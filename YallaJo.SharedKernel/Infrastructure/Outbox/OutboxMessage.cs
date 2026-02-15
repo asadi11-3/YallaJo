@@ -49,7 +49,7 @@ namespace YallaJo.SharedKernel.Infrastructure.Outbox
         {
             return new OutboxMessage
             {
-                Id = Guid.NewGuid(),
+                Id = Guid.CreateVersion7(),
                 Type = integrationEvent.GetType().AssemblyQualifiedName!,
                 Content = JsonSerializer.Serialize(
                     integrationEvent,

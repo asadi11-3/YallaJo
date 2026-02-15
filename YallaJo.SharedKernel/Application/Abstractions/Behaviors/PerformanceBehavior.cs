@@ -1,26 +1,15 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace YallaJo.SharedKernel.Application.Abstractions.Behaviors
 {
-    public class PerformanceBehavior<TRequest, TResponse>
-      : IPipelineBehavior<TRequest, TResponse>
-      where TRequest : IRequest<TResponse>
+    public sealed class PerformanceBehavior<TRequest, TResponse>(
+        ILogger<PerformanceBehavior<TRequest, TResponse>> logger)
+        : IPipelineBehavior<TRequest, TResponse>
+        where TRequest : IRequest<TResponse>
     {
-        private readonly ILogger<PerformanceBehavior<TRequest, TResponse>> _logger;
-        private const int SlowRequestThresholdMs = 500; // 500ms
-
-        public PerformanceBehavior(
-            ILogger<PerformanceBehavior<TRequest, TResponse>> logger)
-        {
-            _logger = logger;
-        }
+        private const int SlowRequestThresholdMs = 500;
 
         public async Task<TResponse> Handle(
             TRequest request,
@@ -29,24 +18,33 @@ namespace YallaJo.SharedKernel.Application.Abstractions.Behaviors
         {
             var stopwatch = Stopwatch.StartNew();
 
-            var response = await next();
+            try
+            {
+                var response = await next();
 
-            stopwatch.Stop();
+                stopwatch.Stop();
+                LogIfSlow(stopwatch.ElapsedMilliseconds);
 
-            var elapsedMs = stopwatch.ElapsedMilliseconds;
+                return response;
+            }
+            catch
+            {
+                stopwatch.Stop();
+                LogIfSlow(stopwatch.ElapsedMilliseconds);
+                throw;
+            }
+        }
 
+        private void LogIfSlow(long elapsedMs)
+        {
             if (elapsedMs > SlowRequestThresholdMs)
             {
-                var requestName = typeof(TRequest).Name;
-
-                _logger.LogWarning(
-                    "⚠️ Slow request detected: {RequestName} took {ElapsedMs}ms (threshold: {ThresholdMs}ms)",
-                    requestName,
+                logger.LogWarning(
+                    "Slow request detected: {RequestName} took {ElapsedMs}ms (threshold: {ThresholdMs}ms)",
+                    typeof(TRequest).Name,
                     elapsedMs,
                     SlowRequestThresholdMs);
             }
-
-            return response;
         }
     }
 }

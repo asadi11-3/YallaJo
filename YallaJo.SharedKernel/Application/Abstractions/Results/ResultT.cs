@@ -81,9 +81,6 @@ namespace YallaJo.SharedKernel.Application.Abstractions.Results
         public static Result<T> Fail(Outcome outcome, string message, T? data)
             => new(false, outcome, value: data, messages: new[] { message });
 
-        
-
-      
         public Result<TNew> Map<TNew>(Func<T, TNew> mapper)
         {
             if (IsFailure)
@@ -91,8 +88,6 @@ namespace YallaJo.SharedKernel.Application.Abstractions.Results
 
             return Result<TNew>.Success(mapper(Value!), Messages.ToArray());
         }
-
-    
         public Result<TNew> Bind<TNew>(Func<T, Result<TNew>> binder)
         {
             if (IsFailure)
@@ -101,23 +96,18 @@ namespace YallaJo.SharedKernel.Application.Abstractions.Results
             return binder(Value!);
         }
 
-      
         public Result<T> OnSuccess(Action<T> action)
         {
             if (IsSuccess && Value is not null)
                 action(Value);
             return this;
         }
-
-        
         public Result<T> OnFailure(Action<Result<T>> action)
         {
             if (IsFailure)
                 action(this);
             return this;
         }
-
-       
         public TResult Match<TResult>(
             Func<T, TResult> onSuccess,
             Func<Result<T>, TResult> onFailure)
