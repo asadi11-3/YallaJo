@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,8 +8,8 @@ namespace YallaJo.SharedKernel.Domain.ValueObjects
 {
     public sealed class Money : ValueObject
     {
-        public decimal Amount { get; }
-        public string Currency { get; }
+        public decimal Amount { get; private set; }
+        public string Currency { get; private set; }
 
         private Money() { Currency = "JOD"; }
 

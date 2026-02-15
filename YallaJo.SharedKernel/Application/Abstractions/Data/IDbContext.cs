@@ -1,12 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace YallaJo.SharedKernel.Application.Abstractions.Data
 {
-    internal class IDbContext
+    public interface IDbContext
     {
+        DbSet<TEntity> Set<TEntity>() where TEntity : class;
+        
+        Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
+
+        DatabaseFacade Database { get; }
     }
 }
+

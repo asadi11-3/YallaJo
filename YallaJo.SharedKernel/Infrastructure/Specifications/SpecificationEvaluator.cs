@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,7 +16,8 @@ namespace YallaJo.SharedKernel.Infrastructure.Specifications
         /// </summary>
         public static IQueryable<TEntity> GetQuery<TEntity>(
             IQueryable<TEntity> inputQuery,
-            ISpecification<TEntity> specification)
+            ISpecification<TEntity> specification,
+            bool evaluatePaging = true)
             where TEntity : class
         {
             var query = inputQuery;
@@ -57,7 +58,7 @@ namespace YallaJo.SharedKernel.Infrastructure.Specifications
             }
 
             // ─── 7. Paging ──────────────────────────────────────────────
-            if (specification.IsPagingEnabled)
+            if (evaluatePaging && specification.IsPagingEnabled)
             {
                 if (specification.Skip.HasValue && specification.Skip > 0)
                     query = query.Skip(specification.Skip.Value);
@@ -65,7 +66,7 @@ namespace YallaJo.SharedKernel.Infrastructure.Specifications
                 if (specification.Take.HasValue)
                     query = query.Take(specification.Take.Value);
             }
-            else if (specification.Take.HasValue)
+            else if (evaluatePaging && specification.Take.HasValue)
             {
                 // Support WithTop() without full paging
                 query = query.Take(specification.Take.Value);
@@ -75,8 +76,8 @@ namespace YallaJo.SharedKernel.Infrastructure.Specifications
             if (specification.AsNoTracking)
                 query = query.AsNoTracking();
 
-            //if (specification.AsSplitQuery)  // ✅ صح
-            //    query = query.AsSplitQuery();
+            if (specification.AsSplitQuery)
+                query = query.AsSplitQuery();
 
             return query;
         }

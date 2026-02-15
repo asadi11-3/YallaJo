@@ -1,13 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace YallaJo.SharedKernel.Application.Abstractions.Results
 {
-
-
     public sealed class Result
     {
         public bool IsSuccess { get; }
@@ -28,15 +23,11 @@ namespace YallaJo.SharedKernel.Application.Abstractions.Results
             Errors = errors ?? Array.Empty<Error>();
         }
 
-      
-
         public static Result Success(params string[] messages)
             => new(true, Outcome.Ok, messages: messages);
 
         public static Result Created(params string[] messages)
             => new(true, Outcome.Created, messages: messages);
-
-      
 
         public static Result Failure(Error error, Outcome outcome = Outcome.Invalid)
             => new(false, outcome, errors: new[] { error });
@@ -64,20 +55,14 @@ namespace YallaJo.SharedKernel.Application.Abstractions.Results
         public static Result Canceled(params string[] messages)
             => new(false, Outcome.Canceled, messages: messages);
 
-       
-
-       
         public static Result Invalid(params Error[] errors)
             => new(false, Outcome.Invalid, errors: errors);
 
-       
         public static Result Fail(Outcome outcome, params Error[] errors)
             => new(false, outcome, errors: errors);
 
         public static Result Fail(Outcome outcome, string message, params Error[] errors)
             => new(false, outcome, messages: new[] { message }, errors: errors);
-
-      
 
         public static implicit operator Result(Error error)
             => Failure(error);
@@ -86,3 +71,4 @@ namespace YallaJo.SharedKernel.Application.Abstractions.Results
             => result.IsSuccess;
     }
 }
+

@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 using YallaJo.SharedKernel.Application.Abstractions.Data;
 using YallaJo.SharedKernel.Application.Abstractions.Pagination;
@@ -7,28 +7,24 @@ using YallaJo.SharedKernel.Infrastructure.Specifications;
 
 namespace YallaJo.SharedKernel.Infrastructure.Data.Repositories
 {
-    public class EfReadRepository<TEntity, TKey> : IReadRepository<TEntity, TKey>
-    where TEntity : class
-    where TKey : notnull
+    public class EfReadRepository<TEntity, TKey>(DbContext context) : IReadRepository<TEntity, TKey>
+        where TEntity : class
+        where TKey : notnull
     {
-        protected readonly DbContext _context;
-        protected readonly DbSet<TEntity> _dbSet;
-        
-
-       
-
+        protected readonly DbContext _context = context;
         protected DbSet<TEntity> DbSet => _context.Set<TEntity>();
 
-        public EfReadRepository(DbContext context)
-        {
-            _context = context;
-            _dbSet = context.Set<TEntity>();
-        }
+        #region Expression-based Read Operations
 
         public virtual async Task<TEntity?> GetByIdAsync(TKey id, CancellationToken ct = default, bool asNoTracking = true)
-            => await _dbSet.FindAsync([id], ct);
+        {
+            if (!asNoTracking)
+                return await DbSet.FindAsync([id], ct);
 
+            return await DbSet.AsNoTracking()
                 .FirstOrDefaultAsync(e => EF.Property<TKey>(e, "Id")!.Equals(id), ct);
+        }
+
         public virtual async Task<TEntity?> GetAsync(
             Expression<Func<TEntity, bool>> filter,
             Func<IQueryable<TEntity>, IQueryable<TEntity>>? include = null,
@@ -74,9 +70,7 @@ namespace YallaJo.SharedKernel.Infrastructure.Data.Repositories
             Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>>? orderBy = null,
             CancellationToken ct = default)
         {
-            IQueryable<TEntity> query = _dbSet.AsNoTracking();
-            if (filter is not null) query = query.Where(filter);
-            if (orderBy is not null) query = orderBy(query);
+            var query = BuildQuery(filter, orderBy: orderBy, asNoTracking: true);
             return await query.Select(selector).ToListAsync(ct);
         }
 
@@ -87,11 +81,12 @@ namespace YallaJo.SharedKernel.Infrastructure.Data.Repositories
             Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>>? orderBy = null,
             CancellationToken ct = default)
         {
-            IQueryable<TEntity> query = _dbSet.AsNoTracking();
-            if (filter is not null) query = query.Where(filter);
+            var query = BuildQuery(filter, orderBy: orderBy, asNoTracking: true);
             var totalCount = await query.CountAsync(ct);
-            if (orderBy is not null) query = orderBy(query);
-            var items = await query.Skip((pageNumber - 1) * pageSize).Take(pageSize).Select(selector).ToListAsync(ct);
+            var items = await query.Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .Select(selector)
+                .ToListAsync(ct);
             return new PaginatedResult<TResult>(items, totalCount, pageNumber, pageSize);
         }
 
@@ -102,101 +97,59 @@ namespace YallaJo.SharedKernel.Infrastructure.Data.Repositories
             => BuildQuery(filter, include, asNoTracking: asNoTracking);
 
         public virtual async Task<bool> ExistsAsync(Expression<Func<TEntity, bool>> predicate, CancellationToken ct = default)
-            => await _dbSet.AnyAsync(predicate, ct);
+            => await DbSet.AnyAsync(predicate, ct);
 
         public virtual async Task<bool> AnyAsync(Expression<Func<TEntity, bool>>? filter = null, CancellationToken ct = default)
-            => filter is null ? await _dbSet.AnyAsync(ct) : await _dbSet.AnyAsync(filter, ct);
+            => filter is null ? await DbSet.AnyAsync(ct) : await DbSet.AnyAsync(filter, ct);
 
         public virtual async Task<int> CountAsync(Expression<Func<TEntity, bool>>? filter = null, CancellationToken ct = default)
-            => filter is null ? await _dbSet.CountAsync(ct) : await _dbSet.CountAsync(filter, ct);
+            => filter is null ? await DbSet.CountAsync(ct) : await DbSet.CountAsync(filter, ct);
 
-        protected IQueryable<TEntity> BuildQuery(
-            Expression<Func<TEntity, bool>>? filter = null,
-            Func<IQueryable<TEntity>, IQueryable<TEntity>>? include = null,
-            Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>>? orderBy = null,
-            bool asNoTracking = true)
-        {
-            IQueryable<TEntity> query = _dbSet;
-            if (asNoTracking) query = query.AsNoTracking();
-            if (include is not null) query = include(query);
-            if (filter is not null) query = query.Where(filter);
-            if (orderBy is not null) query = orderBy(query);
-            return query;
-        }
+        #endregion
 
-        public async Task<TEntity?> FirstOrDefaultAsync(
-          ISpecification<TEntity> specification,
-          CancellationToken ct = default)
-        {
-            return await ApplySpecification(specification).FirstOrDefaultAsync(ct);
-        }
+        #region Specification-based Read Operations
 
-        public async Task<TEntity?> SingleOrDefaultAsync(
-            ISpecification<TEntity> specification,
-            CancellationToken ct = default)
-        {
-            return await ApplySpecification(specification).SingleOrDefaultAsync(ct);
-        }
+        public virtual async Task<TEntity?> FirstOrDefaultAsync(
+            ISpecification<TEntity> specification, CancellationToken ct = default)
+            => await ApplySpecification(specification).FirstOrDefaultAsync(ct);
 
-        // ─── Collections ─────────────────────────────────────────────────
+        public virtual async Task<TEntity?> SingleOrDefaultAsync(
+            ISpecification<TEntity> specification, CancellationToken ct = default)
+            => await ApplySpecification(specification).SingleOrDefaultAsync(ct);
 
-        public async Task<List<TEntity>> ListAsync(
-            ISpecification<TEntity> specification,
-            CancellationToken ct = default)
-        {
-            return await ApplySpecification(specification).ToListAsync(ct);
-        }
+        public virtual async Task<List<TEntity>> ListAsync(
+            ISpecification<TEntity> specification, CancellationToken ct = default)
+            => await ApplySpecification(specification).ToListAsync(ct);
 
-        public async Task<IReadOnlyList<TEntity>> ReadOnlyListAsync(
-            ISpecification<TEntity> specification,
-            CancellationToken ct = default)
-        {
-            return await ApplySpecification(specification).ToListAsync(ct);
-        }
+        public virtual async Task<IReadOnlyList<TEntity>> ReadOnlyListAsync(
+            ISpecification<TEntity> specification, CancellationToken ct = default)
+            => await ApplySpecification(specification).ToListAsync(ct);
 
-        // ─── Projected Collections ───────────────────────────────────────
+        public virtual async Task<List<TResult>> ListAsync<TResult>(
+            ISpecification<TEntity, TResult> specification, CancellationToken ct = default)
+            => await ApplySpecification(specification).ToListAsync(ct);
 
-        public async Task<List<TResult>> ListAsync<TResult>(
-            ISpecification<TEntity, TResult> specification,
-            CancellationToken ct = default)
-        {
-            return await ApplySpecification(specification).ToListAsync(ct);
-        }
+        public virtual async Task<IReadOnlyList<TResult>> ReadOnlyListAsync<TResult>(
+            ISpecification<TEntity, TResult> specification, CancellationToken ct = default)
+            => await ApplySpecification(specification).ToListAsync(ct);
 
-        public async Task<IReadOnlyList<TResult>> ReadOnlyListAsync<TResult>(
-            ISpecification<TEntity, TResult> specification,
-            CancellationToken ct = default)
-        {
-            return await ApplySpecification(specification).ToListAsync(ct);
-        }
+        public virtual async Task<int> CountAsync(
+            ISpecification<TEntity> specification, CancellationToken ct = default)
+            => await ApplySpecification(specification, evaluatePaging: false).CountAsync(ct);
 
-        // ─── Aggregates ──────────────────────────────────────────────────
+        public virtual async Task<bool> AnyAsync(
+            ISpecification<TEntity> specification, CancellationToken ct = default)
+            => await ApplySpecification(specification, evaluatePaging: false).AnyAsync(ct);
 
-        public async Task<int> CountAsync(
-            ISpecification<TEntity> specification,
-            CancellationToken ct = default)
-        {
-            return await ApplySpecification(specification, evaluatePaging: false).CountAsync(ct);
-        }
-
-        public async Task<bool> AnyAsync(
-            ISpecification<TEntity> specification,
-            CancellationToken ct = default)
-        {
-            return await ApplySpecification(specification, evaluatePaging: false).AnyAsync(ct);
-        }
-
-        // ─── Paged Results ───────────────────────────────────────────────
-
-        public async Task<PaginatedResult<TEntity>> PaginatedListAsync(
-     ISpecification<TEntity> specification,
-     CancellationToken ct = default)
+        public virtual async Task<PaginatedResult<TEntity>> PaginatedListAsync(
+            ISpecification<TEntity> specification, CancellationToken ct = default)
         {
             var totalCount = await ApplySpecification(specification, evaluatePaging: false).CountAsync(ct);
-
             var items = await ApplySpecification(specification).ToListAsync(ct);
 
             var pageSize = specification.Take ?? items.Count;
+            if (pageSize == 0) pageSize = items.Count > 0 ? items.Count : 1;
+
             var pageNumber = (specification.Skip.HasValue && pageSize > 0)
                 ? (specification.Skip.Value / pageSize) + 1
                 : 1;
@@ -204,16 +157,15 @@ namespace YallaJo.SharedKernel.Infrastructure.Data.Repositories
             return new PaginatedResult<TEntity>(items, totalCount, pageNumber, pageSize);
         }
 
-
-        public async Task<PaginatedResult<TResult>> PaginatedListAsync<TResult>(
-     ISpecification<TEntity, TResult> specification,
-     CancellationToken ct = default)
+        public virtual async Task<PaginatedResult<TResult>> PaginatedListAsync<TResult>(
+            ISpecification<TEntity, TResult> specification, CancellationToken ct = default)
         {
             var totalCount = await ApplySpecification(specification, evaluatePaging: false).CountAsync(ct);
-
             var items = await ApplySpecification(specification).ToListAsync(ct);
 
             var pageSize = specification.Take ?? items.Count;
+            if (pageSize == 0) pageSize = items.Count > 0 ? items.Count : 1;
+
             var pageNumber = (specification.Skip.HasValue && pageSize > 0)
                 ? (specification.Skip.Value / pageSize) + 1
                 : 1;
@@ -221,11 +173,26 @@ namespace YallaJo.SharedKernel.Infrastructure.Data.Repositories
             return new PaginatedResult<TResult>(items, totalCount, pageNumber, pageSize);
         }
 
+        #endregion
 
+        #region Helpers
+
+        protected IQueryable<TEntity> BuildQuery(
+            Expression<Func<TEntity, bool>>? filter = null,
+            Func<IQueryable<TEntity>, IQueryable<TEntity>>? include = null,
+            Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>>? orderBy = null,
+            bool asNoTracking = true)
+        {
+            IQueryable<TEntity> query = DbSet;
+            if (asNoTracking) query = query.AsNoTracking();
+            if (include is not null) query = include(query);
+            if (filter is not null) query = query.Where(filter);
+            if (orderBy is not null) query = orderBy(query);
+            return query;
+        }
 
         private IQueryable<TEntity> ApplySpecification(
-     ISpecification<TEntity> specification,
-     bool evaluatePaging = true)
+            ISpecification<TEntity> specification, bool evaluatePaging = true)
         {
             var spec = (!evaluatePaging && specification.IsPagingEnabled)
                 ? new NoPagingSpecWrapper<TEntity>(specification)
@@ -234,11 +201,8 @@ namespace YallaJo.SharedKernel.Infrastructure.Data.Repositories
             return SpecificationEvaluator.GetQuery(DbSet.AsQueryable(), spec);
         }
 
-
-
         private IQueryable<TResult> ApplySpecification<TResult>(
-            ISpecification<TEntity, TResult> specification,
-            bool evaluatePaging = true)
+            ISpecification<TEntity, TResult> specification, bool evaluatePaging = true)
         {
             if (!evaluatePaging && specification.IsPagingEnabled)
             {
@@ -253,5 +217,7 @@ namespace YallaJo.SharedKernel.Infrastructure.Data.Repositories
 
             return SpecificationEvaluator.GetQuery(DbSet.AsQueryable(), specification);
         }
+
+        #endregion
     }
 }

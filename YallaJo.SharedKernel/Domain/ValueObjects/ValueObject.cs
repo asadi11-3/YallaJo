@@ -1,8 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace YallaJo.SharedKernel.Domain.ValueObjects
 {
@@ -19,10 +17,17 @@ namespace YallaJo.SharedKernel.Domain.ValueObjects
         public override bool Equals(object? obj) => Equals(obj as ValueObject);
 
         public override int GetHashCode()
-            => GetEqualityComponents()
-                .Aggregate(0, (hash, component) => HashCode.Combine(hash, component?.GetHashCode() ?? 0));
+        {
+            var hash = new HashCode();
+            foreach (var component in GetEqualityComponents())
+            {
+                hash.Add(component);
+            }
+            return hash.ToHashCode();
+        }
 
         public static bool operator ==(ValueObject? left, ValueObject? right) => Equals(left, right);
         public static bool operator !=(ValueObject? left, ValueObject? right) => !Equals(left, right);
     }
 }
+

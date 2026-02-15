@@ -1,139 +1,110 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+using MediatR;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-//using System.Text;
-//using System.Text.Json;
-//using System.Threading.Tasks;
-//using YallaJo.SharedKernel.Domain.Event;
-//using YallaJo.SharedKernel.Infrastructure.Outbox;
+using System.Text.Json;
+using YallaJo.SharedKernel.Domain.Event;
+using YallaJo.SharedKernel.Infrastructure.Outbox;
 
-//namespace YallaJo.SharedKernel.Infrastructure.BackgroundJobs
-//{
-   
-//    public sealed class OutboxProcessor : BackgroundService
-//    {
-//        private readonly IServiceProvider _serviceProvider;
-//        private readonly ILogger<OutboxProcessor> _logger;
-//        private readonly TimeSpan _interval = TimeSpan.FromSeconds(10);
+namespace YallaJo.SharedKernel.Infrastructure.BackgroundJobs
+{
+    public sealed class OutboxProcessor(
+        IServiceProvider serviceProvider,
+        ILogger<OutboxProcessor> logger) : BackgroundService, IOutboxProcessor
+    {
+        private const int MaxRetryCount = 3;
+        private const int BatchSize = 20;
+        private static readonly TimeSpan Interval = TimeSpan.FromSeconds(10);
 
-//        public OutboxProcessor(
-//            IServiceProvider serviceProvider,
-//            ILogger<OutboxProcessor> logger)
-//        {
-//            _serviceProvider = serviceProvider;
-//            _logger = logger;
-//        }
+        protected override async Task ExecuteAsync(CancellationToken ct)
+        {
+            logger.LogInformation("Outbox Processor started");
 
-        //protected override async Task ExecuteAsync(CancellationToken ct)
-        //{
-        //    _logger.LogInformation("Outbox Processor started");
+            while (!ct.IsCancellationRequested)
+            {
+                try
+                {
+                    await ProcessOutboxMessagesAsync(ct);
+                }
+                catch (OperationCanceledException) when (ct.IsCancellationRequested)
+                {
+                    // Graceful shutdown — do not log as error
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, "Unexpected error in outbox processing loop");
+                }
 
-        //    while (!ct.IsCancellationRequested)
-        //    {
-        //        try
-        //        {
-        //            await ProcessOutboxMessagesAsync(ct);
-        //        }
-        //        catch (Exception ex)
-        //        {
-        //            _logger.LogError(ex, "Error processing outbox messages");
-        //        }
+                try
+                {
+                    await Task.Delay(Interval, ct);
+                }
+                catch (OperationCanceledException) when (ct.IsCancellationRequested)
+                {
+                    break;
+                }
+            }
 
-        //        await Task.Delay(_interval, ct);
-        //    }
+            logger.LogInformation("Outbox Processor stopped");
+        }
 
-        //    _logger.LogInformation("Outbox Processor stopped");
-        //}
+        public async Task ProcessOutboxMessagesAsync(CancellationToken ct = default)
+        {
+            using var scope = serviceProvider.CreateScope();
 
-        //private async Task ProcessOutboxMessagesAsync(CancellationToken ct)
-        //{
-        //    using var scope = _serviceProvider.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<DbContext>();
+            var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
 
-        //    var dbContext = scope.ServiceProvider
-        //        .GetRequiredService<ApplicationDbContext>();
+            var messages = await dbContext.Set<OutboxMessage>()
+                .Where(m => m.ProcessedOnUtc == null)
+                .Where(m => m.RetryCount < MaxRetryCount)
+                .OrderBy(m => m.OccurredOnUtc)
+                .Take(BatchSize)
+                .ToListAsync(ct);
 
-        //    var eventBus = scope.ServiceProvider
-        //        .GetRequiredService<IEventBus>();
+            if (messages.Count == 0)
+                return;
 
-        //    // ═══════════════════════════════════════
-        //    // 1. جيب الرسائل اللي ما انعالجت
-        //    // ═══════════════════════════════════════
+            logger.LogInformation("Processing {Count} outbox messages", messages.Count);
 
-        //    var messages = await dbContext
-        //        .Set<OutboxMessage>()
-        //        .Where(m => m.ProcessedOnUtc == null)
-        //        .Where(m => m.RetryCount < 3) // max 3 retries
-        //        .OrderBy(m => m.OccurredOnUtc)
-        //        .Take(20) // معالجة 20 رسالة بالمرة
-        //        .ToListAsync(ct);
+            foreach (var message in messages)
+            {
+                try
+                {
+                    var eventType = Type.GetType(message.Type);
 
-        //    if (!messages.Any())
-        //        return;
+                    if (eventType is null)
+                    {
+                        logger.LogWarning("Unknown event type: {Type} for message {Id}", message.Type, message.Id);
+                        message.MarkAsFailed($"Unknown event type: {message.Type}");
+                        continue;
+                    }
 
-        //    _logger.LogInformation(
-        //        "Processing {Count} outbox messages",
-        //        messages.Count);
+                    var integrationEvent = JsonSerializer.Deserialize(message.Content, eventType) as IIntegrationEvent;
 
-        //    // ═══════════════════════════════════════
-        //    // 2. عالج كل رسالة
-        //    // ═══════════════════════════════════════
+                    if (integrationEvent is null)
+                    {
+                        logger.LogWarning("Failed to deserialize event {Id} of type {Type}", message.Id, message.Type);
+                        message.MarkAsFailed("Deserialization returned null");
+                        continue;
+                    }
 
-        //    foreach (var message in messages)
-        //    {
-        //        try
-        //        {
-        //            // Deserialize الـ Event
-        //            var eventType = Type.GetType(message.Type);
+                    await mediator.Publish(integrationEvent, ct);
 
-        //            if (eventType is null)
-        //            {
-        //                _logger.LogWarning(
-        //                    "Unknown event type: {Type}",
-        //                    message.Type);
-        //                continue;
-        //            }
+                    message.MarkAsProcessed();
 
-        //            var integrationEvent = JsonSerializer.Deserialize(
-        //                message.Content,
-        //                eventType) as IIntegrationEvent;
+                    logger.LogDebug("Processed outbox message {Id}", message.Id);
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, "Failed to process outbox message {Id}", message.Id);
+                    message.MarkAsFailed(ex.Message);
+                }
+            }
 
-        //            if (integrationEvent is null)
-        //            {
-        //                _logger.LogWarning(
-        //                    "Failed to deserialize event {Id}",
-        //                    message.Id);
-        //                continue;
-        //            }
-
-        //            // ✅ انشر Event
-        //            await eventBus.PublishAsync(integrationEvent, ct);
-
-        //            // ✅ علمه كـ processed
-        //            message.MarkAsProcessed();
-
-        //            _logger.LogInformation(
-        //                "Processed outbox message {Id}",
-        //                message.Id);
-        //        }
-        //        catch (Exception ex)
-        //        {
-        //            _logger.LogError(
-        //                ex,
-        //                "Failed to process outbox message {Id}",
-        //                message.Id);
-
-        //            message.MarkAsFailed(ex.Message);
-        //        }
-        //    }
-
-        //    // ═══════════════════════════════════════
-        //    // 3. احفظ التغييرات
-        //    // ═══════════════════════════════════════
-
-        //    await dbContext.SaveChangesAsync(ct);
-//        //}
-//    }
-//}
+            await dbContext.SaveChangesAsync(ct);
+        }
+    }
+}

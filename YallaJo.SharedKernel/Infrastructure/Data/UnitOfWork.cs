@@ -1,42 +1,36 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using YallaJo.SharedKernel.Application.Abstractions.Data;
 using YallaJo.SharedKernel.Domain.Entities;
 
 namespace YallaJo.SharedKernel.Infrastructure.Data
 {
-   
-    public class UnitOfWork : IUnitOfWork
+    public class UnitOfWork(DbContext context, IMediator mediator) : IUnitOfWork
     {
-        private readonly DbContext _context;
-        private readonly IMediator _mediator;
-        public UnitOfWork(DbContext context,IMediator mediator)
-        {
-            _mediator = mediator;
-            _context = context;
-        }
+        private readonly DbContext _context = context;
+        private readonly IMediator _mediator = mediator;
 
         public async Task<int> SaveChangesAsync(CancellationToken ct = default)
         {
-           
-
-            var domainEvents = _context.ChangeTracker
+            var aggregateRoots = _context.ChangeTracker
                 .Entries<IAggregateRoot>()
-                .SelectMany(e => e.Entity.DomainEvents)
+                .Where(e => e.Entity.DomainEvents.Count > 0)
+                .Select(e => e.Entity)
                 .ToList();
 
-           
+            var domainEvents = aggregateRoots
+                .SelectMany(ar => ar.DomainEvents)
+                .ToList();
+
+            // Clear events BEFORE save to prevent re-dispatch on subsequent calls
+            foreach (var aggregate in aggregateRoots)
+            {
+                aggregate.ClearDomainEvents();
+            }
 
             var result = await _context.SaveChangesAsync(ct);
 
-            // ══════════════════════════════════════════
-          
-
+            // Dispatch events AFTER successful save
             foreach (var domainEvent in domainEvents)
             {
                 await _mediator.Publish(domainEvent, ct);

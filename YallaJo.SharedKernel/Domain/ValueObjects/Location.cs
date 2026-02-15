@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,8 +8,8 @@ namespace YallaJo.SharedKernel.Domain.ValueObjects
 {
     public sealed class Location : ValueObject
     {
-        public decimal Latitude { get; }
-        public decimal Longitude { get; }
+        public decimal Latitude { get; private set; }
+        public decimal Longitude { get; private set; }
 
         private Location() { }
 

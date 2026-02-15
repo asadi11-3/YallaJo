@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,8 +8,8 @@ namespace YallaJo.SharedKernel.Domain.ValueObjects
 {
     public sealed class DateRange : ValueObject
     {
-        public DateTime Start { get; }
-        public DateTime End { get; }
+        public DateTime Start { get; private set; }
+        public DateTime End { get; private set; }
 
         private DateRange() { }
 
