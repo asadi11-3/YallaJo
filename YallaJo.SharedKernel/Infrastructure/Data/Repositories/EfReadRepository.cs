@@ -28,6 +28,7 @@ namespace YallaJo.SharedKernel.Infrastructure.Data.Repositories
         public virtual async Task<TEntity?> GetByIdAsync(TKey id, CancellationToken ct = default, bool asNoTracking = true)
             => await _dbSet.FindAsync([id], ct);
 
+                .FirstOrDefaultAsync(e => EF.Property<TKey>(e, "Id")!.Equals(id), ct);
         public virtual async Task<TEntity?> GetAsync(
             Expression<Func<TEntity, bool>> filter,
             Func<IQueryable<TEntity>, IQueryable<TEntity>>? include = null,
