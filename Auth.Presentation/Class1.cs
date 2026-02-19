@@ -1,4 +1,4 @@
-﻿namespace Users.Infrastructure
+﻿namespace Auth.Presentation
 {
     public class Class1
     {

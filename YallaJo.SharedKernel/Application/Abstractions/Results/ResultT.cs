@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace YallaJo.SharedKernel.Application.Abstractions.Results
 {
@@ -14,6 +12,9 @@ namespace YallaJo.SharedKernel.Application.Abstractions.Results
         public T? Value { get; }
         public IReadOnlyList<string> Messages { get; }
         public IReadOnlyList<Error> Errors { get; }
+
+        // Convenient single-error accessor
+        public Error? Error => Errors.FirstOrDefault();
 
         private Result(
             bool isSuccess,
@@ -29,14 +30,12 @@ namespace YallaJo.SharedKernel.Application.Abstractions.Results
             Errors = errors ?? Array.Empty<Error>();
         }
 
-       
         public static Result<T> Success(T value, params string[] messages)
             => new(true, Outcome.Ok, value: value, messages: messages);
 
         public static Result<T> Created(T value, params string[] messages)
             => new(true, Outcome.Created, value: value, messages: messages);
 
-     
         public static Result<T> Failure(Error error, Outcome outcome = Outcome.Invalid)
             => new(false, outcome, errors: new[] { error });
 
@@ -66,18 +65,15 @@ namespace YallaJo.SharedKernel.Application.Abstractions.Results
         public static Result<T> Canceled(params string[] messages)
             => new(false, Outcome.Canceled, messages: messages);
 
-        
         public static Result<T> Invalid(params Error[] errors)
             => new(false, Outcome.Invalid, errors: errors);
 
-       
         public static Result<T> Fail(Outcome outcome, params Error[] errors)
             => new(false, outcome, errors: errors);
 
         public static Result<T> Fail(Outcome outcome, string message, params Error[] errors)
             => new(false, outcome, messages: new[] { message }, errors: errors);
 
-        
         public static Result<T> Fail(Outcome outcome, string message, T? data)
             => new(false, outcome, value: data, messages: new[] { message });
 
@@ -88,6 +84,7 @@ namespace YallaJo.SharedKernel.Application.Abstractions.Results
 
             return Result<TNew>.Success(mapper(Value!), Messages.ToArray());
         }
+
         public Result<TNew> Bind<TNew>(Func<T, Result<TNew>> binder)
         {
             if (IsFailure)
@@ -102,12 +99,14 @@ namespace YallaJo.SharedKernel.Application.Abstractions.Results
                 action(Value);
             return this;
         }
+
         public Result<T> OnFailure(Action<Result<T>> action)
         {
             if (IsFailure)
                 action(this);
             return this;
         }
+
         public TResult Match<TResult>(
             Func<T, TResult> onSuccess,
             Func<Result<T>, TResult> onFailure)
@@ -115,10 +114,8 @@ namespace YallaJo.SharedKernel.Application.Abstractions.Results
             return IsSuccess ? onSuccess(Value!) : onFailure(this);
         }
 
-       
         public static implicit operator Result<T>(T value) => Success(value);
 
-       
         public static implicit operator Result<T>(Error error) => Failure(error);
 
         public static implicit operator bool(Result<T> result) => result.IsSuccess;

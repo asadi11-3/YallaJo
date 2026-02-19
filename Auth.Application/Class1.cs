@@ -1,4 +1,4 @@
-﻿namespace Users.Application
+﻿namespace Auth.Application
 {
     public class Class1
     {

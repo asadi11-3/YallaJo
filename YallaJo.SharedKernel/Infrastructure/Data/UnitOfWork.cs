@@ -1,42 +1,38 @@
+
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using YallaJo.SharedKernel.Application.Abstractions.Data;
 using YallaJo.SharedKernel.Domain.Entities;
 
-namespace YallaJo.SharedKernel.Infrastructure.Data
+namespace YallaJo.SharedKernel.Infrastructure.Data;
+
+public sealed class UnitOfWork<TContext>(TContext context, IMediator mediator)
+    : IUnitOfWork<TContext>
+    where TContext : DbContext
 {
-    public class UnitOfWork(DbContext context, IMediator mediator) : IUnitOfWork
+    public async Task<int> SaveChangesAsync(CancellationToken ct = default)
     {
-        private readonly DbContext _context = context;
-        private readonly IMediator _mediator = mediator;
+        
+        var aggregates = context.ChangeTracker
+            .Entries<IAggregateRoot>()
+            .Where(e => e.Entity.DomainEvents.Count > 0)
+            .Select(e => e.Entity)
+            .ToList();
 
-        public async Task<int> SaveChangesAsync(CancellationToken ct = default)
-        {
-            var aggregateRoots = _context.ChangeTracker
-                .Entries<IAggregateRoot>()
-                .Where(e => e.Entity.DomainEvents.Count > 0)
-                .Select(e => e.Entity)
-                .ToList();
+        var domainEvents = aggregates
+            .SelectMany(a => a.DomainEvents)
+            .ToList();
 
-            var domainEvents = aggregateRoots
-                .SelectMany(ar => ar.DomainEvents)
-                .ToList();
+        
+        foreach (var aggregate in aggregates)
+            aggregate.ClearDomainEvents();
 
-            // Clear events BEFORE save to prevent re-dispatch on subsequent calls
-            foreach (var aggregate in aggregateRoots)
-            {
-                aggregate.ClearDomainEvents();
-            }
+        var result = await context.SaveChangesAsync(ct);
 
-            var result = await _context.SaveChangesAsync(ct);
+       
+        foreach (var ev in domainEvents)
+            await mediator.Publish(ev, ct);
 
-            // Dispatch events AFTER successful save
-            foreach (var domainEvent in domainEvents)
-            {
-                await _mediator.Publish(domainEvent, ct);
-            }
-
-            return result;
-        }
+        return result;
     }
 }

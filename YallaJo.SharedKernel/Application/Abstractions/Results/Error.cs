@@ -1,25 +1,25 @@
-﻿
-
-namespace YallaJo.SharedKernel.Application.Abstractions.Results
+﻿namespace YallaJo.SharedKernel.Application.Abstractions.Results
 {
     public sealed record Error(string Code, string Message)
-    { 
+    {
         public static Error Failure(string code, string message)
             => new(code, message);
+
         public static Error NotFound(string entity)
-            => new($"{entity}.NotFound", $"{entity}.NotFound");
+            => new($"{entity}.NotFound", $"{entity} was not found.");
 
-        public static Error Validation(string field, string reason)
-            => new($"Validation.{field}.{reason}", $"Validation.{field}.{reason}");
+        public static Error NotFound(string field, string message)
+          => new($"NotFound.{field}", message);
+        public static Error Validation(string field, string message)
+            => new($"Validation.{field}", message);
 
-        public static Error Conflict(string entity, string reason)
-            => new($"{entity}.{reason}", $"{entity}.{reason}");
+        public static Error Conflict(string entity, string message)
+            => new($"{entity}.Conflict", message);
 
-        public static Error Unauthorized(string reason = "Unauthorized")
-            => new($"Auth.{reason}", $"Auth.{reason}");
+        public static Error Unauthorized(string message = "Unauthorized")
+            => new("Auth.Unauthorized", message);
 
-        
-        public static Error Forbidden(string reason = "Forbidden")
-            => new($"Auth.{reason}", $"Auth.{reason}");
+        public static Error Forbidden(string message = "Forbidden")
+            => new("Auth.Forbidden", message);
     }
 }

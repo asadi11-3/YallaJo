@@ -1,4 +1,4 @@
-﻿namespace Users.Domain
+﻿namespace Security.Application
 {
     public class Class1
     {

@@ -1,4 +1,4 @@
-﻿namespace Users.Presentation
+﻿namespace Auth.Domain
 {
     public class Class1
     {

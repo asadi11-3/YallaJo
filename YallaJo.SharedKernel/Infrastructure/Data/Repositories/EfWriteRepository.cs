@@ -26,6 +26,7 @@ namespace YallaJo.SharedKernel.Infrastructure.Data.Repositories
 
         public virtual void Update(TEntity entity)
             => DbSet.Update(entity);
+       
 
         public virtual void UpdateRange(IEnumerable<TEntity> entities)
             => DbSet.UpdateRange(entities);
