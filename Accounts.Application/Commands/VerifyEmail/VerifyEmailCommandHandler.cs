@@ -1,7 +1,6 @@
-﻿using Accounts.Application.Specifications;
+using Accounts.Application.Specifications;
 using Accounts.Domain.Events;
 using Accounts.Domain.Interfaces;
-using Accounts.Infrastructure.Persistence;
 using YallaJo.SharedKernel.Application.Abstractions.Data;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Application.Abstractions.Results;
@@ -11,11 +10,11 @@ namespace Accounts.Application.Commands.VerifyEmail
     public sealed class VerifyEmailCommandHandler : ICommandHandler<VerifyEmailCommand>
     {
         private readonly IUserRepository _userRepository;
-        private readonly IUnitOfWork<AccountsDbContext> _unitOfWork;
+        private readonly IUnitOfWork _unitOfWork;
 
         public VerifyEmailCommandHandler(
             IUserRepository userRepository,
-            IUnitOfWork<AccountsDbContext> unitOfWork)
+            IUnitOfWork unitOfWork)
         {
             _userRepository = userRepository;
             _unitOfWork = unitOfWork;

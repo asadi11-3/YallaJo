@@ -41,15 +41,18 @@ namespace Accounts.Domain.Entities
             if (string.IsNullOrWhiteSpace(lastName))
                 return Result.Failure<User>(Error.Validation("User.LastName", "Last name is required"));
 
-            var user = new User(firstName, lastName); // ✅ بدون Guid
+            var user = new User(firstName, lastName);
 
             var emailResult = UserEmail.Create(user.Id, emailAddress, isPrimary: true);
-            if (emailResult.IsFailure)
-                return Result.Failure<User>(emailResult.Error);
+            if (emailResult.IsFailure || emailResult.Value is null)
+            {
+                return Result.Failure<User>(
+                    emailResult.Error ?? Error.Validation("User.Email", "Email is invalid"));
+            }
 
             user._emails.Add(emailResult.Value);
 
-            user.AddDomainEvent(new UserRegisteredEvent(user.Id, emailAddress.Value)); // أو RaiseDomainEvent حسب تسميتك
+            user.AddDomainEvent(new UserRegisteredEvent(user.Id, emailAddress.Value));
 
             return Result.Success(user); 
         }
@@ -70,10 +73,13 @@ namespace Accounts.Domain.Entities
                 return Result.Failure(Error.Conflict("User.Email", "Email already added to this user"));
 
             var emailResult = UserEmail.Create(Id, emailAddress, isPrimary);
-            if (emailResult.IsFailure)
-                return Result.Failure(emailResult.Error!);
+            if (emailResult.IsFailure || emailResult.Value is null)
+            {
+                return Result.Failure(
+                    emailResult.Error ?? Error.Validation("User.Email", "Email is invalid"));
+            }
 
-            _emails.Add(emailResult.Value!);
+            _emails.Add(emailResult.Value);
             return Result.Success();
         }
 

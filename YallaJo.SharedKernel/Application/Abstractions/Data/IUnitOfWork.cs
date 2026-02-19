@@ -7,8 +7,13 @@ using System.Threading.Tasks;
 
 namespace YallaJo.SharedKernel.Application.Abstractions.Data
 {
-    public interface IUnitOfWork<TContext> where TContext : DbContext
+    public interface IUnitOfWork
     {
         Task<int> SaveChangesAsync(CancellationToken ct = default);
+    }
+
+    public interface IUnitOfWork<TContext> : IUnitOfWork
+        where TContext : DbContext
+    {
     }
 }

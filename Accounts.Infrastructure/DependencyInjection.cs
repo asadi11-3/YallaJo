@@ -1,5 +1,7 @@
 ﻿
 using Accounts.Infrastructure.Persistence;
+using Accounts.Infrastructure.Repositories;
+using Accounts.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -23,7 +25,8 @@ public static class DependencyInjection
                     sql.EnableRetryOnFailure(3);
                 }));
 
-        services.AddScoped<IUnitOfWork<AccountsDbContext>, UnitOfWork<AccountsDbContext>>();
+        services.AddScoped<IUnitOfWork, UnitOfWork<AccountsDbContext>>();
+        services.AddScoped<IUserRepository, UserRepository>();
 
         return services;
     }

@@ -18,13 +18,13 @@ namespace Accounts.Domain.Entities
         }
 
         public Guid UserId { get; private set; }
-        public EmailAddress Address { get; private set; }
+        public EmailAddress Address { get; private set; } = default!;
         public bool IsPrimary { get; private set; }
         public bool IsVerified { get; private set; }
         public DateTime? VerifiedAt { get; private set; }
 
-       
-        public User User { get; private set; }
+        
+        public User User { get; private set; } = default!;
 
         public static Result<UserEmail> Create(Guid userId, EmailAddress emailAddress, bool isPrimary)
         {
