@@ -64,12 +64,7 @@ namespace YallaJo.SharedKernel.Application.Abstractions.Results
         public static Result<T> Fail<T>(Outcome outcome, string message, T? data)
             => Result<T>.Fail(outcome, message, data);
 
-        // ============================================================
-        // 🚫 Non-generic API (COMMENTED OUT to enforce Option B usage)
-        // ============================================================
-
-        
-        // Non-generic factories (not used when Option B is selected)
+      
         public static Result Success(params string[] messages)
             => new(true, Outcome.Ok, messages: messages);
 

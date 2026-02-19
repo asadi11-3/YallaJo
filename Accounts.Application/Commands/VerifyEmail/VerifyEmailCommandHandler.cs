@@ -1,7 +1,6 @@
 using Accounts.Application.Specifications;
 using Accounts.Domain.Events;
 using Accounts.Domain.Interfaces;
-using YallaJo.SharedKernel.Application.Abstractions.Data;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Application.Abstractions.Results;
 
@@ -10,11 +9,11 @@ namespace Accounts.Application.Commands.VerifyEmail
     public sealed class VerifyEmailCommandHandler : ICommandHandler<VerifyEmailCommand>
     {
         private readonly IUserRepository _userRepository;
-        private readonly IUnitOfWork _unitOfWork;
+        private readonly IAccountsUnitOfWork _unitOfWork;
 
         public VerifyEmailCommandHandler(
             IUserRepository userRepository,
-            IUnitOfWork unitOfWork)
+            IAccountsUnitOfWork unitOfWork)
         {
             _userRepository = userRepository;
             _unitOfWork = unitOfWork;

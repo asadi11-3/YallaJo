@@ -25,7 +25,8 @@ public static class DependencyInjection
                     sql.EnableRetryOnFailure(3);
                 }));
 
-        services.AddScoped<IUnitOfWork, UnitOfWork<AccountsDbContext>>();
+        services.AddScoped<IUnitOfWork<AccountsDbContext>, UnitOfWork<AccountsDbContext>>();
+        services.AddScoped<IAccountsUnitOfWork, AccountsUnitOfWork>();
         services.AddScoped<IUserRepository, UserRepository>();
 
         return services;

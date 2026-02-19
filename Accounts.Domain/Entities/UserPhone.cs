@@ -1,9 +1,4 @@
 ﻿using Accounts.Domain.ValueObjects;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using YallaJo.SharedKernel.Application.Abstractions.Results;
 using YallaJo.SharedKernel.Domain.Entities;
 
@@ -15,7 +10,7 @@ namespace Accounts.Domain.Entities
 
         private UserPhone(Guid userId, PhoneNumber phoneNumber, bool isPrimary) 
         {
-           
+            UserId = userId;
             Number = phoneNumber;
             IsPrimary = isPrimary;
             IsVerified = false;

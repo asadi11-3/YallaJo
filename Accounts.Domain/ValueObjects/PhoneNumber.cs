@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿
 using YallaJo.SharedKernel.Application.Abstractions.Results;
 using YallaJo.SharedKernel.Domain.ValueObjects;
 
@@ -24,7 +20,7 @@ namespace Accounts.Domain.ValueObjects
 
             phone = phone.Trim();
 
-            // Basic validation (extend with libphonenumber later)
+          
             if (phone.Length < 10 || phone.Length > 15)
                 return Result.Failure<PhoneNumber>(Error.Validation("Phone", "Phone number must be 10-15 digits"));
 

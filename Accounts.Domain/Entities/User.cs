@@ -1,10 +1,5 @@
 ﻿using Accounts.Domain.Events;
 using Accounts.Domain.ValueObjects;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using YallaJo.SharedKernel.Application.Abstractions.Results;
 using YallaJo.SharedKernel.Domain.Entities;
 
@@ -32,7 +27,7 @@ namespace Accounts.Domain.Entities
         public IReadOnlyCollection<UserEmail> Emails => _emails.AsReadOnly();
         public IReadOnlyCollection<UserPhone> Phones => _phones.AsReadOnly();
 
-        // Factory Method
+        
         public static Result<User> Create(string firstName, string lastName, EmailAddress emailAddress)
         {
             if (string.IsNullOrWhiteSpace(firstName))

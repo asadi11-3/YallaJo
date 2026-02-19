@@ -5,7 +5,7 @@ using YallaJo.SharedKernel.Infrastructure.Data.Repositories;
 
 namespace Accounts.Infrastructure.Repositories;
 
-        public sealed class UserRepository(AccountsDbContext context)
-            : EfRepository<User, Guid>(context), IUserRepository
-        {
-        }
+    public sealed class UserRepository(AccountsDbContext context)
+        : EfRepository<User, Guid>(context), IUserRepository
+    {
+    }

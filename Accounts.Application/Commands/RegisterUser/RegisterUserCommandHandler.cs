@@ -1,7 +1,6 @@
 using Accounts.Domain.Entities;
 using Accounts.Domain.Interfaces;
 using Accounts.Domain.ValueObjects;
-using YallaJo.SharedKernel.Application.Abstractions.Data;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Application.Abstractions.Results;
 
@@ -10,11 +9,11 @@ namespace Accounts.Application.Commands.RegisterUser
     public sealed class RegisterUserCommandHandler : ICommandHandler<RegisterUserCommand, Guid>
     {
         private readonly IUserRepository _userRepository;
-        private readonly IUnitOfWork _unitOfWork;
+        private readonly IAccountsUnitOfWork _unitOfWork;
 
         public RegisterUserCommandHandler(
             IUserRepository userRepository,
-            IUnitOfWork unitOfWork)
+            IAccountsUnitOfWork unitOfWork)
         {
             _userRepository = userRepository;
             _unitOfWork = unitOfWork;
