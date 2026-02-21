@@ -1,6 +1,6 @@
 ﻿using Accounts.Domain.Events;
 using Accounts.Domain.ValueObjects;
-using YallaJo.SharedKernel.Application.Abstractions.Results;
+using YallaJo.SharedKernel.Domain.Abstractions.Results;
 using YallaJo.SharedKernel.Domain.Entities;
 
 namespace Accounts.Domain.Entities

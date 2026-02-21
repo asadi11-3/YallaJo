@@ -1,5 +1,5 @@
 ﻿
-using YallaJo.SharedKernel.Application.Abstractions.Results;
+using YallaJo.SharedKernel.Domain.Abstractions.Results;
 using YallaJo.SharedKernel.Domain.ValueObjects;
 
 namespace Accounts.Domain.ValueObjects

@@ -30,6 +30,11 @@ namespace Accounts.Infrastructure.Persistence.Configurations
                     .HasColumnName("PhoneNumber")
                     .IsRequired()
                     .HasMaxLength(20);
+
+                // Index: conditionally unique for verified phones
+                phone.HasIndex(n => n.Value)
+                    .HasDatabaseName("IX_UserPhones_PhoneNumber")
+                    .HasFilter("[IsVerified] = 1");
             });
 
             builder.Property(p => p.IsPrimary)
@@ -48,13 +53,6 @@ namespace Accounts.Infrastructure.Persistence.Configurations
 
             builder.Property(p => p.UpdatedAt)
                 .IsRequired(false);
-
-            // Unique constraint: Phone must be globally unique when verified
-            // Note: SQL Server doesn't support conditional unique indexes directly in EF,
-            // so we'll add this via raw SQL migration
-            builder.HasIndex(p => p.Number.Value)
-                .HasDatabaseName("IX_UserPhones_PhoneNumber")
-                .HasFilter("[IsVerified] = 1"); // Only verified phones must be unique
 
             // Composite index
             builder.HasIndex(p => new { p.UserId, p.IsPrimary });

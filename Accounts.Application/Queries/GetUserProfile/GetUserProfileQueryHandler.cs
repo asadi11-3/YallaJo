@@ -1,9 +1,9 @@
 ﻿using Accounts.Application.DTOs;
 using Accounts.Application.Specifications;
 using Accounts.Domain.Entities;
-using YallaJo.SharedKernel.Application.Abstractions.Data;
+using YallaJo.SharedKernel.Domain.Abstractions.Data;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
-using YallaJo.SharedKernel.Application.Abstractions.Results;
+using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
 namespace Accounts.Application.Queries.GetUserProfile
 {

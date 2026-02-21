@@ -1,0 +1,15 @@
+namespace YallaJo.SharedKernel.Domain.Abstractions.Results
+{
+    public enum Outcome
+    {
+        Ok = 200,
+        Created = 201,
+        Invalid = 400,
+        Unauthorized = 401,
+        Forbidden = 403,
+        NotFound = 404,
+        Conflict = 409,
+        ServerError = 500,
+        Canceled = 499
+    }
+}

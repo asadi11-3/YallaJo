@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\YallaJo.SharedKernel\YallaJo.SharedKernel.csproj" />
+    <ProjectReference Include="..\YallaJo.SharedKernel.Domain\YallaJo.SharedKernel.Domain.csproj" />
   </ItemGroup>
 
   <ItemGroup>

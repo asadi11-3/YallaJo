@@ -2,7 +2,7 @@ using Accounts.Application.Specifications;
 using Accounts.Domain.Events;
 using Accounts.Domain.Interfaces;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
-using YallaJo.SharedKernel.Application.Abstractions.Results;
+using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
 namespace Accounts.Application.Commands.VerifyEmail
 {

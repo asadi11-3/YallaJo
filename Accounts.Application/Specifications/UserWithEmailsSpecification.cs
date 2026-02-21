@@ -1,5 +1,5 @@
 ﻿using Accounts.Domain.Entities;
-using YallaJo.SharedKernel.Application.Abstractions.Specifications;
+using YallaJo.SharedKernel.Domain.Abstractions.Specifications;
 
 namespace Accounts.Application.Specifications
 {

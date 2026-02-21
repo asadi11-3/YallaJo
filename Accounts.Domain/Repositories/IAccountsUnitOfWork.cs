@@ -1,4 +1,4 @@
-using YallaJo.SharedKernel.Application.Abstractions.Data;
+using YallaJo.SharedKernel.Domain.Abstractions.Data;
 
 namespace Accounts.Domain.Interfaces;
 

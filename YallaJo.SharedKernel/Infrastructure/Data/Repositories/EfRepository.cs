@@ -59,6 +59,7 @@ namespace YallaJo.SharedKernel.Infrastructure.Data.Repositories
         public Task<int> CountAsync(Expression<Func<TEntity, bool>>? filter = null,
             CancellationToken ct = default) => _read.CountAsync(filter, ct);
         #endregion
+
         #region Write Methods
         public void Add(TEntity entity)
             => _write.Add(entity);

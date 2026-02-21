@@ -2,7 +2,7 @@ using Accounts.Domain.Entities;
 using Accounts.Domain.Interfaces;
 using Accounts.Domain.ValueObjects;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
-using YallaJo.SharedKernel.Application.Abstractions.Results;
+using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
 namespace Accounts.Application.Commands.RegisterUser
 {

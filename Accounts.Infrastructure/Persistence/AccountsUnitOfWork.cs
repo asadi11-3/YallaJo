@@ -1,5 +1,5 @@
 using Accounts.Domain.Interfaces;
-using YallaJo.SharedKernel.Application.Abstractions.Data;
+using YallaJo.SharedKernel.Infrastructure.Data;
 
 namespace Accounts.Infrastructure.Persistence;
 

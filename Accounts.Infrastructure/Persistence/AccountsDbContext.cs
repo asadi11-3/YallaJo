@@ -1,6 +1,8 @@
-﻿using Accounts.Domain.Entities;
+using Accounts.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using YallaJo.SharedKernel.Application.Abstractions.Data;
+using YallaJo.SharedKernel.Infrastructure.Outbox;
+
 namespace Accounts.Infrastructure.Persistence
 {
     public class AccountsDbContext : DbContext, IDbContext
@@ -13,12 +15,12 @@ namespace Accounts.Infrastructure.Persistence
         public DbSet<User> Users => Set<User>();
         public DbSet<UserEmail> UserEmails => Set<UserEmail>();
         public DbSet<UserPhone> UserPhones => Set<UserPhone>();
+        public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.HasDefaultSchema("accounts");
 
-           
             modelBuilder.ApplyConfigurationsFromAssembly(
                 typeof(AccountsDbContext).Assembly,
                 type => type.Namespace?.Contains("Accounts.Infrastructure.Persistence.Configurations") ?? false
@@ -26,7 +28,5 @@ namespace Accounts.Infrastructure.Persistence
 
             base.OnModelCreating(modelBuilder);
         }
-
-      
     }
 }

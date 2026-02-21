@@ -1,11 +1,11 @@
-﻿
+using Accounts.Domain.Interfaces;
 using Accounts.Infrastructure.Persistence;
 using Accounts.Infrastructure.Repositories;
-using Accounts.Domain.Interfaces;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using YallaJo.SharedKernel.Application.Abstractions.Data;
+using YallaJo.SharedKernel.Infrastructure.BackgroundJobs;
 using YallaJo.SharedKernel.Infrastructure.Data;
 
 namespace Accounts.Infrastructure;
@@ -28,6 +28,9 @@ public static class DependencyInjection
         services.AddScoped<IUnitOfWork<AccountsDbContext>, UnitOfWork<AccountsDbContext>>();
         services.AddScoped<IAccountsUnitOfWork, AccountsUnitOfWork>();
         services.AddScoped<IUserRepository, UserRepository>();
+
+        services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
+        services.AddHostedService<OutboxProcessor<AccountsDbContext>>();
 
         return services;
     }

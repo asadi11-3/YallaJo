@@ -30,6 +30,11 @@ namespace Accounts.Infrastructure.Persistence.Configurations
                     .HasColumnName("Email")
                     .IsRequired()
                     .HasMaxLength(255);
+
+                // Unique constraint: Email must be globally unique
+                email.HasIndex(a => a.Value)
+                    .IsUnique()
+                    .HasDatabaseName("IX_UserEmails_Email_Unique");
             });
 
             builder.Property(e => e.IsPrimary)
@@ -48,11 +53,6 @@ namespace Accounts.Infrastructure.Persistence.Configurations
 
             builder.Property(e => e.UpdatedAt)
                 .IsRequired(false);
-
-            // Unique constraint: Email must be globally unique (case-insensitive)
-            builder.HasIndex(e => e.Address.Value)
-                .IsUnique()
-                .HasDatabaseName("IX_UserEmails_Email_Unique");
 
             // Composite index for finding primary email per user
             builder.HasIndex(e => new { e.UserId, e.IsPrimary });
