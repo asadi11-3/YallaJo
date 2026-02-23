@@ -1,3 +1,5 @@
+using YallaJo.Api.ExceptionHandlers;
+using Microsoft.AspNetCore.Diagnostics;
 using Accounts.Application;
 using Accounts.Infrastructure;
 using Accounts.Presentation;
@@ -39,8 +41,21 @@ builder.Services.AddSwaggerGen(options =>
         Version = "v1"
     }));
 
+// ── Exception Handlers ───────────────────────────────────────────────────
+builder.Services.AddExceptionHandler<ValidationExceptionHandler>();
+
 // ── Problem Details (RFC 7807) ────────────────────────────────────────────
-builder.Services.AddProblemDetails();
+builder.Services.AddProblemDetails(options =>
+    options.CustomizeProblemDetails = ctx =>
+    {
+        if (ctx.HttpContext.RequestServices
+                .GetService<IHostEnvironment>()?.IsDevelopment() == true)
+        {
+            var ex = ctx.HttpContext.Features.Get<IExceptionHandlerFeature>()?.Error;
+            if (ex is not null)
+                ctx.ProblemDetails.Extensions["exception"] = ex.ToString();
+        }
+    });
 
 // ── Health Checks ─────────────────────────────────────────────────────────
 builder.Services.AddHealthChecks();
