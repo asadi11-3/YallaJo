@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <!--
+    Auth.Contracts is the public API surface of the Auth module.
+    It contains ONLY integration event DTOs — no domain logic, no EF, no MediatR.
+    Any module that needs to react to Auth events references THIS project, not Auth.Application.
+  -->
+  <ItemGroup>
+    <ProjectReference Include="..\YallaJo.SharedKernel.Domain\YallaJo.SharedKernel.Domain.csproj" />
+  </ItemGroup>
+
+</Project>

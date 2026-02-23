@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -33,14 +33,16 @@ namespace Accounts.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Users",
+                name: "Profiles",
                 schema: "accounts",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     FirstName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     LastName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    DisplayName = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
+                    AvatarUrl = table.Column<string>(type: "nvarchar(2048)", maxLength: 2048, nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
@@ -49,59 +51,7 @@ namespace Accounts.Infrastructure.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Users", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "UserEmails",
-                schema: "accounts",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Email = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
-                    IsPrimary = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
-                    IsVerified = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
-                    VerifiedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_UserEmails", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_UserEmails_Users_UserId",
-                        column: x => x.UserId,
-                        principalSchema: "accounts",
-                        principalTable: "Users",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "UserPhones",
-                schema: "accounts",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    PhoneNumber = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
-                    IsPrimary = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
-                    IsVerified = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
-                    VerifiedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_UserPhones", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_UserPhones_Users_UserId",
-                        column: x => x.UserId,
-                        principalSchema: "accounts",
-                        principalTable: "Users",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                    table.PrimaryKey("PK_Profiles", x => x.Id);
                 });
 
             migrationBuilder.CreateIndex(
@@ -111,54 +61,11 @@ namespace Accounts.Infrastructure.Migrations
                 columns: new[] { "ProcessedOnUtc", "RetryCount", "OccurredOnUtc" });
 
             migrationBuilder.CreateIndex(
-                name: "IX_UserEmails_Email_Unique",
+                name: "IX_Profiles_UserId_Unique",
                 schema: "accounts",
-                table: "UserEmails",
-                column: "Email",
+                table: "Profiles",
+                column: "UserId",
                 unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_UserEmails_IsVerified",
-                schema: "accounts",
-                table: "UserEmails",
-                column: "IsVerified");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_UserEmails_UserId_IsPrimary",
-                schema: "accounts",
-                table: "UserEmails",
-                columns: new[] { "UserId", "IsPrimary" });
-
-            migrationBuilder.CreateIndex(
-                name: "IX_UserPhones_IsVerified",
-                schema: "accounts",
-                table: "UserPhones",
-                column: "IsVerified");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_UserPhones_PhoneNumber",
-                schema: "accounts",
-                table: "UserPhones",
-                column: "PhoneNumber",
-                filter: "[IsVerified] = 1");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_UserPhones_UserId_IsPrimary",
-                schema: "accounts",
-                table: "UserPhones",
-                columns: new[] { "UserId", "IsPrimary" });
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Users_IsActive",
-                schema: "accounts",
-                table: "Users",
-                column: "IsActive");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Users_IsDeleted",
-                schema: "accounts",
-                table: "Users",
-                column: "IsDeleted");
         }
 
         /// <inheritdoc />
@@ -169,15 +76,7 @@ namespace Accounts.Infrastructure.Migrations
                 schema: "accounts");
 
             migrationBuilder.DropTable(
-                name: "UserEmails",
-                schema: "accounts");
-
-            migrationBuilder.DropTable(
-                name: "UserPhones",
-                schema: "accounts");
-
-            migrationBuilder.DropTable(
-                name: "Users",
+                name: "Profiles",
                 schema: "accounts");
         }
     }

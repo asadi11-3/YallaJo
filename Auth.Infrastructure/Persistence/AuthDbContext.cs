@@ -1,6 +1,7 @@
 using Auth.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using YallaJo.SharedKernel.Application.Abstractions.Data;
+using YallaJo.SharedKernel.Infrastructure.Outbox;
 
 namespace Auth.Infrastructure.Persistence;
 
@@ -8,24 +9,23 @@ public sealed class AuthDbContext : DbContext, IDbContext
 {
     public AuthDbContext(DbContextOptions<AuthDbContext> options) : base(options) { }
 
-    public DbSet<UserCredentials> UserCredentials => Set<UserCredentials>();
+    // New auth entities (shells — configurations added in later steps)
+    public DbSet<Device> Devices => Set<Device>();
+    public DbSet<Session> Sessions => Set<Session>();
+    public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+    public DbSet<Otp> Otps => Set<Otp>();
+    public DbSet<ExternalProvider> ExternalProviders => Set<ExternalProvider>();
+    public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasDefaultSchema("auth");
 
-        modelBuilder.Entity<UserCredentials>(entity =>
-        {
-            entity.ToTable("UserCredentials");
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.Id).ValueGeneratedNever(); // ID comes from Accounts module
-            entity.Property(e => e.Email).HasMaxLength(320).IsRequired();
-            entity.HasIndex(e => e.Email).IsUnique();
-            entity.Property(e => e.PasswordHash).HasMaxLength(512).IsRequired(false);
-            entity.Property(e => e.PasswordSalt).HasMaxLength(256).IsRequired(false);
-            entity.Property(e => e.IsActive).IsRequired();
-            entity.Property(e => e.CreatedAt).IsRequired();
-        });
+        // New entities — apply file-based configurations
+        modelBuilder.ApplyConfigurationsFromAssembly(
+            typeof(AuthDbContext).Assembly,
+            type => type.Namespace?.Contains("Auth.Infrastructure.Persistence.Configurations") ?? false
+        );
 
         base.OnModelCreating(modelBuilder);
     }

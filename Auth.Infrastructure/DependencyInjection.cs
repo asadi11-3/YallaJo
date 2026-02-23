@@ -1,7 +1,5 @@
-using Auth.Domain.Repositories;
 using System;
 using Auth.Infrastructure.Persistence;
-using Auth.Infrastructure.Repositories;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -30,9 +28,6 @@ public static class DependencyInjection
 
         // UnitOfWork wraps AuthDbContext and dispatches domain events on SaveChanges
         services.AddScoped<IUnitOfWork<AuthDbContext>, UnitOfWork<AuthDbContext>>();
-
-        // Repositories
-        services.AddScoped<IUserCredentialsRepository, UserCredentialsRepository>();
 
         // MediatR — registers integration event handlers from this assembly
         services.AddMediatR(cfg =>

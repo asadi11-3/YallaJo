@@ -12,10 +12,8 @@ namespace Accounts.Infrastructure.Persistence
         {
         }
 
-        public DbSet<User> Users => Set<User>();
-        public DbSet<UserEmail> UserEmails => Set<UserEmail>();
-        public DbSet<UserPhone> UserPhones => Set<UserPhone>();
         public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
+        public DbSet<Profile> Profiles => Set<Profile>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

@@ -1,0 +1,49 @@
+using Accounts.Domain.Entities;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+namespace Accounts.Infrastructure.Persistence.Configurations;
+
+public class ProfileConfiguration : IEntityTypeConfiguration<Profile>
+{
+    public void Configure(EntityTypeBuilder<Profile> builder)
+    {
+        builder.ToTable("Profiles", "accounts");
+
+        builder.HasKey(p => p.Id);
+        builder.Property(p => p.Id).ValueGeneratedNever();
+
+        // Logical reference to Security.User — no FK
+        builder.Property(p => p.UserId).IsRequired();
+
+        builder.Property(p => p.FirstName)
+            .IsRequired()
+            .HasMaxLength(100);
+
+        builder.Property(p => p.LastName)
+            .IsRequired()
+            .HasMaxLength(100);
+
+        builder.Property(p => p.DisplayName)
+            .IsRequired(false)
+            .HasMaxLength(200);
+
+        builder.Property(p => p.AvatarUrl)
+            .IsRequired(false)
+            .HasMaxLength(2048);
+
+        // Auditable fields
+        builder.Property(p => p.CreatedAt).IsRequired();
+        builder.Property(p => p.UpdatedAt).IsRequired(false);
+        builder.Property(p => p.IsDeleted).IsRequired().HasDefaultValue(false);
+        builder.Property(p => p.DeletedAt).IsRequired(false);
+        builder.Property(p => p.RowVersion).IsRowVersion();
+
+        builder.HasQueryFilter(p => !p.IsDeleted);
+
+        // Indexes — one profile per user
+        builder.HasIndex(p => p.UserId)
+            .IsUnique()
+            .HasDatabaseName("IX_Profiles_UserId_Unique");
+    }
+}
