@@ -1,4 +1,3 @@
-using Security.Domain.Events;
 using YallaJo.SharedKernel.Domain.Entities;
 
 namespace Security.Domain.Entities;
@@ -30,7 +29,6 @@ public sealed class Email : AuditableEntity
     {
         IsVerified = true;
         VerifiedAt = DateTime.UtcNow;
-        AddDomainEvent(new EmailVerifiedEvent(UserId, Id, Address));
         MarkUpdated();
     }
 

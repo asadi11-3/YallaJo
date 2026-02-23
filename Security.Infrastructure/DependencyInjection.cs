@@ -2,7 +2,9 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Security.Domain.Repositories;
 using Security.Infrastructure.Persistence;
+using Security.Infrastructure.Repositories;
 using YallaJo.SharedKernel.Infrastructure.BackgroundJobs;
 using YallaJo.SharedKernel.Infrastructure.Data;
 
@@ -27,6 +29,8 @@ public static class DependencyInjection
                 }));
 
         services.AddScoped<IUnitOfWork<SecurityDbContext>, UnitOfWork<SecurityDbContext>>();
+        services.AddScoped<ISecurityUnitOfWork, SecurityUnitOfWork>();
+        services.AddScoped<IUserRepository, UserRepository>();
 
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
         services.AddHostedService<OutboxProcessor<SecurityDbContext>>();

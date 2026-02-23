@@ -34,9 +34,34 @@ public sealed class User : AuditableEntity, IAggregateRoot
         var primaryEmail = Email.Create(user.Id, email, true);
         user._emails.Add(primaryEmail);
 
-        user.AddDomainEvent(new UserRegisteredEvent(user.Id, primaryEmail.Address));
+        user.AddDomainEvent(new UserCreatedEvent(user.Id, primaryEmail.Address));
 
         return user;
+    }
+
+    public Email? VerifyEmail(Guid emailId)
+    {
+        var email = _emails.FirstOrDefault(e => e.Id == emailId);
+        if (email is null)
+        {
+            return null;
+        }
+
+        if (email.IsVerified)
+        {
+            return email;
+        }
+
+        email.MarkVerified();
+
+        if (!IsActive)
+        {
+            Activate();
+        }
+
+        AddDomainEvent(new EmailVerifiedEvent(Id, email.Id, email.Address));
+
+        return email;
     }
 
     public void Activate() => IsActive = true;
