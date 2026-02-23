@@ -1,4 +1,5 @@
 using Auth.Domain.Repositories;
+using System;
 using Auth.Infrastructure.Persistence;
 using Auth.Infrastructure.Repositories;
 using MediatR;
@@ -15,9 +16,12 @@ public static class DependencyInjection
         this IServiceCollection services,
         IConfiguration configuration)
     {
+        var connectionString = configuration.GetConnectionString("AuthConnection")
+            ?? throw new InvalidOperationException("Connection string 'AuthConnection' is not configured.");
+
         services.AddDbContext<AuthDbContext>(options =>
             options.UseSqlServer(
-                configuration.GetConnectionString("DefaultConnection"),
+                connectionString,
                 sql =>
                 {
                     sql.MigrationsHistoryTable("__EFMigrationsHistory", "auth");

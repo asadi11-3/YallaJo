@@ -1,4 +1,5 @@
 using Accounts.Domain.Interfaces;
+using System;
 using Accounts.Infrastructure.Persistence;
 using Accounts.Infrastructure.Repositories;
 using MediatR;
@@ -16,9 +17,12 @@ public static class DependencyInjection
         this IServiceCollection services,
         IConfiguration configuration)
     {
+        var connectionString = configuration.GetConnectionString("AccountsConnection")
+            ?? throw new InvalidOperationException("Connection string 'AccountsConnection' is not configured.");
+
         services.AddDbContext<AccountsDbContext>(options =>
             options.UseSqlServer(
-                configuration.GetConnectionString("DefaultConnection"),
+                connectionString,
                 sql =>
                 {
                     sql.MigrationsHistoryTable("__EFMigrationsHistory", "accounts");

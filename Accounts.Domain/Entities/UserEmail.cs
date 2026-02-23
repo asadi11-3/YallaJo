@@ -10,6 +10,7 @@ namespace Accounts.Domain.Entities
 
         private UserEmail(Guid userId, EmailAddress emailAddress, bool isPrimary) 
         {
+            Id = Guid.CreateVersion7();
             UserId = userId;
             Address = emailAddress;
             IsPrimary = isPrimary;

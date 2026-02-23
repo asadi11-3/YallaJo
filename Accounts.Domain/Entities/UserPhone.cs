@@ -10,6 +10,7 @@ namespace Accounts.Domain.Entities
 
         private UserPhone(Guid userId, PhoneNumber phoneNumber, bool isPrimary) 
         {
+            Id = Guid.CreateVersion7();
             UserId = userId;
             Number = phoneNumber;
             IsPrimary = isPrimary;

@@ -22,6 +22,7 @@ namespace YallaJo.SharedKernel.Infrastructure
 
             services.AddMediatR(cfg =>
             {
+                cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly);
                 cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
                 cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
                 cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(PerformanceBehavior<,>));

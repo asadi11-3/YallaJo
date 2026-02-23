@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Accounts.Infrastructure.Migrations
 {
     [DbContext(typeof(AccountsDbContext))]
-    [Migration("20260220222129_AddOutboxMessages")]
-    partial class AddOutboxMessages
+    [Migration("20260223121632_CreateModel233")]
+    partial class CreateModel233
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

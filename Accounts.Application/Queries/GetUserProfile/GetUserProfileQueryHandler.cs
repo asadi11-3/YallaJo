@@ -1,7 +1,7 @@
 ﻿using Accounts.Application.DTOs;
 using Accounts.Application.Specifications;
 using Accounts.Domain.Entities;
-using YallaJo.SharedKernel.Domain.Abstractions.Data;
+using Accounts.Domain.Interfaces;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
@@ -10,9 +10,9 @@ namespace Accounts.Application.Queries.GetUserProfile
   
         public sealed class GetUserProfileQueryHandler : IQueryHandler<GetUserProfileQuery, UserProfileDto>
         {
-            private readonly IReadRepository<User,Guid> _userRepository;
+            private readonly IUserRepository _userRepository;
 
-            public GetUserProfileQueryHandler(IReadRepository<User, Guid> userRepository)
+            public GetUserProfileQueryHandler(IUserRepository userRepository)
             {
                 _userRepository = userRepository;
             }

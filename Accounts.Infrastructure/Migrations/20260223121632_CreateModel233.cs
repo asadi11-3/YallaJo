@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Accounts.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class AddOutboxMessages : Migration
+    public partial class CreateModel233 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
