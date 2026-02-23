@@ -6,7 +6,7 @@ namespace Auth.Domain.Entities;
 /// Hashed refresh token for token rotation.
 /// UserId references Security.User.Id (no FK, cross-DB).
 /// </summary>
-public sealed class RefreshToken : AuditableEntity
+public sealed class RefreshToken : AuditableEntity, IAggregateRoot
 {
     private RefreshToken() { } // EF Core
 

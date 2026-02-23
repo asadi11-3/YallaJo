@@ -6,7 +6,7 @@ namespace Auth.Domain.Entities;
 /// An authenticated session tied to a user and device.
 /// UserId references Security.User.Id (no FK, cross-DB).
 /// </summary>
-public sealed class Session : AuditableEntity
+public sealed class Session : AuditableEntity, IAggregateRoot
 {
     private Session() { } // EF Core
 

@@ -7,7 +7,7 @@ namespace Auth.Domain.Entities;
 /// UserId references Security.User.Id (no FK, cross-DB).
 /// Provider is a string — no enum, so new providers need no code changes.
 /// </summary>
-public sealed class ExternalProvider : AuditableEntity
+public sealed class ExternalProvider : AuditableEntity, IAggregateRoot
 {
     private ExternalProvider() { } // EF Core
 

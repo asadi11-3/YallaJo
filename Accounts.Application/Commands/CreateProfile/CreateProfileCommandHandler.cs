@@ -1,4 +1,4 @@
-using Accounts.Application.Abstractions;
+using Security.Contracts.Abstractions;
 using Accounts.Domain.Entities;
 using Accounts.Domain.Interfaces;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;

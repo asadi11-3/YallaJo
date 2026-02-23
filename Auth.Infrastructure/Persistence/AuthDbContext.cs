@@ -9,7 +9,6 @@ public sealed class AuthDbContext : DbContext, IDbContext
 {
     public AuthDbContext(DbContextOptions<AuthDbContext> options) : base(options) { }
 
-    // New auth entities (shells — configurations added in later steps)
     public DbSet<Device> Devices => Set<Device>();
     public DbSet<Session> Sessions => Set<Session>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();

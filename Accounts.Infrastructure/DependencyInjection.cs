@@ -1,6 +1,7 @@
 using Accounts.Domain.Interfaces;
 using System;
 using Accounts.Infrastructure.Persistence;
+using Accounts.Infrastructure.Repositories;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -30,6 +31,7 @@ public static class DependencyInjection
 
         services.AddScoped<IUnitOfWork<AccountsDbContext>, UnitOfWork<AccountsDbContext>>();
         services.AddScoped<IAccountsUnitOfWork, AccountsUnitOfWork>();
+        services.AddScoped<IProfileRepository, ProfileRepository>();
 
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
         services.AddHostedService<OutboxProcessor<AccountsDbContext>>();

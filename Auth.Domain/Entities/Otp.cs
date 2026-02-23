@@ -7,7 +7,7 @@ namespace Auth.Domain.Entities;
 /// UserId references Security.User.Id (no FK, cross-DB).
 /// CodeHash is stored — never the raw code.
 /// </summary>
-public sealed class Otp : AuditableEntity
+public sealed class Otp : AuditableEntity, IAggregateRoot
 {
     private Otp() { } // EF Core
 

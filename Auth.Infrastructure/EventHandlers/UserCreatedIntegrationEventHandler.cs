@@ -1,7 +1,6 @@
 using Auth.Domain.Entities;
-using Auth.Infrastructure.Persistence;
+using Auth.Domain.Repositories;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Security.Contracts.IntegrationEvents;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
@@ -9,7 +8,8 @@ using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 namespace Auth.Infrastructure.EventHandlers;
 
 public sealed class UserCreatedIntegrationEventHandler(
-    AuthDbContext dbContext,
+    IDeviceRepository deviceRepository,
+    IAuthUnitOfWork unitOfWork,
     ILogger<UserCreatedIntegrationEventHandler> logger)
     : INotificationHandler<IntegrationEventNotification<UserCreatedIntegrationEvent>>
 {
@@ -20,8 +20,9 @@ public sealed class UserCreatedIntegrationEventHandler(
         var evt = notification.Event;
         var bootstrapToken = $"bootstrap:{evt.UserId}";
 
-        var existing = await dbContext.Devices
-            .FirstOrDefaultAsync(d => d.UserId == evt.UserId && d.DeviceToken == bootstrapToken, ct);
+        var existing = await deviceRepository.FirstOrDefaultAsync(
+            d => d.UserId == evt.UserId && d.DeviceToken == bootstrapToken,
+            ct: ct);
 
         if (existing is not null)
         {
@@ -35,8 +36,8 @@ public sealed class UserCreatedIntegrationEventHandler(
             "system/bootstrap",
             "Bootstrap Device");
 
-        dbContext.Devices.Add(bootstrapDevice);
-        await dbContext.SaveChangesAsync(ct);
+        await deviceRepository.AddAsync(bootstrapDevice, ct);
+        await unitOfWork.SaveChangesAsync(ct);
 
         logger.LogInformation("Auth bootstrap device created for user {UserId}", evt.UserId);
     }

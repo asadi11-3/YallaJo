@@ -1,6 +1,5 @@
-using Auth.Infrastructure.Persistence;
+using Auth.Domain.Repositories;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Security.Contracts.IntegrationEvents;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
@@ -8,7 +7,8 @@ using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 namespace Auth.Infrastructure.EventHandlers;
 
 public sealed class EmailVerifiedIntegrationEventHandler(
-    AuthDbContext dbContext,
+    IDeviceRepository deviceRepository,
+    IAuthUnitOfWork unitOfWork,
     ILogger<EmailVerifiedIntegrationEventHandler> logger)
     : INotificationHandler<IntegrationEventNotification<EmailVerifiedIntegrationEvent>>
 {
@@ -19,8 +19,10 @@ public sealed class EmailVerifiedIntegrationEventHandler(
         var evt = notification.Event;
         var bootstrapToken = $"bootstrap:{evt.UserId}";
 
-        var bootstrapDevice = await dbContext.Devices
-            .FirstOrDefaultAsync(d => d.UserId == evt.UserId && d.DeviceToken == bootstrapToken, ct);
+        var bootstrapDevice = await deviceRepository.FirstOrDefaultAsync(
+            d => d.UserId == evt.UserId && d.DeviceToken == bootstrapToken,
+            asNoTracking: false,
+            ct: ct);
 
         if (bootstrapDevice is null)
         {
@@ -31,7 +33,8 @@ public sealed class EmailVerifiedIntegrationEventHandler(
         if (!bootstrapDevice.IsTrusted)
         {
             bootstrapDevice.Trust();
-            await dbContext.SaveChangesAsync(ct);
+            deviceRepository.Update(bootstrapDevice);
+            await unitOfWork.SaveChangesAsync(ct);
         }
 
         logger.LogInformation("Auth login bootstrap is trusted for user {UserId}", evt.UserId);
