@@ -7,14 +7,23 @@ using Security.Application.Interfaces;
 
 namespace Security.Infrastructure.Persistence;
 
-internal sealed class JwtTokenService(IOptions<JwtOptions> options) : IJwtTokenService
+internal sealed class JwtTokenService : IJwtTokenService
 {
-    private readonly JwtOptions _opts = options.Value;
+    private readonly JwtOptions _opts;
+    private readonly SigningCredentials _credentials;
+    private readonly JwtSecurityTokenHandler _handler;
+
+    public JwtTokenService(IOptions<JwtOptions> options)
+    {
+        _opts = options.Value;
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_opts.Key));
+        _credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+        _handler = new JwtSecurityTokenHandler();
+    }
 
     public string GenerateAccessToken(UserTokenData data)
     {
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_opts.Key));
-        var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+        var now = DateTimeOffset.UtcNow;
 
         var claims = new List<Claim>
         {
@@ -22,7 +31,7 @@ internal sealed class JwtTokenService(IOptions<JwtOptions> options) : IJwtTokenS
             new(JwtRegisteredClaimNames.Email, data.Email),
             new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
             new(JwtRegisteredClaimNames.Iat,
-                DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(),
+                now.ToUnixTimeSeconds().ToString(),
                 ClaimValueTypes.Integer64),
         };
 
@@ -36,10 +45,10 @@ internal sealed class JwtTokenService(IOptions<JwtOptions> options) : IJwtTokenS
             issuer: _opts.Issuer,
             audience: _opts.Audience,
             claims: claims,
-            notBefore: DateTime.UtcNow,
-            expires: DateTime.UtcNow.AddMinutes(_opts.AccessTokenMinutes),
-            signingCredentials: credentials);
+            notBefore: now.UtcDateTime,
+            expires: now.UtcDateTime.AddMinutes(_opts.AccessTokenMinutes),
+            signingCredentials: _credentials);
 
-        return new JwtSecurityTokenHandler().WriteToken(token);
+        return _handler.WriteToken(token);
     }
 }

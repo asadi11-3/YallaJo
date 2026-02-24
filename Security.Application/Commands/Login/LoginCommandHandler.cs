@@ -1,3 +1,4 @@
+using Security.Application.Helpers;
 using Security.Application.Interfaces;
 using Security.Domain.Repositories;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
@@ -18,7 +19,7 @@ public sealed class LoginCommandHandler(
 
     public async Task<Result<LoginResult>> Handle(LoginCommand request, CancellationToken cancellationToken)
     {
-        var normalizedEmail = request.Email.Trim().ToLowerInvariant();
+        var normalizedEmail = SecurityGuard.NormalizeEmail(request.Email);
 
         var user = await userRepository.GetByEmailWithDetailsAsync(normalizedEmail, cancellationToken);
 
@@ -28,9 +29,13 @@ public sealed class LoginCommandHandler(
         if (!passwordHasher.Verify(request.Password, user.PasswordHash))
             return _invalidCredentials;
 
-        // Build role names (deduplicated)
-        var roles = user.UserRoles
+        // Materialize once — used for both roles and role claims
+        var activeUserRoles = user.UserRoles
             .Where(ur => ur.Role.IsActive)
+            .ToList();
+
+        // Build role names (deduplicated)
+        var roles = activeUserRoles
             .Select(ur => ur.Role.Name)
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToList();
@@ -39,8 +44,7 @@ public sealed class LoginCommandHandler(
         var userClaims = user.UserClaims
             .Select(c => new ClaimEntry(c.ClaimType, c.ClaimValue));
 
-        var roleClaims = user.UserRoles
-            .Where(ur => ur.Role.IsActive)
+        var roleClaims = activeUserRoles
             .SelectMany(ur => ur.Role.RoleClaims)
             .Select(c => new ClaimEntry(c.ClaimType, c.ClaimValue));
 
@@ -49,13 +53,9 @@ public sealed class LoginCommandHandler(
             .DistinctBy(c => (c.Type, c.Value))
             .ToList();
 
-        var primaryEmail = user.Emails
-            .FirstOrDefault(e => e.IsPrimary)?.Address
-            ?? normalizedEmail;
-
         var tokenData = new UserTokenData(
             UserId: user.Id,
-            Email: primaryEmail,
+            Email: normalizedEmail,
             Roles: roles,
             AdditionalClaims: additionalClaims);
 

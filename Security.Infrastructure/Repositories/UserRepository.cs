@@ -6,7 +6,7 @@ using YallaJo.SharedKernel.Infrastructure.Data.Repositories;
 
 namespace Security.Infrastructure.Repositories;
 
-public sealed class UserRepository(SecurityDbContext context)
+internal sealed class UserRepository(SecurityDbContext context)
     : EfRepository<User, Guid>(context), IUserRepository
 {
     public async Task<User?> GetByIdWithEmailsAsync(Guid userId, CancellationToken ct = default)
@@ -19,7 +19,7 @@ public sealed class UserRepository(SecurityDbContext context)
     public async Task<User?> GetByEmailWithDetailsAsync(string normalizedEmail, CancellationToken ct = default)
     {
         return await context.Users
-            .Include(u => u.Emails)
+            .AsNoTracking()
             .Include(u => u.UserRoles)
                 .ThenInclude(ur => ur.Role)
                     .ThenInclude(r => r.RoleClaims)

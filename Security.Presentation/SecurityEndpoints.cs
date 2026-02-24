@@ -13,6 +13,9 @@ namespace Security.Presentation;
 
 public static class SecurityEndpoints
 {
+    private static readonly HashSet<string> _jwtMetaClaims =
+        new(StringComparer.Ordinal) { "jti", "iat", "nbf", "exp", "iss", "aud", "sub", "email", "role" };
+
     public static IEndpointRouteBuilder MapSecurityEndpoints(this IEndpointRouteBuilder endpoints)
     {
         var group = endpoints.MapGroup("/api/security")
@@ -84,9 +87,8 @@ public static class SecurityEndpoints
             var email = user.FindFirstValue("email");
             var roles = user.FindAll("role").Select(c => c.Value).ToList();
 
-            var skipTypes = new HashSet<string>(["jti", "iat", "nbf", "exp", "iss", "aud", "sub", "email", "role"]);
             var extraClaims = user.Claims
-                .Where(c => !skipTypes.Contains(c.Type))
+                .Where(c => !_jwtMetaClaims.Contains(c.Type))
                 .Select(c => new { c.Type, c.Value })
                 .ToList();
 
@@ -118,11 +120,14 @@ public static class SecurityEndpoints
             ? Results.Ok()
             : ToProblem(result.Outcome, result.Errors);
 
-    private static IResult ToProblem(Outcome outcome, IReadOnlyList<Error> errors) =>
-        Results.Problem(
+    private static IResult ToProblem(Outcome outcome, IReadOnlyList<Error> errors)
+    {
+        var first = errors.Count > 0 ? errors[0] : null;
+        return Results.Problem(
             statusCode: (int)outcome,
-            title: errors.FirstOrDefault()?.Code,
-            detail: errors.FirstOrDefault()?.Message);
+            title: first?.Code,
+            detail: first?.Message);
+    }
 }
 
 // ── Request DTOs (decoupled from Application commands) ────────────────────

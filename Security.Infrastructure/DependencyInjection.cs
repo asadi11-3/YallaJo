@@ -34,9 +34,9 @@ public static class DependencyInjection
         services.AddScoped<ISecurityUnitOfWork, SecurityUnitOfWork>();
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<ISecurityUserExistenceChecker, Services.SecurityUserExistenceChecker>();
-        services.AddScoped<IPasswordHasher, PasswordHasher>();
+        services.AddSingleton<IPasswordHasher, PasswordHasher>();
         services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
-        services.AddScoped<IJwtTokenService, JwtTokenService>();
+        services.AddSingleton<IJwtTokenService, JwtTokenService>();
 
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
         services.AddHostedService<OutboxProcessor<SecurityDbContext>>();

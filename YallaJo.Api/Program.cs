@@ -89,6 +89,7 @@ builder.Services.AddSwaggerGen(options =>
 
 // ── Exception Handlers ───────────────────────────────────────────────────
 builder.Services.AddExceptionHandler<ValidationExceptionHandler>();
+builder.Services.AddExceptionHandler<DbUpdateExceptionHandler>();
 
 // ── Problem Details (RFC 7807) ────────────────────────────────────────────
 builder.Services.AddProblemDetails(options =>

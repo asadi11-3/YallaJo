@@ -1,3 +1,4 @@
+using Security.Application.Helpers;
 using Security.Application.Interfaces;
 using Security.Domain.Entities;
 using Security.Domain.Repositories;
@@ -15,7 +16,7 @@ public sealed class RegisterCommandHandler(
 {
     public async Task<Result<RegisterResult>> Handle(RegisterCommand request, CancellationToken cancellationToken)
     {
-        var normalizedEmail = request.Email.Trim().ToLowerInvariant();
+        var normalizedEmail = SecurityGuard.NormalizeEmail(request.Email);
 
         var emailExists = await userRepository.AnyAsync(
             u => u.Emails.Any(e => e.Address == normalizedEmail),

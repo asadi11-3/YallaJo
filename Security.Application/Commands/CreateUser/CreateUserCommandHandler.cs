@@ -1,3 +1,4 @@
+using Security.Application.Helpers;
 using Security.Domain.Entities;
 using Security.Domain.Repositories;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
@@ -13,7 +14,7 @@ public sealed class CreateUserCommandHandler(
 {
     public async Task<Result<Guid>> Handle(CreateUserCommand request, CancellationToken cancellationToken)
     {
-        var normalizedEmail = request.Email.Trim().ToLowerInvariant();
+        var normalizedEmail = SecurityGuard.NormalizeEmail(request.Email);
 
         var emailExists = await userRepository.AnyAsync(
             u => u.Emails.Any(e => e.Address == normalizedEmail),
