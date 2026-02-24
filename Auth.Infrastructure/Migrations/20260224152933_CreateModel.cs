@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Auth.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class CreateModelfsddfs : Migration
+    public partial class CreateModel : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -62,6 +62,19 @@ namespace Auth.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "InboxMessages",
+                schema: "auth",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    ProcessedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_InboxMessages", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Otps",
                 schema: "auth",
                 columns: table => new
@@ -98,7 +111,8 @@ namespace Auth.Infrastructure.Migrations
                     OccurredOnUtc = table.Column<DateTime>(type: "datetime2", nullable: false),
                     ProcessedOnUtc = table.Column<DateTime>(type: "datetime2", nullable: true),
                     Error = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: true),
-                    RetryCount = table.Column<int>(type: "int", nullable: false, defaultValue: 0)
+                    RetryCount = table.Column<int>(type: "int", nullable: false, defaultValue: 0),
+                    LockedUntil = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -289,6 +303,10 @@ namespace Auth.Infrastructure.Migrations
         {
             migrationBuilder.DropTable(
                 name: "ExternalProviders",
+                schema: "auth");
+
+            migrationBuilder.DropTable(
+                name: "InboxMessages",
                 schema: "auth");
 
             migrationBuilder.DropTable(

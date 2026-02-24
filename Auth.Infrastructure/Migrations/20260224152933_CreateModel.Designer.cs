@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Auth.Infrastructure.Migrations
 {
     [DbContext(typeof(AuthDbContext))]
-    [Migration("20260224131413_AddInboxAndOutboxLocking")]
-    partial class AddInboxAndOutboxLocking
+    [Migration("20260224152933_CreateModel")]
+    partial class CreateModel
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

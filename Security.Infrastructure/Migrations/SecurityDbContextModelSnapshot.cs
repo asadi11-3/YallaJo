@@ -426,6 +426,9 @@ namespace Security.Infrastructure.Migrations
                         .HasMaxLength(2000)
                         .HasColumnType("nvarchar(2000)");
 
+                    b.Property<DateTime?>("LockedUntil")
+                        .HasColumnType("datetime2");
+
                     b.Property<DateTime>("OccurredOnUtc")
                         .HasColumnType("datetime2");
 

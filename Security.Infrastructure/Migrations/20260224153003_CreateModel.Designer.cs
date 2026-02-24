@@ -12,8 +12,8 @@ using Security.Infrastructure.Persistence;
 namespace Security.Infrastructure.Migrations
 {
     [DbContext(typeof(SecurityDbContext))]
-    [Migration("20260223222235_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20260224153003_CreateModel")]
+    partial class CreateModel
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -428,6 +428,9 @@ namespace Security.Infrastructure.Migrations
                     b.Property<string>("Error")
                         .HasMaxLength(2000)
                         .HasColumnType("nvarchar(2000)");
+
+                    b.Property<DateTime?>("LockedUntil")
+                        .HasColumnType("datetime2");
 
                     b.Property<DateTime>("OccurredOnUtc")
                         .HasColumnType("datetime2");

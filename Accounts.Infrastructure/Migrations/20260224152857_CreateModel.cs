@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Accounts.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class CreateModel233 : Migration
+    public partial class CreateModel : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -25,7 +25,8 @@ namespace Accounts.Infrastructure.Migrations
                     OccurredOnUtc = table.Column<DateTime>(type: "datetime2", nullable: false),
                     ProcessedOnUtc = table.Column<DateTime>(type: "datetime2", nullable: true),
                     Error = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: true),
-                    RetryCount = table.Column<int>(type: "int", nullable: false, defaultValue: 0)
+                    RetryCount = table.Column<int>(type: "int", nullable: false, defaultValue: 0),
+                    LockedUntil = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
                 constraints: table =>
                 {
