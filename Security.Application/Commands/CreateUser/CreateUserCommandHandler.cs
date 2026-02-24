@@ -20,7 +20,7 @@ public sealed class CreateUserCommandHandler(
 
         if (emailExists)
         {
-            return Result.Failure<Guid>(Error.Conflict("User.Email", "Email is already registered"));
+            return Result<Guid>.Conflict(Error.Conflict("User.Email", "Email is already registered"));
         }
 
         var user = User.Register(normalizedEmail);

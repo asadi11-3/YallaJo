@@ -1,4 +1,4 @@
-using Accounts.Domain.Interfaces;
+using Accounts.Domain.Repositories;
 using System;
 using Accounts.Infrastructure.Persistence;
 using Accounts.Infrastructure.Repositories;

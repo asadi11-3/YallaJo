@@ -23,12 +23,13 @@ namespace YallaJo.SharedKernel.Infrastructure.Data
             foreach (var aggregate in aggregates)
                 aggregate.ClearDomainEvents();
 
-            var result = await context.SaveChangesAsync(ct);
-
+            // Dispatch domain events BEFORE SaveChanges so handlers can write
+            // OutboxMessages to the same DbContext. A single SaveChangesAsync then
+            // persists both the aggregate change and the outbox message atomically.
             if (domainEvents.Count > 0)
                 await dispatcher.DispatchAsync(domainEvents, ct);
 
-            return result;
+            return await context.SaveChangesAsync(ct);
         }
     }
 }

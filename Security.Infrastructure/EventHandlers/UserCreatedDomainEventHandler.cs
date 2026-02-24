@@ -8,30 +8,30 @@ using YallaJo.SharedKernel.Infrastructure.Outbox;
 
 namespace Security.Infrastructure.EventHandlers;
 
-/// <summary>
-/// Handles UserCreatedEvent by persisting a UserCreatedIntegrationEvent to the outbox.
-/// Guarantees cross-module delivery via the OutboxProcessor retry mechanism.
-/// </summary>
+
 public sealed class UserCreatedDomainEventHandler(
     SecurityDbContext dbContext,
     ILogger<UserCreatedDomainEventHandler> logger)
     : INotificationHandler<DomainEventNotification<UserCreatedEvent>>
 {
-    public async Task Handle(
+    public Task Handle(
         DomainEventNotification<UserCreatedEvent> notification,
         CancellationToken ct)
     {
         var domainEvent = notification.Event;
 
         logger.LogInformation(
-            "Handling UserCreatedEvent for user {UserId}, persisting to outbox",
+            "Handling UserCreatedEvent for user {UserId}, writing to outbox",
             domainEvent.UserId);
 
         var integrationEvent = new UserCreatedIntegrationEvent(
             domainEvent.UserId,
             domainEvent.Email);
 
+     
         dbContext.OutboxMessages.Add(OutboxMessage.Create(integrationEvent));
-        await dbContext.SaveChangesAsync(ct);
-    }
+
+        return Task.CompletedTask;
+}
+
 }

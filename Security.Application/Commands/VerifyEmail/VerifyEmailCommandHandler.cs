@@ -14,16 +14,15 @@ public sealed class VerifyEmailCommandHandler(
         var user = await userRepository.GetByIdWithEmailsAsync(request.UserId, cancellationToken);
         if (user is null)
         {
-            return Result.Failure(Error.NotFound("User", "User not found"));
+            return Result.Failure(Error.NotFound("User", "User not found"), Outcome.NotFound);
         }
 
         var email = user.VerifyEmail(request.EmailId);
         if (email is null)
         {
-            return Result.Failure(Error.NotFound("Email", "Email not found for this user"));
+            return Result.Failure(Error.NotFound("Email", "Email not found for this user"), Outcome.NotFound);
         }
 
-        userRepository.Update(user);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Success();

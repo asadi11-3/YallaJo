@@ -1,5 +1,5 @@
 using Accounts.Domain.Entities;
-using Accounts.Domain.Interfaces;
+using Accounts.Domain.Repositories;
 using Accounts.Infrastructure.Persistence;
 using YallaJo.SharedKernel.Infrastructure.Data.Repositories;
 

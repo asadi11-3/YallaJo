@@ -1,6 +1,6 @@
 using YallaJo.SharedKernel.Domain.Abstractions.Data;
 
-namespace Accounts.Domain.Interfaces;
+namespace Accounts.Domain.Repositories;
 
 public interface IAccountsUnitOfWork : IUnitOfWork
 {

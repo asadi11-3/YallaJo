@@ -1,4 +1,4 @@
-using Accounts.Domain.Interfaces;
+using Accounts.Domain.Repositories;
 using YallaJo.SharedKernel.Infrastructure.Data;
 
 namespace Accounts.Infrastructure.Persistence;

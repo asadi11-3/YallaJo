@@ -1,6 +1,6 @@
 using Security.Contracts.Abstractions;
 using Accounts.Domain.Entities;
-using Accounts.Domain.Interfaces;
+using Accounts.Domain.Repositories;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
@@ -17,7 +17,7 @@ public sealed class CreateProfileCommandHandler(
         var securityUserExists = await securityUserExistenceChecker.ExistsAsync(request.UserId, cancellationToken);
         if (!securityUserExists)
         {
-            return Result.Failure<Guid>(Error.NotFound("Security.User", "Security user does not exist"));
+            return Result.Failure<Guid>(Error.NotFound("Security.User", "Security user does not exist"), Outcome.NotFound);
         }
 
         var profileAlreadyExists = await profileRepository.AnyAsync(
@@ -26,7 +26,7 @@ public sealed class CreateProfileCommandHandler(
 
         if (profileAlreadyExists)
         {
-            return Result.Failure<Guid>(Error.Conflict("Profile.UserId", "Profile already exists for this user"));
+            return Result<Guid>.Conflict(Error.Conflict("Profile.UserId", "Profile already exists for this user"));
         }
 
         var profile = Profile.Create(request.UserId, request.FirstName, request.LastName);

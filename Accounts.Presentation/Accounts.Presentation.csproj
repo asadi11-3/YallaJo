@@ -12,7 +12,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Accounts.Application\Accounts.Application.csproj" />
-    <ProjectReference Include="..\Accounts.Infrastructure\Accounts.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

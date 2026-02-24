@@ -13,14 +13,14 @@ public sealed class EmailVerifiedDomainEventHandler(
     ILogger<EmailVerifiedDomainEventHandler> logger)
     : INotificationHandler<DomainEventNotification<EmailVerifiedEvent>>
 {
-    public async Task Handle(
+    public Task Handle(
         DomainEventNotification<EmailVerifiedEvent> notification,
         CancellationToken ct)
     {
         var domainEvent = notification.Event;
 
         logger.LogInformation(
-            "Handling EmailVerifiedEvent for user {UserId}, persisting to outbox",
+            "Handling EmailVerifiedEvent for user {UserId}, writing to outbox",
             domainEvent.UserId);
 
         var integrationEvent = new EmailVerifiedIntegrationEvent(
@@ -28,7 +28,11 @@ public sealed class EmailVerifiedDomainEventHandler(
             domainEvent.EmailId,
             domainEvent.EmailAddress);
 
+        // Add to DbContext in-memory only — the calling UnitOfWork.SaveChangesAsync
+        // will persist this together with the aggregate in a single transaction.
         dbContext.OutboxMessages.Add(OutboxMessage.Create(integrationEvent));
-        await dbContext.SaveChangesAsync(ct);
-    }
+
+        return Task.CompletedTask;
+}
+
 }
