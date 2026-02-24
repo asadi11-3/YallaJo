@@ -17,7 +17,6 @@
   <ItemGroup>
     <ProjectReference Include="..\Auth.Application\Auth.Application.csproj" />
     <ProjectReference Include="..\Auth.Domain\Auth.Domain.csproj" />
-    <ProjectReference Include="..\Security.Contracts\Security.Contracts.csproj" />
     <ProjectReference Include="..\YallaJo.SharedKernel.Infrastructure\YallaJo.SharedKernel.Infrastructure.csproj" />
   </ItemGroup>
 

@@ -12,6 +12,7 @@ namespace YallaJo.SharedKernel.Infrastructure.Outbox
         public DateTime? ProcessedOnUtc { get; private set; }
         public string? Error { get; private set; }
         public int RetryCount { get; private set; }
+        public DateTime? LockedUntil { get; private set; }
 
         private OutboxMessage() { }
 
@@ -25,9 +26,12 @@ namespace YallaJo.SharedKernel.Infrastructure.Outbox
                 OccurredOnUtc = integrationEvent.OccurredOn,
                 ProcessedOnUtc = null,
                 Error = null,
-                RetryCount = 0
+                RetryCount = 0,
+                LockedUntil = null
             };
         }
+
+        public void Lock(DateTime until) => LockedUntil = until;
 
         public void MarkAsProcessed() => ProcessedOnUtc = DateTime.UtcNow;
 

@@ -1,6 +1,7 @@
 using Auth.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using YallaJo.SharedKernel.Application.Abstractions.Data;
+using YallaJo.SharedKernel.Infrastructure.Inbox;
 using YallaJo.SharedKernel.Infrastructure.Outbox;
 
 namespace Auth.Infrastructure.Persistence;
@@ -15,7 +16,7 @@ public sealed class AuthDbContext : DbContext, IDbContext
     public DbSet<Otp> Otps => Set<Otp>();
     public DbSet<ExternalProvider> ExternalProviders => Set<ExternalProvider>();
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
-
+    public DbSet<InboxMessage> InboxMessages => Set<InboxMessage>();
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasDefaultSchema("auth");

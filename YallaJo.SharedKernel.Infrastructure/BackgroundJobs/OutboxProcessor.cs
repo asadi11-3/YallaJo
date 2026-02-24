@@ -12,8 +12,12 @@ namespace YallaJo.SharedKernel.Infrastructure.BackgroundJobs
 {
     /// <summary>
     /// Generic outbox processor typed to a specific DbContext.
-    /// Each module registers its own instance:
+    /// Each module that publishes integration events registers its own instance:
     ///   services.AddHostedService&lt;OutboxProcessor&lt;AccountsDbContext&gt;&gt;();
+    ///
+    /// Locking: messages are claimed (LockedUntil set) before processing to prevent
+    /// double-delivery in multi-instance deployments. The lock expires after 5 minutes,
+    /// allowing another instance to retry if the current one crashes mid-processing.
     /// </summary>
     public sealed class OutboxProcessor<TContext>(
         IServiceProvider serviceProvider,
@@ -23,6 +27,7 @@ namespace YallaJo.SharedKernel.Infrastructure.BackgroundJobs
         private const int MaxRetryCount = 3;
         private const int BatchSize = 20;
         private static readonly TimeSpan Interval = TimeSpan.FromSeconds(10);
+        private static readonly TimeSpan LockDuration = TimeSpan.FromMinutes(5);
 
         protected override async Task ExecuteAsync(CancellationToken ct)
         {
@@ -50,13 +55,25 @@ namespace YallaJo.SharedKernel.Infrastructure.BackgroundJobs
             var dbContext = scope.ServiceProvider.GetRequiredService<TContext>();
             var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
 
+            var now = DateTime.UtcNow;
+
+            // Select only unprocessed, unlocked (or expired-lock) messages
             var messages = await dbContext.Set<OutboxMessage>()
-                .Where(m => m.ProcessedOnUtc == null && m.RetryCount < MaxRetryCount)
+                .Where(m => m.ProcessedOnUtc == null
+                         && m.RetryCount < MaxRetryCount
+                         && (m.LockedUntil == null || m.LockedUntil < now))
                 .OrderBy(m => m.OccurredOnUtc)
                 .Take(BatchSize)
                 .ToListAsync(ct);
 
             if (messages.Count == 0) return;
+
+            // Claim messages by setting a lock so concurrent processors skip them
+            var lockUntil = now.Add(LockDuration);
+            foreach (var msg in messages)
+                msg.Lock(lockUntil);
+
+            await dbContext.SaveChangesAsync(ct);
 
             logger.LogInformation("Processing {Count} outbox messages for {Context}", messages.Count, typeof(TContext).Name);
 
@@ -80,7 +97,8 @@ namespace YallaJo.SharedKernel.Infrastructure.BackgroundJobs
                     }
 
                     var notificationType = typeof(IntegrationEventNotification<>).MakeGenericType(eventType);
-                    var notification = Activator.CreateInstance(notificationType, integrationEvent)!;
+                    // Pass the OutboxMessage.Id as MessageId so handlers can record it in their inbox
+                    var notification = Activator.CreateInstance(notificationType, message.Id, integrationEvent)!;
                     await mediator.Publish((INotification)notification, ct);
 
                     message.MarkAsProcessed();

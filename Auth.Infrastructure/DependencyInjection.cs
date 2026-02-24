@@ -1,13 +1,13 @@
-using System;
 using Auth.Domain.Repositories;
 using Auth.Infrastructure.Persistence;
 using Auth.Infrastructure.Repositories;
-using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using YallaJo.SharedKernel.Application.Abstractions.Data;
 using YallaJo.SharedKernel.Infrastructure.BackgroundJobs;
 using YallaJo.SharedKernel.Infrastructure.Data;
+using YallaJo.SharedKernel.Infrastructure.Inbox;
 
 namespace Auth.Infrastructure;
 
@@ -17,8 +17,8 @@ public static class DependencyInjection
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        var connectionString = configuration.GetConnectionString("AuthConnection")
-            ?? throw new InvalidOperationException("Connection string 'AuthConnection' is not configured.");
+        var connectionString = configuration.GetConnectionString("DefaultConnection")
+            ?? throw new InvalidOperationException("Connection string 'DefaultConnection' is not configured.");
 
         services.AddDbContext<AuthDbContext>(options =>
             options.UseSqlServer(
@@ -39,12 +39,10 @@ public static class DependencyInjection
         services.AddScoped<IOtpRepository, OtpRepository>();
         services.AddScoped<IExternalProviderRepository, ExternalProviderRepository>();
 
-        // MediatR — registers integration event handlers from this assembly
-        services.AddMediatR(cfg =>
-            cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
+        // Inbox — consumer-side idempotency store for integration event handlers
+        services.AddScoped<IInboxStore, EfInboxStore<AuthDbContext>>();
 
         services.AddHostedService<OutboxProcessor<AuthDbContext>>();
-
         return services;
     }
 }
