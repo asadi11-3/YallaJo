@@ -8,6 +8,7 @@ using Security.Infrastructure.Repositories;
 using Security.Contracts.Abstractions;
 using YallaJo.SharedKernel.Infrastructure.BackgroundJobs;
 using YallaJo.SharedKernel.Infrastructure.Data;
+using Security.Application.Interfaces;
 
 namespace Security.Infrastructure;
 
@@ -33,6 +34,9 @@ public static class DependencyInjection
         services.AddScoped<ISecurityUnitOfWork, SecurityUnitOfWork>();
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<ISecurityUserExistenceChecker, Services.SecurityUserExistenceChecker>();
+        services.AddScoped<IPasswordHasher, PasswordHasher>();
+        services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
+        services.AddScoped<IJwtTokenService, JwtTokenService>();
 
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
         services.AddHostedService<OutboxProcessor<SecurityDbContext>>();

@@ -5,6 +5,7 @@ using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
 namespace Security.Application.Commands.CreateUser;
 
+
 public sealed class CreateUserCommandHandler(
     IUserRepository userRepository,
     ISecurityUnitOfWork unitOfWork)
@@ -28,6 +29,6 @@ public sealed class CreateUserCommandHandler(
         await userRepository.AddAsync(user, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return Result.Success(user.Id);
+        return Result<Guid>.Created(user.Id);
     }
 }

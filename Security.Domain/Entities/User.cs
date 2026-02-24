@@ -17,7 +17,7 @@ public sealed class User : AuditableEntity, IAggregateRoot
     private User() { } // EF Core
 
     public bool IsActive { get; private set; }
-
+    public string PasswordHash { get; private set; } = string.Empty;
     public IReadOnlyCollection<Email> Emails => _emails.AsReadOnly();
     public IReadOnlyCollection<Phone> Phones => _phones.AsReadOnly();
     public IReadOnlyCollection<UserRole> UserRoles => _userRoles.AsReadOnly();
@@ -69,6 +69,14 @@ public sealed class User : AuditableEntity, IAggregateRoot
     public void Deactivate()
     {
         IsActive = false;
+        MarkUpdated();
+    }
+    public void SetPasswordHash(string passwordHash)
+    {
+        if (string.IsNullOrWhiteSpace(passwordHash))
+            throw new ArgumentException("Password hash is required.", nameof(passwordHash));
+
+        PasswordHash = passwordHash;
         MarkUpdated();
     }
 }
