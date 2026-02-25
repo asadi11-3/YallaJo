@@ -7,7 +7,7 @@ namespace Auth.Domain.Entities;
 /// UserId references Security.User.Id (no FK, cross-DB).
 /// CodeHash is stored — never the raw code.
 /// </summary>
-public sealed class Otp : AuditableEntity, IAggregateRoot
+public sealed class Otp : AuditableEntity
 {
     private Otp() { } // EF Core
 
@@ -22,8 +22,12 @@ public sealed class Otp : AuditableEntity, IAggregateRoot
     public DateTime? UsedAt { get; private set; }
 
     public static Otp Create(
-        Guid userId, string purpose, string codeHash,
-        string deliveryChannel, string deliveryAddress, DateTime expiresAt)
+        Guid userId,
+        string purpose,
+        string codeHash,
+        string deliveryChannel,
+        string deliveryAddress,
+        int expiryMinutes = 10)
     {
         return new Otp
         {
@@ -32,17 +36,15 @@ public sealed class Otp : AuditableEntity, IAggregateRoot
             CodeHash = codeHash,
             DeliveryChannel = deliveryChannel,
             DeliveryAddress = deliveryAddress,
-            ExpiresAt = expiresAt,
+            ExpiresAt = DateTime.UtcNow.AddMinutes(expiryMinutes),
             AttemptCount = 0,
             IsUsed = false
         };
     }
 
-    public void RecordAttempt()
-    {
-        AttemptCount++;
-        MarkUpdated();
-    }
+    public bool IsExpired() => DateTime.UtcNow > ExpiresAt;
+
+    public void IncrementAttempt() => AttemptCount++;
 
     public void MarkUsed()
     {

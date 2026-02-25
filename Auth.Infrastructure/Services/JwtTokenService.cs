@@ -1,13 +1,15 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
+using Auth.Application.Interfaces;
+using Auth.Infrastructure.Configures;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
-using Security.Application.Interfaces;
 
-namespace Security.Infrastructure.Persistence;
+namespace Auth.Infrastructure.Services;
 
-internal sealed class JwtTokenService : IJwtTokenService
+internal sealed class JwtTokenService : ITokenService
 {
     private readonly JwtOptions _opts;
     private readonly SigningCredentials _credentials;
@@ -21,7 +23,7 @@ internal sealed class JwtTokenService : IJwtTokenService
         _handler = new JwtSecurityTokenHandler();
     }
 
-    public string GenerateAccessToken(UserTokenData data)
+    public string GenerateAccessToken(TokenData data)
     {
         var now = DateTimeOffset.UtcNow;
 
@@ -36,10 +38,10 @@ internal sealed class JwtTokenService : IJwtTokenService
         };
 
         foreach (var role in data.Roles)
-            claims.Add(new Claim(ClaimTypes.Role, role));
+            claims.Add(new Claim("role", role));
 
-        foreach (var extra in data.AdditionalClaims)
-            claims.Add(new Claim(extra.Type, extra.Value));
+        foreach (var (type, value) in data.AdditionalClaims)
+            claims.Add(new Claim(type, value));
 
         var token = new JwtSecurityToken(
             issuer: _opts.Issuer,
@@ -50,5 +52,17 @@ internal sealed class JwtTokenService : IJwtTokenService
             signingCredentials: _credentials);
 
         return _handler.WriteToken(token);
+    }
+
+    public string GenerateRefreshToken()
+    {
+        var bytes = RandomNumberGenerator.GetBytes(64);
+        return Convert.ToBase64String(bytes);
+    }
+
+    public string HashRefreshToken(string plainToken)
+    {
+        var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(plainToken));
+        return Convert.ToBase64String(bytes);
     }
 }

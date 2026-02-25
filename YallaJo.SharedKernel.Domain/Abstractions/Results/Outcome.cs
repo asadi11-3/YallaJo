@@ -10,6 +10,7 @@ namespace YallaJo.SharedKernel.Domain.Abstractions.Results
         NotFound = 404,
         Conflict = 409,
         ServerError = 500,
+        TooManyRequests = 429,
         Canceled = 499
     }
 }

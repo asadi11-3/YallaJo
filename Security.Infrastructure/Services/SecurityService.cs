@@ -1,0 +1,95 @@
+using Microsoft.EntityFrameworkCore;
+using Security.Application.Interfaces;
+using Security.Contracts.Abstractions;
+using Security.Domain.Repositories;
+using Security.Infrastructure.Persistence;
+
+namespace Security.Infrastructure.Services;
+
+/// <summary>
+/// Implements <see cref="ISecurityService"/> for cross-module identity operations.
+/// Called by Auth module to verify credentials, look up users, and mark emails verified.
+/// </summary>
+internal sealed class SecurityService(
+    SecurityDbContext dbContext,
+    IUserRepository userRepository,
+    ISecurityUnitOfWork unitOfWork,
+    IPasswordHasher passwordHasher) : ISecurityService
+{
+    public async Task<Guid?> GetUserIdByEmailAsync(string normalizedEmail, CancellationToken ct = default)
+    {
+        var user = await dbContext.Users
+            .AsNoTracking()
+            .Where(u => u.Emails.Any(e => e.Address == normalizedEmail && e.IsPrimary))
+            .Select(u => (Guid?)u.Id)
+            .FirstOrDefaultAsync(ct);
+
+        return user;
+    }
+
+    public async Task<bool> MarkEmailVerifiedAsync(Guid userId, string email, CancellationToken ct = default)
+    {
+        var user = await userRepository.GetByIdWithEmailsAsync(userId, ct);
+        if (user is null)
+            return false;
+
+        var emailEntity = user.Emails.FirstOrDefault(
+            e => e.Address == email.Trim().ToLowerInvariant() && e.IsPrimary);
+
+        if (emailEntity is null)
+            return false;
+
+        if (emailEntity.IsVerified)
+            return true; // already verified — idempotent
+
+        user.VerifyEmail(emailEntity.Id);
+        // VerifyEmail activates user + raises EmailVerifiedEvent → domain event → outbox
+
+        await unitOfWork.SaveChangesAsync(ct);
+        return true;
+    }
+
+    public async Task<SecurityUserData?> VerifyCredentialsAsync(
+        string normalizedEmail, string password, CancellationToken ct = default)
+    {
+        var user = await userRepository.GetByEmailWithDetailsAsync(normalizedEmail, ct);
+        if (user is null)
+            return null;
+
+        if (!passwordHasher.Verify(password, user.PasswordHash))
+            return null;
+
+        var primaryEmail = user.GetPrimaryEmail();
+        var isEmailVerified = primaryEmail?.IsVerified ?? false;
+
+        // Materialize active roles
+        var activeUserRoles = user.UserRoles
+            .Where(ur => ur.Role.IsActive)
+            .ToList();
+
+        var roles = activeUserRoles
+            .Select(ur => ur.Role.Name)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        // Merge user claims + role claims, deduplicated
+        var userClaims = user.UserClaims
+            .Select(c => (c.ClaimType, c.ClaimValue));
+
+        var roleClaims = activeUserRoles
+            .SelectMany(ur => ur.Role.RoleClaims)
+            .Select(c => (c.ClaimType, c.ClaimValue));
+
+        var claims = userClaims
+            .Concat(roleClaims)
+            .DistinctBy(c => (c.ClaimType, c.ClaimValue))
+            .ToList();
+
+        return new SecurityUserData(
+            UserId: user.Id,
+            Email: normalizedEmail,
+            IsEmailVerified: isEmailVerified,
+            Roles: roles,
+            Claims: claims);
+    }
+}

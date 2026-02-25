@@ -64,6 +64,11 @@ public sealed class User : AuditableEntity, IAggregateRoot
         return email;
     }
 
+    /// <summary>
+    /// Returns the primary email entity, or null if none exists.
+    /// </summary>
+    public Email? GetPrimaryEmail() => _emails.FirstOrDefault(e => e.IsPrimary);
+
     public void Activate() => IsActive = true;
 
     public void Deactivate()

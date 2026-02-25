@@ -1,6 +1,9 @@
+using Auth.Application.Interfaces;
 using Auth.Domain.Repositories;
+using Auth.Infrastructure.Configures;
 using Auth.Infrastructure.Persistence;
 using Auth.Infrastructure.Repositories;
+using Auth.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -33,6 +36,7 @@ public static class DependencyInjection
         services.AddScoped<IUnitOfWork<AuthDbContext>, UnitOfWork<AuthDbContext>>();
         services.AddScoped<IAuthUnitOfWork, AuthUnitOfWork>();
 
+        // Repositories
         services.AddScoped<IDeviceRepository, DeviceRepository>();
         services.AddScoped<ISessionRepository, SessionRepository>();
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
@@ -41,6 +45,16 @@ public static class DependencyInjection
 
         // Inbox — consumer-side idempotency store for integration event handlers
         services.AddScoped<IInboxStore, EfInboxStore<AuthDbContext>>();
+
+        // Application services
+        services.AddSingleton<IOtpService, OtpService>();
+        services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
+        services.AddSingleton<ITokenService, JwtTokenService>();
+        services.Configure<GmailOptions>(configuration.GetSection(GmailOptions.SectionName));
+        services.AddScoped<IEmailService, GmailEmailService>();
+
+        // MediatR handlers in this assembly (integration event handlers)
+        services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
 
         services.AddHostedService<OutboxProcessor<AuthDbContext>>();
         return services;

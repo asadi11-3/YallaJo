@@ -10,11 +10,12 @@ namespace Security.Application.Commands.Register;
 public sealed class RegisterCommandHandler(
     IUserRepository userRepository,
     ISecurityUnitOfWork unitOfWork,
-    IPasswordHasher passwordHasher,
-    IJwtTokenService jwtTokenService)
+    IPasswordHasher passwordHasher)
     : ICommandHandler<RegisterCommand, RegisterResult>
 {
-    public async Task<Result<RegisterResult>> Handle(RegisterCommand request, CancellationToken cancellationToken)
+    public async Task<Result<RegisterResult>> Handle(
+        RegisterCommand request,
+        CancellationToken cancellationToken)
     {
         var normalizedEmail = SecurityGuard.NormalizeEmail(request.Email);
 
@@ -23,27 +24,17 @@ public sealed class RegisterCommandHandler(
             cancellationToken);
 
         if (emailExists)
-        {
             return Result<RegisterResult>.Conflict(
                 Error.Conflict("User.Email", "An account with this email already exists."));
-        }
 
         var user = User.Register(normalizedEmail);
 
-        var passwordHash = passwordHasher.Hash(request.Password);
-        user.SetPasswordHash(passwordHash);
+        user.SetPasswordHash(passwordHasher.Hash(request.Password));
 
         await userRepository.AddAsync(user, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
+        // SaveChanges dispatches UserCreatedDomainEvent → outbox → Auth module sends OTP email
 
-        var tokenData = new UserTokenData(
-            UserId: user.Id,
-            Email: normalizedEmail,
-            Roles: [],
-            AdditionalClaims: []);
-
-        var accessToken = jwtTokenService.GenerateAccessToken(tokenData);
-
-        return Result<RegisterResult>.Created(new RegisterResult(user.Id, accessToken));
+        return Result<RegisterResult>.Created(new RegisterResult(user.Id));
     }
 }

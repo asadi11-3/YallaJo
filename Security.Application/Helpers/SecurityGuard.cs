@@ -1,4 +1,3 @@
-using Security.Application.Interfaces;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
 namespace Security.Application.Helpers;
@@ -7,7 +6,7 @@ namespace Security.Application.Helpers;
 /// Application-layer guard and utility helpers for the Security module.
 ///
 /// Rules:
-///   ✔ May reference Security.Application interfaces (IJwtTokenService, IPasswordHasher, ClaimEntry).
+///   ✔ May reference Security.Application interfaces (IPasswordHasher).
 ///   ✔ May reference SharedKernel domain types (Result&lt;T&gt;, Error, Outcome).
 ///   ✗ Must NOT reference EF Core, ASP.NET Identity, JWT libraries, or any Infrastructure type.
 /// </summary>
@@ -24,12 +23,6 @@ public static class SecurityGuard
     /// Returns <see cref="Result{T}.Failure"/> (NotFound) when <paramref name="entity"/> is null;
     /// otherwise wraps the value in a success result.
     /// </summary>
-    /// <example>
-    /// <code>
-    /// var user = await repo.GetByEmailWithDetailsAsync(email, ct);
-    /// return SecurityGuard.GuardNotFound(user, "User.NotFound", "No account with that email.");
-    /// </code>
-    /// </example>
     public static Result<T> GuardNotFound<T>(T? entity, string code, string message)
         where T : class =>
         entity is null
@@ -38,21 +31,9 @@ public static class SecurityGuard
 
     /// <summary>
     /// Returns a Conflict failure result when <paramref name="condition"/> is true; otherwise null.
-    ///
-    /// Pattern (early-return on conflict):
-    /// <code>
-    /// if (SecurityGuard.GuardConflict&lt;RegisterResult&gt;(emailExists, "User.Email", "Email taken") is { } conflict)
-    ///     return conflict;
-    /// </code>
     /// </summary>
     public static Result<T>? GuardConflict<T>(bool condition, string entity, string message) =>
         condition ? Result<T>.Conflict(Error.Conflict(entity, message)) : null;
-
-    /// <summary>
-    /// Deduplicates JWT claim entries by (Type, Value) pair, preserving first-occurrence order.
-    /// </summary>
-    public static IReadOnlyList<ClaimEntry> DeduplicateClaims(IEnumerable<ClaimEntry> claims) =>
-        claims.DistinctBy(c => (c.Type, c.Value)).ToList().AsReadOnly();
 }
 
 /// <summary>

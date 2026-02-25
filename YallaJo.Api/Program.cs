@@ -3,6 +3,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
 using YallaJo.Api.ExceptionHandlers;
+using YallaJo.Api.Services;
 using Microsoft.AspNetCore.Diagnostics;
 using Accounts.Application;
 using Accounts.Infrastructure;
@@ -13,6 +14,7 @@ using Auth.Presentation;
 using Security.Application;
 using Security.Infrastructure;
 using Security.Presentation;
+using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -29,6 +31,12 @@ builder.Services.AddSecurityInfrastructure(builder.Configuration);
 
 // ── Shared cross-cutting: behaviors, clock, domain event dispatcher ───────
 builder.Services.AddSharedKernelInfrastructure();
+
+// ── HTTP Context services ────────────────────────────────────────────────
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<IRequestContext, RequestContext>();
+builder.Services.AddScoped<ICurrentUser, CurrentUser>();
+
 
 // ── Authentication & Authorization ────────────────────────────────────────
 var jwtKey = builder.Configuration["Jwt:Key"]
