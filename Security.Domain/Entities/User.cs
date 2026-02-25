@@ -28,13 +28,13 @@ public sealed class User : AuditableEntity, IAggregateRoot
         return new User { IsActive = false };
     }
 
-    public static User Register(string email)
+    public static User Register(string email, string firstName, string lastName)
     {
         var user = new User { IsActive = false };
         var primaryEmail = Email.Create(user.Id, email, true);
         user._emails.Add(primaryEmail);
 
-        user.AddDomainEvent(new UserCreatedEvent(user.Id, primaryEmail.Address));
+        user.AddDomainEvent(new UserCreatedEvent(user.Id, primaryEmail.Address, firstName, lastName));
 
         return user;
     }

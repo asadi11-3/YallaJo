@@ -27,7 +27,7 @@ public sealed class RegisterCommandHandler(
             return Result<RegisterResult>.Conflict(
                 Error.Conflict("User.Email", "An account with this email already exists."));
 
-        var user = User.Register(normalizedEmail);
+        var user = User.Register(normalizedEmail, request.FirstName, request.LastName);
 
         user.SetPasswordHash(passwordHasher.Hash(request.Password));
 

@@ -1,6 +1,7 @@
 using Accounts.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using YallaJo.SharedKernel.Application.Abstractions.Data;
+using YallaJo.SharedKernel.Infrastructure.Inbox;
 using YallaJo.SharedKernel.Infrastructure.Outbox;
 
 namespace Accounts.Infrastructure.Persistence
@@ -14,6 +15,7 @@ namespace Accounts.Infrastructure.Persistence
 
         public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
         public DbSet<Profile> Profiles => Set<Profile>();
+        public DbSet<InboxMessage> InboxMessages => Set<InboxMessage>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

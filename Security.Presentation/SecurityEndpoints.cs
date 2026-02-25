@@ -28,7 +28,7 @@ public static class SecurityEndpoints
     {
         group.MapPost("/register", async (RegisterRequest request, ISender sender) =>
         {
-            var result = await sender.Send(new RegisterCommand(request.Email, request.Password));
+            var result = await sender.Send(new RegisterCommand(request.FirstName, request.LastName, request.Email, request.Password));
             return ToApiResult(result);
         })
         .WithName("Register")
@@ -83,5 +83,5 @@ public static class SecurityEndpoints
 
 // ── Request/Response DTOs ────────────────────────────────────────────────
 
-public sealed record RegisterRequest(string Email, string Password);
+public sealed record RegisterRequest(string FirstName, string LastName, string Email, string Password);
 public sealed record RegisterResponse(Guid UserId, string Message);

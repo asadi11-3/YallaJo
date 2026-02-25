@@ -8,4 +8,6 @@ namespace Security.Contracts.IntegrationEvents;
 /// </summary>
 public sealed record UserCreatedIntegrationEvent(
     Guid UserId,
-    string Email) : IntegrationEventBase;
+    string Email,
+    string FirstName,
+    string LastName) : IntegrationEventBase;
