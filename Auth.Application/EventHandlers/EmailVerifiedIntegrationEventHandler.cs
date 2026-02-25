@@ -1,4 +1,5 @@
 using Auth.Application.Interfaces;
+using Auth.Domain.Repositories;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using Security.Contracts.IntegrationEvents;
@@ -13,6 +14,7 @@ namespace Auth.Application.EventHandlers;
 /// </summary>
 public sealed class EmailVerifiedIntegrationEventHandler(
     IAuthInboxStore inboxStore,
+    IAuthUnitOfWork unitOfWork,
     ILogger<EmailVerifiedIntegrationEventHandler> logger)
     : INotificationHandler<IntegrationEventNotification<EmailVerifiedIntegrationEvent>>
 {
@@ -35,12 +37,8 @@ public sealed class EmailVerifiedIntegrationEventHandler(
             "Auth: EmailVerified event received for user {UserId}, email {Email}.",
             evt.UserId, evt.EmailAddress);
 
-        // Mark as processed (no business operation needed — VerifyEmailCommandHandler
-        // already created Device + Session + RefreshToken before this event fires)
+        // Mark as processed — MUST persist the inbox record to prevent infinite reprocessing
         inboxStore.MarkAsProcessed(notification.MessageId);
-
-        // Note: No SaveChanges needed since there are no entity changes.
-        // The inbox store tracks in-memory; it will be saved when the next UoW commits.
-        await Task.CompletedTask;
+        await unitOfWork.SaveChangesAsync(ct);
     }
 }

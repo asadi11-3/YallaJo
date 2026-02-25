@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Accounts.Infrastructure.Migrations
 {
     [DbContext(typeof(AccountsDbContext))]
-    [Migration("20260224152857_CreateModel")]
+    [Migration("20260225225632_CreateModel")]
     partial class CreateModel
     {
         /// <inheritdoc />
@@ -79,6 +79,20 @@ namespace Accounts.Infrastructure.Migrations
                         .HasDatabaseName("IX_Profiles_UserId_Unique");
 
                     b.ToTable("Profiles", "accounts");
+                });
+
+            modelBuilder.Entity("YallaJo.SharedKernel.Infrastructure.Inbox.InboxMessage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("ProcessedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("InboxMessages", "accounts");
                 });
 
             modelBuilder.Entity("YallaJo.SharedKernel.Infrastructure.Outbox.OutboxMessage", b =>

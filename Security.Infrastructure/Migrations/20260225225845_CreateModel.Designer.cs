@@ -12,8 +12,8 @@ using Security.Infrastructure.Persistence;
 namespace Security.Infrastructure.Migrations
 {
     [DbContext(typeof(SecurityDbContext))]
-    [Migration("20260224194422_AddPasswordHashToUsers")]
-    partial class AddPasswordHashToUsers
+    [Migration("20260225225845_CreateModel")]
+    partial class CreateModel
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

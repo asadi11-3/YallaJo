@@ -1,16 +1,13 @@
 using Accounts.Domain.Repositories;
 using Accounts.Infrastructure.Persistence;
 using Accounts.Infrastructure.Repositories;
-using Accounts.Infrastructure.Services;
+using Accounts.Application.Interfaces;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using System;
-using YallaJo.SharedKernel.Application.Abstractions.Data;
 using YallaJo.SharedKernel.Infrastructure.BackgroundJobs;
 using YallaJo.SharedKernel.Infrastructure.Data;
-using YallaJo.SharedKernel.Infrastructure.Inbox;
 
 namespace Accounts.Infrastructure;
 

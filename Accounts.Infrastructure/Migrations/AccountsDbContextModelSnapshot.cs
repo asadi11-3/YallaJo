@@ -78,6 +78,20 @@ namespace Accounts.Infrastructure.Migrations
                     b.ToTable("Profiles", "accounts");
                 });
 
+            modelBuilder.Entity("YallaJo.SharedKernel.Infrastructure.Inbox.InboxMessage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("ProcessedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("InboxMessages", "accounts");
+                });
+
             modelBuilder.Entity("YallaJo.SharedKernel.Infrastructure.Outbox.OutboxMessage", b =>
                 {
                     b.Property<Guid>("Id")

@@ -1,10 +1,9 @@
 using Accounts.Domain.Entities;
 using Accounts.Domain.Repositories;
-using Accounts.Infrastructure.Services;
+using Accounts.Application.Interfaces;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using Security.Contracts.IntegrationEvents;
-using YallaJo.SharedKernel.Application.Abstractions.Data;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 
 namespace Accounts.Application.EventHandlers;

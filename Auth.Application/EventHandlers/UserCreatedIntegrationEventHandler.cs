@@ -4,7 +4,6 @@ using Auth.Domain.Repositories;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using Security.Contracts.IntegrationEvents;
-using YallaJo.SharedKernel.Application.Abstractions.Data;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 
 namespace Auth.Application.EventHandlers;

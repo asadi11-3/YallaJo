@@ -7,10 +7,8 @@ using Auth.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using YallaJo.SharedKernel.Application.Abstractions.Data;
 using YallaJo.SharedKernel.Infrastructure.BackgroundJobs;
 using YallaJo.SharedKernel.Infrastructure.Data;
-using YallaJo.SharedKernel.Infrastructure.Inbox;
 
 namespace Auth.Infrastructure;
 

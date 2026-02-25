@@ -1,6 +1,5 @@
 ﻿using Auth.Application.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using YallaJo.SharedKernel.Application.Abstractions.Data;
 using YallaJo.SharedKernel.Infrastructure.Inbox;
 
 namespace Auth.Infrastructure.Persistence;
