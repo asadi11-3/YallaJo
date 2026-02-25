@@ -16,7 +16,7 @@ namespace Auth.Application.EventHandlers;
 public sealed class UserCreatedIntegrationEventHandler(
     IOtpRepository otpRepository,
     IAuthUnitOfWork unitOfWork,
-    IInboxStore inboxStore,
+    IAuthInboxStore inboxStore,
     IOtpService otpService,
     IEmailService emailService,
     ILogger<UserCreatedIntegrationEventHandler> logger)

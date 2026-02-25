@@ -44,7 +44,7 @@ public static class DependencyInjection
         services.AddScoped<IExternalProviderRepository, ExternalProviderRepository>();
 
         // Inbox — consumer-side idempotency store for integration event handlers
-        services.AddScoped<IInboxStore, EfInboxStore<AuthDbContext>>();
+        services.AddScoped<IAuthInboxStore, AuthInboxStore>();
 
         // Application services
         services.AddSingleton<IOtpService, OtpService>();

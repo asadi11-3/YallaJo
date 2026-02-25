@@ -1,5 +1,6 @@
 using Accounts.Domain.Entities;
 using Accounts.Domain.Repositories;
+using Accounts.Infrastructure.Services;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using Security.Contracts.IntegrationEvents;
@@ -16,7 +17,7 @@ namespace Accounts.Application.EventHandlers;
 public sealed class UserCreatedIntegrationEventHandler(
     IProfileRepository profileRepository,
     IAccountsUnitOfWork unitOfWork,
-    IInboxStore inboxStore,
+    IAccountsInboxStore inboxStore,
     ILogger<UserCreatedIntegrationEventHandler> logger)
     : INotificationHandler<IntegrationEventNotification<UserCreatedIntegrationEvent>>
 {

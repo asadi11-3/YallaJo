@@ -1,14 +1,15 @@
 using Accounts.Domain.Repositories;
-using System;
 using Accounts.Infrastructure.Persistence;
 using Accounts.Infrastructure.Repositories;
+using Accounts.Infrastructure.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using System;
+using YallaJo.SharedKernel.Application.Abstractions.Data;
 using YallaJo.SharedKernel.Infrastructure.BackgroundJobs;
 using YallaJo.SharedKernel.Infrastructure.Data;
-using YallaJo.SharedKernel.Application.Abstractions.Data;
 using YallaJo.SharedKernel.Infrastructure.Inbox;
 
 namespace Accounts.Infrastructure;
@@ -34,7 +35,7 @@ public static class DependencyInjection
         services.AddScoped<IUnitOfWork<AccountsDbContext>, UnitOfWork<AccountsDbContext>>();
         services.AddScoped<IAccountsUnitOfWork, AccountsUnitOfWork>();
         services.AddScoped<IProfileRepository, ProfileRepository>();
-        services.AddScoped<IInboxStore, EfInboxStore<AccountsDbContext>>();
+        services.AddScoped<IAccountsInboxStore, AccountsInboxStore>();
 
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
         services.AddHostedService<OutboxProcessor<AccountsDbContext>>();

@@ -28,4 +28,16 @@ internal sealed class UserRepository(SecurityDbContext context)
                 u => u.Emails.Any(e => e.Address == normalizedEmail && e.IsPrimary),
                 ct);
     }
+
+    public async Task<User?> GetByIdWithDetailsAsync(Guid userId, CancellationToken ct = default)
+    {
+        return await context.Users
+            .AsNoTracking()
+            .Include(u => u.Emails)
+            .Include(u => u.UserRoles)
+                .ThenInclude(ur => ur.Role)
+                    .ThenInclude(r => r.RoleClaims)
+            .Include(u => u.UserClaims)
+            .FirstOrDefaultAsync(u => u.Id == userId, ct);
+    }
 }

@@ -24,6 +24,12 @@ public interface ISecurityService
     /// </summary>
     Task<SecurityUserData?> VerifyCredentialsAsync(
         string normalizedEmail, string password, CancellationToken ct = default);
+
+    /// <summary>
+    /// Returns identity data for the given user Id (used by token refresh).
+    /// Returns null if user not found or deactivated.
+    /// </summary>
+    Task<SecurityUserData?> GetUserDataByIdAsync(Guid userId, CancellationToken ct = default);
 }
 
 /// <summary>

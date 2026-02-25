@@ -92,4 +92,47 @@ internal sealed class SecurityService(
             Roles: roles,
             Claims: claims);
     }
+
+    public async Task<SecurityUserData?> GetUserDataByIdAsync(Guid userId, CancellationToken ct = default)
+    {
+        var user = await userRepository.GetByIdWithDetailsAsync(userId, ct);
+        if (user is null)
+            return null;
+
+        var primaryEmail = user.GetPrimaryEmail();
+        if (primaryEmail is null)
+            return null;
+
+        var isEmailVerified = primaryEmail.IsVerified;
+
+        // Materialize active roles
+        var activeUserRoles = user.UserRoles
+            .Where(ur => ur.Role.IsActive)
+            .ToList();
+
+        var roles = activeUserRoles
+            .Select(ur => ur.Role.Name)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        // Merge user claims + role claims, deduplicated
+        var userClaims = user.UserClaims
+            .Select(c => (c.ClaimType, c.ClaimValue));
+
+        var roleClaims = activeUserRoles
+            .SelectMany(ur => ur.Role.RoleClaims)
+            .Select(c => (c.ClaimType, c.ClaimValue));
+
+        var claims = userClaims
+            .Concat(roleClaims)
+            .DistinctBy(c => (c.ClaimType, c.ClaimValue))
+            .ToList();
+
+        return new SecurityUserData(
+            UserId: user.Id,
+            Email: primaryEmail.Address,
+            IsEmailVerified: isEmailVerified,
+            Roles: roles,
+            Claims: claims);
+    }
 }
