@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using YallaJo.SharedKernel.Infrastructure.Data;
+using YallaJo.SharedKernel.Infrastructure.BackgroundJobs;
 
 namespace Booking.Infrastructure;
 
@@ -27,6 +28,7 @@ public static class DependencyInjection
 
         services.AddScoped<IUnitOfWork<BookingDbContext>, UnitOfWork<BookingDbContext>>();
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
+        services.AddHostedService<OutboxProcessor<BookingDbContext>>();
 
         return services;
     }

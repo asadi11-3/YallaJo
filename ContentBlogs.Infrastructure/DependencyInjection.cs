@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using YallaJo.SharedKernel.Infrastructure.Data;
+using YallaJo.SharedKernel.Infrastructure.BackgroundJobs;
 
 namespace ContentBlogs.Infrastructure;
 
@@ -27,6 +28,7 @@ public static class DependencyInjection
 
         services.AddScoped<IUnitOfWork<ContentBlogsDbContext>, UnitOfWork<ContentBlogsDbContext>>();
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
+        services.AddHostedService<OutboxProcessor<ContentBlogsDbContext>>();
 
         return services;
     }
