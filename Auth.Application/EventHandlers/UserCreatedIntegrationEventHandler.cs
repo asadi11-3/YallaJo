@@ -1,27 +1,30 @@
+using Auth.Application.Interfaces;
 using Auth.Domain.Entities;
 using Auth.Domain.Repositories;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using Security.Contracts.IntegrationEvents;
-using YallaJo.SharedKernel.Application.Abstractions.Data;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 
 namespace Auth.Application.EventHandlers;
 
 /// <summary>
-/// Reacts to a user being created in the Security module by bootstrapping a
-/// trusted Device record in the Auth module.
-///
-/// Lives in Application (use-case layer) because it orchestrates domain operations.
-/// Infrastructure concerns (EF, transport) are handled by OutboxProcessor and EfInboxStore.
+/// Reacts to a user being created in the Security module by generating a 6-digit OTP,
+/// storing its hash in auth.Otps, and sending the code via email.
 /// </summary>
 public sealed class UserCreatedIntegrationEventHandler(
-    IDeviceRepository deviceRepository,
+    IOtpRepository otpRepository,
     IAuthUnitOfWork unitOfWork,
-    IInboxStore inboxStore,
+    IAuthInboxStore inboxStore,
+    IOtpService otpService,
+    IEmailService emailService,
     ILogger<UserCreatedIntegrationEventHandler> logger)
     : INotificationHandler<IntegrationEventNotification<UserCreatedIntegrationEvent>>
 {
+    private const string EmailVerificationPurpose = "EmailVerification";
+    private const string EmailDeliveryChannel = "Email";
+    private const int OtpExpiryMinutes = 10;
+
     public async Task Handle(
         IntegrationEventNotification<UserCreatedIntegrationEvent> notification,
         CancellationToken ct)
@@ -36,31 +39,44 @@ public sealed class UserCreatedIntegrationEventHandler(
         }
 
         var evt = notification.Event;
-        var bootstrapToken = $"bootstrap:{evt.UserId}";
 
-        var existing = await deviceRepository.FirstOrDefaultAsync(
-            d => d.UserId == evt.UserId && d.DeviceToken == bootstrapToken,
-            ct: ct);
+        // Generate cryptographically secure 6-digit OTP
+        var plainOtp = otpService.Generate();
+        var hashedOtp = otpService.Hash(plainOtp);
 
-        if (existing is null)
-        {
-            var bootstrapDevice = Device.Create(
-                evt.UserId,
-                bootstrapToken,
-                "system/bootstrap",
-                "Bootstrap Device");
+        var otp = Otp.Create(
+            userId: evt.UserId,
+            purpose: EmailVerificationPurpose,
+            codeHash: hashedOtp,
+            deliveryChannel: EmailDeliveryChannel,
+            deliveryAddress: evt.Email,
+            expiryMinutes: OtpExpiryMinutes);
 
-            await deviceRepository.AddAsync(bootstrapDevice, ct);
+        await otpRepository.AddAsync(otp, ct);
 
-            logger.LogInformation("Auth: Bootstrap device created for user {UserId}.", evt.UserId);
-        }
-        else
-        {
-            logger.LogInformation("Auth: Bootstrap device already exists for user {UserId}.", evt.UserId);
-        }
-
-        // Record in inbox and persist atomically with the business change
+        // Record in inbox and persist atomically with the OTP
         inboxStore.MarkAsProcessed(notification.MessageId);
         await unitOfWork.SaveChangesAsync(ct);
+
+        // Send OTP email (fire-and-forget relative to persistence —
+        // if email fails, OTP is saved and user can request a resend)
+        try
+        {
+            await emailService.SendAsync(
+                evt.Email,
+                "YallaJo — Verify Your Email",
+                $"Your verification code is: {plainOtp}\n\nThis code expires in {OtpExpiryMinutes} minutes.",
+                ct);
+
+            logger.LogInformation(
+                "Auth: OTP email sent to {Email} for user {UserId}.",
+                evt.Email, evt.UserId);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex,
+                "Auth: Failed to send OTP email to {Email} for user {UserId}. OTP saved — user can request resend.",
+                evt.Email, evt.UserId);
+        }
     }
 }

@@ -17,7 +17,7 @@ public sealed class User : AuditableEntity, IAggregateRoot
     private User() { } // EF Core
 
     public bool IsActive { get; private set; }
-
+    public string PasswordHash { get; private set; } = string.Empty;
     public IReadOnlyCollection<Email> Emails => _emails.AsReadOnly();
     public IReadOnlyCollection<Phone> Phones => _phones.AsReadOnly();
     public IReadOnlyCollection<UserRole> UserRoles => _userRoles.AsReadOnly();
@@ -28,13 +28,13 @@ public sealed class User : AuditableEntity, IAggregateRoot
         return new User { IsActive = false };
     }
 
-    public static User Register(string email)
+    public static User Register(string email, string firstName, string lastName)
     {
         var user = new User { IsActive = false };
         var primaryEmail = Email.Create(user.Id, email, true);
         user._emails.Add(primaryEmail);
 
-        user.AddDomainEvent(new UserCreatedEvent(user.Id, primaryEmail.Address));
+        user.AddDomainEvent(new UserCreatedEvent(user.Id, primaryEmail.Address, firstName, lastName));
 
         return user;
     }
@@ -64,11 +64,24 @@ public sealed class User : AuditableEntity, IAggregateRoot
         return email;
     }
 
+    /// <summary>
+    /// Returns the primary email entity, or null if none exists.
+    /// </summary>
+    public Email? GetPrimaryEmail() => _emails.FirstOrDefault(e => e.IsPrimary);
+
     public void Activate() => IsActive = true;
 
     public void Deactivate()
     {
         IsActive = false;
+        MarkUpdated();
+    }
+    public void SetPasswordHash(string passwordHash)
+    {
+        if (string.IsNullOrWhiteSpace(passwordHash))
+            throw new ArgumentException("Password hash is required.", nameof(passwordHash));
+
+        PasswordHash = passwordHash;
         MarkUpdated();
     }
 }

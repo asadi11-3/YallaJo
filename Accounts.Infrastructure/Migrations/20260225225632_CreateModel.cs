@@ -15,6 +15,19 @@ namespace Accounts.Infrastructure.Migrations
                 name: "accounts");
 
             migrationBuilder.CreateTable(
+                name: "InboxMessages",
+                schema: "accounts",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    ProcessedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_InboxMessages", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "OutboxMessages",
                 schema: "accounts",
                 columns: table => new
@@ -72,6 +85,10 @@ namespace Accounts.Infrastructure.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "InboxMessages",
+                schema: "accounts");
+
             migrationBuilder.DropTable(
                 name: "OutboxMessages",
                 schema: "accounts");

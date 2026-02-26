@@ -12,7 +12,7 @@ using Security.Infrastructure.Persistence;
 namespace Security.Infrastructure.Migrations
 {
     [DbContext(typeof(SecurityDbContext))]
-    [Migration("20260224153003_CreateModel")]
+    [Migration("20260225225845_CreateModel")]
     partial class CreateModel
     {
         /// <inheritdoc />
@@ -308,6 +308,11 @@ namespace Security.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
+
+                    b.Property<string>("PasswordHash")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("nvarchar(512)");
 
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()

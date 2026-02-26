@@ -15,6 +15,10 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
 
         builder.Property(u => u.IsActive).IsRequired();
 
+        builder.Property(u => u.PasswordHash)
+            .HasMaxLength(512)
+            .IsRequired();
+
         // Auditable fields
         builder.Property(u => u.CreatedAt).IsRequired();
         builder.Property(u => u.UpdatedAt).IsRequired(false);

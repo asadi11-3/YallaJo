@@ -26,7 +26,9 @@ public sealed class UserCreatedDomainEventHandler(
 
         var integrationEvent = new UserCreatedIntegrationEvent(
             domainEvent.UserId,
-            domainEvent.Email);
+            domainEvent.Email,
+            domainEvent.FirstName,
+            domainEvent.LastName);
 
      
         dbContext.OutboxMessages.Add(OutboxMessage.Create(integrationEvent));

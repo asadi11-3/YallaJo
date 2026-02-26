@@ -1,4 +1,9 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
+using System.Text;
 using YallaJo.Api.ExceptionHandlers;
+using YallaJo.Api.Services;
 using Microsoft.AspNetCore.Diagnostics;
 using Accounts.Application;
 using Accounts.Infrastructure;
@@ -9,6 +14,7 @@ using Auth.Presentation;
 using Security.Application;
 using Security.Infrastructure;
 using Security.Presentation;
+using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Infrastructure;
 using ContentCore.Application;
 using ContentCore.Infrastructure;
@@ -92,23 +98,72 @@ builder.Services.AddTrackingInfrastructure(builder.Configuration);
 // ── Shared cross-cutting: behaviors, clock, domain event dispatcher ───────
 builder.Services.AddSharedKernelInfrastructure();
 
+// ── HTTP Context services ────────────────────────────────────────────────
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<IRequestContext, RequestContext>();
+builder.Services.AddScoped<ICurrentUser, CurrentUser>();
+
+
 // ── Authentication & Authorization ────────────────────────────────────────
-// TODO: Register a concrete scheme here (e.g. AddJwtBearer) when the Auth
-//       module implements credential verification and token issuance.
-builder.Services.AddAuthentication();
+var jwtKey = builder.Configuration["Jwt:Key"]
+    ?? throw new InvalidOperationException("Jwt:Key is not configured.");
+var jwtIssuer = builder.Configuration["Jwt:Issuer"]
+    ?? throw new InvalidOperationException("Jwt:Issuer is not configured.");
+var jwtAudience = builder.Configuration["Jwt:Audience"]
+    ?? throw new InvalidOperationException("Jwt:Audience is not configured.");
+
+builder.Services
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.MapInboundClaims = false;
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = jwtIssuer,
+            ValidAudience = jwtAudience,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+            RoleClaimType = "role",
+            NameClaimType = "sub",
+            ClockSkew = TimeSpan.FromSeconds(30)
+        };
+    });
 builder.Services.AddAuthorization();
 
 // ── API Documentation ─────────────────────────────────────────────────────
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
-    options.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
+{
+    options.SwaggerDoc("v1", new OpenApiInfo { Title = "YallaJo API", Version = "v1" });
+
+    var bearerScheme = new OpenApiSecurityScheme
     {
-        Title = "YallaJo API",
-        Version = "v1"
-    }));
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Enter your JWT access token."
+    };
+    options.AddSecurityDefinition("Bearer", bearerScheme);
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" }
+            },
+            Array.Empty<string>()
+        }
+    });
+});
 
 // ── Exception Handlers ───────────────────────────────────────────────────
 builder.Services.AddExceptionHandler<ValidationExceptionHandler>();
+builder.Services.AddExceptionHandler<DbUpdateExceptionHandler>();
 
 // ── Problem Details (RFC 7807) ────────────────────────────────────────────
 builder.Services.AddProblemDetails(options =>
