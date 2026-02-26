@@ -1,0 +1,98 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+C:\Program Files\dotnet\sdk\10.0.200-preview.0.26103.119\Sdks\Microsoft.NET.Sdk\targets\Microsoft.NET.RuntimeIdentifierInference.targets(383,5): message NETSDK1057: You are using a preview version of .NET. See: https://aka.ms/dotnet-support-policy [C:\Users\admin1\source\repos\YallaJo\Auth.Domain\Auth.Domain.csproj]
+C:\Program Files\dotnet\sdk\10.0.200-preview.0.26103.119\Sdks\Microsoft.NET.Sdk\targets\Microsoft.NET.RuntimeIdentifierInference.targets(383,5): message NETSDK1057: You are using a preview version of .NET. See: https://aka.ms/dotnet-support-policy [C:\Users\admin1\source\repos\YallaJo\Security.Domain\Security.Domain.csproj]
+C:\Program Files\dotnet\sdk\10.0.200-preview.0.26103.119\Sdks\Microsoft.NET.Sdk\targets\Microsoft.NET.RuntimeIdentifierInference.targets(383,5): message NETSDK1057: You are using a preview version of .NET. See: https://aka.ms/dotnet-support-policy [C:\Users\admin1\source\repos\YallaJo\Auth.Infrastructure\Auth.Infrastructure.csproj]
+C:\Program Files\dotnet\sdk\10.0.200-preview.0.26103.119\Sdks\Microsoft.NET.Sdk\targets\Microsoft.NET.RuntimeIdentifierInference.targets(383,5): message NETSDK1057: You are using a preview version of .NET. See: https://aka.ms/dotnet-support-policy [C:\Users\admin1\source\repos\YallaJo\Accounts.Contracts\Accounts.Contracts.csproj]
+C:\Program Files\dotnet\sdk\10.0.200-preview.0.26103.119\Sdks\Microsoft.NET.Sdk\targets\Microsoft.NET.RuntimeIdentifierInference.targets(383,5): message NETSDK1057: You are using a preview version of .NET. See: https://aka.ms/dotnet-support-policy [C:\Users\admin1\source\repos\YallaJo\Accounts.Domain\Accounts.Domain.csproj]
+C:\Program Files\dotnet\sdk\10.0.200-preview.0.26103.119\Sdks\Microsoft.NET.Sdk\targets\Microsoft.NET.RuntimeIdentifierInference.targets(383,5): message NETSDK1057: You are using a preview version of .NET. See: https://aka.ms/dotnet-support-policy [C:\Users\admin1\source\repos\YallaJo\Accounts.Application\Accounts.Application.csproj]
+C:\Program Files\dotnet\sdk\10.0.200-preview.0.26103.119\Sdks\Microsoft.NET.Sdk\targets\Microsoft.NET.RuntimeIdentifierInference.targets(383,5): message NETSDK1057: You are using a preview version of .NET. See: https://aka.ms/dotnet-support-policy [C:\Users\admin1\source\repos\YallaJo\Accounts.Presentation\Accounts.Presentation.csproj]
+C:\Program Files\dotnet\sdk\10.0.200-preview.0.26103.119\Sdks\Microsoft.NET.Sdk\targets\Microsoft.NET.RuntimeIdentifierInference.targets(383,5): message NETSDK1057: You are using a preview version of .NET. See: https://aka.ms/dotnet-support-policy [C:\Users\admin1\source\repos\YallaJo\YallaJo.SharedKernel.Infrastructure\YallaJo.SharedKernel.Infrastructure.csproj]
+C:\Program Files\dotnet\sdk\10.0.200-preview.0.26103.119\Sdks\Microsoft.NET.Sdk\targets\Microsoft.NET.RuntimeIdentifierInference.targets(383,5): message NETSDK1057: You are using a preview version of .NET. See: https://aka.ms/dotnet-support-policy [C:\Users\admin1\source\repos\YallaJo\Auth.Application\Auth.Application.csproj]
+C:\Program Files\dotnet\sdk\10.0.200-preview.0.26103.119\Sdks\Microsoft.NET.Sdk\targets\Microsoft.NET.RuntimeIdentifierInference.targets(383,5): message NETSDK1057: You are using a preview version of .NET. See: https://aka.ms/dotnet-support-policy [C:\Users\admin1\source\repos\YallaJo\Security.Application\Security.Application.csproj]
+C:\Program Files\dotnet\sdk\10.0.200-preview.0.26103.119\Sdks\Microsoft.NET.Sdk\targets\Microsoft.NET.RuntimeIdentifierInference.targets(383,5): message NETSDK1057: You are using a preview version of .NET. See: https://aka.ms/dotnet-support-policy [C:\Users\admin1\source\repos\YallaJo\Security.Infrastructure\Security.Infrastructure.csproj]
+C:\Program Files\dotnet\sdk\10.0.200-preview.0.26103.119\Sdks\Microsoft.NET.Sdk\targets\Microsoft.NET.RuntimeIdentifierInference.targets(383,5): message NETSDK1057: You are using a preview version of .NET. See: https://aka.ms/dotnet-support-policy [C:\Users\admin1\source\repos\YallaJo\Accounts.Infrastructure\Accounts.Infrastructure.csproj]
+C:\Program Files\dotnet\sdk\10.0.200-preview.0.26103.119\Sdks\Microsoft.NET.Sdk\targets\Microsoft.NET.RuntimeIdentifierInference.targets(383,5): message NETSDK1057: You are using a preview version of .NET. See: https://aka.ms/dotnet-support-policy [C:\Users\admin1\source\repos\YallaJo\YallaJo.SharedKernel.Application\YallaJo.SharedKernel.Application.csproj]
+C:\Program Files\dotnet\sdk\10.0.200-preview.0.26103.119\Sdks\Microsoft.NET.Sdk\targets\Microsoft.NET.RuntimeIdentifierInference.targets(383,5): message NETSDK1057: You are using a preview version of .NET. See: https://aka.ms/dotnet-support-policy [C:\Users\admin1\source\repos\YallaJo\Auth.Presentation\Auth.Presentation.csproj]
+C:\Program Files\dotnet\sdk\10.0.200-preview.0.26103.119\Sdks\Microsoft.NET.Sdk\targets\Microsoft.NET.RuntimeIdentifierInference.targets(383,5): message NETSDK1057: You are using a preview version of .NET. See: https://aka.ms/dotnet-support-policy [C:\Users\admin1\source\repos\YallaJo\YallaJo.SharedKernel.Domain\YallaJo.SharedKernel.Domain.csproj]
+C:\Program Files\dotnet\sdk\10.0.200-preview.0.26103.119\Sdks\Microsoft.NET.Sdk\targets\Microsoft.NET.RuntimeIdentifierInference.targets(383,5): message NETSDK1057: You are using a preview version of .NET. See: https://aka.ms/dotnet-support-policy [C:\Users\admin1\source\repos\YallaJo\YallaJo.Api\YallaJo.Api.csproj]
+  YallaJo.SharedKernel.Domain -> C:\Users\admin1\source\repos\YallaJo\YallaJo.SharedKernel.Domain\bin\Release\net9.0\YallaJo.SharedKernel.Domain.dll
+  ContentSeo.Contracts -> C:\Users\admin1\source\repos\YallaJo\ContentSeo.Contracts\bin\Release\net9.0\ContentSeo.Contracts.dll
+  Analytics.Domain -> C:\Users\admin1\source\repos\YallaJo\Analytics.Domain\bin\Release\net9.0\Analytics.Domain.dll
+  ContentSeo.Domain -> C:\Users\admin1\source\repos\YallaJo\ContentSeo.Domain\bin\Release\net9.0\ContentSeo.Domain.dll
+  Messaging.Domain -> C:\Users\admin1\source\repos\YallaJo\Messaging.Domain\bin\Release\net9.0\Messaging.Domain.dll
+  Analytics.Contracts -> C:\Users\admin1\source\repos\YallaJo\Analytics.Contracts\bin\Release\net9.0\Analytics.Contracts.dll
+  Tracking.Contracts -> C:\Users\admin1\source\repos\YallaJo\Tracking.Contracts\bin\Release\net9.0\Tracking.Contracts.dll
+  ContentBlogs.Contracts -> C:\Users\admin1\source\repos\YallaJo\ContentBlogs.Contracts\bin\Release\net9.0\ContentBlogs.Contracts.dll
+  Auth.Contracts -> C:\Users\admin1\source\repos\YallaJo\Auth.Contracts\bin\Release\net9.0\Auth.Contracts.dll
+  Security.Contracts -> C:\Users\admin1\source\repos\YallaJo\Security.Contracts\bin\Release\net9.0\Security.Contracts.dll
+  ContentCore.Contracts -> C:\Users\admin1\source\repos\YallaJo\ContentCore.Contracts\bin\Release\net9.0\ContentCore.Contracts.dll
+  Tracking.Domain -> C:\Users\admin1\source\repos\YallaJo\Tracking.Domain\bin\Release\net9.0\Tracking.Domain.dll
+  Messaging.Contracts -> C:\Users\admin1\source\repos\YallaJo\Messaging.Contracts\bin\Release\net9.0\Messaging.Contracts.dll
+  ContentTours.Contracts -> C:\Users\admin1\source\repos\YallaJo\ContentTours.Contracts\bin\Release\net9.0\ContentTours.Contracts.dll
+  ContentTours.Domain -> C:\Users\admin1\source\repos\YallaJo\ContentTours.Domain\bin\Release\net9.0\ContentTours.Domain.dll
+  Booking.Contracts -> C:\Users\admin1\source\repos\YallaJo\Booking.Contracts\bin\Release\net9.0\Booking.Contracts.dll
+  Security.Domain -> C:\Users\admin1\source\repos\YallaJo\Security.Domain\bin\Release\net9.0\Security.Domain.dll
+  ContentBlogs.Domain -> C:\Users\admin1\source\repos\YallaJo\ContentBlogs.Domain\bin\Release\net9.0\ContentBlogs.Domain.dll
+  Auth.Domain -> C:\Users\admin1\source\repos\YallaJo\Auth.Domain\bin\Release\net9.0\Auth.Domain.dll
+  Booking.Domain -> C:\Users\admin1\source\repos\YallaJo\Booking.Domain\bin\Release\net9.0\Booking.Domain.dll
+  Accounts.Domain -> C:\Users\admin1\source\repos\YallaJo\Accounts.Domain\bin\Release\net9.0\Accounts.Domain.dll
+  ContentCore.Domain -> C:\Users\admin1\source\repos\YallaJo\ContentCore.Domain\bin\Release\net9.0\ContentCore.Domain.dll
+  YallaJo.SharedKernel.Application -> C:\Users\admin1\source\repos\YallaJo\YallaJo.SharedKernel.Application\bin\Release\net9.0\YallaJo.SharedKernel.Application.dll
+  Messaging.Application -> C:\Users\admin1\source\repos\YallaJo\Messaging.Application\bin\Release\net9.0\Messaging.Application.dll
+  Accounts.Contracts -> C:\Users\admin1\source\repos\YallaJo\Accounts.Contracts\bin\Release\net9.0\Accounts.Contracts.dll
+  ContentSeo.Application -> C:\Users\admin1\source\repos\YallaJo\ContentSeo.Application\bin\Release\net9.0\ContentSeo.Application.dll
+  Security.Application -> C:\Users\admin1\source\repos\YallaJo\Security.Application\bin\Release\net9.0\Security.Application.dll
+  Auth.Application -> C:\Users\admin1\source\repos\YallaJo\Auth.Application\bin\Release\net9.0\Auth.Application.dll
+  ContentTours.Application -> C:\Users\admin1\source\repos\YallaJo\ContentTours.Application\bin\Release\net9.0\ContentTours.Application.dll
+  Analytics.Application -> C:\Users\admin1\source\repos\YallaJo\Analytics.Application\bin\Release\net9.0\Analytics.Application.dll
+  Tracking.Application -> C:\Users\admin1\source\repos\YallaJo\Tracking.Application\bin\Release\net9.0\Tracking.Application.dll
+  ContentSeo.Presentation -> C:\Users\admin1\source\repos\YallaJo\ContentSeo.Presentation\bin\Release\net9.0\ContentSeo.Presentation.dll
+  Messaging.Presentation -> C:\Users\admin1\source\repos\YallaJo\Messaging.Presentation\bin\Release\net9.0\Messaging.Presentation.dll
+  Security.Presentation -> C:\Users\admin1\source\repos\YallaJo\Security.Presentation\bin\Release\net9.0\Security.Presentation.dll
+  Booking.Application -> C:\Users\admin1\source\repos\YallaJo\Booking.Application\bin\Release\net9.0\Booking.Application.dll
+  YallaJo.SharedKernel.Infrastructure -> C:\Users\admin1\source\repos\YallaJo\YallaJo.SharedKernel.Infrastructure\bin\Release\net9.0\YallaJo.SharedKernel.Infrastructure.dll
+  ContentCore.Application -> C:\Users\admin1\source\repos\YallaJo\ContentCore.Application\bin\Release\net9.0\ContentCore.Application.dll
+  Auth.Presentation -> C:\Users\admin1\source\repos\YallaJo\Auth.Presentation\bin\Release\net9.0\Auth.Presentation.dll
+  Analytics.Presentation -> C:\Users\admin1\source\repos\YallaJo\Analytics.Presentation\bin\Release\net9.0\Analytics.Presentation.dll
+  Tracking.Infrastructure -> C:\Users\admin1\source\repos\YallaJo\Tracking.Infrastructure\bin\Release\net9.0\Tracking.Infrastructure.dll
+  Tracking.Presentation -> C:\Users\admin1\source\repos\YallaJo\Tracking.Presentation\bin\Release\net9.0\Tracking.Presentation.dll
+  ContentSeo.Infrastructure -> C:\Users\admin1\source\repos\YallaJo\ContentSeo.Infrastructure\bin\Release\net9.0\ContentSeo.Infrastructure.dll
+  Auth.Infrastructure -> C:\Users\admin1\source\repos\YallaJo\Auth.Infrastructure\bin\Release\net9.0\Auth.Infrastructure.dll
+  Security.Infrastructure -> C:\Users\admin1\source\repos\YallaJo\Security.Infrastructure\bin\Release\net9.0\Security.Infrastructure.dll
+  ContentCore.Infrastructure -> C:\Users\admin1\source\repos\YallaJo\ContentCore.Infrastructure\bin\Release\net9.0\ContentCore.Infrastructure.dll
+  Analytics.Infrastructure -> C:\Users\admin1\source\repos\YallaJo\Analytics.Infrastructure\bin\Release\net9.0\Analytics.Infrastructure.dll
+  ContentTours.Infrastructure -> C:\Users\admin1\source\repos\YallaJo\ContentTours.Infrastructure\bin\Release\net9.0\ContentTours.Infrastructure.dll
+  Booking.Infrastructure -> C:\Users\admin1\source\repos\YallaJo\Booking.Infrastructure\bin\Release\net9.0\Booking.Infrastructure.dll
+  Booking.Presentation -> C:\Users\admin1\source\repos\YallaJo\Booking.Presentation\bin\Release\net9.0\Booking.Presentation.dll
+  Messaging.Infrastructure -> C:\Users\admin1\source\repos\YallaJo\Messaging.Infrastructure\bin\Release\net9.0\Messaging.Infrastructure.dll
+  ContentBlogs.Application -> C:\Users\admin1\source\repos\YallaJo\ContentBlogs.Application\bin\Release\net9.0\ContentBlogs.Application.dll
+  ContentTours.Presentation -> C:\Users\admin1\source\repos\YallaJo\ContentTours.Presentation\bin\Release\net9.0\ContentTours.Presentation.dll
+  ContentCore.Presentation -> C:\Users\admin1\source\repos\YallaJo\ContentCore.Presentation\bin\Release\net9.0\ContentCore.Presentation.dll
+  Accounts.Application -> C:\Users\admin1\source\repos\YallaJo\Accounts.Application\bin\Release\net9.0\Accounts.Application.dll
+  ContentBlogs.Presentation -> C:\Users\admin1\source\repos\YallaJo\ContentBlogs.Presentation\bin\Release\net9.0\ContentBlogs.Presentation.dll
+  Accounts.Infrastructure -> C:\Users\admin1\source\repos\YallaJo\Accounts.Infrastructure\bin\Release\net9.0\Accounts.Infrastructure.dll
+  ContentBlogs.Infrastructure -> C:\Users\admin1\source\repos\YallaJo\ContentBlogs.Infrastructure\bin\Release\net9.0\ContentBlogs.Infrastructure.dll
+  Accounts.Presentation -> C:\Users\admin1\source\repos\YallaJo\Accounts.Presentation\bin\Release\net9.0\Accounts.Presentation.dll
+  Finance.Contracts -> C:\Users\admin1\source\repos\YallaJo\Finance.Contracts\bin\Debug\net9.0\Finance.Contracts.dll
+  Finance.Domain -> C:\Users\admin1\source\repos\YallaJo\Finance.Domain\bin\Debug\net9.0\Finance.Domain.dll
+  ContentPlaces.Contracts -> C:\Users\admin1\source\repos\YallaJo\ContentPlaces.Contracts\bin\Debug\net9.0\ContentPlaces.Contracts.dll
+  ContentPlaces.Domain -> C:\Users\admin1\source\repos\YallaJo\ContentPlaces.Domain\bin\Debug\net9.0\ContentPlaces.Domain.dll
+  Social.Contracts -> C:\Users\admin1\source\repos\YallaJo\Social.Contracts\bin\Debug\net9.0\Social.Contracts.dll
+  Social.Domain -> C:\Users\admin1\source\repos\YallaJo\Social.Domain\bin\Debug\net9.0\Social.Domain.dll
+  Finance.Application -> C:\Users\admin1\source\repos\YallaJo\Finance.Application\bin\Debug\net9.0\Finance.Application.dll
+  Finance.Presentation -> C:\Users\admin1\source\repos\YallaJo\Finance.Presentation\bin\Debug\net9.0\Finance.Presentation.dll
+  Finance.Infrastructure -> C:\Users\admin1\source\repos\YallaJo\Finance.Infrastructure\bin\Debug\net9.0\Finance.Infrastructure.dll
+  Social.Application -> C:\Users\admin1\source\repos\YallaJo\Social.Application\bin\Debug\net9.0\Social.Application.dll
+  Social.Presentation -> C:\Users\admin1\source\repos\YallaJo\Social.Presentation\bin\Debug\net9.0\Social.Presentation.dll
+  Social.Infrastructure -> C:\Users\admin1\source\repos\YallaJo\Social.Infrastructure\bin\Debug\net9.0\Social.Infrastructure.dll
+  ContentPlaces.Application -> C:\Users\admin1\source\repos\YallaJo\ContentPlaces.Application\bin\Debug\net9.0\ContentPlaces.Application.dll
+  ContentPlaces.Infrastructure -> C:\Users\admin1\source\repos\YallaJo\ContentPlaces.Infrastructure\bin\Debug\net9.0\ContentPlaces.Infrastructure.dll
+  ContentPlaces.Presentation -> C:\Users\admin1\source\repos\YallaJo\ContentPlaces.Presentation\bin\Debug\net9.0\ContentPlaces.Presentation.dll
+  YallaJo.Api -> C:\Users\admin1\source\repos\YallaJo\YallaJo.Api\bin\Release\net9.0\YallaJo.Api.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:08.89

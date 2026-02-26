@@ -20,7 +20,7 @@ public class LiveTrackingSessionConfiguration : IEntityTypeConfiguration<LiveTra
         builder.Property(x => x.Status)
             .IsRequired()
             .HasConversion<int>()
-            .HasDefaultValue((int)SessionStatus.Active);
+            .HasDefaultValue(SessionStatus.Active);
 
         builder.Property(x => x.StartedAt).IsRequired();
         builder.Property(x => x.EndedAt).IsRequired(false);

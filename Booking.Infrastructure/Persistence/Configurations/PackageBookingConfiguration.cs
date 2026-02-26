@@ -22,7 +22,7 @@ public class PackageBookingConfiguration : IEntityTypeConfiguration<PackageBooki
             money.Property(m => m.Amount).HasColumnName("TotalPrice").HasPrecision(19, 4);
             money.Property(m => m.Currency).HasColumnName("TotalPriceCurrency").HasMaxLength(3).HasDefaultValue("JOD");
         });
-        builder.Property(x => x.Status).IsRequired().HasConversion<int>().HasDefaultValue(0);
+        builder.Property(x => x.Status).IsRequired().HasConversion<int>();
         builder.Property(x => x.SpecialRequests).IsRequired(false).HasMaxLength(2000);
         builder.Property(x => x.CancellationReason).IsRequired(false).HasMaxLength(1000);
         builder.Property(x => x.CancelledAt).IsRequired(false);

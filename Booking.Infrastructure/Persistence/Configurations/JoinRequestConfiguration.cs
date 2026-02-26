@@ -15,7 +15,7 @@ public class JoinRequestConfiguration : IEntityTypeConfiguration<JoinRequest>
 
         builder.Property(x => x.TourBookingId).IsRequired();
         builder.Property(x => x.UserId).IsRequired();
-        builder.Property(x => x.Status).IsRequired().HasConversion<int>().HasDefaultValue(0);
+        builder.Property(x => x.Status).IsRequired().HasConversion<int>();
         builder.Property(x => x.Message).IsRequired(false).HasMaxLength(1000);
         builder.Property(x => x.ParticipantCount).IsRequired().HasDefaultValue(1);
         builder.Property(x => x.RespondedAt).IsRequired(false);

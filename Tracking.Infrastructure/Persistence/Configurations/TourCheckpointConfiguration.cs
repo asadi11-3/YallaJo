@@ -20,7 +20,7 @@ public class TourCheckpointConfiguration : IEntityTypeConfiguration<TourCheckpoi
         builder.Property(x => x.Status)
             .IsRequired()
             .HasConversion<int>()
-            .HasDefaultValue((int)CheckpointStatus.NotReached);
+            .HasDefaultValue(CheckpointStatus.NotReached);
 
         builder.Property(x => x.ReachedAt).IsRequired(false);
 

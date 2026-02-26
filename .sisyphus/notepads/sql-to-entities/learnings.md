@@ -96,3 +96,94 @@ Build verification during Wave 1: `dotnet build {Module}.Infrastructure/{Module}
 - Cross-module references (`AuthorId`, `LanguageId`, `TourId`, `UserId`) remain required scalar Guid properties with no navigation/HasOne mapping.
 - `BlogTour` is a pure junction entity (no base class) with composite key `{ BlogId, TourId }` and default `SortOrder`.
 - Auditable entities (`Blog`, `BlogComment`) require both `HasQueryFilter(x => !x.IsDeleted)` and `RowVersion.IsRowVersion()`; base entities (`BlogTranslation`, `BlogCommentReaction`) intentionally omit both.
+
+### 2026-02-26 — ContentSeo module scaffolding learnings
+
+- `SeoEntityType` columns are configured with `.HasConversion<int>()` even though enum backing type is `byte`.
+- `SeoMetadata` requires a unique composite index on `{ EntityType, EntityId }` and `SitemapPriority` precision/default via `.HasPrecision(2, 1).HasDefaultValue(0.5m)`.
+- `WeatherCache` keeps cross-module `PlaceId` as required scalar Guid only; no navigation and no `HasOne` mapping.
+- FAQ split follows module conventions: `FaqItem` is auditable with query filter + row version, while `FaqItemTranslation` is base entity without soft-delete concurrency settings.
+- DbContext/DI conventions remain strict: `HasDefaultSchema("content_seo")`, filtered `ApplyConfigurationsFromAssembly`, migrations history in `content_seo`, and no OutboxProcessor registration.
+
+### 2026-02-26 — ContentTours module scaffolding learnings
+
+- ContentTours follows the same 5-project scaffolding as ContentCore with identical package versions and reference topology.
+- `ContentToursDbContext` uses `HasDefaultSchema("content_tours")` plus namespace-filtered configuration scanning under `ContentTours.Infrastructure.Persistence.Configurations`.
+- `Difficulty` and `TourStatus` are persisted with `.HasConversion<int>()` even though enums use `byte` backing type.
+- `Tour` and `TourPackage` are auditable and must include both `HasQueryFilter(x => !x.IsDeleted)` and `RowVersion.IsRowVersion()`; all other tour entities are base/no-filter.
+- Cross-module identifiers (`CreatedByUserId`, `LanguageId`, `TourGuideId`) stay scalar required `Guid` properties without cross-module navigation mappings.
+
+### 2026-02-26 — ContentPlaces module scaffolding learnings
+
+- `ContentPlaces` follows the same 5-project reference graph as `ContentCore`, with identical package versions for MediatR, EF SqlServer, FluentValidation, and config packages.
+- `Place` and `Business` are the only auditable aggregates in this module; both require `HasQueryFilter(x => !x.IsDeleted)` and `RowVersion.IsRowVersion()`.
+- Translation and schedule entities (`PlaceTranslation`, `BusinessTranslation`, `BusinessHours`, `AccessibilityFeature`) inherit `BaseEntity` and should keep only `CreatedAt/UpdatedAt` mappings (no soft delete or row version).
+- All cross-module ids (`LanguageId`, `OwnerId`, `CreatedByUserId`) stay scalar Guid properties with `builder.Property(...).IsRequired()` and no navigation/HasOne mapping.
+- `PlaceBusiness` is a pure junction entity with composite key `{ PlaceId, BusinessId }`, and enum columns (`PlaceType`, `BusinessType`, `DayOfWeek`, `AccessibilityFeatureType`) use `.HasConversion<int>()`.
+
+### 2026-02-26 � Analytics module scaffolding learnings
+
+-  and  must inherit  and use  for BIGINT IDENTITY PKs; never assign Guid ids in constructors.
+- Append-only analytics entities (, ) intentionally omit soft-delete query filters and row-version concurrency tokens.
+-  is a pure junction entity with composite key , precision , and default score .
+-  is configured with  despite enum backing type .
+-  keeps a descending composite index  and remains  without soft-delete metadata.
+
+### 2026-02-26 - Analytics module scaffolding learnings (corrected)
+
+- AuditLog and UserInteraction inherit BaseEntity<long> and are configured with ValueGeneratedOnAdd for BIGINT IDENTITY primary keys.
+- Append-only analytics entities (AuditLog, UserInteraction) intentionally do not use soft-delete query filters or row-version concurrency tokens.
+- UserPreferredCategory is a pure junction entity with composite key { UserId, CategoryId }, precision (5,4), and default score 0.
+- InteractionType is stored with HasConversion<int> although the enum backing type is byte.
+- RecommendationCache uses descending composite index (UserId, EntityType, Score) and remains a BaseEntity type without soft-delete fields.
+
+### 2026-02-26 - Tracking module scaffolding learnings
+
+- Tracking follows the standard 5-project module topology with the same package versions and reference graph as ContentCore.
+- TrackingDbContext uses default schema `tracking`, filtered assembly config scan for `Tracking.Infrastructure.Persistence.Configurations`, and migrations history table in `tracking`.
+- `LocationSnapshot` keeps telemetry numeric fields as C# `double` and maps SQL `float` explicitly via `.HasColumnType("float")`.
+- Cross-module ids (`TourBookingId`, `TourGuideId`, `WaypointId`) remain scalar required Guid properties with no cross-module navigation or HasOne mapping.
+- Auditable entities (`LiveTrackingSession`, `TourCheckpoint`) require both soft-delete query filters and row-version concurrency, while `LocationSnapshot` intentionally has neither.
+
+### 2026-02-26 - Social module scaffolding learnings
+
+- Social follows the same 5-project module topology and package/reference graph as ContentCore/Security.
+- `SocialDbContext` uses `HasDefaultSchema("social")`, filtered `ApplyConfigurationsFromAssembly`, and social-scoped migrations history table.
+- Auditable entities in Social (`Review`, `Report`, `AccessibilityReview`) require both `HasQueryFilter(x => !x.IsDeleted)` and `builder.Property(x => x.RowVersion).IsRowVersion()`.
+- Base entities (`Favorite`, `ContentModerationLog`) intentionally omit soft-delete query filters and row-version settings.
+- Cross-module identifiers (`UserId`, `PlaceId`, `TourId`, `TourGuideId`, `BusinessId`) remain scalar Guid properties only with no cross-module `HasOne` navigation mapping.
+
+### 2026-02-26 - Finance module scaffolding learnings
+
+- Finance follows the same five-project scaffold and package/reference graph as ContentCore/Security, with no solution-file updates in this wave.
+- Financial FK policy is strict: all Finance relationships use `OnDelete(DeleteBehavior.Restrict)` (including junction and line-item tables) for GAAP compliance.
+- Every Finance enum column is persisted with `.HasConversion<int>()` even when enum backing type is `byte`.
+- Auditable Finance entities require both `HasQueryFilter(x => !x.IsDeleted)` and `RowVersion.IsRowVersion()`, while `BaseEntity`/junction entities intentionally omit both.
+- `FinanceDbContext` must use schema `finance`, filtered configuration assembly scanning, and finance-scoped migrations history table.
+
+### 2026-02-26 - Messaging module scaffolding learnings
+
+- Messaging follows the standard 5-project module reference graph and package versions used by ContentCore/Security.
+- Notification is append-only and correctly modeled on BaseEntity (no soft-delete filter, no row-version), while NotificationPreference, NotificationTemplate, DeviceToken, SupportTicket, and ChatBotConversation are auditable with query filter and row version.
+- All cross-module user references (UserId, AssignedToUserId, SenderUserId) remain scalar Guid properties with no HasOne navigation to Security.User.
+- Enum columns are consistently persisted with HasConversion<int>() even when enums use byte backing type.
+- Messaging DbContext and migrations history use schema messaging, and infrastructure DI registers DbContext + IUnitOfWork<MessagingDbContext> + MediatR only (no OutboxProcessor).
+
+
+### 2026-02-26 - Code Quality Review (Task F2) findings
+
+- Full solution build PASSES with 0 errors, 0 warnings.
+- All entities sampled (~50): private EF Core constructor present on 100% of reviewed entities.
+- AuditableEntity vs BaseEntity inheritance correctly applied across all modules.
+- Junction tables (TourTourGuide, EntityTag, EntityCategory, UserPreferredCategory, TourGuideLanguage, TourGuideSpecialization) have NO base class - correct.
+- BIGINT PK entities (Analytics.AuditLog, Analytics.UserInteraction): ValueGeneratedOnAdd(), no HasQueryFilter, no IsRowVersion - correct.
+- Finance module: ALL 15 FK relationships use DeleteBehavior.Restrict.
+- Tracking.LocationSnapshot: double fields (Accuracy, Speed, Heading, Altitude) use HasColumnType(float). Lat/Lon use decimal with HasPrecision.
+- Social.Review: all 4 factory methods present (CreateForPlace, CreateForTour, CreateForTourGuide, CreateForBusiness).
+- Booking.AvailabilitySlot: both factory methods present (CreateForTour, CreateForBusiness).
+- HasQueryFilter: 42 configs with it - all correspond to AuditableEntity types. BaseEntity configs correctly omit it.
+- IsRowVersion: 55 configs with it - all correspond to AuditableEntity types.
+- All Guid PKs use ValueGeneratedNever() consistently.
+- Naming conventions (DbContext, Add*Application, Add*Infrastructure, Map*Endpoints) 100% correct.
+- Namespace conventions correct throughout.
+- Security.AuditLog is BaseEntity (Guid PK), distinct from Analytics.AuditLog (BaseEntity<long>) - both correct.

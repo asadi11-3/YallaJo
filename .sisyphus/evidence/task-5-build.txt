@@ -1,0 +1,25 @@
+  Determining projects to restore...
+  Restored C:\Users\admin1\source\repos\YallaJo\ContentSeo.Contracts\ContentSeo.Contracts.csproj (in 89 ms).
+  Restored C:\Users\admin1\source\repos\YallaJo\ContentSeo.Domain\ContentSeo.Domain.csproj (in 89 ms).
+  Restored C:\Users\admin1\source\repos\YallaJo\ContentSeo.Application\ContentSeo.Application.csproj (in 213 ms).
+  Restored C:\Users\admin1\source\repos\YallaJo\ContentSeo.Infrastructure\ContentSeo.Infrastructure.csproj (in 243 ms).
+  3 of 7 projects are up-to-date for restore.
+C:\Program Files\dotnet\sdk\10.0.200-preview.0.26103.119\Sdks\Microsoft.NET.Sdk\targets\Microsoft.NET.RuntimeIdentifierInference.targets(383,5): message NETSDK1057: You are using a preview version of .NET. See: https://aka.ms/dotnet-support-policy [C:\Users\admin1\source\repos\YallaJo\ContentSeo.Infrastructure\ContentSeo.Infrastructure.csproj]
+C:\Program Files\dotnet\sdk\10.0.200-preview.0.26103.119\Sdks\Microsoft.NET.Sdk\targets\Microsoft.NET.RuntimeIdentifierInference.targets(383,5): message NETSDK1057: You are using a preview version of .NET. See: https://aka.ms/dotnet-support-policy [C:\Users\admin1\source\repos\YallaJo\YallaJo.SharedKernel.Infrastructure\YallaJo.SharedKernel.Infrastructure.csproj]
+C:\Program Files\dotnet\sdk\10.0.200-preview.0.26103.119\Sdks\Microsoft.NET.Sdk\targets\Microsoft.NET.RuntimeIdentifierInference.targets(383,5): message NETSDK1057: You are using a preview version of .NET. See: https://aka.ms/dotnet-support-policy [C:\Users\admin1\source\repos\YallaJo\YallaJo.SharedKernel.Domain\YallaJo.SharedKernel.Domain.csproj]
+C:\Program Files\dotnet\sdk\10.0.200-preview.0.26103.119\Sdks\Microsoft.NET.Sdk\targets\Microsoft.NET.RuntimeIdentifierInference.targets(383,5): message NETSDK1057: You are using a preview version of .NET. See: https://aka.ms/dotnet-support-policy [C:\Users\admin1\source\repos\YallaJo\YallaJo.SharedKernel.Application\YallaJo.SharedKernel.Application.csproj]
+C:\Program Files\dotnet\sdk\10.0.200-preview.0.26103.119\Sdks\Microsoft.NET.Sdk\targets\Microsoft.NET.RuntimeIdentifierInference.targets(383,5): message NETSDK1057: You are using a preview version of .NET. See: https://aka.ms/dotnet-support-policy [C:\Users\admin1\source\repos\YallaJo\ContentSeo.Contracts\ContentSeo.Contracts.csproj]
+C:\Program Files\dotnet\sdk\10.0.200-preview.0.26103.119\Sdks\Microsoft.NET.Sdk\targets\Microsoft.NET.RuntimeIdentifierInference.targets(383,5): message NETSDK1057: You are using a preview version of .NET. See: https://aka.ms/dotnet-support-policy [C:\Users\admin1\source\repos\YallaJo\ContentSeo.Application\ContentSeo.Application.csproj]
+  YallaJo.SharedKernel.Domain -> C:\Users\admin1\source\repos\YallaJo\YallaJo.SharedKernel.Domain\bin\Debug\net9.0\YallaJo.SharedKernel.Domain.dll
+  YallaJo.SharedKernel.Application -> C:\Users\admin1\source\repos\YallaJo\YallaJo.SharedKernel.Application\bin\Debug\net9.0\YallaJo.SharedKernel.Application.dll
+  ContentSeo.Contracts -> C:\Users\admin1\source\repos\YallaJo\ContentSeo.Contracts\bin\Debug\net9.0\ContentSeo.Contracts.dll
+  ContentSeo.Domain -> C:\Users\admin1\source\repos\YallaJo\ContentSeo.Domain\bin\Debug\net9.0\ContentSeo.Domain.dll
+  YallaJo.SharedKernel.Infrastructure -> C:\Users\admin1\source\repos\YallaJo\YallaJo.SharedKernel.Infrastructure\bin\Debug\net9.0\YallaJo.SharedKernel.Infrastructure.dll
+  ContentSeo.Application -> C:\Users\admin1\source\repos\YallaJo\ContentSeo.Application\bin\Debug\net9.0\ContentSeo.Application.dll
+  ContentSeo.Infrastructure -> C:\Users\admin1\source\repos\YallaJo\ContentSeo.Infrastructure\bin\Debug\net9.0\ContentSeo.Infrastructure.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.45
