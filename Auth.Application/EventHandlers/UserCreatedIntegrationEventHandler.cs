@@ -21,6 +21,10 @@ public sealed class UserCreatedIntegrationEventHandler(
     ILogger<UserCreatedIntegrationEventHandler> logger)
     : INotificationHandler<IntegrationEventNotification<UserCreatedIntegrationEvent>>
 {
+    private const string EmailVerificationPurpose = "EmailVerification";
+    private const string EmailDeliveryChannel = "Email";
+    private const int OtpExpiryMinutes = 10;
+
     public async Task Handle(
         IntegrationEventNotification<UserCreatedIntegrationEvent> notification,
         CancellationToken ct)
@@ -42,11 +46,11 @@ public sealed class UserCreatedIntegrationEventHandler(
 
         var otp = Otp.Create(
             userId: evt.UserId,
-            purpose: "EmailVerification",
+            purpose: EmailVerificationPurpose,
             codeHash: hashedOtp,
-            deliveryChannel: "Email",
+            deliveryChannel: EmailDeliveryChannel,
             deliveryAddress: evt.Email,
-            expiryMinutes: 10);
+            expiryMinutes: OtpExpiryMinutes);
 
         await otpRepository.AddAsync(otp, ct);
 
@@ -61,7 +65,7 @@ public sealed class UserCreatedIntegrationEventHandler(
             await emailService.SendAsync(
                 evt.Email,
                 "YallaJo — Verify Your Email",
-                $"Your verification code is: {plainOtp}\n\nThis code expires in 10 minutes.",
+                $"Your verification code is: {plainOtp}\n\nThis code expires in {OtpExpiryMinutes} minutes.",
                 ct);
 
             logger.LogInformation(

@@ -1,6 +1,6 @@
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 
-namespace Auth.Application.Commands.Refresh;
+namespace Auth.Application.Commands.RefreshToken;
 
 public sealed record RefreshTokenResult(
     string AccessToken,

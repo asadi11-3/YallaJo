@@ -5,7 +5,7 @@ using Security.Contracts.Abstractions;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
-namespace Auth.Application.Commands.Refresh;
+namespace Auth.Application.Commands.RefreshToken;
 
 public sealed class RefreshTokenCommandHandler(
     IRefreshTokenRepository refreshTokenRepository,

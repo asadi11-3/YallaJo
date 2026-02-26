@@ -20,6 +20,7 @@ internal sealed class UserRepository(SecurityDbContext context)
     {
         return await context.Users
             .AsNoTracking()
+            .Include(u => u.Emails)          
             .Include(u => u.UserRoles)
                 .ThenInclude(ur => ur.Role)
                     .ThenInclude(r => r.RoleClaims)

@@ -2,6 +2,7 @@ using Auth.Application.Interfaces;
 using Auth.Domain.Entities;
 using Auth.Domain.Repositories;
 using Security.Contracts.Abstractions;
+using RefreshTokenEntity = Auth.Domain.Entities.RefreshToken;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
@@ -105,7 +106,7 @@ public sealed class VerifyEmailCommandHandler(
         var refreshTokenHash = tokenService.HashRefreshToken(plainRefreshToken);
         var refreshTokenExpiresAt = DateTime.UtcNow.AddDays(RefreshTokenDays);
 
-        var refreshToken = RefreshToken.Create(
+        var refreshToken = RefreshTokenEntity.Create(
             userId: userId.Value,
             sessionId: session.Id,
             tokenHash: refreshTokenHash,

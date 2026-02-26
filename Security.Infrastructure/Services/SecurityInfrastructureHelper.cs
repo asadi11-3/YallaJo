@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
-namespace Security.Infrastructure.Helpers;
+namespace Security.Infrastructure.Services;
 
 /// <summary>
 /// Infrastructure-layer helpers that may reference ASP.NET Identity types.

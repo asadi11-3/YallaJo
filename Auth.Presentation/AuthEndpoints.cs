@@ -1,7 +1,7 @@
 using Auth.Application.Commands.Login;
 using Auth.Application.Commands.Logout;
 using Auth.Application.Commands.LogoutAll;
-using Auth.Application.Commands.Refresh;
+using Auth.Application.Commands.RefreshToken;
 using Auth.Application.Commands.VerifyEmail;
 using MediatR;
 using Microsoft.AspNetCore.Builder;

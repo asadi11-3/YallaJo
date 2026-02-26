@@ -1,6 +1,5 @@
 using Auth.Application.Interfaces;
 using Auth.Domain.Repositories;
-using Auth.Infrastructure.Configures;
 using Auth.Infrastructure.Persistence;
 using Auth.Infrastructure.Repositories;
 using Auth.Infrastructure.Services;

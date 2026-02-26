@@ -1,7 +1,6 @@
 using System.Net;
 using System.Net.Mail;
 using Auth.Application.Interfaces;
-using Auth.Infrastructure.Configures;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
