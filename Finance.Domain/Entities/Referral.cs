@@ -11,6 +11,7 @@ public sealed class Referral : AuditableEntity
     public string ReferralCode { get; private set; } = string.Empty;
     public byte Status { get; private set; }
     public decimal? RewardAmount { get; private set; }
+    public decimal? ReferredRewardAmount { get; private set; }
     public string? Currency { get; private set; }
     public DateTime? CompletedAt { get; private set; }
 }

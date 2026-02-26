@@ -13,7 +13,8 @@ public sealed class ContentSeoDbContext : DbContext, IDbContext
     public DbSet<WeatherCache> WeatherCaches => Set<WeatherCache>();
     public DbSet<FaqItem> FaqItems => Set<FaqItem>();
     public DbSet<FaqItemTranslation> FaqItemTranslations => Set<FaqItemTranslation>();
-    public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
+    public DbSet<SitemapEntry> SitemapEntries => Set<SitemapEntry>();
+    public DbSet<Redirect> Redirects => Set<Redirect>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

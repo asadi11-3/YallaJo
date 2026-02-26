@@ -32,6 +32,8 @@ public class DiscountConfiguration : IEntityTypeConfiguration<Discount>
             money.Property(m => m.Amount).HasColumnName("MaxDiscountAmount").HasPrecision(19, 4);
             money.Property(m => m.Currency).HasColumnName("MaxDiscountAmountCurrency").HasMaxLength(3).HasDefaultValue("JOD");
         });
+        builder.Property(x => x.TargetScope).IsRequired().HasConversion<int>();
+        builder.Property(x => x.Visibility).IsRequired().HasConversion<int>();
         builder.Property(x => x.MaxUsageCount).IsRequired(false);
         builder.Property(x => x.CurrentUsageCount).IsRequired().HasDefaultValue(0);
         builder.OwnsOne(x => x.ValidityPeriod, dr =>
@@ -56,5 +58,7 @@ public class DiscountConfiguration : IEntityTypeConfiguration<Discount>
 
         builder.HasQueryFilter(x => !x.IsDeleted);
         builder.HasIndex(x => x.Code).IsUnique();
+        builder.HasIndex(x => x.ProviderId).HasFilter("[IsDeleted] = 0");
+        builder.HasIndex(x => x.TourId).HasFilter("[TourId] IS NOT NULL AND [IsDeleted] = 0");
     }
 }

@@ -33,8 +33,7 @@ public class BlogConfiguration : IEntityTypeConfiguration<Blog>
 
         builder.Property(x => x.Status)
             .IsRequired()
-            .HasConversion<int>()
-            .HasDefaultValue(0);
+            .HasConversion<int>();
 
         builder.Property(x => x.IsFeatured)
             .IsRequired()
@@ -74,5 +73,6 @@ public class BlogConfiguration : IEntityTypeConfiguration<Blog>
 
         builder.HasQueryFilter(x => !x.IsDeleted);
         builder.HasIndex(x => x.Slug).IsUnique();
+        builder.HasIndex(x => x.PlaceId).HasFilter("[PlaceId] IS NOT NULL");
     }
 }

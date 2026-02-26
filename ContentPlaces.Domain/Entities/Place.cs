@@ -14,7 +14,7 @@ public sealed class Place : AuditableEntity, IAggregateRoot
     public string Slug { get; private set; } = string.Empty;
     public string? Description { get; private set; }
     public PlaceType PlaceType { get; private set; }
-    public Location Location { get; private set; }
+    public Location Location { get; private set; } = default!;
     public string? Address { get; private set; }
     public string? City { get; private set; }
     public string? Country { get; private set; }
@@ -26,6 +26,9 @@ public sealed class Place : AuditableEntity, IAggregateRoot
     public int ReviewCount { get; private set; }
     public bool IsFeatured { get; private set; }
     public bool IsVerified { get; private set; }
+    public bool IsWheelchairAccessible { get; private set; }
+    public bool HasAudioGuide { get; private set; }
+    public bool HasBrailleSignage { get; private set; }
     public string? MetaTitle { get; private set; }
     public string? MetaDescription { get; private set; }
     public Guid CreatedByUserId { get; private set; }

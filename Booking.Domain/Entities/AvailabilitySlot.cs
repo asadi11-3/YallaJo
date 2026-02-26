@@ -16,6 +16,11 @@ public sealed class AvailabilitySlot : AuditableEntity
     public TimeOnly EndTime { get; private set; }
     public int MaxCapacity { get; private set; } = 1;
     public int BookedCount { get; private set; }
+    public int LockedCount { get; private set; }
+    public decimal? PriceOverride { get; private set; }
+    public string? PriceOverrideCurrency { get; private set; }
+    public Guid? ScheduleId { get; private set; }
+    public Guid? ServiceItemId { get; private set; }
     public bool IsActive { get; private set; } = true;
 
     public TourGuide TourGuide { get; private set; } = default!;

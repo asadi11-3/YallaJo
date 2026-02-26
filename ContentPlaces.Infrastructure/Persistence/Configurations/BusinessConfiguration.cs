@@ -113,6 +113,11 @@ public class BusinessConfiguration : IEntityTypeConfiguration<Business>
             .IsUnicode(false)
             .HasMaxLength(100);
 
+        builder.Property(x => x.Status).IsRequired().HasConversion<int>();
+        builder.Property(x => x.RejectionReason).IsRequired(false).HasMaxLength(1000);
+        builder.Property(x => x.SubscriptionTier).IsRequired(false).HasConversion<int?>();
+        builder.HasIndex(x => x.Status).HasFilter("[IsDeleted] = 0");
+
         builder.Property(x => x.CreatedAt).IsRequired();
         builder.Property(x => x.UpdatedAt).IsRequired(false);
         builder.Property(x => x.IsDeleted).IsRequired().HasDefaultValue(false);
@@ -125,6 +130,21 @@ public class BusinessConfiguration : IEntityTypeConfiguration<Business>
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasMany(x => x.BusinessHours)
+            .WithOne(x => x.Business)
+            .HasForeignKey(x => x.BusinessId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasMany(x => x.ServiceItems)
+            .WithOne(x => x.Business)
+            .HasForeignKey(x => x.BusinessId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasMany(x => x.Staff)
+            .WithOne(x => x.Business)
+            .HasForeignKey(x => x.BusinessId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasMany(x => x.Amenities)
             .WithOne(x => x.Business)
             .HasForeignKey(x => x.BusinessId)
             .OnDelete(DeleteBehavior.Cascade);

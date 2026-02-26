@@ -36,6 +36,15 @@ public sealed class Tour : AuditableEntity, IAggregateRoot
     public string? MetaTitle { get; private set; }
     public string? MetaDescription { get; private set; }
     public Guid CreatedByUserId { get; private set; }
+    public Guid? PlaceId { get; private set; }
+    public bool IsChildFriendly { get; private set; }
+    public bool IsAccessible { get; private set; }
+    public int? AgeRestriction { get; private set; }
+    public decimal? DiscountPercent { get; private set; }
+    public decimal? SalePrice { get; private set; }
+    public string? SalePriceCurrency { get; private set; }
+    public DateTime? DiscountValidFrom { get; private set; }
+    public DateTime? DiscountValidTo { get; private set; }
 
     public IReadOnlyCollection<TourTranslation> TourTranslations => _tourTranslations.AsReadOnly();
     public IReadOnlyCollection<TourSchedule> TourSchedules => _tourSchedules.AsReadOnly();

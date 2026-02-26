@@ -16,6 +16,8 @@ public sealed class FinanceDbContext : DbContext, IDbContext
     public DbSet<Payout> Payouts => Set<Payout>();
     public DbSet<PayoutItem> PayoutItems => Set<PayoutItem>();
     public DbSet<Dispute> Disputes => Set<Dispute>();
+    public DbSet<DisputeMessage> DisputeMessages => Set<DisputeMessage>();
+    public DbSet<DisputeEvidence> DisputeEvidence => Set<DisputeEvidence>();
     public DbSet<CommissionRule> CommissionRules => Set<CommissionRule>();
     public DbSet<SubscriptionPlan> SubscriptionPlans => Set<SubscriptionPlan>();
     public DbSet<SubscriptionFeature> SubscriptionFeatures => Set<SubscriptionFeature>();
@@ -26,6 +28,7 @@ public sealed class FinanceDbContext : DbContext, IDbContext
     public DbSet<Referral> Referrals => Set<Referral>();
     public DbSet<Discount> Discounts => Set<Discount>();
     public DbSet<DiscountUsage> DiscountUsages => Set<DiscountUsage>();
+    public DbSet<ProviderBankAccount> ProviderBankAccounts => Set<ProviderBankAccount>();
     public DbSet<InvoiceItem> InvoiceItems => Set<InvoiceItem>();
     public DbSet<InvoiceLineItem> InvoiceLineItems => Set<InvoiceLineItem>();
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();

@@ -16,6 +16,7 @@ public class TourBookingConfiguration : IEntityTypeConfiguration<TourBooking>
         builder.Property(x => x.UserId).IsRequired();
         builder.Property(x => x.TourId).IsRequired();
         builder.Property(x => x.TourGuideId).IsRequired(false);
+        builder.Property(x => x.AvailabilitySlotId).IsRequired(false);
         builder.Property(x => x.ScheduledDate).IsRequired();
         builder.Property(x => x.StartTime).IsRequired(false);
         builder.Property(x => x.ParticipantCount).IsRequired().HasDefaultValue(1);
@@ -24,7 +25,13 @@ public class TourBookingConfiguration : IEntityTypeConfiguration<TourBooking>
             money.Property(m => m.Amount).HasColumnName("TotalPrice").HasPrecision(19, 4);
             money.Property(m => m.Currency).HasColumnName("TotalPriceCurrency").HasMaxLength(3).HasDefaultValue("JOD");
         });
-        builder.Property(x => x.Status).IsRequired().HasConversion<int>().HasDefaultValue(0);
+        builder.Property(x => x.Status).IsRequired().HasConversion<int>();
+        builder.Property(x => x.ConfirmationCode).HasMaxLength(20).IsUnicode(false);
+        builder.Property(x => x.PointsRedeemed).IsRequired().HasDefaultValue(0);
+        builder.Property(x => x.PointsDiscount).HasPrecision(19, 4);
+        builder.Property(x => x.PointsDiscountCurrency).HasMaxLength(3);
+        builder.Property(x => x.ReferralDiscount).HasPrecision(19, 4);
+        builder.Property(x => x.ReferralDiscountCurrency).HasMaxLength(3);
         builder.Property(x => x.SpecialRequests).IsRequired(false).HasMaxLength(2000);
         builder.Property(x => x.CancellationReason).IsRequired(false).HasMaxLength(1000);
         builder.Property(x => x.CancelledAt).IsRequired(false);
@@ -45,5 +52,7 @@ public class TourBookingConfiguration : IEntityTypeConfiguration<TourBooking>
         builder.HasQueryFilter(x => !x.IsDeleted);
         builder.HasIndex(x => new { x.UserId, x.ScheduledDate });
         builder.HasIndex(x => x.Status);
+        builder.HasIndex(x => x.ConfirmationCode).IsUnique()
+            .HasFilter("[ConfirmationCode] IS NOT NULL");
     }
 }

@@ -21,6 +21,15 @@ public sealed class Discount : AuditableEntity
     public int CurrentUsageCount { get; private set; }
     public DateRange ValidityPeriod { get; private set; } = default!;
     public bool IsActive { get; private set; } = true;
+    public Guid? ProviderId { get; private set; }
+    public DiscountTargetScope TargetScope { get; private set; }
+    public DiscountVisibility Visibility { get; private set; }
+    public Guid? TourId { get; private set; }
+    public Guid? ServiceItemId { get; private set; }
+    public Guid? CategoryId { get; private set; }
+    public Guid? BusinessId { get; private set; }
+    public int? MaxUsesPerUser { get; private set; }
+    public int? DaysBeforeTour { get; private set; }
     public string? EntityType { get; private set; }
     public Guid? EntityId { get; private set; }
 

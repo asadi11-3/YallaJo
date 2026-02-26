@@ -7,7 +7,8 @@ public sealed class ProviderDocument : AuditableEntity
 {
     private ProviderDocument() { } // EF Core
 
-    public Guid TourGuideId { get; private set; }
+    public Guid? TourGuideId { get; private set; }
+    public Guid? BusinessId { get; private set; }
     public DocumentType DocumentType { get; private set; }
     public string DocumentUrl { get; private set; } = string.Empty;
     public string? OriginalFileName { get; private set; }

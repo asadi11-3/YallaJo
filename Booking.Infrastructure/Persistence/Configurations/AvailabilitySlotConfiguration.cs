@@ -1,5 +1,4 @@
 using Booking.Domain.Entities;
-using Booking.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -9,7 +8,9 @@ public class AvailabilitySlotConfiguration : IEntityTypeConfiguration<Availabili
 {
     public void Configure(EntityTypeBuilder<AvailabilitySlot> builder)
     {
-        builder.ToTable("AvailabilitySlots", "booking");
+        builder.ToTable("AvailabilitySlots", "booking", t => t.HasCheckConstraint(
+            "CK_AvailSlots_Capacity",
+            "[BookedCount] + [LockedCount] <= [MaxCapacity]"));
 
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Id).ValueGeneratedNever();
@@ -23,6 +24,11 @@ public class AvailabilitySlotConfiguration : IEntityTypeConfiguration<Availabili
         builder.Property(x => x.EndTime).IsRequired();
         builder.Property(x => x.MaxCapacity).IsRequired().HasDefaultValue(1);
         builder.Property(x => x.BookedCount).IsRequired().HasDefaultValue(0);
+        builder.Property(x => x.LockedCount).IsRequired().HasDefaultValue(0);
+        builder.Property(x => x.PriceOverride).HasPrecision(19, 4);
+        builder.Property(x => x.PriceOverrideCurrency).HasMaxLength(3);
+        builder.Property(x => x.ScheduleId).IsRequired(false);
+        builder.Property(x => x.ServiceItemId).IsRequired(false);
         builder.Property(x => x.IsActive).IsRequired().HasDefaultValue(true);
 
         builder.Property(x => x.CreatedAt).IsRequired();

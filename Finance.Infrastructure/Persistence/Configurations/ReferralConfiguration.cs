@@ -18,6 +18,7 @@ public class ReferralConfiguration : IEntityTypeConfiguration<Referral>
         builder.Property(x => x.ReferralCode).IsRequired().HasMaxLength(50).IsUnicode(false);
         builder.Property(x => x.Status).IsRequired().HasDefaultValue((byte)0);
         builder.Property(x => x.RewardAmount).IsRequired(false).HasPrecision(19, 4);
+        builder.Property(x => x.ReferredRewardAmount).HasPrecision(19, 4);
         builder.Property(x => x.Currency).IsRequired(false).HasMaxLength(3).IsUnicode(false);
         builder.Property(x => x.CompletedAt).IsRequired(false);
 

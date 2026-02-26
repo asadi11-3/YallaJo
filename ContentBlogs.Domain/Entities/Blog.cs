@@ -22,6 +22,7 @@ public sealed class Blog : AuditableEntity, IAggregateRoot
     public string? MetaTitle { get; private set; }
     public string? MetaDescription { get; private set; }
     public DateTime? PublishedAt { get; private set; }
+    public Guid? PlaceId { get; private set; }
 
     public IReadOnlyCollection<BlogTranslation> BlogTranslations => _blogTranslations.AsReadOnly();
     public IReadOnlyCollection<BlogComment> BlogComments => _blogComments.AsReadOnly();

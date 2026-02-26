@@ -89,6 +89,10 @@ public class PlaceConfiguration : IEntityTypeConfiguration<Place>
             .IsRequired()
             .HasDefaultValue(false);
 
+        builder.Property(x => x.IsWheelchairAccessible).IsRequired().HasDefaultValue(false);
+        builder.Property(x => x.HasAudioGuide).IsRequired().HasDefaultValue(false);
+        builder.Property(x => x.HasBrailleSignage).IsRequired().HasDefaultValue(false);
+
         builder.Property(x => x.MetaTitle)
             .IsRequired(false)
             .IsUnicode(false)

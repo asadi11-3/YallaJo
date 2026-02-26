@@ -5,6 +5,9 @@ namespace Finance.Domain.Entities;
 
 public sealed class Dispute : AuditableEntity
 {
+    private readonly List<DisputeMessage> _messages = [];
+    private readonly List<DisputeEvidence> _evidence = [];
+
     private Dispute() { } // EF Core
 
     public Guid PaymentId { get; private set; }
@@ -18,4 +21,6 @@ public sealed class Dispute : AuditableEntity
     public string? ResolutionNotes { get; private set; }
 
     public Payment Payment { get; private set; } = default!;
+    public IReadOnlyCollection<DisputeMessage> Messages => _messages.AsReadOnly();
+    public IReadOnlyCollection<DisputeEvidence> Evidence => _evidence.AsReadOnly();
 }

@@ -14,6 +14,9 @@ public sealed class ContentPlacesDbContext : DbContext, IDbContext
     public DbSet<Business> Businesses => Set<Business>();
     public DbSet<BusinessTranslation> BusinessTranslations => Set<BusinessTranslation>();
     public DbSet<BusinessHours> BusinessHours => Set<BusinessHours>();
+    public DbSet<ServiceItem> ServiceItems => Set<ServiceItem>();
+    public DbSet<BusinessStaff> BusinessStaff => Set<BusinessStaff>();
+    public DbSet<BusinessAmenity> BusinessAmenities => Set<BusinessAmenity>();
     public DbSet<PlaceBusiness> PlaceBusinesses => Set<PlaceBusiness>();
     public DbSet<AccessibilityFeature> AccessibilityFeatures => Set<AccessibilityFeature>();
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();

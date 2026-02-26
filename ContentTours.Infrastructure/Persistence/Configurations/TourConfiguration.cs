@@ -64,7 +64,7 @@ public class TourConfiguration : IEntityTypeConfiguration<Tour>
         builder.Property(x => x.Status)
             .IsRequired()
             .HasConversion<int>()
-            .HasDefaultValue((int)TourStatus.Draft);
+            .HasDefaultValue(TourStatus.Draft);
 
         builder.Property(x => x.AverageRating)
             .IsRequired()
@@ -100,6 +100,14 @@ public class TourConfiguration : IEntityTypeConfiguration<Tour>
             .HasMaxLength(500);
 
         builder.Property(x => x.CreatedByUserId).IsRequired();
+
+        builder.Property(x => x.DiscountPercent).HasPrecision(5, 2);
+        builder.Property(x => x.SalePrice).HasPrecision(19, 4);
+        builder.Property(x => x.SalePriceCurrency).HasMaxLength(3);
+        builder.Property(x => x.PlaceId);
+        builder.Property(x => x.IsChildFriendly).IsRequired().HasDefaultValue(false);
+        builder.Property(x => x.IsAccessible).IsRequired().HasDefaultValue(false);
+        builder.HasIndex(x => x.PlaceId).HasFilter("[PlaceId] IS NOT NULL");
 
         builder.Property(x => x.CreatedAt).IsRequired();
         builder.Property(x => x.UpdatedAt).IsRequired(false);
