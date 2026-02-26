@@ -17,8 +17,11 @@ public class SubscriptionConfiguration : IEntityTypeConfiguration<Subscription>
         builder.Property(x => x.UserId).IsRequired();
         builder.Property(x => x.PlanId).IsRequired();
         builder.Property(x => x.Status).IsRequired().HasConversion<int>().HasDefaultValue(SubscriptionStatus.Active);
-        builder.Property(x => x.StartDate).IsRequired();
-        builder.Property(x => x.EndDate).IsRequired(false);
+        builder.OwnsOne(x => x.ActivePeriod, dr =>
+        {
+            dr.Property(d => d.Start).HasColumnName("StartDate");
+            dr.Property(d => d.End).HasColumnName("EndDate");
+        });
         builder.Property(x => x.CancelledAt).IsRequired(false);
         builder.Property(x => x.TrialEndsAt).IsRequired(false);
 

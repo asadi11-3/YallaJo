@@ -17,8 +17,11 @@ public class PackageBookingConfiguration : IEntityTypeConfiguration<PackageBooki
         builder.Property(x => x.TourPackageId).IsRequired();
         builder.Property(x => x.BookingDate).IsRequired();
         builder.Property(x => x.ParticipantCount).IsRequired().HasDefaultValue(1);
-        builder.Property(x => x.TotalPrice).IsRequired().HasPrecision(19, 4);
-        builder.Property(x => x.Currency).IsRequired().HasMaxLength(3).IsUnicode(false);
+        builder.OwnsOne(e => e.TotalPrice, money =>
+        {
+            money.Property(m => m.Amount).HasColumnName("TotalPrice").HasPrecision(19, 4);
+            money.Property(m => m.Currency).HasColumnName("TotalPriceCurrency").HasMaxLength(3).HasDefaultValue("JOD");
+        });
         builder.Property(x => x.Status).IsRequired().HasConversion<int>().HasDefaultValue(0);
         builder.Property(x => x.SpecialRequests).IsRequired(false).HasMaxLength(2000);
         builder.Property(x => x.CancellationReason).IsRequired(false).HasMaxLength(1000);

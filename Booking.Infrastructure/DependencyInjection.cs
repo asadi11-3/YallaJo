@@ -28,7 +28,7 @@ public static class DependencyInjection
 
         services.AddScoped<IUnitOfWork<BookingDbContext>, UnitOfWork<BookingDbContext>>();
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
-        services.AddHostedService<OutboxProcessor<BookingDbContext>>();
+        services.AddScoped<IOutboxProcessor, OutboxProcessor<BookingDbContext>>();
 
         return services;
     }

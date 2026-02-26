@@ -1,4 +1,5 @@
 using YallaJo.SharedKernel.Domain.Entities;
+using YallaJo.SharedKernel.Domain.ValueObjects;
 
 namespace ContentTours.Domain.Entities;
 
@@ -11,7 +12,7 @@ public sealed class TourPackage : AuditableEntity
     public Guid TourId { get; private set; }
     public string Name { get; private set; } = string.Empty;
     public string? Description { get; private set; }
-    public decimal Price { get; private set; }
+    public Money Price { get; private set; } = default!;
     public string Currency { get; private set; } = string.Empty;
     public int? MaxParticipants { get; private set; }
     public DateTime? ValidFrom { get; private set; }

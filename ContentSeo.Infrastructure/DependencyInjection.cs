@@ -28,7 +28,7 @@ public static class DependencyInjection
 
         services.AddScoped<IUnitOfWork<ContentSeoDbContext>, UnitOfWork<ContentSeoDbContext>>();
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
-        services.AddHostedService<OutboxProcessor<ContentSeoDbContext>>();
+        services.AddScoped<IOutboxProcessor, OutboxProcessor<ContentSeoDbContext>>();
 
         return services;
     }

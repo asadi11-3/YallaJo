@@ -15,7 +15,11 @@ public class SubscriptionPlanConfiguration : IEntityTypeConfiguration<Subscripti
 
         builder.Property(x => x.Name).IsRequired().HasMaxLength(200);
         builder.Property(x => x.Description).IsRequired(false).HasMaxLength(1000);
-        builder.Property(x => x.Price).IsRequired().HasPrecision(19, 4);
+        builder.OwnsOne(x => x.Price, money =>
+        {
+            money.Property(m => m.Amount).HasColumnName("Price").HasPrecision(19, 4);
+            money.Property(m => m.Currency).HasColumnName("PriceCurrency").HasMaxLength(3).HasDefaultValue("JOD");
+        });
         builder.Property(x => x.Currency).IsRequired().HasMaxLength(3).IsUnicode(false);
         builder.Property(x => x.BillingCycle).IsRequired().HasConversion<int>();
         builder.Property(x => x.TrialDays).IsRequired().HasDefaultValue(0);

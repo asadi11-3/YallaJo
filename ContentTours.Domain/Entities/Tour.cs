@@ -1,5 +1,6 @@
 using ContentTours.Domain.Enums;
 using YallaJo.SharedKernel.Domain.Entities;
+using YallaJo.SharedKernel.Domain.ValueObjects;
 
 namespace ContentTours.Domain.Entities;
 
@@ -21,13 +22,10 @@ public sealed class Tour : AuditableEntity, IAggregateRoot
     public int DurationMinutes { get; private set; }
     public int MaxGroupSize { get; private set; }
     public int? MinAge { get; private set; }
-    public decimal BasePrice { get; private set; }
+    public Money BasePrice { get; private set; } = default!;
     public string Currency { get; private set; } = string.Empty;
-    public decimal Latitude { get; private set; }
-    public decimal Longitude { get; private set; }
-    public string? MeetingPoint { get; private set; }
-    public decimal? MeetingPointLatitude { get; private set; }
-    public decimal? MeetingPointLongitude { get; private set; }
+    public Location Location { get; private set; } = default!;
+    public Location? MeetingPoint { get; private set; }
     public TourStatus Status { get; private set; } = TourStatus.Draft;
     public decimal AverageRating { get; private set; } = 0m;
     public int ReviewCount { get; private set; }

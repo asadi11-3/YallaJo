@@ -38,34 +38,28 @@ public class TourConfiguration : IEntityTypeConfiguration<Tour>
         builder.Property(x => x.MaxGroupSize).IsRequired();
         builder.Property(x => x.MinAge).IsRequired(false);
 
-        builder.Property(x => x.BasePrice)
-            .IsRequired()
-            .HasPrecision(19, 4);
+        builder.OwnsOne(e => e.BasePrice, money =>
+        {
+            money.Property(m => m.Amount).HasColumnName("BasePrice").HasPrecision(19, 4);
+            money.Property(m => m.Currency).HasColumnName("BasePriceCurrency").HasMaxLength(3).HasDefaultValue("JOD");
+        });
 
         builder.Property(x => x.Currency)
             .IsRequired()
             .HasMaxLength(3)
             .IsUnicode(false);
 
-        builder.Property(x => x.Latitude)
-            .IsRequired()
-            .HasPrecision(10, 8);
+        builder.OwnsOne(e => e.Location, loc =>
+        {
+            loc.Property(l => l.Latitude).HasColumnName("Latitude").HasPrecision(10, 8);
+            loc.Property(l => l.Longitude).HasColumnName("Longitude").HasPrecision(11, 8);
+        });
 
-        builder.Property(x => x.Longitude)
-            .IsRequired()
-            .HasPrecision(11, 8);
-
-        builder.Property(x => x.MeetingPoint)
-            .IsRequired(false)
-            .HasMaxLength(500);
-
-        builder.Property(x => x.MeetingPointLatitude)
-            .IsRequired(false)
-            .HasPrecision(10, 8);
-
-        builder.Property(x => x.MeetingPointLongitude)
-            .IsRequired(false)
-            .HasPrecision(11, 8);
+        builder.OwnsOne(e => e.MeetingPoint, loc =>
+        {
+            loc.Property(l => l.Latitude).HasColumnName("MeetingPointLatitude").HasPrecision(10, 8);
+            loc.Property(l => l.Longitude).HasColumnName("MeetingPointLongitude").HasPrecision(11, 8);
+        });
 
         builder.Property(x => x.Status)
             .IsRequired()

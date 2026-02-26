@@ -16,8 +16,16 @@ public class InvoiceLineItemConfiguration : IEntityTypeConfiguration<InvoiceLine
         builder.Property(x => x.InvoiceId).IsRequired();
         builder.Property(x => x.Description).IsRequired().HasMaxLength(500);
         builder.Property(x => x.Quantity).IsRequired().HasDefaultValue(1);
-        builder.Property(x => x.UnitPrice).IsRequired().HasPrecision(19, 4);
-        builder.Property(x => x.Amount).IsRequired().HasPrecision(19, 4);
+        builder.OwnsOne(x => x.UnitPrice, money =>
+        {
+            money.Property(m => m.Amount).HasColumnName("UnitPrice").HasPrecision(19, 4);
+            money.Property(m => m.Currency).HasColumnName("UnitPriceCurrency").HasMaxLength(3).HasDefaultValue("JOD");
+        });
+        builder.OwnsOne(x => x.Amount, money =>
+        {
+            money.Property(m => m.Amount).HasColumnName("Amount").HasPrecision(19, 4);
+            money.Property(m => m.Currency).HasColumnName("AmountCurrency").HasMaxLength(3).HasDefaultValue("JOD");
+        });
         builder.Property(x => x.EntityType).IsRequired(false).HasMaxLength(200);
         builder.Property(x => x.EntityId).IsRequired(false);
 

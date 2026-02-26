@@ -1,5 +1,6 @@
 using Finance.Domain.Enums;
 using YallaJo.SharedKernel.Domain.Entities;
+using YallaJo.SharedKernel.Domain.ValueObjects;
 
 namespace Finance.Domain.Entities;
 
@@ -12,9 +13,9 @@ public sealed class InvoiceItem : AuditableEntity, IAggregateRoot
     public Guid UserId { get; private set; }
     public string InvoiceNumber { get; private set; } = string.Empty;
     public InvoiceStatus Status { get; private set; } = InvoiceStatus.Draft;
-    public decimal SubTotal { get; private set; }
-    public decimal TaxAmount { get; private set; }
-    public decimal TotalAmount { get; private set; }
+    public Money SubTotal { get; private set; } = default!;
+    public Money TaxAmount { get; private set; } = default!;
+    public Money TotalAmount { get; private set; } = default!;
     public string Currency { get; private set; } = string.Empty;
     public DateOnly DueDate { get; private set; }
     public DateTime? PaidAt { get; private set; }

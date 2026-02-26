@@ -1,5 +1,6 @@
 using Finance.Domain.Enums;
 using YallaJo.SharedKernel.Domain.Entities;
+using YallaJo.SharedKernel.Domain.ValueObjects;
 
 namespace Finance.Domain.Entities;
 
@@ -11,7 +12,7 @@ public sealed class Payout : AuditableEntity, IAggregateRoot
 
     public Guid RecipientUserId { get; private set; }
     public PayoutStatus Status { get; private set; } = PayoutStatus.Pending;
-    public decimal TotalAmount { get; private set; }
+    public Money TotalAmount { get; private set; } = default!;
     public string Currency { get; private set; } = string.Empty;
     public DateTime? ProcessedAt { get; private set; }
     public string? BankAccountInfo { get; private set; }

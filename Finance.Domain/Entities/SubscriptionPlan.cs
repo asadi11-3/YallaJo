@@ -1,5 +1,6 @@
 using Finance.Domain.Enums;
 using YallaJo.SharedKernel.Domain.Entities;
+using YallaJo.SharedKernel.Domain.ValueObjects;
 
 namespace Finance.Domain.Entities;
 
@@ -12,7 +13,7 @@ public sealed class SubscriptionPlan : AuditableEntity
 
     public string Name { get; private set; } = string.Empty;
     public string? Description { get; private set; }
-    public decimal Price { get; private set; }
+    public Money Price { get; private set; } = default!;
     public string Currency { get; private set; } = string.Empty;
     public BillingCycle BillingCycle { get; private set; }
     public int TrialDays { get; private set; }

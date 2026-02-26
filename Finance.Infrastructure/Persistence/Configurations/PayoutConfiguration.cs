@@ -16,7 +16,11 @@ public class PayoutConfiguration : IEntityTypeConfiguration<Payout>
 
         builder.Property(x => x.RecipientUserId).IsRequired();
         builder.Property(x => x.Status).IsRequired().HasConversion<int>().HasDefaultValue(PayoutStatus.Pending);
-        builder.Property(x => x.TotalAmount).IsRequired().HasPrecision(19, 4);
+        builder.OwnsOne(x => x.TotalAmount, money =>
+        {
+            money.Property(m => m.Amount).HasColumnName("TotalAmount").HasPrecision(19, 4);
+            money.Property(m => m.Currency).HasColumnName("TotalAmountCurrency").HasMaxLength(3).HasDefaultValue("JOD");
+        });
         builder.Property(x => x.Currency).IsRequired().HasMaxLength(3).IsUnicode(false);
         builder.Property(x => x.ProcessedAt).IsRequired(false);
         builder.Property(x => x.BankAccountInfo).IsRequired(false).HasMaxLength(500);

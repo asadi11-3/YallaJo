@@ -33,13 +33,11 @@ public class BusinessConfiguration : IEntityTypeConfiguration<Business>
 
         builder.Property(x => x.PlaceId).IsRequired(false);
 
-        builder.Property(x => x.Latitude)
-            .IsRequired()
-            .HasPrecision(10, 8);
-
-        builder.Property(x => x.Longitude)
-            .IsRequired()
-            .HasPrecision(11, 8);
+        builder.OwnsOne(e => e.Location, loc =>
+        {
+            loc.Property(l => l.Latitude).HasColumnName("Latitude").HasPrecision(10, 8);
+            loc.Property(l => l.Longitude).HasColumnName("Longitude").HasPrecision(11, 8);
+        });
 
         builder.Property(x => x.Address)
             .IsRequired(false)

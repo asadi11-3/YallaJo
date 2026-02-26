@@ -17,14 +17,22 @@ public class PaymentConfiguration : IEntityTypeConfiguration<Payment>
         builder.Property(x => x.BookingId).IsRequired(false);
         builder.Property(x => x.ReservationId).IsRequired(false);
 
-        builder.Property(x => x.Amount).IsRequired().HasPrecision(19, 4);
+        builder.OwnsOne(x => x.Amount, money =>
+        {
+            money.Property(m => m.Amount).HasColumnName("Amount").HasPrecision(19, 4);
+            money.Property(m => m.Currency).HasColumnName("AmountCurrency").HasMaxLength(3).HasDefaultValue("JOD");
+        });
         builder.Property(x => x.Currency).IsRequired().HasMaxLength(3).IsUnicode(false);
         builder.Property(x => x.PaymentMethod).IsRequired().HasConversion<int>();
         builder.Property(x => x.Status).IsRequired().HasConversion<int>().HasDefaultValue(Finance.Domain.Enums.PaymentStatus.Pending);
         builder.Property(x => x.TransactionId).IsRequired(false).HasMaxLength(200).IsUnicode(false);
         builder.Property(x => x.GatewayResponse).IsRequired(false).HasColumnType("nvarchar(max)");
         builder.Property(x => x.PaidAt).IsRequired(false);
-        builder.Property(x => x.RefundedAmount).IsRequired().HasPrecision(19, 4).HasDefaultValue(0m);
+        builder.OwnsOne(x => x.RefundedAmount, money =>
+        {
+            money.Property(m => m.Amount).HasColumnName("RefundedAmount").HasPrecision(19, 4).HasDefaultValue(0m);
+            money.Property(m => m.Currency).HasColumnName("RefundedAmountCurrency").HasMaxLength(3).HasDefaultValue("JOD");
+        });
         builder.Property(x => x.RefundedAt).IsRequired(false);
 
         builder.Property(x => x.CreatedAt).IsRequired();

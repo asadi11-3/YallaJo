@@ -1,5 +1,6 @@
 using Finance.Domain.Enums;
 using YallaJo.SharedKernel.Domain.Entities;
+using YallaJo.SharedKernel.Domain.ValueObjects;
 
 namespace Finance.Domain.Entities;
 
@@ -13,13 +14,12 @@ public sealed class Discount : AuditableEntity
     public string Name { get; private set; } = string.Empty;
     public string? Description { get; private set; }
     public DiscountType DiscountType { get; private set; }
-    public decimal DiscountValue { get; private set; }
-    public decimal? MinOrderAmount { get; private set; }
-    public decimal? MaxDiscountAmount { get; private set; }
+    public Money DiscountValue { get; private set; } = default!;
+    public Money? MinOrderAmount { get; private set; }
+    public Money? MaxDiscountAmount { get; private set; }
     public int? MaxUsageCount { get; private set; }
     public int CurrentUsageCount { get; private set; }
-    public DateTime ValidFrom { get; private set; }
-    public DateTime ValidTo { get; private set; }
+    public DateRange ValidityPeriod { get; private set; } = default!;
     public bool IsActive { get; private set; } = true;
     public string? EntityType { get; private set; }
     public Guid? EntityId { get; private set; }

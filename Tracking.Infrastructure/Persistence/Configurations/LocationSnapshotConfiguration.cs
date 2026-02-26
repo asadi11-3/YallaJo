@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Tracking.Domain.Entities;
+using YallaJo.SharedKernel.Domain.ValueObjects;
 
 namespace Tracking.Infrastructure.Persistence.Configurations;
 
@@ -15,13 +16,11 @@ public class LocationSnapshotConfiguration : IEntityTypeConfiguration<LocationSn
 
         builder.Property(x => x.SessionId).IsRequired();
 
-        builder.Property(x => x.Latitude)
-            .IsRequired()
-            .HasPrecision(10, 8);
-
-        builder.Property(x => x.Longitude)
-            .IsRequired()
-            .HasPrecision(11, 8);
+        builder.OwnsOne(e => e.Location, loc =>
+        {
+            loc.Property(l => l.Latitude).HasColumnName("Latitude").HasPrecision(10, 8);
+            loc.Property(l => l.Longitude).HasColumnName("Longitude").HasPrecision(11, 8);
+        });
 
         builder.Property(x => x.Accuracy)
             .IsRequired()

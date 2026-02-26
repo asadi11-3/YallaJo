@@ -1,5 +1,6 @@
 using ContentPlaces.Domain.Enums;
 using YallaJo.SharedKernel.Domain.Entities;
+using YallaJo.SharedKernel.Domain.ValueObjects;
 
 namespace ContentPlaces.Domain.Entities;
 
@@ -15,8 +16,7 @@ public sealed class Business : AuditableEntity, IAggregateRoot
     public string? Description { get; private set; }
     public BusinessType BusinessType { get; private set; }
     public Guid? PlaceId { get; private set; }
-    public decimal Latitude { get; private set; }
-    public decimal Longitude { get; private set; }
+    public Location Location { get; private set; }
     public string? Address { get; private set; }
     public string? City { get; private set; }
     public string? Country { get; private set; }

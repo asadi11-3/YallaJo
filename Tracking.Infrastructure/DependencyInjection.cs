@@ -28,7 +28,7 @@ public static class DependencyInjection
 
         services.AddScoped<IUnitOfWork<TrackingDbContext>, UnitOfWork<TrackingDbContext>>();
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
-        services.AddHostedService<OutboxProcessor<TrackingDbContext>>();
+        services.AddScoped<IOutboxProcessor, OutboxProcessor<TrackingDbContext>>();
 
         return services;
     }

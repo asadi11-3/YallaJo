@@ -23,9 +23,11 @@ public class TourPricingTierConfiguration : IEntityTypeConfiguration<TourPricing
             .IsRequired(false)
             .HasMaxLength(500);
 
-        builder.Property(x => x.Price)
-            .IsRequired()
-            .HasPrecision(19, 4);
+        builder.OwnsOne(e => e.Price, money =>
+        {
+            money.Property(m => m.Amount).HasColumnName("Price").HasPrecision(19, 4);
+            money.Property(m => m.Currency).HasColumnName("PriceCurrency").HasMaxLength(3).HasDefaultValue("JOD");
+        });
 
         builder.Property(x => x.Currency)
             .IsRequired()

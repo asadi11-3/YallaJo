@@ -5,7 +5,7 @@ using YallaJo.SharedKernel.Application.Abstractions.Clock;
 using YallaJo.SharedKernel.Application.Abstractions.Events;
 using YallaJo.SharedKernel.Infrastructure.Clock;
 using YallaJo.SharedKernel.Infrastructure.Events;
-
+using YallaJo.SharedKernel.Infrastructure.BackgroundJobs;
 namespace YallaJo.SharedKernel.Infrastructure
 {
     public static class DependencyInjection
@@ -28,6 +28,8 @@ namespace YallaJo.SharedKernel.Infrastructure
                 cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(PerformanceBehavior<,>));
             });
 
+            // Single composite outbox processor replaces per-module hosted services
+            services.AddHostedService<CompositeOutboxProcessor>();
             return services;
         }
     }

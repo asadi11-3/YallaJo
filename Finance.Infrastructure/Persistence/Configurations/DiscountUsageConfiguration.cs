@@ -16,7 +16,11 @@ public class DiscountUsageConfiguration : IEntityTypeConfiguration<DiscountUsage
         builder.Property(x => x.DiscountId).IsRequired();
         builder.Property(x => x.UserId).IsRequired();
         builder.Property(x => x.BookingId).IsRequired(false);
-        builder.Property(x => x.Amount).IsRequired().HasPrecision(19, 4);
+        builder.OwnsOne(x => x.Amount, money =>
+        {
+            money.Property(m => m.Amount).HasColumnName("Amount").HasPrecision(19, 4);
+            money.Property(m => m.Currency).HasColumnName("AmountCurrency").HasMaxLength(3).HasDefaultValue("JOD");
+        });
         builder.Property(x => x.UsedAt).IsRequired();
 
         builder.Property(x => x.CreatedAt).IsRequired();

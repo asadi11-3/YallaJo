@@ -42,7 +42,7 @@ public static class DependencyInjection
         // Inbox — consumer-side idempotency store for integration event handlers
         services.AddScoped<IInboxStore, EfInboxStore<AuthDbContext>>();
 
-        services.AddHostedService<OutboxProcessor<AuthDbContext>>();
+        services.AddScoped<IOutboxProcessor, OutboxProcessor<AuthDbContext>>();
         return services;
     }
 }

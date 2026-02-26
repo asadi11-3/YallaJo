@@ -28,7 +28,7 @@ public static class DependencyInjection
 
         services.AddScoped<IUnitOfWork<ContentCoreDbContext>, UnitOfWork<ContentCoreDbContext>>();
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
-        services.AddHostedService<OutboxProcessor<ContentCoreDbContext>>();
+        services.AddScoped<IOutboxProcessor, OutboxProcessor<ContentCoreDbContext>>();
 
         return services;
     }

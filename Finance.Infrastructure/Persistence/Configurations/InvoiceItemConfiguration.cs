@@ -17,9 +17,21 @@ public class InvoiceItemConfiguration : IEntityTypeConfiguration<InvoiceItem>
         builder.Property(x => x.UserId).IsRequired();
         builder.Property(x => x.InvoiceNumber).IsRequired().HasMaxLength(50).IsUnicode(false);
         builder.Property(x => x.Status).IsRequired().HasConversion<int>().HasDefaultValue(InvoiceStatus.Draft);
-        builder.Property(x => x.SubTotal).IsRequired().HasPrecision(19, 4);
-        builder.Property(x => x.TaxAmount).IsRequired().HasPrecision(19, 4).HasDefaultValue(0m);
-        builder.Property(x => x.TotalAmount).IsRequired().HasPrecision(19, 4);
+        builder.OwnsOne(x => x.SubTotal, money =>
+        {
+            money.Property(m => m.Amount).HasColumnName("SubTotal").HasPrecision(19, 4);
+            money.Property(m => m.Currency).HasColumnName("SubTotalCurrency").HasMaxLength(3).HasDefaultValue("JOD");
+        });
+        builder.OwnsOne(x => x.TaxAmount, money =>
+        {
+            money.Property(m => m.Amount).HasColumnName("TaxAmount").HasPrecision(19, 4).HasDefaultValue(0m);
+            money.Property(m => m.Currency).HasColumnName("TaxAmountCurrency").HasMaxLength(3).HasDefaultValue("JOD");
+        });
+        builder.OwnsOne(x => x.TotalAmount, money =>
+        {
+            money.Property(m => m.Amount).HasColumnName("TotalAmount").HasPrecision(19, 4);
+            money.Property(m => m.Currency).HasColumnName("TotalAmountCurrency").HasMaxLength(3).HasDefaultValue("JOD");
+        });
         builder.Property(x => x.Currency).IsRequired().HasMaxLength(3).IsUnicode(false);
         builder.Property(x => x.DueDate).IsRequired();
         builder.Property(x => x.PaidAt).IsRequired(false);

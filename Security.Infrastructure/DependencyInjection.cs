@@ -35,7 +35,7 @@ public static class DependencyInjection
         services.AddScoped<ISecurityUserExistenceChecker, Services.SecurityUserExistenceChecker>();
 
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
-        services.AddHostedService<OutboxProcessor<SecurityDbContext>>();
+        services.AddScoped<IOutboxProcessor, OutboxProcessor<SecurityDbContext>>();
 
         return services;
     }

@@ -25,13 +25,11 @@ public class UserInteractionConfiguration : IEntityTypeConfiguration<UserInterac
 
         builder.Property(x => x.EntityId).IsRequired();
 
-        builder.Property(x => x.Latitude)
-            .IsRequired(false)
-            .HasPrecision(10, 8);
-
-        builder.Property(x => x.Longitude)
-            .IsRequired(false)
-            .HasPrecision(11, 8);
+        builder.OwnsOne(e => e.Location, loc =>
+        {
+            loc.Property(l => l.Latitude).HasColumnName("Latitude").HasPrecision(10, 8);
+            loc.Property(l => l.Longitude).HasColumnName("Longitude").HasPrecision(11, 8);
+        });
 
         builder.Property(x => x.SessionId)
             .IsRequired(false)

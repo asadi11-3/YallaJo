@@ -1,7 +1,6 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
@@ -12,8 +11,11 @@ namespace YallaJo.SharedKernel.Infrastructure.BackgroundJobs
 {
     /// <summary>
     /// Generic outbox processor typed to a specific DbContext.
-    /// Each module that publishes integration events registers its own instance:
-    ///   services.AddHostedService&lt;OutboxProcessor&lt;AccountsDbContext&gt;&gt;();
+    /// Each module registers its own instance as <see cref="IOutboxProcessor"/>:
+    ///   services.AddScoped&lt;IOutboxProcessor, OutboxProcessor&lt;MyDbContext&gt;&gt;();
+    ///
+    /// The <see cref="CompositeOutboxProcessor"/> hosted service resolves all
+    /// registered processors and runs them in a single background loop.
     ///
     /// Locking: messages are claimed (LockedUntil set) before processing to prevent
     /// double-delivery in multi-instance deployments. The lock expires after 5 minutes,
@@ -21,33 +23,12 @@ namespace YallaJo.SharedKernel.Infrastructure.BackgroundJobs
     /// </summary>
     public sealed class OutboxProcessor<TContext>(
         IServiceProvider serviceProvider,
-        ILogger<OutboxProcessor<TContext>> logger) : BackgroundService, IOutboxProcessor
+        ILogger<OutboxProcessor<TContext>> logger) : IOutboxProcessor
         where TContext : DbContext
     {
         private const int MaxRetryCount = 3;
         private const int BatchSize = 20;
-        private static readonly TimeSpan Interval = TimeSpan.FromSeconds(10);
         private static readonly TimeSpan LockDuration = TimeSpan.FromMinutes(5);
-
-        protected override async Task ExecuteAsync(CancellationToken ct)
-        {
-            logger.LogInformation("Outbox Processor for {Context} started", typeof(TContext).Name);
-
-            while (!ct.IsCancellationRequested)
-            {
-                try { await ProcessOutboxMessagesAsync(ct); }
-                catch (OperationCanceledException) when (ct.IsCancellationRequested) { break; }
-                catch (Exception ex)
-                {
-                    logger.LogError(ex, "Unexpected error in outbox processing loop for {Context}", typeof(TContext).Name);
-                }
-
-                try { await Task.Delay(Interval, ct); }
-                catch (OperationCanceledException) when (ct.IsCancellationRequested) { break; }
-            }
-
-            logger.LogInformation("Outbox Processor for {Context} stopped", typeof(TContext).Name);
-        }
 
         public async Task ProcessOutboxMessagesAsync(CancellationToken ct = default)
         {
