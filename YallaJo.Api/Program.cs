@@ -10,6 +10,39 @@ using Security.Application;
 using Security.Infrastructure;
 using Security.Presentation;
 using YallaJo.SharedKernel.Infrastructure;
+using ContentCore.Application;
+using ContentCore.Infrastructure;
+using ContentCore.Presentation;
+using ContentPlaces.Application;
+using ContentPlaces.Infrastructure;
+using ContentPlaces.Presentation;
+using ContentTours.Application;
+using ContentTours.Infrastructure;
+using ContentTours.Presentation;
+using ContentBlogs.Application;
+using ContentBlogs.Infrastructure;
+using ContentBlogs.Presentation;
+using ContentSeo.Application;
+using ContentSeo.Infrastructure;
+using ContentSeo.Presentation;
+using Analytics.Application;
+using Analytics.Infrastructure;
+using Analytics.Presentation;
+using Booking.Application;
+using Booking.Infrastructure;
+using Booking.Presentation;
+using Finance.Application;
+using Finance.Infrastructure;
+using Finance.Presentation;
+using Messaging.Application;
+using Messaging.Infrastructure;
+using Messaging.Presentation;
+using Social.Application;
+using Social.Infrastructure;
+using Social.Presentation;
+using Tracking.Application;
+using Tracking.Infrastructure;
+using Tracking.Presentation;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,6 +55,39 @@ builder.Services.AddAuthInfrastructure(builder.Configuration);
 
 builder.Services.AddSecurityApplication();
 builder.Services.AddSecurityInfrastructure(builder.Configuration);
+
+builder.Services.AddContentCoreApplication();
+builder.Services.AddContentCoreInfrastructure(builder.Configuration);
+
+builder.Services.AddContentPlacesApplication();
+builder.Services.AddContentPlacesInfrastructure(builder.Configuration);
+
+builder.Services.AddContentToursApplication();
+builder.Services.AddContentToursInfrastructure(builder.Configuration);
+
+builder.Services.AddContentBlogsApplication();
+builder.Services.AddContentBlogsInfrastructure(builder.Configuration);
+
+builder.Services.AddContentSeoApplication();
+builder.Services.AddContentSeoInfrastructure(builder.Configuration);
+
+builder.Services.AddAnalyticsApplication();
+builder.Services.AddAnalyticsInfrastructure(builder.Configuration);
+
+builder.Services.AddBookingApplication();
+builder.Services.AddBookingInfrastructure(builder.Configuration);
+
+builder.Services.AddFinanceApplication();
+builder.Services.AddFinanceInfrastructure(builder.Configuration);
+
+builder.Services.AddMessagingApplication();
+builder.Services.AddMessagingInfrastructure(builder.Configuration);
+
+builder.Services.AddSocialApplication();
+builder.Services.AddSocialInfrastructure(builder.Configuration);
+
+builder.Services.AddTrackingApplication();
+builder.Services.AddTrackingInfrastructure(builder.Configuration);
 
 // ── Shared cross-cutting: behaviors, clock, domain event dispatcher ───────
 builder.Services.AddSharedKernelInfrastructure();
@@ -88,6 +154,17 @@ app.UseAuthorization();
 app.MapAccountsEndpoints();
 app.MapAuthEndpoints();
 app.MapSecurityEndpoints();
+app.MapContentCoreEndpoints();
+app.MapContentPlacesEndpoints();
+app.MapContentToursEndpoints();
+app.MapContentBlogsEndpoints();
+app.MapContentSeoEndpoints();
+app.MapAnalyticsEndpoints();
+app.MapBookingEndpoints();
+app.MapFinanceEndpoints();
+app.MapMessagingEndpoints();
+app.MapSocialEndpoints();
+app.MapTrackingEndpoints();
 
 // ── Infrastructure endpoints ──────────────────────────────────────────────
 app.MapHealthChecks("/health").AllowAnonymous();

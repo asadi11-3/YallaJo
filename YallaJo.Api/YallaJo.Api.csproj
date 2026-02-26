@@ -26,4 +26,31 @@
     <ProjectReference Include="..\Security.Infrastructure\Security.Infrastructure.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- New module Presentation references -->
+    <ProjectReference Include="..\ContentCore.Presentation\ContentCore.Presentation.csproj" />
+    <ProjectReference Include="..\ContentPlaces.Presentation\ContentPlaces.Presentation.csproj" />
+    <ProjectReference Include="..\ContentTours.Presentation\ContentTours.Presentation.csproj" />
+    <ProjectReference Include="..\ContentBlogs.Presentation\ContentBlogs.Presentation.csproj" />
+    <ProjectReference Include="..\ContentSeo.Presentation\ContentSeo.Presentation.csproj" />
+    <ProjectReference Include="..\Analytics.Presentation\Analytics.Presentation.csproj" />
+    <ProjectReference Include="..\Booking.Presentation\Booking.Presentation.csproj" />
+    <ProjectReference Include="..\Finance.Presentation\Finance.Presentation.csproj" />
+    <ProjectReference Include="..\Messaging.Presentation\Messaging.Presentation.csproj" />
+    <ProjectReference Include="..\Social.Presentation\Social.Presentation.csproj" />
+    <ProjectReference Include="..\Tracking.Presentation\Tracking.Presentation.csproj" />
+    <!-- New module Infrastructure references -->
+    <ProjectReference Include="..\ContentCore.Infrastructure\ContentCore.Infrastructure.csproj" />
+    <ProjectReference Include="..\ContentPlaces.Infrastructure\ContentPlaces.Infrastructure.csproj" />
+    <ProjectReference Include="..\ContentTours.Infrastructure\ContentTours.Infrastructure.csproj" />
+    <ProjectReference Include="..\ContentBlogs.Infrastructure\ContentBlogs.Infrastructure.csproj" />
+    <ProjectReference Include="..\ContentSeo.Infrastructure\ContentSeo.Infrastructure.csproj" />
+    <ProjectReference Include="..\Analytics.Infrastructure\Analytics.Infrastructure.csproj" />
+    <ProjectReference Include="..\Booking.Infrastructure\Booking.Infrastructure.csproj" />
+    <ProjectReference Include="..\Finance.Infrastructure\Finance.Infrastructure.csproj" />
+    <ProjectReference Include="..\Messaging.Infrastructure\Messaging.Infrastructure.csproj" />
+    <ProjectReference Include="..\Social.Infrastructure\Social.Infrastructure.csproj" />
+    <ProjectReference Include="..\Tracking.Infrastructure\Tracking.Infrastructure.csproj" />
+  </ItemGroup>
+
 </Project>
