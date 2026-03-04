@@ -41,4 +41,11 @@ internal sealed class UserRepository(SecurityDbContext context)
             .Include(u => u.UserClaims)
             .FirstOrDefaultAsync(u => u.Id == userId, ct);
     }
+
+    public async Task<User?> GetByIdWithPhonesAsync(Guid userId, CancellationToken ct = default)
+    {
+        return await context.Users
+            .Include(u => u.Phones)
+            .FirstOrDefaultAsync(u => u.Id == userId, ct);
+    }
 }

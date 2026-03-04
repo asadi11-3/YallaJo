@@ -1,7 +1,10 @@
+using Auth.Application.Commands.ForgotPassword;
 using Auth.Application.Commands.Login;
 using Auth.Application.Commands.Logout;
 using Auth.Application.Commands.LogoutAll;
 using Auth.Application.Commands.RefreshToken;
+using Auth.Application.Commands.ResendOtp;
+using Auth.Application.Commands.ResetPassword;
 using Auth.Application.Commands.VerifyEmail;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
@@ -77,6 +80,46 @@ public static class AuthEndpoints
         .WithSummary("Logout all sessions — revokes all refresh tokens and sessions for the current user")
         .RequireAuthorization();
 
+        group.MapPost("/forgot-password", async (ForgotPasswordRequest request, ISender sender) =>
+        {
+            var result = await sender.Send(new ForgotPasswordCommand(request.Email));
+            return ToApiResult(result);
+        })
+        .WithName("ForgotPassword")
+        .Produces<ForgotPasswordResult>(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
+        .WithSummary("Request a password reset code — sends OTP to email if account exists")
+        .AllowAnonymous();
+
+        group.MapPost("/reset-password", async (ResetPasswordRequest request, ISender sender) =>
+        {
+            var result = await sender.Send(new ResetPasswordCommand(
+                request.Email,
+                request.OtpCode,
+                request.NewPassword,
+                request.ConfirmNewPassword));
+            return ToApiResult(result);
+        })
+        .WithName("ResetPassword")
+        .Produces<ResetPasswordResult>(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status429TooManyRequests)
+        .WithSummary("Reset password using email and OTP code")
+        .AllowAnonymous();
+
+        group.MapPost("/resend-otp", async (ResendOtpRequest request, ISender sender) =>
+        {
+            var result = await sender.Send(new ResendOtpCommand(request.Email, request.Purpose));
+            return ToApiResult(result);
+        })
+        .WithName("ResendOtp")
+        .Produces<ResendOtpResult>(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status429TooManyRequests)
+        .WithSummary("Resend OTP code for email verification or password reset")
+        .AllowAnonymous();
+
         return endpoints;
     }
 
@@ -113,3 +156,6 @@ public sealed record LoginResponse(Guid UserId, string AccessToken, string Refre
 public sealed record RefreshTokenRequest(string RefreshToken);
 public sealed record RefreshTokenResponse(string AccessToken, string RefreshToken, DateTime RefreshTokenExpiresAt);
 public sealed record LogoutRequest(string RefreshToken);
+public sealed record ForgotPasswordRequest(string Email);
+public sealed record ResetPasswordRequest(string Email, string OtpCode, string NewPassword, string ConfirmNewPassword);
+public sealed record ResendOtpRequest(string Email, string Purpose);

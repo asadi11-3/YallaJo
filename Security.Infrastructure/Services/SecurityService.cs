@@ -135,4 +135,26 @@ internal sealed class SecurityService(
             Roles: roles,
             Claims: claims);
     }
+
+    public async Task<string?> GetPrimaryPhoneNumberAsync(Guid userId, CancellationToken ct = default)
+    {
+        return await dbContext.Phones
+            .AsNoTracking()
+            .Where(p => p.UserId == userId && p.IsPrimary)
+            .Select(p => (string?)p.PhoneNumber)
+            .FirstOrDefaultAsync(ct);
+    }
+
+    public async Task<bool> ResetPasswordAsync(Guid userId, string newPassword, CancellationToken ct = default)
+    {
+        var user = await userRepository.GetByIdAsync(userId, ct, asNoTracking: false);
+        if (user is null)
+            return false;
+
+        user.ResetPassword(passwordHasher.Hash(newPassword));
+        // ResetPassword raises PasswordResetEvent → domain event → outbox → Auth revokes sessions
+
+        await unitOfWork.SaveChangesAsync(ct);
+        return true;
+    }
 }

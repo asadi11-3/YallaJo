@@ -2,6 +2,8 @@ using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using Security.Application.Commands.ChangePassword;
+using Security.Application.Commands.UpdatePhone;
 using Security.Application.Commands.Register;
 using System.Security.Claims;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
@@ -20,6 +22,8 @@ public static class SecurityEndpoints
 
         MapRegisterEndpoint(group);
         MapMeEndpoint(group);
+        MapChangePasswordEndpoint(group);
+        MapUpdatePhoneEndpoint(group);
 
         return endpoints;
     }
@@ -62,6 +66,44 @@ public static class SecurityEndpoints
         .RequireAuthorization();
     }
 
+    private static void MapChangePasswordEndpoint(RouteGroupBuilder group)
+    {
+        var account = group.MapGroup("/account");
+
+        account.MapPut("/password", async (ChangePasswordRequest request, ISender sender) =>
+        {
+            var result = await sender.Send(new ChangePasswordCommand(
+                request.CurrentPassword,
+                request.NewPassword,
+                request.ConfirmNewPassword));
+            return ToApiResult(result);
+        })
+        .WithName("ChangePassword")
+        .Produces<ChangePasswordResult>(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .WithSummary("Change the current user's password")
+        .RequireAuthorization();
+    }
+
+    private static void MapUpdatePhoneEndpoint(RouteGroupBuilder group)
+    {
+        var account = group.MapGroup("/account");
+
+        account.MapPut("/phone", async (UpdatePrimaryPhoneRequest request, ISender sender) =>
+        {
+            var result = await sender.Send(new UpdatePrimaryPhoneCommand(request.PhoneNumber));
+            return ToApiResult(result);
+        })
+        .WithName("UpdatePrimaryPhone")
+        .Produces<UpdatePrimaryPhoneResult>(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .WithSummary("Update the current user's primary phone number")
+        .RequireAuthorization();
+    }
+
     // ── Result → IResult mapping ──────────────────────────────────────────
 
     private static IResult ToApiResult<T>(Result<T> result) =>
@@ -85,3 +127,5 @@ public static class SecurityEndpoints
 
 public sealed record RegisterRequest(string FirstName, string LastName, string Email, string Password);
 public sealed record RegisterResponse(Guid UserId, string Message);
+public sealed record ChangePasswordRequest(string CurrentPassword, string NewPassword, string ConfirmNewPassword);
+public sealed record UpdatePrimaryPhoneRequest(string PhoneNumber);

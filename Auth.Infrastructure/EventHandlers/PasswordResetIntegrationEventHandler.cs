@@ -1,0 +1,62 @@
+using Auth.Application.Interfaces;
+using Auth.Domain.Repositories;
+using MediatR;
+using Microsoft.Extensions.Logging;
+using Security.Contracts.IntegrationEvents;
+using YallaJo.SharedKernel.Application.Abstractions.Messaging;
+
+namespace Auth.Infrastructure.EventHandlers;
+
+/// <summary>
+/// Reacts to a password reset in the Security module by revoking
+/// all active sessions and refresh tokens for the user (security best practice).
+/// </summary>
+public sealed class PasswordResetIntegrationEventHandler(
+    ISessionRepository sessionRepository,
+    IRefreshTokenRepository refreshTokenRepository,
+    IAuthInboxStore inboxStore,
+    IAuthUnitOfWork unitOfWork,
+    ILogger<PasswordResetIntegrationEventHandler> logger)
+    : INotificationHandler<IntegrationEventNotification<PasswordResetIntegrationEvent>>
+{
+    public async Task Handle(
+        IntegrationEventNotification<PasswordResetIntegrationEvent> notification,
+        CancellationToken ct)
+    {
+        // Inbox check — idempotency guard
+        if (await inboxStore.HasBeenProcessedAsync(notification.MessageId, ct))
+        {
+            logger.LogWarning(
+                "Auth: Message {MessageId} (PasswordReset for {UserId}) already processed — skipping.",
+                notification.MessageId, notification.Event.UserId);
+            return;
+        }
+
+        var userId = notification.Event.UserId;
+
+        // Revoke all active sessions
+        var activeSessions = await sessionRepository.GetAllAsync(
+            filter: s => s.UserId == userId && !s.IsRevoked,
+            asNoTracking: false,
+            ct: ct);
+
+        foreach (var session in activeSessions)
+            session.Revoke();
+
+        // Revoke all active refresh tokens
+        var activeTokens = await refreshTokenRepository.GetAllAsync(
+            filter: rt => rt.UserId == userId && !rt.IsRevoked,
+            asNoTracking: false,
+            ct: ct);
+
+        foreach (var token in activeTokens)
+            token.Revoke();
+
+        inboxStore.MarkAsProcessed(notification.MessageId);
+        await unitOfWork.SaveChangesAsync(ct);
+
+        logger.LogInformation(
+            "Auth: Revoked {SessionCount} sessions and {TokenCount} refresh tokens for user {UserId} after password reset.",
+            activeSessions.Count, activeTokens.Count, userId);
+    }
+}

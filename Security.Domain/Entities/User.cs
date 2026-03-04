@@ -84,4 +84,46 @@ public sealed class User : AuditableEntity, IAggregateRoot
         PasswordHash = passwordHash;
         MarkUpdated();
     }
+
+    public void ResetPassword(string newPasswordHash)
+    {
+        if (string.IsNullOrWhiteSpace(newPasswordHash))
+            throw new ArgumentException("Password hash is required.", nameof(newPasswordHash));
+
+        PasswordHash = newPasswordHash;
+        MarkUpdated();
+        AddDomainEvent(new PasswordResetEvent(Id));
+    }
+
+    public Phone UpdatePrimaryPhone(string phoneNumber)
+    {
+        if (string.IsNullOrWhiteSpace(phoneNumber))
+            throw new ArgumentException("Phone number is required.", nameof(phoneNumber));
+
+        var trimmed = phoneNumber.Trim();
+
+        var primary = _phones.FirstOrDefault(p => p.IsPrimary);
+
+        if (primary is null)
+        {
+            var created = Phone.Create(Id, trimmed, isPrimary: true);
+            _phones.Add(created);
+
+            AddDomainEvent(new PhoneNumberUpdatedEvent(Id, created.PhoneNumber, created.IsPrimary));
+            MarkUpdated();
+            return created;
+        }
+
+        // Idempotency: if already primary and same number, do nothing
+        if (string.Equals(primary.PhoneNumber, trimmed, StringComparison.Ordinal))
+            return primary;
+
+        primary.UpdateNumber(trimmed);
+        if (!primary.IsPrimary)
+            primary.SetPrimary(true);
+
+        AddDomainEvent(new PhoneNumberUpdatedEvent(Id, primary.PhoneNumber, primary.IsPrimary));
+        MarkUpdated();
+        return primary;
+    }
 }

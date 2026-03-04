@@ -30,6 +30,18 @@ public interface ISecurityService
     /// Returns null if user not found or deactivated.
     /// </summary>
     Task<SecurityUserData?> GetUserDataByIdAsync(Guid userId, CancellationToken ct = default);
+
+    /// <summary>
+    /// Returns the user's current primary phone number, or null if none exists.
+    /// </summary>
+    Task<string?> GetPrimaryPhoneNumberAsync(Guid userId, CancellationToken ct = default);
+
+    /// <summary>
+    /// Resets the user's password to the given new password.
+    /// Hashes the password internally and raises PasswordResetDomainEvent.
+    /// Returns true if reset succeeded; false if user not found.
+    /// </summary>
+    Task<bool> ResetPasswordAsync(Guid userId, string newPassword, CancellationToken ct = default);
 }
 
 /// <summary>
