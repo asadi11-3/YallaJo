@@ -32,7 +32,8 @@ public static class AuthEndpoints
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status429TooManyRequests)
         .WithSummary("Verify email with OTP code — returns access + refresh tokens")
-        .AllowAnonymous();
+        .AllowAnonymous()
+        .RequireRateLimiting(RateLimitPolicies.OtpPolicy);
 
         group.MapPost("/login", async (LoginRequest request, ISender sender) =>
         {
@@ -44,7 +45,8 @@ public static class AuthEndpoints
         .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status401Unauthorized)
         .WithSummary("Login with email and password — returns access + refresh tokens")
-        .AllowAnonymous();
+        .AllowAnonymous()
+        .RequireRateLimiting(RateLimitPolicies.LoginPolicy);
 
         group.MapPost("/refresh", async (RefreshTokenRequest request, ISender sender) =>
         {
@@ -56,7 +58,8 @@ public static class AuthEndpoints
         .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status401Unauthorized)
         .WithSummary("Refresh access token using a valid refresh token")
-        .AllowAnonymous();
+        .AllowAnonymous()
+        .RequireRateLimiting(RateLimitPolicies.RefreshPolicy);
 
         group.MapPost("/logout", async (LogoutRequest request, ISender sender) =>
         {
@@ -89,7 +92,8 @@ public static class AuthEndpoints
         .Produces<ForgotPasswordResult>(StatusCodes.Status200OK)
         .ProducesValidationProblem()
         .WithSummary("Request a password reset code — sends OTP to email if account exists")
-        .AllowAnonymous();
+        .AllowAnonymous()
+        .RequireRateLimiting(RateLimitPolicies.OtpPolicy);
 
         group.MapPost("/reset-password", async (ResetPasswordRequest request, ISender sender) =>
         {
@@ -106,7 +110,8 @@ public static class AuthEndpoints
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status429TooManyRequests)
         .WithSummary("Reset password using email and OTP code")
-        .AllowAnonymous();
+        .AllowAnonymous()
+        .RequireRateLimiting(RateLimitPolicies.OtpPolicy);
 
         group.MapPost("/resend-otp", async (ResendOtpRequest request, ISender sender) =>
         {
@@ -118,7 +123,8 @@ public static class AuthEndpoints
         .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status429TooManyRequests)
         .WithSummary("Resend OTP code for email verification or password reset")
-        .AllowAnonymous();
+        .AllowAnonymous()
+        .RequireRateLimiting(RateLimitPolicies.OtpPolicy);
 
         return endpoints;
     }

@@ -2,9 +2,14 @@ using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using Security.Application.Commands.AssignRole;
 using Security.Application.Commands.ChangePassword;
+using Security.Application.Commands.CreateRole;
+using Security.Application.Commands.RemoveRole;
 using Security.Application.Commands.UpdatePhone;
 using Security.Application.Commands.Register;
+using Security.Application.Queries.ListRoles;
+using Security.Contracts.Authorization;
 using System.Security.Claims;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
@@ -24,6 +29,10 @@ public static class SecurityEndpoints
         MapMeEndpoint(group);
         MapChangePasswordEndpoint(group);
         MapUpdatePhoneEndpoint(group);
+        MapCreateRoleEndpoint(group);
+        MapListRolesEndpoint(group);
+        MapAssignRoleEndpoint(group);
+        MapRemoveRoleEndpoint(group);
 
         return endpoints;
     }
@@ -104,6 +113,69 @@ public static class SecurityEndpoints
         .RequireAuthorization();
     }
 
+    private static void MapCreateRoleEndpoint(RouteGroupBuilder group)
+    {
+        group.MapPost("/roles", async (CreateRoleRequest request, ISender sender) =>
+        {
+            var result = await sender.Send(new CreateRoleCommand(request.Name, request.Description));
+            return ToApiResult(result);
+        })
+        .WithName("CreateRole")
+        .Produces<CreateRoleResult>(StatusCodes.Status201Created)
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status409Conflict)
+        .WithSummary("Create a new role")
+        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.Role, AppAction.Create))
+        .RequireAuthorization();
+    }
+
+    private static void MapListRolesEndpoint(RouteGroupBuilder group)
+    {
+        group.MapGet("/roles", async (ISender sender) =>
+        {
+            var result = await sender.Send(new ListRolesQuery());
+            return ToApiResult(result);
+        })
+        .WithName("ListRoles")
+        .Produces<IReadOnlyList<RoleDto>>(StatusCodes.Status200OK)
+        .WithSummary("List all active roles")
+        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.Role, AppAction.Read))
+        .RequireAuthorization();
+    }
+
+    private static void MapAssignRoleEndpoint(RouteGroupBuilder group)
+    {
+        group.MapPost("/users/{userId:guid}/roles", async (Guid userId, AssignRoleRequest request, ISender sender) =>
+        {
+            var result = await sender.Send(new AssignRoleCommand(userId, request.RoleId));
+            return ToApiResult(result);
+        })
+        .WithName("AssignRole")
+        .Produces(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status409Conflict)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .WithSummary("Assign a role to a user")
+        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.UserRole, AppAction.Create))
+        .RequireAuthorization();
+    }
+
+    private static void MapRemoveRoleEndpoint(RouteGroupBuilder group)
+    {
+        group.MapDelete("/users/{userId:guid}/roles/{roleId:guid}", async (Guid userId, Guid roleId, ISender sender) =>
+        {
+            var result = await sender.Send(new RemoveRoleCommand(userId, roleId));
+            return ToApiResult(result);
+        })
+        .WithName("RemoveRole")
+        .Produces(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .WithSummary("Remove a role from a user")
+        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.UserRole, AppAction.Delete))
+        .RequireAuthorization();
+    }
+
     // ── Result → IResult mapping ──────────────────────────────────────────
 
     private static IResult ToApiResult<T>(Result<T> result) =>
@@ -111,6 +183,11 @@ public static class SecurityEndpoints
             ? result.Outcome == Outcome.Created
                 ? Results.Created((string?)null, result.Value)
                 : Results.Ok(result.Value)
+            : ToProblem(result.Outcome, result.Errors);
+
+    private static IResult ToApiResult(Result result) =>
+        result.IsSuccess
+            ? Results.Ok()
             : ToProblem(result.Outcome, result.Errors);
 
     private static IResult ToProblem(Outcome outcome, IReadOnlyList<Error> errors)
@@ -129,3 +206,5 @@ public sealed record RegisterRequest(string FirstName, string LastName, string E
 public sealed record RegisterResponse(Guid UserId, string Message);
 public sealed record ChangePasswordRequest(string CurrentPassword, string NewPassword, string ConfirmNewPassword);
 public sealed record UpdatePrimaryPhoneRequest(string PhoneNumber);
+public sealed record CreateRoleRequest(string Name, string? Description);
+public sealed record AssignRoleRequest(Guid RoleId);

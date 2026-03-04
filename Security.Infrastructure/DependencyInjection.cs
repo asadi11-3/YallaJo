@@ -8,6 +8,7 @@ using Security.Domain.Repositories;
 using Security.Infrastructure.Persistence;
 using Security.Infrastructure.Repositories;
 using Security.Infrastructure.Services;
+using Security.Infrastructure.Seeding;
 using YallaJo.SharedKernel.Infrastructure.BackgroundJobs;
 using YallaJo.SharedKernel.Infrastructure.Data;
 
@@ -34,6 +35,9 @@ public static class DependencyInjection
         services.AddScoped<IUnitOfWork<SecurityDbContext>, UnitOfWork<SecurityDbContext>>();
         services.AddScoped<ISecurityUnitOfWork, SecurityUnitOfWork>();
         services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IRoleRepository, RoleRepository>();
+        services.AddScoped<IRoleClaimRepository, RoleClaimRepository>();
+        services.AddScoped<SecurityDataSeeder>();
         services.AddScoped<ISecurityUserExistenceChecker, SecurityUserExistenceChecker>();
         services.AddSingleton<IPasswordHasher, PasswordHasher>();
 

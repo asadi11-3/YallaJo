@@ -48,22 +48,29 @@ internal sealed class RoleRepository(SecurityDbContext context)
     /// Loads active roles matching any of the supplied names (case-insensitive).
     /// </summary>
     public async Task<IReadOnlyList<Role>> GetRolesByNamesAsync(
-        IEnumerable<string> roleNames, CancellationToken ct = default)
+      IEnumerable<string> roleNames, CancellationToken ct = default)
     {
-        if (roleNames is null) return [];
-
-        var names = roleNames
+        var names = roleNames?
             .Where(n => !string.IsNullOrWhiteSpace(n))
             .Select(n => n.Trim())
             .Distinct(StringComparer.OrdinalIgnoreCase)
-            .ToList();
+            .ToList() ?? [];
 
         if (names.Count == 0) return [];
 
-        // names.Contains translates to SQL IN — EF Core handles it.
         return (await GetAllAsync(
             filter: r => names.Contains(r.Name),
+            orderBy: q => q.OrderBy(r => r.Name),  // ← ثابت دايماً
             asNoTracking: true,
             ct: ct)).AsReadOnly();
     }
+
+    public async Task<Role?> GetByNameAsync(string name, CancellationToken ct = default)
+        => await FirstOrDefaultAsync(r => r.Name == name, ct: ct);
+
+    public async Task<bool> ExistsByNameAsync(string name, CancellationToken ct = default)
+        => await AnyAsync(r => r.Name == name, ct);
+
+    public async Task<IReadOnlyList<Role>> GetAllActiveAsync(CancellationToken ct = default)
+        => (await GetAllAsync(filter: r => r.IsActive, asNoTracking: true, ct: ct)).AsReadOnly();
 }

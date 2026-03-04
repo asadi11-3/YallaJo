@@ -4,6 +4,10 @@ using Microsoft.OpenApi.Models;
 using System.Text;
 using YallaJo.Api.ExceptionHandlers;
 using YallaJo.Api.Services;
+using Security.Contracts.Authorization;
+using Security.Infrastructure.Seeding;
+using YallaJo.Api.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Diagnostics;
 using Accounts.Application;
 using Accounts.Infrastructure;
@@ -37,6 +41,8 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IRequestContext, RequestContext>();
 builder.Services.AddScoped<ICurrentUser, CurrentUser>();
 
+// ── Rate Limiting ────────────────────────────────────────────────────────
+builder.Services.AddYallaJoRateLimiting();
 
 // ── Authentication & Authorization ────────────────────────────────────────
 var jwtKey = builder.Configuration["Jwt:Key"]
@@ -65,7 +71,14 @@ builder.Services
             ClockSkew = TimeSpan.FromSeconds(30)
         };
     });
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(opts =>
+{
+    opts.AddPolicy("Owner",      p => p.RequireRole(AppRoles.Owner));
+    opts.AddPolicy("SuperAdmin", p => p.RequireRole(AppRoles.Owner, AppRoles.SuperAdmin));
+    opts.AddPolicy("Admin",      p => p.RequireRole(AppRoles.Owner, AppRoles.SuperAdmin, AppRoles.Admin));
+});
+builder.Services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
+builder.Services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
 
 // ── API Documentation ─────────────────────────────────────────────────────
 builder.Services.AddEndpointsApiExplorer();
@@ -117,6 +130,13 @@ builder.Services.AddHealthChecks();
 
 var app = builder.Build();
 
+// ── Seeding ────────────────────────────────────────────────────────────────────
+using (var scope = app.Services.CreateScope())
+{
+    var seeder = scope.ServiceProvider.GetRequiredService<SecurityDataSeeder>();
+    await seeder.SeedAsync();
+}
+
 // ── Middleware pipeline (ORDER IS MANDATORY) ──────────────────────────────
 
 // 1. Global exception handler — must be first so it wraps all downstream errors
@@ -134,6 +154,9 @@ if (app.Environment.IsDevelopment())
 
 // 3. Transport security
 app.UseHttpsRedirection();
+
+// 3b. Rate limiting — must be before authentication
+app.UseRateLimiter();
 
 // 4. Authentication MUST come before Authorization
 app.UseAuthentication();

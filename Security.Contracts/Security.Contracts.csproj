@@ -12,6 +12,10 @@
     Any module that needs to react to Security events references THIS project, not Security.Application.
   -->
   <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\YallaJo.SharedKernel.Domain\YallaJo.SharedKernel.Domain.csproj" />
   </ItemGroup>
 

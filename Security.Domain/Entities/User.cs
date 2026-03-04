@@ -83,6 +83,7 @@ public sealed class User : AuditableEntity, IAggregateRoot
 
         PasswordHash = passwordHash;
         MarkUpdated();
+        AddDomainEvent(new PasswordChangedEvent(Id));
     }
 
     public void ResetPassword(string newPasswordHash)
@@ -125,5 +126,12 @@ public sealed class User : AuditableEntity, IAggregateRoot
         AddDomainEvent(new PhoneNumberUpdatedEvent(Id, primary.PhoneNumber, primary.IsPrimary));
         MarkUpdated();
         return primary;
+    }
+
+    public void AssignRole(Role role)
+    {
+        var userRole = UserRole.Create(Id, role.Id);
+        _userRoles.Add(userRole);
+        MarkUpdated();
     }
 }

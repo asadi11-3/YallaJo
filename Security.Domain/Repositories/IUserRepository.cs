@@ -9,4 +9,10 @@ public interface IUserRepository : IRepository<User, Guid>
     Task<User?> GetByEmailWithDetailsAsync(string normalizedEmail, CancellationToken ct = default);
     Task<User?> GetByIdWithDetailsAsync(Guid userId, CancellationToken ct = default);
     Task<User?> GetByIdWithPhonesAsync(Guid userId, CancellationToken ct = default);
+
+    Task<bool> AnyWithRoleAsync(string roleName, CancellationToken ct = default);
+
+    Task<UserRole?> GetUserRoleAsync(Guid userId, Guid roleId, CancellationToken ct = default);
+
+    void RemoveUserRole(UserRole userRole);
 }
