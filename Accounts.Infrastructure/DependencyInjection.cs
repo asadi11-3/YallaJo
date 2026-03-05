@@ -35,7 +35,7 @@ public static class DependencyInjection
         services.AddScoped<IAccountsInboxStore, AccountsInboxStore>();
 
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
-        services.AddHostedService<OutboxProcessor<AccountsDbContext>>();
+        services.AddScoped<IOutboxProcessor, OutboxProcessor<AccountsDbContext>>();
 
         return services;
     }

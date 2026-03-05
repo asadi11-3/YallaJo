@@ -48,7 +48,7 @@ public static class DependencyInjection
         services.AddScoped<ISecurityService, SecurityService>();
 
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
-        services.AddHostedService<OutboxProcessor<SecurityDbContext>>();
+        services.AddScoped<IOutboxProcessor, OutboxProcessor<SecurityDbContext>>();
 
         return services;
     }

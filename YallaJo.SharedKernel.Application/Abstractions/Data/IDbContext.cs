@@ -1,14 +1,12 @@
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Infrastructure;
-
 namespace YallaJo.SharedKernel.Application.Abstractions.Data
 {
+    /// <summary>
+    /// Persistence-agnostic database context abstraction for the Application layer.
+    /// Keeps EF Core types out of Application — concrete DbContext implementations
+    /// in Infrastructure satisfy this contract.
+    /// </summary>
     public interface IDbContext
     {
-        DbSet<TEntity> Set<TEntity>() where TEntity : class;
-
         Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
-
-        DatabaseFacade Database { get; }
     }
 }
