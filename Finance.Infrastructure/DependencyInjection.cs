@@ -1,5 +1,5 @@
 using Finance.Infrastructure.Persistence;
-using MediatR;
+using Finance.Infrastructure.Persistence.Seeding;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -27,6 +27,7 @@ public static class DependencyInjection
                 }));
 
         services.AddScoped<IUnitOfWork<FinanceDbContext>, UnitOfWork<FinanceDbContext>>();
+        services.AddScoped<IModuleDbInitializer, FinanceDbInitializer>();
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
         services.AddScoped<IOutboxProcessor, OutboxProcessor<FinanceDbContext>>();
 

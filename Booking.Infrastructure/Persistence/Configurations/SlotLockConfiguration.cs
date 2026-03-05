@@ -28,6 +28,8 @@ public class SlotLockConfiguration : IEntityTypeConfiguration<SlotLock>
             .HasForeignKey(x => x.AvailabilitySlotId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        builder.HasQueryFilter(x => !x.AvailabilitySlot.IsDeleted);
+
         builder.HasIndex(x => new { x.AvailabilitySlotId, x.IsReleased });
     }
 }

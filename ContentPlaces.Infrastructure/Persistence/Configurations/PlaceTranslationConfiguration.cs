@@ -38,6 +38,8 @@ public class PlaceTranslationConfiguration : IEntityTypeConfiguration<PlaceTrans
             .HasForeignKey(x => x.PlaceId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        builder.HasQueryFilter(x => !x.Place.IsDeleted);
+
         builder.HasIndex(x => new { x.PlaceId, x.LanguageId }).IsUnique();
         builder.HasIndex(x => x.LanguageId);
     }

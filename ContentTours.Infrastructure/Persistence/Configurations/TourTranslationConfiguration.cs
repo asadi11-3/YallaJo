@@ -39,5 +39,7 @@ public class TourTranslationConfiguration : IEntityTypeConfiguration<TourTransla
             .WithMany(x => x.TourTranslations)
             .HasForeignKey(x => x.TourId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasQueryFilter(x => !x.Tour.IsDeleted);
     }
 }

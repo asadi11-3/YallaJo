@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Tracking.Domain.Entities;
-using YallaJo.SharedKernel.Domain.ValueObjects;
 
 namespace Tracking.Infrastructure.Persistence.Configurations;
 
@@ -44,6 +43,8 @@ public class LocationSnapshotConfiguration : IEntityTypeConfiguration<LocationSn
             .WithMany(x => x.LocationSnapshots)
             .HasForeignKey(x => x.SessionId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasQueryFilter(x => !x.LiveTrackingSession.IsDeleted);
 
         builder.HasIndex(x => new { x.SessionId, x.CapturedAt });
     }

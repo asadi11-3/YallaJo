@@ -31,8 +31,7 @@ public class SupportTicketConfiguration : IEntityTypeConfiguration<SupportTicket
 
         builder.Property(x => x.Priority)
             .IsRequired()
-            .HasConversion<int>()
-            .HasDefaultValue(TicketPriority.Medium);
+            .HasConversion<int>();
 
         builder.Property(x => x.AssignedToUserId).IsRequired(false);
 

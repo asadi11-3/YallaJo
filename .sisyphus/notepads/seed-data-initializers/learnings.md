@@ -1,0 +1,12 @@
+- Task 1: Added shared seeding contract `IModuleDbInitializer` (Order + InitializeAsync) and API startup seeding extension with deterministic ordering and per-initializer failure isolation.
+- Seeding execution is gated by Development environment or `Seeding:Enabled=true` override for CI/debug reproducibility.
+- Task 2: Added `ContentCoreDbInitializer` with idempotent guard (`Languages.AnyAsync`) and base scenario data for languages, categories, category translations, tags, and guide specializations.
+- ContentCore entities expose private setters/constructors, so seeding uses a focused reflection helper in the initializer to populate required fields safely without altering domain model behavior.
+- Task 3: Added `SecurityDbInitializer` (roles/users/user-roles/role-claims) and `AuthDbInitializer` (devices/sessions/refresh-tokens/otps/external-providers), both wired through `IModuleDbInitializer` with ordered execution.
+- Cross-module identity consistency is handled with shared static `SeedIdentityProfiles` in shared infrastructure so Auth and Security seeders reference the same deterministic `UserId` set.
+- Task 4: Added `AccountsDbInitializer` to create one profile per seeded user (`UserId` logical reference), with idempotency guard and realistic display/avatar defaults.
+- Wave 2: Added `ContentPlacesDbInitializer` (places, businesses, place-business links, amenities, business hours) and `SocialDbInitializer` (reviews, favorites, reports, accessibility reviews), both ordered and idempotent.
+- Shared deterministic content IDs are now defined in `SeedContentIds` so downstream modules can reference seeded places/businesses consistently.
+- Wave 3: Added `ContentToursDbInitializer` with a complete minimal graph (tour, translations, schedules, waypoints, pricing tiers, package, inclusions, tour-guide link) tied to seeded place and guide identities.
+- Wave 4: Added `BookingDbInitializer` and `FinanceDbInitializer` with deterministic IDs for bookings/reservations/payments/payouts to keep cross-module links stable and idempotent.
+- Wave 5: Added `ContentBlogsDbInitializer`, `MessagingDbInitializer`, `AnalyticsDbInitializer`, `TrackingDbInitializer`, and `ContentSeoDbInitializer`, all wired through module DI and ordered (110-150) to complete startup-based idempotent seeding across all modules.

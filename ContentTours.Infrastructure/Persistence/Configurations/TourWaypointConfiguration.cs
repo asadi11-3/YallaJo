@@ -40,5 +40,7 @@ public class TourWaypointConfiguration : IEntityTypeConfiguration<TourWaypoint>
             .WithMany(x => x.TourWaypoints)
             .HasForeignKey(x => x.TourId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasQueryFilter(x => !x.Tour.IsDeleted);
     }
 }

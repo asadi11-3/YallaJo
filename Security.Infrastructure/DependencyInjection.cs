@@ -6,6 +6,7 @@ using Security.Application.Interfaces;
 using Security.Contracts.Abstractions;
 using Security.Domain.Repositories;
 using Security.Infrastructure.Persistence;
+using Security.Infrastructure.Persistence.Seeding;
 using Security.Infrastructure.Repositories;
 using Security.Infrastructure.Services;
 using YallaJo.SharedKernel.Infrastructure.BackgroundJobs;
@@ -32,6 +33,7 @@ public static class DependencyInjection
                 }));
 
         services.AddScoped<IUnitOfWork<SecurityDbContext>, UnitOfWork<SecurityDbContext>>();
+        services.AddScoped<IModuleDbInitializer, SecurityDbInitializer>();
         services.AddScoped<ISecurityUnitOfWork, SecurityUnitOfWork>();
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<ISecurityUserExistenceChecker, SecurityUserExistenceChecker>();

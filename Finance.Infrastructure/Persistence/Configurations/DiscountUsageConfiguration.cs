@@ -30,5 +30,7 @@ public class DiscountUsageConfiguration : IEntityTypeConfiguration<DiscountUsage
             .WithMany(x => x.DiscountUsages)
             .HasForeignKey(x => x.DiscountId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasQueryFilter(x => !x.Discount.IsDeleted);
     }
 }

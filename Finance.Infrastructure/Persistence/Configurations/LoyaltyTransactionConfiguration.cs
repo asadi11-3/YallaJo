@@ -27,5 +27,7 @@ public class LoyaltyTransactionConfiguration : IEntityTypeConfiguration<LoyaltyT
             .WithMany(x => x.Transactions)
             .HasForeignKey(x => x.LoyaltyPointsId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasQueryFilter(x => !x.LoyaltyPoints.IsDeleted);
     }
 }

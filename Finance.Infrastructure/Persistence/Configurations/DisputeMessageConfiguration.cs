@@ -26,6 +26,8 @@ public class DisputeMessageConfiguration : IEntityTypeConfiguration<DisputeMessa
             .HasForeignKey(x => x.DisputeId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        builder.HasQueryFilter(x => !x.Dispute.IsDeleted);
+
         builder.HasIndex(x => x.DisputeId);
     }
 }

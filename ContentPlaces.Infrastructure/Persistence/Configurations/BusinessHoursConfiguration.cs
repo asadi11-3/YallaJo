@@ -34,6 +34,8 @@ public class BusinessHoursConfiguration : IEntityTypeConfiguration<BusinessHours
             .HasForeignKey(x => x.BusinessId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        builder.HasQueryFilter(x => !x.Business.IsDeleted);
+
         builder.HasIndex(x => new { x.BusinessId, x.DayOfWeek }).IsUnique();
     }
 }

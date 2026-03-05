@@ -36,5 +36,7 @@ public class InvoiceLineItemConfiguration : IEntityTypeConfiguration<InvoiceLine
             .WithMany(x => x.InvoiceLineItems)
             .HasForeignKey(x => x.InvoiceId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasQueryFilter(x => !x.InvoiceItem.IsDeleted);
     }
 }

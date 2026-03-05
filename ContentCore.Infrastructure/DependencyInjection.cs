@@ -1,5 +1,5 @@
 using ContentCore.Infrastructure.Persistence;
-using MediatR;
+using ContentCore.Infrastructure.Persistence.Seeding;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -27,6 +27,7 @@ public static class DependencyInjection
                 }));
 
         services.AddScoped<IUnitOfWork<ContentCoreDbContext>, UnitOfWork<ContentCoreDbContext>>();
+        services.AddScoped<IModuleDbInitializer, ContentCoreDbInitializer>();
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
         services.AddScoped<IOutboxProcessor, OutboxProcessor<ContentCoreDbContext>>();
 

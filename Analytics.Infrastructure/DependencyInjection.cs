@@ -1,4 +1,5 @@
 using Analytics.Infrastructure.Persistence;
+using Analytics.Infrastructure.Persistence.Seeding;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -27,6 +28,7 @@ public static class DependencyInjection
                 }));
 
         services.AddScoped<IUnitOfWork<AnalyticsDbContext>, UnitOfWork<AnalyticsDbContext>>();
+        services.AddScoped<IModuleDbInitializer, AnalyticsDbInitializer>();
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
         services.AddScoped<IOutboxProcessor, OutboxProcessor<AnalyticsDbContext>>();
 

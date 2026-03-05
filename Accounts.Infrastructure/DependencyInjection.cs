@@ -1,8 +1,8 @@
 using Accounts.Domain.Repositories;
 using Accounts.Infrastructure.Persistence;
+using Accounts.Infrastructure.Persistence.Seeding;
 using Accounts.Infrastructure.Repositories;
 using Accounts.Application.Interfaces;
-using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -30,6 +30,7 @@ public static class DependencyInjection
                 }));
 
         services.AddScoped<IUnitOfWork<AccountsDbContext>, UnitOfWork<AccountsDbContext>>();
+        services.AddScoped<IModuleDbInitializer, AccountsDbInitializer>();
         services.AddScoped<IAccountsUnitOfWork, AccountsUnitOfWork>();
         services.AddScoped<IProfileRepository, ProfileRepository>();
         services.AddScoped<IAccountsInboxStore, AccountsInboxStore>();

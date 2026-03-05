@@ -1,4 +1,5 @@
 using ContentSeo.Infrastructure.Persistence;
+using ContentSeo.Infrastructure.Persistence.Seeding;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -27,6 +28,7 @@ public static class DependencyInjection
                 }));
 
         services.AddScoped<IUnitOfWork<ContentSeoDbContext>, UnitOfWork<ContentSeoDbContext>>();
+        services.AddScoped<IModuleDbInitializer, ContentSeoDbInitializer>();
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
         services.AddScoped<IOutboxProcessor, OutboxProcessor<ContentSeoDbContext>>();
 

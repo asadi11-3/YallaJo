@@ -38,5 +38,7 @@ public class PayoutItemConfiguration : IEntityTypeConfiguration<PayoutItem>
             .WithMany(x => x.PayoutItems)
             .HasForeignKey(x => x.PayoutId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasQueryFilter(x => !x.Payout.IsDeleted);
     }
 }

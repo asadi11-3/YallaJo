@@ -23,5 +23,7 @@ public class EntityCategoryConfiguration : IEntityTypeConfiguration<EntityCatego
             .WithMany()
             .HasForeignKey(x => x.CategoryId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasQueryFilter(x => !x.Category.IsDeleted);
     }
 }

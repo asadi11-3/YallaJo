@@ -34,6 +34,8 @@ public class CategoryTranslationConfiguration : IEntityTypeConfiguration<Categor
             .HasForeignKey(x => x.CategoryId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        builder.HasQueryFilter(x => !x.Category.IsDeleted);
+
         builder.HasIndex(x => x.LanguageId);
     }
 }

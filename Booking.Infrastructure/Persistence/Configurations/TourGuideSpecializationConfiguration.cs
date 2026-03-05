@@ -19,5 +19,7 @@ public class TourGuideSpecializationConfiguration : IEntityTypeConfiguration<Tou
             .WithMany(x => x.TourGuideSpecializations)
             .HasForeignKey(x => x.TourGuideId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasQueryFilter(x => !x.TourGuide.IsDeleted);
     }
 }

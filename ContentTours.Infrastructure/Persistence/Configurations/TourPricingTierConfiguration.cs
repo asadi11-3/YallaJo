@@ -48,5 +48,7 @@ public class TourPricingTierConfiguration : IEntityTypeConfiguration<TourPricing
             .WithMany(x => x.TourPricingTiers)
             .HasForeignKey(x => x.TourId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasQueryFilter(x => !x.Tour.IsDeleted);
     }
 }

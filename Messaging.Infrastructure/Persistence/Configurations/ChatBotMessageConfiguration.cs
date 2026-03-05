@@ -31,5 +31,7 @@ public class ChatBotMessageConfiguration : IEntityTypeConfiguration<ChatBotMessa
 
         builder.Property(x => x.CreatedAt).IsRequired();
         builder.Property(x => x.UpdatedAt).IsRequired(false);
+
+        builder.HasQueryFilter(x => !x.ChatBotConversation.IsDeleted);
     }
 }

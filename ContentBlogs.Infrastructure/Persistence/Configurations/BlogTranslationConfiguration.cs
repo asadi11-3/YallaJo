@@ -36,6 +36,8 @@ public class BlogTranslationConfiguration : IEntityTypeConfiguration<BlogTransla
             .HasForeignKey(x => x.BlogId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        builder.HasQueryFilter(x => !x.Blog.IsDeleted);
+
         builder.HasIndex(x => new { x.BlogId, x.LanguageId }).IsUnique();
         builder.HasIndex(x => x.LanguageId);
     }

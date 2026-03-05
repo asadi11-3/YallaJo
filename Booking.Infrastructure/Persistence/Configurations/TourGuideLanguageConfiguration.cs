@@ -20,5 +20,7 @@ public class TourGuideLanguageConfiguration : IEntityTypeConfiguration<TourGuide
             .WithMany(x => x.TourGuideLanguages)
             .HasForeignKey(x => x.TourGuideId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasQueryFilter(x => !x.TourGuide.IsDeleted);
     }
 }

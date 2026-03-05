@@ -31,5 +31,7 @@ public class FaqItemTranslationConfiguration : IEntityTypeConfiguration<FaqItemT
             .WithMany(x => x.FaqItemTranslations)
             .HasForeignKey(x => x.FaqItemId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasQueryFilter(x => !x.FaqItem.IsDeleted);
     }
 }

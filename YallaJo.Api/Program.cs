@@ -16,6 +16,7 @@ using Security.Infrastructure;
 using Security.Presentation;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Infrastructure;
+using YallaJo.Api.Extensions;
 using ContentCore.Application;
 using ContentCore.Infrastructure;
 using ContentCore.Presentation;
@@ -97,6 +98,7 @@ builder.Services.AddTrackingInfrastructure(builder.Configuration);
 
 // ── Shared cross-cutting: behaviors, clock, domain event dispatcher ───────
 builder.Services.AddSharedKernelInfrastructure();
+builder.Services.AddDataSeeding();
 
 // ── HTTP Context services ────────────────────────────────────────────────
 builder.Services.AddHttpContextAccessor();
@@ -182,6 +184,8 @@ builder.Services.AddProblemDetails(options =>
 builder.Services.AddHealthChecks();
 
 var app = builder.Build();
+
+await app.UseDataSeedingAsync();
 
 // ── Middleware pipeline (ORDER IS MANDATORY) ──────────────────────────────
 

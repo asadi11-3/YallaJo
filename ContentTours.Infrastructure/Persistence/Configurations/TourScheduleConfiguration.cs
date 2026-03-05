@@ -26,5 +26,7 @@ public class TourScheduleConfiguration : IEntityTypeConfiguration<TourSchedule>
             .WithMany(x => x.TourSchedules)
             .HasForeignKey(x => x.TourId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasQueryFilter(x => !x.Tour.IsDeleted);
     }
 }

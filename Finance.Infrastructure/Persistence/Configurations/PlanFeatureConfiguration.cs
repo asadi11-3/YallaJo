@@ -25,5 +25,7 @@ public class PlanFeatureConfiguration : IEntityTypeConfiguration<PlanFeature>
             .WithMany()
             .HasForeignKey(x => x.FeatureId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasQueryFilter(x => !x.SubscriptionFeature.IsDeleted);
     }
 }

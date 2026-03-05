@@ -33,6 +33,8 @@ public class BusinessAmenityConfiguration : IEntityTypeConfiguration<BusinessAme
             .HasForeignKey(x => x.BusinessId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        builder.HasQueryFilter(x => !x.Business.IsDeleted);
+
         builder.HasIndex(x => x.BusinessId);
     }
 }

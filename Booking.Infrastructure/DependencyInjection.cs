@@ -1,5 +1,5 @@
 using Booking.Infrastructure.Persistence;
-using MediatR;
+using Booking.Infrastructure.Persistence.Seeding;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -27,6 +27,7 @@ public static class DependencyInjection
                 }));
 
         services.AddScoped<IUnitOfWork<BookingDbContext>, UnitOfWork<BookingDbContext>>();
+        services.AddScoped<IModuleDbInitializer, BookingDbInitializer>();
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
         services.AddScoped<IOutboxProcessor, OutboxProcessor<BookingDbContext>>();
 

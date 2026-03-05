@@ -1,9 +1,9 @@
 {
-  "active_plan": "C:\\Users\\admin1\\source\\repos\\YallaJo\\.sisyphus\\plans\\sql-to-entities.md",
-  "started_at": "2026-02-26T14:29:59.378Z",
+  "active_plan": "C:\Users\admin1\source\repos\YallaJo\.sisyphus\plans\seed-data-initializers.md",
+  "started_at": "2026-03-05T13:06:00.000Z",
   "session_ids": [
-    "ses_365cdafb7ffehsq6wgNF9Be3ht"
+    "ses_34289c295ffeuWA20otqqkygSG"
   ],
-  "plan_name": "sql-to-entities",
+  "plan_name": "seed-data-initializers",
   "agent": "atlas"
 }

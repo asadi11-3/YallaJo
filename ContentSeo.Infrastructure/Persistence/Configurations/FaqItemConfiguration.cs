@@ -46,6 +46,13 @@ public class FaqItemConfiguration : IEntityTypeConfiguration<FaqItem>
             .HasForeignKey(x => x.FaqItemId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        builder.Metadata
+            .FindNavigation(nameof(FaqItem.FaqItemTranslations))
+            ?.SetField("_translations");
+
+        builder.Navigation(x => x.FaqItemTranslations)
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
+
         builder.HasQueryFilter(x => !x.IsDeleted);
 
         builder.HasIndex(x => new { x.EntityType, x.EntityId });

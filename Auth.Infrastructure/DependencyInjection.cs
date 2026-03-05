@@ -1,6 +1,7 @@
 using Auth.Application.Interfaces;
 using Auth.Domain.Repositories;
 using Auth.Infrastructure.Persistence;
+using Auth.Infrastructure.Persistence.Seeding;
 using Auth.Infrastructure.Repositories;
 using Auth.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
@@ -31,6 +32,7 @@ public static class DependencyInjection
 
         // UnitOfWork wraps AuthDbContext and dispatches domain events on SaveChanges
         services.AddScoped<IUnitOfWork<AuthDbContext>, UnitOfWork<AuthDbContext>>();
+        services.AddScoped<IModuleDbInitializer, AuthDbInitializer>();
         services.AddScoped<IAuthUnitOfWork, AuthUnitOfWork>();
 
         // Repositories

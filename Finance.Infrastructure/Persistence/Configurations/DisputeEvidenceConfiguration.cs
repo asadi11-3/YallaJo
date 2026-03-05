@@ -28,6 +28,8 @@ public class DisputeEvidenceConfiguration : IEntityTypeConfiguration<DisputeEvid
             .HasForeignKey(x => x.DisputeId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        builder.HasQueryFilter(x => !x.Dispute.IsDeleted);
+
         builder.HasIndex(x => x.DisputeId);
     }
 }

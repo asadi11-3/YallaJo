@@ -23,5 +23,7 @@ public class BlogTourConfiguration : IEntityTypeConfiguration<BlogTour>
             .WithMany()
             .HasForeignKey(x => x.BlogId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasQueryFilter(x => !x.Blog.IsDeleted);
     }
 }

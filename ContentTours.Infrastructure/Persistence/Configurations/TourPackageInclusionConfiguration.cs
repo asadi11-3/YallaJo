@@ -30,5 +30,7 @@ public class TourPackageInclusionConfiguration : IEntityTypeConfiguration<TourPa
             .WithMany(x => x.TourPackageInclusions)
             .HasForeignKey(x => x.TourPackageId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasQueryFilter(x => !x.TourPackage.IsDeleted);
     }
 }

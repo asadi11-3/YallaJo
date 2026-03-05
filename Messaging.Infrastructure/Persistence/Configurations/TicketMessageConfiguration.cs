@@ -26,5 +26,7 @@ public class TicketMessageConfiguration : IEntityTypeConfiguration<TicketMessage
 
         builder.Property(x => x.CreatedAt).IsRequired();
         builder.Property(x => x.UpdatedAt).IsRequired(false);
+
+        builder.HasQueryFilter(x => !x.SupportTicket.IsDeleted);
     }
 }
