@@ -39,6 +39,7 @@ public static class DependencyInjection
         services.AddScoped<ISecurityInboxStore, SecurityInboxStore>();
         services.AddScoped<IAuditLogRepository, AuditLogRepository>();
         services.AddScoped<IRoleClaimRepository, RoleClaimRepository>();
+        services.AddScoped<IUserClaimRepository, UserClaimRepository>();
         services.AddScoped<SecurityDataSeeder>();
         services.AddScoped<ISecurityUserExistenceChecker, SecurityUserExistenceChecker>();
         services.AddSingleton<IPasswordHasher, PasswordHasher>();

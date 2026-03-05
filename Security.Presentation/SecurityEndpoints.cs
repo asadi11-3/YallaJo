@@ -18,6 +18,12 @@ using Security.Application.Commands.DeactivateUser;
 using Security.Application.Commands.UpdateRole;
 using Security.Application.Queries.GetAuditLogs;
 using YallaJo.SharedKernel.Domain.Abstractions.Pagination;
+using Security.Application.Commands.AddRoleClaim;
+using Security.Application.Commands.RemoveRoleClaim;
+using Security.Application.Commands.AddUserClaim;
+using Security.Application.Commands.RemoveUserClaim;
+using Security.Application.Queries.GetUser;
+using Security.Application.Queries.ListUsers;
 
 namespace Security.Presentation;
 
@@ -44,6 +50,12 @@ public static class SecurityEndpoints
         MapActivateUserEndpoint(group);
         MapDeactivateRoleEndpoint(group);
         MapUpdateRoleEndpoint(group);
+        MapGetUserEndpoint(group);
+        MapListUsersEndpoint(group);
+        MapAddRoleClaimEndpoint(group);
+        MapRemoveRoleClaimEndpoint(group);
+        MapAddUserClaimEndpoint(group);
+        MapRemoveUserClaimEndpoint(group);
 
         return endpoints;
     }
@@ -266,6 +278,99 @@ public static class SecurityEndpoints
         .RequireAuthorization();
     }
 
+    private static void MapGetUserEndpoint(RouteGroupBuilder group)
+    {
+        group.MapGet("/users/{userId:guid}", async (Guid userId, ISender sender) =>
+        {
+            var result = await sender.Send(new GetUserQuery(userId));
+            return ToApiResult(result);
+        })
+        .WithName("GetUser")
+        .Produces<UserDto>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .WithSummary("Get a user by ID")
+        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.User, AppAction.Read))
+        .RequireAuthorization();
+    }
+
+    private static void MapListUsersEndpoint(RouteGroupBuilder group)
+    {
+        group.MapGet("/users", async (ISender sender, int page = 1, int pageSize = 20) =>
+        {
+            var result = await sender.Send(new ListUsersQuery(page, pageSize));
+            return ToApiResult(result);
+        })
+        .WithName("ListUsers")
+        .Produces<PaginatedResult<UserDto>>(StatusCodes.Status200OK)
+        .WithSummary("List users with pagination")
+        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.User, AppAction.Read))
+        .RequireAuthorization();
+    }
+
+    private static void MapAddRoleClaimEndpoint(RouteGroupBuilder group)
+    {
+        group.MapPost("/roles/{roleId:guid}/claims", async (Guid roleId, AddClaimRequest request, ISender sender) =>
+        {
+            var result = await sender.Send(new AddRoleClaimCommand(roleId, request.ClaimType, request.ClaimValue));
+            return ToApiResult(result);
+        })
+        .WithName("AddRoleClaim")
+        .Produces(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status409Conflict)
+        .WithSummary("Add a claim to a role")
+        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.RoleClaim, AppAction.Create))
+        .RequireAuthorization();
+    }
+
+    private static void MapRemoveRoleClaimEndpoint(RouteGroupBuilder group)
+    {
+        group.MapDelete("/roles/{roleId:guid}/claims/{claimId:guid}", async (Guid roleId, Guid claimId, ISender sender) =>
+        {
+            var result = await sender.Send(new RemoveRoleClaimCommand(roleId, claimId));
+            return ToApiResult(result);
+        })
+        .WithName("RemoveRoleClaim")
+        .Produces(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .WithSummary("Remove a claim from a role")
+        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.RoleClaim, AppAction.Delete))
+        .RequireAuthorization();
+    }
+
+    private static void MapAddUserClaimEndpoint(RouteGroupBuilder group)
+    {
+        group.MapPost("/users/{userId:guid}/claims", async (Guid userId, AddClaimRequest request, ISender sender) =>
+        {
+            var result = await sender.Send(new AddUserClaimCommand(userId, request.ClaimType, request.ClaimValue));
+            return ToApiResult(result);
+        })
+        .WithName("AddUserClaim")
+        .Produces(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status409Conflict)
+        .WithSummary("Add a claim to a user")
+        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.User, AppAction.Update))
+        .RequireAuthorization();
+    }
+
+    private static void MapRemoveUserClaimEndpoint(RouteGroupBuilder group)
+    {
+        group.MapDelete("/users/{userId:guid}/claims/{claimId:guid}", async (Guid userId, Guid claimId, ISender sender) =>
+        {
+            var result = await sender.Send(new RemoveUserClaimCommand(userId, claimId));
+            return ToApiResult(result);
+        })
+        .WithName("RemoveUserClaim")
+        .Produces(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .WithSummary("Remove a claim from a user")
+        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.User, AppAction.Update))
+        .RequireAuthorization();
+    }
+
     // ── Result → IResult mapping ──────────────────────────────────────────
 
     private static IResult ToApiResult<T>(Result<T> result) =>
@@ -298,3 +403,4 @@ public sealed record UpdatePrimaryPhoneRequest(string PhoneNumber);
 public sealed record CreateRoleRequest(string Name, string? Description);
 public sealed record AssignRoleRequest(Guid RoleId);
 public sealed record UpdateRoleRequest(string? Description);
+public sealed record AddClaimRequest(string ClaimType, string ClaimValue);

@@ -1,4 +1,5 @@
 using Auth.Application.Commands.RevokeSession;
+using Auth.Application.Commands.ForceRevokeUserSessions;
 using Auth.Application.Commands.TrustDevice;
 using Auth.Application.Commands.LinkExternalProvider;
 using Auth.Application.Commands.UnlinkExternalProvider;
@@ -16,6 +17,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
+using Security.Contracts.Authorization;
 
 namespace Auth.Presentation;
 
@@ -198,6 +200,20 @@ public static class AuthEndpoints
         .ProducesProblem(StatusCodes.Status403Forbidden)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Deactivate a linked external OAuth provider account")
+        .RequireAuthorization();
+
+        // ── Admin ────────────────────────────────────────────────────────
+        group.MapDelete("/admin/users/{userId:guid}/sessions", async (Guid userId, ISender sender) =>
+        {
+            var result = await sender.Send(new ForceRevokeUserSessionsCommand(userId));
+            return ToApiResult(result);
+        })
+        .WithName("ForceRevokeUserSessions")
+        .Produces(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .WithSummary("Admin: force-revoke all sessions and refresh tokens for a user")
+        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.User, AppAction.UpdateAny))
         .RequireAuthorization();
 
         return endpoints;

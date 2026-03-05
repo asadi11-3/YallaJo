@@ -1,5 +1,6 @@
 using Accounts.Application.Commands.CreateProfile;
 using Accounts.Application.Commands.DeleteAvatar;
+using Accounts.Application.Commands.DeleteProfile;
 using Accounts.Application.Commands.UpdateAvatar;
 using Accounts.Application.Commands.UpdateProfile;
 using Accounts.Application.Queries.GetProfile;
@@ -110,6 +111,18 @@ public static class AccountsEndpoints
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Remove the current user's avatar")
         .RequireAuthorization();
+
+        profile.MapDelete("/", async (ISender sender) =>
+        {
+            var result = await sender.Send(new DeleteProfileCommand());
+            return ToApiResult(result);
+        })
+        .WithName("DeleteProfile")
+        .Produces(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .WithSummary("Delete the current user's profile")
+        .RequireAuthorization();
     }
 
     // ── Result → IResult mapping ──────────────────────────────────────────
@@ -122,6 +135,11 @@ public static class AccountsEndpoints
     private static IResult ToApiResult<T>(Result<T> result) =>
         result.IsSuccess
             ? Results.Ok(result.Value)
+            : ToProblem(result.Outcome, result.Errors);
+
+    private static IResult ToApiResult(Result result) =>
+        result.IsSuccess
+            ? Results.Ok()
             : ToProblem(result.Outcome, result.Errors);
 
     private static IResult ToProblem(Outcome outcome, IReadOnlyList<Error> errors) =>
