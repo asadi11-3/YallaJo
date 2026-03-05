@@ -1,4 +1,7 @@
 using Auth.Application.Commands.RevokeSession;
+using Auth.Application.Commands.TrustDevice;
+using Auth.Application.Commands.LinkExternalProvider;
+using Auth.Application.Commands.UnlinkExternalProvider;
 using Auth.Application.Queries.ListSessions;
 using Auth.Application.Commands.ForgotPassword;
 using Auth.Application.Commands.Login;
@@ -153,6 +156,50 @@ public static class AuthEndpoints
         .WithSummary("Revoke a specific session — user may only revoke their own sessions")
         .RequireAuthorization();
 
+        // ── Devices ──────────────────────────────────────────────────────────
+        group.MapPatch("/devices/{deviceId:guid}/trust", async (Guid deviceId, ISender sender) =>
+        {
+            var result = await sender.Send(new TrustDeviceCommand(deviceId));
+            return ToApiResult(result);
+        })
+        .WithName("TrustDevice")
+        .Produces(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .WithSummary("Mark a device as trusted for the current user")
+        .RequireAuthorization();
+
+        // ── External Providers ───────────────────────────────────────────────
+        group.MapPost("/external-providers", async (LinkExternalProviderRequest request, ISender sender) =>
+        {
+            var result = await sender.Send(new LinkExternalProviderCommand(
+                request.Provider,
+                request.ProviderUserId,
+                request.ProviderEmail));
+            return ToApiResult(result);
+        })
+        .WithName("LinkExternalProvider")
+        .Produces<Guid>(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status409Conflict)
+        .WithSummary("Link an external OAuth provider account to the current user")
+        .RequireAuthorization();
+
+        group.MapDelete("/external-providers/{providerId:guid}", async (Guid providerId, ISender sender) =>
+        {
+            var result = await sender.Send(new UnlinkExternalProviderCommand(providerId));
+            return ToApiResult(result);
+        })
+        .WithName("UnlinkExternalProvider")
+        .Produces(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .WithSummary("Deactivate a linked external OAuth provider account")
+        .RequireAuthorization();
+
         return endpoints;
     }
 
@@ -192,3 +239,4 @@ public sealed record LogoutRequest(string RefreshToken);
 public sealed record ForgotPasswordRequest(string Email);
 public sealed record ResetPasswordRequest(string Email, string OtpCode, string NewPassword, string ConfirmNewPassword);
 public sealed record ResendOtpRequest(string Email, string Purpose);
+public sealed record LinkExternalProviderRequest(string Provider, string ProviderUserId, string? ProviderEmail);

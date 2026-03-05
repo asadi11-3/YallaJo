@@ -10,6 +10,7 @@ namespace Auth.Application.Commands.RefreshToken;
 public sealed class RefreshTokenCommandHandler(
     IRefreshTokenRepository refreshTokenRepository,
     ISessionRepository sessionRepository,
+    IDeviceRepository deviceRepository,
     ISecurityService securityService,
     IAuthUnitOfWork unitOfWork,
     ITokenService tokenService)
@@ -83,7 +84,9 @@ public sealed class RefreshTokenCommandHandler(
         // 8. Revoke old token, linking to the new one
         oldRefreshToken.Revoke(replacedByTokenId: newRefreshToken.Id);
 
-        // 9. Update session timestamp
+        // 9. Record device activity + update session timestamp
+        var device = await deviceRepository.GetByIdAsync(session.DeviceId, ct: ct, asNoTracking: false);
+        device?.RecordSeen();
         session.MarkUpdated();
 
         // 10. Persist
