@@ -16,7 +16,7 @@ public sealed class SecurityDataSeeder(
         await SeedRoleClaimsAsync(ct);
     }
 
-    // ── Roles ─────────────────────────────────────────────────────────────────
+   
 
     private async Task SeedRolesAsync(CancellationToken ct)
     {
@@ -35,7 +35,7 @@ public sealed class SecurityDataSeeder(
             await unitOfWork.SaveChangesAsync(ct);
     }
 
-    // ── Role claims (permissions) ──────────────────────────────────────────────
+   
 
     private async Task SeedRoleClaimsAsync(CancellationToken ct)
     {

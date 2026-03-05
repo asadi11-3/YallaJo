@@ -3,10 +3,7 @@ using YallaJo.SharedKernel.Domain.Entities;
 
 namespace Auth.Domain.Entities;
 
-/// <summary>
-/// An authenticated session tied to a user and device.
-/// UserId references Security.User.Id (no FK, cross-DB).
-/// </summary>
+
 public sealed class Session : AuditableEntity, IAggregateRoot
 {
     private Session() { } // EF Core

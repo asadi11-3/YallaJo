@@ -1,4 +1,4 @@
-// Security.Infrastructure/Persistence/SecurityInboxStore.cs
+
 using Microsoft.EntityFrameworkCore;
 using Security.Application.Interfaces;
 using YallaJo.SharedKernel.Infrastructure.Inbox;

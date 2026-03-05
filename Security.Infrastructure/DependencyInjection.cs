@@ -44,7 +44,7 @@ public static class DependencyInjection
         services.AddScoped<ISecurityUserExistenceChecker, SecurityUserExistenceChecker>();
         services.AddSingleton<IPasswordHasher, PasswordHasher>();
 
-        // Cross-module contract — used by Auth module for credential verification & email marking
+     
         services.AddScoped<ISecurityService, SecurityService>();
 
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));

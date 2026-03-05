@@ -1,4 +1,4 @@
-// Security.Contracts/Authorization/MustHavePermissionAttribute.cs
+
 using Microsoft.AspNetCore.Authorization;
 
 namespace Security.Contracts.Authorization;

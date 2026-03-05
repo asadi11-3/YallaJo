@@ -10,10 +10,7 @@ using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 
 namespace Security.Infrastructure.EventHandlers;
 
-/// <summary>
-/// Writes an AuditLog entry whenever a user changes their password.
-/// Reacts to PasswordChangedIntegrationEvent published by Security's own outbox.
-/// </summary>
+
 public sealed class PasswordChangedAuditHandler(
     SecurityDbContext dbContext,
     ISecurityInboxStore inboxStore,
@@ -25,7 +22,7 @@ public sealed class PasswordChangedAuditHandler(
         IntegrationEventNotification<PasswordChangedIntegrationEvent> notification,
         CancellationToken ct)
     {
-        // Inbox idempotency guard
+       
         if (await inboxStore.HasBeenProcessedAsync(notification.MessageId, ct))
         {
             logger.LogWarning(

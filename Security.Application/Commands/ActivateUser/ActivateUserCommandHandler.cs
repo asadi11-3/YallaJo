@@ -14,7 +14,7 @@ public sealed class ActivateUserCommandHandler(
 {
     public async Task<Result> Handle(ActivateUserCommand request, CancellationToken ct)
     {
-        if (!currentUser.IsAuthenticated)
+        if (!currentUser.IsAuthenticated || currentUser.UserId is null)
             return Result.Failure(Error.Unauthorized("Authentication is required."), Outcome.Unauthorized);
 
         var user = await userRepository.GetByIdAsync(request.UserId, ct, asNoTracking: false);

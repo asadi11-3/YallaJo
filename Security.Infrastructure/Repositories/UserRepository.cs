@@ -3,6 +3,7 @@ using Security.Domain.Entities;
 using Security.Domain.Repositories;
 using Security.Infrastructure.Persistence;
 using YallaJo.SharedKernel.Infrastructure.Data.Repositories;
+using YallaJo.SharedKernel.Domain.Abstractions.Pagination;
 
 namespace Security.Infrastructure.Repositories;
 
@@ -60,21 +61,33 @@ internal sealed class UserRepository(SecurityDbContext context)
     public void RemoveUserRole(UserRole userRole)
         => context.UserRoles.Remove(userRole);
 
-    public async Task<(List<User> Items, int TotalCount)> GetPagedWithDetailsAsync(
+    public Task<PaginatedResult<User>> GetPagedWithDetailsAsync(
         int page, int pageSize, CancellationToken ct = default)
+        => GetPaginatedAsync(
+            pageNumber: page,
+            pageSize: pageSize,
+            include: q => q
+                .Include(u => u.Emails.Where(e => e.IsPrimary))
+                .Include(u => u.UserRoles).ThenInclude(ur => ur.Role),
+            orderBy: q => q.OrderBy(u => u.Id),
+            asNoTracking: true,
+            ct: ct);
+
+    public async Task<Guid?> GetUserIdByEmailAsync(string normalizedEmail, CancellationToken ct = default)
     {
-        var query = context.Users
+        return await context.Users
             .AsNoTracking()
-            .Include(u => u.Emails.Where(e => e.IsPrimary))
-            .Include(u => u.UserRoles).ThenInclude(ur => ur.Role)
-            .OrderBy(u => u.Id);
+            .Where(u => u.Emails.Any(e => e.Address == normalizedEmail && e.IsPrimary))
+            .Select(u => (Guid?)u.Id)
+            .FirstOrDefaultAsync(ct);
+    }
 
-        var total = await query.CountAsync(ct);
-        var items = await query
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
-            .ToListAsync(ct);
-
-        return (items, total);
+    public async Task<string?> GetPrimaryPhoneNumberAsync(Guid userId, CancellationToken ct = default)
+    {
+        return await context.Phones
+            .AsNoTracking()
+            .Where(p => p.UserId == userId && p.IsPrimary)
+            .Select(p => (string?)p.PhoneNumber)
+            .FirstOrDefaultAsync(ct);
     }
 }

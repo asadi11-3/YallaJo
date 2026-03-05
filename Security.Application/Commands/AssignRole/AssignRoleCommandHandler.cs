@@ -17,7 +17,7 @@ public sealed class AssignRoleCommandHandler(
 {
     public async Task<Result> Handle(AssignRoleCommand request, CancellationToken ct)
     {
-        if (!currentUser.IsAuthenticated)
+        if (!currentUser.IsAuthenticated || currentUser.UserId is null)
             return Result.Failure(Error.Unauthorized("Authentication is required."), Outcome.Unauthorized);
 
         var role = await roleRepository.GetByIdAsync(request.RoleId, ct);
@@ -37,7 +37,7 @@ public sealed class AssignRoleCommandHandler(
             && await userRepository.AnyWithRoleAsync(AppRoles.Owner, ct))
             return Result.Failure(RoleErrors.OwnerSingleton, Outcome.Conflict);
 
-        var user = await userRepository.GetByIdAsync(request.UserId, ct);
+        var user = await userRepository.GetByIdAsync(request.UserId, ct, asNoTracking: false);
         if (user is null)
             return Result.Failure(UserErrors.NotFound, Outcome.NotFound);
 

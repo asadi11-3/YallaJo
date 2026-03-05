@@ -1,4 +1,4 @@
-// Security.Infrastructure/EventHandlers/SessionRevokedAuditHandler.cs
+
 using Auth.Contracts.IntegrationEvents;
 using MediatR;
 using Microsoft.Extensions.Logging;
@@ -10,10 +10,7 @@ using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 
 namespace Security.Infrastructure.EventHandlers;
 
-/// <summary>
-/// Writes an AuditLog entry whenever a session is revoked (logout or forced revocation).
-/// Reacts to SessionRevokedIntegrationEvent published by the Auth module.
-/// </summary>
+
 public sealed class SessionRevokedAuditHandler(
     SecurityDbContext dbContext,
     ISecurityInboxStore inboxStore,
@@ -25,7 +22,7 @@ public sealed class SessionRevokedAuditHandler(
         IntegrationEventNotification<SessionRevokedIntegrationEvent> notification,
         CancellationToken ct)
     {
-        // Inbox idempotency guard
+        
         if (await inboxStore.HasBeenProcessedAsync(notification.MessageId, ct))
         {
             logger.LogWarning(

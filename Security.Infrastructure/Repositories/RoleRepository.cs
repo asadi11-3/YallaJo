@@ -6,23 +6,14 @@ using YallaJo.SharedKernel.Infrastructure.Data.Repositories;
 
 namespace Security.Infrastructure.Repositories;
 
-/// <summary>
-/// Concrete repository for <see cref="Role"/> entities.
-///
-/// Role is a child entity (not an aggregate root) — it uses
-/// <see cref="EfEntityRepository{TEntity,TKey}"/> which has no IAggregateRoot constraint.
-/// No ASP.NET Identity / RoleManager dependency.
-/// </summary>
+
 internal sealed class RoleRepository(SecurityDbContext context)
     : EfEntityRepository<Role, Guid>(context), IRoleRepository
 {
-    // Typed context for joins that need SecurityDbContext-specific DbSets.
+   
     private readonly SecurityDbContext _db = context;
 
-    /// <summary>
-    /// Returns a map of userId → role-name list for the given user IDs.
-    /// One batch query — no N+1.
-    /// </summary>
+  
     public async Task<Dictionary<Guid, IReadOnlyList<string>>> GetRolesByUserIdsAsync(
         IEnumerable<Guid> userIds, CancellationToken ct = default)
     {
@@ -44,9 +35,7 @@ internal sealed class RoleRepository(SecurityDbContext context)
                 g => (IReadOnlyList<string>)g.Select(x => x.RoleName).ToList());
     }
 
-    /// <summary>
-    /// Loads active roles matching any of the supplied names (case-insensitive).
-    /// </summary>
+ 
     public async Task<IReadOnlyList<Role>> GetRolesByNamesAsync(
         IEnumerable<string> roleNames, CancellationToken ct = default)
     {

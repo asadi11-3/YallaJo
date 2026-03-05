@@ -1,4 +1,4 @@
-// Auth.Application/Queries/ListSessions/ListActiveSessionsQuery.cs
+
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 
 namespace Auth.Application.Queries.ListSessions;

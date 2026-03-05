@@ -6,11 +6,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Auth.Infrastructure.BackgroundJobs;
 
-/// <summary>
-/// Periodically deletes expired/revoked refresh tokens, sessions, and used/expired OTPs.
-/// Runs every 24 hours with a 1-minute startup grace period.
-/// Uses ExecuteDeleteAsync for bulk deletion (no entity loading).
-/// </summary>
+
 internal sealed class AuthCleanupService(
     IServiceProvider serviceProvider,
     ILogger<AuthCleanupService> logger) : BackgroundService

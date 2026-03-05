@@ -78,14 +78,7 @@ public sealed class VerifyEmailCommandHandler(
         // 6. OTP is valid — mark as used
         otp.MarkUsed();
 
-        // 7. Mark email verified in Security module (activates user + raises EmailVerifiedEvent)
-        var verified = await securityService.MarkEmailVerifiedAsync(userId.Value, normalizedEmail, ct);
-        if (!verified)
-            return Result<VerifyEmailResult>.Failure(
-                Error.Failure("Verification.Failed", "Could not verify email. Please try again."),
-                Outcome.ServerError);
-
-        // 8. Create Device
+        // 7. Create Device
         var device = Device.Create(
             userId: userId.Value,
             deviceToken: Guid.NewGuid().ToString(),
@@ -93,7 +86,7 @@ public sealed class VerifyEmailCommandHandler(
             deviceName: requestContext.DeviceName);
         await deviceRepository.AddAsync(device, ct);
 
-        // 9. Create Session
+        // 8. Create Session
         var session = Session.Create(
             userId: userId.Value,
             deviceId: device.Id,
@@ -101,7 +94,7 @@ public sealed class VerifyEmailCommandHandler(
             ipAddress: requestContext.IpAddress);
         await sessionRepository.AddAsync(session, ct);
 
-        // 10. Generate & store RefreshToken (hash only in DB)
+        // 9. Generate & store RefreshToken (hash only in DB)
         var plainRefreshToken = tokenService.GenerateRefreshToken();
         var refreshTokenHash = tokenService.HashRefreshToken(plainRefreshToken);
         var refreshTokenExpiresAt = DateTime.UtcNow.AddDays(RefreshTokenDays);
@@ -113,8 +106,17 @@ public sealed class VerifyEmailCommandHandler(
             expiresAt: refreshTokenExpiresAt);
         await refreshTokenRepository.AddAsync(refreshToken, ct);
 
-        // 11. Persist all Auth entities
+        // 10. Persist all Auth entities first (OTP, device, session, refresh token)
         await unitOfWork.SaveChangesAsync(ct);
+
+        // 11. Mark email verified in Security module (activates user + raises EmailVerifiedEvent)
+        //     Done AFTER Auth persistence so if this fails, Auth entities are safe
+        //     and the user can retry verification.
+        var verified = await securityService.MarkEmailVerifiedAsync(userId.Value, normalizedEmail, ct);
+        if (!verified)
+            return Result<VerifyEmailResult>.Failure(
+                Error.Failure("Verification.Failed", "Could not verify email. Please try again."),
+                Outcome.ServerError);
 
         // 12. Generate JWT AccessToken — load real roles/claims from Security module
         var userData = await securityService.GetUserDataByIdAsync(userId.Value, ct);

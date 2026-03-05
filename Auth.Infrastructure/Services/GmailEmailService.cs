@@ -6,10 +6,7 @@ using Microsoft.Extensions.Options;
 
 namespace Auth.Infrastructure.Services;
 
-/// <summary>
-/// Sends emails via Gmail SMTP using App Password authentication.
-/// Port 587, TLS enabled.
-/// </summary>
+
 internal sealed class GmailEmailService(
     IOptions<GmailOptions> options,
     ILogger<GmailEmailService> logger) : IEmailService

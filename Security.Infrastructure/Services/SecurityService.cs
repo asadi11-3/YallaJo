@@ -1,30 +1,18 @@
-using Microsoft.EntityFrameworkCore;
 using Security.Application.Interfaces;
 using Security.Contracts.Abstractions;
 using Security.Domain.Repositories;
-using Security.Infrastructure.Persistence;
 
 namespace Security.Infrastructure.Services;
 
-/// <summary>
-/// Implements <see cref="ISecurityService"/> for cross-module identity operations.
-/// Called by Auth module to verify credentials, look up users, and mark emails verified.
-/// </summary>
+
 internal sealed class SecurityService(
-    SecurityDbContext dbContext,
     IUserRepository userRepository,
     ISecurityUnitOfWork unitOfWork,
     IPasswordHasher passwordHasher) : ISecurityService
 {
     public async Task<Guid?> GetUserIdByEmailAsync(string normalizedEmail, CancellationToken ct = default)
     {
-        var user = await dbContext.Users
-            .AsNoTracking()
-            .Where(u => u.Emails.Any(e => e.Address == normalizedEmail && e.IsPrimary))
-            .Select(u => (Guid?)u.Id)
-            .FirstOrDefaultAsync(ct);
-
-        return user;
+        return await userRepository.GetUserIdByEmailAsync(normalizedEmail, ct);
     }
 
     public async Task<bool> MarkEmailVerifiedAsync(Guid userId, string email, CancellationToken ct = default)
@@ -40,10 +28,10 @@ internal sealed class SecurityService(
             return false;
 
         if (emailEntity.IsVerified)
-            return true; // already verified — idempotent
+            return true; 
 
         user.VerifyEmail(emailEntity.Id);
-        // VerifyEmail activates user + raises EmailVerifiedEvent → domain event → outbox
+       
 
         await unitOfWork.SaveChangesAsync(ct);
         return true;
@@ -138,11 +126,7 @@ internal sealed class SecurityService(
 
     public async Task<string?> GetPrimaryPhoneNumberAsync(Guid userId, CancellationToken ct = default)
     {
-        return await dbContext.Phones
-            .AsNoTracking()
-            .Where(p => p.UserId == userId && p.IsPrimary)
-            .Select(p => (string?)p.PhoneNumber)
-            .FirstOrDefaultAsync(ct);
+        return await userRepository.GetPrimaryPhoneNumberAsync(userId, ct);
     }
 
     public async Task<bool> ResetPasswordAsync(Guid userId, string newPassword, CancellationToken ct = default)
@@ -152,7 +136,7 @@ internal sealed class SecurityService(
             return false;
 
         user.ResetPassword(passwordHasher.Hash(newPassword));
-        // ResetPassword raises PasswordResetEvent → domain event → outbox → Auth revokes sessions
+      
 
         await unitOfWork.SaveChangesAsync(ct);
         return true;

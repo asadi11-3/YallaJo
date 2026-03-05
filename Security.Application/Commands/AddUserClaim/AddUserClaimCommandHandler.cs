@@ -16,7 +16,7 @@ public sealed class AddUserClaimCommandHandler(
 {
     public async Task<Result> Handle(AddUserClaimCommand request, CancellationToken ct)
     {
-        if (!currentUser.IsAuthenticated)
+        if (!currentUser.IsAuthenticated || currentUser.UserId is null)
             return Result.Failure(Error.Unauthorized("Authentication is required."), Outcome.Unauthorized);
 
         var user = await userRepository.GetByIdAsync(request.UserId, ct);

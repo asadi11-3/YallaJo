@@ -7,10 +7,7 @@ using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 
 namespace Auth.Infrastructure.EventHandlers;
 
-/// <summary>
-/// Reacts to a password reset in the Security module by revoking
-/// all active sessions and refresh tokens for the user (security best practice).
-/// </summary>
+
 public sealed class PasswordResetIntegrationEventHandler(
     ISessionRepository sessionRepository,
     IRefreshTokenRepository refreshTokenRepository,
@@ -23,7 +20,7 @@ public sealed class PasswordResetIntegrationEventHandler(
         IntegrationEventNotification<PasswordResetIntegrationEvent> notification,
         CancellationToken ct)
     {
-        // Inbox check — idempotency guard
+       
         if (await inboxStore.HasBeenProcessedAsync(notification.MessageId, ct))
         {
             logger.LogWarning(
@@ -34,7 +31,7 @@ public sealed class PasswordResetIntegrationEventHandler(
 
         var userId = notification.Event.UserId;
 
-        // Revoke all active sessions
+       
         var activeSessions = await sessionRepository.GetAllAsync(
             filter: s => s.UserId == userId && !s.IsRevoked,
             asNoTracking: false,
@@ -43,7 +40,7 @@ public sealed class PasswordResetIntegrationEventHandler(
         foreach (var session in activeSessions)
             session.Revoke();
 
-        // Revoke all active refresh tokens
+        
         var activeTokens = await refreshTokenRepository.GetAllAsync(
             filter: rt => rt.UserId == userId && !rt.IsRevoked,
             asNoTracking: false,

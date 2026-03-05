@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Security.Domain.Entities;
 using YallaJo.SharedKernel.Application.Abstractions.Data;
 using YallaJo.SharedKernel.Infrastructure.Outbox;
+using YallaJo.SharedKernel.Infrastructure.Inbox;
 
 namespace Security.Infrastructure.Persistence;
 
@@ -21,6 +22,7 @@ public sealed class SecurityDbContext : DbContext, IDbContext
     public DbSet<UserClaim> UserClaims => Set<UserClaim>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
+    public DbSet<InboxMessage> InboxMessages => Set<InboxMessage>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

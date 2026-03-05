@@ -1,4 +1,4 @@
-// Auth.Application/Queries/ListSessions/ListActiveSessionsQueryHandler.cs
+
 using Auth.Domain.Repositories;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
@@ -23,20 +23,20 @@ public sealed class ListActiveSessionsQueryHandler(
 
         var userId = currentUser.UserId.Value;
 
-        // Determine the current session from the "sid" JWT claim (if present)
+       
         Guid? currentSessionId = null;
         var sidClaim = currentUser.GetClaim("sid");
         if (sidClaim is not null && Guid.TryParse(sidClaim, out var parsedSid))
             currentSessionId = parsedSid;
 
-        // 1. Load active sessions (non-revoked, non-expired) for the user
+
         var sessions = await sessionRepository.GetActiveSessionsByUserIdAsync(userId, ct);
 
         if (sessions.Count == 0)
             return Result<IReadOnlyList<ActiveSessionDto>>.Success(
                 Array.Empty<ActiveSessionDto>());
 
-        // 2. Batch-load associated devices (single query using IN clause)
+      
         var deviceIds = sessions.Select(s => s.DeviceId).Distinct().ToHashSet();
         var devices = await deviceRepository.GetAllAsync(
             filter: d => deviceIds.Contains(d.Id),
@@ -45,7 +45,7 @@ public sealed class ListActiveSessionsQueryHandler(
 
         var deviceMap = devices.ToDictionary(d => d.Id);
 
-        // 3. Project to DTOs
+       
         IReadOnlyList<ActiveSessionDto> dtos = sessions
             .Select(s =>
             {

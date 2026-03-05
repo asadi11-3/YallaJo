@@ -8,10 +8,7 @@ using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 
 namespace Auth.Application.EventHandlers;
 
-/// <summary>
-/// Reacts to a user being created in the Security module by generating a 6-digit OTP,
-/// storing its hash in auth.Otps, and sending the code via email.
-/// </summary>
+
 public sealed class UserCreatedIntegrationEventHandler(
     IOtpRepository otpRepository,
     IAuthUnitOfWork unitOfWork,
@@ -29,7 +26,7 @@ public sealed class UserCreatedIntegrationEventHandler(
         IntegrationEventNotification<UserCreatedIntegrationEvent> notification,
         CancellationToken ct)
     {
-        // Inbox check — idempotency guard: skip if already processed (retry/duplicate)
+       
         if (await inboxStore.HasBeenProcessedAsync(notification.MessageId, ct))
         {
             logger.LogWarning(
@@ -40,7 +37,7 @@ public sealed class UserCreatedIntegrationEventHandler(
 
         var evt = notification.Event;
 
-        // Generate cryptographically secure 6-digit OTP
+        
         var plainOtp = otpService.Generate();
         var hashedOtp = otpService.Hash(plainOtp);
 
@@ -54,12 +51,11 @@ public sealed class UserCreatedIntegrationEventHandler(
 
         await otpRepository.AddAsync(otp, ct);
 
-        // Record in inbox and persist atomically with the OTP
+      
         inboxStore.MarkAsProcessed(notification.MessageId);
         await unitOfWork.SaveChangesAsync(ct);
 
-        // Send OTP email (fire-and-forget relative to persistence —
-        // if email fails, OTP is saved and user can request a resend)
+        
         try
         {
             await emailService.SendAsync(

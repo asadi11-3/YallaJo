@@ -16,7 +16,7 @@ public sealed class AddRoleClaimCommandHandler(
 {
     public async Task<Result> Handle(AddRoleClaimCommand request, CancellationToken ct)
     {
-        if (!currentUser.IsAuthenticated)
+        if (!currentUser.IsAuthenticated || currentUser.UserId is null)
             return Result.Failure(Error.Unauthorized("Authentication is required."), Outcome.Unauthorized);
 
         var role = await roleRepository.GetByIdAsync(request.RoleId, ct);

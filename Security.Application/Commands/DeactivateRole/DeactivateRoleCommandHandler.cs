@@ -15,10 +15,10 @@ public sealed class DeactivateRoleCommandHandler(
 {
     public async Task<Result> Handle(DeactivateRoleCommand request, CancellationToken ct)
     {
-        if (!currentUser.IsAuthenticated)
+        if (!currentUser.IsAuthenticated || currentUser.UserId is null)
             return Result.Failure(Error.Unauthorized("Authentication is required."), Outcome.Unauthorized);
 
-        var role = await roleRepository.GetByIdAsync(request.RoleId, ct);
+        var role = await roleRepository.GetByIdAsync(request.RoleId, ct, asNoTracking: false);
         if (role is null)
             return Result.Failure(RoleErrors.NotFound, Outcome.NotFound);
 

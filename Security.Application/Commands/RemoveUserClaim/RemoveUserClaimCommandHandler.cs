@@ -15,7 +15,7 @@ public sealed class RemoveUserClaimCommandHandler(
 {
     public async Task<Result> Handle(RemoveUserClaimCommand request, CancellationToken ct)
     {
-        if (!currentUser.IsAuthenticated)
+        if (!currentUser.IsAuthenticated || currentUser.UserId is null)
             return Result.Failure(Error.Unauthorized("Authentication is required."), Outcome.Unauthorized);
 
         var user = await userRepository.GetByIdAsync(request.UserId, ct);

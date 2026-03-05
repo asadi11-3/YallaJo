@@ -2,11 +2,7 @@ using YallaJo.SharedKernel.Domain.Entities;
 
 namespace Auth.Domain.Entities;
 
-/// <summary>
-/// One-time password for verification flows (email, phone, 2FA).
-/// UserId references Security.User.Id (no FK, cross-DB).
-/// CodeHash is stored — never the raw code.
-/// </summary>
+
 public sealed class Otp : AuditableEntity
 {
     private Otp() { } // EF Core

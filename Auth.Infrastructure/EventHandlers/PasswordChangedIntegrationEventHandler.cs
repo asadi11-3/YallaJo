@@ -1,4 +1,4 @@
-// Auth.Infrastructure/EventHandlers/PasswordChangedIntegrationEventHandler.cs
+
 using Auth.Application.Interfaces;
 using Auth.Domain.Repositories;
 using MediatR;
@@ -8,10 +8,7 @@ using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 
 namespace Auth.Infrastructure.EventHandlers;
 
-/// <summary>
-/// Reacts to a password change in the Security module by revoking
-/// all active sessions and refresh tokens for the user (security best practice).
-/// </summary>
+
 public sealed class PasswordChangedIntegrationEventHandler(
     ISessionRepository sessionRepository,
     IRefreshTokenRepository refreshTokenRepository,
@@ -24,7 +21,7 @@ public sealed class PasswordChangedIntegrationEventHandler(
         IntegrationEventNotification<PasswordChangedIntegrationEvent> notification,
         CancellationToken ct)
     {
-        // Inbox check — idempotency guard
+      
         if (await inboxStore.HasBeenProcessedAsync(notification.MessageId, ct))
         {
             logger.LogWarning(
@@ -35,7 +32,7 @@ public sealed class PasswordChangedIntegrationEventHandler(
 
         var userId = notification.Event.UserId;
 
-        // Revoke all active sessions
+      
         var activeSessions = await sessionRepository.GetAllAsync(
             filter: s => s.UserId == userId && !s.IsRevoked,
             asNoTracking: false,
@@ -44,7 +41,7 @@ public sealed class PasswordChangedIntegrationEventHandler(
         foreach (var session in activeSessions)
             session.Revoke();
 
-        // Revoke all active refresh tokens
+        
         var activeTokens = await refreshTokenRepository.GetAllAsync(
             filter: rt => rt.UserId == userId && !rt.IsRevoked,
             asNoTracking: false,

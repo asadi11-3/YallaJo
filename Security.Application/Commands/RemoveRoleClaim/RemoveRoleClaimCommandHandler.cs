@@ -15,7 +15,7 @@ public sealed class RemoveRoleClaimCommandHandler(
 {
     public async Task<Result> Handle(RemoveRoleClaimCommand request, CancellationToken ct)
     {
-        if (!currentUser.IsAuthenticated)
+        if (!currentUser.IsAuthenticated || currentUser.UserId is null)
             return Result.Failure(Error.Unauthorized("Authentication is required."), Outcome.Unauthorized);
 
         var role = await roleRepository.GetByIdAsync(request.RoleId, ct);

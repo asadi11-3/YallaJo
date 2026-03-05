@@ -1,4 +1,4 @@
-// Auth.Domain/Events/UserLoggedInEvent.cs
+
 using YallaJo.SharedKernel.Domain.Event;
 
 namespace Auth.Domain.Events;

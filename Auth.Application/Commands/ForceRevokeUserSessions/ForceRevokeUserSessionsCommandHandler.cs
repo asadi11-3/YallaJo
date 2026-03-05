@@ -16,7 +16,7 @@ public sealed class ForceRevokeUserSessionsCommandHandler(
         ForceRevokeUserSessionsCommand request,
         CancellationToken ct)
     {
-        if (!currentUser.IsAuthenticated)
+        if (!currentUser.IsAuthenticated || currentUser.UserId is null)
             return Result.Unauthorized("Authentication is required.");
 
         var targetUserId = request.UserId;

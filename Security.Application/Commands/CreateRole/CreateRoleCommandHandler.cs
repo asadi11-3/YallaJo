@@ -16,7 +16,7 @@ public sealed class CreateRoleCommandHandler(
 {
     public async Task<Result<CreateRoleResult>> Handle(CreateRoleCommand request, CancellationToken ct)
     {
-        if (!currentUser.IsAuthenticated)
+        if (!currentUser.IsAuthenticated || currentUser.UserId is null)
             return Result<CreateRoleResult>.Failure(
                 Error.Unauthorized("Authentication is required."), Outcome.Unauthorized);
 

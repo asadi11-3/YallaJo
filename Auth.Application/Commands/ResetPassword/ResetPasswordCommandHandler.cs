@@ -65,16 +65,16 @@ public sealed class ResetPasswordCommandHandler(
                 Outcome.Invalid);
         }
 
-        // OTP valid — mark as used
-        otp.MarkUsed();
-        await unitOfWork.SaveChangesAsync(ct);
-
         // Reset password via Security module (also raises PasswordResetDomainEvent → outbox → integration event)
         var reset = await securityService.ResetPasswordAsync(userId.Value, request.NewPassword, ct);
         if (!reset)
             return Result<ResetPasswordResult>.Failure(
                 Error.Failure("Reset.Failed", "Could not reset password. Please try again."),
                 Outcome.ServerError);
+
+        // OTP valid and password reset succeeded — mark OTP as used
+        otp.MarkUsed();
+        await unitOfWork.SaveChangesAsync(ct);
 
         return Result<ResetPasswordResult>.Success(new ResetPasswordResult(true));
     }

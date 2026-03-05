@@ -12,10 +12,10 @@ public sealed class ListUsersQueryHandler(IUserRepository userRepository)
     public async Task<Result<PaginatedResult<UserDto>>> Handle(
         ListUsersQuery request, CancellationToken ct)
     {
-        var (items, total) = await userRepository.GetPagedWithDetailsAsync(
+        var pagedUsers = await userRepository.GetPagedWithDetailsAsync(
             request.Page, request.PageSize, ct);
 
-        var dtos = items.Select(user =>
+        var dtos = pagedUsers.Items.Select(user =>
         {
             var primaryEmail = user.GetPrimaryEmail();
             var roles = user.UserRoles
@@ -32,6 +32,6 @@ public sealed class ListUsersQueryHandler(IUserRepository userRepository)
         }).ToList();
 
         return Result<PaginatedResult<UserDto>>.Success(
-            new PaginatedResult<UserDto>(dtos, total, request.Page, request.PageSize));
+            new PaginatedResult<UserDto>(dtos, pagedUsers.TotalCount, request.Page, request.PageSize));
     }
 }

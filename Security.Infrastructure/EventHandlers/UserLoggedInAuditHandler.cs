@@ -1,4 +1,4 @@
-// Security.Infrastructure/EventHandlers/UserLoggedInAuditHandler.cs
+
 
 using Auth.Contracts.IntegrationEvents;
 using MediatR;
@@ -11,10 +11,7 @@ using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 
 namespace Security.Infrastructure.EventHandlers;
 
-/// <summary>
-/// Writes an AuditLog entry whenever a user successfully logs in.
-/// Reacts to UserLoggedInIntegrationEvent published by the Auth module.
-/// </summary>
+
 public sealed class UserLoggedInAuditHandler(
     SecurityDbContext dbContext,
     ISecurityInboxStore inboxStore,

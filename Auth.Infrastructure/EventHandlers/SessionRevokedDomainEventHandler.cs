@@ -1,4 +1,4 @@
-// Auth.Infrastructure/EventHandlers/SessionRevokedDomainEventHandler.cs
+
 using Auth.Contracts.IntegrationEvents;
 using Auth.Domain.Events;
 using Auth.Infrastructure.Persistence;

@@ -1,4 +1,4 @@
-// Security.Infrastructure/EventHandlers/PasswordChangedDomainEventHandler.cs
+
 using MediatR;
 using Microsoft.Extensions.Logging;
 using Security.Contracts.IntegrationEvents;

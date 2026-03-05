@@ -1,4 +1,4 @@
-// Security.Infrastructure/EventHandlers/UserCreatedAuditHandler.cs
+
 using MediatR;
 using Microsoft.Extensions.Logging;
 using Security.Application.Interfaces;
@@ -10,10 +10,7 @@ using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 
 namespace Security.Infrastructure.EventHandlers;
 
-/// <summary>
-/// Writes an AuditLog entry whenever a new user registers.
-/// Reacts to UserCreatedIntegrationEvent published by Security's own outbox.
-/// </summary>
+
 public sealed class UserCreatedAuditHandler(
     SecurityDbContext dbContext,
     ISecurityInboxStore inboxStore,
@@ -25,7 +22,7 @@ public sealed class UserCreatedAuditHandler(
         IntegrationEventNotification<UserCreatedIntegrationEvent> notification,
         CancellationToken ct)
     {
-        // Inbox idempotency guard
+        
         if (await inboxStore.HasBeenProcessedAsync(notification.MessageId, ct))
         {
             logger.LogWarning(

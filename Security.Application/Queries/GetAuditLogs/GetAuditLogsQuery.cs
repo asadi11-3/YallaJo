@@ -1,4 +1,4 @@
-// Security.Application/Queries/GetAuditLogs/GetAuditLogsQuery.cs
+
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Pagination;
 

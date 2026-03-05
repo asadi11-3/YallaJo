@@ -3,12 +3,13 @@ using Microsoft.EntityFrameworkCore;
 using Security.Domain.Entities;
 using Security.Domain.Repositories;
 using Security.Infrastructure.Persistence;
+using YallaJo.SharedKernel.Domain.Abstractions.Pagination;
 
 namespace Security.Infrastructure.Repositories;
 
 internal sealed class AuditLogRepository(SecurityDbContext context) : IAuditLogRepository
 {
-    public async Task<(List<AuditLog> Items, int TotalCount)> GetPagedAsync(
+    public async Task<PaginatedResult<AuditLog>> GetPagedAsync(
         Guid? userId, int page, int pageSize, CancellationToken ct = default)
     {
         var query = context.AuditLogs.AsQueryable();
@@ -25,6 +26,6 @@ internal sealed class AuditLogRepository(SecurityDbContext context) : IAuditLogR
             .AsNoTracking()
             .ToListAsync(ct);
 
-        return (items, total);
+        return new PaginatedResult<AuditLog>(items, total, page, pageSize);
     }
 }

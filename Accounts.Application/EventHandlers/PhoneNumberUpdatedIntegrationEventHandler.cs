@@ -7,10 +7,7 @@ using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 
 namespace Accounts.Application.EventHandlers;
 
-/// <summary>
-/// Consumes PhoneNumberUpdatedIntegrationEvent from the Security outbox.
-/// Prevents orphaned outbox messages — no Accounts-specific action required at this time.
-/// </summary>
+
 public sealed class PhoneNumberUpdatedIntegrationEventHandler(
     IAccountsInboxStore inboxStore,
     IAccountsUnitOfWork unitOfWork,

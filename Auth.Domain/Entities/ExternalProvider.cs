@@ -2,11 +2,7 @@ using YallaJo.SharedKernel.Domain.Entities;
 
 namespace Auth.Domain.Entities;
 
-/// <summary>
-/// Links a user to an external OAuth/OIDC provider (Google, Apple, etc.).
-/// UserId references Security.User.Id (no FK, cross-DB).
-/// Provider is a string — no enum, so new providers need no code changes.
-/// </summary>
+
 public sealed class ExternalProvider : AuditableEntity, IAggregateRoot
 {
     private ExternalProvider() { } // EF Core
