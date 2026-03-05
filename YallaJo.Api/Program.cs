@@ -1,23 +1,23 @@
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models;
-using System.Text;
-using YallaJo.Api.ExceptionHandlers;
-using YallaJo.Api.Services;
-using Security.Contracts.Authorization;
-using Security.Infrastructure.Seeding;
-using YallaJo.Api.Authorization;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Diagnostics;
 using Accounts.Application;
 using Accounts.Infrastructure;
 using Accounts.Presentation;
 using Auth.Application;
 using Auth.Infrastructure;
 using Auth.Presentation;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using Security.Application;
+using Security.Contracts.Authorization;
 using Security.Infrastructure;
+using Security.Infrastructure.Seeding;
 using Security.Presentation;
+using System.Text;
+using YallaJo.Api.Authorization;
+using YallaJo.Api.ExceptionHandlers;
+using YallaJo.Api.Services;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Infrastructure;
 
@@ -41,8 +41,9 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IRequestContext, RequestContext>();
 builder.Services.AddScoped<ICurrentUser, CurrentUser>();
 
-// ── Rate Limiting ────────────────────────────────────────────────────────
+// ── Rate Limiting ─────────────────────────────────────────────────────────
 builder.Services.AddYallaJoRateLimiting();
+
 
 // ── Authentication & Authorization ────────────────────────────────────────
 var jwtKey = builder.Configuration["Jwt:Key"]
@@ -73,9 +74,9 @@ builder.Services
     });
 builder.Services.AddAuthorization(opts =>
 {
-    opts.AddPolicy("Owner",      p => p.RequireRole(AppRoles.Owner));
+    opts.AddPolicy("Owner", p => p.RequireRole(AppRoles.Owner));
     opts.AddPolicy("SuperAdmin", p => p.RequireRole(AppRoles.Owner, AppRoles.SuperAdmin));
-    opts.AddPolicy("Admin",      p => p.RequireRole(AppRoles.Owner, AppRoles.SuperAdmin, AppRoles.Admin));
+    opts.AddPolicy("Admin", p => p.RequireRole(AppRoles.Owner, AppRoles.SuperAdmin, AppRoles.Admin));
 });
 builder.Services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
 builder.Services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
@@ -129,14 +130,11 @@ builder.Services.AddProblemDetails(options =>
 builder.Services.AddHealthChecks();
 
 var app = builder.Build();
-
-// ── Seeding ────────────────────────────────────────────────────────────────────
 using (var scope = app.Services.CreateScope())
 {
     var seeder = scope.ServiceProvider.GetRequiredService<SecurityDataSeeder>();
     await seeder.SeedAsync();
 }
-
 // ── Middleware pipeline (ORDER IS MANDATORY) ──────────────────────────────
 
 // 1. Global exception handler — must be first so it wraps all downstream errors
@@ -155,10 +153,11 @@ if (app.Environment.IsDevelopment())
 // 3. Transport security
 app.UseHttpsRedirection();
 
-// 3b. Rate limiting — must be before authentication
+// 4. Authentication MUST come before Authorization
+// 4a. Rate limiter — must precede authentication so anonymous endpoints
+//     are throttled before the JWT pipeline runs
 app.UseRateLimiter();
 
-// 4. Authentication MUST come before Authorization
 app.UseAuthentication();
 app.UseAuthorization();
 

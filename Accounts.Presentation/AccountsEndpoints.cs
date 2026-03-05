@@ -7,8 +7,8 @@ using Accounts.Domain.Enums;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Routing;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
 namespace Accounts.Presentation;
@@ -81,7 +81,7 @@ public static class AccountsEndpoints
         .WithSummary("Update the current user's profile")
         .RequireAuthorization();
 
-        profile.MapPut("/avatar", async ([FromForm] UpdateAvatarRequest request, ISender sender) =>
+        profile.MapPut("/avatar", async ([FromForm]  UpdateAvatarRequest request, ISender sender) =>
         {
             var result = await sender.Send(new UpdateAvatarCommand(request.AvatarUrl));
             return ToApiResult(result);

@@ -21,7 +21,6 @@
     <ProjectReference Include="..\Accounts.Presentation\Accounts.Presentation.csproj" />
     <ProjectReference Include="..\Auth.Presentation\Auth.Presentation.csproj" />
     <ProjectReference Include="..\Security.Presentation\Security.Presentation.csproj" />
-    <ProjectReference Include="..\Security.Contracts\Security.Contracts.csproj" />
     <ProjectReference Include="..\YallaJo.SharedKernel.Infrastructure\YallaJo.SharedKernel.Infrastructure.csproj" />
     <ProjectReference Include="..\Accounts.Infrastructure\Accounts.Infrastructure.csproj" />
     <ProjectReference Include="..\Auth.Infrastructure\Auth.Infrastructure.csproj" />

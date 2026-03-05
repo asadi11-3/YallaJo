@@ -48,11 +48,10 @@ internal sealed class UserRepository(SecurityDbContext context)
             .Include(u => u.Phones)
             .FirstOrDefaultAsync(u => u.Id == userId, ct);
     }
-
     public async Task<bool> AnyWithRoleAsync(string roleName, CancellationToken ct = default)
-        => await context.UserRoles
-               .Where(ur => ur.Role.Name == roleName)
-               .AnyAsync(ct);
+     => await context.UserRoles
+            .Where(ur => ur.Role.Name == roleName)
+            .AnyAsync(ct);
 
     public async Task<UserRole?> GetUserRoleAsync(Guid userId, Guid roleId, CancellationToken ct = default)
         => await context.UserRoles

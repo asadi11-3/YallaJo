@@ -33,7 +33,7 @@ public static class AuthEndpoints
         .ProducesProblem(StatusCodes.Status429TooManyRequests)
         .WithSummary("Verify email with OTP code — returns access + refresh tokens")
         .AllowAnonymous()
-        .RequireRateLimiting(RateLimitPolicies.OtpPolicy);
+         .RequireRateLimiting(RateLimitPolicies.OtpPolicy);
 
         group.MapPost("/login", async (LoginRequest request, ISender sender) =>
         {
@@ -46,7 +46,7 @@ public static class AuthEndpoints
         .ProducesProblem(StatusCodes.Status401Unauthorized)
         .WithSummary("Login with email and password — returns access + refresh tokens")
         .AllowAnonymous()
-        .RequireRateLimiting(RateLimitPolicies.LoginPolicy);
+         .RequireRateLimiting(RateLimitPolicies.LoginPolicy);
 
         group.MapPost("/refresh", async (RefreshTokenRequest request, ISender sender) =>
         {
@@ -60,6 +60,7 @@ public static class AuthEndpoints
         .WithSummary("Refresh access token using a valid refresh token")
         .AllowAnonymous()
         .RequireRateLimiting(RateLimitPolicies.RefreshPolicy);
+
 
         group.MapPost("/logout", async (LogoutRequest request, ISender sender) =>
         {

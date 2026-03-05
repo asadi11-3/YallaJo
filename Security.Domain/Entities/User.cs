@@ -127,7 +127,6 @@ public sealed class User : AuditableEntity, IAggregateRoot
         MarkUpdated();
         return primary;
     }
-
     public void AssignRole(Role role)
     {
         var userRole = UserRole.Create(Id, role.Id);

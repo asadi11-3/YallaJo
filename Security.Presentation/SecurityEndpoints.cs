@@ -5,9 +5,9 @@ using Microsoft.AspNetCore.Routing;
 using Security.Application.Commands.AssignRole;
 using Security.Application.Commands.ChangePassword;
 using Security.Application.Commands.CreateRole;
+using Security.Application.Commands.Register;
 using Security.Application.Commands.RemoveRole;
 using Security.Application.Commands.UpdatePhone;
-using Security.Application.Commands.Register;
 using Security.Application.Queries.ListRoles;
 using Security.Contracts.Authorization;
 using System.Security.Claims;
@@ -112,7 +112,6 @@ public static class SecurityEndpoints
         .WithSummary("Update the current user's primary phone number")
         .RequireAuthorization();
     }
-
     private static void MapCreateRoleEndpoint(RouteGroupBuilder group)
     {
         group.MapPost("/roles", async (CreateRoleRequest request, ISender sender) =>
@@ -186,10 +185,9 @@ public static class SecurityEndpoints
             : ToProblem(result.Outcome, result.Errors);
 
     private static IResult ToApiResult(Result result) =>
-        result.IsSuccess
-            ? Results.Ok()
-            : ToProblem(result.Outcome, result.Errors);
-
+       result.IsSuccess
+           ? Results.Ok()
+           : ToProblem(result.Outcome, result.Errors);
     private static IResult ToProblem(Outcome outcome, IReadOnlyList<Error> errors)
     {
         var first = errors.Count > 0 ? errors[0] : null;

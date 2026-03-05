@@ -1,4 +1,4 @@
-
+// Security.Application/Commands/AssignRole/AssignRoleCommandHandler.cs
 using Security.Contracts.Authorization;
 using Security.Domain.Errors;
 using Security.Domain.Repositories;

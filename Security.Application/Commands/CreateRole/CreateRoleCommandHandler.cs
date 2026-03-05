@@ -1,4 +1,3 @@
-
 using Security.Contracts.Authorization;
 using Security.Domain.Entities;
 using Security.Domain.Errors;
