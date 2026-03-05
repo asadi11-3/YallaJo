@@ -13,5 +13,8 @@ public interface IUserRepository : IRepository<User, Guid>
 
     Task<UserRole?> GetUserRoleAsync(Guid userId, Guid roleId, CancellationToken ct = default);
 
+    Task<(List<User> Items, int TotalCount)> GetPagedWithDetailsAsync(
+        int page, int pageSize, CancellationToken ct = default);
+
     void RemoveUserRole(UserRole userRole);
 }

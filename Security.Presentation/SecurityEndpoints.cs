@@ -12,6 +12,12 @@ using Security.Application.Queries.ListRoles;
 using Security.Contracts.Authorization;
 using System.Security.Claims;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
+using Security.Application.Commands.ActivateUser;
+using Security.Application.Commands.DeactivateRole;
+using Security.Application.Commands.DeactivateUser;
+using Security.Application.Commands.UpdateRole;
+using Security.Application.Queries.GetAuditLogs;
+using YallaJo.SharedKernel.Domain.Abstractions.Pagination;
 
 namespace Security.Presentation;
 
@@ -33,6 +39,11 @@ public static class SecurityEndpoints
         MapListRolesEndpoint(group);
         MapAssignRoleEndpoint(group);
         MapRemoveRoleEndpoint(group);
+        MapGetAuditLogsEndpoint(group);
+        MapDeactivateUserEndpoint(group);
+        MapActivateUserEndpoint(group);
+        MapDeactivateRoleEndpoint(group);
+        MapUpdateRoleEndpoint(group);
 
         return endpoints;
     }
@@ -49,7 +60,8 @@ public static class SecurityEndpoints
         .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status409Conflict)
         .WithSummary("Register a new account — verification email will be sent")
-        .AllowAnonymous();
+        .AllowAnonymous()
+        .RequireRateLimiting("register-rate-limit");
     }
 
     private static void MapMeEndpoint(RouteGroupBuilder group)
@@ -175,6 +187,85 @@ public static class SecurityEndpoints
         .RequireAuthorization();
     }
 
+    private static void MapGetAuditLogsEndpoint(RouteGroupBuilder group)
+    {
+        group.MapGet("/audit-logs", async (ISender sender, int page = 1, int pageSize = 20, Guid? userId = null) =>
+        {
+            var result = await sender.Send(new GetAuditLogsQuery(page, pageSize, userId));
+            return ToApiResult(result);
+        })
+        .WithName("GetAuditLogs")
+        .Produces<PaginatedResult<AuditLogDto>>(StatusCodes.Status200OK)
+        .WithSummary("Get paginated audit logs, optionally filtered by user")
+        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.System, AppAction.Read))
+        .RequireAuthorization();
+    }
+
+    private static void MapDeactivateUserEndpoint(RouteGroupBuilder group)
+    {
+        group.MapPatch("/users/{userId:guid}/deactivate", async (Guid userId, ISender sender) =>
+        {
+            var result = await sender.Send(new DeactivateUserCommand(userId));
+            return ToApiResult(result);
+        })
+        .WithName("DeactivateUser")
+        .Produces(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .WithSummary("Deactivate a user account")
+        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.User, AppAction.Update))
+        .RequireAuthorization();
+    }
+
+    private static void MapActivateUserEndpoint(RouteGroupBuilder group)
+    {
+        group.MapPatch("/users/{userId:guid}/activate", async (Guid userId, ISender sender) =>
+        {
+            var result = await sender.Send(new ActivateUserCommand(userId));
+            return ToApiResult(result);
+        })
+        .WithName("ActivateUser")
+        .Produces(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .WithSummary("Activate a user account")
+        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.User, AppAction.Update))
+        .RequireAuthorization();
+    }
+
+    private static void MapDeactivateRoleEndpoint(RouteGroupBuilder group)
+    {
+        group.MapPatch("/roles/{roleId:guid}/deactivate", async (Guid roleId, ISender sender) =>
+        {
+            var result = await sender.Send(new DeactivateRoleCommand(roleId));
+            return ToApiResult(result);
+        })
+        .WithName("DeactivateRole")
+        .Produces(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .WithSummary("Deactivate a role")
+        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.Role, AppAction.Update))
+        .RequireAuthorization();
+    }
+
+    private static void MapUpdateRoleEndpoint(RouteGroupBuilder group)
+    {
+        group.MapPatch("/roles/{roleId:guid}", async (Guid roleId, UpdateRoleRequest request, ISender sender) =>
+        {
+            var result = await sender.Send(new UpdateRoleCommand(roleId, request.Description));
+            return ToApiResult(result);
+        })
+        .WithName("UpdateRole")
+        .Produces(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .WithSummary("Update a role's description")
+        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.Role, AppAction.Update))
+        .RequireAuthorization();
+    }
+
     // ── Result → IResult mapping ──────────────────────────────────────────
 
     private static IResult ToApiResult<T>(Result<T> result) =>
@@ -206,3 +297,4 @@ public sealed record ChangePasswordRequest(string CurrentPassword, string NewPas
 public sealed record UpdatePrimaryPhoneRequest(string PhoneNumber);
 public sealed record CreateRoleRequest(string Name, string? Description);
 public sealed record AssignRoleRequest(Guid RoleId);
+public sealed record UpdateRoleRequest(string? Description);

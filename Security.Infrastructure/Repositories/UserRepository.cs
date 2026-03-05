@@ -59,4 +59,22 @@ internal sealed class UserRepository(SecurityDbContext context)
 
     public void RemoveUserRole(UserRole userRole)
         => context.UserRoles.Remove(userRole);
+
+    public async Task<(List<User> Items, int TotalCount)> GetPagedWithDetailsAsync(
+        int page, int pageSize, CancellationToken ct = default)
+    {
+        var query = context.Users
+            .AsNoTracking()
+            .Include(u => u.Emails.Where(e => e.IsPrimary))
+            .Include(u => u.UserRoles).ThenInclude(ur => ur.Role)
+            .OrderBy(u => u.Id);
+
+        var total = await query.CountAsync(ct);
+        var items = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(ct);
+
+        return (items, total);
+    }
 }

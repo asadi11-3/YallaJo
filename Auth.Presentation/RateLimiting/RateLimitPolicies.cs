@@ -19,9 +19,10 @@ namespace Auth.Presentation;
 
 public static class RateLimitPolicies
 {
-    public const string LoginPolicy   = "login-rate-limit";
-    public const string OtpPolicy     = "otp-rate-limit";
-    public const string RefreshPolicy = "refresh-rate-limit";
+    public const string LoginPolicy    = "login-rate-limit";
+    public const string OtpPolicy      = "otp-rate-limit";
+    public const string RefreshPolicy  = "refresh-rate-limit";
+    public const string RegisterPolicy = "register-rate-limit";
 
     /// <summary>
     /// Registers per-endpoint rate limiting policies for all anonymous authentication
@@ -77,6 +78,18 @@ public static class RateLimitPolicies
                     factory: _ => new FixedWindowRateLimiterOptions
                     {
                         PermitLimit          = 20,
+                        Window               = TimeSpan.FromMinutes(1),
+                        QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                        QueueLimit           = 0
+                    }));
+
+            // ── Register: 5 req / 1 min per IP — fixed window ────────────────
+            options.AddPolicy(RegisterPolicy, httpContext =>
+                RateLimitPartition.GetFixedWindowLimiter(
+                    partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                    factory: _ => new FixedWindowRateLimiterOptions
+                    {
+                        PermitLimit          = 5,
                         Window               = TimeSpan.FromMinutes(1),
                         QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
                         QueueLimit           = 0
