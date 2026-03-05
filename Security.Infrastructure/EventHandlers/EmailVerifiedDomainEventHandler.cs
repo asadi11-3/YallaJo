@@ -28,8 +28,7 @@ public sealed class EmailVerifiedDomainEventHandler(
             domainEvent.EmailId,
             domainEvent.EmailAddress);
 
-        // Add to DbContext in-memory only — the calling UnitOfWork.SaveChangesAsync
-        // will persist this together with the aggregate in a single transaction.
+       
         dbContext.OutboxMessages.Add(OutboxMessage.Create(integrationEvent));
 
         return Task.CompletedTask;

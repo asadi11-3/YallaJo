@@ -32,6 +32,26 @@ public class ProfileConfiguration : IEntityTypeConfiguration<Profile>
             .IsRequired(false)
             .HasMaxLength(2048);
 
+        builder.Property(p => p.DateOfBirth)
+            .IsRequired(false);
+
+        builder.Property(p => p.Gender)
+            .IsRequired(false)
+            .HasMaxLength(20)
+            .HasConversion<string>();
+
+        builder.Property(p => p.Country)
+            .IsRequired(false)
+            .HasMaxLength(100);
+
+        builder.Property(p => p.City)
+            .IsRequired(false)
+            .HasMaxLength(100);
+
+        builder.Property(p => p.AddressLine)
+            .IsRequired(false)
+            .HasMaxLength(300);
+
         // Auditable fields
         builder.Property(p => p.CreatedAt).IsRequired();
         builder.Property(p => p.UpdatedAt).IsRequired(false);

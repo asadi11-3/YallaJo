@@ -8,6 +8,7 @@ using Security.Domain.Repositories;
 using Security.Infrastructure.Persistence;
 using Security.Infrastructure.Persistence.Seeding;
 using Security.Infrastructure.Repositories;
+using Security.Infrastructure.Seeding;
 using Security.Infrastructure.Services;
 using YallaJo.SharedKernel.Infrastructure.BackgroundJobs;
 using YallaJo.SharedKernel.Infrastructure.Data;
@@ -36,10 +37,16 @@ public static class DependencyInjection
         services.AddScoped<IModuleDbInitializer, SecurityDbInitializer>();
         services.AddScoped<ISecurityUnitOfWork, SecurityUnitOfWork>();
         services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IRoleRepository, RoleRepository>();
+        services.AddScoped<ISecurityInboxStore, SecurityInboxStore>();
+        services.AddScoped<IAuditLogRepository, AuditLogRepository>();
+        services.AddScoped<IRoleClaimRepository, RoleClaimRepository>();
+        services.AddScoped<IUserClaimRepository, UserClaimRepository>();
+        services.AddScoped<SecurityDataSeeder>();
         services.AddScoped<ISecurityUserExistenceChecker, SecurityUserExistenceChecker>();
         services.AddSingleton<IPasswordHasher, PasswordHasher>();
 
-        // Cross-module contract — used by Auth module for credential verification & email marking
+     
         services.AddScoped<ISecurityService, SecurityService>();
 
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));

@@ -25,6 +25,15 @@ public sealed class Phone : AuditableEntity
         };
     }
 
+    public void UpdateNumber(string phoneNumber)
+    {
+        if (string.IsNullOrWhiteSpace(phoneNumber))
+            throw new ArgumentException("Phone number is required.", nameof(phoneNumber));
+
+        PhoneNumber = phoneNumber.Trim();
+        MarkUpdated();
+    }
+
     public void MarkVerified()
     {
         IsVerified = true;

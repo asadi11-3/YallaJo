@@ -3,10 +3,7 @@ using Security.Domain.Repositories;
 
 namespace Security.Infrastructure.Services;
 
-/// <summary>
-/// Checks user existence via the Security module's own repository.
-/// The global query filter on User (IsDeleted) is applied automatically.
-/// </summary>
+
 internal sealed class SecurityUserExistenceChecker(IUserRepository userRepository)
     : ISecurityUserExistenceChecker
 {

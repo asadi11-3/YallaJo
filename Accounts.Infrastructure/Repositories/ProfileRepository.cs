@@ -11,7 +11,4 @@ public sealed class ProfileRepository(AccountsDbContext context)
 {
     public async Task<Profile?> GetByUserIdAsync(Guid userId, CancellationToken ct)
         => await context.Profiles.FirstOrDefaultAsync(p => p.UserId == userId, ct);
-
-    public async Task<bool> ExistsByUserIdAsync(Guid userId, CancellationToken ct)
-        => await context.Profiles.AnyAsync(p => p.UserId == userId, ct);
 }

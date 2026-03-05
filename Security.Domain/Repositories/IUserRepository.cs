@@ -1,5 +1,6 @@
 using Security.Domain.Entities;
 using YallaJo.SharedKernel.Domain.Abstractions.Data;
+using YallaJo.SharedKernel.Domain.Abstractions.Pagination;
 
 namespace Security.Domain.Repositories;
 
@@ -8,4 +9,16 @@ public interface IUserRepository : IRepository<User, Guid>
     Task<User?> GetByIdWithEmailsAsync(Guid userId, CancellationToken ct = default);
     Task<User?> GetByEmailWithDetailsAsync(string normalizedEmail, CancellationToken ct = default);
     Task<User?> GetByIdWithDetailsAsync(Guid userId, CancellationToken ct = default);
+    Task<User?> GetByIdWithPhonesAsync(Guid userId, CancellationToken ct = default);
+    Task<bool> AnyWithRoleAsync(string roleName, CancellationToken ct = default);
+
+    Task<UserRole?> GetUserRoleAsync(Guid userId, Guid roleId, CancellationToken ct = default);
+
+    Task<PaginatedResult<User>> GetPagedWithDetailsAsync(
+        int page, int pageSize, CancellationToken ct = default);
+
+    void RemoveUserRole(UserRole userRole);
+
+    Task<Guid?> GetUserIdByEmailAsync(string normalizedEmail, CancellationToken ct = default);
+    Task<string?> GetPrimaryPhoneNumberAsync(Guid userId, CancellationToken ct = default);
 }

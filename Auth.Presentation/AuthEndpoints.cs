@@ -1,13 +1,23 @@
+using Auth.Application.Commands.RevokeSession;
+using Auth.Application.Commands.ForceRevokeUserSessions;
+using Auth.Application.Commands.TrustDevice;
+using Auth.Application.Commands.LinkExternalProvider;
+using Auth.Application.Commands.UnlinkExternalProvider;
+using Auth.Application.Queries.ListSessions;
+using Auth.Application.Commands.ForgotPassword;
 using Auth.Application.Commands.Login;
 using Auth.Application.Commands.Logout;
 using Auth.Application.Commands.LogoutAll;
 using Auth.Application.Commands.RefreshToken;
+using Auth.Application.Commands.ResendOtp;
+using Auth.Application.Commands.ResetPassword;
 using Auth.Application.Commands.VerifyEmail;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
+using Security.Contracts.Authorization;
 
 namespace Auth.Presentation;
 
@@ -29,7 +39,8 @@ public static class AuthEndpoints
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status429TooManyRequests)
         .WithSummary("Verify email with OTP code — returns access + refresh tokens")
-        .AllowAnonymous();
+        .AllowAnonymous()
+         .RequireRateLimiting(RateLimitPolicies.OtpPolicy);
 
         group.MapPost("/login", async (LoginRequest request, ISender sender) =>
         {
@@ -41,7 +52,8 @@ public static class AuthEndpoints
         .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status401Unauthorized)
         .WithSummary("Login with email and password — returns access + refresh tokens")
-        .AllowAnonymous();
+        .AllowAnonymous()
+         .RequireRateLimiting(RateLimitPolicies.LoginPolicy);
 
         group.MapPost("/refresh", async (RefreshTokenRequest request, ISender sender) =>
         {
@@ -53,7 +65,9 @@ public static class AuthEndpoints
         .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status401Unauthorized)
         .WithSummary("Refresh access token using a valid refresh token")
-        .AllowAnonymous();
+        .AllowAnonymous()
+        .RequireRateLimiting(RateLimitPolicies.RefreshPolicy);
+
 
         group.MapPost("/logout", async (LogoutRequest request, ISender sender) =>
         {
@@ -75,6 +89,131 @@ public static class AuthEndpoints
         .Produces(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status401Unauthorized)
         .WithSummary("Logout all sessions — revokes all refresh tokens and sessions for the current user")
+        .RequireAuthorization();
+
+        group.MapPost("/forgot-password", async (ForgotPasswordRequest request, ISender sender) =>
+        {
+            var result = await sender.Send(new ForgotPasswordCommand(request.Email));
+            return ToApiResult(result);
+        })
+        .WithName("ForgotPassword")
+        .Produces<ForgotPasswordResult>(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
+        .WithSummary("Request a password reset code — sends OTP to email if account exists")
+        .AllowAnonymous()
+        .RequireRateLimiting(RateLimitPolicies.OtpPolicy);
+
+        group.MapPost("/reset-password", async (ResetPasswordRequest request, ISender sender) =>
+        {
+            var result = await sender.Send(new ResetPasswordCommand(
+                request.Email,
+                request.OtpCode,
+                request.NewPassword,
+                request.ConfirmNewPassword));
+            return ToApiResult(result);
+        })
+        .WithName("ResetPassword")
+        .Produces<ResetPasswordResult>(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status429TooManyRequests)
+        .WithSummary("Reset password using email and OTP code")
+        .AllowAnonymous()
+        .RequireRateLimiting(RateLimitPolicies.OtpPolicy);
+
+        group.MapPost("/resend-otp", async (ResendOtpRequest request, ISender sender) =>
+        {
+            var result = await sender.Send(new ResendOtpCommand(request.Email, request.Purpose));
+            return ToApiResult(result);
+        })
+        .WithName("ResendOtp")
+        .Produces<ResendOtpResult>(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status429TooManyRequests)
+        .WithSummary("Resend OTP code for email verification or password reset")
+        .AllowAnonymous()
+        .RequireRateLimiting(RateLimitPolicies.OtpPolicy);
+
+        group.MapGet("/sessions", async (ISender sender) =>
+        {
+            var result = await sender.Send(new ListActiveSessionsQuery());
+            return ToApiResult(result);
+        })
+        .WithName("ListActiveSessions")
+        .Produces<IReadOnlyList<ActiveSessionDto>>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .WithSummary("List all active sessions for the current user")
+        .RequireAuthorization();
+
+        group.MapDelete("/sessions/{sessionId:guid}", async (Guid sessionId, ISender sender) =>
+        {
+            var result = await sender.Send(new RevokeSessionCommand(sessionId));
+            return ToApiResult(result);
+        })
+        .WithName("RevokeSession")
+        .Produces(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .WithSummary("Revoke a specific session — user may only revoke their own sessions")
+        .RequireAuthorization();
+
+        // ── Devices ──────────────────────────────────────────────────────────
+        group.MapPatch("/devices/{deviceId:guid}/trust", async (Guid deviceId, ISender sender) =>
+        {
+            var result = await sender.Send(new TrustDeviceCommand(deviceId));
+            return ToApiResult(result);
+        })
+        .WithName("TrustDevice")
+        .Produces(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .WithSummary("Mark a device as trusted for the current user")
+        .RequireAuthorization();
+
+        // ── External Providers ───────────────────────────────────────────────
+        group.MapPost("/external-providers", async (LinkExternalProviderRequest request, ISender sender) =>
+        {
+            var result = await sender.Send(new LinkExternalProviderCommand(
+                request.Provider,
+                request.ProviderUserId,
+                request.ProviderEmail));
+            return ToApiResult(result);
+        })
+        .WithName("LinkExternalProvider")
+        .Produces<Guid>(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status409Conflict)
+        .WithSummary("Link an external OAuth provider account to the current user")
+        .RequireAuthorization();
+
+        group.MapDelete("/external-providers/{providerId:guid}", async (Guid providerId, ISender sender) =>
+        {
+            var result = await sender.Send(new UnlinkExternalProviderCommand(providerId));
+            return ToApiResult(result);
+        })
+        .WithName("UnlinkExternalProvider")
+        .Produces(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .WithSummary("Deactivate a linked external OAuth provider account")
+        .RequireAuthorization();
+
+        // ── Admin ────────────────────────────────────────────────────────
+        group.MapDelete("/admin/users/{userId:guid}/sessions", async (Guid userId, ISender sender) =>
+        {
+            var result = await sender.Send(new ForceRevokeUserSessionsCommand(userId));
+            return ToApiResult(result);
+        })
+        .WithName("ForceRevokeUserSessions")
+        .Produces(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .WithSummary("Admin: force-revoke all sessions and refresh tokens for a user")
+        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.User, AppAction.UpdateAny))
         .RequireAuthorization();
 
         return endpoints;
@@ -113,3 +252,7 @@ public sealed record LoginResponse(Guid UserId, string AccessToken, string Refre
 public sealed record RefreshTokenRequest(string RefreshToken);
 public sealed record RefreshTokenResponse(string AccessToken, string RefreshToken, DateTime RefreshTokenExpiresAt);
 public sealed record LogoutRequest(string RefreshToken);
+public sealed record ForgotPasswordRequest(string Email);
+public sealed record ResetPasswordRequest(string Email, string OtpCode, string NewPassword, string ConfirmNewPassword);
+public sealed record ResendOtpRequest(string Email, string Purpose);
+public sealed record LinkExternalProviderRequest(string Provider, string ProviderUserId, string? ProviderEmail);

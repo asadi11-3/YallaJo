@@ -8,11 +8,7 @@ using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 
 namespace Accounts.Application.EventHandlers;
 
-/// <summary>
-/// Reacts to a user being created in the Security module by creating
-/// a Profile in the Accounts module using the FirstName and LastName
-/// provided at registration time.
-/// </summary>
+
 public sealed class UserCreatedIntegrationEventHandler(
     IProfileRepository profileRepository,
     IAccountsUnitOfWork unitOfWork,
@@ -35,8 +31,7 @@ public sealed class UserCreatedIntegrationEventHandler(
 
         var evt = notification.Event;
 
-        // Guard: profile may already exist (defensive, beyond inbox idempotency)
-        if (await profileRepository.ExistsByUserIdAsync(evt.UserId, ct))
+        if (await profileRepository.AnyAsync(p => p.UserId == evt.UserId, ct))
         {
             logger.LogWarning(
                 "Accounts: Profile already exists for user {UserId} — marking inbox and skipping.",

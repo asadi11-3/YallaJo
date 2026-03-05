@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using YallaJo.SharedKernel.Infrastructure.BackgroundJobs;
+using Auth.Infrastructure.BackgroundJobs;
 using YallaJo.SharedKernel.Infrastructure.Data;
 
 namespace Auth.Infrastructure;
@@ -55,7 +56,9 @@ public static class DependencyInjection
         // MediatR handlers in this assembly (integration event handlers)
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
 
+       
         services.AddScoped<IOutboxProcessor, OutboxProcessor<AuthDbContext>>();
+        services.AddHostedService<AuthCleanupService>();
         return services;
     }
 }
