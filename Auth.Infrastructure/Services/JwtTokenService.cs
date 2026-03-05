@@ -36,6 +36,9 @@ internal sealed class JwtTokenService : ITokenService
                 ClaimValueTypes.Integer64),
         };
 
+        if (data.SessionId.HasValue)
+            claims.Add(new Claim("sid", data.SessionId.Value.ToString()));
+
         foreach (var role in data.Roles)
             claims.Add(new Claim("role", role));
 

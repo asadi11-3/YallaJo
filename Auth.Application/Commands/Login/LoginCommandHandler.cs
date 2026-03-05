@@ -80,7 +80,8 @@ public sealed class LoginCommandHandler(
             UserId: userData.UserId,
             Email: userData.Email,
             Roles: userData.Roles,
-            AdditionalClaims: userData.Claims));
+            AdditionalClaims: userData.Claims,
+            SessionId: session.Id));
 
         return Result<LoginResult>.Success(new LoginResult(
             UserId: userData.UserId,

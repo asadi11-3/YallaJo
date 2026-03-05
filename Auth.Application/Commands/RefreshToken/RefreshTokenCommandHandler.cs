@@ -94,7 +94,8 @@ public sealed class RefreshTokenCommandHandler(
             UserId: userData.UserId,
             Email: userData.Email,
             Roles: userData.Roles,
-            AdditionalClaims: userData.Claims));
+            AdditionalClaims: userData.Claims,
+            SessionId: oldRefreshToken.SessionId));
 
         return Result<RefreshTokenResult>.Success(new RefreshTokenResult(
             AccessToken: accessToken,

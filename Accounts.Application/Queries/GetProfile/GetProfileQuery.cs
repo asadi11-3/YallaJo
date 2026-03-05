@@ -16,4 +16,4 @@ public sealed record GetProfileResult(
     string? AddressLine,
     string Email);
 
-public sealed record GetProfileQuery(Guid UserId) : IQuery<GetProfileResult>;
+public sealed record GetProfileQuery() : IQuery<GetProfileResult>;

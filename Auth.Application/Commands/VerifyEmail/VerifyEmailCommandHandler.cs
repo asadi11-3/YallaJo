@@ -116,12 +116,14 @@ public sealed class VerifyEmailCommandHandler(
         // 11. Persist all Auth entities
         await unitOfWork.SaveChangesAsync(ct);
 
-        // 12. Generate JWT AccessToken
+        // 12. Generate JWT AccessToken — load real roles/claims from Security module
+        var userData = await securityService.GetUserDataByIdAsync(userId.Value, ct);
         var accessToken = tokenService.GenerateAccessToken(new TokenData(
             UserId: userId.Value,
             Email: normalizedEmail,
-            Roles: [],
-            AdditionalClaims: []));
+            Roles: userData?.Roles ?? [],
+            AdditionalClaims: userData?.Claims ?? [],
+            SessionId: session.Id));
 
         return Result<VerifyEmailResult>.Success(new VerifyEmailResult(
             UserId: userId.Value,

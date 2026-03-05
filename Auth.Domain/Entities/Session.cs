@@ -1,3 +1,4 @@
+using Auth.Domain.Events;
 using YallaJo.SharedKernel.Domain.Entities;
 
 namespace Auth.Domain.Entities;
@@ -19,7 +20,7 @@ public sealed class Session : AuditableEntity, IAggregateRoot
 
     public static Session Create(Guid userId, Guid deviceId, DateTime expiresAt, string? ipAddress = null)
     {
-        return new Session
+        var session = new Session
         {
             UserId = userId,
             DeviceId = deviceId,
@@ -27,6 +28,10 @@ public sealed class Session : AuditableEntity, IAggregateRoot
             IsRevoked = false,
             IpAddress = ipAddress
         };
+
+        session.AddDomainEvent(new UserLoggedInEvent(userId, session.Id, deviceId, ipAddress ?? string.Empty));
+
+        return session;
     }
 
     public void Revoke()
@@ -34,5 +39,6 @@ public sealed class Session : AuditableEntity, IAggregateRoot
         IsRevoked = true;
         RevokedAt = DateTime.UtcNow;
         MarkUpdated();
+        AddDomainEvent(new SessionRevokedEvent(UserId, Id));
     }
 }

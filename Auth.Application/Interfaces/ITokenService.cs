@@ -24,4 +24,5 @@ public sealed record TokenData(
     Guid UserId,
     string Email,
     IReadOnlyList<string> Roles,
-    IReadOnlyList<(string Type, string Value)> AdditionalClaims);
+    IReadOnlyList<(string Type, string Value)> AdditionalClaims,
+    Guid? SessionId = null);

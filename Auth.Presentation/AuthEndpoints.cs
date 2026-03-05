@@ -1,3 +1,5 @@
+using Auth.Application.Commands.RevokeSession;
+using Auth.Application.Queries.ListSessions;
 using Auth.Application.Commands.ForgotPassword;
 using Auth.Application.Commands.Login;
 using Auth.Application.Commands.Logout;
@@ -126,6 +128,30 @@ public static class AuthEndpoints
         .WithSummary("Resend OTP code for email verification or password reset")
         .AllowAnonymous()
         .RequireRateLimiting(RateLimitPolicies.OtpPolicy);
+
+        group.MapGet("/sessions", async (ISender sender) =>
+        {
+            var result = await sender.Send(new ListActiveSessionsQuery());
+            return ToApiResult(result);
+        })
+        .WithName("ListActiveSessions")
+        .Produces<IReadOnlyList<ActiveSessionDto>>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .WithSummary("List all active sessions for the current user")
+        .RequireAuthorization();
+
+        group.MapDelete("/sessions/{sessionId:guid}", async (Guid sessionId, ISender sender) =>
+        {
+            var result = await sender.Send(new RevokeSessionCommand(sessionId));
+            return ToApiResult(result);
+        })
+        .WithName("RevokeSession")
+        .Produces(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .WithSummary("Revoke a specific session — user may only revoke their own sessions")
+        .RequireAuthorization();
 
         return endpoints;
     }

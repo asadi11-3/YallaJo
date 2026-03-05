@@ -43,15 +43,18 @@ public static class AccountsEndpoints
         .WithName("CreateProfile")
         .Produces<Guid>(StatusCodes.Status201Created)
         .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status409Conflict)
-        .WithSummary("Create a user profile linked to an existing security user");
+        .WithSummary("Create a user profile linked to an existing security user")
+        .RequireAuthorization("Permission.User.Create");
 
         var profile = group.MapGroup("/profile");
 
         profile.MapGet("/", async (ISender sender) =>
         {
-            var result = await sender.Send(new GetProfileQuery(Guid.Empty));
+            var result = await sender.Send(new GetProfileQuery());
             return ToApiResult(result);
         })
         .WithName("GetProfile")
