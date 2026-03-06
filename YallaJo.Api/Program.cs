@@ -198,6 +198,7 @@ builder.Services.AddProblemDetails(options =>
 builder.Services.AddHealthChecks();
 
 var app = builder.Build();
+
 await app.UseDataSeedingAsync();
 
 using (var scope = app.Services.CreateScope())
@@ -205,6 +206,7 @@ using (var scope = app.Services.CreateScope())
     var seeder = scope.ServiceProvider.GetRequiredService<SecurityDataSeeder>();
     await seeder.SeedAsync();
 }
+
 // ── Middleware pipeline (ORDER IS MANDATORY) ──────────────────────────────
 
 // 1. Global exception handler — must be first so it wraps all downstream errors
