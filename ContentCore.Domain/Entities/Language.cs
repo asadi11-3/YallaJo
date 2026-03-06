@@ -11,4 +11,52 @@ public sealed class Language : AuditableEntity, IAggregateRoot
     public string NativeName { get; private set; } = string.Empty;
     public bool IsRtl { get; private set; }
     public bool IsActive { get; private set; } = true;
+
+    public static Language Create(
+        string code,
+        string name,
+        string nativeName,
+        bool isRtl)
+    {
+        if (string.IsNullOrWhiteSpace(code))
+            throw new ArgumentException("Language code is required.", nameof(code));
+        if (string.IsNullOrWhiteSpace(name))
+            throw new ArgumentException("Language name is required.", nameof(name));
+        if (string.IsNullOrWhiteSpace(nativeName))
+            throw new ArgumentException("Native name is required.", nameof(nativeName));
+
+        return new Language
+        {
+            Code = code.Trim().ToLowerInvariant(),
+            Name = name.Trim(),
+            NativeName = nativeName.Trim(),
+            IsRtl = isRtl,
+            IsActive = true
+        };
+    }
+
+    public void Update(string name, string nativeName, bool isRtl)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            throw new ArgumentException("Language name is required.", nameof(name));
+        if (string.IsNullOrWhiteSpace(nativeName))
+            throw new ArgumentException("Native name is required.", nameof(nativeName));
+
+        Name = name.Trim();
+        NativeName = nativeName.Trim();
+        IsRtl = isRtl;
+        MarkUpdated();
+    }
+
+    public void Activate()
+    {
+        IsActive = true;
+        MarkUpdated();
+    }
+
+    public void Deactivate()
+    {
+        IsActive = false;
+        MarkUpdated();
+    }
 }

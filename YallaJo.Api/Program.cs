@@ -21,6 +21,7 @@ using YallaJo.Api.Services;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Infrastructure;
 using YallaJo.Api.Extensions;
+using YallaJo.Api.Middleware;
 using ContentCore.Application;
 using ContentCore.Infrastructure;
 using ContentCore.Presentation;
@@ -225,6 +226,8 @@ if (app.Environment.IsDevelopment())
 // 3. Transport security
 app.UseHttpsRedirection();
 
+// 3a. Request localization — parse Accept-Language, set CultureInfo
+app.UseMiddleware<RequestLocalizationMiddleware>();
 // 4. Authentication MUST come before Authorization
 // 4a. Rate limiter — must precede authentication so anonymous endpoints
 //     are throttled before the JWT pipeline runs

@@ -19,6 +19,7 @@ public sealed class ContentCoreDbContext : DbContext, IDbContext
     public DbSet<EntityTag> EntityTags => Set<EntityTag>();
     public DbSet<Specialization> Specializations => Set<Specialization>();
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
+    public DbSet<TranslationCache> TranslationCaches => Set<TranslationCache>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
