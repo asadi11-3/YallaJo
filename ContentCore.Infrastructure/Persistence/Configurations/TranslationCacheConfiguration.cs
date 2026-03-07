@@ -15,12 +15,10 @@ public class TranslationCacheConfiguration : IEntityTypeConfiguration<Translatio
         builder.Property(x => x.Id).ValueGeneratedNever();
 
         builder.Property(x => x.OriginalText)
-            .IsRequired()
-            .HasMaxLength(10_000);
+            .IsRequired();
 
         builder.Property(x => x.TranslatedText)
-            .IsRequired()
-            .HasMaxLength(10_000);
+            .IsRequired();
 
         builder.Property(x => x.FromLanguage)
             .IsRequired()
@@ -54,8 +52,8 @@ public class TranslationCacheConfiguration : IEntityTypeConfiguration<Translatio
         builder.Property(x => x.CreatedAt).IsRequired();
         builder.Property(x => x.UpdatedAt).IsRequired(false);
 
-        // Composite index for cache lookups
-        builder.HasIndex(x => new { x.FromLanguage, x.ToLanguage, x.OriginalText })
+        // Index for cache lookups (language pair only; OriginalText filtered in query)
+        builder.HasIndex(x => new { x.FromLanguage, x.ToLanguage })
             .HasDatabaseName("IX_TranslationCache_Lookup");
 
         // Index for entity-based lookups

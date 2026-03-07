@@ -1,4 +1,3 @@
-using ContentCore.Domain.Events;
 using ContentCore.Domain.Repositories;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
@@ -23,18 +22,17 @@ public sealed class CreateCategoryCommandHandler(
                     $"Parent category '{request.ParentCategoryId}' not found.");
         }
 
-        // 2. Create the category entity
+        // 2. Create the category (domain event raised inside Create())
         var category = Domain.Entities.Category.Create(
-            Guid.CreateVersion7(),
-            request.ParentCategoryId,
             request.Name,
             request.Slug,
-            request.Icon ?? string.Empty,
+            request.SourceLanguageCode,
+            request.ParentCategoryId,
             request.SortOrder);
 
-        // 3. Raise domain event — translation happens as a side effect
-        category.AddDomainEvent(new CategoryCreatedDomainEvent(
-            category.Id, category.Name, request.SourceLanguageCode));
+        // 3. Set optional properties
+        if (request.Icon is not null)
+            category.SetIcon(request.Icon);
 
         // 4. Persist (UoW dispatches domain events during SaveChanges)
         await categoryRepository.AddAsync(category, ct);

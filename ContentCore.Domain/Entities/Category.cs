@@ -1,4 +1,4 @@
-using System.Security.Cryptography.X509Certificates;
+using ContentCore.Domain.Events;
 using YallaJo.SharedKernel.Domain.Entities;
 
 namespace ContentCore.Domain.Entities;
@@ -21,35 +21,87 @@ public sealed class Category : AuditableEntity, IAggregateRoot
     public IReadOnlyCollection<Category> SubCategories => _subCategories.AsReadOnly();
     public IReadOnlyCollection<CategoryTranslation> Translations => _translations.AsReadOnly();
 
+    // ── Factory Method (the ONLY way to create) ──
     public static Category Create(
-        Guid id,
-        Guid? parentCategoryId,
         string name,
         string slug,
-        string icon,
-        int sortOreder) {
+        string sourceLanguageCode,
+        Guid? parentCategoryId = null,
+        int sortOrder = 0)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            throw new ArgumentException("Category name is required.", nameof(name));
 
-        if (string.IsNullOrEmpty(name)) 
-        { throw new ArgumentException("Category name is required.", nameof(name)); }
-        
-        if (string.IsNullOrEmpty(slug)) 
-        { throw new ArgumentException("Category slug is required.", nameof(slug)); }
+        if (string.IsNullOrWhiteSpace(slug))
+            throw new ArgumentException("Category slug is required.", nameof(slug));
 
-        return new Category { 
-            Id = id,
+        var category = new Category
+        {
             ParentCategoryId = parentCategoryId,
             Name = name.Trim(),
             Slug = slug.Trim(),
-            Icon = icon.Trim(),
-            SortOrder = sortOreder,
+            SortOrder = sortOrder,
             IsActive = true
         };
+
+        category.AddDomainEvent(new CategoryCreatedDomainEvent(
+            category.Id, category.Name, sourceLanguageCode));
+
+        return category;
     }
 
-    public void AddTranslation(Guid id, Guid languageId, string name, string slug)
+    // ── Business Methods ──
+    public void Update(string name, string slug, string sourceLanguageCode)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            throw new ArgumentException("Category name is required.", nameof(name));
+
+        if (string.IsNullOrWhiteSpace(slug))
+            throw new ArgumentException("Category slug is required.", nameof(slug));
+
+        Name = name.Trim();
+        Slug = slug.Trim();
+        MarkUpdated();
+
+        AddDomainEvent(new CategoryUpdatedDomainEvent(Id, Name, sourceLanguageCode));
+    }
+
+    public void SetIcon(string? icon)
+    {
+        Icon = icon?.Trim();
+        MarkUpdated();
+    }
+
+    public void SetSortOrder(int sortOrder)
+    {
+        SortOrder = sortOrder;
+        MarkUpdated();
+    }
+
+    public void Activate()
+    {
+        IsActive = true;
+        MarkUpdated();
+    }
+
+    public void Deactivate()
+    {
+        IsActive = false;
+        MarkUpdated();
+    }
+
+    public void AddTranslation(Guid languageId, string name, string slug)
     {
         if (_translations.Any(x => x.LanguageId == languageId))
             throw new InvalidOperationException("Translation already exists for this language.");
-        _translations.Add(CategoryTranslation.Create(id, Id, languageId, name, slug));
+        _translations.Add(CategoryTranslation.Create(Id, languageId, name, slug));
+    }
+
+    public void UpdateTranslation(Guid languageId, string name, string slug)
+    {
+        var translation = _translations.FirstOrDefault(x => x.LanguageId == languageId);
+        if (translation is null)
+            throw new InvalidOperationException($"Translation for language '{languageId}' not found.");
+        translation.Update(name, slug);
     }
 }

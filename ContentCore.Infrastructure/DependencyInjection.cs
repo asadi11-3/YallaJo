@@ -36,6 +36,7 @@ public static class DependencyInjection
         services.AddScoped<ICategoryRepository, CategoryRepository>();
         services.AddScoped<ILanguageRepository, LanguageRepository>();
         services.AddScoped<ITranslationCacheRepository, TranslationCacheRepository>();
+        services.AddScoped<ISpecializationRepository, SpecializationRepository>();
 
         // ── Unit of Work & Infrastructure ────────────────────────────────────────
         services.AddScoped<IContentCoreUnitOfWork, ContentCoreUnitOfWork>();

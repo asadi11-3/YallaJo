@@ -1,4 +1,5 @@
 using ContentCore.Application.Commands.Category.CreateCategory;
+using ContentCore.Application.Commands.Category.UpdateCategory;
 using ContentCore.Application.Commands.Language.CreateLanguage;
 using ContentCore.Application.Commands.Language.UpdateLanguage;
 using ContentCore.Application.Commands.Translation.ApproveTranslation;
@@ -51,6 +52,24 @@ public static class ContentCoreEndpoints
         .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Create a category with auto-translation to all active languages")
+        .RequireAuthorization("Admin");
+
+        categories.MapPut("/{id:guid}", async (Guid id, UpdateCategoryRequest request, ISender sender) =>
+        {
+            var result = await sender.Send(new UpdateCategoryCommand(
+                id,
+                request.Name,
+                request.Slug,
+                request.Icon,
+                request.SortOrder,
+                request.SourceLanguageCode ?? "en"));
+            return ToApiResult(result);
+        })
+        .WithName("UpdateCategory")
+        .Produces<UpdateCategoryResult>(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .WithSummary("Update a category with auto re-translation to all active languages")
         .RequireAuthorization("Admin");
     }
 
@@ -198,4 +217,12 @@ public sealed record CreateCategoryRequest(
     Guid? ParentCategoryId = null,
     string? Icon = null,
     int SortOrder = 0,
+    string? SourceLanguageCode = null);
+
+
+public sealed record UpdateCategoryRequest(
+    string Name,
+    string Slug,
+    string? Icon = null,
+    int? SortOrder = null,
     string? SourceLanguageCode = null);

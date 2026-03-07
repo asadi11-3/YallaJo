@@ -9,14 +9,14 @@ using YallaJo.SharedKernel.Application.Abstractions.Translation;
 
 namespace ContentCore.Infrastructure.EventHandlers;
 
-public sealed class CategoryCreatedDomainEventHandler(
+public sealed class CategoryUpdatedDomainEventHandler(
     IEntityTranslationOrchestrator orchestrator,
     ICategoryRepository categoryRepository,
-    ILogger<CategoryCreatedDomainEventHandler> logger)
-    : INotificationHandler<DomainEventNotification<CategoryCreatedDomainEvent>>
+    ILogger<CategoryUpdatedDomainEventHandler> logger)
+    : INotificationHandler<DomainEventNotification<CategoryUpdatedDomainEvent>>
 {
     public async Task Handle(
-        DomainEventNotification<CategoryCreatedDomainEvent> notification,
+        DomainEventNotification<CategoryUpdatedDomainEvent> notification,
         CancellationToken ct)
     {
         var evt = notification.Event;
@@ -30,7 +30,7 @@ public sealed class CategoryCreatedDomainEventHandler(
         if (category is null)
         {
             logger.LogWarning(
-                "CategoryCreatedDomainEvent: Category {CategoryId} not found; skipping translation.",
+                "CategoryUpdatedDomainEvent: Category {CategoryId} not found; skipping re-translation.",
                 evt.CategoryId);
             return;
         }
@@ -42,47 +42,45 @@ public sealed class CategoryCreatedDomainEventHandler(
             evt.SourceLanguageCode,
             ct);
 
-        var addedTranslations = 0;
+        var updatedCount = 0;
+        var addedCount = 0;
 
         foreach (var set in translationSets)
         {
-            if (category.Translations.Any(t => t.LanguageId == set.LanguageId))
-            {
-                continue;
-            }
-
             if (!set.Fields.TryGetValue("Name", out var translatedName) || string.IsNullOrWhiteSpace(translatedName))
-            {
                 continue;
+
+            var slug = Slugify(translatedName);
+            var existing = category.Translations.FirstOrDefault(t => t.LanguageId == set.LanguageId);
+
+            if (existing is not null)
+            {
+                // Re-translate existing translation
+                category.UpdateTranslation(set.LanguageId, translatedName, slug);
+                updatedCount++;
             }
-
-            category.AddTranslation(
-                set.LanguageId,
-                translatedName,
-                Slugify(translatedName));
-
-            addedTranslations++;
+            else
+            {
+                // Add translation for any new active language
+                category.AddTranslation(set.LanguageId, translatedName, slug);
+                addedCount++;
+            }
         }
 
-        if (addedTranslations == 0)
-        {
+        if (updatedCount == 0 && addedCount == 0)
             return;
-        }
-
-        // No explicit Update() call needed — EF ChangeTracker detects changes
 
         logger.LogInformation(
-            "CategoryCreatedDomainEvent: Added {TranslationCount} translations for category {CategoryId}.",
-            addedTranslations,
+            "CategoryUpdatedDomainEvent: Updated {UpdatedCount}, added {AddedCount} translations for category {CategoryId}.",
+            updatedCount,
+            addedCount,
             category.Id);
     }
 
     private static string Slugify(string text)
     {
         if (string.IsNullOrWhiteSpace(text))
-        {
             return string.Empty;
-        }
 
         var normalized = text.Trim().ToLowerInvariant();
         normalized = Regex.Replace(normalized, @"\s+", "-");
