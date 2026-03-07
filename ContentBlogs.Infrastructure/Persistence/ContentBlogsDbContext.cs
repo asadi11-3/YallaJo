@@ -1,6 +1,7 @@
 using ContentBlogs.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using YallaJo.SharedKernel.Application.Abstractions.Data;
+using YallaJo.SharedKernel.Infrastructure.Inbox;
 using YallaJo.SharedKernel.Infrastructure.Outbox;
 
 namespace ContentBlogs.Infrastructure.Persistence;
@@ -15,6 +16,7 @@ public sealed class ContentBlogsDbContext : DbContext, IDbContext
     public DbSet<BlogComment> BlogComments => Set<BlogComment>();
     public DbSet<BlogCommentReaction> BlogCommentReactions => Set<BlogCommentReaction>();
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
+    public DbSet<InboxMessage> InboxMessages => Set<InboxMessage>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

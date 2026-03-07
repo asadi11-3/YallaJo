@@ -13,4 +13,28 @@ public sealed class PlaceTranslation : BaseEntity
     public string? Address { get; private set; }
 
     public Place Place { get; private set; } = default!;
+
+    public static PlaceTranslation Create(
+        Guid placeId,
+        Guid languageId,
+        string name,
+        string? description = null,
+        string? address = null)
+    {
+        if (placeId == Guid.Empty)
+            throw new ArgumentException("Place is required.", nameof(placeId));
+        if (languageId == Guid.Empty)
+            throw new ArgumentException("Language is required.", nameof(languageId));
+        if (string.IsNullOrWhiteSpace(name))
+            throw new ArgumentException("Translation name is required.", nameof(name));
+
+        return new PlaceTranslation
+        {
+            PlaceId = placeId,
+            LanguageId = languageId,
+            Name = name.Trim(),
+            Description = description?.Trim(),
+            Address = address?.Trim()
+        };
+    }
 }

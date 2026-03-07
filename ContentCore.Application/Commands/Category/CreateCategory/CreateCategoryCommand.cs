@@ -1,0 +1,16 @@
+using YallaJo.SharedKernel.Application.Abstractions.Messaging;
+
+namespace ContentCore.Application.Commands.Category.CreateCategory;
+
+public sealed record CreateCategoryResult(
+    Guid Id,
+    string Name,
+    string Slug);
+
+public sealed record CreateCategoryCommand(
+    string Name,
+    string Slug,
+    Guid? ParentCategoryId = null,
+    string? Icon = null,
+    int SortOrder = 0,
+    string SourceLanguageCode = "en") : ICommand<CreateCategoryResult>;

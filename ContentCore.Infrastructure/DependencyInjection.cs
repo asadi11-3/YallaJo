@@ -57,6 +57,10 @@ public static class DependencyInjection
                 unitOfWork: sp.GetRequiredService<IContentCoreUnitOfWork>(),
                 logger: sp.GetRequiredService<ILogger<AutoSaveTranslationService>>()));
 
+        // ── Entity Translation Orchestrator ──────────────────────────────────
+        services.AddScoped<IActiveLanguageProvider, ActiveLanguageProvider>();
+        services.AddScoped<IEntityTranslationOrchestrator, EntityTranslationOrchestrator>();
+
         return services;
     }
 }

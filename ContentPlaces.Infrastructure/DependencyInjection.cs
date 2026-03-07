@@ -1,3 +1,4 @@
+using ContentPlaces.Application.Interfaces;
 using ContentPlaces.Infrastructure.Persistence;
 using ContentPlaces.Infrastructure.Persistence.Seeding;
 using Microsoft.EntityFrameworkCore;
@@ -27,6 +28,8 @@ public static class DependencyInjection
                 }));
 
         services.AddScoped<IUnitOfWork<ContentPlacesDbContext>, UnitOfWork<ContentPlacesDbContext>>();
+        services.AddScoped<IContentPlacesUnitOfWork, ContentPlacesUnitOfWork>();
+        services.AddScoped<IContentPlacesInboxStore, ContentPlacesInboxStore>();
         services.AddScoped<IModuleDbInitializer, ContentPlacesDbInitializer>();
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
         services.AddScoped<IOutboxProcessor, OutboxProcessor<ContentPlacesDbContext>>();

@@ -1,3 +1,4 @@
+using ContentCore.Domain.Events;
 using YallaJo.SharedKernel.Domain.Entities;
 
 namespace ContentCore.Domain.Entities;
@@ -25,7 +26,7 @@ public sealed class Language : AuditableEntity, IAggregateRoot
         if (string.IsNullOrWhiteSpace(nativeName))
             throw new ArgumentException("Native name is required.", nameof(nativeName));
 
-        return new Language
+        var language = new Language
         {
             Code = code.Trim().ToLowerInvariant(),
             Name = name.Trim(),
@@ -33,6 +34,10 @@ public sealed class Language : AuditableEntity, IAggregateRoot
             IsRtl = isRtl,
             IsActive = true
         };
+
+        language.AddDomainEvent(new LanguageActivatedDomainEvent(language.Id, language.Code));
+
+        return language;
     }
 
     public void Update(string name, string nativeName, bool isRtl)
@@ -51,6 +56,7 @@ public sealed class Language : AuditableEntity, IAggregateRoot
     public void Activate()
     {
         IsActive = true;
+        AddDomainEvent(new LanguageActivatedDomainEvent(Id, Code));
         MarkUpdated();
     }
 

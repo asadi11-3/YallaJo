@@ -12,6 +12,7 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="9.0.2" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\ContentCore.Contracts\ContentCore.Contracts.csproj" />
     <ProjectReference Include="..\ContentSeo.Application\ContentSeo.Application.csproj" />
     <ProjectReference Include="..\ContentSeo.Contracts\ContentSeo.Contracts.csproj" />
     <ProjectReference Include="..\ContentSeo.Domain\ContentSeo.Domain.csproj" />

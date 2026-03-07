@@ -1,3 +1,4 @@
+using ContentTours.Application.Interfaces;
 using ContentTours.Infrastructure.Persistence;
 using ContentTours.Infrastructure.Persistence.Seeding;
 using Microsoft.EntityFrameworkCore;
@@ -27,6 +28,8 @@ public static class DependencyInjection
                 }));
 
         services.AddScoped<IUnitOfWork<ContentToursDbContext>, UnitOfWork<ContentToursDbContext>>();
+        services.AddScoped<IContentToursUnitOfWork, ContentToursUnitOfWork>();
+        services.AddScoped<IContentToursInboxStore, ContentToursInboxStore>();
         services.AddScoped<IModuleDbInitializer, ContentToursDbInitializer>();
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
         services.AddScoped<IOutboxProcessor, OutboxProcessor<ContentToursDbContext>>();

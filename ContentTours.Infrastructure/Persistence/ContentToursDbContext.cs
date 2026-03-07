@@ -1,6 +1,7 @@
 using ContentTours.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using YallaJo.SharedKernel.Application.Abstractions.Data;
+using YallaJo.SharedKernel.Infrastructure.Inbox;
 using YallaJo.SharedKernel.Infrastructure.Outbox;
 
 namespace ContentTours.Infrastructure.Persistence;
@@ -18,6 +19,7 @@ public sealed class ContentToursDbContext : DbContext, IDbContext
     public DbSet<TourPackage> TourPackages => Set<TourPackage>();
     public DbSet<TourPackageInclusion> TourPackageInclusions => Set<TourPackageInclusion>();
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
+    public DbSet<InboxMessage> InboxMessages => Set<InboxMessage>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

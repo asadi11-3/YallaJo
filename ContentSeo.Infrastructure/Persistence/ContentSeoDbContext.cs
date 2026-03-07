@@ -1,7 +1,7 @@
 using ContentSeo.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using YallaJo.SharedKernel.Application.Abstractions.Data;
-using YallaJo.SharedKernel.Infrastructure.Outbox;
+using YallaJo.SharedKernel.Infrastructure.Inbox;
 
 namespace ContentSeo.Infrastructure.Persistence;
 
@@ -15,6 +15,7 @@ public sealed class ContentSeoDbContext : DbContext, IDbContext
     public DbSet<FaqItemTranslation> FaqItemTranslations => Set<FaqItemTranslation>();
     public DbSet<SitemapEntry> SitemapEntries => Set<SitemapEntry>();
     public DbSet<Redirect> Redirects => Set<Redirect>();
+    public DbSet<InboxMessage> InboxMessages => Set<InboxMessage>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

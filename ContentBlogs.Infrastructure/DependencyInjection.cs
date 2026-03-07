@@ -1,6 +1,6 @@
+using ContentBlogs.Application.Interfaces;
 using ContentBlogs.Infrastructure.Persistence;
 using ContentBlogs.Infrastructure.Persistence.Seeding;
-using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -28,6 +28,8 @@ public static class DependencyInjection
                 }));
 
         services.AddScoped<IUnitOfWork<ContentBlogsDbContext>, UnitOfWork<ContentBlogsDbContext>>();
+        services.AddScoped<IContentBlogsUnitOfWork, ContentBlogsUnitOfWork>();
+        services.AddScoped<IContentBlogsInboxStore, ContentBlogsInboxStore>();
         services.AddScoped<IModuleDbInitializer, ContentBlogsDbInitializer>();
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
         services.AddScoped<IOutboxProcessor, OutboxProcessor<ContentBlogsDbContext>>();

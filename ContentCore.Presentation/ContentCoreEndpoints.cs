@@ -1,3 +1,4 @@
+using ContentCore.Application.Commands.Category.CreateCategory;
 using ContentCore.Application.Commands.Language.CreateLanguage;
 using ContentCore.Application.Commands.Language.UpdateLanguage;
 using ContentCore.Application.Commands.Translation.ApproveTranslation;
@@ -23,8 +24,34 @@ public static class ContentCoreEndpoints
 
         MapLanguageEndpoints(group);
         MapTranslationEndpoints(group);
+        MapCategoryEndpoints(group);
 
         return endpoints;
+    }
+
+    // ── Category Endpoints ──────────────────────────────────────────────────
+
+    private static void MapCategoryEndpoints(RouteGroupBuilder group)
+    {
+        var categories = group.MapGroup("/categories");
+
+        categories.MapPost("/", async (CreateCategoryRequest request, ISender sender) =>
+        {
+            var result = await sender.Send(new CreateCategoryCommand(
+                request.Name,
+                request.Slug,
+                request.ParentCategoryId,
+                request.Icon,
+                request.SortOrder,
+                request.SourceLanguageCode ?? "en"));
+            return ToApiResult(result);
+        })
+        .WithName("CreateCategory")
+        .Produces<CreateCategoryResult>(StatusCodes.Status201Created)
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .WithSummary("Create a category with auto-translation to all active languages")
+        .RequireAuthorization("Admin");
     }
 
     // ── Language Endpoints ──────────────────────────────────────────────────
@@ -165,3 +192,10 @@ public sealed record UpdateLanguageRequest(string Name, string NativeName, bool 
 public sealed record TranslateRequest(string Text, string FromLanguageCode, string ToLanguageCode);
 public sealed record BatchTranslateRequest(IReadOnlyList<string> Texts, string FromLanguageCode, string ToLanguageCode);
 public sealed record UpdateTranslationRequest(string TranslatedText);
+public sealed record CreateCategoryRequest(
+    string Name,
+    string Slug,
+    Guid? ParentCategoryId = null,
+    string? Icon = null,
+    int SortOrder = 0,
+    string? SourceLanguageCode = null);

@@ -1,6 +1,7 @@
 using ContentPlaces.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using YallaJo.SharedKernel.Application.Abstractions.Data;
+using YallaJo.SharedKernel.Infrastructure.Inbox;
 using YallaJo.SharedKernel.Infrastructure.Outbox;
 
 namespace ContentPlaces.Infrastructure.Persistence;
@@ -20,6 +21,7 @@ public sealed class ContentPlacesDbContext : DbContext, IDbContext
     public DbSet<PlaceBusiness> PlaceBusinesses => Set<PlaceBusiness>();
     public DbSet<AccessibilityFeature> AccessibilityFeatures => Set<AccessibilityFeature>();
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
+    public DbSet<InboxMessage> InboxMessages => Set<InboxMessage>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
