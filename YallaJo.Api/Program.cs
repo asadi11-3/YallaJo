@@ -195,9 +195,9 @@ builder.Services.AddProblemDetails(options =>
         }
     });
 
+
 // ── Health Checks ─────────────────────────────────────────────────────────
 builder.Services.AddHealthChecks();
-
 var app = builder.Build();
 
 await app.UseDataSeedingAsync();
@@ -220,11 +220,13 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI(ui =>
         ui.SwaggerEndpoint("/swagger/v1/swagger.json", "YallaJo API v1"));
-    app.MapGet("/", () => Results.Redirect("/swagger")).ExcludeFromDescription();
 }
 
 // 3. Transport security
 app.UseHttpsRedirection();
+
+// 3b. Static files — serve uploaded files from wwwroot/uploads
+app.UseStaticFiles();
 
 // 3a. Request localization — parse Accept-Language, set CultureInfo
 app.UseMiddleware<RequestLocalizationMiddleware>();

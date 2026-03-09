@@ -1,5 +1,6 @@
 using ContentCore.Application.Interfaces;
 using ContentCore.Domain.Repositories;
+using ContentCore.Infrastructure.BackgroundJobs;
 using ContentCore.Infrastructure.Persistence;
 using ContentCore.Infrastructure.Persistence.Seeding;
 using ContentCore.Infrastructure.Repositories;
@@ -8,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using YallaJo.SharedKernel.Application.Abstractions.Storage;
 using YallaJo.SharedKernel.Application.Abstractions.Translation;
 using YallaJo.SharedKernel.Infrastructure.BackgroundJobs;
 using YallaJo.SharedKernel.Infrastructure.Data;
@@ -37,6 +39,10 @@ public static class DependencyInjection
         services.AddScoped<ILanguageRepository, LanguageRepository>();
         services.AddScoped<ITranslationCacheRepository, TranslationCacheRepository>();
         services.AddScoped<ISpecializationRepository, SpecializationRepository>();
+        services.AddScoped<IAttachmentRepository, AttachmentRepository>();
+        services.AddScoped<ITagRepository, TagRepository>();
+        services.AddScoped<IEntityCategoryRepository, EntityCategoryRepository>();
+        services.AddScoped<IEntityTagRepository, EntityTagRepository>();
 
         // ── Unit of Work & Infrastructure ────────────────────────────────────────
         services.AddScoped<IContentCoreUnitOfWork, ContentCoreUnitOfWork>();
@@ -62,6 +68,15 @@ public static class DependencyInjection
         services.AddScoped<IActiveLanguageProvider, ActiveLanguageProvider>();
         services.AddScoped<IEntityTranslationOrchestrator, EntityTranslationOrchestrator>();
 
+        // ── File Storage ─────────────────────────────────────────────────────
+        services.AddScoped<IFileStorageService, LocalFileStorageService>();
+
+        // ── Media Processing (background jobs) ─────────────────────────────
+        services.AddSingleton<MediaProcessingQueue>();
+        services.AddSingleton<IMediaProcessingQueue>(sp => sp.GetRequiredService<MediaProcessingQueue>());
+        services.AddScoped<IImageProcessingService, ImageProcessingService>();
+        services.AddScoped<IVideoProcessingService, VideoProcessingService>();
+        services.AddHostedService<MediaProcessingBackgroundService>();
         return services;
     }
 }

@@ -14,4 +14,42 @@ public sealed class EntityImage
     public bool IsPrimary { get; private set; }
 
     public Attachment Attachment { get; private set; } = default!;
+
+    // ── Factory Method ──
+    public static EntityImage Create(
+        EntityType entityType,
+        Guid entityId,
+        Guid attachmentId,
+        ImageSize imageSize,
+        int sortOrder = 0,
+        bool isPrimary = false)
+    {
+        if (entityId == Guid.Empty)
+            throw new ArgumentException("Entity ID is required.", nameof(entityId));
+
+        if (attachmentId == Guid.Empty)
+            throw new ArgumentException("Attachment ID is required.", nameof(attachmentId));
+
+        return new EntityImage
+        {
+            EntityType = entityType,
+            EntityId = entityId,
+            AttachmentId = attachmentId,
+            ImageSize = imageSize,
+            SortOrder = sortOrder,
+            IsPrimary = isPrimary
+        };
+    }
+
+    // ── Business Methods ──
+
+    public void SetPrimary(bool isPrimary)
+    {
+        IsPrimary = isPrimary;
+    }
+
+    public void SetSortOrder(int sortOrder)
+    {
+        SortOrder = sortOrder;
+    }
 }
