@@ -1,4 +1,7 @@
 using ContentCore.Application.Commands.Category.CreateCategory;
+using ContentCore.Application.Commands.Category.DeactivateCategory;
+using ContentCore.Application.Commands.Category.ReactivateCategory;
+using ContentCore.Application.Commands.Category.ReorderCategories;
 using ContentCore.Application.Commands.Category.UpdateCategory;
 using ContentCore.Application.Commands.Language.CreateLanguage;
 using ContentCore.Application.Commands.Language.UpdateLanguage;
@@ -6,6 +9,8 @@ using ContentCore.Application.Commands.Translation.ApproveTranslation;
 using ContentCore.Application.Commands.Translation.BatchTranslate;
 using ContentCore.Application.Commands.Translation.TranslateText;
 using ContentCore.Application.Commands.Translation.UpdateTranslation;
+using ContentCore.Application.Queries.Category.GetCategories;
+using ContentCore.Application.Queries.Category.GetCategoryById;
 using ContentCore.Application.Queries.Language.ListLanguages;
 using ContentCore.Application.Queries.Translation.GetEntityTranslations;
 using MediatR;
@@ -36,6 +41,33 @@ public static class ContentCoreEndpoints
     {
         var categories = group.MapGroup("/categories");
 
+        categories.MapGet("/", async (
+            Guid? parentCategoryId,
+            bool? isActive,
+            ISender sender) =>
+        {
+            var result = await sender.Send(new GetCategoriesQuery(
+                parentCategoryId,
+                isActive));
+
+            return ToApiResult(result);
+        })
+        .WithName("GetCategories")
+        .Produces<GetCategoriesResponse>(StatusCodes.Status200OK)
+        .WithSummary("List categories as a tree structure")
+        .AllowAnonymous();
+
+        categories.MapGet("/{id:guid}", async (Guid id, ISender sender) =>
+        {
+            var result = await sender.Send(new GetCategoryByIdQuery(id));
+            return ToApiResult(result);
+        })
+        .WithName("GetCategoryById")
+        .Produces<GetCategoryByIdResponse>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .WithSummary("Get single category with subcategories")
+        .AllowAnonymous();
+
         categories.MapPost("/", async (CreateCategoryRequest request, ISender sender) =>
         {
             var result = await sender.Send(new CreateCategoryCommand(
@@ -45,6 +77,7 @@ public static class ContentCoreEndpoints
                 request.Icon,
                 request.SortOrder,
                 request.SourceLanguageCode ?? "en"));
+
             return ToApiResult(result);
         })
         .WithName("CreateCategory")
@@ -60,16 +93,57 @@ public static class ContentCoreEndpoints
                 id,
                 request.Name,
                 request.Slug,
+                request.ParentCategoryId,
                 request.Icon,
                 request.SortOrder,
-                request.SourceLanguageCode ?? "en"));
+                request.SourceLanguageCode ?? "en",
+                request.Translations));
+
             return ToApiResult(result);
         })
         .WithName("UpdateCategory")
         .Produces<UpdateCategoryResult>(StatusCodes.Status200OK)
         .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status404NotFound)
-        .WithSummary("Update a category with auto re-translation to all active languages")
+        .WithSummary("Update a category")
+        .RequireAuthorization("Admin");
+
+        categories.MapDelete("/{id:guid}", async (Guid id, ISender sender) =>
+        {
+            var result = await sender.Send(new DeactivateCategoryCommand(id));
+            return ToApiResult(result);
+        })
+        .WithName("DeactivateCategory")
+        .Produces<DeactivateCategoryResult>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .WithSummary("Deactivate category")
+        .RequireAuthorization("Admin");
+
+        categories.MapPatch("/{id:guid}", async (Guid id, ISender sender) =>
+        {
+            var result = await sender.Send(new ReactivateCategoryCommand(id));
+            return ToApiResult(result);
+        })
+        .WithName("ReactivateCategory")
+        .Produces<ReactivateCategoryResult>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .WithSummary("Reactivate category")
+        .RequireAuthorization("Admin");
+
+        categories.MapPut("/reorder", async (ReorderCategoriesRequest request, ISender sender) =>
+        {
+            var result = await sender.Send(new ReorderCategoriesCommand(
+                request.Items
+                    .Select(x => new ReorderCategoryItemDto(x.Id, x.SortOrder))
+                    .ToList()));
+
+            return ToApiResult(result);
+        })
+        .WithName("ReorderCategories")
+        .Produces<ReorderCategoriesResult>(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .WithSummary("Reorder categories")
         .RequireAuthorization("Admin");
     }
 
@@ -211,6 +285,7 @@ public sealed record UpdateLanguageRequest(string Name, string NativeName, bool 
 public sealed record TranslateRequest(string Text, string FromLanguageCode, string ToLanguageCode);
 public sealed record BatchTranslateRequest(IReadOnlyList<string> Texts, string FromLanguageCode, string ToLanguageCode);
 public sealed record UpdateTranslationRequest(string TranslatedText);
+
 public sealed record CreateCategoryRequest(
     string Name,
     string Slug,
@@ -219,10 +294,18 @@ public sealed record CreateCategoryRequest(
     int SortOrder = 0,
     string? SourceLanguageCode = null);
 
-
 public sealed record UpdateCategoryRequest(
     string Name,
     string Slug,
+    Guid? ParentCategoryId = null,
     string? Icon = null,
     int? SortOrder = null,
-    string? SourceLanguageCode = null);
+    string? SourceLanguageCode = null,
+    List<UpdateCategoryTranslationDto>? Translations = null);
+
+public sealed record ReorderCategoryItemRequest(
+    Guid Id,
+    int SortOrder);
+
+public sealed record ReorderCategoriesRequest(
+    List<ReorderCategoryItemRequest> Items);

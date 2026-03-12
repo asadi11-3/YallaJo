@@ -15,8 +15,6 @@
     <ProjectReference Include="..\YallaJo.SharedKernel.Application\YallaJo.SharedKernel.Application.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Commands\Category\" />
     <Folder Include="EventHandlers\" />
-    <Folder Include="Queries\Category\" />
   </ItemGroup>
 </Project>

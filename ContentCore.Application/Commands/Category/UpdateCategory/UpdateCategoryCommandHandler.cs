@@ -23,12 +23,63 @@ public sealed class UpdateCategoryCommandHandler(
         // 2. Update translatable content (raises CategoryUpdatedDomainEvent)
         category.Update(request.Name, request.Slug, request.SourceLanguageCode);
 
+        
+        
+        // 3. Update optional properties
+        
+       /* if (request.Icon is not null)
+            category.SetIcon(request.Icon);
+
+        if (request.SortOrder.HasValue)
+            category.SetSortOrder(request.SortOrder.Value);
+        */
+
+        
+        // Update parent category if changed
+        if (request.ParentCategoryId.HasValue &&
+            request.ParentCategoryId != category.ParentCategoryId)
+        {
+            category.ChangeParent(request.ParentCategoryId);
+        }
+
         // 3. Update optional properties
         if (request.Icon is not null)
             category.SetIcon(request.Icon);
 
         if (request.SortOrder.HasValue)
             category.SetSortOrder(request.SortOrder.Value);
+
+
+        // 4. Persist (UoW dispatches domain events during SaveChanges)
+
+        /* await unitOfWork.SaveChangesAsync(ct);
+
+       return Result<UpdateCategoryResult>.Success(
+           new UpdateCategoryResult(category.Id, category.Name, category.Slug));
+       */
+
+
+        // Update translations if provided
+        if (request.Translations is not null)
+        {
+            foreach (var translation in request.Translations)
+            {
+                try
+                {
+                    category.UpdateTranslation(
+                        translation.LanguageId,
+                        translation.Name,
+                        translation.Slug);
+                }
+                catch
+                {
+                    category.AddTranslation(
+                        translation.LanguageId,
+                        translation.Name,
+                        translation.Slug);
+                }
+            }
+        }
 
         // 4. Persist (UoW dispatches domain events during SaveChanges)
         await unitOfWork.SaveChangesAsync(ct);

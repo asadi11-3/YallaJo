@@ -1,14 +1,16 @@
 ﻿using ContentCore.Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using YallaJo.SharedKernel.Domain.Abstractions.Data;
 
-namespace ContentCore.Domain.Repositories
+namespace ContentCore.Domain.Repositories;
+
+public interface ICategoryRepository : IRepository<Category, Guid>
 {
-    public interface ICategoryRepository : IRepository<Category, Guid>
-    {
-    }
+    //  هي للقراءة مع الترجمات وبناء الشجرة
+    Task<List<Category>> GetAllWithTranslationsAsync(CancellationToken ct);
+
+    //  نستخدمها بعملية الترتيب batch حسب مجموعة ids
+    Task<List<Category>> GetByIdsAsync(
+        List<Guid> ids,
+        CancellationToken ct,
+        bool asNoTracking = false);
 }

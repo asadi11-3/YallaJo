@@ -100,8 +100,14 @@ public sealed class Category : AuditableEntity, IAggregateRoot
     public void UpdateTranslation(Guid languageId, string name, string slug)
     {
         var translation = _translations.FirstOrDefault(x => x.LanguageId == languageId);
-        if (translation is null)
+        if (translation == null)
             throw new InvalidOperationException($"Translation for language '{languageId}' not found.");
         translation.Update(name, slug);
+    }
+
+    public void ChangeParent(Guid? parentCategoryId)
+    {
+        ParentCategoryId = parentCategoryId;
+        MarkUpdated();
     }
 }
