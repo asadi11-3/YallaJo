@@ -18,6 +18,7 @@ namespace YallaJo.SharedKernel.Infrastructure
         public static IServiceCollection AddSharedKernelInfrastructure(this IServiceCollection services)
         {
             services.AddScoped<IDomainEventDispatcher, MediatRDomainEventDispatcher>();
+            services.AddMemoryCache();
             services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
 
             services.AddMediatR(cfg =>
@@ -26,6 +27,7 @@ namespace YallaJo.SharedKernel.Infrastructure
                 cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
                 cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
                 cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(PerformanceBehavior<,>));
+                cfg.AddOpenBehavior(typeof(QueryCachingBehavior<,>));
             });
 
             // Single composite outbox processor replaces per-module hosted services
