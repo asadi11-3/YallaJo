@@ -255,6 +255,18 @@ app.MapSocialEndpoints();
 app.MapTrackingEndpoints();
 
 // ── Infrastructure endpoints ──────────────────────────────────────────────
+app.MapGet("/", () => Results.Ok(new
+{
+    service = "YallaJo API",
+    status = "running",
+    health = "/health",
+    docs = "/swagger"
+}))
+    .AllowAnonymous()
+    .WithTags("Infrastructure")
+    .WithName("ApiStatus")
+    .WithSummary("Returns API status and useful links.");
+
 app.MapHealthChecks("/health").AllowAnonymous();
 
 app.Run();

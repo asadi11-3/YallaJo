@@ -11,4 +11,15 @@ public sealed class EntityTag
     public Guid TagId { get; private set; }
 
     public Tag Tag { get; private set; } = default!;
+
+    // ── Factory Method ──
+    public static EntityTag Create(EntityType entityType, Guid entityId, Guid tagId)
+    {
+        return new EntityTag
+        {
+            EntityType = entityType,
+            EntityId = entityId,
+            TagId = tagId
+        };
+    }
 }

@@ -11,4 +11,15 @@ public sealed class EntityCategory
     public Guid CategoryId { get; private set; }
 
     public Category Category { get; private set; } = default!;
+
+    // ── Factory Method ──
+    public static EntityCategory Create(EntityType entityType, Guid entityId, Guid categoryId)
+    {
+        return new EntityCategory
+        {
+            EntityType = entityType,
+            EntityId = entityId,
+            CategoryId = categoryId
+        };
+    }
 }
