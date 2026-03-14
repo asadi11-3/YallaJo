@@ -11,16 +11,46 @@ public sealed class ListCategoriesQueryHandler(ICategoryRepository categoryRepos
         ListCategoriesQuery request,
         CancellationToken ct)
     {
-        var categories = await categoryRepository.GetAllAsync(
+        // Fetch all categories (soft-delete filter is applied by EF query filter)
+        var allCategories = await categoryRepository.GetAllAsync(
             filter: request.ActiveOnly ? c => c.IsActive : null,
             orderBy: q => q.OrderBy(c => c.SortOrder).ThenBy(c => c.Name),
             ct: ct);
 
-        var dtos = categories
-            .Select(c => new CategoryDto(
-                c.Id, c.Name, c.Slug, c.Icon, c.SortOrder, c.IsActive, c.ParentCategoryId))
+        // Group by parent for O(n) tree building
+        var byParent = allCategories.ToLookup(c => c.ParentCategoryId);
+
+        // Build tree from roots (ParentCategoryId == null)
+        var roots = byParent[null]
+            .OrderBy(c => c.SortOrder)
+            .ThenBy(c => c.Name)
+            .ToList();
+
+        var tree = roots
+            .Select(r => BuildNode(r, byParent))
             .ToList() as IReadOnlyList<CategoryDto>;
 
-        return Result<IReadOnlyList<CategoryDto>>.Success(dtos);
+        return Result<IReadOnlyList<CategoryDto>>.Success(tree);
+    }
+
+    private static CategoryDto BuildNode(
+        Domain.Entities.Category category,
+        ILookup<Guid?, Domain.Entities.Category> byParent)
+    {
+        var children = byParent[category.Id]
+            .OrderBy(c => c.SortOrder)
+            .ThenBy(c => c.Name)
+            .Select(c => BuildNode(c, byParent))
+            .ToList() as IReadOnlyList<CategoryDto>;
+
+        return new CategoryDto(
+            category.Id,
+            category.Name,
+            category.Slug,
+            category.Icon,
+            category.SortOrder,
+            category.IsActive,
+            category.ParentCategoryId,
+            children);
     }
 }
