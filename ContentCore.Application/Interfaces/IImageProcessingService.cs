@@ -2,8 +2,8 @@ namespace ContentCore.Application.Interfaces;
 
 /// <summary>
 /// Generates thumbnails and extracts dimensions from image files.
-/// Current implementation uses SixLabors.ImageSharp.
-/// Will be replaced by Cloudinary when migrating to cloud storage.
+/// Current implementation: SixLabors.ImageSharp.
+/// Future: will be replaced by Cloudinary SDK when migrating to cloud storage.
 /// </summary>
 public interface IImageProcessingService
 {

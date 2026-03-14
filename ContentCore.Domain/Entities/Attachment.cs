@@ -4,6 +4,8 @@ using YallaJo.SharedKernel.Domain.Entities;
 
 namespace ContentCore.Domain.Entities;
 
+
+
 public sealed class Attachment : BaseEntity, IAggregateRoot
 {
     private Attachment() { } // EF Core
@@ -111,10 +113,10 @@ public sealed class Attachment : BaseEntity, IAggregateRoot
     public void MarkForDeletion()
     {
         AddDomainEvent(new AttachmentDeletedDomainEvent(
-            Id,
-            EntityType,
-            EntityId,
-            Type,
-            Url));
+     Id,
+     EntityType,
+     EntityId,
+     Type,
+     Url));
     }
 }

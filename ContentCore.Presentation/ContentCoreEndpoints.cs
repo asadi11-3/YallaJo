@@ -3,20 +3,19 @@ using ContentCore.Application.Commands.Attachment.ReorderAttachments;
 using ContentCore.Application.Commands.Attachment.SetPrimaryImage;
 using ContentCore.Application.Commands.Attachment.UploadAttachment;
 using ContentCore.Application.Commands.Category.CreateCategory;
-using ContentCore.Application.Commands.Category.UpdateCategory;
+using ContentCore.Application.Commands.Category.DeactivateCategory;
 using ContentCore.Application.Commands.Category.DeleteCategory;
+using ContentCore.Application.Commands.Category.ReactivateCategory;
 using ContentCore.Application.Commands.Category.ReorderCategories;
-using ContentCore.Application.Commands.Specialization.CreateSpecialization;
-using ContentCore.Application.Commands.Specialization.UpdateSpecialization;
-using ContentCore.Application.Queries.Specialization.ListSpecializations;
-using ContentCore.Application.Queries.Category.GetCategoryById;
-using ContentCore.Application.Queries.Category.ListCategories;
+using ContentCore.Application.Commands.Category.UpdateCategory;
 using ContentCore.Application.Commands.EntityCategory.AssignCategoriesToEntity;
 using ContentCore.Application.Commands.EntityCategory.RemoveCategoryFromEntity;
 using ContentCore.Application.Commands.EntityTag.AssignTagsToEntity;
 using ContentCore.Application.Commands.EntityTag.RemoveTagFromEntity;
 using ContentCore.Application.Commands.Language.CreateLanguage;
 using ContentCore.Application.Commands.Language.UpdateLanguage;
+using ContentCore.Application.Commands.Specialization.CreateSpecialization;
+using ContentCore.Application.Commands.Specialization.UpdateSpecialization;
 using ContentCore.Application.Commands.Tag.CreateTag;
 using ContentCore.Application.Commands.Tag.DeleteTag;
 using ContentCore.Application.Commands.Tag.UpdateTag;
@@ -26,9 +25,12 @@ using ContentCore.Application.Commands.Translation.TranslateText;
 using ContentCore.Application.Commands.Translation.UpdateTranslation;
 using ContentCore.Application.Queries.Attachment.GetAttachmentById;
 using ContentCore.Application.Queries.Attachment.GetEntityAttachments;
+using ContentCore.Application.Queries.Category.GetCategoryById;
+using ContentCore.Application.Queries.Category.ListCategories;
 using ContentCore.Application.Queries.EntityCategory.GetEntityCategories;
 using ContentCore.Application.Queries.EntityTag.GetEntityTags;
 using ContentCore.Application.Queries.Language.ListLanguages;
+using ContentCore.Application.Queries.Specialization.ListSpecializations;
 using ContentCore.Application.Queries.Tag.GetTagById;
 using ContentCore.Application.Queries.Tag.ListTags;
 using ContentCore.Application.Queries.Translation.GetEntityTranslations;
@@ -66,6 +68,37 @@ public static class ContentCoreEndpoints
     {
         var categories = group.MapGroup("/categories");
 
+        // GET / — List categories as tree (public, includes translations when Accept-Language present)
+        categories.MapGet("/", async (HttpContext http, ISender sender,
+            Guid? parentCategoryId = null,
+            bool? isActive = null) =>
+        {
+            var withTranslations = http.Request.Headers.AcceptLanguage.Count > 0;
+            var result = await sender.Send(new ListCategoriesQuery(
+                ActiveOnly: isActive ?? false,
+                ParentCategoryId: parentCategoryId,
+                WithTranslations: withTranslations));
+            return ToApiResult(result);
+        })
+        .WithName("ListCategories")
+        .Produces<IReadOnlyList<CategoryDto>>(StatusCodes.Status200OK)
+        .WithSummary("List categories as a tree with optional translations")
+        .AllowAnonymous();
+
+        // GET /{id} — Get single category with direct children (public)
+        categories.MapGet("/{id:guid}", async (Guid id, HttpContext http, ISender sender) =>
+        {
+            var withTranslations = http.Request.Headers.AcceptLanguage.Count > 0;
+            var result = await sender.Send(new GetCategoryByIdQuery(id, withTranslations));
+            return ToApiResult(result);
+        })
+        .WithName("GetCategoryById")
+        .Produces<CategoryDto>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .WithSummary("Get single category with direct children and translations")
+        .AllowAnonymous();
+
+        // POST / — Create category (admin only)
         categories.MapPost("/", async (CreateCategoryRequest request, ISender sender) =>
         {
             var result = await sender.Send(new CreateCategoryCommand(
@@ -84,45 +117,28 @@ public static class ContentCoreEndpoints
         .WithSummary("Create a category with auto-translation to all active languages")
         .RequireAuthorization("Admin");
 
+        // PUT /{id} — Update category (admin only)
         categories.MapPut("/{id:guid}", async (Guid id, UpdateCategoryRequest request, ISender sender) =>
         {
             var result = await sender.Send(new UpdateCategoryCommand(
                 id,
                 request.Name,
                 request.Slug,
+                request.ParentCategoryId,
                 request.Icon,
                 request.SortOrder,
-                request.SourceLanguageCode ?? "en"));
+                request.SourceLanguageCode ?? "en",
+                request.Translations));
             return ToApiResult(result);
         })
         .WithName("UpdateCategory")
         .Produces<UpdateCategoryResult>(StatusCodes.Status200OK)
         .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status404NotFound)
-        .WithSummary("Update a category with auto re-translation to all active languages")
+        .WithSummary("Update a category with auto re-translation")
         .RequireAuthorization("Admin");
 
-        categories.MapGet("/", async (ISender sender, bool activeOnly = false) =>
-        {
-            var result = await sender.Send(new ListCategoriesQuery(activeOnly));
-            return ToApiResult(result);
-        })
-        .WithName("ListCategories")
-        .Produces<IReadOnlyList<CategoryDto>>(StatusCodes.Status200OK)
-        .WithSummary("List categories")
-        .AllowAnonymous();
-
-        categories.MapGet("/{id:guid}", async (Guid id, ISender sender) =>
-        {
-            var result = await sender.Send(new GetCategoryByIdQuery(id));
-            return ToApiResult(result);
-        })
-        .WithName("GetCategoryById")
-        .Produces<CategoryDto>(StatusCodes.Status200OK)
-        .ProducesProblem(StatusCodes.Status404NotFound)
-        .WithSummary("Get category by ID")
-        .AllowAnonymous();
-
+        // DELETE /{id} — Soft-delete category (admin only)
         categories.MapDelete("/{id:guid}", async (Guid id, ISender sender) =>
         {
             var result = await sender.Send(new DeleteCategoryCommand(id));
@@ -131,9 +147,34 @@ public static class ContentCoreEndpoints
         .WithName("DeleteCategory")
         .Produces(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status404NotFound)
-        .WithSummary("Soft-delete a category")
+        .WithSummary("Soft-delete a category (sets IsDeleted = true)")
         .RequireAuthorization("Admin");
 
+        // PATCH /{id}/deactivate — Hide category from listings without deleting it
+        categories.MapPatch("/{id:guid}/deactivate", async (Guid id, ISender sender) =>
+        {
+            var result = await sender.Send(new DeactivateCategoryCommand(id));
+            return ToApiResult(result);
+        })
+        .WithName("DeactivateCategory")
+        .Produces<DeactivateCategoryResult>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .WithSummary("Deactivate (hide) a category without deleting it")
+        .RequireAuthorization("Admin");
+
+        // PATCH /{id}/activate — Restore a deactivated category
+        categories.MapPatch("/{id:guid}/activate", async (Guid id, ISender sender) =>
+        {
+            var result = await sender.Send(new ReactivateCategoryCommand(id));
+            return ToApiResult(result);
+        })
+        .WithName("ActivateCategory")
+        .Produces<ReactivateCategoryResult>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .WithSummary("Activate (restore) a deactivated category")
+        .RequireAuthorization("Admin");
+
+        // PUT /reorder — Batch sort order update (admin only)
         categories.MapPut("/reorder", async (ReorderCategoriesRequest request, ISender sender) =>
         {
             var result = await sender.Send(new ReorderCategoriesCommand(
@@ -144,7 +185,7 @@ public static class ContentCoreEndpoints
         .Produces(StatusCodes.Status200OK)
         .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status404NotFound)
-        .WithSummary("Reorder categories (batch sort order update)")
+        .WithSummary("Reorder categories via batch sort order update")
         .RequireAuthorization("Admin");
     }
     // ── Language Endpoints ──────────────────────────────────────────────────
@@ -591,6 +632,7 @@ public sealed record UpdateLanguageRequest(string Name, string NativeName, bool 
 public sealed record TranslateRequest(string Text, string FromLanguageCode, string ToLanguageCode);
 public sealed record BatchTranslateRequest(IReadOnlyList<string> Texts, string FromLanguageCode, string ToLanguageCode);
 public sealed record UpdateTranslationRequest(string TranslatedText);
+
 public sealed record CreateCategoryRequest(
     string Name,
     string? Slug = null,
@@ -599,13 +641,14 @@ public sealed record CreateCategoryRequest(
     int SortOrder = 0,
     string? SourceLanguageCode = null);
 
-
 public sealed record UpdateCategoryRequest(
     string Name,
     string Slug,
+    Guid? ParentCategoryId = null,
     string? Icon = null,
     int? SortOrder = null,
-    string? SourceLanguageCode = null);
+    string? SourceLanguageCode = null,
+    List<UpdateCategoryTranslationDto>? Translations = null);
 
 public sealed record CreateTagRequest(string Name, string Slug);
 public sealed record UpdateTagRequest(string Name, string Slug);

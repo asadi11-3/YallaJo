@@ -40,9 +40,9 @@ public static class DependencyInjection
         services.AddScoped<ITranslationCacheRepository, TranslationCacheRepository>();
         services.AddScoped<ISpecializationRepository, SpecializationRepository>();
         services.AddScoped<IAttachmentRepository, AttachmentRepository>();
-        services.AddScoped<ITagRepository, TagRepository>();
-        services.AddScoped<IEntityCategoryRepository, EntityCategoryRepository>();
-        services.AddScoped<IEntityTagRepository, EntityTagRepository>();
+        //services.AddScoped<ITagRepository, TagRepository>();
+        //services.AddScoped<IEntityCategoryRepository, EntityCategoryRepository>();
+        //services.AddScoped<IEntityTagRepository, EntityTagRepository>();
 
         // ── Unit of Work & Infrastructure ────────────────────────────────────────
         services.AddScoped<IContentCoreUnitOfWork, ContentCoreUnitOfWork>();
@@ -76,7 +76,7 @@ public static class DependencyInjection
         services.AddSingleton<IMediaProcessingQueue>(sp => sp.GetRequiredService<MediaProcessingQueue>());
         services.AddScoped<IImageProcessingService, ImageProcessingService>();
         services.AddScoped<IVideoProcessingService, VideoProcessingService>();
-        services.AddHostedService<MediaProcessingBackgroundService>();
+        //services.AddHostedService<MediaProcessingBackgroundService>();
         return services;
     }
 }

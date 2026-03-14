@@ -12,38 +12,29 @@ public sealed class GetCategoryByIdQueryHandler(ICategoryRepository categoryRepo
         GetCategoryByIdQuery request,
         CancellationToken ct)
     {
-        var category = await categoryRepository.GetByIdAsync(request.Id, ct);
+        // Load category — include translations when client requested them
+        var category = request.WithTranslations
+            ? await categoryRepository.GetByIdWithTranslationsAsync(request.Id, ct)
+            : await categoryRepository.GetByIdAsync(request.Id, ct);
+
         if (category is null)
             return Result<CategoryDto>.NotFound($"Category '{request.Id}' not found.");
 
-        // Load direct subcategories
-        var subcategories = await categoryRepository.GetAllAsync(
-            filter: c => c.ParentCategoryId == request.Id,
-            orderBy: q => q.OrderBy(c => c.SortOrder).ThenBy(c => c.Name),
-            ct: ct);
+        // Load direct subcategories (separate query — avoids loading the entire tree)
+        var subcategories = request.WithTranslations
+            ? await categoryRepository.GetAllWithTranslationsAsync(
+                filter: c => c.ParentCategoryId == request.Id,
+                orderBy: q => q.OrderBy(c => c.SortOrder).ThenBy(c => c.Name),
+                ct: ct)
+            : await categoryRepository.GetAllAsync(
+                filter: c => c.ParentCategoryId == request.Id,
+                orderBy: q => q.OrderBy(c => c.SortOrder).ThenBy(c => c.Name),
+                ct: ct);
 
         var childDtos = subcategories
-            .Select(c => new CategoryDto(
-                c.Id,
-                c.Name,
-                c.Slug,
-                c.Icon,
-                c.SortOrder,
-                c.IsActive,
-                c.ParentCategoryId,
-                Array.Empty<CategoryDto>()))
+            .Select(c => CategoryDto.From(c, []))
             .ToList() as IReadOnlyList<CategoryDto>;
 
-        var dto = new CategoryDto(
-            category.Id,
-            category.Name,
-            category.Slug,
-            category.Icon,
-            category.SortOrder,
-            category.IsActive,
-            category.ParentCategoryId,
-            childDtos);
-
-        return Result<CategoryDto>.Success(dto);
+        return Result<CategoryDto>.Success(CategoryDto.From(category, childDtos));
     }
 }
