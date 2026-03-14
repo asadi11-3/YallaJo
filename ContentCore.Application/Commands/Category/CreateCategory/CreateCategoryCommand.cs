@@ -9,7 +9,7 @@ public sealed record CreateCategoryResult(
 
 public sealed record CreateCategoryCommand(
     string Name,
-    string Slug,
+    string? Slug = null,
     Guid? ParentCategoryId = null,
     string? Icon = null,
     int SortOrder = 0,

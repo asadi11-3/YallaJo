@@ -11,10 +11,10 @@ public sealed class CreateCategoryCommandValidator : AbstractValidator<CreateCat
             .MaximumLength(200);
 
         RuleFor(x => x.Slug)
-            .NotEmpty()
             .MaximumLength(200)
             .Matches(@"^[a-z0-9\-]+$")
-            .WithMessage("Slug must contain only lowercase letters, digits, and hyphens.");
+            .WithMessage("Slug must contain only lowercase letters, digits, and hyphens.")
+            .When(x => x.Slug is not null);
 
         RuleFor(x => x.Icon)
             .MaximumLength(100)
