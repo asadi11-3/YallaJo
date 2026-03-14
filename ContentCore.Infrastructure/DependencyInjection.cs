@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Http.Resilience;
 using YallaJo.SharedKernel.Application.Abstractions.Storage;
 using YallaJo.SharedKernel.Application.Abstractions.Translation;
 using YallaJo.SharedKernel.Infrastructure.BackgroundJobs;
@@ -53,7 +54,15 @@ public static class DependencyInjection
 
         // ── Translation Service (decorator pattern) ─────────────────────────────
         // 1. Register the concrete Azure provider as a named/keyed inner service
-        services.AddHttpClient<AzureTranslateService>();
+        // HTTP resilience: retry 3x (exponential backoff+jitter), circuit breaker, 10s per-attempt timeout.
+        // DisableForUnsafeHttpMethods=true: translation POSTs are NOT retried (non-idempotent).
+        services.AddHttpClient<AzureTranslateService>()
+            .AddStandardResilienceHandler(options =>
+            {
+                options.Retry.MaxRetryAttempts = 3;
+                options.CircuitBreaker.FailureRatio = 0.5;
+                options.AttemptTimeout.Timeout = TimeSpan.FromSeconds(10);
+            });
 
         // 2. Register ITranslationService as the AutoSaveTranslationService decorator
         //    wrapping the AzureTranslateService inner implementation
