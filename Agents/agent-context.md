@@ -1,6 +1,6 @@
 # YallaJo — Agent Onboarding & Progress Context
 
-> **Last Updated**: 2026-03-14 | **Build State**: 0 errors, 4 warnings
+> **Last Updated**: 2026-03-15 | **Build State**: 0 errors, 4 warnings (all pre-existing, unrelated to ContentCore)
 
 > **Purpose**: Single source of truth for any AI agent working on YallaJo. **Read this entire file once at the start of every session.** Every section contains rules you must follow — do not skip any.
 
@@ -211,7 +211,7 @@ After completing ANY work, do ALL of the following before ending your session:
 | Auth | ✅ Complete | Pre-existing |
 | Security | ✅ Complete | Pre-existing |
 | Accounts | ✅ Complete | Pre-existing |
-| ContentCore | ✅ Complete | Category, Tag, Specialization, EntityCategory, EntityTag, Attachment, Translation — all CQRS |
+| ContentCore | ✅ Complete | Category (tree, depth, reorder, slug auto-gen), Tag, Specialization, EntityCategory, EntityTag, Attachment, Translation — all CQRS |
 | ContentPlaces | ⬜ Not started | Entities exist, endpoints empty |
 | ContentTours | ⬜ Not started | Entities exist, endpoints empty |
 | ContentBlogs | ⬜ Not started | Entities exist, endpoints empty |
@@ -253,14 +253,19 @@ This section is the **single source of truth** for what exists in the codebase. 
 | 8 | YallaJo.Web (Admin UI) | ✅ | 🤖 Agent | HttpClient BFF, `ApiClient`, `JwtAuthHandler`, `AuthController` (Login/Logout), `DashboardController` |
 | 9 | Auth/Security/Accounts | ✅ | 👤 User | Pre-existing, fully implemented |
 | 10 | Specialization (Full CQRS) | ✅ | 🤖 Agent | `AuditableEntity` (non-aggregate), Create/Update/List handlers + validators, endpoints at `/api/content-core/specializations` |
+| 11 | Category Tree Structure | ✅ | 🤖 Agent | `ListCategories` returns nested tree (roots→children→grandchildren), `GetCategoryById` returns direct children, 3-level max depth enforced in `CreateCategory` |
+| 12 | Category Slug Auto-Gen | ✅ | 🤖 Agent | `CreateCategoryCommand.Slug` is now optional (nullable); auto-generated from name via Slugify when not provided |
+| 13 | Category Reorder Endpoint | ✅ | 🤖 Agent | `PUT /api/content-core/categories/reorder` — `ReorderCategoriesCommand` batch updates SortOrder for multiple categories |
 
 ---
 
 ## What Needs To Be Done Next
 
 ### Wave 1 — ContentCore Completion
-- Verify all Category/Tag/Specialization/Attachment/EntityCategory/EntityTag endpoints end-to-end
-- EF Migrations for all new entities
+- ~~Category tree, depth validation, slug auto-gen, reorder~~ ✅ Done
+- ~~Specialization CQRS~~ ✅ Done
+- Verify all endpoints end-to-end (recommend running Swagger after migration)
+- EF Migrations — all ContentCore entity schemas were pre-existing; no new schema changes from this session's fixes
 
 ### Wave 2 — Phase 1 MVP (~80 endpoints)
 - **ContentPlaces**: Places full CQRS (~16 endpoints)
