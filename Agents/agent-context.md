@@ -1,6 +1,6 @@
 # YallaJo — Agent Onboarding & Progress Context
 
-> **Last Updated**: 2026-03-15 | **Build State**: 0 errors, 4 warnings (all pre-existing, unrelated to ContentCore)
+> **Last Updated**: 2026-03-15 | **Build State**: 0 errors, 0 warnings
 
 > **Purpose**: Single source of truth for any AI agent working on YallaJo. **Read this entire file once at the start of every session.** Every section contains rules you must follow — do not skip any.
 
@@ -211,7 +211,7 @@ After completing ANY work, do ALL of the following before ending your session:
 | Auth | ✅ Complete | Pre-existing |
 | Security | ✅ Complete | Pre-existing |
 | Accounts | ✅ Complete | Pre-existing |
-| ContentCore | ✅ Complete | Category (tree, depth, reorder, slug auto-gen), Tag, Specialization, EntityCategory, EntityTag, Attachment, Translation — all CQRS |
+| ContentCore | ✅ Complete | Category (tree, depth, reorder, slug, translations, deactivate/activate), Specialization, Tag, EntityCategory, EntityTag, Attachment, Translation |
 | ContentPlaces | ⬜ Not started | Entities exist, endpoints empty |
 | ContentTours | ⬜ Not started | Entities exist, endpoints empty |
 | ContentBlogs | ⬜ Not started | Entities exist, endpoints empty |
@@ -256,6 +256,7 @@ This section is the **single source of truth** for what exists in the codebase. 
 | 11 | Category Tree Structure | ✅ | 🤖 Agent | `ListCategories` returns nested tree (roots→children→grandchildren), `GetCategoryById` returns direct children, 3-level max depth enforced in `CreateCategory` |
 | 12 | Category Slug Auto-Gen | ✅ | 🤖 Agent | `CreateCategoryCommand.Slug` is now optional (nullable); auto-generated from name via Slugify when not provided |
 | 13 | Category Reorder Endpoint | ✅ | 🤖 Agent | `PUT /api/content-core/categories/reorder` — `ReorderCategoriesCommand` batch updates SortOrder for multiple categories |
+| 14 | Merge Refactor: Category CQRS Optimization | ✅ | 🤖 Agent | Resolved local/remote conflict; clean `ICategoryRepository` with `GetAllWithTranslationsAsync` + `GetByIdWithTranslationsAsync` (no EF leakage into Domain); `CategoryRepository` does EF Include in Infrastructure only; `ReorderCategories` uses single batch query O(1) instead of N roundtrips; `CategoryDto` adds `Translations` collection + `WithTranslations` flag; Accept-Language header drives translation loading at endpoint layer; DELETE stays soft-delete; `PATCH /{id}/activate` + `PATCH /{id}/deactivate` added; `UpdateCategoryCommandHandler` adds depth validation on parent change + manual translation overrides; removed 6 redundant files from remote merge; 0 errors, 0 warnings |
 
 ---
 
