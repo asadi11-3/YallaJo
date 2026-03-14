@@ -1,0 +1,47 @@
+// ============================================================================
+// TEMPLATE: Create Command Validator
+// USAGE: Copy → Replace {Module}, {Entity} → Adjust rules
+// FILE: {Module}.Application/Commands/{Entity}/Create{Entity}/Create{Entity}CommandValidator.cs
+//
+// RULES APPLIED:
+//   - Every string field has NotEmpty + MaximumLength
+//   - Slug: lowercase ASCII only (^[a-z0-9\-]+$) — never Unicode
+//   - Optional strings: validate length only When not null
+//   - Numeric fields: range validation
+//   - GUID references: NotEqual(Guid.Empty)
+//   - Enum fields: IsInEnum()
+//   - NO async validation (no DB calls) — uniqueness checked in handler
+//   - Error messages are user-friendly (shown to end users)
+// ============================================================================
+using FluentValidation;
+
+namespace {Module}.Application.Commands.{Entity}.Create{Entity};
+
+public sealed class Create{Entity}CommandValidator : AbstractValidator<Create{Entity}Command>
+{
+    public Create{Entity}CommandValidator()
+    {
+        // ── Required strings ──
+        RuleFor(x => x.Name)
+            .NotEmpty().WithMessage("Name is required.")
+            .MaximumLength(200).WithMessage("Name must not exceed 200 characters.");
+
+        RuleFor(x => x.Slug)
+            .NotEmpty().WithMessage("Slug is required.")
+            .MaximumLength(200)
+            .Matches(@"^[a-z0-9\-]+$")
+            .WithMessage("Slug must contain only lowercase letters, digits, and hyphens.");
+
+        // ── Optional strings — validate only when provided ──
+        RuleFor(x => x.Description)
+            .MaximumLength(2000).WithMessage("Description must not exceed 2000 characters.")
+            .When(x => x.Description is not null);
+
+        // ── TODO: Add entity-specific rules ──
+        // Numeric: RuleFor(x => x.Price).GreaterThan(0);
+        // GUID FK: RuleFor(x => x.CategoryId).NotEqual(Guid.Empty);
+        // Enum:    RuleFor(x => x.Status).IsInEnum();
+        // Collection: RuleFor(x => x.TagIds).NotEmpty().ForEach(id => id.NotEqual(Guid.Empty));
+        // File:    RuleFor(x => x.Image).Must(f => f == null || f.Length <= 50 * 1024 * 1024);
+    }
+}

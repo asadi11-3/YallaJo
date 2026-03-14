@@ -1,0 +1,92 @@
+// ============================================================================
+// TEMPLATE: Update Command + Handler + Validator (SEPARATE FILES in real usage)
+// USAGE: Copy each section into its own file → Replace {Module}, {Entity}, {entity}
+// FILE: {Module}.Application/Commands/{Entity}/Update{Entity}/
+//
+// RULES APPLIED:
+//   - CancellationToken on every async call (P1)
+//   - Entity loaded with tracking (asNoTracking: false) for modification
+//   - NotFound check with proper {Entity}.NotFound error code
+//   - Slug uniqueness re-check (another entity might have the slug)
+//   - Concurrency handled by RowVersion (EF throws DbUpdateConcurrencyException)
+//   - Structured logging
+// ============================================================================
+
+// ═══════════════════════════════════════════════════════════════════
+// FILE 1: Update{Entity}Command.cs
+// ═══════════════════════════════════════════════════════════════════
+using YallaJo.SharedKernel.Application.Abstractions.Messaging;
+
+namespace {Module}.Application.Commands.{Entity}.Update{Entity};
+
+public sealed record Update{Entity}Command(
+    Guid Id,
+    string Name,
+    string Slug,
+    string? Description = null) : ICommand<Guid>;
+
+// ═══════════════════════════════════════════════════════════════════
+// FILE 2: Update{Entity}CommandHandler.cs
+// ═══════════════════════════════════════════════════════════════════
+using {Module}.Domain.Repositories;
+using Microsoft.Extensions.Logging;
+using YallaJo.SharedKernel.Application.Abstractions.Messaging;
+using YallaJo.SharedKernel.Domain.Abstractions.Results;
+
+namespace {Module}.Application.Commands.{Entity}.Update{Entity};
+
+public sealed class Update{Entity}CommandHandler(
+    I{Entity}Repository {entity}Repository,
+    I{Module}UnitOfWork unitOfWork,
+    ILogger<Update{Entity}CommandHandler> logger)
+    : ICommandHandler<Update{Entity}Command, Guid>
+{
+    public async Task<Result<Guid>> Handle(Update{Entity}Command request, CancellationToken ct)
+    {
+        // 1. Load entity WITH tracking (need to modify and save)
+        var {entity} = await {entity}Repository.GetByIdAsync(request.Id, ct);
+        if ({entity} is null)
+            return Result<Guid>.NotFound(
+                "{Entity}.NotFound", $"{Entity} '{request.Id}' not found.");
+
+        // 2. Slug uniqueness — check that no OTHER entity has this slug
+        if ({entity}.Slug != request.Slug)
+        {
+            var slugTaken = await {entity}Repository.ExistsAsync(
+                e => e.Slug == request.Slug && e.Id != request.Id, ct);
+            if (slugTaken)
+                return Result<Guid>.Conflict(
+                    "{Entity}.SlugConflict",
+                    $"Slug '{request.Slug}' is already used by another {entity}.");
+        }
+
+        // 3. Apply changes via business method (domain event raised inside)
+        {entity}.Update(request.Name, request.Slug, request.Description);
+
+        // 4. Save — RowVersion handles optimistic concurrency automatically
+        await unitOfWork.SaveChangesAsync(ct);
+
+        logger.LogInformation("Updated {EntityType} {EntityId}", nameof({Entity}), {entity}.Id);
+
+        return Result<Guid>.Success({entity}.Id);
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// FILE 3: Update{Entity}CommandValidator.cs
+// ═══════════════════════════════════════════════════════════════════
+using FluentValidation;
+
+namespace {Module}.Application.Commands.{Entity}.Update{Entity};
+
+public sealed class Update{Entity}CommandValidator : AbstractValidator<Update{Entity}Command>
+{
+    public Update{Entity}CommandValidator()
+    {
+        RuleFor(x => x.Id).NotEqual(Guid.Empty).WithMessage("{Entity} ID is required.");
+        RuleFor(x => x.Name).NotEmpty().MaximumLength(200);
+        RuleFor(x => x.Slug).NotEmpty().MaximumLength(200)
+            .Matches(@"^[a-z0-9\-]+$").WithMessage("Slug must contain only lowercase letters, digits, and hyphens.");
+        RuleFor(x => x.Description).MaximumLength(2000).When(x => x.Description is not null);
+    }
+}

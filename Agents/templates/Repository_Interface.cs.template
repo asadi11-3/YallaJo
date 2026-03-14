@@ -1,0 +1,13 @@
+// ============================================================================
+// TEMPLATE: Repository Interface (Aggregate Root)
+// USAGE: Copy → Replace {Module}, {Entity}
+// For non-aggregate, use IReadRepository<T,TKey> + IWriteRepository<T,TKey>
+// ============================================================================
+using {Module}.Domain.Entities;
+using YallaJo.SharedKernel.Domain.Abstractions.Data;
+
+namespace {Module}.Domain.Repositories;
+
+public interface I{Entity}Repository : IRepository<{Entity}, Guid>
+{
+}

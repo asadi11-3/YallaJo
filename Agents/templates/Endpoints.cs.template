@@ -1,0 +1,125 @@
+// ============================================================================
+// TEMPLATE: Minimal API Endpoint Mapping
+// USAGE: Copy → Replace {Module}, {Entity}, {entity}, {Entities}, {entities}, {route-prefix}
+// FILE: {Module}.Presentation/{Module}Endpoints.cs
+//
+// RULES APPLIED:
+//   - Every endpoint: .RequireAuthorization() or .AllowAnonymous() (Security)
+//   - Every endpoint: .WithName() unique operation ID (API Docs)
+//   - Every endpoint: .WithSummary() one-line description (API Docs)
+//   - Every endpoint: .Produces<T>() typed response (API Docs)
+//   - POST/PUT: .ProducesValidationProblem()
+//   - GET/{id}, PUT, DELETE: .ProducesProblem(404)
+//   - POST/PUT/DELETE (uniqueness): .ProducesProblem(409)
+//   - Admin write endpoints: .RequireAuthorization("Admin")
+//   - Public read endpoints: .AllowAnonymous()
+//   - Pagination params on list endpoints (page, pageSize)
+//   - Request DTOs at bottom — never bind directly to Command
+// ============================================================================
+using {Module}.Application.Commands.{Entity}.Create{Entity};
+using {Module}.Application.Commands.{Entity}.Update{Entity};
+using {Module}.Application.Commands.{Entity}.Delete{Entity};
+using {Module}.Application.Queries.{Entity}.Get{Entity}ById;
+using {Module}.Application.Queries.{Entity}.List{Entities};
+using MediatR;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Routing;
+using YallaJo.SharedKernel.Domain.Abstractions.Results;
+
+namespace {Module}.Presentation;
+
+public static class {Module}Endpoints
+{
+    public static IEndpointRouteBuilder Map{Module}Endpoints(this IEndpointRouteBuilder endpoints)
+    {
+        var group = endpoints.MapGroup("/api/{route-prefix}")
+            .WithTags("{Module}");
+
+        Map{Entity}Endpoints(group);
+
+        return endpoints;
+    }
+
+    private static void Map{Entity}Endpoints(RouteGroupBuilder group)
+    {
+        var sub = group.MapGroup("/{entities}");
+
+        sub.MapPost("/", async (Create{Entity}Request req, ISender sender) =>
+        {
+            var result = await sender.Send(new Create{Entity}Command(req.Name, req.Slug, req.Description));
+            return ToApiResult(result);
+        })
+        .WithName("Create{Entity}")
+        .WithSummary("Create a new {entity}")
+        .Produces<Create{Entity}Result>(StatusCodes.Status201Created)
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status409Conflict)
+        .RequireAuthorization("Admin");
+
+        sub.MapPut("/{id:guid}", async (Guid id, Update{Entity}Request req, ISender sender) =>
+        {
+            var result = await sender.Send(new Update{Entity}Command(id, req.Name, req.Slug, req.Description));
+            return ToApiResult(result);
+        })
+        .WithName("Update{Entity}")
+        .WithSummary("Update an existing {entity}")
+        .Produces<Guid>(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status409Conflict)
+        .RequireAuthorization("Admin");
+
+        sub.MapDelete("/{id:guid}", async (Guid id, ISender sender) =>
+        {
+            var result = await sender.Send(new Delete{Entity}Command(id));
+            return ToApiResult(result);
+        })
+        .WithName("Delete{Entity}")
+        .WithSummary("Soft-delete a {entity}")
+        .Produces<Guid>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status409Conflict)
+        .RequireAuthorization("Admin");
+
+        sub.MapGet("/", async (bool? activeOnly, int? page, int? pageSize, ISender sender) =>
+        {
+            var result = await sender.Send(new List{Entities}Query(activeOnly ?? false, page ?? 1, pageSize ?? 20));
+            return ToApiResult(result);
+        })
+        .WithName("List{Entities}")
+        .WithSummary("List {entities} with filtering and pagination")
+        .Produces<IReadOnlyList<{Entity}SummaryDto>>(StatusCodes.Status200OK)
+        .AllowAnonymous();
+
+        sub.MapGet("/{id:guid}", async (Guid id, ISender sender) =>
+        {
+            var result = await sender.Send(new Get{Entity}ByIdQuery(id));
+            return ToApiResult(result);
+        })
+        .WithName("Get{Entity}ById")
+        .WithSummary("Get {entity} details by ID")
+        .Produces<{Entity}DetailDto>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .AllowAnonymous();
+    }
+
+    private static IResult ToApiResult<T>(Result<T> result) =>
+        result.IsSuccess
+            ? result.Outcome == Outcome.Created
+                ? Results.Created((string?)null, result.Value)
+                : Results.Ok(result.Value)
+            : ToProblem(result.Outcome, result.Errors);
+
+    private static IResult ToProblem(Outcome outcome, IReadOnlyList<Error> errors) =>
+        outcome switch
+        {
+            Outcome.NotFound => Results.NotFound(new { errors }),
+            Outcome.Conflict => Results.Conflict(new { errors }),
+            _ => Results.BadRequest(new { errors })
+        };
+}
+
+// ── Request DTOs (separate from Commands — can evolve independently) ──
+public sealed record Create{Entity}Request(string Name, string Slug, string? Description = null);
+public sealed record Update{Entity}Request(string Name, string Slug, string? Description = null);

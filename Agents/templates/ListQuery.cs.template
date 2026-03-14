@@ -1,0 +1,98 @@
+// ============================================================================
+// TEMPLATE: List Query + SummaryDto + Handler (SEPARATE FILES in real usage)
+// USAGE: Copy each section into its own file → Replace {Module}, {Entity}, {entity}, {Entities}
+// FILE: {Module}.Application/Queries/{Entity}/List{Entities}/
+//
+// RULES APPLIED:
+//   - SummaryDto with 5-8 key fields only — never full entity shape (P2)
+//   - Pagination: default PageSize=20, max 100, validated (P3)
+//   - AsNoTracking for reads (P8) — repo default
+//   - Projections via .Select() — only load needed columns (P5)
+//   - Ordered results — always specify OrderBy
+//   - CancellationToken passed everywhere (P1)
+//   - Cache pattern included (commented — enable when IMemoryCache is registered)
+// ============================================================================
+
+// ═══════════════════════════════════════════════════════════════════
+// FILE 1: List{Entities}Query.cs
+// ═══════════════════════════════════════════════════════════════════
+using YallaJo.SharedKernel.Application.Abstractions.Messaging;
+
+namespace {Module}.Application.Queries.{Entity}.List{Entities};
+
+/// <summary>Lightweight DTO for list endpoints (5-8 fields max).</summary>
+public sealed record {Entity}SummaryDto(
+    Guid Id,
+    string Name,
+    string Slug,
+    bool IsActive,
+    DateTime CreatedAt);
+    // TODO: Add 1-3 more key fields (e.g., string? ThumbnailUrl, decimal Price)
+    // DO NOT add: Description, UpdatedAt, full navigation properties
+
+/// <summary>Paginated query for listing {entities}.</summary>
+public sealed record List{Entities}Query(
+    bool ActiveOnly = false,
+    int Page = 1,
+    int PageSize = 20) : IQuery<IReadOnlyList<{Entity}SummaryDto>>;
+
+// ═══════════════════════════════════════════════════════════════════
+// FILE 2: List{Entities}QueryHandler.cs
+// ═══════════════════════════════════════════════════════════════════
+using {Module}.Domain.Repositories;
+using YallaJo.SharedKernel.Application.Abstractions.Messaging;
+using YallaJo.SharedKernel.Domain.Abstractions.Results;
+// using Microsoft.Extensions.Caching.Memory; // Uncomment when caching is needed
+
+namespace {Module}.Application.Queries.{Entity}.List{Entities};
+
+public sealed class List{Entities}QueryHandler(
+    I{Entity}Repository {entity}Repository
+    // , IMemoryCache cache  // Uncomment when IMemoryCache is registered in DI
+    )
+    : IQueryHandler<List{Entities}Query, IReadOnlyList<{Entity}SummaryDto>>
+{
+    public async Task<Result<IReadOnlyList<{Entity}SummaryDto>>> Handle(
+        List{Entities}Query request,
+        CancellationToken ct)
+    {
+        // ── Cache check (uncomment when ready) ──
+        // var cacheKey = $"{entities}:{(request.ActiveOnly ? "active" : "all")}:p{request.Page}:s{request.PageSize}";
+        // if (cache.TryGetValue(cacheKey, out IReadOnlyList<{Entity}SummaryDto>? cached))
+        //     return Result<IReadOnlyList<{Entity}SummaryDto>>.Success(cached!);
+
+        // ── Query with projection ──
+        var entities = await {entity}Repository.GetAllAsync(
+            filter: request.ActiveOnly ? e => e.IsActive : null,
+            orderBy: q => q.OrderBy(e => e.Name),
+            ct: ct);
+            // TODO: Switch to GetPaginatedAsync when available:
+            // pageNumber: request.Page, pageSize: request.PageSize
+
+        var dtos = entities
+            .Select(e => new {Entity}SummaryDto(
+                e.Id, e.Name, e.Slug, e.IsActive, e.CreatedAt))
+            .ToList() as IReadOnlyList<{Entity}SummaryDto>;
+
+        // ── Cache set (uncomment when ready) ──
+        // cache.Set(cacheKey, dtos, TimeSpan.FromMinutes(5));
+
+        return Result<IReadOnlyList<{Entity}SummaryDto>>.Success(dtos);
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// FILE 3: List{Entities}QueryValidator.cs (pagination enforcement)
+// ═══════════════════════════════════════════════════════════════════
+using FluentValidation;
+
+namespace {Module}.Application.Queries.{Entity}.List{Entities};
+
+public sealed class List{Entities}QueryValidator : AbstractValidator<List{Entities}Query>
+{
+    public List{Entities}QueryValidator()
+    {
+        RuleFor(x => x.Page).GreaterThanOrEqualTo(1).WithMessage("Page must be at least 1.");
+        RuleFor(x => x.PageSize).InclusiveBetween(1, 100).WithMessage("Page size must be between 1 and 100.");
+    }
+}

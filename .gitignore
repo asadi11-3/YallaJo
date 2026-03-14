@@ -366,4 +366,4 @@ FodyWeavers.xsd
 *.py
 /YallaJo_Architecture_Review.pdf
 /YallaJo_Architecture_Review.pdf
-/Agents
+# /Agents — tracked in git (agent onboarding files)

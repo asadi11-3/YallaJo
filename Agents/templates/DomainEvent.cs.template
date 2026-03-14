@@ -1,0 +1,15 @@
+// ============================================================================
+// TEMPLATE: Domain Event
+// USAGE: Copy → Replace {Module}, {Entity} → Adjust properties
+// ============================================================================
+using YallaJo.SharedKernel.Domain.Event;
+
+namespace {Module}.Domain.Events;
+
+public sealed record {Entity}CreatedDomainEvent(
+    Guid {Entity}Id,
+    string Name) : DomainEventBase;
+
+public sealed record {Entity}UpdatedDomainEvent(
+    Guid {Entity}Id,
+    string Name) : DomainEventBase;

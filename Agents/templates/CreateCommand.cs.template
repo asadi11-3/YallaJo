@@ -1,0 +1,31 @@
+// ============================================================================
+// TEMPLATE: Create Command + Result DTO
+// USAGE: Copy → Replace {Module}, {Entity} → Adjust properties
+// FILE: {Module}.Application/Commands/{Entity}/Create{Entity}/Create{Entity}Command.cs
+//
+// RULES APPLIED:
+//   - Command is a sealed record (immutable)
+//   - Result DTO only contains fields the client needs after creation
+//   - ICommand<TResult> triggers MediatR pipeline (Validation → Logging → Handler)
+//   - Optional params have defaults
+// ============================================================================
+using YallaJo.SharedKernel.Application.Abstractions.Messaging;
+
+namespace {Module}.Application.Commands.{Entity}.Create{Entity};
+
+/// <summary>Response DTO after successful creation.</summary>
+public sealed record Create{Entity}Result(
+    Guid Id,
+    string Name,
+    string Slug);
+
+/// <summary>Command to create a new {Entity}.</summary>
+public sealed record Create{Entity}Command(
+    string Name,
+    string Slug,
+    string? Description = null
+    // TODO: Add entity-specific required/optional params
+    // Example: decimal Price,
+    // Example: Guid CategoryId,
+    // Example: string SourceLanguageCode = "en"
+) : ICommand<Create{Entity}Result>;

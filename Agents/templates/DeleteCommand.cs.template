@@ -1,0 +1,83 @@
+// ============================================================================
+// TEMPLATE: Delete Command + Handler + Validator (SEPARATE FILES in real usage)
+// USAGE: Copy each section into its own file → Replace {Module}, {Entity}, {entity}
+// FILE: {Module}.Application/Commands/{Entity}/Delete{Entity}/
+//
+// RULES APPLIED:
+//   - CancellationToken on every async call (P1)
+//   - NotFound check with {Entity}.NotFound error code
+//   - Dependency check — can't delete if other entities reference this one
+//   - Soft delete via SoftDelete() for AuditableEntity (user data recoverable)
+//   - Hard delete for junction/internal tables (use repo.DeleteAsync instead)
+//   - Structured logging
+// ============================================================================
+
+// ═══════════════════════════════════════════════════════════════════
+// FILE 1: Delete{Entity}Command.cs
+// ═══════════════════════════════════════════════════════════════════
+using YallaJo.SharedKernel.Application.Abstractions.Messaging;
+
+namespace {Module}.Application.Commands.{Entity}.Delete{Entity};
+
+public sealed record Delete{Entity}Command(Guid Id) : ICommand<Guid>;
+
+// ═══════════════════════════════════════════════════════════════════
+// FILE 2: Delete{Entity}CommandHandler.cs
+// ═══════════════════════════════════════════════════════════════════
+using {Module}.Domain.Repositories;
+using Microsoft.Extensions.Logging;
+using YallaJo.SharedKernel.Application.Abstractions.Messaging;
+using YallaJo.SharedKernel.Domain.Abstractions.Results;
+
+namespace {Module}.Application.Commands.{Entity}.Delete{Entity};
+
+public sealed class Delete{Entity}CommandHandler(
+    I{Entity}Repository {entity}Repository,
+    I{Module}UnitOfWork unitOfWork,
+    ILogger<Delete{Entity}CommandHandler> logger)
+    : ICommandHandler<Delete{Entity}Command, Guid>
+{
+    public async Task<Result<Guid>> Handle(Delete{Entity}Command request, CancellationToken ct)
+    {
+        // 1. Check entity exists
+        var {entity} = await {entity}Repository.GetByIdAsync(request.Id, ct);
+        if ({entity} is null)
+            return Result<Guid>.NotFound(
+                "{Entity}.NotFound", $"{Entity} '{request.Id}' not found.");
+
+        // 2. Dependency check — can't delete if referenced by other entities
+        // UNCOMMENT and adjust for your entity's relationships:
+        // var dependencyCount = await someRepository.CountAsync(
+        //     x => x.{Entity}Id == request.Id, ct);
+        // if (dependencyCount > 0)
+        //     return Result<Guid>.Conflict(
+        //         "{Entity}.DependencyConflict",
+        //         $"Cannot delete — referenced by {dependencyCount} records.");
+
+        // 3. Soft delete (AuditableEntity) — sets IsDeleted=true, DeletedAt=UtcNow
+        {entity}.SoftDelete();
+        // For junction/internal tables, use hard delete:
+        // await {entity}Repository.DeleteAsync({entity}, ct);
+
+        await unitOfWork.SaveChangesAsync(ct);
+
+        logger.LogInformation("Deleted {EntityType} {EntityId}", nameof({Entity}), {entity}.Id);
+
+        return Result<Guid>.Success({entity}.Id);
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// FILE 3: Delete{Entity}CommandValidator.cs
+// ═══════════════════════════════════════════════════════════════════
+using FluentValidation;
+
+namespace {Module}.Application.Commands.{Entity}.Delete{Entity};
+
+public sealed class Delete{Entity}CommandValidator : AbstractValidator<Delete{Entity}Command>
+{
+    public Delete{Entity}CommandValidator()
+    {
+        RuleFor(x => x.Id).NotEqual(Guid.Empty).WithMessage("{Entity} ID is required.");
+    }
+}

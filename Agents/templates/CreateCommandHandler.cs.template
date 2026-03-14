@@ -1,0 +1,69 @@
+// ============================================================================
+// TEMPLATE: Create Command Handler
+// USAGE: Copy → Replace {Module}, {Entity}, {entity} → Adjust logic
+// FILE: {Module}.Application/Commands/{Entity}/Create{Entity}/Create{Entity}CommandHandler.cs
+//
+// RULES APPLIED:
+//   - CancellationToken passed to EVERY async call (P1)
+//   - Uniqueness check BEFORE creation (slug/email/etc) — returns Conflict, not exception
+//   - Error codes follow {Entity}.{Reason} convention
+//   - Result pattern — never throw for business failures
+//   - Result.Created() for new entities (maps to HTTP 201)
+//   - UoW dispatches domain events during SaveChanges
+//   - No SaveChangesAsync in event handlers (atomicity)
+//   - Structured logging (not string interpolation)
+// ============================================================================
+using {Module}.Domain.Repositories;
+using Microsoft.Extensions.Logging;
+using YallaJo.SharedKernel.Application.Abstractions.Messaging;
+using YallaJo.SharedKernel.Domain.Abstractions.Results;
+
+namespace {Module}.Application.Commands.{Entity}.Create{Entity};
+
+public sealed class Create{Entity}CommandHandler(
+    I{Entity}Repository {entity}Repository,
+    I{Module}UnitOfWork unitOfWork,
+    ILogger<Create{Entity}CommandHandler> logger)
+    : ICommandHandler<Create{Entity}Command, Create{Entity}Result>
+{
+    public async Task<Result<Create{Entity}Result>> Handle(
+        Create{Entity}Command request,
+        CancellationToken ct) // ← ALWAYS accept and forward CancellationToken
+    {
+        // 1. Uniqueness check — do this in the handler, NOT in the validator
+        //    (validators should be pure and fast — no DB calls)
+        var slugExists = await {entity}Repository.ExistsAsync(
+            e => e.Slug == request.Slug, ct);
+        if (slugExists)
+            return Result<Create{Entity}Result>.Conflict(
+                "{Entity}.AlreadyExists",
+                $"A {entity} with slug '{request.Slug}' already exists.");
+
+        // 2. Validate related entities exist (if FK references)
+        // Example:
+        // var category = await categoryRepository.GetByIdAsync(request.CategoryId, ct);
+        // if (category is null)
+        //     return Result<Create{Entity}Result>.NotFound(
+        //         "Category.NotFound", $"Category '{request.CategoryId}' not found.");
+
+        // 3. Create entity (domain event raised inside Create())
+        var {entity} = Domain.Entities.{Entity}.Create(
+            request.Name,
+            request.Slug,
+            request.Description);
+
+        // 4. Set optional properties via business methods
+        // Example: if (request.Icon is not null) {entity}.SetIcon(request.Icon);
+
+        // 5. Persist — UoW dispatches domain events atomically during SaveChanges
+        await {entity}Repository.AddAsync({entity}, ct);
+        await unitOfWork.SaveChangesAsync(ct);
+
+        logger.LogInformation("Created {EntityType} {EntityId} with slug {Slug}",
+            nameof({Entity}), {entity}.Id, {entity}.Slug);
+
+        // 6. Return Created (maps to HTTP 201)
+        return Result<Create{Entity}Result>.Created(
+            new Create{Entity}Result({entity}.Id, {entity}.Name, {entity}.Slug));
+    }
+}

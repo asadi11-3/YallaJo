@@ -1,0 +1,70 @@
+// ============================================================================
+// TEMPLATE: Module DI Registration
+// USAGE: Copy → Replace {Module}, {module_schema} → Add repos/services as entities are added
+// FILE: {Module}.Infrastructure/DependencyInjection.cs
+//
+// RULES APPLIED:
+//   - Every repo/service/UoW MUST be registered (Common Mistake #1)
+//   - Repositories: Scoped (one per request)
+//   - DbContext: Scoped (EF default via AddDbContext)
+//   - Background services: Singleton queue + AddHostedService
+//   - IMemoryCache: AddMemoryCache() when caching is needed
+//   - Connection string from config, never hardcoded (Security)
+//   - EnableRetryOnFailure for transient SQL errors
+//   - MediatR: RegisterServicesFromAssembly for handlers + event handlers
+// ============================================================================
+using {Module}.Domain.Repositories;
+using {Module}.Infrastructure.Persistence;
+using {Module}.Infrastructure.Repositories;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using YallaJo.SharedKernel.Domain.Abstractions.Data;
+using YallaJo.SharedKernel.Infrastructure.Data;
+
+namespace {Module}.Infrastructure;
+
+public static class DependencyInjection
+{
+    public static IServiceCollection Add{Module}Infrastructure(
+        this IServiceCollection services,
+        IConfiguration configuration)
+    {
+        var connectionString = configuration.GetConnectionString("DefaultConnection")
+            ?? throw new InvalidOperationException("Connection string 'DefaultConnection' is not configured.");
+
+        // ── 1. DbContext ──
+        services.AddDbContext<{Module}DbContext>(options =>
+            options.UseSqlServer(connectionString, sql =>
+            {
+                sql.MigrationsHistoryTable("__EFMigrationsHistory", "{module_schema}");
+                sql.EnableRetryOnFailure(3);
+            }));
+
+        // ── 2. Repositories ──
+        // ⚠️  THIS IS THE #1 MOST FORGOTTEN STEP — add one line per entity
+        services.AddScoped<I{Entity}Repository, {Entity}Repository>();
+        // services.AddScoped<I{AnotherEntity}Repository, {AnotherEntity}Repository>();
+
+        // ── 3. Unit of Work ──
+        services.AddScoped<I{Module}UnitOfWork, {Module}UnitOfWork>();
+        services.AddScoped<IUnitOfWork<{Module}DbContext>, UnitOfWork<{Module}DbContext>>();
+
+        // ── 4. MediatR (command/query/event handlers) ──
+        services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
+
+        // ── 5. Caching (uncomment when list queries need it) ──
+        // services.AddMemoryCache();
+        // For multi-server: services.AddStackExchangeRedisCache(opts => ...);
+
+        // ── 6. Module-specific services ──
+        // services.AddScoped<ISomeService, SomeService>();
+        // services.AddHttpClient<SomeExternalApiClient>(); // For external HTTP APIs
+
+        // ── 7. Background services ──
+        // services.AddSingleton<SomeProcessingQueue>();
+        // services.AddHostedService<SomeBackgroundService>();
+
+        return services;
+    }
+}

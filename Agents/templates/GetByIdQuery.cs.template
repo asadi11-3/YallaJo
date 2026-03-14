@@ -1,0 +1,85 @@
+// ============================================================================
+// TEMPLATE: GetById Query + DetailDto + Handler (SEPARATE FILES in real usage)
+// USAGE: Copy each section into its own file → Replace {Module}, {Entity}, {entity}
+// FILE: {Module}.Application/Queries/{Entity}/Get{Entity}ById/
+//
+// RULES APPLIED:
+//   - DetailDto with ALL relevant fields (this is the detail endpoint)
+//   - NotFound returns proper {Entity}.NotFound error code
+//   - AsNoTracking for reads (P8)
+//   - CancellationToken passed everywhere (P1)
+//   - Cache pattern for single-entity lookups (commented — enable when ready)
+//   - AsSplitQuery when 2+ Includes are used (P4)
+// ============================================================================
+
+// ═══════════════════════════════════════════════════════════════════
+// FILE 1: Get{Entity}ByIdQuery.cs
+// ═══════════════════════════════════════════════════════════════════
+using YallaJo.SharedKernel.Application.Abstractions.Messaging;
+
+namespace {Module}.Application.Queries.{Entity}.Get{Entity}ById;
+
+/// <summary>Full detail DTO — all relevant fields for single-entity view.</summary>
+public sealed record {Entity}DetailDto(
+    Guid Id,
+    string Name,
+    string Slug,
+    string? Description,
+    bool IsActive,
+    DateTime CreatedAt,
+    DateTime? UpdatedAt);
+    // TODO: Add all entity-specific fields
+    // Example: decimal Price, string? ThumbnailUrl
+    // Example: IReadOnlyList<ImageDto> Images
+
+public sealed record Get{Entity}ByIdQuery(Guid Id) : IQuery<{Entity}DetailDto>;
+
+// ═══════════════════════════════════════════════════════════════════
+// FILE 2: Get{Entity}ByIdQueryHandler.cs
+// ═══════════════════════════════════════════════════════════════════
+using {Module}.Domain.Repositories;
+using YallaJo.SharedKernel.Application.Abstractions.Messaging;
+using YallaJo.SharedKernel.Domain.Abstractions.Results;
+// using Microsoft.Extensions.Caching.Memory; // Uncomment when caching
+
+namespace {Module}.Application.Queries.{Entity}.Get{Entity}ById;
+
+public sealed class Get{Entity}ByIdQueryHandler(
+    I{Entity}Repository {entity}Repository
+    // , IMemoryCache cache  // Uncomment when ready
+    )
+    : IQueryHandler<Get{Entity}ByIdQuery, {Entity}DetailDto>
+{
+    public async Task<Result<{Entity}DetailDto>> Handle(
+        Get{Entity}ByIdQuery request,
+        CancellationToken ct)
+    {
+        // ── Cache check (uncomment when ready) ──
+        // var cacheKey = $"{entities}:{request.Id}";
+        // if (cache.TryGetValue(cacheKey, out {Entity}DetailDto? cached))
+        //     return Result<{Entity}DetailDto>.Success(cached!);
+
+        // Simple lookup:
+        var {entity} = await {entity}Repository.GetByIdAsync(request.Id, ct);
+
+        // With relationships (use AsSplitQuery for 2+ Includes — P4):
+        // var {entity} = await {entity}Repository.FirstOrDefaultAsync(
+        //     filter: e => e.Id == request.Id,
+        //     include: q => q.Include(e => e.Category).Include(e => e.Images).AsSplitQuery(),
+        //     ct: ct);
+
+        if ({entity} is null)
+            return Result<{Entity}DetailDto>.NotFound(
+                "{Entity}.NotFound", $"{Entity} '{request.Id}' not found.");
+
+        var dto = new {Entity}DetailDto(
+            {entity}.Id, {entity}.Name, {entity}.Slug,
+            {entity}.Description, {entity}.IsActive,
+            {entity}.CreatedAt, {entity}.UpdatedAt);
+
+        // ── Cache set (uncomment when ready) ──
+        // cache.Set(cacheKey, dto, TimeSpan.FromMinutes(10));
+
+        return Result<{Entity}DetailDto>.Success(dto);
+    }
+}

@@ -1,0 +1,101 @@
+// ============================================================================
+// TEMPLATE: Aggregate Root Entity (AuditableEntity + IAggregateRoot)
+// USAGE: Copy → Replace {Module}, {Entity}, {entity} → Adjust properties
+// FILE: {Module}.Domain/Entities/{Entity}.cs
+//
+// RULES APPLIED:
+//   - All setters are private (no public setters, ever)
+//   - Factory method is the ONLY way to create
+//   - Guid.CreateVersion7() for IDs (time-sortable, better index perf)
+//   - Domain events raised inside factory & business methods
+//   - Guard clauses for required params (ArgumentException = programming error)
+//   - MarkUpdated() on every state change
+//   - SoftDelete() for deletion (AuditableEntity)
+//   - DateTime.UtcNow used everywhere (never DateTime.Now)
+//   - No lazy loading — no virtual navigation properties
+// ============================================================================
+using {Module}.Domain.Events;
+using YallaJo.SharedKernel.Domain.Entities;
+
+namespace {Module}.Domain.Entities;
+
+public sealed class {Entity} : AuditableEntity, IAggregateRoot
+{
+    private {Entity}() { } // EF Core — required for materialization
+
+    // ── Properties (ALL private set — enforce via business methods) ──
+    public string Name { get; private set; } = string.Empty;
+    public string Slug { get; private set; } = string.Empty;
+    public string? Description { get; private set; }
+    public bool IsActive { get; private set; } = true;
+    // TODO: Add entity-specific properties (decimal with precision, enums, FKs, etc.)
+    // Example: public decimal Price { get; private set; }
+    // Example: public Guid CategoryId { get; private set; }
+    // Example: public {Entity}Status Status { get; private set; } = {Entity}Status.Draft;
+
+    // ── Navigation Properties (NO virtual — lazy loading is banned) ──
+    // Example: public Category Category { get; private set; } = null!;
+    // Example: private readonly List<{Entity}Image> _images = [];
+    // Example: public IReadOnlyCollection<{Entity}Image> Images => _images.AsReadOnly();
+
+    // ── Factory Method (the ONLY way to create) ──
+    public static {Entity} Create(
+        string name,
+        string slug,
+        string? description = null)
+    {
+        // Guard clauses — ArgumentException for programming errors
+        if (string.IsNullOrWhiteSpace(name))
+            throw new ArgumentException("{Entity} name is required.", nameof(name));
+        if (string.IsNullOrWhiteSpace(slug))
+            throw new ArgumentException("{Entity} slug is required.", nameof(slug));
+
+        var entity = new {Entity}
+        {
+            // Id is auto-set by AuditableEntity base (Guid.CreateVersion7())
+            // CreatedAt is auto-set by AuditableEntity base (DateTime.UtcNow)
+            Name = name.Trim(),
+            Slug = slug.Trim().ToLowerInvariant(),
+            Description = description?.Trim(),
+            IsActive = true
+        };
+
+        // Domain event — triggers side effects (translation, audit, etc.)
+        entity.AddDomainEvent(new {Entity}CreatedDomainEvent(entity.Id, entity.Name));
+        return entity;
+    }
+
+    // ── Business Methods (the ONLY way to modify state) ──
+    public void Update(string name, string slug, string? description = null)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            throw new ArgumentException("{Entity} name is required.", nameof(name));
+        if (string.IsNullOrWhiteSpace(slug))
+            throw new ArgumentException("{Entity} slug is required.", nameof(slug));
+
+        Name = name.Trim();
+        Slug = slug.Trim().ToLowerInvariant();
+        Description = description?.Trim();
+        MarkUpdated(); // Sets UpdatedAt = DateTime.UtcNow
+
+        AddDomainEvent(new {Entity}UpdatedDomainEvent(Id, Name));
+    }
+
+    public void Activate()
+    {
+        if (IsActive) return; // Idempotent
+        IsActive = true;
+        MarkUpdated();
+    }
+
+    public void Deactivate()
+    {
+        if (!IsActive) return; // Idempotent
+        IsActive = false;
+        MarkUpdated();
+    }
+
+    // NOTE: SoftDelete() is inherited from AuditableEntity
+    // It sets IsDeleted=true, DeletedAt=DateTime.UtcNow
+    // HasQueryFilter(x => !x.IsDeleted) auto-excludes from queries
+}

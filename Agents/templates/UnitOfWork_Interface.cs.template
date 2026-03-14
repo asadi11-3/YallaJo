@@ -1,0 +1,12 @@
+// ============================================================================
+// TEMPLATE: Module Unit of Work Interface (one per module, not per entity)
+// USAGE: Copy → Replace {Module}
+// NOTE: Only create this ONCE per module. All entities in the module share it.
+// ============================================================================
+using YallaJo.SharedKernel.Domain.Abstractions.Data;
+
+namespace {Module}.Domain.Repositories;
+
+public interface I{Module}UnitOfWork : IUnitOfWork
+{
+}
