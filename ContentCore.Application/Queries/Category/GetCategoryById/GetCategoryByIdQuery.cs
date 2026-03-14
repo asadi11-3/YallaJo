@@ -1,3 +1,4 @@
+using ContentCore.Application.Caching;
 using ContentCore.Application.Queries.Category.ListCategories;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 
@@ -8,6 +9,9 @@ namespace ContentCore.Application.Queries.Category.GetCategoryById;
 /// When true, all available translations are included in the response.
 /// Set by the endpoint when the client sends an Accept-Language header.
 /// </param>
-public sealed record GetCategoryByIdQuery(
-    Guid Id,
-    bool WithTranslations = false) : IQuery<CategoryDto>;
+public sealed record GetCategoryByIdQuery(Guid Id, bool WithTranslations = false)
+    : IQuery<CategoryDto>, ICacheableQuery
+{
+    public string CacheKey => ContentCoreCacheKeys.Category(Id, WithTranslations);
+    public TimeSpan? CacheDuration => TimeSpan.FromMinutes(30);
+}

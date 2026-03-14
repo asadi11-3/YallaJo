@@ -1,3 +1,4 @@
+using ContentCore.Application.Caching;
 using ContentCore.Application.Queries.Category.Common;
 using CategoryEntity = ContentCore.Domain.Entities.Category;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
@@ -58,4 +59,9 @@ public sealed class CategoryDto
 public sealed record ListCategoriesQuery(
     bool ActiveOnly = false,
     Guid? ParentCategoryId = null,
-    bool WithTranslations = false) : IQuery<IReadOnlyList<CategoryDto>>;
+    bool WithTranslations = false)
+    : IQuery<IReadOnlyList<CategoryDto>>, ICacheableQuery
+{
+    public string CacheKey => ContentCoreCacheKeys.CategoryList(ActiveOnly, ParentCategoryId, WithTranslations);
+    public TimeSpan? CacheDuration => TimeSpan.FromMinutes(30);
+}
