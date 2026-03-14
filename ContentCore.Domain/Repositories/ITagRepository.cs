@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ContentCore.Domain.Entities;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -7,7 +8,7 @@ using YallaJo.SharedKernel.Domain.Abstractions.Data;
 
 namespace ContentCore.Domain.Repositories
 {
-    public interface IContentCoreUnitOfWork : YallaJo.SharedKernel.Domain.Abstractions.Data.IUnitOfWork
-    {
-    }
+	public interface ITagRepository : IReadRepository<Tag, Guid>, IWriteRepository<Tag, Guid>
+	{
+	}
 }
