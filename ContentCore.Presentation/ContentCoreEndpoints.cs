@@ -5,6 +5,10 @@ using ContentCore.Application.Commands.Attachment.UploadAttachment;
 using ContentCore.Application.Commands.Category.CreateCategory;
 using ContentCore.Application.Commands.Category.UpdateCategory;
 using ContentCore.Application.Commands.Category.DeleteCategory;
+using ContentCore.Application.Commands.Category.ReorderCategories;
+using ContentCore.Application.Commands.Specialization.CreateSpecialization;
+using ContentCore.Application.Commands.Specialization.UpdateSpecialization;
+using ContentCore.Application.Queries.Specialization.ListSpecializations;
 using ContentCore.Application.Queries.Category.GetCategoryById;
 using ContentCore.Application.Queries.Category.ListCategories;
 using ContentCore.Application.Commands.EntityCategory.AssignCategoriesToEntity;
@@ -51,6 +55,7 @@ public static class ContentCoreEndpoints
         MapTagEndpoints(group);
         MapEntityCategoryEndpoints(group);
         MapEntityTagEndpoints(group);
+        MapSpecializationEndpoints(group);
 
         return endpoints;
     }
@@ -127,6 +132,19 @@ public static class ContentCoreEndpoints
         .Produces(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Soft-delete a category")
+        .RequireAuthorization("Admin");
+
+        categories.MapPut("/reorder", async (ReorderCategoriesRequest request, ISender sender) =>
+        {
+            var result = await sender.Send(new ReorderCategoriesCommand(
+                request.Items.Select(i => new CategoryOrderItem(i.CategoryId, i.SortOrder)).ToList()));
+            return ToApiResult(result);
+        })
+        .WithName("ReorderCategories")
+        .Produces(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .WithSummary("Reorder categories (batch sort order update)")
         .RequireAuthorization("Admin");
     }
     // ── Language Endpoints ──────────────────────────────────────────────────
@@ -494,6 +512,54 @@ public static class ContentCoreEndpoints
         .RequireAuthorization("Admin");
     }
 
+    // ── Specialization Endpoints ─────────────────────────────────────────
+
+    private static void MapSpecializationEndpoints(RouteGroupBuilder group)
+    {
+        var specializations = group.MapGroup("/specializations");
+
+        specializations.MapGet("/", async (ISender sender, bool activeOnly = false) =>
+        {
+            var result = await sender.Send(new ListSpecializationsQuery(activeOnly));
+            return ToApiResult(result);
+        })
+        .WithName("ListSpecializations")
+        .Produces<IReadOnlyList<SpecializationDto>>(StatusCodes.Status200OK)
+        .WithSummary("List all specializations")
+        .AllowAnonymous();
+
+        specializations.MapPost("/", async (CreateSpecializationRequest request, ISender sender) =>
+        {
+            var result = await sender.Send(new CreateSpecializationCommand(
+                request.Name,
+                request.Description,
+                request.Icon));
+            return ToApiResult(result);
+        })
+        .WithName("CreateSpecialization")
+        .Produces<CreateSpecializationResult>(StatusCodes.Status201Created)
+        .ProducesValidationProblem()
+        .WithSummary("Create a specialization")
+        .RequireAuthorization("Admin");
+
+        specializations.MapPut("/{id:guid}", async (Guid id, UpdateSpecializationRequest request, ISender sender) =>
+        {
+            var result = await sender.Send(new UpdateSpecializationCommand(
+                id,
+                request.Name,
+                request.Description,
+                request.Icon,
+                request.IsActive));
+            return ToApiResult(result);
+        })
+        .WithName("UpdateSpecialization")
+        .Produces<UpdateSpecializationResult>(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .WithSummary("Update a specialization")
+        .RequireAuthorization("Admin");
+    }
+
     // ── Result → IResult mapping ──────────────────────────────────────────
 
     private static IResult ToApiResult<T>(Result<T> result) =>
@@ -527,7 +593,7 @@ public sealed record BatchTranslateRequest(IReadOnlyList<string> Texts, string F
 public sealed record UpdateTranslationRequest(string TranslatedText);
 public sealed record CreateCategoryRequest(
     string Name,
-    string Slug,
+    string? Slug = null,
     Guid? ParentCategoryId = null,
     string? Icon = null,
     int SortOrder = 0,
@@ -564,3 +630,9 @@ public sealed record SetPrimaryImageRequest(
     string EntityType,
     Guid EntityId,
     Guid AttachmentId);
+
+public sealed record ReorderCategoryItem(Guid CategoryId, int SortOrder);
+public sealed record ReorderCategoriesRequest(IReadOnlyList<ReorderCategoryItem> Items);
+
+public sealed record CreateSpecializationRequest(string Name, string? Description = null, string? Icon = null);
+public sealed record UpdateSpecializationRequest(string Name, string? Description = null, string? Icon = null, bool? IsActive = null);
