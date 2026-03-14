@@ -257,6 +257,7 @@ This section is the **single source of truth** for what exists in the codebase. 
 | 12 | Category Slug Auto-Gen | ✅ | 🤖 Agent | `CreateCategoryCommand.Slug` is now optional (nullable); auto-generated from name via Slugify when not provided |
 | 13 | Category Reorder Endpoint | ✅ | 🤖 Agent | `PUT /api/content-core/categories/reorder` — `ReorderCategoriesCommand` batch updates SortOrder for multiple categories |
 | 14 | Merge Refactor: Category CQRS Optimization | ✅ | 🤖 Agent | Resolved local/remote conflict; clean `ICategoryRepository` with `GetAllWithTranslationsAsync` + `GetByIdWithTranslationsAsync` (no EF leakage into Domain); `CategoryRepository` does EF Include in Infrastructure only; `ReorderCategories` uses single batch query O(1) instead of N roundtrips; `CategoryDto` adds `Translations` collection + `WithTranslations` flag; Accept-Language header drives translation loading at endpoint layer; DELETE stays soft-delete; `PATCH /{id}/activate` + `PATCH /{id}/deactivate` added; `UpdateCategoryCommandHandler` adds depth validation on parent change + manual translation overrides; removed 6 redundant files from remote merge; 0 errors, 0 warnings |
+| 15 | Caching + Polly Resilience | ✅ | 🤖 Agent | `ICacheableQuery` marker + `QueryCachingBehavior<,>` open-generic pipeline in SharedKernel; `ContentCoreCacheKeys` static key factory; all 11 query records implement ICacheableQuery (Languages 1h, Categories/Tags/Specs 30m, Attachments/Junctions 15m); 19 command handlers inject `IMemoryCache` and call `Remove()` on write; Azure Translator HttpClient: `AddStandardResilienceHandler` (Polly v8: 3x retry exp+jitter, circuit breaker, 10s timeout); packages: `Microsoft.Extensions.Http.Resilience` 9.4.0, `Microsoft.Extensions.Caching.Memory` |
 
 ---
 
@@ -800,6 +801,230 @@ Unhandled exception thrown anywhere
 ```
 
 **Never expose stack traces, internal paths, or SQL errors to the client.**
+
+---
+
+## 🔴 Try/Catch & Exception Rules
+
+Exception handling is one of the most misused patterns in .NET. Follow these rules exactly — every violation either swallows errors silently or crashes the pipeline unexpectedly.
+
+### The #1 Rule: Never Catch What You Can't Handle
+
+```csharp
+// ❌ WRONG — catching everything, doing nothing meaningful
+try { await repo.AddAsync(entity, ct); }
+catch (Exception) { }  // Swallowed. No one knows it failed.
+
+// ❌ WRONG — catching and re-throwing loses the stack trace
+try { await repo.AddAsync(entity, ct); }
+catch (Exception ex) { throw new Exception("Failed", ex); }  // Pointless wrapper.
+
+// ✅ CORRECT — let it propagate. Global handler catches it, logs it, returns 500.
+await repo.AddAsync(entity, ct);
+```
+
+---
+
+### Where try/catch IS Allowed (Whitelist)
+
+Only add try/catch when you can take a MEANINGFUL action on the specific exception type.
+
+#### 1. Infrastructure Layer — External Service Calls
+
+Wrap calls to external APIs (Azure Translator, payment gateway, file storage) to convert infrastructure failures into `Result` failures:
+
+```csharp
+// ✅ In Infrastructure — wrapping external HTTP/API calls
+public async Task<Result<TranslationResult>> TranslateAsync(string text, string targetLang, CancellationToken ct)
+{
+    try
+    {
+        var response = await _httpClient.PostAsync("/translate", content, ct);
+        response.EnsureSuccessStatusCode();
+        return Result<TranslationResult>.Success(await ParseResponse(response, ct));
+    }
+    catch (HttpRequestException ex)
+    {
+        _logger.LogError(ex, "Translation API call failed for language {Language}", targetLang);
+        return Result<TranslationResult>.Failure("Translation.ServiceUnavailable",
+            "Translation service is temporarily unavailable.");
+    }
+    catch (TaskCanceledException ex) when (!ct.IsCancellationRequested)
+    {
+        _logger.LogWarning(ex, "Translation API timed out for language {Language}", targetLang);
+        return Result<TranslationResult>.Failure("Translation.Timeout",
+            "Translation request timed out.");
+    }
+    // Do NOT catch general Exception — let unexpected errors propagate
+}
+```
+
+#### 2. Infrastructure Layer — Optimistic Concurrency
+
+Catch `DbUpdateConcurrencyException` ONLY when you want to return a user-friendly conflict response instead of a 500:
+
+```csharp
+// ✅ In a command handler that explicitly handles concurrency conflicts
+try
+{
+    await unitOfWork.SaveChangesAsync(ct);
+}
+catch (DbUpdateConcurrencyException)
+{
+    return Result<Guid>.Conflict("Entity.ConcurrencyConflict",
+        "This record was modified by another user. Please refresh and try again.");
+}
+```
+
+#### 3. Background Services — Prevent Worker Crash
+
+Background services MUST NOT crash on individual item failures — the worker loop MUST continue:
+
+```csharp
+// ✅ In BackgroundService — catch per-item to keep the worker alive
+while (await _channel.Reader.WaitToReadAsync(ct))
+{
+    var item = await _channel.Reader.ReadAsync(ct);
+    try
+    {
+        await ProcessItemAsync(item, ct);
+    }
+    catch (OperationCanceledException) when (ct.IsCancellationRequested)
+    {
+        break; // Graceful shutdown — stop the loop
+    }
+    catch (Exception ex)
+    {
+        // Log and continue — do NOT let one item crash the whole worker
+        _logger.LogError(ex, "Failed to process media item {ItemId}", item.Id);
+    }
+}
+```
+
+#### 4. Application Layer — TaskCanceledException (Graceful Shutdown)
+
+If you want to distinguish between user-cancelled requests and app shutdown:
+
+```csharp
+// ✅ Only when you need to differentiate cancellation sources
+catch (OperationCanceledException) when (ct.IsCancellationRequested)
+{
+    // Request was cancelled by the client — ignore silently
+    return Result<Guid>.Failure("Request.Cancelled", "Request was cancelled.");
+}
+```
+
+---
+
+### Where try/catch is FORBIDDEN
+
+| Location | Why |
+|----------|-----|
+| **Domain entity methods** (`Create()`, `Update()`) | Domain uses `ArgumentException` for programming errors. These MUST propagate — they indicate a bug, not a user error. |
+| **Application command/query handlers** (general `Exception`) | Handlers return `Result<T>`. Catching `Exception` here masks infrastructure failures that the global handler needs to see. |
+| **Endpoint/Presentation layer** | Never. The global `IExceptionHandler` handles all unhandled exceptions. Adding try/catch in endpoints duplicates that responsibility. |
+| **Validators** | FluentValidation rules are pure — no exception handling. |
+| **Empty catch blocks** | `catch (Exception) { }` — NEVER. This is a bug, not error handling. |
+| **Catching and swallowing without logging** | If you catch it, you MUST log it. Silent swallowing hides failures. |
+
+---
+
+### Exception Types Reference (this stack)
+
+| Exception | Source | When It Occurs | What To Do |
+|-----------|--------|----------------|------------|
+| `ArgumentException` / `ArgumentNullException` | Domain `Create()` / `Update()` | Programming error — caller passed invalid args | Let propagate → 500. It's a developer bug. |
+| `ValidationException` (FluentValidation) | MediatR `ValidationBehavior` | Input fails validator rules | Already handled by `ValidationExceptionHandler` → 400. Never catch this yourself. |
+| `DbUpdateConcurrencyException` | EF Core `SaveChangesAsync` | RowVersion conflict — two users edited same record | Catch only if returning 409 Conflict to user. Otherwise propagate → 500. |
+| `DbUpdateException` | EF Core `SaveChangesAsync` | DB constraint violation (FK, unique index) | Usually propagate → 500. Can catch to return 409 if you inspect `InnerException` for specific violation. |
+| `OperationCanceledException` / `TaskCanceledException` | `CancellationToken` cancellation | Client disconnected or app shutting down | Catch in background services. In handlers: propagate — MediatR handles it cleanly. |
+| `HttpRequestException` | `HttpClient` calls | External API unreachable or returns 4xx/5xx | Catch in Infrastructure layer. Convert to `Result.Failure`. Log with full context. |
+| `TimeoutException` | External service timeouts | API/DB call exceeded timeout | Catch in Infrastructure layer. Convert to `Result.Failure("X.Timeout", ...)`. |
+| `InvalidOperationException` | DI, EF state errors | Usually a programming error (misconfigured DI, wrong EF state) | Let propagate → 500. Fix the code, not the catch. |
+| `UnauthorizedAccessException` | File system | No permission to read/write file | Catch in `IFileStorageService`. Return `Result.Failure("File.AccessDenied", ...)`. |
+| `IOException` | File system | Disk full, file locked, path invalid | Catch in `IFileStorageService`. Return `Result.Failure("File.StorageFailed", ...)`. |
+| `JsonException` | `System.Text.Json` | Malformed JSON from external API | Catch in Infrastructure parsing code. Log + return `Result.Failure`. |
+
+---
+
+### Logging Requirements Inside catch Blocks
+
+Every catch block that doesn't re-throw MUST log before returning:
+
+```csharp
+// ✅ CORRECT — logs with full context before converting to Result
+catch (HttpRequestException ex)
+{
+    _logger.LogError(ex,                    // ← exception object FIRST (captures stack trace)
+        "External API call failed. Url={Url} StatusCode={StatusCode}",
+        requestUrl, ex.StatusCode);         // ← structured log properties
+    return Result<T>.Failure("Service.Unavailable", "External service is unavailable.");
+}
+
+// ❌ WRONG — no logging
+catch (HttpRequestException)
+{
+    return Result<T>.Failure("Service.Unavailable", "External service is unavailable.");
+}
+
+// ❌ WRONG — string interpolation instead of structured logging
+catch (HttpRequestException ex)
+{
+    _logger.LogError($"Call to {url} failed: {ex.Message}"); // Not searchable in prod
+    return Result<T>.Failure(...);
+}
+```
+
+---
+
+### The finally Block Rule
+
+Use `finally` ONLY for resource cleanup — never for business logic:
+
+```csharp
+// ✅ CORRECT — cleanup in finally
+var stream = File.OpenRead(path);
+try
+{
+    await ProcessAsync(stream, ct);
+}
+finally
+{
+    await stream.DisposeAsync(); // Always runs, even if exception thrown
+}
+
+// ✅ BETTER — use 'using' instead of try/finally for IDisposable
+await using var stream = File.OpenRead(path);
+await ProcessAsync(stream, ct);
+
+// ❌ WRONG — business logic in finally
+try { ... }
+finally
+{
+    await unitOfWork.SaveChangesAsync(ct); // Don't do this — may run after an exception
+}
+```
+
+---
+
+### Exception Wrapping Rule
+
+When you MUST wrap an exception (rare), ALWAYS include the original as `innerException` and log before wrapping:
+
+```csharp
+// ✅ CORRECT — preserves original stack trace
+catch (Exception ex)
+{
+    _logger.LogError(ex, "Media processing failed for attachment {AttachmentId}", attachmentId);
+    throw new MediaProcessingException("Failed to process media file.", ex); // ex as inner
+}
+
+// ❌ WRONG — loses original stack trace
+catch (Exception)
+{
+    throw new MediaProcessingException("Failed to process media file."); // Where did it fail?
+}
+```
 
 ---
 
