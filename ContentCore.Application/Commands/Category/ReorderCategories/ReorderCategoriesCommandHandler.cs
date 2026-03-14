@@ -1,4 +1,6 @@
+using ContentCore.Application.Caching;
 using ContentCore.Domain.Repositories;
+using Microsoft.Extensions.Caching.Memory;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
@@ -6,7 +8,8 @@ namespace ContentCore.Application.Commands.Category.ReorderCategories;
 
 public sealed class ReorderCategoriesCommandHandler(
     ICategoryRepository categoryRepository,
-    IContentCoreUnitOfWork unitOfWork)
+    IContentCoreUnitOfWork unitOfWork,
+    IMemoryCache cache)
     : ICommandHandler<ReorderCategoriesCommand>
 {
     public async Task<Result> Handle(
@@ -35,6 +38,10 @@ public sealed class ReorderCategoriesCommandHandler(
             category.SetSortOrder(sortOrderMap[category.Id]);
 
         await unitOfWork.SaveChangesAsync(ct);
+
+        // Invalidate all root-level category list caches
+        foreach (var key in ContentCoreCacheKeys.CommonCategoryListKeys())
+            cache.Remove(key);
         return Result.Success();
     }
 }

@@ -1,5 +1,7 @@
+using ContentCore.Application.Caching;
 using ContentCore.Domain.Enums;
 using ContentCore.Domain.Repositories;
+using Microsoft.Extensions.Caching.Memory;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
@@ -8,7 +10,8 @@ namespace ContentCore.Application.Commands.EntityCategory.AssignCategoriesToEnti
 public sealed class AssignCategoriesToEntityCommandHandler(
     IEntityCategoryRepository entityCategoryRepository,
     ICategoryRepository categoryRepository,
-    IContentCoreUnitOfWork unitOfWork)
+    IContentCoreUnitOfWork unitOfWork,
+    IMemoryCache cache)
     : ICommandHandler<AssignCategoriesToEntityCommand>
 {
     public async Task<Result> Handle(AssignCategoriesToEntityCommand request, CancellationToken ct)
@@ -31,6 +34,7 @@ public sealed class AssignCategoriesToEntityCommandHandler(
         }
 
         await unitOfWork.SaveChangesAsync(ct);
+        cache.Remove(ContentCoreCacheKeys.EntityCategories(request.EntityType, request.EntityId));
         return Result.Success();
     }
 }

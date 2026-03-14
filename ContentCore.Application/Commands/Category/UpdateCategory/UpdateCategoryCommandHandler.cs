@@ -1,4 +1,7 @@
+using ContentCore.Application.Caching;
+using ContentCore.Application.Commands.Category.DeleteCategory;
 using ContentCore.Domain.Repositories;
+using Microsoft.Extensions.Caching.Memory;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
@@ -6,7 +9,8 @@ namespace ContentCore.Application.Commands.Category.UpdateCategory;
 
 public sealed class UpdateCategoryCommandHandler(
     ICategoryRepository categoryRepository,
-    IContentCoreUnitOfWork unitOfWork)
+    IContentCoreUnitOfWork unitOfWork,
+    IMemoryCache cache)
     : ICommandHandler<UpdateCategoryCommand, UpdateCategoryResult>
 {
     public async Task<Result<UpdateCategoryResult>> Handle(
@@ -64,6 +68,7 @@ public sealed class UpdateCategoryCommandHandler(
         }
 
         await unitOfWork.SaveChangesAsync(ct);
+        DeleteCategoryCommandHandler.InvalidateCategoryCache(cache, request.Id);
 
         return Result<UpdateCategoryResult>.Success(
             new UpdateCategoryResult(category.Id, category.Name, category.Slug));

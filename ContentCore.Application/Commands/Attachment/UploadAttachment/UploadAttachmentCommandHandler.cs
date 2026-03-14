@@ -1,6 +1,8 @@
+using ContentCore.Application.Caching;
 using ContentCore.Application.Interfaces;
 using ContentCore.Domain.Entities;
 using ContentCore.Domain.Repositories;
+using Microsoft.Extensions.Caching.Memory;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Application.Abstractions.Storage;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
@@ -11,7 +13,8 @@ public sealed class UploadAttachmentCommandHandler(
     IFileStorageService fileStorageService,
     IAttachmentRepository attachmentRepository,
     IContentCoreUnitOfWork unitOfWork,
-    IMediaProcessingQueue mediaProcessingQueue)
+    IMediaProcessingQueue mediaProcessingQueue,
+    IMemoryCache cache)
     : ICommandHandler<UploadAttachmentCommand, UploadAttachmentResult>
 {
     public async Task<Result<UploadAttachmentResult>> Handle(
@@ -49,6 +52,7 @@ public sealed class UploadAttachmentCommandHandler(
         // 4. Persist (domain events fire here — creates EntityImage for images)
         await attachmentRepository.AddAsync(attachment, ct);
         await unitOfWork.SaveChangesAsync(ct);
+        cache.Remove(ContentCoreCacheKeys.EntityAttachments(request.EntityType.ToString(), request.EntityId));
 
         // 5. Enqueue background media processing (thumbnails, metadata extraction)
         //    Enqueued AFTER save to guarantee the attachment is persisted before processing.

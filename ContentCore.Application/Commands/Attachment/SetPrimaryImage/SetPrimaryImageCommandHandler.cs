@@ -1,6 +1,8 @@
+using ContentCore.Application.Caching;
 using ContentCore.Domain.Entities;
 using ContentCore.Domain.Enums;
 using ContentCore.Domain.Repositories;
+using Microsoft.Extensions.Caching.Memory;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
@@ -8,7 +10,8 @@ namespace ContentCore.Application.Commands.Attachment.SetPrimaryImage;
 
 public sealed class SetPrimaryImageCommandHandler(
     IAttachmentRepository attachmentRepository,
-    IContentCoreUnitOfWork unitOfWork)
+    IContentCoreUnitOfWork unitOfWork,
+    IMemoryCache cache)
     : ICommandHandler<SetPrimaryImageCommand>
 {
     public async Task<Result> Handle(SetPrimaryImageCommand request, CancellationToken ct)
@@ -45,6 +48,7 @@ public sealed class SetPrimaryImageCommandHandler(
         }
 
         await unitOfWork.SaveChangesAsync(ct);
+        cache.Remove(ContentCoreCacheKeys.EntityAttachments(request.EntityType.ToString(), request.EntityId));
 
         return Result.Success();
     }

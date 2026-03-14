@@ -1,4 +1,6 @@
+using ContentCore.Application.Caching;
 using ContentCore.Domain.Repositories;
+using Microsoft.Extensions.Caching.Memory;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
@@ -6,7 +8,8 @@ namespace ContentCore.Application.Commands.Specialization.UpdateSpecialization;
 
 public sealed class UpdateSpecializationCommandHandler(
     ISpecializationRepository specializationRepository,
-    IContentCoreUnitOfWork unitOfWork)
+    IContentCoreUnitOfWork unitOfWork,
+    IMemoryCache cache)
     : ICommandHandler<UpdateSpecializationCommand, UpdateSpecializationResult>
 {
     public async Task<Result<UpdateSpecializationResult>> Handle(
@@ -29,6 +32,9 @@ public sealed class UpdateSpecializationCommandHandler(
         }
 
         await unitOfWork.SaveChangesAsync(ct);
+
+        cache.Remove(ContentCoreCacheKeys.Specializations(true));
+        cache.Remove(ContentCoreCacheKeys.Specializations(false));
 
         return Result<UpdateSpecializationResult>.Success(
             new UpdateSpecializationResult(specialization.Id, specialization.Name));

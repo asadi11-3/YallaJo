@@ -1,4 +1,6 @@
+using ContentCore.Application.Caching;
 using ContentCore.Domain.Repositories;
+using Microsoft.Extensions.Caching.Memory;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
@@ -6,7 +8,8 @@ namespace ContentCore.Application.Commands.Attachment.DeleteAttachment;
 
 public sealed class DeleteAttachmentCommandHandler(
     IAttachmentRepository attachmentRepository,
-    IContentCoreUnitOfWork unitOfWork)
+    IContentCoreUnitOfWork unitOfWork,
+    IMemoryCache cache)
     : ICommandHandler<DeleteAttachmentCommand>
 {
     public async Task<Result> Handle(DeleteAttachmentCommand request, CancellationToken ct)
@@ -22,6 +25,7 @@ public sealed class DeleteAttachmentCommandHandler(
 
         attachmentRepository.Remove(attachment);
         await unitOfWork.SaveChangesAsync(ct);
+        cache.Remove(ContentCoreCacheKeys.Attachment(request.AttachmentId));
 
         return Result.Success();
     }

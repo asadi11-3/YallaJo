@@ -1,5 +1,7 @@
+using ContentCore.Application.Caching;
 using ContentCore.Domain.Enums;
 using ContentCore.Domain.Repositories;
+using Microsoft.Extensions.Caching.Memory;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
@@ -8,7 +10,8 @@ namespace ContentCore.Application.Commands.EntityTag.AssignTagsToEntity;
 public sealed class AssignTagsToEntityCommandHandler(
     IEntityTagRepository entityTagRepository,
     ITagRepository tagRepository,
-    IContentCoreUnitOfWork unitOfWork)
+    IContentCoreUnitOfWork unitOfWork,
+    IMemoryCache cache)
     : ICommandHandler<AssignTagsToEntityCommand>
 {
     public async Task<Result> Handle(AssignTagsToEntityCommand request, CancellationToken ct)
@@ -31,6 +34,7 @@ public sealed class AssignTagsToEntityCommandHandler(
         }
 
         await unitOfWork.SaveChangesAsync(ct);
+        cache.Remove(ContentCoreCacheKeys.EntityTags(request.EntityType, request.EntityId));
         return Result.Success();
     }
 }
