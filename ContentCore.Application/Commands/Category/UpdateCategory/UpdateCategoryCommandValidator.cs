@@ -30,5 +30,27 @@ public sealed class UpdateCategoryCommandValidator : AbstractValidator<UpdateCat
         RuleFor(x => x.SourceLanguageCode)
             .NotEmpty()
             .MaximumLength(10);
+
+        // Validate ParentCategoryId if provided
+        RuleFor(x => x.ParentCategoryId)
+            .NotEqual(Guid.Empty)
+            .When(x => x.ParentCategoryId.HasValue);
+
+        // Validate Translations if provided
+        RuleForEach(x => x.Translations)
+            .ChildRules(translation =>
+            {
+                translation.RuleFor(t => t.LanguageId)
+                    .NotEmpty();
+
+                translation.RuleFor(t => t.Name)
+                    .NotEmpty()
+                    .MaximumLength(200);
+
+                translation.RuleFor(t => t.Slug)
+                    .NotEmpty()
+                    .MaximumLength(200)
+                    .Matches(@"^[a-z0-9\-]+$");
+            });
     }
 }
