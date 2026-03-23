@@ -369,3 +369,5 @@ FodyWeavers.xsd
 # Agent files — AI coding tool instructions (not shipped with code)
 /Agents
 AGENTS.md
+/Agents/error-log.md
+/Agents/agent-context.md
