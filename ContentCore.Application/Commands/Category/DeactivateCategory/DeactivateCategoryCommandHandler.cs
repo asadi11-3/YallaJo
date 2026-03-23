@@ -1,32 +1,53 @@
-using ContentCore.Application.Commands.Category.DeleteCategory;
 using ContentCore.Domain.Repositories;
-using Microsoft.Extensions.Caching.Memory;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Hybrid;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
+using Outcome = YallaJo.SharedKernel.Domain.Abstractions.Results.Outcome;
 
 namespace ContentCore.Application.Commands.Category.DeactivateCategory;
 
 public sealed class DeactivateCategoryCommandHandler(
     ICategoryRepository categoryRepository,
     IContentCoreUnitOfWork unitOfWork,
-    IMemoryCache cache)
+    HybridCache cache)
     : ICommandHandler<DeactivateCategoryCommand, DeactivateCategoryResult>
 {
     public async Task<Result<DeactivateCategoryResult>> Handle(
         DeactivateCategoryCommand request,
         CancellationToken ct)
     {
-        var category = await categoryRepository.GetByIdAsync(request.Id, ct, asNoTracking: false);
-        if (category is null)
-            return Result<DeactivateCategoryResult>.NotFound(
-                $"Category '{request.Id}' not found.");
+        try
+        {
+            var category = await categoryRepository.GetByIdAsync(request.Id, ct, asNoTracking: false);
+            if (category is null)
+                return Result<DeactivateCategoryResult>.Failure(
+                    new Error("Category.NotFound", $"Category '{request.Id}' was not found."),
+                    Outcome.NotFound);
 
-        category.Deactivate();
-        await unitOfWork.SaveChangesAsync(ct);
+            category.Deactivate();
 
-        DeleteCategoryCommandHandler.InvalidateCategoryCache(cache, request.Id);
+            try
+            {
+                await unitOfWork.SaveChangesAsync(ct);
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                return Result<DeactivateCategoryResult>.Conflict(
+                    new Error("Category.ConcurrencyConflict",
+                        "This record was modified by another user. Please refresh and try again."));
+            }
 
-        return Result<DeactivateCategoryResult>.Success(
-            new DeactivateCategoryResult(category.Id, category.IsActive));
+            await cache.RemoveByTagAsync("categories", ct);
+
+            return Result<DeactivateCategoryResult>.Success(
+                new DeactivateCategoryResult(category.Id, category.IsActive));
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            return Result<DeactivateCategoryResult>.Failure(
+                new Error("Request.Cancelled", "The request was cancelled."),
+                Outcome.Canceled);
+        }
     }
 }

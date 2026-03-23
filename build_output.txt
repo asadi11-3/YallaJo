@@ -1,0 +1,85 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  YallaJo.SharedKernel.Domain -> C:\Users\admin1\source\repos\YallaJo\YallaJo.SharedKernel.Domain\bin\Debug\net9.0\YallaJo.SharedKernel.Domain.dll
+  ContentPlaces.Contracts -> C:\Users\admin1\source\repos\YallaJo\ContentPlaces.Contracts\bin\Debug\net9.0\ContentPlaces.Contracts.dll
+  Booking.Domain -> C:\Users\admin1\source\repos\YallaJo\Booking.Domain\bin\Debug\net9.0\Booking.Domain.dll
+  Social.Contracts -> C:\Users\admin1\source\repos\YallaJo\Social.Contracts\bin\Debug\net9.0\Social.Contracts.dll
+  Social.Domain -> C:\Users\admin1\source\repos\YallaJo\Social.Domain\bin\Debug\net9.0\Social.Domain.dll
+  Finance.Domain -> C:\Users\admin1\source\repos\YallaJo\Finance.Domain\bin\Debug\net9.0\Finance.Domain.dll
+  Tracking.Domain -> C:\Users\admin1\source\repos\YallaJo\Tracking.Domain\bin\Debug\net9.0\Tracking.Domain.dll
+  YallaJo.Web -> C:\Users\admin1\source\repos\YallaJo\YallaJo.Web\bin\Debug\net9.0\YallaJo.Web.dll
+  Tracking.Contracts -> C:\Users\admin1\source\repos\YallaJo\Tracking.Contracts\bin\Debug\net9.0\Tracking.Contracts.dll
+  Finance.Contracts -> C:\Users\admin1\source\repos\YallaJo\Finance.Contracts\bin\Debug\net9.0\Finance.Contracts.dll
+  ContentCore.Domain -> C:\Users\admin1\source\repos\YallaJo\ContentCore.Domain\bin\Debug\net9.0\ContentCore.Domain.dll
+  ContentPlaces.Domain -> C:\Users\admin1\source\repos\YallaJo\ContentPlaces.Domain\bin\Debug\net9.0\ContentPlaces.Domain.dll
+  Analytics.Contracts -> C:\Users\admin1\source\repos\YallaJo\Analytics.Contracts\bin\Debug\net9.0\Analytics.Contracts.dll
+  ContentBlogs.Contracts -> C:\Users\admin1\source\repos\YallaJo\ContentBlogs.Contracts\bin\Debug\net9.0\ContentBlogs.Contracts.dll
+  Messaging.Contracts -> C:\Users\admin1\source\repos\YallaJo\Messaging.Contracts\bin\Debug\net9.0\Messaging.Contracts.dll
+  Analytics.Domain -> C:\Users\admin1\source\repos\YallaJo\Analytics.Domain\bin\Debug\net9.0\Analytics.Domain.dll
+  ContentCore.Contracts -> C:\Users\admin1\source\repos\YallaJo\ContentCore.Contracts\bin\Debug\net9.0\ContentCore.Contracts.dll
+  ContentTours.Contracts -> C:\Users\admin1\source\repos\YallaJo\ContentTours.Contracts\bin\Debug\net9.0\ContentTours.Contracts.dll
+  ContentBlogs.Domain -> C:\Users\admin1\source\repos\YallaJo\ContentBlogs.Domain\bin\Debug\net9.0\ContentBlogs.Domain.dll
+  ContentTours.Domain -> C:\Users\admin1\source\repos\YallaJo\ContentTours.Domain\bin\Debug\net9.0\ContentTours.Domain.dll
+  Accounts.Contracts -> C:\Users\admin1\source\repos\YallaJo\Accounts.Contracts\bin\Debug\net9.0\Accounts.Contracts.dll
+  YallaJo.SharedKernel.Application -> C:\Users\admin1\source\repos\YallaJo\YallaJo.SharedKernel.Application\bin\Debug\net9.0\YallaJo.SharedKernel.Application.dll
+  Messaging.Domain -> C:\Users\admin1\source\repos\YallaJo\Messaging.Domain\bin\Debug\net9.0\Messaging.Domain.dll
+  Booking.Contracts -> C:\Users\admin1\source\repos\YallaJo\Booking.Contracts\bin\Debug\net9.0\Booking.Contracts.dll
+  ContentSeo.Contracts -> C:\Users\admin1\source\repos\YallaJo\ContentSeo.Contracts\bin\Debug\net9.0\ContentSeo.Contracts.dll
+  Security.Domain -> C:\Users\admin1\source\repos\YallaJo\Security.Domain\bin\Debug\net9.0\Security.Domain.dll
+  Accounts.Domain -> C:\Users\admin1\source\repos\YallaJo\Accounts.Domain\bin\Debug\net9.0\Accounts.Domain.dll
+  Auth.Domain -> C:\Users\admin1\source\repos\YallaJo\Auth.Domain\bin\Debug\net9.0\Auth.Domain.dll
+  ContentSeo.Domain -> C:\Users\admin1\source\repos\YallaJo\ContentSeo.Domain\bin\Debug\net9.0\ContentSeo.Domain.dll
+  ContentTours.Application -> C:\Users\admin1\source\repos\YallaJo\ContentTours.Application\bin\Debug\net9.0\ContentTours.Application.dll
+  Finance.Application -> C:\Users\admin1\source\repos\YallaJo\Finance.Application\bin\Debug\net9.0\Finance.Application.dll
+  Tracking.Application -> C:\Users\admin1\source\repos\YallaJo\Tracking.Application\bin\Debug\net9.0\Tracking.Application.dll
+  YallaJo.Tests.Shared -> C:\Users\admin1\source\repos\YallaJo\tests\YallaJo.Tests.Shared\bin\Debug\net9.0\YallaJo.Tests.Shared.dll
+  Auth.Contracts -> C:\Users\admin1\source\repos\YallaJo\Auth.Contracts\bin\Debug\net9.0\Auth.Contracts.dll
+  YallaJo.SharedKernel.Infrastructure -> C:\Users\admin1\source\repos\YallaJo\YallaJo.SharedKernel.Infrastructure\bin\Debug\net9.0\YallaJo.SharedKernel.Infrastructure.dll
+  Security.Contracts -> C:\Users\admin1\source\repos\YallaJo\Security.Contracts\bin\Debug\net9.0\Security.Contracts.dll
+  Social.Application -> C:\Users\admin1\source\repos\YallaJo\Social.Application\bin\Debug\net9.0\Social.Application.dll
+  ContentCore.Application -> C:\Users\admin1\source\repos\YallaJo\ContentCore.Application\bin\Debug\net9.0\ContentCore.Application.dll
+  ContentSeo.Application -> C:\Users\admin1\source\repos\YallaJo\ContentSeo.Application\bin\Debug\net9.0\ContentSeo.Application.dll
+  ContentSeo.Presentation -> C:\Users\admin1\source\repos\YallaJo\ContentSeo.Presentation\bin\Debug\net9.0\ContentSeo.Presentation.dll
+  ContentBlogs.Application -> C:\Users\admin1\source\repos\YallaJo\ContentBlogs.Application\bin\Debug\net9.0\ContentBlogs.Application.dll
+  Finance.Infrastructure -> C:\Users\admin1\source\repos\YallaJo\Finance.Infrastructure\bin\Debug\net9.0\Finance.Infrastructure.dll
+  ContentBlogs.Infrastructure -> C:\Users\admin1\source\repos\YallaJo\ContentBlogs.Infrastructure\bin\Debug\net9.0\ContentBlogs.Infrastructure.dll
+  ContentSeo.Infrastructure -> C:\Users\admin1\source\repos\YallaJo\ContentSeo.Infrastructure\bin\Debug\net9.0\ContentSeo.Infrastructure.dll
+  Finance.Presentation -> C:\Users\admin1\source\repos\YallaJo\Finance.Presentation\bin\Debug\net9.0\Finance.Presentation.dll
+  ContentTours.Presentation -> C:\Users\admin1\source\repos\YallaJo\ContentTours.Presentation\bin\Debug\net9.0\ContentTours.Presentation.dll
+  Social.Presentation -> C:\Users\admin1\source\repos\YallaJo\Social.Presentation\bin\Debug\net9.0\Social.Presentation.dll
+  Tracking.Presentation -> C:\Users\admin1\source\repos\YallaJo\Tracking.Presentation\bin\Debug\net9.0\Tracking.Presentation.dll
+  ContentCore.Presentation -> C:\Users\admin1\source\repos\YallaJo\ContentCore.Presentation\bin\Debug\net9.0\ContentCore.Presentation.dll
+  Security.Application -> C:\Users\admin1\source\repos\YallaJo\Security.Application\bin\Debug\net9.0\Security.Application.dll
+  Social.Infrastructure -> C:\Users\admin1\source\repos\YallaJo\Social.Infrastructure\bin\Debug\net9.0\Social.Infrastructure.dll
+  Auth.Application -> C:\Users\admin1\source\repos\YallaJo\Auth.Application\bin\Debug\net9.0\Auth.Application.dll
+  ContentCore.Infrastructure -> C:\Users\admin1\source\repos\YallaJo\ContentCore.Infrastructure\bin\Debug\net9.0\ContentCore.Infrastructure.dll
+  Messaging.Application -> C:\Users\admin1\source\repos\YallaJo\Messaging.Application\bin\Debug\net9.0\Messaging.Application.dll
+  Tracking.Infrastructure -> C:\Users\admin1\source\repos\YallaJo\Tracking.Infrastructure\bin\Debug\net9.0\Tracking.Infrastructure.dll
+  ContentPlaces.Application -> C:\Users\admin1\source\repos\YallaJo\ContentPlaces.Application\bin\Debug\net9.0\ContentPlaces.Application.dll
+  Analytics.Application -> C:\Users\admin1\source\repos\YallaJo\Analytics.Application\bin\Debug\net9.0\Analytics.Application.dll
+  Booking.Application -> C:\Users\admin1\source\repos\YallaJo\Booking.Application\bin\Debug\net9.0\Booking.Application.dll
+  Messaging.Presentation -> C:\Users\admin1\source\repos\YallaJo\Messaging.Presentation\bin\Debug\net9.0\Messaging.Presentation.dll
+  ContentTours.Infrastructure -> C:\Users\admin1\source\repos\YallaJo\ContentTours.Infrastructure\bin\Debug\net9.0\ContentTours.Infrastructure.dll
+  Accounts.Application -> C:\Users\admin1\source\repos\YallaJo\Accounts.Application\bin\Debug\net9.0\Accounts.Application.dll
+  ContentPlaces.Infrastructure -> C:\Users\admin1\source\repos\YallaJo\ContentPlaces.Infrastructure\bin\Debug\net9.0\ContentPlaces.Infrastructure.dll
+  ContentCore.Tests.Unit -> C:\Users\admin1\source\repos\YallaJo\tests\ContentCore.Tests.Unit\bin\Debug\net9.0\ContentCore.Tests.Unit.dll
+  Messaging.Infrastructure -> C:\Users\admin1\source\repos\YallaJo\Messaging.Infrastructure\bin\Debug\net9.0\Messaging.Infrastructure.dll
+  Security.Infrastructure -> C:\Users\admin1\source\repos\YallaJo\Security.Infrastructure\bin\Debug\net9.0\Security.Infrastructure.dll
+  Security.Presentation -> C:\Users\admin1\source\repos\YallaJo\Security.Presentation\bin\Debug\net9.0\Security.Presentation.dll
+  ContentBlogs.Presentation -> C:\Users\admin1\source\repos\YallaJo\ContentBlogs.Presentation\bin\Debug\net9.0\ContentBlogs.Presentation.dll
+  Auth.Presentation -> C:\Users\admin1\source\repos\YallaJo\Auth.Presentation\bin\Debug\net9.0\Auth.Presentation.dll
+  Analytics.Infrastructure -> C:\Users\admin1\source\repos\YallaJo\Analytics.Infrastructure\bin\Debug\net9.0\Analytics.Infrastructure.dll
+  ContentPlaces.Presentation -> C:\Users\admin1\source\repos\YallaJo\ContentPlaces.Presentation\bin\Debug\net9.0\ContentPlaces.Presentation.dll
+  Analytics.Presentation -> C:\Users\admin1\source\repos\YallaJo\Analytics.Presentation\bin\Debug\net9.0\Analytics.Presentation.dll
+  Accounts.Infrastructure -> C:\Users\admin1\source\repos\YallaJo\Accounts.Infrastructure\bin\Debug\net9.0\Accounts.Infrastructure.dll
+  Auth.Infrastructure -> C:\Users\admin1\source\repos\YallaJo\Auth.Infrastructure\bin\Debug\net9.0\Auth.Infrastructure.dll
+  Booking.Presentation -> C:\Users\admin1\source\repos\YallaJo\Booking.Presentation\bin\Debug\net9.0\Booking.Presentation.dll
+  Booking.Infrastructure -> C:\Users\admin1\source\repos\YallaJo\Booking.Infrastructure\bin\Debug\net9.0\Booking.Infrastructure.dll
+  Accounts.Presentation -> C:\Users\admin1\source\repos\YallaJo\Accounts.Presentation\bin\Debug\net9.0\Accounts.Presentation.dll
+  YallaJo.Api -> C:\Users\admin1\source\repos\YallaJo\YallaJo.Api\bin\Debug\net9.0\YallaJo.Api.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:06.77

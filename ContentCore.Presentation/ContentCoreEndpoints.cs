@@ -47,7 +47,7 @@ public static class ContentCoreEndpoints
 {
     public static IEndpointRouteBuilder MapContentCoreEndpoints(this IEndpointRouteBuilder endpoints)
     {
-        var group = endpoints.MapGroup("/api/content-core")
+        var group = endpoints.MapGroup("/api/v1/content-core")
             .WithTags("ContentCore");
 
         MapLanguageEndpoints(group);
@@ -608,20 +608,32 @@ public static class ContentCoreEndpoints
             ? result.Outcome == Outcome.Created
                 ? Results.Created((string?)null, result.Value)
                 : Results.Ok(result.Value)
-            : ToProblem(result.Outcome, result.Errors);
+            : ToProblem(result.Outcome, result.Errors, result.Messages);
 
     private static IResult ToApiResult(Result result) =>
         result.IsSuccess
             ? Results.Ok()
-            : ToProblem(result.Outcome, result.Errors);
+            : ToProblem(result.Outcome, result.Errors, result.Messages);
 
-    private static IResult ToProblem(Outcome outcome, IReadOnlyList<Error> errors)
+    private static IResult ToProblem(
+        Outcome outcome,
+        IReadOnlyList<Error> errors,
+        IReadOnlyList<string> messages)
     {
-        var first = errors.Count > 0 ? errors[0] : null;
+        // Prefer structured Error record (Code + Message) — handlers MUST use Error records.
+        // Messages fallback handles any remaining legacy message-only returns.
+        if (errors.Count > 0)
+        {
+            var first = errors[0];
+            return Results.Problem(
+                statusCode: (int)outcome,
+                title: first.Code,
+                detail: first.Message);
+        }
+
         return Results.Problem(
             statusCode: (int)outcome,
-            title: first?.Code,
-            detail: first?.Message);
+            detail: messages.Count > 0 ? messages[0] : null);
     }
 }
 

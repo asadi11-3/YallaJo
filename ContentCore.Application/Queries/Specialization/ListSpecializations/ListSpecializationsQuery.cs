@@ -15,4 +15,5 @@ public sealed record ListSpecializationsQuery(bool ActiveOnly = false)
 {
     public string CacheKey => ContentCoreCacheKeys.Specializations(ActiveOnly);
     public TimeSpan? CacheDuration => TimeSpan.FromMinutes(30);
+    public IReadOnlyList<string> Tags => ["specializations"];
 }

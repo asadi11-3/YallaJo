@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.DependencyInjection;
 using YallaJo.SharedKernel.Application.Abstractions.Behaviors;
 using YallaJo.SharedKernel.Application.Abstractions.Clock;
@@ -18,7 +19,15 @@ namespace YallaJo.SharedKernel.Infrastructure
         public static IServiceCollection AddSharedKernelInfrastructure(this IServiceCollection services)
         {
             services.AddScoped<IDomainEventDispatcher, MediatRDomainEventDispatcher>();
-            services.AddMemoryCache();
+            services.AddHybridCache(options =>
+            {
+                options.DefaultEntryOptions = new HybridCacheEntryOptions
+                {
+                    Expiration = TimeSpan.FromMinutes(15),
+                    LocalCacheExpiration = TimeSpan.FromMinutes(5),
+                };
+                options.MaximumPayloadBytes = 1024 * 1024;
+            });
             services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
 
             services.AddMediatR(cfg =>

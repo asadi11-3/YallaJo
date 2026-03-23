@@ -64,4 +64,5 @@ public sealed record ListCategoriesQuery(
 {
     public string CacheKey => ContentCoreCacheKeys.CategoryList(ActiveOnly, ParentCategoryId, WithTranslations);
     public TimeSpan? CacheDuration => TimeSpan.FromMinutes(30);
+    public IReadOnlyList<string> Tags => ["categories"];
 }

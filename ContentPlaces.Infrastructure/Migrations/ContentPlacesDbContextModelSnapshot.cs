@@ -287,8 +287,7 @@ namespace ContentPlaces.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("BusinessId", "DayOfWeek")
-                        .IsUnique();
+                    b.HasIndex("BusinessId");
 
                     b.ToTable("BusinessHours", "content_places");
                 });

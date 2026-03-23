@@ -1,38 +1,51 @@
-using ContentCore.Application.Caching;
 using ContentCore.Domain.Repositories;
-using Microsoft.Extensions.Caching.Memory;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Hybrid;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
+using Outcome = YallaJo.SharedKernel.Domain.Abstractions.Results.Outcome;
 
 namespace ContentCore.Application.Commands.Category.DeleteCategory;
 
 public sealed class DeleteCategoryCommandHandler(
     ICategoryRepository categoryRepository,
     IContentCoreUnitOfWork unitOfWork,
-    IMemoryCache cache)
+    HybridCache cache)
     : ICommandHandler<DeleteCategoryCommand>
 {
     public async Task<Result> Handle(DeleteCategoryCommand request, CancellationToken ct)
     {
-        var category = await categoryRepository.GetByIdAsync(request.Id, ct, asNoTracking: false);
-        if (category is null)
-            return Result.NotFound($"Category '{request.Id}' not found.");
+        try
+        {
+            var category = await categoryRepository.GetByIdAsync(request.Id, ct, asNoTracking: false);
+            if (category is null)
+                return Result.Failure(
+                    new Error("Category.NotFound", $"Category '{request.Id}' was not found."),
+                    Outcome.NotFound);
 
-        category.SoftDelete();
-        await unitOfWork.SaveChangesAsync(ct);
+            category.SoftDelete();
 
-        InvalidateCategoryCache(cache, request.Id);
-        return Result.Success();
+            try
+            {
+                await unitOfWork.SaveChangesAsync(ct);
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                return Result.Failure(
+                    new Error("Category.ConcurrencyConflict",
+                        "This record was modified by another user. Please refresh and try again."),
+                    Outcome.Conflict);
+            }
+
+            await cache.RemoveByTagAsync("categories", ct);
+            return Result.Success();
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            return Result.Failure(
+                new Error("Request.Cancelled", "The request was cancelled."),
+                Outcome.Canceled);
+        }
     }
 
-    internal static void InvalidateCategoryCache(IMemoryCache cache, Guid id)
-    {
-        // Invalidate all root-level list permutations
-        foreach (var key in ContentCoreCacheKeys.CommonCategoryListKeys())
-            cache.Remove(key);
-
-        // Invalidate both translation variants for this specific category
-        cache.Remove(ContentCoreCacheKeys.Category(id, false));
-        cache.Remove(ContentCoreCacheKeys.Category(id, true));
-    }
 }

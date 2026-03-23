@@ -36,6 +36,9 @@ public class BusinessHoursConfiguration : IEntityTypeConfiguration<BusinessHours
 
         builder.HasQueryFilter(x => !x.Business.IsDeleted);
 
-        builder.HasIndex(x => new { x.BusinessId, x.DayOfWeek }).IsUnique();
+        // Removed unique index on (BusinessId, DayOfWeek) to support split shifts
+        // (two entries per day, e.g. 9:00-13:00 and 17:00-22:00).
+        // Overlap validation is enforced in SetBusinessHoursCommandHandler.
+        builder.HasIndex(x => x.BusinessId);
     }
 }

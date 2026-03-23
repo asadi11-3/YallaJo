@@ -1,3 +1,5 @@
+using Microsoft.Extensions.Caching.Hybrid;
+
 namespace YallaJo.SharedKernel.Application.Abstractions.Messaging;
 
 /// <summary>
@@ -6,7 +8,7 @@ namespace YallaJo.SharedKernel.Application.Abstractions.Messaging;
 /// </summary>
 /// <remarks>
 /// Cache invalidation: command handlers that mutate the related data must call
-/// <c>IMemoryCache.Remove(cacheKey)</c> for the affected keys after saving.
+/// <c>HybridCache.RemoveByTagAsync(tag, ct)</c> for the affected tags after saving.
 /// </remarks>
 public interface ICacheableQuery
 {
@@ -20,4 +22,9 @@ public interface ICacheableQuery
     /// How long the cached result is valid. <c>null</c> uses the behavior default (15 minutes).
     /// </summary>
     TimeSpan? CacheDuration { get; }
+
+    /// <summary>
+    /// Cache tags used for group-based invalidation.
+    /// </summary>
+    IReadOnlyList<string> Tags => [];
 }

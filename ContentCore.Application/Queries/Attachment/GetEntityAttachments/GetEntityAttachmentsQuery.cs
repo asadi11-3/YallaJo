@@ -26,4 +26,5 @@ public sealed record GetEntityAttachmentsQuery(EntityType EntityType, Guid Entit
 {
     public string CacheKey => ContentCoreCacheKeys.EntityAttachments(EntityType.ToString(), EntityId);
     public TimeSpan? CacheDuration => TimeSpan.FromMinutes(15);
+    public IReadOnlyList<string> Tags => ["attachments", $"attachments:{EntityType}:{EntityId}"];
 }

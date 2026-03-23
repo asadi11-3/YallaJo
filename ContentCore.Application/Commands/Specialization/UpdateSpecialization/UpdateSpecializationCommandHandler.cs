@@ -1,42 +1,63 @@
 using ContentCore.Application.Caching;
 using ContentCore.Domain.Repositories;
-using Microsoft.Extensions.Caching.Memory;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Hybrid;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
+using Outcome = YallaJo.SharedKernel.Domain.Abstractions.Results.Outcome;
 
 namespace ContentCore.Application.Commands.Specialization.UpdateSpecialization;
 
 public sealed class UpdateSpecializationCommandHandler(
     ISpecializationRepository specializationRepository,
     IContentCoreUnitOfWork unitOfWork,
-    IMemoryCache cache)
+    HybridCache cache)
     : ICommandHandler<UpdateSpecializationCommand, UpdateSpecializationResult>
 {
     public async Task<Result<UpdateSpecializationResult>> Handle(
         UpdateSpecializationCommand request,
         CancellationToken ct)
     {
-        var specialization = await specializationRepository.GetByIdAsync(request.Id, ct, asNoTracking: false);
-
-        if (specialization is null)
-            return Result<UpdateSpecializationResult>.NotFound($"Specialization '{request.Id}' not found.");
-
-        specialization.Update(request.Name, request.Description, request.Icon);
-
-        if (request.IsActive.HasValue)
+        try
         {
-            if (request.IsActive.Value)
-                specialization.Activate();
-            else
-                specialization.Deactivate();
+            var specialization = await specializationRepository.GetByIdAsync(request.Id, ct, asNoTracking: false);
+
+            if (specialization is null)
+                return Result<UpdateSpecializationResult>.Failure(
+                    new Error("Specialization.NotFound", $"Specialization '{request.Id}' was not found."),
+                    Outcome.NotFound);
+
+            specialization.Update(request.Name, request.Description, request.Icon);
+
+            if (request.IsActive.HasValue)
+            {
+                if (request.IsActive.Value)
+                    specialization.Activate();
+                else
+                    specialization.Deactivate();
+            }
+
+            try
+            {
+                await unitOfWork.SaveChangesAsync(ct);
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                return Result<UpdateSpecializationResult>.Conflict(
+                    new Error("Specialization.ConcurrencyConflict",
+                        "This record was modified by another user. Please refresh and try again."));
+            }
+
+            await cache.RemoveByTagAsync("specializations", ct);
+
+            return Result<UpdateSpecializationResult>.Success(
+                new UpdateSpecializationResult(specialization.Id, specialization.Name));
         }
-
-        await unitOfWork.SaveChangesAsync(ct);
-
-        cache.Remove(ContentCoreCacheKeys.Specializations(true));
-        cache.Remove(ContentCoreCacheKeys.Specializations(false));
-
-        return Result<UpdateSpecializationResult>.Success(
-            new UpdateSpecializationResult(specialization.Id, specialization.Name));
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            return Result<UpdateSpecializationResult>.Failure(
+                new Error("Request.Cancelled", "The request was cancelled."),
+                Outcome.Canceled);
+        }
     }
 }

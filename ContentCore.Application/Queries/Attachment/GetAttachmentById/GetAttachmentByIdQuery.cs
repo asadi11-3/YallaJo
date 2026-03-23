@@ -8,5 +8,6 @@ public sealed record GetAttachmentByIdQuery(Guid AttachmentId)
     : IQuery<AttachmentDto>, ICacheableQuery
 {
     public string CacheKey => ContentCoreCacheKeys.Attachment(AttachmentId);
-    public TimeSpan? CacheDuration => TimeSpan.FromMinutes(15);
+    public TimeSpan? CacheDuration => TimeSpan.FromMinutes(5);
+    public IReadOnlyList<string> Tags => ["attachments", $"attachment:{AttachmentId}"];
 }

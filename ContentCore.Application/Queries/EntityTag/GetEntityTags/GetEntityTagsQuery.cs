@@ -10,4 +10,5 @@ public sealed record GetEntityTagsQuery(string EntityType, Guid EntityId)
 {
     public string CacheKey => ContentCoreCacheKeys.EntityTags(EntityType, EntityId);
     public TimeSpan? CacheDuration => TimeSpan.FromMinutes(15);
+    public IReadOnlyList<string> Tags => ["entity-tags", $"entity-tags:{EntityType}:{EntityId}"];
 }

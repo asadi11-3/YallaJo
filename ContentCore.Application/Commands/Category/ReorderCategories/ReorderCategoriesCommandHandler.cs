@@ -1,47 +1,56 @@
-using ContentCore.Application.Caching;
 using ContentCore.Domain.Repositories;
-using Microsoft.Extensions.Caching.Memory;
+using Microsoft.EntityFrameworkCore;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
+using Outcome = YallaJo.SharedKernel.Domain.Abstractions.Results.Outcome;
 
 namespace ContentCore.Application.Commands.Category.ReorderCategories;
 
 public sealed class ReorderCategoriesCommandHandler(
     ICategoryRepository categoryRepository,
-    IContentCoreUnitOfWork unitOfWork,
-    IMemoryCache cache)
+    IContentCoreUnitOfWork unitOfWork)
     : ICommandHandler<ReorderCategoriesCommand>
 {
     public async Task<Result> Handle(
         ReorderCategoriesCommand request,
         CancellationToken ct)
     {
-        var ids = request.Items.Select(x => x.CategoryId).ToList();
-
-        // Single DB query: fetch all requested categories at once — O(1) roundtrip vs O(n)
-        var categories = await categoryRepository.GetAllAsync(
-            filter: c => ids.Contains(c.Id),
-            asNoTracking: false,
-            ct: ct);
-
-        // Fail fast if any ID is missing
-        if (categories.Count != ids.Count)
+        try
         {
-            var missing = ids.Except(categories.Select(c => c.Id)).First();
-            return Result.NotFound($"Category '{missing}' not found.");
+            var ids = request.Items.Select(x => x.CategoryId).ToList();
+
+            var categories = await categoryRepository.GetAllAsync(
+                filter: c => ids.Contains(c.Id),
+                asNoTracking: false,
+                ct: ct);
+
+            var orderMap = request.Items.ToDictionary(x => x.CategoryId, x => x.SortOrder);
+
+            foreach (var category in categories)
+            {
+                if (orderMap.TryGetValue(category.Id, out var newOrder))
+                    category.SetSortOrder(newOrder);
+            }
+
+            try
+            {
+                await unitOfWork.SaveChangesAsync(ct);
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                return Result.Failure(
+                    new Error("Category.ConcurrencyConflict",
+                        "This record was modified by another user. Please refresh and try again."),
+                    Outcome.Conflict);
+            }
+
+            return Result.Success();
         }
-
-        // Build O(1) lookup for sort order assignment
-        var sortOrderMap = request.Items.ToDictionary(x => x.CategoryId, x => x.SortOrder);
-
-        foreach (var category in categories)
-            category.SetSortOrder(sortOrderMap[category.Id]);
-
-        await unitOfWork.SaveChangesAsync(ct);
-
-        // Invalidate all root-level category list caches
-        foreach (var key in ContentCoreCacheKeys.CommonCategoryListKeys())
-            cache.Remove(key);
-        return Result.Success();
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            return Result.Failure(
+                new Error("Request.Cancelled", "The request was cancelled."),
+                Outcome.Canceled);
+        }
     }
 }

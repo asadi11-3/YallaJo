@@ -13,5 +13,6 @@ public sealed record GetCategoryByIdQuery(Guid Id, bool WithTranslations = false
     : IQuery<CategoryDto>, ICacheableQuery
 {
     public string CacheKey => ContentCoreCacheKeys.Category(Id, WithTranslations);
-    public TimeSpan? CacheDuration => TimeSpan.FromMinutes(30);
+    public TimeSpan? CacheDuration => TimeSpan.FromMinutes(5);
+    public IReadOnlyList<string> Tags => ["categories", $"category:{Id}"];
 }

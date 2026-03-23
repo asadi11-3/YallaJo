@@ -10,4 +10,5 @@ public sealed record GetEntityCategoriesQuery(string EntityType, Guid EntityId)
 {
     public string CacheKey => ContentCoreCacheKeys.EntityCategories(EntityType, EntityId);
     public TimeSpan? CacheDuration => TimeSpan.FromMinutes(15);
+    public IReadOnlyList<string> Tags => ["entity-categories", $"entity-categories:{EntityType}:{EntityId}"];
 }

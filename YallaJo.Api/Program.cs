@@ -1,12 +1,38 @@
 using Accounts.Application;
 using Accounts.Infrastructure;
 using Accounts.Presentation;
+using Analytics.Application;
+using Analytics.Infrastructure;
+using Analytics.Presentation;
 using Auth.Application;
 using Auth.Infrastructure;
 using Auth.Presentation;
+using Booking.Application;
+using Booking.Infrastructure;
+using Booking.Presentation;
+using ContentBlogs.Application;
+using ContentBlogs.Infrastructure;
+using ContentBlogs.Presentation;
+using ContentCore.Application;
+using ContentCore.Infrastructure;
+using ContentCore.Presentation;
+using ContentPlaces.Application;
+using ContentPlaces.Infrastructure;
+using ContentPlaces.Presentation;
+using ContentSeo.Application;
+using ContentSeo.Infrastructure;
+using ContentSeo.Presentation;
+using ContentTours.Application;
+using ContentTours.Infrastructure;
+using ContentTours.Presentation;
+using Finance.Application;
+using Finance.Infrastructure;
+using Finance.Presentation;
+using Messaging.Application;
+using Messaging.Infrastructure;
+using Messaging.Presentation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Security.Application;
@@ -14,49 +40,24 @@ using Security.Contracts.Authorization;
 using Security.Infrastructure;
 using Security.Infrastructure.Seeding;
 using Security.Presentation;
-using System.Text;
-using YallaJo.Api.Authorization;
-using YallaJo.Api.ExceptionHandlers;
-using YallaJo.Api.Services;
-using YallaJo.SharedKernel.Application.Abstractions.Context;
-using YallaJo.SharedKernel.Infrastructure;
-using YallaJo.Api.Extensions;
-using YallaJo.Api.Middleware;
-using ContentCore.Application;
-using ContentCore.Infrastructure;
-using ContentCore.Presentation;
-using ContentPlaces.Application;
-using ContentPlaces.Infrastructure;
-using ContentPlaces.Presentation;
-using ContentTours.Application;
-using ContentTours.Infrastructure;
-using ContentTours.Presentation;
-using ContentBlogs.Application;
-using ContentBlogs.Infrastructure;
-using ContentBlogs.Presentation;
-using ContentSeo.Application;
-using ContentSeo.Infrastructure;
-using ContentSeo.Presentation;
-using Analytics.Application;
-using Analytics.Infrastructure;
-using Analytics.Presentation;
-using Booking.Application;
-using Booking.Infrastructure;
-using Booking.Presentation;
-using Finance.Application;
-using Finance.Infrastructure;
-using Finance.Presentation;
-using Messaging.Application;
-using Messaging.Infrastructure;
-using Messaging.Presentation;
 using Social.Application;
 using Social.Infrastructure;
 using Social.Presentation;
+using System.Text;
 using Tracking.Application;
 using Tracking.Infrastructure;
 using Tracking.Presentation;
+using YallaJo.Api.Authorization;
+using YallaJo.Api.ExceptionHandlers;
+using YallaJo.Api.Extensions;
+using YallaJo.Api.Middleware;
+using YallaJo.Api.Services;
+using YallaJo.SharedKernel.Application.Abstractions.Context;
+using YallaJo.SharedKernel.Infrastructure;
 
+// ── Serilog bootstrap (captures startup errors) ───────────────────────────
 var builder = WebApplication.CreateBuilder(args);
+builder.AddYallaJoSerilog();
 
 // ── Module registrations ──────────────────────────────────────────────────
 builder.Services.AddAccountsApplication();
@@ -113,6 +114,14 @@ builder.Services.AddScoped<ICurrentUser, CurrentUser>();
 // ── Rate Limiting ─────────────────────────────────────────────────────────
 builder.Services.AddYallaJoRateLimiting();
 
+// ── API Versioning ────────────────────────────────────────────────────────
+builder.Services.AddYallaJoApiVersioning();
+
+// ── OpenTelemetry (tracing + metrics) ─────────────────────────────────────
+builder.AddYallaJoOpenTelemetry();
+
+// ── Health Checks ─────────────────────────────────────────────────────────
+builder.Services.AddYallaJoHealthChecks(builder.Configuration);
 
 // ── Authentication & Authorization ────────────────────────────────────────
 var jwtKey = builder.Configuration["Jwt:Key"]
@@ -138,15 +147,17 @@ builder.Services
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
             RoleClaimType = "role",
             NameClaimType = "sub",
-            ClockSkew = TimeSpan.FromSeconds(30)
+            ClockSkew = TimeSpan.FromSeconds(30),
         };
     });
+
 builder.Services.AddAuthorization(opts =>
 {
     opts.AddPolicy("Owner", p => p.RequireRole(AppRoles.Owner));
     opts.AddPolicy("SuperAdmin", p => p.RequireRole(AppRoles.Owner, AppRoles.SuperAdmin));
     opts.AddPolicy("Admin", p => p.RequireRole(AppRoles.Owner, AppRoles.SuperAdmin, AppRoles.Admin));
 });
+
 builder.Services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
 builder.Services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
 
@@ -163,41 +174,30 @@ builder.Services.AddSwaggerGen(options =>
         Scheme = "bearer",
         BearerFormat = "JWT",
         In = ParameterLocation.Header,
-        Description = "Enter your JWT access token."
+        Description = "Enter your JWT access token.",
     };
+
     options.AddSecurityDefinition("Bearer", bearerScheme);
     options.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
         {
             new OpenApiSecurityScheme
             {
-                Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" }
+                Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" },
             },
             Array.Empty<string>()
-        }
+        },
     });
 });
 
-// ── Exception Handlers ───────────────────────────────────────────────────
+// ── Exception Handlers (order matters — first match wins) ─────────────────
 builder.Services.AddExceptionHandler<ValidationExceptionHandler>();
 builder.Services.AddExceptionHandler<DbUpdateExceptionHandler>();
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
 // ── Problem Details (RFC 7807) ────────────────────────────────────────────
-builder.Services.AddProblemDetails(options =>
-    options.CustomizeProblemDetails = ctx =>
-    {
-        if (ctx.HttpContext.RequestServices
-                .GetService<IHostEnvironment>()?.IsDevelopment() == true)
-        {
-            var ex = ctx.HttpContext.Features.Get<IExceptionHandlerFeature>()?.Error;
-            if (ex is not null)
-                ctx.ProblemDetails.Extensions["exception"] = ex.ToString();
-        }
-    });
+builder.Services.AddProblemDetails();
 
-
-// ── Health Checks ─────────────────────────────────────────────────────────
-builder.Services.AddHealthChecks();
 var app = builder.Build();
 
 await app.UseDataSeedingAsync();
@@ -214,7 +214,10 @@ using (var scope = app.Services.CreateScope())
 app.UseExceptionHandler();
 app.UseStatusCodePages();
 
-// 2. Dev tooling
+// 2. Serilog request logging — early to capture full request lifecycle
+app.UseYallaJoSerilogRequestLogging();
+
+// 3. Dev tooling
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -222,19 +225,19 @@ if (app.Environment.IsDevelopment())
         ui.SwaggerEndpoint("/swagger/v1/swagger.json", "YallaJo API v1"));
 }
 
-// 3. Transport security
+// 4. Transport security
 app.UseHttpsRedirection();
 
-// 3b. Static files — serve uploaded files from wwwroot/uploads
+// 5. Static files — serve uploaded files from wwwroot/uploads
 app.UseStaticFiles();
 
-// 3a. Request localization — parse Accept-Language, set CultureInfo
+// 6. Request localization — parse Accept-Language, set CultureInfo
 app.UseMiddleware<RequestLocalizationMiddleware>();
-// 4. Authentication MUST come before Authorization
-// 4a. Rate limiter — must precede authentication so anonymous endpoints
-//     are throttled before the JWT pipeline runs
+
+// 7. Rate limiter — must precede authentication
 app.UseRateLimiter();
 
+// 8. Authentication & Authorization
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -260,13 +263,14 @@ app.MapGet("/", () => Results.Ok(new
     service = "YallaJo API",
     status = "running",
     health = "/health",
-    docs = "/swagger"
+    docs = "/swagger",
 }))
     .AllowAnonymous()
     .WithTags("Infrastructure")
     .WithName("ApiStatus")
     .WithSummary("Returns API status and useful links.");
 
-app.MapHealthChecks("/health").AllowAnonymous();
+// ── Health check endpoints ────────────────────────────────────────────────
+app.MapYallaJoHealthChecks();
 
 app.Run();

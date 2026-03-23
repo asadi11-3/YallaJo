@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace YallaJo.SharedKernel.Domain.Abstractions.Results
 {
     public sealed class Result<T>
@@ -11,12 +13,17 @@ namespace YallaJo.SharedKernel.Domain.Abstractions.Results
 
         public Error? Error => Errors.FirstOrDefault();
 
-        private Result(
+        /// <summary>
+        /// JSON deserialization constructor — required for HybridCache L2 (Redis) serialization.
+        /// Do NOT call directly in application code — use the static factory methods.
+        /// </summary>
+        [JsonConstructor]
+        public Result(
             bool isSuccess,
             Outcome outcome,
-            T? value = default,
-            IReadOnlyList<string>? messages = null,
-            IReadOnlyList<Error>? errors = null)
+            T? value,
+            IReadOnlyList<string>? messages,
+            IReadOnlyList<Error>? errors)
         {
             IsSuccess = isSuccess;
             Outcome = outcome;
@@ -25,52 +32,54 @@ namespace YallaJo.SharedKernel.Domain.Abstractions.Results
             Errors = errors ?? Array.Empty<Error>();
         }
 
+
+
         public static Result<T> Success(T value, params string[] messages)
-            => new(true, Outcome.Ok, value: value, messages: messages);
+            => new(true, Outcome.Ok, value, messages, null);
 
         public static Result<T> Created(T value, params string[] messages)
-            => new(true, Outcome.Created, value: value, messages: messages);
+            => new(true, Outcome.Created, value, messages, null);
 
         public static Result<T> Failure(Error error, Outcome outcome = Outcome.Invalid)
-            => new(false, outcome, errors: new[] { error });
+            => new(false, outcome, default, null, new[] { error });
 
         public static Result<T> NotFound(string? message = null)
-            => new(false, Outcome.NotFound,
-                messages: message != null ? new[] { message } : null);
+            => new(false, Outcome.NotFound, default,
+                message != null ? new[] { message } : null, null);
 
         public static Result<T> Unauthorized(string? message = null)
-            => new(false, Outcome.Unauthorized,
-                messages: message != null ? new[] { message } : null);
+            => new(false, Outcome.Unauthorized, default,
+                message != null ? new[] { message } : null, null);
 
         public static Result<T> Forbidden(string? message = null)
-            => new(false, Outcome.Forbidden,
-                messages: message != null ? new[] { message } : null);
+            => new(false, Outcome.Forbidden, default,
+                message != null ? new[] { message } : null, null);
 
         public static Result<T> Conflict(string? message = null)
-            => new(false, Outcome.Conflict,
-                messages: message != null ? new[] { message } : null);
+            => new(false, Outcome.Conflict, default,
+                message != null ? new[] { message } : null, null);
 
         public static Result<T> Conflict(Error error)
-            => new(false, Outcome.Conflict, errors: new[] { error });
+            => new(false, Outcome.Conflict, default, null, new[] { error });
 
         public static Result<T> ServerError(string? message = null)
-            => new(false, Outcome.ServerError,
-                messages: message != null ? new[] { message } : null);
+            => new(false, Outcome.ServerError, default,
+                message != null ? new[] { message } : null, null);
 
         public static Result<T> Canceled(params string[] messages)
-            => new(false, Outcome.Canceled, messages: messages);
+            => new(false, Outcome.Canceled, default, messages, null);
 
         public static Result<T> Invalid(params Error[] errors)
-            => new(false, Outcome.Invalid, errors: errors);
+            => new(false, Outcome.Invalid, default, null, errors);
 
         public static Result<T> Fail(Outcome outcome, params Error[] errors)
-            => new(false, outcome, errors: errors);
+            => new(false, outcome, default, null, errors);
 
         public static Result<T> Fail(Outcome outcome, string message, params Error[] errors)
-            => new(false, outcome, messages: new[] { message }, errors: errors);
+            => new(false, outcome, default, new[] { message }, errors);
 
         public static Result<T> Fail(Outcome outcome, string message, T? data)
-            => new(false, outcome, value: data, messages: new[] { message });
+            => new(false, outcome, data, new[] { message }, null);
 
         public Result<TNew> Map<TNew>(Func<T, TNew> mapper)
         {

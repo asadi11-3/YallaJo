@@ -10,4 +10,5 @@ public sealed record ListTagsQuery(bool ActiveOnly = false)
 {
     public string CacheKey => ContentCoreCacheKeys.Tags(ActiveOnly);
     public TimeSpan? CacheDuration => TimeSpan.FromMinutes(30);
+    public IReadOnlyList<string> Tags => ["tags"];
 }

@@ -1,17 +1,12 @@
 using MediatR;
-using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 
 namespace YallaJo.SharedKernel.Application.Abstractions.Behaviors;
 
-/// <summary>
-/// MediatR pipeline behavior that caches query results in <see cref="IMemoryCache"/>.
-/// Activated only for requests that implement <see cref="ICacheableQuery"/>.
-/// Position in pipeline: after Validation and Logging, immediately before the handler.
-/// </summary>
 public sealed class QueryCachingBehavior<TRequest, TResponse>(
-    IMemoryCache cache,
+    HybridCache cache,
     ILogger<QueryCachingBehavior<TRequest, TResponse>> logger)
     : IPipelineBehavior<TRequest, TResponse>
     where TRequest : IRequest<TResponse>
@@ -23,30 +18,22 @@ public sealed class QueryCachingBehavior<TRequest, TResponse>(
         RequestHandlerDelegate<TResponse> next,
         CancellationToken cancellationToken)
     {
-        // Only activate for queries that opt into caching
         if (request is not ICacheableQuery cacheableQuery)
             return await next();
 
         var key = cacheableQuery.CacheKey;
+        logger.LogDebug("[Cache] Key={CacheKey}", key);
 
-        if (cache.TryGetValue(key, out TResponse? cached) && cached is not null)
-        {
-            logger.LogDebug("[Cache HIT] {CacheKey}", key);
-            return cached;
-        }
-
-        logger.LogDebug("[Cache MISS] {CacheKey} — executing handler", key);
-        var response = await next();
-
-        if (response is not null)
-        {
-            cache.Set(key, response, new MemoryCacheEntryOptions
+        var response = await cache.GetOrCreateAsync<TResponse>(
+            key,
+            async cancel => await next(),
+            options: new HybridCacheEntryOptions
             {
-                AbsoluteExpirationRelativeToNow = cacheableQuery.CacheDuration ?? DefaultDuration,
-                Priority = CacheItemPriority.Normal
-            });
-        }
+                Expiration = cacheableQuery.CacheDuration ?? DefaultDuration,
+            },
+            tags: cacheableQuery.Tags,
+            cancellationToken: cancellationToken);
 
-        return response;
+        return response!;
     }
 }

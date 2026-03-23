@@ -1,34 +1,54 @@
 using ContentCore.Application.Caching;
 using ContentCore.Domain.Repositories;
-using Microsoft.Extensions.Caching.Memory;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Hybrid;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
+using Outcome = YallaJo.SharedKernel.Domain.Abstractions.Results.Outcome;
 
 namespace ContentCore.Application.Commands.Tag.CreateTag;
 
 public sealed class CreateTagCommandHandler(
     ITagRepository tagRepository,
     IContentCoreUnitOfWork unitOfWork,
-    IMemoryCache cache)
+    HybridCache cache)
     : ICommandHandler<CreateTagCommand, CreateTagResult>
 {
     public async Task<Result<CreateTagResult>> Handle(
         CreateTagCommand request,
         CancellationToken ct)
     {
-        if (await tagRepository.SlugExistsAsync(request.Slug, ct))
-            return Result<CreateTagResult>.Conflict(
-                $"Tag with slug '{request.Slug}' already exists.");
+        try
+        {
+            if (await tagRepository.SlugExistsAsync(request.Slug, ct))
+                return Result<CreateTagResult>.Conflict(
+                    new Error("Tag.AlreadyExists", $"Tag with slug '{request.Slug}' already exists."));
 
-        var tag = Domain.Entities.Tag.Create(request.Name, request.Slug);
+            var tag = Domain.Entities.Tag.Create(request.Name, request.Slug);
 
-        await tagRepository.AddAsync(tag, ct);
-        await unitOfWork.SaveChangesAsync(ct);
+            await tagRepository.AddAsync(tag, ct);
 
-        cache.Remove(ContentCoreCacheKeys.Tags(true));
-        cache.Remove(ContentCoreCacheKeys.Tags(false));
+            try
+            {
+                await unitOfWork.SaveChangesAsync(ct);
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                return Result<CreateTagResult>.Conflict(
+                    new Error("Tag.ConcurrencyConflict",
+                        "This record was modified by another user. Please refresh and try again."));
+            }
 
-        return Result<CreateTagResult>.Created(
-            new CreateTagResult(tag.Id, tag.Name, tag.Slug));
+            await cache.RemoveByTagAsync("tags", ct);
+
+            return Result<CreateTagResult>.Created(
+                new CreateTagResult(tag.Id, tag.Name, tag.Slug));
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            return Result<CreateTagResult>.Failure(
+                new Error("Request.Cancelled", "The request was cancelled."),
+                Outcome.Canceled);
+        }
     }
 }

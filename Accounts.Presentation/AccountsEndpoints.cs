@@ -18,7 +18,7 @@ public static class AccountsEndpoints
 {
     public static IEndpointRouteBuilder MapAccountsEndpoints(this IEndpointRouteBuilder endpoints)
     {
-        var group = endpoints.MapGroup("/api/accounts")
+        var group = endpoints.MapGroup("/api/v1/accounts")
             .WithTags("Accounts");
 
         MapProfileEndpoints(group);
@@ -39,7 +39,7 @@ public static class AccountsEndpoints
                 request.DisplayName,
                 request.AvatarUrl));
 
-            return ToApiResult(result, id => $"/api/accounts/profiles/{id}");
+            return ToApiResult(result, id => $"/api/v1/accounts/profiles/{id}");
         })
         .WithName("CreateProfile")
         .Produces<Guid>(StatusCodes.Status201Created)

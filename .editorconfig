@@ -1,0 +1,123 @@
+# EditorConfig — YallaJo Solution
+# https://editorconfig.org
+
+root = true
+
+# ── All files ──────────────────────────────────────────────────────────────
+[*]
+indent_style = space
+indent_size = 4
+end_of_line = crlf
+charset = utf-8
+trim_trailing_whitespace = true
+insert_final_newline = true
+
+# ── C# files ──────────────────────────────────────────────────────────────
+[*.cs]
+
+# ── StyleCop rules we SUPPRESS (conflict with modern C# conventions) ──────
+
+# SA1200: Using directives should appear within namespace
+# SUPPRESS: Modern C# (and file-scoped namespaces) use top-level usings.
+# The entire codebase already does this. Changing would be a massive pointless diff.
+dotnet_diagnostic.SA1200.severity = none
+
+# SA1101: Prefix local calls with this
+# SUPPRESS: Modern C# convention is to NOT use `this.` — redundant noise.
+dotnet_diagnostic.SA1101.severity = none
+
+# SA1633: File header XML is missing
+# SUPPRESS: We use XML doc comments on classes, not file-level headers.
+# File headers are a legacy convention from pre-Git codebases.
+dotnet_diagnostic.SA1633.severity = none
+
+# SA1600: Elements should be documented
+# SUPPRESS: Internal code doesn't need XML docs on every member.
+# We document public APIs and non-obvious logic — not boilerplate.
+dotnet_diagnostic.SA1600.severity = none
+
+# SA1009: Closing parenthesis should not be followed by a space
+# SUPPRESS: Conflicts with C# 12 primary constructors — `class Foo(ILogger logger) : Base`
+dotnet_diagnostic.SA1009.severity = none
+
+# SA1010: Opening square brackets should not be preceded by a space
+# SUPPRESS: Conflicts with C# 12 collection expressions — `tags: ["ready", "db"]`
+dotnet_diagnostic.SA1010.severity = none
+
+# SA1000: Keywords should be spaced correctly
+# SUPPRESS: Conflicts with `new()` target-typed expressions in modern C#.
+dotnet_diagnostic.SA1000.severity = none
+
+# SA1503: Braces should not be omitted
+# SUPPRESS: Single-line guard clauses like `if (x is null) return;` are idiomatic.
+dotnet_diagnostic.SA1503.severity = none
+
+# SA0001: XML comment analysis disabled
+# SUPPRESS: We don't generate XML documentation files.
+dotnet_diagnostic.SA0001.severity = none
+
+# ── Meziantou rules we SUPPRESS ──────────────────────────────────────────
+
+# MA0004: Use ConfigureAwait(false)
+# SUPPRESS: Not needed in ASP.NET Core — SynchronizationContext is null.
+# Only relevant for library code consumed from UI frameworks.
+dotnet_diagnostic.MA0004.severity = none
+
+# MA0002: IEqualityComparer<string> or StringComparison should be used
+# SUPPRESS: Too noisy for dictionary/LINQ calls where ordinal is fine.
+dotnet_diagnostic.MA0002.severity = suggestion
+
+# MA0006: Use String.Equals instead of == operator
+# SUPPRESS: `==` for string comparison is perfectly fine in C#.
+dotnet_diagnostic.MA0006.severity = none
+
+# ── Rules we KEEP (useful, catch real bugs) ───────────────────────────────
+
+# SA1309: Field should not begin with underscore — KEEP as suggestion
+# We USE underscore-prefix for private fields (_logger, _repository).
+# This conflicts with our convention, so downgrade to suggestion.
+dotnet_diagnostic.SA1309.severity = none
+
+# CA1848: Use LoggerMessage delegates — KEEP as suggestion (perf optimization, not required)
+dotnet_diagnostic.CA1848.severity = suggestion
+
+# CA1305: Specify IFormatProvider — KEEP as suggestion
+dotnet_diagnostic.CA1305.severity = suggestion
+
+# CA1873: Avoid unnecessary 'ToString' — keep as suggestion
+dotnet_diagnostic.CA1873.severity = suggestion
+
+# ── Style rules we DOWNGRADE to suggestion (cosmetic, not bugs) ──────────
+
+# SA1413: Use trailing comma in multi-line initializers
+dotnet_diagnostic.SA1413.severity = suggestion
+
+# SA1117: Parameters should be on same line or each on own line
+dotnet_diagnostic.SA1117.severity = suggestion
+
+# SA1118: Parameter should not span multiple lines
+dotnet_diagnostic.SA1118.severity = suggestion
+
+# SA1516: Elements should be separated by blank line
+dotnet_diagnostic.SA1516.severity = suggestion
+
+# SA1025: Code should not contain multiple whitespace characters in a row
+dotnet_diagnostic.SA1025.severity = suggestion
+
+# SA1008: Opening parenthesis should not be preceded by a space
+dotnet_diagnostic.SA1008.severity = suggestion
+
+# SA1202: Public members should come before private members
+dotnet_diagnostic.SA1202.severity = suggestion
+
+# SA1203: Constant fields should appear before non-constant fields
+dotnet_diagnostic.SA1203.severity = suggestion
+
+# SA1204: Static members should appear before non-static members
+dotnet_diagnostic.SA1204.severity = suggestion
+
+# SA1208: System using directives should be placed before other using directives
+dotnet_diagnostic.SA1208.severity = suggestion
+
+# SA1210: Using directives should be ordered alphabetically
+dotnet_diagnostic.SA1210.severity = suggestion

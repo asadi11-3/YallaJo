@@ -34,7 +34,7 @@ public static class SecurityEndpoints
 
     public static IEndpointRouteBuilder MapSecurityEndpoints(this IEndpointRouteBuilder endpoints)
     {
-        var group = endpoints.MapGroup("/api/security")
+        var group = endpoints.MapGroup("/api/v1/security")
             .WithTags("Security");
 
         MapRegisterEndpoint(group);
