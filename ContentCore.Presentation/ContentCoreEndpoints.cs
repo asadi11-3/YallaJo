@@ -115,7 +115,7 @@ public static class ContentCoreEndpoints
         .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Create a category with auto-translation to all active languages")
-        .RequireAuthorization("Admin");
+        .RequireAuthorization("Permission.Category.Create");
 
         // PUT /{id} — Update category (admin only)
         categories.MapPut("/{id:guid}", async (Guid id, UpdateCategoryRequest request, ISender sender) =>
