@@ -1,4 +1,4 @@
-using ContentCore.Application.Interfaces;
+using ContentCore.Domain.Repositories;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 using Outcome = YallaJo.SharedKernel.Domain.Abstractions.Results.Outcome;

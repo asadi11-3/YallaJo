@@ -2,16 +2,21 @@
 using Security.Contracts.Authorization;
 using Security.Domain.Entities;
 using Security.Domain.Repositories;
+using Security.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 
 namespace Security.Infrastructure.Seeding;
 
 public sealed class SecurityDataSeeder(
+    SecurityDbContext dbContext,
     IRoleRepository roleRepository,
     IRoleClaimRepository roleClaimRepository,
     ISecurityUnitOfWork unitOfWork)
 {
     public async Task SeedAsync(CancellationToken ct = default)
     {
+        await dbContext.Database.MigrateAsync(ct);
+
         await SeedRolesAsync(ct);
         await SeedRoleClaimsAsync(ct);
     }

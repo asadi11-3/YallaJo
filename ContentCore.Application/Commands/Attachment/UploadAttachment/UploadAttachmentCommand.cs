@@ -9,6 +9,7 @@ public sealed record UploadAttachmentCommand(
     Stream FileStream,
     string FileName,
     string ContentType,
+    long FileSize,
     EntityType EntityType,
     Guid EntityId,
     AttachmentType Type,

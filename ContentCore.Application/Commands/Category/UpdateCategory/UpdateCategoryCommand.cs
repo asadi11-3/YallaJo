@@ -15,5 +15,4 @@ public sealed record UpdateCategoryCommand(
     string? Icon = null,
     int? SortOrder = null,
     string SourceLanguageCode = "en",
-    List<UpdateCategoryTranslationDto>? Translations = null) : ICommand<UpdateCategoryResult>;
-//string SourceLanguageCode = "en") : ICommand<UpdateCategoryResult>;
+    IReadOnlyList<UpdateCategoryTranslationDto>? Translations = null) : ICommand<UpdateCategoryResult>;

@@ -39,6 +39,8 @@ using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using Security.Contracts.Authorization;
+using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
 namespace ContentCore.Presentation;
@@ -62,6 +64,7 @@ public static class ContentCoreEndpoints
         return endpoints;
     }
 
+
     // ── Category Endpoints ──────────────────────────────────────────────────
 
     private static void MapCategoryEndpoints(RouteGroupBuilder group)
@@ -69,13 +72,15 @@ public static class ContentCoreEndpoints
         var categories = group.MapGroup("/categories");
 
         // GET / — List categories as tree (public, includes translations when Accept-Language present)
+        // ActiveOnly defaults to true so anonymous callers never see deactivated categories.
+        // Authenticated admins may pass ?isActive=false to list all categories.
         categories.MapGet("/", async (HttpContext http, ISender sender,
             Guid? parentCategoryId = null,
             bool? isActive = null) =>
         {
             var withTranslations = http.Request.Headers.AcceptLanguage.Count > 0;
             var result = await sender.Send(new ListCategoriesQuery(
-                ActiveOnly: isActive ?? false,
+                ActiveOnly: isActive ?? true,
                 ParentCategoryId: parentCategoryId,
                 WithTranslations: withTranslations));
             return ToApiResult(result);
@@ -136,7 +141,7 @@ public static class ContentCoreEndpoints
         .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Update a category with auto re-translation")
-        .RequireAuthorization("Admin");
+        .RequireAuthorization("Permission.Category.Update");
 
         // DELETE /{id} — Soft-delete category (admin only)
         categories.MapDelete("/{id:guid}", async (Guid id, ISender sender) =>
@@ -148,7 +153,7 @@ public static class ContentCoreEndpoints
         .Produces(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Soft-delete a category (sets IsDeleted = true)")
-        .RequireAuthorization("Admin");
+        .RequireAuthorization("Permission.Category.Delete");
 
         // PATCH /{id}/deactivate — Hide category from listings without deleting it
         categories.MapPatch("/{id:guid}/deactivate", async (Guid id, ISender sender) =>
@@ -160,7 +165,7 @@ public static class ContentCoreEndpoints
         .Produces<DeactivateCategoryResult>(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Deactivate (hide) a category without deleting it")
-        .RequireAuthorization("Admin");
+        .RequireAuthorization("Permission.Category.Update");
 
         // PATCH /{id}/activate — Restore a deactivated category
         categories.MapPatch("/{id:guid}/activate", async (Guid id, ISender sender) =>
@@ -172,7 +177,7 @@ public static class ContentCoreEndpoints
         .Produces<ReactivateCategoryResult>(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Activate (restore) a deactivated category")
-        .RequireAuthorization("Admin");
+        .RequireAuthorization("Permission.Category.Update");
 
         // PUT /reorder — Batch sort order update (admin only)
         categories.MapPut("/reorder", async (ReorderCategoriesRequest request, ISender sender) =>
@@ -186,7 +191,7 @@ public static class ContentCoreEndpoints
         .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Reorder categories via batch sort order update")
-        .RequireAuthorization("Admin");
+        .RequireAuthorization("Permission.Category.Update");
     }
     // ── Language Endpoints ──────────────────────────────────────────────────
 
@@ -215,7 +220,8 @@ public static class ContentCoreEndpoints
         .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status409Conflict)
         .WithSummary("Add a new language")
-        .RequireAuthorization("Admin");
+        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.Language, AppAction.Create))
+        .RequireAuthorization();
 
         languages.MapPut("/{id:guid}", async (Guid id, UpdateLanguageRequest request, ISender sender) =>
         {
@@ -228,7 +234,8 @@ public static class ContentCoreEndpoints
         .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Update language settings")
-        .RequireAuthorization("Admin");
+        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.Language, AppAction.Update))
+        .RequireAuthorization();
     }
 
     // ── Translation Endpoints ───────────────────────────────────────────────
@@ -247,7 +254,8 @@ public static class ContentCoreEndpoints
         .Produces<TranslateTextResult>(StatusCodes.Status200OK)
         .ProducesValidationProblem()
         .WithSummary("On-demand translation (admin tool)")
-        .RequireAuthorization("Admin");
+        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.TranslationCache, AppAction.Create))
+        .RequireAuthorization();
 
         translations.MapPost("/batch", async (BatchTranslateRequest request, ISender sender) =>
         {
@@ -259,7 +267,8 @@ public static class ContentCoreEndpoints
         .Produces<BatchTranslateResult>(StatusCodes.Status200OK)
         .ProducesValidationProblem()
         .WithSummary("Batch translate multiple texts")
-        .RequireAuthorization("Admin");
+        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.TranslationCache, AppAction.Create))
+        .RequireAuthorization();
 
         translations.MapGet("/{entityType}/{entityId:guid}", async (string entityType, Guid entityId, ISender sender) =>
         {
@@ -269,7 +278,8 @@ public static class ContentCoreEndpoints
         .WithName("GetEntityTranslations")
         .Produces<IReadOnlyList<EntityTranslationDto>>(StatusCodes.Status200OK)
         .WithSummary("Get all translations for an entity")
-        .AllowAnonymous();
+        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.TranslationCache, AppAction.Read))
+        .RequireAuthorization();
 
         translations.MapPut("/{id:guid}", async (Guid id, UpdateTranslationRequest request, ISender sender) =>
         {
@@ -281,7 +291,8 @@ public static class ContentCoreEndpoints
         .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Update/override a translation")
-        .RequireAuthorization("Admin");
+        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.TranslationCache, AppAction.Update))
+        .RequireAuthorization();
 
         translations.MapPost("/{id:guid}/approve", async (Guid id, ISender sender) =>
         {
@@ -292,7 +303,8 @@ public static class ContentCoreEndpoints
         .Produces(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Mark translation as human-reviewed")
-        .RequireAuthorization("Admin");
+       .WithMetadata(new MustHavePermissionAttribute(AppFeatures.TranslationCache, AppAction.Update))
+        .RequireAuthorization();
     }
 
     // ── Attachment Endpoints ────────────────────────────────────────────────────
@@ -302,25 +314,27 @@ public static class ContentCoreEndpoints
         var attachments = group.MapGroup("/attachments");
 
         // Upload attachment (multipart/form-data)
-        attachments.MapPost("/", async (IFormFile file, [AsParameters] UploadAttachmentRequest request, ISender sender, HttpContext http) =>
+        attachments.MapPost("/", async (IFormFile file, [AsParameters] UploadAttachmentRequest request, ICurrentUser currentUser, ISender sender) =>
         {
             if (!Enum.TryParse<EntityType>(request.EntityType, true, out var entityType))
                 return Results.BadRequest("Invalid EntityType.");
 
             if (!Enum.TryParse<Domain.Enums.AttachmentType>(request.AttachmentType, true, out var attachmentType))
                 return Results.BadRequest("Invalid AttachmentType.");
-
-            var userId = Guid.TryParse(http.User.FindFirst("sub")?.Value, out var uid) ? uid : Guid.Empty;
-
+            if (currentUser.UserId is null)
+            {
+                return Results.Unauthorized();
+            }
             await using var stream = file.OpenReadStream();
             var result = await sender.Send(new UploadAttachmentCommand(
                 stream,
                 file.FileName,
                 file.ContentType,
+                file.Length,
                 entityType,
                 request.EntityId,
                 attachmentType,
-                userId,
+                currentUser.UserId.Value,
                 request.Width,
                 request.Height,
                 request.DurationSeconds,
@@ -331,6 +345,7 @@ public static class ContentCoreEndpoints
         .Produces<UploadAttachmentResult>(StatusCodes.Status201Created)
         .ProducesValidationProblem()
         .WithSummary("Upload a file attachment for an entity")
+       .WithMetadata(new MustHavePermissionAttribute(AppFeatures.Attachment, AppAction.Create))
         .RequireAuthorization()
         .DisableAntiforgery();
 
@@ -343,7 +358,8 @@ public static class ContentCoreEndpoints
         .WithName("GetEntityAttachments")
         .Produces<IReadOnlyList<AttachmentDto>>(StatusCodes.Status200OK)
         .WithSummary("List attachments for an entity")
-        .AllowAnonymous();
+        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.Attachment, AppAction.Read))
+        .RequireAuthorization();
 
         // Get attachment by ID
         attachments.MapGet("/{id:guid}", async (Guid id, ISender sender) =>
@@ -355,7 +371,8 @@ public static class ContentCoreEndpoints
         .Produces<AttachmentDto>(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Get a single attachment by ID")
-        .AllowAnonymous();
+       .WithMetadata(new MustHavePermissionAttribute(AppFeatures.Attachment, AppAction.Read))
+        .RequireAuthorization();
 
         // Delete attachment
         attachments.MapDelete("/{id:guid}", async (Guid id, ISender sender) =>
@@ -367,7 +384,7 @@ public static class ContentCoreEndpoints
         .Produces(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Delete an attachment and its file")
-        .RequireAuthorization();
+        .RequireAuthorization("Permission.Attachment.Delete");
 
         // Reorder attachments
         attachments.MapPut("/reorder", async (ReorderAttachmentsRequest request, ISender sender) =>
@@ -384,6 +401,7 @@ public static class ContentCoreEndpoints
         .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Reorder attachments for an entity")
+        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.Attachment, AppAction.Update))
         .RequireAuthorization();
 
         // Set primary image
@@ -400,6 +418,7 @@ public static class ContentCoreEndpoints
         .Produces(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Set an attachment as the primary image for an entity")
+        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.EntityImage, AppAction.Update))
         .RequireAuthorization();
     }
 
@@ -440,7 +459,8 @@ public static class ContentCoreEndpoints
         .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status409Conflict)
         .WithSummary("Create a tag")
-        .RequireAuthorization("Admin");
+        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.Tag, AppAction.Create))
+        .RequireAuthorization();
 
         tags.MapPut("/{id:guid}", async (Guid id, UpdateTagRequest request, ISender sender) =>
         {
@@ -453,7 +473,8 @@ public static class ContentCoreEndpoints
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status409Conflict)
         .WithSummary("Update a tag")
-        .RequireAuthorization("Admin");
+        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.Tag, AppAction.Update))
+        .RequireAuthorization();
 
         tags.MapDelete("/{id:guid}", async (Guid id, ISender sender) =>
         {
@@ -464,7 +485,8 @@ public static class ContentCoreEndpoints
         .Produces(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Delete a tag")
-        .RequireAuthorization("Admin");
+        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.Tag, AppAction.Delete))
+        .RequireAuthorization();
     }
 
     // ── EntityCategory Endpoints ──────────────────────────────────────────
@@ -496,7 +518,8 @@ public static class ContentCoreEndpoints
         .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Assign categories to an entity")
-        .RequireAuthorization("Admin");
+        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.EntityCategory, AppAction.Create))
+        .RequireAuthorization();
 
         entityCategories.MapDelete("/", async (string entityType, Guid entityId, Guid categoryId, ISender sender) =>
         {
@@ -507,7 +530,8 @@ public static class ContentCoreEndpoints
         .Produces(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Remove category assignment from an entity")
-        .RequireAuthorization("Admin");
+        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.EntityCategory, AppAction.Delete))
+        .RequireAuthorization();
     }
 
     // ── EntityTag Endpoints ───────────────────────────────────────────────
@@ -539,7 +563,8 @@ public static class ContentCoreEndpoints
         .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Assign tags to an entity")
-        .RequireAuthorization("Admin");
+        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.EntityTag, AppAction.Create))
+        .RequireAuthorization();
 
         entityTags.MapDelete("/", async (string entityType, Guid entityId, Guid tagId, ISender sender) =>
         {
@@ -550,7 +575,8 @@ public static class ContentCoreEndpoints
         .Produces(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Remove tag assignment from an entity")
-        .RequireAuthorization("Admin");
+        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.EntityTag, AppAction.Delete))
+        .RequireAuthorization();
     }
 
     // ── Specialization Endpoints ─────────────────────────────────────────
@@ -581,7 +607,8 @@ public static class ContentCoreEndpoints
         .Produces<CreateSpecializationResult>(StatusCodes.Status201Created)
         .ProducesValidationProblem()
         .WithSummary("Create a specialization")
-        .RequireAuthorization("Admin");
+        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.Specialization, AppAction.Create))
+        .RequireAuthorization();
 
         specializations.MapPut("/{id:guid}", async (Guid id, UpdateSpecializationRequest request, ISender sender) =>
         {
@@ -598,7 +625,8 @@ public static class ContentCoreEndpoints
         .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Update a specialization")
-        .RequireAuthorization("Admin");
+        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.Specialization, AppAction.Update))
+        .RequireAuthorization();
     }
 
     // ── Result → IResult mapping ──────────────────────────────────────────

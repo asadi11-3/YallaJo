@@ -35,6 +35,7 @@ public class TranslationCacheConfiguration : IEntityTypeConfiguration<Translatio
         builder.Property(x => x.Status)
             .IsRequired()
             .HasDefaultValue(TranslationStatus.AutoTranslated)
+            .HasSentinel(TranslationStatus.AutoTranslated)
             .HasConversion<byte>();
 
         builder.Property(x => x.EntityType)

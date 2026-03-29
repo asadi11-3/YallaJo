@@ -1,5 +1,6 @@
+using ContentCore.Domain.Exceptions;
 using ContentCore.Domain.Repositories;
-using Microsoft.EntityFrameworkCore;
+using ContentCore.Domain.Services;
 using Microsoft.Extensions.Caching.Hybrid;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
@@ -9,72 +10,108 @@ namespace ContentCore.Application.Commands.Category.CreateCategory;
 
 public sealed class CreateCategoryCommandHandler(
     ICategoryRepository categoryRepository,
+    ICategoryHierarchyService hierarchyService,
     IContentCoreUnitOfWork unitOfWork,
     HybridCache cache)
     : ICommandHandler<CreateCategoryCommand, CreateCategoryResult>
 {
     public async Task<Result<CreateCategoryResult>> Handle(
-        CreateCategoryCommand request,
-        CancellationToken ct)
+      CreateCategoryCommand request,
+      CancellationToken cancellationToken)
     {
         try
         {
-            // Auto-generate slug from name when not provided
-            var slug = request.Slug ?? GenerateSlug(request.Name);
+            var slug = request.Slug ?? Domain.Entities.Category.GenerateSlug(request.Name);
 
-            // Validate parent + enforce max 3-level depth
-            if (request.ParentCategoryId.HasValue)
+            if (await categoryRepository.SlugExistsAsync(slug, cancellationToken))
             {
-                var parent = await categoryRepository.GetByIdAsync(request.ParentCategoryId.Value, ct);
-                if (parent is null)
-                    return Result<CreateCategoryResult>.Failure(
-                        new Error("Category.NotFound",
-                            $"Parent category '{request.ParentCategoryId}' was not found."),
-                        Outcome.NotFound);
+                return Result<CreateCategoryResult>.Conflict(
+                    new Error(
+                        "Category.SlugConflict",
+                        $"A category with Slug '{slug}' already exists."));
+            }
 
-                if (parent.ParentCategoryId.HasValue)
-                {
-                    var grandparent = await categoryRepository.GetByIdAsync(parent.ParentCategoryId.Value, ct);
-                    if (grandparent?.ParentCategoryId.HasValue == true)
-                        return Result<CreateCategoryResult>.Failure(
-                            new Error("Category.MaxDepthExceeded",
-                                "Cannot create category: maximum depth of 3 levels exceeded."),
-                            Outcome.Invalid);
-                }
+            var parentValidationResult = await ValidateParentAsync(request, cancellationToken);
+            if (parentValidationResult is not null)
+            {
+                return parentValidationResult;
             }
 
             var category = Domain.Entities.Category.Create(
-                request.Name, slug, request.SourceLanguageCode,
-                request.ParentCategoryId, request.SortOrder);
+                request.Name,
+                slug,
+                request.SourceLanguageCode,
+                request.ParentCategoryId,
+                request.SortOrder);
 
-            await categoryRepository.AddAsync(category, ct);
+            await categoryRepository.AddAsync(category, cancellationToken);
 
-            try
+            var saveResult = await SaveChangesAsync(cancellationToken);
+            if (saveResult is not null)
             {
-                await unitOfWork.SaveChangesAsync(ct);
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                return Result<CreateCategoryResult>.Conflict(
-                    new Error("Category.ConcurrencyConflict",
-                        "This record was modified by another user. Please refresh and try again."));
+                return saveResult;
             }
 
-            await cache.RemoveByTagAsync("categories", ct);
+            await cache.RemoveByTagAsync("categories", cancellationToken);
 
             return Result<CreateCategoryResult>.Created(
                 new CreateCategoryResult(category.Id, category.Name, category.Slug));
         }
-        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
             return Result<CreateCategoryResult>.Failure(
-                new Error("Request.Cancelled", "The request was cancelled."),
+                new Error(
+                    "Request.Cancelled",
+                    "The request was cancelled."),
                 Outcome.Canceled);
         }
     }
 
-    private static string GenerateSlug(string name) =>
-        System.Text.RegularExpressions.Regex
-            .Replace(name.Trim().ToLowerInvariant().Replace(' ', '-'), @"[^a-z0-9\-]", string.Empty)
-            .Trim('-');
+    private async Task<Result<CreateCategoryResult>?> ValidateParentAsync(
+        CreateCategoryCommand request,
+        CancellationToken ct)
+    {
+        if (!request.ParentCategoryId.HasValue)
+        {
+            return null;
+        }
+
+        var parent = await categoryRepository.GetByIdAsync(request.ParentCategoryId.Value, ct);
+        if (parent is null)
+        {
+            return Result<CreateCategoryResult>.Failure(
+                new Error(
+                    "Category.NotFound",
+                    $"Parent category '{request.ParentCategoryId}' was not found."),
+                Outcome.NotFound);
+        }
+
+        var parentDepth = await hierarchyService.GetDepthAsync(request.ParentCategoryId, ct);
+        if (parentDepth + 1 > hierarchyService.MaxDepth)
+        {
+            return Result<CreateCategoryResult>.Failure(
+                new Error(
+                    "Category.MaxDepthExceeded",
+                    $"Cannot create category: maximum depth of {hierarchyService.MaxDepth} levels exceeded."),
+                Outcome.Invalid);
+        }
+
+        return null;
+    }
+
+    private async Task<Result<CreateCategoryResult>?> SaveChangesAsync(CancellationToken ct)
+    {
+        try
+        {
+            await unitOfWork.SaveChangesAsync(ct);
+            return null;
+        }
+        catch (ContentCoreConcurrencyException)
+        {
+            return Result<CreateCategoryResult>.Conflict(
+                new Error(
+                    "Category.ConcurrencyConflict",
+                    "This record was modified by another user. Please refresh and try again."));
+        }
+    }
 }

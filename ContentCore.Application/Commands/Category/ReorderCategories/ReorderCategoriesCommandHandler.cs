@@ -1,5 +1,5 @@
+using ContentCore.Domain.Exceptions;
 using ContentCore.Domain.Repositories;
-using Microsoft.EntityFrameworkCore;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 using Outcome = YallaJo.SharedKernel.Domain.Abstractions.Results.Outcome;
@@ -36,10 +36,11 @@ public sealed class ReorderCategoriesCommandHandler(
             {
                 await unitOfWork.SaveChangesAsync(ct);
             }
-            catch (DbUpdateConcurrencyException)
+            catch (ContentCoreConcurrencyException)
             {
                 return Result.Failure(
-                    new Error("Category.ConcurrencyConflict",
+                    new Error(
+                        "Category.ConcurrencyConflict",
                         "This record was modified by another user. Please refresh and try again."),
                     Outcome.Conflict);
             }

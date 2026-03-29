@@ -1,4 +1,4 @@
-﻿using YallaJo.SharedKernel.Application.Abstractions.Messaging;
+using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 
 namespace ContentCore.Application.Commands.Category.DeactivateCategory;
 

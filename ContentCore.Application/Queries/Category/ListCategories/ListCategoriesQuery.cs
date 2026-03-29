@@ -25,7 +25,7 @@ public sealed class CategoryDto
     /// <summary>Direct children in tree responses. Empty for leaf nodes.</summary>
     public IReadOnlyList<CategoryDto> Children { get; init; } = [];
 
-    private CategoryDto() { }
+    public  CategoryDto() { }
 
     /// <summary>
     /// Maps a Category entity to a DTO.
@@ -48,14 +48,6 @@ public sealed class CategoryDto
         };
 }
 
-/// <param name="ActiveOnly">When true, exclude inactive categories.</param>
-/// <param name="ParentCategoryId">
-/// Filter to direct children of this parent. When null, the full tree from roots is returned.
-/// </param>
-/// <param name="WithTranslations">
-/// When true, translations are included in the response (one extra JOIN per query).
-/// Set by the endpoint when the client sends an Accept-Language header.
-/// </param>
 public sealed record ListCategoriesQuery(
     bool ActiveOnly = false,
     Guid? ParentCategoryId = null,

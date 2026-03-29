@@ -1,6 +1,6 @@
 using ContentCore.Application.Caching;
+using ContentCore.Domain.Exceptions;
 using ContentCore.Domain.Repositories;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
@@ -16,38 +16,40 @@ public sealed class CreateLanguageCommandHandler(
 {
     public async Task<Result<CreateLanguageResult>> Handle(
         CreateLanguageCommand request,
-        CancellationToken ct)
+        CancellationToken cancellationToken)
     {
         try
         {
             var normalizedCode = request.Code.Trim().ToLowerInvariant();
 
-            if (await languageRepository.CodeExistsAsync(normalizedCode, ct))
+            if (await languageRepository.CodeExistsAsync(normalizedCode, cancellationToken)) {
                 return Result<CreateLanguageResult>.Conflict(
-                    Error.Conflict("Language", $"Language with code '{normalizedCode}' already exists."));
+                   Error.Conflict("Language", $"Language with code '{normalizedCode}' already exists."));
+            }
 
             var language = Domain.Entities.Language.Create(
                 normalizedCode, request.Name, request.NativeName, request.IsRtl);
 
-            await languageRepository.AddAsync(language, ct);
+            await languageRepository.AddAsync(language, cancellationToken);
 
             try
             {
-                await unitOfWork.SaveChangesAsync(ct);
+                await unitOfWork.SaveChangesAsync(cancellationToken);
             }
-            catch (DbUpdateConcurrencyException)
+            catch (ContentCoreConcurrencyException)
             {
                 return Result<CreateLanguageResult>.Conflict(
-                    new Error("Language.ConcurrencyConflict",
+                    new Error(
+                        "Language.ConcurrencyConflict",
                         "This record was modified by another user. Please refresh and try again."));
             }
 
-            await cache.RemoveByTagAsync("languages", ct);
+            await cache.RemoveByTagAsync("languages", cancellationToken);
 
             return Result<CreateLanguageResult>.Created(
                 new CreateLanguageResult(language.Id, language.Code, language.Name));
         }
-        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
             return Result<CreateLanguageResult>.Failure(
                 new Error("Request.Cancelled", "The request was cancelled."),

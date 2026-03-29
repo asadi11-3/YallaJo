@@ -21,6 +21,8 @@ public sealed class SecurityDbInitializer(
 
     public async Task InitializeAsync(CancellationToken cancellationToken = default)
     {
+        await dbContext.Database.MigrateAsync(cancellationToken);
+
         if (await dbContext.Users.AnyAsync(cancellationToken))
         {
             return;

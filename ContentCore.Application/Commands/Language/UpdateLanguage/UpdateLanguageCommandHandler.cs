@@ -1,6 +1,6 @@
 using ContentCore.Application.Caching;
+using ContentCore.Domain.Exceptions;
 using ContentCore.Domain.Repositories;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
@@ -16,15 +16,16 @@ public sealed class UpdateLanguageCommandHandler(
 {
     public async Task<Result<UpdateLanguageResult>> Handle(
         UpdateLanguageCommand request,
-        CancellationToken ct)
+        CancellationToken cancellationToken)
     {
         try
         {
-            var language = await languageRepository.GetByIdAsync(request.Id, ct, asNoTracking: false);
-            if (language is null)
+            var language = await languageRepository.GetByIdAsync(request.Id, cancellationToken, asNoTracking: false);
+            if (language is null) {
                 return Result<UpdateLanguageResult>.Failure(
-                    new Error("Language.NotFound", $"Language '{request.Id}' was not found."),
-                    Outcome.NotFound);
+                  new Error("Language.NotFound", $"Language '{request.Id}' was not found."),
+                  Outcome.NotFound);
+            }
 
             language.Update(request.Name, request.NativeName, request.IsRtl);
 
@@ -37,21 +38,22 @@ public sealed class UpdateLanguageCommandHandler(
 
             try
             {
-                await unitOfWork.SaveChangesAsync(ct);
+                await unitOfWork.SaveChangesAsync(cancellationToken);
             }
-            catch (DbUpdateConcurrencyException)
+            catch (ContentCoreConcurrencyException)
             {
                 return Result<UpdateLanguageResult>.Conflict(
-                    new Error("Language.ConcurrencyConflict",
+                    new Error(
+                        "Language.ConcurrencyConflict",
                         "This record was modified by another user. Please refresh and try again."));
             }
 
-            await cache.RemoveByTagAsync("languages", ct);
+            await cache.RemoveByTagAsync("languages", cancellationToken);
 
             return Result<UpdateLanguageResult>.Success(
                 new UpdateLanguageResult(language.Id, language.Name, language.NativeName, language.IsRtl, language.IsActive));
         }
-        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
             return Result<UpdateLanguageResult>.Failure(
                 new Error("Request.Cancelled", "The request was cancelled."),

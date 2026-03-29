@@ -11,14 +11,14 @@ public sealed class GetEntityAttachmentsQueryHandler(
 {
     public async Task<Result<IReadOnlyList<AttachmentDto>>> Handle(
         GetEntityAttachmentsQuery request,
-        CancellationToken ct)
+        CancellationToken cancellationToken)
     {
         try
         {
             var attachments = await attachmentRepository.GetAllAsync(
                 filter: x => x.EntityType == request.EntityType && x.EntityId == request.EntityId,
                 orderBy: q => q.OrderBy(x => x.SortOrder),
-                ct: ct);
+                ct: cancellationToken);
 
             var dtos = attachments.Select(a => new AttachmentDto(
                 a.Id,
@@ -39,7 +39,7 @@ public sealed class GetEntityAttachmentsQueryHandler(
 
             return Result<IReadOnlyList<AttachmentDto>>.Success(dtos);
         }
-        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
             return Result<IReadOnlyList<AttachmentDto>>.Failure(
                 new Error("Request.Cancelled", "The request was cancelled."),

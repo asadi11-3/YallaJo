@@ -1,4 +1,3 @@
-using ContentCore.Application.Interfaces;
 using ContentCore.Domain.Entities;
 using ContentCore.Domain.Repositories;
 using Microsoft.Extensions.Logging;
@@ -10,23 +9,29 @@ namespace ContentCore.Infrastructure.Services;
 /// Decorates any <see cref="ITranslationService"/> implementation to auto-persist
 /// translation results to the database. On subsequent calls with the same input,
 /// the cached result is returned without hitting the external API.
+///
+/// This service deliberately does NOT call SaveChangesAsync. Persistence is the
+/// caller's responsibility so that translation cache entries and any other
+/// changes made within the same unit-of-work are committed atomically.
+/// When invoked from domain event handlers the outer UnitOfWork.SaveChangesAsync
+/// commits everything in a single database round-trip.
+/// When invoked from dedicated command handlers (TranslateText, BatchTranslate)
+/// those handlers inject IContentCoreUnitOfWork and call SaveChangesAsync after
+/// this service returns.
 /// </summary>
 public sealed class AutoSaveTranslationService : ITranslationService
 {
     private readonly ITranslationService _inner;
     private readonly ITranslationCacheRepository _cacheRepository;
-    private readonly IContentCoreUnitOfWork _unitOfWork;
     private readonly ILogger<AutoSaveTranslationService> _logger;
 
     public AutoSaveTranslationService(
         ITranslationService inner,
         ITranslationCacheRepository cacheRepository,
-        IContentCoreUnitOfWork unitOfWork,
         ILogger<AutoSaveTranslationService> logger)
     {
         _inner = inner;
         _cacheRepository = cacheRepository;
-        _unitOfWork = unitOfWork;
         _logger = logger;
     }
 
@@ -54,7 +59,7 @@ public sealed class AutoSaveTranslationService : ITranslationService
         // 2. Call external API
         var result = await _inner.TranslateAsync(text, fromLanguageCode, toLanguageCode, ct);
 
-        // 3. Auto-save to DB
+        // 3. Stage cache entry — caller is responsible for committing via UnitOfWork
         var entry = TranslationCache.Create(
             result.OriginalText,
             result.TranslatedText,
@@ -63,7 +68,6 @@ public sealed class AutoSaveTranslationService : ITranslationService
             result.Confidence);
 
         await _cacheRepository.AddAsync(entry, ct);
-        await _unitOfWork.SaveChangesAsync(ct);
 
         return result;
     }
@@ -109,7 +113,7 @@ public sealed class AutoSaveTranslationService : ITranslationService
                 var r = apiResults[i];
                 results[uncachedIndices[i]] = r;
 
-                // 3. Auto-save each result
+                // 3. Stage each cache entry — caller commits via UnitOfWork
                 var entry = TranslationCache.Create(
                     r.OriginalText,
                     r.TranslatedText,
@@ -118,8 +122,6 @@ public sealed class AutoSaveTranslationService : ITranslationService
                     r.Confidence);
                 await _cacheRepository.AddAsync(entry, ct);
             }
-
-            await _unitOfWork.SaveChangesAsync(ct);
         }
 
         _logger.LogDebug(

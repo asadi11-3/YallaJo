@@ -11,7 +11,7 @@ namespace ContentCore.Domain.Repositories;
 /// </summary>
 public interface IAttachmentRepository : IReadRepository<Attachment, Guid>, IWriteRepository<Attachment, Guid>
 {
-    Task<List<EntityImage>> GetEntityImagesAsync(EntityType entityType, Guid entityId, CancellationToken ct = default);
+    Task<IReadOnlyList<EntityImage>> GetEntityImagesAsync(EntityType entityType, Guid entityId, CancellationToken ct = default);
     void AddEntityImage(EntityImage entityImage);
     void UpdateEntityImage(EntityImage entityImage);
 }

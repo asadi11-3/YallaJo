@@ -1,8 +1,8 @@
 using ContentCore.Application.Interfaces;
-using ContentCore.Domain.Entities;
+using ContentCore.Domain.Exceptions;
 using ContentCore.Domain.Repositories;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
+using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Application.Abstractions.Storage;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
@@ -20,7 +20,7 @@ public sealed class UploadAttachmentCommandHandler(
 {
     public async Task<Result<UploadAttachmentResult>> Handle(
         UploadAttachmentCommand request,
-        CancellationToken ct)
+        CancellationToken cancellationToken)
     {
         try
         {
@@ -31,9 +31,8 @@ public sealed class UploadAttachmentCommandHandler(
                 request.FileName,
                 request.ContentType,
                 folder,
-                ct);
+                cancellationToken);
 
-            // 2. Create attachment entity (domain event raised inside Create())
             var attachment = Domain.Entities.Attachment.Create(
                 request.EntityType,
                 request.EntityId,
@@ -52,31 +51,31 @@ public sealed class UploadAttachmentCommandHandler(
             if (request.DurationSeconds.HasValue)
                 attachment.SetDuration(request.DurationSeconds.Value);
 
-            // 4. Persist (domain events fire here — creates EntityImage for images)
-            await attachmentRepository.AddAsync(attachment, ct);
+            await attachmentRepository.AddAsync(attachment, cancellationToken);
 
             try
             {
-                await unitOfWork.SaveChangesAsync(ct);
+                await unitOfWork.SaveChangesAsync(cancellationToken);
             }
-            catch (DbUpdateConcurrencyException)
+            catch (ContentCoreConcurrencyException)
             {
                 return Result<UploadAttachmentResult>.Conflict(
-                    new Error("Attachment.ConcurrencyConflict",
+                    new Error(
+                        "Attachment.ConcurrencyConflict",
                         "This record was modified by another user. Please refresh and try again."));
             }
 
-            await cache.RemoveByTagAsync($"attachments:{request.EntityType}:{request.EntityId}", ct);
+            await cache.RemoveByTagAsync($"attachments:{request.EntityType}:{request.EntityId}", cancellationToken);
 
             // 5. Enqueue background media processing (thumbnails, metadata extraction)
             //    Enqueued AFTER save to guarantee the attachment is persisted before processing.
             await mediaProcessingQueue.EnqueueAsync(
-                new MediaProcessingJob(attachment.Id, attachment.Url, request.Type), ct);
+                new MediaProcessingJob(attachment.Id, attachment.Url, request.Type), cancellationToken);
 
             return Result<UploadAttachmentResult>.Created(
                 new UploadAttachmentResult(attachment.Id, attachment.Url, uploadResult.FileSize));
         }
-        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
             return Result<UploadAttachmentResult>.Failure(
                 new Error("Request.Cancelled", "The request was cancelled."),

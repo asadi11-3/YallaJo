@@ -1,6 +1,5 @@
-using ContentCore.Application.Interfaces;
+using ContentCore.Domain.Exceptions;
 using ContentCore.Domain.Repositories;
-using Microsoft.EntityFrameworkCore;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 using Outcome = YallaJo.SharedKernel.Domain.Abstractions.Results.Outcome;
@@ -14,34 +13,36 @@ public sealed class ApproveTranslationCommandHandler(
 {
     public async Task<Result> Handle(
         ApproveTranslationCommand request,
-        CancellationToken ct)
+        CancellationToken cancellationToken)
     {
         try
         {
-            var cached = await translationCacheRepository.GetByIdAsync(request.Id, ct, asNoTracking: false);
-            if (cached is null)
+            var cached = await translationCacheRepository.GetByIdAsync(request.Id, cancellationToken, asNoTracking: false);
+            if (cached is null) {
                 return Result.Failure(
-                    new Error("Translation.NotFound", "Translation was not found."),
-                    Outcome.NotFound);
+                   new Error("Translation.NotFound", "Translation was not found."),
+                   Outcome.NotFound);
+            }
 
             cached.Approve();
             translationCacheRepository.Update(cached);
 
             try
             {
-                await unitOfWork.SaveChangesAsync(ct);
+                await unitOfWork.SaveChangesAsync(cancellationToken);
             }
-            catch (DbUpdateConcurrencyException)
+            catch (ContentCoreConcurrencyException)
             {
                 return Result.Failure(
-                    new Error("Translation.ConcurrencyConflict",
+                    new Error(
+                        "Translation.ConcurrencyConflict",
                         "This record was modified by another user. Please refresh and try again."),
                     Outcome.Conflict);
             }
 
             return Result.Success();
         }
-        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
             return Result.Failure(
                 new Error("Request.Cancelled", "The request was cancelled."),
