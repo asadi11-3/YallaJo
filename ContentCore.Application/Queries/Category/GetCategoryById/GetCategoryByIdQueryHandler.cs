@@ -1,4 +1,4 @@
-using ContentCore.Application.Queries.Category.ListCategories;
+using ContentCore.Application.Queries.Category.Common;
 using ContentCore.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;

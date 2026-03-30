@@ -1,4 +1,4 @@
-using ContentCore.Application.Queries.Tag.ListTags;
+using ContentCore.Application.Queries.Tag.Common;
 using ContentCore.Domain.Repositories;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;

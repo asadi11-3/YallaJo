@@ -4,6 +4,7 @@ using ContentCore.Application.Commands.Category.DeleteCategory;
 using ContentCore.Application.Commands.Category.ReactivateCategory;
 using ContentCore.Application.Commands.Category.ReorderCategories;
 using ContentCore.Application.Commands.Category.UpdateCategory;
+using ContentCore.Application.Queries.Category.Common;
 using ContentCore.Application.Queries.Category.GetCategoryById;
 using ContentCore.Application.Queries.Category.ListCategories;
 using ContentCore.Presentation.Endpoints.Category.Models;

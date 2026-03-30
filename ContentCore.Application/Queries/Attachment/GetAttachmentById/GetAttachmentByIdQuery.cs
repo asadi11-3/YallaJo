@@ -1,5 +1,5 @@
 using ContentCore.Application.Caching;
-using ContentCore.Application.Queries.Attachment.GetEntityAttachments;
+using ContentCore.Application.Queries.Attachment.Common;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 
 namespace ContentCore.Application.Queries.Attachment.GetAttachmentById;

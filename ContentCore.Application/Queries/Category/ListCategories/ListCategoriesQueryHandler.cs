@@ -1,4 +1,5 @@
 using CategoryEntity = ContentCore.Domain.Entities.Category;
+using ContentCore.Application.Queries.Category.Common;
 using ContentCore.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;

@@ -2,6 +2,7 @@ using ContentCore.Application.Commands.Attachment.DeleteAttachment;
 using ContentCore.Application.Commands.Attachment.ReorderAttachments;
 using ContentCore.Application.Commands.Attachment.SetPrimaryImage;
 using ContentCore.Application.Commands.Attachment.UploadAttachment;
+using ContentCore.Application.Queries.Attachment.Common;
 using ContentCore.Application.Queries.Attachment.GetAttachmentById;
 using ContentCore.Application.Queries.Attachment.GetEntityAttachments;
 using ContentCore.Domain.Enums;

@@ -1,6 +1,7 @@
 using ContentCore.Application.Commands.Tag.CreateTag;
 using ContentCore.Application.Commands.Tag.DeleteTag;
 using ContentCore.Application.Commands.Tag.UpdateTag;
+using ContentCore.Application.Queries.Tag.Common;
 using ContentCore.Application.Queries.Tag.GetTagById;
 using ContentCore.Application.Queries.Tag.ListTags;
 using ContentCore.Presentation.Endpoints.Tag.Models;
