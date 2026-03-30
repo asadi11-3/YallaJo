@@ -13,18 +13,18 @@ public sealed class ReorderCategoriesCommandHandler(
 {
     public async Task<Result> Handle(
         ReorderCategoriesCommand request,
-        CancellationToken ct)
+        CancellationToken cancellationToken)
     {
         try
         {
-            var ids = request.Items.Select(x => x.CategoryId).ToList();
+            var ids = request.SortOrders.Select(x => x.CategoryId).ToList();
 
             var categories = await categoryRepository.GetAllAsync(
                 filter: c => ids.Contains(c.Id),
                 asNoTracking: false,
-                ct: ct);
+                ct: cancellationToken);
 
-            var orderMap = request.Items.ToDictionary(x => x.CategoryId, x => x.SortOrder);
+            var orderMap = request.SortOrders.ToDictionary(x => x.CategoryId, x => x.SortOrder);
 
             foreach (var category in categories)
             {
@@ -34,7 +34,7 @@ public sealed class ReorderCategoriesCommandHandler(
 
             try
             {
-                await unitOfWork.SaveChangesAsync(ct);
+                await unitOfWork.SaveChangesAsync(cancellationToken);
             }
             catch (ContentCoreConcurrencyException)
             {
@@ -47,7 +47,7 @@ public sealed class ReorderCategoriesCommandHandler(
 
             return Result.Success();
         }
-        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
             return Result.Failure(
                 new Error("Request.Cancelled", "The request was cancelled."),

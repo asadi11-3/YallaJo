@@ -6,8 +6,8 @@ public sealed class ReorderCategoriesCommandValidator : AbstractValidator<Reorde
 {
     public ReorderCategoriesCommandValidator()
     {
-        RuleFor(x => x.Items).NotEmpty().WithMessage("At least one category order item is required.");
-        RuleForEach(x => x.Items).ChildRules(item =>
+        RuleFor(x => x.SortOrders).NotEmpty().WithMessage("At least one category sort order update is required.");
+        RuleForEach(x => x.SortOrders).ChildRules(item =>
         {
             item.RuleFor(x => x.CategoryId).NotEmpty();
             item.RuleFor(x => x.SortOrder).GreaterThanOrEqualTo(0);

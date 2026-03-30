@@ -1,0 +1,57 @@
+using ContentCore.Application.Commands.EntityTag.AssignTagsToEntity;
+using ContentCore.Application.Commands.EntityTag.RemoveTagFromEntity;
+using ContentCore.Application.Queries.EntityTag.GetEntityTags;
+using ContentCore.Presentation.Endpoints.EntityTag.Models;
+using MediatR;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Routing;
+using Security.Contracts.Authorization;
+
+namespace ContentCore.Presentation.Endpoints.EntityTag;
+
+internal static class EntityTagEndpoints
+{
+    internal static void MapEntityTagEndpoints(RouteGroupBuilder group)
+    {
+        var entityTags = group.MapGroup("/entity-tags");
+
+        entityTags.MapGet("/", async (string entityType, Guid entityId, ISender sender) =>
+        {
+            var result = await sender.Send(new GetEntityTagsQuery(entityType, entityId));
+            return ContentCoreResultHelper.ToApiResult(result);
+        })
+        .WithName("GetEntityTags")
+        .Produces<IReadOnlyList<EntityTagDto>>(StatusCodes.Status200OK)
+        .WithSummary("Get tags assigned to an entity")
+        .AllowAnonymous();
+
+        entityTags.MapPost("/", async (AssignTagsToEntityRequest request, ISender sender) =>
+        {
+            var result = await sender.Send(new AssignTagsToEntityCommand(
+                request.EntityType,
+                request.EntityId,
+                request.TagIds));
+            return ContentCoreResultHelper.ToApiResult(result);
+        })
+        .WithName("AssignTagsToEntity")
+        .Produces(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .WithSummary("Assign tags to an entity")
+        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.EntityTag, AppAction.Create))
+        .RequireAuthorization();
+
+        entityTags.MapDelete("/", async (string entityType, Guid entityId, Guid tagId, ISender sender) =>
+        {
+            var result = await sender.Send(new RemoveTagFromEntityCommand(entityType, entityId, tagId));
+            return ContentCoreResultHelper.ToApiResult(result);
+        })
+        .WithName("RemoveTagFromEntity")
+        .Produces(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .WithSummary("Remove tag assignment from an entity")
+        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.EntityTag, AppAction.Delete))
+        .RequireAuthorization();
+    }
+}

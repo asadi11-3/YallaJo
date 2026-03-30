@@ -2,11 +2,6 @@ using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 
 namespace ContentCore.Application.Commands.Category.CreateCategory;
 
-public sealed record CreateCategoryResult(
-    Guid Id,
-    string Name,
-    string Slug);
-
 public sealed record CreateCategoryCommand(
     string Name,
     string? Slug = null,
