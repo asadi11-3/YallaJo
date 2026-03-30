@@ -29,7 +29,7 @@ public sealed class DeleteCategoryCommandHandler(
             }
 
             // Prevent deletion when subcategories exist (avoids orphaned children)
-            if (await categoryRepository.HasChildrenAsync(category.Id, ct))
+            if (await categoryRepository.AnyAsync(c => c.ParentCategoryId == category.Id, ct))
             {
                 return Result.Failure(
                     new Error(

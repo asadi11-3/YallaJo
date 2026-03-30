@@ -39,10 +39,10 @@ public static class DependencyInjection
         // ── Repositories ────────────────────────────────────────────────────────
         services.AddScoped<ICategoryRepository, CategoryRepository>();
         services.AddScoped<ILanguageRepository, LanguageRepository>();
-        services.AddScoped<ITranslationCacheRepository, TranslationCacheRepository>();
-        services.AddScoped<ISpecializationRepository, SpecializationRepository>();
-        services.AddScoped<IAttachmentRepository, AttachmentRepository>();
         services.AddScoped<ITagRepository, TagRepository>();
+        services.AddScoped<ISpecializationRepository, SpecializationRepository>();
+        services.AddScoped<ITranslationCacheRepository, TranslationCacheRepository>();
+        services.AddScoped<IAttachmentRepository, AttachmentRepository>();
         services.AddScoped<IEntityCategoryRepository, EntityCategoryRepository>();
         services.AddScoped<IEntityTagRepository, EntityTagRepository>();
         services.AddScoped<ICategoryHierarchyService, CategoryHierarchyService>();

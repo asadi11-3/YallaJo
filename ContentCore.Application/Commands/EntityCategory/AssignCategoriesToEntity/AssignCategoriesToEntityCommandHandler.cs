@@ -63,7 +63,8 @@ public sealed class AssignCategoriesToEntityCommandHandler(
             catch (ContentCoreConcurrencyException)
             {
                 return Result.Failure(
-                    new Error("Entity.ConcurrencyConflict",
+                    new Error(
+                        "Entity.ConcurrencyConflict",
                         "This record was modified by another user. Please refresh and try again."),
                     Outcome.Conflict);
             }

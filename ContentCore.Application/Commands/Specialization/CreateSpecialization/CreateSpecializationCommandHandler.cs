@@ -1,3 +1,4 @@
+using SpecializationEntity = ContentCore.Domain.Entities.Specialization;
 using ContentCore.Application.Caching;
 using ContentCore.Domain.Exceptions;
 using ContentCore.Domain.Repositories;
@@ -20,7 +21,7 @@ public sealed class CreateSpecializationCommandHandler(
     {
         try
         {
-            var specialization = Domain.Entities.Specialization.Create(
+            var specialization = SpecializationEntity.Create(
                 request.Name,
                 request.Description,
                 request.Icon);

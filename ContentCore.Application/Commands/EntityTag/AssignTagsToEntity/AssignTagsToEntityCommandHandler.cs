@@ -34,11 +34,13 @@ public sealed class AssignTagsToEntityCommandHandler(
             }
 
             var inactiveTag = tags.FirstOrDefault(t => !t.IsActive);
-            if (inactiveTag is not null) {
+            if (inactiveTag is not null)
+            {
                 return Result.Failure(
                     new Error(
                         "Tag.Inactive",
-                        $"Tag '{inactiveTag.Id}' is inactive and cannot be assigned."), Outcome.Invalid);
+                        $"Tag '{inactiveTag.Id}' is inactive and cannot be assigned."),
+                    Outcome.Invalid);
             }
 
             var existing = await entityTagRepository.GetByEntityAsync(entityType, request.EntityId, cancellationToken);

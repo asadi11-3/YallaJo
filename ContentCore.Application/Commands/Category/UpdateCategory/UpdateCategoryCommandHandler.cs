@@ -1,7 +1,8 @@
-using ContentCore.Domain.Entities;
+using CategoryEntity = ContentCore.Domain.Entities.Category;
 using ContentCore.Domain.Exceptions;
 using ContentCore.Domain.Repositories;
 using ContentCore.Domain.Services;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
@@ -78,24 +79,27 @@ public sealed class UpdateCategoryCommandHandler(
         }
     }
 
-    private async Task<Result<ContentCore.Domain.Entities.Category>> GetCategoryForUpdateAsync(
+    private async Task<Result<CategoryEntity>> GetCategoryForUpdateAsync(
         Guid categoryId,
         CancellationToken cancellationToken)
     {
-        var category = await categoryRepository.GetByIdWithTranslationsAsync(
-            categoryId,
-            cancellationToken);
+        // Load with Translations for mutation; asNoTracking:false so EF tracks all changes
+        var category = await categoryRepository.GetAsync(
+            filter: c => c.Id == categoryId,
+            include: q => q.Include(c => c.Translations),
+            asNoTracking: false,
+            ct: cancellationToken);
 
         if (category is null)
         {
-            return Result<ContentCore.Domain.Entities.Category>.Failure(
+            return Result<CategoryEntity>.Failure(
                 new Error(
                     "Category.NotFound",
                     $"Category '{categoryId}' was not found."),
                 Outcome.NotFound);
         }
 
-        return Result<ContentCore.Domain.Entities.Category>.Success(category);
+        return Result<CategoryEntity>.Success(category);
     }
 
     private async Task<Result<UpdateCategoryResult>?> EnsureSlugIsUniqueAsync(
@@ -103,7 +107,9 @@ public sealed class UpdateCategoryCommandHandler(
         Guid categoryId,
         CancellationToken cancellationToken)
     {
-        if (!await categoryRepository.SlugExistsAsync(slug, categoryId, cancellationToken))
+        if (!await categoryRepository.AnyAsync(
+                c => c.Slug == slug && c.Id != categoryId,
+                cancellationToken))
         {
             return null;
         }
@@ -115,7 +121,7 @@ public sealed class UpdateCategoryCommandHandler(
     }
 
     private async Task<Result<UpdateCategoryResult>?> ValidateParentChangeAsync(
-        ContentCore.Domain.Entities.Category category,
+        CategoryEntity category,
         UpdateCategoryCommand request,
         CancellationToken cancellationToken)
     {
@@ -210,7 +216,7 @@ public sealed class UpdateCategoryCommandHandler(
     }
 
     private static void ApplyUpdates(
-        ContentCore.Domain.Entities.Category category,
+        CategoryEntity category,
         UpdateCategoryCommand request)
     {
         category.Update(
@@ -249,7 +255,7 @@ public sealed class UpdateCategoryCommandHandler(
     }
 
     private static void ApplyTranslations(
-        ContentCore.Domain.Entities.Category category,
+        CategoryEntity category,
         UpdateCategoryCommand request)
     {
         if (request.Translations is null)

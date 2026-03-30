@@ -1,3 +1,4 @@
+using TagEntity = ContentCore.Domain.Entities.Tag;
 using ContentCore.Application.Caching;
 using ContentCore.Domain.Exceptions;
 using ContentCore.Domain.Repositories;
@@ -20,12 +21,13 @@ public sealed class CreateTagCommandHandler(
     {
         try
         {
-            if (await tagRepository.SlugExistsAsync(request.Slug, cancellationToken)) {
+            if (await tagRepository.AnyAsync(t => t.Slug == request.Slug, cancellationToken))
+            {
                 return Result<CreateTagResult>.Conflict(
                    new Error("Tag.AlreadyExists", $"Tag with slug '{request.Slug}' already exists."));
             }
 
-            var tag = Domain.Entities.Tag.Create(request.Name, request.Slug);
+            var tag = TagEntity.Create(request.Name, request.Slug);
 
             await tagRepository.AddAsync(tag, cancellationToken);
 

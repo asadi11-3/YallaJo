@@ -1,3 +1,4 @@
+using CategoryEntity = ContentCore.Domain.Entities.Category;
 using ContentCore.Domain.Exceptions;
 using ContentCore.Domain.Repositories;
 using ContentCore.Domain.Services;
@@ -21,9 +22,9 @@ public sealed class CreateCategoryCommandHandler(
     {
         try
         {
-            var slug = request.Slug ?? Domain.Entities.Category.GenerateSlug(request.Name);
+            var slug = request.Slug ?? CategoryEntity.GenerateSlug(request.Name);
 
-            if (await categoryRepository.SlugExistsAsync(slug, cancellationToken))
+            if (await categoryRepository.AnyAsync(c => c.Slug == slug, cancellationToken))
             {
                 return Result<CreateCategoryResult>.Conflict(
                     new Error(
@@ -37,7 +38,7 @@ public sealed class CreateCategoryCommandHandler(
                 return parentValidationResult;
             }
 
-            var category = Domain.Entities.Category.Create(
+            var category = CategoryEntity.Create(
                 request.Name,
                 slug,
                 request.SourceLanguageCode,

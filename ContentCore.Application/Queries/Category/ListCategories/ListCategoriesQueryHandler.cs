@@ -1,5 +1,6 @@
 using CategoryEntity = ContentCore.Domain.Entities.Category;
 using ContentCore.Domain.Repositories;
+using Microsoft.EntityFrameworkCore;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 using Outcome = YallaJo.SharedKernel.Domain.Abstractions.Results.Outcome;
@@ -22,10 +23,11 @@ public sealed class ListCategoriesQueryHandler(ICategoryRepository categoryRepos
             var orderBy = (Func<IQueryable<CategoryEntity>, IOrderedQueryable<CategoryEntity>>)
                 (q => q.OrderBy(c => c.SortOrder).ThenBy(c => c.Name));
 
-            // Load categories — include translations when client requested them
+            // Load categories — include Translations when client requested them
             var allCategories = request.WithTranslations
-                ? await categoryRepository.GetAllWithTranslationsAsync(
+                ? await categoryRepository.GetAllAsync(
                     filter: activeFilter,
+                    include: q => q.Include(c => c.Translations),
                     orderBy: orderBy,
                     ct: ct)
                 : await categoryRepository.GetAllAsync(

@@ -21,17 +21,19 @@ public sealed class UpdateTagCommandHandler(
         try
         {
             var tag = await tagRepository.GetByIdAsync(request.Id, ct, asNoTracking: false);
-            if (tag is null) {
+            if (tag is null)
+            {
                 return Result<UpdateTagResult>.Failure(
                        new Error("Tag.NotFound", $"Tag '{request.Id}' was not found."),
                        Outcome.NotFound);
             }
 
-
-            if (await tagRepository.SlugExistsAsync(request.Slug, request.Id, ct)) {
+            if (await tagRepository.AnyAsync(t => t.Slug == request.Slug && t.Id != request.Id, ct))
+            {
                 return Result<UpdateTagResult>.Conflict(
                        new Error("Tag.AlreadyExists", $"Tag with slug '{request.Slug}' already exists."));
             }
+
             tag.Update(request.Name, request.Slug);
 
             try

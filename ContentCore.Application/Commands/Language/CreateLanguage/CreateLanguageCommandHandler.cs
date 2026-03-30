@@ -1,3 +1,4 @@
+using LanguageEntity = ContentCore.Domain.Entities.Language;
 using ContentCore.Application.Caching;
 using ContentCore.Domain.Exceptions;
 using ContentCore.Domain.Repositories;
@@ -22,12 +23,12 @@ public sealed class CreateLanguageCommandHandler(
         {
             var normalizedCode = request.Code.Trim().ToLowerInvariant();
 
-            if (await languageRepository.CodeExistsAsync(normalizedCode, cancellationToken)) {
+            if (await languageRepository.AnyAsync(l => l.Code == normalizedCode, cancellationToken)) {
                 return Result<CreateLanguageResult>.Conflict(
                    Error.Conflict("Language", $"Language with code '{normalizedCode}' already exists."));
             }
 
-            var language = Domain.Entities.Language.Create(
+            var language = LanguageEntity.Create(
                 normalizedCode, request.Name, request.NativeName, request.IsRtl);
 
             await languageRepository.AddAsync(language, cancellationToken);
