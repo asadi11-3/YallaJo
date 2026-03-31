@@ -23,4 +23,16 @@ public interface ICategoryHierarchyService
     /// A leaf node (no children) returns 0. A node with only leaf children returns 1.
     /// </summary>
     Task<int> GetSubtreeHeightAsync(Guid categoryId, CancellationToken ct = default);
+
+    /// <summary>
+    /// Returns <c>true</c> when <paramref name="ancestorCandidateId"/> is a strict ancestor
+    /// of <paramref name="descendantId"/> (i.e. moving <paramref name="descendantId"/> under
+    /// <paramref name="ancestorCandidateId"/> would create a circular reference).
+    /// Returns <c>false</c> when no ancestor relationship exists or the candidate is a root.
+    /// (ISSUE-002 / B1: domain service replaces the Application-layer loop.)
+    /// </summary>
+    Task<bool> IsAncestorAsync(Guid ancestorCandidateId, Guid descendantId, CancellationToken ct = default);
+
+
+
 }

@@ -1,5 +1,6 @@
 using ContentCore.Domain.Exceptions;
 using ContentCore.Domain.Repositories;
+using Microsoft.Extensions.Caching.Hybrid;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 using Outcome = YallaJo.SharedKernel.Domain.Abstractions.Results.Outcome;
@@ -8,7 +9,8 @@ namespace ContentCore.Application.Commands.Translation.UpdateTranslation;
 
 public sealed class UpdateTranslationCommandHandler(
     ITranslationCacheRepository translationCacheRepository,
-    IContentCoreUnitOfWork unitOfWork)
+    IContentCoreUnitOfWork unitOfWork,
+    HybridCache cache)
     : ICommandHandler<UpdateTranslationCommand, UpdateTranslationResult>
 {
     public async Task<Result<UpdateTranslationResult>> Handle(
@@ -23,8 +25,8 @@ public sealed class UpdateTranslationCommandHandler(
                     new Error("Translation.NotFound", "Translation was not found."),
                     Outcome.NotFound);
             }
+
             cached.UpdateTranslation(request.TranslatedText);
-            translationCacheRepository.Update(cached);
 
             try
             {
@@ -36,6 +38,14 @@ public sealed class UpdateTranslationCommandHandler(
                     new Error(
                         "Translation.ConcurrencyConflict",
                         "This record was modified by another user. Please refresh and try again."));
+            }
+
+            
+            if (cached.EntityType is not null && cached.EntityId.HasValue)
+            {
+                await cache.RemoveByTagAsync(
+                    $"translations:{cached.EntityType}:{cached.EntityId.Value}",
+                    cancellationToken);
             }
 
             return Result<UpdateTranslationResult>.Success(

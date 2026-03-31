@@ -57,4 +57,31 @@ internal sealed class CategoryHierarchyService(ICategoryRepository categoryRepos
 
         return maxChildHeight + 1;
     }
+
+    /// <inheritdoc/>
+    /// ISSUE-002 / B1: Moved from the Application-layer loop in UpdateCategoryCommandHandler.
+    public async Task<bool> IsAncestorAsync(
+        Guid ancestorCandidateId,
+        Guid descendantId,
+        CancellationToken ct = default)
+    {
+        var currentId = (Guid?)ancestorCandidateId;
+
+        for (var i = 0; i < MaxTraversalDepth; i++)
+        {
+            if (currentId is null)
+                return false;
+
+            var cat = await categoryRepository.GetByIdAsync(currentId.Value, ct);
+            if (cat is null || !cat.ParentCategoryId.HasValue)
+                return false;
+
+            if (cat.ParentCategoryId.Value == descendantId)
+                return true;
+
+            currentId = cat.ParentCategoryId;
+        }
+
+        return false;
+    }
 }

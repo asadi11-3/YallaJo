@@ -1,4 +1,3 @@
-using CategoryEntity = ContentCore.Domain.Entities.Category;
 using ContentCore.Domain.Exceptions;
 using ContentCore.Domain.Repositories;
 using ContentCore.Domain.Services;
@@ -6,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
+using CategoryEntity = ContentCore.Domain.Entities.Category;
 using Outcome = YallaJo.SharedKernel.Domain.Abstractions.Results.Outcome;
 
 namespace ContentCore.Application.Commands.Category.UpdateCategory;
@@ -83,12 +83,11 @@ public sealed class UpdateCategoryCommandHandler(
         Guid categoryId,
         CancellationToken cancellationToken)
     {
-        // Load with Translations for mutation; asNoTracking:false so EF tracks all changes
         var category = await categoryRepository.GetAsync(
-            filter: c => c.Id == categoryId,
-            include: q => q.Include(c => c.Translations),
-            asNoTracking: false,
-            ct: cancellationToken);
+           filter: c => c.Id == categoryId,
+           include: q => q.Include(c => c.Translations),
+           asNoTracking: false,
+           ct: cancellationToken);
 
         if (category is null)
         {
@@ -153,7 +152,8 @@ public sealed class UpdateCategoryCommandHandler(
                 Outcome.NotFound);
         }
 
-        if (await IsDescendantAsync(
+       
+        if (await hierarchyService.IsAncestorAsync(
                 request.ParentCategoryId.Value,
                 category.Id,
                 cancellationToken))
@@ -184,35 +184,6 @@ public sealed class UpdateCategoryCommandHandler(
 
         category.ChangeParent(request.ParentCategoryId);
         return null;
-    }
-
-    private async Task<bool> IsDescendantAsync(
-        Guid candidateParentId,
-        Guid categoryId,
-        CancellationToken cancellationToken)
-    {
-        var currentId = candidateParentId;
-
-        for (var i = 0; i < 20; i++)
-        {
-            var current = await categoryRepository.GetByIdAsync(
-                currentId,
-                cancellationToken);
-
-            if (current is null || !current.ParentCategoryId.HasValue)
-            {
-                return false;
-            }
-
-            if (current.ParentCategoryId.Value == categoryId)
-            {
-                return true;
-            }
-
-            currentId = current.ParentCategoryId.Value;
-        }
-
-        return false;
     }
 
     private static void ApplyUpdates(

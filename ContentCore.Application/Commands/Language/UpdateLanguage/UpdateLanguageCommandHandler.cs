@@ -34,7 +34,6 @@ public sealed class UpdateLanguageCommandHandler(
             else
                 language.Deactivate();
 
-            languageRepository.Update(language);
 
             try
             {

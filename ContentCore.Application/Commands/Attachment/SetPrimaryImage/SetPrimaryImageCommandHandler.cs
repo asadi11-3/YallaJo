@@ -27,6 +27,15 @@ public sealed class SetPrimaryImageCommandHandler(
                  new Error("Attachment.NotFound", $"Attachment '{request.AttachmentId}' was not found."),
                  Outcome.NotFound);
             }
+ 
+            if (attachment.EntityType != request.EntityType || attachment.EntityId != request.EntityId)
+            {
+                return Result.Failure(
+                    new Error(
+                        "Attachment.WrongEntity",
+                        $"Attachment '{request.AttachmentId}' does not belong to {request.EntityType}/{request.EntityId}."),
+                    Outcome.Invalid);
+            }
 
             var entityImages = await attachmentRepository.GetEntityImagesAsync(
                 request.EntityType, request.EntityId, cancellationToken);

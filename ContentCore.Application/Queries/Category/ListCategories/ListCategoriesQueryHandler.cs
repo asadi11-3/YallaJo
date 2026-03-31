@@ -1,9 +1,9 @@
-using CategoryEntity = ContentCore.Domain.Entities.Category;
 using ContentCore.Application.Queries.Category.Common;
 using ContentCore.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
+using CategoryEntity = ContentCore.Domain.Entities.Category;
 using Outcome = YallaJo.SharedKernel.Domain.Abstractions.Results.Outcome;
 
 namespace ContentCore.Application.Queries.Category.ListCategories;
@@ -24,17 +24,16 @@ public sealed class ListCategoriesQueryHandler(ICategoryRepository categoryRepos
             var orderBy = (Func<IQueryable<CategoryEntity>, IOrderedQueryable<CategoryEntity>>)
                 (q => q.OrderBy(c => c.SortOrder).ThenBy(c => c.Name));
 
-            // Load categories — include Translations when client requested them
             var allCategories = request.WithTranslations
-                ? await categoryRepository.GetAllAsync(
-                    filter: activeFilter,
-                    include: q => q.Include(c => c.Translations),
-                    orderBy: orderBy,
-                    ct: ct)
-                : await categoryRepository.GetAllAsync(
-                    filter: activeFilter,
-                    orderBy: q => q.OrderBy(c => c.SortOrder).ThenBy(c => c.Name),
-                    ct: ct);
+               ? await categoryRepository.GetAllAsync(
+                   filter: activeFilter,
+                   include: q => q.Include(c => c.Translations),
+                   orderBy: orderBy,
+                   ct: ct)
+               : await categoryRepository.GetAllAsync(
+                   filter: activeFilter,
+                   orderBy: q => q.OrderBy(c => c.SortOrder).ThenBy(c => c.Name),
+                   ct: ct);
 
             // Build tree using O(n) lookup — one pass to group, one pass to build
             var byParent = allCategories.ToLookup(c => c.ParentCategoryId);
