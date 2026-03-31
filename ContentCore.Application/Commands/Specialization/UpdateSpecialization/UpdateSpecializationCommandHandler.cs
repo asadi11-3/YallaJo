@@ -1,6 +1,6 @@
 using ContentCore.Application.Caching;
+using ContentCore.Domain.Exceptions;
 using ContentCore.Domain.Repositories;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
@@ -16,16 +16,17 @@ public sealed class UpdateSpecializationCommandHandler(
 {
     public async Task<Result<UpdateSpecializationResult>> Handle(
         UpdateSpecializationCommand request,
-        CancellationToken ct)
+        CancellationToken cancellationToken)
     {
         try
         {
-            var specialization = await specializationRepository.GetByIdAsync(request.Id, ct, asNoTracking: false);
+            var specialization = await specializationRepository.GetByIdAsync(request.Id, cancellationToken, asNoTracking: false);
 
-            if (specialization is null)
+            if (specialization is null) {
                 return Result<UpdateSpecializationResult>.Failure(
-                    new Error("Specialization.NotFound", $"Specialization '{request.Id}' was not found."),
-                    Outcome.NotFound);
+                   new Error("Specialization.NotFound", $"Specialization '{request.Id}' was not found."),
+                   Outcome.NotFound);
+            }
 
             specialization.Update(request.Name, request.Description, request.Icon);
 
@@ -39,21 +40,22 @@ public sealed class UpdateSpecializationCommandHandler(
 
             try
             {
-                await unitOfWork.SaveChangesAsync(ct);
+                await unitOfWork.SaveChangesAsync(cancellationToken);
             }
-            catch (DbUpdateConcurrencyException)
+            catch (ContentCoreConcurrencyException)
             {
                 return Result<UpdateSpecializationResult>.Conflict(
-                    new Error("Specialization.ConcurrencyConflict",
+                    new Error(
+                        "Specialization.ConcurrencyConflict",
                         "This record was modified by another user. Please refresh and try again."));
             }
 
-            await cache.RemoveByTagAsync("specializations", ct);
+            await cache.RemoveByTagAsync("specializations", cancellationToken);
 
             return Result<UpdateSpecializationResult>.Success(
                 new UpdateSpecializationResult(specialization.Id, specialization.Name));
         }
-        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
             return Result<UpdateSpecializationResult>.Failure(
                 new Error("Request.Cancelled", "The request was cancelled."),

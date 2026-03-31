@@ -1,5 +1,6 @@
 using ContentCore.Application.Interfaces;
 using ContentCore.Domain.Repositories;
+using ContentCore.Domain.Services;
 using ContentCore.Infrastructure.BackgroundJobs;
 using ContentCore.Infrastructure.Persistence;
 using ContentCore.Infrastructure.Persistence.Seeding;
@@ -38,12 +39,13 @@ public static class DependencyInjection
         // ── Repositories ────────────────────────────────────────────────────────
         services.AddScoped<ICategoryRepository, CategoryRepository>();
         services.AddScoped<ILanguageRepository, LanguageRepository>();
-        services.AddScoped<ITranslationCacheRepository, TranslationCacheRepository>();
+        services.AddScoped<ITagRepository, TagRepository>();
         services.AddScoped<ISpecializationRepository, SpecializationRepository>();
+        services.AddScoped<ITranslationCacheRepository, TranslationCacheRepository>();
         services.AddScoped<IAttachmentRepository, AttachmentRepository>();
-        //services.AddScoped<ITagRepository, TagRepository>();
-        //services.AddScoped<IEntityCategoryRepository, EntityCategoryRepository>();
-        //services.AddScoped<IEntityTagRepository, EntityTagRepository>();
+        services.AddScoped<IEntityCategoryRepository, EntityCategoryRepository>();
+        services.AddScoped<IEntityTagRepository, EntityTagRepository>();
+        services.AddScoped<ICategoryHierarchyService, CategoryHierarchyService>();
 
         // ── Unit of Work & Infrastructure ────────────────────────────────────────
         services.AddScoped<IContentCoreUnitOfWork, ContentCoreUnitOfWork>();
@@ -65,12 +67,14 @@ public static class DependencyInjection
             });
 
         // 2. Register ITranslationService as the AutoSaveTranslationService decorator
-        //    wrapping the AzureTranslateService inner implementation
+        //    wrapping the AzureTranslateService inner implementation.
+        //    AutoSaveTranslationService does NOT hold IContentCoreUnitOfWork — it stages
+        //    cache entries but delegates the commit to the calling handler or the outer
+        //    UnitOfWork.SaveChangesAsync so persistence is always atomic.
         services.AddScoped<ITranslationService>(sp =>
             new AutoSaveTranslationService(
                 inner: sp.GetRequiredService<AzureTranslateService>(),
                 cacheRepository: sp.GetRequiredService<ITranslationCacheRepository>(),
-                unitOfWork: sp.GetRequiredService<IContentCoreUnitOfWork>(),
                 logger: sp.GetRequiredService<ILogger<AutoSaveTranslationService>>()));
 
         // ── Entity Translation Orchestrator ──────────────────────────────────

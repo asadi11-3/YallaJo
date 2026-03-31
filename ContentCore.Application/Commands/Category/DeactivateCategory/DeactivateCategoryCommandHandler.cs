@@ -1,5 +1,5 @@
+using ContentCore.Domain.Exceptions;
 using ContentCore.Domain.Repositories;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
@@ -15,35 +15,38 @@ public sealed class DeactivateCategoryCommandHandler(
 {
     public async Task<Result<DeactivateCategoryResult>> Handle(
         DeactivateCategoryCommand request,
-        CancellationToken ct)
+        CancellationToken cancellationToken)
     {
         try
         {
-            var category = await categoryRepository.GetByIdAsync(request.Id, ct, asNoTracking: false);
-            if (category is null)
+            var category = await categoryRepository.GetByIdAsync(request.Id, cancellationToken, asNoTracking: false);
+            if (category is null) {
                 return Result<DeactivateCategoryResult>.Failure(
-                    new Error("Category.NotFound", $"Category '{request.Id}' was not found."),
-                    Outcome.NotFound);
-
+                  new Error(
+                      "Category.NotFound",
+                      $"Category '{request.Id}' was not found."),
+                  Outcome.NotFound);
+            }
             category.Deactivate();
 
             try
             {
-                await unitOfWork.SaveChangesAsync(ct);
+                await unitOfWork.SaveChangesAsync(cancellationToken);
             }
-            catch (DbUpdateConcurrencyException)
+            catch (ContentCoreConcurrencyException)
             {
                 return Result<DeactivateCategoryResult>.Conflict(
-                    new Error("Category.ConcurrencyConflict",
+                    new Error(
+                        "Category.ConcurrencyConflict",
                         "This record was modified by another user. Please refresh and try again."));
             }
 
-            await cache.RemoveByTagAsync("categories", ct);
+            await cache.RemoveByTagAsync("categories", cancellationToken);
 
             return Result<DeactivateCategoryResult>.Success(
                 new DeactivateCategoryResult(category.Id, category.IsActive));
         }
-        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
             return Result<DeactivateCategoryResult>.Failure(
                 new Error("Request.Cancelled", "The request was cancelled."),

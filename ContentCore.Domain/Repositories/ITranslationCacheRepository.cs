@@ -1,15 +1,15 @@
 using ContentCore.Domain.Entities;
 using YallaJo.SharedKernel.Domain.Abstractions.Data;
 
-namespace ContentCore.Application.Interfaces;
+namespace ContentCore.Domain.Repositories;
 
 public interface ITranslationCacheRepository : IRepository<TranslationCache, Guid>
 {
     /// <summary>
     /// Find a cached translation by original text and language pair.
     /// </summary>
-    Task<TranslationCache?> FindCachedAsync(
-        string originalText,
+    Task<TranslationCache?> FindCachedAsync( string originalText,
+       
         string fromLanguage,
         string toLanguage,
         CancellationToken ct = default);

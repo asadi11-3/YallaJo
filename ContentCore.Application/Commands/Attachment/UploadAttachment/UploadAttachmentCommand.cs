@@ -3,12 +3,11 @@ using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 
 namespace ContentCore.Application.Commands.Attachment.UploadAttachment;
 
-public sealed record UploadAttachmentResult(Guid Id, string Url, long FileSize);
-
 public sealed record UploadAttachmentCommand(
     Stream FileStream,
     string FileName,
     string ContentType,
+    long FileSize,
     EntityType EntityType,
     Guid EntityId,
     AttachmentType Type,

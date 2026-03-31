@@ -1,3 +1,4 @@
+using ContentCore.Domain.Repositories;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Application.Abstractions.Translation;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
@@ -5,12 +6,14 @@ using Outcome = YallaJo.SharedKernel.Domain.Abstractions.Results.Outcome;
 
 namespace ContentCore.Application.Commands.Translation.BatchTranslate;
 
-public sealed class BatchTranslateCommandHandler(ITranslationService translationService)
+public sealed class BatchTranslateCommandHandler(
+    ITranslationService translationService,
+    IContentCoreUnitOfWork unitOfWork)
     : ICommandHandler<BatchTranslateCommand, BatchTranslateResult>
 {
     public async Task<Result<BatchTranslateResult>> Handle(
         BatchTranslateCommand request,
-        CancellationToken ct)
+        CancellationToken cancellationToken)
     {
         try
         {
@@ -18,7 +21,11 @@ public sealed class BatchTranslateCommandHandler(ITranslationService translation
                 request.Texts,
                 request.FromLanguageCode,
                 request.ToLanguageCode,
-                ct);
+                cancellationToken);
+
+            // AutoSaveTranslationService stages cache entries but does not commit.
+            // Commit here so all cache rows are persisted atomically with this operation.
+            await unitOfWork.SaveChangesAsync(cancellationToken);
 
             var items = results
                 .Select(r => new BatchTranslateResultItem(
@@ -37,13 +44,13 @@ public sealed class BatchTranslateCommandHandler(ITranslationService translation
                 new Error("Translation.ServiceUnavailable", "Translation service is temporarily unavailable."),
                 Outcome.ServerError);
         }
-        catch (TaskCanceledException) when (!ct.IsCancellationRequested)
+        catch (TaskCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
             return Result<BatchTranslateResult>.Failure(
                 new Error("Translation.Timeout", "Translation request timed out."),
                 Outcome.ServerError);
         }
-        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
             return Result<BatchTranslateResult>.Failure(
                 new Error("Request.Cancelled", "The request was cancelled."),

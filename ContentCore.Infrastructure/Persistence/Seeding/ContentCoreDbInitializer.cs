@@ -1,187 +1,95 @@
 using ContentCore.Domain.Entities;
+using ContentCore.Domain.Repositories;
+using ContentCore.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using YallaJo.SharedKernel.Infrastructure.Data;
 
 namespace ContentCore.Infrastructure.Persistence.Seeding;
 
-public sealed class ContentCoreDbInitializer(ContentCoreDbContext dbContext) : IModuleDbInitializer
+/// <summary>
+/// Seeds reference data on first boot.
+/// Uses domain factory methods so invariants are enforced and domain events (e.g.
+/// LanguageActivatedDomainEvent) are raised and committed to the outbox atomically
+/// via <see cref="IContentCoreUnitOfWork"/>.
+/// Categories clear their own domain events after creation so the auto-translation
+/// handler is not triggered for seed data whose translations are supplied manually.
+/// </summary>
+public sealed class ContentCoreDbInitializer(
+    ContentCoreDbContext dbContext,
+    IContentCoreUnitOfWork unitOfWork) : IModuleDbInitializer
 {
     public int Order => 20;
 
     public async Task InitializeAsync(CancellationToken cancellationToken = default)
     {
         if (await dbContext.Languages.AnyAsync(cancellationToken))
-        {
             return;
-        }
 
-        var languages = SeedLanguages();
-        var categories = SeedCategories();
-        var categoryTranslations = SeedCategoryTranslations(categories, languages);
-        var tags = SeedTags();
-        var specializations = SeedSpecializations();
+        // ── Languages ────────────────────────────────────────────────────────
+        // Language.Create() raises LanguageActivatedDomainEvent → outbox message
+        // is committed atomically so cross-module subscribers receive notification.
+        var en = Language.Create("en", "English", "English", isRtl: false);
+        var ar = Language.Create("ar", "Arabic", "العربية", isRtl: true);
+        var es = Language.Create("es", "Spanish", "Español", isRtl: false);
 
-        dbContext.Languages.AddRange(languages);
-        dbContext.Categories.AddRange(categories);
-        dbContext.CategoryTranslations.AddRange(categoryTranslations);
-        dbContext.Tags.AddRange(tags);
-        dbContext.Specializations.AddRange(specializations);
+        dbContext.Languages.AddRange(en, ar, es);
 
-        await dbContext.SaveChangesAsync(cancellationToken);
+        // ── Categories ───────────────────────────────────────────────────────
+        // Category.Create() raises CategoryCreatedDomainEvent. We clear it before
+        // save so the auto-translation handler does not fire — translations are
+        // added manually below to avoid external API calls during seeding.
+        var adventure = BuildCategory("Adventure", "adventure", sortOrder: 1, icon: "mountain");
+        adventure.AddTranslation(en.Id, "Adventure", "adventure");
+        adventure.AddTranslation(ar.Id, "Moghamarat", "moghamarat");
+        adventure.AddTranslation(es.Id, "Aventura", "aventura");
+
+        var historical = BuildCategory("Historical", "historical", sortOrder: 2, icon: "landmark");
+        historical.AddTranslation(en.Id, "Historical", "historical");
+        historical.AddTranslation(ar.Id, "Tarikhi", "tarikhi");
+        historical.AddTranslation(es.Id, "Histórico", "historico");
+
+        var culinary = BuildCategory("Culinary", "culinary", sortOrder: 3, icon: "restaurant");
+        culinary.AddTranslation(en.Id, "Culinary", "culinary");
+        culinary.AddTranslation(ar.Id, "Matbakh", "matbakh");
+        culinary.AddTranslation(es.Id, "Culinario", "culinario");
+
+        dbContext.Categories.AddRange(adventure, historical, culinary);
+
+        // ── Tags ─────────────────────────────────────────────────────────────
+        var tagSeeds = new[]
+        {
+            ("family friendly", "family-friendly"),
+            ("budget", "budget"),
+            ("luxury", "luxury"),
+            ("eco", "eco"),
+            ("photography", "photography"),
+            ("walking", "walking"),
+        };
+
+        foreach (var (name, slug) in tagSeeds)
+            dbContext.Tags.Add(Tag.Create(name, slug));
+
+        // ── Specializations ──────────────────────────────────────────────────
+        dbContext.Specializations.AddRange(
+            Specialization.Create("City Guide", "Expert in urban tours and local culture.", "compass"),
+            Specialization.Create("Desert Guide", "Experienced with desert routes and safety planning.", "map"),
+            Specialization.Create("Hiking Guide", "Leads mountain and trail adventures.", "binoculars"),
+            Specialization.Create("History Expert", "Focuses on heritage sites and historical storytelling.", "book"),
+            Specialization.Create("Food Specialist", "Curates culinary tours and local tasting sessions.", "utensils"));
+
+        // Single atomic commit: Language outbox messages + all seed entities.
+        await unitOfWork.SaveChangesAsync(cancellationToken);
     }
 
-    private static List<Language> SeedLanguages()
-    {
-        return
-        [
-            BuildLanguage("en", "English", "English", isRtl: false),
-            BuildLanguage("ar", "Arabic", "العربية", isRtl: true),
-            BuildLanguage("es", "Spanish", "Espanol", isRtl: false)
-        ];
-    }
-
-    private static List<Category> SeedCategories()
-    {
-        return
-        [
-            BuildCategory("Adventure", "adventure", 1, "mountain"),
-            BuildCategory("Historical", "historical", 2, "landmark"),
-            BuildCategory("Culinary", "culinary", 3, "restaurant")
-        ];
-    }
-
-    private static List<CategoryTranslation> SeedCategoryTranslations(
-        IReadOnlyList<Category> categories,
-        IReadOnlyList<Language> languages)
-    {
-        var byName = categories.ToDictionary(GetStringProperty, c => c, StringComparer.OrdinalIgnoreCase);
-        var byCode = languages.ToDictionary(GetCodeProperty, l => l, StringComparer.OrdinalIgnoreCase);
-
-        return
-        [
-            BuildCategoryTranslation(byName["Adventure"], byCode["en"], "Adventure", "adventure"),
-            BuildCategoryTranslation(byName["Adventure"], byCode["ar"], "Moghamarat", "moghamarat"),
-            BuildCategoryTranslation(byName["Adventure"], byCode["es"], "Aventura", "aventura"),
-
-            BuildCategoryTranslation(byName["Historical"], byCode["en"], "Historical", "historical"),
-            BuildCategoryTranslation(byName["Historical"], byCode["ar"], "Tarikhi", "tarikhi"),
-            BuildCategoryTranslation(byName["Historical"], byCode["es"], "Historico", "historico"),
-
-            BuildCategoryTranslation(byName["Culinary"], byCode["en"], "Culinary", "culinary"),
-            BuildCategoryTranslation(byName["Culinary"], byCode["ar"], "Matbakh", "matbakh"),
-            BuildCategoryTranslation(byName["Culinary"], byCode["es"], "Culinario", "culinario")
-        ];
-    }
-
-    private static List<Tag> SeedTags()
-    {
-        var names = new[] { "family-friendly", "budget", "luxury", "eco", "photography", "walking" };
-
-        return names.Select(BuildTag).ToList();
-    }
-
-    private static List<Specialization> SeedSpecializations()
-    {
-        return
-        [
-            BuildSpecialization("City Guide", "Expert in urban tours and local culture.", "compass"),
-            BuildSpecialization("Desert Guide", "Experienced with desert routes and safety planning.", "map"),
-            BuildSpecialization("Hiking Guide", "Leads mountain and trail adventures.", "binoculars"),
-            BuildSpecialization("History Expert", "Focuses on heritage sites and historical storytelling.", "book"),
-            BuildSpecialization("Food Specialist", "Curates culinary tours and local tasting sessions.", "utensils")
-        ];
-    }
-
-    private static Language BuildLanguage(string code, string name, string nativeName, bool isRtl)
-    {
-        var language = CreateEntity<Language>();
-        SetProperty(language, nameof(Language.Code), code);
-        SetProperty(language, nameof(Language.Name), name);
-        SetProperty(language, nameof(Language.NativeName), nativeName);
-        SetProperty(language, nameof(Language.IsRtl), isRtl);
-        SetProperty(language, nameof(Language.IsActive), true);
-        return language;
-    }
-
+    /// <summary>
+    /// Creates a Category via the factory method (enforces invariants), then clears
+    /// its domain events so auto-translation is suppressed during seeding.
+    /// </summary>
     private static Category BuildCategory(string name, string slug, int sortOrder, string icon)
     {
-        var category = CreateEntity<Category>();
-        SetProperty(category, nameof(Category.Name), name);
-        SetProperty(category, nameof(Category.Slug), slug);
-        SetProperty(category, nameof(Category.SortOrder), sortOrder);
-        SetProperty(category, nameof(Category.Icon), icon);
-        SetProperty(category, nameof(Category.IsActive), true);
+        var category = Category.Create(name, slug, sourceLanguageCode: "en", sortOrder: sortOrder);
+        category.SetIcon(icon);
+        category.ClearDomainEvents(); // translations are seeded manually — suppress CategoryCreatedDomainEvent
         return category;
-    }
-
-    private static CategoryTranslation BuildCategoryTranslation(
-        Category category,
-        Language language,
-        string translatedName,
-        string translatedSlug)
-    {
-        var translation = CreateEntity<CategoryTranslation>();
-        SetProperty(translation, nameof(CategoryTranslation.CategoryId), category.Id);
-        SetProperty(translation, nameof(CategoryTranslation.LanguageId), language.Id);
-        SetProperty(translation, nameof(CategoryTranslation.Name), translatedName);
-        SetProperty(translation, nameof(CategoryTranslation.Slug), translatedSlug);
-        return translation;
-    }
-
-    private static Tag BuildTag(string seedName)
-    {
-        var tag = CreateEntity<Tag>();
-        var normalized = seedName.Trim().ToLowerInvariant();
-        SetProperty(tag, nameof(Tag.Name), normalized.Replace('-', ' '));
-        SetProperty(tag, nameof(Tag.Slug), normalized);
-        SetProperty(tag, nameof(Tag.IsActive), true);
-        return tag;
-    }
-
-    private static Specialization BuildSpecialization(string name, string description, string icon)
-    {
-        var specialization = CreateEntity<Specialization>();
-        SetProperty(specialization, nameof(Specialization.Name), name);
-        SetProperty(specialization, nameof(Specialization.Description), description);
-        SetProperty(specialization, nameof(Specialization.Icon), icon);
-        SetProperty(specialization, nameof(Specialization.IsActive), true);
-        return specialization;
-    }
-
-    private static TEntity CreateEntity<TEntity>() where TEntity : class
-    {
-        var entity = Activator.CreateInstance(typeof(TEntity), nonPublic: true) as TEntity;
-        if (entity is null)
-        {
-            throw new InvalidOperationException($"Failed to create entity instance for {typeof(TEntity).FullName}.");
-        }
-
-        return entity;
-    }
-
-    private static void SetProperty<TValue>(object target, string propertyName, TValue value)
-    {
-        var property = target.GetType().GetProperty(
-            propertyName,
-            System.Reflection.BindingFlags.Instance |
-            System.Reflection.BindingFlags.Public |
-            System.Reflection.BindingFlags.NonPublic);
-
-        if (property is null)
-        {
-            throw new InvalidOperationException($"Property '{propertyName}' was not found on {target.GetType().FullName}.");
-        }
-
-        property.SetValue(target, value);
-    }
-
-    private static string GetStringProperty(Category category)
-    {
-        return category.GetType().GetProperty(nameof(Category.Name))?.GetValue(category)?.ToString() ?? string.Empty;
-    }
-
-    private static string GetCodeProperty(Language language)
-    {
-        return language.GetType().GetProperty(nameof(Language.Code))?.GetValue(language)?.ToString() ?? string.Empty;
     }
 }

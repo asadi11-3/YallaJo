@@ -1,4 +1,4 @@
-using System.Text.RegularExpressions;
+using ContentCore.Domain.Entities;
 using ContentCore.Domain.Events;
 using ContentCore.Domain.Repositories;
 using MediatR;
@@ -50,7 +50,8 @@ public sealed class CategoryUpdatedDomainEventHandler(
             if (!set.Fields.TryGetValue("Name", out var translatedName) || string.IsNullOrWhiteSpace(translatedName))
                 continue;
 
-            var slug = Slugify(translatedName);
+            // Slug generation delegates to the domain entity's canonical rule.
+            var slug = Category.GenerateSlug(translatedName);
             var existing = category.Translations.FirstOrDefault(t => t.LanguageId == set.LanguageId);
 
             if (existing is not null)
@@ -75,18 +76,5 @@ public sealed class CategoryUpdatedDomainEventHandler(
             updatedCount,
             addedCount,
             category.Id);
-    }
-
-    private static string Slugify(string text)
-    {
-        if (string.IsNullOrWhiteSpace(text))
-            return string.Empty;
-
-        var normalized = text.Trim().ToLowerInvariant();
-        normalized = Regex.Replace(normalized, @"\s+", "-");
-        normalized = Regex.Replace(normalized, @"[^\w\-]", string.Empty, RegexOptions.None);
-        normalized = Regex.Replace(normalized, @"-{2,}", "-");
-
-        return normalized.Trim('-');
     }
 }

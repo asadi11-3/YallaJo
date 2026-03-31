@@ -1,17 +1,14 @@
 using ContentCore.Domain.Entities;
 using ContentCore.Domain.Repositories;
 using ContentCore.Infrastructure.Persistence;
-using Microsoft.EntityFrameworkCore;
 using YallaJo.SharedKernel.Infrastructure.Data.Repositories;
 
 namespace ContentCore.Infrastructure.Repositories;
 
+/// <summary>
+/// EF Core repository for the <see cref="Tag"/> entity.
+/// <see cref="Tag"/> is not an <c>IAggregateRoot</c>, so this class extends
+/// <see cref="EfEntityRepository{TEntity,TKey}"/> rather than <see cref="EfRepository{TEntity,TKey}"/>.
+/// </summary>
 internal sealed class TagRepository(ContentCoreDbContext context)
-    : EfEntityRepository<Tag, Guid>(context), ITagRepository
-{
-    public async Task<bool> SlugExistsAsync(string slug, CancellationToken ct = default)
-        => await _context.Set<Tag>().AnyAsync(t => t.Slug == slug, ct);
-
-    public async Task<bool> SlugExistsAsync(string slug, Guid excludeId, CancellationToken ct = default)
-        => await _context.Set<Tag>().AnyAsync(t => t.Slug == slug && t.Id != excludeId, ct);
-}
+    : EfEntityRepository<Tag, Guid>(context), ITagRepository;

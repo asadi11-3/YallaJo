@@ -1,5 +1,6 @@
-using ContentCore.Application.Queries.Category.ListCategories;
+using ContentCore.Application.Queries.Category.Common;
 using ContentCore.Domain.Repositories;
+using Microsoft.EntityFrameworkCore;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 using Outcome = YallaJo.SharedKernel.Domain.Abstractions.Results.Outcome;
@@ -11,30 +12,35 @@ public sealed class GetCategoryByIdQueryHandler(ICategoryRepository categoryRepo
 {
     public async Task<Result<CategoryDto>> Handle(
         GetCategoryByIdQuery request,
-        CancellationToken ct)
+        CancellationToken cancellationToken)
     {
         try
         {
-            // Load category — include translations when client requested them
+            // Load category — include Translations when client requested them
             var category = request.WithTranslations
-                ? await categoryRepository.GetByIdWithTranslationsAsync(request.Id, ct)
-                : await categoryRepository.GetByIdAsync(request.Id, ct);
+                ? await categoryRepository.GetAsync(
+                    filter: c => c.Id == request.Id,
+                    include: q => q.Include(c => c.Translations),
+                    ct: cancellationToken)
+                : await categoryRepository.GetByIdAsync(request.Id, cancellationToken);
 
-            if (category is null)
+            if (category is null || !category.IsActive)
+            {
                 return Result<CategoryDto>.Failure(
                     new Error("Category.NotFound", $"Category '{request.Id}' was not found."),
                     Outcome.NotFound);
+            }
 
-            // Load direct subcategories (separate query — avoids loading the entire tree)
             var subcategories = request.WithTranslations
-                ? await categoryRepository.GetAllWithTranslationsAsync(
+                ? await categoryRepository.GetAllAsync(
                     filter: c => c.ParentCategoryId == request.Id,
+                    include: q => q.Include(c => c.Translations),
                     orderBy: q => q.OrderBy(c => c.SortOrder).ThenBy(c => c.Name),
-                    ct: ct)
+                    ct: cancellationToken)
                 : await categoryRepository.GetAllAsync(
                     filter: c => c.ParentCategoryId == request.Id,
                     orderBy: q => q.OrderBy(c => c.SortOrder).ThenBy(c => c.Name),
-                    ct: ct);
+                    ct: cancellationToken);
 
             var childDtos = subcategories
                 .Select(c => CategoryDto.From(c, []))
@@ -42,7 +48,7 @@ public sealed class GetCategoryByIdQueryHandler(ICategoryRepository categoryRepo
 
             return Result<CategoryDto>.Success(CategoryDto.From(category, childDtos));
         }
-        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
             return Result<CategoryDto>.Failure(
                 new Error("Request.Cancelled", "The request was cancelled."),

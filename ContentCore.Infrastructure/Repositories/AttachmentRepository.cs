@@ -1,4 +1,4 @@
-﻿using ContentCore.Domain.Entities;
+using ContentCore.Domain.Entities;
 using ContentCore.Domain.Enums;
 using ContentCore.Domain.Repositories;
 using ContentCore.Infrastructure.Persistence;
@@ -10,7 +10,7 @@ namespace ContentCore.Infrastructure.Repositories;
 internal sealed class AttachmentRepository(ContentCoreDbContext context)
     : EfEntityRepository<Attachment, Guid>(context), IAttachmentRepository
 {
-    public async Task<List<EntityImage>> GetEntityImagesAsync(
+    public async Task<IReadOnlyList<EntityImage>> GetEntityImagesAsync(
         EntityType entityType, Guid entityId, CancellationToken ct = default)
         => await _context.Set<EntityImage>()
             .Where(x => x.EntityType == entityType && x.EntityId == entityId)

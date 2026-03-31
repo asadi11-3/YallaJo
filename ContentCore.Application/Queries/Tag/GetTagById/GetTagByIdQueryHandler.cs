@@ -1,4 +1,4 @@
-using ContentCore.Application.Queries.Tag.ListTags;
+using ContentCore.Application.Queries.Tag.Common;
 using ContentCore.Domain.Repositories;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
@@ -11,21 +11,22 @@ public sealed class GetTagByIdQueryHandler(ITagRepository tagRepository)
 {
     public async Task<Result<TagDto>> Handle(
         GetTagByIdQuery request,
-        CancellationToken ct)
+        CancellationToken cancellationToken)
     {
         try
         {
-            var tag = await tagRepository.GetByIdAsync(request.Id, ct);
-            if (tag is null)
+            var tag = await tagRepository.GetByIdAsync(request.Id, cancellationToken);
+            if (tag is null) {
                 return Result<TagDto>.Failure(
-                    new Error("Tag.NotFound", $"Tag '{request.Id}' was not found."),
-                    Outcome.NotFound);
+                   new Error("Tag.NotFound", $"Tag '{request.Id}' was not found."),
+                   Outcome.NotFound);
+            }
 
             var dto = new TagDto(tag.Id, tag.Name, tag.Slug, tag.IsActive);
 
             return Result<TagDto>.Success(dto);
         }
-        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
             return Result<TagDto>.Failure(
                 new Error("Request.Cancelled", "The request was cancelled."),

@@ -1,6 +1,6 @@
 using ContentCore.Domain.Enums;
+using ContentCore.Domain.Exceptions;
 using ContentCore.Domain.Repositories;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
@@ -14,42 +14,41 @@ public sealed class RemoveCategoryFromEntityCommandHandler(
     HybridCache cache)
     : ICommandHandler<RemoveCategoryFromEntityCommand>
 {
-    public async Task<Result> Handle(RemoveCategoryFromEntityCommand request, CancellationToken ct)
+    public async Task<Result> Handle(RemoveCategoryFromEntityCommand request, CancellationToken cancellationToken)
     {
         try
         {
-            if (!Enum.TryParse<EntityType>(request.EntityType, true, out var entityType))
-                return Result.Failure(
-                    new Error("Entity.InvalidType", $"Entity type '{request.EntityType}' is not recognized."),
-                    Outcome.Invalid);
+            var entityType = Enum.Parse<EntityType>(request.EntityType, true);
 
-            var entityCategories = await entityCategoryRepository.GetByEntityAsync(entityType, request.EntityId, ct);
+            var entityCategories = await entityCategoryRepository.GetByEntityAsync(entityType, request.EntityId, cancellationToken);
             var entityCategory = entityCategories.FirstOrDefault(ec => ec.CategoryId == request.CategoryId);
-            if (entityCategory is null)
+            if (entityCategory is null) {
                 return Result.Failure(
-                    new Error("EntityCategory.NotFound",
+                    new Error(
+                        "EntityCategory.NotFound",
                         $"Category '{request.CategoryId}' is not assigned to {request.EntityType}/{request.EntityId}."),
                     Outcome.NotFound);
-
+            }
             entityCategoryRepository.Remove(entityCategory);
 
             try
             {
-                await unitOfWork.SaveChangesAsync(ct);
+                await unitOfWork.SaveChangesAsync(cancellationToken);
             }
-            catch (DbUpdateConcurrencyException)
+            catch (ContentCoreConcurrencyException)
             {
                 return Result.Failure(
-                    new Error("Entity.ConcurrencyConflict",
+                    new Error(
+                        "Entity.ConcurrencyConflict",
                         "This record was modified by another user. Please refresh and try again."),
                     Outcome.Conflict);
             }
 
-            await cache.RemoveByTagAsync($"entity-categories:{request.EntityType}:{request.EntityId}", ct);
+            await cache.RemoveByTagAsync($"entity-categories:{request.EntityType}:{request.EntityId}", cancellationToken);
 
             return Result.Success();
         }
-        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
             return Result.Failure(
                 new Error("Request.Cancelled", "The request was cancelled."),

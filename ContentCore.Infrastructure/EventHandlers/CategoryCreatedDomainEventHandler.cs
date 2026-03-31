@@ -1,4 +1,4 @@
-using System.Text.RegularExpressions;
+using ContentCore.Domain.Entities;
 using ContentCore.Domain.Events;
 using ContentCore.Domain.Repositories;
 using MediatR;
@@ -47,27 +47,22 @@ public sealed class CategoryCreatedDomainEventHandler(
         foreach (var set in translationSets)
         {
             if (category.Translations.Any(t => t.LanguageId == set.LanguageId))
-            {
                 continue;
-            }
 
             if (!set.Fields.TryGetValue("Name", out var translatedName) || string.IsNullOrWhiteSpace(translatedName))
-            {
                 continue;
-            }
 
+            // Slug generation delegates to the domain entity's canonical rule.
             category.AddTranslation(
                 set.LanguageId,
                 translatedName,
-                Slugify(translatedName));
+                Category.GenerateSlug(translatedName));
 
             addedTranslations++;
         }
 
         if (addedTranslations == 0)
-        {
             return;
-        }
 
         // No explicit Update() call needed — EF ChangeTracker detects changes
 
@@ -75,20 +70,5 @@ public sealed class CategoryCreatedDomainEventHandler(
             "CategoryCreatedDomainEvent: Added {TranslationCount} translations for category {CategoryId}.",
             addedTranslations,
             category.Id);
-    }
-
-    private static string Slugify(string text)
-    {
-        if (string.IsNullOrWhiteSpace(text))
-        {
-            return string.Empty;
-        }
-
-        var normalized = text.Trim().ToLowerInvariant();
-        normalized = Regex.Replace(normalized, @"\s+", "-");
-        normalized = Regex.Replace(normalized, @"[^\w\-]", string.Empty, RegexOptions.None);
-        normalized = Regex.Replace(normalized, @"-{2,}", "-");
-
-        return normalized.Trim('-');
     }
 }

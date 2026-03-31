@@ -1,6 +1,6 @@
 using ContentCore.Application.Caching;
+using ContentCore.Domain.Exceptions;
 using ContentCore.Domain.Repositories;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
@@ -22,13 +22,17 @@ public sealed class UpdateTagCommandHandler(
         {
             var tag = await tagRepository.GetByIdAsync(request.Id, ct, asNoTracking: false);
             if (tag is null)
+            {
                 return Result<UpdateTagResult>.Failure(
-                    new Error("Tag.NotFound", $"Tag '{request.Id}' was not found."),
-                    Outcome.NotFound);
+                       new Error("Tag.NotFound", $"Tag '{request.Id}' was not found."),
+                       Outcome.NotFound);
+            }
 
-            if (await tagRepository.SlugExistsAsync(request.Slug, request.Id, ct))
+            if (await tagRepository.AnyAsync(t => t.Slug == request.Slug && t.Id != request.Id, ct))
+            {
                 return Result<UpdateTagResult>.Conflict(
-                    new Error("Tag.AlreadyExists", $"Tag with slug '{request.Slug}' already exists."));
+                       new Error("Tag.AlreadyExists", $"Tag with slug '{request.Slug}' already exists."));
+            }
 
             tag.Update(request.Name, request.Slug);
 
@@ -36,10 +40,11 @@ public sealed class UpdateTagCommandHandler(
             {
                 await unitOfWork.SaveChangesAsync(ct);
             }
-            catch (DbUpdateConcurrencyException)
+            catch (ContentCoreConcurrencyException)
             {
                 return Result<UpdateTagResult>.Conflict(
-                    new Error("Tag.ConcurrencyConflict",
+                    new Error(
+                        "Tag.ConcurrencyConflict",
                         "This record was modified by another user. Please refresh and try again."));
             }
 

@@ -110,4 +110,10 @@ public sealed class Category : AuditableEntity, IAggregateRoot
         ParentCategoryId = parentCategoryId;
         MarkUpdated();
     }
+
+  
+    public static string GenerateSlug(string name) =>
+        System.Text.RegularExpressions.Regex
+            .Replace(name.Trim().ToLowerInvariant().Replace(' ', '-'), @"[^a-z0-9\-]", string.Empty)
+            .Trim('-');
 }

@@ -1,4 +1,4 @@
-﻿namespace ContentCore.Application.Commands.Category.UpdateCategory;
+namespace ContentCore.Application.Commands.Category.UpdateCategory;
 
 public sealed record UpdateCategoryTranslationDto(
     Guid LanguageId,

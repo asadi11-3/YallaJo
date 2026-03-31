@@ -1,6 +1,7 @@
+using SpecializationEntity = ContentCore.Domain.Entities.Specialization;
 using ContentCore.Application.Caching;
+using ContentCore.Domain.Exceptions;
 using ContentCore.Domain.Repositories;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
@@ -16,34 +17,35 @@ public sealed class CreateSpecializationCommandHandler(
 {
     public async Task<Result<CreateSpecializationResult>> Handle(
         CreateSpecializationCommand request,
-        CancellationToken ct)
+        CancellationToken cancellationToken)
     {
         try
         {
-            var specialization = Domain.Entities.Specialization.Create(
+            var specialization = SpecializationEntity.Create(
                 request.Name,
                 request.Description,
                 request.Icon);
 
-            await specializationRepository.AddAsync(specialization, ct);
+            await specializationRepository.AddAsync(specialization, cancellationToken);
 
             try
             {
-                await unitOfWork.SaveChangesAsync(ct);
+                await unitOfWork.SaveChangesAsync(cancellationToken);
             }
-            catch (DbUpdateConcurrencyException)
+            catch (ContentCoreConcurrencyException)
             {
                 return Result<CreateSpecializationResult>.Conflict(
-                    new Error("Specialization.ConcurrencyConflict",
+                    new Error(
+                        "Specialization.ConcurrencyConflict",
                         "This record was modified by another user. Please refresh and try again."));
             }
 
-            await cache.RemoveByTagAsync("specializations", ct);
+            await cache.RemoveByTagAsync("specializations", cancellationToken);
 
             return Result<CreateSpecializationResult>.Created(
                 new CreateSpecializationResult(specialization.Id, specialization.Name));
         }
-        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
             return Result<CreateSpecializationResult>.Failure(
                 new Error("Request.Cancelled", "The request was cancelled."),

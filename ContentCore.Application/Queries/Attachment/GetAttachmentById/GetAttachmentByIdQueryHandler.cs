@@ -1,4 +1,4 @@
-using ContentCore.Application.Queries.Attachment.GetEntityAttachments;
+using ContentCore.Application.Queries.Attachment.Common;
 using ContentCore.Domain.Repositories;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
@@ -12,15 +12,16 @@ public sealed class GetAttachmentByIdQueryHandler(
 {
     public async Task<Result<AttachmentDto>> Handle(
         GetAttachmentByIdQuery request,
-        CancellationToken ct)
+        CancellationToken cancellationToken)
     {
         try
         {
-            var attachment = await attachmentRepository.GetByIdAsync(request.AttachmentId, ct);
+            var attachment = await attachmentRepository.GetByIdAsync(request.AttachmentId, cancellationToken);
 
-            if (attachment is null)
+            if (attachment is null) {
                 return Result<AttachmentDto>.NotFound(
-                    $"Attachment '{request.AttachmentId}' not found.");
+                       $"Attachment '{request.AttachmentId}' not found.");
+            }
 
             var dto = new AttachmentDto(
                 attachment.Id,
@@ -41,7 +42,7 @@ public sealed class GetAttachmentByIdQueryHandler(
 
             return Result<AttachmentDto>.Success(dto);
         }
-        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
             return Result<AttachmentDto>.Failure(
                 new Error("Request.Cancelled", "The request was cancelled."),

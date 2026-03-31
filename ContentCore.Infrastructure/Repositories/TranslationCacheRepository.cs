@@ -1,15 +1,19 @@
-using ContentCore.Application.Interfaces;
 using ContentCore.Domain.Entities;
-using ContentCore.Infrastructure.Persistence;
+using ContentCore.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
 using YallaJo.SharedKernel.Infrastructure.Data.Repositories;
+using ContentCore.Infrastructure.Persistence;
 
 namespace ContentCore.Infrastructure.Repositories;
 
+/// <summary>
+/// EfRepository uses composition (not inheritance) and does not expose a protected _context.
+/// A typed ContentCoreDbContext reference is captured for domain-specific queries.
+/// </summary>
 internal sealed class TranslationCacheRepository(ContentCoreDbContext context)
     : EfRepository<TranslationCache, Guid>(context), ITranslationCacheRepository
 {
-    private readonly ContentCoreDbContext _context = context;
+    private readonly ContentCoreDbContext _db = context;
 
     public async Task<TranslationCache?> FindCachedAsync(
         string originalText,
@@ -20,7 +24,7 @@ internal sealed class TranslationCacheRepository(ContentCoreDbContext context)
         var from = fromLanguage.ToLowerInvariant();
         var to = toLanguage.ToLowerInvariant();
 
-        return await _context.TranslationCaches
+        return await _db.TranslationCaches
             .AsNoTracking()
             .FirstOrDefaultAsync(
                 t => t.OriginalText == originalText
@@ -33,12 +37,10 @@ internal sealed class TranslationCacheRepository(ContentCoreDbContext context)
         string entityType,
         Guid entityId,
         CancellationToken ct = default)
-    {
-        return await _context.TranslationCaches
+        => await _db.TranslationCaches
             .AsNoTracking()
             .Where(t => t.EntityType == entityType && t.EntityId == entityId)
             .OrderBy(t => t.FieldName)
             .ThenBy(t => t.ToLanguage)
             .ToListAsync(ct);
-    }
 }

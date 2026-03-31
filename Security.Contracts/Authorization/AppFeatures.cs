@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -13,5 +13,15 @@ namespace Security.Contracts.Authorization
         public const string RoleClaim = nameof(RoleClaim);
         public const string System = nameof(System);
         public const string User = nameof(User);
+        public const string Category = nameof(Category);
+        public const string CategoryTranslation = nameof(CategoryTranslation);
+        public const string Specialization = nameof(Specialization);
+        public const string Tag = nameof(Tag);
+        public const string EntityCategory = nameof(EntityCategory);
+        public const string EntityImage = nameof(EntityImage);
+        public const string EntityTag = nameof(EntityTag);
+        public const string TranslationCache = nameof(TranslationCache);
+        public const string Language = nameof(Language);
+        public const string Attachment = nameof(Attachment);
     }
 }

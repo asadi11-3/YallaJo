@@ -6,32 +6,23 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ContentCore.Infrastructure.Repositories;
 
+/// <summary>
+/// Concrete repository for <see cref="EntityCategory"/> (composite-PK entity).
+/// Implements only the minimal contract declared by <see cref="IEntityCategoryRepository"/>.
+/// </summary>
 internal sealed class EntityCategoryRepository(ContentCoreDbContext context) : IEntityCategoryRepository
 {
     public async Task<IReadOnlyList<EntityCategory>> GetByEntityAsync(
         EntityType entityType, Guid entityId, CancellationToken ct = default)
-        => await context.EntityCategories
+        => await context.Set<EntityCategory>()
             .Include(ec => ec.Category)
             .Where(ec => ec.EntityType == entityType && ec.EntityId == entityId)
             .AsNoTracking()
             .ToListAsync(ct);
 
-    public async Task<bool> ExistsAsync(
-        EntityType entityType, Guid entityId, Guid categoryId, CancellationToken ct = default)
-        => await context.EntityCategories
-            .AnyAsync(ec => ec.EntityType == entityType
-                && ec.EntityId == entityId
-                && ec.CategoryId == categoryId, ct);
-
     public void Add(EntityCategory entityCategory)
-        => context.EntityCategories.Add(entityCategory);
-
-    public void AddRange(IEnumerable<EntityCategory> entityCategories)
-        => context.EntityCategories.AddRange(entityCategories);
+        => context.Set<EntityCategory>().Add(entityCategory);
 
     public void Remove(EntityCategory entityCategory)
-        => context.EntityCategories.Remove(entityCategory);
-
-    public void RemoveRange(IEnumerable<EntityCategory> entityCategories)
-        => context.EntityCategories.RemoveRange(entityCategories);
+        => context.Set<EntityCategory>().Remove(entityCategory);
 }

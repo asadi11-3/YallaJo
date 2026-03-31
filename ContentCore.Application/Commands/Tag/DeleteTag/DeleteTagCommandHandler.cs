@@ -1,6 +1,6 @@
 using ContentCore.Application.Caching;
+using ContentCore.Domain.Exceptions;
 using ContentCore.Domain.Repositories;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
@@ -14,35 +14,38 @@ public sealed class DeleteTagCommandHandler(
     HybridCache cache)
     : ICommandHandler<DeleteTagCommand>
 {
-    public async Task<Result> Handle(DeleteTagCommand request, CancellationToken ct)
+    public async Task<Result> Handle(DeleteTagCommand request, CancellationToken cancellationToken)
     {
         try
         {
-            var tag = await tagRepository.GetByIdAsync(request.Id, ct, asNoTracking: false);
+            var tag = await tagRepository.GetByIdAsync(request.Id, cancellationToken, asNoTracking: false);
             if (tag is null)
+            {
                 return Result.Failure(
                     new Error("Tag.NotFound", $"Tag '{request.Id}' was not found."),
                     Outcome.NotFound);
+            }
 
             tagRepository.Remove(tag);
 
             try
             {
-                await unitOfWork.SaveChangesAsync(ct);
+                await unitOfWork.SaveChangesAsync(cancellationToken);
             }
-            catch (DbUpdateConcurrencyException)
+            catch (ContentCoreConcurrencyException)
             {
                 return Result.Failure(
-                    new Error("Tag.ConcurrencyConflict",
+                    new Error(
+                        "Tag.ConcurrencyConflict",
                         "This record was modified by another user. Please refresh and try again."),
                     Outcome.Conflict);
             }
 
-            await cache.RemoveByTagAsync("tags", ct);
+            await cache.RemoveByTagAsync("tags", cancellationToken);
 
             return Result.Success();
         }
-        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
             return Result.Failure(
                 new Error("Request.Cancelled", "The request was cancelled."),
