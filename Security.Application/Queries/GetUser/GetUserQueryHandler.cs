@@ -1,3 +1,4 @@
+using Security.Application.Queries.Dtos;
 using Security.Domain.Errors;
 using Security.Domain.Repositories;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;

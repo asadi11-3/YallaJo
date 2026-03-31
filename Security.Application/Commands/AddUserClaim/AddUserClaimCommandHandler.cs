@@ -10,23 +10,21 @@ namespace Security.Application.Commands.AddUserClaim;
 public sealed class AddUserClaimCommandHandler(
     IUserRepository userRepository,
     IUserClaimRepository userClaimRepository,
-    ISecurityUnitOfWork unitOfWork,
-    ICurrentUser currentUser)
+    ISecurityUnitOfWork unitOfWork
+   )
     : ICommandHandler<AddUserClaimCommand>
 {
     public async Task<Result> Handle(AddUserClaimCommand request, CancellationToken ct)
     {
-        if (!currentUser.IsAuthenticated || currentUser.UserId is null)
-            return Result.Failure(Error.Unauthorized("Authentication is required."), Outcome.Unauthorized);
-
         var user = await userRepository.GetByIdAsync(request.UserId, ct);
         if (user is null)
             return Result.Failure(UserErrors.NotFound, Outcome.NotFound);
 
-        if (await userClaimRepository.ExistsAsync(request.UserId, request.ClaimType, request.ClaimValue, ct))
+        if (await userClaimRepository.ExistsAsync(request.UserId, request.ClaimType, request.ClaimValue, ct)) {
             return Result.Failure(
-                new Error("UserClaim.Duplicate", "This claim already exists on the user."),
-                Outcome.Conflict);
+               new Error("UserClaim.Duplicate", "This claim already exists on the user."),
+               Outcome.Conflict);
+        }
 
         var claim = UserClaim.Create(request.UserId, request.ClaimType, request.ClaimValue);
         await userClaimRepository.AddAsync(claim, ct);

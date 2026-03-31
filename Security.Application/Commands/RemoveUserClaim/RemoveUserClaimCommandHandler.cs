@@ -15,7 +15,7 @@ public sealed class RemoveUserClaimCommandHandler(
 {
     public async Task<Result> Handle(RemoveUserClaimCommand request, CancellationToken ct)
     {
-        if (!currentUser.IsAuthenticated || currentUser.UserId is null)
+        if (currentUser.UserId is null)
             return Result.Failure(Error.Unauthorized("Authentication is required."), Outcome.Unauthorized);
 
         var user = await userRepository.GetByIdAsync(request.UserId, ct);
@@ -23,10 +23,11 @@ public sealed class RemoveUserClaimCommandHandler(
             return Result.Failure(UserErrors.NotFound, Outcome.NotFound);
 
         var claim = await userClaimRepository.GetByIdAsync(request.ClaimId, ct);
-        if (claim is null || claim.UserId != request.UserId)
+        if (claim is null || claim.UserId != request.UserId) {
             return Result.Failure(
                 new Error("NotFound.UserClaim", "The specified claim was not found on this user."),
                 Outcome.NotFound);
+        }
 
         userClaimRepository.Remove(claim);
         await unitOfWork.SaveChangesAsync(ct);

@@ -13,21 +13,18 @@ public sealed class DeleteAvatarCommandHandler(
 {
     public async Task<Result<DeleteAvatarResult>> Handle(
         DeleteAvatarCommand request,
-        CancellationToken ct)
+        CancellationToken cancellationToken)
     {
-        if (!currentUser.IsAuthenticated || currentUser.UserId is null)
-            return Result<DeleteAvatarResult>.Failure(
-                Error.Unauthorized("Authentication is required."),
-                Outcome.Unauthorized);
-
-        var profile = await profileRepository.GetByUserIdAsync(currentUser.UserId.Value, ct);
+        var profile = await profileRepository.GetByUserIdAsync(currentUser.UserId.Value, cancellationToken);
         if (profile is null)
+        {
             return Result<DeleteAvatarResult>.Failure(
-                Error.NotFound("Profile", "Profile not found."),
-                Outcome.NotFound);
+               Error.NotFound("Profile", "Profile not found."),
+               Outcome.NotFound);
+        }
 
         profile.DeleteAvatar();
-        await unitOfWork.SaveChangesAsync(ct);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<DeleteAvatarResult>.Success(new DeleteAvatarResult(true));
     }

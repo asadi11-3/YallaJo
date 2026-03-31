@@ -23,9 +23,10 @@ public sealed class RegisterCommandHandler(
             u => u.Emails.Any(e => e.Address == normalizedEmail),
             cancellationToken);
 
-        if (emailExists)
+        if (emailExists) {
             return Result<RegisterResult>.Conflict(
-                Error.Conflict("User.Email", "An account with this email already exists."));
+                  Error.Conflict("User.Email", "An account with this email already exists."));
+        }
 
         var user = User.Register(normalizedEmail, request.FirstName, request.LastName);
 
@@ -33,8 +34,6 @@ public sealed class RegisterCommandHandler(
 
         await userRepository.AddAsync(user, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
-        // SaveChanges dispatches UserCreatedDomainEvent → outbox → Auth module sends OTP email
-
         return Result<RegisterResult>.Created(new RegisterResult(user.Id));
     }
 }

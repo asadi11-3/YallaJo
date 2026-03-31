@@ -3,13 +3,8 @@ namespace Auth.Application.Interfaces;
 
 public interface ITokenService
 {
-   
     string GenerateAccessToken(TokenData data);
-
-   
     string GenerateRefreshToken();
-
-
     string HashRefreshToken(string plainToken);
 }
 

@@ -24,6 +24,7 @@ using Security.Application.Commands.AddUserClaim;
 using Security.Application.Commands.RemoveUserClaim;
 using Security.Application.Queries.GetUser;
 using Security.Application.Queries.ListUsers;
+using Security.Application.Queries.Dtos;
 
 namespace Security.Presentation;
 

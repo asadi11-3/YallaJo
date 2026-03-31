@@ -6,8 +6,6 @@ using Security.Contracts.IntegrationEvents;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 
 namespace Auth.Application.EventHandlers;
-
-
 public sealed class EmailVerifiedIntegrationEventHandler(
     IAuthInboxStore inboxStore,
     IAuthUnitOfWork unitOfWork,
@@ -18,7 +16,6 @@ public sealed class EmailVerifiedIntegrationEventHandler(
         IntegrationEventNotification<EmailVerifiedIntegrationEvent> notification,
         CancellationToken ct)
     {
-        
         if (await inboxStore.HasBeenProcessedAsync(notification.MessageId, ct))
         {
             logger.LogWarning(
@@ -32,8 +29,6 @@ public sealed class EmailVerifiedIntegrationEventHandler(
         logger.LogInformation(
             "Auth: EmailVerified event received for user {UserId}, email {Email}.",
             evt.UserId, evt.EmailAddress);
-
-       
         inboxStore.MarkAsProcessed(notification.MessageId);
         await unitOfWork.SaveChangesAsync(ct);
     }

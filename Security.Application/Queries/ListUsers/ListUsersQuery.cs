@@ -1,4 +1,4 @@
-using Security.Application.Queries.GetUser;
+using Security.Application.Queries.Dtos;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Pagination;
 

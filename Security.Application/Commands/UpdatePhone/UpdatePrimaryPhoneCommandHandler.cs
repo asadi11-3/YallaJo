@@ -16,16 +16,18 @@ public sealed class UpdatePrimaryPhoneCommandHandler(
         UpdatePrimaryPhoneCommand request,
         CancellationToken ct)
     {
-        if (!currentUser.IsAuthenticated || currentUser.UserId is null)
+        if (currentUser.UserId is null) {
             return Result<UpdatePrimaryPhoneResult>.Failure(
-                Error.Unauthorized("Authentication is required."),
-                Outcome.Unauthorized);
+                 Error.Unauthorized("Authentication is required."),
+                 Outcome.Unauthorized);
+        }
 
         var user = await userRepository.GetByIdWithPhonesAsync(currentUser.UserId.Value, ct);
-        if (user is null)
+        if (user is null) {
             return Result<UpdatePrimaryPhoneResult>.Failure(
-                Error.NotFound("User", "User not found."),
-                Outcome.NotFound);
+                   Error.NotFound("User", "User not found."),
+                   Outcome.NotFound);
+        }
 
         var phone = user.UpdatePrimaryPhone(request.PhoneNumber);
         await unitOfWork.SaveChangesAsync(ct);

@@ -26,7 +26,6 @@ public sealed class UserCreatedIntegrationEventHandler(
         IntegrationEventNotification<UserCreatedIntegrationEvent> notification,
         CancellationToken ct)
     {
-       
         if (await inboxStore.HasBeenProcessedAsync(notification.MessageId, ct))
         {
             logger.LogWarning(
@@ -36,8 +35,6 @@ public sealed class UserCreatedIntegrationEventHandler(
         }
 
         var evt = notification.Event;
-
-        
         var plainOtp = otpService.Generate();
         var hashedOtp = otpService.Hash(plainOtp);
 
@@ -50,12 +47,8 @@ public sealed class UserCreatedIntegrationEventHandler(
             expiryMinutes: OtpExpiryMinutes);
 
         await otpRepository.AddAsync(otp, ct);
-
-      
         inboxStore.MarkAsProcessed(notification.MessageId);
         await unitOfWork.SaveChangesAsync(ct);
-
-        
         try
         {
             await emailService.SendAsync(

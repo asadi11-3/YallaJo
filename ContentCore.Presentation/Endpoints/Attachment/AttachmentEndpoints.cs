@@ -30,7 +30,6 @@ internal static class AttachmentEndpoints
 
             if (!Enum.TryParse<Domain.Enums.AttachmentType>(request.AttachmentType, true, out var attachmentType))
                 return Results.BadRequest("Invalid AttachmentType.");
-
             if (currentUser.UserId is null)
                 return Results.Unauthorized();
 

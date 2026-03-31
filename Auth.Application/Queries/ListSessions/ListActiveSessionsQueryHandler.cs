@@ -14,38 +14,27 @@ public sealed class ListActiveSessionsQueryHandler(
 {
     public async Task<Result<IReadOnlyList<ActiveSessionDto>>> Handle(
         ListActiveSessionsQuery request,
-        CancellationToken ct)
+        CancellationToken cancellationToken)
     {
-        if (!currentUser.IsAuthenticated || currentUser.UserId is null)
-            return Result<IReadOnlyList<ActiveSessionDto>>.Failure(
-                Error.Unauthorized("Authentication is required."),
-                Outcome.Unauthorized);
-
         var userId = currentUser.UserId.Value;
-
-       
         Guid? currentSessionId = null;
         var sidClaim = currentUser.GetClaim("sid");
         if (sidClaim is not null && Guid.TryParse(sidClaim, out var parsedSid))
             currentSessionId = parsedSid;
+        var sessions = await sessionRepository.GetActiveSessionsByUserIdAsync(userId, cancellationToken);
 
-
-        var sessions = await sessionRepository.GetActiveSessionsByUserIdAsync(userId, ct);
-
-        if (sessions.Count == 0)
+        if (sessions.Count == 0) {
             return Result<IReadOnlyList<ActiveSessionDto>>.Success(
-                Array.Empty<ActiveSessionDto>());
+               Array.Empty<ActiveSessionDto>());
+        }
 
-      
         var deviceIds = sessions.Select(s => s.DeviceId).Distinct().ToHashSet();
         var devices = await deviceRepository.GetAllAsync(
             filter: d => deviceIds.Contains(d.Id),
             asNoTracking: true,
-            ct: ct);
+            ct: cancellationToken);
 
         var deviceMap = devices.ToDictionary(d => d.Id);
-
-       
         IReadOnlyList<ActiveSessionDto> dtos = sessions
             .Select(s =>
             {
