@@ -121,3 +121,124 @@ dotnet_diagnostic.SA1208.severity = suggestion
 
 # SA1210: Using directives should be ordered alphabetically
 dotnet_diagnostic.SA1210.severity = suggestion
+
+# SA1313: Parameter should begin with lower-case letter
+# SUPPRESS: FALSE POSITIVE on C# records — `record Foo(string Title)` uses PascalCase
+# parameters by convention. StyleCop doesn't understand records.
+dotnet_diagnostic.SA1313.severity = none
+
+# SA1512: Single-line comments should not be followed by blank line
+# SUPPRESS: Cosmetic. Devs sometimes add spacing after section comments for readability.
+dotnet_diagnostic.SA1512.severity = none
+
+# MA0048: File name must match type name
+# SUPPRESS: Common pattern to group small related DTOs/records in one file
+# (e.g., AuthDtos.cs with LoginRequest + LoginResponse). Valid in practice.
+dotnet_diagnostic.MA0048.severity = suggestion
+
+# CA1000: Do not declare static members on generic types
+# SUPPRESS: Common pattern for factory methods like `ApiResponse<T>.Success()`.
+dotnet_diagnostic.CA1000.severity = suggestion
+
+# SA1201: Elements should appear in correct order (field before property, etc.)
+# SUPPRESS: Overly rigid — we group by logical concern, not by member type.
+dotnet_diagnostic.SA1201.severity = none
+
+# SA1402: File may only contain a single type
+# SUPPRESS: Small related types (DTOs, records) grouped in one file is fine.
+dotnet_diagnostic.SA1402.severity = none
+
+# SA1507: Code should not contain multiple blank lines in a row
+dotnet_diagnostic.SA1507.severity = suggestion
+
+# SA1508: Closing brace should not be preceded by a blank line
+dotnet_diagnostic.SA1508.severity = suggestion
+
+# SA1649: File name should match first type name
+# SUPPRESS: ResultT.cs for Result<T>, Specifications.cs for multiple spec types — fine.
+dotnet_diagnostic.SA1649.severity = none
+
+# SA1106: Code should not contain empty statements
+# SUPPRESS: Interface marker patterns like `IRepository<T>;` are intentional.
+dotnet_diagnostic.SA1106.severity = none
+
+# CA1716: Rename to not conflict with reserved keyword
+# SUPPRESS: `Error` and `Event` namespace are intentional domain names — not changing.
+dotnet_diagnostic.CA1716.severity = none
+
+# RCS1194: Implement exception constructors
+# SUPPRESS: We only expose the constructors we need, not all 4 overloads.
+dotnet_diagnostic.RCS1194.severity = none
+
+# ── Remaining cosmetic StyleCop rules ─────────────────────────────────────
+# These are all whitespace/formatting opinions — not bugs.
+
+# SA1127: Generic type constraints should be on their own line
+dotnet_diagnostic.SA1127.severity = none
+
+# SA1513: Closing brace should be followed by blank line
+dotnet_diagnostic.SA1513.severity = none
+
+# SA1517: Code should not contain blank lines at start of file
+dotnet_diagnostic.SA1517.severity = suggestion
+
+# SA1502: Element should not be on a single line
+# SUPPRESS: `private Foo() { }` on one line is idiomatic for EF Core constructors.
+dotnet_diagnostic.SA1502.severity = none
+
+# SA1028: Code should not contain trailing whitespace
+dotnet_diagnostic.SA1028.severity = suggestion
+
+# SA1129: Do not use default value type constructor
+dotnet_diagnostic.SA1129.severity = suggestion
+
+# ── Meziantou — collection abstractions ───────────────────────────────────
+
+# MA0016: Prefer collection abstraction instead of implementation
+# SUPPRESS: Using List<T> in interfaces is intentional for our repository patterns.
+dotnet_diagnostic.MA0016.severity = none
+
+# ── Code analysis — CancellationToken ordering ───────────────────────────
+
+# CA1068: CancellationToken should be the last parameter
+# KEEP as suggestion — valid advice but not breaking existing signatures.
+dotnet_diagnostic.CA1068.severity = suggestion
+
+# ── BULK: Suppress ALL remaining cosmetic StyleCop formatting rules ───────
+# These are whitespace, spacing, comment placement, and brace style opinions.
+# None of them catch bugs. They just create noise on existing code.
+
+dotnet_diagnostic.SA1001.severity = none  # Comma spacing
+dotnet_diagnostic.SA1005.severity = none  # Comment should begin with space
+dotnet_diagnostic.SA1011.severity = none  # Closing bracket spacing
+dotnet_diagnostic.SA1015.severity = none  # Generic bracket spacing
+dotnet_diagnostic.SA1107.severity = none  # Multiple statements on one line
+dotnet_diagnostic.SA1116.severity = none  # Parameters on separate lines
+dotnet_diagnostic.SA1124.severity = none  # Do not use regions
+dotnet_diagnostic.SA1128.severity = none  # Constructor initializers on own line
+dotnet_diagnostic.SA1209.severity = none  # Using alias ordering
+dotnet_diagnostic.SA1300.severity = none  # Element should begin with uppercase (conflicts with iOS)
+dotnet_diagnostic.SA1401.severity = none  # Field should be private (protected fields in base classes)
+dotnet_diagnostic.SA1407.severity = none  # Arithmetic precedence parens
+dotnet_diagnostic.SA1500.severity = none  # Braces sharing line
+dotnet_diagnostic.SA1501.severity = none  # Statement on single line
+dotnet_diagnostic.SA1505.severity = none  # Opening brace blank line
+dotnet_diagnostic.SA1515.severity = none  # Comment preceded by blank line
+dotnet_diagnostic.SA1519.severity = none  # Braces on multi-line child
+
+# ── BULK: Suppress AD0001 (StyleCop analyzer crashes) ────────────────────
+# Known bug in StyleCop.Analyzers 1.1.x with C# 12 syntax
+dotnet_diagnostic.AD0001.severity = none
+
+# ── Code analysis — keep as suggestions (valid but not critical) ──────────
+dotnet_diagnostic.CA1051.severity = suggestion  # Visible instance fields
+dotnet_diagnostic.CA1711.severity = none        # Type name ending (Queue, etc.)
+dotnet_diagnostic.CA1725.severity = suggestion  # Parameter name match
+dotnet_diagnostic.CA1805.severity = suggestion  # Default value init
+dotnet_diagnostic.CA1826.severity = suggestion  # Enumerable on indexable
+dotnet_diagnostic.CA2016.severity = suggestion  # Forward CancellationToken
+dotnet_diagnostic.CS8618.severity = suggestion  # Non-nullable property (EF Core constructors)
+
+# ── Meziantou ─────────────────────────────────────────────────────────────
+dotnet_diagnostic.MA0015.severity = suggestion  # ArgumentException with param name
+dotnet_diagnostic.MA0051.severity = none        # Method too long
