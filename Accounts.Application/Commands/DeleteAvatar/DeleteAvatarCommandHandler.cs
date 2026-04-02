@@ -15,6 +15,13 @@ public sealed class DeleteAvatarCommandHandler(
         DeleteAvatarCommand request,
         CancellationToken cancellationToken)
     {
+        if (currentUser.UserId is null)
+        {
+            return Result<DeleteAvatarResult>.Failure(
+                 Error.Unauthorized("Authentication is required."),
+                 Outcome.Unauthorized);
+        }
+
         var profile = await profileRepository.GetByUserIdAsync(currentUser.UserId.Value, cancellationToken);
         if (profile is null)
         {

@@ -11,9 +11,8 @@ internal sealed class OtpService : IOtpService
 
     public string Generate()
     {
-       
         var code = RandomNumberGenerator.GetInt32(0, 1_000_000);
-        return code.ToString("D6"); 
+        return code.ToString("D6", System.Globalization.CultureInfo.InvariantCulture);
     }
 
     public string Hash(string plainOtp)

@@ -14,20 +14,22 @@ public sealed class GetProfileQueryHandler(
 {
     public async Task<Result<GetProfileResult>> Handle(
         GetProfileQuery request,
-        CancellationToken ct)
+        CancellationToken cancellationToken)
     {
-        if (!currentUser.IsAuthenticated || currentUser.UserId is null)
+        if (!currentUser.IsAuthenticated || currentUser.UserId is null) {
             return Result<GetProfileResult>.Failure(
-                Error.Unauthorized("Authentication is required."),
-                Outcome.Unauthorized);
+                   Error.Unauthorized("Authentication is required."),
+                   Outcome.Unauthorized);
+        }
 
-        var profile = await profileRepository.GetByUserIdAsync(currentUser.UserId.Value, ct);
-        if (profile is null)
+        var profile = await profileRepository.GetByUserIdAsync(currentUser.UserId.Value, cancellationToken);
+        if (profile is null) {
             return Result<GetProfileResult>.Failure(
-                Error.NotFound("Profile", "Profile not found."),
-                Outcome.NotFound);
+                   Error.NotFound("Profile", "Profile not found."),
+                   Outcome.NotFound);
+        }
 
-        var phoneNumber = await securityService.GetPrimaryPhoneNumberAsync(currentUser.UserId.Value, ct);
+        var phoneNumber = await securityService.GetPrimaryPhoneNumberAsync(currentUser.UserId.Value, cancellationToken);
 
         return Result<GetProfileResult>.Success(new GetProfileResult(
             UserId: profile.UserId,

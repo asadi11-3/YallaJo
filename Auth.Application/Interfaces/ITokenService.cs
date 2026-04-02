@@ -8,7 +8,6 @@ public interface ITokenService
     string HashRefreshToken(string plainToken);
 }
 
-
 public sealed record TokenData(
     Guid UserId,
     string Email,

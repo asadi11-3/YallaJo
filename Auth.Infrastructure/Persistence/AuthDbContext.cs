@@ -8,7 +8,10 @@ namespace Auth.Infrastructure.Persistence;
 
 public sealed class AuthDbContext : DbContext, IDbContext
 {
-    public AuthDbContext(DbContextOptions<AuthDbContext> options) : base(options) { }
+    public AuthDbContext(DbContextOptions<AuthDbContext> options)
+    : base(options)
+    {
+    }
 
     public DbSet<Device> Devices => Set<Device>();
     public DbSet<Session> Sessions => Set<Session>();

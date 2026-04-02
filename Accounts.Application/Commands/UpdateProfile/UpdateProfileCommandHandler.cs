@@ -13,18 +13,20 @@ public sealed class UpdateProfileCommandHandler(
 {
     public async Task<Result<UpdateProfileResult>> Handle(
         UpdateProfileCommand request,
-        CancellationToken ct)
+        CancellationToken cancellationToken)
     {
-        if (!currentUser.IsAuthenticated || currentUser.UserId is null)
+        if (!currentUser.IsAuthenticated || currentUser.UserId is null) {
             return Result<UpdateProfileResult>.Failure(
-                Error.Unauthorized("Authentication is required."),
-                Outcome.Unauthorized);
+                    Error.Unauthorized("Authentication is required."),
+                    Outcome.Unauthorized);
+        }
 
-        var profile = await profileRepository.GetByUserIdAsync(currentUser.UserId.Value, ct);
-        if (profile is null)
+        var profile = await profileRepository.GetByUserIdAsync(currentUser.UserId.Value, cancellationToken);
+        if (profile is null) {
             return Result<UpdateProfileResult>.Failure(
-                Error.NotFound("Profile", "Profile not found."),
-                Outcome.NotFound);
+                   Error.NotFound("Profile", "Profile not found."),
+                   Outcome.NotFound);
+        }
 
         profile.UpdateProfile(
             request.FirstName,
@@ -35,7 +37,7 @@ public sealed class UpdateProfileCommandHandler(
             request.City,
             request.AddressLine);
 
-        await unitOfWork.SaveChangesAsync(ct);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<UpdateProfileResult>.Success(new UpdateProfileResult(
             FirstName: profile.FirstName,

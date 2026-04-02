@@ -16,7 +16,6 @@ public sealed class TrustDeviceCommandHandler(
         if (!currentUser.IsAuthenticated || currentUser.UserId is null)
             return Result.Unauthorized("Authentication is required.");
 
-        // 1. Load device (tracked — will be mutated)
         var device = await deviceRepository.GetByIdAsync(
             request.DeviceId,
             ct: ct,
@@ -25,11 +24,9 @@ public sealed class TrustDeviceCommandHandler(
         if (device is null)
             return Result.NotFound($"Device {request.DeviceId} was not found.");
 
-        // 2. Security: caller may only trust their own devices
         if (device.UserId != currentUser.UserId.Value)
             return Result.Forbidden("You are not authorized to trust this device.");
 
-        // 3. Trust (idempotent — already-trusted is fine)
         if (!device.IsTrusted)
             device.Trust();
 

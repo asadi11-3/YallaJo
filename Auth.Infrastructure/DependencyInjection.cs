@@ -56,7 +56,6 @@ public static class DependencyInjection
         // MediatR handlers in this assembly (integration event handlers)
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
 
-       
         services.AddScoped<IOutboxProcessor, OutboxProcessor<AuthDbContext>>();
         services.AddHostedService<AuthCleanupService>();
         return services;

@@ -243,8 +243,6 @@ public static class AuthEndpoints
     }
 }
 
-// ── Request/Response DTOs ────────────────────────────────────────────────
-
 public sealed record VerifyEmailRequest(string Email, string OtpCode);
 public sealed record VerifyEmailResponse(Guid UserId, string AccessToken, string RefreshToken, DateTime RefreshTokenExpiresAt);
 public sealed record LoginRequest(string Email, string Password);
