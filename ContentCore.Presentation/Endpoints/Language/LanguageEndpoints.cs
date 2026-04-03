@@ -14,7 +14,7 @@ internal static class LanguageEndpoints
 {
     internal static void MapLanguageEndpoints(RouteGroupBuilder group)
     {
-        var languages = group.MapGroup("/languages");
+        var languages = group.MapGroup("/languages").WithTags("ContentCore | Languages");
 
         languages.MapGet("/", async (ISender sender, bool activeOnly = true) =>
         {

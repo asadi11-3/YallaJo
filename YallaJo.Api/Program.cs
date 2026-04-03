@@ -205,7 +205,17 @@ await app.UseDataSeedingAsync();
 using (var scope = app.Services.CreateScope())
 {
     var seeder = scope.ServiceProvider.GetRequiredService<SecurityDataSeeder>();
-    await seeder.SeedAsync();
+    var seederLogger = scope.ServiceProvider
+        .GetRequiredService<ILoggerFactory>()
+        .CreateLogger("SecurityDataSeeder");
+    try
+    {
+        await seeder.SeedAsync();
+    }
+    catch (Exception ex)
+    {
+        seederLogger.LogError(ex, "SecurityDataSeeder failed. Startup will continue.");
+    }
 }
 
 // ── Middleware pipeline (ORDER IS MANDATORY) ──────────────────────────────

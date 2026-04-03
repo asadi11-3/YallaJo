@@ -15,8 +15,6 @@ public sealed class SecurityDataSeeder(
 {
     public async Task SeedAsync(CancellationToken ct = default)
     {
-        await dbContext.Database.MigrateAsync(ct);
-
         await SeedRolesAsync(ct);
         await SeedRoleClaimsAsync(ct);
     }

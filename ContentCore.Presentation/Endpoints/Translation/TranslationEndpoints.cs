@@ -16,7 +16,7 @@ internal static class TranslationEndpoints
 {
     internal static void MapTranslationEndpoints(RouteGroupBuilder group)
     {
-        var translations = group.MapGroup("/translations");
+        var translations = group.MapGroup("/translations").WithTags("ContentCore | Translations");
 
         translations.MapPost("/translate", async (TranslateRequest request, ISender sender) =>
         {

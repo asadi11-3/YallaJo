@@ -19,7 +19,7 @@ internal static class CategoryEndpoints
 {
     internal static void MapCategoryEndpoints(RouteGroupBuilder group)
     {
-        var categories = group.MapGroup("/categories");
+        var categories = group.MapGroup("/categories").WithTags("ContentCore | Categories");
 
         // GET / — List categories as tree (public, includes translations when Accept-Language present)
         // ActiveOnly defaults to true so anonymous callers never see deactivated categories.

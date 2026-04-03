@@ -14,7 +14,7 @@ internal static class EntityCategoryEndpoints
 {
     internal static void MapEntityCategoryEndpoints(RouteGroupBuilder group)
     {
-        var entityCategories = group.MapGroup("/entity-categories");
+        var entityCategories = group.MapGroup("/entity-categories").WithTags("ContentCore | Entity Categories");
 
         entityCategories.MapGet("/", async (string entityType, Guid entityId, ISender sender) =>
         {

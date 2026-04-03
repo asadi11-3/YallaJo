@@ -14,7 +14,7 @@ internal static class SpecializationEndpoints
 {
     internal static void MapSpecializationEndpoints(RouteGroupBuilder group)
     {
-        var specializations = group.MapGroup("/specializations");
+        var specializations = group.MapGroup("/specializations").WithTags("ContentCore | Specializations");
 
         specializations.MapGet("/", async (ISender sender, bool activeOnly = false) =>
         {

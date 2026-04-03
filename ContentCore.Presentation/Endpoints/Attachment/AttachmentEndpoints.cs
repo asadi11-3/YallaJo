@@ -20,7 +20,7 @@ internal static class AttachmentEndpoints
 {
     internal static void MapAttachmentEndpoints(RouteGroupBuilder group)
     {
-        var attachments = group.MapGroup("/attachments");
+        var attachments = group.MapGroup("/attachments").WithTags("ContentCore | Attachments");
 
         // Upload attachment (multipart/form-data)
         attachments.MapPost("/", async (IFormFile file, [AsParameters] UploadAttachmentRequest request, ICurrentUser currentUser, ISender sender) =>

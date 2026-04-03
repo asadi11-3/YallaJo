@@ -17,7 +17,7 @@ internal static class TagEndpoints
 {
     internal static void MapTagEndpoints(RouteGroupBuilder group)
     {
-        var tags = group.MapGroup("/tags");
+        var tags = group.MapGroup("/tags").WithTags("ContentCore | Tags");
 
         tags.MapGet("/", async (ISender sender, bool activeOnly = false) =>
         {

@@ -14,7 +14,7 @@ internal static class EntityTagEndpoints
 {
     internal static void MapEntityTagEndpoints(RouteGroupBuilder group)
     {
-        var entityTags = group.MapGroup("/entity-tags");
+        var entityTags = group.MapGroup("/entity-tags").WithTags("ContentCore | Entity Tags");
 
         entityTags.MapGet("/", async (string entityType, Guid entityId, ISender sender) =>
         {
