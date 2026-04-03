@@ -16,7 +16,6 @@ public sealed class UnlinkExternalProviderCommandHandler(
         if (!currentUser.IsAuthenticated || currentUser.UserId is null)
             return Result.Unauthorized("Authentication is required.");
 
-        // 1. Load provider link (tracked — will be mutated)
         var externalProvider = await externalProviderRepository.GetByIdAsync(
             request.ExternalProviderId,
             ct: ct,
@@ -25,11 +24,9 @@ public sealed class UnlinkExternalProviderCommandHandler(
         if (externalProvider is null)
             return Result.NotFound($"External provider link {request.ExternalProviderId} was not found.");
 
-        // 2. Security: caller may only unlink their own providers
         if (externalProvider.UserId != currentUser.UserId.Value)
             return Result.Forbidden("You are not authorized to unlink this external provider.");
 
-        // 3. Deactivate (idempotent — already-inactive is fine)
         if (externalProvider.IsActive)
             externalProvider.Deactivate();
 

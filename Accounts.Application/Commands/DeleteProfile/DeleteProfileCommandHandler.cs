@@ -17,10 +17,11 @@ public sealed class DeleteProfileCommandHandler(
             return Result.Failure(Error.Unauthorized("Authentication is required."), Outcome.Unauthorized);
 
         var profile = await profileRepository.GetByUserIdAsync(currentUser.UserId.Value, ct);
-        if (profile is null)
+        if (profile is null) {
             return Result.Failure(
-                Error.NotFound("Profile", "Profile not found."),
-                Outcome.NotFound);
+                   Error.NotFound("Profile", "Profile not found."),
+                   Outcome.NotFound);
+        }
 
         profileRepository.Remove(profile);
         await unitOfWork.SaveChangesAsync(ct);

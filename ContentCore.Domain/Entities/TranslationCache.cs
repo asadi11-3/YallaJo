@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using ContentCore.Domain.Enums;
 using YallaJo.SharedKernel.Domain.Entities;
 
@@ -27,6 +28,12 @@ public sealed class TranslationCache : BaseEntity, IAggregateRoot
     public string? EntityType { get; private set; }
     public Guid? EntityId { get; private set; }
     public string? FieldName { get; private set; }
+
+    /// <summary>
+    /// Optimistic concurrency token. Backed by a SQL Server rowversion column.
+    /// </summary>
+    [Timestamp]
+    public byte[] RowVersion { get; private set; } = [];
 
     public static TranslationCache Create(
         string originalText,

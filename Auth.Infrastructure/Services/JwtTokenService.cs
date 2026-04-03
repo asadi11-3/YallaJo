@@ -32,7 +32,7 @@ internal sealed class JwtTokenService : ITokenService
             new(JwtRegisteredClaimNames.Email, data.Email),
             new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
             new(JwtRegisteredClaimNames.Iat,
-                now.ToUnixTimeSeconds().ToString(),
+                now.ToUnixTimeSeconds().ToString(System.Globalization.CultureInfo.InvariantCulture),
                 ClaimValueTypes.Integer64),
         };
 

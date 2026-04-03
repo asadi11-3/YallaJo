@@ -20,7 +20,6 @@ public sealed class PasswordResetIntegrationEventHandler(
         IntegrationEventNotification<PasswordResetIntegrationEvent> notification,
         CancellationToken ct)
     {
-       
         if (await inboxStore.HasBeenProcessedAsync(notification.MessageId, ct))
         {
             logger.LogWarning(
@@ -30,8 +29,6 @@ public sealed class PasswordResetIntegrationEventHandler(
         }
 
         var userId = notification.Event.UserId;
-
-       
         var activeSessions = await sessionRepository.GetAllAsync(
             filter: s => s.UserId == userId && !s.IsRevoked,
             asNoTracking: false,
@@ -39,8 +36,6 @@ public sealed class PasswordResetIntegrationEventHandler(
 
         foreach (var session in activeSessions)
             session.Revoke();
-
-        
         var activeTokens = await refreshTokenRepository.GetAllAsync(
             filter: rt => rt.UserId == userId && !rt.IsRevoked,
             asNoTracking: false,

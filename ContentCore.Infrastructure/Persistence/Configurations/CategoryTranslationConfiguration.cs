@@ -36,6 +36,13 @@ public class CategoryTranslationConfiguration : IEntityTypeConfiguration<Categor
 
         builder.HasQueryFilter(x => !x.Category.IsDeleted);
 
-        builder.HasIndex(x => x.LanguageId);
+        // ISSUE-006: Enforce the one-translation-per-language domain invariant at DB level.
+        builder.HasIndex(x => new { x.CategoryId, x.LanguageId })
+            .IsUnique()
+            .HasDatabaseName("UX_CategoryTranslations_CategoryId_LanguageId");
+
+        // Keep separate index on LanguageId for cross-category language queries.
+        builder.HasIndex(x => x.LanguageId)
+            .HasDatabaseName("IX_CategoryTranslations_LanguageId");
     }
 }

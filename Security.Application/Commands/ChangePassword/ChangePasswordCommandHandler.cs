@@ -15,26 +15,30 @@ public sealed class ChangePasswordCommandHandler(
 {
     public async Task<Result<ChangePasswordResult>> Handle(
         ChangePasswordCommand request,
-        CancellationToken ct)
+        CancellationToken cancellationToken)
     {
-        if (!currentUser.IsAuthenticated || currentUser.UserId is null)
+        if (currentUser.UserId is null)
+        {
             return Result<ChangePasswordResult>.Failure(
-                Error.Unauthorized("Authentication is required."),
+                Error.Unauthorized("User is not authenticated."),
                 Outcome.Unauthorized);
+        }
 
-        var user = await userRepository.GetByIdAsync(currentUser.UserId.Value, ct, asNoTracking: false);
-        if (user is null)
+        var user = await userRepository.GetByIdAsync(currentUser.UserId.Value, cancellationToken, asNoTracking: false);
+        if (user is null) {
             return Result<ChangePasswordResult>.Failure(
-                Error.NotFound("User", "User not found."),
-                Outcome.NotFound);
+               Error.NotFound("User", "User not found."),
+               Outcome.NotFound);
+        }
 
-        if (!passwordHasher.Verify(request.CurrentPassword, user.PasswordHash))
+        if (!passwordHasher.Verify(request.CurrentPassword, user.PasswordHash)) {
             return Result<ChangePasswordResult>.Failure(
                 Error.Unauthorized("Current password is incorrect."),
                 Outcome.Unauthorized);
+        }
 
         user.SetPasswordHash(passwordHasher.Hash(request.NewPassword));
-        await unitOfWork.SaveChangesAsync(ct);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<ChangePasswordResult>.Success(new ChangePasswordResult(true));
     }

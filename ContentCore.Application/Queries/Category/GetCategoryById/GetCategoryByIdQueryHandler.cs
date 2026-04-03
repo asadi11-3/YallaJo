@@ -16,7 +16,6 @@ public sealed class GetCategoryByIdQueryHandler(ICategoryRepository categoryRepo
     {
         try
         {
-            // Load category — include Translations when client requested them
             var category = request.WithTranslations
                 ? await categoryRepository.GetAsync(
                     filter: c => c.Id == request.Id,
@@ -32,15 +31,15 @@ public sealed class GetCategoryByIdQueryHandler(ICategoryRepository categoryRepo
             }
 
             var subcategories = request.WithTranslations
-                ? await categoryRepository.GetAllAsync(
-                    filter: c => c.ParentCategoryId == request.Id,
-                    include: q => q.Include(c => c.Translations),
-                    orderBy: q => q.OrderBy(c => c.SortOrder).ThenBy(c => c.Name),
-                    ct: cancellationToken)
-                : await categoryRepository.GetAllAsync(
-                    filter: c => c.ParentCategoryId == request.Id,
-                    orderBy: q => q.OrderBy(c => c.SortOrder).ThenBy(c => c.Name),
-                    ct: cancellationToken);
+             ? await categoryRepository.GetAllAsync(
+                 filter: c => c.ParentCategoryId == request.Id,
+                 include: q => q.Include(c => c.Translations),
+                 orderBy: q => q.OrderBy(c => c.SortOrder).ThenBy(c => c.Name),
+                 ct: cancellationToken)
+             : await categoryRepository.GetAllAsync(
+                 filter: c => c.ParentCategoryId == request.Id,
+                 orderBy: q => q.OrderBy(c => c.SortOrder).ThenBy(c => c.Name),
+                 ct: cancellationToken);
 
             var childDtos = subcategories
                 .Select(c => CategoryDto.From(c, []))

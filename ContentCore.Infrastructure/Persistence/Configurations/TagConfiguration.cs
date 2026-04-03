@@ -30,6 +30,9 @@ public class TagConfiguration : IEntityTypeConfiguration<Tag>
         builder.Property(x => x.CreatedAt).IsRequired();
         builder.Property(x => x.UpdatedAt).IsRequired(false);
 
+        // POSSIBLE-001: Concurrency token so optimistic-locking catch blocks are functional.
+        builder.Property(x => x.RowVersion).IsRowVersion();
+
         builder.HasIndex(x => x.Slug).IsUnique();
     }
 }

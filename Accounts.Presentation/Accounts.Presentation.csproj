@@ -12,6 +12,13 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Accounts.Application\Accounts.Application.csproj" />
+    <!--
+      Security.Contracts is already transitively available via Accounts.Application,
+      but declared explicitly here so MustHavePermissionAttribute is a first-class
+      dependency of this Presentation project.
+    -->
+    <ProjectReference Include="..\Security.Contracts\Security.Contracts.csproj" />
+    <ProjectReference Include="..\YallaJo.SharedKernel.Presentation\YallaJo.SharedKernel.Presentation.csproj" />
   </ItemGroup>
 
 </Project>

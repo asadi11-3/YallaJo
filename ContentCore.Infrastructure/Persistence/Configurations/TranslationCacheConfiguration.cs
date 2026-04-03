@@ -53,6 +53,9 @@ public class TranslationCacheConfiguration : IEntityTypeConfiguration<Translatio
         builder.Property(x => x.CreatedAt).IsRequired();
         builder.Property(x => x.UpdatedAt).IsRequired(false);
 
+        // POSSIBLE-001: Concurrency token so optimistic-locking catch blocks are functional.
+        builder.Property(x => x.RowVersion).IsRowVersion();
+
         // Index for cache lookups (language pair only; OriginalText filtered in query)
         builder.HasIndex(x => new { x.FromLanguage, x.ToLanguage })
             .HasDatabaseName("IX_TranslationCache_Lookup");

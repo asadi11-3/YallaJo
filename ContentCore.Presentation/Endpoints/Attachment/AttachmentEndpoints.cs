@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Security.Contracts.Authorization;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
+using YallaJo.SharedKernel.Presentation;
 
 namespace ContentCore.Presentation.Endpoints.Attachment;
 
@@ -30,7 +31,6 @@ internal static class AttachmentEndpoints
 
             if (!Enum.TryParse<Domain.Enums.AttachmentType>(request.AttachmentType, true, out var attachmentType))
                 return Results.BadRequest("Invalid AttachmentType.");
-
             if (currentUser.UserId is null)
                 return Results.Unauthorized();
 
@@ -48,7 +48,7 @@ internal static class AttachmentEndpoints
                 request.Height,
                 request.DurationSeconds,
                 request.SortOrder));
-            return ContentCoreResultHelper.ToApiResult(result);
+            return result.ToApiResult();
         })
         .WithName("UploadAttachment")
         .Produces<UploadAttachmentResult>(StatusCodes.Status201Created)
@@ -62,7 +62,7 @@ internal static class AttachmentEndpoints
         attachments.MapGet("/", async (EntityType entityType, Guid entityId, ISender sender) =>
         {
             var result = await sender.Send(new GetEntityAttachmentsQuery(entityType, entityId));
-            return ContentCoreResultHelper.ToApiResult(result);
+            return result.ToApiResult();
         })
         .WithName("GetEntityAttachments")
         .Produces<IReadOnlyList<AttachmentDto>>(StatusCodes.Status200OK)
@@ -74,7 +74,7 @@ internal static class AttachmentEndpoints
         attachments.MapGet("/{id:guid}", async (Guid id, ISender sender) =>
         {
             var result = await sender.Send(new GetAttachmentByIdQuery(id));
-            return ContentCoreResultHelper.ToApiResult(result);
+            return result.ToApiResult();
         })
         .WithName("GetAttachmentById")
         .Produces<AttachmentDto>(StatusCodes.Status200OK)
@@ -87,7 +87,7 @@ internal static class AttachmentEndpoints
         attachments.MapDelete("/{id:guid}", async (Guid id, ISender sender) =>
         {
             var result = await sender.Send(new DeleteAttachmentCommand(id));
-            return ContentCoreResultHelper.ToApiResult(result);
+            return result.ToApiResult();
         })
         .WithName("DeleteAttachment")
         .Produces(StatusCodes.Status200OK)
@@ -103,7 +103,7 @@ internal static class AttachmentEndpoints
 
             var result = await sender.Send(new ReorderAttachmentsCommand(
                 entityType, request.EntityId, request.OrderedAttachmentIds));
-            return ContentCoreResultHelper.ToApiResult(result);
+            return result.ToApiResult();
         })
         .WithName("ReorderAttachments")
         .Produces(StatusCodes.Status200OK)
@@ -121,7 +121,7 @@ internal static class AttachmentEndpoints
 
             var result = await sender.Send(new SetPrimaryImageCommand(
                 entityType, request.EntityId, request.AttachmentId));
-            return ContentCoreResultHelper.ToApiResult(result);
+            return result.ToApiResult();
         })
         .WithName("SetPrimaryImage")
         .Produces(StatusCodes.Status200OK)

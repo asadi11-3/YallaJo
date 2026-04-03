@@ -5,8 +5,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace Auth.Infrastructure.Services;
-
-
 internal sealed class GmailEmailService(
     IOptions<GmailOptions> options,
     ILogger<GmailEmailService> logger) : IEmailService

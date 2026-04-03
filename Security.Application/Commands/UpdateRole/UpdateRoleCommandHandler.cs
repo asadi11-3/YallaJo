@@ -9,15 +9,11 @@ namespace Security.Application.Commands.UpdateRole;
 
 public sealed class UpdateRoleCommandHandler(
     IRoleRepository roleRepository,
-    ISecurityUnitOfWork unitOfWork,
-    ICurrentUser currentUser)
+    ISecurityUnitOfWork unitOfWork)
     : ICommandHandler<UpdateRoleCommand>
 {
     public async Task<Result> Handle(UpdateRoleCommand request, CancellationToken ct)
     {
-        if (!currentUser.IsAuthenticated || currentUser.UserId is null)
-            return Result.Failure(Error.Unauthorized("Authentication is required."), Outcome.Unauthorized);
-
         var role = await roleRepository.GetByIdAsync(request.RoleId, ct, asNoTracking: false);
         if (role is null)
             return Result.Failure(RoleErrors.NotFound, Outcome.NotFound);

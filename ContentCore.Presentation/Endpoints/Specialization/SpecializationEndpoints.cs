@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Security.Contracts.Authorization;
+using YallaJo.SharedKernel.Presentation;
 
 namespace ContentCore.Presentation.Endpoints.Specialization;
 
@@ -19,7 +20,7 @@ internal static class SpecializationEndpoints
         specializations.MapGet("/", async (ISender sender, bool activeOnly = false) =>
         {
             var result = await sender.Send(new ListSpecializationsQuery(activeOnly));
-            return ContentCoreResultHelper.ToApiResult(result);
+            return result.ToApiResult();
         })
         .WithName("ListSpecializations")
         .Produces<IReadOnlyList<SpecializationDto>>(StatusCodes.Status200OK)
@@ -32,7 +33,7 @@ internal static class SpecializationEndpoints
                 request.Name,
                 request.Description,
                 request.Icon));
-            return ContentCoreResultHelper.ToApiResult(result);
+            return result.ToApiResult();
         })
         .WithName("CreateSpecialization")
         .Produces<CreateSpecializationResult>(StatusCodes.Status201Created)
@@ -49,7 +50,7 @@ internal static class SpecializationEndpoints
                 request.Description,
                 request.Icon,
                 request.IsActive));
-            return ContentCoreResultHelper.ToApiResult(result);
+            return result.ToApiResult();
         })
         .WithName("UpdateSpecialization")
         .Produces<UpdateSpecializationResult>(StatusCodes.Status200OK)

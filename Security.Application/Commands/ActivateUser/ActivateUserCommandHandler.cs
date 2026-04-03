@@ -8,15 +8,12 @@ namespace Security.Application.Commands.ActivateUser;
 
 public sealed class ActivateUserCommandHandler(
     IUserRepository userRepository,
-    ISecurityUnitOfWork unitOfWork,
-    ICurrentUser currentUser)
+    ISecurityUnitOfWork unitOfWork
+    )
     : ICommandHandler<ActivateUserCommand>
 {
     public async Task<Result> Handle(ActivateUserCommand request, CancellationToken ct)
     {
-        if (!currentUser.IsAuthenticated || currentUser.UserId is null)
-            return Result.Failure(Error.Unauthorized("Authentication is required."), Outcome.Unauthorized);
-
         var user = await userRepository.GetByIdAsync(request.UserId, ct, asNoTracking: false);
         if (user is null)
             return Result.Failure(UserErrors.NotFound, Outcome.NotFound);

@@ -1,4 +1,4 @@
-using TagEntity = ContentCore.Domain.Entities.Tag;
+
 using ContentCore.Application.Caching;
 using ContentCore.Domain.Exceptions;
 using ContentCore.Domain.Repositories;
@@ -6,7 +6,7 @@ using Microsoft.Extensions.Caching.Hybrid;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 using Outcome = YallaJo.SharedKernel.Domain.Abstractions.Results.Outcome;
-
+using TagEntity = ContentCore.Domain.Entities.Tag;
 namespace ContentCore.Application.Commands.Tag.CreateTag;
 
 public sealed class CreateTagCommandHandler(

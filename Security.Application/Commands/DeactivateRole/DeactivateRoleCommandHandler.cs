@@ -9,14 +9,12 @@ namespace Security.Application.Commands.DeactivateRole;
 
 public sealed class DeactivateRoleCommandHandler(
     IRoleRepository roleRepository,
-    ISecurityUnitOfWork unitOfWork,
-    ICurrentUser currentUser)
+    ISecurityUnitOfWork unitOfWork
+  )
     : ICommandHandler<DeactivateRoleCommand>
 {
     public async Task<Result> Handle(DeactivateRoleCommand request, CancellationToken ct)
     {
-        if (!currentUser.IsAuthenticated || currentUser.UserId is null)
-            return Result.Failure(Error.Unauthorized("Authentication is required."), Outcome.Unauthorized);
 
         var role = await roleRepository.GetByIdAsync(request.RoleId, ct, asNoTracking: false);
         if (role is null)

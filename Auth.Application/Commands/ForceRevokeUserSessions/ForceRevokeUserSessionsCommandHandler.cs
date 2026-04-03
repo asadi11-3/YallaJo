@@ -14,7 +14,7 @@ public sealed class ForceRevokeUserSessionsCommandHandler(
 {
     public async Task<Result> Handle(
         ForceRevokeUserSessionsCommand request,
-        CancellationToken ct)
+        CancellationToken cancellationToken)
     {
         if (!currentUser.IsAuthenticated || currentUser.UserId is null)
             return Result.Unauthorized("Authentication is required.");
@@ -25,13 +25,13 @@ public sealed class ForceRevokeUserSessionsCommandHandler(
         var activeSessions = await sessionRepository.GetAllAsync(
             filter: s => s.UserId == targetUserId && !s.IsRevoked,
             asNoTracking: false,
-            ct: ct);
+            ct: cancellationToken);
 
         // 2. Revoke all active refresh tokens for the target user
         var activeRefreshTokens = await refreshTokenRepository.GetAllAsync(
             filter: rt => rt.UserId == targetUserId && !rt.IsRevoked,
             asNoTracking: false,
-            ct: ct);
+            ct: cancellationToken);
 
         foreach (var session in activeSessions)
             session.Revoke();
@@ -39,7 +39,7 @@ public sealed class ForceRevokeUserSessionsCommandHandler(
         foreach (var refreshToken in activeRefreshTokens)
             refreshToken.Revoke();
 
-        await unitOfWork.SaveChangesAsync(ct);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Success();
     }

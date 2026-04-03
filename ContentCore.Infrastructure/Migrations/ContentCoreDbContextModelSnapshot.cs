@@ -196,9 +196,12 @@ namespace ContentCore.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CategoryId");
+                    b.HasIndex("LanguageId")
+                        .HasDatabaseName("IX_CategoryTranslations_LanguageId");
 
-                    b.HasIndex("LanguageId");
+                    b.HasIndex("CategoryId", "LanguageId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_CategoryTranslations_CategoryId_LanguageId");
 
                     b.ToTable("CategoryTranslations", "content_core");
                 });
@@ -399,6 +402,12 @@ namespace ContentCore.Infrastructure.Migrations
                         .IsUnicode(false)
                         .HasColumnType("varchar(100)");
 
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
                     b.Property<string>("Slug")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -449,6 +458,12 @@ namespace ContentCore.Infrastructure.Migrations
                     b.Property<string>("OriginalText")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
 
                     b.Property<byte>("Status")
                         .ValueGeneratedOnAdd()

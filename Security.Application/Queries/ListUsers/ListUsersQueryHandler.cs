@@ -1,4 +1,4 @@
-using Security.Application.Queries.GetUser;
+using Security.Application.Queries.Dtos;
 using Security.Domain.Repositories;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Pagination;
@@ -10,10 +10,10 @@ public sealed class ListUsersQueryHandler(IUserRepository userRepository)
     : IQueryHandler<ListUsersQuery, PaginatedResult<UserDto>>
 {
     public async Task<Result<PaginatedResult<UserDto>>> Handle(
-        ListUsersQuery request, CancellationToken ct)
+        ListUsersQuery request, CancellationToken cancellationToken)
     {
         var pagedUsers = await userRepository.GetPagedWithDetailsAsync(
-            request.Page, request.PageSize, ct);
+            request.Page, request.PageSize, cancellationToken);
 
         var dtos = pagedUsers.Items.Select(user =>
         {

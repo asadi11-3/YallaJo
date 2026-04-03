@@ -8,14 +8,14 @@ using YallaJo.SharedKernel.Infrastructure.Outbox;
 
 namespace Security.Infrastructure.EventHandlers;
 
-public sealed class EmailVerifiedDomainEventHandler(
+public sealed class EmailVerifiedDomainNotificationHandler(
     SecurityDbContext dbContext,
-    ILogger<EmailVerifiedDomainEventHandler> logger)
+    ILogger<EmailVerifiedDomainNotificationHandler> logger)
     : INotificationHandler<DomainEventNotification<EmailVerifiedEvent>>
 {
     public Task Handle(
         DomainEventNotification<EmailVerifiedEvent> notification,
-        CancellationToken ct)
+        CancellationToken cancellationToken)
     {
         var domainEvent = notification.Event;
 
@@ -26,9 +26,7 @@ public sealed class EmailVerifiedDomainEventHandler(
         var integrationEvent = new EmailVerifiedIntegrationEvent(
             domainEvent.UserId,
             domainEvent.EmailId,
-            domainEvent.EmailAddress);
-
-       
+            domainEvent.EmailAddress);  
         dbContext.OutboxMessages.Add(OutboxMessage.Create(integrationEvent));
 
         return Task.CompletedTask;

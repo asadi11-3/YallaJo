@@ -8,15 +8,12 @@ namespace Security.Application.Commands.DeactivateUser;
 
 public sealed class DeactivateUserCommandHandler(
     IUserRepository userRepository,
-    ISecurityUnitOfWork unitOfWork,
-    ICurrentUser currentUser)
+    ISecurityUnitOfWork unitOfWork
+    )
     : ICommandHandler<DeactivateUserCommand>
 {
     public async Task<Result> Handle(DeactivateUserCommand request, CancellationToken ct)
     {
-        if (!currentUser.IsAuthenticated || currentUser.UserId is null)
-            return Result.Failure(Error.Unauthorized("Authentication is required."), Outcome.Unauthorized);
-
         var user = await userRepository.GetByIdAsync(request.UserId, ct, asNoTracking: false);
         if (user is null)
             return Result.Failure(UserErrors.NotFound, Outcome.NotFound);

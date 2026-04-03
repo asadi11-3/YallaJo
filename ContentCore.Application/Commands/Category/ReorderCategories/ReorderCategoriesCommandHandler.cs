@@ -1,5 +1,6 @@
 using ContentCore.Domain.Exceptions;
 using ContentCore.Domain.Repositories;
+using Microsoft.Extensions.Caching.Hybrid;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 using Outcome = YallaJo.SharedKernel.Domain.Abstractions.Results.Outcome;
@@ -8,7 +9,8 @@ namespace ContentCore.Application.Commands.Category.ReorderCategories;
 
 public sealed class ReorderCategoriesCommandHandler(
     ICategoryRepository categoryRepository,
-    IContentCoreUnitOfWork unitOfWork)
+    IContentCoreUnitOfWork unitOfWork,
+    HybridCache cache)
     : ICommandHandler<ReorderCategoriesCommand>
 {
     public async Task<Result> Handle(
@@ -44,6 +46,8 @@ public sealed class ReorderCategoriesCommandHandler(
                         "This record was modified by another user. Please refresh and try again."),
                     Outcome.Conflict);
             }
+
+            await cache.RemoveByTagAsync("categories", cancellationToken);
 
             return Result.Success();
         }

@@ -13,21 +13,24 @@ public sealed class UpdateAvatarCommandHandler(
 {
     public async Task<Result<UpdateAvatarResult>> Handle(
         UpdateAvatarCommand request,
-        CancellationToken ct)
+        CancellationToken cancellationToken)
     {
-        if (!currentUser.IsAuthenticated || currentUser.UserId is null)
+        if (!currentUser.IsAuthenticated || currentUser.UserId is null) {
             return Result<UpdateAvatarResult>.Failure(
-                Error.Unauthorized("Authentication is required."),
-                Outcome.Unauthorized);
+                   Error.Unauthorized("Authentication is required."),
+                   Outcome.Unauthorized);
+        }
 
-        var profile = await profileRepository.GetByUserIdAsync(currentUser.UserId.Value, ct);
+        var profile = await profileRepository.GetByUserIdAsync(currentUser.UserId.Value, cancellationToken);
         if (profile is null)
+        {
             return Result<UpdateAvatarResult>.Failure(
                 Error.NotFound("Profile", "Profile not found."),
                 Outcome.NotFound);
+        }
 
         profile.UpdateAvatar(request.AvatarUrl);
-        await unitOfWork.SaveChangesAsync(ct);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<UpdateAvatarResult>.Success(new UpdateAvatarResult(profile.AvatarUrl!));
     }

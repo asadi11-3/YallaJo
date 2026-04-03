@@ -19,11 +19,11 @@ public sealed class ResendOtpCommandHandler(
 
     public async Task<Result<ResendOtpResult>> Handle(
         ResendOtpCommand request,
-        CancellationToken ct)
+        CancellationToken cancellationToken)
     {
         var normalizedEmail = request.Email.Trim().ToLowerInvariant();
 
-        var userId = await securityService.GetUserIdByEmailAsync(normalizedEmail, ct);
+        var userId = await securityService.GetUserIdByEmailAsync(normalizedEmail, cancellationToken);
         if (userId is null)
             return Result<ResendOtpResult>.Success(new ResendOtpResult(GenericMessage));
 
@@ -34,25 +34,25 @@ public sealed class ResendOtpCommandHandler(
                       && !o.IsUsed,
             orderBy: q => q.OrderByDescending(o => o.CreatedAt),
             asNoTracking: true,
-            ct: ct);
+            ct: cancellationToken);
 
         if (recentOtp is not null && recentOtp.CreatedAt > DateTime.UtcNow.AddMinutes(-1))
+        {
             return Result<ResendOtpResult>.Fail(
-                Outcome.TooManyRequests,
-                "Please wait before requesting a new code.");
+               Outcome.TooManyRequests,
+               "Please wait before requesting a new code.");
+        }
 
-        // Mark old active OTPs for this purpose as used
         var oldOtps = await otpRepository.GetAllAsync(
             filter: o => o.UserId == userId.Value
                       && o.Purpose == request.Purpose
                       && !o.IsUsed,
             asNoTracking: false,
-            ct: ct);
+            ct: cancellationToken);
 
         foreach (var old in oldOtps)
             old.MarkUsed();
 
-        // Generate new OTP
         var plainOtp = otpService.Generate();
         var otpHash = otpService.Hash(plainOtp);
 
@@ -63,8 +63,8 @@ public sealed class ResendOtpCommandHandler(
             deliveryChannel: "Email",
             deliveryAddress: normalizedEmail);
 
-        await otpRepository.AddAsync(otp, ct);
-        await unitOfWork.SaveChangesAsync(ct);
+        await otpRepository.AddAsync(otp, cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         var subject = request.Purpose == "PasswordReset"
             ? "YallaJo — Reset Your Password"
@@ -74,7 +74,7 @@ public sealed class ResendOtpCommandHandler(
             normalizedEmail,
             subject,
             $"Your verification code is: {plainOtp}. It expires in 10 minutes.",
-            ct);
+            cancellationToken);
 
         return Result<ResendOtpResult>.Success(new ResendOtpResult(GenericMessage));
     }

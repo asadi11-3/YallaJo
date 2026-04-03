@@ -18,63 +18,65 @@ public sealed class ResetPasswordCommandHandler(
 
     public async Task<Result<ResetPasswordResult>> Handle(
         ResetPasswordCommand request,
-        CancellationToken ct)
+        CancellationToken cancellationToken)
     {
         var normalizedEmail = request.Email.Trim().ToLowerInvariant();
-
-        var userId = await securityService.GetUserIdByEmailAsync(normalizedEmail, ct);
+        var userId = await securityService.GetUserIdByEmailAsync(normalizedEmail, cancellationToken);
         if (userId is null)
+        {
             return Result<ResetPasswordResult>.Failure(
-                Error.NotFound("User.NotFound", "No account found with this email."),
-                Outcome.NotFound);
+             Error.NotFound("User.NotFound", "No account found with this email."),
+             Outcome.NotFound);
+        }
 
-        // Get latest active OTP for password reset
         var otp = await otpRepository.FirstOrDefaultAsync(
             filter: o => o.UserId == userId.Value
                       && o.Purpose == OtpPurpose
                       && !o.IsUsed,
             orderBy: q => q.OrderByDescending(o => o.CreatedAt),
-            asNoTracking: false,
-            ct: ct);
+            asNoTracking: false, ct: cancellationToken);
 
         if (otp is null)
+        {
             return Result<ResetPasswordResult>.Failure(
-                Error.NotFound("Otp.NotFound", "No pending reset code found. Please request a new one."),
-                Outcome.NotFound);
+               Error.NotFound("Otp.NotFound", "No pending reset code found. Please request a new one."),
+               Outcome.NotFound);
+        }
 
-        // Brute force protection
         if (otp.AttemptCount >= MaxOtpAttempts)
+        {
             return Result<ResetPasswordResult>.Fail(
                 Outcome.TooManyRequests,
                 "Too many verification attempts. Please request a new code.");
+        }
 
-        // Check expiration
         if (otp.ExpiresAt < DateTime.UtcNow)
+        {
             return Result<ResetPasswordResult>.Failure(
                 Error.Validation("Otp.Expired", "Reset code has expired. Please request a new one."),
                 Outcome.Invalid);
+        }
 
-        // Record attempt and verify
         otp.IncrementAttempt();
 
         if (!otpService.Verify(request.OtpCode, otp.CodeHash))
         {
-            await unitOfWork.SaveChangesAsync(ct); // persist attempt count
+            await unitOfWork.SaveChangesAsync(cancellationToken); 
             return Result<ResetPasswordResult>.Failure(
                 Error.Validation("Otp.Invalid", "Invalid reset code."),
                 Outcome.Invalid);
         }
 
-        // Reset password via Security module (also raises PasswordResetDomainEvent → outbox → integration event)
-        var reset = await securityService.ResetPasswordAsync(userId.Value, request.NewPassword, ct);
+        var reset = await securityService.ResetPasswordAsync(userId.Value, request.NewPassword, cancellationToken);
         if (!reset)
+        {
             return Result<ResetPasswordResult>.Failure(
-                Error.Failure("Reset.Failed", "Could not reset password. Please try again."),
-                Outcome.ServerError);
+             Error.Failure("Reset.Failed", "Could not reset password. Please try again."),
+             Outcome.ServerError);
+        }
 
-        // OTP valid and password reset succeeded — mark OTP as used
         otp.MarkUsed();
-        await unitOfWork.SaveChangesAsync(ct);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<ResetPasswordResult>.Success(new ResetPasswordResult(true));
     }

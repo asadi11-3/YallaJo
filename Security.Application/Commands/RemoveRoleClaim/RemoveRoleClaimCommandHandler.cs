@@ -15,18 +15,19 @@ public sealed class RemoveRoleClaimCommandHandler(
 {
     public async Task<Result> Handle(RemoveRoleClaimCommand request, CancellationToken ct)
     {
-        if (!currentUser.IsAuthenticated || currentUser.UserId is null)
-            return Result.Failure(Error.Unauthorized("Authentication is required."), Outcome.Unauthorized);
-
+        if (currentUser.UserId is null)
+                return Result.Failure(Error.Unauthorized("Authentication is required."), Outcome.Unauthorized);
         var role = await roleRepository.GetByIdAsync(request.RoleId, ct);
         if (role is null)
             return Result.Failure(RoleErrors.NotFound, Outcome.NotFound);
 
         var claim = await roleClaimRepository.GetByIdAsync(request.ClaimId, ct);
         if (claim is null || claim.RoleId != request.RoleId)
+        {
             return Result.Failure(
-                new Error("NotFound.RoleClaim", "The specified claim was not found on this role."),
-                Outcome.NotFound);
+                  new Error("NotFound.RoleClaim", "The specified claim was not found on this role."),
+                  Outcome.NotFound);
+        }
 
         roleClaimRepository.Remove(claim);
         await unitOfWork.SaveChangesAsync(ct);

@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <!--
+    ASP.NET Core is needed for IResult / Results — the mapping helpers
+    are presentation-layer concerns and require the web framework types.
+  -->
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\YallaJo.SharedKernel.Domain\YallaJo.SharedKernel.Domain.csproj" />
+  </ItemGroup>
+
+</Project>

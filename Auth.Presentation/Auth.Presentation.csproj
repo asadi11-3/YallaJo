@@ -13,6 +13,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Auth.Application\Auth.Application.csproj" />
     <ProjectReference Include="..\Security.Contracts\Security.Contracts.csproj" />
+    <ProjectReference Include="..\YallaJo.SharedKernel.Presentation\YallaJo.SharedKernel.Presentation.csproj" />
   </ItemGroup>
 
 </Project>

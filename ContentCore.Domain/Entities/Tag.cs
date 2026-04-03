@@ -1,14 +1,22 @@
+using System.ComponentModel.DataAnnotations;
 using YallaJo.SharedKernel.Domain.Entities;
 
 namespace ContentCore.Domain.Entities;
 
 public sealed class Tag : BaseEntity
 {
+    
     private Tag() { } // EF Core
 
     public string Name { get; private set; } = string.Empty;
     public string Slug { get; private set; } = string.Empty;
     public bool IsActive { get; private set; } = true;
+
+    /// <summary>
+    /// Optimistic concurrency token. Backed by a SQL Server rowversion column.
+    /// </summary>
+    [Timestamp]
+    public byte[] RowVersion { get; private set; } = [];
 
     // ── Factory Method ──
     public static Tag Create(string name, string slug)

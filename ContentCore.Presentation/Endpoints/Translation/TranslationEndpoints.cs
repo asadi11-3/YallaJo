@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Security.Contracts.Authorization;
+using YallaJo.SharedKernel.Presentation;
 
 namespace ContentCore.Presentation.Endpoints.Translation;
 
@@ -22,7 +23,7 @@ internal static class TranslationEndpoints
         {
             var result = await sender.Send(new TranslateTextCommand(
                 request.Text, request.FromLanguageCode, request.ToLanguageCode));
-            return ContentCoreResultHelper.ToApiResult(result);
+            return result.ToApiResult();
         })
         .WithName("TranslateText")
         .Produces<TranslateTextResult>(StatusCodes.Status200OK)
@@ -35,7 +36,7 @@ internal static class TranslationEndpoints
         {
             var result = await sender.Send(new BatchTranslateCommand(
                 request.Texts, request.FromLanguageCode, request.ToLanguageCode));
-            return ContentCoreResultHelper.ToApiResult(result);
+            return result.ToApiResult();
         })
         .WithName("BatchTranslate")
         .Produces<BatchTranslateResult>(StatusCodes.Status200OK)
@@ -47,7 +48,7 @@ internal static class TranslationEndpoints
         translations.MapGet("/{entityType}/{entityId:guid}", async (string entityType, Guid entityId, ISender sender) =>
         {
             var result = await sender.Send(new GetEntityTranslationsQuery(entityType, entityId));
-            return ContentCoreResultHelper.ToApiResult(result);
+            return result.ToApiResult();
         })
         .WithName("GetEntityTranslations")
         .Produces<IReadOnlyList<EntityTranslationDto>>(StatusCodes.Status200OK)
@@ -58,7 +59,7 @@ internal static class TranslationEndpoints
         translations.MapPut("/{id:guid}", async (Guid id, UpdateTranslationRequest request, ISender sender) =>
         {
             var result = await sender.Send(new UpdateTranslationCommand(id, request.TranslatedText));
-            return ContentCoreResultHelper.ToApiResult(result);
+            return result.ToApiResult();
         })
         .WithName("UpdateTranslation")
         .Produces<UpdateTranslationResult>(StatusCodes.Status200OK)
@@ -71,7 +72,7 @@ internal static class TranslationEndpoints
         translations.MapPost("/{id:guid}/approve", async (Guid id, ISender sender) =>
         {
             var result = await sender.Send(new ApproveTranslationCommand(id));
-            return ContentCoreResultHelper.ToApiResult(result);
+            return result.ToApiResult();
         })
         .WithName("ApproveTranslation")
         .Produces(StatusCodes.Status200OK)
