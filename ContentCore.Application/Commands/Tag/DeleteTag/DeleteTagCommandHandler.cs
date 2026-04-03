@@ -21,10 +21,13 @@ public sealed class DeleteTagCommandHandler(
             var tag = await tagRepository.GetByIdAsync(request.Id, cancellationToken, asNoTracking: false);
             if (tag is null)
             {
+
+
                 return Result.Failure(
-                    new Error("Tag.NotFound", $"Tag '{request.Id}' was not found."),
-                    Outcome.NotFound);
+                        new Error("Tag.NotFound", $"Tag '{request.Id}' was not found."),
+                        Outcome.NotFound);
             }
+           
 
             tagRepository.Remove(tag);
 

@@ -34,7 +34,6 @@ public sealed class UpdateLanguageCommandHandler(
             else
                 language.Deactivate();
 
-
             try
             {
                 await unitOfWork.SaveChangesAsync(cancellationToken);

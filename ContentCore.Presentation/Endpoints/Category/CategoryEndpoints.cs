@@ -12,6 +12,7 @@ using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using YallaJo.SharedKernel.Presentation;
 
 namespace ContentCore.Presentation.Endpoints.Category;
 
@@ -33,7 +34,7 @@ internal static class CategoryEndpoints
                 ActiveOnly: isActive ?? true,
                 ParentCategoryId: parentCategoryId,
                 WithTranslations: withTranslations));
-            return ContentCoreResultHelper.ToApiResult(result);
+            return result.ToApiResult();
         })
         .WithName("ListCategories")
         .Produces<IReadOnlyList<CategoryDto>>(StatusCodes.Status200OK)
@@ -45,7 +46,7 @@ internal static class CategoryEndpoints
         {
             var withTranslations = http.Request.Headers.AcceptLanguage.Count > 0;
             var result = await sender.Send(new GetCategoryByIdQuery(id, withTranslations));
-            return ContentCoreResultHelper.ToApiResult(result);
+            return result.ToApiResult();
         })
         .WithName("GetCategoryById")
         .Produces<CategoryDto>(StatusCodes.Status200OK)
@@ -63,7 +64,7 @@ internal static class CategoryEndpoints
                 request.Icon,
                 request.SortOrder,
                 request.SourceLanguageCode ?? "en"));
-            return ContentCoreResultHelper.ToApiResult(result);
+            return result.ToApiResult();
         })
         .WithName("CreateCategory")
         .Produces<CreateCategoryResult>(StatusCodes.Status201Created)
@@ -84,7 +85,7 @@ internal static class CategoryEndpoints
                 request.SortOrder,
                 request.SourceLanguageCode ?? "en",
                 request.Translations));
-            return ContentCoreResultHelper.ToApiResult(result);
+            return result.ToApiResult();
         })
         .WithName("UpdateCategory")
         .Produces<UpdateCategoryResult>(StatusCodes.Status200OK)
@@ -97,7 +98,7 @@ internal static class CategoryEndpoints
         categories.MapDelete("/{id:guid}", async (Guid id, ISender sender) =>
         {
             var result = await sender.Send(new DeleteCategoryCommand(id));
-            return ContentCoreResultHelper.ToApiResult(result);
+            return result.ToApiResult();
         })
         .WithName("DeleteCategory")
         .Produces(StatusCodes.Status200OK)
@@ -109,7 +110,7 @@ internal static class CategoryEndpoints
         categories.MapPatch("/{id:guid}/deactivate", async (Guid id, ISender sender) =>
         {
             var result = await sender.Send(new DeactivateCategoryCommand(id));
-            return ContentCoreResultHelper.ToApiResult(result);
+            return result.ToApiResult();
         })
         .WithName("DeactivateCategory")
         .Produces<DeactivateCategoryResult>(StatusCodes.Status200OK)
@@ -121,7 +122,7 @@ internal static class CategoryEndpoints
         categories.MapPatch("/{id:guid}/activate", async (Guid id, ISender sender) =>
         {
             var result = await sender.Send(new ReactivateCategoryCommand(id));
-            return ContentCoreResultHelper.ToApiResult(result);
+            return result.ToApiResult();
         })
         .WithName("ActivateCategory")
         .Produces<ReactivateCategoryResult>(StatusCodes.Status200OK)
@@ -136,7 +137,7 @@ internal static class CategoryEndpoints
                 request.SortOrders
                     .Select(i => new CategorySortOrderUpdate(i.CategoryId, i.SortOrder))
                     .ToList()));
-            return ContentCoreResultHelper.ToApiResult(result);
+            return result.ToApiResult();
         })
         .WithName("ReorderCategories")
         .Produces(StatusCodes.Status200OK)

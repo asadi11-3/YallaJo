@@ -9,8 +9,7 @@ namespace Security.Application.Commands.UpdateRole;
 
 public sealed class UpdateRoleCommandHandler(
     IRoleRepository roleRepository,
-    ISecurityUnitOfWork unitOfWork,
-    )
+    ISecurityUnitOfWork unitOfWork)
     : ICommandHandler<UpdateRoleCommand>
 {
     public async Task<Result> Handle(UpdateRoleCommand request, CancellationToken ct)

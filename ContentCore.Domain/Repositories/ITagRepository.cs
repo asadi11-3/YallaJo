@@ -16,5 +16,5 @@ namespace ContentCore.Domain.Repositories;
 /// <c>AnyAsync(t =&gt; t.Slug == slug)</c>.
 /// </summary>
 public interface ITagRepository : IReadRepository<Tag, Guid>, IWriteRepository<Tag, Guid>
-{
+{ 
 }

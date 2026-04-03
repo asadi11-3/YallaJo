@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Security.Contracts.Authorization;
+using YallaJo.SharedKernel.Presentation;
 
 namespace ContentCore.Presentation.Endpoints.Tag;
 
@@ -22,7 +23,7 @@ internal static class TagEndpoints
         tags.MapGet("/", async (ISender sender, bool activeOnly = false) =>
         {
             var result = await sender.Send(new ListTagsQuery(activeOnly));
-            return ContentCoreResultHelper.ToApiResult(result);
+            return result.ToApiResult();
         })
         .WithName("ListTags")
         .Produces<IReadOnlyList<TagDto>>(StatusCodes.Status200OK)
@@ -32,7 +33,7 @@ internal static class TagEndpoints
         tags.MapGet("/{id:guid}", async (Guid id, ISender sender) =>
         {
             var result = await sender.Send(new GetTagByIdQuery(id));
-            return ContentCoreResultHelper.ToApiResult(result);
+            return result.ToApiResult();
         })
         .WithName("GetTagById")
         .Produces<TagDto>(StatusCodes.Status200OK)
@@ -43,7 +44,7 @@ internal static class TagEndpoints
         tags.MapPost("/", async (CreateTagRequest request, ISender sender) =>
         {
             var result = await sender.Send(new CreateTagCommand(request.Name, request.Slug));
-            return ContentCoreResultHelper.ToApiResult(result);
+            return result.ToApiResult();
         })
         .WithName("CreateTag")
         .Produces<CreateTagResult>(StatusCodes.Status201Created)
@@ -56,7 +57,7 @@ internal static class TagEndpoints
         tags.MapPut("/{id:guid}", async (Guid id, UpdateTagRequest request, ISender sender) =>
         {
             var result = await sender.Send(new UpdateTagCommand(id, request.Name, request.Slug));
-            return ContentCoreResultHelper.ToApiResult(result);
+            return result.ToApiResult();
         })
         .WithName("UpdateTag")
         .Produces<UpdateTagResult>(StatusCodes.Status200OK)
@@ -70,7 +71,7 @@ internal static class TagEndpoints
         tags.MapDelete("/{id:guid}", async (Guid id, ISender sender) =>
         {
             var result = await sender.Send(new DeleteTagCommand(id));
-            return ContentCoreResultHelper.ToApiResult(result);
+            return result.ToApiResult();
         })
         .WithName("DeleteTag")
         .Produces(StatusCodes.Status200OK)

@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Security.Contracts.Authorization;
+using YallaJo.SharedKernel.Presentation;
 
 namespace ContentCore.Presentation.Endpoints.Language;
 
@@ -19,7 +20,7 @@ internal static class LanguageEndpoints
         languages.MapGet("/", async (ISender sender, bool activeOnly = true) =>
         {
             var result = await sender.Send(new ListLanguagesQuery(activeOnly));
-            return ContentCoreResultHelper.ToApiResult(result);
+            return result.ToApiResult();
         })
         .WithName("ListLanguages")
         .Produces<IReadOnlyList<LanguageDto>>(StatusCodes.Status200OK)
@@ -30,7 +31,7 @@ internal static class LanguageEndpoints
         {
             var result = await sender.Send(new CreateLanguageCommand(
                 request.Code, request.Name, request.NativeName, request.IsRtl));
-            return ContentCoreResultHelper.ToApiResult(result);
+            return result.ToApiResult();
         })
         .WithName("CreateLanguage")
         .Produces<CreateLanguageResult>(StatusCodes.Status201Created)
@@ -44,7 +45,7 @@ internal static class LanguageEndpoints
         {
             var result = await sender.Send(new UpdateLanguageCommand(
                 id, request.Name, request.NativeName, request.IsRtl, request.IsActive));
-            return ContentCoreResultHelper.ToApiResult(result);
+            return result.ToApiResult();
         })
         .WithName("UpdateLanguage")
         .Produces<UpdateLanguageResult>(StatusCodes.Status200OK)

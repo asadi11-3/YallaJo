@@ -23,5 +23,6 @@ namespace Security.Contracts.Authorization
         public const string TranslationCache = nameof(TranslationCache);
         public const string Language = nameof(Language);
         public const string Attachment = nameof(Attachment);
+        public const string Booking = nameof(Booking);
     }
 }

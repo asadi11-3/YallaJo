@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Security.Contracts.Authorization;
+using YallaJo.SharedKernel.Presentation;
 
 namespace ContentCore.Presentation.Endpoints.EntityCategory;
 
@@ -19,7 +20,7 @@ internal static class EntityCategoryEndpoints
         entityCategories.MapGet("/", async (string entityType, Guid entityId, ISender sender) =>
         {
             var result = await sender.Send(new GetEntityCategoriesQuery(entityType, entityId));
-            return ContentCoreResultHelper.ToApiResult(result);
+            return result.ToApiResult();
         })
         .WithName("GetEntityCategories")
         .Produces<IReadOnlyList<EntityCategoryDto>>(StatusCodes.Status200OK)
@@ -32,7 +33,7 @@ internal static class EntityCategoryEndpoints
                 request.EntityType,
                 request.EntityId,
                 request.CategoryIds));
-            return ContentCoreResultHelper.ToApiResult(result);
+            return result.ToApiResult();
         })
         .WithName("AssignCategoriesToEntity")
         .Produces(StatusCodes.Status200OK)
@@ -45,7 +46,7 @@ internal static class EntityCategoryEndpoints
         entityCategories.MapDelete("/", async (string entityType, Guid entityId, Guid categoryId, ISender sender) =>
         {
             var result = await sender.Send(new RemoveCategoryFromEntityCommand(entityType, entityId, categoryId));
-            return ContentCoreResultHelper.ToApiResult(result);
+            return result.ToApiResult();
         })
         .WithName("RemoveCategoryFromEntity")
         .Produces(StatusCodes.Status200OK)

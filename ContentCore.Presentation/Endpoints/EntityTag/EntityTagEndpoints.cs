@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Security.Contracts.Authorization;
+using YallaJo.SharedKernel.Presentation;
 
 namespace ContentCore.Presentation.Endpoints.EntityTag;
 
@@ -19,7 +20,7 @@ internal static class EntityTagEndpoints
         entityTags.MapGet("/", async (string entityType, Guid entityId, ISender sender) =>
         {
             var result = await sender.Send(new GetEntityTagsQuery(entityType, entityId));
-            return ContentCoreResultHelper.ToApiResult(result);
+            return result.ToApiResult();
         })
         .WithName("GetEntityTags")
         .Produces<IReadOnlyList<EntityTagDto>>(StatusCodes.Status200OK)
@@ -32,7 +33,7 @@ internal static class EntityTagEndpoints
                 request.EntityType,
                 request.EntityId,
                 request.TagIds));
-            return ContentCoreResultHelper.ToApiResult(result);
+            return result.ToApiResult();
         })
         .WithName("AssignTagsToEntity")
         .Produces(StatusCodes.Status200OK)
@@ -45,7 +46,7 @@ internal static class EntityTagEndpoints
         entityTags.MapDelete("/", async (string entityType, Guid entityId, Guid tagId, ISender sender) =>
         {
             var result = await sender.Send(new RemoveTagFromEntityCommand(entityType, entityId, tagId));
-            return ContentCoreResultHelper.ToApiResult(result);
+            return result.ToApiResult();
         })
         .WithName("RemoveTagFromEntity")
         .Produces(StatusCodes.Status200OK)
