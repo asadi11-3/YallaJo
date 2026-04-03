@@ -1,11 +1,13 @@
 using ContentPlaces.Application.Interfaces;
+using ContentPlaces.Domain.Repositories;
 using ContentPlaces.Infrastructure.Persistence;
 using ContentPlaces.Infrastructure.Persistence.Seeding;
+using ContentPlaces.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using YallaJo.SharedKernel.Infrastructure.Data;
 using YallaJo.SharedKernel.Infrastructure.BackgroundJobs;
+using YallaJo.SharedKernel.Infrastructure.Data;
 
 namespace ContentPlaces.Infrastructure;
 
@@ -33,7 +35,7 @@ public static class DependencyInjection
         services.AddScoped<IModuleDbInitializer, ContentPlacesDbInitializer>();
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
         services.AddScoped<IOutboxProcessor, OutboxProcessor<ContentPlacesDbContext>>();
-
+        services.AddScoped<IBusinessRepository, BusinessRepository>();
         return services;
     }
 }
