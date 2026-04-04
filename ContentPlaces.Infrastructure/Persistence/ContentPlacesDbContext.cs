@@ -8,7 +8,10 @@ namespace ContentPlaces.Infrastructure.Persistence;
 
 public sealed class ContentPlacesDbContext : DbContext, IDbContext
 {
-    public ContentPlacesDbContext(DbContextOptions<ContentPlacesDbContext> options) : base(options) { }
+    public ContentPlacesDbContext(DbContextOptions<ContentPlacesDbContext> options)
+        : base(options)
+    {
+    }
 
     public DbSet<Place> Places => Set<Place>();
     public DbSet<PlaceTranslation> PlaceTranslations => Set<PlaceTranslation>();

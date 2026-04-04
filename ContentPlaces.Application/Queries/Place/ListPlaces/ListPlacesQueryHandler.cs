@@ -1,4 +1,5 @@
 using ContentPlaces.Application.Queries.Place.Common;
+using ContentPlaces.Application.Specifications;
 using ContentPlaces.Domain.Repositories;
 using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
@@ -22,15 +23,15 @@ public sealed class ListPlacesQueryHandler(
         {
             var pageSize = Math.Min(request.PageSize, MaxPageSize);
 
-            var paged = await placeRepository.GetPagedAsync(
+            var spec = new PlaceFilterSpecification(
                 page:      request.Page,
-                pageSize: pageSize,
-                categoryId: request.CategoryId,
+                pageSize:  pageSize,
                 ratingMin: request.RatingMin,
                 ratingMax: request.RatingMax,
-                city: request.City,
-                country: request.Country,
-                ct: cancellationToken);
+                city:      request.City,
+                country:   request.Country);
+
+            var paged = await placeRepository.PaginatedListAsync(spec, cancellationToken);
 
             var dtos = paged.Items
                 .Select(PlaceSummaryDto.From)

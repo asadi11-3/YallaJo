@@ -20,7 +20,7 @@ public sealed class PlaceUpdatedDomainEventHandler(
 {
     public async Task Handle(
         DomainEventNotification<PlaceUpdatedDomainEvent> notification,
-        CancellationToken ct)
+        CancellationToken cancellationToken)
     {
         var evt = notification.Event;
 
@@ -28,7 +28,7 @@ public sealed class PlaceUpdatedDomainEventHandler(
             filter:      p => p.Id == evt.PlaceId,
             include:     q => q.Include(p => p.PlaceTranslations),
             asNoTracking: false,
-            ct:          ct);
+            ct:          cancellationToken);
 
         if (place is null)
         {
@@ -47,7 +47,7 @@ public sealed class PlaceUpdatedDomainEventHandler(
             fields["Address"] = evt.Address;
 
         var translationSets = await orchestrator.TranslateToAllActiveLanguagesAsync(
-            fields, sourceLanguageCode: "en", ct);
+            fields, sourceLanguageCode: "en", cancellationToken);
 
         var updatedCount = 0;
         var addedCount   = 0;
