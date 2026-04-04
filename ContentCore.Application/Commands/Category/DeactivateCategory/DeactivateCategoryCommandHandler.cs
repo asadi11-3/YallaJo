@@ -20,13 +20,15 @@ public sealed class DeactivateCategoryCommandHandler(
         try
         {
             var category = await categoryRepository.GetByIdAsync(request.Id, cancellationToken, asNoTracking: false);
-            if (category is null) {
+            if (category is null)
+            {
                 return Result<DeactivateCategoryResult>.Failure(
                   new Error(
                       "Category.NotFound",
                       $"Category '{request.Id}' was not found."),
                   Outcome.NotFound);
             }
+
             category.Deactivate();
 
             try

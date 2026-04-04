@@ -76,10 +76,10 @@ internal static class AppPermissions
         new(AppFeatures.Attachment,          AppAction.Update, AppRoleGroup.ContentManagement, "Update attachment details"),
         new(AppFeatures.Attachment,          AppAction.Delete, AppRoleGroup.ContentManagement, "Delete an attachment"),
 
-        new(AppFeatures.Booking,          AppAction.Read,   AppRoleGroup.ContentManagement, "View Bookgin"),
-        new(AppFeatures.Booking,          AppAction.Create, AppRoleGroup.ContentManagement, "Upload an Bookgin"),
-        new(AppFeatures.Booking,          AppAction.Update, AppRoleGroup.ContentManagement, "Update Bookgin details"),
-        new(AppFeatures.Booking,          AppAction.Delete, AppRoleGroup.ContentManagement, "Delete an Bookgin")
+        new(AppFeatures.Place, AppAction.Read,    AppRoleGroup.ContentManagement, "View places"),
+        new(AppFeatures.Place, AppAction.Create,  AppRoleGroup.ContentManagement, "Create a place"),
+        new(AppFeatures.Place, AppAction.Update,  AppRoleGroup.ContentManagement, "Update place details"),
+        new(AppFeatures.Place, AppAction.Delete,  AppRoleGroup.ContentManagement, "Delete a place"),
 
     }.AsReadOnly();
 
