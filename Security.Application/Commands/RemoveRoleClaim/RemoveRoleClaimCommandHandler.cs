@@ -23,7 +23,6 @@ public sealed class RemoveRoleClaimCommandHandler(
 
         var claim = await roleClaimRepository.GetByIdAsync(request.ClaimId, ct);
         if (claim is null || claim.RoleId != request.RoleId)
-        {
             return Result.Failure(
                   new Error("NotFound.RoleClaim", "The specified claim was not found on this role."),
                   Outcome.NotFound);
