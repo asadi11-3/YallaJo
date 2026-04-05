@@ -15,9 +15,11 @@ public sealed class LinkExternalProviderCommandHandler(
     public async Task<Result<Guid>> Handle(LinkExternalProviderCommand request, CancellationToken ct)
     {
         if (!currentUser.IsAuthenticated || currentUser.UserId is null)
+        {
             return Result.Failure<Guid>(
-                Error.Unauthorized("Authentication is required."),
-                Outcome.Unauthorized);
+               Error.Unauthorized("Authentication is required."),
+               Outcome.Unauthorized);
+        }
 
         var userId = currentUser.UserId.Value;
         var normalizedProvider = request.Provider.Trim().ToLowerInvariant();
@@ -30,10 +32,12 @@ public sealed class LinkExternalProviderCommandHandler(
             ct);
 
         if (alreadyLinked)
+        {
             return Result<Guid>.Conflict(
                 Error.Conflict(
                     "ExternalProvider.AlreadyLinked",
                     $"An active {request.Provider} account is already linked to your profile."));
+        }
 
         // 2. Guard: this provider account isn't already claimed by another user
         var takenByOther = await externalProviderRepository.AnyAsync(
@@ -43,12 +47,13 @@ public sealed class LinkExternalProviderCommandHandler(
             ct);
 
         if (takenByOther)
+        {
             return Result<Guid>.Conflict(
-                Error.Conflict(
-                    "ExternalProvider.ProviderIdTaken",
-                    $"This {request.Provider} account is already linked to another user."));
+               Error.Conflict(
+                   "ExternalProvider.ProviderIdTaken",
+                   $"This {request.Provider} account is already linked to another user."));
+        }
 
-        // 3. Create and persist
         var externalProvider = ExternalProvider.Create(
             userId,
             normalizedProvider,

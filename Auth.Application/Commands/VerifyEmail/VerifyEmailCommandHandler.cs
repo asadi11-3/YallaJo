@@ -6,6 +6,7 @@ using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 using RefreshTokenEntity = Auth.Domain.Entities.RefreshToken;
+
 namespace Auth.Application.Commands.VerifyEmail;
 
 public sealed class VerifyEmailCommandHandler(
@@ -20,8 +21,7 @@ public sealed class VerifyEmailCommandHandler(
     IRequestContext requestContext)
     : ICommandHandler<VerifyEmailCommand, VerifyEmailResult>
 {
-    private const int MaxOtpAttempts = 5;
-    private const int SessionDays = 30;
+    private const int SessionDays      = 30;
     private const int RefreshTokenDays = 30;
 
     public async Task<Result<VerifyEmailResult>> Handle(
@@ -29,18 +29,19 @@ public sealed class VerifyEmailCommandHandler(
         CancellationToken cancellationToken)
     {
         var normalizedEmail = request.Email.Trim().ToLowerInvariant();
+
         var userId = await securityService.GetUserIdByEmailAsync(normalizedEmail, cancellationToken);
         if (userId is null)
         {
             return Result<VerifyEmailResult>.Failure(
-              Error.NotFound("User.NotFound", "No account found with this email."),
-              Outcome.NotFound);
+                Error.NotFound("User.NotFound", "No account found with this email."),
+                Outcome.NotFound);
         }
 
         var otp = await otpRepository.FirstOrDefaultAsync(
-            filter: o => o.UserId == userId.Value
-                      && o.Purpose == "EmailVerification"
-                      && !o.IsUsed,
+            filter:  o => o.UserId == userId.Value
+                       && o.Purpose == "EmailVerification"
+                       && !o.IsUsed,
             orderBy: q => q.OrderByDescending(o => o.CreatedAt),
             asNoTracking: false,
             ct: cancellationToken);
@@ -48,28 +49,30 @@ public sealed class VerifyEmailCommandHandler(
         if (otp is null)
         {
             return Result<VerifyEmailResult>.Failure(
-           Error.NotFound("Otp.NotFound", "No pending verification code found. Please register again."),
-           Outcome.NotFound);
+                Error.NotFound("Otp.NotFound", "No pending verification code found. Please register again."),
+                Outcome.NotFound);
         }
 
-        if (otp.AttemptCount >= MaxOtpAttempts)
+        // ── Domain invariants (moved out of handlers into Otp entity) ─────────
+        if (otp.IsExhausted)
         {
             return Result<VerifyEmailResult>.Fail(
-               Outcome.TooManyRequests,
-               "Too many verification attempts. Please request a new code.");
+                Outcome.TooManyRequests,
+                "Too many verification attempts. Please request a new code.");
         }
 
-        if (otp.ExpiresAt < DateTime.UtcNow) {
+        if (otp.IsExpired())
+        {
             return Result<VerifyEmailResult>.Failure(
-             Error.Validation("Otp.Expired", "Verification code has expired. Please request a new one."),
-             Outcome.Invalid);
+                Error.Validation("Otp.Expired", "Verification code has expired. Please request a new one."),
+                Outcome.Invalid);
         }
 
         otp.IncrementAttempt();
 
         if (!otpService.Verify(request.OtpCode, otp.CodeHash))
         {
-            await unitOfWork.SaveChangesAsync(cancellationToken); // persist attempt count
+            await unitOfWork.SaveChangesAsync(cancellationToken); // persist incremented attempt
             return Result<VerifyEmailResult>.Failure(
                 Error.Validation("Otp.Invalid", "Invalid verification code."),
                 Outcome.Invalid);
@@ -78,31 +81,33 @@ public sealed class VerifyEmailCommandHandler(
         otp.MarkUsed();
 
         var device = Device.Create(
-            userId: userId.Value,
-            deviceToken: Guid.NewGuid().ToString(),
-            userAgent: requestContext.UserAgent,
-            deviceName: requestContext.DeviceName);
+            userId:      userId.Value,
+            deviceToken: Guid.CreateVersion7().ToString(),
+            userAgent:   requestContext.UserAgent,
+            deviceName:  requestContext.DeviceName);
         await deviceRepository.AddAsync(device, cancellationToken);
 
         var session = Session.Create(
-            userId: userId.Value,
-            deviceId: device.Id,
+            userId:    userId.Value,
+            deviceId:  device.Id,
             expiresAt: DateTime.UtcNow.AddDays(SessionDays),
             ipAddress: requestContext.IpAddress);
         await sessionRepository.AddAsync(session, cancellationToken);
-        var plainRefreshToken = tokenService.GenerateRefreshToken();
-        var refreshTokenHash = tokenService.HashRefreshToken(plainRefreshToken);
+
+        var plainRefreshToken    = tokenService.GenerateRefreshToken();
+        var refreshTokenHash     = tokenService.HashRefreshToken(plainRefreshToken);
         var refreshTokenExpiresAt = DateTime.UtcNow.AddDays(RefreshTokenDays);
 
         var refreshToken = RefreshTokenEntity.Create(
-            userId: userId.Value,
+            userId:    userId.Value,
             sessionId: session.Id,
             tokenHash: refreshTokenHash,
             expiresAt: refreshTokenExpiresAt);
         await refreshTokenRepository.AddAsync(refreshToken, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        var verified = await securityService.MarkEmailVerifiedAsync(userId.Value, normalizedEmail, cancellationToken);
+        var verified = await securityService.MarkEmailVerifiedAsync(
+            userId.Value, normalizedEmail, cancellationToken);
         if (!verified)
         {
             return Result<VerifyEmailResult>.Failure(
@@ -110,18 +115,18 @@ public sealed class VerifyEmailCommandHandler(
                 Outcome.ServerError);
         }
 
-        var userData = await securityService.GetUserDataByIdAsync(userId.Value, cancellationToken);
+        var userData    = await securityService.GetUserDataByIdAsync(userId.Value, cancellationToken);
         var accessToken = tokenService.GenerateAccessToken(new TokenData(
-            UserId: userId.Value,
-            Email: normalizedEmail,
-            Roles: userData?.Roles ?? [],
+            UserId:           userId.Value,
+            Email:            normalizedEmail,
+            Roles:            userData?.Roles ?? [],
             AdditionalClaims: userData?.Claims ?? [],
-            SessionId: session.Id));
+            SessionId:        session.Id));
 
         return Result<VerifyEmailResult>.Success(new VerifyEmailResult(
-            UserId: userId.Value,
-            AccessToken: accessToken,
-            RefreshToken: plainRefreshToken,
+            UserId:                userId.Value,
+            AccessToken:           accessToken,
+            RefreshToken:          plainRefreshToken,
             RefreshTokenExpiresAt: refreshTokenExpiresAt));
     }
 }

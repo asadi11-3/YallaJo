@@ -58,6 +58,10 @@ public static class DependencyInjection
 
         services.AddScoped<IOutboxProcessor, OutboxProcessor<AuthDbContext>>();
         services.AddHostedService<AuthCleanupService>();
+
+        // Distributed cache — idempotent, safe if the host already registered it
+        services.AddHybridCache();
+
         return services;
     }
 }

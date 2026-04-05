@@ -1,4 +1,6 @@
+using Auth.Application.Caching;
 using Auth.Domain.Repositories;
+using Microsoft.Extensions.Caching.Hybrid;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
@@ -9,7 +11,8 @@ public sealed class ForceRevokeUserSessionsCommandHandler(
     ISessionRepository sessionRepository,
     IRefreshTokenRepository refreshTokenRepository,
     IAuthUnitOfWork unitOfWork,
-    ICurrentUser currentUser)
+    ICurrentUser currentUser,
+    HybridCache cache)
     : ICommandHandler<ForceRevokeUserSessionsCommand>
 {
     public async Task<Result> Handle(
@@ -21,13 +24,11 @@ public sealed class ForceRevokeUserSessionsCommandHandler(
 
         var targetUserId = request.UserId;
 
-        // 1. Revoke all active sessions for the target user
         var activeSessions = await sessionRepository.GetAllAsync(
             filter: s => s.UserId == targetUserId && !s.IsRevoked,
             asNoTracking: false,
             ct: cancellationToken);
 
-        // 2. Revoke all active refresh tokens for the target user
         var activeRefreshTokens = await refreshTokenRepository.GetAllAsync(
             filter: rt => rt.UserId == targetUserId && !rt.IsRevoked,
             asNoTracking: false,
@@ -40,6 +41,8 @@ public sealed class ForceRevokeUserSessionsCommandHandler(
             refreshToken.Revoke();
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        await cache.RemoveByTagAsync(AuthCacheKeys.UserSessionsTag(targetUserId), cancellationToken);
 
         return Result.Success();
     }

@@ -48,10 +48,10 @@ public sealed class LoginCommandHandler(
 
         // 3. Create Device
         var device = Device.Create(
-            userId: userData.UserId,
-            deviceToken: Guid.NewGuid().ToString(),
-            userAgent: requestContext.UserAgent,
-            deviceName: requestContext.DeviceName);
+            userId:      userData.UserId,
+            deviceToken: Guid.CreateVersion7().ToString(),
+            userAgent:   requestContext.UserAgent,
+            deviceName:  requestContext.DeviceName);
         await deviceRepository.AddAsync(device, cancellationToken);
 
         // 4. Create Session

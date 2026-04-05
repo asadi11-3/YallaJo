@@ -43,9 +43,15 @@ public sealed class ExternalProviderConfiguration : IEntityTypeConfiguration<Ext
         builder.HasQueryFilter(e => !e.IsDeleted);
 
         builder.HasIndex(e => e.UserId);
+
+        // Uniqueness is enforced ONLY for active links.
+        // Without this filter, deactivating (unlinking) a provider account would permanently
+        // block re-linking it — the DB constraint would fire even though IsActive = false.
         builder.HasIndex(e => new { e.Provider, e.ProviderUserId })
             .IsUnique()
-            .HasDatabaseName("IX_ExternalProviders_Provider_UserId");
+            .HasFilter("[IsActive] = 1")
+            .HasDatabaseName("IX_ExternalProviders_Provider_ProviderUserId_Active");
+
         builder.HasIndex(e => e.IsActive);
     }
 }
