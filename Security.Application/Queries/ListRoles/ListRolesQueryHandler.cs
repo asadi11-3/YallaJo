@@ -9,11 +9,14 @@ public sealed class ListRolesQueryHandler(IRoleRepository roleRepository)
 {
     public async Task<Result<IReadOnlyList<RoleDto>>> Handle(ListRolesQuery request, CancellationToken ct)
     {
-        var roles = await roleRepository.GetAllActiveAsync(ct);
+        var roles = await roleRepository.GetAllAsync(
+            filter: r => r.IsActive,
+            asNoTracking: true,
+            ct: ct);
 
         var dtos = roles
             .Select(r => new RoleDto(r.Id, r.Name, r.Description, r.IsActive))
-            .ToList();
+            .ToList<RoleDto>();
 
         return Result<IReadOnlyList<RoleDto>>.Success(dtos);
     }

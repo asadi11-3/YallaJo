@@ -6,14 +6,11 @@ using YallaJo.SharedKernel.Infrastructure.Data.Repositories;
 
 namespace Security.Infrastructure.Repositories;
 
-
 internal sealed class RoleRepository(SecurityDbContext context)
     : EfEntityRepository<Role, Guid>(context), IRoleRepository
 {
-   
     private readonly SecurityDbContext _db = context;
 
-  
     public async Task<Dictionary<Guid, IReadOnlyList<string>>> GetRolesByUserIdsAsync(
         IEnumerable<Guid> userIds, CancellationToken ct = default)
     {
@@ -35,7 +32,6 @@ internal sealed class RoleRepository(SecurityDbContext context)
                 g => (IReadOnlyList<string>)g.Select(x => x.RoleName).ToList());
     }
 
- 
     public async Task<IReadOnlyList<Role>> GetRolesByNamesAsync(
         IEnumerable<string> roleNames, CancellationToken ct = default)
     {
@@ -49,18 +45,9 @@ internal sealed class RoleRepository(SecurityDbContext context)
 
         if (names.Count == 0) return [];
 
-        // names.Contains translates to SQL IN — EF Core handles it.
         return (await GetAllAsync(
             filter: r => names.Contains(r.Name),
             asNoTracking: true,
             ct: ct)).AsReadOnly();
     }
-    public async Task<Role?> GetByNameAsync(string name, CancellationToken ct = default)
-       => await FirstOrDefaultAsync(r => r.Name == name, ct: ct);
-
-    public async Task<bool> ExistsByNameAsync(string name, CancellationToken ct = default)
-        => await AnyAsync(r => r.Name == name, ct);
-
-    public async Task<IReadOnlyList<Role>> GetAllActiveAsync(CancellationToken ct = default)
-        => (await GetAllAsync(filter: r => r.IsActive, asNoTracking: true, ct: ct)).AsReadOnly();
 }

@@ -29,5 +29,9 @@ public class UserRoleConfiguration : IEntityTypeConfiguration<UserRole>
         builder.HasIndex(ur => new { ur.UserId, ur.RoleId })
             .IsUnique()
             .HasDatabaseName("IX_UserRoles_UserId_RoleId_Unique");
+
+        // FK index on RoleId for efficient role-based user queries (e.g., AnyWithRoleAsync)
+        builder.HasIndex(ur => ur.RoleId)
+            .HasDatabaseName("IX_UserRoles_RoleId");
     }
 }

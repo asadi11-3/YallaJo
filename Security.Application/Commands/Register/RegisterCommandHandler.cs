@@ -1,3 +1,5 @@
+using Microsoft.Extensions.Caching.Hybrid;
+using Security.Application.Caching;
 using Security.Application.Helpers;
 using Security.Application.Interfaces;
 using Security.Domain.Entities;
@@ -10,7 +12,8 @@ namespace Security.Application.Commands.Register;
 public sealed class RegisterCommandHandler(
     IUserRepository userRepository,
     ISecurityUnitOfWork unitOfWork,
-    IPasswordHasher passwordHasher)
+    IPasswordHasher passwordHasher,
+    HybridCache cache)
     : ICommandHandler<RegisterCommand, RegisterResult>
 {
     public async Task<Result<RegisterResult>> Handle(
@@ -23,17 +26,21 @@ public sealed class RegisterCommandHandler(
             u => u.Emails.Any(e => e.Address == normalizedEmail),
             cancellationToken);
 
-        if (emailExists) {
+        if (emailExists)
+        {
             return Result<RegisterResult>.Conflict(
-                  Error.Conflict("User.Email", "An account with this email already exists."));
+                Error.Conflict("User.Email", "An account with this email already exists."));
         }
+            
 
         var user = User.Register(normalizedEmail, request.FirstName, request.LastName);
-
         user.SetPasswordHash(passwordHasher.Hash(request.Password));
 
         await userRepository.AddAsync(user, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        await cache.RemoveByTagAsync(SecurityCacheKeys.UsersTag, cancellationToken);
+
         return Result<RegisterResult>.Created(new RegisterResult(user.Id));
     }
 }

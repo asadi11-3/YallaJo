@@ -1,4 +1,5 @@
-// Security.Application/Commands/AssignRole/AssignRoleCommandHandler.cs
+using Microsoft.Extensions.Caching.Hybrid;
+using Security.Application.Caching;
 using Security.Contracts.Authorization;
 using Security.Domain.Errors;
 using Security.Domain.Repositories;
@@ -12,7 +13,8 @@ public sealed class AssignRoleCommandHandler(
     IRoleRepository roleRepository,
     IUserRepository userRepository,
     ISecurityUnitOfWork unitOfWork,
-    ICurrentUser currentUser)
+    ICurrentUser currentUser,
+    HybridCache cache)
     : ICommandHandler<AssignRoleCommand>
 {
     public async Task<Result> Handle(AssignRoleCommand request, CancellationToken ct)
@@ -44,6 +46,9 @@ public sealed class AssignRoleCommandHandler(
 
         user.AssignRole(role);
         await unitOfWork.SaveChangesAsync(ct);
+
+        await cache.RemoveByTagAsync(SecurityCacheKeys.UserTag(request.UserId), ct);
+        await cache.RemoveByTagAsync(SecurityCacheKeys.UsersTag, ct);
 
         return Result.Success();
     }
