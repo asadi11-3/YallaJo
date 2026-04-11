@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Security.Contracts.Authorization;
+using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Presentation;
 
 namespace Auth.Presentation.Endpoints.Session;
@@ -38,11 +39,31 @@ internal static class SessionEndpoints
         .ProducesProblem(StatusCodes.Status401Unauthorized)
         .WithSummary("Logout all sessions — revokes all refresh tokens for the current user")
         .RequireAuthorization();
-
-        group.MapGet("/sessions", async (ISender sender, CancellationToken ct) =>
+        group.MapGet("/sessions", async (ICurrentUser currentUser, ISender sender, CancellationToken ct) =>
         {
-            var result = await sender.Send(new ListActiveSessionsQuery(), ct);
-            return result.ToApiResult();
+            if (!currentUser.IsAuthenticated || currentUser.UserId is null)
+                return Results.Unauthorized();
+
+            Guid? currentSessionId = null;
+            var sidClaim = currentUser.GetClaim("sid");
+            if (sidClaim is not null && Guid.TryParse(sidClaim, out var parsedSid))
+                currentSessionId = parsedSid;
+
+            var result = await sender.Send(new ListActiveSessionsQuery(currentUser.UserId.Value), ct);
+
+            var decorated = result.Map(items => (IReadOnlyList<ActiveSessionDto>)items
+                .Select(i => new ActiveSessionDto(
+                    SessionId: i.SessionId,
+                    DeviceId: i.DeviceId,
+                    DeviceName: i.DeviceName,
+                    UserAgent: i.UserAgent,
+                    IpAddress: i.IpAddress,
+                    CreatedAt: i.CreatedAt,
+                    ExpiresAt: i.ExpiresAt,
+                    IsCurrent: currentSessionId.HasValue && i.SessionId == currentSessionId.Value))
+                .ToList());
+
+            return decorated.ToApiResult();
         })
         .WithName("ListActiveSessions")
         .Produces<IReadOnlyList<ActiveSessionDto>>(StatusCodes.Status200OK)

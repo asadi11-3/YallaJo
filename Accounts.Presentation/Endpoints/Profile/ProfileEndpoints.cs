@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Security.Contracts.Authorization;
+using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Abstractions.Storage;
 using YallaJo.SharedKernel.Presentation;
 
@@ -31,7 +32,8 @@ internal static class ProfileEndpoints
 
         profiles.MapPost("/", async (CreateProfileRequest request, ISender sender, CancellationToken ct) =>
         {
-            var result = await sender.Send(new CreateProfileCommand(
+            var result = await sender.Send(
+                new CreateProfileCommand(
                 request.UserId,
                 request.FirstName,
                 request.LastName,
@@ -58,9 +60,13 @@ internal static class ProfileEndpoints
     {
         var profile = group.MapGroup("/profile");
 
-        profile.MapGet("/", async (ISender sender, CancellationToken ct) =>
+       
+        profile.MapGet("/", async (ICurrentUser currentUser, ISender sender, CancellationToken ct) =>
         {
-            var result = await sender.Send(new GetProfileQuery(), ct);
+            if (!currentUser.IsAuthenticated || currentUser.UserId is null)
+                return Results.Unauthorized();
+
+            var result = await sender.Send(new GetProfileQuery(currentUser.UserId.Value), ct);
             return result.ToApiResult();
         })
         .WithName("GetProfile")
@@ -72,7 +78,8 @@ internal static class ProfileEndpoints
 
         profile.MapPut("/", async (UpdateProfileRequest request, ISender sender, CancellationToken ct) =>
         {
-            var result = await sender.Send(new UpdateProfileCommand(
+            var result = await sender.Send(
+                new UpdateProfileCommand(
                 request.FirstName,
                 request.LastName,
                 request.DateOfBirth,
@@ -97,8 +104,10 @@ internal static class ProfileEndpoints
             CancellationToken ct) =>
         {
             if (file is null || file.Length == 0)
+            {
                 return Results.ValidationProblem(
-                    new Dictionary<string, string[]> { { "file", ["An image file is required."] } });
+                   new Dictionary<string, string[]> { { "file", ["An image file is required."] } });
+            }
 
             await using var stream = file.OpenReadStream();
             var upload = await fileStorage.UploadAsync(

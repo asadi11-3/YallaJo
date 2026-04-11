@@ -6,6 +6,7 @@ public interface ISecurityService
     Task<SecurityUserData?> VerifyCredentialsAsync(string normalizedEmail, string password, CancellationToken ct = default);
     Task<SecurityUserData?> GetUserDataByIdAsync(Guid userId, CancellationToken ct = default);
     Task<string?> GetPrimaryPhoneNumberAsync(Guid userId, CancellationToken ct = default);
+    Task<SecurityContactData?> GetPrimaryContactDataAsync(Guid userId, CancellationToken ct = default);
     Task<bool> ResetPasswordAsync(Guid userId, string newPassword, CancellationToken ct = default);
 }
 
@@ -15,3 +16,7 @@ public sealed record SecurityUserData(
     bool IsEmailVerified,
     IReadOnlyList<string> Roles,
     IReadOnlyList<(string Type, string Value)> Claims);
+
+public sealed record SecurityContactData(
+    string Email,
+    string? PhoneNumber);

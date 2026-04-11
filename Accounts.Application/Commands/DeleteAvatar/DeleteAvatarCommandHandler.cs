@@ -18,7 +18,7 @@ public sealed class DeleteAvatarCommandHandler(
         DeleteAvatarCommand request,
         CancellationToken cancellationToken)
     {
-        if (currentUser.UserId is null)
+        if (!currentUser.IsAuthenticated || currentUser.UserId is null)
         {
             return Result<DeleteAvatarResult>.Failure(
                 Error.Unauthorized("Authentication is required."),

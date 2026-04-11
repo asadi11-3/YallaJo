@@ -2,7 +2,6 @@ using Microsoft.Extensions.Caching.Hybrid;
 using Security.Application.Caching;
 using Security.Domain.Errors;
 using Security.Domain.Repositories;
-using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
@@ -12,15 +11,13 @@ public sealed class RemoveRoleClaimCommandHandler(
     IRoleRepository roleRepository,
     IRoleClaimRepository roleClaimRepository,
     ISecurityUnitOfWork unitOfWork,
-    ICurrentUser currentUser,
     HybridCache cache)
     : ICommandHandler<RemoveRoleClaimCommand>
 {
     public async Task<Result> Handle(RemoveRoleClaimCommand request, CancellationToken ct)
     {
-        if (currentUser.UserId is null)
-            return Result.Failure(Error.Unauthorized("Authentication is required."), Outcome.Unauthorized);
-
+        // Authentication and permission (RoleClaim.Delete) are enforced by the endpoint.
+        // This handler operates on the target role/claim supplied in the command, not the caller.
         var role = await roleRepository.GetByIdAsync(request.RoleId, ct);
         if (role is null)
             return Result.Failure(RoleErrors.NotFound, Outcome.NotFound);

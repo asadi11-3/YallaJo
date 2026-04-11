@@ -1,5 +1,4 @@
 using Auth.Domain.Repositories;
-using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
@@ -7,20 +6,14 @@ namespace Auth.Application.Queries.ListSessions;
 
 public sealed class ListActiveSessionsQueryHandler(
     ISessionRepository sessionRepository,
-    IDeviceRepository deviceRepository,
-    ICurrentUser currentUser)
-    : IQueryHandler<ListActiveSessionsQuery, IReadOnlyList<ActiveSessionDto>>
+    IDeviceRepository deviceRepository)
+    : IQueryHandler<ListActiveSessionsQuery, IReadOnlyList<ActiveSessionListItemDto>>
 {
-    public async Task<Result<IReadOnlyList<ActiveSessionDto>>> Handle(
+    public async Task<Result<IReadOnlyList<ActiveSessionListItemDto>>> Handle(
         ListActiveSessionsQuery request,
         CancellationToken cancellationToken)
     {
         var userId = request.UserId;
-
-        Guid? currentSessionId = null;
-        var sidClaim = currentUser.GetClaim("sid");
-        if (sidClaim is not null && Guid.TryParse(sidClaim, out var parsedSid))
-            currentSessionId = parsedSid;
 
         var now = DateTime.UtcNow;
 
@@ -31,7 +24,7 @@ public sealed class ListActiveSessionsQueryHandler(
             ct: cancellationToken);
 
         if (sessions.Count == 0)
-            return Result<IReadOnlyList<ActiveSessionDto>>.Success(Array.Empty<ActiveSessionDto>());
+            return Result<IReadOnlyList<ActiveSessionListItemDto>>.Success(Array.Empty<ActiveSessionListItemDto>());
 
         var deviceIds = sessions.Select(s => s.DeviceId).Distinct().ToHashSet();
         var devices = await deviceRepository.GetAllAsync(
@@ -45,18 +38,17 @@ public sealed class ListActiveSessionsQueryHandler(
             .Select(s =>
             {
                 deviceMap.TryGetValue(s.DeviceId, out var device);
-                return new ActiveSessionDto(
+                return new ActiveSessionListItemDto(
                     SessionId: s.Id,
                     DeviceId: s.DeviceId,
                     DeviceName: device?.DeviceName,
                     UserAgent: device?.UserAgent,
                     IpAddress: s.IpAddress,
                     CreatedAt: s.CreatedAt,
-                    ExpiresAt: s.ExpiresAt,
-                    IsCurrent: currentSessionId.HasValue && s.Id == currentSessionId.Value);
+                    ExpiresAt: s.ExpiresAt);
             })
             .ToList();
 
-        return Result<IReadOnlyList<ActiveSessionDto>>.Success(dtos);
+        return Result<IReadOnlyList<ActiveSessionListItemDto>>.Success(dtos);
     }
 }
