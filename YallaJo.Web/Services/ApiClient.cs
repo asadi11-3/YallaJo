@@ -1,113 +1,144 @@
-using System.Net.Http.Json;
+using System.Text;
+using System.Text.Json;
+using YallaJo.Web.Infrastructure.Api.Contracts;
 
 namespace YallaJo.Web.Services;
 
 /// <summary>
-/// Typed HttpClient that communicates with the YallaJo API.
-/// JWT is automatically attached via <see cref="JwtAuthHandler"/>.
+/// Typed HTTP client registered via AddHttpClient&lt;ApiClient&gt; in Program.cs.
+/// All outbound API calls go through this class; the JwtAuthHandler
+/// DelegatingHandler transparently attaches the Bearer token.
+///
+/// Caller never touches HttpClient directly — only ApiClient methods.
+/// Returns ApiResult / ApiResult&lt;T&gt; so callers can pattern-match outcomes
+/// without catching exceptions.
 /// </summary>
-public sealed class ApiClient(HttpClient http)
+public sealed class ApiClient
 {
-    // ── GET ──────────────────────────────────────────────────────────────
-    public async Task<ApiResponse<T>> GetAsync<T>(string url, CancellationToken ct = default)
+    private readonly HttpClient _http;
+
+    private static readonly JsonSerializerOptions SerializeOpts = new()
     {
-        var response = await http.GetAsync(url, ct);
-        return await ParseResponse<T>(response, ct);
+        PropertyNamingPolicy        = JsonNamingPolicy.CamelCase,
+        DefaultIgnoreCondition      = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull,
+    };
+
+    private static readonly JsonSerializerOptions DeserializeOpts = new()
+    {
+        PropertyNameCaseInsensitive = true,
+    };
+
+    public ApiClient(HttpClient http) => _http = http;
+
+    // ── GET ─────────────────────────────────────────────────────────────────
+
+    public async Task<ApiResult<T>> GetAsync<T>(string path, CancellationToken ct = default)
+    {
+        using var response = await _http.GetAsync(path, ct);
+        return await ReadAsync<T>(response, ct);
     }
 
-    // ── POST ─────────────────────────────────────────────────────────────
-    public async Task<ApiResponse<T>> PostAsync<T>(string url, object? payload = null, CancellationToken ct = default)
+    // ── POST ────────────────────────────────────────────────────────────────
+
+    public async Task<ApiResult<T>> PostAsync<T>(string path, object? body = null, CancellationToken ct = default)
     {
-        var response = await http.PostAsJsonAsync(url, payload, ct);
-        return await ParseResponse<T>(response, ct);
+        using var content  = ToJson(body);
+        using var response = await _http.PostAsync(path, content, ct);
+        return await ReadAsync<T>(response, ct);
     }
 
-    public async Task<ApiResponse> PostAsync(string url, object? payload = null, CancellationToken ct = default)
+    public async Task<ApiResult> PostAsync(string path, object? body = null, CancellationToken ct = default)
     {
-        var response = await http.PostAsJsonAsync(url, payload, ct);
-        return await ParseVoidResponse(response, ct);
+        using var content  = ToJson(body);
+        using var response = await _http.PostAsync(path, content, ct);
+        return await ReadNoBodyAsync(response, ct);
     }
 
-    // ── PUT ──────────────────────────────────────────────────────────────
-    public async Task<ApiResponse<T>> PutAsync<T>(string url, object? payload = null, CancellationToken ct = default)
+    // ── PATCH ───────────────────────────────────────────────────────────────
+
+    public async Task<ApiResult> PatchAsync(string path, object? body = null, CancellationToken ct = default)
     {
-        var response = await http.PutAsJsonAsync(url, payload, ct);
-        return await ParseResponse<T>(response, ct);
+        using var request = new HttpRequestMessage(HttpMethod.Patch, path)
+        {
+            Content = ToJson(body),
+        };
+        using var response = await _http.SendAsync(request, ct);
+        return await ReadNoBodyAsync(response, ct);
     }
 
-    public async Task<ApiResponse> PutAsync(string url, object? payload = null, CancellationToken ct = default)
+    // ── DELETE ──────────────────────────────────────────────────────────────
+
+    public async Task<ApiResult> DeleteAsync(string path, CancellationToken ct = default)
     {
-        var response = await http.PutAsJsonAsync(url, payload, ct);
-        return await ParseVoidResponse(response, ct);
+        using var response = await _http.DeleteAsync(path, ct);
+        return await ReadNoBodyAsync(response, ct);
     }
 
-    // ── DELETE ────────────────────────────────────────────────────────────
-    public async Task<ApiResponse> DeleteAsync(string url, CancellationToken ct = default)
+    // ── Helpers ─────────────────────────────────────────────────────────────
+
+    private static StringContent? ToJson(object? body)
     {
-        var response = await http.DeleteAsync(url, ct);
-        return await ParseVoidResponse(response, ct);
+        if (body is null) return null;
+        return new StringContent(
+            JsonSerializer.Serialize(body, SerializeOpts),
+            Encoding.UTF8,
+            "application/json");
     }
 
-    public async Task<ApiResponse<T>> DeleteAsync<T>(string url, CancellationToken ct = default)
+    private static async Task<ApiResult<T>> ReadAsync<T>(HttpResponseMessage response, CancellationToken ct)
     {
-        var response = await http.DeleteAsync(url, ct);
-        return await ParseResponse<T>(response, ct);
-    }
+        var raw = await response.Content.ReadAsStringAsync(ct);
 
-    // ── Multipart (file upload) ──────────────────────────────────────────
-    public async Task<ApiResponse<T>> PostMultipartAsync<T>(
-        string url,
-        MultipartFormDataContent content,
-        CancellationToken ct = default)
-    {
-        var response = await http.PostAsync(url, content, ct);
-        return await ParseResponse<T>(response, ct);
-    }
-
-    // ── Response parsing ─────────────────────────────────────────────────
-
-    private static async Task<ApiResponse<T>> ParseResponse<T>(
-        HttpResponseMessage response,
-        CancellationToken ct)
-    {
         if (response.IsSuccessStatusCode)
         {
-            var data = await response.Content.ReadFromJsonAsync<T>(ct);
-            return ApiResponse<T>.Success(data!, (int)response.StatusCode);
+            var data = JsonSerializer.Deserialize<T>(raw, DeserializeOpts);
+            return ApiResult<T>.Ok(data!, (int)response.StatusCode);
         }
 
-        var error = await ReadErrorMessage(response, ct);
-        return ApiResponse<T>.Failure((int)response.StatusCode, error);
+        return ParseError<T>((int)response.StatusCode, raw);
     }
 
-    private static async Task<ApiResponse> ParseVoidResponse(
-        HttpResponseMessage response,
-        CancellationToken ct)
+    private static async Task<ApiResult> ReadNoBodyAsync(HttpResponseMessage response, CancellationToken ct)
     {
         if (response.IsSuccessStatusCode)
-            return ApiResponse.Success((int)response.StatusCode);
+            return ApiResult.Ok((int)response.StatusCode);
 
-        var error = await ReadErrorMessage(response, ct);
-        return ApiResponse.Failure((int)response.StatusCode, error);
+        var raw = await response.Content.ReadAsStringAsync(ct);
+        var err = ParseError<object>((int)response.StatusCode, raw);
+        return err.IsValidationError
+            ? ApiResult.ValidationFail(err.ValidationErrors!)
+            : ApiResult.Fail(err.StatusCode, err.Error);
     }
 
-    private static async Task<string> ReadErrorMessage(
-        HttpResponseMessage response,
-        CancellationToken ct)
+    private static ApiResult<T> ParseError<T>(int statusCode, string raw)
     {
         try
         {
-            var problem = await response.Content.ReadFromJsonAsync<ProblemDetailDto>(ct);
-            return problem?.Detail
-                ?? problem?.Title
-                ?? $"Request failed with status {(int)response.StatusCode}.";
+            var problem = JsonSerializer.Deserialize<ProblemDetails>(raw, DeserializeOpts);
+
+            if (statusCode == 422 && problem?.Errors?.Count > 0)
+            {
+                var errors = problem.Errors
+                    .ToDictionary(
+                        kvp => kvp.Key,
+                        kvp => kvp.Value.ToArray());
+                return ApiResult<T>.ValidationFail(errors);
+            }
+
+            var msg = problem?.Title ?? problem?.Detail ?? $"HTTP {statusCode}";
+            return ApiResult<T>.Fail(statusCode, msg);
         }
         catch
         {
-            return $"Request failed with status {(int)response.StatusCode}.";
+            return ApiResult<T>.Fail(statusCode, $"HTTP {statusCode}");
         }
     }
 
-    /// <summary>Maps the RFC 7807 ProblemDetails shape returned by the API.</summary>
-    private sealed record ProblemDetailDto(int? Status, string? Title, string? Detail);
+    // Minimal problem-details shape — enough for error + validation handling.
+    private sealed class ProblemDetails
+    {
+        public string? Title  { get; init; }
+        public string? Detail { get; init; }
+        public Dictionary<string, List<string>>? Errors { get; init; }
+    }
 }

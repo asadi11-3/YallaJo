@@ -10,4 +10,40 @@
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.7.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Areas\Auth\Features\Devices\" />
+    <Folder Include="Areas\Auth\Features\ForgotPassword\Validators\" />
+    <Folder Include="Areas\Auth\Features\ForgotPassword\Views\" />
+    <Folder Include="Areas\Auth\Features\ForgotPassword\ViewModels\" />
+    <Folder Include="Areas\Auth\Features\ForgotPassword\Responses\" />
+    <Folder Include="Areas\Auth\Features\ForgotPassword\Requests\" />
+    <Folder Include="Areas\Auth\Features\Login\Views\" />
+    <Folder Include="Areas\Auth\Features\Sessions\" />
+    <Folder Include="Areas\Auth\Features\VerifyEmail\" />
+    <Folder Include="Areas\Auth\Features\ResetPassword\" />
+    <Folder Include="Controllers\" />
+    <Folder Include="Infrastructure\Api\Contracts\" />
+    <Folder Include="Infrastructure\Api\Core\" />
+    <Folder Include="Infrastructure\Api\Handlers\" />
+    <Folder Include="Infrastructure\Authentication\Claims\" />
+    <Folder Include="Infrastructure\Authentication\Cookie\" />
+    <Folder Include="Infrastructure\Authentication\SignIn\" />
+    <Folder Include="Infrastructure\Authentication\Tokens\" />
+    <Folder Include="Infrastructure\Authorization\" />
+    <Folder Include="Infrastructure\Constants\" />
+    <Folder Include="Infrastructure\DependencyInjection\" />
+    <Folder Include="Infrastructure\Navigation\" />
+    <Folder Include="Infrastructure\State\" />
+    <Folder Include="Models\" />
+    <Folder Include="Shared\Components\" />
+    <Folder Include="Shared\Extensions\" />
+    <Folder Include="Shared\Filters\" />
+    <Folder Include="Shared\Layout\" />
+    <Folder Include="Shared\Notifications\" />
+    <Folder Include="Shared\Results\" />
+    <Folder Include="Shared\TagHelpers\" />
+    <Folder Include="Shared\ViewModels\" />
+    <Folder Include="Shared\Views\" />
+  </ItemGroup>
+
 </Project>

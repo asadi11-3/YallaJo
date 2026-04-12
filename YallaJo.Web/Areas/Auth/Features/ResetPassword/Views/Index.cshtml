@@ -1,0 +1,44 @@
+@model YallaJo.Web.Areas.Auth.Features.ResetPassword.ViewModels.ResetPasswordVm
+@{
+    ViewData["Title"] = "Reset Password";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="auth-card">
+    <h2>Reset Password</h2>
+    <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+    <form asp-area="Auth" asp-controller="ResetPassword" asp-action="Index" method="post">
+        @Html.AntiForgeryToken()
+
+        <div class="mb-3">
+            <label asp-for="Email" class="form-label"></label>
+            <input asp-for="Email" class="form-control" autocomplete="email" />
+            <span asp-validation-for="Email" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="OtpCode" class="form-label">Reset Code</label>
+            <input asp-for="OtpCode" class="form-control" maxlength="6" autocomplete="one-time-code" />
+            <span asp-validation-for="OtpCode" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="NewPassword" class="form-label"></label>
+            <input asp-for="NewPassword" type="password" class="form-control" autocomplete="new-password" />
+            <span asp-validation-for="NewPassword" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="ConfirmNewPassword" class="form-label"></label>
+            <input asp-for="ConfirmNewPassword" type="password" class="form-control" autocomplete="new-password" />
+            <span asp-validation-for="ConfirmNewPassword" class="text-danger"></span>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100">Reset Password</button>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
