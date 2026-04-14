@@ -1,6 +1,5 @@
 using YallaJo.Web.Areas.Auth.Features.Login.Mappers;
 using YallaJo.Web.Areas.Auth.Features.Login.ViewModels;
-using YallaJo.Web.Areas.Auth.Features.Logout.ViewModels;
 using YallaJo.Web.Infrastructure.Authentication.SignIn;
 
 namespace YallaJo.Web.Areas.Auth.Features.Login;

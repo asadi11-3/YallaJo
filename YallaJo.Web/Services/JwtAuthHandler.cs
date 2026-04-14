@@ -140,8 +140,16 @@ public sealed class JwtAuthHandler : DelegatingHandler
         var identity  = new ClaimsIdentity(existingClaims, CookieAuthenticationDefaults.AuthenticationScheme);
         var principal = new ClaimsPrincipal(identity);
 
+       
+        var props = await context.AuthenticateAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+        var authProps = props?.Properties ?? new AuthenticationProperties
+        {
+            IsPersistent = true,
+            ExpiresUtc   = DateTimeOffset.UtcNow.AddHours(8),
+        };
+
         // Persist to cookie (next browser request will carry the new token).
-        await context.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
+        await context.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal, authProps);
 
         // Also update the in-memory principal so the rest of THIS request
         // (e.g. a second API call in the same request) uses the new token.

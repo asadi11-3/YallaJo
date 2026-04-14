@@ -38,11 +38,15 @@
     <script>
         document.getElementById('resendBtn').addEventListener('click', async function () {
             var email = document.getElementById('Email').value;
+            var token = document.querySelector('input[name="__RequestVerificationToken"]').value;
             var btn   = this;
             btn.disabled = true;
             var res = await fetch('/auth/verifyemail/resendotp', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': token
+                },
                 body: JSON.stringify({ email: email })
             });
             var data = await res.json();

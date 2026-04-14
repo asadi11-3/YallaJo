@@ -6,12 +6,6 @@
 
 <div class="auth-card">
     <h2>Forgot Password</h2>
-
-    @if (Model.SuccessMessage is not null)
-    {
-        <div class="alert alert-success">@Model.SuccessMessage</div>
-    }
-
     <div asp-validation-summary="All" class="text-danger mb-3"></div>
 
     <form asp-area="Auth" asp-controller="ForgotPassword" asp-action="Index" method="post">

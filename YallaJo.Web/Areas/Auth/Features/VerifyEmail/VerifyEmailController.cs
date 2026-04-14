@@ -47,6 +47,7 @@ public sealed class VerifyEmailController : Controller
 
     // POST /auth/verifyemail/resendotp  (AJAX)
     [HttpPost("auth/verifyemail/resendotp")]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> ResendOtp([FromBody] ResendOtpPayload payload, CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(payload.Email))

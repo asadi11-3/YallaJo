@@ -26,7 +26,7 @@ public sealed class ForgotPasswordController : Controller
 
         if (result.IsSuccess)
         {
-            vm.SuccessMessage = "If that email is registered, a reset code has been sent.";
+            TempData["SuccessMessage"] = "If that email is registered, a reset code has been sent.";
             return RedirectToAction("Index", "ResetPassword",
                 new { area = "Auth", email = vm.Email });
         }

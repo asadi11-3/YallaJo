@@ -6,6 +6,12 @@
 
 <div class="auth-card">
     <h2>Reset Password</h2>
+
+    @if (TempData["SuccessMessage"] is string successMsg)
+    {
+        <div class="alert alert-success">@successMsg</div>
+    }
+
     <div asp-validation-summary="All" class="text-danger mb-3"></div>
 
     <form asp-area="Auth" asp-controller="ResetPassword" asp-action="Index" method="post">
