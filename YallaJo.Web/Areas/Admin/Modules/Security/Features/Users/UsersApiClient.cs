@@ -5,13 +5,10 @@ using YallaJo.Web.Services;
 
 namespace YallaJo.Web.Areas.Admin.Modules.Security.Features.Users;
 
-/// <summary>All HTTP calls for the admin Users feature.</summary>
 public sealed class UsersApiClient
 {
     private readonly ApiClient _api;
     public UsersApiClient(ApiClient api) => _api = api;
-
-    // ── User list / detail ────────────────────────────────────────────────────
 
     public Task<ApiResult<UserListResponse>> GetUsersAsync(
         int page, int pageSize, CancellationToken ct = default)
@@ -23,15 +20,11 @@ public sealed class UsersApiClient
         => _api.GetAsync<UserItemResponse>(
             $"/api/v1/security/users/{userId}", ct);
 
-    // ── Activate / Deactivate ─────────────────────────────────────────────────
-
     public Task<ApiResult> ActivateUserAsync(Guid userId, CancellationToken ct = default)
         => _api.PatchAsync($"/api/v1/security/users/{userId}/activate", null, ct);
 
     public Task<ApiResult> DeactivateUserAsync(Guid userId, CancellationToken ct = default)
         => _api.PatchAsync($"/api/v1/security/users/{userId}/deactivate", null, ct);
-
-    // ── Role assignment ───────────────────────────────────────────────────────
 
     public Task<ApiResult> AssignRoleAsync(
         Guid userId, AssignRoleRequest request, CancellationToken ct = default)
@@ -40,8 +33,6 @@ public sealed class UsersApiClient
     public Task<ApiResult> RemoveRoleAsync(
         Guid userId, Guid roleId, CancellationToken ct = default)
         => _api.DeleteAsync($"/api/v1/security/users/{userId}/roles/{roleId}", ct);
-
-    // ── Claims ────────────────────────────────────────────────────────────────
 
     public Task<ApiResult> AddClaimAsync(
         Guid userId, AddUserClaimRequest request, CancellationToken ct = default)

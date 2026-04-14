@@ -15,6 +15,7 @@ public sealed class ForgotPasswordApiClient
         => _api.PostAsync<ForgotPasswordResponse>("/api/v1/auth/forgot-password", request, ct);
 
     public Task<ApiResult> ResendOtpAsync(string email, CancellationToken ct = default)
-        => _api.PostAsync("/api/v1/auth/resend-otp",
+        => _api.PostAsync(
+            "/api/v1/auth/resend-otp",
             new { Email = email, Purpose = "PasswordReset" }, ct);
 }

@@ -1,9 +1,5 @@
 namespace YallaJo.Web.Areas.Auth.Features.Sessions.Responses;
 
-/// <summary>
-/// One item from GET /api/v1/auth/sessions.
-/// Mirrors ActiveSessionDto returned by the backend.
-/// </summary>
 public sealed class SessionItemResponse
 {
     public Guid      SessionId  { get; init; }

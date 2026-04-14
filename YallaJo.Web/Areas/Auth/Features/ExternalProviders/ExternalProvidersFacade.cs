@@ -1,5 +1,6 @@
 using YallaJo.Web.Areas.Auth.Features.ExternalProviders.Requests;
 using YallaJo.Web.Areas.Auth.Features.ExternalProviders.ViewModels;
+using YallaJo.Web.Infrastructure.Api.Contracts;
 using YallaJo.Web.Infrastructure.Authentication.SignIn;
 
 namespace YallaJo.Web.Areas.Auth.Features.ExternalProviders;
@@ -15,7 +16,7 @@ public sealed class ExternalProvidersFacade
         _signIn = signIn;
     }
 
-    public async Task<ExternalProvidersFacadeResult> LinkAsync(
+    public async Task<ApiResult> LinkAsync(
         ExternalProvidersVm vm, CancellationToken ct = default)
     {
         var request = new LinkExternalProviderRequest
@@ -27,38 +28,24 @@ public sealed class ExternalProvidersFacade
 
         var result = await _api.LinkAsync(request, ct);
 
-        if (result.IsSuccess) return ExternalProvidersFacadeResult.Ok("Provider linked successfully.");
+        if (result.IsSuccess) return ApiResult.Ok("Provider linked successfully.");
 
-        if (result.IsUnauthorized) { await _signIn.SignOutAsync(); return ExternalProvidersFacadeResult.ForceSignOut(); }
-        if (result.IsConflict)     return ExternalProvidersFacadeResult.Fail("This provider account is already linked.");
-        if (result.IsValidationError) return ExternalProvidersFacadeResult.Invalid(result.ValidationErrors!);
-
-        return ExternalProvidersFacadeResult.Fail(result.Error ?? "Link failed.");
+        if (result.IsUnauthorized) { await _signIn.SignOutAsync(); return ApiResult.ForceSignOut(); }
+        if (result.IsConflict)     return ApiResult.Fail("This provider account is already linked.");
+        if (result.IsValidationError) return ApiResult.Invalid(result.ValidationErrors!);
+        return ApiResult.Fail(result.Error ?? "Link failed.");
     }
 
-    public async Task<ExternalProvidersFacadeResult> UnlinkAsync(Guid providerId, CancellationToken ct = default)
+    public async Task<ApiResult> UnlinkAsync(Guid providerId, CancellationToken ct = default)
     {
         var result = await _api.UnlinkAsync(providerId, ct);
 
-        if (result.IsSuccess || result.IsNotFound) return ExternalProvidersFacadeResult.Ok("Provider unlinked.");
+        if (result.IsSuccess || result.IsNotFound) return ApiResult.Ok("Provider unlinked.");
 
-        if (result.IsUnauthorized) { await _signIn.SignOutAsync(); return ExternalProvidersFacadeResult.ForceSignOut(); }
+        if (result.IsUnauthorized) { await _signIn.SignOutAsync(); return ApiResult.ForceSignOut(); }
 
-        return ExternalProvidersFacadeResult.Fail(result.Error ?? "Unlink failed.");
+        return ApiResult.Fail(result.Error ?? "Unlink failed.");
     }
 }
 
-public sealed class ExternalProvidersFacadeResult
-{
-    public bool                                   IsSuccess        { get; private init; }
-    public string?                                Message          { get; private init; }
-    public string?                                Error            { get; private init; }
-    public bool                                   RequireSignOut   { get; private init; }
-    public IReadOnlyDictionary<string, string[]>? ValidationErrors { get; private init; }
 
-    public static ExternalProvidersFacadeResult Ok(string msg)   => new() { IsSuccess = true, Message = msg };
-    public static ExternalProvidersFacadeResult Fail(string e)   => new() { IsSuccess = false, Error = e };
-    public static ExternalProvidersFacadeResult ForceSignOut()   => new() { IsSuccess = false, RequireSignOut = true };
-    public static ExternalProvidersFacadeResult Invalid(IReadOnlyDictionary<string, string[]> errors)
-        => new() { IsSuccess = false, ValidationErrors = errors };
-}

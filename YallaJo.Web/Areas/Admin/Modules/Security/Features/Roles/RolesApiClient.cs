@@ -5,7 +5,6 @@ using YallaJo.Web.Services;
 
 namespace YallaJo.Web.Areas.Admin.Modules.Security.Features.Roles;
 
-/// <summary>All HTTP calls for the admin Roles feature.</summary>
 public sealed class RolesApiClient
 {
     private readonly ApiClient _api;

@@ -11,11 +11,8 @@ public sealed class ExternalProvidersController : Controller
     private readonly ExternalProvidersFacade _facade;
     public ExternalProvidersController(ExternalProvidersFacade facade) => _facade = facade;
 
-    // GET /auth/externalproviders
     [HttpGet]
     public IActionResult Index() => View(new ExternalProvidersVm());
-
-    // POST /auth/externalproviders (link)
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Index(ExternalProvidersVm vm, CancellationToken ct)
@@ -45,7 +42,6 @@ public sealed class ExternalProvidersController : Controller
         return View(vm);
     }
 
-    // POST /auth/externalproviders/unlink/{providerId}
     [HttpPost("auth/externalproviders/unlink/{providerId:guid}")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Unlink(Guid providerId, CancellationToken ct)

@@ -66,6 +66,11 @@ public sealed class WebSignInService : IWebSignInService
     /// all "role" and "Permission" claims so they can be stored in the Web cookie.
     /// Returns empty on any parse failure rather than throwing.
     /// </summary>
+    /// <param name="accessToken">The JWT access token to extract claims from.</param>
+    /// <returns>
+    /// An <see cref="IEnumerable{Claim}"/> containing all "role" and "Permission" claims found in the token,
+    /// or an empty collection if the token cannot be parsed.
+    /// </returns>
     internal static IEnumerable<Claim> ExtractUserClaimsFromJwt(string accessToken)
     {
         try

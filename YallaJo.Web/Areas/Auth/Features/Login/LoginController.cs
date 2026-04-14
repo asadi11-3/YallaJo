@@ -1,13 +1,9 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using YallaJo.Web.Areas.Auth.Features.Login.ViewModels;
 
 namespace YallaJo.Web.Areas.Auth.Features.Login;
 
-/// <summary>
-/// Handles GET /auth/login  and  POST /auth/login.
-/// Thin — all orchestration is in LoginFacade.
-/// </summary>
 [Area("Auth")]
 [AllowAnonymous]
 public sealed class LoginController : Controller
@@ -16,7 +12,6 @@ public sealed class LoginController : Controller
 
     public LoginController(LoginFacade facade) => _facade = facade;
 
-    // GET /auth/login
     [HttpGet]
     public IActionResult Index(string? returnUrl = null)
     {
@@ -26,7 +21,6 @@ public sealed class LoginController : Controller
         return View(new LoginVm { ReturnUrl = returnUrl });
     }
 
-    // POST /auth/login
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Index(LoginVm vm, CancellationToken ct)
@@ -50,8 +44,6 @@ public sealed class LoginController : Controller
         ModelState.AddModelError(string.Empty, result.Error ?? "Login failed.");
         return View(vm);
     }
-
-    // ── Helpers ───────────────────────────────────────────────────────────────
 
     private IActionResult RedirectToLocal(string? returnUrl)
     {

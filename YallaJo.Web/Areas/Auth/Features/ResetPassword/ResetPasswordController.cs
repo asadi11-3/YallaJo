@@ -11,12 +11,10 @@ public sealed class ResetPasswordController : Controller
     private readonly ResetPasswordFacade _facade;
     public ResetPasswordController(ResetPasswordFacade facade) => _facade = facade;
 
-    // GET /auth/resetpassword
     [HttpGet]
     public IActionResult Index(string? email = null) =>
         View(new ResetPasswordVm { Email = email ?? string.Empty });
 
-    // POST /auth/resetpassword
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Index(ResetPasswordVm vm, CancellationToken ct)

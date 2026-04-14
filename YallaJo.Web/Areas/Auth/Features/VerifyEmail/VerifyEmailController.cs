@@ -4,10 +4,6 @@ using YallaJo.Web.Areas.Auth.Features.VerifyEmail.ViewModels;
 
 namespace YallaJo.Web.Areas.Auth.Features.VerifyEmail;
 
-/// <summary>
-/// Handles  GET/POST /auth/verifyemail
-/// and AJAX POST     /auth/verifyemail/resendotp
-/// </summary>
 [Area("Auth")]
 [AllowAnonymous]
 public sealed class VerifyEmailController : Controller
@@ -16,12 +12,10 @@ public sealed class VerifyEmailController : Controller
 
     public VerifyEmailController(VerifyEmailFacade facade) => _facade = facade;
 
-    // GET /auth/verifyemail
     [HttpGet]
     public IActionResult Index(string? email = null) =>
         View(new VerifyEmailVm { Email = email ?? string.Empty });
 
-    // POST /auth/verifyemail
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Index(VerifyEmailVm vm, CancellationToken ct)

@@ -11,25 +11,30 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Areas\Admin\Modules\Security\Features\AuditLogs\Requests\" />
+    <Folder Include="Areas\Admin\Modules\Security\Features\AuditLogs\Validators\" />
+    <Folder Include="Areas\Admin\Modules\Security\Features\Roles\Validators\" />
+    <Folder Include="Areas\Admin\Modules\Security\Features\Users\Validators\" />
     <Folder Include="Areas\Auth\Features\Devices\" />
+    <Folder Include="Areas\Auth\Features\ExternalProviders\Mappers\" />
+    <Folder Include="Areas\Auth\Features\ExternalProviders\Validators\" />
     <Folder Include="Areas\Auth\Features\ForgotPassword\Validators\" />
     <Folder Include="Areas\Auth\Features\ForgotPassword\Views\" />
     <Folder Include="Areas\Auth\Features\ForgotPassword\ViewModels\" />
     <Folder Include="Areas\Auth\Features\ForgotPassword\Responses\" />
     <Folder Include="Areas\Auth\Features\ForgotPassword\Requests\" />
     <Folder Include="Areas\Auth\Features\Login\Views\" />
-    <Folder Include="Areas\Auth\Features\Sessions\" />
+    <Folder Include="Areas\Auth\Features\Logout\Responses\" />
+    <Folder Include="Areas\Auth\Features\Sessions\Validators\" />
     <Folder Include="Areas\Auth\Features\VerifyEmail\" />
     <Folder Include="Areas\Auth\Features\ResetPassword\" />
     <Folder Include="Controllers\" />
-    <Folder Include="Infrastructure\Api\Contracts\" />
     <Folder Include="Infrastructure\Api\Core\" />
     <Folder Include="Infrastructure\Api\Handlers\" />
     <Folder Include="Infrastructure\Authentication\Claims\" />
     <Folder Include="Infrastructure\Authentication\Cookie\" />
     <Folder Include="Infrastructure\Authentication\SignIn\" />
     <Folder Include="Infrastructure\Authentication\Tokens\" />
-    <Folder Include="Infrastructure\Authorization\" />
     <Folder Include="Infrastructure\Constants\" />
     <Folder Include="Infrastructure\DependencyInjection\" />
     <Folder Include="Infrastructure\Navigation\" />

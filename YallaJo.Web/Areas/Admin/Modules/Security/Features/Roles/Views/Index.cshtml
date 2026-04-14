@@ -15,7 +15,7 @@
     @* ── Create form: visible only to users with Role.Create ──────────────────
        <permission> TagHelper suppresses the block entirely when the permission is absent.
        No ViewModel boolean. No @if (Model.CanCreate). *@
-    <permission require="@WebPermission.Role.Create">
+    <permission require="@WebPermissions.Role.Create">
         <div class="card mb-4 p-3">
             <h5>Create Role</h5>
             <form asp-area="Admin" asp-controller="Roles" asp-action="Create" method="post" class="row g-2">
@@ -43,7 +43,7 @@
                 <th>Name</th>
                 <th>Description</th>
                 <th>Status</th>
-                <permission require="@WebPermission.Role.Update"><th>Actions</th></permission>
+                <permission require="@WebPermissions.Role.Update"><th>Actions</th></permission>
             </tr>
         </thead>
         <tbody>
@@ -57,7 +57,7 @@
                             @(r.IsActive ? "Active" : "Inactive")
                         </span>
                     </td>
-                    <permission require="@WebPermission.Role.Update">
+                    <permission require="@WebPermissions.Role.Update">
                         <td>
                             @if (r.IsActive)
                             {

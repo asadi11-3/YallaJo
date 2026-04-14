@@ -11,11 +11,9 @@ public sealed class ForgotPasswordController : Controller
     private readonly ForgotPasswordFacade _facade;
     public ForgotPasswordController(ForgotPasswordFacade facade) => _facade = facade;
 
-    // GET /auth/forgotpassword
     [HttpGet]
     public IActionResult Index() => View(new ForgotPasswordVm());
 
-    // POST /auth/forgotpassword
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Index(ForgotPasswordVm vm, CancellationToken ct)

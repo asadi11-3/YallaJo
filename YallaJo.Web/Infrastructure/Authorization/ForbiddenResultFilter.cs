@@ -57,7 +57,8 @@ public sealed class ForbiddenResultFilter : IAsyncResultFilter
 
     // ── AJAX / JSON / HTMX → ProblemDetails JSON ─────────────────────────────
 
-    private static IActionResult BuildJsonResult() =>
+    // Change return type from IActionResult to ObjectResult for BuildJsonResult to fix CA1859
+    private static ObjectResult BuildJsonResult() =>
         new ObjectResult(new
         {
             status = StatusCodes.Status403Forbidden,
@@ -87,8 +88,9 @@ public sealed class ForbiddenResultFilter : IAsyncResultFilter
             return true;
 
         // Content-Type: application/json (API-style POST)
-        if (request.ContentType?.Contains("application/json",
-                StringComparison.OrdinalIgnoreCase) == true)
+        if (request.ContentType?.Contains(
+            "application/json",
+            StringComparison.OrdinalIgnoreCase) == true)
             return true;
 
         return false;

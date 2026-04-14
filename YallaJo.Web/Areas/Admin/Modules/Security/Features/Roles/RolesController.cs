@@ -6,28 +6,14 @@ using YallaJo.Web.Infrastructure.Authorization;
 
 namespace YallaJo.Web.Areas.Admin.Modules.Security.Features.Roles;
 
-/// <summary>
-/// Admin role management — list, create, update description, deactivate, claims.
-///
-/// Authorization:
-///   [RequirePermission(WebPermission.Role.Read)] on the class = page-level gate.
-///   Individual action permissions are enforced by the backend API; the view hides
-///   UI elements via &lt;permission require="..."&gt; TagHelpers.
-///
-/// Every action is thin:
-///   1. Call the facade.
-///   2. Switch on result.State.
-///   3. Return Redirect or View — nothing else.
-/// </summary>
 [Area("Admin")]
 [Authorize]
-[RequirePermission(WebPermission.Role.Read)]
+[RequirePermission(WebPermissions.Role.Read)]
 public sealed class RolesController : Controller
 {
     private readonly RolesFacade _facade;
     public RolesController(RolesFacade facade) => _facade = facade;
 
-    // ── GET /admin/roles ──────────────────────────────────────────────────────
 
     [HttpGet]
     public async Task<IActionResult> Index(CancellationToken ct)
@@ -43,15 +29,13 @@ public sealed class RolesController : Controller
         };
     }
 
-    // ── POST /admin/roles/create ──────────────────────────────────────────────
-
     [HttpPost("admin/roles/create")]
     [ValidateAntiForgeryToken]
+    [RequirePermission(WebPermissions.Role.Create)]
     public async Task<IActionResult> Create(CreateRoleVm vm, CancellationToken ct)
     {
         if (!ModelState.IsValid)
         {
-            // Re-render the list page with the validation errors visible.
             var listResult = await _facade.GetRolesAsync(ct);
             if (listResult.State == ApiResultState.Unauthorized) return RedirectToLogin();
             if (listResult.State == ApiResultState.Forbidden)    return new ForbidResult();
@@ -69,8 +53,10 @@ public sealed class RolesController : Controller
         if (result.State == ApiResultState.Forbidden)    return new ForbidResult();
 
         if (result.IsValidationError && result.ValidationErrors is not null)
+        {
             foreach (var (field, msgs) in result.ValidationErrors)
                 foreach (var msg in msgs) ModelState.AddModelError(field, msg);
+        }
 
         TempData[result.IsSuccess ? "Success" : "Error"] =
             result.IsSuccess ? $"Role '{vm.Name}' created." : result.Error;
@@ -78,10 +64,9 @@ public sealed class RolesController : Controller
         return RedirectToAction(nameof(Index));
     }
 
-    // ── POST /admin/roles/{roleId}/update ─────────────────────────────────────
-
     [HttpPost("admin/roles/{roleId:guid}/update")]
     [ValidateAntiForgeryToken]
+    [RequirePermission(WebPermissions.Role.Update)]
     public async Task<IActionResult> Update(Guid roleId, UpdateRoleVm vm, CancellationToken ct)
     {
         var result = await _facade.UpdateAsync(roleId, vm, ct);
@@ -95,10 +80,9 @@ public sealed class RolesController : Controller
         return RedirectToAction(nameof(Index));
     }
 
-    // ── POST /admin/roles/{roleId}/deactivate ─────────────────────────────────
-
     [HttpPost("admin/roles/{roleId:guid}/deactivate")]
     [ValidateAntiForgeryToken]
+    [RequirePermission(WebPermissions.Role.Delete)]
     public async Task<IActionResult> Deactivate(Guid roleId, CancellationToken ct)
     {
         var result = await _facade.DeactivateAsync(roleId, ct);
@@ -106,14 +90,11 @@ public sealed class RolesController : Controller
         if (result.State == ApiResultState.Unauthorized) return RedirectToLogin();
         if (result.State == ApiResultState.Forbidden)    return new ForbidResult();
 
-        // Conflict (409) = protected system role — this is now a business rule, not a permission.
         TempData[result.IsSuccess ? "Success" : "Error"] =
             result.IsSuccess ? "Role deactivated." : result.Error;
 
         return RedirectToAction(nameof(Index));
     }
-
-    // ── POST /admin/roles/{roleId}/claims ─────────────────────────────────────
 
     [HttpPost("admin/roles/{roleId:guid}/claims")]
     [ValidateAntiForgeryToken]
@@ -136,8 +117,6 @@ public sealed class RolesController : Controller
         return RedirectToAction(nameof(Index));
     }
 
-    // ── POST /admin/roles/{roleId}/claims/{claimId}/remove ────────────────────
-
     [HttpPost("admin/roles/{roleId:guid}/claims/{claimId:guid}/remove")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> RemoveClaim(Guid roleId, Guid claimId, CancellationToken ct)
@@ -153,12 +132,10 @@ public sealed class RolesController : Controller
         return RedirectToAction(nameof(Index));
     }
 
-    // ── Private helpers ───────────────────────────────────────────────────────
-
-    private IActionResult RedirectToLogin() =>
+    private RedirectToActionResult RedirectToLogin() =>
         RedirectToAction("Index", "Login", new { area = "Auth" });
 
-    private IActionResult ViewWithError(RoleListVm vm, string? error)
+    private ViewResult ViewWithError(RoleListVm vm, string? error)
     {
         ViewBag.Error = error;
         return View(vm);

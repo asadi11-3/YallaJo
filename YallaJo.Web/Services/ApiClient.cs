@@ -92,7 +92,7 @@ public sealed class ApiClient
         if (response.IsSuccessStatusCode)
         {
             var data = JsonSerializer.Deserialize<T>(raw, DeserializeOpts);
-            return ApiResult<T>.Ok(data!, (int)response.StatusCode);
+            return ApiResult<T>.CreateSuccess(data!, (int)response.StatusCode);
         }
 
         return ParseError<T>((int)response.StatusCode, raw);
@@ -124,15 +124,15 @@ public sealed class ApiClient
                     .ToDictionary(
                         kvp => kvp.Key,
                         kvp => kvp.Value.ToArray());
-                return ApiResult<T>.ValidationFail(statusCode, errors);
+                return ApiResult<T>.CreateValidationFailure(statusCode, errors);
             }
 
             var msg = problem?.Title ?? problem?.Detail ?? $"HTTP {statusCode}";
-            return ApiResult<T>.Fail(statusCode, msg);
+            return ApiResult<T>.CreateFailure(statusCode, msg);
         }
         catch
         {
-            return ApiResult<T>.Fail(statusCode, $"HTTP {statusCode}");
+            return ApiResult<T>.CreateFailure(statusCode, $"HTTP {statusCode}");
         }
     }
 

@@ -14,10 +14,6 @@ public sealed class VerifyEmailApiClient
         VerifyEmailRequest request, CancellationToken ct = default)
         => _api.PostAsync<VerifyEmailResponse>("/api/v1/auth/verify-email", request, ct);
 
-    /// <summary>
-    /// Resend an OTP for the given purpose.
-    /// purpose values: "EmailVerification" | "PasswordReset"
-    /// </summary>
     public Task<ApiResult> ResendOtpAsync(string email, string purpose, CancellationToken ct = default)
         => _api.PostAsync("/api/v1/auth/resend-otp", new { Email = email, Purpose = purpose }, ct);
 }

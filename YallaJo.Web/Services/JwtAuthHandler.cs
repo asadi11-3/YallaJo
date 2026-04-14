@@ -10,25 +10,6 @@ using YallaJo.Web.Infrastructure.Authentication.SignIn;
 
 namespace YallaJo.Web.Services;
 
-/// <summary>
-/// DelegatingHandler that transparently attaches a Bearer token to every
-/// outbound API request made through ApiClient.
-///
-/// Token lifecycle (per-request):
-///  1. Read access token from the encrypted cookie claims.
-///  2. Decode the JWT locally (no signature check — just read the exp claim).
-///  3. If the token is expired or expiring within 30 seconds, call
-///     POST /api/v1/auth/refresh using a plain "anon" HttpClient that
-///     does NOT go through this handler (prevents infinite loops).
-///  4. On successful refresh: update the cookie so the browser gets the
-///     new token on its next request, and also update HttpContext.User
-///     in-memory so the rest of this request uses the new token.
-///  5. Attach Authorization: Bearer {accessToken} to the outgoing request.
-///
-/// On a 401 from the backend (edge case: token expired between check and call)
-/// we simply return the 401 — the Facade or Controller is responsible for
-/// signing the user out and redirecting to login.
-/// </summary>
 public sealed class JwtAuthHandler : DelegatingHandler
 {
     private readonly IHttpContextAccessor _accessor;
@@ -85,8 +66,6 @@ public sealed class JwtAuthHandler : DelegatingHandler
         return await base.SendAsync(request, cancellationToken);
     }
 
-   
-
     private static bool IsExpiredOrExpiringSoon(string token, int bufferSeconds = 30)
     {
         try
@@ -123,8 +102,6 @@ public sealed class JwtAuthHandler : DelegatingHandler
         }
     }
 
-    // ── Cookie update ────────────────────────────────────────────────────────
-
     private static async Task UpdateCookieAsync(HttpContext context, TokenPair pair)
     {
         // Rebuild the claims list.
@@ -150,7 +127,6 @@ public sealed class JwtAuthHandler : DelegatingHandler
         var identity  = new ClaimsIdentity(existingClaims, CookieAuthenticationDefaults.AuthenticationScheme);
         var principal = new ClaimsPrincipal(identity);
 
-       
         var props = await context.AuthenticateAsync(CookieAuthenticationDefaults.AuthenticationScheme);
         var authProps = props?.Properties ?? new AuthenticationProperties
         {
@@ -165,6 +141,7 @@ public sealed class JwtAuthHandler : DelegatingHandler
         // (e.g. a second API call in the same request) uses the new token.
         context.User = principal;
     }
+
     private sealed record TokenPair(
         string   AccessToken,
         string   RefreshToken,

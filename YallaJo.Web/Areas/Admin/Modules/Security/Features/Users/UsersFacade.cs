@@ -2,6 +2,7 @@ using YallaJo.Web.Areas.Admin.Modules.Security.Features.Roles;
 using YallaJo.Web.Areas.Admin.Modules.Security.Features.Users.Mappers;
 using YallaJo.Web.Areas.Admin.Modules.Security.Features.Users.Requests;
 using YallaJo.Web.Areas.Admin.Modules.Security.Features.Users.ViewModels;
+using YallaJo.Web.Infrastructure.Api.Contracts;
 
 namespace YallaJo.Web.Areas.Admin.Modules.Security.Features.Users;
 
@@ -16,9 +17,7 @@ public sealed class UsersFacade
         _roles = roles;
     }
 
-    // ── List ──────────────────────────────────────────────────────────────────
-
-    public async Task<UsersFacadeResult<UserListVm>> GetUsersAsync(
+    public async Task<ApiResult<UserListVm>> GetUsersAsync(
         int page, int pageSize, CancellationToken ct = default)
     {
         var result = await _users.GetUsersAsync(page, pageSize, ct);
@@ -35,16 +34,14 @@ public sealed class UsersFacade
                 HasPrevious = d.HasPreviousPage,
                 HasNext     = d.HasNextPage,
             };
-            return UsersFacadeResult<UserListVm>.Ok(vm);
+            return ApiResult<UserListVm>.CreateSuccess(vm);
         }
 
-        if (result.IsUnauthorized) return UsersFacadeResult<UserListVm>.ForceSignOut();
-        return UsersFacadeResult<UserListVm>.Fail(result.Error ?? "Could not load users.");
+        if (result.IsUnauthorized) return ApiResult<UserListVm>.ForceSignOut();
+        return ApiResult<UserListVm>.CreateSuccess(result.Error ?? "Could not load users.");
     }
 
-    // ── Details ───────────────────────────────────────────────────────────────
-
-    public async Task<UsersFacadeResult<UserDetailsVm>> GetDetailsAsync(
+    public async Task<ApiResult<UserDetailsVm>> GetDetailsAsync(
         Guid userId, CancellationToken ct = default)
     {
         var userTask  = _users.GetUserAsync(userId, ct);
@@ -52,11 +49,13 @@ public sealed class UsersFacade
         await Task.WhenAll(userTask, rolesTask);
 
         if (userTask.Result.IsUnauthorized || rolesTask.Result.IsUnauthorized)
-            return UsersFacadeResult<UserDetailsVm>.ForceSignOut();
+            return ApiResult<UserDetailsVm>.ForceSignOut();
 
         if (!userTask.Result.IsSuccess)
-            return UsersFacadeResult<UserDetailsVm>.Fail(
+        {
+            return ApiResult<UserDetailsVm>.CreateFailure(
                 userTask.Result.IsNotFound ? "User not found." : userTask.Result.Error ?? "Could not load user.");
+        }
 
         var user  = userTask.Result.Data!;
         var roles = rolesTask.Result.Data ?? [];
@@ -72,99 +71,65 @@ public sealed class UsersFacade
                 .Select(r => new RoleOptionVm { Id = r.Id, Name = r.Name })
                 .ToList(),
         };
-        return UsersFacadeResult<UserDetailsVm>.Ok(vm);
+        return ApiResult<UserDetailsVm>.CreateSuccess(vm);
     }
 
-    // ── Activate / Deactivate ─────────────────────────────────────────────────
-
-    public async Task<UsersFacadeResult> ActivateAsync(Guid userId, CancellationToken ct = default)
+    public async Task<ApiResult> ActivateAsync(Guid userId, CancellationToken ct = default)
     {
         var result = await _users.ActivateUserAsync(userId, ct);
-        if (result.IsSuccess) return UsersFacadeResult.Ok();
-        if (result.IsUnauthorized) return UsersFacadeResult.ForceSignOut();
-        return UsersFacadeResult.Fail(result.Error ?? "Activate failed.");
+        if (result.IsSuccess) return ApiResult.Ok();
+        if (result.IsUnauthorized) return ApiResult.ForceSignOut();
+        return ApiResult.Fail(result.Error ?? "Activate failed.");
     }
 
-    public async Task<UsersFacadeResult> DeactivateAsync(Guid userId, CancellationToken ct = default)
+    public async Task<ApiResult> DeactivateAsync(Guid userId, CancellationToken ct = default)
     {
         var result = await _users.DeactivateUserAsync(userId, ct);
-        if (result.IsSuccess) return UsersFacadeResult.Ok();
-        if (result.IsUnauthorized) return UsersFacadeResult.ForceSignOut();
-        return UsersFacadeResult.Fail(result.Error ?? "Deactivate failed.");
+        if (result.IsSuccess) return ApiResult.Ok();
+        if (result.IsUnauthorized) return ApiResult.ForceSignOut();
+        return ApiResult.Fail(result.Error ?? "Deactivate failed.");
     }
 
-    // ── Role assignment ───────────────────────────────────────────────────────
-
-    public async Task<UsersFacadeResult> AssignRoleAsync(
+    public async Task<ApiResult> AssignRoleAsync(
         Guid userId, AssignRoleVm vm, CancellationToken ct = default)
     {
         var result = await _users.AssignRoleAsync(
             userId, UsersMapper.ToAssignRoleRequest(vm), ct);
-        if (result.IsSuccess)   return UsersFacadeResult.Ok();
-        if (result.IsUnauthorized) return UsersFacadeResult.ForceSignOut();
-        if (result.IsConflict)  return UsersFacadeResult.Fail("User already has this role.");
-        if (result.IsNotFound)  return UsersFacadeResult.Fail("User or role not found.");
-        if (result.IsValidationError) return UsersFacadeResult.Invalid(result.ValidationErrors!);
-        return UsersFacadeResult.Fail(result.Error ?? "Could not assign role.");
+        if (result.IsSuccess)   return ApiResult.Ok();
+        if (result.IsUnauthorized) return ApiResult.ForceSignOut();
+        if (result.IsConflict)  return ApiResult.Fail("User already has this role.");
+        if (result.IsNotFound)  return ApiResult.Fail("User or role not found.");
+        if (result.IsValidationError) return ApiResult.Invalid(result.ValidationErrors!);
+        return ApiResult.Fail(result.Error ?? "Could not assign role.");
     }
 
-    public async Task<UsersFacadeResult> RemoveRoleAsync(
+    public async Task<ApiResult> RemoveRoleAsync(
         Guid userId, Guid roleId, CancellationToken ct = default)
     {
         var result = await _users.RemoveRoleAsync(userId, roleId, ct);
-        if (result.IsSuccess || result.IsNotFound) return UsersFacadeResult.Ok();
-        if (result.IsUnauthorized) return UsersFacadeResult.ForceSignOut();
-        return UsersFacadeResult.Fail(result.Error ?? "Could not remove role.");
+        if (result.IsSuccess || result.IsNotFound) return ApiResult.Ok();
+        if (result.IsUnauthorized) return ApiResult.ForceSignOut();
+        return ApiResult.Fail(result.Error ?? "Could not remove role.");
     }
 
-    // ── Claims ────────────────────────────────────────────────────────────────
-
-    public async Task<UsersFacadeResult> AddClaimAsync(
+    public async Task<ApiResult> AddClaimAsync(
         Guid userId, AddClaimVm vm, CancellationToken ct = default)
     {
         var result = await _users.AddClaimAsync(
             userId, UsersMapper.ToAddClaimRequest(vm), ct);
-        if (result.IsSuccess)   return UsersFacadeResult.Ok();
-        if (result.IsUnauthorized) return UsersFacadeResult.ForceSignOut();
-        if (result.IsConflict)  return UsersFacadeResult.Fail("Claim already exists.");
-        if (result.IsValidationError) return UsersFacadeResult.Invalid(result.ValidationErrors!);
-        return UsersFacadeResult.Fail(result.Error ?? "Could not add claim.");
+        if (result.IsSuccess)   return ApiResult.Ok();
+        if (result.IsUnauthorized) return ApiResult.ForceSignOut();
+        if (result.IsConflict)  return ApiResult.Fail("Claim already exists.");
+        if (result.IsValidationError) return ApiResult.Invalid(result.ValidationErrors!);
+        return ApiResult.Fail(result.Error ?? "Could not add claim.");
     }
 
-    public async Task<UsersFacadeResult> RemoveClaimAsync(
+    public async Task<ApiResult> RemoveClaimAsync(
         Guid userId, Guid claimId, CancellationToken ct = default)
     {
         var result = await _users.RemoveClaimAsync(userId, claimId, ct);
-        if (result.IsSuccess || result.IsNotFound) return UsersFacadeResult.Ok();
-        if (result.IsUnauthorized) return UsersFacadeResult.ForceSignOut();
-        return UsersFacadeResult.Fail(result.Error ?? "Could not remove claim.");
+        if (result.IsSuccess || result.IsNotFound) return ApiResult.Ok();
+        if (result.IsUnauthorized) return ApiResult.ForceSignOut();
+        return ApiResult.Fail(result.Error ?? "Could not remove claim.");
     }
-}
-
-// ── Facade result types ────────────────────────────────────────────────────────
-
-public sealed class UsersFacadeResult
-{
-    public bool    IsSuccess      { get; private init; }
-    public string? Error          { get; private init; }
-    public bool    RequireSignOut { get; private init; }
-    public IReadOnlyDictionary<string, string[]>? ValidationErrors { get; private init; }
-
-    public static UsersFacadeResult Ok()           => new() { IsSuccess = true };
-    public static UsersFacadeResult Fail(string e) => new() { IsSuccess = false, Error = e };
-    public static UsersFacadeResult ForceSignOut() => new() { IsSuccess = false, RequireSignOut = true };
-    public static UsersFacadeResult Invalid(IReadOnlyDictionary<string, string[]> errs)
-        => new() { IsSuccess = false, ValidationErrors = errs };
-}
-
-public sealed class UsersFacadeResult<T>
-{
-    public bool    IsSuccess      { get; private init; }
-    public T?      Data           { get; private init; }
-    public string? Error          { get; private init; }
-    public bool    RequireSignOut { get; private init; }
-
-    public static UsersFacadeResult<T> Ok(T data)    => new() { IsSuccess = true, Data = data };
-    public static UsersFacadeResult<T> Fail(string e)=> new() { IsSuccess = false, Error = e };
-    public static UsersFacadeResult<T> ForceSignOut() => new() { IsSuccess = false, RequireSignOut = true };
 }

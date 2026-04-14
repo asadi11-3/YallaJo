@@ -5,11 +5,6 @@ using YallaJo.Web.Services;
 
 namespace YallaJo.Web.Areas.Auth.Features.Login;
 
-/// <summary>
-/// Wraps all backend calls needed by the Login feature.
-/// Receives the shared ApiClient (which has JwtAuthHandler for token injection).
-/// Login itself is anonymous — the handler is a no-op when no token is in the cookie.
-/// </summary>
 public sealed class LoginApiClient
 {
     private readonly ApiClient _api;

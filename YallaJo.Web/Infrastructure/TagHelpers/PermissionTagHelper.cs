@@ -7,7 +7,7 @@ namespace YallaJo.Web.Infrastructure.TagHelpers;
 /// Razor TagHelper for action-level visibility in views.
 ///
 /// Usage:
-///   &lt;permission require="@WebPermission.Role.Create"&gt;
+///   &lt;permission require="@WebPermissions.Role.Create"&gt;
 ///       ... create form HTML ...
 ///   &lt;/permission&gt;
 ///
@@ -29,7 +29,7 @@ public sealed class PermissionTagHelper : TagHelper
 
     private readonly ICurrentUser _currentUser;
 
-    /// <summary>The permission constant to check (e.g. WebPermission.Role.Create).</summary>
+    /// <summary>The permission constant to check (e.g. WebPermissions.Role.Create).</summary>
     [HtmlAttributeName(RequireAttributeName)]
     public string Require { get; set; } = string.Empty;
 
