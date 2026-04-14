@@ -134,7 +134,7 @@ public sealed class ApiClient
         }
     }
 
-    // Minimal problem-details shape — enough for error + validation handling.
+   
     private sealed class ProblemDetails
     {
         public string? Title  { get; init; }

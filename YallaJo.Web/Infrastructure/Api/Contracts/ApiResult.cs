@@ -1,8 +1,5 @@
 namespace YallaJo.Web.Infrastructure.Api.Contracts;
 
-/// <summary>
-/// Represents the result of a backend API call with no typed payload.
-/// </summary>
 public sealed class ApiResult
 {
     public bool IsSuccess { get; private init; }
@@ -27,9 +24,7 @@ public sealed class ApiResult
         new() { IsSuccess = false, StatusCode = 422, ValidationErrors = errors };
 }
 
-/// <summary>
-/// Represents the result of a backend API call with a typed payload.
-/// </summary>
+
 public sealed class ApiResult<T>
 {
     public bool IsSuccess { get; private init; }

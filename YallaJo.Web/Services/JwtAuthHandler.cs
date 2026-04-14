@@ -84,7 +84,7 @@ public sealed class JwtAuthHandler : DelegatingHandler
         return await base.SendAsync(request, cancellationToken);
     }
 
-    // ── JWT expiry check ─────────────────────────────────────────────────────
+   
 
     private static bool IsExpiredOrExpiringSoon(string token, int bufferSeconds = 30)
     {
@@ -100,8 +100,6 @@ public sealed class JwtAuthHandler : DelegatingHandler
             return true; // If unparseable, treat as expired.
         }
     }
-
-    // ── Token refresh (anonymous client — no JwtAuthHandler) ─────────────────
 
     private async Task<TokenPair?> TryRefreshAsync(string refreshToken, CancellationToken ct)
     {
@@ -149,9 +147,6 @@ public sealed class JwtAuthHandler : DelegatingHandler
         // (e.g. a second API call in the same request) uses the new token.
         context.User = principal;
     }
-
-    // ── Internal DTO for deserialization ─────────────────────────────────────
-
     private sealed record TokenPair(
         string   AccessToken,
         string   RefreshToken,

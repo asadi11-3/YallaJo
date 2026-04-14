@@ -1,0 +1,148 @@
+╔════════════════════════════════════════════════════════════════════════════╗
+║                    YALLAJO.WEB - QUICK REFERENCE CARD                     ║
+║                                                                            ║
+║              Shared View Partials Analysis - Key Findings                  ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PROBLEM
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+❌ Login page fails because _ValidationScriptsPartial.cshtml is not found
+   Referenced in 5 Auth feature views but file doesn't exist
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SOLUTION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ Create: Views/Shared/_ValidationScriptsPartial.cshtml
+
+This is the CORRECT location because:
+  • Shared across multiple features (5 Auth views)
+  • Application-wide concern (client-side validation)
+  • Follows ASP.NET Core conventions
+  • Consistent with _Layout.cshtml location
+  • Framework will find it in standard search path
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+EXISTING SHARED PARTIALS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Location: Views/Shared/
+
+✅ _Layout.cshtml
+   - Master layout for all views
+   - Renders Scripts section at line 19
+
+✅ _ViewStart.cshtml (in Views/)
+   - Sets default layout for all views
+
+✅ _ViewImports.cshtml (Root + Views/)
+   - Global using statements + tag helpers
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FEATURE-LEVEL PARTIALS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Location: Areas/{Area}/Features/{Feature}/Views/
+
+📍 Areas/Admin/Modules/ContentPlaces/Features/Places/Views/
+   - _Form.cshtml
+   - _Table.cshtml
+
+📍 Areas/Accounts/Features/Profile/Views/
+   - _Form.cshtml
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CONVENTIONS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. SHARED PARTIALS
+   Location: Views/Shared/
+   Naming: _PartialName.cshtml
+   Scope: Application-wide
+
+2. FEATURE PARTIALS
+   Location: Areas/{Area}/Features/{Feature}/Views/
+   Naming: _PartialName.cshtml
+   Scope: Feature-specific
+
+3. AREA STRUCTURE
+   Pattern: Areas/{AreaName}/Features/{FeatureName}/Views/
+   Note: NO Area-level Shared folder
+
+4. VIEW IMPORTS
+   Root: _ViewImports.cshtml
+   Views: Views/_ViewImports.cshtml
+   Note: NO Area-level imports
+
+5. LAYOUT
+   Location: Views/Shared/_Layout.cshtml
+   Set via: Views/_ViewStart.cshtml
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+REFERENCES TO _ValidationScriptsPartial
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+5 files reference this missing partial:
+
+1. Areas/Auth/Features/Login/Views/Index.cshtml (Line 36)
+2. Areas/Auth/Features/ForgotPassword/Views/Index.cshtml (Line 35)
+3. Areas/Auth/Features/ResetPassword/Views/Index.cshtml (Line 43)
+4. Areas/Auth/Features/VerifyEmail/Views/Index.cshtml (Line 37)
+5. Areas/Auth/Features/ExternalProviders/Views/Index.cshtml (Line 49)
+
+Usage Pattern:
+  @section Scripts {
+      <partial name="_ValidationScriptsPartial" />
+  }
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+VIEW RESOLUTION ORDER
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+When a view references: <partial name="_ValidationScriptsPartial" />
+
+Framework searches in this order:
+
+1. Feature-level Views directory
+   (e.g., Areas/Auth/Features/Login/Views/)
+
+2. Area-level Shared directory
+   (e.g., Areas/Auth/Views/Shared/)
+   ⚠️  NOT USED in this project
+
+3. Root Shared directory
+   (e.g., Views/Shared/)
+   ✅ WILL FIND IT HERE
+
+4. Root Views directory
+   (e.g., Views/)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SUMMARY TABLE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Aspect                          Value
+─────────────────────────────────────────────────────────────────────────────
+Shared Partials Location        Views/Shared/
+Feature Partials Location       Areas/{Area}/Features/{Feature}/Views/
+Naming Convention               Underscore prefix: _PartialName.cshtml
+Missing Partial                 _ValidationScriptsPartial.cshtml
+Correct Location                Views/Shared/_ValidationScriptsPartial.cshtml
+Referenced By                   5 Auth feature views
+Area-Level Shared               Not used in this project
+View Imports                    Root + Views level (no Area-level)
+Layout                          Single shared layout in Views/Shared/
+Total Razor Files               44 files
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+NEXT STEPS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Create: Views/Shared/_ValidationScriptsPartial.cshtml
+2. Add: Validation script references (jQuery validation or ASP.NET Core built-in)
+3. Test: All 5 Auth feature views
+4. Verify: No runtime errors on login page
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

@@ -5,16 +5,6 @@ using YallaJo.Web.Infrastructure.Authentication.Claims;
 
 namespace YallaJo.Web.Infrastructure.Authentication.SignIn;
 
-/// <summary>
-/// Establishes or tears down the web app's cookie-based authenticated session.
-///
-/// Token flow:
-///   - On sign-in: encrypts access + refresh tokens into the cookie claims
-///   - On sign-out: removes the cookie entirely
-///
-/// The cookie is HttpOnly + SameSite=Strict (configured in Program.cs),
-/// so tokens are never readable by JavaScript.
-/// </summary>
 public sealed class WebSignInService : IWebSignInService
 {
     private readonly IHttpContextAccessor _accessor;
