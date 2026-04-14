@@ -106,7 +106,7 @@ public sealed class ApiClient
         var raw = await response.Content.ReadAsStringAsync(ct);
         var err = ParseError<object>((int)response.StatusCode, raw);
         return err.IsValidationError
-            ? ApiResult.ValidationFail(err.ValidationErrors!)
+            ? ApiResult.ValidationFail(err.StatusCode, err.ValidationErrors!)
             : ApiResult.Fail(err.StatusCode, err.Error);
     }
 
@@ -116,13 +116,15 @@ public sealed class ApiClient
         {
             var problem = JsonSerializer.Deserialize<ProblemDetails>(raw, DeserializeOpts);
 
-            if (statusCode == 422 && problem?.Errors?.Count > 0)
+            // 400 = FluentValidation errors (Outcome.Invalid = 400 on the backend)
+            // 422 = semantic validation (kept for defensive compatibility)
+            if (statusCode is 400 or 422 && problem?.Errors?.Count > 0)
             {
                 var errors = problem.Errors
                     .ToDictionary(
                         kvp => kvp.Key,
                         kvp => kvp.Value.ToArray());
-                return ApiResult<T>.ValidationFail(errors);
+                return ApiResult<T>.ValidationFail(statusCode, errors);
             }
 
             var msg = problem?.Title ?? problem?.Detail ?? $"HTTP {statusCode}";

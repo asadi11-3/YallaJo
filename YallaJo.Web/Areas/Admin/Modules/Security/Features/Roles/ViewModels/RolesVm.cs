@@ -2,7 +2,10 @@ using System.ComponentModel.DataAnnotations;
 
 namespace YallaJo.Web.Areas.Admin.Modules.Security.Features.Roles.ViewModels;
 
-/// <summary>List + inline create form.</summary>
+/// <summary>
+/// Role list page data. Carries domain data only — no permission flags.
+/// Action-level UI visibility is controlled in the view by &lt;permission require="..."&gt; TagHelpers.
+/// </summary>
 public sealed class RoleListVm
 {
     public IReadOnlyList<RoleRowVm> Roles  { get; init; } = [];

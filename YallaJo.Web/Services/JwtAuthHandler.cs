@@ -6,6 +6,7 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using YallaJo.Web.Infrastructure.Authentication.Claims;
+using YallaJo.Web.Infrastructure.Authentication.SignIn;
 
 namespace YallaJo.Web.Services;
 
@@ -126,16 +127,25 @@ public sealed class JwtAuthHandler : DelegatingHandler
 
     private static async Task UpdateCookieAsync(HttpContext context, TokenPair pair)
     {
-        // Rebuild the claims list, replacing the token claims.
+        // Rebuild the claims list.
+        // Remove token claims AND the old role/Permission claims so that the new JWT
+        // can be the single source of truth for the user's current permissions.
         var existingClaims = context.User.Claims
             .Where(c => c.Type != AppClaimTypes.AccessToken
                      && c.Type != AppClaimTypes.RefreshToken
-                     && c.Type != AppClaimTypes.RefreshTokenExpiresAt)
+                     && c.Type != AppClaimTypes.RefreshTokenExpiresAt
+                     && c.Type != AppClaimTypes.Role
+                     && c.Type != AppClaimTypes.Permission)
             .ToList();
 
         existingClaims.Add(new Claim(AppClaimTypes.AccessToken,           pair.AccessToken));
         existingClaims.Add(new Claim(AppClaimTypes.RefreshToken,          pair.RefreshToken));
         existingClaims.Add(new Claim(AppClaimTypes.RefreshTokenExpiresAt, pair.RefreshTokenExpiresAt.ToString("O")));
+
+        // Re-extract role + Permission claims from the new access token
+        // so any permission changes (e.g. role reassignment) take effect on the next refresh.
+        existingClaims.AddRange(
+            WebSignInService.ExtractUserClaimsFromJwt(pair.AccessToken));
 
         var identity  = new ClaimsIdentity(existingClaims, CookieAuthenticationDefaults.AuthenticationScheme);
         var principal = new ClaimsPrincipal(identity);

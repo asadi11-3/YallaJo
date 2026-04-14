@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using YallaJo.Web.Infrastructure.Authentication.SignIn;
+using YallaJo.Web.Infrastructure.Authorization;
+using YallaJo.Web.Infrastructure.Identity;
 using YallaJo.Web.Services;
 
 // ── Auth feature registrations ────────────────────────────────────────────────
@@ -62,6 +64,11 @@ builder.Services.AddHttpClient("anon", client =>
 // ── Auth infrastructure ───────────────────────────────────────────────────────
 builder.Services.AddScoped<IWebSignInService, WebSignInService>();
 
+// ── Identity / authorization infrastructure ───────────────────────────────────
+// ICurrentUser: scoped, lazy per-request claim cache.
+// Every permission and role check in the project goes through this interface.
+builder.Services.AddScoped<ICurrentUser, CurrentUser>();
+
 // ── Auth feature services ─────────────────────────────────────────────────────
 builder.Services.AddScoped<LoginApiClient>();
 builder.Services.AddScoped<LoginFacade>();
@@ -101,7 +108,13 @@ builder.Services.AddScoped<AuditLogsApiClient>();
 builder.Services.AddScoped<AuditLogsFacade>();
 
 // ── MVC + custom Razor view locations ────────────────────────────────────────
-builder.Services.AddControllersWithViews()
+builder.Services.AddControllersWithViews(options =>
+{
+    // ForbiddenResultFilter: intercepts every ForbidResult before it executes and
+    // replaces it with the correct response shape (HTML page or JSON) based on
+    // content negotiation. This is the ONE code path that renders AccessDenied.cshtml.
+    options.Filters.Add<ForbiddenResultFilter>();
+})
     .AddRazorOptions(o =>
     {
         // Auth / Accounts areas: Areas/{area}/Features/{controller}/Views/{view}.cshtml

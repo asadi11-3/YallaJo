@@ -1,0 +1,108 @@
+namespace YallaJo.Web.Infrastructure.Authorization;
+
+/// <summary>
+/// All permission name constants used in YallaJo.Web, organized by feature.
+///
+/// Values match the format produced by AppPermission.NameFor() on the backend:
+///   "Permission.{Feature}.{Action}"
+///
+/// RULE: No permission string may be constructed inline anywhere else in the project.
+///       All permission checks go through ICurrentUser.HasPermission(WebPermission.X.Y).
+/// </summary>
+public static class WebPermission
+{
+    // ── Role ──────────────────────────────────────────────────────────────────
+    public static class Role
+    {
+        public const string Read   = "Permission.Role.Read";
+        public const string Create = "Permission.Role.Create";
+        public const string Update = "Permission.Role.Update";
+        public const string Delete = "Permission.Role.Delete";
+    }
+
+    // ── RoleClaim ─────────────────────────────────────────────────────────────
+    public static class RoleClaim
+    {
+        public const string Read   = "Permission.RoleClaim.Read";
+        public const string Create = "Permission.RoleClaim.Create";
+        public const string Delete = "Permission.RoleClaim.Delete";
+    }
+
+    // ── User ──────────────────────────────────────────────────────────────────
+    public static class User
+    {
+        public const string Read       = "Permission.User.Read";
+        public const string UpdateAny  = "Permission.User.UpdateAny";
+        public const string DeleteAny  = "Permission.User.DeleteAny";
+        public const string UpdateSelf = "Permission.User.UpdateSelf";
+        public const string SoftDelete = "Permission.User.SoftDelete";
+    }
+
+    // ── UserRole ──────────────────────────────────────────────────────────────
+    public static class UserRole
+    {
+        public const string Create = "Permission.UserRole.Create";
+        public const string Delete = "Permission.UserRole.Delete";
+    }
+
+    // ── System ────────────────────────────────────────────────────────────────
+    public static class System
+    {
+        public const string Read   = "Permission.System.Read";
+        public const string Update = "Permission.System.Update";
+    }
+
+    // ── Category ─────────────────────────────────────────────────────────────
+    public static class Category
+    {
+        public const string Read   = "Permission.Category.Read";
+        public const string Create = "Permission.Category.Create";
+        public const string Update = "Permission.Category.Update";
+        public const string Delete = "Permission.Category.Delete";
+    }
+
+    // ── Specialization ────────────────────────────────────────────────────────
+    public static class Specialization
+    {
+        public const string Read   = "Permission.Specialization.Read";
+        public const string Create = "Permission.Specialization.Create";
+        public const string Update = "Permission.Specialization.Update";
+        public const string Delete = "Permission.Specialization.Delete";
+    }
+
+    // ── Language ──────────────────────────────────────────────────────────────
+    public static class Language
+    {
+        public const string Read   = "Permission.Language.Read";
+        public const string Create = "Permission.Language.Create";
+        public const string Update = "Permission.Language.Update";
+        public const string Delete = "Permission.Language.Delete";
+    }
+
+    // ── Tag ───────────────────────────────────────────────────────────────────
+    public static class Tag
+    {
+        public const string Read   = "Permission.Tag.Read";
+        public const string Create = "Permission.Tag.Create";
+        public const string Update = "Permission.Tag.Update";
+        public const string Delete = "Permission.Tag.Delete";
+    }
+
+    // ── Place ─────────────────────────────────────────────────────────────────
+    public static class Place
+    {
+        public const string Read   = "Permission.Place.Read";
+        public const string Create = "Permission.Place.Create";
+        public const string Update = "Permission.Place.Update";
+        public const string Delete = "Permission.Place.Delete";
+    }
+
+    // ── Booking ───────────────────────────────────────────────────────────────
+    public static class Booking
+    {
+        public const string Read   = "Permission.Booking.Read";
+        public const string Create = "Permission.Booking.Create";
+        public const string Update = "Permission.Booking.Update";
+        public const string Delete = "Permission.Booking.Delete";
+    }
+}

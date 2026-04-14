@@ -1,3 +1,4 @@
+@using YallaJo.Web.Infrastructure.Authorization
 @model YallaJo.Web.Areas.Admin.Modules.Security.Features.Roles.ViewModels.RoleListVm
 @{
     ViewData["Title"] = "Roles";
@@ -11,33 +12,38 @@
     @if (TempData["Error"]   is string err) { <div class="alert alert-danger">@err</div> }
     @if (ViewBag.Error       is string vbe) { <div class="alert alert-danger">@vbe</div> }
 
-    @* Create role form *@
-    <div class="card mb-4 p-3">
-        <h5>Create Role</h5>
-        <form asp-area="Admin" asp-controller="Roles" asp-action="Create" method="post" class="row g-2">
-            @Html.AntiForgeryToken()
-            <div asp-validation-summary="All" class="text-danger"></div>
-            <div class="col-auto">
-                <input asp-for="Create.Name" class="form-control" placeholder="Role name" />
-                <span asp-validation-for="Create.Name" class="text-danger"></span>
-            </div>
-            <div class="col-auto">
-                <input asp-for="Create.Description" class="form-control" placeholder="Description (optional)" />
-            </div>
-            <div class="col-auto">
-                <button type="submit" class="btn btn-primary">Create</button>
-            </div>
-        </form>
-    </div>
+    @* ── Create form: visible only to users with Role.Create ──────────────────
+       <permission> TagHelper suppresses the block entirely when the permission is absent.
+       No ViewModel boolean. No @if (Model.CanCreate). *@
+    <permission require="@WebPermission.Role.Create">
+        <div class="card mb-4 p-3">
+            <h5>Create Role</h5>
+            <form asp-area="Admin" asp-controller="Roles" asp-action="Create" method="post" class="row g-2">
+                @Html.AntiForgeryToken()
+                <div asp-validation-summary="All" class="text-danger"></div>
+                <div class="col-auto">
+                    <input asp-for="Create.Name" class="form-control" placeholder="Role name" />
+                    <span asp-validation-for="Create.Name" class="text-danger"></span>
+                </div>
+                <div class="col-auto">
+                    <input asp-for="Create.Description" class="form-control" placeholder="Description (optional)" />
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-primary">Create</button>
+                </div>
+            </form>
+        </div>
+    </permission>
 
-    @* Roles table *@
+    @* ── Roles table: always shown (user passed the Role.Read page-level gate).
+       Actions column + Deactivate button shown only to users with Role.Update. *@
     <table class="table table-bordered">
         <thead>
             <tr>
                 <th>Name</th>
                 <th>Description</th>
                 <th>Status</th>
-                <th>Actions</th>
+                <permission require="@WebPermission.Role.Update"><th>Actions</th></permission>
             </tr>
         </thead>
         <tbody>
@@ -51,18 +57,20 @@
                             @(r.IsActive ? "Active" : "Inactive")
                         </span>
                     </td>
-                    <td>
-                        @if (r.IsActive)
-                        {
-                            <form asp-area="Admin" asp-controller="Roles"
-                                  asp-action="Deactivate" asp-route-roleId="@r.Id"
-                                  method="post" class="d-inline">
-                                @Html.AntiForgeryToken()
-                                <button type="submit" class="btn btn-warning btn-sm"
-                                        onclick="return confirm('Deactivate role @r.Name?')">Deactivate</button>
-                            </form>
-                        }
-                    </td>
+                    <permission require="@WebPermission.Role.Update">
+                        <td>
+                            @if (r.IsActive)
+                            {
+                                <form asp-area="Admin" asp-controller="Roles"
+                                      asp-action="Deactivate" asp-route-roleId="@r.Id"
+                                      method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-warning btn-sm"
+                                            onclick="return confirm('Deactivate role @r.Name?')">Deactivate</button>
+                                </form>
+                            }
+                        </td>
+                    </permission>
                 </tr>
             }
         </tbody>

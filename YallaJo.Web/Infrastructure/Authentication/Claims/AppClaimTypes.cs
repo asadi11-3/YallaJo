@@ -17,4 +17,17 @@ public static class AppClaimTypes
 
     /// <summary>UTC expiry of the refresh token (ISO 8601 round-trip format "O").</summary>
     public const string RefreshTokenExpiresAt = "refresh_token_expires_at";
+
+    /// <summary>
+    /// Role claim type (matches the JWT "role" claim and the API's RoleClaimType setting).
+    /// Extracted from the JWT and stored in the Web cookie so controllers/views can check roles.
+    /// </summary>
+    public const string Role = "role";
+
+    /// <summary>
+    /// Permission claim type (matches the API's PermissionAuthorizationHandler).
+    /// Values follow the format "Permission.{Feature}.{Action}" e.g. "Permission.Role.Read".
+    /// Extracted from the JWT and stored in the Web cookie so controllers/views can check permissions.
+    /// </summary>
+    public const string Permission = "Permission";
 }

@@ -1,3 +1,4 @@
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -21,13 +22,19 @@ public sealed class WebSignInService : IWebSignInService
         var context = _accessor.HttpContext
             ?? throw new InvalidOperationException("No active HTTP context.");
 
-        var claims = new[]
+        // Core token-storage claims.
+        var claims = new List<Claim>
         {
-            new Claim(AppClaimTypes.UserId,                userId.ToString()),
-            new Claim(AppClaimTypes.AccessToken,           accessToken),
-            new Claim(AppClaimTypes.RefreshToken,          refreshToken),
-            new Claim(AppClaimTypes.RefreshTokenExpiresAt, refreshTokenExpiresAt.ToString("O")),
+            new(AppClaimTypes.UserId,                userId.ToString()),
+            new(AppClaimTypes.AccessToken,           accessToken),
+            new(AppClaimTypes.RefreshToken,          refreshToken),
+            new(AppClaimTypes.RefreshTokenExpiresAt, refreshTokenExpiresAt.ToString("O")),
         };
+
+        // Extract role + Permission claims from the JWT so that controllers and
+        // Razor views can check user permissions without re-parsing the token.
+        // No signature verification — we trust our own freshly-issued token.
+        claims.AddRange(ExtractUserClaimsFromJwt(accessToken));
 
         var identity  = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
         var principal = new ClaimsPrincipal(identity);
@@ -50,5 +57,36 @@ public sealed class WebSignInService : IWebSignInService
             ?? throw new InvalidOperationException("No active HTTP context.");
 
         await context.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Reads the JWT (without signature validation — we issued it ourselves) and returns
+    /// all "role" and "Permission" claims so they can be stored in the Web cookie.
+    /// Returns empty on any parse failure rather than throwing.
+    /// </summary>
+    internal static IEnumerable<Claim> ExtractUserClaimsFromJwt(string accessToken)
+    {
+        try
+        {
+            var handler = new JwtSecurityTokenHandler();
+            if (!handler.CanReadToken(accessToken))
+                return [];
+
+            var jwt = handler.ReadJwtToken(accessToken);
+
+            return jwt.Claims
+                .Where(c => c.Type == AppClaimTypes.Role
+                         || c.Type == AppClaimTypes.Permission)
+                .ToList();
+        }
+        catch
+        {
+            // If the token cannot be parsed for any reason, return no user claims.
+            // The user is still authenticated via cookie; they simply have no permissions
+            // visible on the Web side until they sign in again.
+            return [];
+        }
     }
 }
