@@ -21,8 +21,6 @@ internal sealed class CurrentUser : ICurrentUser
 
     public CurrentUser(IHttpContextAccessor accessor) => _accessor = accessor;
 
-    // ── ICurrentUser ──────────────────────────────────────────────────────────
-
     public bool IsAuthenticated =>
         Principal?.Identity?.IsAuthenticated ?? false;
 
@@ -43,8 +41,6 @@ internal sealed class CurrentUser : ICurrentUser
 
     public bool IsInRole(string role) =>
         Roles.Contains(role);
-
-    // ── Private helpers ───────────────────────────────────────────────────────
 
     private ClaimsPrincipal? Principal =>
         _principal ??= _accessor.HttpContext?.User;

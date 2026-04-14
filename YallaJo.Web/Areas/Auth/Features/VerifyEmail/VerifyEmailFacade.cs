@@ -40,5 +40,3 @@ public sealed class VerifyEmailFacade
         return result.IsSuccess ? null : result.Error ?? "Could not resend code.";
     }
 }
-
-

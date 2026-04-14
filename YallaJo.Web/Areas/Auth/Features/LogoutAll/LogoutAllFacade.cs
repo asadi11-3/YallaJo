@@ -13,13 +13,10 @@ public sealed class LogoutAllFacade
         _signIn = signIn;
     }
 
-    /// <summary>
-    /// Revokes all sessions on the backend then clears the local cookie.
-    /// Always signs out locally — even on backend failure.
-    /// </summary>
     public async Task HandleAsync(CancellationToken ct = default)
     {
-        await _api.LogoutAllAsync(ct); // best-effort
+        await _api.LogoutAllAsync(ct);
+
         await _signIn.SignOutAsync();
     }
 }

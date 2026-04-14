@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using YallaJo.Web.Infrastructure.Authentication.SignIn;
 using YallaJo.Web.Infrastructure.Authorization;
 using YallaJo.Web.Infrastructure.Identity;
+using YallaJo.Web.Infrastructure.Mvc;
 using YallaJo.Web.Services;
 
 // ── Auth feature registrations ────────────────────────────────────────────────
@@ -110,31 +111,23 @@ builder.Services.AddScoped<AuditLogsFacade>();
 // ── MVC + custom Razor view locations ────────────────────────────────────────
 builder.Services.AddControllersWithViews(options =>
 {
-    // ForbiddenResultFilter: intercepts every ForbidResult before it executes and
-    // replaces it with the correct response shape (HTML page or JSON) based on
-    // content negotiation. This is the ONE code path that renders AccessDenied.cshtml.
+    // ForbiddenResultFilter: the ONE code path that renders AccessDenied.cshtml.
+    // Branches on content negotiation: HTML page → view, AJAX/JSON → ProblemDetails.
     options.Filters.Add<ForbiddenResultFilter>();
 })
     .AddRazorOptions(o =>
     {
-        // Auth / Accounts areas: Areas/{area}/Features/{controller}/Views/{view}.cshtml
+        // Auth / Accounts / Content areas follow the flat feature-folder convention:
+        //   Areas/{area}/Features/{controller}/Views/{view}.cshtml
         o.AreaViewLocationFormats.Add("~/Areas/{2}/Features/{1}/Views/{0}.cshtml");
         o.AreaViewLocationFormats.Add("~/Areas/{2}/Features/{1}/Views/Shared/{0}.cshtml");
 
-        // Admin area modules: Areas/Admin/Modules/{module}/Features/{controller}/Views/{view}.cshtml
-        // One entry per module so the {2} area token still validates to "Admin".
-        foreach (var module in new[]
-        {
-            "Security", "Dashboard", "ContentCore", "ContentPlaces",
-            "ContentTours", "ContentBlogs", "ContentSeo",
-            "Analytics", "Booking", "Finance", "Messaging", "Social", "Accounts",
-        })
-        {
-            o.AreaViewLocationFormats.Add(
-                $"~/Areas/{{2}}/Modules/{module}/Features/{{1}}/Views/{{0}}.cshtml");
-            o.AreaViewLocationFormats.Add(
-                $"~/Areas/{{2}}/Modules/{module}/Features/{{1}}/Views/Shared/{{0}}.cshtml");
-        }
+        // Admin area uses a deeper module-based convention:
+        //   Areas/Admin/Modules/{module}/Features/{controller}/Views/{view}.cshtml
+        // The AdminModuleViewLocationExpander auto-discovers modules by scanning the
+        // filesystem at startup — no manual list to maintain.
+        o.ViewLocationExpanders.Add(
+            new AdminModuleViewLocationExpander(builder.Environment.ContentRootPath));
     });
 
 var app = builder.Build();

@@ -13,8 +13,6 @@ public sealed class ForgotPasswordFacade
     {
         var result = await _api.ForgotPasswordAsync(ForgotPasswordMapper.ToRequest(vm), ct);
 
-        // Always report "we sent a code if the account exists" to avoid
-        // leaking whether the email is registered.
         if (result.IsSuccess || result.IsNotFound)
             return ApiResult.Ok();
 
@@ -24,4 +22,3 @@ public sealed class ForgotPasswordFacade
         return ApiResult.Fail(result.Error ?? "Request failed.");
     }
 }
-

@@ -38,7 +38,7 @@ public sealed class UsersFacade
         }
 
         if (result.IsUnauthorized) return ApiResult<UserListVm>.ForceSignOut();
-        return ApiResult<UserListVm>.CreateSuccess(result.Error ?? "Could not load users.");
+        return ApiResult<UserListVm>.CreateFailure(result.Error ?? "Could not load users.");
     }
 
     public async Task<ApiResult<UserDetailsVm>> GetDetailsAsync(

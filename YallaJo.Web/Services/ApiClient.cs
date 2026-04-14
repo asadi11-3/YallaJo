@@ -4,15 +4,6 @@ using YallaJo.Web.Infrastructure.Api.Contracts;
 
 namespace YallaJo.Web.Services;
 
-/// <summary>
-/// Typed HTTP client registered via AddHttpClient&lt;ApiClient&gt; in Program.cs.
-/// All outbound API calls go through this class; the JwtAuthHandler
-/// DelegatingHandler transparently attaches the Bearer token.
-///
-/// Caller never touches HttpClient directly — only ApiClient methods.
-/// Returns ApiResult / ApiResult&lt;T&gt; so callers can pattern-match outcomes
-/// without catching exceptions.
-/// </summary>
 public sealed class ApiClient
 {
     private readonly HttpClient _http;
@@ -30,15 +21,11 @@ public sealed class ApiClient
 
     public ApiClient(HttpClient http) => _http = http;
 
-    // ── GET ─────────────────────────────────────────────────────────────────
-
     public async Task<ApiResult<T>> GetAsync<T>(string path, CancellationToken ct = default)
     {
         using var response = await _http.GetAsync(path, ct);
         return await ReadAsync<T>(response, ct);
     }
-
-    // ── POST ────────────────────────────────────────────────────────────────
 
     public async Task<ApiResult<T>> PostAsync<T>(string path, object? body = null, CancellationToken ct = default)
     {
@@ -54,8 +41,6 @@ public sealed class ApiClient
         return await ReadNoBodyAsync(response, ct);
     }
 
-    // ── PATCH ───────────────────────────────────────────────────────────────
-
     public async Task<ApiResult> PatchAsync(string path, object? body = null, CancellationToken ct = default)
     {
         using var request = new HttpRequestMessage(HttpMethod.Patch, path)
@@ -66,15 +51,11 @@ public sealed class ApiClient
         return await ReadNoBodyAsync(response, ct);
     }
 
-    // ── DELETE ──────────────────────────────────────────────────────────────
-
     public async Task<ApiResult> DeleteAsync(string path, CancellationToken ct = default)
     {
         using var response = await _http.DeleteAsync(path, ct);
         return await ReadNoBodyAsync(response, ct);
     }
-
-    // ── Helpers ─────────────────────────────────────────────────────────────
 
     private static StringContent? ToJson(object? body)
     {

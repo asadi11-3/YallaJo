@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using YallaJo.Web.Areas.Auth.Features.VerifyEmail.Requests;
 using YallaJo.Web.Areas.Auth.Features.VerifyEmail.ViewModels;
 
 namespace YallaJo.Web.Areas.Auth.Features.VerifyEmail;
@@ -39,7 +40,6 @@ public sealed class VerifyEmailController : Controller
         return View(vm);
     }
 
-    // POST /auth/verifyemail/resendotp  (AJAX)
     [HttpPost("auth/verifyemail/resendotp")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> ResendOtp([FromBody] ResendOtpPayload payload, CancellationToken ct)
@@ -53,5 +53,3 @@ public sealed class VerifyEmailController : Controller
             : StatusCode(429, new { error });
     }
 }
-
-public sealed record ResendOtpPayload(string Email);

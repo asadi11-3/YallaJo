@@ -1,5 +1,17 @@
 namespace YallaJo.Web.Infrastructure.Api.Contracts;
 
+public enum ApiResultState
+{
+    Success,
+    Unauthorized,
+    Forbidden,
+    NotFound,
+    Conflict,
+    ValidationError,
+    TooManyRequests,
+    Error,
+}
+
 public sealed class ApiResult
 {
     public bool   IsSuccess { get; private init; }
@@ -42,15 +54,21 @@ public sealed class ApiResult
     public static ApiResult ValidationFail(int statusCode, IReadOnlyDictionary<string, string[]> errors) =>
         new() { IsSuccess = false, StatusCode = statusCode, ValidationErrors = errors };
 
+    // Convenience factories
+    public static ApiResult Fail(string error) => Fail(500, error);
+    public static ApiResult Invalid(IReadOnlyDictionary<string, string[]> errors) => ValidationFail(400, errors);
+    public static ApiResult ForceSignOut() => Fail(401, "Session expired.");
+    public bool RequireSignOut => IsUnauthorized;
+    public string? Message => Error;
 
     public static ApiResult<T> Ok<T>(T data, int statusCode = 200) =>
-        ApiResult<T>.CreateSuccess(data, statusCode);
+        ApiResult<T>.Ok(data, statusCode);
 
     public static ApiResult<T> Fail<T>(int statusCode, string? error = null) =>
-        ApiResult<T>.CreateFailure(statusCode, error);
+        ApiResult<T>.Fail(statusCode, error);
 
     public static ApiResult<T> ValidationFail<T>(int statusCode, IReadOnlyDictionary<string, string[]> errors) =>
-        ApiResult<T>.CreateValidationFailure(statusCode, errors);
+        ApiResult<T>.ValidationFail(statusCode, errors);
 }
 
 public sealed class ApiResult<T>
@@ -68,6 +86,7 @@ public sealed class ApiResult<T>
     public bool IsConflict        => StatusCode == 409;
     public bool IsValidationError => StatusCode is 400 or 422;
     public bool IsTooManyRequests => StatusCode == 429;
+    public bool RequireSignOut    => IsUnauthorized;
 
     public ApiResultState State => IsSuccess switch
     {
@@ -85,12 +104,20 @@ public sealed class ApiResult<T>
     };
 
 
-    internal static ApiResult<T> CreateSuccess(T data, int statusCode = 200) =>
+    public static ApiResult<T> Ok(T data, int statusCode = 200) =>
         new() { IsSuccess = true, Data = data, StatusCode = statusCode };
 
-    internal static ApiResult<T> CreateFailure(int statusCode, string? error = null) =>
+    public static ApiResult<T> Fail(int statusCode, string? error = null) =>
         new() { IsSuccess = false, StatusCode = statusCode, Error = error };
 
-    internal static ApiResult<T> CreateValidationFailure(int statusCode, IReadOnlyDictionary<string, string[]> errors) =>
+    public static ApiResult<T> ValidationFail(int statusCode, IReadOnlyDictionary<string, string[]> errors) =>
         new() { IsSuccess = false, StatusCode = statusCode, ValidationErrors = errors };
+
+    public static ApiResult<T> ForceSignOut() => Fail(401, "Session expired.");
+    public static ApiResult<T> CreateSuccess(T data, int statusCode) => Ok(data, statusCode);
+    public static ApiResult<T> CreateSuccess(T data) => Ok(data);
+    public static ApiResult<T> CreateFailure(int statusCode, string? error = null) => Fail(statusCode, error);
+    public static ApiResult<T> CreateFailure(string error) => Fail(500, error);
+    public static ApiResult<T> CreateValidationFailure(int statusCode, IReadOnlyDictionary<string, string[]> errors) =>
+        ValidationFail(statusCode, errors);
 }

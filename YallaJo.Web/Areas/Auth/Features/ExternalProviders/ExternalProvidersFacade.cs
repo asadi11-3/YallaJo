@@ -28,9 +28,14 @@ public sealed class ExternalProvidersFacade
 
         var result = await _api.LinkAsync(request, ct);
 
-        if (result.IsSuccess) return ApiResult.Ok("Provider linked successfully.");
+        if (result.IsSuccess) return ApiResult.Ok();
 
-        if (result.IsUnauthorized) { await _signIn.SignOutAsync(); return ApiResult.ForceSignOut(); }
+        if (result.IsUnauthorized)
+        {
+            await _signIn.SignOutAsync();
+            return ApiResult.ForceSignOut();
+        }
+
         if (result.IsConflict)     return ApiResult.Fail("This provider account is already linked.");
         if (result.IsValidationError) return ApiResult.Invalid(result.ValidationErrors!);
         return ApiResult.Fail(result.Error ?? "Link failed.");
@@ -40,12 +45,11 @@ public sealed class ExternalProvidersFacade
     {
         var result = await _api.UnlinkAsync(providerId, ct);
 
-        if (result.IsSuccess || result.IsNotFound) return ApiResult.Ok("Provider unlinked.");
+        if (result.IsSuccess || result.IsNotFound) return ApiResult.Ok();
 
         if (result.IsUnauthorized) { await _signIn.SignOutAsync(); return ApiResult.ForceSignOut(); }
 
         return ApiResult.Fail(result.Error ?? "Unlink failed.");
     }
 }
-
 

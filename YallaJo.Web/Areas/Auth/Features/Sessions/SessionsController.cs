@@ -10,7 +10,6 @@ public sealed class SessionsController : Controller
     private readonly SessionsFacade _facade;
     public SessionsController(SessionsFacade facade) => _facade = facade;
 
-    // GET /auth/sessions
     [HttpGet]
     public async Task<IActionResult> Index(CancellationToken ct)
     {
@@ -28,7 +27,6 @@ public sealed class SessionsController : Controller
         return View(result.Data);
     }
 
-    // POST /auth/sessions/revoke/{sessionId}
     [HttpPost("auth/sessions/revoke/{sessionId:guid}")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Revoke(Guid sessionId, CancellationToken ct)

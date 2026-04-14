@@ -22,4 +22,3 @@ public sealed class ResetPasswordFacade
         return ApiResult.Fail(result.Error ?? "Password reset failed.");
     }
 }
-

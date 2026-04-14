@@ -7,9 +7,9 @@ namespace YallaJo.Web.Infrastructure.Authorization;
 ///   "Permission.{Feature}.{Action}"
 ///
 /// RULE: No permission string may be constructed inline anywhere else in the project.
-///       All permission checks go through ICurrentUser.HasPermission(WebPermissions.X.Y).
+///       All permission checks go through ICurrentUser.HasPermission(WebPermission.X.Y).
 /// </summary>
-public static class WebPermissions
+public static class WebPermission
 {
     // ── Role ──────────────────────────────────────────────────────────────────
     public static class Role

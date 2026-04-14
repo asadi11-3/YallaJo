@@ -4,22 +4,6 @@ using Microsoft.AspNetCore.Mvc.ViewFeatures;
 
 namespace YallaJo.Web.Infrastructure.Authorization;
 
-/// <summary>
-/// Global MVC result filter — the single, centralized handler for every ForbidResult in the app.
-///
-/// Intercepts any <see cref="ForbidResult"/> BEFORE it executes and replaces it with the
-/// correct response shape based on the request type:
-///
-///   HTML page request  → renders Views/Shared/AccessDenied.cshtml with HTTP 403
-///   AJAX / JSON / HTMX → returns a bare HTTP 403 with a minimal ProblemDetails JSON body
-///
-/// This means:
-///   - There is exactly ONE code path that renders AccessDenied.cshtml.
-///   - No controller may call View("AccessDenied") or have an AccessDeniedView() helper.
-///   - No HTML is ever injected into an AJAX/JSON response.
-///
-/// The filter is registered as a global filter in Program.cs via MvcOptions.Filters.
-/// </summary>
 public sealed class ForbiddenResultFilter : IAsyncResultFilter
 {
     public async Task OnResultExecutionAsync(
@@ -41,14 +25,10 @@ public sealed class ForbiddenResultFilter : IAsyncResultFilter
     private static IActionResult BuildHtmlResult(ResultExecutingContext context)
     {
         context.HttpContext.Response.StatusCode = StatusCodes.Status403Forbidden;
-
-        // ViewResult is executed by MVC's view engine using the registered view locations.
-        // Views/Shared/AccessDenied.cshtml is found via the standard shared fallback.
         return new ViewResult
         {
             ViewName   = "AccessDenied",
             StatusCode = StatusCodes.Status403Forbidden,
-            // ITempDataDictionaryFactory is needed because ViewResult requires it.
             TempData = context.HttpContext.RequestServices
                 .GetRequiredService<ITempDataDictionaryFactory>()
                 .GetTempData(context.HttpContext),

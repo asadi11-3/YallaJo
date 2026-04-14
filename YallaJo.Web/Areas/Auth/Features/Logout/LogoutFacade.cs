@@ -18,11 +18,6 @@ public sealed class LogoutFacade
         _accessor = accessor;
     }
 
-    /// <summary>
-    /// Revokes the current session on the backend then clears the web cookie.
-    /// Always signs out locally even if the backend call fails
-    /// (e.g. token already expired) — the user gets logged out regardless.
-    /// </summary>
     public async Task HandleAsync(CancellationToken ct = default)
     {
         var refreshToken = _accessor.HttpContext?.User
@@ -30,7 +25,6 @@ public sealed class LogoutFacade
 
         if (!string.IsNullOrWhiteSpace(refreshToken))
         {
-            // Best-effort — ignore backend errors; local sign-out always happens.
             await _api.LogoutAsync(new LogoutRequest { RefreshToken = refreshToken }, ct);
         }
 

@@ -26,7 +26,6 @@
     <Folder Include="Areas\Auth\Features\Login\Views\" />
     <Folder Include="Areas\Auth\Features\Logout\Responses\" />
     <Folder Include="Areas\Auth\Features\Sessions\Validators\" />
-    <Folder Include="Areas\Auth\Features\VerifyEmail\" />
     <Folder Include="Areas\Auth\Features\ResetPassword\" />
     <Folder Include="Controllers\" />
     <Folder Include="Infrastructure\Api\Core\" />

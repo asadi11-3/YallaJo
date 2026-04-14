@@ -8,7 +8,7 @@ namespace YallaJo.Web.Areas.Admin.Modules.Security.Features.Roles;
 
 [Area("Admin")]
 [Authorize]
-[RequirePermission(WebPermissions.Role.Read)]
+[RequirePermission(WebPermission.Role.Read)]
 public sealed class RolesController : Controller
 {
     private readonly RolesFacade _facade;
@@ -31,7 +31,7 @@ public sealed class RolesController : Controller
 
     [HttpPost("admin/roles/create")]
     [ValidateAntiForgeryToken]
-    [RequirePermission(WebPermissions.Role.Create)]
+    [RequirePermission(WebPermission.Role.Create)]
     public async Task<IActionResult> Create(CreateRoleVm vm, CancellationToken ct)
     {
         if (!ModelState.IsValid)
@@ -66,7 +66,7 @@ public sealed class RolesController : Controller
 
     [HttpPost("admin/roles/{roleId:guid}/update")]
     [ValidateAntiForgeryToken]
-    [RequirePermission(WebPermissions.Role.Update)]
+    [RequirePermission(WebPermission.Role.Update)]
     public async Task<IActionResult> Update(Guid roleId, UpdateRoleVm vm, CancellationToken ct)
     {
         var result = await _facade.UpdateAsync(roleId, vm, ct);
@@ -82,7 +82,7 @@ public sealed class RolesController : Controller
 
     [HttpPost("admin/roles/{roleId:guid}/deactivate")]
     [ValidateAntiForgeryToken]
-    [RequirePermission(WebPermissions.Role.Delete)]
+    [RequirePermission(WebPermission.Role.Delete)]
     public async Task<IActionResult> Deactivate(Guid roleId, CancellationToken ct)
     {
         var result = await _facade.DeactivateAsync(roleId, ct);
