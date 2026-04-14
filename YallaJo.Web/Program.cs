@@ -13,6 +13,11 @@ using YallaJo.Web.Areas.Auth.Features.ExternalProviders;
 using YallaJo.Web.Areas.Auth.Features.Logout;
 using YallaJo.Web.Areas.Auth.Features.LogoutAll;
 
+// ── Admin / Security feature registrations ────────────────────────────────────
+using YallaJo.Web.Areas.Admin.Modules.Security.Features.Users;
+using YallaJo.Web.Areas.Admin.Modules.Security.Features.Roles;
+using YallaJo.Web.Areas.Admin.Modules.Security.Features.AuditLogs;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // ── Authentication (cookie — MVC frontend, BFF pattern) ──────────────────────
@@ -85,14 +90,38 @@ builder.Services.AddScoped<LogoutFacade>();
 builder.Services.AddScoped<LogoutAllApiClient>();
 builder.Services.AddScoped<LogoutAllFacade>();
 
+// ── Admin / Security services ─────────────────────────────────────────────────
+builder.Services.AddScoped<UsersApiClient>();
+builder.Services.AddScoped<UsersFacade>();
+
+builder.Services.AddScoped<RolesApiClient>();
+builder.Services.AddScoped<RolesFacade>();
+
+builder.Services.AddScoped<AuditLogsApiClient>();
+builder.Services.AddScoped<AuditLogsFacade>();
+
 // ── MVC + custom Razor view locations ────────────────────────────────────────
 builder.Services.AddControllersWithViews()
     .AddRazorOptions(o =>
     {
-        // Feature-folder convention: Areas/{area}/Features/{controller}/Views/{view}.cshtml
-        // Used by Auth, Accounts, Content areas.
+        // Auth / Accounts areas: Areas/{area}/Features/{controller}/Views/{view}.cshtml
         o.AreaViewLocationFormats.Add("~/Areas/{2}/Features/{1}/Views/{0}.cshtml");
         o.AreaViewLocationFormats.Add("~/Areas/{2}/Features/{1}/Views/Shared/{0}.cshtml");
+
+        // Admin area modules: Areas/Admin/Modules/{module}/Features/{controller}/Views/{view}.cshtml
+        // One entry per module so the {2} area token still validates to "Admin".
+        foreach (var module in new[]
+        {
+            "Security", "Dashboard", "ContentCore", "ContentPlaces",
+            "ContentTours", "ContentBlogs", "ContentSeo",
+            "Analytics", "Booking", "Finance", "Messaging", "Social", "Accounts",
+        })
+        {
+            o.AreaViewLocationFormats.Add(
+                $"~/Areas/{{2}}/Modules/{module}/Features/{{1}}/Views/{{0}}.cshtml");
+            o.AreaViewLocationFormats.Add(
+                $"~/Areas/{{2}}/Modules/{module}/Features/{{1}}/Views/Shared/{{0}}.cshtml");
+        }
     });
 
 var app = builder.Build();

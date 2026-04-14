@@ -1,0 +1,72 @@
+@model YallaJo.Web.Areas.Admin.Modules.Security.Features.AuditLogs.ViewModels.AuditLogListVm
+@{
+    ViewData["Title"] = "Audit Logs";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-4">
+    <h2>Audit Logs</h2>
+
+    @if (ViewBag.Error is string err) { <div class="alert alert-danger">@err</div> }
+
+    @* Optional user filter *@
+    <form method="get" class="row g-2 mb-3">
+        <div class="col-auto">
+            <input type="text" name="userId" class="form-control"
+                   placeholder="Filter by User ID (GUID)"
+                   value="@(Model.FilterUserId?.ToString() ?? string.Empty)" />
+        </div>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-outline-secondary">Filter</button>
+            @if (Model.FilterUserId.HasValue)
+            {
+                <a asp-action="Index" class="btn btn-link">Clear</a>
+            }
+        </div>
+    </form>
+
+    <table class="table table-sm table-bordered">
+        <thead>
+            <tr>
+                <th>Occurred At</th>
+                <th>User ID</th>
+                <th>Action</th>
+                <th>IP Address</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var log in Model.Logs)
+            {
+                <tr>
+                    <td>@log.OccurredAt.ToString("g")</td>
+                    <td>
+                        @if (log.UserId.HasValue)
+                        {
+                            <a asp-area="Admin" asp-controller="Users"
+                               asp-action="Details" asp-route-userId="@log.UserId">
+                                @log.UserId.Value.ToString()[..8]…
+                            </a>
+                        }
+                        else { <span class="text-muted">—</span> }
+                    </td>
+                    <td>@log.Action</td>
+                    <td>@(log.IpAddress ?? "—")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <div class="d-flex gap-2">
+        @if (Model.HasPrevious)
+        {
+            <a asp-action="Index" asp-route-page="@(Model.Page - 1)"
+               asp-route-userId="@Model.FilterUserId" class="btn btn-outline-secondary">← Previous</a>
+        }
+        <span class="align-self-center text-muted">Page @Model.Page — @Model.TotalCount total</span>
+        @if (Model.HasNext)
+        {
+            <a asp-action="Index" asp-route-page="@(Model.Page + 1)"
+               asp-route-userId="@Model.FilterUserId" class="btn btn-outline-secondary">Next →</a>
+        }
+    </div>
+</div>
