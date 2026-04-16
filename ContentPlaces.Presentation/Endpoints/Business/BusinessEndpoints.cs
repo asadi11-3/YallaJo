@@ -27,9 +27,11 @@ internal static class BusinessEndpoints
     internal static void MapBusinessEndpoints(RouteGroupBuilder group)
     {
         // ── Businesses ─────────────────────────────────────────────────────────
+        var businesses = group.MapGroup("/places/businesses").WithTags("ContentPlaces | Businesses");
+
 
         // GET /places/{id}/businesses — list all businesses for a place
-        group.MapGet("/places/{id:guid}/businesses", async (
+        businesses.MapGet("/places/{id:guid}/businesses", async (
             Guid id,
             HttpContext http,
             ISender sender,
@@ -49,7 +51,7 @@ internal static class BusinessEndpoints
         .AllowAnonymous();
 
         // GET /places/businesses/{id} — get single business
-        group.MapGet("/places/businesses/{id:guid}", async (
+        businesses.MapGet("/places/businesses/{id:guid}", async (
             Guid id,
             HttpContext http,
             ISender sender) =>
@@ -67,7 +69,7 @@ internal static class BusinessEndpoints
         .AllowAnonymous();
 
         // POST /places/businesses — create a business
-        group.MapPost("/places/businesses", async (
+        businesses.MapPost("/places/businesses", async (
             CreateBusinessRequest request,
             ISender sender) =>
         {
@@ -100,7 +102,7 @@ internal static class BusinessEndpoints
         .RequireAuthorization();
 
         // PUT /places/businesses/{id} — update a business
-        group.MapPut("/places/businesses/{id:guid}", async (
+        businesses.MapPut("/places/businesses/{id:guid}", async (
             Guid id,
             UpdateBusinessRequest request,
             ISender sender) =>
@@ -130,7 +132,7 @@ internal static class BusinessEndpoints
         .RequireAuthorization();
 
         // DELETE /places/businesses/{id} — soft-delete a business (admin only)
-        group.MapDelete("/places/businesses/{id:guid}", async (
+        businesses.MapDelete("/places/businesses/{id:guid}", async (
             Guid id,
             ISender sender) =>
         {
@@ -144,7 +146,7 @@ internal static class BusinessEndpoints
         .RequireAuthorization("Admin");
 
         // POST /places/businesses/{id}/resubmit — owner resubmits a rejected business
-        group.MapPost("/places/businesses/{id:guid}/resubmit", async (
+        businesses.MapPost("/places/businesses/{id:guid}/resubmit", async (
             Guid id,
             ISender sender) =>
         {
@@ -163,7 +165,7 @@ internal static class BusinessEndpoints
         // ── Admin transitions ──────────────────────────────────────────────────
 
         // POST /places/businesses/admin/{id}/approve
-        group.MapPost("/places/businesses/admin/{id:guid}/approve", async (
+        businesses.MapPost("/places/businesses/admin/{id:guid}/approve", async (
             Guid id,
             ISender sender) =>
         {
@@ -178,7 +180,7 @@ internal static class BusinessEndpoints
         .RequireAuthorization("Admin");
 
         // POST /places/businesses/admin/{id}/reject
-        group.MapPost("/places/businesses/admin/{id:guid}/reject", async (
+        businesses.MapPost("/places/businesses/admin/{id:guid}/reject", async (
             Guid id,
             RejectBusinessRequest request,
             ISender sender) =>
@@ -195,7 +197,7 @@ internal static class BusinessEndpoints
         .RequireAuthorization("Admin");
 
         // POST /places/businesses/admin/{id}/suspend
-        group.MapPost("/places/businesses/admin/{id:guid}/suspend", async (
+        businesses.MapPost("/places/businesses/admin/{id:guid}/suspend", async (
             Guid id,
             SuspendBusinessRequest request,
             ISender sender) =>
@@ -212,7 +214,7 @@ internal static class BusinessEndpoints
         .RequireAuthorization("Admin");
 
         // POST /places/businesses/admin/{id}/reinstate
-        group.MapPost("/places/businesses/admin/{id:guid}/reinstate", async (
+        businesses.MapPost("/places/businesses/admin/{id:guid}/reinstate", async (
             Guid id,
             ISender sender) =>
         {
@@ -229,7 +231,7 @@ internal static class BusinessEndpoints
         // ── Business Hours ─────────────────────────────────────────────────────
 
         // GET /places/businesses/{id}/hours
-        group.MapGet("/places/businesses/{id:guid}/hours", async (
+        businesses.MapGet("/places/businesses/{id:guid}/hours", async (
             Guid id,
             HttpContext http,
             ISender sender) =>
@@ -247,7 +249,7 @@ internal static class BusinessEndpoints
         .AllowAnonymous();
 
         // PUT /places/businesses/{id}/hours
-        group.MapPut("/places/businesses/{id:guid}/hours", async (
+        businesses.MapPut("/places/businesses/{id:guid}/hours", async (
             Guid id,
             SetBusinessHoursRequest request,
             ISender sender) =>

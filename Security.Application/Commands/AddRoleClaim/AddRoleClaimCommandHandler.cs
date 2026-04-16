@@ -1,7 +1,8 @@
+using Microsoft.Extensions.Caching.Hybrid;
+using Security.Application.Caching;
 using Security.Domain.Entities;
 using Security.Domain.Errors;
 using Security.Domain.Repositories;
-using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
@@ -10,8 +11,8 @@ namespace Security.Application.Commands.AddRoleClaim;
 public sealed class AddRoleClaimCommandHandler(
     IRoleRepository roleRepository,
     IRoleClaimRepository roleClaimRepository,
-    ISecurityUnitOfWork unitOfWork
-    )
+    ISecurityUnitOfWork unitOfWork,
+    HybridCache cache)
     : ICommandHandler<AddRoleClaimCommand>
 {
     public async Task<Result> Handle(AddRoleClaimCommand request, CancellationToken cancellationToken)
@@ -20,15 +21,22 @@ public sealed class AddRoleClaimCommandHandler(
         if (role is null)
             return Result.Failure(RoleErrors.NotFound, Outcome.NotFound);
 
-        if (await roleClaimRepository.ExistsAsync(request.RoleId, request.ClaimType, request.ClaimValue, cancellationToken)) {
+        var alreadyExists = await roleClaimRepository.AnyAsync(
+            rc => rc.RoleId == request.RoleId
+               && rc.ClaimType == request.ClaimType
+               && rc.ClaimValue == request.ClaimValue,
+            cancellationToken);
+
+        if (alreadyExists)
             return Result.Failure(
                 new Error("RoleClaim.Duplicate", "This claim already exists on the role."),
                 Outcome.Conflict);
-        }
 
         var claim = RoleClaim.Create(request.RoleId, request.ClaimType, request.ClaimValue);
         await roleClaimRepository.AddAsync(claim, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        await cache.RemoveByTagAsync(SecurityCacheKeys.RolesTag, cancellationToken);
 
         return Result.Success();
     }

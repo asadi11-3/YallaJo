@@ -38,6 +38,9 @@ public static class DependencyInjection
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
         services.AddScoped<IOutboxProcessor, OutboxProcessor<AccountsDbContext>>();
 
+        // Distributed cache — idempotent, safe if host already registered it
+        services.AddHybridCache();
+
         return services;
     }
 }

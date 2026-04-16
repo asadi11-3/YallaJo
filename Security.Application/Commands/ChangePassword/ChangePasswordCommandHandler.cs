@@ -17,10 +17,10 @@ public sealed class ChangePasswordCommandHandler(
         ChangePasswordCommand request,
         CancellationToken cancellationToken)
     {
-        if (currentUser.UserId is null)
+        if (!currentUser.IsAuthenticated || currentUser.UserId is null)
         {
             return Result<ChangePasswordResult>.Failure(
-                Error.Unauthorized("User is not authenticated."),
+                Error.Unauthorized("Authentication is required."),
                 Outcome.Unauthorized);
         }
 

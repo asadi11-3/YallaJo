@@ -129,6 +129,23 @@ internal sealed class SecurityService(
         return await userRepository.GetPrimaryPhoneNumberAsync(userId, ct);
     }
 
+    public async Task<SecurityContactData?> GetPrimaryContactDataAsync(Guid userId, CancellationToken ct = default)
+    {
+        // Email is sourced from the Security aggregate (persistent source of truth),
+        // not from JWT claims. Phone is optional.
+        var user = await userRepository.GetByIdWithEmailsAsync(userId, ct);
+        if (user is null)
+            return null;
+
+        var primaryEmail = user.GetPrimaryEmail();
+        if (primaryEmail is null)
+            return null;
+
+        var phoneNumber = await userRepository.GetPrimaryPhoneNumberAsync(userId, ct);
+
+        return new SecurityContactData(primaryEmail.Address, phoneNumber);
+    }
+
     public async Task<bool> ResetPasswordAsync(Guid userId, string newPassword, CancellationToken ct = default)
     {
         var user = await userRepository.GetByIdAsync(userId, ct, asNoTracking: false);

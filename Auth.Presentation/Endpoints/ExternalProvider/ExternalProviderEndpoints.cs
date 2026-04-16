@@ -15,7 +15,8 @@ internal static class ExternalProviderEndpoints
     {
         group.MapPost("/external-providers", async (LinkExternalProviderRequest request, ISender sender, CancellationToken ct) =>
         {
-            var result = await sender.Send(new LinkExternalProviderCommand(
+            var result = await sender.Send(
+                new LinkExternalProviderCommand(
                 request.Provider,
                 request.ProviderUserId,
                 request.ProviderEmail), ct);

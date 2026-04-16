@@ -71,7 +71,8 @@ internal static class CredentialEndpoints
 
         group.MapPost("/reset-password", async (ResetPasswordRequest request, ISender sender, CancellationToken ct) =>
         {
-            var result = await sender.Send(new ResetPasswordCommand(
+            var result = await sender.Send(
+                new ResetPasswordCommand(
                 request.Email,
                 request.OtpCode,
                 request.NewPassword,

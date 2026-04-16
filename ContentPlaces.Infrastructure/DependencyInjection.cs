@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using YallaJo.SharedKernel.Infrastructure.BackgroundJobs;
+using YallaJo.SharedKernel.Application.Abstractions.Translation;
 using YallaJo.SharedKernel.Infrastructure.Data;
 
 namespace ContentPlaces.Infrastructure;
@@ -29,6 +30,10 @@ public static class DependencyInjection
                     sql.EnableRetryOnFailure(3);
                 }));
 
+        // ── Repositories ─────────────────────────────────────────────────────
+        services.AddScoped<IPlaceRepository, PlaceRepository>();
+
+        // ── Unit of Work & Infrastructure ────────────────────────────────────
         services.AddScoped<IUnitOfWork<ContentPlacesDbContext>, UnitOfWork<ContentPlacesDbContext>>();
         services.AddScoped<IContentPlacesUnitOfWork, ContentPlacesUnitOfWork>();
         services.AddScoped<IContentPlacesInboxStore, ContentPlacesInboxStore>();
@@ -36,6 +41,11 @@ public static class DependencyInjection
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
         services.AddScoped<IOutboxProcessor, OutboxProcessor<ContentPlacesDbContext>>();
         services.AddScoped<IBusinessRepository, BusinessRepository>();
+
+        // ── Translation Orchestrator (shared from ContentCore via DI) ─────────
+        // IEntityTranslationOrchestrator is registered by ContentCore.Infrastructure.
+        // ContentPlaces domain event handlers consume it; no separate registration needed here.
+
         return services;
     }
 }

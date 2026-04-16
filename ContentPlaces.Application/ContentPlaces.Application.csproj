@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -9,6 +9,7 @@
     <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
     <PackageReference Include="MediatR" Version="14.0.0" />
     <PackageReference Include="Microsoft.Extensions.Caching.Hybrid" Version="9.3.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.13" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ContentPlaces.Contracts\ContentPlaces.Contracts.csproj" />

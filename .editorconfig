@@ -121,3 +121,4 @@ dotnet_diagnostic.SA1208.severity = suggestion
 
 # SA1210: Using directives should be ordered alphabetically
 dotnet_diagnostic.SA1210.severity = suggestion
+dotnet_diagnostic.SA1313.severity = suggestion

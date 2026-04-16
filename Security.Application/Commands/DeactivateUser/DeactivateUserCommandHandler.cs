@@ -1,6 +1,7 @@
+using Microsoft.Extensions.Caching.Hybrid;
+using Security.Application.Caching;
 using Security.Domain.Errors;
 using Security.Domain.Repositories;
-using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
@@ -8,8 +9,8 @@ namespace Security.Application.Commands.DeactivateUser;
 
 public sealed class DeactivateUserCommandHandler(
     IUserRepository userRepository,
-    ISecurityUnitOfWork unitOfWork
-    )
+    ISecurityUnitOfWork unitOfWork,
+    HybridCache cache)
     : ICommandHandler<DeactivateUserCommand>
 {
     public async Task<Result> Handle(DeactivateUserCommand request, CancellationToken ct)
@@ -23,6 +24,9 @@ public sealed class DeactivateUserCommandHandler(
 
         user.Deactivate();
         await unitOfWork.SaveChangesAsync(ct);
+
+        await cache.RemoveByTagAsync(SecurityCacheKeys.UserTag(request.UserId), ct);
+        await cache.RemoveByTagAsync(SecurityCacheKeys.UsersTag, ct);
 
         return Result.Success();
     }

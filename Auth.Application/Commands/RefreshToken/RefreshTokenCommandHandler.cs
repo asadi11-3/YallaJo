@@ -1,5 +1,4 @@
 using Auth.Application.Interfaces;
-using Auth.Domain.Entities;
 using Auth.Domain.Repositories;
 using Security.Contracts.Abstractions;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
@@ -28,74 +27,102 @@ public sealed class RefreshTokenCommandHandler(
         CancellationToken cancellationToken)
     {
         var hash = tokenService.HashRefreshToken(request.RefreshToken);
+
+        // Intentionally fetch WITHOUT the IsRevoked filter so we can detect reuse attacks.
+        // If the token exists but is already revoked, that is a strong signal of token theft.
         var oldRefreshToken = await refreshTokenRepository.FirstOrDefaultAsync(
-            filter: rt => rt.TokenHash == hash && !rt.IsRevoked && !rt.IsDeleted,
+            filter: rt => rt.TokenHash == hash && !rt.IsDeleted,
             asNoTracking: false,
             ct: cancellationToken);
 
         if (oldRefreshToken is null)
             return _invalidToken;
 
+        // ── Reuse-attack detection ──────────────────────────────────────────
+        // A previously-issued token that has already been rotated is being re-presented.
+        // Revoke the entire session + all its remaining tokens immediately.
         if (oldRefreshToken.IsRevoked)
         {
+            var compromisedTokens = await refreshTokenRepository.GetAllAsync(
+                filter: rt => rt.SessionId == oldRefreshToken.SessionId && !rt.IsRevoked,
+                asNoTracking: false,
+                ct: cancellationToken);
+
+            var compromisedSession = await sessionRepository.GetByIdAsync(
+                oldRefreshToken.SessionId,
+                ct: cancellationToken,
+                asNoTracking: false);
+
+            foreach (var t in compromisedTokens)
+                t.Revoke();
+
+            if (compromisedSession is not null && !compromisedSession.IsRevoked)
+                compromisedSession.Revoke();
+
+            await unitOfWork.SaveChangesAsync(cancellationToken);
+
             return Result<RefreshTokenResult>.Failure(
-                    Error.Unauthorized("Refresh token has been revoked."),
-                    Outcome.Unauthorized);
+                Error.Unauthorized(
+                    "Token reuse detected. For your security, this session has been terminated."),
+                Outcome.Unauthorized);
         }
 
         if (oldRefreshToken.ExpiresAt < DateTime.UtcNow)
-        {
-            return Result<RefreshTokenResult>.Failure(
-                  Error.Unauthorized("Refresh token has expired."),
-                  Outcome.Unauthorized);
-        }
+            return _invalidToken;
 
-        var session = await sessionRepository.GetByIdAsync(
+        var activeSession = await sessionRepository.GetByIdAsync(
             oldRefreshToken.SessionId,
             ct: cancellationToken,
             asNoTracking: false);
 
-        if (session is null || session.IsRevoked)
+        if (activeSession is null || activeSession.IsRevoked)
         {
             return Result<RefreshTokenResult>.Failure(
-                  Error.Unauthorized("Session is no longer valid."),
-                  Outcome.Unauthorized);
+                Error.Unauthorized("Session is no longer valid."),
+                Outcome.Unauthorized);
         }
 
-        var userData = await securityService.GetUserDataByIdAsync(oldRefreshToken.UserId, cancellationToken);
-        if (userData is null) {
+        var userData = await securityService.GetUserDataByIdAsync(
+            oldRefreshToken.UserId, cancellationToken);
+
+        if (userData is null)
+        {
             return Result<RefreshTokenResult>.Failure(
-              Error.Unauthorized("User account not found or deactivated."),
-              Outcome.Unauthorized);
+                Error.Unauthorized("User account not found or deactivated."),
+                Outcome.Unauthorized);
         }
 
+        // ── Token rotation ──────────────────────────────────────────────────
         var newPlainRefreshToken = tokenService.GenerateRefreshToken();
-        var newHash = tokenService.HashRefreshToken(newPlainRefreshToken);
-        var newExpiresAt = DateTime.UtcNow.AddDays(RefreshTokenDays);
+        var newHash              = tokenService.HashRefreshToken(newPlainRefreshToken);
+        var newExpiresAt         = DateTime.UtcNow.AddDays(RefreshTokenDays);
 
         var newRefreshToken = Domain.Entities.RefreshToken.Create(
-            userId: oldRefreshToken.UserId,
+            userId:    oldRefreshToken.UserId,
             sessionId: oldRefreshToken.SessionId,
             tokenHash: newHash,
             expiresAt: newExpiresAt);
         await refreshTokenRepository.AddAsync(newRefreshToken, cancellationToken);
 
         oldRefreshToken.Revoke(replacedByTokenId: newRefreshToken.Id);
-        var device = await deviceRepository.GetByIdAsync(session.DeviceId, ct: cancellationToken, asNoTracking: false);
+
+        var device = await deviceRepository.GetByIdAsync(
+            activeSession.DeviceId, ct: cancellationToken, asNoTracking: false);
         device?.RecordSeen();
-        session.MarkUpdated();
+        activeSession.MarkUpdated();
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
+
         var accessToken = tokenService.GenerateAccessToken(new TokenData(
-            UserId: userData.UserId,
-            Email: userData.Email,
-            Roles: userData.Roles,
+            UserId:           userData.UserId,
+            Email:            userData.Email,
+            Roles:            userData.Roles,
             AdditionalClaims: userData.Claims,
-            SessionId: oldRefreshToken.SessionId));
+            SessionId:        oldRefreshToken.SessionId));
 
         return Result<RefreshTokenResult>.Success(new RefreshTokenResult(
-            AccessToken: accessToken,
-            RefreshToken: newPlainRefreshToken,
+            AccessToken:           accessToken,
+            RefreshToken:          newPlainRefreshToken,
             RefreshTokenExpiresAt: newExpiresAt));
     }
 }

@@ -1,4 +1,6 @@
+using Auth.Application.Caching;
 using Auth.Domain.Repositories;
+using Microsoft.Extensions.Caching.Hybrid;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
@@ -9,7 +11,8 @@ public sealed class RevokeSessionCommandHandler(
     ISessionRepository sessionRepository,
     IRefreshTokenRepository refreshTokenRepository,
     IAuthUnitOfWork unitOfWork,
-    ICurrentUser currentUser)
+    ICurrentUser currentUser,
+    HybridCache cache)
     : ICommandHandler<RevokeSessionCommand>
 {
     public async Task<Result> Handle(
@@ -20,6 +23,7 @@ public sealed class RevokeSessionCommandHandler(
             return Result.Unauthorized("Authentication is required.");
 
         var userId = currentUser.UserId.Value;
+
         var session = await sessionRepository.GetByIdAsync(
             request.SessionId,
             ct: cancellationToken,
@@ -27,11 +31,13 @@ public sealed class RevokeSessionCommandHandler(
 
         if (session is null)
             return Result.NotFound($"Session {request.SessionId} was not found.");
+
         if (session.UserId != userId)
             return Result.Forbidden("You are not authorized to revoke this session.");
 
         if (!session.IsRevoked)
             session.Revoke();
+
         var activeTokens = await refreshTokenRepository.GetAllAsync(
             filter: rt => rt.SessionId == request.SessionId && !rt.IsRevoked,
             asNoTracking: false,
@@ -39,7 +45,10 @@ public sealed class RevokeSessionCommandHandler(
 
         foreach (var token in activeTokens)
             token.Revoke();
+
         await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        await cache.RemoveByTagAsync(AuthCacheKeys.UserSessionsTag(userId), cancellationToken);
 
         return Result.Success();
     }

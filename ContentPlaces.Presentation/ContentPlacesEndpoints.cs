@@ -1,4 +1,5 @@
 using ContentPlaces.Presentation.Endpoints.Business;
+using ContentPlaces.Presentation.Endpoints.Place;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -13,6 +14,8 @@ public static class ContentPlacesEndpoints
             .WithTags("ContentPlaces");
 
         BusinessEndpoints.MapBusinessEndpoints(group);
+
+        PlaceEndpoints.MapPlaceEndpoints(group);
 
         return endpoints;
     }

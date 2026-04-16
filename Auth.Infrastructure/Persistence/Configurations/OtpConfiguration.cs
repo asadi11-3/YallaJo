@@ -52,8 +52,17 @@ public sealed class OtpConfiguration : IEntityTypeConfiguration<Otp>
 
         builder.HasQueryFilter(o => !o.IsDeleted);
 
-        builder.HasIndex(o => o.UserId);
-        builder.HasIndex(o => o.ExpiresAt);
-        builder.HasIndex(o => o.IsUsed);
+        // Composite covering index for the canonical 3-column OTP lookup pattern:
+        //   WHERE UserId = @u AND Purpose = @p AND IsUsed = 0
+        //   ORDER BY CreatedAt DESC
+        // The partial filter on IsUsed = 0 shrinks the index to active OTPs only,
+        // keeping it small as records are marked used and eventually cleaned up.
+        builder.HasIndex(o => new { o.UserId, o.Purpose, o.IsUsed })
+            .HasFilter("[IsUsed] = 0")
+            .HasDatabaseName("IX_Otps_UserId_Purpose_IsUsed_Active");
+
+        // Retained for the cleanup job's range scan on ExpiresAt
+        builder.HasIndex(o => o.ExpiresAt)
+            .HasDatabaseName("IX_Otps_ExpiresAt");
     }
 }

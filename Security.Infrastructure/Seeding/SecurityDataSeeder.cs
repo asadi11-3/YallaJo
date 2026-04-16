@@ -1,9 +1,7 @@
-
 using Security.Contracts.Authorization;
 using Security.Domain.Entities;
 using Security.Domain.Repositories;
 using Security.Infrastructure.Persistence;
-using Microsoft.EntityFrameworkCore;
 
 namespace Security.Infrastructure.Seeding;
 
@@ -19,15 +17,13 @@ public sealed class SecurityDataSeeder(
         await SeedRoleClaimsAsync(ct);
     }
 
-   
-
     private async Task SeedRolesAsync(CancellationToken ct)
     {
         var changed = false;
 
         foreach (var roleName in AppRoles.AllRoles)
         {
-            if (!await roleRepository.ExistsByNameAsync(roleName, ct))
+            if (!await roleRepository.AnyAsync(r => r.Name == roleName, ct))
             {
                 await roleRepository.AddAsync(Role.Create(roleName), ct);
                 changed = true;
@@ -38,11 +34,13 @@ public sealed class SecurityDataSeeder(
             await unitOfWork.SaveChangesAsync(ct);
     }
 
-   
-
     private async Task SeedRoleClaimsAsync(CancellationToken ct)
     {
-        var roles = await roleRepository.GetAllActiveAsync(ct);
+        var roles = await roleRepository.GetAllAsync(
+            filter: r => r.IsActive,
+            asNoTracking: true,
+            ct: ct);
+
         var changed = false;
 
         foreach (var role in roles)
@@ -51,7 +49,13 @@ public sealed class SecurityDataSeeder(
 
             foreach (var permission in permissions)
             {
-                if (!await roleClaimRepository.ExistsAsync(role.Id, "Permission", permission, ct))
+                var alreadyExists = await roleClaimRepository.AnyAsync(
+                    rc => rc.RoleId == role.Id
+                       && rc.ClaimType == "Permission"
+                       && rc.ClaimValue == permission,
+                    ct);
+
+                if (!alreadyExists)
                 {
                     await roleClaimRepository.AddAsync(
                         RoleClaim.Create(role.Id, "Permission", permission), ct);

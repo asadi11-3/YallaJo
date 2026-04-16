@@ -30,11 +30,22 @@ public sealed class PlaceTranslation : BaseEntity
 
         return new PlaceTranslation
         {
-            PlaceId = placeId,
-            LanguageId = languageId,
-            Name = name.Trim(),
+            PlaceId     = placeId,
+            LanguageId  = languageId,
+            Name        = name.Trim(),
             Description = description?.Trim(),
-            Address = address?.Trim()
+            Address     = address?.Trim()
         };
+    }
+
+    public void Update(string name, string? description, string? address)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            throw new ArgumentException("Translation name is required.", nameof(name));
+
+        Name        = name.Trim();
+        Description = description?.Trim();
+        Address     = address?.Trim();
+        UpdatedAt   = DateTime.UtcNow;
     }
 }
