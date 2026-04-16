@@ -30,6 +30,9 @@ public static class DependencyInjection
                     sql.EnableRetryOnFailure(3);
                 }));
 
+        services.AddScoped<IContentPlacesDbContext>(sp =>
+            sp.GetRequiredService<ContentPlacesDbContext>());
+
         // ── Repositories ─────────────────────────────────────────────────────
         services.AddScoped<IPlaceRepository, PlaceRepository>();
 

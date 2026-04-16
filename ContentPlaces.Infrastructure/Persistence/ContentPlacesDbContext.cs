@@ -3,10 +3,10 @@ using Microsoft.EntityFrameworkCore;
 using YallaJo.SharedKernel.Application.Abstractions.Data;
 using YallaJo.SharedKernel.Infrastructure.Inbox;
 using YallaJo.SharedKernel.Infrastructure.Outbox;
+using ContentPlaces.Application.Interfaces;
 
 namespace ContentPlaces.Infrastructure.Persistence;
-
-public sealed class ContentPlacesDbContext : DbContext, IDbContext
+public class ContentPlacesDbContext : DbContext, IContentPlacesDbContext
 {
     public ContentPlacesDbContext(DbContextOptions<ContentPlacesDbContext> options)
         : base(options)

@@ -81,6 +81,9 @@ internal static class AppPermissions
         new(AppFeatures.Place, AppAction.Update,  AppRoleGroup.ContentManagement, "Update place details"),
         new(AppFeatures.Place, AppAction.Delete,  AppRoleGroup.ContentManagement, "Delete a place"),
 
+        // *── AccessibilityFeature ──────────────────────────────────────
+        new(AppFeatures.AccessibilityFeature, AppAction.Read,   AppRoleGroup.ContentManagement, "View accessibility features"),
+        new(AppFeatures.AccessibilityFeature, AppAction.Update, AppRoleGroup.ContentManagement, "Update accessibility features"),
     }.AsReadOnly();
 
     public static IReadOnlyList<string> GetPermissionsForRole(string roleName) =>
