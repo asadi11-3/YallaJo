@@ -1,12 +1,6 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+namespace ContentPlaces.Application.Queries.Business.Common;
 
-namespace ContentPlaces.Application.Queries.Business.Common
-{
-    public sealed record BusinessDetailDto(
+public sealed record BusinessDetailDto(
     Guid Id,
     string Name,
     string Slug,
@@ -29,5 +23,16 @@ namespace ContentPlaces.Application.Queries.Business.Common
     Guid OwnerId,
     string Status,
     string? RejectionReason,
-    DateTime CreatedAt);
-}
+    string? LicenseNumber,
+    string? TaxId,
+    string? MetaTitle,
+    string? MetaDescription,
+    string? SubscriptionTier,
+    int ServiceItemCount,
+    int StaffCount,
+    int AmenityCount,
+    IReadOnlyList<BusinessTranslationDto> Translations,
+    IReadOnlyList<BusinessHoursDto> BusinessHours,
+    DateTime CreatedAt,
+    DateTime? UpdatedAt);
+

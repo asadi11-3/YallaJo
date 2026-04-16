@@ -176,7 +176,7 @@ public sealed class Business : AuditableEntity, IAggregateRoot
     public void Approve(Guid reviewedByUserId)
     {
         if (Status != BusinessStatus.Pending)
-            throw new InvalidOperationException($"Cannot approve a business with status {Status}");
+            throw new InvalidOperationException($"Cannot approve a business with status {Status}.");
 
         Status = BusinessStatus.Approved;
         ReviewedByUserId = reviewedByUserId;
@@ -193,7 +193,7 @@ public sealed class Business : AuditableEntity, IAggregateRoot
             throw new ArgumentException("Rejection reason is required.", nameof(reason));
 
         if (Status != BusinessStatus.Pending)
-            throw new InvalidOperationException($"Cannot reject a business with status {Status}");
+            throw new InvalidOperationException($"Cannot reject a business with status {Status}.");
 
         Status = BusinessStatus.Rejected;
         RejectionReason = reason.Trim();
@@ -207,7 +207,7 @@ public sealed class Business : AuditableEntity, IAggregateRoot
     public void Resubmit()
     {
         if (Status != BusinessStatus.Rejected)
-            throw new InvalidOperationException($"Cannot resubmit a business with status {Status}");
+            throw new InvalidOperationException($"Cannot resubmit a business with status {Status}.");
 
         Status = BusinessStatus.Pending;
         RejectionReason = null;
@@ -221,7 +221,7 @@ public sealed class Business : AuditableEntity, IAggregateRoot
             throw new ArgumentException("Suspension reason is required.", nameof(reason));
 
         if (Status != BusinessStatus.Approved)
-            throw new InvalidOperationException($"Cannot suspend a business with status {Status}");
+            throw new InvalidOperationException($"Cannot suspend a business with status {Status}.");
 
         Status = BusinessStatus.Suspended;
 
@@ -232,7 +232,7 @@ public sealed class Business : AuditableEntity, IAggregateRoot
     public void Reinstate()
     {
         if (Status != BusinessStatus.Suspended)
-            throw new InvalidOperationException($"Cannot reinstate a business with status {Status}");
+            throw new InvalidOperationException($"Cannot reinstate a business with status {Status}.");
 
         Status = BusinessStatus.Approved;
 
