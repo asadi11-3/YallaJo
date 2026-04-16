@@ -16,7 +16,9 @@ internal static class UsersMapper
 
     public static AssignRoleRequest ToAssignRoleRequest(AssignRoleVm vm) => new()
     {
-        RoleId = vm.RoleId,
+        // vm.RoleId is guaranteed non-null here: [Required] already rejected null
+        // before the controller reaches this mapper call.
+        RoleId = vm.RoleId!.Value,
     };
 
     public static AddUserClaimRequest ToAddClaimRequest(AddClaimVm vm) => new()

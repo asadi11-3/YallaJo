@@ -7,7 +7,5 @@ namespace YallaJo.Web.Areas.Admin.Modules.Security.Features.Users.ViewModels
         public bool IsActive { get; init; }
         public IReadOnlyList<string> CurrentRoles { get; init; } = [];
         public IReadOnlyList<RoleOptionVm> AvailableRoles { get; init; } = [];
-        public AssignRoleVm AssignRole { get; init; } = new();
-        public AddClaimVm AddClaim { get; init; } = new();
     }
 }

@@ -24,7 +24,12 @@ public sealed class UsersFacade
 
         if (result.IsSuccess)
         {
-            var d  = result.Data!;
+            if (result.Data is null)
+            {
+                return ApiResult<UserListVm>.CreateFailure("Could not load users.");
+            }
+
+            var d = result.Data;
             var vm = new UserListVm
             {
                 Users       = d.Items.Select(UsersMapper.ToRowVm).ToList(),
@@ -57,7 +62,12 @@ public sealed class UsersFacade
                 userTask.Result.IsNotFound ? "User not found." : userTask.Result.Error ?? "Could not load user.");
         }
 
-        var user  = userTask.Result.Data!;
+        if (userTask.Result.Data is null)
+        {
+            return ApiResult<UserDetailsVm>.CreateFailure("Could not load user.");
+        }
+
+        var user = userTask.Result.Data;
         var roles = rolesTask.Result.Data ?? [];
 
         var vm = new UserDetailsVm

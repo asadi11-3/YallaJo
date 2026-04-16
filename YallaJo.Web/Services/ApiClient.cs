@@ -72,8 +72,22 @@ public sealed class ApiClient
 
         if (response.IsSuccessStatusCode)
         {
-            var data = JsonSerializer.Deserialize<T>(raw, DeserializeOpts);
-            return ApiResult<T>.CreateSuccess(data!, (int)response.StatusCode);
+            if (string.IsNullOrWhiteSpace(raw))
+            {
+                return ApiResult<T>.CreateFailure((int)response.StatusCode, "Empty response body.");
+            }
+
+            try
+            {
+                var data = JsonSerializer.Deserialize<T>(raw, DeserializeOpts);
+                return data is null
+                    ? ApiResult<T>.CreateFailure((int)response.StatusCode, "Could not parse response body.")
+                    : ApiResult<T>.CreateSuccess(data, (int)response.StatusCode);
+            }
+            catch (JsonException)
+            {
+                return ApiResult<T>.CreateFailure((int)response.StatusCode, "Could not parse response body.");
+            }
         }
 
         return ParseError<T>((int)response.StatusCode, raw);
@@ -117,7 +131,6 @@ public sealed class ApiClient
         }
     }
 
-   
     private sealed class ProblemDetails
     {
         public string? Title  { get; init; }

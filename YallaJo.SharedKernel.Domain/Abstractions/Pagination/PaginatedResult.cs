@@ -10,7 +10,7 @@ namespace YallaJo.SharedKernel.Domain.Abstractions.Pagination
         public bool HasPreviousPage => PageNumber > 1;
         public bool HasNextPage => PageNumber < TotalPages;
 
-        public PaginatedResult(List<T> items, int totalCount, int pageNumber, int pageSize)
+        public PaginatedResult(IReadOnlyList<T> items, int totalCount, int pageNumber, int pageSize)
         {
             ArgumentOutOfRangeException.ThrowIfNegative(pageSize);
             ArgumentOutOfRangeException.ThrowIfLessThan(pageNumber, 1);

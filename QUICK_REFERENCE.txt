@@ -1,148 +1,160 @@
-╔════════════════════════════════════════════════════════════════════════════╗
-║                    YALLAJO.WEB - QUICK REFERENCE CARD                     ║
-║                                                                            ║
-║              Shared View Partials Analysis - Key Findings                  ║
-╚════════════════════════════════════════════════════════════════════════════╝
+================================================================================
+ASSIGN ROLE FLOW - QUICK REFERENCE
+================================================================================
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-PROBLEM
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CRITICAL ISSUE: Property Name Mismatch
+──────────────────────────────────────
 
-❌ Login page fails because _ValidationScriptsPartial.cshtml is not found
-   Referenced in 5 Auth feature views but file doesn't exist
+Frontend sends:    {"RoleId": "550e8400-e29b-41d4-a716-446655440000"}
+Backend expects:   {"Id": "550e8400-e29b-41d4-a716-446655440000"}
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-SOLUTION
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Result: Backend receives Id = Guid.Empty → Validator rejects
 
-✅ Create: Views/Shared/_ValidationScriptsPartial.cshtml
+================================================================================
+10-STEP FLOW
+================================================================================
 
-This is the CORRECT location because:
-  • Shared across multiple features (5 Auth views)
-  • Application-wide concern (client-side validation)
-  • Follows ASP.NET Core conventions
-  • Consistent with _Layout.cshtml location
-  • Framework will find it in standard search path
+1. RAZOR VIEW
+   File: Details.cshtml (Line 54)
+   Code: <select name="RoleId" ...>
+   Status: ✓ CORRECT
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-EXISTING SHARED PARTIALS
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2. VIEW MODEL
+   File: AssignRoleVm.cs (Line 8)
+   Code: public Guid? RoleId { get; set; }
+   Status: ✓ CORRECT
 
-Location: Views/Shared/
+3. CONTROLLER
+   File: UsersController.cs (Line 66)
+   Code: AssignRole(Guid userId, AssignRoleVm vm, ...)
+   Status: ✓ CORRECT
 
-✅ _Layout.cshtml
-   - Master layout for all views
-   - Renders Scripts section at line 19
+4. MAPPER
+   File: UsersMapper.cs (Line 21)
+   Code: RoleId = vm.RoleId!.Value
+   Status: ✓ CORRECT
 
-✅ _ViewStart.cshtml (in Views/)
-   - Sets default layout for all views
+5. WEB REQUEST MODEL
+   File: AssignRoleRequest.cs (Web) (Line 5)
+   Code: public Guid RoleId { get; init; }
+   Status: ✓ CORRECT
 
-✅ _ViewImports.cshtml (Root + Views/)
-   - Global using statements + tag helpers
+6. API CLIENT
+   File: UsersApiClient.cs (Line 31)
+   Code: _api.PostAsync($"/api/v1/security/users/{userId}/roles", request, ct)
+   JSON: {"RoleId": "..."}
+   Status: ✓ CORRECT
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-FEATURE-LEVEL PARTIALS
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+7. BACKEND ENDPOINT
+   File: UserEndpoints.cs (Line 154)
+   Code: new AssignRoleCommand(userId, request.Id)
+   Status: ❌ WRONG - Accesses request.Id
 
-Location: Areas/{Area}/Features/{Feature}/Views/
+8. BACKEND REQUEST MODEL
+   File: AssignRoleRequest.cs (Backend) (Line 3)
+   Code: public sealed record AssignRoleRequest(Guid Id);
+   Status: ❌ CRITICAL - Property is "Id" not "RoleId"
 
-📍 Areas/Admin/Modules/ContentPlaces/Features/Places/Views/
-   - _Form.cshtml
-   - _Table.cshtml
+9. COMMAND
+   File: AssignRoleCommand.cs (Line 6)
+   Code: record AssignRoleCommand(Guid UserId, Guid RoleId)
+   Receives: RoleId = Guid.Empty
+   Status: ❌ WRONG - Receives empty GUID
 
-📍 Areas/Accounts/Features/Profile/Views/
-   - _Form.cshtml
+10. VALIDATOR
+    File: AssignRoleCommandValidator.cs (Line 11)
+    Code: RuleFor(x => x.RoleId).NotEmpty()
+    Result: Guid.Empty.NotEmpty() = FALSE
+    Error: "Role ID is required."
+    Status: ❌ REJECTS
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-CONVENTIONS
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+================================================================================
+MODELSTATE BEHAVIOR
+================================================================================
 
-1. SHARED PARTIALS
-   Location: Views/Shared/
-   Naming: _PartialName.cshtml
-   Scope: Application-wide
+NO SELECTION:
+  Input: RoleId= (empty string)
+  Binding: Cannot convert empty string to Guid?
+  ModelState.IsValid: FALSE
+  Error: "The value '' is not valid for Guid?"
+  User sees: "Please select a role." (from controller)
 
-2. FEATURE PARTIALS
-   Location: Areas/{Area}/Features/{Feature}/Views/
-   Naming: _PartialName.cshtml
-   Scope: Feature-specific
+VALID SELECTION:
+  Input: RoleId=550e8400-e29b-41d4-a716-446655440000
+  Binding: Converts GUID string to Guid?
+  ModelState.IsValid: TRUE
+  Proceeds to: Facade → Mapper → API Client → Backend
+  Backend receives: Id = Guid.Empty (deserialization fails)
+  User sees: "Role ID is required." (from backend validator)
 
-3. AREA STRUCTURE
-   Pattern: Areas/{AreaName}/Features/{FeatureName}/Views/
-   Note: NO Area-level Shared folder
+================================================================================
+ROOT CAUSE
+================================================================================
 
-4. VIEW IMPORTS
-   Root: _ViewImports.cshtml
-   Views: Views/_ViewImports.cshtml
-   Note: NO Area-level imports
+File: Security.Presentation\Endpoints\User\Models\AssignRoleRequest.cs
+Line: 3
 
-5. LAYOUT
-   Location: Views/Shared/_Layout.cshtml
-   Set via: Views/_ViewStart.cshtml
+CURRENT:
+  public sealed record AssignRoleRequest(Guid Id);
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-REFERENCES TO _ValidationScriptsPartial
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PROBLEM:
+  - Frontend sends JSON with "RoleId" key
+  - Backend expects JSON with "Id" key
+  - JSON deserializer cannot find "Id" property
+  - Id = Guid.Empty (default value)
 
-5 files reference this missing partial:
+================================================================================
+FIX
+================================================================================
 
-1. Areas/Auth/Features/Login/Views/Index.cshtml (Line 36)
-2. Areas/Auth/Features/ForgotPassword/Views/Index.cshtml (Line 35)
-3. Areas/Auth/Features/ResetPassword/Views/Index.cshtml (Line 43)
-4. Areas/Auth/Features/VerifyEmail/Views/Index.cshtml (Line 37)
-5. Areas/Auth/Features/ExternalProviders/Views/Index.cshtml (Line 49)
+File 1: Security.Presentation\Endpoints\User\Models\AssignRoleRequest.cs
+Line: 3
 
-Usage Pattern:
-  @section Scripts {
-      <partial name="_ValidationScriptsPartial" />
-  }
+CHANGE FROM:
+  public sealed record AssignRoleRequest(Guid Id);
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-VIEW RESOLUTION ORDER
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CHANGE TO:
+  public sealed record AssignRoleRequest(Guid RoleId);
 
-When a view references: <partial name="_ValidationScriptsPartial" />
+────────────────────────────────────────────────────────────────────────────
 
-Framework searches in this order:
+File 2: Security.Presentation\Endpoints\User\UserEndpoints.cs
+Line: 154
 
-1. Feature-level Views directory
-   (e.g., Areas/Auth/Features/Login/Views/)
+CHANGE FROM:
+  var result = await sender.Send(new AssignRoleCommand(userId, request.Id), ct);
 
-2. Area-level Shared directory
-   (e.g., Areas/Auth/Views/Shared/)
-   ⚠️  NOT USED in this project
+CHANGE TO:
+  var result = await sender.Send(new AssignRoleCommand(userId, request.RoleId), ct);
 
-3. Root Shared directory
-   (e.g., Views/Shared/)
-   ✅ WILL FIND IT HERE
+================================================================================
+EVIDENCE
+================================================================================
 
-4. Root Views directory
-   (e.g., Views/)
+EVIDENCE 1: Frontend sends RoleId
+  Details.cshtml:54 → <select name="RoleId" ...>
+  JSON: {"RoleId": "550e8400-e29b-41d4-a716-446655440000"}
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-SUMMARY TABLE
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+EVIDENCE 2: Backend expects Id
+  AssignRoleRequest.cs:3 → public sealed record AssignRoleRequest(Guid Id);
+  Expected JSON: {"Id": "550e8400-e29b-41d4-a716-446655440000"}
 
-Aspect                          Value
-─────────────────────────────────────────────────────────────────────────────
-Shared Partials Location        Views/Shared/
-Feature Partials Location       Areas/{Area}/Features/{Feature}/Views/
-Naming Convention               Underscore prefix: _PartialName.cshtml
-Missing Partial                 _ValidationScriptsPartial.cshtml
-Correct Location                Views/Shared/_ValidationScriptsPartial.cshtml
-Referenced By                   5 Auth feature views
-Area-Level Shared               Not used in this project
-View Imports                    Root + Views level (no Area-level)
-Layout                          Single shared layout in Views/Shared/
-Total Razor Files               44 files
+EVIDENCE 3: Endpoint accesses request.Id
+  UserEndpoints.cs:154 → new AssignRoleCommand(userId, request.Id)
+  Result: request.Id = Guid.Empty
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-NEXT STEPS
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+EVIDENCE 4: Validator rejects Guid.Empty
+  AssignRoleCommandValidator.cs:11 → RuleFor(x => x.RoleId).NotEmpty()
+  Error: "Role ID is required."
 
-1. Create: Views/Shared/_ValidationScriptsPartial.cshtml
-2. Add: Validation script references (jQuery validation or ASP.NET Core built-in)
-3. Test: All 5 Auth feature views
-4. Verify: No runtime errors on login page
+================================================================================
+SUMMARY
+================================================================================
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Issue: Property name mismatch (RoleId vs Id)
+Location: Backend request model
+Impact: JSON deserialization fails silently
+Result: Backend receives Guid.Empty, validator rejects
+Fix: Rename property from "Id" to "RoleId" in 2 files
+
+================================================================================

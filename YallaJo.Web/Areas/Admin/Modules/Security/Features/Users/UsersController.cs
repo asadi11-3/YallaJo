@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using YallaJo.Web.Areas.Admin.Modules.Security.Features.Users.ViewModels;
-using YallaJo.Web.Infrastructure.Authorization;
 
 namespace YallaJo.Web.Areas.Admin.Modules.Security.Features.Users;
 
@@ -12,7 +11,6 @@ public sealed class UsersController : Controller
     private readonly UsersFacade _facade;
     public UsersController(UsersFacade facade) => _facade = facade;
 
-[RequirePermission(WebPermission.User.Read)]
     [HttpGet]
     public async Task<IActionResult> Index(int page = 1, CancellationToken ct = default)
     {
@@ -27,7 +25,6 @@ public sealed class UsersController : Controller
         return View(result.Data);
     }
 
-    [RequirePermission(WebPermission.User.Read)]
     [HttpGet("admin/users/details/{userId:guid}")]
     public async Task<IActionResult> Details(Guid userId, CancellationToken ct)
     {
@@ -42,7 +39,6 @@ public sealed class UsersController : Controller
         return View(result.Data);
     }
 
-    [RequirePermission(WebPermission.User.SoftDelete)]
     [HttpPost("admin/users/{userId:guid}/activate")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Activate(Guid userId, CancellationToken ct)
@@ -54,7 +50,6 @@ public sealed class UsersController : Controller
         return RedirectToAction("Details", new { userId });
     }
 
-    [RequirePermission(WebPermission.User.SoftDelete)]
     [HttpPost("admin/users/{userId:guid}/deactivate")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Deactivate(Guid userId, CancellationToken ct)
@@ -66,7 +61,6 @@ public sealed class UsersController : Controller
         return RedirectToAction("Details", new { userId });
     }
 
-    [RequirePermission(WebPermission.User.UpdateAny)]
     [HttpPost("admin/users/{userId:guid}/roles")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> AssignRole(Guid userId, AssignRoleVm vm, CancellationToken ct)
@@ -97,7 +91,6 @@ public sealed class UsersController : Controller
         return RedirectToAction("Details", new { userId });
     }
 
-    [RequirePermission(WebPermission.User.DeleteAny)]
     [HttpPost("admin/users/{userId:guid}/roles/{roleId:guid}/remove")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> RemoveRole(Guid userId, Guid roleId, CancellationToken ct)
@@ -109,7 +102,6 @@ public sealed class UsersController : Controller
         return RedirectToAction("Details", new { userId });
     }
 
-    [RequirePermission(WebPermission.User.UpdateAny)]
     [HttpPost("admin/users/{userId:guid}/claims")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> AddClaim(Guid userId, AddClaimVm vm, CancellationToken ct)

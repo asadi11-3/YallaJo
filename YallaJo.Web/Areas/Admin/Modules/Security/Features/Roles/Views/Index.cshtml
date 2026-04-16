@@ -18,20 +18,7 @@
     <permission require="@WebPermission.Role.Create">
         <div class="card mb-4 p-3">
             <h5>Create Role</h5>
-            <form asp-area="Admin" asp-controller="Roles" asp-action="Create" method="post" class="row g-2">
-                @Html.AntiForgeryToken()
-                <div asp-validation-summary="All" class="text-danger"></div>
-                <div class="col-auto">
-                    <input asp-for="Create.Name" class="form-control" placeholder="Role name" />
-                    <span asp-validation-for="Create.Name" class="text-danger"></span>
-                </div>
-                <div class="col-auto">
-                    <input asp-for="Create.Description" class="form-control" placeholder="Description (optional)" />
-                </div>
-                <div class="col-auto">
-                    <button type="submit" class="btn btn-primary">Create</button>
-                </div>
-            </form>
+            <partial name="_CreateRoleForm" model="Model.Create" />
         </div>
     </permission>
 
