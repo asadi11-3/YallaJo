@@ -367,9 +367,6 @@ FodyWeavers.xsd
 /YallaJo_Architecture_Review.pdf
 /YallaJo_Architecture_Review.pdf
 # Agent files — AI coding tool instructions (not shipped with code)
-/Agents
-AGENTS.md
-/Agents/error-log.md
-/Agents/agent-context.md
-/CUsersadmin1build_out.txt
-/Agents.zip
+
+/Agents/ContentPlaces-tasks.md
+/Agents/ContentPlaces-team-tasks.md
