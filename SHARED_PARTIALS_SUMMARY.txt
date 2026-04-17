@@ -1,0 +1,200 @@
+================================================================================
+                    YALLAJO.WEB - SHARED PARTIALS ANALYSIS
+                                SUMMARY REPORT
+================================================================================
+
+CONTEXT: Login page fails because _ValidationScriptsPartial not found
+GOAL: Identify existing shared view partial patterns and conventions
+DOWNSTREAM: Decide correct location for _ValidationScriptsPartial.cshtml
+
+================================================================================
+1. EXISTING SHARED PARTIALS
+================================================================================
+
+Location: Views/Shared/
+
+✅ _Layout.cshtml
+   - Type: Layout template
+   - Scope: Application-wide
+   - Usage: Master layout for all views
+   - Content: Bootstrap 5.3.3, renders body + Scripts section
+
+✅ _ViewStart.cshtml (in Views/)
+   - Type: View start file
+   - Scope: Application-wide
+   - Usage: Sets default layout for all views
+   - Content: Layout = "_Layout"
+
+✅ _ViewImports.cshtml (Root + Views/)
+   - Type: View imports
+   - Scope: Global
+   - Usage: Global using statements + tag helpers
+   - Content: @using YallaJo.Web, @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+================================================================================
+2. MISSING SHARED PARTIALS
+================================================================================
+
+❌ Views/Shared/_ValidationScriptsPartial.cshtml
+   - Type: Partial view
+   - Purpose: Client-side validation scripts
+   - Referenced in: 5 Auth feature views
+   - Status: MISSING - CAUSES LOGIN PAGE FAILURE
+
+================================================================================
+3. FEATURE-LEVEL PARTIALS (Feature-Scoped)
+================================================================================
+
+Location: Areas/{Area}/Features/{Feature}/Views/
+
+📍 Areas/Admin/Modules/ContentPlaces/Features/Places/Views/
+   - _Form.cshtml (empty placeholder)
+   - _Table.cshtml (empty placeholder)
+
+📍 Areas/Accounts/Features/Profile/Views/
+   - _Form.cshtml (empty placeholder)
+
+Pattern: Feature-specific partials use underscore prefix and live in feature's Views/ directory
+
+================================================================================
+4. IDENTIFIED CONVENTIONS
+================================================================================
+
+CONVENTION #1: Shared Partials Location
+  Location: Views/Shared/
+  Naming: Underscore prefix (_PartialName.cshtml)
+  Scope: Application-wide (all areas and features)
+  Examples: _Layout.cshtml, _ValidationScriptsPartial.cshtml (missing)
+
+CONVENTION #2: Feature-Level Partials Location
+  Location: Areas/{Area}/Features/{Feature}/Views/
+  Naming: Underscore prefix (_PartialName.cshtml)
+  Scope: Feature-specific only
+  Examples: _Form.cshtml, _Table.cshtml
+
+CONVENTION #3: Area Structure
+  Pattern: Areas/{AreaName}/Features/{FeatureName}/Views/
+  Note: NO Area-level Shared folder (unlike traditional ASP.NET MVC)
+  All shared resources go to root Views/Shared/
+
+CONVENTION #4: View Imports Hierarchy
+  Root level: _ViewImports.cshtml (project root)
+  Views level: Views/_ViewImports.cshtml (views folder)
+  Note: NO Area-level imports (unlike traditional ASP.NET MVC)
+  Inheritance: All views inherit both root and Views-level imports
+
+CONVENTION #5: Layout Pattern
+  Single layout: Views/Shared/_Layout.cshtml
+  Set via: Views/_ViewStart.cshtml (applies to all views automatically)
+  Override: Individual views can override with Layout = "~/Views/Shared/_Layout.cshtml"
+
+================================================================================
+5. VALIDATION SCRIPTS PARTIAL - REFERENCES
+================================================================================
+
+Files referencing _ValidationScriptsPartial:
+
+1. Areas/Auth/Features/Login/Views/Index.cshtml (Line 36)
+2. Areas/Auth/Features/ForgotPassword/Views/Index.cshtml (Line 35)
+3. Areas/Auth/Features/ResetPassword/Views/Index.cshtml (Line 43)
+4. Areas/Auth/Features/VerifyEmail/Views/Index.cshtml (Line 37)
+5. Areas/Auth/Features/ExternalProviders/Views/Index.cshtml (Line 49)
+
+Usage Pattern (all identical):
+  @section Scripts {
+      <partial name="_ValidationScriptsPartial" />
+  }
+
+This renders in _Layout.cshtml Line 19:
+  @await RenderSectionAsync("Scripts", required: false)
+
+================================================================================
+6. ASP.NET CORE VIEW RESOLUTION ORDER
+================================================================================
+
+When a view references: <partial name="_ValidationScriptsPartial" />
+
+The framework searches in this order:
+
+1. Feature-level Views directory
+   (e.g., Areas/Auth/Features/Login/Views/)
+
+2. Area-level Shared directory
+   (e.g., Areas/Auth/Views/Shared/)
+   ⚠️  NOT USED in this project
+
+3. Root Shared directory
+   (e.g., Views/Shared/)
+   ✅ STANDARD LOCATION - WHERE IT SHOULD BE
+
+4. Root Views directory
+   (e.g., Views/)
+
+================================================================================
+7. RECOMMENDATION: CORRECT LOCATION
+================================================================================
+
+✅ CORRECT LOCATION:
+   Views/Shared/_ValidationScriptsPartial.cshtml
+
+Rationale:
+  1. Shared across multiple features (5 Auth features)
+  2. Application-wide concern (client-side validation)
+  3. Follows ASP.NET Core conventions
+  4. Consistent with existing patterns (_Layout.cshtml location)
+  5. Proper view resolution (framework will find it)
+
+❌ INCORRECT LOCATIONS (Why NOT):
+  - Areas/Auth/Views/Shared/_ValidationScriptsPartial.cshtml
+    → Area-level Shared doesn't exist in this project
+  
+  - Areas/Auth/Features/Login/Views/_ValidationScriptsPartial.cshtml
+    → Would only be available to Login feature, not shared
+  
+  - Views/_ValidationScriptsPartial.cshtml
+    → Works but violates convention (should be in Shared/)
+
+================================================================================
+8. SUMMARY TABLE
+================================================================================
+
+Aspect                          Details
+─────────────────────────────────────────────────────────────────────────────
+Shared Partials Location        Views/Shared/
+Feature Partials Location       Areas/{Area}/Features/{Feature}/Views/
+Naming Convention               Underscore prefix: _PartialName.cshtml
+Missing Partial                 _ValidationScriptsPartial.cshtml
+Correct Location                Views/Shared/_ValidationScriptsPartial.cshtml
+Referenced By                   5 Auth feature views
+Area-Level Shared               Not used in this project
+View Imports                    Root + Views level (no Area-level)
+Layout                          Single shared layout in Views/Shared/
+View Resolution Order           Feature → Area Shared → Root Shared → Root
+
+================================================================================
+9. DIRECTORY STRUCTURE
+================================================================================
+
+YallaJo.Web/
+├── _ViewImports.cshtml                    [Root-level imports]
+├── Views/
+│   ├── _ViewImports.cshtml                [Views-level imports]
+│   ├── _ViewStart.cshtml                  [Default layout setter]
+│   └── Shared/
+│       └── _Layout.cshtml                 [✅ SHARED LAYOUT]
+│
+└── Areas/
+    ├── Auth/
+    │   └── Features/
+    │       ├── Login/Views/Index.cshtml                    [References _ValidationScriptsPartial]
+    │       ├── ForgotPassword/Views/Index.cshtml           [References _ValidationScriptsPartial]
+    │       ├── ResetPassword/Views/Index.cshtml            [References _ValidationScriptsPartial]
+    │       ├── VerifyEmail/Views/Index.cshtml              [References _ValidationScriptsPartial]
+    │       └── ExternalProviders/Views/Index.cshtml        [References _ValidationScriptsPartial]
+    │
+    ├── Admin/
+    │   └── Modules/ContentPlaces/Features/Places/Views/
+    │       ├── _Form.cshtml                [Feature-level partial]
+    │       └── _Table.cshtml               [Feature-level partial]
+    │
+   

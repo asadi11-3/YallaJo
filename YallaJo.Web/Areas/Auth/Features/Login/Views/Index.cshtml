@@ -1,0 +1,37 @@
+@model YallaJo.Web.Areas.Auth.Features.Login.ViewModels.LoginVm
+@{
+    ViewData["Title"] = "Sign In";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="auth-card">
+    <h2>Sign In</h2>
+    <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+    <form asp-area="Auth" asp-controller="Login" asp-action="Index" method="post">
+        <input type="hidden" asp-for="ReturnUrl" />
+        @Html.AntiForgeryToken()
+
+        <div class="mb-3">
+            <label asp-for="Email" class="form-label"></label>
+            <input asp-for="Email" class="form-control" autocomplete="email" />
+            <span asp-validation-for="Email" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Password" class="form-label"></label>
+            <input asp-for="Password" type="password" class="form-control" autocomplete="current-password" />
+            <span asp-validation-for="Password" class="text-danger"></span>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100">Sign In</button>
+    </form>
+
+    <div class="mt-3">
+        <a asp-area="Auth" asp-controller="ForgotPassword" asp-action="Index">Forgot password?</a>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

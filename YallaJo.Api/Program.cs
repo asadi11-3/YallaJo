@@ -45,6 +45,8 @@ using Social.Application;
 using Social.Infrastructure;
 using Social.Presentation;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Tracking.Application;
 using Tracking.Infrastructure;
 using Tracking.Presentation;
@@ -59,6 +61,18 @@ using YallaJo.SharedKernel.Infrastructure;
 // ── Serilog bootstrap (captures startup errors) ───────────────────────────
 var builder = WebApplication.CreateBuilder(args);
 builder.AddYallaJoSerilog();
+
+// ── JSON options for minimal-API endpoints ────────────────────────────────
+// Aligns the API's read/write contract with the web client (ApiClient) which
+// serializes with CamelCase.  Without this, {"roleId":"..."} sent by the
+// client would silently fail to bind to PascalCase record constructor params,
+// leaving every Guid at Guid.Empty and triggering FluentValidation failures.
+builder.Services.ConfigureHttpJsonOptions(options =>
+{
+    options.SerializerOptions.PropertyNamingPolicy        = JsonNamingPolicy.CamelCase;
+    options.SerializerOptions.PropertyNameCaseInsensitive = true;
+    options.SerializerOptions.DefaultIgnoreCondition      = JsonIgnoreCondition.WhenWritingNull;
+});
 
 // ── Module registrations ──────────────────────────────────────────────────
 builder.Services.AddAccountsApplication();

@@ -15,4 +15,30 @@ public sealed class BusinessStaff : AuditableEntity
     public DateTime? DeactivatedAt { get; private set; }
 
     public Business Business { get; private set; } = default!;
+
+    // create new staff
+    public static BusinessStaff Create(
+        Guid businessId,
+        Guid userId,
+        BusinessStaffRole role)
+    {
+        return new BusinessStaff
+        {
+            Id = Guid.CreateVersion7(),
+            CreatedAt = DateTime.UtcNow,
+            BusinessId = businessId,
+            UserId = userId,
+            Role = role,
+            IsActive = true,
+            DeactivatedAt = null
+        };
+    }
+
+    // soft delete (deactivate)
+    public void Deactivate()
+    {
+        IsActive = false;
+        DeactivatedAt = DateTime.UtcNow;
+        UpdatedAt = DateTime.UtcNow;
+    }
 }
