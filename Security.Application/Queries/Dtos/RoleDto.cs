@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Security.Application.Queries.ListRoles
+namespace Security.Application.Queries.Dtos
 {
     public sealed record RoleDto(Guid Id, string Name, string? Description, bool IsActive);
 }

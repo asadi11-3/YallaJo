@@ -32,6 +32,14 @@ internal sealed class RoleRepository(SecurityDbContext context)
                 g => (IReadOnlyList<string>)g.Select(x => x.RoleName).ToList());
     }
 
+    public async Task<Role?> GetByIdWithClaimsAsync(Guid roleId, CancellationToken ct = default)
+    {
+        return await _db.Roles
+            .AsNoTracking()
+            .Include(r => r.RoleClaims)
+            .FirstOrDefaultAsync(r => r.Id == roleId, ct);
+    }
+
     public async Task<IReadOnlyList<Role>> GetRolesByNamesAsync(
         IEnumerable<string> roleNames, CancellationToken ct = default)
     {

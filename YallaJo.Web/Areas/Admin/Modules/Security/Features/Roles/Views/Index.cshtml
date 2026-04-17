@@ -30,7 +30,7 @@
                 <th>Name</th>
                 <th>Description</th>
                 <th>Status</th>
-                <permission require="@WebPermission.Role.Update"><th>Actions</th></permission>
+                <th>Actions</th>
             </tr>
         </thead>
         <tbody>
@@ -44,8 +44,11 @@
                             @(r.IsActive ? "Active" : "Inactive")
                         </span>
                     </td>
-                    <permission require="@WebPermission.Role.Update">
-                        <td>
+                    <td>
+                        <a asp-area="Admin" asp-controller="Roles"
+                           asp-action="Details" asp-route-roleId="@r.Id"
+                           class="btn btn-sm btn-outline-primary">Manage</a>
+                        <permission require="@WebPermission.Role.Update">
                             @if (r.IsActive)
                             {
                                 <form asp-area="Admin" asp-controller="Roles"
@@ -56,8 +59,8 @@
                                             onclick="return confirm('Deactivate role @r.Name?')">Deactivate</button>
                                 </form>
                             }
-                        </td>
-                    </permission>
+                        </permission>
+                    </td>
                 </tr>
             }
         </tbody>

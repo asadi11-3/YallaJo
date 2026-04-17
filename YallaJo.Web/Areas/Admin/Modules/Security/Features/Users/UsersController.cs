@@ -119,6 +119,17 @@ public sealed class UsersController : Controller
         return RedirectToAction("Details", new { userId });
     }
 
+    [HttpPost("admin/users/{userId:guid}/claims/{claimId:guid}/remove")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> RemoveClaim(Guid userId, Guid claimId, CancellationToken ct)
+    {
+        var result = await _facade.RemoveClaimAsync(userId, claimId, ct);
+        if (result.RequireSignOut) return RedirectToLogin();
+        TempData[result.IsSuccess ? "Success" : "Error"] =
+            result.IsSuccess ? "Claim removed." : result.Error;
+        return RedirectToAction("Details", new { userId });
+    }
+
     private RedirectToActionResult RedirectToLogin() =>
         RedirectToAction("Index", "Login", new { area = "Auth" });
 }

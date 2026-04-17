@@ -28,6 +28,23 @@ public sealed class RolesController : Controller
         };
     }
 
+    [HttpGet("admin/roles/details/{roleId:guid}")]
+    public async Task<IActionResult> Details(Guid roleId, CancellationToken ct)
+    {
+        var result = await _facade.GetDetailsAsync(roleId, ct);
+
+        if (result.State == ApiResultState.Unauthorized) return RedirectToLogin();
+        if (result.State == ApiResultState.Forbidden)    return new ForbidResult();
+
+        if (!result.IsSuccess)
+        {
+            TempData["Error"] = result.Error;
+            return RedirectToAction(nameof(Index));
+        }
+
+        return View(result.Data);
+    }
+
     [HttpPost("admin/roles/create")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(CreateRoleVm vm, CancellationToken ct)
@@ -71,10 +88,16 @@ public sealed class RolesController : Controller
         if (result.State == ApiResultState.Unauthorized) return RedirectToLogin();
         if (result.State == ApiResultState.Forbidden)    return new ForbidResult();
 
+        if (result.IsValidationError && result.ValidationErrors is not null)
+        {
+            foreach (var (field, msgs) in result.ValidationErrors)
+                foreach (var msg in msgs) ModelState.AddModelError(field, msg);
+        }
+
         TempData[result.IsSuccess ? "Success" : "Error"] =
             result.IsSuccess ? "Role updated." : result.Error;
 
-        return RedirectToAction(nameof(Index));
+        return RedirectToAction(nameof(Details), new { roleId });
     }
 
     [HttpPost("admin/roles/{roleId:guid}/deactivate")]
@@ -99,7 +122,7 @@ public sealed class RolesController : Controller
         if (!ModelState.IsValid)
         {
             TempData["Error"] = "Claim type and value are required.";
-            return RedirectToAction(nameof(Index));
+            return RedirectToAction(nameof(Details), new { roleId });
         }
 
         var result = await _facade.AddClaimAsync(roleId, vm, ct);
@@ -110,7 +133,7 @@ public sealed class RolesController : Controller
         TempData[result.IsSuccess ? "Success" : "Error"] =
             result.IsSuccess ? "Claim added." : result.Error;
 
-        return RedirectToAction(nameof(Index));
+        return RedirectToAction(nameof(Details), new { roleId });
     }
 
     [HttpPost("admin/roles/{roleId:guid}/claims/{claimId:guid}/remove")]
@@ -125,7 +148,7 @@ public sealed class RolesController : Controller
         TempData[result.IsSuccess ? "Success" : "Error"] =
             result.IsSuccess ? "Claim removed." : result.Error;
 
-        return RedirectToAction(nameof(Index));
+        return RedirectToAction(nameof(Details), new { roleId });
     }
 
     private RedirectToActionResult RedirectToLogin() =>

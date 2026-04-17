@@ -80,6 +80,14 @@ public sealed class UsersFacade
                 .Where(r => r.IsActive)
                 .Select(r => new RoleOptionVm { Id = r.Id, Name = r.Name })
                 .ToList(),
+            Claims = user.Claims
+                .Select(c => new UserClaimVm
+                {
+                    Id         = c.Id,
+                    ClaimType  = c.ClaimType,
+                    ClaimValue = c.ClaimValue,
+                })
+                .ToList(),
         };
         return ApiResult<UserDetailsVm>.CreateSuccess(vm);
     }

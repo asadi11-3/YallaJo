@@ -13,6 +13,9 @@ public sealed class RolesApiClient
     public Task<ApiResult<List<RoleItemResponse>>> GetRolesAsync(CancellationToken ct = default)
         => _api.GetAsync<List<RoleItemResponse>>("/api/v1/security/roles", ct);
 
+    public Task<ApiResult<RoleDetailsResponse>> GetRoleAsync(Guid roleId, CancellationToken ct = default)
+        => _api.GetAsync<RoleDetailsResponse>($"/api/v1/security/roles/{roleId}", ct);
+
     public Task<ApiResult<CreateRoleResponse>> CreateRoleAsync(
         CreateRoleRequest request, CancellationToken ct = default)
         => _api.PostAsync<CreateRoleResponse>("/api/v1/security/roles", request, ct);

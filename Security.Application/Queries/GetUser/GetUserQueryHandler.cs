@@ -23,10 +23,15 @@ public sealed class GetUserQueryHandler(IUserRepository userRepository)
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToList();
 
+        var claims = user.UserClaims
+            .Select(uc => new UserClaimDto(uc.Id, uc.ClaimType, uc.ClaimValue))
+            .ToList();
+
         return Result<UserDto>.Success(new UserDto(
             user.Id,
             primaryEmail?.Address ?? string.Empty,
             user.IsActive,
-            roles));
+            roles,
+            claims));
     }
 }

@@ -8,6 +8,7 @@ using Security.Application.Commands.DeactivateRole;
 using Security.Application.Commands.RemoveRoleClaim;
 using Security.Application.Commands.UpdateRole;
 using Security.Application.Queries.Dtos;
+using Security.Application.Queries.GetRole;
 using Security.Application.Queries.ListRoles;
 using Security.Contracts.Authorization;
 using Security.Presentation.Endpoints.Role.Models;
@@ -42,6 +43,18 @@ internal static class RoleEndpoints
         .WithName("ListRoles")
         .Produces<IReadOnlyList<RoleDto>>(StatusCodes.Status200OK)
         .WithSummary("List all active roles")
+        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.Role, AppAction.Read))
+        .RequireAuthorization();
+
+        roles.MapGet("/{roleId:guid}", async (Guid roleId, ISender sender, CancellationToken ct) =>
+        {
+            var result = await sender.Send(new GetRoleQuery(roleId), ct);
+            return result.ToApiResult();
+        })
+        .WithName("GetRole")
+        .Produces<RoleDetailsDto>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .WithSummary("Get a role with its claims")
         .WithMetadata(new MustHavePermissionAttribute(AppFeatures.Role, AppAction.Read))
         .RequireAuthorization();
 
