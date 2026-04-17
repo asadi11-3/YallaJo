@@ -25,5 +25,6 @@ namespace Security.Contracts.Authorization
         public const string Attachment = nameof(Attachment);
         public const string Place = nameof(Place);
         public const string Booking = nameof(Booking);
+        public const string ServiceItem = nameof(ServiceItem);
     }
 }

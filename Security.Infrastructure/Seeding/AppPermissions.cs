@@ -81,6 +81,11 @@ internal static class AppPermissions
         new(AppFeatures.Place, AppAction.Update,  AppRoleGroup.ContentManagement, "Update place details"),
         new(AppFeatures.Place, AppAction.Delete,  AppRoleGroup.ContentManagement, "Delete a place"),
 
+        new(AppFeatures.ServiceItem, AppAction.Read,    AppRoleGroup.ContentManagement, "View service items"),
+        new(AppFeatures.ServiceItem, AppAction.Create,  AppRoleGroup.ContentManagement, "Create a service item"),
+        new(AppFeatures.ServiceItem, AppAction.Update,  AppRoleGroup.ContentManagement, "Update service item details"),
+        new(AppFeatures.ServiceItem, AppAction.SoftDelete,  AppRoleGroup.ContentManagement, "Delete a service item"),
+
     }.AsReadOnly();
 
     public static IReadOnlyList<string> GetPermissionsForRole(string roleName) =>
