@@ -1,3 +1,4 @@
+using ContentPlaces.Application.Queries.Place.Common;
 using ContentPlaces.Domain.Repositories;
 using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
