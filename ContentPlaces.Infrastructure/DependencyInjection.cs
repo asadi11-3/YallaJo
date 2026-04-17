@@ -30,11 +30,12 @@ public static class DependencyInjection
                     sql.EnableRetryOnFailure(3);
                 }));
 
-        services.AddScoped<IContentPlacesDbContext>(sp =>
-            sp.GetRequiredService<ContentPlacesDbContext>());
-
         // ── Repositories ─────────────────────────────────────────────────────
         services.AddScoped<IPlaceRepository, PlaceRepository>();
+        services.AddScoped<IBusinessRepository, BusinessRepository>();
+        services.AddScoped<IBusinessStaffRepository, BusinessStaffRepository>();
+        services.AddScoped<IBusinessAmenityRepository, BusinessAmenityRepository>();
+        services.AddScoped<IAccessibilityFeatureRepository, AccessibilityFeatureRepository>();
 
         // ── Unit of Work & Infrastructure ────────────────────────────────────
         services.AddScoped<IUnitOfWork<ContentPlacesDbContext>, UnitOfWork<ContentPlacesDbContext>>();

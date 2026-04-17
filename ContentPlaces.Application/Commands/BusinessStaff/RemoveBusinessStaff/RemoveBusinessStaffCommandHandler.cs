@@ -1,5 +1,5 @@
 using ContentPlaces.Application.Interfaces;
-using Microsoft.EntityFrameworkCore;
+using ContentPlaces.Domain.Repositories;
 using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
@@ -7,7 +7,7 @@ using YallaJo.SharedKernel.Domain.Abstractions.Results;
 namespace ContentPlaces.Application.Commands.BusinessStaff.RemoveBusinessStaff;
 
 public sealed class RemoveBusinessStaffCommandHandler(
-    IContentPlacesDbContext dbContext,
+    IBusinessStaffRepository staffRepository,
     IContentPlacesUnitOfWork unitOfWork,
     ILogger<RemoveBusinessStaffCommandHandler> logger)
     : ICommandHandler<RemoveBusinessStaffCommand>
@@ -16,8 +16,7 @@ public sealed class RemoveBusinessStaffCommandHandler(
         RemoveBusinessStaffCommand request,
         CancellationToken cancellationToken)
     {
-        var staff = await dbContext.BusinessStaff
-            .FirstOrDefaultAsync(x => x.Id == request.Id, cancellationToken);
+        var staff = await staffRepository.GetByIdAsync(request.Id, cancellationToken, asNoTracking: false);
 
         if (staff is null)
         {
@@ -26,7 +25,6 @@ public sealed class RemoveBusinessStaffCommandHandler(
                 Outcome.NotFound);
         }
 
-        // بيمنع duplicate deactivation
         if (!staff.IsActive)
         {
             return Result.Failure(
@@ -34,15 +32,11 @@ public sealed class RemoveBusinessStaffCommandHandler(
                 Outcome.Conflict);
         }
 
-        // soft delete
         staff.Deactivate();
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        logger.LogInformation(
-            "Staff {StaffId} deactivated at {Time}",
-            request.Id,
-            DateTime.UtcNow);
+        logger.LogInformation("Staff {StaffId} deactivated", request.Id);
 
         return Result.Success();
     }

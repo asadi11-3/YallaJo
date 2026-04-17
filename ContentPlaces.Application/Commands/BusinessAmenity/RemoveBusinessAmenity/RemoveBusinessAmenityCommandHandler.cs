@@ -1,5 +1,5 @@
 using ContentPlaces.Application.Interfaces;
-using Microsoft.EntityFrameworkCore;
+using ContentPlaces.Domain.Repositories;
 using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
@@ -8,7 +8,7 @@ using YallaJo.SharedKernel.Domain.Abstractions.Results;
 namespace ContentPlaces.Application.Commands.BusinessAmenity.RemoveBusinessAmenity;
 
 public sealed class RemoveBusinessAmenityCommandHandler(
-    IContentPlacesDbContext dbContext,
+    IBusinessAmenityRepository amenityRepository,
     IContentPlacesUnitOfWork unitOfWork,
     ICurrentUser currentUser,
     ILogger<RemoveBusinessAmenityCommandHandler> logger)
@@ -25,8 +25,7 @@ public sealed class RemoveBusinessAmenityCommandHandler(
                 Outcome.Unauthorized);
         }
 
-        var amenity = await dbContext.BusinessAmenities
-            .FirstOrDefaultAsync(x => x.Id == request.AmenityId, cancellationToken);
+        var amenity = await amenityRepository.GetByIdAsync(request.AmenityId, cancellationToken, asNoTracking: false);
 
         if (amenity is null)
         {
@@ -35,7 +34,7 @@ public sealed class RemoveBusinessAmenityCommandHandler(
                 Outcome.NotFound);
         }
 
-        dbContext.BusinessAmenities.Remove(amenity);
+        amenityRepository.Remove(amenity);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         logger.LogInformation("Amenity removed {AmenityId}", request.AmenityId);

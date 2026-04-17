@@ -1,6 +1,5 @@
 using ContentPlaces.Application.Queries.BusinessAmenity.Common;
-using ContentPlaces.Application.Interfaces;
-using Microsoft.EntityFrameworkCore;
+using ContentPlaces.Domain.Repositories;
 using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
@@ -8,7 +7,7 @@ using YallaJo.SharedKernel.Domain.Abstractions.Results;
 namespace ContentPlaces.Application.Queries.BusinessAmenity.ListBusinessAmenities;
 
 public sealed class ListBusinessAmenitiesQueryHandler(
-    IContentPlacesDbContext dbContext,
+    IBusinessAmenityRepository amenityRepository,
     ILogger<ListBusinessAmenitiesQueryHandler> logger)
     : IQueryHandler<ListBusinessAmenitiesQuery, IReadOnlyList<BusinessAmenityDto>>
 {
@@ -16,15 +15,11 @@ public sealed class ListBusinessAmenitiesQueryHandler(
         ListBusinessAmenitiesQuery request,
         CancellationToken cancellationToken)
     {
-        var amenities = await dbContext.BusinessAmenities
-     .AsNoTracking()
-     .Where(x => x.BusinessId == request.BusinessId)
-     .OrderBy(x => x.SortOrder) // primary order
-     .ThenBy(x => x.Name)       // stable order
-     .Skip((request.Page - 1) * request.PageSize) // pagination ترقيم الصفحات
-     .Take(request.PageSize) // pagination ترقيم الصفحات
-     .Select(x => BusinessAmenityDto.From(x))
-     .ToListAsync(cancellationToken);
+        var amenities = await amenityRepository.SelectAsync(
+            selector: x => BusinessAmenityDto.From(x),
+            filter: x => x.BusinessId == request.BusinessId,
+            orderBy: q => q.OrderBy(x => x.SortOrder).ThenBy(x => x.Name),
+            ct: cancellationToken);
 
         logger.LogInformation("Fetched amenities for business {BusinessId}", request.BusinessId);
 

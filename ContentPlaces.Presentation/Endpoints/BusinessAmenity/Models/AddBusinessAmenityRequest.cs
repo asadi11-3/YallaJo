@@ -1,4 +1,4 @@
-namespace ContentPlaces.Presentation.Endpoints.BusinessAmenity;
+namespace ContentPlaces.Presentation.Endpoints.BusinessAmenity.Models;
 
 public sealed record AddBusinessAmenityRequest(
     string Name,

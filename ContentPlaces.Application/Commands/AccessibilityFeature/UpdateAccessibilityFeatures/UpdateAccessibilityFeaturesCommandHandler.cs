@@ -1,6 +1,6 @@
 using ContentPlaces.Application.Interfaces;
+using ContentPlaces.Domain.Repositories;
 using AccessibilityFeatureEntity = ContentPlaces.Domain.Entities.AccessibilityFeature;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
@@ -8,45 +8,36 @@ using YallaJo.SharedKernel.Domain.Abstractions.Results;
 namespace ContentPlaces.Application.Commands.AccessibilityFeature.UpdateAccessibilityFeatures;
 
 public sealed class UpdateAccessibilityFeaturesCommandHandler(
-    IContentPlacesDbContext dbContext,
+    IAccessibilityFeatureRepository featureRepository,
+    IPlaceRepository placeRepository,
     IContentPlacesUnitOfWork unitOfWork,
     ILogger<UpdateAccessibilityFeaturesCommandHandler> logger)
     : ICommandHandler<UpdateAccessibilityFeaturesCommand>
 {
-    private const byte PlaceEntityType = 1; // polymorphic:  Place  حالياً بس 
+    private const byte PlaceEntityType = 1;
 
     public async Task<Result> Handle(
         UpdateAccessibilityFeaturesCommand request,
         CancellationToken cancellationToken)
     {
-        // check place exists
-        var exists = await dbContext.Places
-            .AsNoTracking()
-            .AnyAsync(x => x.Id == request.PlaceId, cancellationToken);
+        var placeExists = await placeRepository.AnyAsync(
+            x => x.Id == request.PlaceId, cancellationToken);
 
-        if (!exists)
+        if (!placeExists)
         {
             return Result.Failure(
                 new Error("Place.NotFound", "Place not found"),
                 Outcome.NotFound);
         }
 
-        // get old features
-        var oldFeatures = await dbContext.AccessibilityFeatures
-            .Where(x => x.EntityId == request.PlaceId && x.EntityType == PlaceEntityType)
-            .ToListAsync(cancellationToken);
+        var existingFeatures = await featureRepository.GetAllAsync(
+            filter: x => x.EntityId == request.PlaceId && x.EntityType == PlaceEntityType,
+            ct: cancellationToken);
 
-        // remove old
+        featureRepository.RemoveRange(existingFeatures);
 
-        var existingFeatures = await dbContext.AccessibilityFeatures
-    .Where(x => x.EntityId == request.PlaceId && x.EntityType == PlaceEntityType)
-    .ToListAsync(cancellationToken);
-
-        dbContext.AccessibilityFeatures.RemoveRange(existingFeatures); 
-
-        // create new
         var newFeatures = request.Features
-            .GroupBy(x => x.FeatureType) // prevent duplicates
+            .GroupBy(x => x.FeatureType)
             .Select(x => x.First())
             .Select(x => AccessibilityFeatureEntity.Create(
                 PlaceEntityType,
@@ -57,13 +48,12 @@ public sealed class UpdateAccessibilityFeaturesCommandHandler(
                 x.IsAvailable))
             .ToList();
 
-        await dbContext.AccessibilityFeatures.AddRangeAsync(newFeatures, cancellationToken);
+        await featureRepository.AddRangeAsync(newFeatures, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         logger.LogInformation(
             "Accessibility updated for Place {PlaceId}. New count: {Count}",
-            request.PlaceId,
-            newFeatures.Count);
+            request.PlaceId, newFeatures.Count);
 
         return Result.Success();
     }
