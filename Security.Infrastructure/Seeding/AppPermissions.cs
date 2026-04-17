@@ -94,6 +94,12 @@ internal static class AppPermissions
         // *── AccessibilityFeature ──────────────────────────────────────
         new(AppFeatures.AccessibilityFeature, AppAction.Read,   AppRoleGroup.ContentManagement, "View accessibility features"),
         new(AppFeatures.AccessibilityFeature, AppAction.Update, AppRoleGroup.ContentManagement, "Update accessibility features"),
+
+        // *── ServiceItem ──────────────────────────────────────────────
+        new(AppFeatures.ServiceItem, AppAction.Read,       AppRoleGroup.ContentManagement, "View service items"),
+        new(AppFeatures.ServiceItem, AppAction.Create,     AppRoleGroup.ContentManagement, "Create a service item"),
+        new(AppFeatures.ServiceItem, AppAction.Update,     AppRoleGroup.ContentManagement, "Update a service item"),
+        new(AppFeatures.ServiceItem, AppAction.SoftDelete, AppRoleGroup.ContentManagement, "Soft-delete a service item"),
     }.AsReadOnly();
 
     public static IReadOnlyList<string> GetPermissionsForRole(string roleName) =>

@@ -15,8 +15,8 @@ using Microsoft.AspNetCore.Routing;
 using Security.Contracts.Authorization;
 using YallaJo.SharedKernel.Domain.Abstractions.Pagination;
 using YallaJo.SharedKernel.Presentation;
-using ContentPlaces.Application.Features.Places.Queries.GetNearbyPlaces;
-using ContentPlaces.Application.Features.Places.Queries.GetMapViewport;
+using ContentPlaces.Application.Queries.Place.GetMapViewport;
+using ContentPlaces.Application.Queries.Place.GetNearbyPlaces;
 namespace ContentPlaces.Presentation.Endpoints.Place;
 
 internal static class PlaceEndpoints
@@ -78,15 +78,13 @@ internal static class PlaceEndpoints
             int pageSize = 10) =>
         {
             var result = await sender.Send(new GetNearbyPlacesQuery(lat, lng, radiusKm, pageSize), ct);
-
-            return Results.Ok(result);
+            return result.ToApiResult();
         })
         .WithName("GetNearbyPlaces")
-        .Produces<List<NearbyPlaceSummaryDto>>(StatusCodes.Status200OK)
+        .Produces<IReadOnlyList<NearbyPlaceSummaryDto>>(StatusCodes.Status200OK)
         .ProducesValidationProblem()
         .WithSummary("Get nearby places using Haversine formula (max 100km radius)")
         .AllowAnonymous();
-
 
         places.MapGet("/map/viewport", async (
             ISender sender,
@@ -97,7 +95,7 @@ internal static class PlaceEndpoints
             double westLng) =>
         {
             var result = await sender.Send(new GetMapViewportQuery(northLat, southLat, eastLng, westLng), ct);
-            return Results.Ok(result);
+            return result.ToApiResult();
         })
         .WithName("GetMapViewport")
         .Produces<MapViewportResponse>(StatusCodes.Status200OK)

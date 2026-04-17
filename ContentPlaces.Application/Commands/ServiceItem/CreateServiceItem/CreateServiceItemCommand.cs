@@ -1,0 +1,13 @@
+using YallaJo.SharedKernel.Application.Abstractions.Messaging;
+
+namespace ContentPlaces.Application.Commands.ServiceItem.CreateServiceItem;
+
+public sealed record CreateServiceItemCommand(
+    Guid BusinessId,
+    string Name,
+    decimal Price,
+    int DurationMinutes,
+    int MaxCapacity,
+    string Currency,
+    int SortOrder)
+    : ICommand<CreateServiceItemResult>;

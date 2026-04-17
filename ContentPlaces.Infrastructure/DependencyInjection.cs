@@ -36,6 +36,7 @@ public static class DependencyInjection
         services.AddScoped<IBusinessStaffRepository, BusinessStaffRepository>();
         services.AddScoped<IBusinessAmenityRepository, BusinessAmenityRepository>();
         services.AddScoped<IAccessibilityFeatureRepository, AccessibilityFeatureRepository>();
+        services.AddScoped<IServiceItemRepository, ServiceItemRepository>();
 
         // ── Unit of Work & Infrastructure ────────────────────────────────────
         services.AddScoped<IUnitOfWork<ContentPlacesDbContext>, UnitOfWork<ContentPlacesDbContext>>();

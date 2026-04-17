@@ -28,5 +28,6 @@ namespace Security.Contracts.Authorization
         public const string BusinessStaff = nameof(BusinessStaff);
         public const string BusinessAmenity = nameof(BusinessAmenity);
         public const string AccessibilityFeature = nameof(AccessibilityFeature);
+        public const string ServiceItem = nameof(ServiceItem);
     }
 }

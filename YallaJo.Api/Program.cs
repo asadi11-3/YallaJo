@@ -13,7 +13,6 @@ using Booking.Presentation;
 using ContentBlogs.Application;
 using ContentBlogs.Infrastructure;
 using ContentBlogs.Presentation;
-using ContentPlaces.Presentation.ServiceItems;
 using ContentCore.Application;
 using ContentCore.Infrastructure;
 using ContentCore.Presentation;
