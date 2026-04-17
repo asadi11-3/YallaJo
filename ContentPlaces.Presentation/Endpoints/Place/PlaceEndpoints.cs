@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Security.Contracts.Authorization;
+using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Domain.Abstractions.Pagination;
 using YallaJo.SharedKernel.Presentation;
 using ContentPlaces.Application.Queries.Place.GetMapViewport;
@@ -105,10 +106,10 @@ internal static class PlaceEndpoints
 
         // ── Admin: write operations ───────────────────────────────────────────
 
-        places.MapPost("/", async (CreatePlaceRequest request, System.Security.Claims.ClaimsPrincipal user,
+        places.MapPost("/", async (CreatePlaceRequest request, ICurrentUser currentUser,
             ISender sender, CancellationToken ct) =>
         {
-            if (!Guid.TryParse(user.FindFirst("sub")?.Value, out var createdByUserId))
+            if (!currentUser.IsAuthenticated || currentUser.UserId is null)
                 return Results.Unauthorized();
 
             var result = await sender.Send(
@@ -117,7 +118,7 @@ internal static class PlaceEndpoints
                 request.Latitude, request.Longitude, request.Description,
                 request.Address, request.City, request.Country, request.PostalCode,
                 request.Phone, request.Email, request.Website,
-                request.MetaTitle, request.MetaDescription, createdByUserId), ct);
+                request.MetaTitle, request.MetaDescription, currentUser.UserId.Value), ct);
 
             return result.ToApiResult(r => $"/api/v1/places/{r.PlaceId}");
         })

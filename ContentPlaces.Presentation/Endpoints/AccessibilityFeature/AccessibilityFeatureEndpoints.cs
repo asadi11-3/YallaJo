@@ -17,8 +17,6 @@ internal static class AccessibilityFeatureEndpoints
         var accessibility = group.MapGroup("/places")
             .WithTags("ContentPlaces | AccessibilityFeatures");
 
-        // ── Anonymous: public reads ───────────────────────────────────────────
-
         accessibility.MapGet("/{id:guid}/accessibility", async (
             Guid id,
             ISender sender,
@@ -31,8 +29,6 @@ internal static class AccessibilityFeatureEndpoints
         .Produces<IReadOnlyList<AccessibilityFeatureDto>>(StatusCodes.Status200OK)
         .WithSummary("Get accessibility features for a place")
         .AllowAnonymous();
-
-        // ── Authorized: write operations ──────────────────────────────────────
 
         accessibility.MapPut("/{id:guid}/accessibility", async (
             Guid id,

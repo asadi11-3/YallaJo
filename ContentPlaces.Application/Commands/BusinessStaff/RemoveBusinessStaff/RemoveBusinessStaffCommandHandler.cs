@@ -1,4 +1,5 @@
 using ContentPlaces.Application.Interfaces;
+using ContentPlaces.Domain.Exceptions;
 using ContentPlaces.Domain.Repositories;
 using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
@@ -34,7 +35,18 @@ public sealed class RemoveBusinessStaffCommandHandler(
 
         staff.Deactivate();
 
-        await unitOfWork.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await unitOfWork.SaveChangesAsync(cancellationToken);
+        }
+        catch (ContentPlaceConcurrencyException)
+        {
+            return Result.Failure(
+                new Error(
+                    "BusinessStaff.ConcurrencyConflict",
+                    "A concurrency conflict occurred. Please refresh and try again."),
+                Outcome.Conflict);
+        }
 
         logger.LogInformation("Staff {StaffId} deactivated", request.Id);
 

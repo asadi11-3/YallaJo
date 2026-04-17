@@ -1,9 +1,10 @@
 using ContentPlaces.Application.Interfaces;
+using ContentPlaces.Domain.Exceptions;
 using ContentPlaces.Domain.Repositories;
-using AccessibilityFeatureEntity = ContentPlaces.Domain.Entities.AccessibilityFeature;
 using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
+using AccessibilityFeatureEntity = ContentPlaces.Domain.Entities.AccessibilityFeature;
 
 namespace ContentPlaces.Application.Commands.AccessibilityFeature.UpdateAccessibilityFeatures;
 
@@ -49,7 +50,18 @@ public sealed class UpdateAccessibilityFeaturesCommandHandler(
             .ToList();
 
         await featureRepository.AddRangeAsync(newFeatures, cancellationToken);
-        await unitOfWork.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await unitOfWork.SaveChangesAsync(cancellationToken);
+        }
+        catch (ContentPlaceConcurrencyException)
+        {
+            return Result.Failure(
+                new Error(
+                    "AccessibilityFeature.ConcurrencyConflict",
+                    "A concurrency conflict occurred. Please refresh and try again."),
+                Outcome.Conflict);
+        }
 
         logger.LogInformation(
             "Accessibility updated for Place {PlaceId}. New count: {Count}",

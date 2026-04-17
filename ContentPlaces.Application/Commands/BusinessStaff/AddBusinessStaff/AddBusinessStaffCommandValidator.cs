@@ -10,7 +10,7 @@ public sealed class AddBusinessStaffCommandValidator
         RuleFor(x => x.BusinessId).NotEmpty();
         RuleFor(x => x.UserId).NotEmpty();
         RuleFor(x => x.Role)
-    .IsInEnum()
-    .WithMessage("Invalid role value");
+            .IsInEnum()
+            .WithMessage("Invalid role value");
     }
 }

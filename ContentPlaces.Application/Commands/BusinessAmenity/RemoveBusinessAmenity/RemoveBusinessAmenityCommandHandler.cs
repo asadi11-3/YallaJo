@@ -1,4 +1,5 @@
 using ContentPlaces.Application.Interfaces;
+using ContentPlaces.Domain.Exceptions;
 using ContentPlaces.Domain.Repositories;
 using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
@@ -35,7 +36,18 @@ public sealed class RemoveBusinessAmenityCommandHandler(
         }
 
         amenityRepository.Remove(amenity);
-        await unitOfWork.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await unitOfWork.SaveChangesAsync(cancellationToken);
+        }
+        catch (ContentPlaceConcurrencyException)
+        {
+            return Result.Failure(
+                new Error(
+                    "BusinessAmenity.ConcurrencyConflict",
+                    "A concurrency conflict occurred. Please refresh and try again."),
+                Outcome.Conflict);
+        }
 
         logger.LogInformation("Amenity removed {AmenityId}", request.AmenityId);
 

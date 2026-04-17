@@ -1,5 +1,7 @@
+using System.Globalization;
 using ContentPlaces.Application.Interfaces;
 using ContentPlaces.Application.Queries.BusinessAmenity.Common;
+using ContentPlaces.Domain.Exceptions;
 using ContentPlaces.Domain.Repositories;
 using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
@@ -44,12 +46,10 @@ public sealed class AddBusinessAmenityCommandHandler(
                 Outcome.Forbidden);
         }
 
-        var normalizedName = request.Name.Trim().ToLower();
-
+        var normalizedName = request.Name.Trim().ToLower(CultureInfo.InvariantCulture);
         var exists = await amenityRepository.AnyAsync(
             x => x.BusinessId == request.BusinessId &&
-                 x.Name.ToLower() == normalizedName,
-            cancellationToken);
+                 string.Equals(x.Name, normalizedName, StringComparison.OrdinalIgnoreCase), cancellationToken);
 
         if (exists)
         {
@@ -65,12 +65,22 @@ public sealed class AddBusinessAmenityCommandHandler(
             request.SortOrder);
 
         await amenityRepository.AddAsync(amenity, cancellationToken);
-        await unitOfWork.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await unitOfWork.SaveChangesAsync(cancellationToken);
+        }
+        catch (ContentPlaceConcurrencyException)
+        {
+            return Result<BusinessAmenityDto>.Failure(
+                new Error(
+                    "BusinessAmenity.ConcurrencyConflict",
+                    "A concurrency conflict occurred. Please refresh and try again."),
+                Outcome.Conflict);
+        }
 
         logger.LogInformation(
             "Amenity {AmenityId} added to Business {BusinessId}",
             amenity.Id, request.BusinessId);
-
         return Result<BusinessAmenityDto>.Created(BusinessAmenityDto.From(amenity));
     }
 }

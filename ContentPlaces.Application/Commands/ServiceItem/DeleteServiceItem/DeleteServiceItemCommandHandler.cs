@@ -1,5 +1,6 @@
 using ContentPlaces.Application.Interfaces;
 using ContentPlaces.Contracts.IntegrationEvents;
+using ContentPlaces.Domain.Exceptions;
 using ContentPlaces.Domain.Repositories;
 using MediatR;
 using Microsoft.Extensions.Logging;
@@ -29,10 +30,21 @@ public sealed class DeleteServiceItemCommandHandler(
         }
 
         item.SoftDelete();
-        await unitOfWork.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await unitOfWork.SaveChangesAsync(cancellationToken);
+        }
+        catch (ContentPlaceConcurrencyException)
+        {
+            return Result.Failure(
+                new Error(
+                    "ServiceItem.ConcurrencyConflict",
+                    "A concurrency conflict occurred. Please refresh and try again."),
+                Outcome.Conflict);
+        }
 
         await publisher.Publish(
-            new ServiceItemCreateIntegrationEvent(item.Id, item.BusinessId, item.Name, item.Price, item.Currency),
+            new ServiceItemDeletedIntegrationEvent(item.Id, item.BusinessId),
             cancellationToken);
 
         logger.LogInformation("ServiceItem {ServiceItemId} soft-deleted", request.Id);

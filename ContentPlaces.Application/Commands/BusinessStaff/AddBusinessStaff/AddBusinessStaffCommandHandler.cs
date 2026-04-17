@@ -1,10 +1,11 @@
+using ContentPlaces.Application.Interfaces;
 using ContentPlaces.Application.Queries.BusinessStaff.Common;
+using ContentPlaces.Domain.Exceptions;
 using ContentPlaces.Domain.Repositories;
 using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
-using ContentPlaces.Application.Interfaces;
 using StaffEntity = ContentPlaces.Domain.Entities.BusinessStaff;
 
 namespace ContentPlaces.Application.Commands.BusinessStaff.AddBusinessStaff;
@@ -46,7 +47,19 @@ public sealed class AddBusinessStaffCommandHandler(
             request.Role);
 
         await staffRepository.AddAsync(staff, cancellationToken);
-        await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        try
+        {
+            await unitOfWork.SaveChangesAsync(cancellationToken);
+        }
+        catch (ContentPlaceConcurrencyException)
+        {
+            return Result<BusinessStaffDto>.Failure(
+                new Error(
+                    "BusinessStaff.ConcurrencyConflict",
+                    "A concurrency conflict occurred. Please refresh and try again."),
+                Outcome.Conflict);
+        }
 
         logger.LogInformation(
             "Staff {StaffId} created: User {UserId} as {Role} in Business {BusinessId}",

@@ -1,6 +1,7 @@
 using System;
 using System.Globalization;
 using ContentPlaces.Application.Interfaces;
+using ContentPlaces.Domain.Exceptions;
 using ContentPlaces.Domain.Repositories;
 using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
@@ -43,7 +44,18 @@ public sealed class UpdateServiceItemCommandHandler(
         item.Update(request.Name, request.Price, request.DurationMinutes,
             request.MaxCapacity, request.Currency, request.SortOrder);
 
-        await unitOfWork.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await unitOfWork.SaveChangesAsync(cancellationToken);
+        }
+        catch (ContentPlaceConcurrencyException)
+        {
+            return Result.Failure(
+                new Error(
+                    "ServiceItem.ConcurrencyConflict",
+                    "A concurrency conflict occurred. Please refresh and try again."),
+                Outcome.Conflict);
+        }
 
         logger.LogInformation("ServiceItem {ServiceItemId} updated", request.Id);
 
