@@ -2,6 +2,9 @@ using ContentPlaces.Presentation.Endpoints.Place;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using ContentPlaces.Presentation.Endpoints.BusinessAmenity;
+using ContentPlaces.Presentation.Endpoints.BusinessStaff;
+using ContentPlaces.Presentation.Endpoints.AccessibilityFeature;
 
 namespace ContentPlaces.Presentation;
 
@@ -13,7 +16,9 @@ public static class ContentPlacesEndpoints
             .WithTags("ContentPlaces");
 
         PlaceEndpoints.MapPlaceEndpoints(group);
-
+        BusinessAmenityEndpoints.MapBusinessAmenityEndpoints(group);
+        BusinessStaffEndpoints.MapBusinessStaffEndpoints(group);
+        AccessibilityFeatureEndpoints.MapAccessibilityFeatureEndpoints(group);
         return endpoints;
     }
 }
