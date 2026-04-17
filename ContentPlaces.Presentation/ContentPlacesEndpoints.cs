@@ -1,4 +1,5 @@
 using ContentPlaces.Presentation.Endpoints.Place;
+using ContentPlaces.Presentation.ServiceItems; 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -13,7 +14,8 @@ public static class ContentPlacesEndpoints
             .WithTags("ContentPlaces");
 
         PlaceEndpoints.MapPlaceEndpoints(group);
-
+        ServiceItemEndpoints.MapServiceItemEndpoints(group);
+        
         return endpoints;
     }
 }

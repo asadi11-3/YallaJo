@@ -32,6 +32,7 @@ public static class DependencyInjection
 
         // ── Repositories ─────────────────────────────────────────────────────
         services.AddScoped<IPlaceRepository, PlaceRepository>();
+        services.AddScoped<IServiceItemRepository, ServiceItemRepository>();
 
         // ── Unit of Work & Infrastructure ────────────────────────────────────
         services.AddScoped<IUnitOfWork<ContentPlacesDbContext>, UnitOfWork<ContentPlacesDbContext>>();
