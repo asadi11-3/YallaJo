@@ -32,6 +32,7 @@ public static class WebPermission
     public static class User
     {
         public const string Read       = "Permission.User.Read";
+        public const string Create     = "Permission.User.Create";
         public const string UpdateAny  = "Permission.User.UpdateAny";
         public const string DeleteAny  = "Permission.User.DeleteAny";
         public const string UpdateSelf = "Permission.User.UpdateSelf";

@@ -1,11 +1,13 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using YallaJo.Web.Areas.Admin.Modules.Security.Features.Users.ViewModels;
+using YallaJo.Web.Infrastructure.Authorization;
 
 namespace YallaJo.Web.Areas.Admin.Modules.Security.Features.Users;
 
 [Area("Admin")]
 [Authorize]
+[RequirePermission(WebPermission.User.Read)]
 public sealed class UsersController : Controller
 {
     private readonly UsersFacade _facade;
@@ -41,6 +43,7 @@ public sealed class UsersController : Controller
 
     [HttpPost("admin/users/{userId:guid}/activate")]
     [ValidateAntiForgeryToken]
+    [RequirePermission(WebPermission.User.UpdateAny)]
     public async Task<IActionResult> Activate(Guid userId, CancellationToken ct)
     {
         var result = await _facade.ActivateAsync(userId, ct);
@@ -52,6 +55,7 @@ public sealed class UsersController : Controller
 
     [HttpPost("admin/users/{userId:guid}/deactivate")]
     [ValidateAntiForgeryToken]
+    [RequirePermission(WebPermission.User.UpdateAny)]
     public async Task<IActionResult> Deactivate(Guid userId, CancellationToken ct)
     {
         var result = await _facade.DeactivateAsync(userId, ct);
@@ -63,6 +67,7 @@ public sealed class UsersController : Controller
 
     [HttpPost("admin/users/{userId:guid}/roles")]
     [ValidateAntiForgeryToken]
+    [RequirePermission(WebPermission.UserRole.Create)]
     public async Task<IActionResult> AssignRole(Guid userId, AssignRoleVm vm, CancellationToken ct)
     {
         if (!ModelState.IsValid)
@@ -93,6 +98,7 @@ public sealed class UsersController : Controller
 
     [HttpPost("admin/users/{userId:guid}/roles/{roleId:guid}/remove")]
     [ValidateAntiForgeryToken]
+    [RequirePermission(WebPermission.UserRole.Delete)]
     public async Task<IActionResult> RemoveRole(Guid userId, Guid roleId, CancellationToken ct)
     {
         var result = await _facade.RemoveRoleAsync(userId, roleId, ct);
@@ -104,6 +110,7 @@ public sealed class UsersController : Controller
 
     [HttpPost("admin/users/{userId:guid}/claims")]
     [ValidateAntiForgeryToken]
+    [RequirePermission(WebPermission.User.UpdateAny)]
     public async Task<IActionResult> AddClaim(Guid userId, AddClaimVm vm, CancellationToken ct)
     {
         if (!ModelState.IsValid)
@@ -121,6 +128,7 @@ public sealed class UsersController : Controller
 
     [HttpPost("admin/users/{userId:guid}/claims/{claimId:guid}/remove")]
     [ValidateAntiForgeryToken]
+    [RequirePermission(WebPermission.User.UpdateAny)]
     public async Task<IActionResult> RemoveClaim(Guid userId, Guid claimId, CancellationToken ct)
     {
         var result = await _facade.RemoveClaimAsync(userId, claimId, ct);

@@ -51,6 +51,41 @@ public sealed class ApiClient
         return await ReadNoBodyAsync(response, ct);
     }
 
+    public async Task<ApiResult<T>> PutAsync<T>(string path, object? body = null, CancellationToken ct = default)
+    {
+        using var content  = ToJson(body);
+        using var response = await _http.PutAsync(path, content, ct);
+        return await ReadAsync<T>(response, ct);
+    }
+
+    public async Task<ApiResult> PutAsync(string path, object? body = null, CancellationToken ct = default)
+    {
+        using var content  = ToJson(body);
+        using var response = await _http.PutAsync(path, content, ct);
+        return await ReadNoBodyAsync(response, ct);
+    }
+
+    public async Task<ApiResult<T>> PutFileAsync<T>(
+        string path,
+        Stream fileStream,
+        string fileName,
+        string contentType,
+        string formFieldName = "file",
+        CancellationToken ct = default)
+    {
+        using var multipart = new MultipartFormDataContent();
+        using var streamContent = new StreamContent(fileStream);
+        streamContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(contentType);
+        multipart.Add(streamContent, formFieldName, fileName);
+
+        using var request = new HttpRequestMessage(HttpMethod.Put, path)
+        {
+            Content = multipart,
+        };
+        using var response = await _http.SendAsync(request, ct);
+        return await ReadAsync<T>(response, ct);
+    }
+
     public async Task<ApiResult> DeleteAsync(string path, CancellationToken ct = default)
     {
         using var response = await _http.DeleteAsync(path, ct);

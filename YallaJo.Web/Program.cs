@@ -16,10 +16,18 @@ using YallaJo.Web.Areas.Auth.Features.ExternalProviders;
 using YallaJo.Web.Areas.Auth.Features.Logout;
 using YallaJo.Web.Areas.Auth.Features.LogoutAll;
 
+// ── Accounts (non-admin, self-service) feature registrations ─────────────────
+using YallaJo.Web.Areas.Accounts.Features.ChangePassword;
+using YallaJo.Web.Areas.Accounts.Features.UpdatePhone;
+using YallaJo.Web.Areas.Accounts.Features.Profile;
+
 // ── Admin / Security feature registrations ────────────────────────────────────
 using YallaJo.Web.Areas.Admin.Modules.Security.Features.Users;
 using YallaJo.Web.Areas.Admin.Modules.Security.Features.Roles;
 using YallaJo.Web.Areas.Admin.Modules.Security.Features.AuditLogs;
+
+// ── Admin / Accounts feature registrations ────────────────────────────────────
+using YallaJo.Web.Areas.Admin.Modules.Accounts.Features.Profiles;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -97,6 +105,20 @@ builder.Services.AddScoped<LogoutFacade>();
 
 builder.Services.AddScoped<LogoutAllApiClient>();
 builder.Services.AddScoped<LogoutAllFacade>();
+
+// ── Accounts (non-admin, self-service) services ──────────────────────────────
+builder.Services.AddScoped<ChangePasswordApiClient>();
+builder.Services.AddScoped<ChangePasswordFacade>();
+
+builder.Services.AddScoped<UpdatePhoneApiClient>();
+builder.Services.AddScoped<UpdatePhoneFacade>();
+
+builder.Services.AddScoped<ProfileApiClient>();
+builder.Services.AddScoped<ProfileFacade>();
+
+// ── Admin / Accounts services ────────────────────────────────────────────────
+builder.Services.AddScoped<ProfilesApiClient>();
+builder.Services.AddScoped<ProfilesFacade>();
 
 // ── Admin / Security services ─────────────────────────────────────────────────
 builder.Services.AddScoped<UsersApiClient>();

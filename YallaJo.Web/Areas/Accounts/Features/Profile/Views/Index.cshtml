@@ -1,0 +1,148 @@
+@model YallaJo.Web.Areas.Accounts.Features.Profile.ViewModels.ProfileVm
+@{
+    ViewData["Title"] = "My Profile";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-4">
+    <h2>My Profile</h2>
+
+    @if (TempData["Success"] is string ok)  { <div class="alert alert-success">@ok</div> }
+    @if (TempData["Error"]   is string err) { <div class="alert alert-danger">@err</div> }
+    @if (ViewBag.Error       is string verr){ <div class="alert alert-danger">@verr</div> }
+
+    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+    @* ── Identity (read-only from backend) ──────────────────────────────── *@
+    <div class="card mb-3">
+        <div class="card-body">
+            <dl class="row mb-0">
+                <dt class="col-sm-3">Email</dt>
+                <dd class="col-sm-9">@Model.Email</dd>
+
+                <dt class="col-sm-3">Phone</dt>
+                <dd class="col-sm-9">
+                    @(string.IsNullOrEmpty(Model.PhoneNumber) ? "—" : Model.PhoneNumber)
+                    <a asp-area="Accounts" asp-controller="UpdatePhone" asp-action="Index" class="btn btn-sm btn-link">Change</a>
+                </dd>
+
+                <dt class="col-sm-3">Password</dt>
+                <dd class="col-sm-9">
+                    <a asp-area="Accounts" asp-controller="ChangePassword" asp-action="Index" class="btn btn-sm btn-link">Change password</a>
+                </dd>
+            </dl>
+        </div>
+    </div>
+
+    @* ── Avatar ─────────────────────────────────────────────────────────── *@
+    <div class="card mb-3">
+        <div class="card-body">
+            <h5>Avatar</h5>
+            @if (!string.IsNullOrEmpty(Model.AvatarUrl))
+            {
+                <img src="@Model.AvatarUrl" alt="Avatar" style="max-width:96px;max-height:96px;" class="mb-2" />
+            }
+            else
+            {
+                <p class="text-muted">No avatar set.</p>
+            }
+
+            <form asp-area="Accounts" asp-controller="Profile" asp-action="UpdateAvatar"
+                  method="post" enctype="multipart/form-data" class="d-flex gap-2 align-items-center">
+                @Html.AntiForgeryToken()
+                <input type="file" name="File" accept="image/*" class="form-control" />
+                <button type="submit" class="btn btn-primary">Upload</button>
+            </form>
+
+            @if (!string.IsNullOrEmpty(Model.AvatarUrl))
+            {
+                <form asp-area="Accounts" asp-controller="Profile" asp-action="DeleteAvatar"
+                      method="post" class="mt-2">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-outline-danger btn-sm"
+                            onclick="return confirm('Remove your avatar?');">Remove avatar</button>
+                </form>
+            }
+        </div>
+    </div>
+
+    @* ── Profile details (update) ──────────────────────────────────────── *@
+    <div class="card mb-3">
+        <div class="card-body">
+            <h5>Details</h5>
+            <form asp-area="Accounts" asp-controller="Profile" asp-action="Update" method="post">
+                @Html.AntiForgeryToken()
+
+                <div class="row g-2">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="Update.FirstName" class="form-label"></label>
+                        <input asp-for="Update.FirstName" class="form-control" />
+                        <span asp-validation-for="Update.FirstName" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="Update.LastName" class="form-label"></label>
+                        <input asp-for="Update.LastName" class="form-control" />
+                        <span asp-validation-for="Update.LastName" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="row g-2">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="Update.DateOfBirth" class="form-label"></label>
+                        <input asp-for="Update.DateOfBirth" class="form-control" />
+                        <span asp-validation-for="Update.DateOfBirth" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="Update.Gender" class="form-label"></label>
+                        <select asp-for="Update.Gender"
+                                asp-items="Html.GetEnumSelectList<YallaJo.Web.Areas.Accounts.Features.Profile.ViewModels.GenderOption>()"
+                                class="form-select">
+                            <option value="">—</option>
+                        </select>
+                        <span asp-validation-for="Update.Gender" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="row g-2">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="Update.Country" class="form-label"></label>
+                        <input asp-for="Update.Country" class="form-control" />
+                        <span asp-validation-for="Update.Country" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="Update.City" class="form-label"></label>
+                        <input asp-for="Update.City" class="form-control" />
+                        <span asp-validation-for="Update.City" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Update.AddressLine" class="form-label"></label>
+                    <input asp-for="Update.AddressLine" class="form-control" />
+                    <span asp-validation-for="Update.AddressLine" class="text-danger"></span>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Save changes</button>
+            </form>
+        </div>
+    </div>
+
+    @* ── Danger zone ────────────────────────────────────────────────────── *@
+    <div class="card border-danger">
+        <div class="card-body">
+            <h5 class="text-danger">Delete profile</h5>
+            <p class="text-muted">This removes your profile data. You will be signed out.</p>
+            <form asp-area="Accounts" asp-controller="Profile" asp-action="Delete" method="post">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn btn-outline-danger"
+                        onclick="return confirm('Delete your profile? This cannot be undone here.');">
+                    Delete my profile
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

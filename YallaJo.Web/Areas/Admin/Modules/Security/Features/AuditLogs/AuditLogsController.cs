@@ -1,11 +1,13 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using YallaJo.Web.Areas.Admin.Modules.Security.Features.AuditLogs.ViewModels;
+using YallaJo.Web.Infrastructure.Authorization;
 
 namespace YallaJo.Web.Areas.Admin.Modules.Security.Features.AuditLogs;
 
 [Area("Admin")]
 [Authorize]
+[RequirePermission(WebPermission.System.Read)]
 public sealed class AuditLogsController : Controller
 {
     private readonly AuditLogsFacade _facade;

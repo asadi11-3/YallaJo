@@ -127,7 +127,7 @@ internal static class UserEndpoints
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status401Unauthorized)
         .WithSummary("Activate a user account")
-        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.User, AppAction.Update))
+        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.User, AppAction.UpdateAny))
         .RequireAuthorization();
     }
 
@@ -143,7 +143,7 @@ internal static class UserEndpoints
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status401Unauthorized)
         .WithSummary("Deactivate a user account")
-        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.User, AppAction.Update))
+        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.User, AppAction.UpdateAny))
         .RequireAuthorization();
     }
 
@@ -193,7 +193,7 @@ internal static class UserEndpoints
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status409Conflict)
         .WithSummary("Add a claim to a user")
-        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.User, AppAction.Update))
+        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.User, AppAction.UpdateAny))
         .RequireAuthorization();
     }
 
@@ -208,7 +208,7 @@ internal static class UserEndpoints
         .Produces(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Remove a claim from a user")
-        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.User, AppAction.Update))
+        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.User, AppAction.UpdateAny))
         .RequireAuthorization();
     }
 }

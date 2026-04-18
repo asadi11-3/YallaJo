@@ -20,6 +20,7 @@ internal static class AppPermissions
         new(AppFeatures.RoleClaim,   AppAction.Delete,     AppRoleGroup.SystemAccess,    "Remove a claim from a role"),
 
         new(AppFeatures.User,        AppAction.Read,       AppRoleGroup.SystemAccess,    "View any user"),
+        new(AppFeatures.User,        AppAction.Create,     AppRoleGroup.SystemAccess,    "Create a user profile"),
         new(AppFeatures.User,        AppAction.UpdateAny,  AppRoleGroup.SystemAccess,    "Update any user"),
         new(AppFeatures.User,        AppAction.DeleteAny,  AppRoleGroup.SystemAccess,    "Hard-delete any user"),
         new(AppFeatures.User,        AppAction.SoftDelete, AppRoleGroup.SystemAccess,    "Soft-delete any user"),

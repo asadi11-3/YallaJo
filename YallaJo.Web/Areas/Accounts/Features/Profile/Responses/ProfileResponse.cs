@@ -1,6 +1,6 @@
-namespace YallaJo.Web.Areas.Accounts.Features.Profile.ViewModels;
+namespace YallaJo.Web.Areas.Accounts.Features.Profile.Responses;
 
-public sealed class ProfileVm
+public sealed class ProfileResponse
 {
     public Guid UserId { get; init; }
     public string FirstName { get; init; } = string.Empty;
@@ -14,7 +14,4 @@ public sealed class ProfileVm
     public string? City { get; init; }
     public string? AddressLine { get; init; }
     public string Email { get; init; } = string.Empty;
-
-    public UpdateProfileVm Update { get; init; } = new();
-    public UpdateAvatarVm  UpdateAvatar { get; init; } = new();
 }
