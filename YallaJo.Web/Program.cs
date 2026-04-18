@@ -29,6 +29,11 @@ using YallaJo.Web.Areas.Admin.Modules.Security.Features.AuditLogs;
 // ── Admin / Accounts feature registrations ────────────────────────────────────
 using YallaJo.Web.Areas.Admin.Modules.Accounts.Features.Profiles;
 
+// ── Admin / ContentCore feature registrations ────────────────────────────────
+using YallaJo.Web.Areas.Admin.Modules.ContentCore.Features.Languages;
+using YallaJo.Web.Areas.Admin.Modules.ContentCore.Features.Tags;
+using YallaJo.Web.Areas.Admin.Modules.ContentCore.Features.Specializations;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // ── Authentication (cookie — MVC frontend, BFF pattern) ──────────────────────
@@ -129,6 +134,16 @@ builder.Services.AddScoped<RolesFacade>();
 
 builder.Services.AddScoped<AuditLogsApiClient>();
 builder.Services.AddScoped<AuditLogsFacade>();
+
+// ── Admin / ContentCore services ─────────────────────────────────────────────
+builder.Services.AddScoped<LanguagesApiClient>();
+builder.Services.AddScoped<LanguagesFacade>();
+
+builder.Services.AddScoped<TagsApiClient>();
+builder.Services.AddScoped<TagsFacade>();
+
+builder.Services.AddScoped<SpecializationsApiClient>();
+builder.Services.AddScoped<SpecializationsFacade>();
 
 // ── MVC + custom Razor view locations ────────────────────────────────────────
 builder.Services.AddControllersWithViews(options =>
