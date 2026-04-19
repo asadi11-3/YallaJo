@@ -28,7 +28,8 @@ public sealed class ListUsersQueryHandler(IUserRepository userRepository)
                 user.Id,
                 primaryEmail?.Address ?? string.Empty,
                 user.IsActive,
-                roles);
+                roles,
+                Claims: []);
         }).ToList();
 
         return Result<PaginatedResult<UserDto>>.Success(

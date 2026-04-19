@@ -1,0 +1,249 @@
+================================================================================
+YALLAJO AUTH MODULE - COMPLETE DEEP EXPLORATION ANALYSIS
+================================================================================
+
+EXECUTIVE SUMMARY
+================================================================================
+
+The YallaJoJo Auth module is a production-grade, security-focused authentication
+system implementing Clean Architecture with CQRS pattern. It provides:
+
+✅ JWT-based access tokens (15-minute lifetime)
+✅ Refresh token rotation with reuse-attack detection
+✅ OTP-based email verification and password reset
+✅ Session management with device tracking
+✅ External OAuth provider linking/unlinking
+✅ Rate limiting on all authentication endpoints
+✅ Event-driven architecture with outbox/inbox patterns
+✅ Hybrid caching for session lists
+✅ Background cleanup of expired tokens/OTPs
+✅ Soft deletes with query filters
+✅ Comprehensive security patterns
+
+ARCHITECTURE LAYERS
+================================================================================
+
+1. DOMAIN LAYER (Auth.Domain)
+   - Rich domain entities with invariants
+   - Domain events for audit trail
+   - Repository interfaces
+   - No external dependencies
+
+2. APPLICATION LAYER (Auth.Application)
+   - 13 command handlers (CQRS)
+   - 1 query handler with caching
+   - Validators for all commands
+   - Application service interfaces
+   - Integration event handlers
+
+3. INFRASTRUCTURE LAYER (Auth.Infrastructure)
+   - EF Core DbContext with 5 tables
+   - JWT token service (HMAC-SHA256)
+   - OTP service (PBKDF2 hashing)
+   - Gmail email service (SMTP)
+   - 5 repository implementations
+   - Domain event handlers
+   - Integration event handlers
+   - Background cleanup job
+   - Database seeding
+
+4. PRESENTATION LAYER (Auth.Presentation)
+   - 6 endpoint groups
+   - 15+ API endpoints
+   - Rate limiting policies
+   - Request/response models
+   - Minimal endpoint logic
+
+5. CONTRACTS LAYER (Auth.Contracts)
+   - Integration events for cross-module communication
+
+KEY ENTITIES
+================================================================================
+
+SESSION
+  - Tracks user login sessions
+  - Linked to Device
+  - 30-day expiration
+  - Explicit revocation support
+  - IP address capture for audit trail
+
+REFRESH TOKEN
+  - Enables token rotation
+  - SHA256 hashed before storage
+  - Tracks replacement token (ReplacedByTokenId)
+  - Reuse-attack detection
+  - 30-day expiration
+
+DEVICE
+  - Tracks user devices
+  - UUIDv7 device token
+  - User agent and device name capture
+  - Trust status with timestamp
+  - Last seen timestamp
+
+OTP (One-Time Password)
+  - Email verification and password reset
+  - PBKDF2 hashed before storage
+  - 6-digit format
+  - 10-minute expiration
+  - Max 5 verification attempts
+  - One-time use enforcement
+
+EXTERNAL PROVIDER
+  - OAuth provider linking
+  - Prevents duplicate links per user
+  - Prevents provider account hijacking
+  - Soft deactivation allows re-linking
+
+AUTHENTICATION FLOWS
+================================================================================
+
+LOGIN FLOW
+  1. Verify credentials via Security module
+  2. Check email verified
+  3. Create Device (UUIDv7 token)
+  4. Create Session (30-day expiry)
+  5. Generate refresh token (64 random bytes)
+  6. Hash refresh token (SHA256)
+  7. Create RefreshToken entity
+  8. SaveChanges (dispatch domain events)
+  9. Generate JWT AccessToken
+  10. Return tokens to client
+
+REFRESH TOKEN FLOW
+  1. Hash provided token
+  2. Fetch token from DB (intentionally without IsRevoked filter)
+  3. Detect reuse attack: if revoked, revoke entire session
+  4. Check expiration
+  5. Validate session
+  6. Validate user
+  7. Generate new token
+  8. Revoke old token with ReplacedByTokenId
+  9. Update device LastSeenAt
+  10. Generate new JWT
+  11. Return new tokens
+
+EMAIL VERIFICATION FLOW
+  1. Get user ID
+  2. Fetch OTP
+  3. Check exhausted (5+ attempts)
+  4. Check expired (10 minutes)
+  5. Increment attempt
+  6. Verify OTP code
+  7. Create Device and Session
+  8. Generate RefreshToken
+  9. Mark OTP used
+  10. Mark email verified in Security module
+  11. Generate JWT
+
+PASSWORD RESET FLOW
+  1. ForgotPassword: Generate OTP, send email
+  2. ResetPassword: Verify OTP, reset password, revoke all sessions/tokens
+
+SECURITY PATTERNS
+================================================================================
+
+TOKEN SECURITY
+  - Access Token: JWT with HMAC-SHA256, 15-minute lifetime
+  - Refresh Token: 64 random bytes, SHA256 hashed before storage
+  - Token Rotation: Old token revoked, new token issued
+  - Reuse Attack Detection: If revoked token presented, entire session terminated
+  - Session ID in JWT: Enables session-specific token validation
+
+OTP SECURITY
+  - Generation: 6-digit random number (000000-999999)
+  - Storage: PBKDF2 hash only (never plaintext)
+  - Validation: Max 5 attempts, 10-minute expiry, one-time use
+  - Brute Force Prevention: Attempt counter prevents exhaustion
+
+PASSWORD SECURITY
+  - Hashing: Delegated to Security module
+  - Reset: OTP-based verification
+  - Automatic Session Revocation: On password reset/change
+  - Complexity: Enforced by Security module
+
+SESSION SECURITY
+  - Device Tracking: Device ID, user agent, device name
+  - IP Tracking: IP address captured at login
+  - Expiration: 30 days
+  - Revocation: Explicit or automatic on password change
+  - Trust Status: Devices can be marked as trusted
+
+EXTERNAL PROVIDER SECURITY
+  - Duplicate Link Prevention: One active link per user per provider
+  - Provider Account Hijacking Prevention: Unique (Provider, ProviderUserId) where IsActive = 1
+  - Soft Deactivation: Allows re-linking later
+
+RATE LIMITING
+  - LoginPolicy: 10 req/min per IP (fixed window)
+  - OtpPolicy: 3 req/min per email (sliding window, 2 segments)
+  - RefreshPolicy: 20 req/min per IP (fixed window)
+  - RegisterPolicy: 5 req/min per IP (fixed window)
+
+USER ENUMERATION PREVENTION
+  - ForgotPassword: Returns generic message whether user exists or not
+  - ResendOtp: Returns generic message whether user exists or not
+
+COMMANDS (13 Total)
+================================================================================
+
+1. LoginCommand
+   Input: Email, Password
+   Output: UserId, AccessToken, RefreshToken, RefreshTokenExpiresAt
+   Validation: Email format, password not empty
+   Security: Email verification mandatory, IP address captured
+
+2. RefreshTokenCommand
+   Input: RefreshToken
+   Output: AccessToken, RefreshToken, RefreshTokenExpiresAt
+   Validation: Token not empty
+   Security: Token rotation, reuse-attack detection, session validation
+
+3. LogoutCommand
+   Input: RefreshToken
+   Output: Success
+   Security: Idempotent, revokes both token and session
+
+4. LogoutAllCommand
+   Input: (none, uses current user)
+   Output: Success
+   Security: Requires authentication, revokes all sessions/tokens
+
+5. VerifyEmailCommand
+   Input: Email, OtpCode (6-digit)
+   Output: UserId, AccessToken, RefreshToken, RefreshTokenExpiresAt
+   Validation: Email format, OTP 6-digit number
+   Security: Attempt limiting, expiry checking, one-time use
+
+6. ForgotPasswordCommand
+   Input: Email
+   Output: Generic success message
+   Security: User enumeration prevention, email failure doesn't fail command
+
+7. ResetPasswordCommand
+   Input: Email, OtpCode, NewPassword, ConfirmNewPassword
+   Output: Success
+   Validation: Email format, OTP 6-digit, password 8-64 chars, passwords match
+   Security: OTP validation, password complexity delegated to Security module
+
+8. ResendOtpCommand
+   Input: Email, Purpose (EmailVerification/PasswordReset)
+   Output: Generic success message
+   Security: Rate limiting (1-minute cooldown), OTP invalidation
+
+9. RevokeSessionCommand
+   Input: SessionId
+   Output: Success
+   Security: Users can only revoke their own sessions
+
+10. TrustDeviceCommand
+    Input: DeviceId
+    Output: Success
+    Security: Users can only trust their own devices
+
+11. LinkExternalProviderCommand
+    Input: Provider, ProviderUserId, ProviderEmail
+    Output: ProviderId
+    Security: Prevents duplicate links, prevents provider account hijacking
+
+12. U

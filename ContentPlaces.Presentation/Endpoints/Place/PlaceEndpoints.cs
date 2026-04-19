@@ -13,9 +13,11 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Security.Contracts.Authorization;
+using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Domain.Abstractions.Pagination;
 using YallaJo.SharedKernel.Presentation;
-
+using ContentPlaces.Application.Queries.Place.GetMapViewport;
+using ContentPlaces.Application.Queries.Place.GetNearbyPlaces;
 namespace ContentPlaces.Presentation.Endpoints.Place;
 
 internal static class PlaceEndpoints
@@ -68,12 +70,46 @@ internal static class PlaceEndpoints
         .WithSummary("Get full place details by slug")
         .AllowAnonymous();
 
+        places.MapGet("/nearby", async (
+            ISender sender,
+            CancellationToken ct,
+            double lat,
+            double lng,
+            double radiusKm = 10,
+            int pageSize = 10) =>
+        {
+            var result = await sender.Send(new GetNearbyPlacesQuery(lat, lng, radiusKm, pageSize), ct);
+            return result.ToApiResult();
+        })
+        .WithName("GetNearbyPlaces")
+        .Produces<IReadOnlyList<NearbyPlaceSummaryDto>>(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
+        .WithSummary("Get nearby places using Haversine formula (max 100km radius)")
+        .AllowAnonymous();
+
+        places.MapGet("/map/viewport", async (
+            ISender sender,
+            CancellationToken ct,
+            double northLat,
+            double southLat,
+            double eastLng,
+            double westLng) =>
+        {
+            var result = await sender.Send(new GetMapViewportQuery(northLat, southLat, eastLng, westLng), ct);
+            return result.ToApiResult();
+        })
+        .WithName("GetMapViewport")
+        .Produces<MapViewportResponse>(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
+        .WithSummary("Get lightweight map pins for the current viewport bounding box")
+        .AllowAnonymous();
+
         // ── Admin: write operations ───────────────────────────────────────────
 
-        places.MapPost("/", async (CreatePlaceRequest request, System.Security.Claims.ClaimsPrincipal user,
+        places.MapPost("/", async (CreatePlaceRequest request, ICurrentUser currentUser,
             ISender sender, CancellationToken ct) =>
         {
-            if (!Guid.TryParse(user.FindFirst("sub")?.Value, out var createdByUserId))
+            if (!currentUser.IsAuthenticated || currentUser.UserId is null)
                 return Results.Unauthorized();
 
             var result = await sender.Send(
@@ -82,7 +118,7 @@ internal static class PlaceEndpoints
                 request.Latitude, request.Longitude, request.Description,
                 request.Address, request.City, request.Country, request.PostalCode,
                 request.Phone, request.Email, request.Website,
-                request.MetaTitle, request.MetaDescription, createdByUserId), ct);
+                request.MetaTitle, request.MetaDescription, currentUser.UserId.Value), ct);
 
             return result.ToApiResult(r => $"/api/v1/places/{r.PlaceId}");
         })

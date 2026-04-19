@@ -81,9 +81,25 @@ internal static class AppPermissions
         new(AppFeatures.Place, AppAction.Update,  AppRoleGroup.ContentManagement, "Update place details"),
         new(AppFeatures.Place, AppAction.Delete,  AppRoleGroup.ContentManagement, "Delete a place"),
 
+        // *── BusinessStaff ─────────────────────────────────────────────
+        new(AppFeatures.BusinessStaff, AppAction.Read,   AppRoleGroup.ContentManagement, "View business staff"),
+        new(AppFeatures.BusinessStaff, AppAction.Create, AppRoleGroup.ContentManagement, "Add business staff"),
+        new(AppFeatures.BusinessStaff, AppAction.Delete, AppRoleGroup.ContentManagement, "Remove business staff"),
+
+        // *── BusinessAmenity ──────────────────────────────────────────
+        new(AppFeatures.BusinessAmenity, AppAction.Read,   AppRoleGroup.ContentManagement, "View business amenities"),
+        new(AppFeatures.BusinessAmenity, AppAction.Create, AppRoleGroup.ContentManagement, "Add business amenity"),
+        new(AppFeatures.BusinessAmenity, AppAction.Delete, AppRoleGroup.ContentManagement, "Remove business amenity"),
+
         // *── AccessibilityFeature ──────────────────────────────────────
         new(AppFeatures.AccessibilityFeature, AppAction.Read,   AppRoleGroup.ContentManagement, "View accessibility features"),
         new(AppFeatures.AccessibilityFeature, AppAction.Update, AppRoleGroup.ContentManagement, "Update accessibility features"),
+
+        // *── ServiceItem ──────────────────────────────────────────────
+        new(AppFeatures.ServiceItem, AppAction.Read,       AppRoleGroup.ContentManagement, "View service items"),
+        new(AppFeatures.ServiceItem, AppAction.Create,     AppRoleGroup.ContentManagement, "Create a service item"),
+        new(AppFeatures.ServiceItem, AppAction.Update,     AppRoleGroup.ContentManagement, "Update a service item"),
+        new(AppFeatures.ServiceItem, AppAction.SoftDelete, AppRoleGroup.ContentManagement, "Soft-delete a service item"),
     }.AsReadOnly();
 
     public static IReadOnlyList<string> GetPermissionsForRole(string roleName) =>

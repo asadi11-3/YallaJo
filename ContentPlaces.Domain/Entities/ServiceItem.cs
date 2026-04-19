@@ -3,7 +3,7 @@ using YallaJo.SharedKernel.Domain.Entities;
 
 namespace ContentPlaces.Domain.Entities;
 
-public sealed class ServiceItem : AuditableEntity
+public sealed class ServiceItem : AuditableEntity, IAggregateRoot
 {
     private ServiceItem() { } // EF Core
 
@@ -25,4 +25,51 @@ public sealed class ServiceItem : AuditableEntity
     public DateTime? DiscountValidTo { get; private set; }
 
     public Business Business { get; private set; } = default!;
+
+    public static ServiceItem Create(
+        Guid businessId, string name, decimal price,
+        int durationMinutes, int maxCapacity, string currency, int sortOrder)
+    {
+        if (price < 0) throw new ArgumentException("Price cannot be negative", nameof(price));
+        if (durationMinutes <= 0) throw new ArgumentException("Duration must be positive", nameof(durationMinutes));
+        if (maxCapacity <= 0) throw new ArgumentException("Capacity must be positive", nameof(maxCapacity));
+
+        return new ServiceItem
+        {
+            Id = Guid.CreateVersion7(),
+            BusinessId = businessId,
+            Name = name,
+            Price = price,
+            DurationMinutes = durationMinutes,
+            MaxCapacity = maxCapacity,
+            Currency = currency.ToUpperInvariant(),
+            PriceCurrency = currency.ToUpperInvariant(),
+            IsAvailable = true,
+            SortOrder = sortOrder,
+        };
+    }
+
+    public void Update(
+        string name, decimal price, int durationMinutes,
+        int maxCapacity, string currency, int sortOrder)
+    {
+        if (price < 0) throw new ArgumentException("Price cannot be negative", nameof(price));
+        if (durationMinutes <= 0) throw new ArgumentException("Duration must be positive", nameof(durationMinutes));
+        if (maxCapacity <= 0) throw new ArgumentException("Capacity must be positive", nameof(maxCapacity));
+
+        Name = name;
+        Price = price;
+        DurationMinutes = durationMinutes;
+        MaxCapacity = maxCapacity;
+        Currency = currency.ToUpperInvariant();
+        PriceCurrency = currency.ToUpperInvariant();
+        SortOrder = sortOrder;
+        MarkUpdated();
+    }
+
+    public void SetAvailability(bool isAvailable)
+    {
+        IsAvailable = isAvailable;
+        MarkUpdated();
+    }
 }

@@ -20,8 +20,9 @@ public sealed class DeactivateRoleCommandHandler(
         if (role is null)
             return Result.Failure(RoleErrors.NotFound, Outcome.NotFound);
 
+       
         if (AppRoles.ProtectedRoles.Contains(role.Name, StringComparer.OrdinalIgnoreCase))
-            return Result.Failure(RoleErrors.Protected, Outcome.Forbidden);
+            return Result.Failure(RoleErrors.Protected, Outcome.Conflict);
 
         if (!role.IsActive)
             return Result.Success(); // idempotent — already deactivated

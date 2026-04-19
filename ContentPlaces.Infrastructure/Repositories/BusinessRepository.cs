@@ -6,7 +6,7 @@ using YallaJo.SharedKernel.Infrastructure.Data.Repositories;
 
 namespace ContentPlaces.Infrastructure.Repositories;
 
-public sealed class BusinessRepository(ContentPlacesDbContext context)
+internal sealed class BusinessRepository(ContentPlacesDbContext context)
     : EfRepository<Business, Guid>(context), IBusinessRepository
 {
     public async Task AddPlaceBusinessJunctionAsync(Guid placeId, Guid businessId, CancellationToken ct = default)

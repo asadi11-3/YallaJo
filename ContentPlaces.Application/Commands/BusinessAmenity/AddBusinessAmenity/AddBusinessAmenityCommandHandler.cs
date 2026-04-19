@@ -1,16 +1,19 @@
+using System.Globalization;
 using ContentPlaces.Application.Interfaces;
 using ContentPlaces.Application.Queries.BusinessAmenity.Common;
-using ContentPlaces.Domain.Entities;
-using Microsoft.EntityFrameworkCore;
+using ContentPlaces.Domain.Exceptions;
+using ContentPlaces.Domain.Repositories;
 using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
+using AmenityEntity = ContentPlaces.Domain.Entities.BusinessAmenity;
 
 namespace ContentPlaces.Application.Commands.BusinessAmenity.AddBusinessAmenity;
 
 public sealed class AddBusinessAmenityCommandHandler(
-    IContentPlacesDbContext dbContext,
+    IBusinessAmenityRepository amenityRepository,
+    IBusinessRepository businessRepository,
     IContentPlacesUnitOfWork unitOfWork,
     ICurrentUser currentUser,
     ILogger<AddBusinessAmenityCommandHandler> logger)
@@ -20,7 +23,6 @@ public sealed class AddBusinessAmenityCommandHandler(
         AddBusinessAmenityCommand request,
         CancellationToken cancellationToken)
     {
-        // check authentication
         if (!currentUser.IsAuthenticated || currentUser.UserId is null)
         {
             return Result<BusinessAmenityDto>.Failure(
@@ -28,9 +30,7 @@ public sealed class AddBusinessAmenityCommandHandler(
                 Outcome.Unauthorized);
         }
 
-        // check business exists
-        var business = await dbContext.Businesses
-            .FirstOrDefaultAsync(x => x.Id == request.BusinessId, cancellationToken);
+        var business = await businessRepository.GetByIdAsync(request.BusinessId, cancellationToken);
 
         if (business is null)
         {
@@ -39,7 +39,6 @@ public sealed class AddBusinessAmenityCommandHandler(
                 Outcome.NotFound);
         }
 
-        // check ownership (authorization)
         if (business.OwnerId != currentUser.UserId)
         {
             return Result<BusinessAmenityDto>.Failure(
@@ -47,14 +46,10 @@ public sealed class AddBusinessAmenityCommandHandler(
                 Outcome.Forbidden);
         }
 
-        // normalize name
-        var normalizedName = request.Name.Trim().ToLower();
-
-        // prevent duplicates
-        var exists = await dbContext.BusinessAmenities
-            .AnyAsync(x => x.BusinessId == request.BusinessId &&
-                           x.Name.ToLower() == normalizedName,
-                      cancellationToken);
+        var normalizedName = request.Name.Trim().ToLower(CultureInfo.InvariantCulture);
+        var exists = await amenityRepository.AnyAsync(
+            x => x.BusinessId == request.BusinessId &&
+                 string.Equals(x.Name, normalizedName, StringComparison.OrdinalIgnoreCase), cancellationToken);
 
         if (exists)
         {
@@ -63,22 +58,29 @@ public sealed class AddBusinessAmenityCommandHandler(
                 Outcome.Conflict);
         }
 
-        // create entity
-        var amenity = ContentPlaces.Domain.Entities.BusinessAmenity.Create(
+        var amenity = AmenityEntity.Create(
             request.BusinessId,
             request.Name,
             request.Icon,
             request.SortOrder);
 
-        await dbContext.BusinessAmenities.AddAsync(amenity, cancellationToken);
-        await unitOfWork.SaveChangesAsync(cancellationToken);
+        await amenityRepository.AddAsync(amenity, cancellationToken);
+        try
+        {
+            await unitOfWork.SaveChangesAsync(cancellationToken);
+        }
+        catch (ContentPlaceConcurrencyException)
+        {
+            return Result<BusinessAmenityDto>.Failure(
+                new Error(
+                    "BusinessAmenity.ConcurrencyConflict",
+                    "A concurrency conflict occurred. Please refresh and try again."),
+                Outcome.Conflict);
+        }
 
-        // better logging
         logger.LogInformation(
             "Amenity {AmenityId} added to Business {BusinessId}",
-            amenity.Id,
-            request.BusinessId);
-
+            amenity.Id, request.BusinessId);
         return Result<BusinessAmenityDto>.Created(BusinessAmenityDto.From(amenity));
     }
 }

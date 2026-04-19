@@ -2,10 +2,12 @@ using ContentPlaces.Application.Commands.BusinessAmenity.AddBusinessAmenity;
 using ContentPlaces.Application.Commands.BusinessAmenity.RemoveBusinessAmenity;
 using ContentPlaces.Application.Queries.BusinessAmenity.Common;
 using ContentPlaces.Application.Queries.BusinessAmenity.ListBusinessAmenities;
+using ContentPlaces.Presentation.Endpoints.BusinessAmenity.Models;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using Security.Contracts.Authorization;
 using YallaJo.SharedKernel.Presentation;
 
 namespace ContentPlaces.Presentation.Endpoints.BusinessAmenity;
@@ -17,7 +19,7 @@ internal static class BusinessAmenityEndpoints
         var amenities = group.MapGroup("/places/businesses")
             .WithTags("ContentPlaces | BusinessAmenities");
 
-        // GET
+
         amenities.MapGet("/{id:guid}/amenities", async (
             Guid id,
             ISender sender,
@@ -28,13 +30,10 @@ internal static class BusinessAmenityEndpoints
         })
         .WithName("ListBusinessAmenities")
         .Produces<IReadOnlyList<BusinessAmenityDto>>(StatusCodes.Status200OK)
-        .ProducesProblem(StatusCodes.Status400BadRequest)
         .ProducesProblem(StatusCodes.Status404NotFound)
-        .WithSummary("List amenities")
-        .WithDescription("Returns all amenities for a given business")
+        .WithSummary("List amenities for a business")
         .AllowAnonymous();
 
-        // POST
         amenities.MapPost("/{id:guid}/amenities", async (
             Guid id,
             AddBusinessAmenityRequest request,
@@ -43,18 +42,16 @@ internal static class BusinessAmenityEndpoints
         {
             var result = await sender.Send(
                 new AddBusinessAmenityCommand(id, request.Name, request.Icon, request.SortOrder), ct);
-
             return result.ToApiResult();
         })
         .WithName("AddBusinessAmenity")
         .Produces<BusinessAmenityDto>(StatusCodes.Status201Created)
         .ProducesValidationProblem()
-        .ProducesProblem(StatusCodes.Status400BadRequest)
-        .WithSummary("Add amenity")
-        .WithDescription("Adds a new amenity to the business if it does not already exist")
+        .ProducesProblem(StatusCodes.Status409Conflict)
+        .WithSummary("Add an amenity to a business")
+        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.BusinessAmenity, AppAction.Create))
         .RequireAuthorization();
 
-        // DELETE
         amenities.MapDelete("/amenities/{id:guid}", async (
             Guid id,
             ISender sender,
@@ -65,10 +62,9 @@ internal static class BusinessAmenityEndpoints
         })
         .WithName("RemoveBusinessAmenity")
         .Produces(StatusCodes.Status200OK)
-        .ProducesProblem(StatusCodes.Status400BadRequest)
         .ProducesProblem(StatusCodes.Status404NotFound)
-        .WithSummary("Remove amenity")
-        .WithDescription("Deletes an amenity from the business")
+        .WithSummary("Remove an amenity from a business")
+        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.BusinessAmenity, AppAction.Delete))
         .RequireAuthorization();
     }
 }

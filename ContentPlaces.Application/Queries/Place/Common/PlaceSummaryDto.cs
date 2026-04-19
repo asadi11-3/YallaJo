@@ -31,4 +31,3 @@ public sealed record PlaceSummaryDto(
         IsFeatured:    place.IsFeatured,
         IsVerified:    place.IsVerified);
 }
-

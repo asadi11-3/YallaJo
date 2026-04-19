@@ -1,6 +1,5 @@
-using ContentPlaces.Application.Interfaces;
 using ContentPlaces.Application.Queries.BusinessStaff.Common;
-using Microsoft.EntityFrameworkCore;
+using ContentPlaces.Domain.Repositories;
 using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
@@ -8,7 +7,7 @@ using YallaJo.SharedKernel.Domain.Abstractions.Results;
 namespace ContentPlaces.Application.Queries.BusinessStaff.ListBusinessStaff;
 
 public sealed class ListBusinessStaffQueryHandler(
-    IContentPlacesDbContext dbContext,
+    IBusinessStaffRepository staffRepository,
     ILogger<ListBusinessStaffQueryHandler> logger)
     : IQueryHandler<ListBusinessStaffQuery, IReadOnlyList<BusinessStaffDto>>
 {
@@ -16,18 +15,15 @@ public sealed class ListBusinessStaffQueryHandler(
         ListBusinessStaffQuery request,
         CancellationToken cancellationToken)
     {
-        var staff = await dbContext.BusinessStaff
-            .AsNoTracking()
-            .Where(x => x.BusinessId == request.BusinessId && x.IsActive) // ignore deactivated
-            .OrderBy(x => x.Role) // stable order
-            .ThenBy(x => x.UserId)
-            .Select(x => BusinessStaffDto.From(x))
-            .ToListAsync(cancellationToken);
+        var staff = await staffRepository.SelectAsync(
+            selector: x => BusinessStaffDto.From(x),
+            filter: x => x.BusinessId == request.BusinessId && x.IsActive,
+            orderBy: q => q.OrderBy(x => x.Role).ThenBy(x => x.UserId),
+            ct: cancellationToken);
 
         logger.LogInformation(
             "Fetched {Count} staff members for Business {BusinessId}",
-            staff.Count,
-            request.BusinessId);
+            staff.Count, request.BusinessId);
 
         return Result<IReadOnlyList<BusinessStaffDto>>.Success(staff);
     }

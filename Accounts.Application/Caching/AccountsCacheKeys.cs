@@ -6,7 +6,11 @@ namespace Accounts.Application.Caching;
 /// </summary>
 public static class AccountsCacheKeys
 {
-    /// <summary>Cache entry key for the full profile (including phone) of one user.</summary>
+    /// <summary>
+    /// Cache entry key for the full profile (including phone) of one user.
+    /// </summary>
+    /// <param name="userId">The unique identifier of the user.</param>
+    /// <returns>The cache key for the specified user's profile.</returns>
     public static string UserProfile(Guid userId) => $"accounts:profile:{userId}";
 
     /// <summary>

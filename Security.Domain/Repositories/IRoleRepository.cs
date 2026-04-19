@@ -10,4 +10,6 @@ public interface IRoleRepository : IReadRepository<Role, Guid>, IWriteRepository
 
     Task<IReadOnlyList<Role>> GetRolesByNamesAsync(
         IEnumerable<string> roleNames, CancellationToken ct = default);
+
+    Task<Role?> GetByIdWithClaimsAsync(Guid roleId, CancellationToken ct = default);
 }

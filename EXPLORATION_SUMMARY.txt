@@ -1,0 +1,193 @@
+================================================================================
+YALLAJO: SHARED KERNEL & WEB INFRASTRUCTURE DEEP EXPLORATION
+================================================================================
+
+COMPREHENSIVE DOCUMENTATION CREATED
+Location: SHARED_KERNEL_DEEP_DIVE.md (192 lines)
+
+================================================================================
+KEY FINDINGS
+================================================================================
+
+1. SHARED KERNEL ARCHITECTURE
+   ├── YallaJo.SharedKernel.Domain
+   │   ├── BaseEntity<TKey> / BaseEntity (Guid.CreateVersion7())
+   │   ├── AuditableEntity (soft delete, row version, audit timestamps)
+   │   ├── Result<T> / Result (railway-oriented programming)
+   │   ├── Error (Code + Message record)
+   │   ├── Outcome enum (HTTP status codes)
+   │   ├── IRepository<TEntity, TKey> (read + write)
+   │   ├── IReadRepository (expression + specification queries)
+   │   ├── IWriteRepository (add/update/remove/bulk operations)
+   │   └── IUnitOfWork (SaveChangesAsync)
+   │
+   ├── YallaJo.SharedKernel.Application
+   │   ├── ICommand / ICommand<TResponse> (MediatR)
+   │   ├── ICommandHandler / ICommandHandler<TCommand, TResponse>
+   │   ├── IQuery<TResponse> (MediatR)
+   │   ├── IQueryHandler<TQuery, TResponse>
+   │   ├── ValidationBehavior (FluentValidation)
+   │   ├── LoggingBehavior (request timing)
+   │   ├── PerformanceBehavior (>500ms warning)
+   │   ├── QueryCachingBehavior (HybridCache L1+L2)
+   │   ├── ICurrentUser (UserId, Email, Roles, Permissions)
+   │   ├── IRequestContext (IpAddress, UserAgent, DeviceName, AcceptLanguage, Platform)
+   │   ├── IDbContext (SaveChangesAsync)
+   │   ├── IInboxStore (idempotency)
+   │   └── IDomainEventDispatcher (MediatR-based)
+   │
+   ├── YallaJo.SharedKernel.Infrastructure
+   │   ├── DependencyInjection.cs (global MediatR setup)
+   │   ├── UnitOfWork<TContext> (domain event dispatch before SaveChanges)
+   │   ├── EfRepository<TEntity, TKey> (composition pattern)
+   │   ├── EfReadRepository (expression + specification queries)
+   │   ├── EfWriteRepository (add/update/remove/bulk operations)
+   │   ├── MediatRDomainEventDispatcher
+   │   ├── CompositeOutboxProcessor (all modules' outbox messages)
+   │   └── DateTimeProvider (IDateTimeProvider)
+   │
+   └── YallaJo.SharedKernel.Presentation
+       └── ResultExtensions.cs (Result<T> → IResult mapping)
+
+2. WEB PROJECT (MVC + BFF PATTERN)
+   ├── Program.cs Configuration
+   │   ├── Authentication: CookieAuthenticationDefaults
+   │   │   ├── LoginPath: /auth/login
+   │   │   ├── LogoutPath: /auth/logout
+   │   │   ├── ExpireTimeSpan: 8 hours
+   │   │   ├── SlidingExpiration: true
+   │   │   ├── HttpOnly: true (XSS protection)
+   │   │   └── SameSite: Strict (CSRF protection)
+   │   │
+   │   ├── HTTP Clients
+   │   │   ├── ApiClient (primary, through JwtAuthHandler)
+   │   │   └── "anon" (for /refresh endpoint, no JwtAuthHandler)
+   │   │
+   │   ├── Auth Feature Services
+   │   │   ├── IWebSignInService (WebSignInService)
+   │   │   ├── LoginApiClient + LoginFacade
+   │   │   ├── VerifyEmailApiClient + VerifyEmailFacade
+   │   │   ├── ForgotPasswordApiClient + ForgotPasswordFacade
+   │   │   ├── ResetPasswordApiClient + ResetPasswordFacade
+   │   │   ├── SessionsApiClient + SessionsFacade
+   │   │   ├── DevicesApiClient + DevicesFacade
+   │   │   ├── ExternalProvidersApiClient + ExternalProvidersFacade
+   │   │   ├── LogoutApiClient + LogoutFacade
+   │   │   └── LogoutAllApiClient + LogoutAllFacade
+   │   │
+   │   └── MVC Configuration
+   │       └── Feature-folder convention: Areas/{area}/Features/{controller}/Views/{view}.cshtml
+   │
+   ├── JwtAuthHandler (DelegatingHandler)
+   │   ├── Proactive refresh (30-second buffer)
+   │   ├── No signature validation (local decode only)
+   │   ├── Refresh endpoint: POST /api/v1/auth/refresh
+   │   ├── Cookie update (both persistent + in-memory)
+   │   └── Transparent token attachment (Authorization: Bearer)
+   │
+   ├── ApiClient (Typed HTTP Client)
+   │   ├── GetAsync<T>(path)
+   │   ├── PostAsync<T>(path, body)
+   │   ├── PostAsync(path, body)
+   │   ├── PatchAsync(path, body)
+   │   ├── DeleteAsync(path)
+   │   ├── Error parsing (RFC 7807 Problem Details)
+   │   └── Validation error handling (422)
+   │
+   ├── WebSignInService (IWebSignInService)
+   │   ├── SignInAsync(userId, accessToken, refreshToken, refreshTokenExpiresAt)
+   │   ├── Creates encrypted cookie
+   │   ├── Updates context.User in-memory
+   │   └── SignOutAsync()
+   │
+   ├── AppClaimTypes
+   │   ├── UserId = "sub"
+   │   ├── AccessToken = "access_token"
+   │   ├── RefreshToken = "refresh_token"
+   │   └── RefreshTokenExpiresAt = "refresh_token_expires_at"
+   │
+   └── ApiResult / ApiResult<T>
+       ├── IsSuccess, StatusCode, Error, ValidationErrors
+       ├── IsUnauthorized, IsForbidden, IsNotFound, IsConflict, IsValidationError, IsTooManyRequests
+       └── Pattern matching for outcomes
+
+3. API PROJECT (REST + JWT)
+   ├── Program.cs Configuration
+   │   ├── Module Registrations (Auth, Accounts, Security, Content*, etc.)
+   │   ├── SharedKernel Registration (ONCE after all modules)
+   │   ├── HTTP Context Services
+   │   │   ├── IRequestContext → RequestContext
+   │   │   └── ICurrentUser → CurrentUser
+   │   │
+   │   ├── JWT Authentication
+   │   │   ├── JwtBearerDefaults.AuthenticationScheme
+   │   │   ├── MapInboundClaims = false (preserve custom claims)
+   │   │   ├── RoleClaimType = "role"
+   │   │   ├── NameClaimType = "sub"
+   │   │   ├── ClockSkew = 30 seconds
+   │   │   └── Token validation (issuer, audience, lifetime, signature)
+   │   │
+   │   ├── Authorization Policies
+   │   │   ├── Role-based: Owner, SuperAdmin, Admin
+   │   │   └── Permission-based: Dynamic (Permission.*)
+   │   │
+   │   ├── Exception Handlers
+   │   │   ├── ValidationExceptionHandler
+   │   │   ├── DbUpdateExceptionHandler
+   │   │   └── GlobalExceptionHandler (catch-all)
+   │   │
+   │   └── Middleware Pipeline
+   │       ├── 1. UseExceptionHandler() (must be first)
+   │       ├── 2. UseYallaJoSerilogRequestLogging()
+   │       ├── 3. Swagger (dev only)
+   │       ├── 4. UseHttpsRedirection()
+   │       ├── 5. UseStaticFiles()
+   │       ├── 6. RequestLocalizationMiddleware
+   │       ├── 7. UseRateLimiter()
+   │       ├── 8. UseAuthentication()
+   │       ├── 9. UseAuthorization()
+   │       └── 10. MapEndpoints()
+   │
+   ├── CurrentUser (ICurrentUser)
+   │   ├── Reads from JWT claims in ClaimsPrincipal
+   │   ├── UserId (from "sub" claim)
+   │   ├── Email (from "email" claim)
+   │   ├── Roles (from "role" claims)
+   │   ├── Permissions (from "permission" claims)
+   │   └── Helper methods: HasPermission(), IsInRole()
+   │
+   ├── RequestContext (IRequestContext)
+   │   ├── IpAddress (from Connection.RemoteIpAddress)
+   │   ├── UserAgent (from Request.Headers.UserAgent)
+   │   ├── DeviceName (from Request.Headers["X-Device-Name"])
+   │   ├── AcceptLanguage (from Request.Headers.AcceptLanguage)
+   │   └── Platform (from Request.Headers["X-Platform"])
+   │
+   ├── Authorization
+   │   ├── PermissionRequirement (IAuthorizationRequirement)
+   │   ├── PermissionAuthorizationHandler (checks "Permission" claim)
+   │   └── PermissionPolicyProvider (dynamic policy creation)
+   │
+   ├── Exception Handlers
+   │   ├── GlobalExceptionHandler
+   │   │   ├── Correlation ID (Activity.Current?.Id or TraceIdentifier)
+   │   │   ├── Maps exception types to status codes
+   │   │   ├── Development: includes exception details
+   │   │   └── Production: generic message
+   │   │
+   │   └── RequestLocalizationMiddleware
+   │       ├── Parses Accept-Language header
+   │       ├── Supported: "ar", "en"
+   │       ├── Respects quality weights (q=0.9)
+   │       └── Sets CultureInfo.CurrentCulture/CurrentUICulture
+   │
+   └── Endpoints
+       ├── Minimal APIs (MapPost, MapGet, etc.)
+       ├── ISender for MediatR
+       ├── ToApiResult() for Result mapping
+       ├── AllowAnonymous for public endpoints
+       └── RequireRateLimiting for rate-limited endpoints
+
+4. AUTH MODULE INTEGRATION
+   ├── Auth.Application
+   │   ├── LoginCommand (Emai

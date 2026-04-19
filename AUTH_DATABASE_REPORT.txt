@@ -1,0 +1,297 @@
+================================================================================
+YallaJoJo AUTH DATABASE & MIGRATION DEEP EXPLORATION REPORT
+================================================================================
+
+EXECUTIVE SUMMARY
+=================
+This report provides comprehensive analysis of all database tables, migrations, 
+entity configurations, and relationships related to Authentication in YallaJoJo.
+
+The Auth system is split across two modules:
+1. Security Module (Security.Infrastructure) - User identity and role management
+2. Auth Module (Auth.Infrastructure) - Session, device, refresh token, OTP management
+
+================================================================================
+1. DATABASE SCHEMA OVERVIEW
+================================================================================
+
+Schema Distribution:
+- Security Schema: User identity, roles, claims, emails, phones, audit logs
+- Auth Schema: Sessions, devices, refresh tokens, OTPs, external providers
+
+Database Context Files:
+- Security.Infrastructure.Persistence.SecurityDbContext
+- Auth.Infrastructure.Persistence.AuthDbContext
+
+================================================================================
+2. SECURITY MODULE TABLES
+================================================================================
+
+2.1 USERS TABLE
+Schema: security | Table: Users
+
+Columns:
+- Id (uniqueidentifier, PK, ValueGeneratedNever)
+- IsActive (bit, Default: 0)
+- PasswordHash (nvarchar(512), Required)
+- CreatedAt (datetime2, Required)
+- UpdatedAt (datetime2, Nullable)
+- IsDeleted (bit, Default: 0)
+- DeletedAt (datetime2, Nullable)
+- RowVersion (rowversion, Concurrency Token)
+
+Indexes:
+- IX_Users_IsActive
+- IX_Users_IsDeleted
+
+Key Features:
+✅ Soft delete support with query filter
+✅ Concurrency control via RowVersion
+✅ Audit trail (CreatedAt, UpdatedAt, DeletedAt)
+✅ Password hash stored (max 512 chars)
+⚠️ No unique constraint on email (enforced at Emails table level)
+
+Relationships:
+- One-to-Many with Emails (Cascade Delete)
+- One-to-Many with Phones (Cascade Delete)
+- One-to-Many with UserRoles (Cascade Delete)
+- One-to-Many with UserClaims (Cascade Delete)
+
+---
+
+2.2 EMAILS TABLE
+Schema: security | Table: Emails
+
+Columns:
+- Id (uniqueidentifier, PK)
+- UserId (uniqueidentifier, FK → Users)
+- Address (nvarchar(320), UNIQUE)
+- IsPrimary (bit, Default: 0)
+- IsVerified (bit, Default: 0)
+- VerifiedAt (datetime2, Nullable)
+- CreatedAt (datetime2, Required)
+- UpdatedAt (datetime2, Nullable)
+- IsDeleted (bit, Default: 0)
+- DeletedAt (datetime2, Nullable)
+- RowVersion (rowversion, Concurrency Token)
+
+Indexes:
+- IX_Emails_Address_Unique (UNIQUE)
+- IX_Emails_UserId_IsPrimary (Composite)
+- IX_Emails_IsVerified
+
+Key Features:
+✅ UNIQUE constraint on email address
+✅ Email verification tracking with timestamp
+✅ Primary email designation
+✅ Soft delete support
+✅ Concurrency control
+
+---
+
+2.3 PHONES TABLE
+Schema: security | Table: Phones
+
+Columns:
+- Id (uniqueidentifier, PK)
+- UserId (uniqueidentifier, FK → Users)
+- PhoneNumber (nvarchar(20), Required)
+- IsPrimary (bit, Default: 0)
+- IsVerified (bit, Default: 0)
+- VerifiedAt (datetime2, Nullable)
+- CreatedAt (datetime2, Required)
+- UpdatedAt (datetime2, Nullable)
+- IsDeleted (bit, Default: 0)
+- DeletedAt (datetime2, Nullable)
+- RowVersion (rowversion, Concurrency Token)
+
+Indexes:
+- IX_Phones_PhoneNumber (Filtered WHERE IsVerified = 1)
+- IX_Phones_UserId_IsPrimary (Composite)
+- IX_Phones_IsVerified
+
+Key Features:
+✅ Phone verification tracking
+✅ Primary phone designation
+✅ Filtered index for verified phones only (performance optimization)
+✅ Soft delete support
+⚠️ No global unique constraint (only verified phones indexed)
+
+---
+
+2.4 ROLES TABLE
+Schema: security | Table: Roles
+
+Columns:
+- Id (uniqueidentifier, PK)
+- Name (nvarchar(100), UNIQUE)
+- Description (nvarchar(500), Nullable)
+- IsActive (bit, Required)
+- CreatedAt (datetime2, Required)
+- UpdatedAt (datetime2, Nullable)
+- IsDeleted (bit, Default: 0)
+- DeletedAt (datetime2, Nullable)
+- RowVersion (rowversion, Concurrency Token)
+
+Indexes:
+- IX_Roles_Name_Unique (UNIQUE)
+- IX_Roles_IsActive
+
+Key Features:
+✅ UNIQUE constraint on role name
+✅ Role activation control
+✅ Soft delete support
+✅ Concurrency control
+
+---
+
+2.5 USERROLES TABLE
+Schema: security | Table: UserRoles
+
+Columns:
+- Id (uniqueidentifier, PK)
+- UserId (uniqueidentifier, FK → Users)
+- RoleId (uniqueidentifier, FK → Roles)
+- CreatedAt (datetime2, Required)
+- UpdatedAt (datetime2, Nullable)
+- IsDeleted (bit, Default: 0)
+- DeletedAt (datetime2, Nullable)
+- RowVersion (rowversion, Concurrency Token)
+
+Indexes:
+- IX_UserRoles_UserId_RoleId_Unique (UNIQUE Composite)
+- IX_UserRoles_RoleId
+
+Key Features:
+✅ UNIQUE constraint on (UserId, RoleId) - prevents duplicate role assignments
+✅ Soft delete support
+✅ Concurrency control
+
+---
+
+2.6 USERCLAIMS TABLE
+Schema: security | Table: UserClaims
+
+Columns:
+- Id (uniqueidentifier, PK)
+- UserId (uniqueidentifier, FK → Users)
+- ClaimType (nvarchar(256), Required)
+- ClaimValue (nvarchar(1024), Required)
+- CreatedAt (datetime2, Required)
+- UpdatedAt (datetime2, Nullable)
+- IsDeleted (bit, Default: 0)
+- DeletedAt (datetime2, Nullable)
+- RowVersion (rowversion, Concurrency Token)
+
+Indexes:
+- IX_UserClaims_UserId_ClaimType_ClaimValue_Unique (UNIQUE Composite)
+
+Key Features:
+✅ UNIQUE constraint on (UserId, ClaimType, ClaimValue)
+✅ Soft delete support
+✅ Concurrency control
+
+---
+
+2.7 ROLECLAIMS TABLE
+Schema: security | Table: RoleClaims
+
+Columns:
+- Id (uniqueidentifier, PK)
+- RoleId (uniqueidentifier, FK → Roles)
+- ClaimType (nvarchar(256), Required)
+- ClaimValue (nvarchar(1024), Required)
+- CreatedAt (datetime2, Required)
+- UpdatedAt (datetime2, Nullable)
+- IsDeleted (bit, Default: 0)
+- DeletedAt (datetime2, Nullable)
+- RowVersion (rowversion, Concurrency Token)
+
+Indexes:
+- IX_RoleClaims_RoleId_ClaimType_ClaimValue_Unique (UNIQUE Composite)
+
+Key Features:
+✅ UNIQUE constraint on (RoleId, ClaimType, ClaimValue)
+✅ Soft delete support
+✅ Concurrency control
+
+---
+
+2.8 AUDITLOGS TABLE
+Schema: security | Table: AuditLogs
+
+Columns:
+- Id (uniqueidentifier, PK)
+- UserId (uniqueidentifier, Nullable)
+- Action (nvarchar(200), Required)
+- ResourceType (nvarchar(200), Required)
+- ResourceId (uniqueidentifier, Nullable)
+- IpAddress (nvarchar(45), Nullable)
+- OldValue (nvarchar(max), Nullable)
+- NewValue (nvarchar(max), Nullable)
+- OccurredAt (datetime2, Required)
+- CreatedAt (datetime2, Required)
+- UpdatedAt (datetime2, Nullable)
+
+Indexes:
+- IX_AuditLogs_OccurredAt
+- IX_AuditLogs_ResourceType_ResourceId
+- IX_AuditLogs_UserId
+
+Key Features:
+✅ Comprehensive audit trail
+✅ Before/after value tracking
+✅ IP address logging
+✅ Optimized for time-range queries
+
+================================================================================
+3. AUTH MODULE TABLES
+================================================================================
+
+3.1 DEVICES TABLE
+Schema: auth | Table: Devices
+
+Columns:
+- Id (uniqueidentifier, PK)
+- UserId (uniqueidentifier, Logical FK to Users)
+- DeviceToken (nvarchar(256), UNIQUE)
+- UserAgent (nvarchar(512), Nullable)
+- DeviceName (nvarchar(200), Nullable)
+- IsTrusted (bit, Default: 0)
+- TrustedAt (datetime2, Nullable)
+- LastSeenAt (datetime2, Required)
+- CreatedAt (datetime2, Required)
+- UpdatedAt (datetime2, Nullable)
+- IsDeleted (bit, Default: 0)
+- DeletedAt (datetime2, Nullable)
+- RowVersion (rowversion, Concurrency Token)
+
+Indexes:
+- IX_Devices_DeviceToken (UNIQUE)
+- IX_Devices_UserId
+- IX_Devices_IsTrusted
+
+Key Features:
+✅ UNIQUE constraint on DeviceToken
+✅ Device trust tracking with timestamp
+✅ Last activity tracking
+✅ Soft delete support
+✅ Concurrency control
+⚠️ Logical FK to Users (no database constraint)
+
+Relationships:
+- One-to-Many with Sessions (Cascade Delete)
+
+---
+
+3.2 SESSIONS TABLE
+Schema: auth | Table: Sessions
+
+Columns:
+- Id (uniqueidentifier, PK)
+- UserId (uniqueidentifier, Logical FK to Users)
+- DeviceId (uniqueidentifier, FK → Devices)
+- ExpiresAt (datetime2, Required) *** SESSION EXPIRY ***
+- IsRevoked (bit, Default: 0)
+- RevokedAt (datetime2, Nullable)
+- IpAddress (nvarchar(64), Nullable)

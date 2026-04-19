@@ -20,7 +20,7 @@ public sealed class CreateRoleCommandHandler(
         // Authentication and permission (Role.Create) are enforced by the endpoint.
         // This handler does not act on the caller's identity — no ICurrentUser needed.
         if (AppRoles.ProtectedRoles.Contains(request.Name, StringComparer.OrdinalIgnoreCase))
-            return Result<CreateRoleResult>.Failure(RoleErrors.Protected, Outcome.Forbidden);
+            return Result<CreateRoleResult>.Failure(RoleErrors.Protected, Outcome.Conflict);
 
         if (await roleRepository.AnyAsync(r => r.Name == request.Name, ct))
             return Result<CreateRoleResult>.Failure(RoleErrors.AlreadyExists, Outcome.Conflict);

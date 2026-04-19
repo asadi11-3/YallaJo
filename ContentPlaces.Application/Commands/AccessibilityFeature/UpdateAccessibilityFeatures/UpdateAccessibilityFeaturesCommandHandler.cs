@@ -1,52 +1,44 @@
 using ContentPlaces.Application.Interfaces;
-using AccessibilityFeatureEntity = ContentPlaces.Domain.Entities.AccessibilityFeature;
-using Microsoft.EntityFrameworkCore;
+using ContentPlaces.Domain.Exceptions;
+using ContentPlaces.Domain.Repositories;
 using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
+using AccessibilityFeatureEntity = ContentPlaces.Domain.Entities.AccessibilityFeature;
 
 namespace ContentPlaces.Application.Commands.AccessibilityFeature.UpdateAccessibilityFeatures;
 
 public sealed class UpdateAccessibilityFeaturesCommandHandler(
-    IContentPlacesDbContext dbContext,
+    IAccessibilityFeatureRepository featureRepository,
+    IPlaceRepository placeRepository,
     IContentPlacesUnitOfWork unitOfWork,
     ILogger<UpdateAccessibilityFeaturesCommandHandler> logger)
     : ICommandHandler<UpdateAccessibilityFeaturesCommand>
 {
-    private const byte PlaceEntityType = 1; // polymorphic:  Place  حالياً بس 
+    private const byte PlaceEntityType = 1;
 
     public async Task<Result> Handle(
         UpdateAccessibilityFeaturesCommand request,
         CancellationToken cancellationToken)
     {
-        // check place exists
-        var exists = await dbContext.Places
-            .AsNoTracking()
-            .AnyAsync(x => x.Id == request.PlaceId, cancellationToken);
+        var placeExists = await placeRepository.AnyAsync(
+            x => x.Id == request.PlaceId, cancellationToken);
 
-        if (!exists)
+        if (!placeExists)
         {
             return Result.Failure(
                 new Error("Place.NotFound", "Place not found"),
                 Outcome.NotFound);
         }
 
-        // get old features
-        var oldFeatures = await dbContext.AccessibilityFeatures
-            .Where(x => x.EntityId == request.PlaceId && x.EntityType == PlaceEntityType)
-            .ToListAsync(cancellationToken);
+        var existingFeatures = await featureRepository.GetAllAsync(
+            filter: x => x.EntityId == request.PlaceId && x.EntityType == PlaceEntityType,
+            ct: cancellationToken);
 
-        // remove old
+        featureRepository.RemoveRange(existingFeatures);
 
-        var existingFeatures = await dbContext.AccessibilityFeatures
-    .Where(x => x.EntityId == request.PlaceId && x.EntityType == PlaceEntityType)
-    .ToListAsync(cancellationToken);
-
-        dbContext.AccessibilityFeatures.RemoveRange(existingFeatures); 
-
-        // create new
         var newFeatures = request.Features
-            .GroupBy(x => x.FeatureType) // prevent duplicates
+            .GroupBy(x => x.FeatureType)
             .Select(x => x.First())
             .Select(x => AccessibilityFeatureEntity.Create(
                 PlaceEntityType,
@@ -57,13 +49,23 @@ public sealed class UpdateAccessibilityFeaturesCommandHandler(
                 x.IsAvailable))
             .ToList();
 
-        await dbContext.AccessibilityFeatures.AddRangeAsync(newFeatures, cancellationToken);
-        await unitOfWork.SaveChangesAsync(cancellationToken);
+        await featureRepository.AddRangeAsync(newFeatures, cancellationToken);
+        try
+        {
+            await unitOfWork.SaveChangesAsync(cancellationToken);
+        }
+        catch (ContentPlaceConcurrencyException)
+        {
+            return Result.Failure(
+                new Error(
+                    "AccessibilityFeature.ConcurrencyConflict",
+                    "A concurrency conflict occurred. Please refresh and try again."),
+                Outcome.Conflict);
+        }
 
         logger.LogInformation(
             "Accessibility updated for Place {PlaceId}. New count: {Count}",
-            request.PlaceId,
-            newFeatures.Count);
+            request.PlaceId, newFeatures.Count);
 
         return Result.Success();
     }

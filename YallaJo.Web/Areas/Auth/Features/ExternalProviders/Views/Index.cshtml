@@ -1,0 +1,50 @@
+@model YallaJo.Web.Areas.Auth.Features.ExternalProviders.ViewModels.ExternalProvidersVm
+@{
+    ViewData["Title"] = "External Providers";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-4">
+    <h2>Linked Providers</h2>
+
+    @if (TempData["ProviderMessage"] is string msg)
+    {
+        <div class="alert alert-info">@msg</div>
+    }
+
+    @if (Model.Message is not null)
+    {
+        <div class="alert alert-success">@Model.Message</div>
+    }
+
+    <h4 class="mt-4">Link a New Provider</h4>
+    <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+    <form asp-area="Auth" asp-controller="ExternalProviders" asp-action="Index" method="post" style="max-width:420px">
+        @Html.AntiForgeryToken()
+
+        <div class="mb-3">
+            <label asp-for="Provider" class="form-label">Provider (e.g. Google)</label>
+            <input asp-for="Provider" class="form-control" placeholder="Google" />
+            <span asp-validation-for="Provider" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="ProviderUserId" class="form-label">Provider User ID</label>
+            <input asp-for="ProviderUserId" class="form-control" />
+            <span asp-validation-for="ProviderUserId" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="ProviderEmail" class="form-label">Provider Email (optional)</label>
+            <input asp-for="ProviderEmail" class="form-control" autocomplete="email" />
+            <span asp-validation-for="ProviderEmail" class="text-danger"></span>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Link Provider</button>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

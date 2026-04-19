@@ -1,0 +1,56 @@
+@model YallaJo.Web.Areas.Admin.Modules.Security.Features.Users.ViewModels.UserListVm
+@{
+    ViewData["Title"] = "Users";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-4">
+    <h2>Users</h2>
+
+    @if (TempData["Success"] is string ok)  { <div class="alert alert-success">@ok</div> }
+    @if (TempData["Error"]   is string err) { <div class="alert alert-danger">@err</div> }
+    @if (ViewBag.Error       is string vbe) { <div class="alert alert-danger">@vbe</div> }
+
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Email</th>
+                <th>Roles</th>
+                <th>Status</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var u in Model.Users)
+            {
+                <tr>
+                    <td>@u.Email</td>
+                    <td>@string.Join(", ", u.Roles)</td>
+                    <td>
+                        <span class="badge @(u.IsActive ? "bg-success" : "bg-secondary")">
+                            @(u.IsActive ? "Active" : "Inactive")
+                        </span>
+                    </td>
+                    <td>
+                        <a asp-area="Admin" asp-controller="Users"
+                           asp-action="Details" asp-route-userId="@u.Id"
+                           class="btn btn-sm btn-outline-primary">Manage</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    @* Pagination *@
+    <div class="d-flex gap-2">
+        @if (Model.HasPrevious)
+        {
+            <a asp-action="Index" asp-route-page="@(Model.Page - 1)" class="btn btn-outline-secondary">← Previous</a>
+        }
+        <span class="align-self-center text-muted">Page @Model.Page — @Model.TotalCount total</span>
+        @if (Model.HasNext)
+        {
+            <a asp-action="Index" asp-route-page="@(Model.Page + 1)" class="btn btn-outline-secondary">Next →</a>
+        }
+    </div>
+</div>
