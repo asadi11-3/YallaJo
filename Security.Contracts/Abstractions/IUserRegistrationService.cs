@@ -30,6 +30,13 @@ public interface IUserRegistrationService
         CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Lists active roles that the current authenticated inviter is allowed to
+    /// pre-assign during Invite User flow.
+    /// </summary>
+    Task<Result<IReadOnlyList<InvitableRoleOption>>> ListInvitableRolesAsync(
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Returns the onboarding status of the account identified by email, or
     /// <c>null</c> if no such account exists. Used by Auth to gate invite
     /// accept/resend flows without exposing the full User aggregate.
@@ -59,7 +66,14 @@ public sealed record UserRegistrationRequest(
 public sealed record InvitedUserRegistrationRequest(
     string FirstName,
     string LastName,
-    string Email);
+    string Email,
+    IReadOnlyList<Guid> InitialRoleIds);
+
+public sealed record InvitableRoleOption(
+    Guid RoleId,
+    string Name,
+    string? Description,
+    bool IsPrivileged);
 
 public sealed record InviteAccountStatus(
     Guid UserId,

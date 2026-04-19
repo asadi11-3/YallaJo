@@ -9,4 +9,5 @@ public sealed record InviteUserCommand(
     string FirstName,
     string LastName,
     string? DisplayName,
-    string? AvatarUrl) : ICommand<InviteUserResult>;
+    string? AvatarUrl,
+    IReadOnlyList<Guid> InitialRoleIds) : ICommand<InviteUserResult>;

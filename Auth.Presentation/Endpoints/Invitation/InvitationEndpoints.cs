@@ -1,6 +1,7 @@
 using Auth.Application.Commands.AcceptInvite;
 using Auth.Application.Commands.InviteUser;
 using Auth.Application.Commands.ResendInvite;
+using Auth.Application.Queries.ListInvitableRoles;
 using Auth.Presentation.Endpoints.Invitation.Models;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
@@ -16,9 +17,34 @@ internal static class InvitationEndpoints
 {
     internal static void MapInvitationEndpoints(RouteGroupBuilder group)
     {
+        MapInvitableRolesEndpoint(group);
         MapInviteUserEndpoint(group);
         MapAcceptInviteEndpoint(group);
         MapResendInviteEndpoint(group);
+    }
+
+    private static void MapInvitableRolesEndpoint(RouteGroupBuilder group)
+    {
+        group.MapGet("/invitations/roles", async (ISender sender, CancellationToken ct) =>
+            {
+                var result = await sender.Send(new ListInvitableRolesQuery(), ct);
+                return result
+                    .Map(roles => (IReadOnlyList<InvitableRoleOptionResponse>)roles
+                        .Select(r => new InvitableRoleOptionResponse(
+                            r.RoleId,
+                            r.Name,
+                            r.Description,
+                            r.IsPrivileged))
+                        .ToList())
+                    .ToApiResult();
+            })
+            .WithName("ListInvitableRoles")
+            .Produces<IReadOnlyList<InvitableRoleOptionResponse>>(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status403Forbidden)
+            .WithSummary("Admin: list active roles that can be pre-assigned during invite.")
+            .WithMetadata(new MustHavePermissionAttribute(AppFeatures.User, AppAction.Create))
+            .RequireAuthorization();
     }
 
     // ── Admin: invite a user ─────────────────────────────────────────────────
@@ -36,7 +62,8 @@ internal static class InvitationEndpoints
                         request.FirstName,
                         request.LastName,
                         request.DisplayName,
-                        request.AvatarUrl), ct);
+                        request.AvatarUrl,
+                        request.RoleIds), ct);
 
                 return result
                     .Map(r => new InviteUserResponse(

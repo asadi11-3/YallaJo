@@ -5,4 +5,5 @@ public sealed record InviteUserRequest(
     string FirstName,
     string LastName,
     string? DisplayName,
-    string? AvatarUrl);
+    string? AvatarUrl,
+    IReadOnlyList<Guid> RoleIds);

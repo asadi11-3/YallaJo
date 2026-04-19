@@ -27,4 +27,10 @@ public sealed class InviteUserVm
     [Url(ErrorMessage = "Avatar URL must be a valid URL.")]
     [Display(Name = "Avatar URL")]
     public string? AvatarUrl { get; set; }
+
+    [Display(Name = "Initial roles")]
+    [MinLength(1, ErrorMessage = "Select at least one initial role.")]
+    public List<Guid> SelectedRoleIds { get; set; } = [];
+
+    public IReadOnlyList<InvitableRoleOptionVm> AvailableRoles { get; set; } = [];
 }

@@ -3,8 +3,11 @@ using Security.Application.Caching;
 using Security.Application.Helpers;
 using Security.Application.Interfaces;
 using Security.Contracts.Abstractions;
+using Security.Contracts.Authorization;
 using Security.Domain.Entities;
+using Security.Domain.Errors;
 using Security.Domain.Repositories;
+using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
 namespace Security.Application.Services;
@@ -17,8 +20,10 @@ namespace Security.Application.Services;
 /// </summary>
 internal sealed class UserRegistrationService(
     IUserRepository userRepository,
+    IRoleRepository roleRepository,
     ISecurityUnitOfWork unitOfWork,
     IPasswordHasher passwordHasher,
+    ICurrentUser currentUser,
     HybridCache cache)
     : IUserRegistrationService
 {
@@ -57,10 +62,56 @@ internal sealed class UserRegistrationService(
                 Error.Conflict("User.Email", "An account with this email already exists."));
         }
 
+        var roleIds = request.InitialRoleIds
+            .Where(id => id != Guid.Empty)
+            .Distinct()
+            .ToList();
+
+        if (roleIds.Count == 0)
+        {
+            return Result<Guid>.Failure(
+                Error.Validation("Invite.RoleIds", "At least one initial role must be selected."),
+                Outcome.Invalid);
+        }
+
+        var assignable = await GetInvitableRolesInternalAsync(cancellationToken);
+        if (assignable.IsFailure)
+        {
+            return Result<Guid>.Fail(
+                assignable.Outcome,
+                assignable.Messages.FirstOrDefault() ?? "Failed to resolve invitable roles.",
+                assignable.Errors.ToArray());
+        }
+
+        var assignableIds = assignable.Value.Select(r => r.RoleId).ToHashSet();
+        var disallowedIds = roleIds.Where(id => !assignableIds.Contains(id)).ToArray();
+        if (disallowedIds.Length > 0)
+        {
+            return Result<Guid>.Failure(
+                Error.Forbidden("You are not allowed to assign one or more selected roles."),
+                Outcome.Forbidden);
+        }
+
         // Invited user: no password, unverified email, inactive account.
-        // These transitions happen only after the invitee accepts the invite
-        // (proving mailbox ownership) via CompleteInviteAsync.
+        // Pre-assigned roles are persisted now; the invite acceptance later
+        // completes password + verification + activation only.
         var user = User.Register(normalizedEmail, request.FirstName, request.LastName);
+
+        foreach (var roleId in roleIds)
+        {
+            var role = await roleRepository.GetByIdAsync(roleId, cancellationToken);
+            if (role is null)
+                return Result<Guid>.Failure(RoleErrors.NotFound, Outcome.NotFound);
+
+            if (!role.IsActive)
+                return Result<Guid>.Failure(RoleErrors.Inactive, Outcome.Invalid);
+
+            if (role.Name == AppRoles.Owner
+                && await userRepository.AnyWithRoleAsync(AppRoles.Owner, cancellationToken))
+                return Result<Guid>.Failure(RoleErrors.OwnerSingleton, Outcome.Conflict);
+
+            user.AssignRole(role);
+        }
 
         await userRepository.AddAsync(user, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
@@ -69,6 +120,10 @@ internal sealed class UserRegistrationService(
 
         return Result<Guid>.Created(user.Id);
     }
+
+    public Task<Result<IReadOnlyList<InvitableRoleOption>>> ListInvitableRolesAsync(
+        CancellationToken cancellationToken = default) =>
+        GetInvitableRolesInternalAsync(cancellationToken);
 
     public async Task<InviteAccountStatus?> GetInviteAccountStatusAsync(
         string email,
@@ -139,4 +194,34 @@ internal sealed class UserRegistrationService(
         userRepository.AnyAsync(
             u => u.Emails.Any(e => e.Address == normalizedEmail),
             ct);
+
+    private async Task<Result<IReadOnlyList<InvitableRoleOption>>> GetInvitableRolesInternalAsync(
+        CancellationToken ct)
+    {
+        if (!currentUser.IsAuthenticated)
+        {
+            return Result<IReadOnlyList<InvitableRoleOption>>.Failure(
+                Error.Unauthorized(),
+                Outcome.Unauthorized);
+        }
+
+        var roles = await roleRepository.GetAllAsync(
+            filter: r => r.IsActive,
+            asNoTracking: true,
+            ct: ct);
+
+        var canAssignOwnerOnly = currentUser.IsInRole(AppRoles.Owner);
+
+        var options = roles
+            .Where(r => canAssignOwnerOnly || !AppRoles.OwnerOnlyRoles.Contains(r.Name, StringComparer.Ordinal))
+            .Select(r => new InvitableRoleOption(
+                RoleId: r.Id,
+                Name: r.Name,
+                Description: r.Description,
+                IsPrivileged: AppRoles.ProtectedRoles.Contains(r.Name, StringComparer.Ordinal)))
+            .OrderBy(r => r.Name, StringComparer.Ordinal)
+            .ToList();
+
+        return Result<IReadOnlyList<InvitableRoleOption>>.Success(options);
+    }
 }

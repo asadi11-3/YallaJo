@@ -40,7 +40,11 @@ public sealed class InviteUserCommandHandler(
         // 1. Create the Security identity in invited state (no password,
         //    unverified email, inactive).
         var registrationResult = await userRegistrationService.RegisterInvitedAsync(
-            new InvitedUserRegistrationRequest(request.FirstName, request.LastName, normalizedEmail),
+            new InvitedUserRegistrationRequest(
+                request.FirstName,
+                request.LastName,
+                normalizedEmail,
+                request.InitialRoleIds),
             ct);
 
         if (registrationResult.IsFailure)

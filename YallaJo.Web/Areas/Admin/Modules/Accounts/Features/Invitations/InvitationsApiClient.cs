@@ -14,6 +14,10 @@ public sealed class InvitationsApiClient
         InviteUserRequest request, CancellationToken ct = default)
         => _api.PostAsync<InviteUserResponse>("/api/v1/auth/invitations", request, ct);
 
+    public Task<ApiResult<IReadOnlyList<InvitableRoleOptionResponse>>> GetInvitableRolesAsync(
+        CancellationToken ct = default)
+        => _api.GetAsync<IReadOnlyList<InvitableRoleOptionResponse>>("/api/v1/auth/invitations/roles", ct);
+
     public Task<ApiResult> ResendAsync(
         ResendInviteRequest request, CancellationToken ct = default)
         => _api.PostAsync("/api/v1/auth/invitations/resend", request, ct);

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using YallaJo.Web.Areas.Admin.Modules.Accounts.Features.Invitations.ViewModels;
+using YallaJo.Web.Infrastructure.Api.Contracts;
 using YallaJo.Web.Infrastructure.Authorization;
 
 namespace YallaJo.Web.Areas.Admin.Modules.Accounts.Features.Invitations;
@@ -15,8 +16,18 @@ public sealed class InvitationsController : Controller
     public InvitationsController(InvitationsFacade facade) => _facade = facade;
 
     [HttpGet]
-    public IActionResult Index() =>
-        View(new InviteUserVm());
+    public async Task<IActionResult> Index(CancellationToken ct)
+    {
+        var vm = new InviteUserVm();
+        var loaded = await PopulateRoleOptionsAsync(vm, ct);
+        if (loaded.RequireSignOut)
+            return RedirectToAction("Index", "Login", new { area = "Auth" });
+
+        if (!loaded.IsSuccess)
+            TempData["Error"] = loaded.Error ?? "Could not load role options.";
+
+        return View(vm);
+    }
 
     [HttpGet]
     public IActionResult Resend() =>
@@ -27,6 +38,13 @@ public sealed class InvitationsController : Controller
     [RequirePermission(WebPermission.User.Create)]
     public async Task<IActionResult> Create(InviteUserVm vm, CancellationToken ct)
     {
+        var loaded = await PopulateRoleOptionsAsync(vm, ct);
+        if (loaded.RequireSignOut)
+            return RedirectToAction("Index", "Login", new { area = "Auth" });
+
+        if (!loaded.IsSuccess)
+            ModelState.AddModelError(string.Empty, loaded.Error ?? "Could not load role options.");
+
         if (!ModelState.IsValid)
             return View(nameof(Index), vm);
 
@@ -84,5 +102,20 @@ public sealed class InvitationsController : Controller
 
         ModelState.AddModelError(string.Empty, result.Error ?? "Could not resend invite.");
         return View(nameof(Resend), vm);
+    }
+
+    private async Task<ApiResult> PopulateRoleOptionsAsync(InviteUserVm vm, CancellationToken ct)
+    {
+        var result = await _facade.GetInvitableRolesAsync(ct);
+        if (!result.IsSuccess || result.Data is null)
+        {
+            vm.AvailableRoles = [];
+            return result.IsUnauthorized
+                ? ApiResult.ForceSignOut()
+                : ApiResult.Fail(result.Error ?? "Could not load role options.");
+        }
+
+        vm.AvailableRoles = result.Data;
+        return ApiResult.Ok();
     }
 }

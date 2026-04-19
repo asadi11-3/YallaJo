@@ -24,5 +24,18 @@ public sealed class InviteUserCommandValidator : AbstractValidator<InviteUserCom
 
         RuleFor(x => x.AvatarUrl)
             .MaximumLength(2048);
+
+        RuleFor(x => x.InitialRoleIds)
+            .NotNull()
+            .Must(ids => ids.Count > 0)
+            .WithMessage("At least one initial role must be selected.");
+
+        RuleForEach(x => x.InitialRoleIds)
+            .NotEmpty()
+            .WithMessage("Role ID is required.");
+
+        RuleFor(x => x.InitialRoleIds)
+            .Must(ids => ids.Distinct().Count() == ids.Count)
+            .WithMessage("Duplicate roles are not allowed.");
     }
 }

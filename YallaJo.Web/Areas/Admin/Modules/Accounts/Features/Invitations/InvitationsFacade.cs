@@ -10,6 +10,33 @@ public sealed class InvitationsFacade
     private readonly InvitationsApiClient _api;
     public InvitationsFacade(InvitationsApiClient api) => _api = api;
 
+    public async Task<ApiResult<IReadOnlyList<InvitableRoleOptionVm>>> GetInvitableRolesAsync(CancellationToken ct = default)
+    {
+        var result = await _api.GetInvitableRolesAsync(ct);
+
+        if (result.IsSuccess && result.Data is not null)
+        {
+            var options = (IReadOnlyList<InvitableRoleOptionVm>)result.Data
+                .Select(r => new InvitableRoleOptionVm
+                {
+                    RoleId = r.RoleId,
+                    Name = r.Name,
+                    Description = r.Description,
+                    IsPrivileged = r.IsPrivileged,
+                })
+                .ToList();
+
+            return ApiResult<IReadOnlyList<InvitableRoleOptionVm>>.CreateSuccess(options, result.StatusCode);
+        }
+
+        if (result.IsUnauthorized)
+            return ApiResult<IReadOnlyList<InvitableRoleOptionVm>>.ForceSignOut();
+
+        return ApiResult<IReadOnlyList<InvitableRoleOptionVm>>.CreateFailure(
+            result.StatusCode,
+            result.Error ?? "Could not load invitable roles.");
+    }
+
     public async Task<ApiResult<InviteUserResponse>> InviteAsync(InviteUserVm vm, CancellationToken ct = default)
     {
         var request = new InviteUserRequest(
@@ -17,7 +44,8 @@ public sealed class InvitationsFacade
             FirstName:   vm.FirstName.Trim(),
             LastName:    vm.LastName.Trim(),
             DisplayName: string.IsNullOrWhiteSpace(vm.DisplayName) ? null : vm.DisplayName.Trim(),
-            AvatarUrl:   string.IsNullOrWhiteSpace(vm.AvatarUrl) ? null : vm.AvatarUrl.Trim());
+            AvatarUrl:   string.IsNullOrWhiteSpace(vm.AvatarUrl) ? null : vm.AvatarUrl.Trim(),
+            RoleIds:     vm.SelectedRoleIds.Distinct().ToList());
 
         var result = await _api.InviteAsync(request, ct);
 
