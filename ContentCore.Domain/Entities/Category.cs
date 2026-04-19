@@ -1,4 +1,5 @@
 using ContentCore.Domain.Events;
+using ContentCore.Domain.Enums;
 using YallaJo.SharedKernel.Domain.Entities;
 
 namespace ContentCore.Domain.Entities;
@@ -90,19 +91,61 @@ public sealed class Category : AuditableEntity, IAggregateRoot
         MarkUpdated();
     }
 
-    public void AddTranslation(Guid languageId, string name, string slug)
+    public void AddTranslation(
+        Guid languageId,
+        string name,
+        string slug,
+        TranslationStatus status = TranslationStatus.AutoTranslated)
     {
         if (_translations.Any(x => x.LanguageId == languageId))
             throw new InvalidOperationException("Translation already exists for this language.");
-        _translations.Add(CategoryTranslation.Create(Id, languageId, name, slug));
+        _translations.Add(CategoryTranslation.Create(Id, languageId, name, slug, status));
     }
 
-    public void UpdateTranslation(Guid languageId, string name, string slug)
+    public void UpdateTranslation(
+        Guid languageId,
+        string name,
+        string slug,
+        TranslationStatus? status = null)
     {
         var translation = _translations.FirstOrDefault(x => x.LanguageId == languageId);
         if (translation == null)
             throw new InvalidOperationException($"Translation for language '{languageId}' not found.");
-        translation.Update(name, slug);
+        translation.Update(name, slug, status);
+    }
+
+    /// <summary>
+    /// Updates an existing translation only if it is NOT human-reviewed.
+    /// Returns false when the translation is missing or locked by human review.
+    /// </summary>
+    public bool TryUpdateAutoTranslation(Guid languageId, string name, string slug)
+    {
+        var translation = _translations.FirstOrDefault(x => x.LanguageId == languageId);
+        if (translation is null)
+            return false;
+
+        if (translation.Status == TranslationStatus.HumanReviewed)
+            return false;
+
+        translation.Update(name, slug, TranslationStatus.AutoTranslated);
+        return true;
+    }
+
+    /// <summary>
+    /// Applies a manual/human-reviewed translation, creating it if missing.
+    /// This marks status as HumanReviewed so auto-translation won't overwrite it.
+    /// </summary>
+    public void UpsertHumanReviewedTranslation(Guid languageId, string name, string slug)
+    {
+        var existing = _translations.FirstOrDefault(x => x.LanguageId == languageId);
+        if (existing is not null)
+        {
+            existing.Update(name, slug, TranslationStatus.HumanReviewed);
+            return;
+        }
+
+        _translations.Add(CategoryTranslation.Create(
+            Id, languageId, name, slug, TranslationStatus.HumanReviewed));
     }
 
     public void ChangeParent(Guid? parentCategoryId)

@@ -1,4 +1,6 @@
 using System.ComponentModel.DataAnnotations;
+using System.Security.Cryptography;
+using System.Text;
 using ContentCore.Domain.Enums;
 using YallaJo.SharedKernel.Domain.Entities;
 
@@ -15,6 +17,7 @@ public sealed class TranslationCache : BaseEntity, IAggregateRoot
     private TranslationCache() { } // EF Core
 
     public string OriginalText { get; private set; } = string.Empty;
+    public string OriginalTextHash { get; private set; } = string.Empty;
     public string TranslatedText { get; private set; } = string.Empty;
     public string FromLanguage { get; private set; } = string.Empty;
     public string ToLanguage { get; private set; } = string.Empty;
@@ -48,6 +51,7 @@ public sealed class TranslationCache : BaseEntity, IAggregateRoot
         return new TranslationCache
         {
             OriginalText = originalText,
+            OriginalTextHash = ComputeHash(originalText, fromLanguage, toLanguage),
             TranslatedText = translatedText,
             FromLanguage = fromLanguage.ToLowerInvariant(),
             ToLanguage = toLanguage.ToLowerInvariant(),
@@ -70,5 +74,17 @@ public sealed class TranslationCache : BaseEntity, IAggregateRoot
     {
         Status = TranslationStatus.HumanReviewed;
         UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// SHA-256 hash of (OriginalText + from + to) used for fast dedup lookup and unique index.
+    /// </summary>
+    public static string ComputeHash(string originalText, string fromLanguage, string toLanguage)
+    {
+        var normalizedFrom = fromLanguage.ToLowerInvariant();
+        var normalizedTo = toLanguage.ToLowerInvariant();
+        var payload = $"{normalizedFrom}|{normalizedTo}|{originalText}";
+        var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(payload));
+        return Convert.ToHexString(bytes); // 64-char uppercase hex
     }
 }

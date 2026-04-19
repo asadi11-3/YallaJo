@@ -1,4 +1,4 @@
-﻿
+
 # YallaJo Architecture — Complete Developer Guide
 
 > **This guide is the single-source-of-truth for understanding and working with the YallaJo modular monolith.**  
@@ -1834,6 +1834,68 @@ public sealed class RoleRepository(SecurityDbContext context)
 
 *How soft delete protects data and how optimistic concurrency prevents lost updates. Both mechanisms are built into `AuditableEntity` and require minimal configuration.*
 
+### Entity Base Class Selection — `BaseEntity` vs `AuditableEntity`
+
+Choose the base class carefully. The choice affects EF configuration and available methods:
+
+| Needs | Use |
+|-------|-----|
+| Simple identity only (`Id`) — no tracking, no concurrency | `BaseEntity` |
+| Full audit trail (`CreatedAt`, `UpdatedAt`, `IsDeleted`, `DeletedAt`, `RowVersion`) | `AuditableEntity` |
+| Aggregate root (can raise domain events, dispatched by UoW) | `AuditableEntity` + `IAggregateRoot` |
+| Join table / value object with no lifecycle | `BaseEntity` |
+
+**The rule**: If an entity has ANY of — `UpdatedAt`, `RowVersion`, `IsDeleted` — it MUST extend `AuditableEntity`, not `BaseEntity`. Never manually add `[Timestamp] byte[] RowVersion` or `DateTime? UpdatedAt` to a `BaseEntity` subclass. That's a sign it should be `AuditableEntity`. (`Tag` was found doing this in ContentCore — fixed.)
+
+```csharp
+// ❌ WRONG — manually managing what AuditableEntity provides for free
+public sealed class Tag : BaseEntity
+{
+    [Timestamp]
+    public byte[] RowVersion { get; private set; } = [];  // ← belongs in AuditableEntity
+    public DateTime? UpdatedAt { get; private set; }       // ← belongs in AuditableEntity
+
+    public void Update(...)
+    {
+        UpdatedAt = DateTime.UtcNow;  // ← should be MarkUpdated()
+    }
+}
+
+// ✅ CORRECT
+public sealed class Tag : AuditableEntity
+{
+    public void Update(...)
+    {
+        MarkUpdated();  // AuditableEntity handles UpdatedAt, RowVersion via interceptors
+    }
+}
+```
+
+**EF configuration**: When switching from `BaseEntity` to `AuditableEntity`, remove any explicit `CreatedAt`, `UpdatedAt`, `RowVersion` config from the `IEntityTypeConfiguration` — `AuditableEntity`'s shared base configuration in SharedKernel already handles them.
+
+### IncludeInactive pattern for admin queries
+
+When a query hides inactive/deactivated entities (e.g., `!category.IsActive`), provide an `IncludeInactive` parameter for admin callers who need to view and manage deactivated records:
+
+```csharp
+// Query record:
+public sealed record GetCategoryByIdQuery(
+    Guid Id,
+    bool WithTranslations = false,
+    bool IncludeInactive = false)    // ← admin pass true
+    : IQuery<CategoryDto>, ICacheableQuery
+{
+    // Cache key MUST include IncludeInactive to avoid mixing admin and public cached views
+    public string CacheKey => ContentCoreCacheKeys.Category(Id, WithTranslations, IncludeInactive);
+}
+
+// Handler:
+if (category is null || (!category.IsActive && !request.IncludeInactive))
+    return Result<CategoryDto>.Failure(new Error("Category.NotFound", ...), Outcome.NotFound);
+```
+
+**Never** return the same cached entry for admin and public callers when the visibility differs.
+
 ### Soft Delete
 
 All entities inheriting from `AuditableEntity` support soft delete:
@@ -2411,7 +2473,37 @@ public static class ContentPlacesCacheKeys
 | `"attachments:{entityType}:{entityId}"` | Attachments scoped to a parent | `"attachments:Place:abc123"` |
 | `"translations:{entityType}:{entityId}"` | Translations scoped to a parent | `"translations:Place:abc123"` |
 
-**Command handler rule**: Always evict the coarse entity-level tag (`"places"`) which invalidates all lists AND individual entries. Only use fine-grained instance tags (`"place:{id}"`) when you need to evict just one entry without affecting lists.
+**Command handler rule — use the RIGHT granularity**:
+
+| Operation type | Tags to evict | Why |
+|---|---|---|
+| Create new entity | Coarse only (`"places"`) | All lists become stale, no specific instance to target |
+| Update single entity | Fine + coarse (`"place:{id}"` + `"places"`) | Detail cache stale + list summaries stale |
+| Delete single entity | Fine + coarse (`"place:{id}"` + `"places"`) | Same as update |
+| Delete attachment | Fine only (`"attachments:{Type}:{EntityId}"` + `"attachment:{id}"`) | Only THIS entity's attachments are affected — do NOT use coarse `"attachments"` which evicts ALL entities' attachment caches system-wide |
+| Assign/remove category from entity | Fine only (`"entity-categories:{Type}:{EntityId}"`) | Only THIS entity's category assignments are affected |
+
+⚠️ **Critical rule**: Using `RemoveByTagAsync("coarse-tag")` on single-entity mutations causes a cache stampede — ALL entries tagged with that tag are evicted system-wide, forcing every entity to hit the DB on next read. Always prefer `RemoveByTagAsync($"fine-grained:{id}")` for single-entity mutations.
+
+**State-change guard rule** (prevents duplicate domain events → duplicate outbox writes):
+Before calling any domain method that raises a domain event (`Activate()`, `Approve()`, `Suspend()`, etc.), ALWAYS check that the entity is NOT already in the target state:
+
+```csharp
+// WRONG — fires event even if already active:
+language.Activate();
+
+// CORRECT — only fires if state actually changes:
+if (!language.IsActive)
+    language.Activate();
+
+// For toggle commands:
+if (request.IsActive && !language.IsActive)
+    language.Activate();
+else if (!request.IsActive && language.IsActive)
+    language.Deactivate();
+```
+
+Calling state-change methods without guards causes duplicate domain events → duplicate outbox rows → duplicate integration events → duplicate downstream work (e.g., re-translating all content when a language was already active).
 
 ### Cache Key Convention
 
@@ -2424,6 +2516,106 @@ Rules:
 - NEVER cache user-specific data with a shared key — include `user:{userId}`
 - NEVER hand-write key strings — always use the module's static `CacheKeys` class
 - NEVER use spaces in cache keys
+
+### New Module Caching Setup Checklist
+
+Every new module that adds caching MUST follow ALL these steps. Do NOT skip any. Each step is a mandatory requirement.
+
+#### Step A: Add the package to `{Module}.Application.csproj`
+
+```xml
+<PackageReference Include="Microsoft.Extensions.Caching.Hybrid" Version="9.3.0" />
+```
+
+> ⚠️ **LOCKED VERSION**: Always use `9.3.0`. This is the canonical version for this project.
+> Do NOT use `10.x` — see §Version Consistency Rule in `agent-context.md`.
+> The version in `SharedKernel.Application` and `SharedKernel.Infrastructure` must match.
+> If you see a mismatch, downgrade all references to `9.3.0` before proceeding.
+
+#### Step B: Create `{Module}.Application/Caching/{Module}CacheKeys.cs`
+
+One static class per module. All key-building logic lives here — never hand-write key strings in handlers.
+
+```csharp
+namespace {Module}.Application.Caching;
+
+public static class {Module}CacheKeys
+{
+    // Pattern: {prefix}:{entity}:{scope}:{params}
+    // Module prefixes: cc=ContentCore, cp=ContentPlaces, ct=ContentTours, bk=Booking, fn=Finance
+
+    public static string EntityList(bool activeOnly, int page, int pageSize) =>
+        $"{prefix}:{entity}:{activeOnly}:p{page}:s{pageSize}";
+
+    public static string Entity(Guid id) =>
+        $"{prefix}:{entity}:{id}";
+
+    // If the query varies by caller identity (admin vs public), include user context:
+    public static string EntityForUser(Guid id, Guid? userId, bool isAdmin) =>
+        $"{prefix}:{entity}:{id}:u:{userId}:a:{isAdmin}";
+}
+```
+
+#### Step C: Add `ICacheableQuery` to every query record
+
+Every query that returns data (list or single-entity) MUST implement `ICacheableQuery`. No exceptions.
+
+```csharp
+public sealed record ListXxxQuery(int Page, int PageSize)
+    : IQuery<PaginatedResult<XxxSummaryDto>>, ICacheableQuery
+{
+    public string CacheKey => {Module}CacheKeys.XxxList(Page, PageSize);
+    public TimeSpan? CacheDuration => TimeSpan.FromMinutes(5);
+    public IReadOnlyList<string> Tags => ["xxxs"];          // coarse tag for the entity type
+}
+
+public sealed record GetXxxByIdQuery(Guid Id, Guid? UserId, bool IsAdmin)
+    : IQuery<XxxDetailDto>, ICacheableQuery
+{
+    public string CacheKey => {Module}CacheKeys.Xxx(Id, UserId, IsAdmin);
+    public TimeSpan? CacheDuration => TimeSpan.FromMinutes(5);
+    public IReadOnlyList<string> Tags => ["xxxs", $"xxx:{Id}"];  // coarse + fine-grained
+}
+```
+
+#### Step D: Inject `HybridCache` and call `RemoveByTagAsync` in every command handler
+
+Every command that mutates state MUST invalidate the cache after a successful save.
+
+```csharp
+public sealed class CreateXxxCommandHandler(
+    IXxxRepository xxxRepository,
+    I{Module}UnitOfWork unitOfWork,
+    HybridCache cache,                   // ← inject
+    ILogger<CreateXxxCommandHandler> logger)
+    : ICommandHandler<CreateXxxCommand, CreateXxxResult>
+{
+    public async Task<Result<CreateXxxResult>> Handle(CreateXxxCommand request, CancellationToken ct)
+    {
+        // ... business logic + save ...
+
+        var saveResult = await SaveAsync(..., ct);
+        if (saveResult is not null) return saveResult;
+
+        await cache.RemoveByTagAsync("xxxs", ct);    // ← evict after save, not before
+
+        return Result<CreateXxxResult>.Created(new CreateXxxResult(entity.Id));
+    }
+}
+```
+
+**Tag eviction rule**: Evict AFTER a successful save. Never evict before save — a failed save would leave an empty cache backed by nothing.
+
+#### Step E: Verify — Caching Checklist Before Marking Feature Complete
+
+- [ ] `Microsoft.Extensions.Caching.Hybrid` `9.3.0` added to `{Module}.Application.csproj`?
+- [ ] `{Module}CacheKeys.cs` static class created in `{Module}.Application/Caching/`?
+- [ ] Every query record implements `ICacheableQuery` (CacheKey + CacheDuration + Tags)?
+- [ ] Every command handler injects `HybridCache` and calls `RemoveByTagAsync` after successful save?
+- [ ] Tags follow convention: `"{entity}s"` for lists, `"{entity}s"` + `"{entity}:{id}"` for detail?
+- [ ] Keys follow format `{prefix}:{entity}:{scope}:{params}` — all lowercase, colon-separated?
+- [ ] Auth-varied queries (admin vs public) include `userId` and `isAdmin` in the cache key?
+- [ ] `RemoveByTagAsync` called AFTER save (not before)?
 
 ### Serialization (Result<T> Redis-Ready)
 

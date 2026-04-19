@@ -3,6 +3,7 @@ using ContentCore.Domain.Enums;
 using ContentCore.Domain.Exceptions;
 using ContentCore.Domain.Repositories;
 using Microsoft.Extensions.Caching.Hybrid;
+using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
@@ -13,21 +14,29 @@ namespace ContentCore.Application.Commands.Attachment.SetPrimaryImage;
 public sealed class SetPrimaryImageCommandHandler(
     IAttachmentRepository attachmentRepository,
     IContentCoreUnitOfWork unitOfWork,
-    HybridCache cache)
+    ICurrentUser currentUser,
+    HybridCache cache,
+    ILogger<SetPrimaryImageCommandHandler> logger)
     : ICommandHandler<SetPrimaryImageCommand>
 {
     public async Task<Result> Handle(SetPrimaryImageCommand request, CancellationToken cancellationToken)
     {
         try
         {
-            var attachment = await attachmentRepository.GetByIdAsync(request.AttachmentId, cancellationToken);
+            if (currentUser.UserId is null)
+                return Result.Failure(Error.Unauthorized("Authentication is required."), Outcome.Unauthorized);
+
+            // Load for validation only (ownership + entity check) — no mutation on the attachment itself.
+            var attachment = await attachmentRepository.GetByIdAsync(
+                request.AttachmentId, cancellationToken, asNoTracking: true);
+
             if (attachment is null)
             {
                 return Result.Failure(
-                 new Error("Attachment.NotFound", $"Attachment '{request.AttachmentId}' was not found."),
-                 Outcome.NotFound);
+                    new Error("Attachment.NotFound", $"Attachment '{request.AttachmentId}' was not found."),
+                    Outcome.NotFound);
             }
- 
+
             if (attachment.EntityType != request.EntityType || attachment.EntityId != request.EntityId)
             {
                 return Result.Failure(
@@ -35,6 +44,15 @@ public sealed class SetPrimaryImageCommandHandler(
                         "Attachment.WrongEntity",
                         $"Attachment '{request.AttachmentId}' does not belong to {request.EntityType}/{request.EntityId}."),
                     Outcome.Invalid);
+            }
+
+            // IDOR: only the uploader or an admin may set the primary image
+            var isAdmin = currentUser.IsInRole("Admin");
+            if (!isAdmin && attachment.UploadedByUserId != currentUser.UserId.Value)
+            {
+                return Result.Failure(
+                    Error.Forbidden("You do not have permission to set the primary image for this entity."),
+                    Outcome.Forbidden);
             }
 
             var entityImages = await attachmentRepository.GetEntityImagesAsync(
@@ -74,6 +92,10 @@ public sealed class SetPrimaryImageCommandHandler(
             }
 
             await cache.RemoveByTagAsync($"attachments:{request.EntityType}:{request.EntityId}", cancellationToken);
+
+            logger.LogInformation(
+                "Primary image set: Attachment={AttachmentId} for {EntityType}/{EntityId}",
+                request.AttachmentId, request.EntityType, request.EntityId);
 
             return Result.Success();
         }

@@ -17,6 +17,11 @@ public class TranslationCacheConfiguration : IEntityTypeConfiguration<Translatio
         builder.Property(x => x.OriginalText)
             .IsRequired();
 
+        builder.Property(x => x.OriginalTextHash)
+            .IsRequired()
+            .IsUnicode(false)
+            .HasMaxLength(64);
+
         builder.Property(x => x.TranslatedText)
             .IsRequired();
 
@@ -56,7 +61,12 @@ public class TranslationCacheConfiguration : IEntityTypeConfiguration<Translatio
         // POSSIBLE-001: Concurrency token so optimistic-locking catch blocks are functional.
         builder.Property(x => x.RowVersion).IsRowVersion();
 
-        // Index for cache lookups (language pair only; OriginalText filtered in query)
+        // Unique dedup index by deterministic hash of (OriginalText + FromLanguage + ToLanguage)
+        builder.HasIndex(x => x.OriginalTextHash)
+            .IsUnique()
+            .HasDatabaseName("UX_TranslationCache_Hash");
+
+        // Secondary lookup index for analytics/listing by language pair
         builder.HasIndex(x => new { x.FromLanguage, x.ToLanguage })
             .HasDatabaseName("IX_TranslationCache_Lookup");
 

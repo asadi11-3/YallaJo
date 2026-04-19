@@ -2,6 +2,7 @@ using ContentCore.Domain.Enums;
 using ContentCore.Domain.Exceptions;
 using ContentCore.Domain.Repositories;
 using Microsoft.Extensions.Caching.Hybrid;
+using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 using Outcome = YallaJo.SharedKernel.Domain.Abstractions.Results.Outcome;
@@ -11,7 +12,8 @@ namespace ContentCore.Application.Commands.EntityCategory.RemoveCategoryFromEnti
 public sealed class RemoveCategoryFromEntityCommandHandler(
     IEntityCategoryRepository entityCategoryRepository,
     IContentCoreUnitOfWork unitOfWork,
-    HybridCache cache)
+    HybridCache cache,
+    ILogger<RemoveCategoryFromEntityCommandHandler> logger)
     : ICommandHandler<RemoveCategoryFromEntityCommand>
 {
     public async Task<Result> Handle(RemoveCategoryFromEntityCommand request, CancellationToken cancellationToken)
@@ -45,6 +47,10 @@ public sealed class RemoveCategoryFromEntityCommandHandler(
             }
 
             await cache.RemoveByTagAsync($"entity-categories:{request.EntityType}:{request.EntityId}", cancellationToken);
+
+            logger.LogInformation(
+                "Removed category {CategoryId} from {EntityType}/{EntityId}",
+                request.CategoryId, request.EntityType, request.EntityId);
 
             return Result.Success();
         }

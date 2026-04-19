@@ -1,6 +1,6 @@
 # YallaJo — Agent Onboarding & Progress Context
 
-> **Last Updated**: 2026-04-16 | **Build State**: 0 errors, pre-existing StyleCop warnings only (SA1200, SA1633 etc. — from Roslyn analyzers in Directory.Build.props, NOT code regressions)
+> **Last Updated**: 2026-04-17 (ContentCore WS4/WS6 remediation + schema migration) | **Build State**: 0 errors, analyzer warnings only (pre-existing StyleCop/Meziantou/CA warnings; no new compile errors)
 
 > **Purpose**: Single source of truth for any AI agent working on YallaJo. **Read this entire file once at the start of every session.** Every section contains rules you must follow — do not skip any.
 ## 📑 Table of Contents
@@ -63,6 +63,13 @@ These are hard-won lessons. **Read before writing any code.**
 | 9 | **`Result<T>` errors**: `result.Errors` = `IReadOnlyList<Error>`, `result.Messages` = `IReadOnlyList<string>` | `Error` is `record Error(string Code, string Message)`. |
 | 10 | **DI registration is the #1 most forgotten step** | Every repo, service, UoW MUST be registered in `DependencyInjection.cs` or you get runtime `InvalidOperationException`. |
 | 11 | **Business Rules PDF is MANDATORY before implementing any module** | `Agents/YallaJo Business Rules & Edge Cases.pdf` contains every validation rule, state machine, and edge case. If you skip it, you WILL miss critical business logic and your work must be redone. |
+| 12 | **`Microsoft.Extensions.*` packages MUST stay on `9.x` — NEVER add `10.x`** | The project targets `net9.0`. Adding a `10.x` version of any `Microsoft.Extensions.*` package causes `NU1605: Detected package downgrade` because other projects transitively pull `9.x`. Exception: `Caching.Hybrid` is pinned at `9.3.0` (its GA version). All three `Caching.Hybrid` references (SharedKernel.Application, SharedKernel.Infrastructure, module Application) MUST be `9.3.0`. Before adding any `Microsoft.Extensions.*` package, search the solution for the existing version and match it exactly. |
+| 13 | **ALL queries MUST implement `ICacheableQuery` — no uncached queries** | Every `IQuery<T>` record in every module MUST implement `ICacheableQuery` with `CacheKey`, `CacheDuration`, and `Tags`. Returning data without caching defeats the HybridCache pipeline behavior. Forgetting it means the `QueryCachingBehavior` is silently bypassed and every request hits the DB. |
+| 14 | **ALL command handlers MUST inject `HybridCache` and call `RemoveByTagAsync` after save** | Writing data without invalidating the cache leaves stale data visible to users until TTL expires. `RemoveByTagAsync` is called AFTER a successful `SaveChangesAsync` — never before (a failed save would leave an empty cache). |
+| 15 | **`RemoveByTagAsync` MUST use the MOST SPECIFIC tag — NEVER use a coarse tag for single-entity mutations** | `RemoveByTagAsync("attachments")` evicts ALL entities' attachment caches system-wide. Single-entity deletes/updates MUST use `$"attachments:{EntityType}:{EntityId}"` + `$"attachment:{id}"`. Coarse tags (`"categories"`, `"tags"`) are only correct for operations that affect ALL instances (schema changes, bulk deletes). ERR-010 in error-log.md. |
+| 16 | **Before calling any domain method that raises an event, guard the current state** | `language.Activate()` ALWAYS raises `LanguageActivatedDomainEvent`. If the language is already active and you call `Activate()` again, you get a duplicate outbox row → duplicate integration event → duplicate downstream work (re-translating all content). Always check: `if (!entity.IsInTargetState) entity.TransitionToTargetState()`. See ERR-009 in error-log.md. |
+| 17 | **Recursive tree builders MUST have cycle detection** | Any method that traverses parent-child relationships from DB data must use a `HashSet<Guid> visited` set to detect circular references. A circular parent chain in the DB causes `StackOverflowException` that crashes the process. See ERR-012 in error-log.md. |
+| 18 | **`ILogger<THandler>` is mandatory in ALL handlers — commands AND queries** | Query handlers are NOT exempt. 21 ContentCore handlers were found missing ILogger during audit (2026-04-17). The rule applies to every `ICommandHandler` and `IQueryHandler` implementation in every module. See BUG-005 in ContentCore-fixes-required.md. |
 
 ---
 ## 🚨 [CRITICAL] Common Mistakes & Fixes
@@ -84,6 +91,9 @@ These are hard-won lessons. **Read before writing any code.**
 | Modifying a different aggregate in a domain event handler | Inconsistent state — second aggregate may not save, or may corrupt transaction | Use integration event (outbox) instead. One transaction = one aggregate. |
 | Entity has public setters | Any code can modify entity state bypassing business rules | All setters must be `private` or `private set`. Expose business methods instead (`Update()`, `Activate()`). |
 | Forgot to raise domain event in factory method | Downstream handlers (translation, audit) never trigger | Every `Create()` factory MUST raise `{Entity}CreatedDomainEvent` before returning. |
+| Called `Activate()` / state-transition method without checking current state | Duplicate domain events → duplicate outbox rows → duplicate integration events → duplicate downstream processing (e.g., re-translating all content) | Before calling any method that raises a domain event, guard: `if (!entity.IsActive) entity.Activate()`. Never call state-change methods unconditionally. ERR-009. |
+| Used `BaseEntity` for an entity that needs `UpdatedAt` / `RowVersion` | `UpdatedAt` manually set via `= DateTime.UtcNow` (two sources of truth), `[Timestamp]` attribute on a `BaseEntity` property bypasses interceptors | If an entity needs `UpdatedAt`, `IsDeleted`, or `RowVersion`, it MUST extend `AuditableEntity`. Use `MarkUpdated()` — never `UpdatedAt = DateTime.UtcNow`. See §guide.md §13 Entity Base Class Selection. |
+| Recursive tree builder with no cycle detection | `StackOverflowException` crashes the process when DB has circular parent references | Add `HashSet<Guid> visited` to recursive method. Before recursing, call `visited.Add(id)` and return leaf if false. ERR-012. |
 ### EF Core & Query Bugs
 | Mistake | Symptom | Fix |
 |---------|---------|-----|
@@ -175,7 +185,7 @@ After completing ANY work, do ALL of the following before ending your session:
 | Auth | ✅ Complete | Pre-existing |
 | Security | ✅ Complete | Pre-existing |
 | Accounts | ✅ Complete | Pre-existing |
-| ContentCore | ✅ Complete | Category (tree, depth, reorder, slug, translations, deactivate/activate), Specialization, Tag, EntityCategory, EntityTag, Attachment, Translation |
+| ContentCore | ✅ Fixed | Full audit + all 11 bugs fixed 2026-04-17, plus WS follow-up remediation: upload magic-byte signature validation (WS6), verified post-commit attachment deletion flow/no-op event handler consistency (WS4), and new migration `20260417115007_UpdateContentCoreUnicodeTranslationCacheAndStatus` for Unicode + CategoryTranslation.Status + TranslationCache hash index. Build: 0 errors. See `Agents/ContentCore-fixes-required.md`. |
 | ContentPlaces | 🟡 In Progress | Tasks 2+3 complete (Business CQRS + state machine + BusinessHours). Task 1 (Place) still needed before Task 2 endpoints are functional end-to-end. Tasks 4–8 remain. |
 | ContentTours | ⬜ Not started | Entities exist, endpoints empty |
 | ContentBlogs | ⬜ Not started | Entities exist, endpoints empty |
@@ -230,6 +240,9 @@ This section is the **single source of truth** for what exists in the codebase. 
 | 26 | Test Infrastructure | ✅ | 🤖 Agent | Created `tests/YallaJo.Tests.Shared/` (xunit 2.9.3, NSubstitute 5.3.0, FluentAssertions 7.0.0) and `tests/ContentCore.Tests.Unit/` with 6 passing Category domain tests: Create valid, Create raises event, Create null name throws, Update changes props, SoftDelete sets IsDeleted, Update null name throws. Both projects added to solution. `dotnet test`: 6 passed, 0 failed. |
 | 27 | Program.cs Infrastructure Wiring | ✅ | 🤖 Agent | Rewired Program.cs: added `builder.AddYallaJoSerilog()`, `builder.Services.AddYallaJoApiVersioning()`, `builder.AddYallaJoOpenTelemetry()`, `builder.Services.AddYallaJoHealthChecks()`, `builder.Services.AddExceptionHandler<GlobalExceptionHandler>()`, `app.UseYallaJoSerilogRequestLogging()`, `app.MapYallaJoHealthChecks()`. Simplified ProblemDetails registration (GlobalExceptionHandler handles dev details). Removed stale `using Microsoft.AspNetCore.Diagnostics`. Build: 0 errors. |
 | 28 | ContentPlaces Task 2+3 Bug Fixes & Completions | ✅ | 🤖 Agent | Fixed 6 build errors (wrong concurrency exception type + wrong Result.Conflict overload). Added missing `ReinstateBusiness` command/handler/endpoint. Expanded `BusinessDetailDto` from 22→34 fields (LicenseNumber, TaxId, MetaTitle, MetaDescription, SubscriptionTier, ServiceItemCount, StaffCount, AmenityCount, Translations, BusinessHours, UpdatedAt). Created `BusinessTranslationDto`. Updated `GetBusinessByIdQueryHandler` to use `GetByIdWithDetailsAsync` (single query with all Includes). Fixed `BusinessHoursDto` shape (added Guid Id, changed int→string DayOfWeek). Added `GetByIdWithDetailsAsync` to `IBusinessRepository` + `BusinessRepository`. Improved `ReplaceBusinessHoursAsync` to use `ExecuteDeleteAsync` (bulk SQL delete, no load-then-delete). Added `ICurrentUser` guard to `SuspendBusinessCommandHandler` + `ReinstateBusinessCommandHandler`. All domain state-machine methods remain `void`+throw per guide.md rules. Build: 0 errors. |
+| 29 | ContentCore Full Audit | ✅ | 🤖 Agent | Full read of all 140+ ContentCore files. Build: 0 errors throughout. 11 bugs found across Domain, Application, Infrastructure — 2 high, 5 medium, 4 low. Full report written to `Agents/ContentCore-fixes-required.md`. Error log updated (ERR-009 through ERR-012). Guide.md updated: state-change guard rule, fine-grained vs coarse cache tag strategy. agent-context.md updated: gotchas #15–18 added. Notable: ContentCore is architecturally the best module — IContentCoreUnitOfWork correctly wraps IUnitOfWork<TContext> and dispatches domain events (unlike ContentPlaces). |
+| 30 | ContentCore All Bugs Fixed | ✅ | 🤖 Agent | Fixed all 11 bugs from ContentCore-fixes-required.md. BUG-001: UpdateLanguageCommandHandler now guards Activate/Deactivate with state checks (prevents duplicate domain events). BUG-002: DeleteAttachmentCommandHandler uses fine-grained cache tags (not coarse "attachments"). BUG-003: Tag.cs changed from BaseEntity→AuditableEntity, [Timestamp] removed, MarkUpdated() used, TagConfiguration cleaned. BUG-004: Dead coarse tags removed from GetEntityCategoriesQuery+GetEntityTagsQuery. BUG-005: ILogger added to all 21 handlers. BUG-006: Cycle detection (HashSet<Guid> visited) added to ListCategoriesQueryHandler.BuildNode. BUG-007: GetCategoryByIdQuery+Handler now support IncludeInactive param for admins. DESIGN-001: Cargo usings removed from IContentCoreUnitOfWork. DESIGN-003: TODO comment added for MediaProcessingBackgroundService. BUG-008/009: asNoTracking explicit, missing step 2 comment added. guide.md updated: BaseEntity vs AuditableEntity selection rule + IncludeInactive pattern. agent-context.md Common Mistakes updated. Build: 0 errors. |
+| 31 | ContentCore WS4/WS6 + migration follow-up | ✅ | 🤖 Agent | Implemented binary file signature (magic-byte) validation in `UploadAttachmentCommandHandler` before storage upload, with strict signature↔attachment-type↔MIME↔extension compatibility checks (SVG remains blocked by validator). Verified attachment deletion flow consistency: post-commit delete stays in `DeleteAttachmentCommandHandler`, `AttachmentDeletedDomainEventHandler` remains intentional no-op, upload rollback cleanup remains best-effort. Added EF migration `20260417115007_UpdateContentCoreUnicodeTranslationCacheAndStatus` covering Unicode column updates, `CategoryTranslations.Status`, and `TranslationCaches.OriginalTextHash` unique index (also includes pending Tag audit columns from model drift). Validation: `dotnet build` (0 errors) and `dotnet test tests/ContentCore.Tests.Unit` (6/6 passed). |
 
 ---
 ## [TRACKING] What Needs To Be Done Next
@@ -237,7 +250,9 @@ This section is the **single source of truth** for what exists in the codebase. 
 - ~~Category tree, depth validation, slug auto-gen, reorder~~ ✅ Done
 - ~~Specialization CQRS~~ ✅ Done
 - Verify all endpoints end-to-end (recommend running Swagger after migration)
-- EF Migrations — all ContentCore entity schemas were pre-existing; no new schema changes from this session's fixes
+- ~~EF Migrations — all ContentCore entity schemas were pre-existing; no new schema changes from this session's fixes~~ ✅ Updated: migration `20260417115007_UpdateContentCoreUnicodeTranslationCacheAndStatus` added for Unicode/Status/hash schema updates
+- Apply latest ContentCore migration to the target database and smoke-test ContentCore attachment/category/language flows in Swagger
+- Add WS10-focused automated tests for signature mismatch rejection, human-reviewed translation preservation, and translation-cache hash dedup race safety
 ### Wave 2 — ContentPlaces Full Module (34 endpoints)
 - See `Agents/ContentPlaces-tasks.md` for the complete task breakdown, WBS, and implementation rules
 - **Task 1**: Place CQRS + Admin Actions (8 endpoints) — Phase 1
@@ -286,8 +301,11 @@ This section is the **single source of truth** for what exists in the codebase. 
 - [ ] `Commands/{Entity}/Create{Entity}/` — Command, Handler, Validator
 - [ ] `Commands/{Entity}/Update{Entity}/` — Command, Handler, Validator
 - [ ] `Commands/{Entity}/Delete{Entity}/` — Command, Handler, Validator
-- [ ] `Queries/{Entity}/List{Entities}/` — Query (with SummaryDto), Handler (paginated, AsNoTracking)
-- [ ] `Queries/{Entity}/Get{Entity}ById/` — Query (with DetailDto), Handler
+- [ ] `Queries/{Entity}/List{Entities}/` — Query **with `ICacheableQuery`** (SummaryDto, paginated, AsNoTracking)
+- [ ] `Queries/{Entity}/Get{Entity}ById/` — Query **with `ICacheableQuery`** (DetailDto)
+- [ ] `Caching/{Module}CacheKeys.cs` — static key factory class (if not already exists for this module)
+- [ ] `Microsoft.Extensions.Caching.Hybrid` **`9.3.0`** in `{Module}.Application.csproj` (if not already present)
+- [ ] **All command handlers inject `HybridCache` and call `RemoveByTagAsync` after successful save**
 - [ ] Domain event handlers in `EventHandlers/` (if needed)
 ### Step 3: Infrastructure (`{Module}.Infrastructure`)
 - [ ] EF config in `Persistence/Configurations/` (MUST follow `guide.md` patterns)
@@ -343,6 +361,10 @@ After running `scaffold.ps1`, you MUST review and customize EVERY generated file
    - [ ] Verify SummaryDto has only 5-8 fields (not full entity)
    - [ ] Verify DetailDto has ALL relevant fields
    - [ ] Add pagination validation to list query
+   - [ ] **Every `IQuery<T>` record implements `ICacheableQuery`** — `CacheKey` (from CacheKeys class), `CacheDuration` (5 min for lists/detail), `Tags` (coarse `"{entity}s"` + fine `"{entity}:{id}"` for detail)
+   - [ ] **Every command handler injects `HybridCache`** and calls `await cache.RemoveByTagAsync(...)` **after** successful save
+   - [ ] **`{Module}CacheKeys.cs`** exists with a method for every cached query
+   - [ ] **Auth-varied queries** (admin sees different data than public) include `userId` and `isAdmin` in the `CacheKey`
 
 4. **Validators** (`{Module}.Application/Commands/`)
    - [ ] Add validation rules for EVERY input field
@@ -1175,6 +1197,11 @@ Before marking ANY feature as ✅ complete in the Work Tracker, verify ALL of th
 - [ ] `CancellationToken` passed through entire call chain?
 - [ ] List endpoints use SummaryDto (not full entity)?
 - [ ] List endpoints have pagination with max PageSize=100?
+- [ ] **Every query record implements `ICacheableQuery` (CacheKey + CacheDuration + Tags)?**
+- [ ] **Every command handler injects `HybridCache` and calls `RemoveByTagAsync` after successful save?**
+- [ ] **`Microsoft.Extensions.Caching.Hybrid` `9.3.0` added to `{Module}.Application.csproj`?**
+- [ ] **`{Module}CacheKeys.cs` static class exists with all key methods?**
+- [ ] **Auth-varied queries include `userId`/`isAdmin` in cache key?**
 - [ ] `dotnet build` passes with 0 errors?
 - [ ] `lsp_diagnostics` clean on all changed files?
 ### Rollback Strategy
@@ -1278,15 +1305,44 @@ YallaJo is a Jordanian tourism platform. Arabic (RTL) and English (LTR) are the 
 | **MUST use existing packages first** | If a capability is already covered by an installed package, use it. Do NOT add a second package for the same purpose. |
 | **No preview packages in production code** | Unless the project explicitly uses a preview SDK (YallaJo uses .NET SDK 10.0.200-preview, targeting net9.0 — this is fine). |
 | **Pin versions** | Always specify exact version in `.csproj` — no floating versions (`*`). |
+| **Version consistency is MANDATORY** | Every `Microsoft.Extensions.*` package MUST use the same major.minor version across ALL projects. The canonical version band for this project is **`9.x`** (e.g., `9.0.x`, `9.3.0`, `9.4.0`). NEVER add a `10.x` version of any `Microsoft.Extensions.*` package — even if the SDK is .NET 10 preview and NuGet resolves it. The target framework is `net9.0` and the extensions ecosystem must stay on `9.x`. |
+| **Before adding any `Microsoft.Extensions.*` package** | Search the solution for the same package family (`grep -r "Microsoft.Extensions" *.csproj`). Use the exact version already present. If not present, use the latest `9.x` stable. |
+
+### ⚠️ Version Consistency Rule (STRICT — violations cause NU1605 build errors)
+
+This project targets `net9.0` with SDK `10.0.x-preview`. This combination is valid.
+However, **NuGet package versions must stay internally consistent**:
+
+| Package Family | Canonical Version | Rule |
+|---|---|---|
+| `Microsoft.Extensions.*` (Configuration, Hosting, DI, etc.) | `9.0.x` – `9.4.x` | Never use `10.x` |
+| `Microsoft.EntityFrameworkCore.*` | `9.0.x` | Never use `10.x` |
+| `Microsoft.AspNetCore.*` | `9.0.x` | Never use `10.x` |
+| `Microsoft.Extensions.Caching.Hybrid` | **`9.3.0`** (pinned) | This is the ONLY exception to automatic `9.0.x` — HybridCache reached GA at `9.3.0`. All three references (SharedKernel.Application, SharedKernel.Infrastructure, any module Application) MUST use exactly `9.3.0`. |
+
+**Why this matters**: Using `10.x` in one project while another project transitively pulls `9.x` of the same package causes `NU1605: Detected package downgrade`. This is treated as a build error in this solution (`TreatWarningsAsErrors` is set for analyzers).
+
+**How to verify before adding a package**:
+```powershell
+# Check what version is already used across the solution
+Select-String -Path "**/*.csproj" -Pattern "PackageName" -Recurse
+```
+Always match the version already in use. If no version exists yet, use the latest `9.x` stable.
+
 ### Approved Packages (already in use)
-| Package | Purpose | DO NOT replace with |
-|---------|---------|-------------------|
-| MediatR | CQRS pipeline | Wolverine, raw DI |
-| FluentValidation | Input validation | DataAnnotations |
-| EF Core (SqlServer) | ORM | Dapper (for CQRS queries it's OK to add later) |
-| SixLabors.ImageSharp | Image processing | System.Drawing, SkiaSharp |
-| FFMpegCore | Video/audio metadata | MediaToolkit |
-| Azure.AI.Translation.Text | Translation API | Google Translate SDK |
+| Package | Pinned Version | Purpose | DO NOT replace with |
+|---------|---------------|---------|-------------------|
+| MediatR | `14.0.0` | CQRS pipeline | Wolverine, raw DI |
+| FluentValidation | `12.1.1` | Input validation | DataAnnotations |
+| EF Core (SqlServer) | `9.0.13` | ORM | Dapper (for CQRS queries it's OK to add later) |
+| **Microsoft.Extensions.Caching.Hybrid** | **`9.3.0`** | HybridCache — data caching with stampede prevention + tag eviction | IMemoryCache, IDistributedCache directly |
+| Microsoft.Extensions.Http.Resilience | `9.4.0` | Polly v8 resilience for HttpClient | Raw Polly setup |
+| SixLabors.ImageSharp | `3.1.12` | Image processing | System.Drawing, SkiaSharp |
+| FFMpegCore | `5.4.0` | Video/audio metadata | MediaToolkit |
+| Azure.AI.Translation.Text | (current) | Translation API | Google Translate SDK |
+| Serilog.AspNetCore | `10.0.0` | Structured logging | Microsoft.Extensions.Logging direct |
+| Asp.Versioning.Http | `8.1.1` | API versioning | Manual route strings |
+
 ### Banned Packages
 | Package | Why |
 |---------|-----|
@@ -1294,6 +1350,7 @@ YallaJo is a Jordanian tourism platform. Arabic (RTL) and English (LTR) are the 
 | AutoMapper | We use manual DTO mapping for explicitness and performance |
 | MediatR.Extensions.* | Unnecessary — pipeline behaviors are in SharedKernel |
 | EntityFramework.Proxies | No lazy loading — see Performance Rule P7 |
+| IMemoryCache (standalone) | Replaced by HybridCache. Zero new code should use `IMemoryCache`. |
 
 ---
 ## 🧠 [CRITICAL] Error Learning System (MANDATORY)

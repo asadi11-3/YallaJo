@@ -99,3 +99,35 @@
 - **Root Cause**: Agent incorrectly generalized the Result pattern to the Domain layer. The rule exists because domain entities express business state through throws (`InvalidOperationException`) for programming/invariant violations, while `Result` is an Application-layer concern for user-facing error paths.
 - **Fix Applied**: Reverted all 5 methods back to `void` + `throw InvalidOperationException`. Restored state-guard checks inside each Application handler before calling the domain method.
 - **Prevention Rule**: NEVER add `Result`, `Error`, or `Outcome` return types to Domain entity methods. Domain entity methods are `void` (state transitions) or return primitives/the entity. Business-rule violations in the domain use `throw InvalidOperationException`. State machine guards belong in BOTH the handler (for early `Result.Failure` return) AND the domain (as a throw for programming error protection).
+
+### ERR-009: `UpdateLanguageCommandHandler` fires `LanguageActivatedDomainEvent` even when language is already active — duplicate outbox writes
+- **Date**: 2026-04-17
+- **Module**: ContentCore
+- **What Happened**: `UpdateLanguageCommandHandler` calls `language.Activate()` unconditionally when `request.IsActive == true`. `Language.Activate()` always raises `LanguageActivatedDomainEvent`, which writes an `OutboxMessage` row. If the language was already active, the event fires anyway — triggering a duplicate backfill of all Place/Business translations.
+- **Root Cause**: No state guard before calling `Activate()`/`Deactivate()`. The domain method raises the event without checking if the state actually changed.
+- **Fix Applied**: Add state change guards in the handler: `if (request.IsActive && !language.IsActive) language.Activate(); else if (!request.IsActive && language.IsActive) language.Deactivate();`
+- **Prevention Rule**: Before calling any domain method that raises a domain event (e.g., `Activate()`, `Approve()`, `Deactivate()`), ALWAYS check that the entity is NOT already in the target state. Calling state-change methods idempotently (without the guard) causes duplicate domain events → duplicate outbox rows → duplicate integration events → duplicate downstream work. Pattern: `if (entity.Status != targetStatus) entity.ChangeStatus(...)`.
+
+### ERR-010: `DeleteAttachmentCommandHandler` uses coarse cache tag `"attachments"` — evicts ALL entity attachment caches system-wide
+- **Date**: 2026-04-17
+- **Module**: ContentCore
+- **What Happened**: `DeleteAttachmentCommandHandler` calls `RemoveByTagAsync("attachments")`. While functionally it does evict the correct cache entries (via the coarse tag), it also evicts attachment lists for ALL entities in the system — not just the entity whose attachment was deleted. This is an unnecessary cache stampede: all entities will miss the cache on their next attachment request, causing N DB queries.
+- **Root Cause**: Used the broadest possible tag (`"attachments"`) instead of the fine-grained entity-specific tag (`"attachments:{EntityType}:{EntityId}"`).
+- **Fix Applied**: Replace `RemoveByTagAsync("attachments")` with `RemoveByTagAsync($"attachments:{attachment.EntityType}:{attachment.EntityId}")` + `RemoveByTagAsync($"attachment:{request.AttachmentId}")`.
+- **Prevention Rule**: Always use the MOST SPECIFIC cache tag available for invalidation. Coarse tags (`"attachments"`, `"categories"`) should only be evicted by operations that truly affect ALL instances (e.g., a schema change or bulk delete). Single-entity mutations must evict only `$"{entity}:{id}"` fine-grained tags. Before writing `RemoveByTagAsync("coarse-tag")`, ask: "Does this mutation affect ALL entries with this tag, or just one?"
+
+### ERR-011: Multiple ContentCore handlers missing `ILogger<THandler>` — guide rule violated across 21 files
+- **Date**: 2026-04-17
+- **Module**: ContentCore
+- **What Happened**: Full audit found 21 handler files (commands and queries) that do not inject `ILogger<THandler>`. This violates the mandatory rule in `agent-context.md`: "Add `ILogger<THandler>` to every handler."
+- **Root Cause**: Handlers were written before the ILogger rule was strictly enforced, or the rule was overlooked during review. Query handlers are often forgotten because they "just read data."
+- **Fix Applied**: Add `ILogger<THandler>` to all 21 affected files (see ContentCore-fixes-required.md §BUG-005 for the complete list).
+- **Prevention Rule**: ILogger is MANDATORY in every handler — commands AND queries. This is on the Completion Checklist and the New Entity Checklist. Query handlers are NOT exempt. Add ILogger to the primary constructor and log at least: (1) entry with request parameters for commands, (2) result count for list queries, (3) success/failure for mutating commands.
+
+### ERR-012: `ListCategoriesQueryHandler.BuildNode` has no cycle detection — stack overflow on circular parent references in DB
+- **Date**: 2026-04-17
+- **Module**: ContentCore
+- **What Happened**: The recursive `BuildNode()` method in `ListCategoriesQueryHandler` has no visited-set or depth limit. If the DB contains a circular parent reference (Category A → parent B → parent A), the recursion never terminates, causing a `StackOverflowException` that crashes the process.
+- **Root Cause**: Recursive tree builders always need cycle detection. The DB has a unique index on `(Id)` but no DB-level constraint preventing circular parent chains.
+- **Fix Applied**: Add a `HashSet<Guid> visited` parameter to `BuildNode()`. Before recursing into children, check `if (!visited.Add(category.Id)) return leaf node;`
+- **Prevention Rule**: Any recursive method that traverses user-supplied or DB-supplied graph data MUST have cycle detection via a `HashSet<T>` visited set AND/OR a max-depth limit. Never assume the data is a clean tree just because the schema suggests it should be.

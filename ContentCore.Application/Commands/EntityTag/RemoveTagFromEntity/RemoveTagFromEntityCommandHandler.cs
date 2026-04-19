@@ -2,6 +2,7 @@ using ContentCore.Domain.Enums;
 using ContentCore.Domain.Exceptions;
 using ContentCore.Domain.Repositories;
 using Microsoft.Extensions.Caching.Hybrid;
+using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 using Outcome = YallaJo.SharedKernel.Domain.Abstractions.Results.Outcome;
@@ -11,7 +12,8 @@ namespace ContentCore.Application.Commands.EntityTag.RemoveTagFromEntity;
 public sealed class RemoveTagFromEntityCommandHandler(
     IEntityTagRepository entityTagRepository,
     IContentCoreUnitOfWork unitOfWork,
-    HybridCache cache)
+    HybridCache cache,
+    ILogger<RemoveTagFromEntityCommandHandler> logger)
     : ICommandHandler<RemoveTagFromEntityCommand>
 {
     public async Task<Result> Handle(RemoveTagFromEntityCommand request, CancellationToken cancellationToken)
@@ -46,6 +48,10 @@ public sealed class RemoveTagFromEntityCommandHandler(
             }
 
             await cache.RemoveByTagAsync($"entity-tags:{request.EntityType}:{request.EntityId}", cancellationToken);
+
+            logger.LogInformation(
+                "Removed tag {TagId} from {EntityType}/{EntityId}",
+                request.TagId, request.EntityType, request.EntityId);
 
             return Result.Success();
         }

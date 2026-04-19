@@ -236,23 +236,12 @@ public sealed class UpdateCategoryCommandHandler(
 
         foreach (var translation in request.Translations)
         {
-            var existing = category.Translations
-                .FirstOrDefault(x => x.LanguageId == translation.LanguageId);
-
-            if (existing is not null)
-            {
-                category.UpdateTranslation(
-                    translation.LanguageId,
-                    translation.Name,
-                    translation.Slug);
-            }
-            else
-            {
-                category.AddTranslation(
-                    translation.LanguageId,
-                    translation.Name,
-                    translation.Slug);
-            }
+            // Manual updates from admin UI are human-reviewed translations.
+            // Mark as HumanReviewed so auto-translation handlers don't overwrite them.
+            category.UpsertHumanReviewedTranslation(
+                translation.LanguageId,
+                translation.Name,
+                translation.Slug);
         }
     }
 }

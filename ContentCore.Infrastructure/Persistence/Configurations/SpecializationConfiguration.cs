@@ -15,12 +15,12 @@ public class SpecializationConfiguration : IEntityTypeConfiguration<Specializati
 
         builder.Property(x => x.Name)
             .IsRequired()
-            .IsUnicode(false)
+            .IsUnicode(true)
             .HasMaxLength(200);
 
         builder.Property(x => x.Description)
             .IsRequired(false)
-            .IsUnicode(false)
+            .IsUnicode(true)
             .HasMaxLength(1000);
 
         builder.Property(x => x.Icon)

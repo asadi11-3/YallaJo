@@ -1,4 +1,5 @@
 using ContentCore.Domain.Entities;
+using ContentCore.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -18,13 +19,19 @@ public class CategoryTranslationConfiguration : IEntityTypeConfiguration<Categor
 
         builder.Property(x => x.Name)
             .IsRequired()
-            .IsUnicode(false)
+            .IsUnicode(true)
             .HasMaxLength(200);
 
         builder.Property(x => x.Slug)
             .IsRequired()
             .IsUnicode(false)
             .HasMaxLength(200);
+
+        builder.Property(x => x.Status)
+            .IsRequired()
+            .HasDefaultValue(TranslationStatus.AutoTranslated)
+            .HasSentinel(TranslationStatus.AutoTranslated)
+            .HasConversion<byte>();
 
         builder.Property(x => x.CreatedAt).IsRequired();
         builder.Property(x => x.UpdatedAt).IsRequired(false);

@@ -12,4 +12,21 @@ public sealed class BusinessAmenity : BaseEntity
     public int SortOrder { get; private set; }
 
     public Business Business { get; private set; } = default!;
+
+    public static BusinessAmenity Create(
+    Guid businessId,
+    string name,
+    string? icon,
+    int sortOrder)
+    {
+        return new BusinessAmenity
+        {
+            Id = Guid.CreateVersion7(),
+            CreatedAt = DateTime.UtcNow,
+            BusinessId = businessId,
+            Name = name.Trim(),
+            Icon = string.IsNullOrWhiteSpace(icon) ? null : icon.Trim(),
+            SortOrder = sortOrder
+        };
+    }
 }

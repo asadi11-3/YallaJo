@@ -2,6 +2,7 @@ using ContentCore.Application.Caching;
 using ContentCore.Domain.Exceptions;
 using ContentCore.Domain.Repositories;
 using Microsoft.Extensions.Caching.Hybrid;
+using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 using Outcome = YallaJo.SharedKernel.Domain.Abstractions.Results.Outcome;
@@ -11,7 +12,8 @@ namespace ContentCore.Application.Commands.Language.UpdateLanguage;
 public sealed class UpdateLanguageCommandHandler(
     ILanguageRepository languageRepository,
     IContentCoreUnitOfWork unitOfWork,
-    HybridCache cache)
+    HybridCache cache,
+    ILogger<UpdateLanguageCommandHandler> logger)
     : ICommandHandler<UpdateLanguageCommand, UpdateLanguageResult>
 {
     public async Task<Result<UpdateLanguageResult>> Handle(
@@ -29,9 +31,12 @@ public sealed class UpdateLanguageCommandHandler(
 
             language.Update(request.Name, request.NativeName, request.IsRtl);
 
-            if (request.IsActive)
+            // Guard: only call Activate/Deactivate when state ACTUALLY changes.
+            // Language.Activate() always raises LanguageActivatedDomainEvent → outbox write.
+            // Calling it when already active causes duplicate integration events downstream.
+            if (request.IsActive && !language.IsActive)
                 language.Activate();
-            else
+            else if (!request.IsActive && language.IsActive)
                 language.Deactivate();
 
             try
@@ -47,6 +52,10 @@ public sealed class UpdateLanguageCommandHandler(
             }
 
             await cache.RemoveByTagAsync("languages", cancellationToken);
+
+            logger.LogInformation(
+                "Language updated: {LanguageId} (Code={Code}, IsActive={IsActive})",
+                language.Id, language.Code, language.IsActive);
 
             return Result<UpdateLanguageResult>.Success(
                 new UpdateLanguageResult(language.Id, language.Name, language.NativeName, language.IsRtl, language.IsActive));

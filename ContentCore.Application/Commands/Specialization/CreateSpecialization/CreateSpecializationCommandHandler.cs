@@ -3,6 +3,7 @@ using ContentCore.Application.Caching;
 using ContentCore.Domain.Exceptions;
 using ContentCore.Domain.Repositories;
 using Microsoft.Extensions.Caching.Hybrid;
+using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 using Outcome = YallaJo.SharedKernel.Domain.Abstractions.Results.Outcome;
@@ -12,7 +13,8 @@ namespace ContentCore.Application.Commands.Specialization.CreateSpecialization;
 public sealed class CreateSpecializationCommandHandler(
     ISpecializationRepository specializationRepository,
     IContentCoreUnitOfWork unitOfWork,
-    HybridCache cache)
+    HybridCache cache,
+    ILogger<CreateSpecializationCommandHandler> logger)
     : ICommandHandler<CreateSpecializationCommand, CreateSpecializationResult>
 {
     public async Task<Result<CreateSpecializationResult>> Handle(
@@ -41,6 +43,10 @@ public sealed class CreateSpecializationCommandHandler(
             }
 
             await cache.RemoveByTagAsync("specializations", cancellationToken);
+
+            logger.LogInformation(
+                "Specialization created: {SpecializationId} (Name={Name})",
+                specialization.Id, specialization.Name);
 
             return Result<CreateSpecializationResult>.Created(
                 new CreateSpecializationResult(specialization.Id, specialization.Name));

@@ -19,10 +19,10 @@ internal static class TranslationEndpoints
     {
         var translations = group.MapGroup("/translations").WithTags("ContentCore | Translations");
 
-        translations.MapPost("/translate", async (TranslateRequest request, ISender sender) =>
+        translations.MapPost("/translate", async (TranslateRequest request, ISender sender, CancellationToken ct = default) =>
         {
             var result = await sender.Send(new TranslateTextCommand(
-                request.Text, request.FromLanguageCode, request.ToLanguageCode));
+                request.Text, request.FromLanguageCode, request.ToLanguageCode), ct);
             return result.ToApiResult();
         })
         .WithName("TranslateText")
@@ -32,10 +32,10 @@ internal static class TranslationEndpoints
         .WithMetadata(new MustHavePermissionAttribute(AppFeatures.TranslationCache, AppAction.Create))
         .RequireAuthorization();
 
-        translations.MapPost("/batch", async (BatchTranslateRequest request, ISender sender) =>
+        translations.MapPost("/batch", async (BatchTranslateRequest request, ISender sender, CancellationToken ct = default) =>
         {
             var result = await sender.Send(new BatchTranslateCommand(
-                request.Texts, request.FromLanguageCode, request.ToLanguageCode));
+                request.Texts, request.FromLanguageCode, request.ToLanguageCode), ct);
             return result.ToApiResult();
         })
         .WithName("BatchTranslate")
@@ -45,9 +45,9 @@ internal static class TranslationEndpoints
         .WithMetadata(new MustHavePermissionAttribute(AppFeatures.TranslationCache, AppAction.Create))
         .RequireAuthorization();
 
-        translations.MapGet("/{entityType}/{entityId:guid}", async (string entityType, Guid entityId, ISender sender) =>
+        translations.MapGet("/{entityType}/{entityId:guid}", async (string entityType, Guid entityId, ISender sender, CancellationToken ct = default) =>
         {
-            var result = await sender.Send(new GetEntityTranslationsQuery(entityType, entityId));
+            var result = await sender.Send(new GetEntityTranslationsQuery(entityType, entityId), ct);
             return result.ToApiResult();
         })
         .WithName("GetEntityTranslations")
@@ -56,9 +56,9 @@ internal static class TranslationEndpoints
         .WithMetadata(new MustHavePermissionAttribute(AppFeatures.TranslationCache, AppAction.Read))
         .RequireAuthorization();
 
-        translations.MapPut("/{id:guid}", async (Guid id, UpdateTranslationRequest request, ISender sender) =>
+        translations.MapPut("/{id:guid}", async (Guid id, UpdateTranslationRequest request, ISender sender, CancellationToken ct = default) =>
         {
-            var result = await sender.Send(new UpdateTranslationCommand(id, request.TranslatedText));
+            var result = await sender.Send(new UpdateTranslationCommand(id, request.TranslatedText), ct);
             return result.ToApiResult();
         })
         .WithName("UpdateTranslation")
@@ -69,9 +69,9 @@ internal static class TranslationEndpoints
         .WithMetadata(new MustHavePermissionAttribute(AppFeatures.TranslationCache, AppAction.Update))
         .RequireAuthorization();
 
-        translations.MapPost("/{id:guid}/approve", async (Guid id, ISender sender) =>
+        translations.MapPost("/{id:guid}/approve", async (Guid id, ISender sender, CancellationToken ct = default) =>
         {
-            var result = await sender.Send(new ApproveTranslationCommand(id));
+            var result = await sender.Send(new ApproveTranslationCommand(id), ct);
             return result.ToApiResult();
         })
         .WithName("ApproveTranslation")

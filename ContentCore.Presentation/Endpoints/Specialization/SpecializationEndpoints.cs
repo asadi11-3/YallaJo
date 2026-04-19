@@ -17,9 +17,9 @@ internal static class SpecializationEndpoints
     {
         var specializations = group.MapGroup("/specializations").WithTags("ContentCore | Specializations");
 
-        specializations.MapGet("/", async (ISender sender, bool activeOnly = false) =>
+        specializations.MapGet("/", async (ISender sender, CancellationToken ct, bool activeOnly = false) =>
         {
-            var result = await sender.Send(new ListSpecializationsQuery(activeOnly));
+            var result = await sender.Send(new ListSpecializationsQuery(activeOnly), ct);
             return result.ToApiResult();
         })
         .WithName("ListSpecializations")
@@ -27,12 +27,12 @@ internal static class SpecializationEndpoints
         .WithSummary("List all specializations")
         .AllowAnonymous();
 
-        specializations.MapPost("/", async (CreateSpecializationRequest request, ISender sender) =>
+        specializations.MapPost("/", async (CreateSpecializationRequest request, ISender sender, CancellationToken ct = default) =>
         {
             var result = await sender.Send(new CreateSpecializationCommand(
                 request.Name,
                 request.Description,
-                request.Icon));
+                request.Icon), ct);
             return result.ToApiResult();
         })
         .WithName("CreateSpecialization")
@@ -42,14 +42,14 @@ internal static class SpecializationEndpoints
         .WithMetadata(new MustHavePermissionAttribute(AppFeatures.Specialization, AppAction.Create))
         .RequireAuthorization();
 
-        specializations.MapPut("/{id:guid}", async (Guid id, UpdateSpecializationRequest request, ISender sender) =>
+        specializations.MapPut("/{id:guid}", async (Guid id, UpdateSpecializationRequest request, ISender sender, CancellationToken ct = default) =>
         {
             var result = await sender.Send(new UpdateSpecializationCommand(
                 id,
                 request.Name,
                 request.Description,
                 request.Icon,
-                request.IsActive));
+                request.IsActive), ct);
             return result.ToApiResult();
         })
         .WithName("UpdateSpecialization")

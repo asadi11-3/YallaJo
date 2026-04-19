@@ -22,40 +22,81 @@ internal static class CategoryEndpoints
     {
         var categories = group.MapGroup("/categories").WithTags("ContentCore | Categories");
 
-        // GET / — List categories as tree (public, includes translations when Accept-Language present)
-        // ActiveOnly defaults to true so anonymous callers never see deactivated categories.
-        // Authenticated admins may pass ?isActive=false to list all categories.
+        // ── Public endpoints — active categories only, no inactive exposure ──────────
+
+        // GET / — Active categories tree (public). isActive/includeInactive params are not accepted
+        // here; anonymous callers NEVER see inactive categories regardless of query params.
         categories.MapGet("/", async (HttpContext http, ISender sender,
             Guid? parentCategoryId = null,
-            bool? isActive = null) =>
+            CancellationToken ct = default) =>
         {
             var withTranslations = http.Request.Headers.AcceptLanguage.Count > 0;
             var result = await sender.Send(new ListCategoriesQuery(
-                ActiveOnly: isActive ?? true,
+                ActiveOnly: true,           // HARDCODED — public route never exposes inactive
                 ParentCategoryId: parentCategoryId,
-                WithTranslations: withTranslations));
+                WithTranslations: withTranslations), ct);
             return result.ToApiResult();
         })
         .WithName("ListCategories")
         .Produces<IReadOnlyList<CategoryDto>>(StatusCodes.Status200OK)
-        .WithSummary("List categories as a tree with optional translations")
+        .WithSummary("List active categories as a tree (public)")
         .AllowAnonymous();
 
-        // GET /{id} — Get single category with direct children (public)
-        categories.MapGet("/{id:guid}", async (Guid id, HttpContext http, ISender sender) =>
+        // GET /{id} — Single active category (public). Returns 404 for inactive categories.
+        categories.MapGet("/{id:guid}", async (Guid id, HttpContext http, ISender sender,
+            CancellationToken ct = default) =>
         {
             var withTranslations = http.Request.Headers.AcceptLanguage.Count > 0;
-            var result = await sender.Send(new GetCategoryByIdQuery(id, withTranslations));
+            var result = await sender.Send(
+                new GetCategoryByIdQuery(id, withTranslations, IncludeInactive: false), ct);
             return result.ToApiResult();
         })
         .WithName("GetCategoryById")
         .Produces<CategoryDto>(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status404NotFound)
-        .WithSummary("Get single category with direct children and translations")
+        .WithSummary("Get active category by ID with direct children (public)")
         .AllowAnonymous();
 
+        // ── Admin endpoints — may access inactive categories ──────────────────────────
+
+        // GET /admin — Admin list including inactive. Requires Permission.Category.Read.
+        categories.MapGet("/admin", async (HttpContext http, ISender sender,
+            Guid? parentCategoryId = null,
+            bool activeOnly = false,
+            CancellationToken ct = default) =>
+        {
+            var withTranslations = http.Request.Headers.AcceptLanguage.Count > 0;
+            var result = await sender.Send(new ListCategoriesQuery(
+                ActiveOnly: activeOnly,
+                ParentCategoryId: parentCategoryId,
+                WithTranslations: withTranslations), ct);
+            return result.ToApiResult();
+        })
+        .WithName("ListCategoriesAdmin")
+        .Produces<IReadOnlyList<CategoryDto>>(StatusCodes.Status200OK)
+        .WithSummary("List categories (admin — may include inactive, requires read permission)")
+        .RequireAuthorization("Permission.Category.Read");
+
+        // GET /admin/{id} — Admin single category lookup including inactive.
+        categories.MapGet("/admin/{id:guid}", async (Guid id, HttpContext http, ISender sender,
+            bool includeInactive = true,
+            CancellationToken ct = default) =>
+        {
+            var withTranslations = http.Request.Headers.AcceptLanguage.Count > 0;
+            var result = await sender.Send(new GetCategoryByIdQuery(id, withTranslations, includeInactive), ct);
+            return result.ToApiResult();
+        })
+        .WithName("GetCategoryByIdAdmin")
+        .Produces<CategoryDto>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .WithSummary("Get category by ID (admin — may include inactive)")
+        .RequireAuthorization("Permission.Category.Read");
+
+        // ── Write endpoints ────────────────────────────────────────────────────────────
+
         // POST / — Create category (admin only)
-        categories.MapPost("/", async (CreateCategoryRequest request, ISender sender) =>
+        categories.MapPost("/", async (CreateCategoryRequest request, ISender sender,
+            CancellationToken ct = default) =>
         {
             var result = await sender.Send(new CreateCategoryCommand(
                 request.Name,
@@ -63,7 +104,7 @@ internal static class CategoryEndpoints
                 request.ParentCategoryId,
                 request.Icon,
                 request.SortOrder,
-                request.SourceLanguageCode ?? "en"));
+                request.SourceLanguageCode ?? "en"), ct);
             return result.ToApiResult();
         })
         .WithName("CreateCategory")
@@ -74,7 +115,8 @@ internal static class CategoryEndpoints
         .RequireAuthorization("Permission.Category.Create");
 
         // PUT /{id} — Update category (admin only)
-        categories.MapPut("/{id:guid}", async (Guid id, UpdateCategoryRequest request, ISender sender) =>
+        categories.MapPut("/{id:guid}", async (Guid id, UpdateCategoryRequest request, ISender sender,
+            CancellationToken ct = default) =>
         {
             var result = await sender.Send(new UpdateCategoryCommand(
                 id,
@@ -84,7 +126,7 @@ internal static class CategoryEndpoints
                 request.Icon,
                 request.SortOrder,
                 request.SourceLanguageCode ?? "en",
-                request.Translations));
+                request.Translations), ct);
             return result.ToApiResult();
         })
         .WithName("UpdateCategory")
@@ -95,9 +137,10 @@ internal static class CategoryEndpoints
         .RequireAuthorization("Permission.Category.Update");
 
         // DELETE /{id} — Soft-delete category (admin only)
-        categories.MapDelete("/{id:guid}", async (Guid id, ISender sender) =>
+        categories.MapDelete("/{id:guid}", async (Guid id, ISender sender,
+            CancellationToken ct = default) =>
         {
-            var result = await sender.Send(new DeleteCategoryCommand(id));
+            var result = await sender.Send(new DeleteCategoryCommand(id), ct);
             return result.ToApiResult();
         })
         .WithName("DeleteCategory")
@@ -107,9 +150,10 @@ internal static class CategoryEndpoints
         .RequireAuthorization("Permission.Category.Delete");
 
         // PATCH /{id}/deactivate — Hide category from listings without deleting it
-        categories.MapPatch("/{id:guid}/deactivate", async (Guid id, ISender sender) =>
+        categories.MapPatch("/{id:guid}/deactivate", async (Guid id, ISender sender,
+            CancellationToken ct = default) =>
         {
-            var result = await sender.Send(new DeactivateCategoryCommand(id));
+            var result = await sender.Send(new DeactivateCategoryCommand(id), ct);
             return result.ToApiResult();
         })
         .WithName("DeactivateCategory")
@@ -119,9 +163,10 @@ internal static class CategoryEndpoints
         .RequireAuthorization("Permission.Category.Update");
 
         // PATCH /{id}/activate — Restore a deactivated category
-        categories.MapPatch("/{id:guid}/activate", async (Guid id, ISender sender) =>
+        categories.MapPatch("/{id:guid}/activate", async (Guid id, ISender sender,
+            CancellationToken ct = default) =>
         {
-            var result = await sender.Send(new ReactivateCategoryCommand(id));
+            var result = await sender.Send(new ReactivateCategoryCommand(id), ct);
             return result.ToApiResult();
         })
         .WithName("ActivateCategory")
@@ -131,12 +176,13 @@ internal static class CategoryEndpoints
         .RequireAuthorization("Permission.Category.Update");
 
         // PUT /reorder — Batch sort order update (admin only)
-        categories.MapPut("/reorder", async (ReorderCategoriesRequest request, ISender sender) =>
+        categories.MapPut("/reorder", async (ReorderCategoriesRequest request, ISender sender,
+            CancellationToken ct = default) =>
         {
             var result = await sender.Send(new ReorderCategoriesCommand(
                 request.SortOrders
                     .Select(i => new CategorySortOrderUpdate(i.CategoryId, i.SortOrder))
-                    .ToList()));
+                    .ToList()), ct);
             return result.ToApiResult();
         })
         .WithName("ReorderCategories")

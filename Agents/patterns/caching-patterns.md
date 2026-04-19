@@ -9,7 +9,9 @@
 
 ```csharp
 // In Program.cs or SharedKernel DI — once per application
-// Package: Microsoft.Extensions.Caching.Hybrid (>= 9.3.0)
+// Package: Microsoft.Extensions.Caching.Hybrid Version="9.3.0"  ← PINNED — do NOT use 10.x
+// Add to {Module}.Application.csproj: <PackageReference Include="Microsoft.Extensions.Caching.Hybrid" Version="9.3.0" />
+// All three references (SharedKernel.Application, SharedKernel.Infrastructure, module Application) MUST be 9.3.0
 builder.Services.AddHybridCache(options =>
 {
     // Default expiration for entries that don't specify their own

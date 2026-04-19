@@ -1,13 +1,16 @@
 using ContentCore.Application.Queries.Category.Common;
 using ContentCore.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 using Outcome = YallaJo.SharedKernel.Domain.Abstractions.Results.Outcome;
 
 namespace ContentCore.Application.Queries.Category.GetCategoryById;
 
-public sealed class GetCategoryByIdQueryHandler(ICategoryRepository categoryRepository)
+public sealed class GetCategoryByIdQueryHandler(
+    ICategoryRepository categoryRepository,
+    ILogger<GetCategoryByIdQueryHandler> logger)
     : IQueryHandler<GetCategoryByIdQuery, CategoryDto>
 {
     public async Task<Result<CategoryDto>> Handle(
@@ -23,7 +26,9 @@ public sealed class GetCategoryByIdQueryHandler(ICategoryRepository categoryRepo
                     ct: cancellationToken)
                 : await categoryRepository.GetByIdAsync(request.Id, cancellationToken);
 
-            if (category is null || !category.IsActive)
+            // Public callers always see only active categories.
+            // Admin callers with IncludeInactive = true can retrieve deactivated categories (for management UIs).
+            if (category is null || (!category.IsActive && !request.IncludeInactive))
             {
                 return Result<CategoryDto>.Failure(
                     new Error("Category.NotFound", $"Category '{request.Id}' was not found."),

@@ -13,4 +13,36 @@ public sealed class AccessibilityFeature : BaseEntity
     public string Name { get; private set; } = string.Empty;
     public string? Description { get; private set; }
     public bool IsAvailable { get; private set; }
+
+    //  create
+    public static AccessibilityFeature Create(
+        byte entityType,
+        Guid entityId,
+        AccessibilityFeatureType featureType,
+        string name,
+        string? description,
+        bool isAvailable)
+    {
+        return new AccessibilityFeature
+        {
+            Id = Guid.CreateVersion7(),
+            EntityType = entityType,
+            EntityId = entityId,
+            FeatureType = featureType,
+            Name = name,
+            Description = description,
+            IsAvailable = isAvailable
+        };
+    }
+
+    //  update 
+    public void Update(
+        string name,
+        string? description,
+        bool isAvailable)
+    {
+        Name = name;
+        Description = description;
+        IsAvailable = isAvailable;
+    }
 }

@@ -15,7 +15,7 @@ public class TagConfiguration : IEntityTypeConfiguration<Tag>
 
         builder.Property(x => x.Name)
             .IsRequired()
-            .IsUnicode(false)
+            .IsUnicode(true)
             .HasMaxLength(100);
 
         builder.Property(x => x.Slug)
@@ -27,11 +27,8 @@ public class TagConfiguration : IEntityTypeConfiguration<Tag>
             .IsRequired()
             .HasDefaultValue(true);
 
-        builder.Property(x => x.CreatedAt).IsRequired();
-        builder.Property(x => x.UpdatedAt).IsRequired(false);
-
-        // POSSIBLE-001: Concurrency token so optimistic-locking catch blocks are functional.
-        builder.Property(x => x.RowVersion).IsRowVersion();
+        // CreatedAt, UpdatedAt, RowVersion, IsDeleted, DeletedAt are managed by
+        // AuditableEntity's shared EF base configuration in SharedKernel. Do not re-configure here.
 
         builder.HasIndex(x => x.Slug).IsUnique();
     }

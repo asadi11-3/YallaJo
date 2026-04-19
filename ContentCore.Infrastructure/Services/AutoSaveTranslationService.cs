@@ -10,14 +10,11 @@ namespace ContentCore.Infrastructure.Services;
 /// translation results to the database. On subsequent calls with the same input,
 /// the cached result is returned without hitting the external API.
 ///
-/// This service deliberately does NOT call SaveChangesAsync. Persistence is the
-/// caller's responsibility so that translation cache entries and any other
-/// changes made within the same unit-of-work are committed atomically.
-/// When invoked from domain event handlers the outer UnitOfWork.SaveChangesAsync
-/// commits everything in a single database round-trip.
-/// When invoked from dedicated command handlers (TranslateText, BatchTranslate)
-/// those handlers inject IContentCoreUnitOfWork and call SaveChangesAsync after
-/// this service returns.
+/// Translation cache writes are persisted immediately via
+/// <see cref="ITranslationCacheRepository.TryAddCacheEntryAsync"/> using
+/// insert-if-not-exists semantics to reduce race-condition duplicates.
+/// Translation cache is auxiliary data and should not fail the caller's
+/// primary business transaction.
 /// </summary>
 public sealed class AutoSaveTranslationService : ITranslationService
 {
@@ -59,7 +56,7 @@ public sealed class AutoSaveTranslationService : ITranslationService
         // 2. Call external API
         var result = await _inner.TranslateAsync(text, fromLanguageCode, toLanguageCode, ct);
 
-        // 3. Stage cache entry — caller is responsible for committing via UnitOfWork
+        // 3. Persist cache entry immediately (dedup-safe)
         var entry = TranslationCache.Create(
             result.OriginalText,
             result.TranslatedText,
@@ -67,7 +64,13 @@ public sealed class AutoSaveTranslationService : ITranslationService
             result.ToLanguage,
             result.Confidence);
 
-        await _cacheRepository.AddAsync(entry, ct);
+        var inserted = await _cacheRepository.TryAddCacheEntryAsync(entry, ct);
+        if (!inserted)
+        {
+            _logger.LogDebug(
+                "Translation cache insert skipped (duplicate hash): {Hash}",
+                entry.OriginalTextHash);
+        }
 
         return result;
     }
@@ -113,14 +116,21 @@ public sealed class AutoSaveTranslationService : ITranslationService
                 var r = apiResults[i];
                 results[uncachedIndices[i]] = r;
 
-                // 3. Stage each cache entry — caller commits via UnitOfWork
+                // 3. Persist each cache entry immediately (dedup-safe)
                 var entry = TranslationCache.Create(
                     r.OriginalText,
                     r.TranslatedText,
                     r.FromLanguage,
                     r.ToLanguage,
                     r.Confidence);
-                await _cacheRepository.AddAsync(entry, ct);
+
+                var inserted = await _cacheRepository.TryAddCacheEntryAsync(entry, ct);
+                if (!inserted)
+                {
+                    _logger.LogDebug(
+                        "Batch translation cache insert skipped (duplicate hash): {Hash}",
+                        entry.OriginalTextHash);
+                }
             }
         }
 

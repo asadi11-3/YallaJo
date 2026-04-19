@@ -1,12 +1,15 @@
 using ContentCore.Domain.Enums;
 using ContentCore.Domain.Repositories;
+using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 using Outcome = YallaJo.SharedKernel.Domain.Abstractions.Results.Outcome;
 
 namespace ContentCore.Application.Queries.EntityTag.GetEntityTags;
 
-public sealed class GetEntityTagsQueryHandler(IEntityTagRepository entityTagRepository)
+public sealed class GetEntityTagsQueryHandler(
+    IEntityTagRepository entityTagRepository,
+    ILogger<GetEntityTagsQueryHandler> logger)
     : IQueryHandler<GetEntityTagsQuery, IReadOnlyList<EntityTagDto>>
 {
     public async Task<Result<IReadOnlyList<EntityTagDto>>> Handle(
@@ -22,6 +25,10 @@ public sealed class GetEntityTagsQueryHandler(IEntityTagRepository entityTagRepo
             var dtos = entityTags
                 .Select(et => new EntityTagDto(et.TagId, et.Tag.Name, et.Tag.Slug))
                 .ToList() as IReadOnlyList<EntityTagDto>;
+
+            logger.LogDebug(
+                "GetEntityTags: {Count} tags for {EntityType}/{EntityId}",
+                dtos.Count, request.EntityType, request.EntityId);
 
             return Result<IReadOnlyList<EntityTagDto>>.Success(dtos);
         }

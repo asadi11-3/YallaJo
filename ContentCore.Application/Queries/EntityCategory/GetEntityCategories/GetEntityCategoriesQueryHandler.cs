@@ -1,12 +1,15 @@
 using ContentCore.Domain.Enums;
 using ContentCore.Domain.Repositories;
+using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 using Outcome = YallaJo.SharedKernel.Domain.Abstractions.Results.Outcome;
 
 namespace ContentCore.Application.Queries.EntityCategory.GetEntityCategories;
 
-public sealed class GetEntityCategoriesQueryHandler(IEntityCategoryRepository entityCategoryRepository)
+public sealed class GetEntityCategoriesQueryHandler(
+    IEntityCategoryRepository entityCategoryRepository,
+    ILogger<GetEntityCategoriesQueryHandler> logger)
     : IQueryHandler<GetEntityCategoriesQuery, IReadOnlyList<EntityCategoryDto>>
 {
     public async Task<Result<IReadOnlyList<EntityCategoryDto>>> Handle(
@@ -22,6 +25,10 @@ public sealed class GetEntityCategoriesQueryHandler(IEntityCategoryRepository en
             var dtos = entityCategories
                 .Select(ec => new EntityCategoryDto(ec.CategoryId, ec.Category.Name, ec.Category.Slug))
                 .ToList() as IReadOnlyList<EntityCategoryDto>;
+
+            logger.LogDebug(
+                "GetEntityCategories: {Count} categories for {EntityType}/{EntityId}",
+                dtos.Count, request.EntityType, request.EntityId);
 
             return Result<IReadOnlyList<EntityCategoryDto>>.Success(dtos);
         }

@@ -1,6 +1,7 @@
 using ContentCore.Domain.Exceptions;
 using ContentCore.Domain.Repositories;
 using Microsoft.Extensions.Caching.Hybrid;
+using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 using Outcome = YallaJo.SharedKernel.Domain.Abstractions.Results.Outcome;
@@ -10,7 +11,8 @@ namespace ContentCore.Application.Commands.Category.ReorderCategories;
 public sealed class ReorderCategoriesCommandHandler(
     ICategoryRepository categoryRepository,
     IContentCoreUnitOfWork unitOfWork,
-    HybridCache cache)
+    HybridCache cache,
+    ILogger<ReorderCategoriesCommandHandler> logger)
     : ICommandHandler<ReorderCategoriesCommand>
 {
     public async Task<Result> Handle(
@@ -48,6 +50,9 @@ public sealed class ReorderCategoriesCommandHandler(
             }
 
             await cache.RemoveByTagAsync("categories", cancellationToken);
+
+            logger.LogInformation(
+                "Reordered {Count} categories", request.SortOrders.Count);
 
             return Result.Success();
         }

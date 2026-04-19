@@ -1,6 +1,7 @@
 using ContentCore.Application.Queries.Category.Common;
 using ContentCore.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 using CategoryEntity = ContentCore.Domain.Entities.Category;
@@ -8,7 +9,9 @@ using Outcome = YallaJo.SharedKernel.Domain.Abstractions.Results.Outcome;
 
 namespace ContentCore.Application.Queries.Category.ListCategories;
 
-public sealed class ListCategoriesQueryHandler(ICategoryRepository categoryRepository)
+public sealed class ListCategoriesQueryHandler(
+    ICategoryRepository categoryRepository,
+    ILogger<ListCategoriesQueryHandler> logger)
     : IQueryHandler<ListCategoriesQuery, IReadOnlyList<CategoryDto>>
 {
     public async Task<Result<IReadOnlyList<CategoryDto>>> Handle(
@@ -44,8 +47,10 @@ public sealed class ListCategoriesQueryHandler(ICategoryRepository categoryRepos
 
             var tree = roots
                 .OrderBy(c => c.SortOrder).ThenBy(c => c.Name)
-                .Select(r => BuildNode(r, byParent))
+                .Select(r => BuildNode(r, byParent, []))
                 .ToList() as IReadOnlyList<CategoryDto>;
+
+            logger.LogDebug("ListCategories returned {Count} root nodes", tree.Count);
 
             return Result<IReadOnlyList<CategoryDto>>.Success(tree);
         }
@@ -59,11 +64,17 @@ public sealed class ListCategoriesQueryHandler(ICategoryRepository categoryRepos
 
     private static CategoryDto BuildNode(
         CategoryEntity category,
-        ILookup<Guid?, CategoryEntity> byParent)
+        ILookup<Guid?, CategoryEntity> byParent,
+        HashSet<Guid> visited)
     {
+        // Cycle detection: if we've already visited this node, return it as a leaf.
+        // This handles corrupt DB data with circular parent references and prevents StackOverflow.
+        if (!visited.Add(category.Id))
+            return CategoryDto.From(category, []);
+
         var children = byParent[category.Id]
             .OrderBy(c => c.SortOrder).ThenBy(c => c.Name)
-            .Select(c => BuildNode(c, byParent))
+            .Select(c => BuildNode(c, byParent, visited))
             .ToList() as IReadOnlyList<CategoryDto>;
 
         return CategoryDto.From(category, children);

@@ -3,6 +3,7 @@ using ContentCore.Domain.Exceptions;
 using ContentCore.Domain.Repositories;
 using ContentCore.Domain.Services;
 using Microsoft.Extensions.Caching.Hybrid;
+using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 using Outcome = YallaJo.SharedKernel.Domain.Abstractions.Results.Outcome;
@@ -13,7 +14,8 @@ public sealed class CreateCategoryCommandHandler(
     ICategoryRepository categoryRepository,
     ICategoryHierarchyService hierarchyService,
     IContentCoreUnitOfWork unitOfWork,
-    HybridCache cache)
+    HybridCache cache,
+    ILogger<CreateCategoryCommandHandler> logger)
     : ICommandHandler<CreateCategoryCommand, CreateCategoryResult>
 {
     public async Task<Result<CreateCategoryResult>> Handle(
@@ -54,6 +56,9 @@ public sealed class CreateCategoryCommandHandler(
             }
 
             await cache.RemoveByTagAsync("categories", cancellationToken);
+
+            logger.LogInformation(
+                "Category created: {CategoryId} (Slug={Slug})", category.Id, category.Slug);
 
             return Result<CreateCategoryResult>.Created(
                 new CreateCategoryResult(category.Id, category.Name, category.Slug));
