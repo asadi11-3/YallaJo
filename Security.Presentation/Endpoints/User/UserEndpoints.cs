@@ -6,7 +6,6 @@ using Security.Application.Commands.ActivateUser;
 using Security.Application.Commands.AddUserClaim;
 using Security.Application.Commands.AssignRole;
 using Security.Application.Commands.DeactivateUser;
-using Security.Application.Commands.Register;
 using Security.Application.Commands.RemoveRole;
 using Security.Application.Commands.RemoveUserClaim;
 using Security.Application.Queries.Dtos;
@@ -22,16 +21,11 @@ namespace Security.Presentation.Endpoints.User;
 
 internal static class UserEndpoints
 {
-    // Matches Auth.Presentation.RateLimitPolicies.RegisterPolicy.
-    // Defined locally to avoid a cross-module project reference.
-    private const string RegisterRateLimitPolicy = "register-rate-limit";
-
     private static readonly HashSet<string> _jwtMetaClaims =
         new(StringComparer.Ordinal) { "jti", "iat", "nbf", "exp", "iss", "aud", "sub", "email", "role" };
 
     internal static void MapUserEndpoints(RouteGroupBuilder group)
     {
-        MapRegisterEndpoint(group);
         MapMeEndpoint(group);
         MapListUsersEndpoint(group);
         MapGetUserEndpoint(group);
@@ -41,25 +35,6 @@ internal static class UserEndpoints
         MapRemoveRoleEndpoint(group);
         MapAddUserClaimEndpoint(group);
         MapRemoveUserClaimEndpoint(group);
-    }
-
-    // ── Anonymous ─────────────────────────────────────────────────────────────
-
-    private static void MapRegisterEndpoint(RouteGroupBuilder group)
-    {
-        group.MapPost("/register", async (RegisterRequest request, ISender sender, CancellationToken ct) =>
-        {
-            var result = await sender.Send(
-                new RegisterCommand(request.FirstName, request.LastName, request.Email, request.Password), ct);
-            return result.ToApiResult();
-        })
-        .WithName("Register")
-        .Produces<RegisterResponse>(StatusCodes.Status201Created)
-        .ProducesValidationProblem()
-        .ProducesProblem(StatusCodes.Status409Conflict)
-        .WithSummary("Register a new account — verification email will be sent")
-        .AllowAnonymous()
-        .RequireRateLimiting(RegisterRateLimitPolicy);
     }
 
     private static void MapMeEndpoint(RouteGroupBuilder group)

@@ -1,8 +1,6 @@
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 
-namespace Security.Application.Commands.Register;
-
-public sealed record RegisterResult(Guid UserId);
+namespace Auth.Application.Commands.Register;
 
 public sealed record RegisterCommand(
     string FirstName,

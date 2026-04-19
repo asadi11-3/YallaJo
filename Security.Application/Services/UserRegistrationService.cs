@@ -2,23 +2,23 @@ using Microsoft.Extensions.Caching.Hybrid;
 using Security.Application.Caching;
 using Security.Application.Helpers;
 using Security.Application.Interfaces;
+using Security.Contracts.Abstractions;
 using Security.Domain.Entities;
 using Security.Domain.Repositories;
-using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
-namespace Security.Application.Commands.Register;
+namespace Security.Application.Services;
 
-public sealed class RegisterCommandHandler(
+internal sealed class UserRegistrationService(
     IUserRepository userRepository,
     ISecurityUnitOfWork unitOfWork,
     IPasswordHasher passwordHasher,
     HybridCache cache)
-    : ICommandHandler<RegisterCommand, RegisterResult>
+    : IUserRegistrationService
 {
-    public async Task<Result<RegisterResult>> Handle(
-        RegisterCommand request,
-        CancellationToken cancellationToken)
+    public async Task<Result<Guid>> RegisterAsync(
+        UserRegistrationRequest request,
+        CancellationToken cancellationToken = default)
     {
         var normalizedEmail = SecurityGuard.NormalizeEmail(request.Email);
 
@@ -28,7 +28,7 @@ public sealed class RegisterCommandHandler(
 
         if (emailExists)
         {
-            return Result<RegisterResult>.Conflict(
+            return Result<Guid>.Conflict(
                 Error.Conflict("User.Email", "An account with this email already exists."));
         }
 
@@ -40,6 +40,6 @@ public sealed class RegisterCommandHandler(
 
         await cache.RemoveByTagAsync(SecurityCacheKeys.UsersTag, cancellationToken);
 
-        return Result<RegisterResult>.Created(new RegisterResult(user.Id));
+        return Result<Guid>.Created(user.Id);
     }
 }

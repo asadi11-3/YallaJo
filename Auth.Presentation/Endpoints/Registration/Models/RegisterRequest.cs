@@ -1,4 +1,4 @@
-namespace Security.Presentation.Endpoints.User.Models;
+namespace Auth.Presentation.Endpoints.Registration.Models;
 
 public sealed record RegisterRequest(
     string FirstName,

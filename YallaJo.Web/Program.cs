@@ -7,6 +7,7 @@ using YallaJo.Web.Services;
 
 // ── Auth feature registrations ────────────────────────────────────────────────
 using YallaJo.Web.Areas.Auth.Features.Login;
+using YallaJo.Web.Areas.Auth.Features.Register;
 using YallaJo.Web.Areas.Auth.Features.VerifyEmail;
 using YallaJo.Web.Areas.Auth.Features.ForgotPassword;
 using YallaJo.Web.Areas.Auth.Features.ResetPassword;
@@ -89,6 +90,9 @@ builder.Services.AddScoped<ICurrentUser, CurrentUser>();
 // ── Auth feature services ─────────────────────────────────────────────────────
 builder.Services.AddScoped<LoginApiClient>();
 builder.Services.AddScoped<LoginFacade>();
+
+builder.Services.AddScoped<RegisterApiClient>();
+builder.Services.AddScoped<RegisterFacade>();
 
 builder.Services.AddScoped<VerifyEmailApiClient>();
 builder.Services.AddScoped<VerifyEmailFacade>();
