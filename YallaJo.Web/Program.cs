@@ -29,7 +29,6 @@ using YallaJo.Web.Areas.Admin.Modules.Security.Features.Roles;
 using YallaJo.Web.Areas.Admin.Modules.Security.Features.AuditLogs;
 
 // ── Admin / Accounts feature registrations ────────────────────────────────────
-using YallaJo.Web.Areas.Admin.Modules.Accounts.Features.Profiles;
 using YallaJo.Web.Areas.Admin.Modules.Accounts.Features.Invitations;
 
 // ── Admin / ContentCore feature registrations ────────────────────────────────
@@ -132,10 +131,6 @@ builder.Services.AddScoped<UpdatePhoneFacade>();
 
 builder.Services.AddScoped<ProfileApiClient>();
 builder.Services.AddScoped<ProfileFacade>();
-
-// ── Admin / Accounts services ────────────────────────────────────────────────
-builder.Services.AddScoped<ProfilesApiClient>();
-builder.Services.AddScoped<ProfilesFacade>();
 
 builder.Services.AddScoped<InvitationsApiClient>();
 builder.Services.AddScoped<InvitationsFacade>();

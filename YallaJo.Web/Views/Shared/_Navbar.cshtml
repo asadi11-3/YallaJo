@@ -82,12 +82,6 @@
                                            asp-area="Admin" asp-controller="Invitations" asp-action="Resend">Resend Invite</a>
                                     </li>
                                 </permission>
-                                <permission require="@WebPermission.User.Create">
-                                    <li>
-                                        <a class="dropdown-item"
-                                           asp-area="Admin" asp-controller="Profiles" asp-action="Index">Create Profile (profile-only)</a>
-                                    </li>
-                                </permission>
                             </ul>
                         </li>
                     }
