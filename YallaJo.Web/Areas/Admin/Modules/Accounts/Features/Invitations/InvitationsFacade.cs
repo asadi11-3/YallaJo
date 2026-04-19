@@ -1,0 +1,43 @@
+using YallaJo.Web.Areas.Admin.Modules.Accounts.Features.Invitations.Requests;
+using YallaJo.Web.Areas.Admin.Modules.Accounts.Features.Invitations.Responses;
+using YallaJo.Web.Areas.Admin.Modules.Accounts.Features.Invitations.ViewModels;
+using YallaJo.Web.Infrastructure.Api.Contracts;
+
+namespace YallaJo.Web.Areas.Admin.Modules.Accounts.Features.Invitations;
+
+public sealed class InvitationsFacade
+{
+    private readonly InvitationsApiClient _api;
+    public InvitationsFacade(InvitationsApiClient api) => _api = api;
+
+    public async Task<ApiResult<InviteUserResponse>> InviteAsync(InviteUserVm vm, CancellationToken ct = default)
+    {
+        var request = new InviteUserRequest(
+            Email:       vm.Email.Trim(),
+            FirstName:   vm.FirstName.Trim(),
+            LastName:    vm.LastName.Trim(),
+            DisplayName: string.IsNullOrWhiteSpace(vm.DisplayName) ? null : vm.DisplayName.Trim(),
+            AvatarUrl:   string.IsNullOrWhiteSpace(vm.AvatarUrl) ? null : vm.AvatarUrl.Trim());
+
+        var result = await _api.InviteAsync(request, ct);
+
+        if (result.IsSuccess && result.Data is not null)
+            return ApiResult<InviteUserResponse>.CreateSuccess(result.Data, result.StatusCode);
+
+        if (result.IsUnauthorized)    return ApiResult<InviteUserResponse>.ForceSignOut();
+        if (result.IsConflict)        return ApiResult<InviteUserResponse>.CreateFailure(409, "An account with this email already exists.");
+        if (result.IsValidationError) return ApiResult<InviteUserResponse>.CreateValidationFailure(result.StatusCode, result.ValidationErrors!);
+        return ApiResult<InviteUserResponse>.CreateFailure(result.StatusCode, result.Error ?? "Could not send invite.");
+    }
+
+    public async Task<ApiResult> ResendAsync(ResendInviteVm vm, CancellationToken ct = default)
+    {
+        var result = await _api.ResendAsync(new ResendInviteRequest(vm.Email.Trim()), ct);
+
+        if (result.IsSuccess) return ApiResult.Ok();
+        if (result.IsUnauthorized) return ApiResult.ForceSignOut();
+        if (result.IsConflict) return ApiResult.Fail("This account has already completed onboarding.");
+        if (result.IsValidationError) return ApiResult.Invalid(result.ValidationErrors!);
+        return ApiResult.Fail(result.Error ?? "Could not resend invite.");
+    }
+}

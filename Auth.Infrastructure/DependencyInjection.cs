@@ -48,6 +48,9 @@ public static class DependencyInjection
 
         // Application services
         services.AddSingleton<IOtpService, OtpService>();
+        services.AddSingleton<IInviteTokenService, InviteTokenService>();
+        services.Configure<InviteOptions>(configuration.GetSection(InviteOptions.SectionName));
+        services.AddSingleton<IInviteLinkBuilder, InviteLinkBuilder>();
         services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
         services.AddSingleton<ITokenService, JwtTokenService>();
         services.Configure<GmailOptions>(configuration.GetSection(GmailOptions.SectionName));

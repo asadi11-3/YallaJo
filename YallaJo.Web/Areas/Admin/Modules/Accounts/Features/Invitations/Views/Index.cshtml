@@ -1,14 +1,14 @@
 @using YallaJo.Web.Infrastructure.Authorization
-@model YallaJo.Web.Areas.Admin.Modules.Accounts.Features.Profiles.ViewModels.CreateProfileVm
+@model YallaJo.Web.Areas.Admin.Modules.Accounts.Features.Invitations.ViewModels.InviteUserVm
 @{
-    ViewData["Title"] = "Create Profile (Profile-only)";
+    ViewData["Title"] = "Invite User";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
 <div class="container mt-4">
-    <h2>Create Profile (Profile-only)</h2>
+    <h2>Invite User</h2>
     <p class="text-muted">
-        Creates only an Accounts profile for an existing Security user ID. This does not invite or onboard a login identity.
+        Creates a pending identity and profile, then emails the user an invite link. The account becomes active only after the invitee sets their password through the invite link.
     </p>
 
     @if (TempData["Success"] is string ok) { <div class="alert alert-success">@ok</div> }
@@ -16,13 +16,13 @@
     <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
     <permission require="@WebPermission.User.Create">
-        <form asp-area="Admin" asp-controller="Profiles" asp-action="Create" method="post" class="col-md-6">
+        <form asp-area="Admin" asp-controller="Invitations" asp-action="Create" method="post" class="col-md-6">
             @Html.AntiForgeryToken()
 
             <div class="mb-3">
-                <label asp-for="UserId" class="form-label"></label>
-                <input asp-for="UserId" class="form-control" placeholder="00000000-0000-0000-0000-000000000000" />
-                <span asp-validation-for="UserId" class="text-danger"></span>
+                <label asp-for="Email" class="form-label"></label>
+                <input asp-for="Email" class="form-control" autocomplete="email" />
+                <span asp-validation-for="Email" class="text-danger"></span>
             </div>
 
             <div class="row g-2">
@@ -50,7 +50,8 @@
                 <span asp-validation-for="AvatarUrl" class="text-danger"></span>
             </div>
 
-            <button type="submit" class="btn btn-secondary">Create profile only</button>
+            <button type="submit" class="btn btn-primary">Send invite</button>
+            <a asp-area="Admin" asp-controller="Invitations" asp-action="Resend" class="btn btn-link">Resend an invite</a>
         </form>
     </permission>
 </div>

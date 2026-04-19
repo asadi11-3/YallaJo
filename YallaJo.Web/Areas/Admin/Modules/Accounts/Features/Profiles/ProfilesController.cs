@@ -30,7 +30,7 @@ public sealed class ProfilesController : Controller
 
         if (result.IsSuccess)
         {
-            TempData["Success"] = $"Profile created (Id: {result.Data}).";
+            TempData["Success"] = $"Profile-only record created (Id: {result.Data}).";
             return RedirectToAction(nameof(Index));
         }
 

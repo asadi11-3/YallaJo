@@ -7,6 +7,7 @@ using YallaJo.Web.Services;
 
 // ── Auth feature registrations ────────────────────────────────────────────────
 using YallaJo.Web.Areas.Auth.Features.Login;
+using YallaJo.Web.Areas.Auth.Features.AcceptInvite;
 using YallaJo.Web.Areas.Auth.Features.Register;
 using YallaJo.Web.Areas.Auth.Features.VerifyEmail;
 using YallaJo.Web.Areas.Auth.Features.ForgotPassword;
@@ -29,6 +30,7 @@ using YallaJo.Web.Areas.Admin.Modules.Security.Features.AuditLogs;
 
 // ── Admin / Accounts feature registrations ────────────────────────────────────
 using YallaJo.Web.Areas.Admin.Modules.Accounts.Features.Profiles;
+using YallaJo.Web.Areas.Admin.Modules.Accounts.Features.Invitations;
 
 // ── Admin / ContentCore feature registrations ────────────────────────────────
 using YallaJo.Web.Areas.Admin.Modules.ContentCore.Features.Languages;
@@ -91,6 +93,9 @@ builder.Services.AddScoped<ICurrentUser, CurrentUser>();
 builder.Services.AddScoped<LoginApiClient>();
 builder.Services.AddScoped<LoginFacade>();
 
+builder.Services.AddScoped<AcceptInviteApiClient>();
+builder.Services.AddScoped<AcceptInviteFacade>();
+
 builder.Services.AddScoped<RegisterApiClient>();
 builder.Services.AddScoped<RegisterFacade>();
 
@@ -131,6 +136,9 @@ builder.Services.AddScoped<ProfileFacade>();
 // ── Admin / Accounts services ────────────────────────────────────────────────
 builder.Services.AddScoped<ProfilesApiClient>();
 builder.Services.AddScoped<ProfilesFacade>();
+
+builder.Services.AddScoped<InvitationsApiClient>();
+builder.Services.AddScoped<InvitationsFacade>();
 
 // ── Admin / Security services ─────────────────────────────────────────────────
 builder.Services.AddScoped<UsersApiClient>();

@@ -1,0 +1,18 @@
+@model YallaJo.Web.Areas.Auth.Features.AcceptInvite.ResendFromExpiredVm
+@{
+    ViewData["Title"] = "Invite Expired";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="auth-card">
+    <h2>Invite Link Expired</h2>
+    <p class="text-muted mb-3">
+        This invite link is expired or no longer valid for <strong>@Model.Email</strong>.
+    </p>
+
+    <div class="alert alert-warning">
+        Please contact your administrator to resend your invite.
+    </div>
+
+    <a asp-area="Auth" asp-controller="Login" asp-action="Index" class="btn btn-outline-primary w-100">Back to sign in</a>
+</div>
