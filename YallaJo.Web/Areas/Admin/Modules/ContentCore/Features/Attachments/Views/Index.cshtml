@@ -1,0 +1,135 @@
+@using YallaJo.Web.Infrastructure.Authorization
+@using YallaJo.Web.Areas.Admin.Modules.ContentCore.Features.Attachments.ViewModels
+@model YallaJo.Web.Areas.Admin.Modules.ContentCore.Features.Attachments.ViewModels.AttachmentListVm
+@{
+    ViewData["Title"] = "Attachments";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-4">
+    <h2>Attachments</h2>
+    <p class="text-muted">Select an entity to view or manage its attachments.</p>
+
+    @if (TempData["Success"] is string ok)  { <div class="alert alert-success">@ok</div> }
+    @if (TempData["Error"]   is string err) { <div class="alert alert-danger">@err</div> }
+    @if (ViewBag.Error       is string vbe) { <div class="alert alert-danger">@vbe</div> }
+
+    @* ── Filter: choose entity ─────────────────────────────────────────── *@
+    <form asp-area="Admin" asp-controller="Attachments" asp-action="Index" method="get"
+          class="row g-2 mb-4">
+        <div class="col-md-3">
+            <label class="form-label">Entity type</label>
+            <select name="entityType"
+                    asp-items="Html.GetEnumSelectList<EntityTypeOption>()"
+                    class="form-select">
+                <option value="">—</option>
+            </select>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Entity ID</label>
+            <input name="entityId" class="form-control"
+                   value="@(Model.HasFilter ? Model.Filter.EntityId.ToString() : string.Empty)"
+                   placeholder="00000000-0000-0000-0000-000000000000" />
+        </div>
+        <div class="col-md-3 d-flex align-items-end">
+            <button type="submit" class="btn btn-outline-secondary">Load</button>
+        </div>
+    </form>
+
+    @if (Model.HasFilter)
+    {
+        <permission require="@WebPermission.Attachment.Create">
+            <div class="card mb-4 p-3">
+                <h5>Upload Attachment</h5>
+                <form asp-area="Admin" asp-controller="Attachments" asp-action="Upload"
+                      method="post" enctype="multipart/form-data">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="EntityType" value="@Model.Filter.EntityType" />
+                    <input type="hidden" name="EntityId" value="@Model.Filter.EntityId" />
+
+                    <div class="row g-2">
+                        <div class="col-md-4">
+                            <label class="form-label">File</label>
+                            <input type="file" name="File" class="form-control" required />
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Attachment type</label>
+                            <select name="AttachmentType"
+                                    asp-items="Html.GetEnumSelectList<AttachmentTypeOption>()"
+                                    class="form-select"></select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Sort order</label>
+                            <input name="SortOrder" type="number" value="0" min="0" class="form-control" />
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary">Upload</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </permission>
+
+        <table class="table table-sm table-bordered align-middle">
+            <thead>
+                <tr>
+                    <th style="width:96px;">Preview</th>
+                    <th>File</th>
+                    <th>Type</th>
+                    <th>Sort</th>
+                    <th>Uploaded</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var a in Model.Attachments.OrderBy(x => x.SortOrder))
+                {
+                    <tr>
+                        <td>
+                            @if (string.Equals(a.Type, "Image", StringComparison.OrdinalIgnoreCase))
+                            {
+                                <img src="@(a.ThumbnailUrl ?? a.Url)" alt="" style="max-width:80px;max-height:80px;" />
+                            }
+                            else
+                            {
+                                <a href="@a.Url" target="_blank">Open</a>
+                            }
+                        </td>
+                        <td>@(a.OriginalFileName ?? "—")</td>
+                        <td>@a.Type</td>
+                        <td>@a.SortOrder</td>
+                        <td>@a.UploadedAt.ToString("u")</td>
+                        <td>
+                            <permission require="@WebPermission.EntityImage.Update">
+                                @if (string.Equals(a.Type, "Image", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    <form asp-area="Admin" asp-controller="Attachments" asp-action="SetPrimary"
+                                          asp-route-id="@a.Id" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="EntityType" value="@Model.Filter.EntityType" />
+                                        <input type="hidden" name="EntityId" value="@Model.Filter.EntityId" />
+                                        <button type="submit" class="btn btn-sm btn-outline-secondary">Make primary</button>
+                                    </form>
+                                }
+                            </permission>
+                            <permission require="@WebPermission.Attachment.Delete">
+                                <form asp-area="Admin" asp-controller="Attachments" asp-action="Delete"
+                                      asp-route-id="@a.Id" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="entityType" value="@Model.Filter.EntityType" />
+                                    <input type="hidden" name="entityId" value="@Model.Filter.EntityId" />
+                                    <button type="submit" class="btn btn-sm btn-outline-danger"
+                                            onclick="return confirm('Delete this attachment?');">Delete</button>
+                                </form>
+                            </permission>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

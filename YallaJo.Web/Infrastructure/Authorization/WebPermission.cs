@@ -98,6 +98,29 @@ public static class WebPermission
         public const string Delete = "Permission.Place.Delete";
     }
 
+    // ── Attachment ────────────────────────────────────────────────────────────
+    public static class Attachment
+    {
+        public const string Read   = "Permission.Attachment.Read";
+        public const string Create = "Permission.Attachment.Create";
+        public const string Update = "Permission.Attachment.Update";
+        public const string Delete = "Permission.Attachment.Delete";
+    }
+
+    // ── EntityImage ───────────────────────────────────────────────────────────
+    public static class EntityImage
+    {
+        public const string Update = "Permission.EntityImage.Update";
+    }
+
+    // ── TranslationCache ──────────────────────────────────────────────────────
+    public static class TranslationCache
+    {
+        public const string Read   = "Permission.TranslationCache.Read";
+        public const string Create = "Permission.TranslationCache.Create";
+        public const string Update = "Permission.TranslationCache.Update";
+    }
+
     // ── Booking ───────────────────────────────────────────────────────────────
     public static class Booking
     {

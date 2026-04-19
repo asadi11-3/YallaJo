@@ -33,6 +33,9 @@ using YallaJo.Web.Areas.Admin.Modules.Accounts.Features.Profiles;
 using YallaJo.Web.Areas.Admin.Modules.ContentCore.Features.Languages;
 using YallaJo.Web.Areas.Admin.Modules.ContentCore.Features.Tags;
 using YallaJo.Web.Areas.Admin.Modules.ContentCore.Features.Specializations;
+using YallaJo.Web.Areas.Admin.Modules.ContentCore.Features.Categories;
+using YallaJo.Web.Areas.Admin.Modules.ContentCore.Features.Attachments;
+using YallaJo.Web.Areas.Admin.Modules.ContentCore.Features.Translations;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -144,6 +147,15 @@ builder.Services.AddScoped<TagsFacade>();
 
 builder.Services.AddScoped<SpecializationsApiClient>();
 builder.Services.AddScoped<SpecializationsFacade>();
+
+builder.Services.AddScoped<CategoriesApiClient>();
+builder.Services.AddScoped<CategoriesFacade>();
+
+builder.Services.AddScoped<AttachmentsApiClient>();
+builder.Services.AddScoped<AttachmentsFacade>();
+
+builder.Services.AddScoped<TranslationsApiClient>();
+builder.Services.AddScoped<TranslationsFacade>();
 
 // ── MVC + custom Razor view locations ────────────────────────────────────────
 builder.Services.AddControllersWithViews(options =>

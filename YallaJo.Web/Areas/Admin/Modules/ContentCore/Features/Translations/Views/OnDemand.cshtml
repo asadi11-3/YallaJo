@@ -1,0 +1,59 @@
+@model YallaJo.Web.Areas.Admin.Modules.ContentCore.Features.Translations.ViewModels.TranslateOnDemandVm
+@{
+    ViewData["Title"] = "On-demand Translate";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-4">
+    <h2>On-demand Translate</h2>
+
+    <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+    <form asp-area="Admin" asp-controller="Translations" asp-action="OnDemand" method="post" class="col-md-8">
+        @Html.AntiForgeryToken()
+
+        <div class="row g-2 mb-3">
+            <div class="col-md-6">
+                <label asp-for="FromLanguageCode" class="form-label"></label>
+                <input asp-for="FromLanguageCode" class="form-control" />
+                <span asp-validation-for="FromLanguageCode" class="text-danger"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="ToLanguageCode" class="form-label"></label>
+                <input asp-for="ToLanguageCode" class="form-control" />
+                <span asp-validation-for="ToLanguageCode" class="text-danger"></span>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Text" class="form-label"></label>
+            <textarea asp-for="Text" class="form-control" rows="4"></textarea>
+            <span asp-validation-for="Text" class="text-danger"></span>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Translate</button>
+        <a asp-action="Index" class="btn btn-link">Back</a>
+    </form>
+
+    @if (!string.IsNullOrEmpty(Model.LastTranslated))
+    {
+        <div class="card mt-4 p-3">
+            <h5>Result</h5>
+            <dl class="row mb-0">
+                <dt class="col-sm-3">Original</dt>
+                <dd class="col-sm-9">@Model.LastOriginal</dd>
+                <dt class="col-sm-3">Translated</dt>
+                <dd class="col-sm-9">@Model.LastTranslated</dd>
+                @if (Model.LastConfidence.HasValue)
+                {
+                    <dt class="col-sm-3">Confidence</dt>
+                    <dd class="col-sm-9">@Model.LastConfidence.Value.ToString("0.00")</dd>
+                }
+            </dl>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

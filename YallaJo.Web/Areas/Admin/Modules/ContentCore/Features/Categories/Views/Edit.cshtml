@@ -1,0 +1,60 @@
+@model YallaJo.Web.Areas.Admin.Modules.ContentCore.Features.Categories.ViewModels.UpdateCategoryVm
+@{
+    ViewData["Title"] = "Edit Category";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-4">
+    <h2>Edit Category</h2>
+
+    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+    <form asp-area="Admin" asp-controller="Categories" asp-action="Edit"
+          asp-route-id="@Model.Id" method="post" class="col-md-6">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="Id" />
+
+        <div class="mb-3">
+            <label asp-for="Name" class="form-label"></label>
+            <input asp-for="Name" class="form-control" />
+            <span asp-validation-for="Name" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Slug" class="form-label"></label>
+            <input asp-for="Slug" class="form-control" />
+            <span asp-validation-for="Slug" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="ParentCategoryId" class="form-label"></label>
+            <input asp-for="ParentCategoryId" class="form-control" placeholder="Optional GUID" />
+            <span asp-validation-for="ParentCategoryId" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Icon" class="form-label"></label>
+            <input asp-for="Icon" class="form-control" />
+            <span asp-validation-for="Icon" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="SortOrder" class="form-label"></label>
+            <input asp-for="SortOrder" class="form-control" />
+            <span asp-validation-for="SortOrder" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="SourceLanguageCode" class="form-label"></label>
+            <input asp-for="SourceLanguageCode" class="form-control" />
+            <span asp-validation-for="SourceLanguageCode" class="text-danger"></span>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Save</button>
+        <a asp-action="Index" class="btn btn-link">Cancel</a>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
