@@ -44,6 +44,7 @@ public sealed class CategoryUpdatedDomainEventHandler(
 
         var updatedCount = 0;
         var addedCount = 0;
+        var skippedHumanReviewedCount = 0;
 
         foreach (var set in translationSets)
         {
@@ -56,9 +57,16 @@ public sealed class CategoryUpdatedDomainEventHandler(
 
             if (existing is not null)
             {
-                // Re-translate existing translation
-                category.UpdateTranslation(set.LanguageId, translatedName, slug);
-                updatedCount++;
+                // Re-translate existing translation ONLY if it's auto-generated.
+                // Human-reviewed translations are protected from overwrite.
+                if (category.TryUpdateAutoTranslation(set.LanguageId, translatedName, slug))
+                {
+                    updatedCount++;
+                }
+                else
+                {
+                    skippedHumanReviewedCount++;
+                }
             }
             else
             {
@@ -72,9 +80,10 @@ public sealed class CategoryUpdatedDomainEventHandler(
             return;
 
         logger.LogInformation(
-            "CategoryUpdatedDomainEvent: Updated {UpdatedCount}, added {AddedCount} translations for category {CategoryId}.",
+            "CategoryUpdatedDomainEvent: Updated {UpdatedCount}, added {AddedCount}, skipped {SkippedHumanReviewed} (human-reviewed) for category {CategoryId}.",
             updatedCount,
             addedCount,
+            skippedHumanReviewedCount,
             category.Id);
     }
 }

@@ -15,8 +15,8 @@ public static class ContentCoreCacheKeys
     public static string CategoryList(bool activeOnly, Guid? parentId, bool withTranslations) =>
         $"cc:cats:{activeOnly}:{parentId?.ToString() ?? "root"}:{withTranslations}";
 
-    public static string Category(Guid id, bool withTranslations) =>
-        $"cc:cat:{id}:{withTranslations}";
+    public static string Category(Guid id, bool withTranslations, bool includeInactive = false) =>
+        $"cc:cat:{id}:{withTranslations}:{includeInactive}";
 
     /// <summary>
     /// Returns the known "root-level" category list cache key permutations.

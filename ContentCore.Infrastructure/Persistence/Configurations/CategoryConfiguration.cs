@@ -17,7 +17,7 @@ public class CategoryConfiguration : IEntityTypeConfiguration<Category>
 
         builder.Property(x => x.Name)
             .IsRequired()
-            .IsUnicode(false)
+            .IsUnicode(true)
             .HasMaxLength(200);
 
         builder.Property(x => x.Slug)

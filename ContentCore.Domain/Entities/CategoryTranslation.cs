@@ -1,3 +1,4 @@
+using ContentCore.Domain.Enums;
 using YallaJo.SharedKernel.Domain.Entities;
 
 namespace ContentCore.Domain.Entities;
@@ -10,6 +11,7 @@ public sealed class CategoryTranslation : BaseEntity
     public Guid LanguageId { get; private set; }
     public string Name { get; private set; } = string.Empty;
     public string Slug { get; private set; } = string.Empty;
+    public TranslationStatus Status { get; private set; } = TranslationStatus.AutoTranslated;
 
     public Category Category { get; private set; } = default!;
 
@@ -17,7 +19,8 @@ public sealed class CategoryTranslation : BaseEntity
         Guid categoryId,
         Guid languageId,
         string name,
-        string slug)
+        string slug,
+        TranslationStatus status = TranslationStatus.AutoTranslated)
     {
         if (languageId == Guid.Empty)
             throw new ArgumentException("Language is required.", nameof(languageId));
@@ -31,11 +34,12 @@ public sealed class CategoryTranslation : BaseEntity
             CategoryId = categoryId,
             LanguageId = languageId,
             Name = name.Trim(),
-            Slug = slug.Trim()
+            Slug = slug.Trim(),
+            Status = status
         };
     }
 
-    public void Update(string name, string slug)
+    public void Update(string name, string slug, TranslationStatus? status = null)
     {
         if (string.IsNullOrWhiteSpace(name))
             throw new ArgumentException("Translation name is required.", nameof(name));
@@ -44,5 +48,8 @@ public sealed class CategoryTranslation : BaseEntity
 
         Name = name.Trim();
         Slug = slug.Trim();
+
+        if (status.HasValue)
+            Status = status.Value;
     }
 }

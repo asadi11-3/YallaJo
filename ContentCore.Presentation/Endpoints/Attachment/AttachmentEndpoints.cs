@@ -24,7 +24,8 @@ internal static class AttachmentEndpoints
         var attachments = group.MapGroup("/attachments").WithTags("ContentCore | Attachments");
 
         // Upload attachment (multipart/form-data)
-        attachments.MapPost("/", async (IFormFile file, [AsParameters] UploadAttachmentRequest request, ICurrentUser currentUser, ISender sender) =>
+        attachments.MapPost("/", async (IFormFile file, [AsParameters] UploadAttachmentRequest request,
+            ICurrentUser currentUser, ISender sender, CancellationToken ct = default) =>
         {
             if (!Enum.TryParse<EntityType>(request.EntityType, true, out var entityType))
                 return Results.BadRequest("Invalid EntityType.");
@@ -47,7 +48,7 @@ internal static class AttachmentEndpoints
                 request.Width,
                 request.Height,
                 request.DurationSeconds,
-                request.SortOrder));
+                request.SortOrder), ct);
             return result.ToApiResult();
         })
         .WithName("UploadAttachment")
@@ -59,9 +60,9 @@ internal static class AttachmentEndpoints
         .DisableAntiforgery();
 
         // Get attachments by entity
-        attachments.MapGet("/", async (EntityType entityType, Guid entityId, ISender sender) =>
+        attachments.MapGet("/", async (EntityType entityType, Guid entityId, ISender sender, CancellationToken ct = default) =>
         {
-            var result = await sender.Send(new GetEntityAttachmentsQuery(entityType, entityId));
+            var result = await sender.Send(new GetEntityAttachmentsQuery(entityType, entityId), ct);
             return result.ToApiResult();
         })
         .WithName("GetEntityAttachments")
@@ -71,9 +72,9 @@ internal static class AttachmentEndpoints
         .RequireAuthorization();
 
         // Get attachment by ID
-        attachments.MapGet("/{id:guid}", async (Guid id, ISender sender) =>
+        attachments.MapGet("/{id:guid}", async (Guid id, ISender sender, CancellationToken ct = default) =>
         {
-            var result = await sender.Send(new GetAttachmentByIdQuery(id));
+            var result = await sender.Send(new GetAttachmentByIdQuery(id), ct);
             return result.ToApiResult();
         })
         .WithName("GetAttachmentById")
@@ -84,9 +85,9 @@ internal static class AttachmentEndpoints
         .RequireAuthorization();
 
         // Delete attachment
-        attachments.MapDelete("/{id:guid}", async (Guid id, ISender sender) =>
+        attachments.MapDelete("/{id:guid}", async (Guid id, ISender sender, CancellationToken ct = default) =>
         {
-            var result = await sender.Send(new DeleteAttachmentCommand(id));
+            var result = await sender.Send(new DeleteAttachmentCommand(id), ct);
             return result.ToApiResult();
         })
         .WithName("DeleteAttachment")
@@ -96,13 +97,13 @@ internal static class AttachmentEndpoints
         .RequireAuthorization("Permission.Attachment.Delete");
 
         // Reorder attachments
-        attachments.MapPut("/reorder", async (ReorderAttachmentsRequest request, ISender sender) =>
+        attachments.MapPut("/reorder", async (ReorderAttachmentsRequest request, ISender sender, CancellationToken ct = default) =>
         {
             if (!Enum.TryParse<EntityType>(request.EntityType, true, out var entityType))
                 return Results.BadRequest("Invalid EntityType.");
 
             var result = await sender.Send(new ReorderAttachmentsCommand(
-                entityType, request.EntityId, request.OrderedAttachmentIds));
+                entityType, request.EntityId, request.OrderedAttachmentIds), ct);
             return result.ToApiResult();
         })
         .WithName("ReorderAttachments")
@@ -114,13 +115,13 @@ internal static class AttachmentEndpoints
         .RequireAuthorization();
 
         // Set primary image
-        attachments.MapPut("/primary", async (SetPrimaryImageRequest request, ISender sender) =>
+        attachments.MapPut("/primary", async (SetPrimaryImageRequest request, ISender sender, CancellationToken ct = default) =>
         {
             if (!Enum.TryParse<EntityType>(request.EntityType, true, out var entityType))
                 return Results.BadRequest("Invalid EntityType.");
 
             var result = await sender.Send(new SetPrimaryImageCommand(
-                entityType, request.EntityId, request.AttachmentId));
+                entityType, request.EntityId, request.AttachmentId), ct);
             return result.ToApiResult();
         })
         .WithName("SetPrimaryImage")

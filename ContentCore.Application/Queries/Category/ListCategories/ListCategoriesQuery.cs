@@ -5,7 +5,7 @@ using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 namespace ContentCore.Application.Queries.Category.ListCategories;
 
 public sealed record ListCategoriesQuery(
-    bool ActiveOnly = false,
+    bool ActiveOnly = true,      // Default is true — callers must explicitly opt-in to see inactive
     Guid? ParentCategoryId = null,
     bool WithTranslations = false)
     : IQuery<IReadOnlyList<CategoryDto>>, ICacheableQuery

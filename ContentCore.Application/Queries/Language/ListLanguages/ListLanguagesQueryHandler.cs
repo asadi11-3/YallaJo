@@ -1,11 +1,14 @@
 using ContentCore.Domain.Repositories;
+using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 using Outcome = YallaJo.SharedKernel.Domain.Abstractions.Results.Outcome;
 
 namespace ContentCore.Application.Queries.Language.ListLanguages;
 
-public sealed class ListLanguagesQueryHandler(ILanguageRepository languageRepository)
+public sealed class ListLanguagesQueryHandler(
+    ILanguageRepository languageRepository,
+    ILogger<ListLanguagesQueryHandler> logger)
     : IQueryHandler<ListLanguagesQuery, IReadOnlyList<LanguageDto>>
 {
     public async Task<Result<IReadOnlyList<LanguageDto>>> Handle(
@@ -22,6 +25,8 @@ public sealed class ListLanguagesQueryHandler(ILanguageRepository languageReposi
             var dtos = languages
                 .Select(l => new LanguageDto(l.Id, l.Code, l.Name, l.NativeName, l.IsRtl, l.IsActive))
                 .ToList() as IReadOnlyList<LanguageDto>;
+
+            logger.LogDebug("ListLanguages returned {Count} languages", dtos.Count);
 
             return Result<IReadOnlyList<LanguageDto>>.Success(dtos);
         }

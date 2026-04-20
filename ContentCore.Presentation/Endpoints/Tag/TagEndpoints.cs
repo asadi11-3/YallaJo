@@ -20,9 +20,9 @@ internal static class TagEndpoints
     {
         var tags = group.MapGroup("/tags").WithTags("ContentCore | Tags");
 
-        tags.MapGet("/", async (ISender sender, bool activeOnly = false) =>
+        tags.MapGet("/", async (ISender sender, CancellationToken ct, bool activeOnly = false) =>
         {
-            var result = await sender.Send(new ListTagsQuery(activeOnly));
+            var result = await sender.Send(new ListTagsQuery(activeOnly), ct);
             return result.ToApiResult();
         })
         .WithName("ListTags")
@@ -30,9 +30,9 @@ internal static class TagEndpoints
         .WithSummary("List tags")
         .AllowAnonymous();
 
-        tags.MapGet("/{id:guid}", async (Guid id, ISender sender) =>
+        tags.MapGet("/{id:guid}", async (Guid id, ISender sender, CancellationToken ct = default) =>
         {
-            var result = await sender.Send(new GetTagByIdQuery(id));
+            var result = await sender.Send(new GetTagByIdQuery(id), ct);
             return result.ToApiResult();
         })
         .WithName("GetTagById")
@@ -41,9 +41,9 @@ internal static class TagEndpoints
         .WithSummary("Get tag by ID")
         .AllowAnonymous();
 
-        tags.MapPost("/", async (CreateTagRequest request, ISender sender) =>
+        tags.MapPost("/", async (CreateTagRequest request, ISender sender, CancellationToken ct = default) =>
         {
-            var result = await sender.Send(new CreateTagCommand(request.Name, request.Slug));
+            var result = await sender.Send(new CreateTagCommand(request.Name, request.Slug), ct);
             return result.ToApiResult();
         })
         .WithName("CreateTag")
@@ -54,9 +54,9 @@ internal static class TagEndpoints
         .WithMetadata(new MustHavePermissionAttribute(AppFeatures.Tag, AppAction.Create))
         .RequireAuthorization();
 
-        tags.MapPut("/{id:guid}", async (Guid id, UpdateTagRequest request, ISender sender) =>
+        tags.MapPut("/{id:guid}", async (Guid id, UpdateTagRequest request, ISender sender, CancellationToken ct = default) =>
         {
-            var result = await sender.Send(new UpdateTagCommand(id, request.Name, request.Slug));
+            var result = await sender.Send(new UpdateTagCommand(id, request.Name, request.Slug), ct);
             return result.ToApiResult();
         })
         .WithName("UpdateTag")
@@ -68,9 +68,9 @@ internal static class TagEndpoints
         .WithMetadata(new MustHavePermissionAttribute(AppFeatures.Tag, AppAction.Update))
         .RequireAuthorization();
 
-        tags.MapDelete("/{id:guid}", async (Guid id, ISender sender) =>
+        tags.MapDelete("/{id:guid}", async (Guid id, ISender sender, CancellationToken ct = default) =>
         {
-            var result = await sender.Send(new DeleteTagCommand(id));
+            var result = await sender.Send(new DeleteTagCommand(id), ct);
             return result.ToApiResult();
         })
         .WithName("DeleteTag")

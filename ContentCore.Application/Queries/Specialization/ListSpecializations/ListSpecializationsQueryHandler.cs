@@ -1,11 +1,14 @@
 using ContentCore.Domain.Repositories;
+using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 using Outcome = YallaJo.SharedKernel.Domain.Abstractions.Results.Outcome;
 
 namespace ContentCore.Application.Queries.Specialization.ListSpecializations;
 
-public sealed class ListSpecializationsQueryHandler(ISpecializationRepository specializationRepository)
+public sealed class ListSpecializationsQueryHandler(
+    ISpecializationRepository specializationRepository,
+    ILogger<ListSpecializationsQueryHandler> logger)
     : IQueryHandler<ListSpecializationsQuery, IReadOnlyList<SpecializationDto>>
 {
     public async Task<Result<IReadOnlyList<SpecializationDto>>> Handle(
@@ -27,6 +30,8 @@ public sealed class ListSpecializationsQueryHandler(ISpecializationRepository sp
                     s.Icon,
                     s.IsActive))
                 .ToList() as IReadOnlyList<SpecializationDto>;
+
+            logger.LogDebug("ListSpecializations returned {Count} specializations", dtos.Count);
 
             return Result<IReadOnlyList<SpecializationDto>>.Success(dtos);
         }

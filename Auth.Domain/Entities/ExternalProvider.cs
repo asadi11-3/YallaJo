@@ -2,7 +2,6 @@ using YallaJo.SharedKernel.Domain.Entities;
 
 namespace Auth.Domain.Entities;
 
-
 public sealed class ExternalProvider : AuditableEntity, IAggregateRoot
 {
     private ExternalProvider() { } // EF Core

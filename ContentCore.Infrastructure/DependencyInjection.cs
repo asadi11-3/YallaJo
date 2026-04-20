@@ -89,7 +89,9 @@ public static class DependencyInjection
         services.AddSingleton<IMediaProcessingQueue>(sp => sp.GetRequiredService<MediaProcessingQueue>());
         services.AddScoped<IImageProcessingService, ImageProcessingService>();
         services.AddScoped<IVideoProcessingService, VideoProcessingService>();
-        //services.AddHostedService<MediaProcessingBackgroundService>();
+        // ffmpeg v8.0.1 confirmed installed (BinaryFolder configured in appsettings.json "FFmpeg:BinaryFolder").
+        // SixLabors.ImageSharp handles image processing (no external binary needed).
+        services.AddHostedService<MediaProcessingBackgroundService>();
         return services;
     }
 }

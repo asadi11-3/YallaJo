@@ -1,5 +1,6 @@
 using ContentCore.Application.Queries.Attachment.Common;
 using ContentCore.Domain.Repositories;
+using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 using Outcome = YallaJo.SharedKernel.Domain.Abstractions.Results.Outcome;
@@ -7,7 +8,8 @@ using Outcome = YallaJo.SharedKernel.Domain.Abstractions.Results.Outcome;
 namespace ContentCore.Application.Queries.Attachment.GetEntityAttachments;
 
 public sealed class GetEntityAttachmentsQueryHandler(
-    IAttachmentRepository attachmentRepository)
+    IAttachmentRepository attachmentRepository,
+    ILogger<GetEntityAttachmentsQueryHandler> logger)
     : IQueryHandler<GetEntityAttachmentsQuery, IReadOnlyList<AttachmentDto>>
 {
     public async Task<Result<IReadOnlyList<AttachmentDto>>> Handle(
@@ -37,6 +39,10 @@ public sealed class GetEntityAttachmentsQueryHandler(
                 a.SortOrder,
                 a.UploadedAt,
                 a.UploadedByUserId)).ToList();
+
+            logger.LogDebug(
+                "GetEntityAttachments: {Count} attachments for {EntityType}/{EntityId}",
+                dtos.Count, request.EntityType, request.EntityId);
 
             return Result<IReadOnlyList<AttachmentDto>>.Success(dtos);
         }

@@ -20,12 +20,12 @@ public class LanguageConfiguration : IEntityTypeConfiguration<Language>
 
         builder.Property(x => x.Name)
             .IsRequired()
-            .IsUnicode(false)
+            .IsUnicode(true)
             .HasMaxLength(100);
 
         builder.Property(x => x.NativeName)
             .IsRequired()
-            .IsUnicode(false)
+            .IsUnicode(true)
             .HasMaxLength(100);
 
         builder.Property(x => x.IsRtl).IsRequired();

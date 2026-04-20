@@ -1,4 +1,5 @@
 using ContentCore.Domain.Repositories;
+using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Application.Abstractions.Translation;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
@@ -8,7 +9,8 @@ namespace ContentCore.Application.Commands.Translation.BatchTranslate;
 
 public sealed class BatchTranslateCommandHandler(
     ITranslationService translationService,
-    IContentCoreUnitOfWork unitOfWork)
+    IContentCoreUnitOfWork unitOfWork,
+    ILogger<BatchTranslateCommandHandler> logger)
     : ICommandHandler<BatchTranslateCommand, BatchTranslateResult>
 {
     public async Task<Result<BatchTranslateResult>> Handle(
@@ -35,6 +37,10 @@ public sealed class BatchTranslateCommandHandler(
                     r.ToLanguage,
                     r.Confidence))
                 .ToList() as IReadOnlyList<BatchTranslateResultItem>;
+
+            logger.LogInformation(
+                "BatchTranslate completed: {Count} items ({From}→{To})",
+                items.Count, request.FromLanguageCode, request.ToLanguageCode);
 
             return Result<BatchTranslateResult>.Success(new BatchTranslateResult(items));
         }

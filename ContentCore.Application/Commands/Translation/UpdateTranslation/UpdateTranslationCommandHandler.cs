@@ -1,6 +1,7 @@
 using ContentCore.Domain.Exceptions;
 using ContentCore.Domain.Repositories;
 using Microsoft.Extensions.Caching.Hybrid;
+using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 using Outcome = YallaJo.SharedKernel.Domain.Abstractions.Results.Outcome;
@@ -10,7 +11,8 @@ namespace ContentCore.Application.Commands.Translation.UpdateTranslation;
 public sealed class UpdateTranslationCommandHandler(
     ITranslationCacheRepository translationCacheRepository,
     IContentCoreUnitOfWork unitOfWork,
-    HybridCache cache)
+    HybridCache cache,
+    ILogger<UpdateTranslationCommandHandler> logger)
     : ICommandHandler<UpdateTranslationCommand, UpdateTranslationResult>
 {
     public async Task<Result<UpdateTranslationResult>> Handle(
@@ -47,6 +49,9 @@ public sealed class UpdateTranslationCommandHandler(
                     $"translations:{cached.EntityType}:{cached.EntityId.Value}",
                     cancellationToken);
             }
+
+            logger.LogInformation(
+                "Translation updated: {TranslationId}", request.Id);
 
             return Result<UpdateTranslationResult>.Success(
                 new UpdateTranslationResult(cached.Id, cached.TranslatedText, cached.Status.ToString()));

@@ -1,6 +1,7 @@
 using ContentCore.Domain.Exceptions;
 using ContentCore.Domain.Repositories;
 using Microsoft.Extensions.Caching.Hybrid;
+using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 using Outcome = YallaJo.SharedKernel.Domain.Abstractions.Results.Outcome;
@@ -10,7 +11,8 @@ namespace ContentCore.Application.Commands.Category.DeleteCategory;
 public sealed class DeleteCategoryCommandHandler(
     ICategoryRepository categoryRepository,
     IContentCoreUnitOfWork unitOfWork,
-    HybridCache cache)
+    HybridCache cache,
+    ILogger<DeleteCategoryCommandHandler> logger)
     : ICommandHandler<DeleteCategoryCommand>
 {
     public async Task<Result> Handle(DeleteCategoryCommand request, CancellationToken ct)
@@ -54,6 +56,8 @@ public sealed class DeleteCategoryCommandHandler(
             }
 
             await cache.RemoveByTagAsync("categories", ct);
+
+            logger.LogInformation("Category soft-deleted: {CategoryId}", request.Id);
 
             return Result.Success();
         }

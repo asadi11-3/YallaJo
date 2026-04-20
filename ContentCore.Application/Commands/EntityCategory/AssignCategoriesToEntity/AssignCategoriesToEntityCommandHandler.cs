@@ -2,6 +2,7 @@ using ContentCore.Domain.Enums;
 using ContentCore.Domain.Exceptions;
 using ContentCore.Domain.Repositories;
 using Microsoft.Extensions.Caching.Hybrid;
+using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 using Outcome = YallaJo.SharedKernel.Domain.Abstractions.Results.Outcome;
@@ -12,7 +13,8 @@ public sealed class AssignCategoriesToEntityCommandHandler(
     IEntityCategoryRepository entityCategoryRepository,
     ICategoryRepository categoryRepository,
     IContentCoreUnitOfWork unitOfWork,
-    HybridCache cache)
+    HybridCache cache,
+    ILogger<AssignCategoriesToEntityCommandHandler> logger)
     : ICommandHandler<AssignCategoriesToEntityCommand>
 {
     public async Task<Result> Handle(AssignCategoriesToEntityCommand request, CancellationToken cancellationToken)
@@ -70,6 +72,11 @@ public sealed class AssignCategoriesToEntityCommandHandler(
             }
 
             await cache.RemoveByTagAsync($"entity-categories:{request.EntityType}:{request.EntityId}", cancellationToken);
+
+            logger.LogInformation(
+                "Assigned {Count} categories to {EntityType}/{EntityId}",
+                request.CategoryIds.Count, request.EntityType, request.EntityId);
+
             return Result.Success();
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)

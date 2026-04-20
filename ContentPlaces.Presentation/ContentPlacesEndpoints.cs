@@ -1,3 +1,4 @@
+using ContentPlaces.Presentation.Endpoints.Business;
 using ContentPlaces.Presentation.Endpoints.Place;
 using ContentPlaces.Presentation.Endpoints.ServiceItem;
 using Microsoft.AspNetCore.Builder;
@@ -15,6 +16,8 @@ public static class ContentPlacesEndpoints
     {
         var group = endpoints.MapGroup("/api/v1")
             .WithTags("ContentPlaces");
+
+        BusinessEndpoints.MapBusinessEndpoints(group);
 
         PlaceEndpoints.MapPlaceEndpoints(group);
         ServiceItemEndpoints.MapServiceItemEndpoints(group);

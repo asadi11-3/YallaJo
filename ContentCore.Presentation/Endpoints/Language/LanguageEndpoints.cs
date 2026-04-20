@@ -17,9 +17,9 @@ internal static class LanguageEndpoints
     {
         var languages = group.MapGroup("/languages").WithTags("ContentCore | Languages");
 
-        languages.MapGet("/", async (ISender sender, bool activeOnly = true) =>
+        languages.MapGet("/", async (ISender sender, CancellationToken ct, bool activeOnly = true) =>
         {
-            var result = await sender.Send(new ListLanguagesQuery(activeOnly));
+            var result = await sender.Send(new ListLanguagesQuery(activeOnly), ct);
             return result.ToApiResult();
         })
         .WithName("ListLanguages")
@@ -27,10 +27,10 @@ internal static class LanguageEndpoints
         .WithSummary("List all active languages")
         .AllowAnonymous();
 
-        languages.MapPost("/", async (CreateLanguageRequest request, ISender sender) =>
+        languages.MapPost("/", async (CreateLanguageRequest request, ISender sender, CancellationToken ct = default) =>
         {
             var result = await sender.Send(new CreateLanguageCommand(
-                request.Code, request.Name, request.NativeName, request.IsRtl));
+                request.Code, request.Name, request.NativeName, request.IsRtl), ct);
             return result.ToApiResult();
         })
         .WithName("CreateLanguage")
@@ -41,10 +41,10 @@ internal static class LanguageEndpoints
         .WithMetadata(new MustHavePermissionAttribute(AppFeatures.Language, AppAction.Create))
         .RequireAuthorization();
 
-        languages.MapPut("/{id:guid}", async (Guid id, UpdateLanguageRequest request, ISender sender) =>
+        languages.MapPut("/{id:guid}", async (Guid id, UpdateLanguageRequest request, ISender sender, CancellationToken ct = default) =>
         {
             var result = await sender.Send(new UpdateLanguageCommand(
-                id, request.Name, request.NativeName, request.IsRtl, request.IsActive));
+                id, request.Name, request.NativeName, request.IsRtl, request.IsActive), ct);
             return result.ToApiResult();
         })
         .WithName("UpdateLanguage")

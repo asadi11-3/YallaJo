@@ -1,6 +1,7 @@
 using ContentCore.Domain.Exceptions;
 using ContentCore.Domain.Repositories;
 using Microsoft.Extensions.Caching.Hybrid;
+using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 using Outcome = YallaJo.SharedKernel.Domain.Abstractions.Results.Outcome;
@@ -10,7 +11,8 @@ namespace ContentCore.Application.Commands.Translation.ApproveTranslation;
 public sealed class ApproveTranslationCommandHandler(
     ITranslationCacheRepository translationCacheRepository,
     IContentCoreUnitOfWork unitOfWork,
-    HybridCache cache)
+    HybridCache cache,
+    ILogger<ApproveTranslationCommandHandler> logger)
     : ICommandHandler<ApproveTranslationCommand>
 {
     public async Task<Result> Handle(
@@ -48,6 +50,9 @@ public sealed class ApproveTranslationCommandHandler(
                     $"translations:{cached.EntityType}:{cached.EntityId.Value}",
                     cancellationToken);
             }
+
+            logger.LogInformation(
+                "Translation approved: {TranslationId}", request.Id);
 
             return Result.Success();
         }
