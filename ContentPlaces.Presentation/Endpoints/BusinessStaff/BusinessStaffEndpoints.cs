@@ -7,6 +7,7 @@ using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using ContentPlaces.Contracts.Authorization;
 using Security.Contracts.Authorization;
 using YallaJo.SharedKernel.Presentation.Authorization;
 using YallaJo.SharedKernel.Application.Authorization;
@@ -50,7 +51,7 @@ internal static class BusinessStaffEndpoints
         .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status409Conflict)
         .WithSummary("Add a staff member to a business")
-        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.BusinessStaff, AppAction.Create))
+        .WithMetadata(new MustHavePermissionAttribute(ContentPlacesFeatures.BusinessStaff, AppAction.Create))
         .RequireAuthorization();
 
         staff.MapDelete("/staff/{id:guid}", async (
@@ -66,7 +67,7 @@ internal static class BusinessStaffEndpoints
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status409Conflict)
         .WithSummary("Deactivate a staff member (soft delete)")
-        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.BusinessStaff, AppAction.Delete))
+        .WithMetadata(new MustHavePermissionAttribute(ContentPlacesFeatures.BusinessStaff, AppAction.Delete))
         .RequireAuthorization();
     }
 }

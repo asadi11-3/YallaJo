@@ -8,6 +8,7 @@ using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using ContentCore.Contracts.Authorization;
 using Security.Contracts.Authorization;
 using YallaJo.SharedKernel.Presentation.Authorization;
 using YallaJo.SharedKernel.Application.Authorization;
@@ -31,7 +32,7 @@ internal static class TranslationEndpoints
         .Produces<TranslateTextResult>(StatusCodes.Status200OK)
         .ProducesValidationProblem()
         .WithSummary("On-demand translation (admin tool)")
-        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.TranslationCache, AppAction.Create))
+        .WithMetadata(new MustHavePermissionAttribute(ContentCoreFeatures.TranslationCache, AppAction.Create))
         .RequireAuthorization();
 
         translations.MapPost("/batch", async (BatchTranslateRequest request, ISender sender, CancellationToken ct = default) =>
@@ -44,7 +45,7 @@ internal static class TranslationEndpoints
         .Produces<BatchTranslateResult>(StatusCodes.Status200OK)
         .ProducesValidationProblem()
         .WithSummary("Batch translate multiple texts")
-        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.TranslationCache, AppAction.Create))
+        .WithMetadata(new MustHavePermissionAttribute(ContentCoreFeatures.TranslationCache, AppAction.Create))
         .RequireAuthorization();
 
         translations.MapGet("/{entityType}/{entityId:guid}", async (string entityType, Guid entityId, ISender sender, CancellationToken ct = default) =>
@@ -55,7 +56,7 @@ internal static class TranslationEndpoints
         .WithName("GetEntityTranslations")
         .Produces<IReadOnlyList<EntityTranslationDto>>(StatusCodes.Status200OK)
         .WithSummary("Get all translations for an entity")
-        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.TranslationCache, AppAction.Read))
+        .WithMetadata(new MustHavePermissionAttribute(ContentCoreFeatures.TranslationCache, AppAction.Read))
         .RequireAuthorization();
 
         translations.MapPut("/{id:guid}", async (Guid id, UpdateTranslationRequest request, ISender sender, CancellationToken ct = default) =>
@@ -68,7 +69,7 @@ internal static class TranslationEndpoints
         .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Update/override a translation")
-        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.TranslationCache, AppAction.Update))
+        .WithMetadata(new MustHavePermissionAttribute(ContentCoreFeatures.TranslationCache, AppAction.Update))
         .RequireAuthorization();
 
         translations.MapPost("/{id:guid}/approve", async (Guid id, ISender sender, CancellationToken ct = default) =>
@@ -80,7 +81,7 @@ internal static class TranslationEndpoints
         .Produces(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Mark translation as human-reviewed")
-        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.TranslationCache, AppAction.Update))
+        .WithMetadata(new MustHavePermissionAttribute(ContentCoreFeatures.TranslationCache, AppAction.Update))
         .RequireAuthorization();
     }
 }

@@ -9,6 +9,7 @@ using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using ContentPlaces.Contracts.Authorization;
 using Security.Contracts.Authorization;
 using YallaJo.SharedKernel.Presentation.Authorization;
 using YallaJo.SharedKernel.Application.Authorization;
@@ -59,7 +60,7 @@ internal static class ServiceItemEndpoints
         .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status409Conflict)
         .WithSummary("Create a service item for a business")
-        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.ServiceItem, AppAction.Create))
+        .WithMetadata(new MustHavePermissionAttribute(ContentPlacesFeatures.ServiceItem, AppAction.Create))
         .RequireAuthorization();
 
         services.MapPut("/{serviceItemId:guid}", async (
@@ -76,7 +77,7 @@ internal static class ServiceItemEndpoints
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status409Conflict)
         .WithSummary("Update a service item")
-        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.ServiceItem, AppAction.Update))
+        .WithMetadata(new MustHavePermissionAttribute(ContentPlacesFeatures.ServiceItem, AppAction.Update))
         .RequireAuthorization();
 
         services.MapDelete("/{serviceItemId:guid}", async (
@@ -89,7 +90,7 @@ internal static class ServiceItemEndpoints
         .Produces(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Soft-delete a service item")
-        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.ServiceItem, AppAction.SoftDelete))
+        .WithMetadata(new MustHavePermissionAttribute(ContentPlacesFeatures.ServiceItem, AppAction.SoftDelete))
         .RequireAuthorization();
     }
 }

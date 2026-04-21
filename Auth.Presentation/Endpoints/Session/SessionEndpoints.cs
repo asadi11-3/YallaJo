@@ -99,7 +99,7 @@ internal static class SessionEndpoints
         .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status401Unauthorized)
         .WithSummary("Admin: force-revoke all sessions and refresh tokens for a user")
-        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.User, AppAction.UpdateAny))
+        .WithMetadata(new MustHavePermissionAttribute(SecurityFeatures.User, AppAction.UpdateAny))
         .RequireAuthorization();
     }
 }

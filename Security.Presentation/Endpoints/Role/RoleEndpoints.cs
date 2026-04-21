@@ -34,7 +34,7 @@ internal static class RoleEndpoints
         .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status409Conflict)
         .WithSummary("Create a new role")
-        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.Role, AppAction.Create))
+        .WithMetadata(new MustHavePermissionAttribute(SecurityFeatures.Role, AppAction.Create))
         .RequireAuthorization();
 
         roles.MapGet("/", async (ISender sender, CancellationToken ct) =>
@@ -45,7 +45,7 @@ internal static class RoleEndpoints
         .WithName("ListRoles")
         .Produces<IReadOnlyList<RoleDto>>(StatusCodes.Status200OK)
         .WithSummary("List all active roles")
-        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.Role, AppAction.Read))
+        .WithMetadata(new MustHavePermissionAttribute(SecurityFeatures.Role, AppAction.Read))
         .RequireAuthorization();
 
         roles.MapGet("/{roleId:guid}", async (Guid roleId, ISender sender, CancellationToken ct) =>
@@ -57,7 +57,7 @@ internal static class RoleEndpoints
         .Produces<RoleDetailsDto>(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Get a role with its claims")
-        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.Role, AppAction.Read))
+        .WithMetadata(new MustHavePermissionAttribute(SecurityFeatures.Role, AppAction.Read))
         .RequireAuthorization();
 
         roles.MapPatch("/{roleId:guid}", async (Guid roleId, UpdateRoleRequest request, ISender sender, CancellationToken ct) =>
@@ -71,7 +71,7 @@ internal static class RoleEndpoints
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status403Forbidden)
         .WithSummary("Update a role's description")
-        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.Role, AppAction.Update))
+        .WithMetadata(new MustHavePermissionAttribute(SecurityFeatures.Role, AppAction.Update))
         .RequireAuthorization();
 
         roles.MapPatch("/{roleId:guid}/deactivate", async (Guid roleId, ISender sender, CancellationToken ct) =>
@@ -84,7 +84,7 @@ internal static class RoleEndpoints
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status403Forbidden)
         .WithSummary("Deactivate a role")
-        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.Role, AppAction.Update))
+        .WithMetadata(new MustHavePermissionAttribute(SecurityFeatures.Role, AppAction.Update))
         .RequireAuthorization();
 
         roles.MapPost("/{roleId:guid}/claims", async (Guid roleId, AddRoleClaimRequest request, ISender sender, CancellationToken ct) =>
@@ -98,7 +98,7 @@ internal static class RoleEndpoints
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status409Conflict)
         .WithSummary("Add a claim to a role")
-        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.RoleClaim, AppAction.Create))
+        .WithMetadata(new MustHavePermissionAttribute(SecurityFeatures.RoleClaim, AppAction.Create))
         .RequireAuthorization();
 
         roles.MapDelete("/{roleId:guid}/claims/{claimId:guid}", async (Guid roleId, Guid claimId, ISender sender, CancellationToken ct) =>
@@ -110,7 +110,7 @@ internal static class RoleEndpoints
         .Produces(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Remove a claim from a role")
-        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.RoleClaim, AppAction.Delete))
+        .WithMetadata(new MustHavePermissionAttribute(SecurityFeatures.RoleClaim, AppAction.Delete))
         .RequireAuthorization();
     }
 }

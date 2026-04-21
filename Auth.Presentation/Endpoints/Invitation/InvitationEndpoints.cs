@@ -45,7 +45,7 @@ internal static class InvitationEndpoints
             .ProducesProblem(StatusCodes.Status401Unauthorized)
             .ProducesProblem(StatusCodes.Status403Forbidden)
             .WithSummary("Admin: list active roles that can be pre-assigned during invite.")
-            .WithMetadata(new MustHavePermissionAttribute(AppFeatures.User, AppAction.Create))
+            .WithMetadata(new MustHavePermissionAttribute(SecurityFeatures.User, AppAction.Create))
             .RequireAuthorization();
     }
 
@@ -81,7 +81,7 @@ internal static class InvitationEndpoints
             .ProducesProblem(StatusCodes.Status403Forbidden)
             .ProducesProblem(StatusCodes.Status409Conflict)
             .WithSummary("Admin: invite a new user — creates identity (pending) + profile and sends invite email.")
-            .WithMetadata(new MustHavePermissionAttribute(AppFeatures.User, AppAction.Create))
+            .WithMetadata(new MustHavePermissionAttribute(SecurityFeatures.User, AppAction.Create))
             .RequireAuthorization();
     }
 
@@ -137,7 +137,7 @@ internal static class InvitationEndpoints
             .ProducesProblem(StatusCodes.Status403Forbidden)
             .ProducesProblem(StatusCodes.Status409Conflict)
             .WithSummary("Admin: resend an invite link for a pending account.")
-            .WithMetadata(new MustHavePermissionAttribute(AppFeatures.User, AppAction.Create))
+            .WithMetadata(new MustHavePermissionAttribute(SecurityFeatures.User, AppAction.Create))
             .RequireAuthorization();
     }
 }

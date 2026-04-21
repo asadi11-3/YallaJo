@@ -6,6 +6,7 @@ using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using ContentCore.Contracts.Authorization;
 using Security.Contracts.Authorization;
 using YallaJo.SharedKernel.Presentation.Authorization;
 using YallaJo.SharedKernel.Application.Authorization;
@@ -41,7 +42,7 @@ internal static class SpecializationEndpoints
         .Produces<CreateSpecializationResult>(StatusCodes.Status201Created)
         .ProducesValidationProblem()
         .WithSummary("Create a specialization")
-        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.Specialization, AppAction.Create))
+        .WithMetadata(new MustHavePermissionAttribute(ContentCoreFeatures.Specialization, AppAction.Create))
         .RequireAuthorization();
 
         specializations.MapPut("/{id:guid}", async (Guid id, UpdateSpecializationRequest request, ISender sender, CancellationToken ct = default) =>
@@ -59,7 +60,7 @@ internal static class SpecializationEndpoints
         .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Update a specialization")
-        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.Specialization, AppAction.Update))
+        .WithMetadata(new MustHavePermissionAttribute(ContentCoreFeatures.Specialization, AppAction.Update))
         .RequireAuthorization();
     }
 }

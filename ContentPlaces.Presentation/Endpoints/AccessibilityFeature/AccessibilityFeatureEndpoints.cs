@@ -5,6 +5,7 @@ using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using ContentPlaces.Contracts.Authorization;
 using Security.Contracts.Authorization;
 using YallaJo.SharedKernel.Presentation.Authorization;
 using YallaJo.SharedKernel.Application.Authorization;
@@ -47,7 +48,7 @@ internal static class AccessibilityFeatureEndpoints
         .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Replace all accessibility features for a place (batch replace)")
-        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.AccessibilityFeature, AppAction.Update))
+        .WithMetadata(new MustHavePermissionAttribute(ContentPlacesFeatures.AccessibilityFeature, AppAction.Update))
         .RequireAuthorization();
     }
 }

@@ -6,6 +6,7 @@ using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using ContentCore.Contracts.Authorization;
 using Security.Contracts.Authorization;
 using YallaJo.SharedKernel.Presentation.Authorization;
 using YallaJo.SharedKernel.Application.Authorization;
@@ -40,7 +41,7 @@ internal static class LanguageEndpoints
         .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status409Conflict)
         .WithSummary("Add a new language")
-        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.Language, AppAction.Create))
+        .WithMetadata(new MustHavePermissionAttribute(ContentCoreFeatures.Language, AppAction.Create))
         .RequireAuthorization();
 
         languages.MapPut("/{id:guid}", async (Guid id, UpdateLanguageRequest request, ISender sender, CancellationToken ct = default) =>
@@ -54,7 +55,7 @@ internal static class LanguageEndpoints
         .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Update language settings")
-        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.Language, AppAction.Update))
+        .WithMetadata(new MustHavePermissionAttribute(ContentCoreFeatures.Language, AppAction.Update))
         .RequireAuthorization();
     }
 }

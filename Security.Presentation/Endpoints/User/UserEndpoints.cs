@@ -73,7 +73,7 @@ internal static class UserEndpoints
         .WithName("ListUsers")
         .Produces<PaginatedResult<UserDto>>(StatusCodes.Status200OK)
         .WithSummary("List users with pagination")
-        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.User, AppAction.Read))
+        .WithMetadata(new MustHavePermissionAttribute(SecurityFeatures.User, AppAction.Read))
         .RequireAuthorization();
     }
 
@@ -88,7 +88,7 @@ internal static class UserEndpoints
         .Produces<UserDto>(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Get a user by ID")
-        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.User, AppAction.Read))
+        .WithMetadata(new MustHavePermissionAttribute(SecurityFeatures.User, AppAction.Read))
         .RequireAuthorization();
     }
 
@@ -104,7 +104,7 @@ internal static class UserEndpoints
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status401Unauthorized)
         .WithSummary("Activate a user account")
-        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.User, AppAction.UpdateAny))
+        .WithMetadata(new MustHavePermissionAttribute(SecurityFeatures.User, AppAction.UpdateAny))
         .RequireAuthorization();
     }
 
@@ -120,7 +120,7 @@ internal static class UserEndpoints
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status401Unauthorized)
         .WithSummary("Deactivate a user account")
-        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.User, AppAction.UpdateAny))
+        .WithMetadata(new MustHavePermissionAttribute(SecurityFeatures.User, AppAction.UpdateAny))
         .RequireAuthorization();
     }
 
@@ -137,7 +137,7 @@ internal static class UserEndpoints
         .ProducesProblem(StatusCodes.Status409Conflict)
         .ProducesProblem(StatusCodes.Status403Forbidden)
         .WithSummary("Assign a role to a user")
-        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.UserRole, AppAction.Create))
+        .WithMetadata(new MustHavePermissionAttribute(SecurityFeatures.UserRole, AppAction.Create))
         .RequireAuthorization();
     }
 
@@ -153,7 +153,7 @@ internal static class UserEndpoints
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status403Forbidden)
         .WithSummary("Remove a role from a user")
-        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.UserRole, AppAction.Delete))
+        .WithMetadata(new MustHavePermissionAttribute(SecurityFeatures.UserRole, AppAction.Delete))
         .RequireAuthorization();
     }
 
@@ -170,7 +170,7 @@ internal static class UserEndpoints
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status409Conflict)
         .WithSummary("Add a claim to a user")
-        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.User, AppAction.UpdateAny))
+        .WithMetadata(new MustHavePermissionAttribute(SecurityFeatures.User, AppAction.UpdateAny))
         .RequireAuthorization();
     }
 
@@ -185,7 +185,7 @@ internal static class UserEndpoints
         .Produces(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Remove a claim from a user")
-        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.User, AppAction.UpdateAny))
+        .WithMetadata(new MustHavePermissionAttribute(SecurityFeatures.User, AppAction.UpdateAny))
         .RequireAuthorization();
     }
 }

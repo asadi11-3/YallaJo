@@ -24,7 +24,7 @@ internal static class AuditLogEndpoints
         .WithName("GetAuditLogs")
         .Produces<PaginatedResult<AuditLogDto>>(StatusCodes.Status200OK)
         .WithSummary("Get paginated audit logs, optionally filtered by user")
-        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.System, AppAction.Read))
+        .WithMetadata(new MustHavePermissionAttribute(SecurityFeatures.System, AppAction.Read))
         .RequireAuthorization();
     }
 }

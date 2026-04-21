@@ -6,6 +6,7 @@ using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using ContentCore.Contracts.Authorization;
 using Security.Contracts.Authorization;
 using YallaJo.SharedKernel.Presentation.Authorization;
 using YallaJo.SharedKernel.Application.Authorization;
@@ -42,7 +43,7 @@ internal static class EntityTagEndpoints
         .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Assign tags to an entity")
-        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.EntityTag, AppAction.Create))
+        .WithMetadata(new MustHavePermissionAttribute(ContentCoreFeatures.EntityTag, AppAction.Create))
         .RequireAuthorization();
 
         entityTags.MapDelete("/", async (string entityType, Guid entityId, Guid tagId, ISender sender) =>
@@ -54,7 +55,7 @@ internal static class EntityTagEndpoints
         .Produces(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Remove tag assignment from an entity")
-        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.EntityTag, AppAction.Delete))
+        .WithMetadata(new MustHavePermissionAttribute(ContentCoreFeatures.EntityTag, AppAction.Delete))
         .RequireAuthorization();
     }
 }

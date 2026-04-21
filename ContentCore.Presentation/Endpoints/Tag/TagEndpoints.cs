@@ -9,6 +9,7 @@ using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using ContentCore.Contracts.Authorization;
 using Security.Contracts.Authorization;
 using YallaJo.SharedKernel.Presentation.Authorization;
 using YallaJo.SharedKernel.Application.Authorization;
@@ -53,7 +54,7 @@ internal static class TagEndpoints
         .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status409Conflict)
         .WithSummary("Create a tag")
-        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.Tag, AppAction.Create))
+        .WithMetadata(new MustHavePermissionAttribute(ContentCoreFeatures.Tag, AppAction.Create))
         .RequireAuthorization();
 
         tags.MapPut("/{id:guid}", async (Guid id, UpdateTagRequest request, ISender sender, CancellationToken ct = default) =>
@@ -67,7 +68,7 @@ internal static class TagEndpoints
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status409Conflict)
         .WithSummary("Update a tag")
-        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.Tag, AppAction.Update))
+        .WithMetadata(new MustHavePermissionAttribute(ContentCoreFeatures.Tag, AppAction.Update))
         .RequireAuthorization();
 
         tags.MapDelete("/{id:guid}", async (Guid id, ISender sender, CancellationToken ct = default) =>
@@ -79,7 +80,7 @@ internal static class TagEndpoints
         .Produces(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Delete a tag")
-        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.Tag, AppAction.Delete))
+        .WithMetadata(new MustHavePermissionAttribute(ContentCoreFeatures.Tag, AppAction.Delete))
         .RequireAuthorization();
     }
 }

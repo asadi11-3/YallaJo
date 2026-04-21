@@ -7,6 +7,7 @@ using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using ContentPlaces.Contracts.Authorization;
 using Security.Contracts.Authorization;
 using YallaJo.SharedKernel.Presentation.Authorization;
 using YallaJo.SharedKernel.Application.Authorization;
@@ -51,7 +52,7 @@ internal static class BusinessAmenityEndpoints
         .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status409Conflict)
         .WithSummary("Add an amenity to a business")
-        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.BusinessAmenity, AppAction.Create))
+        .WithMetadata(new MustHavePermissionAttribute(ContentPlacesFeatures.BusinessAmenity, AppAction.Create))
         .RequireAuthorization();
 
         amenities.MapDelete("/amenities/{id:guid}", async (
@@ -66,7 +67,7 @@ internal static class BusinessAmenityEndpoints
         .Produces(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Remove an amenity from a business")
-        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.BusinessAmenity, AppAction.Delete))
+        .WithMetadata(new MustHavePermissionAttribute(ContentPlacesFeatures.BusinessAmenity, AppAction.Delete))
         .RequireAuthorization();
     }
 }
