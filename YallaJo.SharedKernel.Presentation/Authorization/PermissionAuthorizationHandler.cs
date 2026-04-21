@@ -1,17 +1,18 @@
-// YallaJo.Api/Authorization/PermissionAuthorizationHandler.cs
 using Microsoft.AspNetCore.Authorization;
 
-namespace YallaJo.Api.Authorization;
+namespace YallaJo.SharedKernel.Presentation.Authorization;
 
 public sealed class PermissionAuthorizationHandler
     : AuthorizationHandler<PermissionRequirement>
 {
+    public const string PermissionClaimType = "Permission";
+
     protected override Task HandleRequirementAsync(
         AuthorizationHandlerContext context,
         PermissionRequirement requirement)
     {
         if (context.User.HasClaim(c =>
-                c.Type == "Permission" && c.Value == requirement.Permission))
+                c.Type == PermissionClaimType && c.Value == requirement.Permission))
         {
             context.Succeed(requirement);
         }

@@ -6,10 +6,6 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Authorization" Version="9.0.13" />
-  </ItemGroup>
-
   <!--
     Security.Contracts is the public API surface of the Security module.
     It contains ONLY integration event DTOs — no domain logic, no EF, no MediatR.

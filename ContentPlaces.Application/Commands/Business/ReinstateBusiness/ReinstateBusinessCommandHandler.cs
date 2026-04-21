@@ -38,7 +38,8 @@ public sealed class ReinstateBusinessCommandHandler(
             if (business.Status != BusinessStatus.Suspended)
             {
                 return Result.Failure(
-                    new Error("Business.InvalidTransition",
+                    new Error(
+                        "Business.InvalidTransition",
                         $"Cannot reinstate a business with status {business.Status}."),
                     Outcome.Conflict);
             }

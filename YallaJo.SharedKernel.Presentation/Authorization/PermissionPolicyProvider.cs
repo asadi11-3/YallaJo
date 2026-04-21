@@ -1,15 +1,12 @@
-// YallaJo.Api/Authorization/PermissionPolicyProvider.cs
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Options;
 
-namespace YallaJo.Api.Authorization;
+namespace YallaJo.SharedKernel.Presentation.Authorization;
 
-public sealed class PermissionPolicyProvider : IAuthorizationPolicyProvider
+public sealed class PermissionPolicyProvider(IOptions<AuthorizationOptions> options)
+    : IAuthorizationPolicyProvider
 {
-    private readonly DefaultAuthorizationPolicyProvider _fallback;
-
-    public PermissionPolicyProvider(IOptions<AuthorizationOptions> options)
-        => _fallback = new DefaultAuthorizationPolicyProvider(options);
+    private readonly DefaultAuthorizationPolicyProvider _fallback = new(options);
 
     public Task<AuthorizationPolicy> GetDefaultPolicyAsync()
         => _fallback.GetDefaultPolicyAsync();
@@ -19,7 +16,7 @@ public sealed class PermissionPolicyProvider : IAuthorizationPolicyProvider
 
     public Task<AuthorizationPolicy?> GetPolicyAsync(string policyName)
     {
-        if (policyName.StartsWith("Permission.", StringComparison.Ordinal))
+        if (PermissionPolicyNames.IsPermissionPolicy(policyName))
         {
             var policy = new AuthorizationPolicyBuilder()
                 .RequireAuthenticatedUser()

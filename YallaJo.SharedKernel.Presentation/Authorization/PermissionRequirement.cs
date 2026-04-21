@@ -1,7 +1,6 @@
-// YallaJo.Api/Authorization/PermissionRequirement.cs
 using Microsoft.AspNetCore.Authorization;
 
-namespace YallaJo.Api.Authorization;
+namespace YallaJo.SharedKernel.Presentation.Authorization;
 
 public sealed class PermissionRequirement(string permission) : IAuthorizationRequirement
 {

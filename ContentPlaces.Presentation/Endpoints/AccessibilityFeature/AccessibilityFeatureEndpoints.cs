@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Security.Contracts.Authorization;
+using YallaJo.SharedKernel.Presentation.Authorization;
+using YallaJo.SharedKernel.Application.Authorization;
 using YallaJo.SharedKernel.Presentation;
 
 namespace ContentPlaces.Presentation.Endpoints.AccessibilityFeature;

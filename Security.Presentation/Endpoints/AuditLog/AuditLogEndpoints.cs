@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.Routing;
 using Security.Application.Queries.Dtos;
 using Security.Application.Queries.GetAuditLogs;
 using Security.Contracts.Authorization;
+using YallaJo.SharedKernel.Presentation.Authorization;
+using YallaJo.SharedKernel.Application.Authorization;
 using YallaJo.SharedKernel.Domain.Abstractions.Pagination;
 using YallaJo.SharedKernel.Presentation;
 

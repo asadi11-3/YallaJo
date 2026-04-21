@@ -49,7 +49,7 @@ using System.Text.Json.Serialization;
 using Tracking.Application;
 using Tracking.Infrastructure;
 using Tracking.Presentation;
-using YallaJo.Api.Authorization;
+using YallaJo.SharedKernel.Presentation.Authorization;
 using YallaJo.Api.ExceptionHandlers;
 using YallaJo.Api.Extensions;
 using YallaJo.Api.Middleware;
@@ -172,8 +172,7 @@ builder.Services.AddAuthorization(opts =>
     opts.AddPolicy("Admin", p => p.RequireRole(AppRoles.Owner, AppRoles.SuperAdmin, AppRoles.Admin));
 });
 
-builder.Services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
-builder.Services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
+builder.Services.AddPermissionAuthorization();
 
 // ── API Documentation ─────────────────────────────────────────────────────
 builder.Services.AddEndpointsApiExplorer();

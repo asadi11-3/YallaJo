@@ -12,6 +12,8 @@ using Security.Application.Queries.Dtos;
 using Security.Application.Queries.GetUser;
 using Security.Application.Queries.ListUsers;
 using Security.Contracts.Authorization;
+using YallaJo.SharedKernel.Presentation.Authorization;
+using YallaJo.SharedKernel.Application.Authorization;
 using Security.Presentation.Endpoints.User.Models;
 using System.Security.Claims;
 using YallaJo.SharedKernel.Domain.Abstractions.Pagination;

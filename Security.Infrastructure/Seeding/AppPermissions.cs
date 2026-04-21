@@ -1,4 +1,5 @@
 using Security.Contracts.Authorization;
+using YallaJo.SharedKernel.Application.Authorization;
 
 namespace Security.Infrastructure.Seeding;
 
