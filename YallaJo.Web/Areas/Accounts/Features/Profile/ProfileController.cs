@@ -28,6 +28,10 @@ public sealed class ProfileController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Update(UpdateProfileVm vm, CancellationToken ct)
     {
+        // The "Details" form POSTs to this action with a flat UpdateProfileVm
+        // (its own partial view — see Views/_UpdateProfileForm.cshtml). No
+        // prefix-binding trickery is needed: input names are FirstName,
+        // LastName, DateOfBirth, Gender, Country, City, AddressLine.
         if (!ModelState.IsValid)
         {
             return await ReloadIndexWithEdit(vm, ct);
@@ -46,7 +50,7 @@ public sealed class ProfileController : Controller
         {
             foreach (var (field, messages) in result.ValidationErrors)
                 foreach (var m in messages)
-                    ModelState.AddModelError($"Update.{field}", m);
+                    ModelState.AddModelError(field, m);
             return await ReloadIndexWithEdit(vm, ct);
         }
 
@@ -67,8 +71,23 @@ public sealed class ProfileController : Controller
         var result = await _facade.UpdateAvatarAsync(vm, ct);
         if (result.RequireSignOut) return RedirectToLogin();
 
-        TempData[result.IsSuccess ? "Success" : "Error"] =
-            result.IsSuccess ? "Avatar updated." : result.Error ?? "Could not upload avatar.";
+        if (result.IsSuccess)
+        {
+            TempData["Success"] = "Avatar updated.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        if (result.ValidationErrors is { Count: > 0 })
+        {
+            var firstMessage = result.ValidationErrors.Values
+                .SelectMany(messages => messages)
+                .FirstOrDefault();
+
+            TempData["Error"] = firstMessage ?? "Could not upload avatar.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        TempData["Error"] = result.Error ?? "Could not upload avatar.";
         return RedirectToAction(nameof(Index));
     }
 

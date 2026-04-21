@@ -3,6 +3,7 @@ using Auth.Application.Interfaces;
 using Auth.Application.Invitations;
 using Auth.Domain.Entities;
 using Auth.Domain.Repositories;
+using Microsoft.Extensions.Logging;
 using Security.Contracts.Abstractions;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
@@ -28,7 +29,8 @@ public sealed class InviteUserCommandHandler(
     IAuthUnitOfWork unitOfWork,
     IInviteTokenService inviteTokenService,
     IInviteLinkBuilder inviteLinkBuilder,
-    IEmailService emailService)
+    IEmailService emailService,
+    ILogger<InviteUserCommandHandler> logger)
     : ICommandHandler<InviteUserCommand, InviteUserResult>
 {
     public async Task<Result<InviteUserResult>> Handle(
@@ -92,13 +94,30 @@ public sealed class InviteUserCommandHandler(
 
         var link = inviteLinkBuilder.Build(normalizedEmail, plainToken);
 
-        await emailService.SendAsync(
-            normalizedEmail,
-            "YallaJo — You're invited",
-            $"Hello {request.FirstName},\n\nYou have been invited to join YallaJo.\n" +
-            $"Click the link below to set your password and activate your account:\n\n{link}\n\n" +
-            $"This link expires in {InviteConstants.ExpiryMinutes / 60 / 24} days.",
-            ct);
+        try
+        {
+            await emailService.SendAsync(
+                normalizedEmail,
+                "YallaJo — You're invited",
+                $"Hello {request.FirstName},\n\nYou have been invited to join YallaJo.\n" +
+                $"Click the link below to set your password and activate your account:\n\n{link}\n\n" +
+                $"This link expires in {InviteConstants.ExpiryMinutes / 60 / 24} days.",
+                ct);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException || !ct.IsCancellationRequested)
+        {
+            invite.MarkUsed();
+            await unitOfWork.SaveChangesAsync(ct);
+
+            logger.LogError(ex,
+                "Auth: Failed to send invite email to {Email}. Invite token invalidated — use ResendInvite.",
+                normalizedEmail);
+
+            return Result<InviteUserResult>.Failure(
+                Error.Failure("Invite.EmailDeliveryFailed",
+                    "Invite created but we couldn't send the email. Please use Resend Invite."),
+                Outcome.ServerError);
+        }
 
         return Result<InviteUserResult>.Created(new InviteUserResult(userId, profileResult.Value));
     }

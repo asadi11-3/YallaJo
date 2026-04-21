@@ -40,7 +40,7 @@ internal sealed class UserRegistrationService(
         }
 
         var user = User.Register(normalizedEmail, request.FirstName, request.LastName);
-        user.SetPasswordHash(passwordHasher.Hash(request.Password));
+        user.SetInitialPasswordHash(passwordHasher.Hash(request.Password));
 
         await userRepository.AddAsync(user, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);

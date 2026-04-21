@@ -21,7 +21,7 @@ internal static class RegistrationEndpoints
             return result
                 .Map(r => new RegisterResponse(
                     r.UserId,
-                    "Registration successful. A verification email has been sent."))
+                    "Registration successful. Your verification code should arrive shortly. If it doesn't, use resend-otp to request a fresh code."))
                 .ToApiResult();
         })
         .WithName("Register")
@@ -29,7 +29,7 @@ internal static class RegistrationEndpoints
         .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status409Conflict)
         .ProducesProblem(StatusCodes.Status429TooManyRequests)
-        .WithSummary("Register a new account — verification email will be sent")
+        .WithSummary("Register a new account — verification code is queued for email delivery")
         .AllowAnonymous()
         .RequireRateLimiting(RateLimitPolicies.RegisterPolicy);
     }

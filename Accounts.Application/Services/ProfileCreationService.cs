@@ -18,12 +18,42 @@ internal sealed class ProfileCreationService(
     IAccountsUnitOfWork unitOfWork)
     : IProfileCreationService
 {
+    public async Task<Result<Guid>> CreateForUserAsync(
+        ProfileCreationRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        return await CreateProfileAsync(
+            request.UserId,
+            request.FirstName,
+            request.LastName,
+            displayName: null,
+            avatarUrl: null,
+            cancellationToken);
+    }
+
     public async Task<Result<Guid>> CreateForInvitedUserAsync(
         InvitedProfileCreationRequest request,
         CancellationToken cancellationToken = default)
     {
+        return await CreateProfileAsync(
+            request.UserId,
+            request.FirstName,
+            request.LastName,
+            request.DisplayName,
+            request.AvatarUrl,
+            cancellationToken);
+    }
+
+    private async Task<Result<Guid>> CreateProfileAsync(
+        Guid userId,
+        string firstName,
+        string lastName,
+        string? displayName,
+        string? avatarUrl,
+        CancellationToken cancellationToken)
+    {
         var exists = await profileRepository.AnyAsync(
-            p => p.UserId == request.UserId,
+            p => p.UserId == userId,
             cancellationToken);
 
         if (exists)
@@ -32,9 +62,9 @@ internal sealed class ProfileCreationService(
                 Error.Conflict("Profile.UserId", "Profile already exists for this user."));
         }
 
-        var profile = Profile.Create(request.UserId, request.FirstName, request.LastName);
-        profile.SetDisplayName(request.DisplayName);
-        profile.SetAvatarUrl(request.AvatarUrl);
+        var profile = Profile.Create(userId, firstName, lastName);
+        profile.SetDisplayName(displayName);
+        profile.SetAvatarUrl(avatarUrl);
 
         await profileRepository.AddAsync(profile, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);

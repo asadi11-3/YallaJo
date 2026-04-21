@@ -131,3 +131,39 @@
 - **Root Cause**: Recursive tree builders always need cycle detection. The DB has a unique index on `(Id)` but no DB-level constraint preventing circular parent chains.
 - **Fix Applied**: Add a `HashSet<Guid> visited` parameter to `BuildNode()`. Before recursing into children, check `if (!visited.Add(category.Id)) return leaf node;`
 - **Prevention Rule**: Any recursive method that traverses user-supplied or DB-supplied graph data MUST have cycle detection via a `HashSet<T>` visited set AND/OR a max-depth limit. Never assume the data is a clean tree just because the schema suggests it should be.
+
+### ERR-013: Registration email flow marked inbox processed before SMTP success — users saw success while no verification email was sent
+- **Date**: 2026-04-21
+- **Module**: Auth
+- **What Happened**: Registration returned `"Registration successful. A verification email has been sent."`, but `UserCreatedIntegrationEventHandler` persisted the OTP, marked the inbox message processed, saved, then swallowed any `IEmailService.SendAsync` exception. If Gmail/SMTP failed, the user got a success response and no retry happened because the outbox message was already considered processed.
+- **Error Message**: User-facing symptom: registration succeeds but verification email never arrives. Server logs show SMTP/send exceptions only.
+- **Root Cause**: The handler acknowledged completion of an outbox/inbox-driven side effect before the external side effect actually succeeded. Email delivery failure was treated as non-fatal even though the registration UX depends on receiving the OTP.
+- **Fix Applied**: `UserCreatedIntegrationEventHandler` now saves the OTP first, sends the email, marks the inbox processed only after a successful send, invalidates the failed OTP on send errors, and rethrows so the outbox retry policy can retry cleanly. `ResendOtpCommandHandler` now also invalidates unsent OTPs and returns `Otp.EmailDeliveryFailed` instead of leaving dead active codes behind.
+- **Prevention Rule**: Never mark an inbox/outbox message as processed before the external side effect succeeds. For OTP/email flows: persist the token, attempt delivery, invalidate failed tokens, and let the outbox retry mechanism handle transient delivery failures.
+
+### ERR-014: Gmail app password copied with display spaces caused SMTP auth failure despite valid message data
+- **Date**: 2026-04-21
+- **Module**: Auth
+- **What Happened**: `await client.SendMailAsync(message, ct)` looked like the failing line even though sender, recipient, subject, and body were populated. Investigation found `Gmail:AppPassword` stored as a spaced string (Google UI display format like `xxxx xxxx xxxx xxxx`).
+- **Error Message**: SMTP send/authentication failure at `SendMailAsync` with apparently valid message data.
+- **Root Cause**: Google displays app passwords in grouped chunks for readability, but `NetworkCredential` requires the compact password with no spaces. The transport credentials were invalid, not the `MailMessage` payload.
+- **Fix Applied**: `GmailEmailService` now strips spaces and trims the app password before constructing `NetworkCredential`, validates trimmed sender/recipient addresses with `MailAddress`, and sets a 30-second SMTP timeout.
+- **Prevention Rule**: Treat Google app passwords as display-formatted secrets. Normalize by removing spaces and trimming before SMTP authentication, and validate transport settings separately from message payload data.
+
+### ERR-015: Registration returned before Accounts profile existed, causing immediate get-profile 404s
+- **Date**: 2026-04-21
+- **Module**: Auth / Accounts
+- **What Happened**: A newly registered user could successfully authenticate, but `GET /api/v1/accounts/profile` returned `Profile not found.` because normal registration only guaranteed Security user creation. The Accounts profile depended on the integration-event pipeline, so the profile row could arrive later than the first profile request.
+- **Error Message**: 404 `NotFound.Profile` / `Profile not found.` immediately after successful registration.
+- **Root Cause**: The registration UX required the Accounts profile to exist immediately, but the implementation left that creation to the asynchronous cross-module event flow. The invited-user path already created the profile synchronously, while self-registration did not.
+- **Fix Applied**: Added a synchronous `CreateForUserAsync(ProfileCreationRequest)` capability to `IProfileCreationService`, reused shared profile-creation logic in `ProfileCreationService`, and updated `RegisterCommandHandler` to create the Accounts profile before returning success. Conflict outcomes are treated as success so the event-driven fallback remains idempotent.
+- **Prevention Rule**: If a follow-up endpoint is expected to work immediately after a successful command, create its required cross-module read-model/data synchronously before returning success, or explicitly design the API contract around eventual consistency.
+
+### ERR-016: `string.StartsWith` overload mismatch caused Accounts.Application build break
+- **Date**: 2026-04-21
+- **Module**: Accounts.Application
+- **What Happened**: While updating `UpdateAvatarCommandValidator` to accept rooted relative URLs, code used `url.StartsWith('/', StringComparison.Ordinal)`.
+- **Error Message**: `CS1503: Argument 1: cannot convert from 'char' to 'string'`.
+- **Root Cause**: The `StartsWith` overload that accepts `StringComparison` requires a `string`, not a `char`.
+- **Fix Applied**: Changed to `url.StartsWith("/", StringComparison.Ordinal)` and re-ran build/tests.
+- **Prevention Rule**: When using `StringComparison` with `StartsWith`, always pass a string literal (e.g., `"/"`), never a char literal.

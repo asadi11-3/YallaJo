@@ -18,7 +18,8 @@ public sealed class VerifyEmailCommandHandler(
     IAuthUnitOfWork unitOfWork,
     IOtpService otpService,
     ITokenService tokenService,
-    IRequestContext requestContext)
+    IRequestContext requestContext,
+    ITransactionalExecutor txExecutor)
     : ICommandHandler<VerifyEmailCommand, VerifyEmailResult>
 {
     private const int SessionDays      = 30;
@@ -53,7 +54,6 @@ public sealed class VerifyEmailCommandHandler(
                 Outcome.NotFound);
         }
 
-        // ── Domain invariants (moved out of handlers into Otp entity) ─────────
         if (otp.IsExhausted)
         {
             return Result<VerifyEmailResult>.Fail(
@@ -80,35 +80,59 @@ public sealed class VerifyEmailCommandHandler(
 
         otp.MarkUsed();
 
-        var device = Device.Create(
-            userId:      userId.Value,
-            deviceToken: Guid.CreateVersion7().ToString(),
-            userAgent:   requestContext.UserAgent,
-            deviceName:  requestContext.DeviceName);
-        await deviceRepository.AddAsync(device, cancellationToken);
+        // Cross-module consistency: Auth session/device/refresh-token writes
+        // and Security's email-verified flag must commit as ONE retriable
+        // transactional unit. The executor drives the delegate via
+        // AuthDbContext's retrying execution strategy — required because
+        // EnableRetryOnFailure forbids user-initiated transactions unless
+        // wrapped in CreateExecutionStrategy().
+        //
+        // Note: the delegate creates fresh Device/Session/RefreshToken on
+        // each strategy attempt; on a transient-failure retry the rolled-back
+        // previous attempt's rows are gone, and only the committed attempt's
+        // identifiers flow out of the delegate to the caller below.
+        var outcome = await txExecutor.ExecuteAsync<VerificationOutcome>(
+            async innerCt =>
+            {
+                var device = Device.Create(
+                    userId:      userId.Value,
+                    deviceToken: Guid.CreateVersion7().ToString(),
+                    userAgent:   requestContext.UserAgent,
+                    deviceName:  requestContext.DeviceName);
+                await deviceRepository.AddAsync(device, innerCt);
 
-        var session = Session.Create(
-            userId:    userId.Value,
-            deviceId:  device.Id,
-            expiresAt: DateTime.UtcNow.AddDays(SessionDays),
-            ipAddress: requestContext.IpAddress);
-        await sessionRepository.AddAsync(session, cancellationToken);
+                var session = Session.Create(
+                    userId:    userId.Value,
+                    deviceId:  device.Id,
+                    expiresAt: DateTime.UtcNow.AddDays(SessionDays),
+                    ipAddress: requestContext.IpAddress);
+                await sessionRepository.AddAsync(session, innerCt);
 
-        var plainRefreshToken    = tokenService.GenerateRefreshToken();
-        var refreshTokenHash     = tokenService.HashRefreshToken(plainRefreshToken);
-        var refreshTokenExpiresAt = DateTime.UtcNow.AddDays(RefreshTokenDays);
+                var plainRefreshToken     = tokenService.GenerateRefreshToken();
+                var refreshTokenHash      = tokenService.HashRefreshToken(plainRefreshToken);
+                var refreshTokenExpiresAt = DateTime.UtcNow.AddDays(RefreshTokenDays);
 
-        var refreshToken = RefreshTokenEntity.Create(
-            userId:    userId.Value,
-            sessionId: session.Id,
-            tokenHash: refreshTokenHash,
-            expiresAt: refreshTokenExpiresAt);
-        await refreshTokenRepository.AddAsync(refreshToken, cancellationToken);
-        await unitOfWork.SaveChangesAsync(cancellationToken);
+                var refreshToken = RefreshTokenEntity.Create(
+                    userId:    userId.Value,
+                    sessionId: session.Id,
+                    tokenHash: refreshTokenHash,
+                    expiresAt: refreshTokenExpiresAt);
+                await refreshTokenRepository.AddAsync(refreshToken, innerCt);
 
-        var verified = await securityService.MarkEmailVerifiedAsync(
-            userId.Value, normalizedEmail, cancellationToken);
-        if (!verified)
+                await unitOfWork.SaveChangesAsync(innerCt);
+
+                var verified = await securityService.MarkEmailVerifiedAsync(
+                    userId.Value, normalizedEmail, innerCt);
+
+                return new VerificationOutcome(
+                    Verified:              verified,
+                    SessionId:             session.Id,
+                    PlainRefreshToken:     plainRefreshToken,
+                    RefreshTokenExpiresAt: refreshTokenExpiresAt);
+            },
+            cancellationToken);
+
+        if (!outcome.Verified)
         {
             return Result<VerifyEmailResult>.Failure(
                 Error.Failure("Verification.Failed", "Could not verify email. Please try again."),
@@ -121,12 +145,18 @@ public sealed class VerifyEmailCommandHandler(
             Email:            normalizedEmail,
             Roles:            userData?.Roles ?? [],
             AdditionalClaims: userData?.Claims ?? [],
-            SessionId:        session.Id));
+            SessionId:        outcome.SessionId));
 
         return Result<VerifyEmailResult>.Success(new VerifyEmailResult(
             UserId:                userId.Value,
             AccessToken:           accessToken,
-            RefreshToken:          plainRefreshToken,
-            RefreshTokenExpiresAt: refreshTokenExpiresAt));
+            RefreshToken:          outcome.PlainRefreshToken,
+            RefreshTokenExpiresAt: outcome.RefreshTokenExpiresAt));
     }
+
+    private readonly record struct VerificationOutcome(
+        bool     Verified,
+        Guid     SessionId,
+        string   PlainRefreshToken,
+        DateTime RefreshTokenExpiresAt);
 }

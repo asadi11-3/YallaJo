@@ -83,6 +83,11 @@ builder.Services.AddHttpClient("anon", client =>
 // ── Auth infrastructure ───────────────────────────────────────────────────────
 builder.Services.AddScoped<IWebSignInService, WebSignInService>();
 
+// API-hosted asset URL resolver — turns API-relative paths like
+// "/uploads/avatars/<guid>.png" into absolute URLs the browser can fetch
+// from the API origin. Used for avatar rendering in the web layer.
+builder.Services.AddSingleton<IApiAssetUrlResolver, ApiAssetUrlResolver>();
+
 // ── Identity / authorization infrastructure ───────────────────────────────────
 // ICurrentUser: scoped, lazy per-request claim cache.
 // Every permission and role check in the project goes through this interface.

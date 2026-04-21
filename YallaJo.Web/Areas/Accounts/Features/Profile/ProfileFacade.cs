@@ -1,20 +1,27 @@
 using YallaJo.Web.Areas.Accounts.Features.Profile.Mappers;
 using YallaJo.Web.Areas.Accounts.Features.Profile.ViewModels;
 using YallaJo.Web.Infrastructure.Api.Contracts;
+using YallaJo.Web.Services;
 
 namespace YallaJo.Web.Areas.Accounts.Features.Profile;
 
 public sealed class ProfileFacade
 {
     private readonly ProfileApiClient _api;
-    public ProfileFacade(ProfileApiClient api) => _api = api;
+    private readonly IApiAssetUrlResolver _assetResolver;
+
+    public ProfileFacade(ProfileApiClient api, IApiAssetUrlResolver assetResolver)
+    {
+        _api = api;
+        _assetResolver = assetResolver;
+    }
 
     public async Task<ApiResult<ProfileVm>> GetAsync(CancellationToken ct = default)
     {
         var result = await _api.GetProfileAsync(ct);
 
         if (result.IsSuccess && result.Data is not null)
-            return ApiResult<ProfileVm>.CreateSuccess(ProfileMapper.ToVm(result.Data));
+            return ApiResult<ProfileVm>.CreateSuccess(ProfileMapper.ToVm(result.Data, _assetResolver));
 
         if (result.IsUnauthorized) return ApiResult<ProfileVm>.ForceSignOut();
         if (result.IsNotFound)     return ApiResult<ProfileVm>.CreateFailure(404, "Profile not found.");

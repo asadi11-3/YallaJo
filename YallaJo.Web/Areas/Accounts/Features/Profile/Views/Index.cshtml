@@ -67,62 +67,15 @@
     </div>
 
     @* ── Profile details (update) ──────────────────────────────────────── *@
+    @* The form is rendered from a partial typed to UpdateProfileVm so the
+       input names are flat (FirstName, LastName, ...) and match the
+       controller's UpdateProfileVm parameter with zero prefix tricks. *@
     <div class="card mb-3">
         <div class="card-body">
             <h5>Details</h5>
             <form asp-area="Accounts" asp-controller="Profile" asp-action="Update" method="post">
                 @Html.AntiForgeryToken()
-
-                <div class="row g-2">
-                    <div class="col-md-6 mb-3">
-                        <label asp-for="Update.FirstName" class="form-label"></label>
-                        <input asp-for="Update.FirstName" class="form-control" />
-                        <span asp-validation-for="Update.FirstName" class="text-danger"></span>
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label asp-for="Update.LastName" class="form-label"></label>
-                        <input asp-for="Update.LastName" class="form-control" />
-                        <span asp-validation-for="Update.LastName" class="text-danger"></span>
-                    </div>
-                </div>
-
-                <div class="row g-2">
-                    <div class="col-md-6 mb-3">
-                        <label asp-for="Update.DateOfBirth" class="form-label"></label>
-                        <input asp-for="Update.DateOfBirth" class="form-control" />
-                        <span asp-validation-for="Update.DateOfBirth" class="text-danger"></span>
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label asp-for="Update.Gender" class="form-label"></label>
-                        <select asp-for="Update.Gender"
-                                asp-items="Html.GetEnumSelectList<YallaJo.Web.Areas.Accounts.Features.Profile.ViewModels.GenderOption>()"
-                                class="form-select">
-                            <option value="">—</option>
-                        </select>
-                        <span asp-validation-for="Update.Gender" class="text-danger"></span>
-                    </div>
-                </div>
-
-                <div class="row g-2">
-                    <div class="col-md-6 mb-3">
-                        <label asp-for="Update.Country" class="form-label"></label>
-                        <input asp-for="Update.Country" class="form-control" />
-                        <span asp-validation-for="Update.Country" class="text-danger"></span>
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label asp-for="Update.City" class="form-label"></label>
-                        <input asp-for="Update.City" class="form-control" />
-                        <span asp-validation-for="Update.City" class="text-danger"></span>
-                    </div>
-                </div>
-
-                <div class="mb-3">
-                    <label asp-for="Update.AddressLine" class="form-label"></label>
-                    <input asp-for="Update.AddressLine" class="form-control" />
-                    <span asp-validation-for="Update.AddressLine" class="text-danger"></span>
-                </div>
-
-                <button type="submit" class="btn btn-primary">Save changes</button>
+                @await Html.PartialAsync("_UpdateProfileForm", Model.Update)
             </form>
         </div>
     </div>

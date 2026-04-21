@@ -97,6 +97,7 @@ internal static class CredentialEndpoints
         .Produces<ResendOtpResult>(StatusCodes.Status200OK)
         .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status429TooManyRequests)
+        .ProducesProblem(StatusCodes.Status500InternalServerError)
         .WithSummary("Resend OTP code for email verification or password reset")
         .AllowAnonymous()
         .RequireRateLimiting(RateLimitPolicies.OtpPolicy);

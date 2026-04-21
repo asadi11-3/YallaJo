@@ -1,18 +1,23 @@
 using YallaJo.Web.Areas.Accounts.Features.Profile.Requests;
 using YallaJo.Web.Areas.Accounts.Features.Profile.Responses;
 using YallaJo.Web.Areas.Accounts.Features.Profile.ViewModels;
+using YallaJo.Web.Services;
 
 namespace YallaJo.Web.Areas.Accounts.Features.Profile.Mappers;
 
 public static class ProfileMapper
 {
-    public static ProfileVm ToVm(ProfileResponse r) => new()
+    public static ProfileVm ToVm(ProfileResponse r, IApiAssetUrlResolver? assetResolver = null) => new()
     {
         UserId       = r.UserId,
         FirstName    = r.FirstName,
         LastName     = r.LastName,
         DisplayName  = r.DisplayName,
-        AvatarUrl    = r.AvatarUrl,
+        // Avatar URLs stored by the API are relative to the API origin
+        // (e.g. "/uploads/avatars/<guid>.png"). The browser resolves a
+        // relative <img src> against the WEB origin — where the file does
+        // not exist — so resolve to an absolute API URL here.
+        AvatarUrl    = assetResolver?.Resolve(r.AvatarUrl) ?? r.AvatarUrl,
         PhoneNumber  = r.PhoneNumber,
         DateOfBirth  = r.DateOfBirth,
         Gender       = r.Gender,

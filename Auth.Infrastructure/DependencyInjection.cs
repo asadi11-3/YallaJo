@@ -36,6 +36,13 @@ public static class DependencyInjection
         services.AddScoped<IModuleDbInitializer, AuthDbInitializer>();
         services.AddScoped<IAuthUnitOfWork, AuthUnitOfWork>();
 
+        // Retriable cross-module transaction executor used by VerifyEmail +
+        // ResetPassword to enlist Security writes with Auth writes under a
+        // single EF execution strategy. See AuthTransactionalExecutor for the
+        // rationale (EnableRetryOnFailure rejects user-initiated transactions
+        // unless run via CreateExecutionStrategy()).
+        services.AddScoped<ITransactionalExecutor, AuthTransactionalExecutor>();
+
         // Repositories
         services.AddScoped<IDeviceRepository, DeviceRepository>();
         services.AddScoped<ISessionRepository, SessionRepository>();

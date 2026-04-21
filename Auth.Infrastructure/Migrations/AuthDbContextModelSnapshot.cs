@@ -220,9 +220,10 @@ namespace Auth.Infrastructure.Migrations
                     b.HasIndex("ExpiresAt")
                         .HasDatabaseName("IX_Otps_ExpiresAt");
 
-                    b.HasIndex("UserId", "Purpose", "IsUsed")
-                        .HasDatabaseName("IX_Otps_UserId_Purpose_IsUsed_Active")
-                        .HasFilter("[IsUsed] = 0");
+                    b.HasIndex("UserId", "Purpose")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Otps_UserId_Purpose_Active_Unique")
+                        .HasFilter("[IsUsed] = 0 AND [IsDeleted] = 0");
 
                     b.ToTable("Otps", "auth");
                 });

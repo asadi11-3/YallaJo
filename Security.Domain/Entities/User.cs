@@ -86,6 +86,19 @@ public sealed class User : AuditableEntity, IAggregateRoot
         AddDomainEvent(new PasswordChangedEvent(Id));
     }
 
+    /// <summary>
+    /// Sets the password hash for a brand-new user during initial registration.
+    /// Does NOT raise <see cref="PasswordChangedEvent"/> — the user was just created
+    /// and <see cref="UserCreatedEvent"/> already covers the initial state.
+    /// </summary>
+    public void SetInitialPasswordHash(string passwordHash)
+    {
+        if (string.IsNullOrWhiteSpace(passwordHash))
+            throw new ArgumentException("Password hash is required.", nameof(passwordHash));
+
+        PasswordHash = passwordHash;
+    }
+
     public void ResetPassword(string newPasswordHash)
     {
         if (string.IsNullOrWhiteSpace(newPasswordHash))

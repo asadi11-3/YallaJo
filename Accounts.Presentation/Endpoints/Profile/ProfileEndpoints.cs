@@ -81,6 +81,12 @@ internal static class ProfileEndpoints
                 stream, file.FileName, file.ContentType, "avatars", ct);
 
             var result = await sender.Send(new UpdateAvatarCommand(upload.Url), ct);
+
+            if (!result.IsSuccess)
+            {
+                await fileStorage.DeleteAsync(upload.Url, ct);
+            }
+
             return result.ToApiResult();
         })
         .WithName("UpdateAvatar")

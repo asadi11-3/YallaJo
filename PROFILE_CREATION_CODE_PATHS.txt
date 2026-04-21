@@ -1,0 +1,216 @@
+================================================================================
+PROFILE CREATION - EXACT CODE PATHS & DI REGISTRATIONS
+================================================================================
+
+COMPLETE FLOW WITH LINE NUMBERS
+================================================================================
+
+1. REGISTRATION COMMAND HANDLER
+   ────────────────────────────
+   File: Auth.Application/Commands/Register/RegisterCommandHandler.cs
+   
+   public sealed class RegisterCommandHandler(
+       IUserRegistrationService userRegistrationService)
+       : ICommandHandler<RegisterCommand, RegisterResult>
+   {
+       public async Task<Result<RegisterResult>> Handle(
+           RegisterCommand request,
+           CancellationToken cancellationToken)
+       {
+           var result = await userRegistrationService.RegisterAsync(
+               new UserRegistrationRequest(
+                   request.FirstName,
+                   request.LastName,
+                   request.Email,
+                   request.Password),
+               cancellationToken);
+           
+           return result.Map(userId => new RegisterResult(userId));
+       }
+   }
+
+2. USER REGISTRATION SERVICE
+   ─────────────────────────
+   File: Security.Application/Services/UserRegistrationService.cs:30-51
+   
+   public async Task<Result<Guid>> RegisterAsync(
+       UserRegistrationRequest request,
+       CancellationToken cancellationToken = default)
+   {
+       var normalizedEmail = SecurityGuard.NormalizeEmail(request.Email);
+       
+       if (await EmailExistsAsync(normalizedEmail, cancellationToken))
+       {
+           return Result<Guid>.Conflict(...);
+       }
+       
+       var user = User.Register(normalizedEmail, request.FirstName, request.LastName);
+       user.SetPasswordHash(passwordHasher.Hash(request.Password));
+       
+       await userRepository.AddAsync(user, cancellationToken);
+       await unitOfWork.SaveChangesAsync(cancellationToken);  // ← PERSISTS USER + DOMAIN EVENTS
+       
+       await cache.RemoveByTagAsync(SecurityCacheKeys.UsersTag, cancellationToken);
+       
+       return Result<Guid>.Created(user.Id);
+   }
+
+3. USER AGGREGATE - DOMAIN EVENT RAISED
+   ────────────────────────────────────
+   File: Security.Domain/Entities/User.cs:31-40
+   
+   public static User Register(string email, string firstName, string lastName)
+   {
+       var user = new User { IsActive = false };
+       var primaryEmail = Email.Create(user.Id, email, true);
+       user._emails.Add(primaryEmail);
+       
+       user.AddDomainEvent(new UserCreatedEvent(user.Id, primaryEmail.Address, firstName, lastName));
+       
+       return user;
+   }
+
+4. DOMAIN EVENT DEFINITION
+   ──────────────────────
+   File: Security.Domain/Events/UserCreatedEvent.cs
+   
+   public sealed record UserCreatedEvent(
+       Guid UserId,
+       string Email,
+       string FirstName,
+       string LastName) : DomainEventBase;
+
+5. DOMAIN EVENT HANDLER (Outbox Writer)
+   ────────────────────────────────────
+   File: Security.Infrastructure/EventHandlers/UserCreatedDomainEventHandler.cs
+   
+   public sealed class UserCreatedDomainEventHandler(
+       SecurityDbContext dbContext,
+       ILogger<UserCreatedDomainEventHandler> logger)
+       : INotificationHandler<DomainEventNotification<UserCreatedEvent>>
+   {
+       public Task Handle(
+           DomainEventNotification<UserCreatedEvent> notification,
+           CancellationToken ct)
+       {
+           var domainEvent = notification.Event;
+           
+           logger.LogInformation(
+               "Handling UserCreatedEvent for user {UserId}, writing to outbox",
+               domainEvent.UserId);
+           
+           var integrationEvent = new UserCreatedIntegrationEvent(
+               domainEvent.UserId,
+               domainEvent.Email,
+               domainEvent.FirstName,
+               domainEvent.LastName);
+           
+           dbContext.OutboxMessages.Add(OutboxMessage.Create(integrationEvent));
+           
+           return Task.CompletedTask;
+       }
+   }
+
+6. INTEGRATION EVENT DEFINITION
+   ────────────────────────────
+   File: Security.Contracts/IntegrationEvents/UserCreatedIntegrationEvent.cs
+   
+   public sealed record UserCreatedIntegrationEvent(
+       Guid UserId,
+       string Email,
+       string FirstName,
+       string LastName) : IntegrationEventBase;
+
+7. OUTBOX PROCESSOR (Background Job)
+   ────────────────────────────────
+   File: YallaJo.SharedKernel.Infrastructure/BackgroundJobs/OutboxProcessor.cs:33-96
+   
+   public async Task ProcessOutboxMessagesAsync(CancellationToken ct = default)
+   {
+       using var scope = serviceProvider.CreateScope();
+       var dbContext = scope.ServiceProvider.GetRequiredService<TContext>();
+       var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+       
+       var now = DateTime.UtcNow;
+       
+       // Select unprocessed, unlocked messages
+       var messages = await dbContext.Set<OutboxMessage>()
+           .Where(m => m.ProcessedOnUtc == null
+                    && m.RetryCount < MaxRetryCount
+                    && (m.LockedUntil == null || m.LockedUntil < now))
+           .OrderBy(m => m.OccurredOnUtc)
+           .Take(BatchSize)
+           .ToListAsync(ct);
+       
+       if (messages.Count == 0) return;
+       
+       // Claim messages with lock
+       var lockUntil = now.Add(LockDuration);
+       foreach (var msg in messages)
+           msg.Lock(lockUntil);
+       
+       await dbContext.SaveChangesAsync(ct);
+       
+       logger.LogInformation("Processing {Count} outbox messages for {Context}", messages.Count, typeof(TContext).Name);
+       
+       foreach (var message in messages)
+       {
+           try
+           {
+               var eventType = Type.GetType(message.Type);
+               if (eventType is null)
+               {
+                   logger.LogWarning("Unknown event type: {Type}", message.Type);
+                   message.MarkAsFailed($"Unknown event type: {message.Type}");
+                   continue;
+               }
+               
+               var integrationEvent = JsonSerializer.Deserialize(message.Content, eventType) as IIntegrationEvent;
+               if (integrationEvent is null)
+               {
+                   message.MarkAsFailed("Deserialization returned null");
+                   continue;
+               }
+               
+               var notificationType = typeof(IntegrationEventNotification<>).MakeGenericType(eventType);
+               var notification = Activator.CreateInstance(notificationType, message.Id, integrationEvent)!;
+               await mediator.Publish((INotification)notification, ct);  // ← PUBLISHES TO ACCOUNTS HANDLER
+               
+               message.MarkAsProcessed();
+               logger.LogDebug("Processed outbox message {Id}", message.Id);
+           }
+           catch (Exception ex)
+           {
+               logger.LogError(ex, "Failed to process outbox message {Id}", message.Id);
+               message.MarkAsFailed(ex.Message);
+           }
+       }
+       
+       await dbContext.SaveChangesAsync(ct);
+   }
+
+8. COMPOSITE OUTBOX PROCESSOR (Hosted Service)
+   ───────────────────────────────────────────
+   File: YallaJo.SharedKernel.Infrastructure/BackgroundJobs/CompositeOutboxProcessor.cs:18-60
+   
+   protected override async Task ExecuteAsync(CancellationToken ct)
+   {
+       logger.LogInformation("Composite Outbox Processor started");
+       
+       while (!ct.IsCancellationRequested)
+       {
+           try
+           {
+               using var scope = serviceProvider.CreateScope();
+               var processors = scope.ServiceProvider.GetServices<IOutboxProcessor>();
+               
+               foreach (var processor in processors)
+               {
+                   if (ct.IsCancellationRequested) break;
+                   
+                   try
+                   {
+                       await processor.ProcessOutboxMessagesAsync(ct);  // ← RUNS EVERY 10 SECONDS
+                   }
+                   catch (OperationCanceledException) when (ct.IsCancellationRequested)
+         

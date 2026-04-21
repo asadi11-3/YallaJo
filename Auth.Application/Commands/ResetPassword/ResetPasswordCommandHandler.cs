@@ -10,7 +10,8 @@ public sealed class ResetPasswordCommandHandler(
     ISecurityService securityService,
     IOtpRepository otpRepository,
     IAuthUnitOfWork unitOfWork,
-    IOtpService otpService)
+    IOtpService otpService,
+    ITransactionalExecutor txExecutor)
     : ICommandHandler<ResetPasswordCommand, ResetPasswordResult>
 {
     private const string OtpPurpose = "PasswordReset";
@@ -69,17 +70,36 @@ public sealed class ResetPasswordCommandHandler(
                 Outcome.Invalid);
         }
 
-        var reset = await securityService.ResetPasswordAsync(
-            userId.Value, request.NewPassword, cancellationToken);
-        if (!reset)
+        // Cross-module consistency: Security password change + Auth OTP burn
+        // must commit as ONE retriable transactional unit, otherwise a blip
+        // on Auth SaveChanges after Security already changed the password
+        // would leave the OTP reusable for another reset attempt.
+        //
+        // The executor drives the block via AuthDbContext's retrying execution
+        // strategy — required because EnableRetryOnFailure rejects user-
+        // initiated transactions (TransactionScope) unless they're wrapped in
+        // a strategy. The delegate may re-run on transient SQL failures; all
+        // its operations (Security reset + Auth SaveChanges) are idempotent
+        // on a single OTP and user.
+        var executed = await txExecutor.ExecuteAsync(
+            async innerCt =>
+            {
+                var reset = await securityService.ResetPasswordAsync(
+                    userId.Value, request.NewPassword, innerCt);
+                if (!reset) return false;
+
+                otp.MarkUsed();
+                await unitOfWork.SaveChangesAsync(innerCt);
+                return true;
+            },
+            cancellationToken);
+
+        if (!executed)
         {
             return Result<ResetPasswordResult>.Failure(
                 Error.Failure("Reset.Failed", "Could not reset password. Please try again."),
                 Outcome.ServerError);
         }
-
-        otp.MarkUsed();
-        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<ResetPasswordResult>.Success(new ResetPasswordResult(true));
     }
