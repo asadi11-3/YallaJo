@@ -51,7 +51,7 @@ namespace ContentCore.Infrastructure.Migrations
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     ParentCategoryId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    Name = table.Column<string>(type: "varchar(200)", unicode: false, maxLength: 200, nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
                     Slug = table.Column<string>(type: "varchar(200)", unicode: false, maxLength: 200, nullable: false),
                     Icon = table.Column<string>(type: "varchar(100)", unicode: false, maxLength: 100, nullable: true),
                     SortOrder = table.Column<int>(type: "int", nullable: false, defaultValue: 0),
@@ -81,8 +81,8 @@ namespace ContentCore.Infrastructure.Migrations
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Code = table.Column<string>(type: "varchar(10)", unicode: false, maxLength: 10, nullable: false),
-                    Name = table.Column<string>(type: "varchar(100)", unicode: false, maxLength: 100, nullable: false),
-                    NativeName = table.Column<string>(type: "varchar(100)", unicode: false, maxLength: 100, nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    NativeName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     IsRtl = table.Column<bool>(type: "bit", nullable: false),
                     IsActive = table.Column<bool>(type: "bit", nullable: false, defaultValue: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -121,8 +121,8 @@ namespace ContentCore.Infrastructure.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Name = table.Column<string>(type: "varchar(200)", unicode: false, maxLength: 200, nullable: false),
-                    Description = table.Column<string>(type: "varchar(1000)", unicode: false, maxLength: 1000, nullable: true),
+                    Name = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
                     Icon = table.Column<string>(type: "varchar(100)", unicode: false, maxLength: 100, nullable: true),
                     IsActive = table.Column<bool>(type: "bit", nullable: false, defaultValue: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -142,12 +142,14 @@ namespace ContentCore.Infrastructure.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Name = table.Column<string>(type: "varchar(100)", unicode: false, maxLength: 100, nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     Slug = table.Column<string>(type: "varchar(100)", unicode: false, maxLength: 100, nullable: false),
                     IsActive = table.Column<bool>(type: "bit", nullable: false, defaultValue: true),
-                    RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    DeletedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -161,6 +163,7 @@ namespace ContentCore.Infrastructure.Migrations
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     OriginalText = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    OriginalTextHash = table.Column<string>(type: "varchar(64)", unicode: false, maxLength: 64, nullable: false),
                     TranslatedText = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     FromLanguage = table.Column<string>(type: "varchar(10)", unicode: false, maxLength: 10, nullable: false),
                     ToLanguage = table.Column<string>(type: "varchar(10)", unicode: false, maxLength: 10, nullable: false),
@@ -210,8 +213,9 @@ namespace ContentCore.Infrastructure.Migrations
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     CategoryId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     LanguageId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Name = table.Column<string>(type: "varchar(200)", unicode: false, maxLength: 200, nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
                     Slug = table.Column<string>(type: "varchar(200)", unicode: false, maxLength: 200, nullable: false),
+                    Status = table.Column<byte>(type: "tinyint", nullable: false, defaultValue: (byte)1),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
@@ -351,6 +355,13 @@ namespace ContentCore.Infrastructure.Migrations
                 schema: "content_core",
                 table: "TranslationCaches",
                 columns: new[] { "FromLanguage", "ToLanguage" });
+
+            migrationBuilder.CreateIndex(
+                name: "UX_TranslationCache_Hash",
+                schema: "content_core",
+                table: "TranslationCaches",
+                column: "OriginalTextHash",
+                unique: true);
         }
 
         /// <inheritdoc />

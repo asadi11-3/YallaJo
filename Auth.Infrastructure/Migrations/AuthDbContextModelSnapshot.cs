@@ -145,7 +145,8 @@ namespace Auth.Infrastructure.Migrations
 
                     b.HasIndex("Provider", "ProviderUserId")
                         .IsUnique()
-                        .HasDatabaseName("IX_ExternalProviders_Provider_UserId");
+                        .HasDatabaseName("IX_ExternalProviders_Provider_ProviderUserId_Active")
+                        .HasFilter("[IsActive] = 1");
 
                     b.ToTable("ExternalProviders", "auth");
                 });
@@ -216,11 +217,12 @@ namespace Auth.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ExpiresAt");
+                    b.HasIndex("ExpiresAt")
+                        .HasDatabaseName("IX_Otps_ExpiresAt");
 
-                    b.HasIndex("IsUsed");
-
-                    b.HasIndex("UserId");
+                    b.HasIndex("UserId", "Purpose", "IsUsed")
+                        .HasDatabaseName("IX_Otps_UserId_Purpose_IsUsed_Active")
+                        .HasFilter("[IsUsed] = 0");
 
                     b.ToTable("Otps", "auth");
                 });

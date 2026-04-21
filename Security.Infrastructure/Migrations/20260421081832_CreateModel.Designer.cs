@@ -12,7 +12,7 @@ using Security.Infrastructure.Persistence;
 namespace Security.Infrastructure.Migrations
 {
     [DbContext(typeof(SecurityDbContext))]
-    [Migration("20260404103124_CreateModel")]
+    [Migration("20260421081832_CreateModel")]
     partial class CreateModel
     {
         /// <inheritdoc />
@@ -412,7 +412,8 @@ namespace Security.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("RoleId");
+                    b.HasIndex("RoleId")
+                        .HasDatabaseName("IX_UserRoles_RoleId");
 
                     b.HasIndex("UserId", "RoleId")
                         .IsUnique()

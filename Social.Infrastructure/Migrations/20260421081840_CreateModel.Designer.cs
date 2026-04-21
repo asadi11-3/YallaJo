@@ -12,7 +12,7 @@ using Social.Infrastructure.Persistence;
 namespace Social.Infrastructure.Migrations
 {
     [DbContext(typeof(SocialDbContext))]
-    [Migration("20260404103134_CreateModel")]
+    [Migration("20260421081840_CreateModel")]
     partial class CreateModel
     {
         /// <inheritdoc />

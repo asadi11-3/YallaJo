@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Auth.Infrastructure.Migrations
 {
     [DbContext(typeof(AuthDbContext))]
-    [Migration("20260404103009_CreateModel")]
+    [Migration("20260421081716_CreateModel")]
     partial class CreateModel
     {
         /// <inheritdoc />
@@ -148,7 +148,8 @@ namespace Auth.Infrastructure.Migrations
 
                     b.HasIndex("Provider", "ProviderUserId")
                         .IsUnique()
-                        .HasDatabaseName("IX_ExternalProviders_Provider_UserId");
+                        .HasDatabaseName("IX_ExternalProviders_Provider_ProviderUserId_Active")
+                        .HasFilter("[IsActive] = 1");
 
                     b.ToTable("ExternalProviders", "auth");
                 });
@@ -219,11 +220,12 @@ namespace Auth.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ExpiresAt");
+                    b.HasIndex("ExpiresAt")
+                        .HasDatabaseName("IX_Otps_ExpiresAt");
 
-                    b.HasIndex("IsUsed");
-
-                    b.HasIndex("UserId");
+                    b.HasIndex("UserId", "Purpose", "IsUsed")
+                        .HasDatabaseName("IX_Otps_UserId_Purpose_IsUsed_Active")
+                        .HasFilter("[IsUsed] = 0");
 
                     b.ToTable("Otps", "auth");
                 });

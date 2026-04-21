@@ -409,7 +409,8 @@ namespace Security.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("RoleId");
+                    b.HasIndex("RoleId")
+                        .HasDatabaseName("IX_UserRoles_RoleId");
 
                     b.HasIndex("UserId", "RoleId")
                         .IsUnique()
