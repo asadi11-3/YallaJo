@@ -519,55 +519,60 @@ public static class DependencyInjection
 **Minimal API endpoints** — one static class per module.
 
 ```csharp
+using Booking.Contracts.Authorization;
+using YallaJo.SharedKernel.Application.Authorization;
+using YallaJo.SharedKernel.Presentation.Authorization;
+
 public static class BookingEndpoints
 {
     public static IEndpointRouteBuilder MapBookingEndpoints(
         this IEndpointRouteBuilder endpoints)
     {
-        var group = endpoints.MapGroup("/api/bookings")
+        var group = endpoints.MapGroup("/api/v1/bookings")
             .WithTags("Bookings");
 
-        // ── POST /api/bookings ──────────────────────────────
+        // ── POST /api/v1/bookings ────────────────────────────
         group.MapPost("/", CreateBooking)
             .WithName("CreateBooking")
+            .WithMetadata(new MustHavePermissionAttribute(BookingFeatures.Booking, AppAction.Create))
             .Produces<Guid>(StatusCodes.Status201Created)
-            .ProducesValidationProblem()
-            .RequireAuthorization();
+            .ProducesValidationProblem();
 
-        // ── GET /api/bookings/{id} ──────────────────────────
+        // ── GET /api/v1/bookings/{id} ────────────────────────
         group.MapGet("/{id:guid}", GetBooking)
             .WithName("GetBooking")
+            .WithMetadata(new MustHavePermissionAttribute(BookingFeatures.Booking, AppAction.Read))
             .Produces<TourBookingDto>()
-            .ProducesProblem(StatusCodes.Status404NotFound)
-            .RequireAuthorization();
+            .ProducesProblem(StatusCodes.Status404NotFound);
 
-        // ── GET /api/bookings ───────────────────────────────
+        // ── GET /api/v1/bookings ─────────────────────────────
         group.MapGet("/", ListBookings)
             .WithName("ListBookings")
-            .Produces<PaginatedResult<TourBookingDto>>()
-            .RequireAuthorization();
+            .WithMetadata(new MustHavePermissionAttribute(BookingFeatures.Booking, AppAction.Read))
+            .Produces<PaginatedResult<TourBookingDto>>();
 
-        // ── PUT /api/bookings/{id} ──────────────────────────
+        // ── PUT /api/v1/bookings/{id} ────────────────────────
         group.MapPut("/{id:guid}", UpdateBooking)
             .WithName("UpdateBooking")
+            .WithMetadata(new MustHavePermissionAttribute(BookingFeatures.Booking, AppAction.Update))
             .Produces<TourBookingDto>()
             .ProducesProblem(StatusCodes.Status404NotFound)
-            .ProducesValidationProblem()
-            .RequireAuthorization();
+            .ProducesProblem(StatusCodes.Status409Conflict)  // concurrency
+            .ProducesValidationProblem();
 
-        // ── PATCH /api/bookings/{id}/confirm ────────────────
+        // ── PATCH /api/v1/bookings/{id}/confirm ─────────────
         group.MapPatch("/{id:guid}/confirm", ConfirmBooking)
             .WithName("ConfirmBooking")
+            .WithMetadata(new MustHavePermissionAttribute(BookingFeatures.Booking, AppAction.Approve))
             .Produces(StatusCodes.Status204NoContent)
-            .ProducesProblem(StatusCodes.Status404NotFound)
-            .RequireAuthorization("Permission.Booking.Confirm");
+            .ProducesProblem(StatusCodes.Status404NotFound);
 
-        // ── DELETE /api/bookings/{id} ───────────────────────
+        // ── DELETE /api/v1/bookings/{id} ────────────────────
         group.MapDelete("/{id:guid}", CancelBooking)
             .WithName("CancelBooking")
+            .WithMetadata(new MustHavePermissionAttribute(BookingFeatures.Booking, AppAction.Delete))
             .Produces(StatusCodes.Status204NoContent)
-            .ProducesProblem(StatusCodes.Status404NotFound)
-            .RequireAuthorization();
+            .ProducesProblem(StatusCodes.Status404NotFound);
 
         return endpoints;
     }
@@ -670,26 +675,36 @@ public sealed record ListBookingsRequest(int Page = 1, int PageSize = 20);
 - Use `MapGroup()` for shared prefix + tags
 - Each endpoint → `ISender.Send(Command/Query)` → `Result<T>` → `IResult`
 - Request DTOs are **separate** from Commands (decoupled API shape from use case)
-- `ToProblem()` converts `Result.Outcome` (enum maps to HTTP status code) to `ProblemDetails`
-- Auth: `.RequireAuthorization()` or `.RequireAuthorization("Permission.Xxx.Yyy")`
-- Anonymous: `.AllowAnonymous()`
+- `ToProblem()` / `result.ToApiResult()` converts `Result.Outcome` (enum maps to HTTP status code) to `ProblemDetails`
+- Auth (protected): `.WithMetadata(new MustHavePermissionAttribute({Module}Features.X, AppAction.Y))`
+- Auth (public): `.AllowAnonymous()`
 - Rate limiting: `.RequireRateLimiting(RateLimitPolicies.LoginPolicy)`
 
-> **📌 Rule:** Every endpoint MUST have explicit `.RequireAuthorization()` or `.AllowAnonymous()`. An endpoint without either is a security hole — the framework won't reject unauthenticated requests by default.
+> **📌 Rule 1 (non-negotiable):** Every endpoint MUST have EITHER `.WithMetadata(new MustHavePermissionAttribute(...))` OR `.AllowAnonymous()`. See `agent-context.md §2.1`.
+>
+> **Forbidden**:
+> - `.RequireAuthorization()` alone — "any authenticated user" is almost never what you mean; use a permission.
+> - `.RequireAuthorization("Permission.X.Y")` — string-based policies bypass the attribute and the `PermissionSeeder` won't find the permission. Use `MustHavePermissionAttribute` so the permission is declared in the module's `IPermissionCatalog` and auto-seeded.
+> - No decoration at all — the framework will NOT reject anonymous requests by default.
 
 ---
 
 ### 2.5 Contracts Layer (`{Module}.Contracts/`)
 
-Contains **integration events** published for other modules.
+The module's **public surface**. Contains exactly two things: integration events and the authorization catalog.
 
 ```
 {Module}.Contracts/
-└── IntegrationEvents/
-    ├── TourBookingCreatedIntegrationEvent.cs
-    ├── TourBookingConfirmedIntegrationEvent.cs
-    └── TourBookingCancelledIntegrationEvent.cs
+├── IntegrationEvents/
+│   ├── TourBookingCreatedIntegrationEvent.cs
+│   ├── TourBookingConfirmedIntegrationEvent.cs
+│   └── TourBookingCancelledIntegrationEvent.cs
+└── Authorization/
+    ├── {Module}Features.cs            ← feature string constants OWNED by this module
+    └── {Module}PermissionCatalog.cs   ← implements IPermissionCatalog
 ```
+
+#### Integration Events
 
 ```csharp
 public sealed record TourBookingCreatedIntegrationEvent(
@@ -700,10 +715,61 @@ public sealed record TourBookingCreatedIntegrationEvent(
     int ParticipantCount) : IntegrationEventBase;
 ```
 
+#### Authorization Catalog (required for every module with endpoints)
+
+**Features constants** — one file per module. Other modules MUST NOT add constants here.
+
+```csharp
+// Booking.Contracts/Authorization/BookingFeatures.cs
+namespace Booking.Contracts.Authorization;
+
+public static class BookingFeatures
+{
+    public const string Booking      = nameof(Booking);
+    public const string Refund       = nameof(Refund);
+    public const string Availability = nameof(Availability);
+}
+```
+
+**Permission catalog** — lists every permission this module contributes:
+
+```csharp
+// Booking.Contracts/Authorization/BookingPermissionCatalog.cs
+using YallaJo.SharedKernel.Application.Authorization;
+
+namespace Booking.Contracts.Authorization;
+
+public sealed class BookingPermissionCatalog : IPermissionCatalog
+{
+    public string ModuleName => "Booking";
+
+    public IReadOnlyList<PermissionDescriptor> Permissions { get; } =
+    [
+        new(BookingFeatures.Booking, AppAction.Read,    PermissionGroup.BookingOperations, "View bookings"),
+        new(BookingFeatures.Booking, AppAction.Create,  PermissionGroup.BookingOperations, "Create a booking"),
+        new(BookingFeatures.Booking, AppAction.Update,  PermissionGroup.BookingOperations, "Update a booking"),
+        new(BookingFeatures.Booking, AppAction.Approve, PermissionGroup.BookingOperations, "Approve a pending booking"),
+        new(BookingFeatures.Booking, AppAction.Reject,  PermissionGroup.BookingOperations, "Reject a booking"),
+        new(BookingFeatures.Booking, AppAction.Delete,  PermissionGroup.BookingOperations, "Cancel a booking"),
+    ];
+}
+```
+
+**DI registration** — goes in `{Module}.Infrastructure/DependencyInjection.cs` (NOT in Contracts, to keep Contracts DI-free):
+
+```csharp
+services.AddSingleton<IPermissionCatalog, BookingPermissionCatalog>();
+```
+
+`PermissionSeeder` in `Security.Infrastructure` auto-discovers every registered `IPermissionCatalog` and seeds the database at startup. **Adding a new module requires zero changes to Security** — it just registers its catalog and the permissions appear.
+
 **Rules:**
-- ONLY integration events and shared DTOs (things other modules need to reference)
-- Other modules add a project reference to `{Module}.Contracts` (never `{Module}.Domain`)
-- Inherits from `IntegrationEventBase` (which implements `IIntegrationEvent`)
+- ONLY integration events + authorization catalog + shared DTOs that OTHER modules need to reference
+- Other modules add a project reference to `{Module}.Contracts` — NEVER to `{Module}.Domain` or `{Module}.Application`
+- Integration events inherit from `IntegrationEventBase` (which implements `IIntegrationEvent`)
+- **NEVER add another module's features to your `{Module}Features.cs`** — the boundary is strict
+- See `agent-context.md §4.2` for the full "How to Add a New Permission" walkthrough
+- See `authorization-refactor-plan.md` for the complete authorization architecture
 
 [↑ Back to Table of Contents](#table-of-contents)
 
@@ -822,13 +888,90 @@ public sealed class TourUnitOfWork(IUnitOfWork<TourDbContext> inner) : ITourUnit
 
 **DbContext + Configuration** in `{Module}.Infrastructure/Persistence/`.
 
-**Register in DI** in `{Module}.Infrastructure/DependencyInjection.cs`.
+**Register in DI** in `{Module}.Infrastructure/DependencyInjection.cs`:
 
-### Step 5: Wire Endpoints
+```csharp
+public static IServiceCollection AddTourInfrastructure(
+    this IServiceCollection services, IConfiguration config)
+{
+    // DbContext, UoW, repos, event handlers, outbox/inbox, seeders...
+    services.AddScoped<ITourRepository, TourRepository>();
+    services.AddScoped<ITourUnitOfWork, TourUnitOfWork>();
 
-In `{Module}.Presentation/TourEndpoints.cs` — map to commands/queries.
+    // ── Permission catalog (discovered by Security's PermissionSeeder) ──
+    services.AddSingleton<IPermissionCatalog, TourPermissionCatalog>();
 
-### Step 6: Register in Program.cs
+    return services;
+}
+```
+
+### Step 5: Define the Permission Catalog
+
+In `{Module}.Contracts/Authorization/`:
+
+```csharp
+// TourFeatures.cs
+namespace Tour.Contracts.Authorization;
+
+public static class TourFeatures
+{
+    public const string Tour    = nameof(Tour);
+    public const string Pricing = nameof(Pricing);
+}
+
+// TourPermissionCatalog.cs
+using YallaJo.SharedKernel.Application.Authorization;
+
+namespace Tour.Contracts.Authorization;
+
+public sealed class TourPermissionCatalog : IPermissionCatalog
+{
+    public string ModuleName => "Tour";
+
+    public IReadOnlyList<PermissionDescriptor> Permissions { get; } =
+    [
+        new(TourFeatures.Tour, AppAction.Read,   PermissionGroup.ContentManagement, "View tours"),
+        new(TourFeatures.Tour, AppAction.Create, PermissionGroup.ContentManagement, "Create a tour"),
+        new(TourFeatures.Tour, AppAction.Update, PermissionGroup.ContentManagement, "Update a tour"),
+        new(TourFeatures.Tour, AppAction.Delete, PermissionGroup.ContentManagement, "Delete a tour"),
+    ];
+}
+```
+
+### Step 6: Wire Endpoints
+
+In `{Module}.Presentation/TourEndpoints.cs`:
+
+```csharp
+using Tour.Contracts.Authorization;
+using YallaJo.SharedKernel.Application.Authorization;
+using YallaJo.SharedKernel.Presentation.Authorization;
+
+public static IEndpointRouteBuilder MapTourEndpoints(this IEndpointRouteBuilder endpoints)
+{
+    var group = endpoints.MapGroup("/api/v1/tours").WithTags("Tours");
+
+    group.MapPost("/", CreateTour)
+        .WithName("CreateTour")
+        .WithMetadata(new MustHavePermissionAttribute(TourFeatures.Tour, AppAction.Create))
+        .Produces<Guid>(StatusCodes.Status201Created)
+        .ProducesValidationProblem();
+
+    group.MapGet("/{id:guid}", GetTour)
+        .WithName("GetTour")
+        .WithMetadata(new MustHavePermissionAttribute(TourFeatures.Tour, AppAction.Read))
+        .Produces<TourDto>()
+        .ProducesProblem(StatusCodes.Status404NotFound);
+
+    // ... rest of CRUD endpoints, each with its own MustHavePermission attribute
+
+    return endpoints;
+}
+```
+
+> **📌 Rule 1 check**: Every endpoint must have `.WithMetadata(new MustHavePermissionAttribute(...))` OR `.AllowAnonymous()`. No exceptions. See `agent-context.md §2.1`.
+
+### Step 7: Register in Program.cs
 
 ```csharp
 // In YallaJo.Api/Program.cs
@@ -837,6 +980,14 @@ builder.Services.AddTourInfrastructure(builder.Configuration);
 // ...
 app.MapTourEndpoints();
 ```
+
+**Verify seed**: start the app and check the startup log:
+
+```
+[INFO] Seeding 64 permissions from 5 modules: Security, ContentCore, ContentPlaces, Accounts, Tour
+```
+
+If your module isn't in that list, the catalog wasn't registered in DI. Fix `DependencyInjection.cs`.
 
 [↑ Back to Table of Contents](#table-of-contents)
 
@@ -2049,40 +2200,163 @@ WARN: Slow request detected: ListTourBookingsQuery took 1200ms (threshold: 500ms
 
 *Interfaces for accessing the current user's identity and HTTP request metadata. Inject these instead of reading from `HttpContext` directly — they're mockable and properly abstracted.*
 
-### ICurrentUser — Accessing the Authenticated User
+### ICurrentUser — The Ownership Rule (MANDATORY)
 
-Injected into handlers. Reads JWT claims automatically:
+> **📌 Rule 2 (non-negotiable):** Inject `ICurrentUser` into a handler **ONLY when comparing `ICurrentUser.UserId` against a resource's owner/creator/target field**. See `agent-context.md §2.2`.
+
+`ICurrentUser` is NOT a general-purpose "authenticated user" gate. Authorization is done at the endpoint with `MustHavePermissionAttribute` (see §2.4). A handler that only calls `currentUser.IsAuthenticated` is duplicating the job — remove the injection.
+
+#### The Interface
 
 ```csharp
 public interface ICurrentUser
 {
-    Guid? UserId { get; }                   // From "sub" claim
-    string? UserName { get; }               // From "name" claim
-    string? Email { get; }                  // From "email" claim
+    Guid? UserId { get; }                    // From "sub" claim
+    string? UserName { get; }                // From "name" claim
+    string? Email { get; }                   // From "email" claim
     bool IsAuthenticated { get; }
-    IEnumerable<string> Roles { get; }      // From "role" claims
-    IEnumerable<string> Permissions { get; } // From "permission" claims
+    IEnumerable<string> Roles { get; }       // From "role" claims
+    IEnumerable<string> Permissions { get; } // From "Permission" claims
     bool HasPermission(string permission);
     bool IsInRole(string role);
 }
+```
 
-// Usage in a handler:
-public sealed class GetMyBookingsQueryHandler(
-    IBookingRepository repo,
-    ICurrentUser currentUser)  // ← Inject
-    : IQueryHandler<GetMyBookingsQuery, List<BookingDto>>
+#### Decision Table — Should I Inject `ICurrentUser`?
+
+| Scenario | Inject? | Why |
+|---|---|---|
+| Query: "List MY bookings" (filter by userId) | ✅ YES | Compares `booking.UserId == currentUser.UserId` |
+| Command: "Update MY profile" (self-edit) | ✅ YES | Loads profile where `p.UserId == currentUser.UserId` |
+| Command: "Revoke MY session" (IDOR prevention) | ✅ YES | Guards `session.UserId != currentUser.UserId → Forbidden` |
+| Command: "Update ANY business" (admin can, owner can) | ✅ YES | Compares `business.OwnerId != currentUser.UserId && !isAdmin` |
+| Command: "Create business" (stamp owner) | ✅ YES | `ownerId: currentUser.UserId.Value` is a valid creator stamp |
+| Command: "Approve business" (admin-only action) | ❌ NO | Use `MustHavePermission(Business, Approve)` on endpoint. Don't gate inside the handler. |
+| Command: "Suspend business" (moderator action) | ❌ NO | Same — permission belongs on the endpoint |
+| Query: "List all users" (admin dashboard) | ❌ NO | Permission gates access; handler has no ownership concern |
+| Any handler that only checks `IsAuthenticated` | ❌ NO | `MustHavePermission` on endpoint already enforced authentication |
+
+#### ✅ Valid Patterns
+
+```csharp
+// ✅ Self-edit (list/update only the current user's resource)
+public sealed class UpdateProfileCommandHandler(
+    IProfileRepository profileRepository,
+    IAccountsUnitOfWork uow,
+    HybridCache cache,
+    ICurrentUser currentUser,
+    ILogger<UpdateProfileCommandHandler> logger)
+    : ICommandHandler<UpdateProfileCommand>
 {
-    public async Task<Result<List<BookingDto>>> Handle(...)
+    public async Task<Result> Handle(UpdateProfileCommand cmd, CancellationToken ct)
     {
-        if (!currentUser.IsAuthenticated)
-            return Result.Unauthorized<List<BookingDto>>();
-        
-        var bookings = await repo.GetAllAsync(
-            b => b.UserId == currentUser.UserId!.Value, ct);
+        if (currentUser.UserId is null)
+            return Result.Unauthorized("Authentication required.");
+
+        // ownership = self: load ONLY the current user's profile
+        var profile = await profileRepository.FirstOrDefaultAsync(
+            p => p.UserId == currentUser.UserId.Value, ct);
+
+        if (profile is null)
+            return Result.Failure(Error.NotFound("Profile.NotFound"), Outcome.NotFound);
+
+        profile.Update(cmd.FirstName, cmd.LastName);
+        await uow.SaveChangesAsync(ct);
+        await cache.RemoveByTagAsync($"profile:{currentUser.UserId.Value}", ct);
+        return Result.Success();
+    }
+}
+
+// ✅ IDOR prevention (owner-or-admin check)
+public sealed class UpdateBusinessCommandHandler(
+    IBusinessRepository repo,
+    IContentPlacesUnitOfWork uow,
+    HybridCache cache,
+    ICurrentUser currentUser,
+    ILogger<UpdateBusinessCommandHandler> logger)
+    : ICommandHandler<UpdateBusinessCommand>
+{
+    public async Task<Result> Handle(UpdateBusinessCommand cmd, CancellationToken ct)
+    {
+        // endpoint already verified: MustHavePermission(Business, Update)
+        var business = await repo.GetByIdAsync(cmd.Id, ct);
+        if (business is null)
+            return Result.Failure(Error.NotFound("Business.NotFound"), Outcome.NotFound);
+
+        // row-level ownership check
+        var isAdmin = currentUser.IsInRole("Admin");
+        if (!isAdmin && business.OwnerId != currentUser.UserId!.Value)
+            return Result.Failure(Error.Forbidden("Business.NotOwner"), Outcome.Forbidden);
+
+        business.Update(cmd.Name, cmd.Description);
+        await uow.SaveChangesAsync(ct);
+        await cache.RemoveByTagAsync($"business:{cmd.Id}", ct);
+        return Result.Success();
+    }
+}
+
+// ✅ Creator stamp at aggregate creation
+public sealed class CreateBusinessCommandHandler(
+    IBusinessRepository repo,
+    ICurrentUser currentUser,
+    ...)
+{
+    public async Task<Result<CreateBusinessResult>> Handle(CreateBusinessCommand cmd, CancellationToken ct)
+    {
+        if (currentUser.UserId is null)
+            return Result.Unauthorized("Authentication required.");
+
+        // stamping the creator is a legitimate domain concept
+        var business = BusinessEntity.Create(
+            name: cmd.Name,
+            slug: slug,
+            ownerId: currentUser.UserId.Value);
         // ...
     }
 }
 ```
+
+#### ❌ Anti-Patterns (REJECT in code review)
+
+```csharp
+// ❌ Gratuitous — only checks auth, no ownership comparison
+public sealed class SuspendBusinessCommandHandler(
+    IBusinessRepository repo,
+    ICurrentUser currentUser,  // ← REMOVE THIS
+    ...)
+{
+    public async Task<Result> Handle(SuspendBusinessCommand cmd, CancellationToken ct)
+    {
+        if (!currentUser.IsAuthenticated)  // ← permission on endpoint already enforced this
+            return Result.Unauthorized();
+
+        var business = await repo.GetByIdAsync(cmd.Id, ct);
+        business.Suspend(cmd.Reason);  // ← no ownership check anywhere
+        // ...
+    }
+}
+
+// ✅ FIX — remove ICurrentUser. Guard via MustHavePermission on endpoint:
+//    .WithMetadata(new MustHavePermissionAttribute(ContentPlacesFeatures.Business, AppAction.Suspend))
+public sealed class SuspendBusinessCommandHandler(
+    IBusinessRepository repo,
+    IContentPlacesUnitOfWork uow,
+    ILogger<SuspendBusinessCommandHandler> logger)
+{
+    public async Task<Result> Handle(SuspendBusinessCommand cmd, CancellationToken ct)
+    {
+        var business = await repo.GetByIdAsync(cmd.Id, ct);
+        if (business is null)
+            return Result.Failure(Error.NotFound("Business.NotFound"), Outcome.NotFound);
+
+        business.Suspend(cmd.Reason);
+        await uow.SaveChangesAsync(ct);
+        return Result.Success();
+    }
+}
+```
+
+> **Current violations in the codebase**: 8 handlers in `ContentPlaces.Application` violate this rule. See `agent-context.md §8.1` for the exact list + fixes.
 
 ### IRequestContext — HTTP Request Metadata
 
@@ -2138,24 +2412,42 @@ public sealed class ExpireOldLocksCommandHandler(
 ### File Creation Checklist (New Feature)
 
 ```
-□ Domain Entity          → {Module}.Domain/Entities/
-□ Domain Enums           → {Module}.Domain/Enums/
-□ Domain Events          → {Module}.Domain/Events/
-□ Repo Interface         → {Module}.Domain/Repositories/
-□ UoW Interface          → {Module}.Domain/Repositories/
-□ Commands + Handlers    → {Module}.Application/Commands/
-□ Queries + Handlers     → {Module}.Application/Queries/
-□ Validators             → With each command
-□ DbContext + Config     → {Module}.Infrastructure/Persistence/
-□ Repository Impl        → {Module}.Infrastructure/Repositories/
-□ UoW Impl               → {Module}.Infrastructure/Persistence/
-□ Domain Event Handlers  → {Module}.Infrastructure/EventHandlers/
-□ DI Registration        → {Module}.Infrastructure/DependencyInjection.cs
-□ Endpoints              → {Module}.Presentation/
-□ Integration Events     → {Module}.Contracts/IntegrationEvents/
-□ Register in Program.cs → YallaJo.Api/Program.cs
-□ EF Migration           → dotnet ef migrations add ...
+Domain
+□ Domain Entity              → {Module}.Domain/Entities/
+□ Domain Enums               → {Module}.Domain/Enums/
+□ Domain Events              → {Module}.Domain/Events/
+□ Repo Interface             → {Module}.Domain/Repositories/
+□ UoW Interface              → {Module}.Domain/Repositories/
+
+Contracts (public surface)
+□ Integration Events         → {Module}.Contracts/IntegrationEvents/
+□ Feature Constants          → {Module}.Contracts/Authorization/{Module}Features.cs
+□ Permission Catalog         → {Module}.Contracts/Authorization/{Module}PermissionCatalog.cs
+
+Application
+□ Commands + Handlers        → {Module}.Application/Commands/
+□ Queries + Handlers         → {Module}.Application/Queries/  (MUST implement ICacheableQuery)
+□ Validators                 → With each command
+□ Cache Keys                 → {Module}.Application/Caching/{Module}CacheKeys.cs
+
+Infrastructure
+□ DbContext + Config         → {Module}.Infrastructure/Persistence/
+□ Repository Impl            → {Module}.Infrastructure/Repositories/
+□ UoW Impl                   → {Module}.Infrastructure/Persistence/
+□ Domain Event Handlers      → {Module}.Infrastructure/EventHandlers/
+□ DI Registration            → {Module}.Infrastructure/DependencyInjection.cs
+  └─ services.AddSingleton<IPermissionCatalog, {Module}PermissionCatalog>();
+
+Presentation
+□ Endpoints                  → {Module}.Presentation/
+  └─ Every endpoint: .WithMetadata(new MustHavePermissionAttribute(...)) OR .AllowAnonymous()
+
+Host
+□ Register in Program.cs     → Add{Module}Application() + Add{Module}Infrastructure() + Map{Module}Endpoints()
+□ EF Migration               → dotnet ef migrations add Add{Entity} --project {Module}.Infrastructure --startup-project YallaJo.Api
 ```
+
+> **Authorization catalog is a new mandatory artifact as of the 2026-04-22 refactor.** Without it, your module's permissions never appear in the database and every endpoint returns 403. See `agent-context.md §4` and `authorization-refactor-plan.md` for the full architecture.
 
 ### Domain Event vs Integration Event Decision
 
