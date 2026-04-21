@@ -1,4 +1,6 @@
+using ContentPlaces.Contracts.Authorization;
 using ContentPlaces.Application.Interfaces;
+using YallaJo.SharedKernel.Application.Authorization;
 using ContentPlaces.Domain.Repositories;
 using ContentPlaces.Infrastructure.Persistence;
 using ContentPlaces.Infrastructure.Persistence.Seeding;
@@ -50,6 +52,9 @@ public static class DependencyInjection
         // ── Translation Orchestrator (shared from ContentCore via DI) ─────────
         // IEntityTranslationOrchestrator is registered by ContentCore.Infrastructure.
         // ContentPlaces domain event handlers consume it; no separate registration needed here.
+
+        // ── Permission catalog (discovered by Security.Infrastructure PermissionSeeder) ─
+        services.AddSingleton<IPermissionCatalog, ContentPlacesPermissionCatalog>();
 
         return services;
     }
