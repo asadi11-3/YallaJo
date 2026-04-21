@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Caching.Hybrid;
+using Security.Application.Authorization;
 using Security.Application.Caching;
 using Security.Domain.Errors;
 using Security.Domain.Repositories;
@@ -11,16 +12,21 @@ public sealed class RemoveRoleClaimCommandHandler(
     IRoleRepository roleRepository,
     IRoleClaimRepository roleClaimRepository,
     ISecurityUnitOfWork unitOfWork,
+    IRoleHierarchyService hierarchy,
     HybridCache cache)
     : ICommandHandler<RemoveRoleClaimCommand>
 {
     public async Task<Result> Handle(RemoveRoleClaimCommand request, CancellationToken ct)
     {
-        // Authentication and permission (RoleClaim.Delete) are enforced by the endpoint.
-        // This handler operates on the target role/claim supplied in the command, not the caller.
         var role = await roleRepository.GetByIdAsync(request.RoleId, ct);
         if (role is null)
             return Result.Failure(RoleErrors.NotFound, Outcome.NotFound);
+
+        // Hierarchy: removing a claim from a role silently revokes permissions
+        // from every holder. Actor must strictly outrank the role.
+        var roleGuard = hierarchy.EnsureCanModifyRoleDefinition(role.Name);
+        if (!roleGuard.IsSuccess)
+            return roleGuard;
 
         var claim = await roleClaimRepository.GetByIdAsync(request.ClaimId, ct);
         if (claim is null || claim.RoleId != request.RoleId)

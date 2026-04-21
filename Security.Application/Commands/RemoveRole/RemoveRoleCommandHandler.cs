@@ -1,9 +1,8 @@
 using Microsoft.Extensions.Caching.Hybrid;
+using Security.Application.Authorization;
 using Security.Application.Caching;
-using Security.Contracts.Authorization;
 using Security.Domain.Errors;
 using Security.Domain.Repositories;
-using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
@@ -13,27 +12,28 @@ public sealed class RemoveRoleCommandHandler(
     IRoleRepository roleRepository,
     IUserRepository userRepository,
     ISecurityUnitOfWork unitOfWork,
-    ICurrentUser currentUser,
+    IRoleHierarchyService hierarchy,
     HybridCache cache)
     : ICommandHandler<RemoveRoleCommand>
 {
     public async Task<Result> Handle(RemoveRoleCommand request, CancellationToken ct)
     {
-        if (!currentUser.IsAuthenticated || currentUser.UserId is null)
-            return Result.Failure(Error.Unauthorized("Authentication is required."), Outcome.Unauthorized);
-
         var role = await roleRepository.GetByIdAsync(request.RoleId, ct);
         if (role is null)
             return Result.Failure(RoleErrors.NotFound, Outcome.NotFound);
 
-        // Cannot remove users from protected roles.
-        if (AppRoles.ProtectedRoles.Contains(role.Name, StringComparer.OrdinalIgnoreCase))
-            return Result.Failure(RoleErrors.Protected, Outcome.Forbidden);
+        // Hierarchy: actor must strictly outrank the role being removed.
+        // This replaces the previous "OwnerOnly for Owner/SuperAdmin" shortcut
+        // with a uniform rule that also blocks Admin-removing-Admin.
+        var roleGuard = hierarchy.EnsureCanManageRole(role.Name);
+        if (!roleGuard.IsSuccess)
+            return roleGuard;
 
-        // OwnerOnly: only the Owner can remove Owner/SuperAdmin roles.
-        if (AppRoles.OwnerOnlyRoles.Contains(role.Name, StringComparer.Ordinal)
-            && !currentUser.IsInRole(AppRoles.Owner))
-            return Result.Failure(RoleErrors.OwnerOnly, Outcome.Forbidden);
+        // Hierarchy: actor must also outrank the target user (prevents Admin
+        // from removing roles from a SuperAdmin/Owner, and same-level edits).
+        var targetGuard = await hierarchy.EnsureCanManageUserAsync(request.UserId, ct);
+        if (!targetGuard.IsSuccess)
+            return targetGuard;
 
         var userRole = await userRepository.GetUserRoleAsync(request.UserId, request.RoleId, ct);
         if (userRole is null)
@@ -48,3 +48,4 @@ public sealed class RemoveRoleCommandHandler(
         return Result.Success();
     }
 }
+

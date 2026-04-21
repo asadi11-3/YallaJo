@@ -1,9 +1,9 @@
 using Microsoft.Extensions.Caching.Hybrid;
+using Security.Application.Authorization;
 using Security.Application.Caching;
 using Security.Contracts.Authorization;
 using Security.Domain.Errors;
 using Security.Domain.Repositories;
-using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
@@ -13,7 +13,7 @@ public sealed class AssignRoleCommandHandler(
     IRoleRepository roleRepository,
     IUserRepository userRepository,
     ISecurityUnitOfWork unitOfWork,
-    ICurrentUser currentUser,
+    IRoleHierarchyService hierarchy,
     HybridCache cache)
     : ICommandHandler<AssignRoleCommand>
 {
@@ -26,10 +26,13 @@ public sealed class AssignRoleCommandHandler(
         if (!role.IsActive)
             return Result.Failure(RoleErrors.Inactive, Outcome.Invalid);
 
-        // OwnerOnly: only the Owner can assign Owner/SuperAdmin roles.
-        if (AppRoles.OwnerOnlyRoles.Contains(role.Name, StringComparer.Ordinal)
-            && !currentUser.IsInRole(AppRoles.Owner))
-            return Result.Failure(RoleErrors.OwnerOnly, Outcome.Forbidden);
+        // Hierarchy: the actor must strictly outrank the role being assigned
+        // (Admin cannot assign Admin; SuperAdmin cannot assign SuperAdmin; etc).
+        // This supersedes the legacy OwnerOnly check while keeping its intent:
+        // only Owner can assign Owner/SuperAdmin.
+        var roleGuard = hierarchy.EnsureCanManageRole(role.Name);
+        if (!roleGuard.IsSuccess)
+            return roleGuard;
 
         // OwnerSingleton: only one user may hold the Owner role.
         if (role.Name == AppRoles.Owner
@@ -39,6 +42,12 @@ public sealed class AssignRoleCommandHandler(
         var user = await userRepository.GetByIdAsync(request.UserId, ct, asNoTracking: false);
         if (user is null)
             return Result.Failure(UserErrors.NotFound, Outcome.NotFound);
+
+        // Hierarchy: actor must also outrank the target user. This prevents
+        // Admin from touching SuperAdmin/Owner, and blocks same-level edits.
+        var targetGuard = await hierarchy.EnsureCanManageUserAsync(request.UserId, ct);
+        if (!targetGuard.IsSuccess)
+            return targetGuard;
 
         var existing = await userRepository.GetUserRoleAsync(request.UserId, request.RoleId, ct);
         if (existing is not null)
@@ -53,3 +62,4 @@ public sealed class AssignRoleCommandHandler(
         return Result.Success();
     }
 }
+

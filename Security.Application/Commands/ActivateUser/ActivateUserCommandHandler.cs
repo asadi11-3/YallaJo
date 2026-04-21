@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Caching.Hybrid;
+using Security.Application.Authorization;
 using Security.Application.Caching;
 using Security.Domain.Errors;
 using Security.Domain.Repositories;
@@ -10,6 +11,7 @@ namespace Security.Application.Commands.ActivateUser;
 public sealed class ActivateUserCommandHandler(
     IUserRepository userRepository,
     ISecurityUnitOfWork unitOfWork,
+    IRoleHierarchyService hierarchy,
     HybridCache cache)
     : ICommandHandler<ActivateUserCommand>
 {
@@ -18,6 +20,12 @@ public sealed class ActivateUserCommandHandler(
         var user = await userRepository.GetByIdAsync(request.UserId, ct, asNoTracking: false);
         if (user is null)
             return Result.Failure(UserErrors.NotFound, Outcome.NotFound);
+
+        // Hierarchy: activation can silently restore elevated privileges —
+        // require actor to outrank the target user.
+        var guard = await hierarchy.EnsureCanManageUserAsync(request.UserId, ct);
+        if (!guard.IsSuccess)
+            return guard;
 
         if (user.IsActive)
             return Result.Success(); // idempotent — already active
@@ -31,3 +39,4 @@ public sealed class ActivateUserCommandHandler(
         return Result.Success();
     }
 }
+

@@ -167,3 +167,12 @@
 - **Root Cause**: The `StartsWith` overload that accepts `StringComparison` requires a `string`, not a `char`.
 - **Fix Applied**: Changed to `url.StartsWith("/", StringComparison.Ordinal)` and re-ran build/tests.
 - **Prevention Rule**: When using `StringComparison` with `StartsWith`, always pass a string literal (e.g., `"/"`), never a char literal.
+
+### ERR-017: Parallel `dotnet build/test` on overlapping projects caused CS2012 file-lock failures
+- **Date**: 2026-04-21
+- **Module**: Security / SharedKernel (validation workflow)
+- **What Happened**: Ran multiple `dotnet build`/`dotnet test` commands in parallel targeting projects that share transitive dependencies and intermediate outputs.
+- **Error Message**: `CS2012: Cannot open ... .dll for writing -- file is being used by another process`.
+- **Root Cause**: Concurrent compiler/test runs attempted to write to the same `obj/bin` artifacts at the same time.
+- **Fix Applied**: Re-ran validations sequentially (`Security.Infrastructure` build, `YallaJo.SharedKernel.Infrastructure` build, `Security.Tests.Unit` test), all passing.
+- **Prevention Rule**: If build/test targets overlap in dependency graph or output paths, run validations sequentially. Reserve parallel execution for truly independent projects.

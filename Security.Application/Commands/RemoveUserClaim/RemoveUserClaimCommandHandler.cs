@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Caching.Hybrid;
+using Security.Application.Authorization;
 using Security.Application.Caching;
 using Security.Domain.Errors;
 using Security.Domain.Repositories;
@@ -11,16 +12,21 @@ public sealed class RemoveUserClaimCommandHandler(
     IUserRepository userRepository,
     IUserClaimRepository userClaimRepository,
     ISecurityUnitOfWork unitOfWork,
+    IRoleHierarchyService hierarchy,
     HybridCache cache)
     : ICommandHandler<RemoveUserClaimCommand>
 {
     public async Task<Result> Handle(RemoveUserClaimCommand request, CancellationToken ct)
     {
-        // Authentication and permission (User.Update) are enforced by the endpoint.
-        // This handler operates on the target user/claim supplied in the command, not the caller.
         var user = await userRepository.GetByIdAsync(request.UserId, ct);
         if (user is null)
             return Result.Failure(UserErrors.NotFound, Outcome.NotFound);
+
+        // Hierarchy: user claims can grant effective permissions. Actor must
+        // outrank the target user to mutate them.
+        var guard = await hierarchy.EnsureCanManageUserAsync(request.UserId, ct);
+        if (!guard.IsSuccess)
+            return guard;
 
         var claim = await userClaimRepository.GetByIdAsync(request.ClaimId, ct);
         if (claim is null || claim.UserId != request.UserId)
@@ -37,3 +43,4 @@ public sealed class RemoveUserClaimCommandHandler(
         return Result.Success();
     }
 }
+

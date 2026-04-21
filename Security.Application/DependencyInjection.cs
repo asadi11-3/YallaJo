@@ -1,5 +1,6 @@
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
+using Security.Application.Authorization;
 using Security.Application.Services;
 using Security.Contracts.Abstractions;
 
@@ -14,7 +15,9 @@ public static class DependencyInjection
         services.AddValidatorsFromAssembly(assembly, includeInternalTypes: true);
 
         services.AddScoped<IUserRegistrationService, UserRegistrationService>();
+        services.AddScoped<IRoleHierarchyService, RoleHierarchyService>();
 
         return services;
     }
 }
+
