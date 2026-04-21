@@ -1943,6 +1943,714 @@ public async Task Handler_Is_Idempotent_On_Duplicate_Delivery()
 }
 ```
 
+### 5.18 Production Hardening
+
+This section covers the production-readiness concerns that are typically underdocumented: retention policy, schema versioning, dead-letter strategy, multi-instance polling, observability, and testing. Backed by 15+ industry references ([Chris Richardson microservices.io](https://microservices.io/patterns/data/transactional-outbox.html), [Milan Jovanović](https://www.milanjovanovic.tech/blog/scaling-the-outbox-pattern), [Kamil Grzybek](https://www.kamilgrzybek.com/design/the-outbox-pattern/), [Wolverine](https://wolverinefx.io/guide/durability), [MassTransit](https://masstransit.io/documentation/configuration/middleware/outbox), [NServiceBus](https://docs.particular.net/nservicebus/outbox/), [Brighter](https://brightercommand.gitbook.io/paramore-brighter-documentation/outbox-and-inbox/mssqloutbox), [João Antunes OutboxKit](https://blog.codingmilitia.com/2024/12/03/introducing-outboxkit/)).
+
+#### 5.18.1 Retention Policy
+
+Processed outbox rows accumulate forever today. Add a cleanup job to prune them while preserving audit trail + dead-letters.
+
+| Category | Retention | Reason |
+|---|---|---|
+| Successfully processed (`ProcessedOnUtc` IS NOT NULL, `RetryCount < 10`) | **30 days** default | Audit + replay window. Jovanović, Grzybek, NServiceBus converge on this. |
+| Dead-lettered (`RetryCount >= 10`) | **NEVER auto-delete** | Evidence for debugging + replay after bug fix. Keep indefinitely or with separate 180-day window. |
+| In-flight (`LockedUntil > now`) | N/A | Cleanup job excludes these. |
+| Pending (`ProcessedOnUtc` IS NULL, not locked) | N/A | Cleanup job excludes these. |
+
+**Recommended `OutboxCleanupBackgroundService`** (add to `YallaJo.SharedKernel.Infrastructure/BackgroundJobs/`):
+
+```csharp
+/// <summary>
+/// Deletes successfully processed outbox rows older than the retention window.
+/// Runs once per hour. Never deletes dead-lettered rows (RetryCount >= 10) —
+/// those require manual intervention.
+///
+/// Per-module cleanup: resolves every IOutboxProcessor via DI to locate each
+/// module's DbContext, then runs the cleanup query against that schema.
+/// </summary>
+public sealed class OutboxCleanupBackgroundService(
+    IServiceProvider serviceProvider,
+    ILogger<OutboxCleanupBackgroundService> logger,
+    IOptions<OutboxCleanupOptions> options) : BackgroundService
+{
+    private const int BatchSize = 1000; // delete in batches to avoid long-running transactions
+    private readonly TimeSpan _retentionPeriod = options.Value.RetentionPeriod;   // default 30 days
+    private readonly TimeSpan _cleanupInterval = options.Value.CleanupInterval;   // default 1 hour
+
+    protected override async Task ExecuteAsync(CancellationToken ct)
+    {
+        logger.LogInformation(
+            "Outbox cleanup service started — retention: {Retention}, interval: {Interval}",
+            _retentionPeriod, _cleanupInterval);
+
+        while (!ct.IsCancellationRequested)
+        {
+            try
+            {
+                await CleanupAllModulesAsync(ct);
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                logger.LogError(ex, "Outbox cleanup iteration failed");
+            }
+
+            try { await Task.Delay(_cleanupInterval, ct); }
+            catch (OperationCanceledException) when (ct.IsCancellationRequested) { break; }
+        }
+    }
+
+    private async Task CleanupAllModulesAsync(CancellationToken ct)
+    {
+        using var scope = serviceProvider.CreateScope();
+        var cutoff = DateTime.UtcNow - _retentionPeriod;
+        var cleaners = scope.ServiceProvider.GetServices<IOutboxCleaner>();
+
+        foreach (var cleaner in cleaners)
+        {
+            if (ct.IsCancellationRequested) break;
+
+            try
+            {
+                var deleted = await cleaner.DeleteProcessedBeforeAsync(cutoff, BatchSize, ct);
+                if (deleted > 0)
+                {
+                    logger.LogInformation(
+                        "Outbox cleanup: deleted {Count} rows for {Module} (cutoff {Cutoff})",
+                        deleted, cleaner.ModuleName, cutoff);
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Outbox cleanup failed for {Module}", cleaner.ModuleName);
+            }
+        }
+    }
+}
+
+/// <summary>Per-module cleanup abstraction. Each module registers its own implementation.</summary>
+public interface IOutboxCleaner
+{
+    string ModuleName { get; }
+    Task<int> DeleteProcessedBeforeAsync(DateTime cutoff, int batchSize, CancellationToken ct);
+}
+
+public sealed class OutboxCleaner<TContext>(IServiceScopeFactory scopeFactory) : IOutboxCleaner
+    where TContext : DbContext
+{
+    public string ModuleName => typeof(TContext).Name;
+
+    public async Task<int> DeleteProcessedBeforeAsync(
+        DateTime cutoff, int batchSize, CancellationToken ct)
+    {
+        using var scope = scopeFactory.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<TContext>();
+
+        int totalDeleted = 0;
+        int deletedInBatch;
+
+        do
+        {
+            // ExecuteDeleteAsync in EF 7+ does a single bulk DELETE statement
+            // Filter: only PROCESSED rows older than cutoff with RetryCount < 10 (exclude dead-letters)
+            deletedInBatch = await db.Set<OutboxMessage>()
+                .Where(m => m.ProcessedOnUtc != null
+                         && m.ProcessedOnUtc < cutoff
+                         && m.RetryCount < OutboxProcessor<TContext>.MaxRetryCount)
+                .Take(batchSize)
+                .ExecuteDeleteAsync(ct);
+
+            totalDeleted += deletedInBatch;
+
+        } while (deletedInBatch == batchSize && !ct.IsCancellationRequested);
+
+        return totalDeleted;
+    }
+}
+
+public sealed class OutboxCleanupOptions
+{
+    public TimeSpan RetentionPeriod { get; set; } = TimeSpan.FromDays(30);
+    public TimeSpan CleanupInterval { get; set; } = TimeSpan.FromHours(1);
+}
+```
+
+**Registration in each module's DI**:
+
+```csharp
+// {Module}.Infrastructure/DependencyInjection.cs
+services.AddScoped<IOutboxCleaner, OutboxCleaner<SecurityDbContext>>();
+```
+
+**Registration in `YallaJo.SharedKernel.Infrastructure/DependencyInjection.cs`**:
+
+```csharp
+services.Configure<OutboxCleanupOptions>(config.GetSection("OutboxCleanup"));
+services.AddHostedService<OutboxCleanupBackgroundService>();
+```
+
+**`appsettings.json`**:
+
+```json
+{
+  "OutboxCleanup": {
+    "RetentionPeriod": "30.00:00:00",
+    "CleanupInterval": "01:00:00"
+  }
+}
+```
+
+**Index for the cleanup query** (add via EF migration):
+
+```sql
+-- SQL Server — filtered index excludes dead-letters and includes only processed rows
+CREATE NONCLUSTERED INDEX IX_OutboxMessages_Cleanup
+ON OutboxMessages (ProcessedOnUtc)
+WHERE ProcessedOnUtc IS NOT NULL AND RetryCount < 10;
+```
+
+#### 5.18.2 Schema Versioning — Integration Event Type Registry
+
+`OutboxMessage.Type = integrationEvent.GetType().AssemblyQualifiedName!` is **fragile**. Renaming the class, namespace, or assembly breaks deserialization of outstanding outbox rows. This is a production risk.
+
+**Fix**: decouple stored type name from CLR `AssemblyQualifiedName` using a short-name registry.
+
+```csharp
+/// <summary>
+/// Maps stable logical names to CLR types.
+/// Every integration event MUST be registered here.
+/// NEVER remove or rename an existing key — only add new ones.
+/// To rename an event type, keep the old key as a legacy alias.
+/// </summary>
+public static class IntegrationEventTypeRegistry
+{
+    private static readonly Dictionary<string, Type> _nameToType = new()
+    {
+        ["user.created.v1"]              = typeof(UserCreatedIntegrationEvent),
+        ["user.email-verified.v1"]       = typeof(UserEmailVerifiedIntegrationEvent),
+        ["tag.created.v1"]               = typeof(TagCreatedIntegrationEvent),
+        ["place.created.v1"]             = typeof(PlaceCreatedIntegrationEvent),
+        // ... every integration event from every module
+    };
+
+    private static readonly Dictionary<Type, string> _typeToName =
+        _nameToType
+            .GroupBy(kv => kv.Value)
+            .ToDictionary(g => g.Key, g => g.First().Key); // canonical (first) name per type
+
+    public static string GetName(Type type)
+        => _typeToName.TryGetValue(type, out var name)
+            ? name
+            : throw new InvalidOperationException(
+                $"Type {type.FullName} not registered in IntegrationEventTypeRegistry. " +
+                "Add it before publishing.");
+
+    public static bool TryGetType(string name, out Type? type)
+        => _nameToType.TryGetValue(name, out type);
+}
+```
+
+**Modify `OutboxMessage.Create`** to use the registry:
+
+```csharp
+public static OutboxMessage Create(IIntegrationEvent integrationEvent)
+{
+    return new OutboxMessage
+    {
+        Id = Guid.CreateVersion7(),
+        // Was: integrationEvent.GetType().AssemblyQualifiedName!
+        Type = IntegrationEventTypeRegistry.GetName(integrationEvent.GetType()),
+        Content = JsonSerializer.Serialize(integrationEvent, integrationEvent.GetType()),
+        OccurredOnUtc = integrationEvent.OccurredOn,
+        ProcessedOnUtc = null,
+        Error = null,
+        RetryCount = 0,
+        LockedUntil = null
+    };
+}
+```
+
+**Modify `OutboxProcessor.ProcessOutboxMessagesAsync`** to use the registry:
+
+```csharp
+// Was: var eventType = Type.GetType(message.Type);
+if (!IntegrationEventTypeRegistry.TryGetType(message.Type, out var eventType) || eventType is null)
+{
+    logger.LogError(
+        "Unknown integration event type {Type} (message {MessageId}) — dead-lettering",
+        message.Type, message.Id);
+
+    // Force dead-letter: set RetryCount to MaxRetryCount so filter excludes it
+    // (Alternative: add a dedicated Status column — see §5.18.3)
+    while (message.RetryCount < OutboxProcessor<TContext>.MaxRetryCount)
+        message.MarkAsFailed($"Unknown type: {message.Type}");
+    continue;
+}
+```
+
+**Schema evolution rules** (from [Confluent schema evolution](https://developer.confluent.io/courses/microservices/schema-evolution)):
+
+| Change | Safe? | Notes |
+|---|---|---|
+| Add optional field with default | ✅ YES | Always safe — tolerant reader pattern |
+| Add required field (no default) | ❌ NO | Old consumers fail to deserialize |
+| Remove optional field | ⚠️ RISKY | New consumers may expect it |
+| Remove required field | ❌ NEVER | Hard break |
+| Rename field | ❌ NEVER | Use add-new + deprecate-old pattern |
+| Change field type | ❌ NEVER | Hard break |
+
+**Renaming an event type safely (3-step migration)**:
+
+1. Add new type name to registry alongside old name (both point to same CLR type): `["user.created.v2"] = typeof(UserCreatedIntegrationEvent), ["user.created.v1"] = typeof(UserCreatedIntegrationEvent),`
+2. Deploy. Producer starts writing `v2`. Consumers handle both keys. Old rows with `v1` still deserialize via the legacy alias.
+3. Wait for retention window + all `v1` rows processed. Remove `v1` key from registry.
+
+#### 5.18.3 Dead-Letter Strategy
+
+**Current YallaJo state**: dead-lettered messages (`RetryCount >= 10`) stay in the main table but are filtered out of dispatcher queries. They are queryable via SQL but there is no automated alerting.
+
+**Recommended enhancements** (listed in priority order):
+
+1. **Add explicit `Status` column** (`Pending` | `Processing` | `Processed` | `Failed` | `Dead`) — makes queries self-documenting:
+
+```csharp
+public sealed class OutboxMessage
+{
+    // ... existing fields ...
+    public OutboxMessageStatus Status { get; private set; } = OutboxMessageStatus.Pending;
+}
+
+public enum OutboxMessageStatus { Pending, Processing, Processed, Failed, Dead }
+```
+
+2. **Expose dead-letter health endpoint** — `/health/outbox-dead-letters` returns 200 if count is 0, 503 otherwise. Integrates with existing health-check infrastructure.
+
+3. **Add replay endpoint for ops** (guarded by `Permission.Ops.ReplayDeadLetter`):
+
+```csharp
+// YallaJo.Api/Endpoints/OpsEndpoints.cs
+ops.MapPost("/outbox/replay/{id:guid}", async (Guid id, ISender sender, CancellationToken ct) =>
+{
+    var result = await sender.Send(new ReplayDeadLetterCommand(id), ct);
+    return result.ToApiResult();
+})
+.WithMetadata(new MustHavePermissionAttribute(OpsFeatures.DeadLetter, AppAction.Replay))
+.WithName("ReplayDeadLetter");
+```
+
+**Replay strategy** (preferred: clone, don't mutate):
+
+```csharp
+public async Task<Result> Handle(ReplayDeadLetterCommand cmd, CancellationToken ct)
+{
+    var dead = await dbContext.OutboxMessages.FindAsync([cmd.MessageId], ct);
+    if (dead is null || dead.RetryCount < OutboxProcessor<T>.MaxRetryCount)
+        return Result.Failure(Error.NotFound("OutboxMessage.NotDead"), Outcome.NotFound);
+
+    // Clone → new row with fresh ID, RetryCount=0. Preserves dead-letter evidence.
+    dbContext.OutboxMessages.Add(new OutboxMessage {
+        Id = Guid.CreateVersion7(),
+        Type = dead.Type,
+        Content = dead.Content,
+        OccurredOnUtc = DateTime.UtcNow, // re-stamp so it's picked up on next poll
+        // ProcessedOnUtc, Error, RetryCount, LockedUntil all default
+    });
+    await dbContext.SaveChangesAsync(ct);
+    return Result.Success();
+}
+```
+
+4. **Ops dashboard queries** (add to documentation):
+
+```sql
+-- Dead-letter count per module (RUN THIS AS MONITORING)
+SELECT 'Security' AS Module, COUNT(*) AS DeadLetters, MIN(OccurredOnUtc) AS Oldest
+FROM security.OutboxMessages WHERE RetryCount >= 10
+UNION ALL
+SELECT 'Accounts', COUNT(*), MIN(OccurredOnUtc)
+FROM accounts.OutboxMessages WHERE RetryCount >= 10;
+
+-- Dead-letters with error details
+SELECT Id, Type, Error, RetryCount, OccurredOnUtc,
+       DATEDIFF(HOUR, OccurredOnUtc, GETUTCDATE()) AS AgeHours
+FROM security.OutboxMessages
+WHERE RetryCount >= 10
+ORDER BY OccurredOnUtc DESC;
+
+-- Processing backlog (should be near zero in healthy system)
+SELECT COUNT(*) AS Backlog
+FROM security.OutboxMessages
+WHERE ProcessedOnUtc IS NULL AND RetryCount < 10;
+
+-- Oldest unprocessed message age (processing lag)
+SELECT DATEDIFF(SECOND, MIN(OccurredOnUtc), GETUTCDATE()) AS LagSeconds
+FROM security.OutboxMessages
+WHERE ProcessedOnUtc IS NULL AND RetryCount < 10;
+```
+
+#### 5.18.4 Multi-Instance Polling Deep Dive
+
+YallaJo's current locking is optimistic — safe for multi-instance but not optimal. Industry comparison:
+
+| Framework | Locking mechanism | Polling interval |
+|---|---|---|
+| **YallaJo** | Optimistic via `LockedUntil` (5min) | 10 seconds fixed |
+| [Wolverine](https://wolverinefx.io/guide/durability) | Leadership election (1 instance owns outbox) | 5s default, per-queue override |
+| [MassTransit](https://masstransit.io/documentation/configuration/middleware/outbox) | `FOR UPDATE SKIP LOCKED` (PostgreSQL) | `QueryDelay` — 0 when active |
+| [NServiceBus](https://docs.particular.net/nservicebus/outbox/) | Depends on transport + persistence | Configurable per persistence |
+| [Milan Jovanović scaling](https://www.milanjovanovic.tech/blog/scaling-the-outbox-pattern) | `SKIP LOCKED` + parallel workers | Continuous (no sleep when active) |
+
+**Adaptive polling pattern** (optimization — poll faster when queue has work):
+
+```csharp
+// In CompositeOutboxProcessor.ExecuteAsync(), replace fixed Task.Delay with:
+var processedThisCycle = false;
+foreach (var processor in processors)
+{
+    try
+    {
+        var count = await processor.ProcessOutboxMessagesAsync(ct);
+        if (count > 0) processedThisCycle = true;
+    }
+    catch { /* log, continue */ }
+}
+
+// Adapt: short delay while draining, long delay when idle
+var delay = processedThisCycle
+    ? TimeSpan.FromMilliseconds(200)    // keep draining
+    : TimeSpan.FromSeconds(10);          // idle backoff (current default)
+
+await Task.Delay(delay, ct);
+```
+
+This requires `ProcessOutboxMessagesAsync` to return `int` (count of messages processed). Small, non-breaking change.
+
+#### 5.18.5 Observability — OpenTelemetry Metrics + Trace Propagation
+
+**Problem**: the outbox pattern creates a trace discontinuity. The HTTP request span ends after commit. The outbox processor picks up the row later in a separate span. Without explicit W3C trace context propagation, traces break at the outbox boundary.
+
+**Fix**: propagate `traceparent` through `OutboxMessage.TraceContext`.
+
+**Schema change**:
+
+```csharp
+public sealed class OutboxMessage
+{
+    // ... existing fields ...
+    public string? TraceContext { get; private set; } // W3C traceparent + baggage
+}
+```
+
+**Capture at write time**:
+
+```csharp
+using OpenTelemetry.Context.Propagation;
+
+public static class TraceContextHelpers
+{
+    public static string? Capture()
+    {
+        var activity = Activity.Current;
+        if (activity is null) return null;
+
+        var entries = new List<KeyValuePair<string, string>>();
+        Propagators.DefaultTextMapPropagator.Inject(
+            new PropagationContext(activity.Context, Baggage.Current),
+            entries,
+            (carrier, key, value) => carrier.Add(new(key, value)));
+
+        return JsonSerializer.Serialize(entries);
+    }
+
+    public static Activity? Restore(string? serialized, ActivitySource source, string spanName)
+    {
+        if (string.IsNullOrEmpty(serialized)) return source.StartActivity(spanName);
+
+        var entries = JsonSerializer.Deserialize<List<KeyValuePair<string, string>>>(serialized)!;
+        var parentContext = Propagators.DefaultTextMapPropagator.Extract(
+            default, entries,
+            (carrier, key) => carrier.Where(e => e.Key == key).Select(e => e.Value));
+
+        Baggage.Current = parentContext.Baggage;
+
+        return source.StartActivity(
+            spanName,
+            ActivityKind.Producer,
+            parentContext.ActivityContext);
+    }
+}
+```
+
+**Modify `OutboxMessage.Create`**:
+
+```csharp
+public static OutboxMessage Create(IIntegrationEvent integrationEvent)
+{
+    return new OutboxMessage
+    {
+        Id = Guid.CreateVersion7(),
+        Type = IntegrationEventTypeRegistry.GetName(integrationEvent.GetType()),
+        Content = JsonSerializer.Serialize(integrationEvent, integrationEvent.GetType()),
+        OccurredOnUtc = integrationEvent.OccurredOn,
+        TraceContext = TraceContextHelpers.Capture(),  // ← NEW
+        // ...
+    };
+}
+```
+
+**Modify `OutboxProcessor.ProcessOutboxMessagesAsync`** — restore context before dispatching:
+
+```csharp
+private static readonly ActivitySource _activitySource = new("YallaJo.Outbox");
+
+foreach (var message in messages)
+{
+    using var activity = TraceContextHelpers.Restore(
+        message.TraceContext, _activitySource, "outbox.dispatch");
+    activity?.SetTag("outbox.message.id", message.Id);
+    activity?.SetTag("outbox.message.type", message.Type);
+    activity?.SetTag("outbox.retry.count", message.RetryCount);
+
+    // ... existing deserialize + handler invocation ...
+
+    activity?.SetStatus(handlerFailures.Count == 0
+        ? ActivityStatusCode.Ok
+        : ActivityStatusCode.Error);
+}
+```
+
+**Metrics to export** (OpenTelemetry Metrics API):
+
+```csharp
+public static class OutboxMetrics
+{
+    private static readonly Meter _meter = new("YallaJo.Outbox", "1.0.0");
+
+    public static readonly Counter<long> ProcessedTotal =
+        _meter.CreateCounter<long>("outbox.processed.total",
+            description: "Total messages successfully dispatched");
+
+    public static readonly Counter<long> FailedTotal =
+        _meter.CreateCounter<long>("outbox.failed.total",
+            description: "Total messages that failed dispatch");
+
+    public static readonly Counter<long> DeadLetteredTotal =
+        _meter.CreateCounter<long>("outbox.dead_lettered.total",
+            description: "Total messages moved to dead-letter");
+
+    public static readonly Histogram<double> DispatchLatencyMs =
+        _meter.CreateHistogram<double>("outbox.dispatch.latency_ms",
+            description: "Time from message creation to successful dispatch");
+
+    public static readonly Histogram<int> RetryCountHist =
+        _meter.CreateHistogram<int>("outbox.retry.count",
+            description: "Retry count distribution");
+
+    public static readonly Counter<long> HandlerSuccessTotal =
+        _meter.CreateCounter<long>("outbox.handler.success.total",
+            description: "Per-handler success count (tag: handler_name)");
+
+    public static readonly Counter<long> HandlerFailureTotal =
+        _meter.CreateCounter<long>("outbox.handler.failure.total",
+            description: "Per-handler failure count (tag: handler_name)");
+}
+```
+
+**Recording metrics in `OutboxProcessor`**:
+
+```csharp
+// After successful dispatch:
+var latency = (DateTime.UtcNow - message.OccurredOnUtc).TotalMilliseconds;
+OutboxMetrics.ProcessedTotal.Add(1, new KeyValuePair<string, object?>("module", typeof(TContext).Name));
+OutboxMetrics.DispatchLatencyMs.Record(latency);
+OutboxMetrics.RetryCountHist.Record(message.RetryCount);
+
+// On handler success:
+OutboxMetrics.HandlerSuccessTotal.Add(1,
+    new KeyValuePair<string, object?>("handler", handler.GetType().Name));
+
+// On handler failure:
+OutboxMetrics.HandlerFailureTotal.Add(1,
+    new KeyValuePair<string, object?>("handler", handler.GetType().Name));
+
+// On dead-letter:
+OutboxMetrics.DeadLetteredTotal.Add(1,
+    new KeyValuePair<string, object?>("module", typeof(TContext).Name),
+    new KeyValuePair<string, object?>("type", message.Type));
+```
+
+**Alert thresholds** (from [asadali.dev](https://asadali.dev/blog/high-throughput-background-processing-aspnet-core-azure-service-bus-ef-core-outbox/)):
+
+| Alert | Threshold | Action |
+|---|---|---|
+| Dead-letter count > 0 for any module, sustained > 5 min | Critical | Page ops immediately |
+| Backlog size > N (baseline × 3) for > 10 min | Warning | Investigate handler slowdown |
+| `outbox.dispatch.latency_ms` p99 > SLA | Warning | Investigate DB or broker |
+| Zero messages processed for > 30 min during business hours | Critical | Processor crashed or broker down |
+
+#### 5.18.6 Payload Size Guidance
+
+| Concern | Limit | Notes |
+|---|---|---|
+| Practical outbox payload (industry consensus) | **< 64 KB** | Keeps hot rows in SQL Server in-row storage (under 8060-byte row limit with room for overhead) |
+| SQL Server 8060-byte row limit | NVARCHAR(MAX) values > 8000 bytes spill to LOB pages | Slower access, cannot be indexed |
+| PostgreSQL covered-index row limit | 2,712 bytes per B-tree tuple | Excludes large payloads from `INCLUDE` columns |
+| Azure Service Bus Standard | 256 KB | External broker if YallaJo later splits to microservices |
+| Kafka (recommended) | < 1 MB | External broker limit |
+
+**If a payload must exceed ~64 KB**: use the **Claim Check pattern** — store the large payload in blob storage, write only a reference token (URL or storage key) to the outbox row.
+
+```csharp
+// Conditional claim check (example sketch — not yet implemented in YallaJo):
+public static OutboxMessage Create(IIntegrationEvent evt, IBlobStore blobStore)
+{
+    var json = JsonSerializer.Serialize(evt, evt.GetType());
+
+    if (json.Length > 64 * 1024)
+    {
+        var blobKey = $"outbox/{Guid.NewGuid()}/{evt.GetType().Name}.json";
+        blobStore.UploadAsync(blobKey, json).GetAwaiter().GetResult();
+
+        return new OutboxMessage
+        {
+            Id = Guid.CreateVersion7(),
+            Type = IntegrationEventTypeRegistry.GetName(evt.GetType()),
+            Content = JsonSerializer.Serialize(new ClaimCheckReference(blobKey)),
+            // ...
+        };
+    }
+
+    // Small payload — inline as today
+    return new OutboxMessage { /* ... inline ... */ };
+}
+
+public sealed record ClaimCheckReference(string BlobKey);
+```
+
+Reference: [Microsoft Azure Architecture Center — Claim Check pattern](https://learn.microsoft.com/en-us/azure/architecture/patterns/claim-check).
+
+#### 5.18.7 Testing — Testcontainers + Respawn
+
+For integration tests that exercise the full publish-consume loop, use Testcontainers (SQL Server) + Respawn (fast DB reset between tests).
+
+```csharp
+public class IntegrationTestFixture : WebApplicationFactory<Program>, IAsyncLifetime
+{
+    private readonly MsSqlContainer _sql = new MsSqlBuilder()
+        .WithImage("mcr.microsoft.com/mssql/server:2022-latest")
+        .Build();
+
+    private Respawner _respawner = null!;
+    private SqlConnection _connection = null!;
+
+    public async Task InitializeAsync()
+    {
+        await _sql.StartAsync();
+
+        using var scope = Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<SecurityDbContext>();
+        await db.Database.MigrateAsync();
+
+        _connection = new SqlConnection(_sql.GetConnectionString());
+        await _connection.OpenAsync();
+
+        _respawner = await Respawner.CreateAsync(_connection, new RespawnerOptions
+        {
+            DbAdapter = DbAdapter.SqlServer,
+            TablesToIgnore = new Table[] { "__EFMigrationsHistory" },
+            SchemasToInclude = new[] { "security", "accounts", "auth" }
+            // Do NOT ignore OutboxMessages/InboxMessages — they must reset between tests
+        });
+    }
+
+    public async Task ResetAsync() => await _respawner.ResetAsync(_connection);
+    public async Task DisposeAsync() { await _connection.DisposeAsync(); await _sql.DisposeAsync(); }
+}
+
+// Test pattern:
+public class UserCreatedEndToEndTests(IntegrationTestFixture fixture) : IClassFixture<IntegrationTestFixture>
+{
+    [Fact]
+    public async Task Register_User_End_To_End_Creates_Profile_Via_Outbox()
+    {
+        await fixture.ResetAsync();
+
+        // Act — register user (writes OutboxMessage)
+        var response = await fixture.CreateClient().PostAsJsonAsync("/api/v1/auth/register",
+            new { Email = "a@b.com", Password = "Secret1!", FirstName = "John", LastName = "Doe" });
+        response.EnsureSuccessStatusCode();
+
+        // Outbox row was written
+        using var scope = fixture.Services.CreateScope();
+        var secDb = scope.ServiceProvider.GetRequiredService<SecurityDbContext>();
+        var outboxRow = await secDb.OutboxMessages.SingleAsync();
+        outboxRow.ProcessedOnUtc.Should().BeNull();
+
+        // Run processor manually
+        var processor = scope.ServiceProvider.GetRequiredService<IOutboxProcessor>();
+        await processor.ProcessOutboxMessagesAsync(default);
+
+        // Profile was created in Accounts module
+        var accDb = scope.ServiceProvider.GetRequiredService<AccountsDbContext>();
+        var profile = await accDb.Profiles.SingleAsync();
+        profile.FirstName.Should().Be("John");
+
+        // Inbox row was written (idempotency)
+        var inbox = await accDb.InboxMessages.SingleAsync();
+        inbox.Id.Should().Be(outboxRow.Id);
+
+        // Outbox row is now marked processed
+        await secDb.Entry(outboxRow).ReloadAsync();
+        outboxRow.ProcessedOnUtc.Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task Faulty_Handler_Retries_Then_Other_Handlers_Skip_Via_Inbox()
+    {
+        // Fault injection test — verify per-handler failure isolation
+        // Register a handler that fails 2 times then succeeds
+        // Verify: other handlers receive message once (idempotent skip on retry)
+    }
+}
+```
+
+References: [daninacan.com — Respawn with xUnit](https://daninacan.com/resetting-your-test-database-in-c-with-respawn/), [bakson.dev — EF Core + Respawn](https://bakson.dev/2023/08/17/ef-core-and-respawn.html).
+
+#### 5.18.8 Implementation Checklist (to adopt §5.18 hardening in YallaJo)
+
+Ordered by effort × impact:
+
+- [ ] **P0 — Retention**: add `OutboxCleanupBackgroundService` + per-module `IOutboxCleaner<TContext>` (§5.18.1). Default 30-day retention.
+- [ ] **P0 — Type registry**: add `IntegrationEventTypeRegistry` + migrate `OutboxMessage.Create` + `OutboxProcessor` (§5.18.2).
+- [ ] **P1 — Dead-letter health**: expose `/health/outbox-dead-letters` endpoint with threshold alerting.
+- [ ] **P1 — Dead-letter replay**: add `ReplayDeadLetterCommand` + ops endpoint (permission-guarded).
+- [ ] **P1 — OpenTelemetry metrics**: add `OutboxMetrics` class with 8 core metrics (§5.18.5).
+- [ ] **P2 — Trace context**: add `TraceContext` column to `OutboxMessage`, capture/restore via `TraceContextHelpers` (§5.18.5).
+- [ ] **P2 — Adaptive polling**: modify `CompositeOutboxProcessor` to adapt delay based on processed count (§5.18.4).
+- [ ] **P3 — Status column**: add explicit `Status` enum (`Pending`/`Processing`/`Processed`/`Failed`/`Dead`) — replaces current implicit-by-`RetryCount` scheme.
+- [ ] **P3 — Cleanup index**: add EF migration for `IX_OutboxMessages_Cleanup` filtered index (§5.18.1).
+- [ ] **P3 — Claim Check pattern**: implement for payloads > 64 KB (§5.18.6). Only needed when first encounter a large event.
+
+#### 5.18.9 References
+
+| # | Source | URL |
+|---|---|---|
+| 1 | Chris Richardson — Transactional Outbox canonical definition | [microservices.io/patterns/data/transactional-outbox.html](https://microservices.io/patterns/data/transactional-outbox.html) |
+| 2 | Milan Jovanović — Implementing the Outbox Pattern | [milanjovanovic.tech/blog/implementing-the-outbox-pattern](https://www.milanjovanovic.tech/blog/implementing-the-outbox-pattern) |
+| 3 | Milan Jovanović — Implementing the Inbox Pattern | [milanjovanovic.tech/blog/implementing-the-inbox-pattern-for-reliable-message-consumption](https://www.milanjovanovic.tech/blog/implementing-the-inbox-pattern-for-reliable-message-consumption) |
+| 4 | Milan Jovanović — Scaling the Outbox Pattern (2.8B msgs/day) | [milanjovanovic.tech/blog/scaling-the-outbox-pattern](https://www.milanjovanovic.tech/blog/scaling-the-outbox-pattern) |
+| 5 | Kamil Grzybek — The Outbox Pattern | [kamilgrzybek.com/design/the-outbox-pattern](https://www.kamilgrzybek.com/design/the-outbox-pattern/) |
+| 6 | Kamil Grzybek — modular-monolith-with-ddd repo | [github.com/kgrzybek/modular-monolith-with-ddd](https://github.com/kgrzybek/modular-monolith-with-ddd) |
+| 7 | Wolverine — Durable Messaging guide | [wolverinefx.io/guide/durability](https://wolverinefx.io/guide/durability) |
+| 8 | MassTransit — Outbox middleware configuration | [masstransit.io/documentation/configuration/middleware/outbox](https://masstransit.io/documentation/configuration/middleware/outbox) |
+| 9 | NServiceBus — Outbox pattern | [docs.particular.net/nservicebus/outbox](https://docs.particular.net/nservicebus/outbox/) |
+| 10 | Brighter — MSSQL Outbox | [brightercommand.gitbook.io — MsSqlOutbox](https://brightercommand.gitbook.io/paramore-brighter-documentation/outbox-and-inbox/mssqloutbox) |
+| 11 | João Antunes — OutboxKit introduction + OTel integration | [blog.codingmilitia.com — OutboxKit](https://blog.codingmilitia.com/2024/12/03/introducing-outboxkit/) |
+| 12 | Pat Helland — Life Beyond Distributed Transactions | [queue.acm.org/detail.cfm?id=3025012](https://queue.acm.org/detail.cfm?id=3025012) |
+| 13 | Microsoft — Claim Check pattern | [learn.microsoft.com/azure/architecture/patterns/claim-check](https://learn.microsoft.com/en-us/azure/architecture/patterns/claim-check) |
+| 14 | DevelopersVoice — Mastering Outbox Pattern in .NET | [developersvoice.com/blog/architecture/mastering-outbox-pattern-distributed-net](https://developersvoice.com/blog/architecture/mastering-outbox-pattern-distributed-net/) |
+| 15 | Asad Ali — Production outbox monitoring + alerting | [asadali.dev/blog/high-throughput-background-processing-aspnet-core-azure-service-bus-ef-core-outbox](https://asadali.dev/blog/high-throughput-background-processing-aspnet-core-azure-service-bus-ef-core-outbox/) |
+
 [↑ Back to Table of Contents](#table-of-contents)
 
 ---
