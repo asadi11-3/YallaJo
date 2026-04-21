@@ -2,6 +2,22 @@ namespace ContentPlaces.Application.Caching;
 
 public static class ContentPlacesCacheKeys
 {
+    // ── Place ─────────────────────────────────────────────────────────────────
+
+    public static string PlaceList(
+        int page,
+        int pageSize,
+        Guid? categoryId,
+        string? city,
+        string? country,
+        decimal? ratingMin,
+        decimal? ratingMax) =>
+        $"cp:places:p{page}:s{pageSize}:cat:{categoryId}:city:{city}:ctry:{country}:rmin:{ratingMin}:rmax:{ratingMax}";
+
+    public static string Place(Guid id) => $"cp:place:{id}";
+
+    public static string PlaceBySlug(string slug) => $"cp:place:slug:{slug.Trim().ToLowerInvariant()}";
+
     // ── Business ──────────────────────────────────────────────────────────────
 
     /// <summary>Paginated list of businesses for a given place. Varies by caller visibility.</summary>

@@ -1,6 +1,5 @@
-using ContentCore.Application.Caching;
-using ContentCore.Domain.Exceptions;
 using ContentCore.Domain.Repositories;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
@@ -27,7 +26,6 @@ public sealed class DeleteTagCommandHandler(
                         new Error("Tag.NotFound", $"Tag '{request.Id}' was not found."),
                         Outcome.NotFound);
             }
-           
 
             tagRepository.Remove(tag);
 
@@ -35,7 +33,7 @@ public sealed class DeleteTagCommandHandler(
             {
                 await unitOfWork.SaveChangesAsync(cancellationToken);
             }
-            catch (ContentCoreConcurrencyException)
+            catch (DbUpdateConcurrencyException)
             {
                 return Result.Failure(
                     new Error(

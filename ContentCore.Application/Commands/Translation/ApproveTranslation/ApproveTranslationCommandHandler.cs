@@ -1,5 +1,5 @@
-using ContentCore.Domain.Exceptions;
 using ContentCore.Domain.Repositories;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
@@ -28,14 +28,13 @@ public sealed class ApproveTranslationCommandHandler(
                    Outcome.NotFound);
             }
 
-           
             cached.Approve();
 
             try
             {
                 await unitOfWork.SaveChangesAsync(cancellationToken);
             }
-            catch (ContentCoreConcurrencyException)
+            catch (DbUpdateConcurrencyException)
             {
                 return Result.Failure(
                     new Error(
@@ -43,7 +42,7 @@ public sealed class ApproveTranslationCommandHandler(
                         "This record was modified by another user. Please refresh and try again."),
                     Outcome.Conflict);
             }
-   
+
             if (cached.EntityType is not null && cached.EntityId.HasValue)
             {
                 await cache.RemoveByTagAsync(

@@ -1,11 +1,11 @@
-using System;
-using System.Globalization;
 using ContentPlaces.Application.Interfaces;
 using ContentPlaces.Contracts.IntegrationEvents;
-using ContentPlaces.Domain.Exceptions;
 using ContentPlaces.Domain.Repositories;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using System;
+using System.Globalization;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 using ServiceItemEntity = ContentPlaces.Domain.Entities.ServiceItem;
@@ -44,7 +44,7 @@ public sealed class CreateServiceItemCommandHandler(
         {
             await unitOfWork.SaveChangesAsync(cancellationToken);
         }
-        catch (ContentPlaceConcurrencyException)
+        catch (DbUpdateConcurrencyException)
         {
             return Result<CreateServiceItemResult>.Failure(
                 new Error(

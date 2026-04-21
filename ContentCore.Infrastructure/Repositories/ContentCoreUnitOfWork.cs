@@ -1,4 +1,3 @@
-using ContentCore.Domain.Exceptions;
 using ContentCore.Domain.Repositories;
 using ContentCore.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -15,9 +14,10 @@ namespace ContentCore.Infrastructure.Repositories
             {
                 return await unitOfWork.SaveChangesAsync(ct);
             }
-            catch (DbUpdateConcurrencyException)
+            catch (DbUpdateConcurrencyException ex)
             {
-                throw new ContentCoreConcurrencyException();
+                throw new DbUpdateConcurrencyException(
+                "A concurrency conflict occurred. Please refresh and try again.", ex);
             }
         }
     }

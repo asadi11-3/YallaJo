@@ -1,5 +1,5 @@
-using ContentCore.Domain.Exceptions;
 using ContentCore.Domain.Repositories;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
@@ -46,7 +46,7 @@ public sealed class DeleteCategoryCommandHandler(
             {
                 await unitOfWork.SaveChangesAsync(ct);
             }
-            catch (ContentCoreConcurrencyException)
+            catch (DbUpdateConcurrencyException)
             {
                 return Result.Failure(
                     new Error(

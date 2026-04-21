@@ -1,6 +1,5 @@
-using ContentCore.Application.Caching;
-using ContentCore.Domain.Exceptions;
 using ContentCore.Domain.Repositories;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
@@ -42,7 +41,7 @@ public sealed class UpdateSpecializationCommandHandler(
             {
                 await unitOfWork.SaveChangesAsync(cancellationToken);
             }
-            catch (ContentCoreConcurrencyException)
+            catch (DbUpdateConcurrencyException)
             {
                 return Result<UpdateSpecializationResult>.Conflict(
                     new Error(

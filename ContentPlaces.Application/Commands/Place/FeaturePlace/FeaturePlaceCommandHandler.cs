@@ -1,6 +1,7 @@
 using ContentPlaces.Application.Interfaces;
-using ContentPlaces.Domain.Exceptions;
 using ContentPlaces.Domain.Repositories;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
@@ -10,6 +11,7 @@ namespace ContentPlaces.Application.Commands.Place.FeaturePlace;
 public sealed class FeaturePlaceCommandHandler(
     IPlaceRepository placeRepository,
     IContentPlacesUnitOfWork unitOfWork,
+    HybridCache cache,
     ILogger<FeaturePlaceCommandHandler> logger)
     : ICommandHandler<FeaturePlaceCommand>
 {
@@ -31,7 +33,7 @@ public sealed class FeaturePlaceCommandHandler(
             {
                 await unitOfWork.SaveChangesAsync(cancellationToken);
             }
-            catch (ContentPlaceConcurrencyException)
+            catch (DbUpdateConcurrencyException)
             {
                 return Result.Failure(
                     new Error(
@@ -39,6 +41,9 @@ public sealed class FeaturePlaceCommandHandler(
                         "This record was modified by another user. Please refresh and try again."),
                     Outcome.Conflict);
             }
+
+            await cache.RemoveByTagAsync($"place:{request.PlaceId}", cancellationToken);
+            await cache.RemoveByTagAsync("places", cancellationToken);
 
             logger.LogInformation(
                 "Place {PlaceId} featured={IsFeatured}", request.PlaceId, request.IsFeatured);

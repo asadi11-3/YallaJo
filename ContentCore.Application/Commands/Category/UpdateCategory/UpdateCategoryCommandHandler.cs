@@ -1,4 +1,3 @@
-using ContentCore.Domain.Exceptions;
 using ContentCore.Domain.Repositories;
 using ContentCore.Domain.Services;
 using Microsoft.EntityFrameworkCore;
@@ -152,7 +151,6 @@ public sealed class UpdateCategoryCommandHandler(
                 Outcome.NotFound);
         }
 
-       
         if (await hierarchyService.IsAncestorAsync(
                 request.ParentCategoryId.Value,
                 category.Id,
@@ -216,7 +214,7 @@ public sealed class UpdateCategoryCommandHandler(
             await unitOfWork.SaveChangesAsync(cancellationToken);
             return null;
         }
-        catch (ContentCoreConcurrencyException)
+        catch (DbUpdateConcurrencyException)
         {
             return Result<UpdateCategoryResult>.Conflict(
                 new Error(

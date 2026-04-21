@@ -1,10 +1,13 @@
+using ContentPlaces.Contracts.IntegrationEvents;
 using ContentPlaces.Domain.Events;
 using ContentPlaces.Domain.Repositories;
+using ContentPlaces.Infrastructure.Persistence;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Application.Abstractions.Translation;
+using YallaJo.SharedKernel.Infrastructure.Outbox;
 
 namespace ContentPlaces.Infrastructure.EventHandlers;
 
@@ -15,6 +18,7 @@ namespace ContentPlaces.Infrastructure.EventHandlers;
 public sealed class PlaceCreatedDomainEventHandler(
     IPlaceRepository placeRepository,
     IEntityTranslationOrchestrator orchestrator,
+    ContentPlacesDbContext dbContext,
     ILogger<PlaceCreatedDomainEventHandler> logger)
     : INotificationHandler<DomainEventNotification<PlaceCreatedDomainEvent>>
 {
@@ -74,6 +78,9 @@ public sealed class PlaceCreatedDomainEventHandler(
 
             addedCount++;
         }
+
+        dbContext.OutboxMessages.Add(OutboxMessage.Create(
+            new PlaceCreatedIntegrationEvent(evt.PlaceId, evt.Name, evt.Slug)));
 
         if (addedCount > 0)
         {

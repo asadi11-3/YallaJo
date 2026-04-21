@@ -1,13 +1,13 @@
 using ContentPlaces.Application.Interfaces;
-using ContentPlaces.Domain.Exceptions;
 using ContentPlaces.Domain.Repositories;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
-using PlaceDayOfWeek = ContentPlaces.Domain.Enums.DayOfWeek;
 using BusinessHoursEntity = ContentPlaces.Domain.Entities.BusinessHours;
+using PlaceDayOfWeek = ContentPlaces.Domain.Enums.DayOfWeek;
 
 namespace ContentPlaces.Application.Commands.BusinessHours.SetBusinessHours;
 
@@ -69,7 +69,7 @@ public sealed class SetBusinessHoursCommandHandler(
             {
                 await unitOfWork.SaveChangesAsync(cancellationToken);
             }
-            catch (ContentPlacesConcurrencyException ex)
+            catch (DbUpdateConcurrencyException ex)
             {
                 logger.LogWarning(ex, "Concurrency conflict setting hours for business '{BusinessId}'.", request.BusinessId);
                 return Result.Failure(

@@ -9,4 +9,6 @@ namespace ContentPlaces.Infrastructure.Repositories;
 internal sealed class PlaceRepository(ContentPlacesDbContext context)
     : EfRepository<Place, Guid>(context), IPlaceRepository
 {
+    public Task<bool> HasActiveLinkedBusinessesAsync(Guid placeId, CancellationToken ct = default) =>
+        context.PlaceBusinesses.AnyAsync(pb => pb.PlaceId == placeId, ct);
 }
