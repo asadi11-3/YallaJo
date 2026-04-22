@@ -8,6 +8,7 @@ using ContentPlaces.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using YallaJo.SharedKernel.Infrastructure.Outbox;
 using YallaJo.SharedKernel.Infrastructure.BackgroundJobs;
 using YallaJo.SharedKernel.Application.Abstractions.Translation;
 using YallaJo.SharedKernel.Infrastructure.Data;
@@ -47,6 +48,7 @@ public static class DependencyInjection
         services.AddScoped<IModuleDbInitializer, ContentPlacesDbInitializer>();
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
         services.AddScoped<IOutboxProcessor, OutboxProcessor<ContentPlacesDbContext>>();
+        services.AddScoped<IOutboxCleaner, OutboxCleaner<ContentPlacesDbContext>>();
         services.AddScoped<IBusinessRepository, BusinessRepository>();
 
         // ── Translation Orchestrator (shared from ContentCore via DI) ─────────

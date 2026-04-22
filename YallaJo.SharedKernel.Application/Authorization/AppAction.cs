@@ -18,4 +18,5 @@ public static class AppAction
     public const string Reject     = nameof(Reject);
     public const string Suspend    = nameof(Suspend);
     public const string Reinstate  = nameof(Reinstate);
+    public const string Replay     = nameof(Replay);
 }

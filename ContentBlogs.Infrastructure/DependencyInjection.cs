@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using YallaJo.SharedKernel.Infrastructure.Data;
+using YallaJo.SharedKernel.Infrastructure.Outbox;
 using YallaJo.SharedKernel.Infrastructure.BackgroundJobs;
 
 namespace ContentBlogs.Infrastructure;
@@ -33,6 +34,7 @@ public static class DependencyInjection
         services.AddScoped<IModuleDbInitializer, ContentBlogsDbInitializer>();
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
         services.AddScoped<IOutboxProcessor, OutboxProcessor<ContentBlogsDbContext>>();
+        services.AddScoped<IOutboxCleaner, OutboxCleaner<ContentBlogsDbContext>>();
 
         return services;
     }

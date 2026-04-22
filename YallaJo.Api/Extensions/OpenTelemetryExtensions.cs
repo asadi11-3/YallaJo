@@ -43,7 +43,8 @@ public static class OpenTelemetryExtensions
                     })
                     .AddHttpClientInstrumentation()
                     .AddEntityFrameworkCoreInstrumentation()
-                    .AddSource("MediatR"); // Custom ActivitySource for MediatR pipeline
+                    .AddSource("MediatR")    // Custom ActivitySource for MediatR pipeline
+                    .AddSource("YallaJo.Outbox"); // Outbox dispatch spans
 
                 if (!string.IsNullOrEmpty(otlpEndpoint))
                 {
@@ -59,7 +60,8 @@ public static class OpenTelemetryExtensions
             {
                 metrics
                     .AddAspNetCoreInstrumentation()
-                    .AddHttpClientInstrumentation();
+                    .AddHttpClientInstrumentation()
+                    .AddMeter("YallaJo.Outbox"); // Outbox metrics
 
                 if (!string.IsNullOrEmpty(otlpEndpoint))
                 {

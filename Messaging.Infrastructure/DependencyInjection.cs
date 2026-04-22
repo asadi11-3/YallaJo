@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using YallaJo.SharedKernel.Infrastructure.Data;
+using YallaJo.SharedKernel.Infrastructure.Outbox;
 using YallaJo.SharedKernel.Infrastructure.BackgroundJobs;
 
 namespace Messaging.Infrastructure;
@@ -31,6 +32,7 @@ public static class DependencyInjection
         services.AddScoped<IModuleDbInitializer, MessagingDbInitializer>();
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
         services.AddScoped<IOutboxProcessor, OutboxProcessor<MessagingDbContext>>();
+        services.AddScoped<IOutboxCleaner, OutboxCleaner<MessagingDbContext>>();
 
         return services;
     }

@@ -1,7 +1,7 @@
 # YallaJo — Agent Context & Build Guide
 
-> **Version**: 2.0 · **Last Updated**: 2026-04-22
-> **Build State**: 0 errors · 135 tests pass · Authorization refactored to `IPermissionCatalog` (see `authorization-refactor-plan.md`).
+> **Version**: 2.1 · **Last Updated**: 2026-04-22
+> **Build State**: 0 errors · 171 tests pass · Outbox/Inbox production hardening complete (all 5 PRs — see `outbox-hardening-implementation-plan.md`).
 
 > **Purpose**: The single source of truth for any AI agent working on YallaJo.
 > **Read every section before writing code.** Every section is a rule you must follow.
@@ -1310,6 +1310,182 @@ History preserved from previous sessions. Add entries immediately after completi
 - [ ] Integration tests with Testcontainers + Respawn (per module)
 - [ ] Docker + Aspire setup
 - [ ] Cloudinary swap for `IFileStorageService` (when ready for production files)
+- [ ] Run remaining EF migrations manually (Finance, Messaging, Security, Social, Tracking for AddOutboxTraceContext; all 14 for AddOutboxStatusColumn)
+
+---
+
+## §N. Outbox/Inbox Production Hardening — Session 2026-04-22
+
+**Plan source**: `Agents/outbox-hardening-implementation-plan.md`
+**Status**: All 5 PRs implemented. 0 build errors. 171 tests pass (was 135).
+**No commits made** (user preference).
+
+### PR 1 — Outbox Retention Cleanup ✅
+
+**New files**:
+- `SharedKernel.Infrastructure/Outbox/OutboxCleanupOptions.cs` — config POCO (Enabled, RetentionPeriod, CleanupInterval, BatchSize)
+- `SharedKernel.Infrastructure/Outbox/IOutboxCleaner.cs` — per-module interface (also has `CountDeadLetteredAsync`, `ListDeadLetteredAsync`, `ReplayDeadLetterAsync` added in PR 3)
+- `SharedKernel.Infrastructure/Outbox/OutboxCleaner<TContext>.cs` — EF impl; uses `ExecuteDeleteAsync` for SQL Server/Postgres, falls back to load-and-remove for InMemory
+- `SharedKernel.Infrastructure/BackgroundJobs/OutboxCleanupBackgroundService.cs` — hosted service, ticks every `CleanupInterval`, skips dead-lettered rows
+- `tests/SharedKernel.Tests.Unit/OutboxCleanerTests.cs` — 6 tests
+
+**Modified files**:
+- All 14 `{Module}.Infrastructure/DependencyInjection.cs` — added `services.AddScoped<IOutboxCleaner, OutboxCleaner<{Module}DbContext>>()`
+- `SharedKernel.Infrastructure/DependencyInjection.cs` — registers `OutboxCleanupBackgroundService` + binds `OutboxCleanupOptions`
+- `SharedKernel.Infrastructure/BackgroundJobs/OutboxProcessor.cs` — `MaxRetryCount` promoted to `public const`
+- `SharedKernel.Infrastructure/Outbox/OutboxMessage.cs` — added `MarkAsProcessedAt(DateTime)` for test-friendly state setting
+- `YallaJo.Api/appsettings.json` + `appsettings.Development.json` — `OutboxCleanup` section
+- `YallaJo.Api/Program.cs` — passes `builder.Configuration` to `AddSharedKernelInfrastructure`
+
+**Key gotchas**:
+- `InMemoryDatabaseRoot` must be shared across all scopes in tests or each scope sees empty DB
+- `ExecuteDeleteAsync` is NOT supported by InMemory provider — detect by `db.Database.ProviderName`
+
+---
+
+### PR 2 — Integration Event Type Registry ✅
+
+**New files**:
+- `SharedKernel.Infrastructure/Abstractions/Integration/IntegrationEventTypeRegistry.cs` — maps 13 stable logical names (e.g. `"security.user.created.v1"`) to CLR types; throws on unregistered publish attempts
+- `tests/SharedKernel.Tests.Unit/IntegrationEventTypeRegistryTests.cs` — 5 tests (GetName, TryGetType, roundtrip, unregistered throws)
+
+**Modified files**:
+- `SharedKernel.Infrastructure/YallaJo.SharedKernel.Infrastructure.csproj` — added `<ProjectReference>` to `Auth.Contracts`, `ContentCore.Contracts`, `ContentPlaces.Contracts`, `Security.Contracts`
+- `SharedKernel.Infrastructure/Outbox/OutboxMessage.cs` — `Create()` now calls `IntegrationEventTypeRegistry.GetName()` instead of `AssemblyQualifiedName`
+- `SharedKernel.Infrastructure/BackgroundJobs/OutboxProcessor.cs` — dual-read: tries registry first, falls back to `Type.GetType()` for legacy AQN rows
+- `tests/SharedKernel.Tests.Unit/OutboxProcessorTests.cs` — `SeedOutboxMessageAsync` now bypasses `Create()` via reflection (stores AQN) to exercise dual-read fallback; added `LegacyAssemblyQualifiedNameRow_ShouldProcessViaFallbackPath` test
+
+**Key gotchas**:
+- Tests that use `OutboxMessage.Create()` with stub events not in the registry will throw. Use `Activator.CreateInstance(typeof(OutboxMessage), nonPublic: true)` + reflection to set properties directly in tests.
+- 13 events across 4 modules. Security (5), Auth (2), ContentCore (1), ContentPlaces (5).
+
+**Registered events (short keys)**:
+```
+security.user.created.v1, security.user.email-verified.v1,
+security.user.password-changed.v1, security.user.password-reset.v1,
+security.user.phone-updated.v1, auth.user.logged-in.v1,
+auth.session.revoked.v1, content-core.language.activated.v1,
+content-places.place.created.v1, content-places.place.updated.v1,
+content-places.place.deleted.v1, content-places.service-item.created.v1,
+content-places.service-item.deleted.v1
+```
+
+---
+
+### PR 3 — Dead-Letter Ops + OpenTelemetry Metrics ✅
+
+**New files**:
+- `SharedKernel.Infrastructure/Outbox/OutboxMetrics.cs` — 8 OTel instruments (Meter: `YallaJo.Outbox`)
+- `SharedKernel.Infrastructure/Outbox/OutboxDeadLetterDto.cs` — read model for dead-letter ops
+- `SharedKernel.Infrastructure/Handlers/Outbox/ReplayDeadLetterCommandHandler.cs` — clones dead-lettered row, zeroes RetryCount, preserves original
+- `SharedKernel.Infrastructure/Handlers/Outbox/ListDeadLettersQueryHandler.cs` — aggregates dead-letters across all modules
+- `SharedKernel.Application/Abstractions/Outbox/ReplayDeadLetterCommand.cs`
+- `SharedKernel.Application/Abstractions/Outbox/ListDeadLettersQuery.cs` + result records
+- `SharedKernel.Application/Authorization/OpsFeatures.cs` — `OpsFeatures.Outbox` constant
+- `YallaJo.Api/HealthChecks/OutboxDeadLetterHealthCheck.cs` — returns Degraded if any module has dead-lettered messages
+- `YallaJo.Api/Endpoints/OpsEndpoints.cs` — `GET /api/v1/ops/outbox/dead-letters`, `POST /api/v1/ops/outbox/dead-letters/{module}/{id}/replay`
+
+**Modified files**:
+- `SharedKernel.Application/Authorization/AppAction.cs` — added `Replay` constant
+- `SharedKernel.Infrastructure/BackgroundJobs/OutboxProcessor.cs` — records 6 OTel metrics
+- `SharedKernel.Infrastructure/BackgroundJobs/OutboxCleanupBackgroundService.cs` — records `CleanupDeletedTotal`
+- `SharedKernel.Infrastructure/Outbox/IOutboxCleaner.cs` — added `CountDeadLetteredAsync`, `ListDeadLetteredAsync`, `ReplayDeadLetterAsync`
+- `SharedKernel.Infrastructure/Outbox/OutboxCleaner.cs` — implements new interface methods
+- `SharedKernel.Infrastructure/Outbox/OutboxMessage.cs` — added `CreateReplayCopy()`
+- `YallaJo.Api/Extensions/HealthCheckExtensions.cs` — registers `OutboxDeadLetterHealthCheck`
+- `YallaJo.Api/Extensions/OpenTelemetryExtensions.cs` — `.AddMeter("YallaJo.Outbox")`, `.AddSource("YallaJo.Outbox")`
+- `YallaJo.Api/Program.cs` — `app.MapOpsEndpoints()`
+
+**OTel metrics emitted** (all tagged with `module` and/or `type`/`handler`):
+- `outbox.processed.total`, `outbox.failed.total`, `outbox.dead_lettered.total`
+- `outbox.dispatch.latency_ms`, `outbox.retry.count`
+- `outbox.handler.success.total`, `outbox.handler.failure.total`
+- `outbox.cleanup.deleted.total`
+
+**Ops endpoints** (both require `Permission.Outbox.{Read|Replay}`):
+- `GET  /api/v1/ops/outbox/dead-letters?module=&limit=50`
+- `POST /api/v1/ops/outbox/dead-letters/{module}/{id}/replay`
+
+---
+
+### PR 4 — W3C Trace Context + Adaptive Polling ✅
+
+**New files**:
+- `SharedKernel.Infrastructure/Outbox/TraceContextHelpers.cs` — BCL-only (no OTel API dep); `Capture()` stores `Activity.Id` + `TraceStateString` as JSON; `TryRestoreContext()` parses back to `ActivityContext`
+- `SharedKernel.Infrastructure/BackgroundJobs/OutboxActivitySource.cs` — `ActivitySource("YallaJo.Outbox", "1.0.0")`
+
+**Modified files**:
+- `SharedKernel.Infrastructure/Outbox/OutboxMessage.cs` — added `TraceContext` property; `Create()` calls `TraceContextHelpers.Capture()`
+- `SharedKernel.Infrastructure/BackgroundJobs/OutboxProcessor.cs` — restores trace context before each message; sets activity tags + status; returns `int` (messages processed count)
+- `SharedKernel.Infrastructure/BackgroundJobs/IOutboxProcessor.cs` — `Task<int>` (was `Task`)
+- `SharedKernel.Infrastructure/BackgroundJobs/CompositeOutboxProcessor.cs` — **adaptive polling**: 200 ms drain delay when any processor returned > 0, 10 s idle delay when all returned 0
+- All 14 `OutboxMessageConfiguration.cs` — added `builder.Property(o => o.TraceContext).IsRequired(false).HasMaxLength(500)`
+
+**EF migrations** (`AddOutboxTraceContext`): Created for Accounts, Analytics, Auth, Booking, ContentBlogs, ContentCore, ContentPlaces, ContentSeo, ContentTours. **Still needed (manual)**: Finance, Messaging, Security, Social, Tracking.
+
+**Migration command template**:
+```
+dotnet ef migrations add AddOutboxTraceContext \
+  --project {Module}.Infrastructure \
+  --startup-project YallaJo.Api \
+  --context {Module}DbContext
+```
+
+---
+
+### PR 5 — Explicit Status Column ✅
+
+**New files**:
+- `SharedKernel.Infrastructure/Outbox/OutboxMessageStatus.cs` — `enum { Pending=0, Processing=1, Processed=2, Failed=3, Dead=4 }`
+- `SharedKernel.Infrastructure/Outbox/OutboxConstants.cs` — `MaxRetryCount = 10` (single source of truth; `OutboxProcessor<T>.MaxRetryCount` delegates to this)
+
+**Modified files**:
+- `SharedKernel.Infrastructure/Outbox/OutboxMessage.cs` — added `Status` property; `Lock()`, `MarkAsProcessed()`, `MarkAsProcessedAt()`, `MarkAsFailed()`, `Create()`, `CreateReplayCopy()` all set `Status` correctly
+- All 14 `OutboxMessageConfiguration.cs` — added `builder.Property(o => o.Status).IsRequired().HasDefaultValue(OutboxMessageStatus.Pending).HasConversion<int>()`
+
+**EF migrations** (`AddOutboxStatusColumn`): **ALL 14 still needed (manual)**.
+
+**Migration command template**:
+```
+dotnet ef migrations add AddOutboxStatusColumn \
+  --project {Module}.Infrastructure \
+  --startup-project YallaJo.Api \
+  --context {Module}DbContext
+```
+
+**Key gotcha**: Use `HasDefaultValue(OutboxMessageStatus.Pending)` NOT `HasDefaultValue(0)`. EF validates that the default value type matches the CLR property type after conversion — `int` vs `OutboxMessageStatus` mismatch causes `DbContext.get_ContextServices()` to throw in tests using the InMemory provider.
+
+---
+
+### Remaining Manual Steps
+
+Run these commands to complete the database schema:
+
+```powershell
+# ── AddOutboxTraceContext (5 remaining) ──────────────────────────────────────
+$root = "C:\Users\admin1\source\repos\YallaJo"; $api = "$root\YallaJo.Api"
+foreach ($m in @("Finance","Messaging","Security","Social","Tracking")) {
+  dotnet ef migrations add AddOutboxTraceContext `
+    --project "$root\$m.Infrastructure" `
+    --startup-project $api `
+    --context "${m}DbContext"
+}
+
+# ── AddOutboxStatusColumn (all 14) ───────────────────────────────────────────
+foreach ($m in @("Accounts","Analytics","Auth","Booking","ContentBlogs","ContentCore",
+                  "ContentPlaces","ContentSeo","ContentTours","Finance","Messaging",
+                  "Security","Social","Tracking")) {
+  dotnet ef migrations add AddOutboxStatusColumn `
+    --project "$root\$m.Infrastructure" `
+    --startup-project $api `
+    --context "${m}DbContext"
+}
+
+# ── Apply all migrations ─────────────────────────────────────────────────────
+dotnet ef database update --project "$root\{Module}.Infrastructure" `
+  --startup-project $api --context {Module}DbContext
+# (repeat per module or run via the API startup auto-migration if configured)
+```
 
 ---
 

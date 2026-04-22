@@ -50,6 +50,7 @@ using Tracking.Application;
 using Tracking.Infrastructure;
 using Tracking.Presentation;
 using YallaJo.SharedKernel.Presentation.Authorization;
+using YallaJo.Api.Endpoints;
 using YallaJo.Api.ExceptionHandlers;
 using YallaJo.Api.Extensions;
 using YallaJo.Api.Middleware;
@@ -117,7 +118,7 @@ builder.Services.AddTrackingApplication();
 builder.Services.AddTrackingInfrastructure(builder.Configuration);
 
 // ── Shared cross-cutting: behaviors, clock, domain event dispatcher ───────
-builder.Services.AddSharedKernelInfrastructure();
+builder.Services.AddSharedKernelInfrastructure(builder.Configuration);
 builder.Services.AddDataSeeding();
 
 // ── HTTP Context services ────────────────────────────────────────────────
@@ -279,6 +280,9 @@ app.MapFinanceEndpoints();
 app.MapMessagingEndpoints();
 app.MapSocialEndpoints();
 app.MapTrackingEndpoints();
+
+// ── Ops endpoints ─────────────────────────────────────────────────────────
+app.MapOpsEndpoints();
 
 // ── Infrastructure endpoints ──────────────────────────────────────────────
 app.MapGet("/", () => Results.Ok(new

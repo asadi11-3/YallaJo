@@ -7,6 +7,7 @@ using Auth.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using YallaJo.SharedKernel.Infrastructure.Outbox;
 using YallaJo.SharedKernel.Infrastructure.BackgroundJobs;
 using Auth.Infrastructure.BackgroundJobs;
 using YallaJo.SharedKernel.Infrastructure.Data;
@@ -67,6 +68,7 @@ public static class DependencyInjection
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
 
         services.AddScoped<IOutboxProcessor, OutboxProcessor<AuthDbContext>>();
+        services.AddScoped<IOutboxCleaner, OutboxCleaner<AuthDbContext>>();
         services.AddHostedService<AuthCleanupService>();
 
         // Distributed cache — idempotent, safe if the host already registered it

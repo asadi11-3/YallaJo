@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using System.Text.Json;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Event;
+using YallaJo.SharedKernel.Infrastructure.Abstractions.Integration;
 using YallaJo.SharedKernel.Infrastructure.Outbox;
 
 namespace YallaJo.SharedKernel.Infrastructure.BackgroundJobs
@@ -41,11 +42,12 @@ namespace YallaJo.SharedKernel.Infrastructure.BackgroundJobs
         ILogger<OutboxProcessor<TContext>> logger) : IOutboxProcessor
         where TContext : DbContext
     {
-        internal const int MaxRetryCount = 10;
+        /// <summary>Delegates to <see cref="OutboxConstants.MaxRetryCount"/> — single source of truth.</summary>
+        public const int MaxRetryCount = OutboxConstants.MaxRetryCount;
         private const int BatchSize = 20;
         private static readonly TimeSpan LockDuration = TimeSpan.FromMinutes(5);
 
-        public async Task ProcessOutboxMessagesAsync(CancellationToken ct = default)
+        public async Task<int> ProcessOutboxMessagesAsync(CancellationToken ct = default)
         {
             using var scope = serviceProvider.CreateScope();
             var dbContext = scope.ServiceProvider.GetRequiredService<TContext>();
@@ -60,7 +62,7 @@ namespace YallaJo.SharedKernel.Infrastructure.BackgroundJobs
                 .Take(BatchSize)
                 .ToListAsync(ct);
 
-            if (messages.Count == 0) return;
+            if (messages.Count == 0) return 0;
 
             var lockUntil = now.Add(LockDuration);
             foreach (var msg in messages)
@@ -76,13 +78,43 @@ namespace YallaJo.SharedKernel.Infrastructure.BackgroundJobs
             {
                 if (ct.IsCancellationRequested) break;
 
+                // Restore W3C trace context so this dispatch span is a child of the original request.
+                var parentContext = TraceContextHelpers.TryRestoreContext(message.TraceContext);
+                using var activity = parentContext.HasValue
+                    ? OutboxActivitySource.Instance.StartActivity(
+                        "outbox.dispatch", System.Diagnostics.ActivityKind.Consumer, parentContext.Value)
+                    : OutboxActivitySource.Instance.StartActivity(
+                        "outbox.dispatch", System.Diagnostics.ActivityKind.Consumer);
+
+                activity?.SetTag("outbox.message.id", message.Id);
+                activity?.SetTag("outbox.message.type", message.Type);
+                activity?.SetTag("outbox.retry.count", message.RetryCount);
+                activity?.SetTag("outbox.module", typeof(TContext).Name);
+
                 try
                 {
-                    var eventType = Type.GetType(message.Type);
+                    // Path 1: new-format — short name in registry
+                    Type? eventType = null;
+                    if (!IntegrationEventTypeRegistry.TryGetType(message.Type, out eventType))
+                    {
+                        // Path 2: old-format — legacy AssemblyQualifiedName rows written before PR 2
+                        eventType = Type.GetType(message.Type);
+                    }
+
                     if (eventType is null)
                     {
-                        logger.LogWarning("Unknown event type: {Type}", message.Type);
-                        message.MarkAsFailed($"Unknown event type: {message.Type}");
+                        logger.LogError(
+                            "Unknown integration event type '{Type}' (message {MessageId}) — not in registry " +
+                            "and AssemblyQualifiedName resolution failed. Dead-lettering.",
+                            message.Type, message.Id);
+
+                        // Force dead-letter by bumping RetryCount to MaxRetryCount
+                        while (message.RetryCount < MaxRetryCount)
+                            message.MarkAsFailed($"Unknown type: {message.Type}");
+
+                        OutboxMetrics.DeadLetteredTotal.Add(1,
+                            new KeyValuePair<string, object?>("module", typeof(TContext).Name),
+                            new KeyValuePair<string, object?>("type", message.Type));
                         continue;
                     }
 
@@ -118,6 +150,9 @@ namespace YallaJo.SharedKernel.Infrastructure.BackgroundJobs
                     {
                         if (ct.IsCancellationRequested) break;
 
+                        var handlerName = handler?.GetType().Name ?? "Unknown";
+                        var handlerSucceeded = true;
+
                         try
                         {
                             var task = (Task?)handlerType
@@ -131,6 +166,8 @@ namespace YallaJo.SharedKernel.Infrastructure.BackgroundJobs
                         }
                         catch (Exception handlerEx)
                         {
+                            handlerSucceeded = false;
+
                             // Unwrap TargetInvocationException from reflected invocation.
                             var actual = handlerEx is System.Reflection.TargetInvocationException tie && tie.InnerException is not null
                                 ? tie.InnerException
@@ -142,6 +179,15 @@ namespace YallaJo.SharedKernel.Infrastructure.BackgroundJobs
 
                             handlerFailures.Add(
                                 $"{handler.GetType().Name}: {actual.GetType().Name} {actual.Message}");
+
+                            OutboxMetrics.HandlerFailureTotal.Add(1,
+                                new KeyValuePair<string, object?>("handler", handlerName));
+                        }
+
+                        if (handlerSucceeded)
+                        {
+                            OutboxMetrics.HandlerSuccessTotal.Add(1,
+                                new KeyValuePair<string, object?>("handler", handlerName));
                         }
                     }
 
@@ -150,10 +196,34 @@ namespace YallaJo.SharedKernel.Infrastructure.BackgroundJobs
                         var aggregate = string.Join(" | ", handlerFailures);
                         if (aggregate.Length > 4000) aggregate = aggregate[..4000];
                         message.MarkAsFailed(aggregate);
+
+                        OutboxMetrics.FailedTotal.Add(1,
+                            new KeyValuePair<string, object?>("module", typeof(TContext).Name));
+
+                        // Check if this push hit the dead-letter ceiling
+                        if (message.RetryCount >= MaxRetryCount)
+                        {
+                            OutboxMetrics.DeadLetteredTotal.Add(1,
+                                new KeyValuePair<string, object?>("module", typeof(TContext).Name),
+                                new KeyValuePair<string, object?>("type", message.Type));
+                        }
+
+                        activity?.SetStatus(System.Diagnostics.ActivityStatusCode.Error,
+                            $"{handlerFailures.Count} handler(s) failed");
+                        activity?.SetTag("outbox.handler.failures",
+                            string.Join("; ", handlerFailures.Take(3)));
                     }
                     else
                     {
                         message.MarkAsProcessed();
+
+                        var latencyMs = (DateTime.UtcNow - message.OccurredOnUtc).TotalMilliseconds;
+                        OutboxMetrics.ProcessedTotal.Add(1,
+                            new KeyValuePair<string, object?>("module", typeof(TContext).Name));
+                        OutboxMetrics.DispatchLatencyMs.Record(latencyMs);
+                        OutboxMetrics.RetryCountDistribution.Record(message.RetryCount);
+
+                        activity?.SetStatus(System.Diagnostics.ActivityStatusCode.Ok);
                     }
                 }
                 catch (OperationCanceledException) when (ct.IsCancellationRequested)
@@ -162,12 +232,14 @@ namespace YallaJo.SharedKernel.Infrastructure.BackgroundJobs
                 }
                 catch (Exception ex)
                 {
+                    activity?.SetStatus(System.Diagnostics.ActivityStatusCode.Error, ex.Message);
                     logger.LogError(ex, "Failed to process outbox message {Id}", message.Id);
                     message.MarkAsFailed(ex.Message);
                 }
             }
 
             await dbContext.SaveChangesAsync(ct);
+            return messages.Count;
         }
     }
 }

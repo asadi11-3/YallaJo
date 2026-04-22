@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using YallaJo.Api.HealthChecks;
 
 namespace YallaJo.Api.Extensions;
 
@@ -40,7 +41,11 @@ public static class HealthCheckExtensions
                 return string.IsNullOrEmpty(endpoint)
                     ? HealthCheckResult.Degraded("AzureTranslator:Endpoint not configured")
                     : HealthCheckResult.Healthy($"Configured: {endpoint}");
-            }, tags: ["ready", "external"]);
+            }, tags: ["ready", "external"])
+            .AddCheck<OutboxDeadLetterHealthCheck>(
+                "outbox-dead-letters",
+                failureStatus: HealthStatus.Degraded,
+                tags: ["ready", "outbox", "ops"]);
 
         return services;
     }

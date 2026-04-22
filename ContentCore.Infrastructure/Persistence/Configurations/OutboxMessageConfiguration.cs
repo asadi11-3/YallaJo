@@ -32,7 +32,16 @@ public class OutboxMessageConfiguration : IEntityTypeConfiguration<OutboxMessage
             .IsRequired()
             .HasDefaultValue(0);
 
-        builder.HasIndex(o => new { o.ProcessedOnUtc, o.RetryCount, o.OccurredOnUtc })
-            .HasDatabaseName("IX_OutboxMessages_Unprocessed");
+        builder.Property(o => o.TraceContext)
+                    .IsRequired(false)
+                    .HasMaxLength(500);
+        
+                builder.Property(o => o.Status)
+                            .IsRequired()
+                            .HasDefaultValue(OutboxMessageStatus.Pending)
+                            .HasConversion<int>();
+        
+                builder.HasIndex(o => new { o.ProcessedOnUtc, o.RetryCount, o.OccurredOnUtc })
+                    .HasDatabaseName("IX_OutboxMessages_Unprocessed");
     }
 }

@@ -15,6 +15,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Http.Resilience;
 using YallaJo.SharedKernel.Application.Abstractions.Storage;
 using YallaJo.SharedKernel.Application.Abstractions.Translation;
+using YallaJo.SharedKernel.Infrastructure.Outbox;
 using YallaJo.SharedKernel.Infrastructure.BackgroundJobs;
 using YallaJo.SharedKernel.Infrastructure.Data;
 
@@ -55,6 +56,7 @@ public static class DependencyInjection
         services.AddScoped<IModuleDbInitializer, ContentCoreDbInitializer>();
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
         services.AddScoped<IOutboxProcessor, OutboxProcessor<ContentCoreDbContext>>();
+        services.AddScoped<IOutboxCleaner, OutboxCleaner<ContentCoreDbContext>>();
 
         // ── Translation Service (decorator pattern) ─────────────────────────────
         // 1. Register the concrete Azure provider as a named/keyed inner service

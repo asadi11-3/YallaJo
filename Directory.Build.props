@@ -8,13 +8,22 @@
     <PackageReference Include="StyleCop.Analyzers" Version="1.1.118" PrivateAssets="all">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Meziantou.Analyzer" Version="2.0.182" PrivateAssets="all">
+    <PackageReference Include="Meziantou.Analyzer" Version="3.0.52" PrivateAssets="all">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Roslynator.Analyzers" Version="4.12.10" PrivateAssets="all">
+    <PackageReference Include="Roslynator.Analyzers" Version="4.15.0" PrivateAssets="all">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="AsyncAwaitBestPractices" Version="8.0.0" PrivateAssets="all">
+    <PackageReference Include="AsyncAwaitBestPractices" Version="10.0.0" PrivateAssets="all">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <!-- ── EF Core Tools — PMC Add-Migration / Update-Database support ─────────── -->
+  <!-- Applied to every *.Infrastructure project automatically.                   -->
+  <!-- PrivateAssets=all → build-time only, zero runtime/deploy footprint.         -->
+  <ItemGroup Condition="$(MSBuildProjectName.EndsWith('.Infrastructure'))">
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.15" PrivateAssets="all">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
   </ItemGroup>

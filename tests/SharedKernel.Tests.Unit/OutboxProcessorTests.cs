@@ -1,3 +1,5 @@
+using System.Reflection;
+using System.Text.Json;
 using FluentAssertions;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -109,11 +111,40 @@ public sealed class OutboxProcessorTests
         return (sp, state, processor);
     }
 
+    /// <summary>
+    /// Creates an OutboxMessage bypassing IntegrationEventTypeRegistry so tests can use
+    /// unregistered stub events. Uses the AssemblyQualifiedName as the type string, which
+    /// exercises the legacy/fallback dual-read path in OutboxProcessor.
+    /// </summary>
+    private static OutboxMessage CreateTestOutboxMessage<TEvent>(TEvent evt)
+        where TEvent : IIntegrationEvent
+    {
+        // Construct via the private parameterless constructor
+        var msg = (OutboxMessage)Activator.CreateInstance(typeof(OutboxMessage), nonPublic: true)!;
+
+        void Set(string propName, object? value) =>
+            typeof(OutboxMessage)
+                .GetProperty(propName, BindingFlags.Public | BindingFlags.Instance)!
+                .SetValue(msg, value);
+
+        Set("Id", Guid.CreateVersion7());
+        // Use AssemblyQualifiedName — this is the OLD format, so tests exercise the dual-read
+        // fallback path (registry miss → Type.GetType()) in OutboxProcessor.
+        Set("Type", typeof(TEvent).AssemblyQualifiedName!);
+        Set("Content", JsonSerializer.Serialize(evt, typeof(TEvent)));
+        Set("OccurredOnUtc", evt.OccurredOn);
+        Set("RetryCount", 0);
+
+        return msg;
+    }
+
     private static async Task<Guid> SeedOutboxMessageAsync(IServiceProvider sp)
     {
         using var scope = sp.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<OutboxOnlyDbContext>();
-        var msg = OutboxMessage.Create(new SampleIntegrationEvent("hello"));
+        // Use the test helper — SampleIntegrationEvent is not in the registry so we
+        // bypass Create() and store the AssemblyQualifiedName (old format) to test dual-read.
+        var msg = CreateTestOutboxMessage(new SampleIntegrationEvent("hello"));
         db.OutboxMessages.Add(msg);
         await db.SaveChangesAsync();
         return msg.Id;
@@ -239,5 +270,24 @@ public sealed class OutboxProcessorTests
         var reloaded = await ReloadAsync(sp, id);
         reloaded.Should().NotBeNull();
         reloaded!.ProcessedOnUtc.Should().NotBeNull("orphan messages must drain so the outbox never jams");
+    }
+
+    [Fact]
+    public async Task LegacyAssemblyQualifiedNameRow_ShouldProcessViaFallbackPath()
+    {
+        // Arrange: row written before PR 2 — Type is the full AssemblyQualifiedName (old format)
+        var (sp, state, processor) = BuildHarness();
+        var id = await SeedOutboxMessageAsync(sp); // uses CreateTestOutboxMessage → AQN format
+
+        // Act: processor should resolve the type via Type.GetType() fallback
+        await processor.ProcessOutboxMessagesAsync(CancellationToken.None);
+
+        // Assert: dual-read succeeded — message processed, both handlers ran
+        state.HandlerAInvocations.Should().Be(1, "handler A must run via legacy AQN resolution");
+        state.HandlerBInvocations.Should().Be(1, "handler B must run via legacy AQN resolution");
+
+        var reloaded = await ReloadAsync(sp, id);
+        reloaded!.ProcessedOnUtc.Should().NotBeNull("legacy row must be successfully processed");
+        reloaded.Error.Should().BeNull();
     }
 }
