@@ -10,4 +10,6 @@ public sealed class VerifyEmailVm
 
     [Required(ErrorMessage = "OTP code is required.")]
     public string OtpCode { get; set; } = string.Empty;
+
+    public string RecaptchaToken { get; set; } = string.Empty;
 }

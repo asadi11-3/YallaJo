@@ -1,3 +1,4 @@
+using Auth.Application.Recaptcha;
 using FluentValidation;
 
 namespace Auth.Application.Commands.ForgotPassword;
@@ -10,5 +11,7 @@ public sealed class ForgotPasswordCommandValidator : AbstractValidator<ForgotPas
             .NotEmpty()
             .EmailAddress()
             .MaximumLength(320);
+
+        RuleFor(x => x.RecaptchaToken).MustBeValidRecaptchaToken();
     }
 }

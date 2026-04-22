@@ -47,7 +47,11 @@ public sealed class VerifyEmailController : Controller
         if (string.IsNullOrWhiteSpace(payload.Email))
             return BadRequest(new { error = "Email is required." });
 
-        var outcome = await _facade.ResendOtpAsync(payload.Email, "EmailVerification", ct);
+        if (string.IsNullOrWhiteSpace(payload.RecaptchaToken))
+            return BadRequest(new { error = "Captcha verification failed." });
+
+        var outcome = await _facade.ResendOtpAsync(
+            payload.Email, "EmailVerification", payload.RecaptchaToken, ct);
         if (outcome.IsSuccess)
             return Ok(new { message = "A new code has been sent." });
 

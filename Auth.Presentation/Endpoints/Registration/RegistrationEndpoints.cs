@@ -16,7 +16,12 @@ internal static class RegistrationEndpoints
         group.MapPost("/register", async (RegisterRequest request, ISender sender, CancellationToken ct) =>
         {
             var result = await sender.Send(
-                new RegisterCommand(request.FirstName, request.LastName, request.Email, request.Password), ct);
+                new RegisterCommand(
+                    request.FirstName,
+                    request.LastName,
+                    request.Email,
+                    request.Password,
+                    request.RecaptchaToken), ct);
 
             return result
                 .Map(r => new RegisterResponse(

@@ -9,5 +9,6 @@ public static class VerifyEmailMapper
     {
         Email   = vm.Email.Trim(),
         OtpCode = vm.OtpCode.Trim(),
+        RecaptchaToken = vm.RecaptchaToken,
     };
 }

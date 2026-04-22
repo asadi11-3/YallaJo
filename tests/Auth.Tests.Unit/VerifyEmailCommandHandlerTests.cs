@@ -58,7 +58,7 @@ public sealed class VerifyEmailCommandHandlerTests
             .Returns((Guid?)null);
 
         var sut = CreateSut();
-        var result = await sut.Handle(new VerifyEmailCommand("u@example.com", "123456"), CancellationToken.None);
+        var result = await sut.Handle(new VerifyEmailCommand("u@example.com", "123456", "test-recaptcha-token"), CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();
         result.Outcome.Should().Be(Outcome.NotFound);
@@ -76,7 +76,7 @@ public sealed class VerifyEmailCommandHandlerTests
         ArrangeValidOtp(userId);
 
         var sut = CreateSut();
-        var result = await sut.Handle(new VerifyEmailCommand("u@example.com", "123456"), CancellationToken.None);
+        var result = await sut.Handle(new VerifyEmailCommand("u@example.com", "123456", "test-recaptcha-token"), CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();
         result.Outcome.Should().Be(Outcome.ServerError);
@@ -104,7 +104,7 @@ public sealed class VerifyEmailCommandHandlerTests
         ArrangeValidOtp(userId);
 
         var sut = CreateSut();
-        var result = await sut.Handle(new VerifyEmailCommand("u@example.com", "123456"), CancellationToken.None);
+        var result = await sut.Handle(new VerifyEmailCommand("u@example.com", "123456", "test-recaptcha-token"), CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
         result.Value!.AccessToken.Should().Be("access-token");
@@ -134,7 +134,7 @@ public sealed class VerifyEmailCommandHandlerTests
             .Returns(expired);
 
         var sut = CreateSut();
-        var result = await sut.Handle(new VerifyEmailCommand("u@example.com", "123456"), CancellationToken.None);
+        var result = await sut.Handle(new VerifyEmailCommand("u@example.com", "123456", "test-recaptcha-token"), CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();
         result.Outcome.Should().Be(Outcome.Invalid);

@@ -1,3 +1,4 @@
+using Auth.Application.Recaptcha;
 using FluentValidation;
 
 namespace Auth.Application.Commands.Register;
@@ -23,5 +24,7 @@ public sealed class RegisterCommandValidator : AbstractValidator<RegisterCommand
             .NotEmpty()
             .MinimumLength(8)
             .MaximumLength(128);
+
+        RuleFor(x => x.RecaptchaToken).MustBeValidRecaptchaToken();
     }
 }

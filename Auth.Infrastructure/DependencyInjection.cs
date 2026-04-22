@@ -1,12 +1,17 @@
+using Auth.Application.ExternalAuth;
 using Auth.Application.Interfaces;
+using Auth.Application.Recaptcha;
 using Auth.Domain.Repositories;
+using Auth.Infrastructure.ExternalAuth;
 using Auth.Infrastructure.Persistence;
 using Auth.Infrastructure.Persistence.Seeding;
+using Auth.Infrastructure.Recaptcha;
 using Auth.Infrastructure.Repositories;
 using Auth.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using YallaJo.SharedKernel.Infrastructure.BackgroundJobs;
 using Auth.Infrastructure.BackgroundJobs;
 using YallaJo.SharedKernel.Infrastructure.Data;
@@ -60,6 +65,31 @@ public static class DependencyInjection
         services.AddSingleton<IInviteLinkBuilder, InviteLinkBuilder>();
         services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
         services.AddSingleton<ITokenService, JwtTokenService>();
+
+        // External-provider auth ticket protocol (Google / Facebook / ...).
+        // Options are validated at startup so a missing signing key fails fast
+        // instead of silently accepting forged tickets.
+        services.AddOptions<ExternalAuthOptions>()
+            .Bind(configuration.GetSection(ExternalAuthOptions.SectionName))
+            .ValidateOnStart();
+        services.AddSingleton<IValidateOptions<ExternalAuthOptions>, ExternalAuthOptionsValidator>();
+        services.AddSingleton<IExternalAuthTicketVerifier, ExternalAuthTicketVerifier>();
+        services.AddSingleton<IExternalAuthNonceStore, HybridCacheExternalAuthNonceStore>();
+
+        // reCAPTCHA v3 bot protection. Verifier is invoked automatically via
+        // the RecaptchaValidationBehavior pipeline step on any command that
+        // implements IRecaptchaProtectedCommand — there is no way to bypass
+        // the check from an individual handler.
+        services.AddOptions<RecaptchaOptions>()
+            .Bind(configuration.GetSection(RecaptchaOptions.SectionName))
+            .ValidateOnStart();
+        services.AddSingleton<IValidateOptions<RecaptchaOptions>, RecaptchaOptionsValidator>();
+        services.AddHttpClient(GoogleRecaptchaVerifier.HttpClientName, (sp, client) =>
+        {
+            var opts = sp.GetRequiredService<IOptions<RecaptchaOptions>>().Value;
+            client.Timeout = TimeSpan.FromSeconds(opts.TimeoutSeconds);
+        });
+        services.AddSingleton<IRecaptchaVerifier, GoogleRecaptchaVerifier>();
         services.Configure<GmailOptions>(configuration.GetSection(GmailOptions.SectionName));
         services.AddScoped<IEmailService, GmailEmailService>();
 

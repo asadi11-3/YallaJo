@@ -10,4 +10,6 @@ public sealed class ForgotPasswordVm
 
     /// <summary>Set after a successful submission to show a confirmation message.</summary>
     public string? SuccessMessage { get; set; }
+
+    public string RecaptchaToken { get; set; } = string.Empty;
 }

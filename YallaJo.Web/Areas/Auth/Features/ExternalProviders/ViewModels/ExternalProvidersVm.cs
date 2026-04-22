@@ -1,17 +1,13 @@
-using System.ComponentModel.DataAnnotations;
-
 namespace YallaJo.Web.Areas.Auth.Features.ExternalProviders.ViewModels;
 
+/// <summary>
+/// Read-only view model for the "Linked Providers" page. Linking is started
+/// by POST-ing to the OAuth challenge endpoint — there is no form binding
+/// here so that raw provider IDs cannot be smuggled in by a malicious client.
+/// </summary>
 public sealed class ExternalProvidersVm
 {
-    [Required(ErrorMessage = "Provider name is required (e.g. Google, Facebook).")]
-    public string  Provider       { get; set; } = string.Empty;
-
-    [Required(ErrorMessage = "Provider user ID is required.")]
-    public string  ProviderUserId { get; set; } = string.Empty;
-
-    [EmailAddress]
-    public string? ProviderEmail  { get; set; }
-
     public string? Message { get; set; }
+    public bool IsGoogleAvailable { get; set; }
+    public bool IsFacebookAvailable { get; set; }
 }

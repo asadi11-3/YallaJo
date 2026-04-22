@@ -9,5 +9,6 @@ public static class LoginMapper
     {
         Email    = vm.Email.Trim(),
         Password = vm.Password,
+        RecaptchaToken = vm.RecaptchaToken,
     };
 }

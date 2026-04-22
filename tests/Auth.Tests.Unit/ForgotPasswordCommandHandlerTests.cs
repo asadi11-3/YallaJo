@@ -26,7 +26,7 @@ public sealed class ForgotPasswordCommandHandlerTests
             NullLogger<ForgotPasswordCommandHandler>.Instance);
 
     private static ForgotPasswordCommand Command(string email = "user@example.com")
-        => new(email);
+        => new(email, "test-recaptcha-token");
 
     [Fact]
     public async Task Handle_ShouldReturnGenericSuccess_AndSkipSend_WhenUserDoesNotExist()

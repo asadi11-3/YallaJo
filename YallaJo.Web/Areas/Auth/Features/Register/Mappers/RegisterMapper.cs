@@ -11,5 +11,6 @@ public static class RegisterMapper
         LastName  = vm.LastName.Trim(),
         Email     = vm.Email.Trim(),
         Password  = vm.Password,
+        RecaptchaToken = vm.RecaptchaToken,
     };
 }

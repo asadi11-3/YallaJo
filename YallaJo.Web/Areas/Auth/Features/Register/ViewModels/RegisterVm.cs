@@ -23,4 +23,9 @@ public sealed class RegisterVm
     [StringLength(128, MinimumLength = 8, ErrorMessage = "Password must be between 8 and 128 characters.")]
     [DataType(DataType.Password)]
     public string Password { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Populated client-side by the centralized <c>_RecaptchaField</c> partial.
+    /// </summary>
+    public string RecaptchaToken { get; set; } = string.Empty;
 }

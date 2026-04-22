@@ -1,12 +1,33 @@
+using System.Net;
 using System.Text;
 using System.Text.Json;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using YallaJo.Web.Infrastructure.Api.Contracts;
 
 namespace YallaJo.Web.Services;
 
 public sealed class ApiClient
 {
+    /// <summary>
+    /// HTTP status used by the BFF when the API itself is unreachable or
+    /// produced a malformed response — <c>503 Service Unavailable</c> matches
+    /// the semantics that every <see cref="ApiResult"/> consumer already
+    /// handles via the generic "Error" branch, and keeps the stack trace out
+    /// of the response shown to the user.
+    /// </summary>
+    private const int ServiceUnavailableStatusCode = (int)HttpStatusCode.ServiceUnavailable;
+
+    /// <summary>
+    /// Generic message used for every transport-layer failure. Intentionally
+    /// free of infrastructure details (hostnames, ports, socket error codes)
+    /// so the UI does not leak the API's address to end users.
+    /// </summary>
+    private const string ServiceUnavailableMessage =
+        "The service is temporarily unavailable. Please try again in a moment.";
+
     private readonly HttpClient _http;
+    private readonly ILogger<ApiClient> _logger;
 
     private static readonly JsonSerializerOptions SerializeOpts = new()
     {
@@ -19,108 +40,192 @@ public sealed class ApiClient
         PropertyNameCaseInsensitive = true,
     };
 
-    public ApiClient(HttpClient http) => _http = http;
-
-    public async Task<ApiResult<T>> GetAsync<T>(string path, CancellationToken ct = default)
+    // Single constructor so AddHttpClient<ApiClient>(...) can pick it
+    // unambiguously via ActivatorUtilities. An earlier variant kept a
+    // 1-arg convenience overload "for tests", which was rejected at runtime
+    // with "Multiple constructors accepting all given argument types …"
+    // because the DI container could satisfy both ctors (ILogger<T> is
+    // always available). Tests that need to instantiate ApiClient directly
+    // pass NullLogger<ApiClient>.Instance.
+    public ApiClient(HttpClient http, ILogger<ApiClient> logger)
     {
-        using var response = await _http.GetAsync(path, ct);
-        return await ReadAsync<T>(response, ct);
+        _http = http;
+        _logger = logger;
     }
 
-    public async Task<ApiResult<T>> PostAsync<T>(string path, object? body = null, CancellationToken ct = default)
-    {
-        using var content  = ToJson(body);
-        using var response = await _http.PostAsync(path, content, ct);
-        return await ReadAsync<T>(response, ct);
-    }
+    public Task<ApiResult<T>> GetAsync<T>(string path, CancellationToken ct = default) =>
+        SendWithBodyAsync<T>(path, () => _http.GetAsync(path, ct), ct);
 
-    public async Task<ApiResult> PostAsync(string path, object? body = null, CancellationToken ct = default)
-    {
-        using var content  = ToJson(body);
-        using var response = await _http.PostAsync(path, content, ct);
-        return await ReadNoBodyAsync(response, ct);
-    }
-
-    public async Task<ApiResult> PatchAsync(string path, object? body = null, CancellationToken ct = default)
-    {
-        using var request = new HttpRequestMessage(HttpMethod.Patch, path)
+    public Task<ApiResult<T>> PostAsync<T>(string path, object? body = null, CancellationToken ct = default) =>
+        SendWithBodyAsync<T>(path, async () =>
         {
-            Content = ToJson(body),
-        };
-        using var response = await _http.SendAsync(request, ct);
-        return await ReadNoBodyAsync(response, ct);
-    }
+            using var content = ToJson(body);
+            return await _http.PostAsync(path, content, ct);
+        }, ct);
 
-    public async Task<ApiResult<T>> PutAsync<T>(string path, object? body = null, CancellationToken ct = default)
-    {
-        using var content  = ToJson(body);
-        using var response = await _http.PutAsync(path, content, ct);
-        return await ReadAsync<T>(response, ct);
-    }
+    public Task<ApiResult> PostAsync(string path, object? body = null, CancellationToken ct = default) =>
+        SendNoBodyAsync(path, async () =>
+        {
+            using var content = ToJson(body);
+            return await _http.PostAsync(path, content, ct);
+        }, ct);
 
-    public async Task<ApiResult> PutAsync(string path, object? body = null, CancellationToken ct = default)
-    {
-        using var content  = ToJson(body);
-        using var response = await _http.PutAsync(path, content, ct);
-        return await ReadNoBodyAsync(response, ct);
-    }
+    public Task<ApiResult> PatchAsync(string path, object? body = null, CancellationToken ct = default) =>
+        SendNoBodyAsync(path, async () =>
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Patch, path)
+            {
+                Content = ToJson(body),
+            };
+            return await _http.SendAsync(request, ct);
+        }, ct);
 
-    public async Task<ApiResult<T>> PutFileAsync<T>(
+    public Task<ApiResult<T>> PutAsync<T>(string path, object? body = null, CancellationToken ct = default) =>
+        SendWithBodyAsync<T>(path, async () =>
+        {
+            using var content = ToJson(body);
+            return await _http.PutAsync(path, content, ct);
+        }, ct);
+
+    public Task<ApiResult> PutAsync(string path, object? body = null, CancellationToken ct = default) =>
+        SendNoBodyAsync(path, async () =>
+        {
+            using var content = ToJson(body);
+            return await _http.PutAsync(path, content, ct);
+        }, ct);
+
+    public Task<ApiResult<T>> PutFileAsync<T>(
         string path,
         Stream fileStream,
         string fileName,
         string contentType,
         string formFieldName = "file",
-        CancellationToken ct = default)
-    {
-        using var multipart = new MultipartFormDataContent();
-        using var streamContent = new StreamContent(fileStream);
-        streamContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(contentType);
-        multipart.Add(streamContent, formFieldName, fileName);
-
-        using var request = new HttpRequestMessage(HttpMethod.Put, path)
+        CancellationToken ct = default) =>
+        SendWithBodyAsync<T>(path, async () =>
         {
-            Content = multipart,
-        };
-        using var response = await _http.SendAsync(request, ct);
-        return await ReadAsync<T>(response, ct);
-    }
+            using var multipart = new MultipartFormDataContent();
+            using var streamContent = new StreamContent(fileStream);
+            streamContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(contentType);
+            multipart.Add(streamContent, formFieldName, fileName);
 
-    public async Task<ApiResult<T>> PostFileAsync<T>(
+            using var request = new HttpRequestMessage(HttpMethod.Put, path)
+            {
+                Content = multipart,
+            };
+            return await _http.SendAsync(request, ct);
+        }, ct);
+
+    public Task<ApiResult<T>> PostFileAsync<T>(
         string path,
         Stream fileStream,
         string fileName,
         string contentType,
         IReadOnlyDictionary<string, string>? formFields = null,
         string formFieldName = "file",
-        CancellationToken ct = default)
-    {
-        using var multipart = new MultipartFormDataContent();
-        using var streamContent = new StreamContent(fileStream);
-        streamContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(contentType);
-        multipart.Add(streamContent, formFieldName, fileName);
-
-        if (formFields is not null)
+        CancellationToken ct = default) =>
+        SendWithBodyAsync<T>(path, async () =>
         {
-            foreach (var kvp in formFields)
+            using var multipart = new MultipartFormDataContent();
+            using var streamContent = new StreamContent(fileStream);
+            streamContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(contentType);
+            multipart.Add(streamContent, formFieldName, fileName);
+
+            if (formFields is not null)
             {
-                multipart.Add(new StringContent(kvp.Value), kvp.Key);
+                foreach (var kvp in formFields)
+                {
+                    multipart.Add(new StringContent(kvp.Value), kvp.Key);
+                }
             }
-        }
 
-        using var request = new HttpRequestMessage(HttpMethod.Post, path)
-        {
-            Content = multipart,
-        };
-        using var response = await _http.SendAsync(request, ct);
-        return await ReadAsync<T>(response, ct);
-    }
+            using var request = new HttpRequestMessage(HttpMethod.Post, path)
+            {
+                Content = multipart,
+            };
+            return await _http.SendAsync(request, ct);
+        }, ct);
 
-    public async Task<ApiResult> DeleteAsync(string path, CancellationToken ct = default)
+    public Task<ApiResult> DeleteAsync(string path, CancellationToken ct = default) =>
+        SendNoBodyAsync(path, () => _http.DeleteAsync(path, ct), ct);
+
+    // ── Transport-error handling ─────────────────────────────────────────────
+    // Every HTTP verb above routes through one of these two wrappers. A network
+    // failure (API offline, DNS failure, TLS handshake error, response timeout)
+    // used to bubble all the way up to the controller and produce a stack-trace
+    // page for the user. We translate them to ApiResult.Fail(503, ...) so that:
+    //   - facades keep their ordinary "result.IsSuccess == false" branches,
+    //   - the user sees a short generic message instead of the API's address,
+    //   - cancellation requested BY THE CALLER is still propagated (we only
+    //     catch OperationCanceledException when the caller's token did NOT fire).
+
+    private async Task<ApiResult<T>> SendWithBodyAsync<T>(
+        string path,
+        Func<Task<HttpResponseMessage>> send,
+        CancellationToken ct)
     {
-        using var response = await _http.DeleteAsync(path, ct);
-        return await ReadNoBodyAsync(response, ct);
+        HttpResponseMessage? response = null;
+        try
+        {
+            response = await send().ConfigureAwait(false);
+            return await ReadAsync<T>(response, ct).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception ex) when (IsTransportFailure(ex))
+        {
+            _logger.LogWarning(ex,
+                "API call to {Path} failed at the transport layer; returning 503 to caller.",
+                path);
+            return ApiResult<T>.Fail(ServiceUnavailableStatusCode, ServiceUnavailableMessage);
+        }
+        finally
+        {
+            response?.Dispose();
+        }
     }
+
+    private async Task<ApiResult> SendNoBodyAsync(
+        string path,
+        Func<Task<HttpResponseMessage>> send,
+        CancellationToken ct)
+    {
+        HttpResponseMessage? response = null;
+        try
+        {
+            response = await send().ConfigureAwait(false);
+            return await ReadNoBodyAsync(response, ct).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception ex) when (IsTransportFailure(ex))
+        {
+            _logger.LogWarning(ex,
+                "API call to {Path} failed at the transport layer; returning 503 to caller.",
+                path);
+            return ApiResult.Fail(ServiceUnavailableStatusCode, ServiceUnavailableMessage);
+        }
+        finally
+        {
+            response?.Dispose();
+        }
+    }
+
+    /// <summary>
+    /// True for exceptions that represent the BFF being unable to reach the API
+    /// or consume its response (as opposed to application-level HTTP errors,
+    /// which <see cref="HttpResponseMessage.IsSuccessStatusCode"/> already
+    /// reflects and <c>ReadAsync</c> converts to <see cref="ApiResult"/>s).
+    /// </summary>
+    private static bool IsTransportFailure(Exception ex) =>
+        ex is HttpRequestException
+           or System.Net.Sockets.SocketException
+           or IOException
+           or TaskCanceledException        // HttpClient timeout surfaces as TaskCanceledException
+           or TimeoutException;
 
     private static StringContent? ToJson(object? body)
     {

@@ -1,44 +1,41 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using YallaJo.Web.Areas.Auth.Features.ExternalProviders.ViewModels;
+using YallaJo.Web.Infrastructure.Authentication.ExternalAuth;
 
 namespace YallaJo.Web.Areas.Auth.Features.ExternalProviders;
 
+/// <summary>
+/// Manages the linked-providers UI for the signed-in user. Linking itself is
+/// no longer done by form POST — it MUST flow through a real OAuth challenge
+/// at <c>/auth/external/challenge</c> because only a verified provider
+/// identity is accepted by the API. This controller is therefore only a
+/// presentation shell for the list + unlink actions.
+/// </summary>
 [Area("Auth")]
 [Authorize]
 public sealed class ExternalProvidersController : Controller
 {
     private readonly ExternalProvidersFacade _facade;
-    public ExternalProvidersController(ExternalProvidersFacade facade) => _facade = facade;
+    private readonly IExternalProviderAvailability _availability;
+
+    public ExternalProvidersController(
+        ExternalProvidersFacade facade,
+        IExternalProviderAvailability availability)
+    {
+        _facade = facade;
+        _availability = availability;
+    }
 
     [HttpGet]
-    public IActionResult Index() => View(new ExternalProvidersVm());
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Index(ExternalProvidersVm vm, CancellationToken ct)
+    public IActionResult Index()
     {
-        if (!ModelState.IsValid) return View(vm);
-
-        var result = await _facade.LinkAsync(vm, ct);
-
-        if (result.RequireSignOut)
-            return RedirectToAction("Index", "Login", new { area = "Auth" });
-
-        if (result.IsSuccess)
+        var vm = new ExternalProvidersVm
         {
-            vm.Message = result.Message;
-            return View(vm);
-        }
-
-        if (result.ValidationErrors is not null)
-        {
-            foreach (var (f, msgs) in result.ValidationErrors)
-                foreach (var m in msgs)
-                    ModelState.AddModelError(f, m);
-            return View(vm);
-        }
-
-        ModelState.AddModelError(string.Empty, result.Error!);
+            Message = TempData["ProviderMessage"] as string,
+            IsGoogleAvailable = _availability.IsGoogleAvailable,
+            IsFacebookAvailable = _availability.IsFacebookAvailable,
+        };
         return View(vm);
     }
 

@@ -26,7 +26,7 @@ public sealed class RegisterCommandHandlerTests
             NullLogger<RegisterCommandHandler>.Instance);
 
     private static RegisterCommand SampleCommand(string email = "new@example.com") =>
-        new("Joe", "Doe", email, "SuperSecret123");
+        new("Joe", "Doe", email, "SuperSecret123", "test-recaptcha-token");
 
     private void ArrangeHappySecurityAndAccounts(Guid userId)
     {

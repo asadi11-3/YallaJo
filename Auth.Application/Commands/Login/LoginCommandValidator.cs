@@ -1,3 +1,4 @@
+using Auth.Application.Recaptcha;
 using FluentValidation;
 
 namespace Auth.Application.Commands.Login;
@@ -14,5 +15,7 @@ public sealed class LoginCommandValidator : AbstractValidator<LoginCommand>
         RuleFor(x => x.Password)
             .NotEmpty()
             .MaximumLength(128);
+
+        RuleFor(x => x.RecaptchaToken).MustBeValidRecaptchaToken();
     }
 }

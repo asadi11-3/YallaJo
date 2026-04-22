@@ -1,3 +1,4 @@
+using Auth.Application.Recaptcha;
 using FluentValidation;
 
 namespace Auth.Application.Commands.LinkExternalProvider;
@@ -6,17 +7,10 @@ public sealed class LinkExternalProviderCommandValidator : AbstractValidator<Lin
 {
     public LinkExternalProviderCommandValidator()
     {
-        RuleFor(x => x.Provider)
-            .NotEmpty().WithMessage("Provider name is required.")
-            .MaximumLength(50);
+        RuleFor(x => x.Ticket)
+            .NotEmpty().WithMessage("External provider ticket is required.")
+            .MaximumLength(4096).WithMessage("External provider ticket is invalid.");
 
-        RuleFor(x => x.ProviderUserId)
-            .NotEmpty().WithMessage("Provider user ID is required.")
-            .MaximumLength(256);
-
-        RuleFor(x => x.ProviderEmail)
-            .EmailAddress().WithMessage("Provider email must be a valid email address.")
-            .MaximumLength(320)
-            .When(x => !string.IsNullOrEmpty(x.ProviderEmail));
+        RuleFor(x => x.RecaptchaToken).MustBeValidRecaptchaToken();
     }
 }

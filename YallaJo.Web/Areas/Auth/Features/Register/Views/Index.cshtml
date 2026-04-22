@@ -1,3 +1,4 @@
+@using YallaJo.Web.Infrastructure.Security.Recaptcha
 @model YallaJo.Web.Areas.Auth.Features.Register.ViewModels.RegisterVm
 @{
     ViewData["Title"] = "Create Account";
@@ -34,6 +35,8 @@
             <input asp-for="Password" type="password" class="form-control" autocomplete="new-password" />
             <span asp-validation-for="Password" class="text-danger"></span>
         </div>
+
+        <partial name="_RecaptchaField" model="@RecaptchaActions.Register" />
 
         <button type="submit" class="btn btn-primary w-100">Create Account</button>
     </form>

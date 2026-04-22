@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
+using YallaJo.Web.Infrastructure.Authentication.ExternalAuth;
 using YallaJo.Web.Infrastructure.Authentication.SignIn;
 using YallaJo.Web.Infrastructure.Authorization;
 using YallaJo.Web.Infrastructure.Identity;
 using YallaJo.Web.Infrastructure.Mvc;
+using YallaJo.Web.Infrastructure.Security.Recaptcha;
 using YallaJo.Web.Services;
 
 // ── Auth feature registrations ────────────────────────────────────────────────
@@ -42,7 +44,7 @@ using YallaJo.Web.Areas.Admin.Modules.ContentCore.Features.Translations;
 var builder = WebApplication.CreateBuilder(args);
 
 // ── Authentication (cookie — MVC frontend, BFF pattern) ──────────────────────
-builder.Services
+var authBuilder = builder.Services
     .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
@@ -52,11 +54,38 @@ builder.Services
         options.ExpireTimeSpan   = TimeSpan.FromHours(8);
         options.SlidingExpiration = true;
         options.Cookie.HttpOnly   = true;
-        options.Cookie.SameSite   = SameSiteMode.Strict;
+        // Lax (not Strict) so that top-level redirects back from an external
+        // OAuth provider still carry the primary cookie. The external callback
+        // flow is still CSRF-safe because the intermediate cookie uses SameSite=Lax
+        // AND the Challenge action is POST+anti-forgery.
+        options.Cookie.SameSite   = SameSiteMode.Lax;
+        options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
         options.Cookie.Name       = "YallaJo.Web";
     });
 
+// External-provider infrastructure: intermediate cookie + Google/Facebook
+// handlers (registered only when configured) + signed-ticket builder.
+builder.Services.AddYallaJoExternalAuth(builder.Configuration, authBuilder);
+
+// reCAPTCHA v3 client-side integration. Views pull IRecaptchaScriptService to
+// render the script + hidden field centrally (see _RecaptchaField partial).
+builder.Services.Configure<RecaptchaOptions>(
+    builder.Configuration.GetSection(RecaptchaOptions.SectionName));
+builder.Services.AddSingleton<IRecaptchaScriptService, RecaptchaScriptService>();
+
 builder.Services.AddAuthorization();
+
+// Runtime availability flag exposed to views so provider buttons are only
+// rendered when the operator has actually configured the provider.
+builder.Services.AddSingleton(sp =>
+{
+    var cfg = sp.GetRequiredService<IConfiguration>();
+    var g = new GoogleProviderOptions();
+    cfg.GetSection(GoogleProviderOptions.SectionName).Bind(g);
+    var f = new FacebookProviderOptions();
+    cfg.GetSection(FacebookProviderOptions.SectionName).Bind(f);
+    return (IExternalProviderAvailability)new ExternalProviderAvailability(g, f);
+});
 
 // ── HttpClient → API (BFF pattern) ───────────────────────────────────────────
 builder.Services.AddHttpContextAccessor();
@@ -182,6 +211,13 @@ builder.Services.AddControllersWithViews(options =>
         //   Areas/{area}/Features/{controller}/Views/{view}.cshtml
         o.AreaViewLocationFormats.Add("~/Areas/{2}/Features/{1}/Views/{0}.cshtml");
         o.AreaViewLocationFormats.Add("~/Areas/{2}/Features/{1}/Views/Shared/{0}.cshtml");
+
+        // Area-level shared partials live at ~/Areas/{area}/Shared/{view}.cshtml
+        // (e.g. Areas/Auth/Shared/_RecaptchaField.cshtml — used by every auth form).
+        // Without this entry, <partial name="_RecaptchaField" /> would not resolve
+        // because the feature-folder formats above only look inside a specific
+        // controller's folder.
+        o.AreaViewLocationFormats.Add("~/Areas/{2}/Shared/{0}.cshtml");
 
         // Admin area uses a deeper module-based convention:
         //   Areas/Admin/Modules/{module}/Features/{controller}/Views/{view}.cshtml

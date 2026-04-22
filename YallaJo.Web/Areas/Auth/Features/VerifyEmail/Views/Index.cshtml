@@ -1,3 +1,5 @@
+@using YallaJo.Web.Infrastructure.Security.Recaptcha
+@inject IRecaptchaScriptService Recaptcha
 @model YallaJo.Web.Areas.Auth.Features.VerifyEmail.ViewModels.VerifyEmailVm
 @{
     ViewData["Title"] = "Verify Email";
@@ -24,6 +26,8 @@
             <span asp-validation-for="OtpCode" class="text-danger"></span>
         </div>
 
+        <partial name="_RecaptchaField" model="@RecaptchaActions.VerifyEmail" />
+
         <button type="submit" class="btn btn-primary w-100">Verify</button>
     </form>
 
@@ -36,24 +40,43 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script>
-        document.getElementById('resendBtn').addEventListener('click', async function () {
-            var email = document.getElementById('Email').value;
-            var token = document.querySelector('input[name="__RequestVerificationToken"]').value;
-            var btn   = this;
-            btn.disabled = true;
-            var res = await fetch('/auth/verifyemail/resendotp', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'RequestVerificationToken': token
-                },
-                body: JSON.stringify({ email: email })
+        (function () {
+            var btn     = document.getElementById('resendBtn');
+            var msg     = document.getElementById('resendMsg');
+            var enabled = @Json.Serialize(Recaptcha.IsEnabled);
+            var siteKey = @Json.Serialize(Recaptcha.SiteKey);
+
+            async function getToken() {
+                if (!enabled) return '';
+                return await new Promise(function (resolve) {
+                    grecaptcha.ready(function () {
+                        grecaptcha.execute(siteKey, { action: '@RecaptchaActions.ResendOtp' })
+                            .then(resolve)
+                            .catch(function () { resolve(''); });
+                    });
+                });
+            }
+
+            btn.addEventListener('click', async function () {
+                var email = document.getElementById('Email').value;
+                var af    = document.querySelector('input[name="__RequestVerificationToken"]').value;
+                btn.disabled = true;
+
+                var recaptchaToken = await getToken();
+
+                var res = await fetch('/auth/verifyemail/resendotp', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': af
+                    },
+                    body: JSON.stringify({ email: email, recaptchaToken: recaptchaToken })
+                });
+                var data = await res.json();
+                msg.textContent = data.message || data.error || 'Error';
+                msg.className = res.ok ? 'text-success' : 'text-danger';
+                setTimeout(function () { btn.disabled = false; }, 60000);
             });
-            var data = await res.json();
-            var msg = document.getElementById('resendMsg');
-            msg.textContent = data.message || data.error || 'Error';
-            msg.className = res.ok ? 'text-success' : 'text-danger';
-            setTimeout(() => { btn.disabled = false; }, 60000);
-        });
+        })();
     </script>
 }
