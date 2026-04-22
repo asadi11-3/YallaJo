@@ -1,7 +1,7 @@
 using ContentPlaces.Application.Interfaces;
 using ContentPlaces.Application.Queries.BusinessStaff.Common;
-using ContentPlaces.Domain.Exceptions;
 using ContentPlaces.Domain.Repositories;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
@@ -52,7 +52,7 @@ public sealed class AddBusinessStaffCommandHandler(
         {
             await unitOfWork.SaveChangesAsync(cancellationToken);
         }
-        catch (ContentPlaceConcurrencyException)
+        catch (DbUpdateConcurrencyException)
         {
             return Result<BusinessStaffDto>.Failure(
                 new Error(

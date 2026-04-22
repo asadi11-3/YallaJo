@@ -7,4 +7,7 @@
   <ItemGroup>
     <ProjectReference Include="..\YallaJo.SharedKernel.Domain\YallaJo.SharedKernel.Domain.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Exceptions\" />
+  </ItemGroup>
 </Project>

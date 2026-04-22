@@ -132,6 +132,15 @@ public sealed class Place : AuditableEntity, IAggregateRoot
         AddDomainEvent(new PlaceUpdatedDomainEvent(Id, Name, Description, Address));
     }
 
+    public void Delete()
+    {
+        if (IsDeleted)
+            return;
+
+        SoftDelete();
+        AddDomainEvent(new PlaceDeletedDomainEvent(Id));
+    }
+
     public void SetFeatured(bool isFeatured)
     {
         IsFeatured = isFeatured;

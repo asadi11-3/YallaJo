@@ -1,6 +1,6 @@
 using ContentCore.Application.Interfaces;
-using ContentCore.Domain.Exceptions;
 using ContentCore.Domain.Repositories;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
@@ -136,7 +136,7 @@ public sealed class UploadAttachmentCommandHandler(
             {
                 await unitOfWork.SaveChangesAsync(cancellationToken);
             }
-            catch (ContentCoreConcurrencyException)
+            catch (DbUpdateConcurrencyException)
             {
                 await TryCleanupOrphanedFileAsync(uploadResult.Url, cancellationToken);
                 return Result<UploadAttachmentResult>.Conflict(

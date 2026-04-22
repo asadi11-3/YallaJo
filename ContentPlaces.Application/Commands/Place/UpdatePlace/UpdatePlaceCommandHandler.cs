@@ -1,6 +1,7 @@
 using ContentPlaces.Application.Interfaces;
-using ContentPlaces.Domain.Exceptions;
 using ContentPlaces.Domain.Repositories;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
@@ -10,6 +11,7 @@ namespace ContentPlaces.Application.Commands.Place.UpdatePlace;
 public sealed class UpdatePlaceCommandHandler(
     IPlaceRepository placeRepository,
     IContentPlacesUnitOfWork unitOfWork,
+    HybridCache cache,
     ILogger<UpdatePlaceCommandHandler> logger)
     : ICommandHandler<UpdatePlaceCommand, UpdatePlaceResult>
 {
@@ -54,13 +56,16 @@ public sealed class UpdatePlaceCommandHandler(
             {
                 await unitOfWork.SaveChangesAsync(cancellationToken);
             }
-            catch (ContentPlaceConcurrencyException)
+            catch (DbUpdateConcurrencyException)
             {
                 return Result<UpdatePlaceResult>.Conflict(
                     new Error(
                         "Place.ConcurrencyConflict",
                         "This record was modified by another user. Please refresh and try again."));
             }
+
+            await cache.RemoveByTagAsync($"place:{place.Id}", cancellationToken);
+            await cache.RemoveByTagAsync("places", cancellationToken);
 
             logger.LogInformation("Place updated: {PlaceId}", place.Id);
 

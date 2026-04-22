@@ -1,12 +1,10 @@
-using LanguageEntity = ContentCore.Domain.Entities.Language;
-using ContentCore.Application.Caching;
-using ContentCore.Domain.Exceptions;
 using ContentCore.Domain.Repositories;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
+using LanguageEntity = ContentCore.Domain.Entities.Language;
 using Outcome = YallaJo.SharedKernel.Domain.Abstractions.Results.Outcome;
-
 namespace ContentCore.Application.Commands.Language.CreateLanguage;
 
 public sealed class CreateLanguageCommandHandler(
@@ -37,7 +35,7 @@ public sealed class CreateLanguageCommandHandler(
             {
                 await unitOfWork.SaveChangesAsync(cancellationToken);
             }
-            catch (ContentCoreConcurrencyException)
+            catch (DbUpdateConcurrencyException)
             {
                 return Result<CreateLanguageResult>.Conflict(
                     new Error(
