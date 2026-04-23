@@ -12,9 +12,10 @@ public sealed record ListPlacesQuery(
     decimal? RatingMin,
     decimal? RatingMax,
     string? City,
-    string? Country) : IQuery<PaginatedResult<PlaceSummaryDto>>, ICacheableQuery
+    string? Country,
+    bool? HasActiveTours = null) : IQuery<PaginatedResult<PlaceSummaryDto>>, ICacheableQuery
 {
-    public string CacheKey => ContentPlacesCacheKeys.PlaceList(Page, PageSize, CategoryId, City, Country, RatingMin, RatingMax);
+    public string CacheKey => ContentPlacesCacheKeys.PlaceList(Page, PageSize, CategoryId, City, Country, RatingMin, RatingMax, HasActiveTours);
 
     public TimeSpan? CacheDuration => TimeSpan.FromMinutes(5);
 

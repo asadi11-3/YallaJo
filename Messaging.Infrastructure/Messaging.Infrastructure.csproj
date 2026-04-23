@@ -12,6 +12,7 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="9.0.15" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\ContentPlaces.Contracts\ContentPlaces.Contracts.csproj" />
     <ProjectReference Include="..\Messaging.Application\Messaging.Application.csproj" />
     <ProjectReference Include="..\Messaging.Contracts\Messaging.Contracts.csproj" />
     <ProjectReference Include="..\Messaging.Domain\Messaging.Domain.csproj" />

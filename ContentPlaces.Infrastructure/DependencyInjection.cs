@@ -1,9 +1,9 @@
 using ContentPlaces.Contracts.Authorization;
 using ContentPlaces.Application.Interfaces;
-using YallaJo.SharedKernel.Application.Authorization;
-using ContentPlaces.Domain.Repositories;
 using ContentPlaces.Infrastructure.Persistence;
 using ContentPlaces.Infrastructure.Persistence.Seeding;
+using YallaJo.SharedKernel.Application.Authorization;
+using ContentPlaces.Domain.Repositories;
 using ContentPlaces.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -45,11 +45,11 @@ public static class DependencyInjection
         services.AddScoped<IUnitOfWork<ContentPlacesDbContext>, UnitOfWork<ContentPlacesDbContext>>();
         services.AddScoped<IContentPlacesUnitOfWork, ContentPlacesUnitOfWork>();
         services.AddScoped<IContentPlacesInboxStore, ContentPlacesInboxStore>();
+        services.AddScoped<IContentPlacesOutboxWriter, ContentPlacesOutboxWriter>();
         services.AddScoped<IModuleDbInitializer, ContentPlacesDbInitializer>();
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
         services.AddScoped<IOutboxProcessor, OutboxProcessor<ContentPlacesDbContext>>();
         services.AddScoped<IOutboxCleaner, OutboxCleaner<ContentPlacesDbContext>>();
-        services.AddScoped<IBusinessRepository, BusinessRepository>();
 
         // ── Translation Orchestrator (shared from ContentCore via DI) ─────────
         // IEntityTranslationOrchestrator is registered by ContentCore.Infrastructure.

@@ -24,12 +24,14 @@ public sealed class ListPlacesQueryHandler(
             var pageSize = Math.Min(request.PageSize, MaxPageSize);
 
             var spec = new PlaceFilterSpecification(
-                page:      request.Page,
-                pageSize:  pageSize,
-                ratingMin: request.RatingMin,
-                ratingMax: request.RatingMax,
-                city:      request.City,
-                country:   request.Country);
+                page:           request.Page,
+                pageSize:       pageSize,
+                categoryId:     request.CategoryId,
+                ratingMin:      request.RatingMin,
+                ratingMax:      request.RatingMax,
+                city:           request.City,
+                country:        request.Country,
+                hasActiveTours: request.HasActiveTours);
 
             var paged = await placeRepository.PaginatedListAsync(spec, cancellationToken);
 

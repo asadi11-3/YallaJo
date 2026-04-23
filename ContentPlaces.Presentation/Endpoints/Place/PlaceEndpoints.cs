@@ -40,10 +40,11 @@ internal static class PlaceEndpoints
             decimal? ratingMin = null,
             decimal? ratingMax = null,
             string? city = null,
-            string? country = null) =>
+            string? country = null,
+            bool? hasActiveTours = null) =>
         {
             var result = await sender.Send(
-                new ListPlacesQuery(page, pageSize, categoryId, ratingMin, ratingMax, city, country), ct);
+                new ListPlacesQuery(page, pageSize, categoryId, ratingMin, ratingMax, city, country, hasActiveTours), ct);
             return result.ToApiResult();
         })
         .WithName("ListPlaces")

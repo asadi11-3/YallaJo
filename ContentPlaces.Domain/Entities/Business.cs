@@ -259,6 +259,21 @@ public sealed class Business : AuditableEntity, IAggregateRoot
         MarkUpdated();
     }
 
+    /// <summary>
+    /// Adds a new translation or updates an existing one for the given language.
+    /// Called by domain event handlers — does NOT call SaveChangesAsync.
+    /// </summary>
+    public void AddOrUpdateTranslation(Guid languageId, string name, string? description)
+    {
+        var existing = _businessTranslations.FirstOrDefault(t => t.LanguageId == languageId);
+        if (existing is not null)
+        {
+            _businessTranslations.Remove(existing);
+        }
+
+        _businessTranslations.Add(BusinessTranslation.Create(Id, languageId, name, description));
+    }
+
     public static string GenerateSlug(string name) =>
         SlugRegex.Replace(name.Trim().ToLowerInvariant().Replace(' ', '-'), string.Empty).Trim('-');
 }

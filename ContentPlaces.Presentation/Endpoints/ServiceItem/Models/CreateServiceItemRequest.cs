@@ -1,3 +1,5 @@
+using ContentPlaces.Domain.Enums;
+
 namespace ContentPlaces.Presentation.Endpoints.ServiceItem.Models;
 
 public sealed record CreateServiceItemRequest(
@@ -6,4 +8,6 @@ public sealed record CreateServiceItemRequest(
     int DurationMinutes,
     int MaxCapacity,
     string Currency,
-    int SortOrder);
+    ServiceCategory Category,
+    string? Description = null,
+    int SortOrder = 0);

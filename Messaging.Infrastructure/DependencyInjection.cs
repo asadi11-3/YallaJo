@@ -1,4 +1,5 @@
 using MediatR;
+using Messaging.Application.Interfaces;
 using Messaging.Infrastructure.Persistence;
 using Messaging.Infrastructure.Persistence.Seeding;
 using Microsoft.EntityFrameworkCore;
@@ -29,6 +30,8 @@ public static class DependencyInjection
                 }));
 
         services.AddScoped<IUnitOfWork<MessagingDbContext>, UnitOfWork<MessagingDbContext>>();
+        services.AddScoped<IMessagingUnitOfWork, MessagingUnitOfWork>();
+        services.AddScoped<IMessagingInboxStore, MessagingInboxStore>();
         services.AddScoped<IModuleDbInitializer, MessagingDbInitializer>();
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
         services.AddScoped<IOutboxProcessor, OutboxProcessor<MessagingDbContext>>();

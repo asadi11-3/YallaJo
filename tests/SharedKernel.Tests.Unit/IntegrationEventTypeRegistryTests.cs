@@ -1,6 +1,7 @@
 using Auth.Contracts.IntegrationEvents;
 using ContentCore.Contracts.IntegrationEvents;
 using ContentPlaces.Contracts.IntegrationEvents;
+using ContentTours.Contracts;
 using FluentAssertions;
 using Security.Contracts.IntegrationEvents;
 using YallaJo.SharedKernel.Infrastructure.Abstractions.Integration;
@@ -12,23 +13,29 @@ namespace SharedKernel.Tests.Unit;
 /// </summary>
 public sealed class IntegrationEventTypeRegistryTests
 {
-    // ── All 13 expected types ────────────────────────────────────────────────
+    // ── All 19 expected types ─────────────────────────────────────────────────
 
     private static readonly (string Key, Type Type)[] KnownMappings =
     [
-        ("security.user.created.v1",               typeof(UserCreatedIntegrationEvent)),
-        ("security.user.email-verified.v1",        typeof(EmailVerifiedIntegrationEvent)),
-        ("security.user.password-changed.v1",      typeof(PasswordChangedIntegrationEvent)),
-        ("security.user.password-reset.v1",        typeof(PasswordResetIntegrationEvent)),
-        ("security.user.phone-updated.v1",         typeof(PhoneNumberUpdatedIntegrationEvent)),
-        ("auth.user.logged-in.v1",                 typeof(UserLoggedInIntegrationEvent)),
-        ("auth.session.revoked.v1",                typeof(SessionRevokedIntegrationEvent)),
-        ("content-core.language.activated.v1",     typeof(LanguageActivatedIntegrationEvent)),
-        ("content-places.place.created.v1",        typeof(PlaceCreatedIntegrationEvent)),
-        ("content-places.place.updated.v1",        typeof(PlaceUpdatedIntegrationEvent)),
-        ("content-places.place.deleted.v1",        typeof(PlaceDeletedIntegrationEvent)),
-        ("content-places.service-item.created.v1", typeof(ServiceItemCreateIntegrationEvent)),
-        ("content-places.service-item.deleted.v1", typeof(ServiceItemDeletedIntegrationEvent)),
+        ("security.user.created.v1",                      typeof(UserCreatedIntegrationEvent)),
+        ("security.user.email-verified.v1",               typeof(EmailVerifiedIntegrationEvent)),
+        ("security.user.password-changed.v1",             typeof(PasswordChangedIntegrationEvent)),
+        ("security.user.password-reset.v1",               typeof(PasswordResetIntegrationEvent)),
+        ("security.user.phone-updated.v1",                typeof(PhoneNumberUpdatedIntegrationEvent)),
+        ("auth.user.logged-in.v1",                        typeof(UserLoggedInIntegrationEvent)),
+        ("auth.session.revoked.v1",                       typeof(SessionRevokedIntegrationEvent)),
+        ("content-core.language.activated.v1",            typeof(LanguageActivatedIntegrationEvent)),
+        ("content-places.place.created.v1",               typeof(PlaceCreatedIntegrationEvent)),
+        ("content-places.place.updated.v1",               typeof(PlaceUpdatedIntegrationEvent)),
+        ("content-places.place.deleted.v1",               typeof(PlaceDeletedIntegrationEvent)),
+        ("content-places.business.created.v1",            typeof(BusinessCreatedIntegrationEvent)),
+        ("content-places.business.approved.v1",           typeof(BusinessApprovedIntegrationEvent)),
+        ("content-places.business.rejected.v1",           typeof(BusinessRejectedIntegrationEvent)),
+        ("content-places.business.suspended.v1",          typeof(BusinessSuspendedIntegrationEvent)),
+        ("content-places.business.reinstated.v1",         typeof(BusinessReinstatedIntegrationEvent)),
+        ("content-places.service-item.created.v1",        typeof(ServiceItemCreatedIntegrationEvent)),
+        ("content-places.service-item.deleted.v1",        typeof(ServiceItemDeletedIntegrationEvent)),
+        ("content-tours.place.tour-count-updated.v1",     typeof(PlaceTourCountUpdatedIntegrationEvent)),
     ];
 
     // ── Tests ─────────────────────────────────────────────────────────────────
@@ -38,7 +45,7 @@ public sealed class IntegrationEventTypeRegistryTests
     {
         var registered = IntegrationEventTypeRegistry.AllRegisteredTypes;
 
-        registered.Should().HaveCount(13, "all 13 integration events must be registered");
+        registered.Should().HaveCount(19, "all 19 integration events must be registered");
 
         foreach (var (_, type) in KnownMappings)
         {

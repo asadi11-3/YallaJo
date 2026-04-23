@@ -18,7 +18,7 @@ namespace ContentPlaces.Infrastructure.Migrations
 #pragma warning disable 612, 618
             modelBuilder
                 .HasDefaultSchema("content_places")
-                .HasAnnotation("ProductVersion", "9.0.13")
+                .HasAnnotation("ProductVersion", "9.0.15")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -405,6 +405,9 @@ namespace ContentPlaces.Infrastructure.Migrations
                         .HasColumnType("decimal(3,2)")
                         .HasDefaultValue(0m);
 
+                    b.Property<Guid?>("CategoryId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("City")
                         .HasMaxLength(200)
                         .IsUnicode(false)
@@ -508,6 +511,11 @@ namespace ContentPlaces.Infrastructure.Migrations
                         .IsUnicode(false)
                         .HasColumnType("varchar(300)");
 
+                    b.Property<int>("TourCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
@@ -518,12 +526,16 @@ namespace ContentPlaces.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CategoryId");
+
                     b.HasIndex("IsFeatured");
 
                     b.HasIndex("IsVerified");
 
                     b.HasIndex("Slug")
                         .IsUnique();
+
+                    b.HasIndex("TourCount");
 
                     b.ToTable("Places", "content_places");
                 });
@@ -644,11 +656,6 @@ namespace ContentPlaces.Infrastructure.Migrations
                         .HasPrecision(19, 4)
                         .HasColumnType("decimal(19,4)");
 
-                    b.Property<string>("PriceCurrency")
-                        .IsRequired()
-                        .HasMaxLength(3)
-                        .HasColumnType("nvarchar(3)");
-
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
                         .IsRequired()
@@ -658,10 +665,6 @@ namespace ContentPlaces.Infrastructure.Migrations
                     b.Property<decimal?>("SalePrice")
                         .HasPrecision(19, 4)
                         .HasColumnType("decimal(19,4)");
-
-                    b.Property<string>("SalePriceCurrency")
-                        .HasMaxLength(3)
-                        .HasColumnType("nvarchar(3)");
 
                     b.Property<int>("SortOrder")
                         .HasColumnType("int");

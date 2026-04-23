@@ -1,6 +1,7 @@
 using Auth.Contracts.IntegrationEvents;
 using ContentCore.Contracts.IntegrationEvents;
 using ContentPlaces.Contracts.IntegrationEvents;
+using ContentTours.Contracts;
 using Security.Contracts.IntegrationEvents;
 
 namespace YallaJo.SharedKernel.Infrastructure.Abstractions.Integration;
@@ -32,12 +33,24 @@ public static class IntegrationEventTypeRegistry
         // ── ContentCore (1 event) ──
         ["content-core.language.activated.v1"]    = typeof(LanguageActivatedIntegrationEvent),
 
-        // ── ContentPlaces (5 events) ──
-        ["content-places.place.created.v1"]       = typeof(PlaceCreatedIntegrationEvent),
-        ["content-places.place.updated.v1"]       = typeof(PlaceUpdatedIntegrationEvent),
-        ["content-places.place.deleted.v1"]       = typeof(PlaceDeletedIntegrationEvent),
-        ["content-places.service-item.created.v1"] = typeof(ServiceItemCreateIntegrationEvent),
-        ["content-places.service-item.deleted.v1"] = typeof(ServiceItemDeletedIntegrationEvent),
+        // ── ContentPlaces — Places (3 events) ──
+        ["content-places.place.created.v1"]              = typeof(PlaceCreatedIntegrationEvent),
+        ["content-places.place.updated.v1"]              = typeof(PlaceUpdatedIntegrationEvent),
+        ["content-places.place.deleted.v1"]              = typeof(PlaceDeletedIntegrationEvent),
+
+        // ── ContentPlaces — Businesses (5 events) ──
+        ["content-places.business.created.v1"]           = typeof(BusinessCreatedIntegrationEvent),
+        ["content-places.business.approved.v1"]          = typeof(BusinessApprovedIntegrationEvent),
+        ["content-places.business.rejected.v1"]          = typeof(BusinessRejectedIntegrationEvent),
+        ["content-places.business.suspended.v1"]         = typeof(BusinessSuspendedIntegrationEvent),
+        ["content-places.business.reinstated.v1"]        = typeof(BusinessReinstatedIntegrationEvent),
+
+        // ── ContentPlaces — ServiceItems (2 events) ──
+        ["content-places.service-item.created.v1"]       = typeof(ServiceItemCreatedIntegrationEvent),
+        ["content-places.service-item.deleted.v1"]       = typeof(ServiceItemDeletedIntegrationEvent),
+
+        // ── ContentTours (1 event) ──
+        ["content-tours.place.tour-count-updated.v1"]    = typeof(PlaceTourCountUpdatedIntegrationEvent),
     };
 
     private static readonly Dictionary<Type, string> TypeToName =

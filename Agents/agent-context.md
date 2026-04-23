@@ -1,7 +1,7 @@
 # YallaJo — Agent Context & Build Guide
 
-> **Version**: 2.1 · **Last Updated**: 2026-04-22
-> **Build State**: 0 errors · 171 tests pass · Outbox/Inbox production hardening complete (all 5 PRs — see `outbox-hardening-implementation-plan.md`). ContentPlaces Place CQRS event/caching fix pass merged.
+> **Version**: 2.3 · **Last Updated**: 2026-04-23
+> **Build State**: 0 errors · 183 tests pass · 8 integration event handlers added (ContentSeo: Place Created/Updated/Deleted + Business Created; Messaging: Business Approved/Rejected/Suspended/Reinstated). Messaging module now has InboxMessages table + UoW + InboxStore. Full event loop closed for all ContentPlaces.Contracts events.
 
 > **Purpose**: The single source of truth for any AI agent working on YallaJo.
 > **Read every section before writing code.** Every section is a rule you must follow.
@@ -1007,13 +1007,13 @@ Health endpoints:
 | Security | ✅ Fixed | Privilege hierarchy enforcement is now in handlers (Owner > SuperAdmin > Admin > standard roles), and seed identity profiles were aligned to canonical roles for testing (`Owner`, `SuperAdmin`, `Admin`, `TourGuide`, `User`) with one Owner only. |
 | Accounts | ✅ Fixed | Profile self-service flow hardened: UpdateProfile flat-binding fix retained, avatar upload contract fixed (relative `/uploads/...` now accepted by `UpdateAvatarCommandValidator`), and API avatar endpoint now deletes freshly uploaded files when profile update fails (prevents orphan files). Added `tests/Accounts.Tests.Unit` validator regressions. |
 | ContentCore | ✅ Fixed | Full audit + all 11 bugs fixed 2026-04-17, plus WS follow-up remediation: upload magic-byte signature validation (WS6), verified post-commit attachment deletion flow/no-op event handler consistency (WS4), and new migration `20260417115007_UpdateContentCoreUnicodeTranslationCacheAndStatus` for Unicode + CategoryTranslation.Status + TranslationCache hash index. Build: 0 errors. See `Agents/ContentCore-fixes-required.md`. |
-| ContentPlaces | 🟡 In Progress | Tasks 2+3 complete (Business CQRS + state machine + BusinessHours). Task 1 Place CQRS has now been hardened: delete guard fixed, Place UoW now dispatches aggregate domain events through the shared UoW, Place create/update/delete publish outbox integration events, Place queries are cacheable, and Place command handlers now invalidate HybridCache tags. Remaining gap: list filtering still cannot enforce `categoryId`/`hasActiveTours` because the current Place model/query shape has no category or tour-count backing fields yet. Tasks 4–8 remain. |
-| ContentTours | ⬜ Not started | Entities exist, endpoints empty |
+| ContentPlaces | 🟡 In Progress | Major fix pass complete 2026-04-23. Place module fully wired (events, cache, filters including `categoryId`+`hasActiveTours` backed by real entity fields). Business module: 5 integration events + 5 domain event handlers. ServiceItem: full rewrite (IDOR, outbox, correct entity, ICacheableQuery, route split). Geo-search: Haversine single-compute + bounding-box pre-filter + composite index. TourCount+CategoryId on Place entity with migrations. Remaining: Fadwa tasks (staff/amenity auth holes, accessibility guard, integration events, ICacheableQuery on 3 queries, DTO fixes). See `Agents/ContentPlaces-remaining-fix-plan.md`. |
+| ContentTours | 🟡 Partial | Tour entity has business methods (Publish/Archive/Suspend/AssignToPlace/RemoveFromPlace/Delete) + domain event + handler that publishes `PlaceTourCountUpdatedIntegrationEvent` to outbox. Full CQRS + endpoints not started. |
 | ContentBlogs | ⬜ Not started | Entities exist, endpoints empty |
-| ContentSeo | ⬜ Not started | Entities exist, endpoints empty |
+| ContentSeo | 🟡 Partial | 4 handlers consuming ContentPlaces events: PlaceCreated→SeoMetadata+SitemapEntry(active); PlaceUpdated→Touch; PlaceDeleted→Deactivate; BusinessCreated→SeoMetadata+SitemapEntry(inactive). SeoMetadata.Create + SitemapEntry.Create factories added. ContentPlaces.Contracts ref added. Endpoints empty. |
 | Booking | ⬜ Not started | Entities exist, endpoints empty |
 | Finance | ⬜ Not started | Entities exist, endpoints empty |
-| Messaging | ⬜ Not started | Entities exist, endpoints empty |
+| Messaging | 🟡 Partial | InboxMessages table + IMessagingInboxStore + IMessagingUnitOfWork added. Notification.Create factory + NotificationType.Business(7). 4 handlers: BusinessApproved(InApp+Email opt-in), BusinessRejected(InApp+Email unconditional), BusinessSuspended(InApp+Email Critical unconditional), BusinessReinstated(InApp+Email opt-in). ContentPlaces.Contracts ref added. Email/Push dispatch not started. Endpoints empty. |
 | Social | ⬜ Not started | Entities exist, endpoints empty |
 | Tracking | ⬜ Not started | Entities exist, endpoints empty |
 | Analytics | ⬜ Not started | Entities exist, endpoints empty |
@@ -1081,17 +1081,16 @@ This section is the **single source of truth** for what exists in the codebase. 
 - ~~EF Migrations — all ContentCore entity schemas were pre-existing; no new schema changes from this session's fixes~~ ✅ Updated: migration `20260417115007_UpdateContentCoreUnicodeTranslationCacheAndStatus` added for Unicode/Status/hash schema updates
 - Apply latest ContentCore migration to the target database and smoke-test ContentCore attachment/category/language flows in Swagger
 - Add WS10-focused automated tests for signature mismatch rejection, human-reviewed translation preservation, and translation-cache hash dedup race safety
-### Wave 2 — ContentPlaces Full Module (34 endpoints)
-- See `Agents/ContentPlaces-tasks.md` for the complete task breakdown, WBS, and implementation rules
-- **Task 1**: Place CQRS + Admin Actions (8 endpoints) — Phase 1
-  - Remaining Place gap: add real `categoryId` / `hasActiveTours` filtering only after Place/category and tour-count data is modeled in ContentPlaces or exposed via a proper cross-module read path
-- ~~**Task 2**: Business CQRS + Full State Machine (9 endpoints) — Phase 1~~ ✅ Done (+ Reinstate = 10 actual endpoints)
-- ~~**Task 3**: BusinessHours Batch Upsert (2 endpoints) — Phase 1~~ ✅ Done
-- **Task 4**: ServiceItem Full CQRS (5 endpoints) — Phase 1
-- **Task 5**: BusinessAmenity Management (3 endpoints) — Phase 1
-- **Task 6**: BusinessStaff Management (3 endpoints) — Phase 1
-- **Task 7**: Place Geo-Search — Nearby + Map Viewport (2 endpoints) — Phase 2
-- **Task 8**: AccessibilityFeature Get + Update (2 endpoints) — Phase 3
+### Wave 2 — ContentPlaces remaining
+- ~~**Task 1**: Place CQRS + Admin Actions~~ ✅ Done (CategoryId, TourCount, HasActiveTours, Haversine optimized)
+- ~~**Task 2**: Business CQRS + Full State Machine~~ ✅ Done
+- ~~**Task 3**: BusinessHours Batch Upsert~~ ✅ Done
+- ~~**Task 4**: ServiceItem Full CQRS~~ ✅ Done (IDOR, outbox, Category/Description, route split)
+- **Task 5**: BusinessAmenity Management — Fadwa fixes remaining (IDOR, ICacheableQuery, pagination)
+- **Task 6**: BusinessStaff Management — Fadwa fixes remaining (auth hole, IDOR, endpoint auth, ICacheableQuery)
+- ~~**Task 7**: Place Geo-Search~~ ✅ Done (Haversine optimized, bounding-box, composite index)
+- **Task 8**: AccessibilityFeature — Fadwa fixes remaining (admin guard, AccessibilityFeatureDto.Id, ICacheableQuery)
+- See `Agents/ContentPlaces-remaining-fix-plan.md` and `Agents/ContentPlaces-fixes-required.md` for Fadwa's 13 open items
 ### Wave 3 — Phase 1 MVP remaining (~80 endpoints)
 - **ContentTours**: Tours full CQRS (~34 endpoints)
 - **Booking**: Core booking state machine (~32 endpoints)
@@ -1236,7 +1235,7 @@ Before marking a feature complete, verify every item:
 - [ ] Every query implements `ICacheableQuery`
 
 **Security**
-- [ ] No raw SQL with string interpolation
+- [ ] Raw SQL: use `SqlQuery<T>(FormattableString)` or `FromSqlInterpolated` — NOT `SqlQueryRaw`/`FromSqlRaw` with interpolation (injection risk). `SqlQuery<T>($"...")` IS safe — EF converts holes to DbParameter.
 - [ ] File uploads validate MIME + magic bytes, sanitize filename
 - [ ] Prices recalculated server-side (never trust client)
 - [ ] Payment endpoints have idempotency key
@@ -1351,6 +1350,15 @@ Full per-endpoint details: `Agents/endpoint-violations.csv`.
 | 22 | Each module owns its own `IPermissionCatalog` | Adding `Booking` features to `SecurityFeatures` or `AppPermissions.cs` breaks the per-module boundary. Use `BookingFeatures` + `BookingPermissionCatalog`. |
 | 23 | `PermissionPolicyNames.Build()` is the ONLY place the policy name format lives | Don't hard-code `"Permission." + feature + "." + action` anywhere. |
 | 24 | Forgetting to register `IPermissionCatalog` in module DI | Symptom: permissions don't appear in DB after seed. All endpoints return 403. Check startup log for `"Seeding N permissions from M modules: ..."` — your module should be listed. |
+| 25 | **Non-aggregate handlers CANNOT use domain events for outbox** | `ServiceItem`, `BusinessStaff`, `BusinessAmenity`, `BusinessHours`, `AccessibilityFeature` are NOT `IAggregateRoot`. UoW never collects their events. For these entities, inject `IContentPlacesOutboxWriter` (Application interface, Infrastructure impl) and call `outbox.Enqueue(event)` BEFORE `SaveChangesAsync`. Never inject `ContentPlacesDbContext` directly into Application handlers — violates gotcha #22 / Clean Architecture §1.3. |
+| 26 | **`IPublisher.Publish()` is NOT durable — always use the outbox** | `IPublisher.Publish()` is in-process MediatR. App restart between `SaveChanges` and `Publish` = event permanently lost. Every integration event MUST go through `OutboxMessage.Create()` staged in the DbContext and committed atomically with the entity row. See `ServiceItemCreatedIntegrationEvent` for the correct pattern. |
+| 27 | **`EfRepository<T>` requires `IAggregateRoot` — `ServiceItem` removed `IAggregateRoot` so `IServiceItemRepository` must use `IReadRepository + IWriteRepository`** | Changing `ServiceItem` from aggregate to non-aggregate also requires changing the repository interface from `IRepository<T, Guid>` (which has `IAggregateRoot` constraint) to `IReadRepository<T, Guid>, IWriteRepository<T, Guid>`. And the impl from `EfRepository<T, Guid>` to `EfEntityRepository<T, Guid>`. Both changes must be made together or the build breaks. |
+| 28 | **Every new integration event MUST be registered in `IntegrationEventTypeRegistry`** | `OutboxMessage.Create()` calls `IntegrationEventTypeRegistry.GetName()`. Publishing an unregistered event throws `InvalidOperationException` at runtime. Add the stable logical name (e.g. `"content-places.business.approved.v1"`) to `IntegrationEventTypeRegistry.cs` AND update `IntegrationEventTypeRegistryTests.cs` with the new count. Registry lives in `YallaJo.SharedKernel.Infrastructure/Abstractions/Integration/`. |
+| 29 | **Haversine double-computation anti-pattern** | Writing `6371 * ACOS(...)` in both `SELECT` (for alias) and `WHERE` (for filter) runs the formula TWICE per row. SQL Server does not CSE this. Fix: wrap in a derived table — compute once in inner query, filter on the alias in outer query. See `PlaceRepository.GetNearbyAsync` for the correct pattern. |
+| 30 | **`SqlQuery<T>($"...")` FormattableString IS injection-safe — do not confuse with `SqlQueryRaw`** | `context.Database.SqlQuery<T>(FormattableString)` (used with `$"""..."""` verbatim + interpolation) converts every `{hole}` to a `DbParameter`. This is identical safety to `FromSqlInterpolated`. `SqlQueryRaw(string)` is the dangerous overload. Never use `FromSqlRaw($"... {userInput} ...")` — that is a SQL injection vulnerability. |
+| 31 | **Add bounding-box pre-filter before Haversine for geo queries** | Running `ACOS/COS/SIN/RADIANS` on every row is expensive. Add a cheap arithmetic bounding-box (`Latitude BETWEEN minLat AND maxLat AND Longitude BETWEEN minLng AND maxLng`) before the Haversine formula. This eliminates ~99% of rows using the `IX_Places_IsDeleted_Latitude_Longitude` composite index before any trig runs. See `PlaceRepository.GetNearbyAsync`. |
+| 32 | **`TourCount` on Place is denormalized — update via `PlaceTourCountUpdatedIntegrationEvent` inbox** | `Place.TourCount` is owned by ContentPlaces but the authoritative count lives in ContentTours. ContentTours publishes `PlaceTourCountUpdatedIntegrationEvent(PlaceId, ActiveTourCount)` via outbox whenever Tour status or PlaceId changes. ContentPlaces handles it via `PlaceTourCountUpdatedIntegrationEventHandler` inbox handler calling `place.UpdateTourCount(count)`. The count is always a fresh re-query from ContentToursDbContext — never increment/decrement (avoids drift). |
+| 33 | **`HasActiveTours` filter on `ListPlacesQuery` requires `Place.TourCount > 0`** | The `PlaceFilterSpecification` uses `WhereIf(hasActiveTours == true, p => p.TourCount > 0)`. This field is denormalized and kept in sync by the TourCount event flow (gotcha #32). If TourCount is always 0 (e.g. no tours published), the filter will correctly return nothing. Do not try to cross-join ContentTours from ContentPlaces to compute this. |
 
 ---
 
@@ -1396,13 +1404,13 @@ Full per-endpoint details: `Agents/endpoint-violations.csv`.
 | Security | ✅ | Privilege hierarchy enforced. Seed identities cover all roles. `IPermissionCatalog` pattern (PR 3 of auth refactor). |
 | Accounts | ✅ | Profile + avatar self-service with validator + orphan-file cleanup. 3/3 unit tests. |
 | ContentCore | ✅ | Full audit — 11 bugs fixed. All queries cached, all commands evict by tag. 11/11 unit tests. |
-| ContentPlaces | 🟡 | Tasks 2+3 complete (Business CQRS + state machine + BusinessHours). Task 1 (Place) and 4–8 remain. **Has `ICurrentUser` violations — see [§8.1](#81-icurrentuser-violations-8-handlers).** |
-| ContentTours | ⬜ | Entities exist. Endpoints empty. |
+| ContentPlaces | 🟡 | Major fix pass complete (2026-04-23). Place module: all 8 fixes done. Business module: 5 integration events + 5 domain event handlers wired, duplicate DI fixed. ServiceItem: IAggregateRoot removed, Category/Description added, PriceCurrency/SalePriceCurrency columns dropped (migration), outbox pattern, IDOR checks, ICacheableQuery. Geo-search: Haversine single-compute + bounding-box + composite index. TourCount + CategoryId fields added to Place with migrations. Remaining open: Fadwa tasks (staff/amenity IDOR, accessibility admin guard, BusinessStaff integration events, 3 queries ICacheableQuery, AccessibilityFeatureDto.Id, amenity pagination). **Has `ICurrentUser` violations — see [§8.1](#81-icurrentuser-violations-8-handlers).** |
+| ContentTours | 🟡 | Tour entity has business methods (`Publish`, `Archive`, `Suspend`, `AssignToPlace`, `RemoveFromPlace`, `Delete`) + `TourPlaceCountChangedDomainEvent` + `TourPlaceCountChangedDomainEventHandler` that publishes `PlaceTourCountUpdatedIntegrationEvent` to outbox. `PlaceTourCountUpdatedIntegrationEvent` in Contracts. ContentPlaces has inbox handler. All wired end-to-end. Endpoints still empty. Full CQRS not started. |
 | ContentBlogs | ⬜ | Entities exist. Endpoints empty. |
-| ContentSeo | ⬜ | Entities exist. Endpoints empty. |
+| ContentSeo | 🟡 | 4 integration event handlers wired (Place Created/Updated/Deleted + Business Created). SeoMetadata + SitemapEntry factories added. Business SEO created inactive until approval (Phase 2 handler pending). Endpoints empty. |
 | Booking | ⬜ | Entities exist. Endpoints empty. |
 | Finance | ⬜ | Entities exist. Endpoints empty. |
-| Messaging | ⬜ | Entities exist. Endpoints empty. |
+| Messaging | 🟡 | InboxMessages table + UoW + InboxStore. Notification.Create factory. NotificationType.Business added. 4 handlers: BusinessApproved/Rejected/Suspended/Reinstated with correct channel + priority logic. Email/Push dispatch BackgroundService pending. Endpoints empty. |
 | Social | ⬜ | Entities exist. Endpoints empty. |
 | Tracking | ⬜ | Entities exist. Endpoints empty. |
 | Analytics | ⬜ | Entities exist. Endpoints empty. |
@@ -1427,6 +1435,12 @@ History preserved from previous sessions. Add entries immediately after completi
 | # | Module / Feature | Status | Built By | Summary |
 |---|---|---|---|---|
 | 1–37 | (earlier entries) | ✅ | — | See git history before 2026-04-22 |
+| 44 | Messaging — Inbox foundation + 4 Business notification handlers | ✅ | 🤖 Agent | **Foundation**: `IMessagingInboxStore` + `IMessagingUnitOfWork` interfaces (Application), `MessagingInboxStore` + `MessagingUnitOfWork` impls (Infrastructure), `InboxMessageConfiguration` EF config, `InboxMessages` DbSet added to `MessagingDbContext`, DI registered, migration `Messaging_AddInboxMessagesTable` generated. **Entities**: `Notification.Create()` factory + `MarkSent()` + `MarkRead()` methods. `NotificationType.Business = 7` added. **Handlers** (4): `BusinessApprovedIntegrationEventHandler` (InApp always + Email opt-in via `NotificationPreference`); `BusinessRejectedIntegrationEventHandler` (InApp + Email both unconditional — preference override, plan Rule C); `BusinessSuspendedIntegrationEventHandler` (InApp + Email Critical both unconditional — revenue-blocking, plan Rule C); `BusinessReinstatedIntegrationEventHandler` (InApp always + Email opt-in). **Project ref**: `ContentPlaces.Contracts` added to `Messaging.Infrastructure.csproj`. Build: 0 errors. Tests: 183/183. |
+| 45 | ContentSeo — 4 Place+Business integration event handlers | ✅ | 🤖 Agent | **Entities**: `SeoMetadata.Create()` + `UpdateMeta()` (preserves editor ownership). `SitemapEntry.Create()` + `Touch()` + `ChangeUrl()` + `Deactivate()` + `Reactivate()`. **Handlers** (4): `PlaceCreatedIntegrationEventHandler` → creates `SeoMetadata(Place, priority=0.6)` + `SitemapEntry(/places/{slug}, active=true)`; `PlaceUpdatedIntegrationEventHandler` → `Touch()` SitemapEntry, self-heals missing records, logs TODO for slug URL update (event lacks OldSlug); `PlaceDeletedIntegrationEventHandler` → `SitemapEntry.Deactivate()`, SeoMetadata preserved for audit; `BusinessCreatedIntegrationEventHandler` → creates `SeoMetadata(Business, priority=0.5)` + `SitemapEntry(/businesses/{slug}, active=false)` — inactive until admin approves business. All handlers: idempotency guard + single `SaveChangesAsync` per §2.6. **Project ref**: `ContentPlaces.Contracts` added to `ContentSeo.Infrastructure.csproj`. Build: 0 errors. Tests: 183/183. |
+| 40 | ContentPlaces — Full Fix Pass (Mahmoud + Mohammad + Ezz) | ✅ | 🤖 Agent | **Phase 0**: `IContentPlacesOutboxWriter` interface (Application) + `ContentPlacesOutboxWriter` impl (Infrastructure) — clean abstraction for non-aggregate outbox writes, respects gotcha #22. **Phase 1**: `HasActiveTours` + `CategoryId` filters wired into `ListPlacesQuery` → `PlaceFilterSpecification` → `ContentPlacesCacheKeys`. **Phase 2 (Mohammad)**: Duplicate `IBusinessRepository` DI removed; 5 Business integration event records in Contracts (`BusinessCreated/Approved/Rejected/Suspended/Reinstated`); 5 Business domain event handlers in Infrastructure (load business for OwnerId, translate name for Created, write to outbox); `Business.AddOrUpdateTranslation()` method added. **Phase 3 (Ezz)**: `ServiceItem` entity rewritten — `IAggregateRoot` removed, `Category`+`Description` added to `Create`/`Update`, `PriceCurrency`+`SalePriceCurrency` dropped; `ServiceItemConfiguration` cleaned; EF migration `ServiceItem_RemoveDuplicateCurrencyColumns`; `ServiceItemCreate...Event` renamed → `ServiceItemCreated...Event`; `CreateServiceItemResult.cs` namespace cleaned; 3 write handlers rewritten (IDOR + `IContentPlacesOutboxWriter` + `HybridCache`); `ListServiceItemsQueryHandler` filters by `IsAvailable` for public, shows all for owner/admin; `ListServiceItemsQuery` + `GetServiceItemByIdQuery` implement `ICacheableQuery`; `GetNearbyPlacesQuery` + `GetMapViewportQuery` implement `ICacheableQuery`; `GetNearbyPlacesQueryHandler` replaced in-memory Haversine with `IPlaceRepository.GetNearbyAsync` SQL; `NearbyPlaceSummaryDto` corrected shape (Slug, Latitude, Longitude, AverageRating, DistanceKm); ServiceItem routes split (List+Create under `/{businessId}/services`, Get+Update+Delete under `/services/{id}`); `CreateServiceItemRequest`+`UpdateServiceItemRequest` updated with Category+Description. **IntegrationEventTypeRegistry** updated to 19 events (was 13); `IServiceItemRepository` fixed to use `IReadRepository+IWriteRepository` + `EfEntityRepository`. Build: 0 errors. Tests: 183/183. |
+| 41 | Place — CategoryId + TourCount fields | ✅ | 🤖 Agent | Added `Guid? CategoryId` and `int TourCount` (default 0) to `Place` entity with `SetCategory(Guid?)` and `UpdateTourCount(int)` business methods. EF config: nullable `CategoryId` column + `TourCount` column (default 0) + indexes `IX_Places_CategoryId` + `IX_Places_TourCount`. Migration `Place_AddCategoryIdAndTourCount` generated. `PlaceFilterSpecification` now uses real `WhereIf` expressions for both fields (TODOs resolved). Build: 0 errors. Tests: 183/183. |
+| 42 | ContentTours → ContentPlaces TourCount sync (full event flow) | ✅ | 🤖 Agent | **ContentTours.Domain**: `TourPlaceCountChangedDomainEvent(TourId, PlaceId?)` added; Tour entity gained business methods `Publish()`, `Archive()`, `Suspend()`, `AssignToPlace(Guid)`, `RemoveFromPlace()`, `Delete()` — each raises the domain event when a PlaceId is affected. **ContentTours.Contracts**: `PlaceTourCountUpdatedIntegrationEvent(PlaceId, ActiveTourCount)`. **ContentTours.Infrastructure**: `TourPlaceCountChangedDomainEventHandler` — re-queries `ContentToursDbContext.Tours.CountAsync(Published + non-deleted + PlaceId)` to get authoritative count, writes outbox row. **ContentPlaces.Infrastructure**: `PlaceTourCountUpdatedIntegrationEventHandler` inbox handler — idempotency check, `place.UpdateTourCount(count)`, mark processed, `SaveChangesAsync`. `ContentPlaces.Infrastructure.csproj` references `ContentTours.Contracts`. `IntegrationEventTypeRegistry` + test updated. Design principle: ContentTours sends authoritative count (fresh re-query), not delta — idempotent and drift-proof. Build: 0 errors. Tests: 183/183. |
+| 43 | PlaceRepository Haversine optimization | ✅ | 🤖 Agent | Fixed 3 issues in `GetNearbyAsync`: (1) **Double-computation** — Haversine was computed in both SELECT and WHERE (2× per row). Fixed by wrapping in derived table: compute once in inner query, filter on alias in outer query. (2) **No bounding-box pre-filter** — added cheap `Latitude/Longitude BETWEEN` filter (arithmetic, index-scannable) before trig functions, eliminating ~99% of rows early. (3) **No composite index for bounding-box** — added `IX_Places_IsDeleted_Latitude_Longitude` composite index to `PlaceConfiguration` + migration `Place_AddGeoBoundingBoxIndex`. Also confirmed: `SqlQuery<T>($"")` FormattableString IS injection-safe (EF Core converts holes to DbParameter). TODO logged: NetTopologySuite + `geography` column + SPATIAL INDEX when dataset > ~50k places. Build: 0 errors. Tests: 183/183. |
 | 38 | Authorization Refactor — 4 PRs | ✅ | 🤖 Agent | Relocated `MustHavePermissionAttribute` from `Security.Contracts` to `SharedKernel.Presentation`. Moved `PermissionRequirement`/`Handler`/`Provider` from `YallaJo.Api` to `SharedKernel.Presentation`. Moved `AppAction` to `SharedKernel.Application`. Added `IPermissionCatalog` + `PermissionDescriptor` + `PermissionGroup` abstractions. Created `SecurityFeatures` + `SecurityPermissionCatalog`, `ContentCoreFeatures` + `ContentCorePermissionCatalog`, `ContentPlacesFeatures` + `ContentPlacesPermissionCatalog`. Replaced `AppPermissions.cs` god-switch with `RolePermissionMapping` (DI discovery). Deleted `AppFeatures.cs`, `AppRoleGroup.cs`, `AppPermissions.cs`. Updated all 17 consumer endpoint files. Added scaffold templates. Full plan: `Agents/authorization-refactor-plan.md`. 4 commits: `b34ce3f`, `1b69478`, `0829aeb`, `e576f4d`. Build: 0 errors. Tests: 135/135 passed. |
 | 39 | Standardized Agent Context v2 | ✅ | 🤖 Agent | Rewrote `Agents/agent-context.md` from 1402-line legacy version into standardized rules-first structure (§0–§11). Added 2 new non-negotiable rules: (1) every endpoint must have `MustHavePermission` or `AllowAnonymous`; (2) `ICurrentUser` only for ownership/self-comparison. Audited codebase: 28 endpoint violations + 8 `ICurrentUser` handler violations catalogued in §8. Updated gotchas registry (24 entries). Moved `endpoint-authorization-audit.md` + `endpoint-violations.csv` to `Agents/`. References `authorization-refactor-plan.md` + `guide.md` + `YallaJo.md` + Business Rules PDF. |
 
@@ -1436,14 +1450,19 @@ History preserved from previous sessions. Add entries immediately after completi
 - [ ] Fix 8 `ICurrentUser` violations per [§8.1](#81-icurrentuser-violations-8-handlers)
 - [ ] Fix 28 endpoint auth violations per [§8.2](#82-endpoint-authorization-violations-28-endpoints) — 3-phase plan, ~2.5 hrs total
 
-#### Wave 2 — ContentPlaces completion (34 endpoints total)
-- See `Agents/ContentPlaces-tasks.md` for full breakdown
-- Task 1: Place CQRS + Admin Actions (8 endpoints) — Phase 1
-- Task 4: ServiceItem Full CQRS (5 endpoints) — Phase 1
-- Task 5: BusinessAmenity Management (3 endpoints) — Phase 1
-- Task 6: BusinessStaff Management (3 endpoints) — Phase 1
-- Task 7: Place Geo-Search — Nearby + Map Viewport (2 endpoints) — Phase 2
-- Task 8: AccessibilityFeature Get + Update (2 endpoints) — Phase 3
+#### Wave 2 — ContentPlaces remaining (Fadwa tasks)
+See `Agents/ContentPlaces-fixes-required.md` for Fadwa's 13 open items. Summary:
+- [ ] `RemoveBusinessStaff` handler: no auth at all — add `ICurrentUser` + ownership check
+- [ ] `ListBusinessStaff` endpoint: still `.AllowAnonymous()` — must be `MustHavePermission(BusinessStaff, Read)`
+- [ ] `ListBusinessStaffQueryHandler`: no IDOR filtering — inject `ICurrentUser` + `IBusinessRepository`, verify ownership
+- [ ] `UpdateAccessibilityFeatures` handler: no admin guard — add `ICurrentUser` + `IsInRole("Admin")` check
+- [ ] Create `BusinessStaffAddedIntegrationEvent` + `BusinessStaffRemovedIntegrationEvent` in Contracts
+- [ ] 3 query records missing `ICacheableQuery`: `ListBusinessAmenitiesQuery`, `ListBusinessStaffQuery`, `GetAccessibilityFeaturesQuery`
+- [ ] `AccessibilityFeatureDto` missing `Guid Id` field
+- [ ] `ListAmenities` endpoint: `Page`/`PageSize` not bound from query string
+- [ ] Remove manual `CreatedAt = DateTime.UtcNow` from `BusinessAmenity.Create()` and `BusinessStaff.Create()` factories
+- [ ] Fix error codes in amenity/staff handlers (`"Auth.Unauthorized"` → `Error.Unauthorized(msg)`)
+- See `Agents/ContentPlaces-remaining-fix-plan.md` §"What's NOT in this plan" for full list
 
 #### Wave 3 — MVP remaining (~80 endpoints)
 - ContentTours: full CQRS (~34 endpoints)
@@ -1492,8 +1511,8 @@ History preserved from previous sessions. Add entries immediately after completi
 ### PR 2 — Integration Event Type Registry ✅
 
 **New files**:
-- `SharedKernel.Infrastructure/Abstractions/Integration/IntegrationEventTypeRegistry.cs` — maps 13 stable logical names (e.g. `"security.user.created.v1"`) to CLR types; throws on unregistered publish attempts
-- `tests/SharedKernel.Tests.Unit/IntegrationEventTypeRegistryTests.cs` — 5 tests (GetName, TryGetType, roundtrip, unregistered throws)
+- `SharedKernel.Infrastructure/Abstractions/Integration/IntegrationEventTypeRegistry.cs` — maps **19** stable logical names (e.g. `"security.user.created.v1"`) to CLR types; throws on unregistered publish attempts. Started at 13; grew to 19 after ContentPlaces fix pass + ContentTours TourCount event.
+- `tests/SharedKernel.Tests.Unit/IntegrationEventTypeRegistryTests.cs` — 5 tests (GetName, TryGetType, roundtrip, unregistered throws). Count assertion updated to 19.
 
 **Modified files**:
 - `SharedKernel.Infrastructure/YallaJo.SharedKernel.Infrastructure.csproj` — added `<ProjectReference>` to `Auth.Contracts`, `ContentCore.Contracts`, `ContentPlaces.Contracts`, `Security.Contracts`
@@ -1503,17 +1522,22 @@ History preserved from previous sessions. Add entries immediately after completi
 
 **Key gotchas**:
 - Tests that use `OutboxMessage.Create()` with stub events not in the registry will throw. Use `Activator.CreateInstance(typeof(OutboxMessage), nonPublic: true)` + reflection to set properties directly in tests.
-- 13 events across 4 modules. Security (5), Auth (2), ContentCore (1), ContentPlaces (5).
+- Now **19 events** across 5 modules. Security (5), Auth (2), ContentCore (1), ContentPlaces (10), ContentTours (1).
+- `ServiceItemCreateIntegrationEvent` was **renamed** to `ServiceItemCreatedIntegrationEvent` (missing 'd' fixed). Old name no longer exists.
 
-**Registered events (short keys)**:
+**Registered events (short keys)** — current 19 total:
 ```
 security.user.created.v1, security.user.email-verified.v1,
 security.user.password-changed.v1, security.user.password-reset.v1,
 security.user.phone-updated.v1, auth.user.logged-in.v1,
 auth.session.revoked.v1, content-core.language.activated.v1,
 content-places.place.created.v1, content-places.place.updated.v1,
-content-places.place.deleted.v1, content-places.service-item.created.v1,
-content-places.service-item.deleted.v1
+content-places.place.deleted.v1,
+content-places.business.created.v1, content-places.business.approved.v1,
+content-places.business.rejected.v1, content-places.business.suspended.v1,
+content-places.business.reinstated.v1,
+content-places.service-item.created.v1, content-places.service-item.deleted.v1,
+content-tours.place.tour-count-updated.v1
 ```
 
 ---
@@ -1568,6 +1592,11 @@ content-places.service-item.deleted.v1
 - All 14 `OutboxMessageConfiguration.cs` — added `builder.Property(o => o.TraceContext).IsRequired(false).HasMaxLength(500)`
 
 **EF migrations** (`AddOutboxTraceContext`): Created for Accounts, Analytics, Auth, Booking, ContentBlogs, ContentCore, ContentPlaces, ContentSeo, ContentTours. **Still needed (manual)**: Finance, Messaging, Security, Social, Tracking.
+
+**Additional ContentPlaces migrations created in 2026-04-23 fix pass** (apply after AddOutboxTraceContext):
+- `ServiceItem_RemoveDuplicateCurrencyColumns` — drops `PriceCurrency` + `SalePriceCurrency` columns from `ServiceItems`
+- `Place_AddCategoryIdAndTourCount` — adds `CategoryId` (nullable Guid) + `TourCount` (int, default 0) + indexes `IX_Places_CategoryId` + `IX_Places_TourCount`
+- `Place_AddGeoBoundingBoxIndex` — adds composite index `IX_Places_IsDeleted_Latitude_Longitude` for geo bounding-box pre-filter
 
 **Migration command template**:
 ```

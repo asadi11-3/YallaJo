@@ -17,7 +17,8 @@ public sealed class GetServiceItemByIdQueryHandler(
     {
         var item = await serviceItemRepository.GetByIdAsync(request.ServiceItemId, cancellationToken);
 
-        if (item is null || item.BusinessId != request.BusinessId)
+        // BusinessId = Guid.Empty when called from item-level route (no businessId in URL); skip validation.
+        if (item is null || (request.BusinessId != Guid.Empty && item.BusinessId != request.BusinessId))
         {
             return Result<ServiceItemDetailDto>.Failure(
                 new Error("ServiceItem.NotFound", "Service item not found"),
