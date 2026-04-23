@@ -18,8 +18,7 @@
     <Folder Include="Areas\Admin\Modules\Security\Features\Roles\Validators\" />
     <Folder Include="Areas\Admin\Modules\Security\Features\Users\Validators\" />
     <Folder Include="Areas\Auth\Features\Devices\" />
-    <Folder Include="Areas\Auth\Features\ExternalProviders\Mappers\" />
-    <Folder Include="Areas\Auth\Features\ExternalProviders\Validators\" />
+
     <Folder Include="Areas\Auth\Features\ForgotPassword\Validators\" />
     <Folder Include="Areas\Auth\Features\ForgotPassword\Views\" />
     <Folder Include="Areas\Auth\Features\ForgotPassword\ViewModels\" />

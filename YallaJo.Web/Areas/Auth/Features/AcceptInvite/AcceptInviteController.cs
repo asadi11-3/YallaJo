@@ -68,7 +68,3 @@ public sealed class AcceptInviteController : Controller
     }
 }
 
-public sealed class ResendFromExpiredVm
-{
-    public string Email { get; set; } = string.Empty;
-}

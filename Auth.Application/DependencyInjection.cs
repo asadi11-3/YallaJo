@@ -14,11 +14,6 @@ public static class DependencyInjection
         services.AddMediatR(cfg =>
         {
             cfg.RegisterServicesFromAssembly(assembly);
-
-            // reCAPTCHA v3 pipeline guard — MUST run before handler execution
-            // for every command that implements IRecaptchaProtectedCommand.
-            // Keeping it here (open generic) means no handler can forget the
-            // check and no handler can accidentally bypass it.
             cfg.AddOpenBehavior(typeof(RecaptchaValidationBehavior<,>));
         });
 

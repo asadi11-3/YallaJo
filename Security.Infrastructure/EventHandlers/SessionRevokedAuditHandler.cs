@@ -9,8 +9,6 @@ using Security.Infrastructure.Persistence;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 
 namespace Security.Infrastructure.EventHandlers;
-
-
 public sealed class SessionRevokedAuditHandler(
     SecurityDbContext dbContext,
     ISecurityInboxStore inboxStore,
@@ -20,10 +18,9 @@ public sealed class SessionRevokedAuditHandler(
 {
     public async Task Handle(
         IntegrationEventNotification<SessionRevokedIntegrationEvent> notification,
-        CancellationToken ct)
+        CancellationToken cancellationToken)
     {
-        
-        if (await inboxStore.HasBeenProcessedAsync(notification.MessageId, ct))
+        if (await inboxStore.HasBeenProcessedAsync(notification.MessageId, cancellationToken))
         {
             logger.LogWarning(
                 "Security: Message {MessageId} (SessionRevoked for {UserId}) already processed — skipping.",
@@ -41,7 +38,7 @@ public sealed class SessionRevokedAuditHandler(
 
         dbContext.AuditLogs.Add(auditLog);
         inboxStore.MarkAsProcessed(notification.MessageId);
-        await unitOfWork.SaveChangesAsync(ct);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         logger.LogInformation(
             "Security: AuditLog written — LOGOUT for user {UserId}, session {SessionId}.",

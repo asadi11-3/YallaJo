@@ -101,7 +101,6 @@ public sealed class ForgotPasswordCommandHandlerTests
 
         // Simulate an OTP created 10 seconds ago.
         var recent = Otp.Create(userId, "PasswordReset", "hash", "Email", "user@example.com");
-        // Otp.CreatedAt is set by BaseEntity at construction — use it as-is since Create() uses UtcNow.
         _otpRepo.FirstOrDefaultAsync(
             Arg.Any<Expression<Func<Otp, bool>>>(),
             Arg.Any<Func<IQueryable<Otp>, IQueryable<Otp>>?>(),

@@ -3,23 +3,6 @@ using Microsoft.Extensions.Caching.Hybrid;
 
 namespace Auth.Infrastructure.ExternalAuth;
 
-/// <summary>
-/// Distributed one-time-nonce store backed by <see cref="HybridCache"/>.
-///
-/// <para>
-/// Uses a create-or-fail pattern: <see cref="HybridCache.GetOrCreateAsync"/>
-/// atomically inserts the marker value on the first call and returns the
-/// existing value on subsequent calls (detected via a unique sentinel per
-/// invocation). If the sentinel we wrote is not the value that comes back, the
-/// key was already consumed → we return <c>false</c> so the caller rejects the
-/// ticket.
-/// </para>
-///
-/// <para>
-/// Expiration is bounded by the ticket's own <c>ExpiresAt</c> so memory is
-/// reclaimed automatically once the ticket could no longer be replayed anyway.
-/// </para>
-/// </summary>
 internal sealed class HybridCacheExternalAuthNonceStore : IExternalAuthNonceStore
 {
     private const string KeyPrefix = "ext-auth-nonce:";

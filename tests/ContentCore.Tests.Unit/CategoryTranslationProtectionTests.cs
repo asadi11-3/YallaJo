@@ -8,7 +8,7 @@ namespace ContentCore.Tests.Unit;
 public sealed class CategoryTranslationProtectionTests : DomainTestBase
 {
     [Fact]
-    public void TryUpdateAutoTranslation_ShouldNotOverwrite_WhenTranslationIsHumanReviewed()
+    public void TryUpdateAutoTranslationShouldNotOverwriteWhenTranslationIsHumanReviewed()
     {
         var category = Category.Create("Food", RandomSlug(), DefaultSourceLanguageCode);
         var languageId = Guid.NewGuid();
@@ -26,7 +26,7 @@ public sealed class CategoryTranslationProtectionTests : DomainTestBase
     }
 
     [Fact]
-    public void TryUpdateAutoTranslation_ShouldUpdate_WhenTranslationIsAutoTranslated()
+    public void TryUpdateAutoTranslationShouldUpdateWhenTranslationIsAutoTranslated()
     {
         var category = Category.Create("Adventure", RandomSlug(), DefaultSourceLanguageCode);
         var languageId = Guid.NewGuid();
@@ -44,7 +44,7 @@ public sealed class CategoryTranslationProtectionTests : DomainTestBase
     }
 
     [Fact]
-    public void UpsertHumanReviewedTranslation_ShouldCreateThenUpdateSingleTranslation()
+    public void UpsertHumanReviewedTranslationShouldCreateThenUpdateSingleTranslation()
     {
         var category = Category.Create("Nature", RandomSlug(), DefaultSourceLanguageCode);
         var languageId = Guid.NewGuid();

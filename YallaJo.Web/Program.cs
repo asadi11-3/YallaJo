@@ -75,18 +75,6 @@ builder.Services.AddSingleton<IRecaptchaScriptService, RecaptchaScriptService>()
 
 builder.Services.AddAuthorization();
 
-// Runtime availability flag exposed to views so provider buttons are only
-// rendered when the operator has actually configured the provider.
-builder.Services.AddSingleton(sp =>
-{
-    var cfg = sp.GetRequiredService<IConfiguration>();
-    var g = new GoogleProviderOptions();
-    cfg.GetSection(GoogleProviderOptions.SectionName).Bind(g);
-    var f = new FacebookProviderOptions();
-    cfg.GetSection(FacebookProviderOptions.SectionName).Bind(f);
-    return (IExternalProviderAvailability)new ExternalProviderAvailability(g, f);
-});
-
 // ── HttpClient → API (BFF pattern) ───────────────────────────────────────────
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddTransient<JwtAuthHandler>();

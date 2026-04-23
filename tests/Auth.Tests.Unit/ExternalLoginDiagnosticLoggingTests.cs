@@ -236,7 +236,6 @@ public sealed class ExternalLoginDiagnosticLoggingTests
             .Returns(new SecurityUserData(
                 UserId: userId, Email: "user@gmail.com", IsEmailVerified: true,
                 Roles: Array.Empty<string>(), Claims: Array.Empty<(string, string)>()));
-        // First probe (self-same-provider) false, second (taken by other) true.
         _extRepo.AnyAsync(
                 Arg.Any<Expression<Func<ExternalProvider, bool>>>(),
                 Arg.Any<CancellationToken>())
@@ -278,7 +277,9 @@ public sealed class ExternalLoginDiagnosticLoggingTests
         public List<string> WarningMessages { get; } = new();
         public List<string> InformationMessages { get; } = new();
 
+#pragma warning disable SA1127 // Generic type constraints should be on their own line
         public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
+#pragma warning restore SA1127 // Generic type constraints should be on their own line
 
         public bool IsEnabled(LogLevel logLevel) => true;
 

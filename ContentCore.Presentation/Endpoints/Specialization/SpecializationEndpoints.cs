@@ -7,7 +7,6 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using ContentCore.Contracts.Authorization;
-using Security.Contracts.Authorization;
 using YallaJo.SharedKernel.Presentation.Authorization;
 using YallaJo.SharedKernel.Application.Authorization;
 using YallaJo.SharedKernel.Presentation;
@@ -32,7 +31,8 @@ internal static class SpecializationEndpoints
 
         specializations.MapPost("/", async (CreateSpecializationRequest request, ISender sender, CancellationToken ct = default) =>
         {
-            var result = await sender.Send(new CreateSpecializationCommand(
+            var result = await sender.Send(
+                new CreateSpecializationCommand(
                 request.Name,
                 request.Description,
                 request.Icon), ct);
@@ -47,7 +47,8 @@ internal static class SpecializationEndpoints
 
         specializations.MapPut("/{id:guid}", async (Guid id, UpdateSpecializationRequest request, ISender sender, CancellationToken ct = default) =>
         {
-            var result = await sender.Send(new UpdateSpecializationCommand(
+            var result = await sender.Send(
+                new UpdateSpecializationCommand(
                 id,
                 request.Name,
                 request.Description,

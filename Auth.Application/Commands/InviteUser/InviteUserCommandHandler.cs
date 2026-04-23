@@ -10,18 +10,6 @@ using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
 namespace Auth.Application.Commands.InviteUser;
 
-/// <summary>
-/// Admin-initiated user-invite orchestration.
-/// <para>
-/// Creates the Security identity in an invited/pending state (no password,
-/// email unverified, inactive), creates the Accounts profile, generates a
-/// long-lived invite token, and sends the invite link by email.
-/// </para>
-/// <para>
-/// Writes only to <c>Auth.Otp</c> directly; Security &amp; Accounts are touched
-/// strictly through their respective contract services.
-/// </para>
-/// </summary>
 public sealed class InviteUserCommandHandler(
     IUserRegistrationService userRegistrationService,
     IProfileCreationService profileCreationService,
@@ -114,7 +102,8 @@ public sealed class InviteUserCommandHandler(
                 normalizedEmail);
 
             return Result<InviteUserResult>.Failure(
-                Error.Failure("Invite.EmailDeliveryFailed",
+                Error.Failure(
+                    "Invite.EmailDeliveryFailed",
                     "Invite created but we couldn't send the email. Please use Resend Invite."),
                 Outcome.ServerError);
         }

@@ -4,7 +4,6 @@ using Security.Domain.Repositories;
 
 namespace Security.Infrastructure.Services;
 
-
 internal sealed class SecurityService(
     IUserRepository userRepository,
     ISecurityUnitOfWork unitOfWork,
@@ -22,16 +21,15 @@ internal sealed class SecurityService(
             return false;
 
         var emailEntity = user.Emails.FirstOrDefault(
-            e => e.Address == email.Trim().ToLowerInvariant() && e.IsPrimary);
+            e => e.Address.Equals(email.Trim(), StringComparison.OrdinalIgnoreCase) && e.IsPrimary);
 
         if (emailEntity is null)
             return false;
 
         if (emailEntity.IsVerified)
-            return true; 
+            return true;
 
         user.VerifyEmail(emailEntity.Id);
-       
 
         await unitOfWork.SaveChangesAsync(ct);
         return true;
@@ -153,8 +151,6 @@ internal sealed class SecurityService(
             return false;
 
         user.ResetPassword(passwordHasher.Hash(newPassword));
-      
-
         await unitOfWork.SaveChangesAsync(ct);
         return true;
     }

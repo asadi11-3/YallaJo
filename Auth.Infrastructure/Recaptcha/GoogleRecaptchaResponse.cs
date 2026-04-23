@@ -2,11 +2,6 @@ using System.Text.Json.Serialization;
 
 namespace Auth.Infrastructure.Recaptcha;
 
-/// <summary>
-/// Wire model for Google's <c>siteverify</c> JSON response. Fields follow the
-/// snake_case names documented at
-/// https://developers.google.com/recaptcha/docs/verify.
-/// </summary>
 internal sealed class GoogleRecaptchaResponse
 {
     [JsonPropertyName("success")]

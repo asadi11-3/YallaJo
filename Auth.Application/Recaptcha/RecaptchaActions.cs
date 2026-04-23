@@ -1,12 +1,5 @@
 namespace Auth.Application.Recaptcha;
 
-/// <summary>
-/// Canonical reCAPTCHA v3 action names. Each sensitive command declares the
-/// action it expects to see in the token so Google-side telemetry and the
-/// server-side verifier can both enforce that the token was produced by the
-/// right UI flow (e.g. a token issued for "login" cannot be replayed against
-/// the register endpoint).
-/// </summary>
 public static class RecaptchaActions
 {
     public const string Register = "register";

@@ -118,7 +118,6 @@ internal static class InvitationEndpoints
             .RequireRateLimiting(RateLimitPolicies.OtpPolicy);
     }
 
-    // ── Admin: resend invite ─────────────────────────────────────────────────
 
     private static void MapResendInviteEndpoint(RouteGroupBuilder group)
     {
@@ -127,7 +126,8 @@ internal static class InvitationEndpoints
                 ISender sender,
                 CancellationToken ct) =>
             {
-                var result = await sender.Send(new ResendInviteCommand(request.Email), ct);
+                var result = await sender.Send(
+                    new ResendInviteCommand(request.Email), ct);
                 return result.ToApiResult();
             })
             .WithName("ResendInvite")

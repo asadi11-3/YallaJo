@@ -61,8 +61,6 @@ internal static class UserEndpoints
         .RequireAuthorization();
     }
 
-    // ── Admin: user management (/users) ───────────────────────────────────────
-
     private static void MapListUsersEndpoint(RouteGroupBuilder group)
     {
         group.MapGet("/users", async (ISender sender, CancellationToken ct, int page = 1, int pageSize = 20) =>

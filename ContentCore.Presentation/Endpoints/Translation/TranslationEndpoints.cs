@@ -24,7 +24,8 @@ internal static class TranslationEndpoints
 
         translations.MapPost("/translate", async (TranslateRequest request, ISender sender, CancellationToken ct = default) =>
         {
-            var result = await sender.Send(new TranslateTextCommand(
+            var result = await sender.Send(
+                new TranslateTextCommand(
                 request.Text, request.FromLanguageCode, request.ToLanguageCode), ct);
             return result.ToApiResult();
         })
@@ -37,7 +38,8 @@ internal static class TranslationEndpoints
 
         translations.MapPost("/batch", async (BatchTranslateRequest request, ISender sender, CancellationToken ct = default) =>
         {
-            var result = await sender.Send(new BatchTranslateCommand(
+            var result = await sender.Send(
+                new BatchTranslateCommand(
                 request.Texts, request.FromLanguageCode, request.ToLanguageCode), ct);
             return result.ToApiResult();
         })

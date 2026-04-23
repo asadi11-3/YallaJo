@@ -30,8 +30,6 @@ public sealed class RoleHierarchyServiceTests
             .Returns(user);
     }
 
-    // ── EnsureCanManageUserAsync ──────────────────────────────────────────────
-
     [Theory]
     [InlineData(AppRoles.Owner,      AppRoles.SuperAdmin, true)]
     [InlineData(AppRoles.Owner,      AppRoles.Admin,      true)]
@@ -64,7 +62,8 @@ public sealed class RoleHierarchyServiceTests
         var sut = Build(actor, actorRole);
         var result = await sut.EnsureCanManageUserAsync(target, CancellationToken.None);
 
-        result.IsSuccess.Should().Be(shouldAllow,
+        result.IsSuccess.Should().Be(
+            shouldAllow,
             $"{actorRole} managing user with {targetRole} should be {(shouldAllow ? "allowed" : "denied")}");
         if (!shouldAllow)
         {
@@ -75,9 +74,6 @@ public sealed class RoleHierarchyServiceTests
     [Fact]
     public async Task EnsureCanManageUserAsync_DeniesSelfManagement_ForPrivilegedActor()
     {
-        // Owner trying to modify Owner-self — forbidden at the self check
-        // BEFORE the target-level check (because self-modification of one's own
-        // privileged roles should always be an admin-flow violation).
         var selfId = Guid.NewGuid();
         StubTargetUser(selfId, AppRoles.Owner);
 
@@ -105,7 +101,6 @@ public sealed class RoleHierarchyServiceTests
     [Fact]
     public async Task EnsureCanManageUserAsync_UsesHighestPrivilege_WhenActorHasMultipleRoles()
     {
-        // Actor has both Admin and User. Effective level = Admin.
         var actor = Guid.NewGuid();
         var target = Guid.NewGuid();
         StubTargetUser(target, AppRoles.TourGuide);
@@ -119,8 +114,6 @@ public sealed class RoleHierarchyServiceTests
     [Fact]
     public async Task EnsureCanManageUserAsync_UsesHighestPrivilege_WhenTargetHasMultipleRoles()
     {
-        // Target has both Admin AND User. Effective level = Admin. Actor is
-        // also Admin → same-level, denied.
         var actor = Guid.NewGuid();
         var target = Guid.NewGuid();
         StubTargetUser(target, AppRoles.User, AppRoles.Admin);
@@ -145,8 +138,6 @@ public sealed class RoleHierarchyServiceTests
         result.IsSuccess.Should().BeTrue();
     }
 
-    // ── EnsureCanManageRole (assign/remove-role-from-user paths) ──────────────
-
     [Theory]
     [InlineData(AppRoles.Owner,      AppRoles.SuperAdmin, true)]
     [InlineData(AppRoles.Owner,      AppRoles.Admin,      true)]
@@ -168,8 +159,6 @@ public sealed class RoleHierarchyServiceTests
 
         result.IsSuccess.Should().Be(shouldAllow);
     }
-
-    // ── EnsureCanModifyRoleDefinition (role entity paths) ─────────────────────
 
     [Theory]
     [InlineData(AppRoles.Owner,      AppRoles.SuperAdmin, true)]

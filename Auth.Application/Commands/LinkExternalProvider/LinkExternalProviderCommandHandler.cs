@@ -8,26 +8,6 @@ using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
 namespace Auth.Application.Commands.LinkExternalProvider;
 
-/// <summary>
-/// Links an external-provider identity (Google, Facebook, …) to the CURRENT
-/// authenticated user.
-///
-/// <para>Security properties enforced by this handler:</para>
-/// <list type="bullet">
-///   <item><description>Caller must be authenticated — linking without a verified
-///   user context is never allowed.</description></item>
-///   <item><description>Only a verified, single-use, signed ticket is accepted.
-///   Raw provider IDs supplied by the client are rejected.</description></item>
-///   <item><description>Ticket nonce is consumed atomically BEFORE any mutation
-///   so that replay attempts cannot race a successful link.</description></item>
-///   <item><description>A provider identity cannot be linked to more than one user
-///   (enforced in-code + by a filtered unique DB index).</description></item>
-///   <item><description>The same user cannot active-link the same provider twice
-///   (prevents runaway row growth on repeated link clicks).</description></item>
-///   <item><description>Relinking after unlink is allowed — previous row stays
-///   inactive for audit and the filtered index permits insert.</description></item>
-/// </list>
-/// </summary>
 public sealed class LinkExternalProviderCommandHandler(
     IExternalProviderRepository externalProviderRepository,
     IAuthUnitOfWork unitOfWork,
@@ -117,12 +97,6 @@ public sealed class LinkExternalProviderCommandHandler(
 
         await externalProviderRepository.AddAsync(externalProvider, ct);
         await unitOfWork.SaveChangesAsync(ct);
-
-        // NOTE: A concurrent insert that races past the in-code guard will violate
-        // the filtered unique index `IX_ExternalProviders_Provider_ProviderUserId_Active`
-        // — the host's global DbUpdateExceptionHandler maps that to a 409 Conflict
-        // response, so we do not need EF-specific try/catch here.
-
         return Result<Guid>.Success(externalProvider.Id);
     }
 }

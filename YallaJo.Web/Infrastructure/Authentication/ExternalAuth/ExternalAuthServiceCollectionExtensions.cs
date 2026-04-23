@@ -1,6 +1,5 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -17,6 +16,8 @@ namespace YallaJo.Web.Infrastructure.Authentication.ExternalAuth;
 ///   <item><description>Google / Facebook handlers — each registered ONLY when
 ///   ClientId/Secret are configured so that missing config does not crash the
 ///   host (the user just does not see the provider buttons).</description></item>
+///   <item><description><see cref="IExternalProviderAvailability"/> for views
+///   to branch on whether a given provider is actually wired.</description></item>
 /// </list>
 /// </summary>
 public static class ExternalAuthServiceCollectionExtensions
@@ -26,15 +27,24 @@ public static class ExternalAuthServiceCollectionExtensions
         IConfiguration configuration,
         AuthenticationBuilder authBuilder)
     {
-        // BFF options + ticket builder.
+        // ── BFF ticket protocol (shared with the API via ExternalAuth:SigningKey) ─
         services.AddOptions<ExternalAuthOptions>()
             .Bind(configuration.GetSection(ExternalAuthOptions.SectionName));
         services.AddSingleton<IExternalAuthTicketBuilder, ExternalAuthTicketBuilder>();
 
-        // Intermediate cookie scheme used to carry the provider principal from
-        // Challenge → callback. MUST be SameSite=None because the provider may
-        // redirect via a cross-site POST after consent. Secure=Always protects
-        // the cookie in transit.
+        // ── Provider options — bound unconditionally so IExternalProviderAvailability
+        //    always has a concrete value to inspect (its "IsConfigured" flag decides
+        //    whether the UI renders the button). ───────────────────────────────────
+        services.Configure<GoogleProviderOptions>(
+            configuration.GetSection(GoogleProviderOptions.SectionName));
+        services.Configure<FacebookProviderOptions>(
+            configuration.GetSection(FacebookProviderOptions.SectionName));
+        services.AddSingleton<IExternalProviderAvailability, ExternalProviderAvailability>();
+
+        // ── Intermediate cookie scheme used to carry the provider principal from
+        //    Challenge → callback. MUST be SameSite=Lax so that top-level redirects
+        //    back from the provider still present the cookie; Secure=Always protects
+        //    the cookie in transit. ───────────────────────────────────────────────
         authBuilder.AddCookie(ExternalProviderConstants.ExternalSignInScheme, o =>
         {
             o.Cookie.Name = "YallaJo.Web.ExternalSignIn";
@@ -48,10 +58,9 @@ public static class ExternalAuthServiceCollectionExtensions
             o.LoginPath = "/auth/login";
         });
 
-        // Google
+        // ── Google ───────────────────────────────────────────────────────────────
         var google = new GoogleProviderOptions();
         configuration.GetSection(GoogleProviderOptions.SectionName).Bind(google);
-        services.Configure<GoogleProviderOptions>(configuration.GetSection(GoogleProviderOptions.SectionName));
         if (google.IsConfigured)
         {
             authBuilder.AddGoogle(ExternalProviderConstants.Google, o =>
@@ -76,10 +85,9 @@ public static class ExternalAuthServiceCollectionExtensions
             });
         }
 
-        // Facebook
+        // ── Facebook ─────────────────────────────────────────────────────────────
         var facebook = new FacebookProviderOptions();
         configuration.GetSection(FacebookProviderOptions.SectionName).Bind(facebook);
-        services.Configure<FacebookProviderOptions>(configuration.GetSection(FacebookProviderOptions.SectionName));
         if (facebook.IsConfigured)
         {
             authBuilder.AddFacebook(ExternalProviderConstants.Facebook, o =>
@@ -107,35 +115,4 @@ public static class ExternalAuthServiceCollectionExtensions
 
         return authBuilder;
     }
-}
-
-/// <summary>
-/// Exposes at runtime which OAuth providers are configured — used by views to
-/// render buttons ONLY for providers that actually work.
-/// </summary>
-public interface IExternalProviderAvailability
-{
-    bool IsGoogleAvailable { get; }
-    bool IsFacebookAvailable { get; }
-    IReadOnlyList<string> AvailableProviders { get; }
-}
-
-public sealed class ExternalProviderAvailability : IExternalProviderAvailability
-{
-    public ExternalProviderAvailability(
-        GoogleProviderOptions google,
-        FacebookProviderOptions facebook)
-    {
-        IsGoogleAvailable = google.IsConfigured;
-        IsFacebookAvailable = facebook.IsConfigured;
-
-        var list = new List<string>(2);
-        if (IsGoogleAvailable) list.Add(ExternalProviderConstants.Google);
-        if (IsFacebookAvailable) list.Add(ExternalProviderConstants.Facebook);
-        AvailableProviders = list;
-    }
-
-    public bool IsGoogleAvailable { get; }
-    public bool IsFacebookAvailable { get; }
-    public IReadOnlyList<string> AvailableProviders { get; }
 }

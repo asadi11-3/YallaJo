@@ -28,8 +28,6 @@ internal static class BusinessEndpoints
     {
         // ── Businesses ─────────────────────────────────────────────────────────
         var businesses = group.MapGroup("/places/businesses").WithTags("ContentPlaces | Businesses");
-
-
         // GET /places/{id}/businesses — list all businesses for a place
         businesses.MapGet("/places/{id:guid}/businesses", async (
             Guid id,
@@ -270,8 +268,6 @@ internal static class BusinessEndpoints
         .WithSummary("Replace all operating hours for a business (owner or admin only; max 2 entries/day)")
         .RequireAuthorization();
     }
-
-    // ── Helpers ────────────────────────────────────────────────────────────────
 
     private static (Guid? UserId, bool IsAdmin) ExtractUser(HttpContext http)
     {

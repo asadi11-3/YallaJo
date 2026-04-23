@@ -29,8 +29,6 @@ internal static class PlaceEndpoints
     {
         var places = group.MapGroup("/places").WithTags("ContentPlaces | Places");
 
-        // ── Anonymous: public reads ───────────────────────────────────────────
-
         places.MapGet("/", async (
             ISender sender,
             CancellationToken ct,
@@ -106,8 +104,6 @@ internal static class PlaceEndpoints
         .ProducesValidationProblem()
         .WithSummary("Get lightweight map pins for the current viewport bounding box")
         .AllowAnonymous();
-
-        // ── Admin: write operations ───────────────────────────────────────────
 
         places.MapPost("/", async (CreatePlaceRequest request, ICurrentUser currentUser,
             ISender sender, CancellationToken ct) =>

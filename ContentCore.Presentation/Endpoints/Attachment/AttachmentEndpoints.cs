@@ -39,7 +39,8 @@ internal static class AttachmentEndpoints
                 return Results.Unauthorized();
 
             await using var stream = file.OpenReadStream();
-            var result = await sender.Send(new UploadAttachmentCommand(
+            var result = await sender.Send(
+                new UploadAttachmentCommand(
                 stream,
                 file.FileName,
                 file.ContentType,
@@ -105,7 +106,8 @@ internal static class AttachmentEndpoints
             if (!Enum.TryParse<EntityType>(request.EntityType, true, out var entityType))
                 return Results.BadRequest("Invalid EntityType.");
 
-            var result = await sender.Send(new ReorderAttachmentsCommand(
+            var result = await sender.Send(
+                new ReorderAttachmentsCommand(
                 entityType, request.EntityId, request.OrderedAttachmentIds), ct);
             return result.ToApiResult();
         })
@@ -123,7 +125,8 @@ internal static class AttachmentEndpoints
             if (!Enum.TryParse<EntityType>(request.EntityType, true, out var entityType))
                 return Results.BadRequest("Invalid EntityType.");
 
-            var result = await sender.Send(new SetPrimaryImageCommand(
+            var result = await sender.Send(
+                new SetPrimaryImageCommand(
                 entityType, request.EntityId, request.AttachmentId), ct);
             return result.ToApiResult();
         })

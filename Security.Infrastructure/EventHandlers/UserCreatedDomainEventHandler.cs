@@ -7,8 +7,6 @@ using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Infrastructure.Outbox;
 
 namespace Security.Infrastructure.EventHandlers;
-
-
 public sealed class UserCreatedDomainEventHandler(
     SecurityDbContext dbContext,
     ILogger<UserCreatedDomainEventHandler> logger)
@@ -16,7 +14,7 @@ public sealed class UserCreatedDomainEventHandler(
 {
     public Task Handle(
         DomainEventNotification<UserCreatedEvent> notification,
-        CancellationToken ct)
+        CancellationToken cancellationToken)
     {
         var domainEvent = notification.Event;
 
@@ -29,8 +27,6 @@ public sealed class UserCreatedDomainEventHandler(
             domainEvent.Email,
             domainEvent.FirstName,
             domainEvent.LastName);
-
-     
         dbContext.OutboxMessages.Add(OutboxMessage.Create(integrationEvent));
 
         return Task.CompletedTask;

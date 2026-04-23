@@ -8,26 +8,6 @@ using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
 namespace Auth.Infrastructure.ExternalAuth;
 
-/// <summary>
-/// Default HMAC-SHA256 JWT-based implementation of
-/// <see cref="IExternalAuthTicketVerifier"/>.
-///
-/// <para>
-/// Hardening applied:
-/// </para>
-/// <list type="bullet">
-///   <item><description>Algorithm pinned to HS256 — rejects <c>alg=none</c> and
-///   RSA/EC token-confusion attacks.</description></item>
-///   <item><description>Issuer and audience validated.</description></item>
-///   <item><description>Lifetime enforced with a small clock skew; additional
-///   upper-bound check rejects tickets whose nominal TTL exceeds the configured
-///   maximum (defense against an issuer that mis-configures long TTLs).</description></item>
-///   <item><description>Provider claim validated against the server-side
-///   allow-list — adding a provider requires a deliberate config change.</description></item>
-///   <item><description>Required claims (<c>jti</c>, <c>provider</c>,
-///   <c>provider_user_id</c>) must be present and non-empty.</description></item>
-/// </list>
-/// </summary>
 internal sealed class ExternalAuthTicketVerifier : IExternalAuthTicketVerifier
 {
     private static readonly JwtSecurityTokenHandler _handler = new() { MapInboundClaims = false };

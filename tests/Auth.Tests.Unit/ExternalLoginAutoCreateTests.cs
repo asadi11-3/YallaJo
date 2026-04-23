@@ -85,10 +85,6 @@ public sealed class ExternalLoginAutoCreateTests
             .Returns((Guid?)null);
     }
 
-    // ─────────────────────────────────────────────────────────────────────
-    // Happy path
-    // ─────────────────────────────────────────────────────────────────────
-
     [Fact]
     public async Task Handle_ShouldAutoCreate_AndSignIn_WhenNoLocalAccountAndProviderVerifiesEmail()
     {
@@ -209,10 +205,6 @@ public sealed class ExternalLoginAutoCreateTests
         result.IsSuccess.Should().BeTrue();
     }
 
-    // ─────────────────────────────────────────────────────────────────────
-    // Safety refusals
-    // ─────────────────────────────────────────────────────────────────────
-
     [Fact]
     public async Task Handle_ShouldRefuseAutoCreate_WhenProviderDidNotVerifyEmail()
     {
@@ -224,7 +216,6 @@ public sealed class ExternalLoginAutoCreateTests
             CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();
-        // Must never provision when provider did not attest verification.
         await _registration.DidNotReceiveWithAnyArgs().RegisterExternalAsync(default!, default);
         await _profile.DidNotReceiveWithAnyArgs().CreateForUserAsync(default!, default);
         await _extRepo.DidNotReceiveWithAnyArgs().AddAsync(default!, default);
@@ -290,7 +281,7 @@ public sealed class ExternalLoginAutoCreateTests
             CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();
-        // Must NOT create the profile or the link when registration is refused.
+
         await _profile.DidNotReceiveWithAnyArgs().CreateForUserAsync(default!, default);
         await _extRepo.DidNotReceiveWithAnyArgs().AddAsync(default!, default);
     }

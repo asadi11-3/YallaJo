@@ -2,12 +2,6 @@ using Microsoft.Extensions.Options;
 
 namespace Auth.Infrastructure.Recaptcha;
 
-/// <summary>
-/// Fails startup if reCAPTCHA is not configured — preventing the bot-protection
-/// layer from silently running in "bypass" mode because the operator forgot a
-/// secret. Explicit <c>BypassForTesting=true</c> is still honored so CI can
-/// exercise the flow without calling Google.
-/// </summary>
 internal sealed class RecaptchaOptionsValidator : IValidateOptions<RecaptchaOptions>
 {
     public ValidateOptionsResult Validate(string? name, RecaptchaOptions options)

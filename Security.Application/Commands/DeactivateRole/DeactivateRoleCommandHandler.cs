@@ -15,9 +15,9 @@ public sealed class DeactivateRoleCommandHandler(
     HybridCache cache)
     : ICommandHandler<DeactivateRoleCommand>
 {
-    public async Task<Result> Handle(DeactivateRoleCommand request, CancellationToken ct)
+    public async Task<Result> Handle(DeactivateRoleCommand request, CancellationToken cancellationToken)
     {
-        var role = await roleRepository.GetByIdAsync(request.RoleId, ct, asNoTracking: false);
+        var role = await roleRepository.GetByIdAsync(request.RoleId, cancellationToken, asNoTracking: false);
         if (role is null)
             return Result.Failure(RoleErrors.NotFound, Outcome.NotFound);
 
@@ -31,12 +31,12 @@ public sealed class DeactivateRoleCommandHandler(
             return Result.Success(); // idempotent — already deactivated
 
         role.Deactivate();
-        await unitOfWork.SaveChangesAsync(ct);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         // Invalidate roles list AND all user caches: GetUserQuery filters by ur.Role.IsActive,
         // so deactivating a role changes which roles appear in cached UserDto.Roles.
-        await cache.RemoveByTagAsync(SecurityCacheKeys.RolesTag, ct);
-        await cache.RemoveByTagAsync(SecurityCacheKeys.UsersTag, ct);
+        await cache.RemoveByTagAsync(SecurityCacheKeys.RolesTag, cancellationToken);
+        await cache.RemoveByTagAsync(SecurityCacheKeys.UsersTag, cancellationToken);
 
         return Result.Success();
     }

@@ -10,7 +10,6 @@ using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 
 namespace Security.Infrastructure.EventHandlers;
 
-
 public sealed class PasswordResetAuditHandler(
     SecurityDbContext dbContext,
     ISecurityInboxStore inboxStore,
@@ -20,10 +19,9 @@ public sealed class PasswordResetAuditHandler(
 {
     public async Task Handle(
         IntegrationEventNotification<PasswordResetIntegrationEvent> notification,
-        CancellationToken ct)
+        CancellationToken cancellationToken)
     {
-        
-        if (await inboxStore.HasBeenProcessedAsync(notification.MessageId, ct))
+        if (await inboxStore.HasBeenProcessedAsync(notification.MessageId, cancellationToken))
         {
             logger.LogWarning(
                 "Security: Message {MessageId} (PasswordReset for {UserId}) already processed — skipping.",
@@ -41,7 +39,7 @@ public sealed class PasswordResetAuditHandler(
 
         dbContext.AuditLogs.Add(auditLog);
         inboxStore.MarkAsProcessed(notification.MessageId);
-        await unitOfWork.SaveChangesAsync(ct);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         logger.LogInformation(
             "Security: AuditLog written — PASSWORD_RESET for user {UserId}.",

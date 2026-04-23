@@ -6,7 +6,6 @@ using Security.Infrastructure.Persistence;
 namespace Security.Infrastructure.Seeding;
 
 public sealed class SecurityDataSeeder(
-    SecurityDbContext dbContext,
     IRoleRepository roleRepository,
     IRoleClaimRepository roleClaimRepository,
     ISecurityUnitOfWork unitOfWork,

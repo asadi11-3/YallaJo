@@ -3,12 +3,6 @@ using Microsoft.Extensions.Options;
 
 namespace Auth.Infrastructure.ExternalAuth;
 
-/// <summary>
-/// Post-binding validator for <see cref="ExternalAuthOptions"/>. Fails startup
-/// with a clear message if the operator has not configured a strong signing key
-/// — preventing the ExternalAuth ticket protocol from silently running with an
-/// empty or weak secret.
-/// </summary>
 internal sealed class ExternalAuthOptionsValidator : IValidateOptions<ExternalAuthOptions>
 {
     private const int MinimumKeyByteLength = 32;

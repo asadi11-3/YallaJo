@@ -83,7 +83,7 @@ public sealed class ExternalLoginCommandHandlerTests
                 UserId: userId,
                 Email: email,
                 IsEmailVerified: true,
-                Roles: new[] { "User" },
+                Roles: new[] { $"User" },
                 Claims: Array.Empty<(string, string)>()));
     }
 
@@ -120,10 +120,6 @@ public sealed class ExternalLoginCommandHandlerTests
         await _extRepo.DidNotReceiveWithAnyArgs().FindActiveLinkAsync(default!, default!, default);
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Auto-link refusal conditions — every one of these paths must fail closed.
-    // ─────────────────────────────────────────────────────────────────────────
-
     [Fact]
     public async Task Handle_ShouldRefuseAutoLink_WhenTicketHasNoEmail()
     {
@@ -157,8 +153,6 @@ public sealed class ExternalLoginCommandHandlerTests
 
         result.IsFailure.Should().BeTrue();
         result.Outcome.Should().Be(Outcome.Unauthorized);
-        // Must NOT touch local-user lookup or link storage when provider
-        // itself has not attested verification.
         await _security.DidNotReceiveWithAnyArgs().GetUserIdByEmailAsync(default!, default);
         await _extRepo.DidNotReceiveWithAnyArgs().AddAsync(default!, default);
     }
@@ -231,7 +225,6 @@ public sealed class ExternalLoginCommandHandlerTests
         var userId = Guid.NewGuid();
         _security.GetUserIdByEmailAsync("user@gmail.com", Arg.Any<CancellationToken>())
             .Returns(userId);
-        // Deactivated users surface as null from GetUserDataByIdAsync.
         _security.GetUserDataByIdAsync(userId, Arg.Any<CancellationToken>())
             .Returns((SecurityUserData?)null);
 
@@ -298,11 +291,6 @@ public sealed class ExternalLoginCommandHandlerTests
         await _extRepo.DidNotReceiveWithAnyArgs().AddAsync(default!, default);
         await _sessionRepo.DidNotReceiveWithAnyArgs().AddAsync(default!, default);
     }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // Happy paths
-    // ─────────────────────────────────────────────────────────────────────────
-
     [Fact]
     public async Task Handle_ShouldAutoLinkAndSignIn_WhenAllConditionsSafe()
     {
@@ -370,7 +358,7 @@ public sealed class ExternalLoginCommandHandlerTests
                 UserId: userId,
                 Email: "user@gmail.com",
                 IsEmailVerified: true,
-                Roles: new[] { "User" },
+                Roles: new[] { $"User"},
                 Claims: Array.Empty<(string, string)>()));
 
         _tokens.GenerateRefreshToken().Returns("plain-refresh");

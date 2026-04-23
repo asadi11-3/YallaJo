@@ -10,12 +10,14 @@ public sealed class ExternalProvidersApiClient
     private readonly ApiClient _api;
     public ExternalProvidersApiClient(ApiClient api) => _api = api;
 
-    public Task<ApiResult<LinkExternalProviderResponse>> LinkAsync(
-        LinkExternalProviderRequest request, CancellationToken ct = default)
-        => _api.PostAsync<LinkExternalProviderResponse>("/api/v1/auth/external-providers", request, ct);
+    public Task<ApiResult<Guid>> LinkAsync(
+        LinkExternalProviderRequest request,
+        CancellationToken ct = default)
+        => _api.PostAsync<Guid>("/api/v1/auth/external-providers", request, ct);
 
     public Task<ApiResult<ExternalLoginResponse>> LoginAsync(
-        ExternalLoginRequest request, CancellationToken ct = default)
+        ExternalLoginRequest request,
+        CancellationToken ct = default)
         => _api.PostAsync<ExternalLoginResponse>("/api/v1/auth/external-providers/login", request, ct);
 
     public Task<ApiResult> UnlinkAsync(Guid providerId, CancellationToken ct = default)

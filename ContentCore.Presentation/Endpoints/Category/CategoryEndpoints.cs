@@ -21,18 +21,14 @@ internal static class CategoryEndpoints
     internal static void MapCategoryEndpoints(RouteGroupBuilder group)
     {
         var categories = group.MapGroup("/categories").WithTags("ContentCore | Categories");
-
-        // ── Public endpoints — active categories only, no inactive exposure ──────────
-
-        // GET / — Active categories tree (public). isActive/includeInactive params are not accepted
-        // here; anonymous callers NEVER see inactive categories regardless of query params.
         categories.MapGet("/", async (HttpContext http, ISender sender,
             Guid? parentCategoryId = null,
             CancellationToken ct = default) =>
         {
             var withTranslations = http.Request.Headers.AcceptLanguage.Count > 0;
-            var result = await sender.Send(new ListCategoriesQuery(
-                ActiveOnly: true,           // HARDCODED — public route never exposes inactive
+            var result = await sender.Send(
+                new ListCategoriesQuery(
+                ActiveOnly: true,
                 ParentCategoryId: parentCategoryId,
                 WithTranslations: withTranslations), ct);
             return result.ToApiResult();
@@ -66,7 +62,8 @@ internal static class CategoryEndpoints
             CancellationToken ct = default) =>
         {
             var withTranslations = http.Request.Headers.AcceptLanguage.Count > 0;
-            var result = await sender.Send(new ListCategoriesQuery(
+            var result = await sender.Send(
+                new ListCategoriesQuery(
                 ActiveOnly: activeOnly,
                 ParentCategoryId: parentCategoryId,
                 WithTranslations: withTranslations), ct);
@@ -98,7 +95,8 @@ internal static class CategoryEndpoints
         categories.MapPost("/", async (CreateCategoryRequest request, ISender sender,
             CancellationToken ct = default) =>
         {
-            var result = await sender.Send(new CreateCategoryCommand(
+            var result = await sender.Send(
+                new CreateCategoryCommand(
                 request.Name,
                 request.Slug,
                 request.ParentCategoryId,
@@ -118,7 +116,8 @@ internal static class CategoryEndpoints
         categories.MapPut("/{id:guid}", async (Guid id, UpdateCategoryRequest request, ISender sender,
             CancellationToken ct = default) =>
         {
-            var result = await sender.Send(new UpdateCategoryCommand(
+            var result = await sender.Send(
+                new UpdateCategoryCommand(
                 id,
                 request.Name,
                 request.Slug,
@@ -179,7 +178,8 @@ internal static class CategoryEndpoints
         categories.MapPut("/reorder", async (ReorderCategoriesRequest request, ISender sender,
             CancellationToken ct = default) =>
         {
-            var result = await sender.Send(new ReorderCategoriesCommand(
+            var result = await sender.Send(
+                new ReorderCategoriesCommand(
                 request.SortOrders
                     .Select(i => new CategorySortOrderUpdate(i.CategoryId, i.SortOrder))
                     .ToList()), ct);

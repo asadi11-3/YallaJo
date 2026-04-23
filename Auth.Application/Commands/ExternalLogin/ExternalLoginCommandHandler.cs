@@ -411,47 +411,4 @@ public sealed class ExternalLoginCommandHandler(
 
         return AutoLinkOutcome.Linked(candidateUserId, AutoLinkPath.AutoLink);
     }
-
-    /// <summary>Which resolver path produced the outcome — log triage.</summary>
-    internal enum AutoLinkPath
-    {
-        Unresolved = 0,
-        ExistingLink,
-        AutoLink,
-        AutoCreate,
-    }
-
-    /// <summary>Every possible reason external sign-in can refuse.</summary>
-    internal enum AutoLinkRefusalReason
-    {
-        None = 0,
-        TicketMissingEmail,
-        ProviderDidNotVerifyEmail,
-        LocalAccountInactive,
-        LocalEmailNotVerified,
-        ResolvedEmailMismatch,
-        UserAlreadyHasDifferentLinkOnSameProvider,
-        ProviderIdentityOwnedByAnotherUser,
-        ConcurrentAccountCreated,
-        AutoCreateFailed,
-    }
-
-    /// <summary>Unified outcome of any resolver path.</summary>
-    internal readonly record struct AutoLinkOutcome(
-        AutoLinkRefusalReason Reason,
-        AutoLinkPath Path,
-        Guid? LinkedUserId,
-        Guid? CandidateUserId,
-        bool LocalEmailVerified)
-    {
-        public static AutoLinkOutcome Linked(Guid userId, AutoLinkPath path) =>
-            new(AutoLinkRefusalReason.None, path, userId, userId, LocalEmailVerified: true);
-
-        public static AutoLinkOutcome Refused(
-            AutoLinkRefusalReason reason,
-            AutoLinkPath path,
-            Guid? candidateUserId = null,
-            bool localEmailVerified = false) =>
-            new(reason, path, LinkedUserId: null, candidateUserId, localEmailVerified);
-    }
 }

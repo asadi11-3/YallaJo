@@ -7,23 +7,6 @@ using MimeKit;
 
 namespace Auth.Infrastructure.Services;
 
-/// <summary>
-/// Gmail SMTP email service using MailKit.
-/// <para>
-/// Default configuration uses port 465 with implicit TLS
-/// (<see cref="SecureSocketOptions.SslOnConnect"/>) instead of port 587 with
-/// STARTTLS. Rationale: some AV / ISP / VPN middle-boxes intercept SMTP on
-/// 587, complete the TCP handshake locally, then fail to proxy the plaintext
-/// banner — causing <c>ConnectAsync</c> to hang until cancellation fires.
-/// Implicit TLS starts the TLS handshake with the very first byte the client
-/// sends, so a transparent proxy cannot strip or rewrite the banner.
-/// </para>
-/// <para>
-/// All three phases (connect, authenticate, send) are independently bounded
-/// by <see cref="GmailOptions.TimeoutSeconds"/> so a stuck middle-box can
-/// never hang the outbox processor indefinitely.
-/// </para>
-/// </summary>
 internal sealed class GmailEmailService(
     IOptions<GmailOptions> options,
     ILogger<GmailEmailService> logger) : IEmailService

@@ -8,25 +8,6 @@ using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
 namespace Auth.Infrastructure.Recaptcha;
 
-/// <summary>
-/// Default <see cref="IRecaptchaVerifier"/> implementation calling Google's
-/// <c>siteverify</c> endpoint.
-///
-/// <para>Hardening:</para>
-/// <list type="bullet">
-///   <item><description>Short HTTP timeout — the check runs inline on every
-///   sensitive request.</description></item>
-///   <item><description><c>success</c>, <c>action</c>, and <c>score</c> are
-///   ALL required to match. Rejecting just on score would allow a token minted
-///   for a different action to be replayed on another endpoint.</description></item>
-///   <item><description>All failures return a single generic <see cref="Result"/>
-///   — the detailed reason is logged server-side only, never surfaced to the
-///   client (prevents an attacker from using error codes as an oracle).</description></item>
-///   <item><description>Network / deserialization failures FAIL CLOSED: the
-///   verifier returns failure rather than letting the request through when
-///   Google is unreachable.</description></item>
-/// </list>
-/// </summary>
 internal sealed class GoogleRecaptchaVerifier : IRecaptchaVerifier
 {
     public const string HttpClientName = "YallaJo.Recaptcha";

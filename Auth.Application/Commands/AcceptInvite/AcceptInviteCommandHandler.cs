@@ -7,16 +7,6 @@ using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
 namespace Auth.Application.Commands.AcceptInvite;
 
-/// <summary>
-/// Invitee-facing invite-acceptance orchestration.
-/// <para>
-/// Validates the invite token (presence, not-used, not-expired, attempts not
-/// exhausted, hash match), then delegates to
-/// <see cref="IUserRegistrationService.CompleteInviteAsync"/> in Security to:
-/// set the password, mark the primary email verified, and activate the
-/// account — atomically inside Security.
-/// </para>
-/// </summary>
 public sealed class AcceptInviteCommandHandler(
     IUserRegistrationService userRegistrationService,
     IOtpRepository otpRepository,
@@ -26,12 +16,12 @@ public sealed class AcceptInviteCommandHandler(
 {
     public async Task<Result<AcceptInviteResult>> Handle(
         AcceptInviteCommand request,
-        CancellationToken ct)
+        CancellationToken cancellationToken)
     {
         var normalizedEmail = request.Email.Trim().ToLowerInvariant();
 
         // 1. Look up the account status via the Security contract.
-        var status = await userRegistrationService.GetInviteAccountStatusAsync(normalizedEmail, ct);
+        var status = await userRegistrationService.GetInviteAccountStatusAsync(normalizedEmail, cancellationToken);
         if (status is null)
         {
             return Result<AcceptInviteResult>.Failure(
@@ -42,7 +32,8 @@ public sealed class AcceptInviteCommandHandler(
         if (status.IsActive || status.IsEmailVerified)
         {
             return Result<AcceptInviteResult>.Failure(
-                Error.Conflict("Invite.AlreadyCompleted",
+                Error.Conflict(
+                    "Invite.AlreadyCompleted",
                     "This invite has already been accepted. Please sign in instead."),
                 Outcome.Conflict);
         }
@@ -54,7 +45,7 @@ public sealed class AcceptInviteCommandHandler(
                        && !o.IsUsed,
             orderBy: q => q.OrderByDescending(o => o.CreatedAt),
             asNoTracking: false,
-            ct: ct);
+            ct: cancellationToken);
 
         if (invite is null)
         {
@@ -74,7 +65,8 @@ public sealed class AcceptInviteCommandHandler(
         if (invite.IsExpired())
         {
             return Result<AcceptInviteResult>.Failure(
-                Error.Validation("Invite.Expired",
+                Error.Validation(
+                    "Invite.Expired",
                     "This invite has expired. Please ask an administrator to resend it."),
                 Outcome.Invalid);
         }
@@ -83,7 +75,7 @@ public sealed class AcceptInviteCommandHandler(
 
         if (!inviteTokenService.Verify(request.Token, invite.CodeHash))
         {
-            await unitOfWork.SaveChangesAsync(ct); // persist the attempt
+            await unitOfWork.SaveChangesAsync(cancellationToken); // persist the attempt
             return Result<AcceptInviteResult>.Failure(
                 Error.Validation("Invite.Invalid", "Invalid invite token."),
                 Outcome.Invalid);
@@ -91,11 +83,11 @@ public sealed class AcceptInviteCommandHandler(
 
         // 4. Finalize in Security (password + email verified + active) atomically.
         var completion = await userRegistrationService.CompleteInviteAsync(
-            status.UserId, normalizedEmail, request.Password, ct);
+            status.UserId, normalizedEmail, request.Password, cancellationToken);
 
         if (completion.IsFailure)
         {
-            await unitOfWork.SaveChangesAsync(ct); // still persist attempt counter
+            await unitOfWork.SaveChangesAsync(cancellationToken); // still persist attempt counter
             return Result<AcceptInviteResult>.Fail(
                 completion.Outcome,
                 completion.Messages.FirstOrDefault() ?? "Could not accept invite.",
@@ -111,12 +103,12 @@ public sealed class AcceptInviteCommandHandler(
                       && !o.IsUsed
                       && o.Id != invite.Id,
             asNoTracking: false,
-            ct: ct);
+            ct: cancellationToken);
 
         foreach (var other in otherInvites)
             other.MarkUsed();
 
-        await unitOfWork.SaveChangesAsync(ct);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<AcceptInviteResult>.Success(new AcceptInviteResult(status.UserId));
     }

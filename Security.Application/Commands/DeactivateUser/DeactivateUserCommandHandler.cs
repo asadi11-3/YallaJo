@@ -15,15 +15,15 @@ public sealed class DeactivateUserCommandHandler(
     HybridCache cache)
     : ICommandHandler<DeactivateUserCommand>
 {
-    public async Task<Result> Handle(DeactivateUserCommand request, CancellationToken ct)
+    public async Task<Result> Handle(DeactivateUserCommand request, CancellationToken cancellationToken)
     {
-        var user = await userRepository.GetByIdAsync(request.UserId, ct, asNoTracking: false);
+        var user = await userRepository.GetByIdAsync(request.UserId, cancellationToken, asNoTracking: false);
         if (user is null)
             return Result.Failure(UserErrors.NotFound, Outcome.NotFound);
 
         // Hierarchy: deactivation is an effective privilege change — require
         // actor to outrank the target user (prevents Admin locking SuperAdmin).
-        var guard = await hierarchy.EnsureCanManageUserAsync(request.UserId, ct);
+        var guard = await hierarchy.EnsureCanManageUserAsync(request.UserId, cancellationToken);
         if (!guard.IsSuccess)
             return guard;
 
@@ -31,12 +31,11 @@ public sealed class DeactivateUserCommandHandler(
             return Result.Success(); // idempotent — already deactivated
 
         user.Deactivate();
-        await unitOfWork.SaveChangesAsync(ct);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        await cache.RemoveByTagAsync(SecurityCacheKeys.UserTag(request.UserId), ct);
-        await cache.RemoveByTagAsync(SecurityCacheKeys.UsersTag, ct);
+        await cache.RemoveByTagAsync(SecurityCacheKeys.UserTag(request.UserId), cancellationToken);
+        await cache.RemoveByTagAsync(SecurityCacheKeys.UsersTag, cancellationToken);
 
         return Result.Success();
     }
 }
-

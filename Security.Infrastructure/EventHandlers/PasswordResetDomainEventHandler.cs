@@ -15,7 +15,7 @@ public sealed class PasswordResetDomainEventHandler(
 {
     public Task Handle(
         DomainEventNotification<PasswordResetEvent> notification,
-        CancellationToken ct)
+        CancellationToken cancellationToken)
     {
         var domainEvent = notification.Event;
 

@@ -5,13 +5,6 @@ using YallaJo.Web.Infrastructure.Authentication.ExternalAuth;
 
 namespace YallaJo.Web.Areas.Auth.Features.ExternalProviders;
 
-/// <summary>
-/// Manages the linked-providers UI for the signed-in user. Linking itself is
-/// no longer done by form POST — it MUST flow through a real OAuth challenge
-/// at <c>/auth/external/challenge</c> because only a verified provider
-/// identity is accepted by the API. This controller is therefore only a
-/// presentation shell for the list + unlink actions.
-/// </summary>
 [Area("Auth")]
 [Authorize]
 public sealed class ExternalProvidersController : Controller

@@ -32,7 +32,8 @@ internal static class LanguageEndpoints
 
         languages.MapPost("/", async (CreateLanguageRequest request, ISender sender, CancellationToken ct = default) =>
         {
-            var result = await sender.Send(new CreateLanguageCommand(
+            var result = await sender.Send(
+                new CreateLanguageCommand(
                 request.Code, request.Name, request.NativeName, request.IsRtl), ct);
             return result.ToApiResult();
         })
@@ -46,7 +47,8 @@ internal static class LanguageEndpoints
 
         languages.MapPut("/{id:guid}", async (Guid id, UpdateLanguageRequest request, ISender sender, CancellationToken ct = default) =>
         {
-            var result = await sender.Send(new UpdateLanguageCommand(
+            var result = await sender.Send(
+                new UpdateLanguageCommand(
                 id, request.Name, request.NativeName, request.IsRtl, request.IsActive), ct);
             return result.ToApiResult();
         })

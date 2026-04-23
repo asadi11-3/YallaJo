@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using YallaJo.Web.Areas.Auth.Features.ExternalProviders.ViewModels;
 using YallaJo.Web.Infrastructure.Authentication.Claims;
 using YallaJo.Web.Infrastructure.Authentication.ExternalAuth;
@@ -11,34 +10,6 @@ using YallaJo.Web.Infrastructure.Security.Recaptcha;
 
 namespace YallaJo.Web.Areas.Auth.Features.ExternalProviders;
 
-/// <summary>
-/// OAuth entry points for the BFF.
-///
-/// <para>Flow — login:</para>
-/// <list type="number">
-///   <item><description><c>POST /auth/external/challenge</c> → Challenge for provider.</description></item>
-///   <item><description>Provider authenticates user, redirects back.</description></item>
-///   <item><description><c>GET /auth/external/callback</c> → renders a short
-///   interstitial HTML page that collects a reCAPTCHA v3 token client-side.</description></item>
-///   <item><description><c>POST /auth/external/complete</c> → verified ticket
-///   + reCAPTCHA token are forwarded to the API for login or link.</description></item>
-/// </list>
-///
-/// <para>Security notes:</para>
-/// <list type="bullet">
-///   <item><description>Challenge is POST + anti-forgery to block CSRF-driven
-///   linking attacks.</description></item>
-///   <item><description><c>returnUrl</c> is always normalized to a local URL.</description></item>
-///   <item><description>The linking flow records the owning user id inside
-///   the challenge state; the callback refuses to link if that id no longer
-///   matches the currently signed-in user.</description></item>
-///   <item><description>The intermediate cookie is always signed out in the
-///   callback — including on failure.</description></item>
-///   <item><description>Complete is POST + anti-forgery. The reCAPTCHA token
-///   on Complete is enforced by the API — not by this controller — so the
-///   check cannot be bypassed by skipping the interstitial.</description></item>
-/// </list>
-/// </summary>
 [Area("Auth")]
 [AllowAnonymous]
 [Route("auth/external")]
@@ -51,14 +22,6 @@ public sealed class ExternalAuthController : Controller
     private const string ModeItemKey = "ExternalAuth.Mode";
     private const string ReturnUrlItemKey = "ExternalAuth.ReturnUrl";
     private const string OwnerUserItemKey = "ExternalAuth.OwnerUserId";
-
-    // ExternalAuthController and ExternalProvidersController deliberately share
-    // the "ExternalProviders" feature folder — they are two controllers for one
-    // feature (OAuth round-trip + linked-providers management). The default
-    // ~/Areas/{area}/Features/{controller}/Views/{view}.cshtml convention would
-    // send Razor looking for Complete.cshtml under Features/ExternalAuth/Views/
-    // which does not exist. Use the explicit feature-folder path so the view
-    // resolves regardless of which controller renders it.
     private const string CompleteViewPath =
         "~/Areas/Auth/Features/ExternalProviders/Views/Complete.cshtml";
 
@@ -116,12 +79,6 @@ public sealed class ExternalAuthController : Controller
         return Challenge(props, provider);
     }
 
-    /// <summary>
-    /// Common callback. Reads the provider identity from the intermediate cookie,
-    /// signs that cookie out, mints a short-lived BFF ticket, then hands off to
-    /// an interstitial view that collects a reCAPTCHA token client-side and
-    /// posts everything to <see cref="Complete"/>.
-    /// </summary>
     [HttpGet("callback")]
     public async Task<IActionResult> Callback(string provider, string? mode)
     {
@@ -131,7 +88,6 @@ public sealed class ExternalAuthController : Controller
         var authResult = await HttpContext.AuthenticateAsync(
             ExternalProviderConstants.ExternalSignInScheme);
 
-        // Always sign out the intermediate cookie — even on failure.
         await HttpContext.SignOutAsync(ExternalProviderConstants.ExternalSignInScheme);
 
         if (!authResult.Succeeded || authResult.Principal is null)
@@ -147,24 +103,13 @@ public sealed class ExternalAuthController : Controller
         var providerUserId = authResult.Principal.FindFirstValue(ClaimTypes.NameIdentifier);
         var email = authResult.Principal.FindFirstValue(ClaimTypes.Email);
 
-        // Use the shared constant so the wire-format claim name is defined
-        // in ONE place (Web BFF issues it, API verifier reads it). A previous
-        // version hardcoded the literal string here which made it drift-prone.
         var emailVerifiedClaim = authResult.Principal.FindFirstValue(
             ExternalAuthTicketClaims.EmailVerified);
         var emailVerified = bool.TryParse(emailVerifiedClaim, out var ev) && ev;
 
-        // Provider-surfaced names — used by the API's auto-create path on
-        // first-time external sign-in. Both Google ("given_name"/"family_name")
-        // and Facebook ("first_name"/"last_name") are already mapped by the
-        // respective default ClaimActions to ClaimTypes.GivenName/Surname.
         var firstName = authResult.Principal.FindFirstValue(ClaimTypes.GivenName);
         var lastName = authResult.Principal.FindFirstValue(ClaimTypes.Surname);
 
-        // Diagnostic log: without this, a runtime failure inside the auto-link
-        // path on the API looks like a total black box from the Web side.
-        // Logs at Information because it fires on EVERY external-login round
-        // trip — operators can toggle it via category filter.
         _logger.LogInformation(
             "External auth callback: Provider={Provider} ProviderUserId={ProviderUserId} HasEmail={HasEmail} EmailVerifiedClaim={EmailVerifiedClaim} ParsedEmailVerified={ParsedEmailVerified} Mode={Mode}",
             provider,
@@ -202,8 +147,6 @@ public sealed class ExternalAuthController : Controller
             }
         }
 
-        // Mint the single-use BFF ticket now — its own TTL (2 min) bounds how
-        // long the interstitial can stall before the ticket expires.
         var ticket = _facade.BuildTicket(
             provider, providerUserId, email, emailVerified, firstName, lastName);
 
@@ -221,11 +164,6 @@ public sealed class ExternalAuthController : Controller
         return View(CompleteViewPath, vm);
     }
 
-    /// <summary>
-    /// Interstitial POST-back. Receives the BFF-signed ticket plus a reCAPTCHA
-    /// v3 token minted in the browser, and hands both off to the API. Anti-forgery
-    /// is enforced — the interstitial page includes the token.
-    /// </summary>
     [HttpPost("complete")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Complete(

@@ -1,7 +1,6 @@
 using FluentAssertions;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
@@ -11,16 +10,6 @@ using YallaJo.SharedKernel.Infrastructure.Outbox;
 
 namespace SharedKernel.Tests.Unit;
 
-/// <summary>
-/// Verifies the outbox processor's resilience guarantees after the refactor
-/// away from <c>mediator.Publish</c>:
-///   1. One throwing handler MUST NOT block another handler for the same event.
-///   2. A message is only marked processed when ALL handlers succeed.
-///   3. A transient handler failure increments RetryCount but the message is
-///      re-picked on the next run; once all handlers are happy, RetryCount is
-///      left as history and ProcessedOnUtc is set.
-///   4. Cancellation aborts cleanly without marking the message processed.
-/// </summary>
 public sealed class OutboxProcessorTests
 {
     // ── Fixture: a minimal DbContext hosting the outbox table ──────────────────
@@ -80,8 +69,6 @@ public sealed class OutboxProcessorTests
         }
     }
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
-
     private static (IServiceProvider sp, RecordingState state, OutboxProcessor<OutboxOnlyDbContext> processor)
         BuildHarness()
     {
@@ -125,8 +112,6 @@ public sealed class OutboxProcessorTests
         var db = scope.ServiceProvider.GetRequiredService<OutboxOnlyDbContext>();
         return await db.OutboxMessages.FindAsync(id);
     }
-
-    // ── Tests ─────────────────────────────────────────────────────────────────
 
     [Fact]
     public async Task AllHandlersSucceed_ShouldMarkMessageProcessed()
