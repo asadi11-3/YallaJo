@@ -30,8 +30,15 @@ public static class IntegrationEventTypeRegistry
         ["auth.user.logged-in.v1"]                = typeof(UserLoggedInIntegrationEvent),
         ["auth.session.revoked.v1"]               = typeof(SessionRevokedIntegrationEvent),
 
-        // ── ContentCore (1 event) ──
-        ["content-core.language.activated.v1"]    = typeof(LanguageActivatedIntegrationEvent),
+        // ── ContentCore (8 events) ──
+        ["content-core.language.activated.v1"]         = typeof(LanguageActivatedIntegrationEvent),
+        ["content-core.language.deactivated.v1"]       = typeof(LanguageDeactivatedIntegrationEvent),
+        ["content-core.attachment.uploaded.v1"]        = typeof(AttachmentUploadedIntegrationEvent),
+        ["content-core.attachment.deleted.v1"]         = typeof(AttachmentDeletedIntegrationEvent),
+        ["content-core.category.created.v1"]           = typeof(CategoryCreatedIntegrationEvent),
+        ["content-core.category.updated.v1"]           = typeof(CategoryUpdatedIntegrationEvent),
+        ["content-core.category.deleted.v1"]           = typeof(CategoryDeletedIntegrationEvent),
+        ["content-core.category.restored.v1"]          = typeof(CategoryRestoredIntegrationEvent),
 
         // ── ContentPlaces — Places (3 events) ──
         ["content-places.place.created.v1"]              = typeof(PlaceCreatedIntegrationEvent),

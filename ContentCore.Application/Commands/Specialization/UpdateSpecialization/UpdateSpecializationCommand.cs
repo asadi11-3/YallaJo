@@ -7,4 +7,5 @@ public sealed record UpdateSpecializationCommand(
     string Name,
     string? Description,
     string? Icon,
-    bool? IsActive) : ICommand<UpdateSpecializationResult>;
+    bool? IsActive,
+    string SourceLanguageCode = "en") : ICommand<UpdateSpecializationResult>;

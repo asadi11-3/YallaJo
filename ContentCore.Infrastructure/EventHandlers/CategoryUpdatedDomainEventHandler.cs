@@ -1,17 +1,27 @@
+using ContentCore.Contracts.IntegrationEvents;
 using ContentCore.Domain.Entities;
 using ContentCore.Domain.Events;
 using ContentCore.Domain.Repositories;
+using ContentCore.Infrastructure.Persistence;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Application.Abstractions.Translation;
+using YallaJo.SharedKernel.Infrastructure.Outbox;
 
 namespace ContentCore.Infrastructure.EventHandlers;
 
+/// <summary>
+/// Handles CategoryUpdatedDomainEvent:
+///   1. Re-translates auto-translated names to all active languages (human-reviewed are protected).
+///   2. Publishes <see cref="CategoryUpdatedIntegrationEvent"/> to the outbox so downstream
+///      modules (e.g. ContentSeo) can invalidate cached slugs.
+/// </summary>
 public sealed class CategoryUpdatedDomainEventHandler(
     IEntityTranslationOrchestrator orchestrator,
     ICategoryRepository categoryRepository,
+    ContentCoreDbContext dbContext,
     ILogger<CategoryUpdatedDomainEventHandler> logger)
     : INotificationHandler<DomainEventNotification<CategoryUpdatedDomainEvent>>
 {
@@ -76,11 +86,16 @@ public sealed class CategoryUpdatedDomainEventHandler(
             }
         }
 
-        if (updatedCount == 0 && addedCount == 0)
-            return;
+        // Publish integration event to outbox (no SaveChanges — UoW commits atomically)
+        dbContext.OutboxMessages.Add(OutboxMessage.Create(
+            new CategoryUpdatedIntegrationEvent(
+                category.Id,
+                category.Name,
+                category.Slug,
+                evt.SourceLanguageCode)));
 
         logger.LogInformation(
-            "CategoryUpdatedDomainEvent: Updated {UpdatedCount}, added {AddedCount}, skipped {SkippedHumanReviewed} (human-reviewed) for category {CategoryId}.",
+            "CategoryUpdatedDomainEvent: Updated {UpdatedCount}, added {AddedCount}, skipped {SkippedHumanReviewed} (human-reviewed), queued outbox for category {CategoryId}.",
             updatedCount,
             addedCount,
             skippedHumanReviewedCount,

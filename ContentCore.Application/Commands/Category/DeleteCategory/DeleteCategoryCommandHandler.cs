@@ -1,3 +1,4 @@
+using ContentCore.Domain.Events;
 using ContentCore.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
@@ -41,6 +42,7 @@ public sealed class DeleteCategoryCommandHandler(
             }
 
             category.SoftDelete();
+            category.AddDomainEvent(new CategoryDeletedDomainEvent(category.Id, category.Slug));
 
             try
             {

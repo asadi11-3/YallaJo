@@ -1,3 +1,3 @@
 namespace ContentCore.Presentation.Endpoints.Tag.Models;
 
-public sealed record CreateTagRequest(string Name, string Slug);
+public sealed record CreateTagRequest(string Name, string Slug, string SourceLanguageCode = "en");

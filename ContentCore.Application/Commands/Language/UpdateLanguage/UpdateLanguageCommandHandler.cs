@@ -51,6 +51,7 @@ public sealed class UpdateLanguageCommandHandler(
             }
 
             await cache.RemoveByTagAsync("languages", cancellationToken);
+            await cache.RemoveByTagAsync($"language:{language.Id}", cancellationToken);
 
             logger.LogInformation(
                 "Language updated: {LanguageId} (Code={Code}, IsActive={IsActive})",

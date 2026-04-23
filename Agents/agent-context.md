@@ -1,7 +1,7 @@
 # YallaJo — Agent Context & Build Guide
 
-> **Version**: 2.3 · **Last Updated**: 2026-04-23
-> **Build State**: 0 errors · 183 tests pass · 8 integration event handlers added (ContentSeo: Place Created/Updated/Deleted + Business Created; Messaging: Business Approved/Rejected/Suspended/Reinstated). Messaging module now has InboxMessages table + UoW + InboxStore. Full event loop closed for all ContentPlaces.Contracts events.
+> **Version**: 2.4 · **Last Updated**: 2026-04-23
+> **Build State**: 0 errors · 916 warnings (style/lint, pre-existing) · ContentCore GAP audit complete (GAP-01→13). Added: ILogger to ReactivateCategoryCommandHandler; RestoreCategoryCommand/Handler/Validator/Result + PATCH /categories/{id}/restore (uses GetByIdIncludingDeletedAsync + AuditableEntity.Restore()); GetEntityTranslationsQuery now accepts optional LanguageCode+TranslationStatus filters (GAP-11); TODO comments added to CategoryCreatedDomainEventHandler, CategoryUpdatedDomainEventHandler, AttachmentUploadedDomainEventHandler for deferred GAP-09/10. GAP-14/15 deferred (multilingual tag/specialization — major design change).
 
 > **Purpose**: The single source of truth for any AI agent working on YallaJo.
 > **Read every section before writing code.** Every section is a rule you must follow.

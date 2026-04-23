@@ -18,7 +18,7 @@ namespace ContentCore.Infrastructure.Migrations
 #pragma warning disable 612, 618
             modelBuilder
                 .HasDefaultSchema("content_core")
-                .HasAnnotation("ProductVersion", "9.0.13")
+                .HasAnnotation("ProductVersion", "9.0.15")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -380,12 +380,65 @@ namespace ContentCore.Infrastructure.Migrations
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("rowversion");
 
+                    b.Property<string>("SourceLanguageCode")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(10)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(10)")
+                        .HasDefaultValue("en");
+
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
 
                     b.ToTable("Specializations", "content_core");
+                });
+
+            modelBuilder.Entity("ContentCore.Domain.Entities.SpecializationTranslation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(1000)
+                        .IsUnicode(true)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<Guid>("LanguageId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .IsUnicode(true)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<Guid>("SpecializationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte>("Status")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("tinyint")
+                        .HasDefaultValue((byte)1);
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LanguageId")
+                        .HasDatabaseName("IX_SpecializationTranslations_LanguageId");
+
+                    b.HasIndex("SpecializationId", "LanguageId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_SpecializationTranslations_SpecId_LanguageId");
+
+                    b.ToTable("SpecializationTranslations", "content_core");
                 });
 
             modelBuilder.Entity("ContentCore.Domain.Entities.Tag", b =>
@@ -425,6 +478,14 @@ namespace ContentCore.Infrastructure.Migrations
                         .IsUnicode(false)
                         .HasColumnType("varchar(100)");
 
+                    b.Property<string>("SourceLanguageCode")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(10)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(10)")
+                        .HasDefaultValue("en");
+
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
@@ -434,6 +495,52 @@ namespace ContentCore.Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("Tags", "content_core");
+                });
+
+            modelBuilder.Entity("ContentCore.Domain.Entities.TagTranslation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("LanguageId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .IsUnicode(true)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<byte>("Status")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("tinyint")
+                        .HasDefaultValue((byte)1);
+
+                    b.Property<Guid>("TagId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LanguageId")
+                        .HasDatabaseName("IX_TagTranslations_LanguageId");
+
+                    b.HasIndex("TagId", "LanguageId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_TagTranslations_TagId_LanguageId");
+
+                    b.ToTable("TagTranslations", "content_core");
                 });
 
             modelBuilder.Entity("ContentCore.Domain.Entities.TranslationCache", b =>
@@ -619,10 +726,42 @@ namespace ContentCore.Infrastructure.Migrations
                     b.Navigation("Tag");
                 });
 
+            modelBuilder.Entity("ContentCore.Domain.Entities.SpecializationTranslation", b =>
+                {
+                    b.HasOne("ContentCore.Domain.Entities.Specialization", "Specialization")
+                        .WithMany("Translations")
+                        .HasForeignKey("SpecializationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Specialization");
+                });
+
+            modelBuilder.Entity("ContentCore.Domain.Entities.TagTranslation", b =>
+                {
+                    b.HasOne("ContentCore.Domain.Entities.Tag", "Tag")
+                        .WithMany("Translations")
+                        .HasForeignKey("TagId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Tag");
+                });
+
             modelBuilder.Entity("ContentCore.Domain.Entities.Category", b =>
                 {
                     b.Navigation("SubCategories");
 
+                    b.Navigation("Translations");
+                });
+
+            modelBuilder.Entity("ContentCore.Domain.Entities.Specialization", b =>
+                {
+                    b.Navigation("Translations");
+                });
+
+            modelBuilder.Entity("ContentCore.Domain.Entities.Tag", b =>
+                {
                     b.Navigation("Translations");
                 });
 #pragma warning restore 612, 618

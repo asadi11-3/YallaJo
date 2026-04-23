@@ -2,6 +2,7 @@ using ContentCore.Domain.Repositories;
 using ContentCore.Domain.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
+using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 using CategoryEntity = ContentCore.Domain.Entities.Category;
@@ -13,7 +14,8 @@ public sealed class UpdateCategoryCommandHandler(
     ICategoryRepository categoryRepository,
     ICategoryHierarchyService hierarchyService,
     IContentCoreUnitOfWork unitOfWork,
-    HybridCache cache)
+    HybridCache cache,
+    ILogger<UpdateCategoryCommandHandler> logger)
     : ICommandHandler<UpdateCategoryCommand, UpdateCategoryResult>
 {
     public async Task<Result<UpdateCategoryResult>> Handle(
@@ -61,6 +63,8 @@ public sealed class UpdateCategoryCommandHandler(
             }
 
             await cache.RemoveByTagAsync("categories", cancellationToken);
+
+            logger.LogInformation("Category updated: {CategoryId} (Slug={Slug})", category.Id, category.Slug);
 
             return Result<UpdateCategoryResult>.Success(
                 new UpdateCategoryResult(

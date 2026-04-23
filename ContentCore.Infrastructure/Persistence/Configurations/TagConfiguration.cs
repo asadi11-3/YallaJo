@@ -27,6 +27,12 @@ public class TagConfiguration : IEntityTypeConfiguration<Tag>
             .IsRequired()
             .HasDefaultValue(true);
 
+        builder.Property(x => x.SourceLanguageCode)
+            .IsRequired()
+            .IsUnicode(false)
+            .HasMaxLength(10)
+            .HasDefaultValue("en");
+
         // CreatedAt, UpdatedAt, RowVersion, IsDeleted, DeletedAt are managed by
         // AuditableEntity's shared EF base configuration in SharedKernel. Do not re-configure here.
 

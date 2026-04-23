@@ -13,7 +13,7 @@ namespace SharedKernel.Tests.Unit;
 /// </summary>
 public sealed class IntegrationEventTypeRegistryTests
 {
-    // ── All 19 expected types ─────────────────────────────────────────────────
+    // ── All 26 expected types ─────────────────────────────────────────────────
 
     private static readonly (string Key, Type Type)[] KnownMappings =
     [
@@ -25,6 +25,13 @@ public sealed class IntegrationEventTypeRegistryTests
         ("auth.user.logged-in.v1",                        typeof(UserLoggedInIntegrationEvent)),
         ("auth.session.revoked.v1",                       typeof(SessionRevokedIntegrationEvent)),
         ("content-core.language.activated.v1",            typeof(LanguageActivatedIntegrationEvent)),
+        ("content-core.language.deactivated.v1",          typeof(LanguageDeactivatedIntegrationEvent)),
+        ("content-core.attachment.uploaded.v1",           typeof(AttachmentUploadedIntegrationEvent)),
+        ("content-core.attachment.deleted.v1",            typeof(AttachmentDeletedIntegrationEvent)),
+        ("content-core.category.created.v1",              typeof(CategoryCreatedIntegrationEvent)),
+        ("content-core.category.updated.v1",              typeof(CategoryUpdatedIntegrationEvent)),
+        ("content-core.category.deleted.v1",              typeof(CategoryDeletedIntegrationEvent)),
+        ("content-core.category.restored.v1",             typeof(CategoryRestoredIntegrationEvent)),
         ("content-places.place.created.v1",               typeof(PlaceCreatedIntegrationEvent)),
         ("content-places.place.updated.v1",               typeof(PlaceUpdatedIntegrationEvent)),
         ("content-places.place.deleted.v1",               typeof(PlaceDeletedIntegrationEvent)),
@@ -41,11 +48,11 @@ public sealed class IntegrationEventTypeRegistryTests
     // ── Tests ─────────────────────────────────────────────────────────────────
 
     [Fact]
-    public void AllRegisteredTypes_Contains_All13Events()
+    public void AllRegisteredTypes_Contains_All26Events()
     {
         var registered = IntegrationEventTypeRegistry.AllRegisteredTypes;
 
-        registered.Should().HaveCount(19, "all 19 integration events must be registered");
+        registered.Should().HaveCount(26, "all 26 integration events must be registered");
 
         foreach (var (_, type) in KnownMappings)
         {

@@ -1,17 +1,27 @@
+using ContentCore.Contracts.IntegrationEvents;
 using ContentCore.Domain.Entities;
 using ContentCore.Domain.Events;
 using ContentCore.Domain.Repositories;
+using ContentCore.Infrastructure.Persistence;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Application.Abstractions.Translation;
+using YallaJo.SharedKernel.Infrastructure.Outbox;
 
 namespace ContentCore.Infrastructure.EventHandlers;
 
+/// <summary>
+/// Handles CategoryCreatedDomainEvent:
+///   1. Auto-translates the category name to all active languages.
+///   2. Publishes <see cref="CategoryCreatedIntegrationEvent"/> to the outbox so downstream
+///      modules (e.g. ContentSeo) can react by auto-creating SeoMetadata.
+/// </summary>
 public sealed class CategoryCreatedDomainEventHandler(
     IEntityTranslationOrchestrator orchestrator,
     ICategoryRepository categoryRepository,
+    ContentCoreDbContext dbContext,
     ILogger<CategoryCreatedDomainEventHandler> logger)
     : INotificationHandler<DomainEventNotification<CategoryCreatedDomainEvent>>
 {
@@ -52,7 +62,6 @@ public sealed class CategoryCreatedDomainEventHandler(
             if (!set.Fields.TryGetValue("Name", out var translatedName) || string.IsNullOrWhiteSpace(translatedName))
                 continue;
 
-            // Slug generation delegates to the domain entity's canonical rule.
             category.AddTranslation(
                 set.LanguageId,
                 translatedName,
@@ -61,13 +70,17 @@ public sealed class CategoryCreatedDomainEventHandler(
             addedTranslations++;
         }
 
-        if (addedTranslations == 0)
-            return;
-
-        // No explicit Update() call needed — EF ChangeTracker detects changes
+        // Publish integration event to outbox (no SaveChanges — UoW commits atomically)
+        dbContext.OutboxMessages.Add(OutboxMessage.Create(
+            new CategoryCreatedIntegrationEvent(
+                category.Id,
+                category.Name,
+                category.Slug,
+                category.ParentCategoryId,
+                evt.SourceLanguageCode)));
 
         logger.LogInformation(
-            "CategoryCreatedDomainEvent: Added {TranslationCount} translations for category {CategoryId}.",
+            "CategoryCreatedDomainEvent: Added {TranslationCount} translations and queued outbox for category {CategoryId}.",
             addedTranslations,
             category.Id);
     }
