@@ -41,8 +41,11 @@ public sealed class ExternalProvidersFacade
         string provider,
         string providerUserId,
         string? email,
-        bool emailVerifiedByProvider) =>
-        _ticketBuilder.Build(provider, providerUserId, email, emailVerifiedByProvider);
+        bool emailVerifiedByProvider,
+        string? firstName = null,
+        string? lastName = null) =>
+        _ticketBuilder.Build(
+            provider, providerUserId, email, emailVerifiedByProvider, firstName, lastName);
 
     /// <summary>
     /// Link the external identity to the currently-signed-in user. Caller MUST
@@ -100,8 +103,10 @@ public sealed class ExternalProvidersFacade
 
         if (result.IsUnauthorized)
         {
-            // Deliberately generic — server doesn't reveal whether the provider
-            // account is known. Encourages the user to sign in normally and link.
+            // Deliberately generic — server never reveals which auto-link /
+            // auto-create safety gate tripped (see ExternalLoginCommandHandler
+            // AutoLinkRefusalReason). The operator-side log does name the
+            // exact reason.
             return ExternalLoginOutcome.NotLinked();
         }
 
@@ -134,11 +139,18 @@ public sealed class ExternalLoginOutcome
     public string? Error { get; private init; }
 
     public static ExternalLoginOutcome Ok() => new() { IsSuccess = true };
+
+    // The API auto-resolves external sign-in in three ways (existing link →
+    // auto-link by verified email → auto-create new account). A 401 therefore
+    // means the provider itself did not attest email verification, a safety
+    // gate tripped on an existing account, or the auto-create attempt hit a
+    // concurrent race. The client message intentionally reveals none of
+    // these; the operator-side log names the exact AutoLinkRefusalReason.
     public static ExternalLoginOutcome NotLinked() =>
         new()
         {
             IsNotLinked = true,
-            Error = "No account is linked to this provider. Sign in normally, then link the provider from your profile."
+            Error = "We couldn't sign you in with this provider. Please try again, or sign in with email and password."
         };
     public static ExternalLoginOutcome Fail(string error) => new() { Error = error };
 }

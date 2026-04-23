@@ -102,6 +102,9 @@ internal sealed class ExternalAuthTicketVerifier : IExternalAuthTicketVerifier
                 principal.FindFirst(ExternalAuthTicketClaims.EmailVerified)?.Value,
                 out var ev) && ev;
 
+            var firstName = principal.FindFirst(ExternalAuthTicketClaims.GivenName)?.Value?.Trim();
+            var lastName = principal.FindFirst(ExternalAuthTicketClaims.FamilyName)?.Value?.Trim();
+
             // Reject tickets whose nominal TTL exceeds the configured cap.
             var issuedAt = jwt.IssuedAt == DateTime.MinValue ? jwt.ValidFrom : jwt.IssuedAt;
             var expiresAt = jwt.ValidTo;
@@ -116,7 +119,9 @@ internal sealed class ExternalAuthTicketVerifier : IExternalAuthTicketVerifier
                 Email: string.IsNullOrWhiteSpace(email) ? null : email.ToLowerInvariant(),
                 EmailVerifiedByProvider: emailVerified,
                 IssuedAt: issuedAt,
-                ExpiresAt: expiresAt));
+                ExpiresAt: expiresAt,
+                FirstName: string.IsNullOrWhiteSpace(firstName) ? null : firstName,
+                LastName: string.IsNullOrWhiteSpace(lastName) ? null : lastName));
         }
         catch (SecurityTokenExpiredException)
         {

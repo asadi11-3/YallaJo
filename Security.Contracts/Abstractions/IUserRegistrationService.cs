@@ -55,6 +55,22 @@ public interface IUserRegistrationService
         string email,
         string password,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// External-provider first-login provisioning.
+    /// <para>
+    /// Creates a fully-onboarded local identity seeded from a provider-verified
+    /// profile: primary email marked verified, account active, NO usable
+    /// password (login is gated to external providers until the user sets a
+    /// local password through password-reset). The caller MUST have already
+    /// verified that the provider asserted <c>email_verified=true</c> and
+    /// that no local account exists with this email — this method refuses to
+    /// overwrite or re-use an existing email.
+    /// </para>
+    /// </summary>
+    Task<Result<Guid>> RegisterExternalAsync(
+        ExternalUserRegistrationRequest request,
+        CancellationToken cancellationToken = default);
 }
 
 public sealed record UserRegistrationRequest(
@@ -80,3 +96,16 @@ public sealed record InviteAccountStatus(
     string Email,
     bool IsEmailVerified,
     bool IsActive);
+
+/// <summary>
+/// Seed data for <see cref="IUserRegistrationService.RegisterExternalAsync"/>.
+/// <para>
+/// All fields come from the OAuth provider's claims — the caller is responsible
+/// for confirming that the provider itself attested email verification
+/// (e.g. Google's <c>email_verified=true</c>, or Meta returning an email at all).
+/// </para>
+/// </summary>
+public sealed record ExternalUserRegistrationRequest(
+    string Email,
+    string FirstName,
+    string LastName);

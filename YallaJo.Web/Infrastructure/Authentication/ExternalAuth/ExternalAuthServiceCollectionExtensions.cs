@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.Extensions.Configuration;
@@ -60,6 +61,18 @@ public static class ExternalAuthServiceCollectionExtensions
                 o.SignInScheme = ExternalProviderConstants.ExternalSignInScheme;
                 o.CallbackPath = "/signin-google";
                 o.SaveTokens = false;
+
+                // Request standard OpenID Connect scopes so the userinfo payload
+                // carries the address AND a trustworthy "email_verified" flag.
+                o.Scope.Add("openid");
+                o.Scope.Add("email");
+                o.Scope.Add("profile");
+
+                // Google returns "email_verified" (bool) in the userinfo
+                // payload, but ASP.NET Core's default claim mapping does NOT
+                // surface it. Auto-linking relies on this claim, so map it
+                // explicitly into the external principal.
+                o.ClaimActions.MapJsonKey("email_verified", "email_verified", ClaimValueTypes.Boolean);
             });
         }
 
@@ -77,6 +90,18 @@ public static class ExternalAuthServiceCollectionExtensions
                 o.CallbackPath = "/signin-facebook";
                 o.SaveTokens = false;
                 o.Fields.Add("email");
+
+                // Meta only releases the email field once the user has
+                // confirmed it on their Facebook account (the field is not
+                // returned otherwise). When an email IS present we therefore
+                // treat it as provider-verified — Facebook has no separate
+                // "email_verified" flag to map. The callback handler inspects
+                // this synthesized claim exactly like Google's email_verified.
+                o.Events.OnCreatingTicket = ctx =>
+                {
+                    FacebookEmailVerificationSynthesizer.Apply(ctx.Identity);
+                    return Task.CompletedTask;
+                };
             });
         }
 

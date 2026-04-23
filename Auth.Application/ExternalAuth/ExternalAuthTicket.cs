@@ -25,4 +25,6 @@ public sealed record ExternalAuthTicket(
     string? Email,
     bool EmailVerifiedByProvider,
     DateTime IssuedAt,
-    DateTime ExpiresAt);
+    DateTime ExpiresAt,
+    string? FirstName = null,
+    string? LastName = null);

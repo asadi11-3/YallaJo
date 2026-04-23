@@ -1,4 +1,5 @@
 @using YallaJo.Web.Infrastructure.Authentication.ExternalAuth
+@using YallaJo.Web.Infrastructure.Security.Recaptcha
 @inject IExternalProviderAvailability ProviderAvailability
 @model YallaJo.Web.Areas.Auth.Features.Login.ViewModels.LoginVm
 @{
@@ -30,6 +31,12 @@
             <input asp-for="Password" type="password" class="form-control" autocomplete="current-password" />
             <span asp-validation-for="Password" class="text-danger"></span>
         </div>
+
+        @* The API enforces reCAPTCHA v3 on every login attempt via the
+           Auth pipeline behavior. Without this partial the hidden field
+           never reaches the server and every password login hits the
+           generic "Captcha verification failed" response. *@
+        <partial name="_RecaptchaField" model="@RecaptchaActions.Login" />
 
         <button type="submit" class="btn btn-primary w-100">Sign In</button>
     </form>

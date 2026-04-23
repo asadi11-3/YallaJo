@@ -146,8 +146,33 @@ public sealed class ExternalAuthController : Controller
 
         var providerUserId = authResult.Principal.FindFirstValue(ClaimTypes.NameIdentifier);
         var email = authResult.Principal.FindFirstValue(ClaimTypes.Email);
-        var emailVerifiedClaim = authResult.Principal.FindFirstValue("email_verified");
+
+        // Use the shared constant so the wire-format claim name is defined
+        // in ONE place (Web BFF issues it, API verifier reads it). A previous
+        // version hardcoded the literal string here which made it drift-prone.
+        var emailVerifiedClaim = authResult.Principal.FindFirstValue(
+            ExternalAuthTicketClaims.EmailVerified);
         var emailVerified = bool.TryParse(emailVerifiedClaim, out var ev) && ev;
+
+        // Provider-surfaced names — used by the API's auto-create path on
+        // first-time external sign-in. Both Google ("given_name"/"family_name")
+        // and Facebook ("first_name"/"last_name") are already mapped by the
+        // respective default ClaimActions to ClaimTypes.GivenName/Surname.
+        var firstName = authResult.Principal.FindFirstValue(ClaimTypes.GivenName);
+        var lastName = authResult.Principal.FindFirstValue(ClaimTypes.Surname);
+
+        // Diagnostic log: without this, a runtime failure inside the auto-link
+        // path on the API looks like a total black box from the Web side.
+        // Logs at Information because it fires on EVERY external-login round
+        // trip — operators can toggle it via category filter.
+        _logger.LogInformation(
+            "External auth callback: Provider={Provider} ProviderUserId={ProviderUserId} HasEmail={HasEmail} EmailVerifiedClaim={EmailVerifiedClaim} ParsedEmailVerified={ParsedEmailVerified} Mode={Mode}",
+            provider,
+            providerUserId ?? "(null)",
+            !string.IsNullOrWhiteSpace(email),
+            emailVerifiedClaim ?? "(claim-missing)",
+            emailVerified,
+            mode ?? "(null)");
 
         if (string.IsNullOrWhiteSpace(providerUserId))
         {
@@ -179,7 +204,8 @@ public sealed class ExternalAuthController : Controller
 
         // Mint the single-use BFF ticket now — its own TTL (2 min) bounds how
         // long the interstitial can stall before the ticket expires.
-        var ticket = _facade.BuildTicket(provider, providerUserId, email, emailVerified);
+        var ticket = _facade.BuildTicket(
+            provider, providerUserId, email, emailVerified, firstName, lastName);
 
         var vm = new ExternalAuthCompleteVm
         {

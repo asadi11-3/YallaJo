@@ -50,7 +50,9 @@ internal sealed class ExternalAuthTicketBuilder : IExternalAuthTicketBuilder
         string provider,
         string providerUserId,
         string? email,
-        bool emailVerifiedByProvider)
+        bool emailVerifiedByProvider,
+        string? firstName = null,
+        string? lastName = null)
     {
         if (string.IsNullOrWhiteSpace(provider))
             throw new ArgumentException("Provider is required.", nameof(provider));
@@ -82,6 +84,12 @@ internal sealed class ExternalAuthTicketBuilder : IExternalAuthTicketBuilder
 
         if (!string.IsNullOrWhiteSpace(email))
             claims.Add(new Claim(ExternalAuthTicketClaims.Email, email.Trim().ToLowerInvariant()));
+
+        if (!string.IsNullOrWhiteSpace(firstName))
+            claims.Add(new Claim(ExternalAuthTicketClaims.GivenName, firstName.Trim()));
+
+        if (!string.IsNullOrWhiteSpace(lastName))
+            claims.Add(new Claim(ExternalAuthTicketClaims.FamilyName, lastName.Trim()));
 
         var token = new JwtSecurityToken(
             issuer: _opts.Issuer,

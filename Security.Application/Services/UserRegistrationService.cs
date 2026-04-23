@@ -121,6 +121,64 @@ internal sealed class UserRegistrationService(
         return Result<Guid>.Created(user.Id);
     }
 
+    public async Task<Result<Guid>> RegisterExternalAsync(
+        ExternalUserRegistrationRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var normalizedEmail = SecurityGuard.NormalizeEmail(request.Email);
+
+        if (string.IsNullOrWhiteSpace(normalizedEmail))
+        {
+            return Result<Guid>.Failure(
+                Error.Validation("User.Email", "Email is required."),
+                Outcome.Invalid);
+        }
+
+        // Refuse to silently merge into an existing local account — the caller
+        // (ExternalLoginCommandHandler) is responsible for auto-linking when a
+        // local account exists. Auto-create only fires for TRULY new users.
+        if (await EmailExistsAsync(normalizedEmail, cancellationToken))
+        {
+            return Result<Guid>.Conflict(
+                Error.Conflict("User.Email", "An account with this email already exists."));
+        }
+
+        // Create the User aggregate and mark the primary email verified BEFORE
+        // persistence — VerifyEmail() also flips IsActive=true via the domain
+        // invariant, so the user is fully onboarded in one transaction.
+        var firstName = string.IsNullOrWhiteSpace(request.FirstName) ? "User" : request.FirstName.Trim();
+        var lastName  = string.IsNullOrWhiteSpace(request.LastName)  ? string.Empty : request.LastName.Trim();
+
+        var user = User.Register(normalizedEmail, firstName, lastName);
+
+        var primaryEmail = user.GetPrimaryEmail();
+        if (primaryEmail is null)
+        {
+            // Defensive — User.Register always adds a primary email; tripping
+            // this means the aggregate contract changed.
+            return Result<Guid>.Failure(
+                Error.Failure("User.NoPrimaryEmail", "Could not create primary email."),
+                Outcome.ServerError);
+        }
+
+        user.VerifyEmail(primaryEmail.Id);
+
+        // NO password is set — the `PasswordHash` column is NOT NULL in the
+        // schema, so we seed an inert, non-usable placeholder that no
+        // plaintext can ever match (the hash format is unrecognizable to
+        // PasswordHasher.Verify, guaranteeing any password-login attempt
+        // fails closed). The user sets a real password later via
+        // forgot-password → reset, which replaces this placeholder.
+        user.SetInitialPasswordHash("EXTERNAL-ONLY:" + Guid.NewGuid().ToString("N"));
+
+        await userRepository.AddAsync(user, cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        await cache.RemoveByTagAsync(SecurityCacheKeys.UsersTag, cancellationToken);
+
+        return Result<Guid>.Created(user.Id);
+    }
+
     public Task<Result<IReadOnlyList<InvitableRoleOption>>> ListInvitableRolesAsync(
         CancellationToken cancellationToken = default) =>
         GetInvitableRolesInternalAsync(cancellationToken);

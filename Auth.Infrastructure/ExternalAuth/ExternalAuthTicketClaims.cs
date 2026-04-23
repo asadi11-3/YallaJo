@@ -18,4 +18,11 @@ public static class ExternalAuthTicketClaims
 
     /// <summary>Whether the provider has verified the email address.</summary>
     public const string EmailVerified = "email_verified";
+
+    /// <summary>Given/first name from the provider, if present. Used by the
+    /// auto-create path to seed the Security user + Accounts profile.</summary>
+    public const string GivenName = "given_name";
+
+    /// <summary>Family/last name from the provider, if present.</summary>
+    public const string FamilyName = "family_name";
 }
