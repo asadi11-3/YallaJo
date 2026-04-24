@@ -144,8 +144,41 @@ internal sealed class SecurityService(
         return new SecurityContactData(primaryEmail.Address, phoneNumber);
     }
 
-    public async Task<bool> ResetPasswordAsync(Guid userId, string newPassword, CancellationToken ct = default)
+    public async Task<AccountStatus?> GetAccountStatusByEmailAsync(
+        string normalizedEmail,
+        CancellationToken ct = default)
     {
+        // Reuse the same user-with-emails path the invite/onboarding flow
+        // already uses — avoids introducing a new query shape for Phase 1.
+        var userId = await userRepository.GetUserIdByEmailAsync(normalizedEmail, ct);
+        if (userId is null)
+            return null;
+
+        var user = await userRepository.GetByIdWithEmailsAsync(userId.Value, ct);
+        if (user is null)
+            return null;
+
+        var primary = user.GetPrimaryEmail();
+
+        return new AccountStatus(
+            UserId:          user.Id,
+            Email:           primary?.Address ?? normalizedEmail,
+            IsActive:        user.IsActive,
+            IsEmailVerified: primary?.IsVerified ?? false);
+    }
+
+    public async Task<bool> ReplacePasswordBySelfAsync(
+        Guid userId,
+        string newPassword,
+        CancellationToken ct = default)
+    {
+        // Phase 1: same domain transition as the legacy ResetPasswordAsync —
+        // this contract verb exists so audit / telemetry downstream can
+        // distinguish self-service from (future) admin-initiated resets
+        // without digging through event metadata. Phase 2 will introduce a
+        // distinct User.ReplacePasswordBySelf domain method that raises a
+        // dedicated event; for now the call still goes through User.ResetPassword
+        // to keep behaviour bit-for-bit identical.
         var user = await userRepository.GetByIdAsync(userId, ct, asNoTracking: false);
         if (user is null)
             return false;
@@ -154,4 +187,8 @@ internal sealed class SecurityService(
         await unitOfWork.SaveChangesAsync(ct);
         return true;
     }
+
+    [Obsolete("Use ReplacePasswordBySelfAsync for self-service recovery. An admin-initiated variant will be introduced in Phase 2.")]
+    public Task<bool> ResetPasswordAsync(Guid userId, string newPassword, CancellationToken ct = default)
+        => ReplacePasswordBySelfAsync(userId, newPassword, ct);
 }

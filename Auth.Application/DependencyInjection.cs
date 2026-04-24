@@ -1,4 +1,6 @@
+using Auth.Application.Interfaces;
 using Auth.Application.Recaptcha;
+using Auth.Application.Services;
 using FluentValidation;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
@@ -18,6 +20,11 @@ public static class DependencyInjection
         });
 
         services.AddValidatorsFromAssembly(assembly, includeInternalTypes: true);
+
+        // Phase 1 — bulk session/refresh-token revocation used by credential
+        // mutation flows (self-service reset, activation). Phase 2 will add
+        // admin reset / reassignment / suspend / archive call sites.
+        services.AddScoped<ISessionRevocationService, SessionRevocationService>();
 
         return services;
     }

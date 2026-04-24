@@ -11,7 +11,8 @@ public sealed class AcceptInviteCommandHandler(
     IUserRegistrationService userRegistrationService,
     IOtpRepository otpRepository,
     IAuthUnitOfWork unitOfWork,
-    IInviteTokenService inviteTokenService)
+    IInviteTokenService inviteTokenService,
+    ISessionRevocationService sessionRevocation)
     : ICommandHandler<AcceptInviteCommand, AcceptInviteResult>
 {
     public async Task<Result<AcceptInviteResult>> Handle(
@@ -107,6 +108,19 @@ public sealed class AcceptInviteCommandHandler(
 
         foreach (var other in otherInvites)
             other.MarkUsed();
+
+        // 6. Defensive credential-event invariant: ANY flow that establishes
+        //    or mutates a user's password MUST tear down any session that
+        //    might already be attached to that user — otherwise a stale
+        //    session could outlive the credential event. For activation this
+        //    is effectively a no-op today (the user has never logged in),
+        //    but wiring it here makes the invariant uniform across
+        //    activation, self-service reset, and (Phase 2+) admin reset /
+        //    reassignment. Cheap to call, costly to forget.
+        await sessionRevocation.RevokeAllForUserAsync(
+            status.UserId,
+            SessionRevocationReason.AccountActivated,
+            cancellationToken);
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
 

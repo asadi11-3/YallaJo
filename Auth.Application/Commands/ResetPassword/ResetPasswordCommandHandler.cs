@@ -11,7 +11,8 @@ public sealed class ResetPasswordCommandHandler(
     IOtpRepository otpRepository,
     IAuthUnitOfWork unitOfWork,
     IOtpService otpService,
-    ITransactionalExecutor txExecutor)
+    ITransactionalExecutor txExecutor,
+    ISessionRevocationService sessionRevocation)
     : ICommandHandler<ResetPasswordCommand, ResetPasswordResult>
 {
     private const string OtpPurpose = "PasswordReset";
@@ -70,23 +71,33 @@ public sealed class ResetPasswordCommandHandler(
                 Outcome.Invalid);
         }
 
-        // Cross-module consistency: Security password change + Auth OTP burn
-        // must commit as ONE retriable transactional unit, otherwise a blip
-        // on Auth SaveChanges after Security already changed the password
-        // would leave the OTP reusable for another reset attempt.
+        // Cross-module atomic unit:
+        //   1. Security: replace password (self-service — raises PasswordResetEvent)
+        //   2. Auth:     revoke every active session + refresh token for this user
+        //   3. Auth:     burn the OTP
+        //   4. Auth:     SaveChangesAsync flushes (2) and (3) together
         //
-        // The executor drives the block via AuthDbContext's retrying execution
-        // strategy — required because EnableRetryOnFailure rejects user-
-        // initiated transactions (TransactionScope) unless they're wrapped in
-        // a strategy. The delegate may re-run on transient SQL failures; all
-        // its operations (Security reset + Auth SaveChanges) are idempotent
-        // on a single OTP and user.
+        // If Security returns false, the ambient TransactionScope is not
+        // completed and disposes rollback everything. If Security succeeds
+        // but the Auth SaveChanges fails, the retrying execution strategy
+        // re-runs the whole delegate (Security's ReplacePasswordBySelfAsync
+        // is idempotent on a single user).
+        //
+        // This is the Phase 1 fix for the "password changed but session
+        // still valid" vulnerability class — an attacker's cookie is
+        // invalidated at the same commit point as the password rotation.
         var executed = await txExecutor.ExecuteAsync(
             async innerCt =>
             {
-                var reset = await securityService.ResetPasswordAsync(
+                var reset = await securityService.ReplacePasswordBySelfAsync(
                     userId.Value, request.NewPassword, innerCt);
                 if (!reset) return false;
+
+                // Stage tracked revocations; flush happens via the UoW below.
+                await sessionRevocation.RevokeAllForUserAsync(
+                    userId.Value,
+                    SessionRevocationReason.PasswordReplacedBySelf,
+                    innerCt);
 
                 otp.MarkUsed();
                 await unitOfWork.SaveChangesAsync(innerCt);

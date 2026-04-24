@@ -65,23 +65,28 @@ public sealed class InviteUserCommandHandler(
                 profileResult.Errors.ToArray());
         }
 
-        // 3. Generate + store invite token (hash only), issue link, send email.
+        // 3. Generate token + link in memory. We do NOT persist the OTP row
+        //    yet — see step 4 for the ordering rationale.
         var plainToken = inviteTokenService.Generate();
         var tokenHash  = inviteTokenService.Hash(plainToken);
+        var link       = inviteLinkBuilder.Build(normalizedEmail, plainToken);
 
-        var invite = Otp.Create(
-            userId:          userId,
-            purpose:         InviteConstants.Purpose,
-            codeHash:        tokenHash,
-            deliveryChannel: "Email",
-            deliveryAddress: normalizedEmail,
-            expiryMinutes:   InviteConstants.ExpiryMinutes);
-
-        await otpRepository.AddAsync(invite, ct);
-        await unitOfWork.SaveChangesAsync(ct);
-
-        var link = inviteLinkBuilder.Build(normalizedEmail, plainToken);
-
+        // 4. Send the email FIRST. If delivery fails we return a clear
+        //    "email delivery failed" error without ever persisting a token
+        //    row. The previous ordering persisted the token, then (on
+        //    failure) MarkedUsed() the row — stamping UsedAt on a token that
+        //    was never consumed. That conflated three different terminal
+        //    states (consumed / revoked / failed-delivery) under one flag
+        //    and wrote a lie into the audit trail.
+        //
+        //    The identity + profile are intentionally left in place on email
+        //    failure: provisioning-without-activation IS a valid state in
+        //    the target business model (an admin may provision an account
+        //    weeks before the real person is ready), and the admin can
+        //    subsequently use Resend Invite to issue + send a fresh link.
+        //    Phase 2 will promote this into an explicit SendActivationEmail
+        //    use case with delivery-status tracking on a dedicated
+        //    ActivationToken aggregate.
         try
         {
             await emailService.SendAsync(
@@ -94,19 +99,28 @@ public sealed class InviteUserCommandHandler(
         }
         catch (Exception ex) when (ex is not OperationCanceledException || !ct.IsCancellationRequested)
         {
-            invite.MarkUsed();
-            await unitOfWork.SaveChangesAsync(ct);
-
             logger.LogError(ex,
-                "Auth: Failed to send invite email to {Email}. Invite token invalidated — use ResendInvite.",
+                "Auth: Invite email delivery failed for {Email}. Identity + profile were provisioned; no invite token was persisted. Admin can issue a fresh invite via Resend Invite.",
                 normalizedEmail);
 
             return Result<InviteUserResult>.Failure(
                 Error.Failure(
                     "Invite.EmailDeliveryFailed",
-                    "Invite created but we couldn't send the email. Please use Resend Invite."),
+                    "Account was provisioned but we couldn't send the invite email. Please use Resend Invite."),
                 Outcome.ServerError);
         }
+
+        // 5. Email delivered — now it is safe to persist the invite token.
+        var invite = Otp.Create(
+            userId:          userId,
+            purpose:         InviteConstants.Purpose,
+            codeHash:        tokenHash,
+            deliveryChannel: "Email",
+            deliveryAddress: normalizedEmail,
+            expiryMinutes:   InviteConstants.ExpiryMinutes);
+
+        await otpRepository.AddAsync(invite, ct);
+        await unitOfWork.SaveChangesAsync(ct);
 
         return Result<InviteUserResult>.Created(new InviteUserResult(userId, profileResult.Value));
     }
