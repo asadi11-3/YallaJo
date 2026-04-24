@@ -377,6 +377,115 @@ internal sealed class SecurityService(
         return Result.Success();
     }
 
+    public async Task<Result<ReassignmentCompleted>> ReassignUserByAdminAsync(
+        Guid targetUserId,
+        Guid actorUserId,
+        string newEmail,
+        CancellationToken ct = default)
+    {
+        _ = actorUserId;
+
+        if (string.IsNullOrWhiteSpace(newEmail))
+        {
+            return Result<ReassignmentCompleted>.Failure(
+                Error.Validation("User.Email", "New email is required."),
+                Outcome.Invalid);
+        }
+
+        var normalizedNewEmail = newEmail.Trim().ToLowerInvariant();
+
+        // 1. Hierarchy / self-management guard. RoleHierarchyService
+        //    denies unauthenticated, under-privileged, self-management,
+        //    and same-level management.
+        var guard = await roleHierarchy.EnsureCanManageUserAsync(targetUserId, ct);
+        if (guard.IsFailure)
+        {
+            return Result<ReassignmentCompleted>.Fail(
+                guard.Outcome,
+                guard.Messages.FirstOrDefault() ?? string.Empty,
+                guard.Errors.ToArray());
+        }
+
+        // 2. Load target (tracked — we will mutate the aggregate).
+        var user = await userRepository.GetByIdWithEmailsAsync(targetUserId, ct);
+        if (user is null)
+        {
+            return Result<ReassignmentCompleted>.Failure(
+                Error.NotFound("User.NotFound", "No account found."),
+                Outcome.NotFound);
+        }
+
+        // 3. Lifecycle eligibility — reject Provisioned / PendingActivation
+        //    / Archived. Active / Suspended / PendingPasswordReset proceed.
+        if (user.LifecycleState is AccountLifecycleState.Provisioned
+            or AccountLifecycleState.PendingActivation
+            or AccountLifecycleState.Archived)
+        {
+            return Result<ReassignmentCompleted>.Failure(
+                Error.Conflict(
+                    "User.IneligibleForReassign",
+                    $"Account is in state '{user.LifecycleState}' and cannot be reassigned."),
+                Outcome.Conflict);
+        }
+
+        // 4. Primary email presence — domain method also guards, but we
+        //    surface a clean Conflict rather than the raw
+        //    InvalidOperationException that would escape otherwise.
+        var primary = user.GetPrimaryEmail();
+        if (primary is null)
+        {
+            return Result<ReassignmentCompleted>.Failure(
+                Error.Conflict("User.NoPrimaryEmail", "Target account has no primary email."),
+                Outcome.Conflict);
+        }
+
+        var oldEmail = primary.Address;
+
+        // 5. Email uniqueness pre-check. The DB unique index on
+        //    Emails.Address remains the final authority, but we surface
+        //    a clean Conflict before attempting the mutation.
+        if (!string.Equals(oldEmail, normalizedNewEmail, StringComparison.Ordinal))
+        {
+            var inUse = await userRepository.AnyAsync(
+                u => u.Emails.Any(e => e.Address == normalizedNewEmail),
+                ct);
+
+            if (inUse)
+            {
+                return Result<ReassignmentCompleted>.Failure(
+                    Error.Conflict("User.Email", "An account with this email already exists."),
+                    Outcome.Conflict);
+            }
+        }
+
+        // 6. Build the fail-closed placeholder hash. Same pattern
+        //    RegisterExternalAsync uses: the "REASSIGNED:" prefix is
+        //    structurally unrecognizable to PasswordHasher.Verify, so
+        //    any password-login attempt against it fails closed. The
+        //    random GUID suffix guarantees each reassignment produces
+        //    a distinct placeholder (no collision signal).
+        var placeholderHash = "REASSIGNED:" + Guid.NewGuid().ToString("N");
+
+        // 7. Domain mutation — email retarget + verification reset +
+        //    password invalidation + lifecycle transition all flow
+        //    through User.ReassignToPendingActivation, which guards
+        //    source states internally as a last-line invariant.
+        user.ReassignToPendingActivation(normalizedNewEmail, placeholderHash);
+
+        await unitOfWork.SaveChangesAsync(ct);
+
+        // 8. Cache invalidation — the target user's snapshot has
+        //    moved, and the users list may need a fresh read.
+        await cache.RemoveByTagAsync(SecurityCacheKeys.UserTag(targetUserId), ct);
+        await cache.RemoveByTagAsync(SecurityCacheKeys.UsersTag, ct);
+
+        return Result<ReassignmentCompleted>.Success(new ReassignmentCompleted(
+            TargetUserId: targetUserId,
+            OldEmail:     oldEmail,
+            NewEmail:     normalizedNewEmail,
+            Lifecycle:    ToContractSnapshot(user.LifecycleState)));
+    }
+
     [Obsolete("Use ReplacePasswordBySelfAsync for self-service recovery. An admin-initiated variant will be introduced in Phase 2.")]
     public Task<bool> ResetPasswordAsync(Guid userId, string newPassword, CancellationToken ct = default)
         => ReplacePasswordBySelfAsync(userId, newPassword, ct);

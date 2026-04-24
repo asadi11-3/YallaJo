@@ -1,3 +1,4 @@
+using Auth.Application.Commands.AdminReassignAccount;
 using Auth.Application.Commands.AdminResetPassword;
 using Auth.Application.Commands.AdminArchiveUser;
 using Auth.Application.Commands.AdminReactivateUser;
@@ -189,6 +190,37 @@ internal static class SessionEndpoints
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status409Conflict)
         .WithSummary("Admin: archive a user account and revoke all active sessions.")
+        .WithMetadata(new MustHavePermissionAttribute(SecurityFeatures.User, AppAction.UpdateAny))
+        .RequireAuthorization();
+
+        // Phase 3C — admin-initiated account reassignment. Retargets
+        // the account to a new primary email / new real user, revokes
+        // all active sessions and refresh tokens
+        // (reason=AccountReassigned), supersedes any outstanding
+        // activation/reset tokens, deactivates external-provider
+        // links, and issues a fresh activation email to the new
+        // address via the existing outbox dispatch pipeline. The old
+        // owner loses access immediately: password is replaced with
+        // an unusable placeholder and lifecycle moves back to
+        // PendingActivation (login gate blocks).
+        admin.MapPost("/users/{userId:guid}/reassign", async (
+            Guid userId,
+            AdminReassignAccountRequest request,
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            var result = await sender.Send(
+                new AdminReassignAccountCommand(userId, request.NewEmail, request.Reason), ct);
+            return result.ToApiResult();
+        })
+        .WithName("AdminReassignAccount")
+        .Produces<AdminReassignAccountResult>(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status409Conflict)
+        .WithSummary("Admin: reassign a user account to a new email — invalidates credentials, revokes sessions, and sends a fresh activation email.")
         .WithMetadata(new MustHavePermissionAttribute(SecurityFeatures.User, AppAction.UpdateAny))
         .RequireAuthorization();
     }

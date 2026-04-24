@@ -15,14 +15,19 @@ namespace Security.Domain.Entities;
 /// <para>
 /// Allowed transitions (enforced by <c>User.TransitionTo</c>):
 /// <code>
-///   Provisioned        → PendingActivation | Archived
-///   PendingActivation  → Active            | Provisioned (admin revoke) | Archived
-///   Active             → Suspended         | PendingPasswordReset       | Archived
-///   Suspended          → Active            | Archived
-///   PendingPasswordReset → Active          | Archived
-///   Archived           → ∅ (terminal)
+///   Provisioned          → PendingActivation | Active (legacy)        | Archived
+///   PendingActivation    → Active            | Provisioned (revoke)   | Archived
+///   Active               → Suspended         | PendingPasswordReset   | PendingActivation (reassign) | Archived
+///   Suspended            → Active            | PendingActivation (reassign)                          | Archived
+///   PendingPasswordReset → Active            | PendingActivation (reassign)                          | Archived
+///   Archived             → ∅ (terminal)
 /// </code>
 /// Self-transitions are permitted and are no-ops (idempotent).
+/// <br/>
+/// Phase 3C: the three <c>… → PendingActivation</c> edges tagged
+/// <c>(reassign)</c> are opened ONLY for the admin reassignment flow
+/// (<c>User.ReassignToPendingActivation</c>). No other caller invokes
+/// these transitions.
 /// </para>
 /// </summary>
 public enum AccountLifecycleState

@@ -156,6 +156,66 @@ public sealed class User : AuditableEntity, IAggregateRoot
     /// </summary>
     public void Deactivate() => Suspend();
 
+    /// <summary>
+    /// Phase 3C — admin-driven account reassignment. Retargets the primary
+    /// email to <paramref name="newEmail"/>, resets email verification,
+    /// installs <paramref name="replacementPasswordHash"/> (must be a
+    /// non-empty unusable placeholder — the column is NOT NULL), and
+    /// transitions lifecycle to <see cref="AccountLifecycleState.PendingActivation"/>.
+    /// <para>
+    /// Eligible source states (enforced here as the last-line invariant):
+    /// <see cref="AccountLifecycleState.Active"/>,
+    /// <see cref="AccountLifecycleState.Suspended"/>,
+    /// <see cref="AccountLifecycleState.PendingPasswordReset"/>.
+    /// Rejected: Provisioned, PendingActivation, Archived.
+    /// </para>
+    /// <para>
+    /// The transition matrix in <see cref="IsTransitionAllowed"/> was
+    /// extended in Phase 3C to permit these three edges to
+    /// <c>PendingActivation</c>. No other caller may perform these
+    /// transitions — the guards above keep them reassignment-scoped.
+    /// </para>
+    /// </summary>
+    public void ReassignToPendingActivation(string newEmail, string replacementPasswordHash)
+    {
+        if (string.IsNullOrWhiteSpace(newEmail))
+            throw new ArgumentException("New email is required.", nameof(newEmail));
+        if (string.IsNullOrWhiteSpace(replacementPasswordHash))
+            throw new ArgumentException("Replacement password hash is required.", nameof(replacementPasswordHash));
+
+        if (LifecycleState is not (AccountLifecycleState.Active
+                                 or AccountLifecycleState.Suspended
+                                 or AccountLifecycleState.PendingPasswordReset))
+        {
+            throw new InvalidLifecycleTransitionException(LifecycleState, AccountLifecycleState.PendingActivation);
+        }
+
+        var primary = _emails.FirstOrDefault(e => e.IsPrimary);
+        if (primary is null)
+            throw new InvalidOperationException("User has no primary email to reassign.");
+
+        // Domain-method chain: change email address + reset verification
+        // state atomically on the same Email entity (row preserved for
+        // FK continuity; DB unique index on Address is enforced by EF
+        // when the UoW flushes).
+        primary.ChangeAddress(newEmail);
+
+        // Invalidate password via the domain's reset verb so a
+        // PasswordResetEvent is raised and audit telemetry sees the
+        // credential mutation. The replacement hash MUST be a
+        // non-usable placeholder produced by the caller (e.g.
+        // "REASSIGNED:" + random GUID) — the same fail-closed pattern
+        // RegisterExternalAsync uses for its password column.
+        ResetPassword(replacementPasswordHash);
+
+        // Lifecycle: route through TransitionTo so the single
+        // AccountLifecycleTransitionedEvent fires with the correct
+        // From/To pair. The extended transition matrix permits
+        // Active | Suspended | PendingPasswordReset -> PendingActivation
+        // exclusively for reassignment.
+        TransitionTo(AccountLifecycleState.PendingActivation);
+    }
+
     private void TransitionTo(AccountLifecycleState target)
     {
         if (LifecycleState == target)
@@ -202,6 +262,17 @@ public sealed class User : AuditableEntity, IAggregateRoot
             // PendingActivation explicitly; until then, allow this shortcut to
             // preserve current behaviour.
             (AccountLifecycleState.Provisioned,        AccountLifecycleState.Active)               => true,
+
+            // Phase 3C — admin reassignment. Active / Suspended /
+            // PendingPasswordReset may transition back to PendingActivation
+            // ONLY through User.ReassignToPendingActivation, which guards
+            // on these source states before calling TransitionTo. The
+            // matrix edges are opened here so the state machine accepts
+            // the move; the semantic "only reassignment may use them"
+            // is enforced at the domain-method level, not the matrix.
+            (AccountLifecycleState.Active,               AccountLifecycleState.PendingActivation) => true,
+            (AccountLifecycleState.Suspended,            AccountLifecycleState.PendingActivation) => true,
+            (AccountLifecycleState.PendingPasswordReset, AccountLifecycleState.PendingActivation) => true,
 
             _ => false,
         };

@@ -64,8 +64,13 @@ public enum SessionRevocationReason
     /// </summary>
     AccountSuspended = 4,
 
-    // Reserved for later phases:
-    // AccountReassigned        = 5,
+    /// <summary>
+    /// Phase 3C — an admin reassigned the account to a new owner (new
+    /// primary email). The old owner must lose access immediately, so
+    /// every active session and refresh token is revoked as part of
+    /// the reassignment operation.
+    /// </summary>
+    AccountReassigned = 5,
 
     /// <summary>
     /// Phase 3B — an admin archived the account (terminal lifecycle state).

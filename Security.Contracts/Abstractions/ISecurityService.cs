@@ -106,6 +106,35 @@ public interface ISecurityService
         CancellationToken ct = default);
 
     /// <summary>
+    /// Phase 3C — admin reassignment. Retargets the target account's
+    /// primary email to <paramref name="newEmail"/>, invalidates the
+    /// password with an unusable placeholder hash, resets email
+    /// verification, and transitions lifecycle to
+    /// <see cref="AccountLifecycleSnapshot.PendingActivation"/>. All
+    /// mutations happen via domain methods (<c>User.ReassignToPendingActivation</c>).
+    /// <para>
+    /// Outcome mapping:
+    /// </para>
+    /// <list type="bullet">
+    ///   <item><description><c>Unauthorized</c> — actor not authenticated.</description></item>
+    ///   <item><description><c>Forbidden</c> — hierarchy / self-management denial.</description></item>
+    ///   <item><description><c>NotFound</c> — target user does not exist.</description></item>
+    ///   <item><description><c>Conflict</c> — current lifecycle is not eligible (Provisioned, PendingActivation, Archived), or <paramref name="newEmail"/> is already in use, or the account has no primary email.</description></item>
+    ///   <item><description><c>Success</c> — returns the eligibility snapshot (old email, new email, actor id) so the Auth-side handler can supersede tokens, deactivate external providers, revoke sessions, and issue a fresh activation token in its own unit of work.</description></item>
+    /// </list>
+    /// <para>
+    /// The Security side does NOT touch Auth aggregates (tokens,
+    /// sessions, external providers). The Auth command orchestrates
+    /// both modules under an <c>ITransactionalExecutor</c>.
+    /// </para>
+    /// </summary>
+    Task<Result<ReassignmentCompleted>> ReassignUserByAdminAsync(
+        Guid targetUserId,
+        Guid actorUserId,
+        string newEmail,
+        CancellationToken ct = default);
+
+    /// <summary>
     /// Legacy, actor-blind password reset primitive. Retained for backward
     /// compatibility while callers migrate to the actor-attributed verbs
     /// (<see cref="ReplacePasswordBySelfAsync"/> and — in Phase 2+ —
@@ -125,6 +154,19 @@ public sealed record AdminResetEligibility(
     Guid TargetUserId,
     string PrimaryEmail,
     bool IsPrimaryEmailVerified,
+    AccountLifecycleSnapshot Lifecycle);
+
+/// <summary>
+/// Phase 3C — result payload for
+/// <see cref="ISecurityService.ReassignUserByAdminAsync"/>. Carries the
+/// addresses and lifecycle snapshot the Auth-side handler needs to
+/// supersede tokens, deactivate external providers, revoke sessions,
+/// and issue a fresh activation email to the new address.
+/// </summary>
+public sealed record ReassignmentCompleted(
+    Guid TargetUserId,
+    string OldEmail,
+    string NewEmail,
     AccountLifecycleSnapshot Lifecycle);
 
 public sealed record SecurityUserData(
