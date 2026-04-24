@@ -56,6 +56,31 @@ public interface IUserRegistrationService
         CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Phase 3A — transitions an <see cref="AccountLifecycleSnapshot.Active"/>
+    /// account to <see cref="AccountLifecycleSnapshot.PendingPasswordReset"/>.
+    /// Used by the admin-initiated password-reset flow
+    /// (<c>AdminResetPasswordCommand</c>) to block login until the user
+    /// completes the reset via the emailed code.
+    /// <para>
+    /// Idempotent. Outcome mapping:
+    /// </para>
+    /// <list type="bullet">
+    ///   <item><description><c>NotFound</c> — user does not exist.</description></item>
+    ///   <item><description><c>Success</c> — transition performed (or no-op if already <c>PendingPasswordReset</c>).</description></item>
+    ///   <item><description><c>Conflict</c> — current state does not allow admin reset (Provisioned / PendingActivation / Suspended / Archived).</description></item>
+    /// </list>
+    /// <para>
+    /// The completion leg — transitioning <c>PendingPasswordReset → Active</c>
+    /// once the user successfully sets a new password — lives inside
+    /// <see cref="ISecurityService.ReplacePasswordBySelfAsync"/> (auto-clear)
+    /// so the reset commit stays atomic.
+    /// </para>
+    /// </summary>
+    Task<Result> MarkPendingPasswordResetAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Admin-initiated invited registration (legacy, Phase 2A).
     /// <para>
     /// Equivalent to <see cref="RegisterProvisionedAsync"/> immediately

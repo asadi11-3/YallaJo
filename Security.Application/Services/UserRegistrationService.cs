@@ -169,6 +169,52 @@ internal sealed class UserRegistrationService(
         return Result.Success();
     }
 
+    public async Task<Result> MarkPendingPasswordResetAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default)
+    {
+        var user = await userRepository.GetByIdAsync(userId, cancellationToken, asNoTracking: false);
+        if (user is null)
+        {
+            return Result.Failure(
+                Error.NotFound("User.NotFound", "No account found."),
+                Outcome.NotFound);
+        }
+
+        // Phase 3A gate: only Active (primary case) or PendingPasswordReset
+        // (re-issue / idempotent) are acceptable entry points. Other states
+        // are admin-workflow errors:
+        //   Provisioned / PendingActivation → use SendActivationEmail
+        //   Suspended                         → admin must Reactivate first
+        //   Archived                          → terminal
+        if (user.LifecycleState != AccountLifecycleState.Active
+         && user.LifecycleState != AccountLifecycleState.PendingPasswordReset)
+        {
+            return Result.Failure(
+                Error.Conflict(
+                    "User.IneligibleForPasswordReset",
+                    $"Account is in state '{user.LifecycleState}' and is not eligible for admin-initiated password reset."),
+                Outcome.Conflict);
+        }
+
+        // Idempotent fast-path: already PendingPasswordReset → no save,
+        // no cache churn. The Auth-side handler still issues a fresh
+        // reset token and supersedes the old one; the lifecycle column
+        // simply stays put.
+        if (user.LifecycleState == AccountLifecycleState.PendingPasswordReset)
+        {
+            return Result.Success();
+        }
+
+        user.MarkPendingPasswordReset();
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        await cache.RemoveByTagAsync(SecurityCacheKeys.UserTag(userId), cancellationToken);
+        await cache.RemoveByTagAsync(SecurityCacheKeys.UsersTag, cancellationToken);
+
+        return Result.Success();
+    }
+
     [Obsolete("Use RegisterProvisionedAsync (then MarkPendingActivationAsync once the activation email is dispatched). Kept for Phase 2A+2B backward compatibility; will be removed in Phase 4.")]
     public async Task<Result<Guid>> RegisterInvitedAsync(
         InvitedUserRegistrationRequest request,

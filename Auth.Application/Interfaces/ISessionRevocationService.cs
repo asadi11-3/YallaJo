@@ -38,8 +38,8 @@ public sealed record SessionRevocationOutcome(
     int RefreshTokensRevoked);
 
 /// <summary>
-/// Why sessions were torn down. Recorded for audit; Phase 2 will persist
-/// this reason against a lifecycle audit log.
+/// Why sessions were torn down. Recorded for audit; a future phase will
+/// persist this reason against a lifecycle audit log.
 /// </summary>
 public enum SessionRevocationReason
 {
@@ -49,8 +49,16 @@ public enum SessionRevocationReason
     /// <summary>Account was just activated (tears down any stray state — defensive).</summary>
     AccountActivated = 2,
 
-    // Reserved for Phase 2+:
-    // PasswordReplacedByAdmin  = 3,
+    /// <summary>
+    /// Phase 3A — an admin initiated a forced password reset for the
+    /// user. The admin does NOT replace the password directly; the
+    /// user completes the reset via the emailed code. Sessions are
+    /// revoked at the moment of initiation so the target cannot keep
+    /// using an existing live session until they complete the reset.
+    /// </summary>
+    PasswordResetByAdmin = 3,
+
+    // Reserved for later phases:
     // AccountSuspended         = 4,
     // AccountReassigned        = 5,
     // AccountArchived          = 6,

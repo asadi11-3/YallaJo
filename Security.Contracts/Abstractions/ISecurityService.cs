@@ -1,3 +1,5 @@
+using YallaJo.SharedKernel.Domain.Abstractions.Results;
+
 namespace Security.Contracts.Abstractions;
 public interface ISecurityService
 {
@@ -30,8 +32,44 @@ public interface ISecurityService
     /// Raises <c>PasswordResetEvent</c> in the Security domain. Callers are
     /// responsible for invalidating any outstanding sessions / refresh tokens
     /// for the user in the same unit of work.
+    /// <para>
+    /// Phase 3A — on success, if the user's lifecycle state is
+    /// <see cref="AccountLifecycleSnapshot.PendingPasswordReset"/> the
+    /// Security side automatically clears it back to
+    /// <see cref="AccountLifecycleSnapshot.Active"/>. This closes the loop
+    /// for admin-initiated resets: admin moves the user to
+    /// <c>PendingPasswordReset</c> at issue time, and the user's completion
+    /// of the reset lands them back in <c>Active</c> atomically with the
+    /// password mutation.
+    /// </para>
     /// </summary>
     Task<bool> ReplacePasswordBySelfAsync(Guid userId, string newPassword, CancellationToken ct = default);
+
+    /// <summary>
+    /// Phase 3A — one-shot eligibility probe for the admin-initiated
+    /// password-reset flow. Loads the target user, runs the
+    /// <c>IRoleHierarchyService.EnsureCanManageUserAsync</c> check against
+    /// the actor (which also denies privileged self-management), and
+    /// returns a lightweight snapshot of the fields the Auth-side command
+    /// needs to issue the reset token:
+    /// <list type="bullet">
+    ///   <item><description>Primary email (delivery address for the reset email).</description></item>
+    ///   <item><description>Primary-email verification flag (reset cannot be sent to an unverified address).</description></item>
+    ///   <item><description>Lifecycle snapshot so the Auth handler can gate on <c>Active</c> / <c>PendingPasswordReset</c>.</description></item>
+    /// </list>
+    /// <para>
+    /// Result mapping:
+    /// <list type="bullet">
+    ///   <item><description><c>NotFound</c> — target user does not exist.</description></item>
+    ///   <item><description><c>Forbidden</c> — actor lacks rank (or is the target).</description></item>
+    ///   <item><description><c>Success</c> — returns the snapshot; Auth applies the lifecycle/email gates itself.</description></item>
+    /// </list>
+    /// </para>
+    /// </summary>
+    Task<Result<AdminResetEligibility>> GetAdminResetEligibilityAsync(
+        Guid targetUserId,
+        Guid actorUserId,
+        CancellationToken ct = default);
 
     /// <summary>
     /// Legacy, actor-blind password reset primitive. Retained for backward
@@ -42,6 +80,18 @@ public interface ISecurityService
     [Obsolete("Use ReplacePasswordBySelfAsync for self-service recovery. An admin-initiated variant will be introduced in Phase 2C+.")]
     Task<bool> ResetPasswordAsync(Guid userId, string newPassword, CancellationToken ct = default);
 }
+
+/// <summary>
+/// Phase 3A — snapshot returned by
+/// <see cref="ISecurityService.GetAdminResetEligibilityAsync"/>. Lives in
+/// <c>Security.Contracts</c> so Auth does not take a dependency on
+/// <c>Security.Domain</c>.
+/// </summary>
+public sealed record AdminResetEligibility(
+    Guid TargetUserId,
+    string PrimaryEmail,
+    bool IsPrimaryEmailVerified,
+    AccountLifecycleSnapshot Lifecycle);
 
 public sealed record SecurityUserData(
     Guid UserId,

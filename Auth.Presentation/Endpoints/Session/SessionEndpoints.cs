@@ -1,3 +1,4 @@
+using Auth.Application.Commands.AdminResetPassword;
 using Auth.Application.Commands.ForceRevokeUserSessions;
 using Auth.Application.Commands.Logout;
 using Auth.Application.Commands.LogoutAll;
@@ -99,6 +100,35 @@ internal static class SessionEndpoints
         .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status401Unauthorized)
         .WithSummary("Admin: force-revoke all sessions and refresh tokens for a user")
+        .WithMetadata(new MustHavePermissionAttribute(SecurityFeatures.User, AppAction.UpdateAny))
+        .RequireAuthorization();
+
+        // Phase 3A — admin-initiated password reset. Lives next to
+        // ForceRevokeUserSessions because both are admin-level verbs
+        // that tear down a target user's active credentials. The
+        // command issues a PasswordResetToken with origin=AdminInitiated,
+        // transitions the user to PendingPasswordReset (blocks login),
+        // revokes sessions + refresh tokens with reason
+        // PasswordResetByAdmin, and queues the reset email via the
+        // existing outbox dispatch pipeline.
+        admin.MapPost("/users/{userId:guid}/reset-password", async (
+            Guid userId,
+            AdminResetPasswordRequest request,
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            var result = await sender.Send(
+                new AdminResetPasswordCommand(userId, request.Reason), ct);
+            return result.ToApiResult();
+        })
+        .WithName("AdminResetPassword")
+        .Produces<AdminResetPasswordResult>(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status409Conflict)
+        .WithSummary("Admin: force a password reset for a user — revokes sessions and sends a reset email.")
         .WithMetadata(new MustHavePermissionAttribute(SecurityFeatures.User, AppAction.UpdateAny))
         .RequireAuthorization();
     }

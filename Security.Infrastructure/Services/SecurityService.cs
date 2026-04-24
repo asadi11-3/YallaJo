@@ -1,14 +1,17 @@
+using Security.Application.Authorization;
 using Security.Application.Interfaces;
 using Security.Contracts.Abstractions;
 using Security.Domain.Entities;
 using Security.Domain.Repositories;
+using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
 namespace Security.Infrastructure.Services;
 
 internal sealed class SecurityService(
     IUserRepository userRepository,
     ISecurityUnitOfWork unitOfWork,
-    IPasswordHasher passwordHasher) : ISecurityService
+    IPasswordHasher passwordHasher,
+    IRoleHierarchyService roleHierarchy) : ISecurityService
 {
     public async Task<Guid?> GetUserIdByEmailAsync(string normalizedEmail, CancellationToken ct = default)
     {
@@ -187,17 +190,74 @@ internal sealed class SecurityService(
         // Phase 1: same domain transition as the legacy ResetPasswordAsync —
         // this contract verb exists so audit / telemetry downstream can
         // distinguish self-service from (future) admin-initiated resets
-        // without digging through event metadata. Phase 2 will introduce a
-        // distinct User.ReplacePasswordBySelf domain method that raises a
-        // dedicated event; for now the call still goes through User.ResetPassword
-        // to keep behaviour bit-for-bit identical.
+        // without digging through event metadata.
+        //
+        // Phase 3A: if the user is in PendingPasswordReset (admin forced
+        // the reset), clear it back to Active once the new password is
+        // committed. Single atomic commit — the password change and the
+        // lifecycle transition land together.
         var user = await userRepository.GetByIdAsync(userId, ct, asNoTracking: false);
         if (user is null)
             return false;
 
         user.ResetPassword(passwordHasher.Hash(newPassword));
+
+        if (user.LifecycleState == AccountLifecycleState.PendingPasswordReset)
+        {
+            // Legal transition: PendingPasswordReset -> Active. Idempotent
+            // self-transition is already a no-op inside User.TransitionTo,
+            // so the guard above is a documentation hint rather than a
+            // required branch — but keeping it explicit makes the intent
+            // obvious to future readers.
+            user.Activate();
+        }
+
         await unitOfWork.SaveChangesAsync(ct);
         return true;
+    }
+
+    public async Task<Result<AdminResetEligibility>> GetAdminResetEligibilityAsync(
+        Guid targetUserId,
+        Guid actorUserId,
+        CancellationToken ct = default)
+    {
+        // Hierarchy check first. The service reads the CURRENT actor from
+        // ICurrentUser internally, so actorUserId is not strictly required
+        // for the check; it's captured in the signature so future audit
+        // telemetry can log both sides without another DI dance. The
+        // service's deny rules also cover self-management for privileged
+        // accounts (verified in RoleHierarchyServiceTests), so an admin
+        // invoking this against their own id is refused here.
+        _ = actorUserId;
+
+        var hierarchy = await roleHierarchy.EnsureCanManageUserAsync(targetUserId, ct);
+        if (hierarchy.IsFailure)
+        {
+            // Propagate the service's outcome (Forbidden on hierarchy
+            // denial, Unauthorized if the actor is not authenticated).
+            return Result<AdminResetEligibility>.Fail(
+                hierarchy.Outcome,
+                hierarchy.Messages.FirstOrDefault() ?? string.Empty,
+                hierarchy.Errors.ToArray());
+        }
+
+        var user = await userRepository.GetByIdWithEmailsAsync(targetUserId, ct);
+        if (user is null)
+        {
+            return Result<AdminResetEligibility>.Failure(
+                Error.NotFound("User.NotFound", "No account found."),
+                Outcome.NotFound);
+        }
+
+        var primary = user.GetPrimaryEmail();
+        var primaryEmail = primary?.Address ?? string.Empty;
+        var isVerified   = primary?.IsVerified ?? false;
+
+        return Result<AdminResetEligibility>.Success(new AdminResetEligibility(
+            TargetUserId:           user.Id,
+            PrimaryEmail:           primaryEmail,
+            IsPrimaryEmailVerified: isVerified,
+            Lifecycle:              ToContractSnapshot(user.LifecycleState)));
     }
 
     [Obsolete("Use ReplacePasswordBySelfAsync for self-service recovery. An admin-initiated variant will be introduced in Phase 2.")]

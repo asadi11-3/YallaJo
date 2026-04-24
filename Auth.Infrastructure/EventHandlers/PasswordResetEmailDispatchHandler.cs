@@ -88,13 +88,35 @@ public sealed class PasswordResetEmailDispatchHandler(
             return;
         }
 
+        // Phase 3A — branch subject + body by the token's origin so
+        // admin-initiated resets carry admin-specific wording. The
+        // dispatch mechanics (idempotency, retry, delivery-status
+        // update) are origin-agnostic; only the copy differs.
+        var (subject, body) = ev.Origin switch
+        {
+            PasswordResetOriginSnapshot.AdminInitiated =>
+                ("YallaJo — Administrator-initiated password reset",
+                 $"An administrator has initiated a password reset for your account. " +
+                 $"Use this code to set a new password: {ev.PlainCode}. " +
+                 $"It expires at {ev.ExpiresAt:u}. " +
+                 $"If you did not expect this, please contact your administrator."),
+            PasswordResetOriginSnapshot.Reassignment =>
+                ("YallaJo — Account reassignment — set your password",
+                 $"Your account has been reassigned. " +
+                 $"Use this code to set a new password: {ev.PlainCode}. " +
+                 $"It expires at {ev.ExpiresAt:u}."),
+            _ /* SelfService */ =>
+                ("YallaJo — Reset Your Password",
+                 $"Your password reset code is: {ev.PlainCode}. " +
+                 $"It expires at {ev.ExpiresAt:u}."),
+        };
+
         try
         {
             await emailService.SendAsync(
                 ev.DeliveryAddress,
-                "YallaJo — Reset Your Password",
-                $"Your password reset code is: {ev.PlainCode}. " +
-                $"It expires at {ev.ExpiresAt:u}.",
+                subject,
+                body,
                 ct);
         }
         catch (Exception ex) when (ex is not OperationCanceledException || !ct.IsCancellationRequested)

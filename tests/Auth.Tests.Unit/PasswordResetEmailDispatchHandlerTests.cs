@@ -29,14 +29,15 @@ public sealed class PasswordResetEmailDispatchHandlerTests
             NullLogger<PasswordResetEmailDispatchHandler>.Instance);
 
     private static PasswordResetTokenIssuedIntegrationEvent Event(Guid tokenId, Guid userId,
-        string email = "user@example.com", string plain = "909090") =>
+        string email = "user@example.com", string plain = "909090",
+        PasswordResetOriginSnapshot origin = PasswordResetOriginSnapshot.SelfService) =>
         new(
             TokenId:         tokenId,
             UserId:          userId,
             DeliveryAddress: email,
             PlainCode:       plain,
             ExpiresAt:       DateTime.UtcNow.AddMinutes(10),
-            Origin:          PasswordResetOriginSnapshot.SelfService);
+            Origin:          origin);
 
     private static IntegrationEventNotification<PasswordResetTokenIssuedIntegrationEvent> Notification(
         Guid messageId, PasswordResetTokenIssuedIntegrationEvent ev) => new(messageId, ev);
@@ -223,5 +224,84 @@ public sealed class PasswordResetEmailDispatchHandlerTests
 
         _inboxStore.DidNotReceive().MarkAsProcessed(messageId);
         await _uow.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
+    }
+
+    // ── Phase 3A: origin-based wording branch ────────────────────────────────
+
+    [Fact]
+    public async Task Handle_OnSelfServiceOrigin_ShouldUseSelfServiceWording()
+    {
+        var (messageId, token) = await SetupHappyPath();
+
+        var sut = CreateSut();
+
+        await sut.Handle(
+            Notification(messageId, Event(token.Id, token.UserId, plain: "SELF123",
+                origin: PasswordResetOriginSnapshot.SelfService)),
+            CancellationToken.None);
+
+        await _email.Received(1).SendAsync(
+            Arg.Any<string>(),
+            Arg.Is<string>(s => s.Contains("Reset Your Password", StringComparison.Ordinal)),
+            Arg.Is<string>(b => b.Contains("Your password reset code is: SELF123", StringComparison.Ordinal)),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Handle_OnAdminInitiatedOrigin_ShouldUseAdminWording()
+    {
+        // Phase 3A — admin-initiated reset uses its own subject + body
+        // so the user sees clearly that an administrator initiated the
+        // flow (and is nudged to contact admin if unexpected).
+        var (messageId, token) = await SetupHappyPath();
+
+        var sut = CreateSut();
+
+        await sut.Handle(
+            Notification(messageId, Event(token.Id, token.UserId, plain: "ADMIN42",
+                origin: PasswordResetOriginSnapshot.AdminInitiated)),
+            CancellationToken.None);
+
+        await _email.Received(1).SendAsync(
+            Arg.Any<string>(),
+            Arg.Is<string>(s => s.Contains("Administrator-initiated", StringComparison.Ordinal)),
+            Arg.Is<string>(b =>
+                b.Contains("administrator has initiated", StringComparison.Ordinal)
+             && b.Contains("ADMIN42", StringComparison.Ordinal)),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Handle_OnReassignmentOrigin_ShouldUseReassignmentWording()
+    {
+        // Reassignment wording is reserved for a later phase but the
+        // branch exists today; exercise it to prevent drift.
+        var (messageId, token) = await SetupHappyPath();
+
+        var sut = CreateSut();
+
+        await sut.Handle(
+            Notification(messageId, Event(token.Id, token.UserId, plain: "REAS99",
+                origin: PasswordResetOriginSnapshot.Reassignment)),
+            CancellationToken.None);
+
+        await _email.Received(1).SendAsync(
+            Arg.Any<string>(),
+            Arg.Is<string>(s => s.Contains("reassignment", StringComparison.OrdinalIgnoreCase)),
+            Arg.Is<string>(b => b.Contains("REAS99", StringComparison.Ordinal)),
+            Arg.Any<CancellationToken>());
+    }
+
+    private async Task<(Guid messageId, PasswordResetToken token)> SetupHappyPath()
+    {
+        var messageId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var token = PasswordResetToken.Issue(userId, "h", "user@example.com", 10);
+
+        StubInboxProcessed(messageId, false);
+        StubToken(token.Id, token);
+
+        await Task.CompletedTask;
+        return (messageId, token);
     }
 }
