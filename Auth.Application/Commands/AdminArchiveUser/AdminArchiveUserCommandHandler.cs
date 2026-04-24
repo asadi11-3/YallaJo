@@ -12,6 +12,8 @@ public sealed class AdminArchiveUserCommandHandler(
     ISecurityService securityService,
     ISessionRevocationService sessionRevocation,
     IAuthUnitOfWork unitOfWork,
+    IAdminAuditWriter adminAuditWriter,
+    IRequestContext requestContext,
     ICurrentUser currentUser,
     ILogger<AdminArchiveUserCommandHandler> logger)
     : ICommandHandler<AdminArchiveUserCommand>
@@ -41,6 +43,18 @@ public sealed class AdminArchiveUserCommandHandler(
             cancellationToken);
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        // Phase 4 — append the admin audit timeline row. Reached only
+        // on the success path.
+        await adminAuditWriter.RecordAsync(
+            new AdminAuditEntry(
+                ActorUserId:  actorId,
+                TargetUserId: request.UserId,
+                Action:       AuditActions.AdminArchiveUser,
+                Reason:       null,
+                Metadata:     null,
+                IpAddress:    requestContext.IpAddress),
+            cancellationToken);
 
         logger.LogInformation(
             "Auth: Admin {AdminActorId} archived user {TargetUserId}; active sessions and refresh tokens revoked.",

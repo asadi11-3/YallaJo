@@ -12,6 +12,8 @@ public sealed class AdminSuspendUserCommandHandler(
     ISecurityService securityService,
     ISessionRevocationService sessionRevocation,
     IAuthUnitOfWork unitOfWork,
+    IAdminAuditWriter adminAuditWriter,
+    IRequestContext requestContext,
     ICurrentUser currentUser,
     ILogger<AdminSuspendUserCommandHandler> logger)
     : ICommandHandler<AdminSuspendUserCommand>
@@ -41,6 +43,19 @@ public sealed class AdminSuspendUserCommandHandler(
             cancellationToken);
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        // Phase 4 — append the admin audit timeline row. Reached only
+        // on the success path: authn / authz / lifecycle failures
+        // returned above without writing a row.
+        await adminAuditWriter.RecordAsync(
+            new AdminAuditEntry(
+                ActorUserId:  actorId,
+                TargetUserId: request.UserId,
+                Action:       AuditActions.AdminSuspendUser,
+                Reason:       null,
+                Metadata:     null,
+                IpAddress:    requestContext.IpAddress),
+            cancellationToken);
 
         logger.LogInformation(
             "Auth: Admin {AdminActorId} suspended user {TargetUserId}; active sessions and refresh tokens revoked.",

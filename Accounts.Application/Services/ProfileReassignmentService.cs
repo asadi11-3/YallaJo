@@ -37,20 +37,20 @@ internal sealed class ProfileReassignmentService(
     ILogger<ProfileReassignmentService> logger)
     : IProfileReassignmentService
 {
-    public async Task<Result> ResetForReassignmentAsync(
+    public async Task<Result<ProfileReassignmentOutcome>> ResetForReassignmentAsync(
         ProfileReassignmentRequest request,
         CancellationToken cancellationToken = default)
     {
         if (request is null)
         {
-            return Result.Failure(
+            return Result<ProfileReassignmentOutcome>.Failure(
                 Error.Validation("Profile.Request", "Reassignment request is required."),
                 Outcome.Invalid);
         }
 
         if (request.UserId == Guid.Empty)
         {
-            return Result.Failure(
+            return Result<ProfileReassignmentOutcome>.Failure(
                 Error.Validation("Profile.UserId", "UserId is required."),
                 Outcome.Invalid);
         }
@@ -68,11 +68,13 @@ internal sealed class ProfileReassignmentService(
             // races ahead of profile provisioning (outbox lag, user
             // whose UserCreatedIntegrationEvent has not landed yet)
             // must not tear down a valid Security/Auth reassignment.
+            // Phase 4 — return Scrubbed=false so the audit row's
+            // metadata is truthful about the no-op.
             logger.LogInformation(
                 "Accounts: No profile row for user {UserId} — ResetForReassignment is a no-op. " +
                 "A subsequent UserCreatedIntegrationEvent replay will create a clean profile.",
                 request.UserId);
-            return Result.Success();
+            return Result<ProfileReassignmentOutcome>.Success(new ProfileReassignmentOutcome(Scrubbed: false));
         }
 
         var localPart = ExtractLocalPart(request.NewEmail);
@@ -94,7 +96,7 @@ internal sealed class ProfileReassignmentService(
             request.UserId,
             profile.DisplayName ?? "(null)");
 
-        return Result.Success();
+        return Result<ProfileReassignmentOutcome>.Success(new ProfileReassignmentOutcome(Scrubbed: true));
     }
 
     /// <summary>

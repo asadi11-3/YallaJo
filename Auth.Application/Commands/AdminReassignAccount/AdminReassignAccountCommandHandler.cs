@@ -66,6 +66,8 @@ public sealed class AdminReassignAccountCommandHandler(
     IInviteTokenService inviteTokenService,
     IInviteLinkBuilder inviteLinkBuilder,
     IProfileReassignmentService profileReassignmentService,
+    IAdminAuditWriter adminAuditWriter,
+    IRequestContext requestContext,
     ICurrentUser currentUser,
     ILogger<AdminReassignAccountCommandHandler> logger)
     : ICommandHandler<AdminReassignAccountCommand, AdminReassignAccountResult>
@@ -200,7 +202,9 @@ public sealed class AdminReassignAccountCommandHandler(
                 //     by the service) rolls back Security + Auth
                 //     reassignment atomically. Missing profile is a
                 //     logged no-op (idempotent) per Phase 3D
-                //     contract.
+                //     contract; Phase 4 carries that fact back via
+                //     ProfileReassignmentOutcome.Scrubbed for the
+                //     audit metadata.
                 var profileReset = await profileReassignmentService.ResetForReassignmentAsync(
                     new ProfileReassignmentRequest(
                         UserId:   request.TargetUserId,
@@ -215,13 +219,42 @@ public sealed class AdminReassignAccountCommandHandler(
                         profileReset.Errors.ToArray());
                 }
 
-                // 2h. Single Auth SaveChanges commits: session/refresh
+                var profileScrubbed = profileReset.Value!.Scrubbed;
+
+                // 2h. Phase 4 — append the admin audit timeline row
+                //     INSIDE the ambient TransactionScope so it rolls
+                //     back together with the rest of the reassignment
+                //     if anything below fails. Single row per
+                //     reassignment (Option C); profileScrubbed lives
+                //     in the metadata JSON, not as a second row.
+                var metadata = BuildReassignMetadata(
+                    oldEmail:              completed.OldEmail,
+                    newEmail:              completed.NewEmail,
+                    lifecycleFrom:         "Active|Suspended|PendingPasswordReset",
+                    lifecycleTo:           completed.Lifecycle.ToString(),
+                    activationsSuperseded: activeActivationTokens.Count,
+                    resetsSuperseded:      activeResetTokens.Count,
+                    providersDeactivated:  activeProviderLinks.Count,
+                    profileScrubbed:       profileScrubbed);
+
+                await adminAuditWriter.RecordAsync(
+                    new AdminAuditEntry(
+                        ActorUserId:  actorId,
+                        TargetUserId: request.TargetUserId,
+                        Action:       AuditActions.AdminReassignAccount,
+                        Reason:       request.Reason,
+                        Metadata:     metadata,
+                        IpAddress:    requestContext.IpAddress),
+                    innerCt);
+
+                // 2i. Single Auth SaveChanges commits: session/refresh
                 //     revocations, activation token supersede sweep,
                 //     password-reset token supersede sweep, external
                 //     provider deactivations, new activation token,
                 //     and the outbox row emitted by the domain-event
-                //     dispatcher. The Accounts UoW SaveChanges above
-                //     already flushed inside the same ambient scope.
+                //     dispatcher. The Accounts UoW + Security audit
+                //     UoW SaveChanges above already flushed inside
+                //     the same ambient scope.
                 await unitOfWork.SaveChangesAsync(innerCt);
 
                 return ReassignOutcome.Ok(
@@ -230,7 +263,8 @@ public sealed class AdminReassignAccountCommandHandler(
                     activeResetTokens.Count,
                     activeProviderLinks.Count,
                     completed.OldEmail,
-                    completed.NewEmail);
+                    completed.NewEmail,
+                    profileScrubbed);
             },
             cancellationToken);
 
@@ -242,15 +276,17 @@ public sealed class AdminReassignAccountCommandHandler(
                 outcome.FailureErrors);
         }
 
-        // 3. Structured audit log. NEVER logs the plain activation
-        //    token — the event payload already carries it to the
-        //    outbox dispatcher; the audit trail only records what
-        //    happened and to whom.
+        // 3. Structured log. NEVER logs the plain activation token —
+        //    the event payload already carries it to the outbox
+        //    dispatcher; the audit trail only records what happened
+        //    and to whom. Phase 4 — the durable audit row was already
+        //    appended inside the transactional delegate via
+        //    IAdminAuditWriter.
         logger.LogInformation(
             "Auth: Admin {AdminActorId} reassigned user {TargetUserId} from {OldEmail} to {NewEmail}. " +
             "Activation token {TokenId} issued; {ActivationsSuperseded} activation token(s), " +
             "{ResetsSuperseded} reset token(s), {ProvidersDeactivated} external provider link(s) invalidated. " +
-            "Accounts profile scrubbed (ProfileReset=true). Reason={Reason}",
+            "Accounts profile scrubbed (ProfileReset={ProfileScrubbed}). Reason={Reason}",
             actorId,
             request.TargetUserId,
             outcome.OldEmail,
@@ -259,10 +295,41 @@ public sealed class AdminReassignAccountCommandHandler(
             outcome.ActivationsSuperseded,
             outcome.ResetsSuperseded,
             outcome.ProvidersDeactivated,
+            outcome.ProfileScrubbed,
             string.IsNullOrWhiteSpace(request.Reason) ? "(none provided)" : request.Reason);
 
         return Result<AdminReassignAccountResult>.Success(
             new AdminReassignAccountResult(SuccessMessage));
+    }
+
+    /// <summary>
+    /// Phase 4 — builds the compact metadata JSON embedded in the
+    /// single <c>ADMIN_REASSIGN_ACCOUNT</c> audit row. Per the Option C
+    /// decision, profile-scrub is recorded as a metadata field rather
+    /// than a separate audit event. No secrets (plain activation
+    /// token, password placeholder) are included.
+    /// </summary>
+    private static string BuildReassignMetadata(
+        string oldEmail,
+        string newEmail,
+        string lifecycleFrom,
+        string lifecycleTo,
+        int activationsSuperseded,
+        int resetsSuperseded,
+        int providersDeactivated,
+        bool profileScrubbed)
+    {
+        return System.Text.Json.JsonSerializer.Serialize(new
+        {
+            oldEmail              = oldEmail,
+            newEmail              = newEmail,
+            lifecycleFrom         = lifecycleFrom,
+            lifecycleTo           = lifecycleTo,
+            activationsSuperseded = activationsSuperseded,
+            resetsSuperseded      = resetsSuperseded,
+            providersDeactivated  = providersDeactivated,
+            profileScrubbed       = profileScrubbed
+        });
     }
 
     /// <summary>
@@ -282,7 +349,8 @@ public sealed class AdminReassignAccountCommandHandler(
         int ResetsSuperseded,
         int ProvidersDeactivated,
         string OldEmail,
-        string NewEmail)
+        string NewEmail,
+        bool ProfileScrubbed)
     {
         public static ReassignOutcome Ok(
             Guid activationTokenId,
@@ -290,13 +358,14 @@ public sealed class AdminReassignAccountCommandHandler(
             int resetsSuperseded,
             int providersDeactivated,
             string oldEmail,
-            string newEmail) =>
+            string newEmail,
+            bool profileScrubbed) =>
             new(true, Outcome.Ok, string.Empty, Array.Empty<Error>(),
                 activationTokenId, activationsSuperseded, resetsSuperseded, providersDeactivated,
-                oldEmail, newEmail);
+                oldEmail, newEmail, profileScrubbed);
 
         public static ReassignOutcome Failed(Outcome outcome, string message, Error[] errors) =>
             new(false, outcome, message, errors,
-                Guid.Empty, 0, 0, 0, string.Empty, string.Empty);
+                Guid.Empty, 0, 0, 0, string.Empty, string.Empty, false);
     }
 }

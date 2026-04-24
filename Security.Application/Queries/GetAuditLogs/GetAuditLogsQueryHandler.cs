@@ -12,10 +12,27 @@ public sealed class GetAuditLogsQueryHandler(IAuditLogRepository auditLogReposit
         GetAuditLogsQuery request, CancellationToken ct)
     {
         var pagedLogs = await auditLogRepository.GetPagedAsync(
-            request.UserId, request.Page, request.PageSize, ct);
+            userId:      request.UserId,
+            page:        request.Page,
+            pageSize:    request.PageSize,
+            actorUserId: request.ActorUserId,
+            action:      request.Action,
+            from:        request.From,
+            to:          request.To,
+            ct:          ct);
 
         var dtos = pagedLogs.Items
-            .Select(a => new AuditLogDto(a.Id, a.UserId, a.Action, a.IpAddress, a.OccurredAt))
+            .Select(a => new AuditLogDto(
+                Id:           a.Id,
+                UserId:       a.UserId,
+                ActorUserId:  a.ActorUserId,
+                Action:       a.Action,
+                ResourceType: a.ResourceType,
+                ResourceId:   a.ResourceId,
+                IpAddress:    a.IpAddress,
+                Reason:       a.Reason,
+                Metadata:     a.Metadata,
+                OccurredAt:   a.OccurredAt))
             .ToList();
 
         return Result<PaginatedResult<AuditLogDto>>.Success(

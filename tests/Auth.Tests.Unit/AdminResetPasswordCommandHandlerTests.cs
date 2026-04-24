@@ -38,6 +38,8 @@ public sealed class AdminResetPasswordCommandHandlerTests
     private readonly IAuthUnitOfWork               _uow               = Substitute.For<IAuthUnitOfWork>();
     private readonly IOtpService                   _otpService        = Substitute.For<IOtpService>();
     private readonly ISessionRevocationService     _sessionRevocation = Substitute.For<ISessionRevocationService>();
+    private readonly IAdminAuditWriter             _auditWriter       = Substitute.For<IAdminAuditWriter>();
+    private readonly IRequestContext               _requestContext    = Substitute.For<IRequestContext>();
     private readonly ICurrentUser                  _currentUser       = Substitute.For<ICurrentUser>();
     private readonly Guid                          _actorId           = Guid.NewGuid();
 
@@ -53,7 +55,8 @@ public sealed class AdminResetPasswordCommandHandlerTests
     }
 
     private AdminResetPasswordCommandHandler CreateSut(ILogger<AdminResetPasswordCommandHandler>? logger = null) =>
-        new(_security, _registration, _tokenRepo, _uow, _otpService, _sessionRevocation, _currentUser,
+        new(_security, _registration, _tokenRepo, _uow, _otpService, _sessionRevocation,
+            _auditWriter, _requestContext, _currentUser,
             logger ?? NullLogger<AdminResetPasswordCommandHandler>.Instance);
 
     private static AdminResetPasswordCommand Command(Guid targetId, string? reason = "left company") =>
@@ -95,6 +98,10 @@ public sealed class AdminResetPasswordCommandHandlerTests
 
         await _security.DidNotReceive()
             .GetAdminResetEligibilityAsync(Arg.Any<Guid>(), Arg.Any<Guid>(), Arg.Any<CancellationToken>());
+
+        // Phase 4 — failures must NOT write audit rows.
+        await _auditWriter.DidNotReceive()
+            .RecordAsync(Arg.Any<AdminAuditEntry>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -232,6 +239,20 @@ public sealed class AdminResetPasswordCommandHandlerTests
 
         // Single Auth UoW save committed everything.
         await _uow.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
+
+        // Phase 4 — admin audit row appended on success path. Action
+        // verb matches the constant; reason is forwarded; metadata
+        // includes the issued token id but NEVER the plain code.
+        await _auditWriter.Received(1).RecordAsync(
+            Arg.Is<AdminAuditEntry>(e =>
+                e.Action       == AuditActions.AdminResetPasswordInitiated
+             && e.ActorUserId  == _actorId
+             && e.TargetUserId == targetId
+             && e.Reason       == "Suspected compromise"
+             && e.Metadata     != null
+             && e.Metadata.Contains(persisted!.Id.ToString("D"), StringComparison.Ordinal)
+             && !e.Metadata.Contains("909090", StringComparison.Ordinal)),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]

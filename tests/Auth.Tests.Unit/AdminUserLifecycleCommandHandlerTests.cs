@@ -17,6 +17,8 @@ public sealed class AdminUserLifecycleCommandHandlerTests
     private readonly ISecurityService _securityService = Substitute.For<ISecurityService>();
     private readonly ISessionRevocationService _sessionRevocation = Substitute.For<ISessionRevocationService>();
     private readonly IAuthUnitOfWork _authUnitOfWork = Substitute.For<IAuthUnitOfWork>();
+    private readonly IAdminAuditWriter _auditWriter = Substitute.For<IAdminAuditWriter>();
+    private readonly IRequestContext _requestContext = Substitute.For<IRequestContext>();
     private readonly ICurrentUser _currentUser = Substitute.For<ICurrentUser>();
     private readonly Guid _actorId = Guid.NewGuid();
 
@@ -40,6 +42,8 @@ public sealed class AdminUserLifecycleCommandHandlerTests
             _securityService,
             _sessionRevocation,
             _authUnitOfWork,
+            _auditWriter,
+            _requestContext,
             _currentUser,
             NullLogger<AdminSuspendUserCommandHandler>.Instance);
 
@@ -50,6 +54,10 @@ public sealed class AdminUserLifecycleCommandHandlerTests
 
         await _securityService.DidNotReceive()
             .SuspendUserByAdminAsync(Arg.Any<Guid>(), Arg.Any<Guid>(), Arg.Any<CancellationToken>());
+
+        // Phase 4 — failures must NOT write audit rows.
+        await _auditWriter.DidNotReceive()
+            .RecordAsync(Arg.Any<AdminAuditEntry>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -64,6 +72,8 @@ public sealed class AdminUserLifecycleCommandHandlerTests
             _securityService,
             _sessionRevocation,
             _authUnitOfWork,
+            _auditWriter,
+            _requestContext,
             _currentUser,
             NullLogger<AdminSuspendUserCommandHandler>.Instance);
 
@@ -78,6 +88,14 @@ public sealed class AdminUserLifecycleCommandHandlerTests
             .RevokeAllForUserAsync(targetUserId, SessionRevocationReason.AccountSuspended, Arg.Any<CancellationToken>());
 
         await _authUnitOfWork.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
+
+        // Phase 4 — admin audit row is appended on the success path.
+        await _auditWriter.Received(1).RecordAsync(
+            Arg.Is<AdminAuditEntry>(e =>
+                e.ActorUserId  == _actorId
+             && e.TargetUserId == targetUserId
+             && e.Action       == AuditActions.AdminSuspendUser),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -92,6 +110,8 @@ public sealed class AdminUserLifecycleCommandHandlerTests
             _securityService,
             _sessionRevocation,
             _authUnitOfWork,
+            _auditWriter,
+            _requestContext,
             _currentUser,
             NullLogger<AdminSuspendUserCommandHandler>.Instance);
 
@@ -103,6 +123,10 @@ public sealed class AdminUserLifecycleCommandHandlerTests
         await _sessionRevocation.DidNotReceive()
             .RevokeAllForUserAsync(Arg.Any<Guid>(), Arg.Any<SessionRevocationReason>(), Arg.Any<CancellationToken>());
         await _authUnitOfWork.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
+
+        // Phase 4 — failures must NOT write audit rows.
+        await _auditWriter.DidNotReceive()
+            .RecordAsync(Arg.Any<AdminAuditEntry>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -115,6 +139,8 @@ public sealed class AdminUserLifecycleCommandHandlerTests
 
         var sut = new AdminReactivateUserCommandHandler(
             _securityService,
+            _auditWriter,
+            _requestContext,
             _currentUser,
             NullLogger<AdminReactivateUserCommandHandler>.Instance);
 
@@ -129,6 +155,14 @@ public sealed class AdminUserLifecycleCommandHandlerTests
             .RevokeAllForUserAsync(Arg.Any<Guid>(), Arg.Any<SessionRevocationReason>(), Arg.Any<CancellationToken>());
 
         await _authUnitOfWork.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
+
+        // Phase 4 — admin audit row is appended on the success path.
+        await _auditWriter.Received(1).RecordAsync(
+            Arg.Is<AdminAuditEntry>(e =>
+                e.ActorUserId  == _actorId
+             && e.TargetUserId == targetUserId
+             && e.Action       == AuditActions.AdminReactivateUser),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -143,6 +177,8 @@ public sealed class AdminUserLifecycleCommandHandlerTests
             _securityService,
             _sessionRevocation,
             _authUnitOfWork,
+            _auditWriter,
+            _requestContext,
             _currentUser,
             NullLogger<AdminArchiveUserCommandHandler>.Instance);
 
@@ -157,5 +193,13 @@ public sealed class AdminUserLifecycleCommandHandlerTests
             .RevokeAllForUserAsync(targetUserId, SessionRevocationReason.AccountArchived, Arg.Any<CancellationToken>());
 
         await _authUnitOfWork.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
+
+        // Phase 4 — admin audit row is appended on the success path.
+        await _auditWriter.Received(1).RecordAsync(
+            Arg.Is<AdminAuditEntry>(e =>
+                e.ActorUserId  == _actorId
+             && e.TargetUserId == targetUserId
+             && e.Action       == AuditActions.AdminArchiveUser),
+            Arg.Any<CancellationToken>());
     }
 }

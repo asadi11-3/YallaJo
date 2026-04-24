@@ -37,6 +37,8 @@ public sealed class AdminReassignAccountCommandHandlerTests
     private readonly IInviteTokenService           _inviteTokenService          = Substitute.For<IInviteTokenService>();
     private readonly IInviteLinkBuilder            _inviteLinkBuilder           = Substitute.For<IInviteLinkBuilder>();
     private readonly IProfileReassignmentService   _profileReassignment         = Substitute.For<IProfileReassignmentService>();
+    private readonly IAdminAuditWriter             _auditWriter                 = Substitute.For<IAdminAuditWriter>();
+    private readonly IRequestContext               _requestContext              = Substitute.For<IRequestContext>();
     private readonly ICurrentUser                  _currentUser                 = Substitute.For<ICurrentUser>();
     private readonly Guid                          _actorId                     = Guid.NewGuid();
 
@@ -54,17 +56,19 @@ public sealed class AdminReassignAccountCommandHandlerTests
         _inviteLinkBuilder.Build(Arg.Any<string>(), Arg.Any<string>())
             .Returns(ci => $"https://app.example.com/activate?email={ci.ArgAt<string>(0)}&token={ci.ArgAt<string>(1)}");
 
-        // Phase 3D — profile reassignment defaults to success; individual
-        // tests override when a failure path is under test.
+        // Phase 3D / 4 — profile reassignment defaults to Success
+        // with Scrubbed=true; individual tests override when a
+        // missing-profile or failure path is under test.
         _profileReassignment
             .ResetForReassignmentAsync(Arg.Any<ProfileReassignmentRequest>(), Arg.Any<CancellationToken>())
-            .Returns(Result.Success());
+            .Returns(Result<ProfileReassignmentOutcome>.Success(new ProfileReassignmentOutcome(Scrubbed: true)));
     }
 
     private AdminReassignAccountCommandHandler CreateSut() =>
         new(_security, _activationTokens, _resetTokens, _externalProviders,
             _sessionRevocation, _uow, _txExecutor, _inviteTokenService, _inviteLinkBuilder,
-            _profileReassignment, _currentUser, NullLogger<AdminReassignAccountCommandHandler>.Instance);
+            _profileReassignment, _auditWriter, _requestContext, _currentUser,
+            NullLogger<AdminReassignAccountCommandHandler>.Instance);
 
     private static AdminReassignAccountCommand Command(
         Guid targetId,
@@ -352,7 +356,7 @@ public sealed class AdminReassignAccountCommandHandlerTests
             .ResetForReassignmentAsync(
                 Arg.Do<ProfileReassignmentRequest>(r => captured = r),
                 Arg.Any<CancellationToken>())
-            .Returns(Result.Success());
+            .Returns(Result<ProfileReassignmentOutcome>.Success(new ProfileReassignmentOutcome(Scrubbed: true)));
 
         var sut = CreateSut();
 
@@ -392,7 +396,7 @@ public sealed class AdminReassignAccountCommandHandlerTests
             .ResetForReassignmentAsync(
                 Arg.Any<ProfileReassignmentRequest>(),
                 Arg.Any<CancellationToken>())
-            .Returns(Result.Failure(
+            .Returns(Result<ProfileReassignmentOutcome>.Failure(
                 Error.Failure("Profile.Reset", "profile reset failed"),
                 Outcome.ServerError));
 
@@ -425,12 +429,173 @@ public sealed class AdminReassignAccountCommandHandlerTests
         var sut = new AdminReassignAccountCommandHandler(
             _security, _activationTokens, _resetTokens, _externalProviders,
             _sessionRevocation, _uow, _txExecutor, _inviteTokenService, _inviteLinkBuilder,
-            _profileReassignment, _currentUser, spy);
+            _profileReassignment, _auditWriter, _requestContext, _currentUser, spy);
 
         await sut.Handle(Command(targetId), CancellationToken.None);
 
         spy.AssertDoesNotContain("SECRET-PLAIN-TOKEN-123",
             "the plain activation token must never travel through structured logs");
+    }
+
+    // ── Phase 4 — admin audit timeline ───────────────────────────────────────
+
+    [Fact]
+    public async Task Handle_OnSuccess_ShouldRecord_Exactly_OneAuditEntry_WithReassignAction()
+    {
+        var targetId = Guid.NewGuid();
+        StubSecuritySuccess(targetId, oldEmail: "old@example.com", newEmail: "new@example.com");
+        StubNoExistingActivationTokens();
+        StubNoExistingResetTokens();
+        StubNoActiveProviderLinks();
+
+        _requestContext.IpAddress.Returns("203.0.113.42");
+
+        var sut = CreateSut();
+
+        await sut.Handle(
+            Command(targetId, newEmail: "new@example.com", reason: "left company"),
+            CancellationToken.None);
+
+        await _auditWriter.Received(1).RecordAsync(
+            Arg.Is<AdminAuditEntry>(e =>
+                e.Action       == AuditActions.AdminReassignAccount
+             && e.ActorUserId  == _actorId
+             && e.TargetUserId == targetId
+             && e.Reason       == "left company"
+             && e.IpAddress    == "203.0.113.42"),
+            Arg.Any<CancellationToken>());
+
+        // Per Option C — exactly ONE audit row is emitted; the
+        // profile-scrub fact lives inside Metadata, not as a second
+        // row.
+        await _auditWriter.Received(1).RecordAsync(
+            Arg.Any<AdminAuditEntry>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Handle_OnSuccessWithScrubbedProfile_ShouldEmbed_ProfileScrubbedTrue_InMetadata()
+    {
+        var targetId = Guid.NewGuid();
+        StubSecuritySuccess(targetId, oldEmail: "old@example.com", newEmail: "new@example.com");
+        StubNoExistingActivationTokens();
+        StubNoExistingResetTokens();
+        StubNoActiveProviderLinks();
+
+        _profileReassignment
+            .ResetForReassignmentAsync(Arg.Any<ProfileReassignmentRequest>(), Arg.Any<CancellationToken>())
+            .Returns(Result<ProfileReassignmentOutcome>.Success(new ProfileReassignmentOutcome(Scrubbed: true)));
+
+        AdminAuditEntry? captured = null;
+        _auditWriter
+            .RecordAsync(Arg.Do<AdminAuditEntry>(e => captured = e), Arg.Any<CancellationToken>())
+            .Returns(Task.CompletedTask);
+
+        var sut = CreateSut();
+
+        await sut.Handle(Command(targetId), CancellationToken.None);
+
+        captured.Should().NotBeNull();
+        captured!.Metadata.Should().NotBeNull();
+        captured.Metadata!.Should().Contain("\"profileScrubbed\":true");
+        captured.Metadata.Should().Contain("\"oldEmail\":\"old@example.com\"");
+        captured.Metadata.Should().Contain("\"newEmail\":\"new@example.com\"");
+    }
+
+    [Fact]
+    public async Task Handle_OnSuccessWithMissingProfile_ShouldEmbed_ProfileScrubbedFalse_InMetadata()
+    {
+        var targetId = Guid.NewGuid();
+        StubSecuritySuccess(targetId);
+        StubNoExistingActivationTokens();
+        StubNoExistingResetTokens();
+        StubNoActiveProviderLinks();
+
+        _profileReassignment
+            .ResetForReassignmentAsync(Arg.Any<ProfileReassignmentRequest>(), Arg.Any<CancellationToken>())
+            .Returns(Result<ProfileReassignmentOutcome>.Success(new ProfileReassignmentOutcome(Scrubbed: false)));
+
+        AdminAuditEntry? captured = null;
+        _auditWriter
+            .RecordAsync(Arg.Do<AdminAuditEntry>(e => captured = e), Arg.Any<CancellationToken>())
+            .Returns(Task.CompletedTask);
+
+        var sut = CreateSut();
+
+        await sut.Handle(Command(targetId), CancellationToken.None);
+
+        captured.Should().NotBeNull();
+        captured!.Metadata.Should().Contain("\"profileScrubbed\":false",
+            "Option C — missing-profile no-op must be reflected truthfully in metadata, " +
+            "not by the absence of a separate audit row.");
+    }
+
+    [Fact]
+    public async Task Handle_OnSecurityFailure_ShouldNotRecordAudit()
+    {
+        var targetId = Guid.NewGuid();
+        _security.ReassignUserByAdminAsync(
+                targetId, _actorId, Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(Result<ReassignmentCompleted>.Failure(
+                Error.Conflict("User.IneligibleForReassign", "ineligible"), Outcome.Conflict));
+
+        var sut = CreateSut();
+
+        var result = await sut.Handle(Command(targetId), CancellationToken.None);
+
+        result.IsFailure.Should().BeTrue();
+
+        await _auditWriter.DidNotReceive()
+            .RecordAsync(Arg.Any<AdminAuditEntry>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Handle_OnProfileFailure_ShouldNotRecordAudit()
+    {
+        var targetId = Guid.NewGuid();
+        StubSecuritySuccess(targetId);
+        StubNoExistingActivationTokens();
+        StubNoExistingResetTokens();
+        StubNoActiveProviderLinks();
+
+        _profileReassignment
+            .ResetForReassignmentAsync(Arg.Any<ProfileReassignmentRequest>(), Arg.Any<CancellationToken>())
+            .Returns(Result<ProfileReassignmentOutcome>.Failure(
+                Error.Failure("Profile.Reset", "boom"), Outcome.ServerError));
+
+        var sut = CreateSut();
+
+        var result = await sut.Handle(Command(targetId), CancellationToken.None);
+
+        result.IsFailure.Should().BeTrue();
+
+        await _auditWriter.DidNotReceive()
+            .RecordAsync(Arg.Any<AdminAuditEntry>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Handle_AuditMetadata_ShouldNeverContain_PlainActivationToken()
+    {
+        var targetId = Guid.NewGuid();
+        StubSecuritySuccess(targetId);
+        StubNoExistingActivationTokens();
+        StubNoExistingResetTokens();
+        StubNoActiveProviderLinks();
+
+        _inviteTokenService.Generate().Returns("SECRET-PLAIN-TOKEN-XYZ");
+
+        AdminAuditEntry? captured = null;
+        _auditWriter
+            .RecordAsync(Arg.Do<AdminAuditEntry>(e => captured = e), Arg.Any<CancellationToken>())
+            .Returns(Task.CompletedTask);
+
+        var sut = CreateSut();
+
+        await sut.Handle(Command(targetId), CancellationToken.None);
+
+        captured.Should().NotBeNull();
+        (captured!.Metadata ?? string.Empty).Should().NotContain("SECRET-PLAIN-TOKEN-XYZ",
+            "the plain activation token must never travel through the audit metadata");
     }
 
     // ── Test-only log spy ─────────────────────────────────────────────────────

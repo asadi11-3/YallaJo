@@ -56,6 +56,8 @@ public sealed class AdminResetPasswordCommandHandler(
     IAuthUnitOfWork unitOfWork,
     IOtpService otpService,
     ISessionRevocationService sessionRevocation,
+    IAdminAuditWriter adminAuditWriter,
+    IRequestContext requestContext,
     ICurrentUser currentUser,
     ILogger<AdminResetPasswordCommandHandler> logger)
     : ICommandHandler<AdminResetPasswordCommand, AdminResetPasswordResult>
@@ -199,7 +201,22 @@ public sealed class AdminResetPasswordCommandHandler(
         //     atomically.
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        // 11. Structured audit log. NEVER logs the plain code.
+        // 11. Phase 4 — append the admin audit timeline row. Reached
+        //     only after the lifecycle transition + token issue +
+        //     session revocation succeeded. The plain code is NEVER
+        //     persisted in metadata; only TokenId and origin are.
+        var metadata = BuildMetadata(token.Id);
+        await adminAuditWriter.RecordAsync(
+            new AdminAuditEntry(
+                ActorUserId:  actorId,
+                TargetUserId: request.TargetUserId,
+                Action:       AuditActions.AdminResetPasswordInitiated,
+                Reason:       request.Reason,
+                Metadata:     metadata,
+                IpAddress:    requestContext.IpAddress),
+            cancellationToken);
+
+        // 12. Structured log. NEVER logs the plain code.
         logger.LogInformation(
             "Auth: Admin {AdminActorId} initiated password reset for user {TargetUserId}. Token {TokenId} issued (origin=AdminInitiated); email queued on outbox. Reason={Reason}",
             actorId,
@@ -209,5 +226,21 @@ public sealed class AdminResetPasswordCommandHandler(
 
         return Result<AdminResetPasswordResult>.Success(
             new AdminResetPasswordResult(SuccessMessage));
+    }
+
+    /// <summary>
+    /// Phase 4 — builds the compact metadata JSON embedded in the
+    /// <c>ADMIN_RESET_PASSWORD_INITIATED</c> audit row. Records the
+    /// issued token id (so analytics can correlate to outbox dispatch
+    /// rows) and the origin marker. The plain reset code is never
+    /// included.
+    /// </summary>
+    private static string BuildMetadata(Guid tokenId)
+    {
+        return System.Text.Json.JsonSerializer.Serialize(new
+        {
+            tokenId = tokenId,
+            origin = "AdminInitiated"
+        });
     }
 }

@@ -52,6 +52,11 @@ public static class DependencyInjection
      
         services.AddScoped<ISecurityService, SecurityService>();
 
+        // Phase 4 — admin audit timeline writer. Used by Auth admin
+        // command handlers to append rows to security.AuditLogs on the
+        // success path of admin lifecycle verbs.
+        services.AddScoped<IAdminAuditWriter, AdminAuditWriter>();
+
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
         services.AddScoped<IOutboxProcessor, OutboxProcessor<SecurityDbContext>>();
 
