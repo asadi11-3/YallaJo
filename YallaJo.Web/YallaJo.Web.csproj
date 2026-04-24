@@ -13,6 +13,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Phase 5A — internal helpers (e.g. AuditLogsApiClient.BuildUrl,
+         JsonMetadataFormatter) need to be testable from
+         tests/Web.Tests.Unit without forcing them onto the public API. -->
+    <InternalsVisibleTo Include="Web.Tests.Unit" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Folder Include="Areas\Admin\Modules\Security\Features\AuditLogs\Requests\" />
     <Folder Include="Areas\Admin\Modules\Security\Features\AuditLogs\Validators\" />
     <Folder Include="Areas\Admin\Modules\Security\Features\Roles\Validators\" />
