@@ -51,8 +51,17 @@ public sealed class ForgotPasswordCommandHandler(
         // Silent rejection for any other state keeps the response
         // enumeration-safe (an observer cannot distinguish non-existent,
         // un-activated, and suspended accounts).
+        //
+        // Phase 2B — branches on AccountLifecycleSnapshot directly rather
+        // than the derived IsActive flag, matching LoginCommandHandler's
+        // gate style and future-proofing against PendingActivation,
+        // Suspended, PendingPasswordReset and Archived states (the IsActive
+        // shadow happens to be false for all of these today, so this is a
+        // no-behavior-change cleanup).
         var status = await securityService.GetAccountStatusByEmailAsync(normalizedEmail, ct);
-        if (status is null || !status.IsActive || !status.IsEmailVerified)
+        if (status is null
+         || status.Lifecycle != AccountLifecycleSnapshot.Active
+         || !status.IsEmailVerified)
         {
             return Result<ForgotPasswordResult>.Success(new ForgotPasswordResult(GenericMessage));
         }

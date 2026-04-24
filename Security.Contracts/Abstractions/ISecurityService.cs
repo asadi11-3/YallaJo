@@ -39,7 +39,7 @@ public interface ISecurityService
     /// (<see cref="ReplacePasswordBySelfAsync"/> and — in Phase 2+ —
     /// <c>ResetPasswordByAdminAsync</c>).
     /// </summary>
-    [Obsolete("Use ReplacePasswordBySelfAsync for self-service recovery. An admin-initiated variant will be introduced in Phase 2.")]
+    [Obsolete("Use ReplacePasswordBySelfAsync for self-service recovery. An admin-initiated variant will be introduced in Phase 2C+.")]
     Task<bool> ResetPasswordAsync(Guid userId, string newPassword, CancellationToken ct = default);
 }
 
@@ -48,19 +48,50 @@ public sealed record SecurityUserData(
     string Email,
     bool IsEmailVerified,
     IReadOnlyList<string> Roles,
-    IReadOnlyList<(string Type, string Value)> Claims);
+    IReadOnlyList<(string Type, string Value)> Claims,
+    // Phase 2A: defaults to Active so pre-Phase-2A constructions (test
+    // doubles, downstream consumers) keep compiling. The Security
+    // infrastructure ALWAYS populates this field with the real value;
+    // the default exists only to keep the contract source-compatible
+    // during the transition.
+    AccountLifecycleSnapshot Lifecycle = AccountLifecycleSnapshot.Active);
 
 public sealed record SecurityContactData(
     string Email,
     string? PhoneNumber);
 
 /// <summary>
-/// Lightweight lifecycle snapshot used to gate recovery flows. Mirrors the
-/// fields <see cref="InviteAccountStatus"/> already carries for onboarding,
-/// but is scoped to post-activation recovery semantics.
+/// Lightweight lifecycle snapshot used to gate recovery and login flows.
+/// <see cref="IsActive"/> is preserved as a derived convenience for backward
+/// compatibility with Phase 1 callers; new code should branch on
+/// <see cref="Lifecycle"/> directly.
 /// </summary>
 public sealed record AccountStatus(
     Guid UserId,
     string Email,
     bool IsActive,
-    bool IsEmailVerified);
+    bool IsEmailVerified,
+    // Phase 2A: defaults to a derived guess so pre-Phase-2A test doubles
+    // continue to compile. Production code in SecurityService always
+    // supplies the real value sourced from User.LifecycleState.
+    AccountLifecycleSnapshot Lifecycle = AccountLifecycleSnapshot.Active);
+
+/// <summary>
+/// Cross-module-safe projection of <c>Security.Domain.Entities.AccountLifecycleState</c>.
+/// <para>
+/// Defined in <c>Security.Contracts</c> so consumers (Auth, future modules)
+/// do not need a project reference on <c>Security.Domain</c>. The ordinals
+/// are guaranteed to match the domain enum 1:1 — see Phase 2A commit notes
+/// for the mapping discipline (the Security infrastructure layer performs
+/// the cast at the contract boundary).
+/// </para>
+/// </summary>
+public enum AccountLifecycleSnapshot
+{
+    Provisioned          = 0,
+    PendingActivation    = 1,
+    Active               = 2,
+    Suspended            = 3,
+    PendingPasswordReset = 4,
+    Archived             = 5,
+}

@@ -42,7 +42,12 @@ public sealed class ForgotPasswordCommandHandlerTests
     private void StubActiveVerifiedAccount(Guid userId, string email = "user@example.com")
     {
         _security.GetAccountStatusByEmailAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
-            .Returns(new AccountStatus(userId, email, IsActive: true, IsEmailVerified: true));
+            .Returns(new AccountStatus(
+                userId,
+                email,
+                IsActive: true,
+                IsEmailVerified: true,
+                Lifecycle: AccountLifecycleSnapshot.Active));
     }
 
     [Fact]
@@ -64,15 +69,17 @@ public sealed class ForgotPasswordCommandHandlerTests
     }
 
     [Theory]
-    [InlineData(false, true)]   // not active (e.g. provisioned but never activated, or suspended)
-    [InlineData(true,  false)]  // email unverified
-    [InlineData(false, false)]  // neither
+    [InlineData(false, true,  AccountLifecycleSnapshot.PendingActivation)]    // provisioned but never activated
+    [InlineData(false, true,  AccountLifecycleSnapshot.Suspended)]            // admin-suspended
+    [InlineData(true,  false, AccountLifecycleSnapshot.Active)]               // active but email unverified (data anomaly)
+    [InlineData(false, false, AccountLifecycleSnapshot.Provisioned)]          // never onboarded
+    [InlineData(false, true,  AccountLifecycleSnapshot.Archived)]             // terminal
     public async Task Handle_ShouldReturnGenericSuccess_AndSkipSend_WhenAccountIsNotEligible(
-        bool isActive, bool isEmailVerified)
+        bool isActive, bool isEmailVerified, AccountLifecycleSnapshot lifecycle)
     {
         var userId = Guid.NewGuid();
         _security.GetAccountStatusByEmailAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
-            .Returns(new AccountStatus(userId, "user@example.com", isActive, isEmailVerified));
+            .Returns(new AccountStatus(userId, "user@example.com", isActive, isEmailVerified, lifecycle));
 
         var sut = CreateSut();
 

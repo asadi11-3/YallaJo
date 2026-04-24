@@ -15,6 +15,18 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
 
         builder.Property(u => u.IsActive).IsRequired();
 
+        // Phase 2A: explicit lifecycle state. Persisted as INT (enum value)
+        // alongside the legacy IsActive boolean. Both are kept until Phase 2B
+        // can safely drop IsActive — the duplication is intentional for
+        // rollback safety and to leave existing LINQ projections (e.g.
+        // queries filtering on Where(u => u.IsActive)) untouched until they
+        // are migrated one by one.
+        builder.Property(u => u.LifecycleState)
+            .HasConversion<int>()
+            .HasColumnName("LifecycleState")
+            .HasDefaultValue(AccountLifecycleState.Provisioned)
+            .IsRequired();
+
         builder.Property(u => u.PasswordHash)
             .HasMaxLength(512)
             .IsRequired();
@@ -52,6 +64,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
 
         // Indexes
         builder.HasIndex(u => u.IsActive);
+        builder.HasIndex(u => u.LifecycleState);
         builder.HasIndex(u => u.IsDeleted);
     }
 }

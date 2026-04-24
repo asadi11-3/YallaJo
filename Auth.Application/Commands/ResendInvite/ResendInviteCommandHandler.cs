@@ -1,25 +1,25 @@
-using Auth.Application.Interfaces;
-using Auth.Application.Invitations;
-using Auth.Domain.Entities;
-using Auth.Domain.Repositories;
-using Security.Contracts.Abstractions;
+using Auth.Application.Commands.SendActivationEmail;
+using MediatR;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
 namespace Auth.Application.Commands.ResendInvite;
 
 /// <summary>
-/// Admin-initiated resend of the invite link. Refuses to resend for accounts
-/// that have already completed onboarding (active + email verified). Marks
-/// any prior outstanding invite tokens as used and issues a new one.
+/// Phase 2B — legacy resend entry point. Retained as a thin, enumeration-safe
+/// façade over <see cref="SendActivationEmailCommand"/>:
+/// <list type="bullet">
+///   <item><description>Account not found → generic success (do not leak existence).</description></item>
+///   <item><description>Account past activation (Active / Suspended / Archived / PendingPasswordReset) → surface as <c>Conflict</c>, matching the pre-2B <c>Invite.AlreadyCompleted</c> response the admin UI already handles.</description></item>
+///   <item><description>Email delivery failure → generic success (do not leak existence on failure either; admin can check logs/metrics).</description></item>
+///   <item><description>Success → generic success message.</description></item>
+/// </list>
+/// <para>
+/// The HTTP endpoint contract (<c>POST /invitations/resend</c>) and response
+/// DTO (<see cref="ResendInviteResult"/>) are unchanged.
+/// </para>
 /// </summary>
-public sealed class ResendInviteCommandHandler(
-    IUserRegistrationService userRegistrationService,
-    IOtpRepository otpRepository,
-    IAuthUnitOfWork unitOfWork,
-    IInviteTokenService inviteTokenService,
-    IInviteLinkBuilder inviteLinkBuilder,
-    IEmailService emailService)
+public sealed class ResendInviteCommandHandler(IMediator mediator)
     : ICommandHandler<ResendInviteCommand, ResendInviteResult>
 {
     private const string GenericMessage =
@@ -29,59 +29,26 @@ public sealed class ResendInviteCommandHandler(
         ResendInviteCommand request,
         CancellationToken ct)
     {
-        var normalizedEmail = request.Email.Trim().ToLowerInvariant();
+        var result = await mediator.Send(
+            new SendActivationEmailCommand(request.Email), ct);
 
-        var status = await userRegistrationService.GetInviteAccountStatusAsync(normalizedEmail, ct);
-        if (status is null)
-        {
-            // Do not leak whether the account exists.
+        if (result.IsSuccess)
             return Result<ResendInviteResult>.Success(new ResendInviteResult(GenericMessage));
-        }
 
-        if (status.IsActive || status.IsEmailVerified)
+        // Surface Conflict verbatim — the admin UI distinguishes
+        // "already completed" from a generic success so the operator can
+        // tell when a resend is genuinely refused.
+        if (result.Outcome == Outcome.Conflict)
         {
-            return Result<ResendInviteResult>.Failure(
-                Error.Conflict("Invite.AlreadyCompleted",
-                    "This account has already completed onboarding. A new invite cannot be sent."),
-                Outcome.Conflict);
+            return Result<ResendInviteResult>.Fail(
+                result.Outcome,
+                result.Messages.FirstOrDefault() ?? string.Empty,
+                result.Errors.ToArray());
         }
 
-        // Invalidate prior outstanding invite tokens for this user.
-        var oldInvites = await otpRepository.GetAllAsync(
-            filter: o => o.UserId == status.UserId
-                      && o.Purpose == InviteConstants.Purpose
-                      && !o.IsUsed,
-            asNoTracking: false,
-            ct: ct);
-
-        foreach (var old in oldInvites)
-            old.MarkUsed();
-
-        // Issue a fresh invite token.
-        var plainToken = inviteTokenService.Generate();
-        var tokenHash  = inviteTokenService.Hash(plainToken);
-
-        var invite = Otp.Create(
-            userId:          status.UserId,
-            purpose:         InviteConstants.Purpose,
-            codeHash:        tokenHash,
-            deliveryChannel: "Email",
-            deliveryAddress: normalizedEmail,
-            expiryMinutes:   InviteConstants.ExpiryMinutes);
-
-        await otpRepository.AddAsync(invite, ct);
-        await unitOfWork.SaveChangesAsync(ct);
-
-        var link = inviteLinkBuilder.Build(normalizedEmail, plainToken);
-
-        await emailService.SendAsync(
-            normalizedEmail,
-            "YallaJo — Your invite link",
-            $"Your YallaJo invite has been refreshed.\n" +
-            $"Click the link below to set your password and activate your account:\n\n{link}\n\n" +
-            $"This link expires in {InviteConstants.ExpiryMinutes / 60 / 24} days.",
-            ct);
-
+        // Every other failure — NotFound (no such account), ServerError
+        // (SMTP dropped), anything else — is absorbed into the generic
+        // success response to preserve enumeration safety.
         return Result<ResendInviteResult>.Success(new ResendInviteResult(GenericMessage));
     }
 }

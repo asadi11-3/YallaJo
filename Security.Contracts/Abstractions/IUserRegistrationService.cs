@@ -20,11 +20,52 @@ public interface IUserRegistrationService
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Admin-initiated invited registration: NO password is set, the email is
-    /// unverified, the account is inactive. Finalization happens later through
-    /// <see cref="CompleteInviteAsync"/> once the invitee proves mailbox
-    /// ownership via the invite-acceptance flow.
+    /// Phase 2B — admin-initiated provisioning: creates the identity + role
+    /// assignments in <see cref="AccountLifecycleSnapshot.Provisioned"/>
+    /// state. NO password is set, email is unverified, NO activation token
+    /// is issued, NO email is sent. A subsequent explicit call to
+    /// <see cref="MarkPendingActivationAsync"/> (driven by the
+    /// <c>SendActivationEmailCommand</c> use case) is required before the
+    /// invitee can complete onboarding via <see cref="CompleteActivationAsync"/>.
+    /// <para>
+    /// Separating provision from send-activation lets admins pre-create
+    /// accounts ahead of time without blasting invite emails, and keeps the
+    /// lifecycle transition authoritative: <c>Provisioned → PendingActivation</c>
+    /// happens only after the email is actually dispatched.
+    /// </para>
     /// </summary>
+    Task<Result<Guid>> RegisterProvisionedAsync(
+        InvitedUserRegistrationRequest request,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Transitions an identity from <see cref="AccountLifecycleSnapshot.Provisioned"/>
+    /// (or idempotently from <see cref="AccountLifecycleSnapshot.PendingActivation"/>)
+    /// to <see cref="AccountLifecycleSnapshot.PendingActivation"/>. Used by
+    /// the <c>SendActivationEmailCommand</c> pipeline after email delivery
+    /// succeeds, so the on-record lifecycle never advances past
+    /// <c>Provisioned</c> unless an activation email has actually been sent.
+    /// <para>
+    /// Idempotent. Returns <c>NotFound</c> if the user does not exist.
+    /// Returns <c>Conflict</c> if the account is in a later lifecycle state
+    /// (Active, Suspended, PendingPasswordReset, Archived).
+    /// </para>
+    /// </summary>
+    Task<Result> MarkPendingActivationAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Admin-initiated invited registration (legacy, Phase 2A).
+    /// <para>
+    /// Equivalent to <see cref="RegisterProvisionedAsync"/> immediately
+    /// followed by <see cref="MarkPendingActivationAsync"/>. Kept as a shim
+    /// so the legacy <c>InviteUserCommand</c> façade and any other
+    /// pre-Phase-2B callers keep compiling; new code should prefer the
+    /// split verbs.
+    /// </para>
+    /// </summary>
+    [Obsolete("Use RegisterProvisionedAsync (then MarkPendingActivationAsync once the activation email is dispatched). Kept for Phase 2A+2B backward compatibility; will be removed in Phase 4.")]
     Task<Result<Guid>> RegisterInvitedAsync(
         InvitedUserRegistrationRequest request,
         CancellationToken cancellationToken = default);
@@ -46,10 +87,27 @@ public interface IUserRegistrationService
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Finalize an invited account in a single step: set the password, mark
-    /// the primary email verified, and activate the account. Fails if the
-    /// user does not exist or is already fully onboarded.
+    /// Phase 2B — finalize activation for an account currently in
+    /// <see cref="AccountLifecycleSnapshot.PendingActivation"/>. In a single
+    /// unit of work: sets the initial password, marks the primary email
+    /// verified, and performs the explicit
+    /// <c>PendingActivation → Active</c> lifecycle transition. Fails if the
+    /// user does not exist, the email does not match, or the account is
+    /// already fully onboarded.
     /// </summary>
+    Task<Result> CompleteActivationAsync(
+        Guid userId,
+        string email,
+        string password,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Legacy invite finalization (Phase 2A). Semantically identical to
+    /// <see cref="CompleteActivationAsync"/>; retained as a shim for the
+    /// legacy <c>AcceptInviteCommand</c> façade. New code should call
+    /// <see cref="CompleteActivationAsync"/> directly.
+    /// </summary>
+    [Obsolete("Use CompleteActivationAsync. Kept for Phase 2A+2B backward compatibility; will be removed in Phase 4.")]
     Task<Result> CompleteInviteAsync(
         Guid userId,
         string email,
@@ -91,11 +149,25 @@ public sealed record InvitableRoleOption(
     string? Description,
     bool IsPrivileged);
 
+/// <summary>
+/// Lightweight onboarding snapshot returned by
+/// <see cref="IUserRegistrationService.GetInviteAccountStatusAsync"/>. Used
+/// by Auth's invite/activation flows to gate resend/accept/send-activation
+/// without exposing the full User aggregate.
+/// <para>
+/// Phase 2B: <see cref="Lifecycle"/> is the authoritative gate.
+/// <see cref="IsActive"/> is retained as a derived convenience for existing
+/// callers (it equals <c>Lifecycle == Active</c>); defaults to
+/// <see cref="AccountLifecycleSnapshot.Provisioned"/> to keep pre-2B test
+/// doubles source-compatible.
+/// </para>
+/// </summary>
 public sealed record InviteAccountStatus(
     Guid UserId,
     string Email,
     bool IsEmailVerified,
-    bool IsActive);
+    bool IsActive,
+    AccountLifecycleSnapshot Lifecycle = AccountLifecycleSnapshot.Provisioned);
 
 /// <summary>
 /// Seed data for <see cref="IUserRegistrationService.RegisterExternalAsync"/>.

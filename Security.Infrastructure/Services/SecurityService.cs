@@ -1,5 +1,6 @@
 using Security.Application.Interfaces;
 using Security.Contracts.Abstractions;
+using Security.Domain.Entities;
 using Security.Domain.Repositories;
 
 namespace Security.Infrastructure.Services;
@@ -76,7 +77,8 @@ internal sealed class SecurityService(
             Email: normalizedEmail,
             IsEmailVerified: isEmailVerified,
             Roles: roles,
-            Claims: claims);
+            Claims: claims,
+            Lifecycle: ToContractSnapshot(user.LifecycleState));
     }
 
     public async Task<SecurityUserData?> GetUserDataByIdAsync(Guid userId, CancellationToken ct = default)
@@ -119,7 +121,8 @@ internal sealed class SecurityService(
             Email: primaryEmail.Address,
             IsEmailVerified: isEmailVerified,
             Roles: roles,
-            Claims: claims);
+            Claims: claims,
+            Lifecycle: ToContractSnapshot(user.LifecycleState));
     }
 
     public async Task<string?> GetPrimaryPhoneNumberAsync(Guid userId, CancellationToken ct = default)
@@ -164,8 +167,17 @@ internal sealed class SecurityService(
             UserId:          user.Id,
             Email:           primary?.Address ?? normalizedEmail,
             IsActive:        user.IsActive,
-            IsEmailVerified: primary?.IsVerified ?? false);
+            IsEmailVerified: primary?.IsVerified ?? false,
+            Lifecycle:       ToContractSnapshot(user.LifecycleState));
     }
+
+    /// <summary>
+    /// Maps the domain enum to its contract counterpart. Both enums are
+    /// guaranteed ordinal-aligned (Phase 2A discipline), so the cast is safe;
+    /// kept as a method so any future divergence has one place to break.
+    /// </summary>
+    private static AccountLifecycleSnapshot ToContractSnapshot(AccountLifecycleState state)
+        => (AccountLifecycleSnapshot)(int)state;
 
     public async Task<bool> ReplacePasswordBySelfAsync(
         Guid userId,

@@ -50,7 +50,7 @@ internal sealed class UserRegistrationService(
         return Result<Guid>.Created(user.Id);
     }
 
-    public async Task<Result<Guid>> RegisterInvitedAsync(
+    public async Task<Result<Guid>> RegisterProvisionedAsync(
         InvitedUserRegistrationRequest request,
         CancellationToken cancellationToken = default)
     {
@@ -92,9 +92,13 @@ internal sealed class UserRegistrationService(
                 Outcome.Forbidden);
         }
 
-        // Invited user: no password, unverified email, inactive account.
-        // Pre-assigned roles are persisted now; the invite acceptance later
-        // completes password + verification + activation only.
+        // Phase 2B — pure provisioning. The identity is created in
+        // Provisioned state with no password, unverified email, and NO
+        // lifecycle advance. The Provisioned -> PendingActivation transition
+        // is the responsibility of MarkPendingActivationAsync, invoked by
+        // the SendActivationEmail pipeline after email delivery succeeds.
+        // This keeps the on-record lifecycle honest: an account never sits
+        // in PendingActivation unless an activation email was actually sent.
         var user = User.Register(normalizedEmail, request.FirstName, request.LastName);
 
         foreach (var roleId in roleIds)
@@ -119,6 +123,78 @@ internal sealed class UserRegistrationService(
         await cache.RemoveByTagAsync(SecurityCacheKeys.UsersTag, cancellationToken);
 
         return Result<Guid>.Created(user.Id);
+    }
+
+    public async Task<Result> MarkPendingActivationAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default)
+    {
+        var user = await userRepository.GetByIdAsync(userId, cancellationToken, asNoTracking: false);
+        if (user is null)
+        {
+            return Result.Failure(
+                Error.NotFound("User.NotFound", "No account found."),
+                Outcome.NotFound);
+        }
+
+        // Gate: only Provisioned (first send) or PendingActivation (resend)
+        // may transition here. Any later state indicates the account is
+        // already past the activation window and must be rejected so an
+        // activation email can't silently reset an active/suspended/
+        // archived account.
+        if (user.LifecycleState != AccountLifecycleState.Provisioned
+         && user.LifecycleState != AccountLifecycleState.PendingActivation)
+        {
+            return Result.Failure(
+                Error.Conflict(
+                    "Invite.AlreadyCompleted",
+                    "This account is past the activation window and cannot receive a new activation email."),
+                Outcome.Conflict);
+        }
+
+        // Idempotent: domain MarkPendingActivation is a no-op self-transition
+        // when already in PendingActivation. We still call SaveChanges only
+        // when a real transition occurs, to avoid UoW churn on no-ops.
+        if (user.LifecycleState == AccountLifecycleState.PendingActivation)
+        {
+            return Result.Success();
+        }
+
+        user.MarkPendingActivation();
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        await cache.RemoveByTagAsync(SecurityCacheKeys.UserTag(userId), cancellationToken);
+        await cache.RemoveByTagAsync(SecurityCacheKeys.UsersTag, cancellationToken);
+
+        return Result.Success();
+    }
+
+    [Obsolete("Use RegisterProvisionedAsync (then MarkPendingActivationAsync once the activation email is dispatched). Kept for Phase 2A+2B backward compatibility; will be removed in Phase 4.")]
+    public async Task<Result<Guid>> RegisterInvitedAsync(
+        InvitedUserRegistrationRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        // Phase 2B compatibility shim — provision + immediate pending-activation
+        // transition in a single call, matching the pre-split observable
+        // behavior. Callers that need the honest "email-sent ⇒ pending-
+        // activation" semantics should use RegisterProvisionedAsync +
+        // MarkPendingActivationAsync via the SendActivationEmailCommand.
+        var provisioned = await RegisterProvisionedAsync(request, cancellationToken);
+        if (provisioned.IsFailure)
+            return provisioned;
+
+        var transition = await MarkPendingActivationAsync(provisioned.Value, cancellationToken);
+        if (transition.IsFailure)
+        {
+            // Should not happen — the account was just created in Provisioned.
+            // Propagate the failure faithfully rather than masking it.
+            return Result<Guid>.Fail(
+                transition.Outcome,
+                transition.Messages.FirstOrDefault() ?? "Failed to mark account pending activation.",
+                transition.Errors.ToArray());
+        }
+
+        return Result<Guid>.Created(provisioned.Value);
     }
 
     public async Task<Result<Guid>> RegisterExternalAsync(
@@ -200,13 +276,14 @@ internal sealed class UserRegistrationService(
         var primary = user.GetPrimaryEmail();
 
         return new InviteAccountStatus(
-            UserId: user.Id,
-            Email: primary?.Address ?? normalizedEmail,
+            UserId:          user.Id,
+            Email:           primary?.Address ?? normalizedEmail,
             IsEmailVerified: primary?.IsVerified ?? false,
-            IsActive: user.IsActive);
+            IsActive:        user.IsActive,
+            Lifecycle:       ToContractSnapshot(user.LifecycleState));
     }
 
-    public async Task<Result> CompleteInviteAsync(
+    public async Task<Result> CompleteActivationAsync(
         Guid userId,
         string email,
         string password,
@@ -238,15 +315,43 @@ internal sealed class UserRegistrationService(
                 Outcome.Conflict);
         }
 
+        // Phase 2B — explicit activation:
+        //   1. Set the initial password.
+        //   2. Mark the primary email verified. User.VerifyEmail internally
+        //      routes through TransitionTo(Active), which in this context
+        //      represents the explicit PendingActivation -> Active
+        //      transition (PendingActivation is a legal predecessor for
+        //      Active in IsTransitionAllowed). The lifecycle transition
+        //      event fires alongside the EmailVerifiedEvent, giving
+        //      downstream audit/telemetry a single deterministic record of
+        //      the activation.
         user.SetPasswordHash(passwordHasher.Hash(password));
-        user.VerifyEmail(primary.Id); // also activates the account via domain invariant
+        user.VerifyEmail(primary.Id);
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
+        await cache.RemoveByTagAsync(SecurityCacheKeys.UserTag(userId), cancellationToken);
         await cache.RemoveByTagAsync(SecurityCacheKeys.UsersTag, cancellationToken);
 
         return Result.Success();
     }
+
+    [Obsolete("Use CompleteActivationAsync. Kept for Phase 2A+2B backward compatibility; will be removed in Phase 4.")]
+    public Task<Result> CompleteInviteAsync(
+        Guid userId,
+        string email,
+        string password,
+        CancellationToken cancellationToken = default)
+        => CompleteActivationAsync(userId, email, password, cancellationToken);
+
+    /// <summary>
+    /// Maps the domain <see cref="AccountLifecycleState"/> enum to its
+    /// cross-module contract counterpart. Ordinals are guaranteed aligned
+    /// by Phase 2A discipline — kept as a helper method so any future
+    /// divergence has a single point of failure.
+    /// </summary>
+    private static AccountLifecycleSnapshot ToContractSnapshot(AccountLifecycleState state)
+        => (AccountLifecycleSnapshot)(int)state;
 
     private Task<bool> EmailExistsAsync(string normalizedEmail, CancellationToken ct) =>
         userRepository.AnyAsync(

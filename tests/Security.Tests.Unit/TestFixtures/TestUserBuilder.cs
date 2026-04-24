@@ -17,6 +17,9 @@ internal static class TestUserBuilder
 
         SetPrivateProperty(user, nameof(User.Id), userId);
         SetPrivateProperty(user, nameof(User.IsActive), true);
+        // Phase 2A: keep both representations consistent. IsActive remains
+        // the legacy boolean; LifecycleState is the new source of truth.
+        SetPrivateProperty(user, nameof(User.LifecycleState), AccountLifecycleState.Active);
 
         var userRolesField = typeof(User).GetField(
             "_userRoles",
