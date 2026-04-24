@@ -54,6 +54,7 @@ public static class DependencyInjection
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
         services.AddScoped<IOtpRepository, OtpRepository>();
         services.AddScoped<IActivationTokenRepository, ActivationTokenRepository>();
+        services.AddScoped<IPasswordResetTokenRepository, PasswordResetTokenRepository>();
         services.AddScoped<IExternalProviderRepository, ExternalProviderRepository>();
 
         // Inbox — consumer-side idempotency store for integration event handlers

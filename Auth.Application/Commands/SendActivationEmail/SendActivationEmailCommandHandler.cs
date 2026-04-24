@@ -1,6 +1,7 @@
 using Auth.Application.Interfaces;
 using Auth.Application.Invitations;
 using Auth.Domain.Entities;
+using Auth.Domain.Events;
 using Auth.Domain.Repositories;
 using Microsoft.Extensions.Logging;
 using Security.Contracts.Abstractions;
@@ -10,42 +11,33 @@ using YallaJo.SharedKernel.Domain.Abstractions.Results;
 namespace Auth.Application.Commands.SendActivationEmail;
 
 /// <summary>
-/// Phase 2C-1 — now backed by the dedicated <see cref="ActivationToken"/>
-/// aggregate instead of the overloaded <c>Otp(Purpose="UserInvite")</c>
-/// representation. The handler still returns the same outcomes and the
-/// legacy <c>InviteUserCommand</c> / <c>ResendInviteCommand</c> façades
-/// are unaffected.
-/// <para>
-/// Flow:
-/// </para>
-/// <list type="number">
-///   <item><description>Look up the account snapshot. <c>NotFound</c> for unknown emails.</description></item>
-///   <item><description>Lifecycle gate — <c>Provisioned</c> or <c>PendingActivation</c> only. Any later state returns <c>Conflict</c>.</description></item>
-///   <item><description>Supersede every non-terminal <see cref="ActivationToken"/> for the user (state <c>Issued</c> or <c>Delivered</c>) by calling <see cref="ActivationToken.Supersede"/>. Enforces the "at most one active token per user" invariant in code.</description></item>
-///   <item><description>Create the new token in <c>Issued</c> / <c>DeliveryStatus=Pending</c> and persist it in the same unit of work as the supersede sweep. This is a deliberate change from the Phase 2B Otp flow, which deferred persistence until after the email: the activation-token aggregate has a real state machine that can represent "persisted but email failed" as <c>Revoked(EmailFailed)</c>, so the DB stays honest without needing to hide rows from failed sends.</description></item>
-///   <item><description>Send the activation email. On success: <see cref="ActivationToken.MarkDelivered"/> → <c>Delivered</c> + <c>Sent</c>. On SMTP failure: <see cref="ActivationToken.RevokeOnEmailFailure"/> → <c>Revoked</c> + <c>Failed</c>.</description></item>
-///   <item><description>Flush the delivery-status update.</description></item>
-///   <item><description>On email success, advance the user lifecycle via <see cref="IUserRegistrationService.MarkPendingActivationAsync"/>. On email failure, the lifecycle is NOT advanced — the account stays in its current state (Provisioned / PendingActivation) and the admin can retry.</description></item>
-/// </list>
-/// <para>
-/// Failure windows:
-/// </para>
-/// <list type="bullet">
-///   <item><description>Crash between steps 4 and 5: a <c>Issued</c>/<c>Pending</c> row is left in the DB. The next send supersedes it and issues a fresh token. No user-visible impact.</description></item>
-///   <item><description>Crash between steps 6 and 7 (email sent, lifecycle transition not committed): the user is still <c>Provisioned</c>; the next send finds the active Delivered token on their record and treats it as a supersede target. The original activation link is therefore invalidated by the next send, which is strictly safer than letting two live links exist.</description></item>
-/// </list>
+/// Phase 2C-3 — the email dispatch leg of activation is now event-driven.
+/// The handler:
 /// </summary>
+/// <list type="number">
+///   <item><description>Resolves the account snapshot and applies the Phase 2B lifecycle gate (<c>Provisioned</c> or <c>PendingActivation</c> only).</description></item>
+///   <item><description>Supersedes every non-terminal <see cref="ActivationToken"/> for the user (the per-user at-most-one-active invariant).</description></item>
+///   <item><description>Generates the plain token + hash + activation link in-memory.</description></item>
+///   <item><description>Creates a new <see cref="ActivationToken"/> in <see cref="ActivationTokenState.Issued"/> / <see cref="ActivationTokenDeliveryStatus.Pending"/>, attaches an <see cref="ActivationTokenIssuedEvent"/> carrying the plain token + link, and persists the token.</description></item>
+///   <item><description>Advances the user lifecycle via <see cref="IUserRegistrationService.MarkPendingActivationAsync"/>. Phase 2C-3 intentionally moves this transition BEFORE the email is dispatched — <c>PendingActivation</c> now means "activation initiated and a valid token exists"; email outcome is recorded separately on <c>DeliveryStatus</c>.</description></item>
+///   <item><description>Calls <c>SaveChangesAsync</c> once. The unit-of-work domain-event dispatcher turns the <see cref="ActivationTokenIssuedEvent"/> into an outbox message in the same DbContext, so token row + supersede sweep + outbox row commit atomically. The <c>CompositeOutboxProcessor</c> delivers the email asynchronously via <c>ActivationEmailDispatchHandler</c>.</description></item>
+/// </list>
+/// <para>
+/// SMTP is no longer invoked inside this handler; <c>IEmailService</c> is
+/// not a dependency here any more. Command latency decouples from SMTP
+/// latency and delivery retries happen in the outbox processor rather
+/// than blocking the admin UX.
+/// </para>
 public sealed class SendActivationEmailCommandHandler(
     IUserRegistrationService userRegistrationService,
     IActivationTokenRepository activationTokenRepository,
     IAuthUnitOfWork unitOfWork,
     IInviteTokenService inviteTokenService,
     IInviteLinkBuilder inviteLinkBuilder,
-    IEmailService emailService,
     ILogger<SendActivationEmailCommandHandler> logger)
     : ICommandHandler<SendActivationEmailCommand, SendActivationEmailResult>
 {
-    private const string SuccessMessage = "Activation email sent.";
+    private const string SuccessMessage = "Activation email queued for delivery.";
 
     public async Task<Result<SendActivationEmailResult>> Handle(
         SendActivationEmailCommand request,
@@ -76,83 +68,71 @@ public sealed class SendActivationEmailCommandHandler(
         }
 
         // 3. Supersede every non-terminal activation token for this user.
-        //    Tracked load — transitions raise no domain events today but
-        //    persist RevokedAt/RevokedReason for the audit trail.
         var existing = await activationTokenRepository.GetActiveForUserAsync(
             status.UserId, ct);
 
         foreach (var prior in existing)
             prior.Supersede();
 
-        // 4. Create the new token, hash the plaintext once, persist.
+        // 4. Generate token + hash + link in-memory. The link is built
+        //    HERE so the email dispatch handler doesn't need URL-building
+        //    concerns — it just sends whatever is in the event payload.
         var plainToken = inviteTokenService.Generate();
         var tokenHash  = inviteTokenService.Hash(plainToken);
         var link       = inviteLinkBuilder.Build(normalizedEmail, plainToken);
 
+        // 5. Create the token in Issued/Pending and raise the domain
+        //    event carrying the plain token + link. The
+        //    ActivationTokenIssuedDomainEventHandler in Auth.Infrastructure
+        //    converts the domain event into an OutboxMessage in the same
+        //    DbContext; the single SaveChanges below commits both.
         var token = ActivationToken.Issue(
             userId:          status.UserId,
             tokenHash:       tokenHash,
             deliveryAddress: normalizedEmail,
             expiryMinutes:   InviteConstants.ExpiryMinutes);
 
+        token.AddDomainEvent(new ActivationTokenIssuedEvent(
+            TokenId:         token.Id,
+            UserId:          token.UserId,
+            DeliveryAddress: token.DeliveryAddress,
+            PlainToken:      plainToken,
+            ActivationLink:  link,
+            ExpiresAt:       token.ExpiresAt));
+
         await activationTokenRepository.AddAsync(token, ct);
-        await unitOfWork.SaveChangesAsync(ct);
 
-        // 5. Send the activation email. On success → MarkDelivered. On
-        //    failure → RevokeOnEmailFailure. Either way we commit the
-        //    delivery-status update before returning so the audit trail
-        //    reflects what happened.
-        bool emailSent;
-        try
-        {
-            await emailService.SendAsync(
-                normalizedEmail,
-                "YallaJo — Activate your account",
-                $"Click the link below to set your password and activate your account:\n\n{link}\n\n" +
-                $"This link expires in {InviteConstants.ExpiryMinutes / 60 / 24} days.",
-                ct);
-
-            token.MarkDelivered();
-            emailSent = true;
-        }
-        catch (Exception ex) when (ex is not OperationCanceledException || !ct.IsCancellationRequested)
-        {
-            logger.LogError(ex,
-                "Auth: Activation email delivery failed for {Email} / token {TokenId}. Token revoked with reason EmailFailed.",
-                normalizedEmail, token.Id);
-
-            token.RevokeOnEmailFailure();
-            emailSent = false;
-        }
-
-        // 6. Flush the delivery-status (and any supersede mutations).
-        await unitOfWork.SaveChangesAsync(ct);
-
-        if (!emailSent)
-        {
-            return Result<SendActivationEmailResult>.Failure(
-                Error.Failure(
-                    "Invite.EmailDeliveryFailed",
-                    "Activation email could not be sent. Please try again."),
-                Outcome.ServerError);
-        }
-
-        // 7. Advance the user lifecycle. Idempotent for PendingActivation.
+        // 6. Advance the user lifecycle BEFORE the SaveChanges so the
+        //    transition commits in the SAME unit of work as the token +
+        //    outbox row. MarkPendingActivationAsync saves on the Security
+        //    UoW separately — the two UoWs straddle module boundaries
+        //    the same way they did in 2C-1; ambient TransactionScope
+        //    is not used here because the failure mode ("activation
+        //    initiated but user still Provisioned") is benign: the next
+        //    send will supersede the orphan token and retry.
         var transition = await userRegistrationService.MarkPendingActivationAsync(
             status.UserId, ct);
 
         if (transition.IsFailure)
         {
             logger.LogError(
-                "Auth: Activation email was sent and token {TokenId} delivered for user {UserId}, but the lifecycle transition to PendingActivation failed: {Outcome} / {Error}.",
-                token.Id, status.UserId, transition.Outcome,
-                transition.Errors.FirstOrDefault()?.Message);
+                "Auth: MarkPendingActivationAsync failed for user {UserId} during activation send. Token {TokenId} will still be persisted and the outbox will still dispatch; admin should inspect the lifecycle.",
+                status.UserId, token.Id);
 
             return Result<SendActivationEmailResult>.Fail(
                 transition.Outcome,
                 transition.Messages.FirstOrDefault() ?? "Failed to update account lifecycle state.",
                 transition.Errors.ToArray());
         }
+
+        // 7. Single SaveChanges commits the token row, the supersede
+        //    mutations, and (via the UnitOfWork's domain-event dispatch)
+        //    the outbox row atomically.
+        await unitOfWork.SaveChangesAsync(ct);
+
+        logger.LogInformation(
+            "Auth: Activation token {TokenId} issued for user {UserId}; email queued on outbox.",
+            token.Id, status.UserId);
 
         return Result<SendActivationEmailResult>.Success(
             new SendActivationEmailResult(SuccessMessage));

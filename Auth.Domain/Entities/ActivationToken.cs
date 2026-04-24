@@ -175,11 +175,49 @@ public sealed class ActivationToken : AuditableEntity, IAggregateRoot
     /// the operator can audit which sends have failed. Updates
     /// <see cref="DeliveryStatus"/> to <see cref="ActivationTokenDeliveryStatus.Failed"/>
     /// on top of the standard revoke bookkeeping.
+    /// <para>
+    /// Phase 2C-3: retained for TERMINAL / permanent revocation only
+    /// (admin cancels a stuck token, outbox exhausts retries and ops
+    /// intervenes). The event-driven email dispatcher uses
+    /// <see cref="MarkDeliveryFailed"/> instead so transient SMTP
+    /// failures remain retryable.
+    /// </para>
     /// </summary>
     public void RevokeOnEmailFailure(DateTime? nowUtc = null)
     {
         Revoke(ActivationTokenRevokedReason.EmailFailed, nowUtc);
         DeliveryStatus = ActivationTokenDeliveryStatus.Failed;
+    }
+
+    /// <summary>
+    /// Phase 2C-3 — non-terminal delivery-failure marker used by the
+    /// event-driven email dispatcher when SMTP throws a transient error.
+    /// Keeps the token redeemable (<see cref="State"/> stays
+    /// <see cref="ActivationTokenState.Issued"/> or
+    /// <see cref="ActivationTokenState.Delivered"/>) so the outbox can
+    /// retry with the same valid token. Flips
+    /// <see cref="DeliveryStatus"/> to
+    /// <see cref="ActivationTokenDeliveryStatus.Failed"/> and stamps
+    /// <see cref="LastSentAt"/> so ops can see when the last attempt
+    /// happened.
+    /// <para>
+    /// Legal from <see cref="ActivationTokenState.Issued"/> or
+    /// <see cref="ActivationTokenState.Delivered"/>. No-op on terminal
+    /// states so a retry that arrives after the user already consumed
+    /// the token doesn't corrupt the audit trail.
+    /// </para>
+    /// </summary>
+    public void MarkDeliveryFailed(DateTime? nowUtc = null)
+    {
+        if (IsTerminal)
+            return; // no-op on Consumed / Revoked — preserves audit trail
+
+        if (State != ActivationTokenState.Issued && State != ActivationTokenState.Delivered)
+            throw new InvalidActivationTokenTransitionException(State, State); // defensive
+
+        DeliveryStatus = ActivationTokenDeliveryStatus.Failed;
+        LastSentAt     = nowUtc ?? DateTime.UtcNow;
+        MarkUpdated();
     }
 
     private void Revoke(ActivationTokenRevokedReason reason, DateTime? nowUtc)

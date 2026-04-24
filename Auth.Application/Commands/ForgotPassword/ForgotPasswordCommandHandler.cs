@@ -1,5 +1,6 @@
 using Auth.Application.Interfaces;
 using Auth.Domain.Entities;
+using Auth.Domain.Events;
 using Auth.Domain.Repositories;
 using Microsoft.Extensions.Logging;
 using Security.Contracts.Abstractions;
@@ -9,37 +10,44 @@ using YallaJo.SharedKernel.Domain.Abstractions.Results;
 namespace Auth.Application.Commands.ForgotPassword;
 
 /// <summary>
-/// Issues a password-reset OTP in an enumeration-safe, rate-limited and
-/// SMTP-failure-safe manner:
-///   • non-existent email             → generic success (no DB write, no email).
-///   • account not active / email not verified
-///                                    → generic success (no DB write, no email).
-///     Enterprise constraint: accounts that have never completed activation
-///     (or that are currently suspended / deactivated) MUST NOT receive
-///     recovery codes — recovery is a post-activation capability only.
-///   • recent OTP within 60 s         → generic success (no DB write, no email).
-///   • any prior active OTPs          → marked used before a new one is created.
-///   • SMTP failure on send           → the OTP row is NEVER persisted, so the
-///                                      domain state stays honest (previously
-///                                      the row was created-then-MarkedUsed,
-///                                      which lied to the audit trail by
-///                                      stamping <c>UsedAt</c> on a token that
-///                                      was never consumed). Enumeration
-///                                      safety is preserved via the generic
-///                                      success response.
+/// Phase 2C-3 — self-service password recovery, now event-driven.
+/// Preserves every pre-existing enumeration-safety invariant:
+/// <list type="bullet">
+///   <item><description>Non-existent email → generic success (no DB write, no event).</description></item>
+///   <item><description>Account not Active or email unverified → generic success (no DB write, no event).</description></item>
+///   <item><description>Recent reset token within 60 s → generic success (no DB write, no event).</description></item>
+///   <item><description>Prior active reset tokens → <see cref="PasswordResetToken.Supersede"/>d before the new one is issued.</description></item>
+/// </list>
+/// <para>
+/// On the happy path the handler generates a plain reset code + hash,
+/// creates a new <see cref="PasswordResetToken"/> in
+/// <see cref="PasswordResetTokenState.Issued"/> /
+/// <see cref="PasswordResetTokenDeliveryStatus.Pending"/>, and raises a
+/// <see cref="PasswordResetTokenIssuedEvent"/> that carries the plain
+/// code. The unit-of-work domain-event dispatcher routes it through the
+/// <c>PasswordResetTokenIssuedDomainEventHandler</c> which writes an
+/// outbox message in the same DbContext. A single
+/// <c>SaveChangesAsync</c> commits the token row, the supersede sweep,
+/// and the outbox row atomically; the
+/// <c>PasswordResetEmailDispatchHandler</c> sends the email out of band.
+/// </para>
+/// <para>
+/// SMTP is no longer invoked inside this handler. Enumeration safety is
+/// actually reinforced — command latency no longer varies with SMTP
+/// latency, so timing side-channels are narrowed.
+/// </para>
 /// </summary>
 public sealed class ForgotPasswordCommandHandler(
     ISecurityService securityService,
-    IOtpRepository otpRepository,
+    IPasswordResetTokenRepository resetTokenRepository,
     IAuthUnitOfWork unitOfWork,
     IOtpService otpService,
-    IEmailService emailService,
     ILogger<ForgotPasswordCommandHandler> logger)
     : ICommandHandler<ForgotPasswordCommand, ForgotPasswordResult>
 {
     private const string GenericMessage  = "If this email exists, a reset code was sent.";
-    private const string OtpPurpose      = "PasswordReset";
     private const int    ThrottleSeconds = 60;
+    private const int    ExpiryMinutes   = 10;
 
     public async Task<Result<ForgotPasswordResult>> Handle(
         ForgotPasswordCommand request,
@@ -48,16 +56,6 @@ public sealed class ForgotPasswordCommandHandler(
         var normalizedEmail = request.Email.Trim().ToLowerInvariant();
 
         // Lifecycle gate: only fully-onboarded, active accounts may recover.
-        // Silent rejection for any other state keeps the response
-        // enumeration-safe (an observer cannot distinguish non-existent,
-        // un-activated, and suspended accounts).
-        //
-        // Phase 2B — branches on AccountLifecycleSnapshot directly rather
-        // than the derived IsActive flag, matching LoginCommandHandler's
-        // gate style and future-proofing against PendingActivation,
-        // Suspended, PendingPasswordReset and Archived states (the IsActive
-        // shadow happens to be false for all of these today, so this is a
-        // no-behavior-change cleanup).
         var status = await securityService.GetAccountStatusByEmailAsync(normalizedEmail, ct);
         if (status is null
          || status.Lifecycle != AccountLifecycleSnapshot.Active
@@ -68,75 +66,54 @@ public sealed class ForgotPasswordCommandHandler(
 
         var userId = status.UserId;
 
-        // Per-email DB throttle (defense-in-depth beyond IP/email rate limiter).
-        var recentOtp = await otpRepository.FirstOrDefaultAsync(
-            filter: o => o.UserId == userId
-                      && o.Purpose == OtpPurpose
-                      && !o.IsUsed,
-            orderBy: q => q.OrderByDescending(o => o.CreatedAt),
-            asNoTracking: true,
-            ct: ct);
-
-        if (recentOtp is not null
-            && recentOtp.CreatedAt > DateTime.UtcNow.AddSeconds(-ThrottleSeconds))
+        // Per-user DB throttle (defense-in-depth beyond IP/email rate
+        // limiter). Readonly lookup so the check doesn't interfere with
+        // the tracked supersede sweep below.
+        var recent = await resetTokenRepository.GetLatestActiveForUserReadOnlyAsync(userId, ct);
+        if (recent is not null
+            && recent.CreatedAt > DateTime.UtcNow.AddSeconds(-ThrottleSeconds))
         {
-            // Enumeration-safe: do not leak "too fast" for valid emails vs silent success for invalid.
             return Result<ForgotPasswordResult>.Success(new ForgotPasswordResult(GenericMessage));
         }
 
-        // Generate the code up-front so we can send the email BEFORE we persist
-        // anything. If email delivery fails, no row enters the OTP table — the
-        // previous implementation created the row, failed delivery, then
-        // MarkedUsed() the row, stamping UsedAt on a token that was never
-        // actually consumed. That wrote a lie into the audit trail and
-        // conflated three different terminal states (consumed / revoked /
-        // failed-delivery) under one flag. By deferring the DB write until
-        // after the email succeeds, the domain stays honest with zero schema
-        // changes — the proper Revoke/Supersede/Consume distinction arrives
-        // in Phase 2 with the ActivationToken / PasswordResetToken aggregates.
-        var plainOtp = otpService.Generate();
-        var otpHash  = otpService.Hash(plainOtp);
+        // Generate the plain code up-front. Only the hash is persisted
+        // on the aggregate; the plain code travels through the domain
+        // event → outbox payload → email dispatcher. See the integration
+        // event XML-doc for the security tradeoff.
+        var plainCode = otpService.Generate();
+        var codeHash  = otpService.Hash(plainCode);
 
-        try
-        {
-            await emailService.SendAsync(
-                normalizedEmail,
-                "YallaJo — Reset Your Password",
-                $"Your password reset code is: {plainOtp}. It expires in 10 minutes.",
-                ct);
-        }
-        catch (Exception ex) when (ex is not OperationCanceledException || !ct.IsCancellationRequested)
-        {
-            logger.LogError(ex,
-                "Auth: Failed to send PasswordReset OTP to {Email}. No OTP was persisted — the user sees a generic response for enumeration safety.",
-                normalizedEmail);
+        // Supersede every non-terminal reset token for this user.
+        var active = await resetTokenRepository.GetActiveForUserAsync(userId, ct);
+        foreach (var prior in active)
+            prior.Supersede();
 
-            // Intentionally fall through to generic success to avoid email-existence enumeration.
-            return Result<ForgotPasswordResult>.Success(new ForgotPasswordResult(GenericMessage));
-        }
-
-        // Email was delivered to the SMTP relay — now it is safe to persist.
-        // Invalidate any prior active reset OTPs before issuing the new one
-        // (in-place — the rows remain in the same unit of work).
-        var oldOtps = await otpRepository.GetAllAsync(
-            filter: o => o.UserId == userId
-                      && o.Purpose == OtpPurpose
-                      && !o.IsUsed,
-            asNoTracking: false,
-            ct: ct);
-
-        foreach (var old in oldOtps)
-            old.MarkUsed();
-
-        var otp = Otp.Create(
+        // Create the token in Issued/Pending and raise the domain event.
+        // The PasswordResetTokenIssuedDomainEventHandler turns the domain
+        // event into an OutboxMessage in the same DbContext, so token
+        // + supersede + outbox commit atomically on the single
+        // SaveChanges below.
+        var token = PasswordResetToken.Issue(
             userId:          userId,
-            purpose:         OtpPurpose,
-            codeHash:        otpHash,
-            deliveryChannel: "Email",
-            deliveryAddress: normalizedEmail);
+            tokenHash:       codeHash,
+            deliveryAddress: normalizedEmail,
+            expiryMinutes:   ExpiryMinutes,
+            origin:          PasswordResetOrigin.SelfService);
 
-        await otpRepository.AddAsync(otp, ct);
+        token.AddDomainEvent(new PasswordResetTokenIssuedEvent(
+            TokenId:         token.Id,
+            UserId:          token.UserId,
+            DeliveryAddress: token.DeliveryAddress,
+            PlainCode:       plainCode,
+            ExpiresAt:       token.ExpiresAt,
+            Origin:          token.ResetOrigin));
+
+        await resetTokenRepository.AddAsync(token, ct);
         await unitOfWork.SaveChangesAsync(ct);
+
+        logger.LogInformation(
+            "Auth: PasswordResetToken {TokenId} issued for user {UserId}; email queued on outbox.",
+            token.Id, userId);
 
         return Result<ForgotPasswordResult>.Success(new ForgotPasswordResult(GenericMessage));
     }

@@ -4,32 +4,47 @@ using FluentAssertions;
 namespace Auth.Tests.Unit;
 
 /// <summary>
-/// Phase 2C-1 — covers the state machine and attempt-budget invariants of
-/// the <see cref="ActivationToken"/> aggregate. These are pure domain
-/// tests; no persistence, no handler plumbing.
+/// Phase 2C-2 — covers the state machine and attempt-budget invariants
+/// of the <see cref="PasswordResetToken"/> aggregate. Pure domain tests;
+/// no persistence, no handler plumbing.
 /// </summary>
-public sealed class ActivationTokenAggregateTests
+public sealed class PasswordResetTokenAggregateTests
 {
-    private static ActivationToken NewToken() =>
-        ActivationToken.Issue(
+    private static PasswordResetToken NewToken(
+        PasswordResetOrigin origin = PasswordResetOrigin.SelfService) =>
+        PasswordResetToken.Issue(
             userId:          Guid.NewGuid(),
             tokenHash:       "hash",
-            deliveryAddress: "invitee@example.com",
-            expiryMinutes:   60);
+            deliveryAddress: "user@example.com",
+            expiryMinutes:   10,
+            origin:          origin);
 
     [Fact]
-    public void Issue_ShouldStartInIssuedPendingState_WithNoAttemptsOrTerminalMarkers()
+    public void Issue_ShouldStartInIssuedPendingState_WithSelfServiceOriginByDefault()
     {
         var token = NewToken();
 
-        token.State.Should().Be(ActivationTokenState.Issued);
-        token.DeliveryStatus.Should().Be(ActivationTokenDeliveryStatus.Pending);
-        token.RevokedReason.Should().Be(ActivationTokenRevokedReason.None);
+        token.State.Should().Be(PasswordResetTokenState.Issued);
+        token.DeliveryStatus.Should().Be(PasswordResetTokenDeliveryStatus.Pending);
+        token.RevokedReason.Should().Be(PasswordResetTokenRevokedReason.None);
+        token.ResetOrigin.Should().Be(PasswordResetOrigin.SelfService);
         token.AttemptCount.Should().Be(0);
         token.ConsumedAt.Should().BeNull();
         token.RevokedAt.Should().BeNull();
         token.LastSentAt.Should().BeNull();
         token.IsTerminal.Should().BeFalse();
+    }
+
+    [Fact]
+    public void Issue_ShouldPreserveExplicitlyProvidedOrigin()
+    {
+        var token = NewToken(PasswordResetOrigin.AdminInitiated);
+
+        // The aggregate accepts every origin value — it does NOT gate on
+        // the enum because the handler layer is responsible for deciding
+        // which origin is legal for which flow. In Phase 2C-2 only the
+        // self-service handler is wired; the other origins are reserved.
+        token.ResetOrigin.Should().Be(PasswordResetOrigin.AdminInitiated);
     }
 
     [Fact]
@@ -41,8 +56,8 @@ public sealed class ActivationTokenAggregateTests
         token.MarkDelivered();
         var after = DateTime.UtcNow.AddSeconds(1);
 
-        token.State.Should().Be(ActivationTokenState.Delivered);
-        token.DeliveryStatus.Should().Be(ActivationTokenDeliveryStatus.Sent);
+        token.State.Should().Be(PasswordResetTokenState.Delivered);
+        token.DeliveryStatus.Should().Be(PasswordResetTokenDeliveryStatus.Sent);
         token.LastSentAt.Should().NotBeNull();
         token.LastSentAt!.Value.Should().BeOnOrAfter(before).And.BeOnOrBefore(after);
     }
@@ -55,8 +70,8 @@ public sealed class ActivationTokenAggregateTests
         token.Consume();
 
         FluentActions.Invoking(() => token.MarkDelivered())
-            .Should().Throw<InvalidActivationTokenTransitionException>()
-            .Which.From.Should().Be(ActivationTokenState.Consumed);
+            .Should().Throw<InvalidPasswordResetTokenTransitionException>()
+            .Which.From.Should().Be(PasswordResetTokenState.Consumed);
     }
 
     [Fact]
@@ -67,7 +82,7 @@ public sealed class ActivationTokenAggregateTests
 
         token.Consume();
 
-        token.State.Should().Be(ActivationTokenState.Consumed);
+        token.State.Should().Be(PasswordResetTokenState.Consumed);
         token.ConsumedAt.Should().NotBeNull();
         token.IsTerminal.Should().BeTrue();
     }
@@ -75,15 +90,15 @@ public sealed class ActivationTokenAggregateTests
     [Fact]
     public void Consume_FromIssued_ShouldBeAllowed_ForRaceSafety()
     {
-        // A fast-enough activation could in principle arrive before the
+        // A fast-enough reset could in principle arrive before the
         // post-send MarkDelivered write has committed. Consuming from
         // Issued is explicitly legal so the user never sees a spurious
-        // "invalid invite" because of infrastructure timing.
+        // "invalid reset code" because of infrastructure timing.
         var token = NewToken();
 
         token.Consume();
 
-        token.State.Should().Be(ActivationTokenState.Consumed);
+        token.State.Should().Be(PasswordResetTokenState.Consumed);
     }
 
     [Fact]
@@ -93,7 +108,7 @@ public sealed class ActivationTokenAggregateTests
         token.Supersede();
 
         FluentActions.Invoking(() => token.Consume())
-            .Should().Throw<InvalidActivationTokenTransitionException>();
+            .Should().Throw<InvalidPasswordResetTokenTransitionException>();
     }
 
     [Fact]
@@ -104,8 +119,8 @@ public sealed class ActivationTokenAggregateTests
 
         token.Supersede();
 
-        token.State.Should().Be(ActivationTokenState.Revoked);
-        token.RevokedReason.Should().Be(ActivationTokenRevokedReason.Superseded);
+        token.State.Should().Be(PasswordResetTokenState.Revoked);
+        token.RevokedReason.Should().Be(PasswordResetTokenRevokedReason.Superseded);
         token.RevokedAt.Should().NotBeNull();
     }
 
@@ -115,11 +130,10 @@ public sealed class ActivationTokenAggregateTests
         var token = NewToken();
         token.Supersede();
 
-        // Calling again should be a no-op, not throw.
         token.Supersede();
 
-        token.State.Should().Be(ActivationTokenState.Revoked);
-        token.RevokedReason.Should().Be(ActivationTokenRevokedReason.Superseded);
+        token.State.Should().Be(PasswordResetTokenState.Revoked);
+        token.RevokedReason.Should().Be(PasswordResetTokenRevokedReason.Superseded);
     }
 
     [Fact]
@@ -130,8 +144,8 @@ public sealed class ActivationTokenAggregateTests
 
         token.RevokeByAdmin();
 
-        token.State.Should().Be(ActivationTokenState.Revoked);
-        token.RevokedReason.Should().Be(ActivationTokenRevokedReason.AdminRevoked);
+        token.State.Should().Be(PasswordResetTokenState.Revoked);
+        token.RevokedReason.Should().Be(PasswordResetTokenRevokedReason.AdminRevoked);
     }
 
     [Fact]
@@ -141,9 +155,9 @@ public sealed class ActivationTokenAggregateTests
 
         token.RevokeOnEmailFailure();
 
-        token.State.Should().Be(ActivationTokenState.Revoked);
-        token.RevokedReason.Should().Be(ActivationTokenRevokedReason.EmailFailed);
-        token.DeliveryStatus.Should().Be(ActivationTokenDeliveryStatus.Failed);
+        token.State.Should().Be(PasswordResetTokenState.Revoked);
+        token.RevokedReason.Should().Be(PasswordResetTokenRevokedReason.EmailFailed);
+        token.DeliveryStatus.Should().Be(PasswordResetTokenDeliveryStatus.Failed);
     }
 
     [Fact]
@@ -156,27 +170,12 @@ public sealed class ActivationTokenAggregateTests
         var after = DateTime.UtcNow.AddSeconds(1);
 
         // Key invariant: the token REMAINS redeemable so the outbox can
-        // retry the same valid token.
-        token.State.Should().Be(ActivationTokenState.Issued);
-        token.DeliveryStatus.Should().Be(ActivationTokenDeliveryStatus.Failed);
+        // retry the same valid reset code.
+        token.State.Should().Be(PasswordResetTokenState.Issued);
+        token.DeliveryStatus.Should().Be(PasswordResetTokenDeliveryStatus.Failed);
         token.LastSentAt.Should().NotBeNull();
         token.LastSentAt!.Value.Should().BeOnOrAfter(before).And.BeOnOrBefore(after);
         token.IsTerminal.Should().BeFalse();
-    }
-
-    [Fact]
-    public void MarkDeliveryFailed_FromDelivered_ShouldPreserveDelivered_AndFlipDeliveryStatus()
-    {
-        // Re-attempt of an already-delivered token whose second send leg
-        // failed (an admin-driven resend scenario in a future phase).
-        var token = NewToken();
-        token.MarkDelivered();
-
-        token.MarkDeliveryFailed();
-
-        token.State.Should().Be(ActivationTokenState.Delivered,
-            "the token was already delivered once; a later retry-failure must not regress the state");
-        token.DeliveryStatus.Should().Be(ActivationTokenDeliveryStatus.Failed);
     }
 
     [Fact]
@@ -188,8 +187,8 @@ public sealed class ActivationTokenAggregateTests
 
         token.MarkDeliveryFailed();
 
-        token.State.Should().Be(ActivationTokenState.Consumed);
-        token.DeliveryStatus.Should().Be(ActivationTokenDeliveryStatus.Sent,
+        token.State.Should().Be(PasswordResetTokenState.Consumed);
+        token.DeliveryStatus.Should().Be(PasswordResetTokenDeliveryStatus.Sent,
             "a late retry after the user already consumed the token must not corrupt the audit trail");
     }
 
@@ -201,8 +200,8 @@ public sealed class ActivationTokenAggregateTests
 
         token.MarkDeliveryFailed();
 
-        token.State.Should().Be(ActivationTokenState.Revoked);
-        token.RevokedReason.Should().Be(ActivationTokenRevokedReason.Superseded);
+        token.State.Should().Be(PasswordResetTokenState.Revoked);
+        token.RevokedReason.Should().Be(PasswordResetTokenRevokedReason.Superseded);
     }
 
     [Fact]
@@ -210,11 +209,11 @@ public sealed class ActivationTokenAggregateTests
     {
         var token = NewToken();
 
-        token.IsExpired(DateTime.UtcNow.AddMinutes(-1)).Should().BeFalse(
-            "60-minute window — not yet expired one minute into the future past issue");
+        token.IsExpired(DateTime.UtcNow.AddMinutes(5)).Should().BeFalse(
+            "within the 10-minute expiry window");
 
-        token.IsExpired(DateTime.UtcNow.AddMinutes(120)).Should().BeTrue(
-            "two hours past issue is well beyond the 60-minute window");
+        token.IsExpired(DateTime.UtcNow.AddMinutes(30)).Should().BeTrue(
+            "well past the 10-minute expiry window");
     }
 
     [Fact]
@@ -233,28 +232,27 @@ public sealed class ActivationTokenAggregateTests
     }
 
     [Theory]
-    [InlineData("", "hash", "user@example.com", 60)]
-    [InlineData(null, "hash", "user@example.com", 60)]
-    public void Issue_ShouldRejectEmptyTokenHash(string? tokenHash, string ignored, string address, int minutes)
+    [InlineData("")]
+    [InlineData(null)]
+    public void Issue_ShouldRejectEmptyTokenHash(string? tokenHash)
     {
-        _ = ignored;
-        FluentActions.Invoking(() => ActivationToken.Issue(
-                Guid.NewGuid(), tokenHash!, address, minutes))
+        FluentActions.Invoking(() => PasswordResetToken.Issue(
+                Guid.NewGuid(), tokenHash!, "user@example.com", 10))
             .Should().Throw<ArgumentException>();
     }
 
     [Fact]
     public void Issue_ShouldRejectEmptyUserId()
     {
-        FluentActions.Invoking(() => ActivationToken.Issue(
-                Guid.Empty, "hash", "a@b.com", 60))
+        FluentActions.Invoking(() => PasswordResetToken.Issue(
+                Guid.Empty, "hash", "a@b.com", 10))
             .Should().Throw<ArgumentException>();
     }
 
     [Fact]
     public void Issue_ShouldRejectNonPositiveExpiry()
     {
-        FluentActions.Invoking(() => ActivationToken.Issue(
+        FluentActions.Invoking(() => PasswordResetToken.Issue(
                 Guid.NewGuid(), "hash", "a@b.com", 0))
             .Should().Throw<ArgumentOutOfRangeException>();
     }

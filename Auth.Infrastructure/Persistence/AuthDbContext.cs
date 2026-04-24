@@ -18,6 +18,7 @@ public sealed class AuthDbContext : DbContext, IDbContext
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<Otp> Otps => Set<Otp>();
     public DbSet<ActivationToken> ActivationTokens => Set<ActivationToken>();
+    public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
     public DbSet<ExternalProvider> ExternalProviders => Set<ExternalProvider>();
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
     public DbSet<InboxMessage> InboxMessages => Set<InboxMessage>();

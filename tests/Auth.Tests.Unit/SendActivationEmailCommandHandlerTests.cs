@@ -1,6 +1,7 @@
 using Auth.Application.Commands.SendActivationEmail;
 using Auth.Application.Interfaces;
 using Auth.Domain.Entities;
+using Auth.Domain.Events;
 using Auth.Domain.Repositories;
 using FluentAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -11,27 +12,32 @@ using YallaJo.SharedKernel.Domain.Abstractions.Results;
 namespace Auth.Tests.Unit;
 
 /// <summary>
-/// Phase 2C-1 — the handler now writes <see cref="ActivationToken"/> rows
-/// instead of <c>Otp(UserInvite)</c>. These tests verify:
+/// Phase 2C-3 — the handler no longer sends SMTP inline; it persists an
+/// <see cref="ActivationToken"/> and raises an
+/// <see cref="ActivationTokenIssuedEvent"/> on the aggregate so the
+/// downstream outbox pipeline can dispatch the email asynchronously.
+/// These tests verify:
 ///   • lifecycle gate (Provisioned / PendingActivation only),
 ///   • NotFound on unknown account,
 ///   • prior active ActivationTokens are superseded,
-///   • new token is persisted in Issued/Pending state,
-///   • email success → MarkDelivered + MarkPendingActivationAsync,
-///   • email failure → RevokeOnEmailFailure, no lifecycle advance,
-///   • idempotent resend from PendingActivation still succeeds.
+///   • new token is persisted in Issued/Pending with the domain event
+///     attached,
+///   • MarkPendingActivationAsync is invoked BEFORE the UoW save so
+///     the transition commits with the token + outbox row,
+///   • no <see cref="IEmailService"/> / <see cref="IInviteLinkBuilder"/>
+///     dependency is exercised inline (the handler no longer takes
+///     <c>IEmailService</c>).
 /// </summary>
 public sealed class SendActivationEmailCommandHandlerTests
 {
-    private readonly IUserRegistrationService   _users    = Substitute.For<IUserRegistrationService>();
+    private readonly IUserRegistrationService   _users     = Substitute.For<IUserRegistrationService>();
     private readonly IActivationTokenRepository _tokenRepo = Substitute.For<IActivationTokenRepository>();
-    private readonly IAuthUnitOfWork            _uow      = Substitute.For<IAuthUnitOfWork>();
-    private readonly IInviteTokenService        _tokens   = Substitute.For<IInviteTokenService>();
-    private readonly IInviteLinkBuilder         _links    = Substitute.For<IInviteLinkBuilder>();
-    private readonly IEmailService              _email    = Substitute.For<IEmailService>();
+    private readonly IAuthUnitOfWork            _uow       = Substitute.For<IAuthUnitOfWork>();
+    private readonly IInviteTokenService        _tokens    = Substitute.For<IInviteTokenService>();
+    private readonly IInviteLinkBuilder         _links     = Substitute.For<IInviteLinkBuilder>();
 
     private SendActivationEmailCommandHandler CreateSut() =>
-        new(_users, _tokenRepo, _uow, _tokens, _links, _email,
+        new(_users, _tokenRepo, _uow, _tokens, _links,
             NullLogger<SendActivationEmailCommandHandler>.Instance);
 
     private static SendActivationEmailCommand Command(string email = "invitee@example.com") => new(email);
@@ -80,8 +86,6 @@ public sealed class SendActivationEmailCommandHandlerTests
         result.Outcome.Should().Be(Outcome.NotFound);
 
         await _tokenRepo.DidNotReceive().AddAsync(Arg.Any<ActivationToken>(), Arg.Any<CancellationToken>());
-        await _email.DidNotReceive().SendAsync(
-            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
         await _users.DidNotReceive().MarkPendingActivationAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>());
     }
 
@@ -104,18 +108,16 @@ public sealed class SendActivationEmailCommandHandlerTests
         result.Outcome.Should().Be(Outcome.Conflict);
 
         await _tokenRepo.DidNotReceive().AddAsync(Arg.Any<ActivationToken>(), Arg.Any<CancellationToken>());
-        await _email.DidNotReceive().SendAsync(
-            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
         await _users.DidNotReceive().MarkPendingActivationAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
-    public async Task Handle_ShouldPersistToken_ThenMarkDelivered_AndTransition_OnHappyPath()
+    public async Task Handle_ShouldPersistTokenInIssuedPending_AndRaiseDomainEvent_OnHappyPath()
     {
         var userId = Guid.NewGuid();
         StubStatus(userId, AccountLifecycleSnapshot.Provisioned);
         StubNoActiveTokens();
-        StubTokens(hash: "hash-abc", link: "https://app/activate?t=plain-token");
+        StubTokens(plain: "plain-xyz", hash: "hash-abc", link: "https://app/activate?t=plain-xyz");
 
         ActivationToken? persisted = null;
         _tokenRepo.AddAsync(Arg.Do<ActivationToken>(t => persisted = t), Arg.Any<CancellationToken>())
@@ -135,61 +137,33 @@ public sealed class SendActivationEmailCommandHandlerTests
         persisted.TokenHash.Should().Be("hash-abc");
         persisted.DeliveryAddress.Should().Be("invitee@example.com");
 
-        // After the send succeeded the handler must have called
-        // MarkDelivered BEFORE the UoW flush.
-        persisted.State.Should().Be(ActivationTokenState.Delivered);
-        persisted.DeliveryStatus.Should().Be(ActivationTokenDeliveryStatus.Sent);
-        persisted.LastSentAt.Should().NotBeNull();
+        // Critical Phase 2C-3 invariant: the token is persisted in
+        // Issued/Pending — it is NOT marked Delivered inline. The
+        // ActivationEmailDispatchHandler will flip it to Delivered only
+        // after SMTP succeeds.
+        persisted.State.Should().Be(ActivationTokenState.Issued);
+        persisted.DeliveryStatus.Should().Be(ActivationTokenDeliveryStatus.Pending);
+        persisted.LastSentAt.Should().BeNull();
 
-        // Email dispatched with the activation link.
-        await _email.Received(1).SendAsync(
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Is<string>(body => body.Contains("https://app/activate?t=plain-token", StringComparison.Ordinal)),
-            Arg.Any<CancellationToken>());
+        // The aggregate must carry the domain event so the unit-of-work
+        // dispatcher picks it up and writes an outbox message. The plain
+        // token + pre-built link are carried on the event because the
+        // aggregate itself only stores the hash.
+        var domainEvent = persisted.DomainEvents
+            .OfType<ActivationTokenIssuedEvent>()
+            .Single();
+        domainEvent.TokenId.Should().Be(persisted.Id);
+        domainEvent.UserId.Should().Be(userId);
+        domainEvent.DeliveryAddress.Should().Be("invitee@example.com");
+        domainEvent.PlainToken.Should().Be("plain-xyz");
+        domainEvent.ActivationLink.Should().Be("https://app/activate?t=plain-xyz");
+        domainEvent.ExpiresAt.Should().Be(persisted.ExpiresAt);
 
-        // SaveChanges is called twice: once to persist the Issued row
-        // (prior-sweep + AddAsync), then again after the delivery-status
-        // update. Relaxed assertion allows any count >= 2.
-        await _uow.Received().SaveChangesAsync(Arg.Any<CancellationToken>());
-
-        // Lifecycle transition invoked on the correct user.
+        // Lifecycle transition must happen BEFORE SaveChanges so the
+        // token row, the outbox row, and the PendingActivation
+        // transition all commit together.
         await _users.Received(1).MarkPendingActivationAsync(userId, Arg.Any<CancellationToken>());
-    }
-
-    [Fact]
-    public async Task Handle_ShouldRevokeToken_AndNotTransition_WhenEmailFails()
-    {
-        var userId = Guid.NewGuid();
-        StubStatus(userId, AccountLifecycleSnapshot.Provisioned);
-        StubNoActiveTokens();
-        StubTokens();
-
-        ActivationToken? persisted = null;
-        _tokenRepo.AddAsync(Arg.Do<ActivationToken>(t => persisted = t), Arg.Any<CancellationToken>())
-            .Returns(Task.CompletedTask);
-
-        _email.SendAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
-            .Returns<Task>(_ => Task.FromException(new InvalidOperationException("SMTP DOWN")));
-
-        var sut = CreateSut();
-
-        var result = await sut.Handle(Command(), CancellationToken.None);
-
-        result.IsFailure.Should().BeTrue();
-        result.Outcome.Should().Be(Outcome.ServerError);
-
-        // Unlike Phase 2B (where no Otp was persisted on failure), the
-        // Phase 2C-1 contract writes a row and transitions it to
-        // Revoked(EmailFailed) so the audit trail records the attempt.
-        persisted.Should().NotBeNull();
-        persisted!.State.Should().Be(ActivationTokenState.Revoked);
-        persisted.RevokedReason.Should().Be(ActivationTokenRevokedReason.EmailFailed);
-        persisted.DeliveryStatus.Should().Be(ActivationTokenDeliveryStatus.Failed);
-
-        // No lifecycle advance when the email did not go out.
-        await _users.DidNotReceive().MarkPendingActivationAsync(
-            Arg.Any<Guid>(), Arg.Any<CancellationToken>());
+        await _uow.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -215,7 +189,6 @@ public sealed class SendActivationEmailCommandHandlerTests
 
         result.IsSuccess.Should().BeTrue();
 
-        // Both prior tokens must be superseded before the new one is issued.
         old1.State.Should().Be(ActivationTokenState.Revoked);
         old1.RevokedReason.Should().Be(ActivationTokenRevokedReason.Superseded);
         old2.State.Should().Be(ActivationTokenState.Revoked);
@@ -223,8 +196,13 @@ public sealed class SendActivationEmailCommandHandlerTests
     }
 
     [Fact]
-    public async Task Handle_ShouldBeIdempotent_WhenAccountIsAlreadyPendingActivation()
+    public async Task Handle_ShouldMarkPendingActivation_EvenFromPendingActivation_Idempotently()
     {
+        // Resending activation to an already-PendingActivation user is
+        // idempotent; MarkPendingActivationAsync returns Success without
+        // changing state, but the handler must still call it so the
+        // contract is uniform across Provisioned / PendingActivation
+        // entry points.
         var userId = Guid.NewGuid();
         StubStatus(userId, AccountLifecycleSnapshot.PendingActivation);
         StubNoActiveTokens();
