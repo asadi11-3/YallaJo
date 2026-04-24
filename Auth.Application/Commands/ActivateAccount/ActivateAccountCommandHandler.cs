@@ -1,5 +1,4 @@
 using Auth.Application.Interfaces;
-using Auth.Application.Invitations;
 using Auth.Domain.Entities;
 using Auth.Domain.Repositories;
 using Security.Contracts.Abstractions;
@@ -9,32 +8,30 @@ using YallaJo.SharedKernel.Domain.Abstractions.Results;
 namespace Auth.Application.Commands.ActivateAccount;
 
 /// <summary>
-/// Phase 2C-1 — redeems an activation token using the new
-/// <see cref="ActivationToken"/> aggregate, with a fallback to the legacy
-/// <c>Otp(Purpose="UserInvite")</c> row for activation links that were
-/// issued by Phase 2B <c>SendActivationEmail</c> before the 2C-1 deploy.
+/// Phase 2C-5 — final cutover. The legacy
+/// <c>Otp(Purpose="UserInvite")</c> fallback path is removed;
+/// activation now validates ActivationToken rows exclusively.
 /// <para>
-/// Validation order (ActivationToken path):
+/// Any in-flight activation link issued by the Phase 2B / 2C-0
+/// inline-SMTP pipeline would, after this cutover, fail to redeem. Per
+/// the operator's decision (no real users have outstanding legacy
+/// links), that exposure is accepted.
+/// </para>
+/// <para>
+/// Flow:
 /// </para>
 /// <list type="number">
-///   <item><description>Resolve the account snapshot via <see cref="IUserRegistrationService.GetInviteAccountStatusAsync"/>. Refuse if missing or already onboarded.</description></item>
-///   <item><description>Load the most recent non-terminal <see cref="ActivationToken"/>. If none exists, fall through to the legacy Otp path.</description></item>
-///   <item><description>Check exhaustion and expiry BEFORE incrementing the attempt counter (attempt-leak invariant).</description></item>
-///   <item><description>Increment the attempt counter, compare hashes.</description></item>
-///   <item><description>On hash match: delegate to <see cref="IUserRegistrationService.CompleteActivationAsync"/> (password set, email verified, <c>PendingActivation → Active</c>). On success, <see cref="ActivationToken.Consume"/> the token and any outstanding siblings get <see cref="ActivationToken.Supersede"/>d defensively (there should be none because of the supersede step in send).</description></item>
-///   <item><description>Revoke sessions via <see cref="ISessionRevocationService"/> (<c>AccountActivated</c> reason — the invariant is uniform across activation, self-service reset, and future admin verbs).</description></item>
+///   <item><description>Resolve the account snapshot; refuse if missing or already onboarded.</description></item>
+///   <item><description>Load the most recent non-terminal <see cref="ActivationToken"/>. Absence is a hard <c>NotFound</c> — no silent fallback.</description></item>
+///   <item><description>Check exhaustion and expiry BEFORE incrementing the attempt counter.</description></item>
+///   <item><description>Increment attempt; compare token hash; persist attempt even on mismatch so the rate-limit counter stays honest.</description></item>
+///   <item><description>On hash match: finalize in Security via <see cref="IUserRegistrationService.CompleteActivationAsync"/> (sets password, verifies email, PendingActivation → Active), <see cref="ActivationToken.Consume"/> the redeemed token, defensively supersede any sibling Issued/Delivered tokens.</description></item>
+///   <item><description>Revoke any residual sessions via <see cref="ISessionRevocationService"/> with <see cref="SessionRevocationReason.AccountActivated"/> — invariant uniform across every credential-establishing flow.</description></item>
 /// </list>
-/// <para>
-/// Legacy Otp fallback: identical logic against the Otp row, preserved
-/// verbatim from Phase 2B so existing activation links that were
-/// persisted as Otp(UserInvite) continue to work until the 7-day window
-/// elapses. A follow-up phase (2C-2) can drop this path.
-/// </para>
 /// </summary>
 public sealed class ActivateAccountCommandHandler(
     IUserRegistrationService userRegistrationService,
     IActivationTokenRepository activationTokenRepository,
-    IOtpRepository otpRepository,
     IAuthUnitOfWork unitOfWork,
     IInviteTokenService inviteTokenService,
     ISessionRevocationService sessionRevocation)
@@ -66,33 +63,21 @@ public sealed class ActivateAccountCommandHandler(
                 Outcome.Conflict);
         }
 
-        // 2. Try the ActivationToken aggregate first.
+        // 2. Load the latest non-terminal ActivationToken. No legacy
+        //    Otp fallback — absence is a hard NotFound.
         var token = await activationTokenRepository.GetLatestActiveForUserAsync(
             status.UserId, cancellationToken);
 
-        if (token is not null)
+        if (token is null)
         {
-            return await ActivateViaActivationTokenAsync(
-                token, status.UserId, normalizedEmail, request, cancellationToken);
+            return Result<ActivateAccountResult>.Failure(
+                Error.NotFound("Invite.NotFound", "This invite is invalid or has expired."),
+                Outcome.NotFound);
         }
 
-        // 3. Fallback: legacy Otp(UserInvite) row from Phase 2B.
-        return await ActivateViaLegacyOtpAsync(
-            status.UserId, normalizedEmail, request, cancellationToken);
-    }
-
-    // ── ActivationToken path (Phase 2C-1) ────────────────────────────────────
-
-    private async Task<Result<ActivateAccountResult>> ActivateViaActivationTokenAsync(
-        ActivationToken token,
-        Guid userId,
-        string normalizedEmail,
-        ActivateAccountCommand request,
-        CancellationToken cancellationToken)
-    {
-        // Domain invariants — checked BEFORE the attempt counter is
-        // incremented so the budget cannot be leaked by a bad-faith
-        // probe of an already-exhausted token.
+        // 3. Attempt-budget and expiry checks BEFORE the increment so a
+        //    bad-faith probe of an already-exhausted token cannot leak
+        //    one more attempt.
         if (token.IsExhausted)
         {
             return Result<ActivateAccountResult>.Fail(
@@ -113,17 +98,16 @@ public sealed class ActivateAccountCommandHandler(
 
         if (!inviteTokenService.Verify(request.Token, token.TokenHash))
         {
-            // Persist the attempt so the rate-limit counter reflects the try.
-            await unitOfWork.SaveChangesAsync(cancellationToken);
+            await unitOfWork.SaveChangesAsync(cancellationToken); // persist the attempt
             return Result<ActivateAccountResult>.Failure(
                 Error.Validation("Invite.Invalid", "Invalid invite token."),
                 Outcome.Invalid);
         }
 
-        // Finalize activation in Security (sets password, verifies email,
-        // performs the explicit PendingActivation -> Active transition).
+        // 4. Finalize in Security (sets password, verifies email,
+        //    performs the explicit PendingActivation -> Active transition).
         var completion = await userRegistrationService.CompleteActivationAsync(
-            userId, normalizedEmail, request.Password, cancellationToken);
+            status.UserId, normalizedEmail, request.Password, cancellationToken);
 
         if (completion.IsFailure)
         {
@@ -134,114 +118,24 @@ public sealed class ActivateAccountCommandHandler(
                 completion.Errors.ToArray());
         }
 
+        // 5. Consume the redeemed token + defensively supersede any
+        //    siblings. The send-activation sweep should prevent more
+        //    than one active at a time, but if a race slipped through
+        //    we clean up here before the flush.
         token.Consume();
 
-        // Defensive: supersede any sibling Issued/Delivered tokens. The
-        // send-activation sweep should have prevented more than one, but
-        // if a race slipped through we clean up here before the flush.
-        var siblings = await activationTokenRepository.GetActiveForUserAsync(userId, cancellationToken);
+        var siblings = await activationTokenRepository.GetActiveForUserAsync(status.UserId, cancellationToken);
         foreach (var sibling in siblings.Where(s => s.Id != token.Id))
             sibling.Supersede();
 
-        // Defensive: if any legacy Otp(UserInvite) rows exist alongside,
-        // mark them used. Prevents an in-flight legacy link from being
-        // redeemable after activation.
-        var legacy = await otpRepository.GetAllAsync(
-            filter: o => o.UserId == userId
-                      && o.Purpose == InviteConstants.Purpose
-                      && !o.IsUsed,
-            asNoTracking: false,
-            ct: cancellationToken);
-        foreach (var old in legacy)
-            old.MarkUsed();
-
-        // Credential-event invariant — revoke any existing sessions.
+        // 6. Credential-event invariant — revoke any existing sessions.
         await sessionRevocation.RevokeAllForUserAsync(
-            userId, SessionRevocationReason.AccountActivated, cancellationToken);
+            status.UserId,
+            SessionRevocationReason.AccountActivated,
+            cancellationToken);
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return Result<ActivateAccountResult>.Success(new ActivateAccountResult(userId));
-    }
-
-    // ── Legacy Otp(UserInvite) fallback (to be dropped in Phase 2C-2) ────────
-
-    private async Task<Result<ActivateAccountResult>> ActivateViaLegacyOtpAsync(
-        Guid userId,
-        string normalizedEmail,
-        ActivateAccountCommand request,
-        CancellationToken cancellationToken)
-    {
-        var invite = await otpRepository.FirstOrDefaultAsync(
-            filter:  o => o.UserId == userId
-                       && o.Purpose == InviteConstants.Purpose
-                       && !o.IsUsed,
-            orderBy: q => q.OrderByDescending(o => o.CreatedAt),
-            asNoTracking: false,
-            ct: cancellationToken);
-
-        if (invite is null)
-        {
-            return Result<ActivateAccountResult>.Failure(
-                Error.NotFound("Invite.NotFound", "This invite is invalid or has expired."),
-                Outcome.NotFound);
-        }
-
-        if (invite.IsExhausted)
-        {
-            return Result<ActivateAccountResult>.Fail(
-                Outcome.TooManyRequests,
-                "Too many invalid attempts. Please request a new invite.");
-        }
-
-        if (invite.IsExpired())
-        {
-            return Result<ActivateAccountResult>.Failure(
-                Error.Validation(
-                    "Invite.Expired",
-                    "This invite has expired. Please ask an administrator to resend it."),
-                Outcome.Invalid);
-        }
-
-        invite.IncrementAttempt();
-
-        if (!inviteTokenService.Verify(request.Token, invite.CodeHash))
-        {
-            await unitOfWork.SaveChangesAsync(cancellationToken);
-            return Result<ActivateAccountResult>.Failure(
-                Error.Validation("Invite.Invalid", "Invalid invite token."),
-                Outcome.Invalid);
-        }
-
-        var completion = await userRegistrationService.CompleteActivationAsync(
-            userId, normalizedEmail, request.Password, cancellationToken);
-
-        if (completion.IsFailure)
-        {
-            await unitOfWork.SaveChangesAsync(cancellationToken);
-            return Result<ActivateAccountResult>.Fail(
-                completion.Outcome,
-                completion.Messages.FirstOrDefault() ?? "Could not activate account.",
-                completion.Errors.ToArray());
-        }
-
-        invite.MarkUsed();
-
-        var otherInvites = await otpRepository.GetAllAsync(
-            filter: o => o.UserId == userId
-                      && o.Purpose == InviteConstants.Purpose
-                      && !o.IsUsed
-                      && o.Id != invite.Id,
-            asNoTracking: false,
-            ct: cancellationToken);
-        foreach (var other in otherInvites)
-            other.MarkUsed();
-
-        await sessionRevocation.RevokeAllForUserAsync(
-            userId, SessionRevocationReason.AccountActivated, cancellationToken);
-
-        await unitOfWork.SaveChangesAsync(cancellationToken);
-
-        return Result<ActivateAccountResult>.Success(new ActivateAccountResult(userId));
+        return Result<ActivateAccountResult>.Success(new ActivateAccountResult(status.UserId));
     }
 }

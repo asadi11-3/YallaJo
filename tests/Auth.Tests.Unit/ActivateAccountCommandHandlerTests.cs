@@ -1,4 +1,3 @@
-using System.Linq.Expressions;
 using Auth.Application.Commands.ActivateAccount;
 using Auth.Application.Interfaces;
 using Auth.Domain.Entities;
@@ -11,29 +10,24 @@ using YallaJo.SharedKernel.Domain.Abstractions.Results;
 namespace Auth.Tests.Unit;
 
 /// <summary>
-/// Phase 2C-1 — the handler now consumes <see cref="ActivationToken"/>
-/// rows (primary path) and falls back to legacy <c>Otp(UserInvite)</c>
-/// rows only when no <see cref="ActivationToken"/> exists for the user.
-/// These tests cover:
-///   • happy path on ActivationToken,
-///   • bad / expired / exhausted / missing token branches,
-///   • already-onboarded refusal,
-///   • Otp fallback when no ActivationToken exists,
-///   • session revocation invariant on success.
+/// Phase 2C-5 — legacy Otp fallback is gone. Activation validates
+/// <see cref="ActivationToken"/> rows exclusively. Coverage:
+///   • pre-flight refusals (no user / already onboarded / no token),
+///   • happy path (consume + revoke siblings + revoke sessions),
+///   • bad hash / exhausted / expired branches,
+///   • no <see cref="IOtpRepository"/> dependency is exercised
+///     (the handler no longer takes one).
 /// </summary>
 public sealed class ActivateAccountCommandHandlerTests
 {
-    private const string InvitePurpose = "UserInvite";
-
     private readonly IUserRegistrationService   _users             = Substitute.For<IUserRegistrationService>();
     private readonly IActivationTokenRepository _tokenRepo         = Substitute.For<IActivationTokenRepository>();
-    private readonly IOtpRepository             _otpRepo           = Substitute.For<IOtpRepository>();
     private readonly IAuthUnitOfWork            _uow               = Substitute.For<IAuthUnitOfWork>();
     private readonly IInviteTokenService        _tokens            = Substitute.For<IInviteTokenService>();
     private readonly ISessionRevocationService  _sessionRevocation = Substitute.For<ISessionRevocationService>();
 
     private ActivateAccountCommandHandler CreateSut() =>
-        new(_users, _tokenRepo, _otpRepo, _uow, _tokens, _sessionRevocation);
+        new(_users, _tokenRepo, _uow, _tokens, _sessionRevocation);
 
     private static ActivateAccountCommand Command(string token = "token-xyz") =>
         new(
@@ -57,39 +51,13 @@ public sealed class ActivateAccountCommandHandlerTests
                 Lifecycle:       lifecycle));
     }
 
-    private void StubActivationToken(ActivationToken? token)
-    {
+    private void StubActivationToken(ActivationToken? token) =>
         _tokenRepo.GetLatestActiveForUserAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
             .Returns(token);
-    }
 
-    private void StubOtherActivationTokens(params ActivationToken[] siblings)
-    {
+    private void StubOtherActivationTokens(params ActivationToken[] siblings) =>
         _tokenRepo.GetActiveForUserAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
             .Returns(siblings);
-    }
-
-    private void StubLegacyOtp(Otp? otp)
-    {
-        _otpRepo.FirstOrDefaultAsync(
-                Arg.Any<Expression<Func<Otp, bool>>>(),
-                Arg.Any<Func<IQueryable<Otp>, IQueryable<Otp>>?>(),
-                Arg.Any<Func<IQueryable<Otp>, IOrderedQueryable<Otp>>?>(),
-                Arg.Any<bool>(),
-                Arg.Any<CancellationToken>())
-            .Returns(otp);
-    }
-
-    private void StubLegacyOtpList(params Otp[] others)
-    {
-        _otpRepo.GetAllAsync(
-                Arg.Any<Expression<Func<Otp, bool>>?>(),
-                Arg.Any<Func<IQueryable<Otp>, IQueryable<Otp>>?>(),
-                Arg.Any<Func<IQueryable<Otp>, IOrderedQueryable<Otp>>?>(),
-                Arg.Any<bool>(),
-                Arg.Any<CancellationToken>())
-            .Returns(new List<Otp>(others));
-    }
 
     // ── Pre-flight refusals ───────────────────────────────────────────────────
 
@@ -124,60 +92,29 @@ public sealed class ActivateAccountCommandHandlerTests
         result.Outcome.Should().Be(Outcome.Conflict);
     }
 
-    // ── ActivationToken path ──────────────────────────────────────────────────
-
     [Fact]
-    public async Task Handle_ShouldConsumeActivationToken_AndActivate_OnHappyPath()
+    public async Task Handle_ShouldReturnNotFound_WhenNoActivationTokenExists()
     {
+        // Phase 2C-5: absence is a hard NotFound. No Otp fallback.
         var userId = Guid.NewGuid();
         StubStatus(userId);
-
-        var token = ActivationToken.Issue(userId, "good-hash", "invitee@example.com", 60);
-        token.MarkDelivered();
-        StubActivationToken(token);
-        StubOtherActivationTokens(); // no siblings
-        StubLegacyOtpList();          // no stray legacy rows
-
-        _tokens.Verify(Arg.Any<string>(), Arg.Any<string>()).Returns(true);
-
-        _users.CompleteActivationAsync(userId, "invitee@example.com", Arg.Any<string>(), Arg.Any<CancellationToken>())
-            .Returns(Result.Success());
-
-        _sessionRevocation.RevokeAllForUserAsync(
-                userId, SessionRevocationReason.AccountActivated, Arg.Any<CancellationToken>())
-            .Returns(new SessionRevocationOutcome(0, 0));
+        StubActivationToken(null);
 
         var sut = CreateSut();
 
         var result = await sut.Handle(Command(), CancellationToken.None);
 
-        result.IsSuccess.Should().BeTrue();
-        result.Value!.UserId.Should().Be(userId);
+        result.IsFailure.Should().BeTrue();
+        result.Outcome.Should().Be(Outcome.NotFound);
 
-        // Token was consumed (not just marked used).
-        token.State.Should().Be(ActivationTokenState.Consumed);
-        token.ConsumedAt.Should().NotBeNull();
-        token.AttemptCount.Should().Be(1);
-
-        // Security was asked to finalize via the new verb.
-        await _users.Received(1).CompleteActivationAsync(
-            userId, "invitee@example.com", "Pa55word!", Arg.Any<CancellationToken>());
-
-        // Session revocation invariant.
-        await _sessionRevocation.Received(1).RevokeAllForUserAsync(
-            userId, SessionRevocationReason.AccountActivated, Arg.Any<CancellationToken>());
-
-        // Legacy-Otp fallback path was NOT entered on this request.
-        await _otpRepo.DidNotReceive().FirstOrDefaultAsync(
-            Arg.Any<Expression<Func<Otp, bool>>>(),
-            Arg.Any<Func<IQueryable<Otp>, IQueryable<Otp>>?>(),
-            Arg.Any<Func<IQueryable<Otp>, IOrderedQueryable<Otp>>?>(),
-            Arg.Any<bool>(),
-            Arg.Any<CancellationToken>());
+        await _users.DidNotReceive().CompleteActivationAsync(
+            Arg.Any<Guid>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
     }
 
+    // ── Token-state refusals ──────────────────────────────────────────────────
+
     [Fact]
-    public async Task Handle_ShouldReturnInvalid_AndPersistAttempt_WhenActivationTokenHashDoesNotMatch()
+    public async Task Handle_ShouldReturnInvalid_AndPersistAttempt_WhenHashDoesNotMatch()
     {
         var userId = Guid.NewGuid();
         StubStatus(userId);
@@ -196,7 +133,8 @@ public sealed class ActivateAccountCommandHandlerTests
         result.Outcome.Should().Be(Outcome.Invalid);
 
         token.AttemptCount.Should().Be(1);
-        token.State.Should().Be(ActivationTokenState.Delivered, "a wrong-hash try must NOT consume the token");
+        token.State.Should().Be(ActivationTokenState.Delivered,
+            "a wrong-hash try must NOT consume the token");
         await _uow.Received().SaveChangesAsync(Arg.Any<CancellationToken>());
 
         await _users.DidNotReceive().CompleteActivationAsync(
@@ -204,7 +142,7 @@ public sealed class ActivateAccountCommandHandlerTests
     }
 
     [Fact]
-    public async Task Handle_ShouldReturnTooManyRequests_WhenActivationTokenIsExhausted()
+    public async Task Handle_ShouldReturnTooManyRequests_WhenTokenIsExhausted()
     {
         var userId = Guid.NewGuid();
         StubStatus(userId);
@@ -225,29 +163,11 @@ public sealed class ActivateAccountCommandHandlerTests
     }
 
     [Fact]
-    public async Task Handle_ShouldReturnInvalidExpired_WhenActivationTokenExpired()
+    public async Task Handle_ShouldReturnInvalid_WhenTokenExpired()
     {
         var userId = Guid.NewGuid();
         StubStatus(userId);
 
-        // Issue a token with a 1-minute expiry, then simulate expiry by
-        // waiting. Use negative expiry via subsequent reflection? Simpler:
-        // construct the token normally then pass a huge nowUtc to the
-        // IsExpired check. But the handler uses IsExpired() without a
-        // parameter. Work around by using a 1-minute expiry and asserting
-        // after the handler via explicit expiry probe? That's fragile.
-        //
-        // Use a tiny trick: Issue with expiry minutes = 1, then wait in
-        // test via Thread.Sleep? Too slow. Instead, rely on the test-only
-        // IsExpired(nowUtc) method — but the handler calls the parameterless
-        // overload.
-        //
-        // Cleanest: expire the token via direct state manipulation through
-        // the public Supersede / etc.? That changes State, not expiry.
-        //
-        // We'll simulate via a past-dated issue: create the token then use
-        // reflection to set ExpiresAt into the past. This is acceptable
-        // here because we're exercising the handler's expiry short-circuit.
         var token = ActivationToken.Issue(userId, "h", "invitee@example.com", 60);
         token.MarkDelivered();
         typeof(ActivationToken).GetProperty(nameof(ActivationToken.ExpiresAt))!
@@ -264,6 +184,46 @@ public sealed class ActivateAccountCommandHandlerTests
         result.Outcome.Should().Be(Outcome.Invalid);
     }
 
+    // ── Happy path + sibling cleanup ──────────────────────────────────────────
+
+    [Fact]
+    public async Task Handle_ShouldConsumeToken_AndActivate_OnHappyPath()
+    {
+        var userId = Guid.NewGuid();
+        StubStatus(userId);
+
+        var token = ActivationToken.Issue(userId, "good-hash", "invitee@example.com", 60);
+        token.MarkDelivered();
+        StubActivationToken(token);
+        StubOtherActivationTokens(); // no siblings
+
+        _tokens.Verify(Arg.Any<string>(), Arg.Any<string>()).Returns(true);
+
+        _users.CompleteActivationAsync(userId, "invitee@example.com", Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(Result.Success());
+
+        _sessionRevocation.RevokeAllForUserAsync(
+                userId, SessionRevocationReason.AccountActivated, Arg.Any<CancellationToken>())
+            .Returns(new SessionRevocationOutcome(0, 0));
+
+        var sut = CreateSut();
+
+        var result = await sut.Handle(Command(), CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value!.UserId.Should().Be(userId);
+
+        token.State.Should().Be(ActivationTokenState.Consumed);
+        token.ConsumedAt.Should().NotBeNull();
+        token.AttemptCount.Should().Be(1);
+
+        await _users.Received(1).CompleteActivationAsync(
+            userId, "invitee@example.com", "Pa55word!", Arg.Any<CancellationToken>());
+
+        await _sessionRevocation.Received(1).RevokeAllForUserAsync(
+            userId, SessionRevocationReason.AccountActivated, Arg.Any<CancellationToken>());
+    }
+
     [Fact]
     public async Task Handle_ShouldSupersedeSiblingTokens_OnSuccessfulConsume()
     {
@@ -277,7 +237,6 @@ public sealed class ActivateAccountCommandHandlerTests
 
         StubActivationToken(main);
         StubOtherActivationTokens(main, sibling);
-        StubLegacyOtpList();
 
         _tokens.Verify(Arg.Any<string>(), Arg.Any<string>()).Returns(true);
         _users.CompleteActivationAsync(userId, Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
@@ -297,102 +256,44 @@ public sealed class ActivateAccountCommandHandlerTests
     }
 
     [Fact]
-    public async Task Handle_ShouldMarkLegacyOtpsUsed_OnActivationTokenSuccess()
+    public async Task Handle_ShouldStillPersistAttempt_WhenCompleteActivationFails()
     {
         var userId = Guid.NewGuid();
         StubStatus(userId);
 
-        var token = ActivationToken.Issue(userId, "good", "invitee@example.com", 60);
+        var token = ActivationToken.Issue(userId, "good-hash", "invitee@example.com", 60);
         token.MarkDelivered();
         StubActivationToken(token);
-        StubOtherActivationTokens();
-
-        var strayOtp = Otp.Create(userId, InvitePurpose, "h", "Email", "invitee@example.com", 60);
-        StubLegacyOtpList(strayOtp);
 
         _tokens.Verify(Arg.Any<string>(), Arg.Any<string>()).Returns(true);
+
         _users.CompleteActivationAsync(userId, Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
-            .Returns(Result.Success());
-        _sessionRevocation.RevokeAllForUserAsync(
-                Arg.Any<Guid>(), Arg.Any<SessionRevocationReason>(), Arg.Any<CancellationToken>())
-            .Returns(new SessionRevocationOutcome(0, 0));
-
-        var sut = CreateSut();
-
-        var result = await sut.Handle(Command(), CancellationToken.None);
-
-        result.IsSuccess.Should().BeTrue();
-        strayOtp.IsUsed.Should().BeTrue(
-            "stray legacy invite rows must be consumed alongside the redeemed ActivationToken");
-    }
-
-    // ── Otp legacy fallback path ──────────────────────────────────────────────
-
-    [Fact]
-    public async Task Handle_ShouldFallBackToLegacyOtp_WhenNoActivationTokenExists()
-    {
-        var userId = Guid.NewGuid();
-        StubStatus(userId);
-        StubActivationToken(null); // no 2C-1 token for this user
-
-        var otp = Otp.Create(userId, InvitePurpose, "legacy-hash", "Email", "invitee@example.com", 60);
-        StubLegacyOtp(otp);
-        StubLegacyOtpList(); // no other legacy rows
-
-        _tokens.Verify(Arg.Any<string>(), Arg.Any<string>()).Returns(true);
-        _users.CompleteActivationAsync(userId, Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
-            .Returns(Result.Success());
-        _sessionRevocation.RevokeAllForUserAsync(
-                Arg.Any<Guid>(), Arg.Any<SessionRevocationReason>(), Arg.Any<CancellationToken>())
-            .Returns(new SessionRevocationOutcome(0, 0));
-
-        var sut = CreateSut();
-
-        var result = await sut.Handle(Command(), CancellationToken.None);
-
-        result.IsSuccess.Should().BeTrue();
-        otp.IsUsed.Should().BeTrue("legacy Otp row must be marked used on success");
-        otp.AttemptCount.Should().Be(1);
-
-        await _users.Received(1).CompleteActivationAsync(
-            userId, "invitee@example.com", "Pa55word!", Arg.Any<CancellationToken>());
-    }
-
-    [Fact]
-    public async Task Handle_ShouldReturnNotFound_WhenNeitherActivationTokenNorLegacyOtpExists()
-    {
-        var userId = Guid.NewGuid();
-        StubStatus(userId);
-        StubActivationToken(null);
-        StubLegacyOtp(null);
+            .Returns(Result.Failure(
+                Error.Conflict("Invite.AlreadyCompleted", "already done"),
+                Outcome.Conflict));
 
         var sut = CreateSut();
 
         var result = await sut.Handle(Command(), CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();
-        result.Outcome.Should().Be(Outcome.NotFound);
+        result.Outcome.Should().Be(Outcome.Conflict);
+
+        token.AttemptCount.Should().Be(1);
+        token.IsUsedOrConsumed().Should().BeFalse();
+        await _uow.Received().SaveChangesAsync(Arg.Any<CancellationToken>());
+
+        await _sessionRevocation.DidNotReceive().RevokeAllForUserAsync(
+            Arg.Any<Guid>(), Arg.Any<SessionRevocationReason>(), Arg.Any<CancellationToken>());
     }
+}
 
-    [Fact]
-    public async Task Handle_ShouldReturnInvalid_WhenLegacyOtpHashDoesNotMatch()
-    {
-        var userId = Guid.NewGuid();
-        StubStatus(userId);
-        StubActivationToken(null);
-
-        var otp = Otp.Create(userId, InvitePurpose, "good-hash", "Email", "invitee@example.com", 60);
-        StubLegacyOtp(otp);
-
-        _tokens.Verify(Arg.Any<string>(), Arg.Any<string>()).Returns(false);
-
-        var sut = CreateSut();
-
-        var result = await sut.Handle(Command("bad"), CancellationToken.None);
-
-        result.IsFailure.Should().BeTrue();
-        result.Outcome.Should().Be(Outcome.Invalid);
-        otp.AttemptCount.Should().Be(1);
-        otp.IsUsed.Should().BeFalse();
-    }
+internal static class ActivationTokenTestExtensions
+{
+    /// <summary>
+    /// Helper so the Phase 2C-5 "do not consume on Security failure" test
+    /// reads fluently regardless of terminal-state semantics.
+    /// </summary>
+    public static bool IsUsedOrConsumed(this ActivationToken token) =>
+        token.State == ActivationTokenState.Consumed;
 }

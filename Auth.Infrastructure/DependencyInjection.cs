@@ -99,6 +99,14 @@ public static class DependencyInjection
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
 
         services.AddScoped<IOutboxProcessor, OutboxProcessor<AuthDbContext>>();
+
+        // Phase 2C-4 — retention policy for disposable Auth state.
+        // AuthCleanupService (BackgroundService) runs the loop; the
+        // worker does the actual work and is unit-testable in isolation.
+        services.Configure<AuthRetentionOptions>(
+            configuration.GetSection(AuthRetentionOptions.SectionName));
+        services.AddScoped<IRetentionDeleteAdapter, EfExecuteDeleteAdapter>();
+        services.AddScoped<IAuthRetentionWorker, AuthRetentionWorker>();
         services.AddHostedService<AuthCleanupService>();
 
         // Distributed cache — idempotent, safe if the host already registered it
