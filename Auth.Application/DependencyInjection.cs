@@ -21,9 +21,9 @@ public static class DependencyInjection
 
         services.AddValidatorsFromAssembly(assembly, includeInternalTypes: true);
 
-        // Phase 1 — bulk session/refresh-token revocation used by credential
-        // mutation flows (self-service reset, activation). Phase 2 will add
-        // admin reset / reassignment / suspend / archive call sites.
+        // Bulk session/refresh-token revocation used by credential and admin
+        // lifecycle flows (self-service reset, activation, admin reset,
+        // suspend, archive).
         services.AddScoped<ISessionRevocationService, SessionRevocationService>();
 
         return services;

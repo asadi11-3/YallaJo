@@ -1,4 +1,7 @@
 using Auth.Application.Commands.AdminResetPassword;
+using Auth.Application.Commands.AdminArchiveUser;
+using Auth.Application.Commands.AdminReactivateUser;
+using Auth.Application.Commands.AdminSuspendUser;
 using Auth.Application.Commands.ForceRevokeUserSessions;
 using Auth.Application.Commands.Logout;
 using Auth.Application.Commands.LogoutAll;
@@ -129,6 +132,63 @@ internal static class SessionEndpoints
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status409Conflict)
         .WithSummary("Admin: force a password reset for a user — revokes sessions and sends a reset email.")
+        .WithMetadata(new MustHavePermissionAttribute(SecurityFeatures.User, AppAction.UpdateAny))
+        .RequireAuthorization();
+
+        admin.MapPatch("/users/{userId:guid}/suspend", async (
+            Guid userId,
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            var result = await sender.Send(new AdminSuspendUserCommand(userId), ct);
+            return result.ToApiResult();
+        })
+        .WithName("AdminSuspendUser")
+        .Produces(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status409Conflict)
+        .WithSummary("Admin: suspend a user account and revoke all active sessions.")
+        .WithMetadata(new MustHavePermissionAttribute(SecurityFeatures.User, AppAction.UpdateAny))
+        .RequireAuthorization();
+
+        admin.MapPatch("/users/{userId:guid}/reactivate", async (
+            Guid userId,
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            var result = await sender.Send(new AdminReactivateUserCommand(userId), ct);
+            return result.ToApiResult();
+        })
+        .WithName("AdminReactivateUser")
+        .Produces(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status409Conflict)
+        .WithSummary("Admin: reactivate a suspended user account.")
+        .WithMetadata(new MustHavePermissionAttribute(SecurityFeatures.User, AppAction.UpdateAny))
+        .RequireAuthorization();
+
+        admin.MapPatch("/users/{userId:guid}/archive", async (
+            Guid userId,
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            var result = await sender.Send(new AdminArchiveUserCommand(userId), ct);
+            return result.ToApiResult();
+        })
+        .WithName("AdminArchiveUser")
+        .Produces(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status409Conflict)
+        .WithSummary("Admin: archive a user account and revoke all active sessions.")
         .WithMetadata(new MustHavePermissionAttribute(SecurityFeatures.User, AppAction.UpdateAny))
         .RequireAuthorization();
     }

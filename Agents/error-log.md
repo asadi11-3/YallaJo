@@ -176,3 +176,12 @@
 - **Root Cause**: Concurrent compiler/test runs attempted to write to the same `obj/bin` artifacts at the same time.
 - **Fix Applied**: Re-ran validations sequentially (`Security.Infrastructure` build, `YallaJo.SharedKernel.Infrastructure` build, `Security.Tests.Unit` test), all passing.
 - **Prevention Rule**: If build/test targets overlap in dependency graph or output paths, run validations sequentially. Reserve parallel execution for truly independent projects.
+
+### ERR-018: New Auth command handler missed `Auth.Domain.Repositories` using, causing unresolved `IAuthUnitOfWork`
+- **Date**: 2026-04-24
+- **Module**: Auth.Application
+- **What Happened**: Added `AdminSuspendUserCommandHandler` and referenced `IAuthUnitOfWork` in the constructor, but forgot to import `Auth.Domain.Repositories`.
+- **Error Message**: `The type or namespace name 'IAuthUnitOfWork' could not be found (are you missing a using directive or an assembly reference?)`
+- **Root Cause**: Handler was scaffolded manually from memory; dependency namespace import step was skipped.
+- **Fix Applied**: Added `using Auth.Domain.Repositories;` to the handler file and re-ran builds/tests.
+- **Prevention Rule**: For every new handler, verify all injected dependency namespaces immediately after file creation (especially `IAuthUnitOfWork` / module UoW interfaces) before running the first build.

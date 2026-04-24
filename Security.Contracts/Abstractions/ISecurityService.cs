@@ -72,6 +72,40 @@ public interface ISecurityService
         CancellationToken ct = default);
 
     /// <summary>
+    /// Phase 3B — admin lifecycle operation. Suspends a target account after
+    /// hierarchy/self-management checks.
+    /// </summary>
+    /// <remarks>
+    /// Allowed source states: Active, PendingPasswordReset, Suspended (idempotent).
+    /// Rejected source states: Provisioned, PendingActivation, Archived.
+    /// </remarks>
+    Task<Result> SuspendUserByAdminAsync(
+        Guid targetUserId,
+        Guid actorUserId,
+        CancellationToken ct = default);
+
+    /// <summary>
+    /// Phase 3B — admin lifecycle operation. Reactivates a suspended account
+    /// after hierarchy/self-management checks.
+    /// </summary>
+    /// <remarks>
+    /// Allowed source state: Suspended.
+    /// </remarks>
+    Task<Result> ReactivateUserByAdminAsync(
+        Guid targetUserId,
+        Guid actorUserId,
+        CancellationToken ct = default);
+
+    /// <summary>
+    /// Phase 3B — admin lifecycle operation. Archives a target account (terminal
+    /// state) after hierarchy/self-management checks.
+    /// </summary>
+    Task<Result> ArchiveUserByAdminAsync(
+        Guid targetUserId,
+        Guid actorUserId,
+        CancellationToken ct = default);
+
+    /// <summary>
     /// Legacy, actor-blind password reset primitive. Retained for backward
     /// compatibility while callers migrate to the actor-attributed verbs
     /// (<see cref="ReplacePasswordBySelfAsync"/> and — in Phase 2+ —

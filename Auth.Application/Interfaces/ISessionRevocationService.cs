@@ -58,8 +58,18 @@ public enum SessionRevocationReason
     /// </summary>
     PasswordResetByAdmin = 3,
 
+    /// <summary>
+    /// Phase 3B — an admin suspended the account. Every active session and
+    /// refresh token is revoked immediately so access is blocked at once.
+    /// </summary>
+    AccountSuspended = 4,
+
     // Reserved for later phases:
-    // AccountSuspended         = 4,
     // AccountReassigned        = 5,
-    // AccountArchived          = 6,
+
+    /// <summary>
+    /// Phase 3B — an admin archived the account (terminal lifecycle state).
+    /// Active sessions/tokens are revoked as part of the archive operation.
+    /// </summary>
+    AccountArchived = 6,
 }

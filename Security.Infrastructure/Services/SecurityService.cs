@@ -1,3 +1,5 @@
+using Microsoft.Extensions.Caching.Hybrid;
+using Security.Application.Caching;
 using Security.Application.Authorization;
 using Security.Application.Interfaces;
 using Security.Contracts.Abstractions;
@@ -11,7 +13,8 @@ internal sealed class SecurityService(
     IUserRepository userRepository,
     ISecurityUnitOfWork unitOfWork,
     IPasswordHasher passwordHasher,
-    IRoleHierarchyService roleHierarchy) : ISecurityService
+    IRoleHierarchyService roleHierarchy,
+    HybridCache cache) : ISecurityService
 {
     public async Task<Guid?> GetUserIdByEmailAsync(string normalizedEmail, CancellationToken ct = default)
     {
@@ -258,6 +261,120 @@ internal sealed class SecurityService(
             PrimaryEmail:           primaryEmail,
             IsPrimaryEmailVerified: isVerified,
             Lifecycle:              ToContractSnapshot(user.LifecycleState)));
+    }
+
+    public async Task<Result> SuspendUserByAdminAsync(
+        Guid targetUserId,
+        Guid actorUserId,
+        CancellationToken ct = default)
+    {
+        _ = actorUserId;
+
+        var guard = await roleHierarchy.EnsureCanManageUserAsync(targetUserId, ct);
+        if (guard.IsFailure)
+            return guard;
+
+        var user = await userRepository.GetByIdAsync(targetUserId, ct, asNoTracking: false);
+        if (user is null)
+        {
+            return Result.Failure(
+                Error.NotFound("User.NotFound", "No account found."),
+                Outcome.NotFound);
+        }
+
+        if (user.LifecycleState is AccountLifecycleState.Provisioned
+            or AccountLifecycleState.PendingActivation
+            or AccountLifecycleState.Archived)
+        {
+            return Result.Failure(
+                Error.Conflict(
+                    "User.IneligibleForSuspend",
+                    $"Account is in state '{user.LifecycleState}' and cannot be suspended."),
+                Outcome.Conflict);
+        }
+
+        if (user.LifecycleState == AccountLifecycleState.Suspended)
+            return Result.Success();
+
+        user.Suspend();
+        await unitOfWork.SaveChangesAsync(ct);
+
+        await cache.RemoveByTagAsync(SecurityCacheKeys.UserTag(targetUserId), ct);
+        await cache.RemoveByTagAsync(SecurityCacheKeys.UsersTag, ct);
+
+        return Result.Success();
+    }
+
+    public async Task<Result> ReactivateUserByAdminAsync(
+        Guid targetUserId,
+        Guid actorUserId,
+        CancellationToken ct = default)
+    {
+        _ = actorUserId;
+
+        var guard = await roleHierarchy.EnsureCanManageUserAsync(targetUserId, ct);
+        if (guard.IsFailure)
+            return guard;
+
+        var user = await userRepository.GetByIdAsync(targetUserId, ct, asNoTracking: false);
+        if (user is null)
+        {
+            return Result.Failure(
+                Error.NotFound("User.NotFound", "No account found."),
+                Outcome.NotFound);
+        }
+
+        if (user.LifecycleState != AccountLifecycleState.Suspended)
+        {
+            return Result.Failure(
+                Error.Conflict(
+                    "User.IneligibleForReactivate",
+                    $"Account is in state '{user.LifecycleState}' and cannot be reactivated."),
+                Outcome.Conflict);
+        }
+
+        user.Reactivate();
+        await unitOfWork.SaveChangesAsync(ct);
+
+        await cache.RemoveByTagAsync(SecurityCacheKeys.UserTag(targetUserId), ct);
+        await cache.RemoveByTagAsync(SecurityCacheKeys.UsersTag, ct);
+
+        return Result.Success();
+    }
+
+    public async Task<Result> ArchiveUserByAdminAsync(
+        Guid targetUserId,
+        Guid actorUserId,
+        CancellationToken ct = default)
+    {
+        _ = actorUserId;
+
+        var guard = await roleHierarchy.EnsureCanManageUserAsync(targetUserId, ct);
+        if (guard.IsFailure)
+            return guard;
+
+        var user = await userRepository.GetByIdAsync(targetUserId, ct, asNoTracking: false);
+        if (user is null)
+        {
+            return Result.Failure(
+                Error.NotFound("User.NotFound", "No account found."),
+                Outcome.NotFound);
+        }
+
+        if (user.LifecycleState == AccountLifecycleState.Archived)
+        {
+            return Result.Failure(
+                Error.Conflict("User.AlreadyArchived", "Account is already archived."),
+                Outcome.Conflict);
+        }
+
+        user.Archive();
+        await unitOfWork.SaveChangesAsync(ct);
+
+        await cache.RemoveByTagAsync(SecurityCacheKeys.UserTag(targetUserId), ct);
+        await cache.RemoveByTagAsync(SecurityCacheKeys.UsersTag, ct);
+
+        return Result.Success();
     }
 
     [Obsolete("Use ReplacePasswordBySelfAsync for self-service recovery. An admin-initiated variant will be introduced in Phase 2.")]
