@@ -21,6 +21,12 @@ public static class DependencyInjection
         // violating the module boundary.
         services.AddScoped<IProfileCreationService, ProfileCreationService>();
 
+        // Phase 3D — cross-module capability used by the Auth admin
+        // reassignment flow to scrub the target user's profile inside
+        // the same transactional scope as the Security/Auth
+        // reassignment.
+        services.AddScoped<IProfileReassignmentService, ProfileReassignmentService>();
+
         return services;
     }
 }

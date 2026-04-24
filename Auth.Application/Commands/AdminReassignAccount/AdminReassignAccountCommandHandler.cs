@@ -1,3 +1,4 @@
+using Accounts.Contracts.Abstractions;
 using Auth.Application.Interfaces;
 using Auth.Application.Invitations;
 using Auth.Domain.Entities;
@@ -39,6 +40,7 @@ namespace Auth.Application.Commands.AdminReassignAccount;
 ///       <item><description>Supersede every non-terminal <see cref="PasswordResetToken"/> for the user.</description></item>
 ///       <item><description>Deactivate every active <see cref="ExternalProvider"/> link for the user — prevents the old owner from signing in via Google/Facebook.</description></item>
 ///       <item><description>Issue a fresh <see cref="ActivationToken"/> for the NEW email, attach <see cref="ActivationTokenIssuedEvent"/>, persist. The outbox pipeline dispatches the activation email.</description></item>
+///       <item><description>Phase 3D — call <see cref="IProfileReassignmentService.ResetForReassignmentAsync"/> to scrub the Accounts profile (FirstName/LastName placeholders, DisplayName = new email local-part, all optional PII cleared). A failure here rolls back Security + Auth reassignment atomically.</description></item>
 ///       <item><description>Single Auth <see cref="IAuthUnitOfWork.SaveChangesAsync"/> commits everything.</description></item>
 ///     </list>
 ///   </description></item>
@@ -63,6 +65,7 @@ public sealed class AdminReassignAccountCommandHandler(
     ITransactionalExecutor txExecutor,
     IInviteTokenService inviteTokenService,
     IInviteLinkBuilder inviteLinkBuilder,
+    IProfileReassignmentService profileReassignmentService,
     ICurrentUser currentUser,
     ILogger<AdminReassignAccountCommandHandler> logger)
     : ICommandHandler<AdminReassignAccountCommand, AdminReassignAccountResult>
@@ -191,12 +194,34 @@ public sealed class AdminReassignAccountCommandHandler(
 
                 await activationTokenRepository.AddAsync(activationToken, innerCt);
 
-                // 2g. Single Auth SaveChanges commits: session/refresh
+                // 2g. Phase 3D — scrub the Accounts profile. Runs
+                //     inside the same ambient TransactionScope: a
+                //     failure returned here (or an exception thrown
+                //     by the service) rolls back Security + Auth
+                //     reassignment atomically. Missing profile is a
+                //     logged no-op (idempotent) per Phase 3D
+                //     contract.
+                var profileReset = await profileReassignmentService.ResetForReassignmentAsync(
+                    new ProfileReassignmentRequest(
+                        UserId:   request.TargetUserId,
+                        NewEmail: completed.NewEmail),
+                    innerCt);
+
+                if (profileReset.IsFailure)
+                {
+                    return ReassignOutcome.Failed(
+                        profileReset.Outcome,
+                        profileReset.Messages.FirstOrDefault() ?? string.Empty,
+                        profileReset.Errors.ToArray());
+                }
+
+                // 2h. Single Auth SaveChanges commits: session/refresh
                 //     revocations, activation token supersede sweep,
                 //     password-reset token supersede sweep, external
                 //     provider deactivations, new activation token,
                 //     and the outbox row emitted by the domain-event
-                //     dispatcher.
+                //     dispatcher. The Accounts UoW SaveChanges above
+                //     already flushed inside the same ambient scope.
                 await unitOfWork.SaveChangesAsync(innerCt);
 
                 return ReassignOutcome.Ok(
@@ -225,7 +250,7 @@ public sealed class AdminReassignAccountCommandHandler(
             "Auth: Admin {AdminActorId} reassigned user {TargetUserId} from {OldEmail} to {NewEmail}. " +
             "Activation token {TokenId} issued; {ActivationsSuperseded} activation token(s), " +
             "{ResetsSuperseded} reset token(s), {ProvidersDeactivated} external provider link(s) invalidated. " +
-            "Reason={Reason}",
+            "Accounts profile scrubbed (ProfileReset=true). Reason={Reason}",
             actorId,
             request.TargetUserId,
             outcome.OldEmail,

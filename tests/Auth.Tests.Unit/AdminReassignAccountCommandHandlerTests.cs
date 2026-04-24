@@ -1,3 +1,4 @@
+using Accounts.Contracts.Abstractions;
 using Auth.Application.Commands.AdminReassignAccount;
 using Auth.Application.Interfaces;
 using Auth.Domain.Entities;
@@ -35,6 +36,7 @@ public sealed class AdminReassignAccountCommandHandlerTests
     private readonly PassThroughTransactionalExecutor _txExecutor               = new();
     private readonly IInviteTokenService           _inviteTokenService          = Substitute.For<IInviteTokenService>();
     private readonly IInviteLinkBuilder            _inviteLinkBuilder           = Substitute.For<IInviteLinkBuilder>();
+    private readonly IProfileReassignmentService   _profileReassignment         = Substitute.For<IProfileReassignmentService>();
     private readonly ICurrentUser                  _currentUser                 = Substitute.For<ICurrentUser>();
     private readonly Guid                          _actorId                     = Guid.NewGuid();
 
@@ -51,12 +53,18 @@ public sealed class AdminReassignAccountCommandHandlerTests
         _inviteTokenService.Hash(Arg.Any<string>()).Returns("hash-xyz");
         _inviteLinkBuilder.Build(Arg.Any<string>(), Arg.Any<string>())
             .Returns(ci => $"https://app.example.com/activate?email={ci.ArgAt<string>(0)}&token={ci.ArgAt<string>(1)}");
+
+        // Phase 3D — profile reassignment defaults to success; individual
+        // tests override when a failure path is under test.
+        _profileReassignment
+            .ResetForReassignmentAsync(Arg.Any<ProfileReassignmentRequest>(), Arg.Any<CancellationToken>())
+            .Returns(Result.Success());
     }
 
     private AdminReassignAccountCommandHandler CreateSut() =>
         new(_security, _activationTokens, _resetTokens, _externalProviders,
             _sessionRevocation, _uow, _txExecutor, _inviteTokenService, _inviteLinkBuilder,
-            _currentUser, NullLogger<AdminReassignAccountCommandHandler>.Instance);
+            _profileReassignment, _currentUser, NullLogger<AdminReassignAccountCommandHandler>.Instance);
 
     private static AdminReassignAccountCommand Command(
         Guid targetId,
@@ -328,6 +336,80 @@ public sealed class AdminReassignAccountCommandHandlerTests
     }
 
     [Fact]
+    public async Task Handle_OnHappyPath_ShouldCallProfileReassignmentService_WithNewEmail()
+    {
+        // Phase 3D — the handler must scrub the Accounts profile as
+        // part of the same transactional unit as the Security/Auth
+        // reassignment.
+        var targetId = Guid.NewGuid();
+        StubSecuritySuccess(targetId, newEmail: "new@example.com");
+        StubNoExistingActivationTokens();
+        StubNoExistingResetTokens();
+        StubNoActiveProviderLinks();
+
+        ProfileReassignmentRequest? captured = null;
+        _profileReassignment
+            .ResetForReassignmentAsync(
+                Arg.Do<ProfileReassignmentRequest>(r => captured = r),
+                Arg.Any<CancellationToken>())
+            .Returns(Result.Success());
+
+        var sut = CreateSut();
+
+        var result = await sut.Handle(
+            Command(targetId, newEmail: "new@example.com"),
+            CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+
+        await _profileReassignment.Received(1).ResetForReassignmentAsync(
+            Arg.Any<ProfileReassignmentRequest>(),
+            Arg.Any<CancellationToken>());
+
+        captured.Should().NotBeNull();
+        captured!.UserId.Should().Be(targetId,
+            "the reassigned UserId must be forwarded to Accounts");
+        captured.NewEmail.Should().Be("new@example.com",
+            "Accounts derives the placeholder DisplayName from the new email local-part");
+    }
+
+    [Fact]
+    public async Task Handle_WhenProfileReassignmentFails_ShouldPropagateFailure()
+    {
+        // Phase 3D — if the Accounts scrub fails, the reassignment must
+        // not silently succeed. Since PassThroughTransactionalExecutor
+        // bypasses TransactionScope, we assert the handler returns a
+        // failure Result; in production the ambient TransactionScope
+        // would also dispose without Complete() and roll Security +
+        // Auth back.
+        var targetId = Guid.NewGuid();
+        StubSecuritySuccess(targetId);
+        StubNoExistingActivationTokens();
+        StubNoExistingResetTokens();
+        StubNoActiveProviderLinks();
+
+        _profileReassignment
+            .ResetForReassignmentAsync(
+                Arg.Any<ProfileReassignmentRequest>(),
+                Arg.Any<CancellationToken>())
+            .Returns(Result.Failure(
+                Error.Failure("Profile.Reset", "profile reset failed"),
+                Outcome.ServerError));
+
+        var sut = CreateSut();
+
+        var result = await sut.Handle(Command(targetId), CancellationToken.None);
+
+        result.IsFailure.Should().BeTrue(
+            "a failing profile scrub must propagate — no silent success");
+        result.Outcome.Should().Be(Outcome.ServerError);
+
+        // The Auth UoW SaveChanges must NOT have been called after a
+        // profile-reset failure (the handler returns before the flush).
+        await _uow.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public async Task Handle_ShouldNeverLog_PlainActivationToken()
     {
         var spy = new LogSpy<AdminReassignAccountCommandHandler>();
@@ -343,7 +425,7 @@ public sealed class AdminReassignAccountCommandHandlerTests
         var sut = new AdminReassignAccountCommandHandler(
             _security, _activationTokens, _resetTokens, _externalProviders,
             _sessionRevocation, _uow, _txExecutor, _inviteTokenService, _inviteLinkBuilder,
-            _currentUser, spy);
+            _profileReassignment, _currentUser, spy);
 
         await sut.Handle(Command(targetId), CancellationToken.None);
 
