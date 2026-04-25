@@ -19,23 +19,39 @@ public sealed class RemoveBusinessAmenityCommandHandler(
         RemoveBusinessAmenityCommand request,
         CancellationToken cancellationToken)
     {
+        // Authentication check
         if (!currentUser.IsAuthenticated)
         {
             return Result.Failure(
-                new Error("Auth.Unauthorized", "Authentication required"),
-                Outcome.Unauthorized);
+                Error.Unauthorized("Authentication required"));
         }
 
-        var amenity = await amenityRepository.GetByIdAsync(request.AmenityId, cancellationToken, asNoTracking: false);
+        // Get amenity with Business included
+        var amenity = await amenityRepository.GetByIdWithBusinessAsync(
+            request.AmenityId,
+            cancellationToken);
 
         if (amenity is null)
         {
             return Result.Failure(
-                new Error("BusinessAmenity.NotFound", "Amenity not found"),
-                Outcome.NotFound);
+                Error.NotFound(
+                    "BusinessAmenity.NotFound",
+                    "Amenity not found"));
         }
 
+        // Authorization: only Admin or Business Owner
+        var isAdmin = currentUser.IsInRole("Admin");
+
+        if (!isAdmin && amenity.Business.OwnerId != currentUser.UserId)
+        {
+            return Result.Failure(
+                Error.Forbidden(
+                    "You are not allowed to modify this business"));
+        }
+
+        // Remove amenity
         amenityRepository.Remove(amenity);
+
         try
         {
             await unitOfWork.SaveChangesAsync(cancellationToken);
@@ -43,13 +59,14 @@ public sealed class RemoveBusinessAmenityCommandHandler(
         catch (ContentPlaceConcurrencyException)
         {
             return Result.Failure(
-                new Error(
+                Error.Conflict(
                     "BusinessAmenity.ConcurrencyConflict",
-                    "A concurrency conflict occurred. Please refresh and try again."),
-                Outcome.Conflict);
+                    "A concurrency conflict occurred. Please refresh and try again."));
         }
 
-        logger.LogInformation("Amenity removed {AmenityId}", request.AmenityId);
+        logger.LogInformation(
+            "Amenity removed successfully. AmenityId: {AmenityId}",
+            request.AmenityId);
 
         return Result.Success();
     }

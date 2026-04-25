@@ -1,7 +1,16 @@
 using ContentPlaces.Application.Queries.BusinessStaff.Common;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 
-namespace ContentPlaces.Application.Queries.BusinessStaff.ListBusinessStaff;
-
 public sealed record ListBusinessStaffQuery(Guid BusinessId)
-    : IQuery<IReadOnlyList<BusinessStaffDto>>;
+    : IQuery<IReadOnlyList<BusinessStaffDto>>, ICacheableQuery
+{
+    public string CacheKey => $"content_places:business_staff:{BusinessId}";
+
+    public TimeSpan? CacheDuration => TimeSpan.FromMinutes(5);
+
+    public IReadOnlyList<string> Tags =>
+    [
+        "businesses",
+        $"biz:{BusinessId}"
+    ];
+}

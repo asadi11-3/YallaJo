@@ -19,20 +19,27 @@ internal static class BusinessStaffEndpoints
         var staff = group.MapGroup("/places/businesses")
             .WithTags("ContentPlaces | BusinessStaff");
 
+        // List business staff (secured)
         staff.MapGet("/{id:guid}/staff", async (
             Guid id,
             ISender sender,
             CancellationToken ct) =>
         {
-            var result = await sender.Send(new ListBusinessStaffQuery(id), ct);
+            var result = await sender.Send(
+                new ListBusinessStaffQuery(id), ct);
+
             return result.ToApiResult();
         })
         .WithName("ListBusinessStaff")
         .Produces<IReadOnlyList<BusinessStaffDto>>(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("List business staff members")
-        .AllowAnonymous();
+        .WithMetadata(new MustHavePermissionAttribute(
+            AppFeatures.BusinessStaff,
+            AppAction.Read))
+        .RequireAuthorization();
 
+        // Add staff member
         staff.MapPost("/{id:guid}/staff", async (
             Guid id,
             AddBusinessStaffRequest request,
@@ -40,7 +47,11 @@ internal static class BusinessStaffEndpoints
             CancellationToken ct) =>
         {
             var result = await sender.Send(
-                new AddBusinessStaffCommand(id, request.UserId, request.Role), ct);
+                new AddBusinessStaffCommand(
+                    id,
+                    request.UserId,
+                    request.Role), ct);
+
             return result.ToApiResult();
         })
         .WithName("AddBusinessStaff")
@@ -48,15 +59,20 @@ internal static class BusinessStaffEndpoints
         .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status409Conflict)
         .WithSummary("Add a staff member to a business")
-        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.BusinessStaff, AppAction.Create))
+        .WithMetadata(new MustHavePermissionAttribute(
+            AppFeatures.BusinessStaff,
+            AppAction.Create))
         .RequireAuthorization();
 
+        // Remove (deactivate) staff member
         staff.MapDelete("/staff/{id:guid}", async (
             Guid id,
             ISender sender,
             CancellationToken ct) =>
         {
-            var result = await sender.Send(new RemoveBusinessStaffCommand(id), ct);
+            var result = await sender.Send(
+                new RemoveBusinessStaffCommand(id), ct);
+
             return result.ToApiResult();
         })
         .WithName("RemoveBusinessStaff")
@@ -64,7 +80,9 @@ internal static class BusinessStaffEndpoints
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status409Conflict)
         .WithSummary("Deactivate a staff member (soft delete)")
-        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.BusinessStaff, AppAction.Delete))
+        .WithMetadata(new MustHavePermissionAttribute(
+            AppFeatures.BusinessStaff,
+            AppAction.Delete))
         .RequireAuthorization();
     }
 }

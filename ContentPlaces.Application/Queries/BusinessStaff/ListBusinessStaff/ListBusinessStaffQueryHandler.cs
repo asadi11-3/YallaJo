@@ -1,6 +1,7 @@
 using ContentPlaces.Application.Queries.BusinessStaff.Common;
 using ContentPlaces.Domain.Repositories;
 using Microsoft.Extensions.Logging;
+using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
@@ -8,6 +9,8 @@ namespace ContentPlaces.Application.Queries.BusinessStaff.ListBusinessStaff;
 
 public sealed class ListBusinessStaffQueryHandler(
     IBusinessStaffRepository staffRepository,
+    IBusinessRepository businessRepository,
+    ICurrentUser currentUser,
     ILogger<ListBusinessStaffQueryHandler> logger)
     : IQueryHandler<ListBusinessStaffQuery, IReadOnlyList<BusinessStaffDto>>
 {
@@ -15,6 +18,34 @@ public sealed class ListBusinessStaffQueryHandler(
         ListBusinessStaffQuery request,
         CancellationToken cancellationToken)
     {
+        // Authentication check
+        if (!currentUser.IsAuthenticated)
+        {
+            return Result<IReadOnlyList<BusinessStaffDto>>.Failure(
+                Error.Unauthorized("Authentication required"));
+        }
+
+        // Validate business existence
+        var business = await businessRepository.GetByIdAsync(
+            request.BusinessId,
+            cancellationToken);
+
+        if (business is null)
+        {
+            return Result<IReadOnlyList<BusinessStaffDto>>.Failure(
+                Error.NotFound("Business.NotFound", "Business not found"));
+        }
+
+        // Authorization: Admin or Owner only
+        var isAdmin = currentUser.IsInRole("Admin");
+
+        if (!isAdmin && business.OwnerId != currentUser.UserId)
+        {
+            return Result<IReadOnlyList<BusinessStaffDto>>.Failure(
+                Error.Forbidden("You are not allowed to view this business"));
+        }
+
+        // Fetch staff
         var staff = await staffRepository.SelectAsync(
             selector: x => BusinessStaffDto.From(x),
             filter: x => x.BusinessId == request.BusinessId && x.IsActive,

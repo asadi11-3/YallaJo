@@ -19,13 +19,15 @@ internal static class BusinessAmenityEndpoints
         var amenities = group.MapGroup("/places/businesses")
             .WithTags("ContentPlaces | BusinessAmenities");
 
-
-        amenities.MapGet("/{id:guid}/amenities", async (
-            Guid id,
+        // Get amenities (public)
+        amenities.MapGet("/{businessId:guid}/amenities", async (
+            Guid businessId,
             ISender sender,
             CancellationToken ct) =>
         {
-            var result = await sender.Send(new ListBusinessAmenitiesQuery(id), ct);
+            var result = await sender.Send(
+                new ListBusinessAmenitiesQuery(businessId), ct);
+
             return result.ToApiResult();
         })
         .WithName("ListBusinessAmenities")
@@ -34,14 +36,20 @@ internal static class BusinessAmenityEndpoints
         .WithSummary("List amenities for a business")
         .AllowAnonymous();
 
-        amenities.MapPost("/{id:guid}/amenities", async (
-            Guid id,
+        // Add amenity
+        amenities.MapPost("/{businessId:guid}/amenities", async (
+            Guid businessId,
             AddBusinessAmenityRequest request,
             ISender sender,
             CancellationToken ct) =>
         {
             var result = await sender.Send(
-                new AddBusinessAmenityCommand(id, request.Name, request.Icon, request.SortOrder), ct);
+                new AddBusinessAmenityCommand(
+                    businessId,
+                    request.Name,
+                    request.Icon,
+                    request.SortOrder), ct);
+
             return result.ToApiResult();
         })
         .WithName("AddBusinessAmenity")
@@ -49,22 +57,29 @@ internal static class BusinessAmenityEndpoints
         .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status409Conflict)
         .WithSummary("Add an amenity to a business")
-        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.BusinessAmenity, AppAction.Create))
+        .WithMetadata(new MustHavePermissionAttribute(
+            AppFeatures.BusinessAmenity,
+            AppAction.Create))
         .RequireAuthorization();
 
-        amenities.MapDelete("/amenities/{id:guid}", async (
-            Guid id,
+        // Remove amenity
+        amenities.MapDelete("/amenities/{amenityId:guid}", async (
+            Guid amenityId,
             ISender sender,
             CancellationToken ct) =>
         {
-            var result = await sender.Send(new RemoveBusinessAmenityCommand(id), ct);
+            var result = await sender.Send(
+                new RemoveBusinessAmenityCommand(amenityId), ct);
+
             return result.ToApiResult();
         })
         .WithName("RemoveBusinessAmenity")
         .Produces(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Remove an amenity from a business")
-        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.BusinessAmenity, AppAction.Delete))
+        .WithMetadata(new MustHavePermissionAttribute(
+            AppFeatures.BusinessAmenity,
+            AppAction.Delete))
         .RequireAuthorization();
     }
 }

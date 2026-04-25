@@ -4,12 +4,14 @@ using AccessibilityFeatureEntity = ContentPlaces.Domain.Entities.AccessibilityFe
 namespace ContentPlaces.Application.Queries.AccessibilityFeature.Common;
 
 public sealed record AccessibilityFeatureDto(
+    Guid Id,
     AccessibilityFeatureType FeatureType,
     string Name,
     string? Description,
     bool IsAvailable)
 {
     public static AccessibilityFeatureDto From(AccessibilityFeatureEntity feature) => new(
+        feature.Id,
         feature.FeatureType,
         feature.Name,
         feature.Description,

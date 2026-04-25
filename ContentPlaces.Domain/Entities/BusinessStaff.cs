@@ -1,4 +1,6 @@
 using ContentPlaces.Domain.Enums;
+using ContentPlaces.Domain.Events;
+using ContentPlaces.Domain.Events.BusinessStaffEvents;
 using YallaJo.SharedKernel.Domain.Entities;
 
 namespace ContentPlaces.Domain.Entities;
@@ -16,29 +18,41 @@ public sealed class BusinessStaff : AuditableEntity
 
     public Business Business { get; private set; } = default!;
 
-    // create new staff
     public static BusinessStaff Create(
         Guid businessId,
         Guid userId,
         BusinessStaffRole role)
     {
-        return new BusinessStaff
+        var staff = new BusinessStaff
         {
             Id = Guid.CreateVersion7(),
-            CreatedAt = DateTime.UtcNow,
             BusinessId = businessId,
             UserId = userId,
             Role = role,
             IsActive = true,
             DeactivatedAt = null
         };
+
+        staff.AddDomainEvent(
+            new BusinessStaffAddedDomainEvent(
+                staff.Id,
+                staff.BusinessId,
+                staff.UserId,
+                staff.Role.ToString()));
+
+        return staff;
     }
 
-    // soft delete (deactivate)
     public void Deactivate()
     {
         IsActive = false;
         DeactivatedAt = DateTime.UtcNow;
         UpdatedAt = DateTime.UtcNow;
+
+        AddDomainEvent(
+            new BusinessStaffRemovedDomainEvent(
+                Id,
+                BusinessId,
+                UserId));
     }
 }

@@ -7,4 +7,16 @@ public sealed record ListBusinessAmenitiesQuery(
     Guid BusinessId,
     int Page = 1,
     int PageSize = 10)
-    : IQuery<IReadOnlyList<BusinessAmenityDto>>;
+    : IQuery<IReadOnlyList<BusinessAmenityDto>>, ICacheableQuery
+{
+    public string CacheKey =>
+        $"content_places:business_amenities:{BusinessId}:page:{Page}:size:{PageSize}";
+
+    public TimeSpan? CacheDuration => TimeSpan.FromMinutes(5);
+
+    public IReadOnlyList<string> Tags =>
+    [
+        "businesses",
+        $"biz:{BusinessId}"
+    ];
+}

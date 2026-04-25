@@ -2,6 +2,7 @@ using ContentPlaces.Application.Interfaces;
 using ContentPlaces.Domain.Exceptions;
 using ContentPlaces.Domain.Repositories;
 using Microsoft.Extensions.Logging;
+using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 using AccessibilityFeatureEntity = ContentPlaces.Domain.Entities.AccessibilityFeature;
@@ -12,6 +13,7 @@ public sealed class UpdateAccessibilityFeaturesCommandHandler(
     IAccessibilityFeatureRepository featureRepository,
     IPlaceRepository placeRepository,
     IContentPlacesUnitOfWork unitOfWork,
+    ICurrentUser currentUser,
     ILogger<UpdateAccessibilityFeaturesCommandHandler> logger)
     : ICommandHandler<UpdateAccessibilityFeaturesCommand>
 {
@@ -21,22 +23,40 @@ public sealed class UpdateAccessibilityFeaturesCommandHandler(
         UpdateAccessibilityFeaturesCommand request,
         CancellationToken cancellationToken)
     {
+        // Authentication check
+        if (!currentUser.IsAuthenticated)
+        {
+            return Result.Failure(
+                Error.Unauthorized("Authentication required"));
+        }
+
+        // Authorization: Admin only
+        if (!currentUser.IsInRole("Admin"))
+        {
+            return Result.Failure(
+                Error.Forbidden("Admin access required"));
+        }
+
+        // Validate place existence
         var placeExists = await placeRepository.AnyAsync(
-            x => x.Id == request.PlaceId, cancellationToken);
+            x => x.Id == request.PlaceId,
+            cancellationToken);
 
         if (!placeExists)
         {
             return Result.Failure(
-                new Error("Place.NotFound", "Place not found"),
-                Outcome.NotFound);
+                Error.NotFound("Place.NotFound", "Place not found"));
         }
 
+        // Get existing features
         var existingFeatures = await featureRepository.GetAllAsync(
             filter: x => x.EntityId == request.PlaceId && x.EntityType == PlaceEntityType,
             ct: cancellationToken);
 
+        // Remove old features
         featureRepository.RemoveRange(existingFeatures);
 
+        // Create new features (deduplicate by FeatureType)
         var newFeatures = request.Features
             .GroupBy(x => x.FeatureType)
             .Select(x => x.First())
@@ -50,6 +70,7 @@ public sealed class UpdateAccessibilityFeaturesCommandHandler(
             .ToList();
 
         await featureRepository.AddRangeAsync(newFeatures, cancellationToken);
+
         try
         {
             await unitOfWork.SaveChangesAsync(cancellationToken);
@@ -57,10 +78,9 @@ public sealed class UpdateAccessibilityFeaturesCommandHandler(
         catch (ContentPlaceConcurrencyException)
         {
             return Result.Failure(
-                new Error(
+                Error.Conflict(
                     "AccessibilityFeature.ConcurrencyConflict",
-                    "A concurrency conflict occurred. Please refresh and try again."),
-                Outcome.Conflict);
+                    "A concurrency conflict occurred. Please refresh and try again."));
         }
 
         logger.LogInformation(
