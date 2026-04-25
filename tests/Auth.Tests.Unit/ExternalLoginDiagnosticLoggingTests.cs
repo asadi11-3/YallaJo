@@ -1,8 +1,8 @@
 using System.Linq.Expressions;
 using Accounts.Contracts.Abstractions;
 using Auth.Application.Commands.ExternalLogin;
-using Auth.Application.ExternalAuth;
 using Auth.Application.Interfaces;
+using Auth.Application.Interfaces.ExternalAuth;
 using Auth.Domain.Entities;
 using Auth.Domain.Repositories;
 using FluentAssertions;

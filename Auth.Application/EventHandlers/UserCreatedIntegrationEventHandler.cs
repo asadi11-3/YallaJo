@@ -15,15 +15,15 @@ public sealed class UserCreatedIntegrationEventHandler(
 {
     public async Task Handle(
         IntegrationEventNotification<UserCreatedIntegrationEvent> notification,
-        CancellationToken ct)
+        CancellationToken cancellationToken)
     {
-        if (await inboxStore.HasBeenProcessedAsync(notification.MessageId, ct))
+        if (await inboxStore.HasBeenProcessedAsync(notification.MessageId, cancellationToken))
         {
             return;
         }
 
         inboxStore.MarkAsProcessed(notification.MessageId);
-        await unitOfWork.SaveChangesAsync(ct);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         logger.LogInformation(
             "Auth: UserCreated acknowledged for user {UserId} (inbox {MessageId}). OTP/email handled inline by RegisterCommandHandler.",

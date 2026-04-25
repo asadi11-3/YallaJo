@@ -1,4 +1,4 @@
-using Auth.Application.Interfaces;
+using Auth.Application.Interfaces.SessionRevocation;
 using Auth.Domain.Repositories;
 using Microsoft.Extensions.Logging;
 using Security.Contracts.Abstractions;
@@ -44,16 +44,14 @@ public sealed class AdminArchiveUserCommandHandler(
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        // Phase 4 — append the admin audit timeline row. Reached only
-        // on the success path.
         await adminAuditWriter.RecordAsync(
             new AdminAuditEntry(
-                ActorUserId:  actorId,
+                ActorUserId: actorId,
                 TargetUserId: request.UserId,
-                Action:       AuditActions.AdminArchiveUser,
-                Reason:       null,
-                Metadata:     null,
-                IpAddress:    requestContext.IpAddress),
+                Action: AuditActions.AdminArchiveUser,
+                Reason: null,
+                Metadata: null,
+                IpAddress: requestContext.IpAddress),
             cancellationToken);
 
         logger.LogInformation(

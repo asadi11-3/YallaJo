@@ -1,5 +1,6 @@
 using Auth.Application.Commands.ActivateAccount;
 using Auth.Application.Interfaces;
+using Auth.Application.Interfaces.SessionRevocation;
 using Auth.Domain.Entities;
 using Auth.Domain.Repositories;
 using FluentAssertions;

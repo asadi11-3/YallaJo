@@ -1,17 +1,5 @@
 namespace Auth.Domain.Entities;
 
-/// <summary>
-/// Why an <see cref="ActivationToken"/> was moved to
-/// <see cref="ActivationTokenState.Revoked"/>. Enumerated so the admin UI
-/// and the audit log can distinguish operational revocations (email
-/// delivery failed) from intent-driven ones (admin manually cancelled, or
-/// a newer send superseded this one).
-/// <para>
-/// Phase 2C-1 defines only the reasons needed by the <c>SendActivationEmail</c>
-/// pipeline. Further reasons (e.g. <c>AccountArchived</c>) will be added
-/// when the admin suspend/archive flows are wired in a later phase.
-/// </para>
-/// </summary>
 public enum ActivationTokenRevokedReason
 {
     /// <summary>

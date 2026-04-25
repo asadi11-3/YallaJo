@@ -1,7 +1,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Cryptography;
 using System.Text;
-using Auth.Application.ExternalAuth;
+using Auth.Application.Interfaces.ExternalAuth;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;

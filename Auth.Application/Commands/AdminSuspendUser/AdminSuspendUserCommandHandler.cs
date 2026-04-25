@@ -1,4 +1,4 @@
-using Auth.Application.Interfaces;
+using Auth.Application.Interfaces.SessionRevocation;
 using Auth.Domain.Repositories;
 using Microsoft.Extensions.Logging;
 using Security.Contracts.Abstractions;
@@ -44,9 +44,6 @@ public sealed class AdminSuspendUserCommandHandler(
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        // Phase 4 — append the admin audit timeline row. Reached only
-        // on the success path: authn / authz / lifecycle failures
-        // returned above without writing a row.
         await adminAuditWriter.RecordAsync(
             new AdminAuditEntry(
                 ActorUserId:  actorId,

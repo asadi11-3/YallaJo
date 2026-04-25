@@ -11,10 +11,6 @@ using YallaJo.SharedKernel.Infrastructure.Outbox;
 
 namespace ContentPlaces.Infrastructure.EventHandlers;
 
-/// <summary>
-/// Triggers auto-translation for all active languages when a Place is created.
-/// Runs in the same UoW scope as the command — does NOT call SaveChangesAsync.
-/// </summary>
 public sealed class PlaceCreatedDomainEventHandler(
     IPlaceRepository placeRepository,
     IEntityTranslationOrchestrator orchestrator,

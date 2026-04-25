@@ -175,7 +175,8 @@ public sealed class ContentPlacesDbInitializer(ContentPlacesDbContext dbContext)
         return row;
     }
 
-    private static TEntity CreateEntity<TEntity>() where TEntity : class
+    private static TEntity CreateEntity<TEntity>()
+        where TEntity : class
     {
         var entity = Activator.CreateInstance(typeof(TEntity), nonPublic: true) as TEntity;
         if (entity is null)

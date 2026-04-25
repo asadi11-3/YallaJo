@@ -2,7 +2,6 @@ using FluentValidation;
 
 namespace Auth.Application.Recaptcha;
 
-
 public static class RecaptchaTokenRule
 {
     private const int MaxTokenLength = 4096;

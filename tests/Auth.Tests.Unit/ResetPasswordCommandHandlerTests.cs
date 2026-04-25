@@ -1,5 +1,6 @@
 using Auth.Application.Commands.ResetPassword;
 using Auth.Application.Interfaces;
+using Auth.Application.Interfaces.SessionRevocation;
 using Auth.Domain.Entities;
 using Auth.Domain.Repositories;
 using Auth.Tests.Unit.TestDoubles;

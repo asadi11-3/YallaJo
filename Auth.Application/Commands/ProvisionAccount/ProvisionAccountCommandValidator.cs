@@ -2,12 +2,6 @@ using FluentValidation;
 
 namespace Auth.Application.Commands.ProvisionAccount;
 
-/// <summary>
-/// Input validation for <see cref="ProvisionAccountCommand"/>. Mirrors the
-/// field rules historically enforced by <c>InviteUserCommandValidator</c>
-/// so the legacy façade path and any direct callers behave identically at
-/// the validation boundary.
-/// </summary>
 public sealed class ProvisionAccountCommandValidator : AbstractValidator<ProvisionAccountCommand>
 {
     public ProvisionAccountCommandValidator()

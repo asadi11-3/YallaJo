@@ -2,10 +2,6 @@ using FluentValidation;
 
 namespace Auth.Application.Commands.ActivateAccount;
 
-/// <summary>
-/// Input validation for <see cref="ActivateAccountCommand"/>. Mirrors the
-/// legacy <c>AcceptInviteCommandValidator</c>.
-/// </summary>
 public sealed class ActivateAccountCommandValidator : AbstractValidator<ActivateAccountCommand>
 {
     public ActivateAccountCommandValidator()

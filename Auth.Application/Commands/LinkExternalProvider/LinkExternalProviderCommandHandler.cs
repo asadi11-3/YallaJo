@@ -1,4 +1,4 @@
-using Auth.Application.ExternalAuth;
+using Auth.Application.Interfaces.ExternalAuth;
 using Auth.Domain.Entities;
 using Auth.Domain.Repositories;
 using Microsoft.Extensions.Logging;
@@ -19,7 +19,6 @@ public sealed class LinkExternalProviderCommandHandler(
 {
     public async Task<Result<Guid>> Handle(LinkExternalProviderCommand request, CancellationToken ct)
     {
-        // 1. Authenticated context required.
         if (!currentUser.IsAuthenticated || currentUser.UserId is null)
         {
             return Result<Guid>.Failure(
@@ -29,8 +28,6 @@ public sealed class LinkExternalProviderCommandHandler(
 
         var userId = currentUser.UserId.Value;
 
-        // 2. Verify the signed ticket. Rejects tampering, expiry, wrong provider,
-        //    missing claims. The ticket carries the trusted provider identity.
         var verification = ticketVerifier.Verify(request.Ticket);
         if (verification.IsFailure)
         {
@@ -46,7 +43,6 @@ public sealed class LinkExternalProviderCommandHandler(
         var ticket = verification.Value!;
         var normalizedProvider = ticket.Provider.Trim().ToLowerInvariant();
 
-        // 3. Consume the ticket nonce ONCE. Replay = reject.
         var consumed = await nonceStore.TryConsumeAsync(ticket.TicketId, ticket.ExpiresAt, ct);
         if (!consumed)
         {
@@ -59,7 +55,6 @@ public sealed class LinkExternalProviderCommandHandler(
                 Outcome.Unauthorized);
         }
 
-        // 4. Guard: this user already has an active link for this provider.
         var alreadyLinked = await externalProviderRepository.AnyAsync(
             ep => ep.UserId == userId
                && ep.Provider == normalizedProvider
@@ -74,7 +69,6 @@ public sealed class LinkExternalProviderCommandHandler(
                     $"A {ticket.Provider} account is already linked to your profile."));
         }
 
-        // 5. Guard: this provider identity is not already claimed by another user.
         var takenByOther = await externalProviderRepository.AnyAsync(
             ep => ep.ProviderUserId == ticket.ProviderUserId
                && ep.Provider == normalizedProvider

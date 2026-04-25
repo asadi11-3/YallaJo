@@ -1,6 +1,6 @@
 using System.Linq.Expressions;
 using Auth.Application.Commands.LinkExternalProvider;
-using Auth.Application.ExternalAuth;
+using Auth.Application.Interfaces.ExternalAuth;
 using Auth.Domain.Entities;
 using Auth.Domain.Repositories;
 using FluentAssertions;

@@ -1,4 +1,3 @@
-using Auth.Application.ExternalAuth;
 using Auth.Application.Interfaces;
 using Auth.Application.Recaptcha;
 using Auth.Domain.Repositories;
@@ -15,6 +14,7 @@ using Microsoft.Extensions.Options;
 using YallaJo.SharedKernel.Infrastructure.BackgroundJobs;
 using Auth.Infrastructure.BackgroundJobs;
 using YallaJo.SharedKernel.Infrastructure.Data;
+using Auth.Application.Interfaces.ExternalAuth;
 
 namespace Auth.Infrastructure;
 

@@ -33,7 +33,6 @@ public sealed class LoginCommandHandler(
     {
         var normalizedEmail = request.Email.Trim().ToLowerInvariant();
 
-        // 1. Verify credentials via Security module (password check + get roles/claims)
         var userData = await securityService.VerifyCredentialsAsync(normalizedEmail, request.Password, cancellationToken);
         if (userData is null)
             return _invalidCredentials;
@@ -46,12 +45,6 @@ public sealed class LoginCommandHandler(
                     Outcome.Unauthorized);
         }
 
-        // 3. Lifecycle gate (Phase 2A) — login is permitted ONLY when the
-        //    account is in the Active state. PendingActivation, Suspended,
-        //    PendingPasswordReset, and Archived all reject regardless of
-        //    credential validity. Email-verified-but-not-Active is treated
-        //    the same way as invalid credentials from the user's perspective
-        //    (no information leak), but logged as a distinct denial reason.
         if (userData.Lifecycle != AccountLifecycleSnapshot.Active)
         {
             return Result<LoginResult>.Failure(

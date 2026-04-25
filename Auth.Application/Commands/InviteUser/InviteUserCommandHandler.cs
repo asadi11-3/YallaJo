@@ -7,27 +7,6 @@ using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
 namespace Auth.Application.Commands.InviteUser;
 
-/// <summary>
-/// Phase 2B — legacy invite entry point. Retained as a thin façade over the
-/// two explicit use cases it originally fused together:
-/// <list type="number">
-///   <item><description><see cref="ProvisionAccountCommand"/> — creates Security identity + Accounts profile shell in <c>Provisioned</c> state.</description></item>
-///   <item><description><see cref="SendActivationEmailCommand"/> — issues an activation token, sends the activation email, and transitions the account to <c>PendingActivation</c>.</description></item>
-/// </list>
-/// <para>
-/// Failure handling (preserved from pre-2B behaviour, per enterprise model):
-/// if provisioning succeeds but activation-email delivery fails, the
-/// provisioned user + profile are NOT rolled back. The admin can retry via
-/// <c>ResendInviteCommand</c> (or directly via <see cref="SendActivationEmailCommand"/>).
-/// Provisioning-without-activation IS a valid state in the target business
-/// model — an admin may provision an account weeks before the real person
-/// is ready.
-/// </para>
-/// <para>
-/// The HTTP endpoint contract (<c>POST /invitations</c>) and response DTO
-/// (<see cref="InviteUserResult"/>) are unchanged.
-/// </para>
-/// </summary>
 public sealed class InviteUserCommandHandler(
     IMediator mediator,
     ILogger<InviteUserCommandHandler> logger)
@@ -37,7 +16,7 @@ public sealed class InviteUserCommandHandler(
         InviteUserCommand request,
         CancellationToken cancellationToken)
     {
-        // 1. Provision — admin identity + profile in Provisioned state.
+        
         var provision = await mediator.Send(
             new ProvisionAccountCommand(
                 request.Email,
@@ -59,10 +38,6 @@ public sealed class InviteUserCommandHandler(
         var userId    = provision.Value.UserId;
         var profileId = provision.Value.ProfileId;
 
-        // 2. Send activation email — transitions to PendingActivation on
-        //    success. On failure we surface the error so the admin knows
-        //    to retry, but do NOT roll back the provisioned user/profile.
-        //    See handler XML doc for rationale.
         var send = await mediator.Send(
             new SendActivationEmailCommand(request.Email),
             cancellationToken);

@@ -1,6 +1,6 @@
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
-namespace Auth.Application.ExternalAuth;
+namespace Auth.Application.Interfaces.ExternalAuth;
 
 public interface IExternalAuthTicketVerifier
 {

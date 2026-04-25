@@ -49,7 +49,6 @@ public static class DependencyInjection
         services.AddSingleton<IPermissionCatalog, SecurityPermissionCatalog>();
         services.AddSingleton<IPasswordHasher, PasswordHasher>();
 
-     
         services.AddScoped<ISecurityService, SecurityService>();
 
         // Phase 4 — admin audit timeline writer. Used by Auth admin

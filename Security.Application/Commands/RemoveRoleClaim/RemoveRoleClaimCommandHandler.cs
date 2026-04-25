@@ -16,9 +16,9 @@ public sealed class RemoveRoleClaimCommandHandler(
     HybridCache cache)
     : ICommandHandler<RemoveRoleClaimCommand>
 {
-    public async Task<Result> Handle(RemoveRoleClaimCommand request, CancellationToken ct)
+    public async Task<Result> Handle(RemoveRoleClaimCommand request, CancellationToken cancellationToken)
     {
-        var role = await roleRepository.GetByIdAsync(request.RoleId, ct);
+        var role = await roleRepository.GetByIdAsync(request.RoleId, cancellationToken);
         if (role is null)
             return Result.Failure(RoleErrors.NotFound, Outcome.NotFound);
 
@@ -28,19 +28,18 @@ public sealed class RemoveRoleClaimCommandHandler(
         if (!roleGuard.IsSuccess)
             return roleGuard;
 
-        var claim = await roleClaimRepository.GetByIdAsync(request.ClaimId, ct);
+        var claim = await roleClaimRepository.GetByIdAsync(request.ClaimId, cancellationToken);
         if (claim is null || claim.RoleId != request.RoleId)
         {
             return Result.Failure(
                new Error("NotFound.RoleClaim", "The specified claim was not found on this role."),
                Outcome.NotFound);
         }
-           
 
         roleClaimRepository.Remove(claim);
-        await unitOfWork.SaveChangesAsync(ct);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        await cache.RemoveByTagAsync(SecurityCacheKeys.RolesTag, ct);
+        await cache.RemoveByTagAsync(SecurityCacheKeys.RolesTag, cancellationToken);
 
         return Result.Success();
     }

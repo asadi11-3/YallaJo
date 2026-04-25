@@ -28,8 +28,6 @@ public sealed class RefreshTokenCommandHandler(
     {
         var hash = tokenService.HashRefreshToken(request.RefreshToken);
 
-        // Intentionally fetch WITHOUT the IsRevoked filter so we can detect reuse attacks.
-        // If the token exists but is already revoked, that is a strong signal of token theft.
         var oldRefreshToken = await refreshTokenRepository.FirstOrDefaultAsync(
             filter: rt => rt.TokenHash == hash && !rt.IsDeleted,
             asNoTracking: false,
@@ -38,9 +36,6 @@ public sealed class RefreshTokenCommandHandler(
         if (oldRefreshToken is null)
             return _invalidToken;
 
-        // ── Reuse-attack detection ──────────────────────────────────────────
-        // A previously-issued token that has already been rotated is being re-presented.
-        // Revoke the entire session + all its remaining tokens immediately.
         if (oldRefreshToken.IsRevoked)
         {
             var compromisedTokens = await refreshTokenRepository.GetAllAsync(

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -47,11 +47,6 @@ namespace Security.Contracts.Authorization
         public static bool IsValidRole(string role) =>
             AllRoles.Any(r => r.Equals(role, StringComparison.OrdinalIgnoreCase));
 
-        /// <summary>
-        /// Returns the privilege tier for a role name. Unknown or non-privileged
-        /// business roles (User / TourGuide / Guest) map to <see cref="RolePrivilegeLevel.Standard"/>.
-        /// Completely unknown roles map to <see cref="RolePrivilegeLevel.None"/>.
-        /// </summary>
         public static RolePrivilegeLevel GetPrivilegeLevel(string? roleName)
         {
             if (string.IsNullOrWhiteSpace(roleName))
@@ -80,16 +75,10 @@ namespace Security.Contracts.Authorization
             {
                 return RolePrivilegeLevel.Standard;
             }
-
-            // Unknown custom role — treat as non-privileged Standard so ad-hoc
-            // tenant roles cannot outrank administrative roles by accident.
+ 
             return RolePrivilegeLevel.Standard;
         }
 
-        /// <summary>
-        /// Returns the highest privilege tier present in a set of role names.
-        /// Empty/null collection yields <see cref="RolePrivilegeLevel.None"/>.
-        /// </summary>
         public static RolePrivilegeLevel HighestPrivilegeLevel(IEnumerable<string>? roleNames)
         {
             if (roleNames is null)

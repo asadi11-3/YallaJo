@@ -1,7 +1,7 @@
 using Accounts.Contracts.Abstractions;
 using Auth.Application.Commands.Login;
-using Auth.Application.ExternalAuth;
 using Auth.Application.Interfaces;
+using Auth.Application.Interfaces.ExternalAuth;
 using Auth.Domain.Entities;
 using Auth.Domain.Repositories;
 using Microsoft.Extensions.Logging;
@@ -13,49 +13,6 @@ using RefreshTokenEntity = Auth.Domain.Entities.RefreshToken;
 
 namespace Auth.Application.Commands.ExternalLogin;
 
-/// <summary>
-/// Signs the user in using an external provider (Google, Facebook, …).
-///
-/// <para>Three outcomes are possible, all short-circuited to a single generic
-/// failure if any safety gate trips (fail-closed; no oracle leak):</para>
-///
-/// <list type="number">
-///   <item><description><b>Existing link</b> — (provider, providerUserId) is
-///   already mapped to an active local user → just sign them in.</description></item>
-///   <item><description><b>Auto-link</b> — no link exists, but the provider-
-///   asserted email matches a local account whose primary email is verified →
-///   attach the new link to that user and sign in.</description></item>
-///   <item><description><b>Auto-create</b> — no link AND no local account with
-///   this email → provision a new local identity (Security user + Accounts
-///   profile) seeded from the provider's verified email / given / family
-///   name, attach the link, and sign in.</description></item>
-/// </list>
-///
-/// <para>Security invariants for auto-link and auto-create:</para>
-/// <list type="bullet">
-///   <item><description>Ticket is HMAC-signed and single-use (nonce consumed
-///   atomically before any state mutation).</description></item>
-///   <item><description>Ticket MUST carry an email AND
-///   <c>EmailVerifiedByProvider = true</c>. Facebook has no native flag — the
-///   Web BFF synthesizes it when Meta surfaces an email, because Meta only
-///   releases the email after user confirmation.</description></item>
-///   <item><description>Auto-link requires the local account's primary email
-///   to also be verified on THIS platform — the provider-asserted email is
-///   not a substitute for the user's own verification on our side.</description></item>
-///   <item><description>Auto-create NEVER overrides an existing local account
-///   — <c>RegisterExternalAsync</c> returns Conflict if the email is taken,
-///   which is treated as the concurrent race that another caller already
-///   auto-linked/created, and the flow retries via the existing-link path.</description></item>
-///   <item><description>The provider identity (provider + providerUserId) is
-///   re-checked against a potential conflict with another user both before
-///   the link write and enforced by the database's filtered unique index.</description></item>
-/// </list>
-///
-/// <para>All refusals log a SINGLE structured Warning line containing
-/// <c>Reason=&lt;AutoLinkRefusalReason&gt;</c> so operators can see WHY the
-/// client got the generic error without being able to leak that reason to the
-/// client response.</para>
-/// </summary>
 public sealed class ExternalLoginCommandHandler(
     IExternalProviderRepository externalProviderRepository,
     IDeviceRepository deviceRepository,
@@ -328,9 +285,7 @@ public sealed class ExternalLoginCommandHandler(
         return AutoLinkOutcome.Linked(newUserId, AutoLinkPath.AutoCreate);
     }
 
-    /// <summary>
-    /// Scenario B: local account exists — safely attach the new provider link.
-    /// </summary>
+
     private async Task<AutoLinkOutcome> TryAutoLinkAsync(
         ExternalAuthTicket ticket,
         string normalizedProvider,

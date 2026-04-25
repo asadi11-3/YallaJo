@@ -1,4 +1,3 @@
-using System.Linq.Expressions;
 using Accounts.Contracts.Abstractions;
 using Auth.Application.Commands.Register;
 using Auth.Application.Interfaces;

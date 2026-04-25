@@ -1,5 +1,6 @@
 using Accounts.Contracts.Abstractions;
 using Auth.Application.Interfaces;
+using Auth.Application.Interfaces.SessionRevocation;
 using Auth.Application.Invitations;
 using Auth.Domain.Entities;
 using Auth.Domain.Events;
@@ -12,49 +13,6 @@ using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
 namespace Auth.Application.Commands.AdminReassignAccount;
 
-/// <summary>
-/// Phase 3C — admin-initiated account reassignment. Orchestrates the
-/// Security-side mutation (email retarget + password invalidation +
-/// lifecycle transition) with the Auth-side credential invalidation
-/// (sessions, refresh tokens, activation/reset tokens, external
-/// providers) and issues a fresh activation email via the existing
-/// outbox pipeline.
-/// <para>
-/// Cross-module atomicity: both modules commit inside a single
-/// <see cref="ITransactionalExecutor"/> scope so that either everything
-/// lands (Security mutation + Auth credential teardown + new activation
-/// token + outbox row) or nothing does. Same shape as the Phase 2C
-/// <c>ResetPasswordCommandHandler</c> / <c>VerifyEmailCommandHandler</c>
-/// cross-module flows.
-/// </para>
-/// <para>
-/// Flow:
-/// </para>
-/// <list type="number">
-///   <item><description>Guard: actor must be authenticated.</description></item>
-///   <item><description>Inside the transactional executor:
-///     <list type="bullet">
-///       <item><description>Call <see cref="ISecurityService.ReassignUserByAdminAsync"/> — hierarchy/self check, lifecycle gate, email uniqueness gate, domain mutation, Security save.</description></item>
-///       <item><description>Revoke all active sessions + refresh tokens via <see cref="ISessionRevocationService"/> with <see cref="SessionRevocationReason.AccountReassigned"/>.</description></item>
-///       <item><description>Supersede every non-terminal <see cref="ActivationToken"/> for the user.</description></item>
-///       <item><description>Supersede every non-terminal <see cref="PasswordResetToken"/> for the user.</description></item>
-///       <item><description>Deactivate every active <see cref="ExternalProvider"/> link for the user — prevents the old owner from signing in via Google/Facebook.</description></item>
-///       <item><description>Issue a fresh <see cref="ActivationToken"/> for the NEW email, attach <see cref="ActivationTokenIssuedEvent"/>, persist. The outbox pipeline dispatches the activation email.</description></item>
-///       <item><description>Phase 3D — call <see cref="IProfileReassignmentService.ResetForReassignmentAsync"/> to scrub the Accounts profile (FirstName/LastName placeholders, DisplayName = new email local-part, all optional PII cleared). A failure here rolls back Security + Auth reassignment atomically.</description></item>
-///       <item><description>Single Auth <see cref="IAuthUnitOfWork.SaveChangesAsync"/> commits everything.</description></item>
-///     </list>
-///   </description></item>
-///   <item><description>Audit log — actor id, target id, old email, new email, reason. Plain token is NEVER logged.</description></item>
-/// </list>
-/// <para>
-/// Lockout proof (old owner cannot log in): password hash replaced
-/// with an unusable placeholder; lifecycle is <c>PendingActivation</c>
-/// which the login gate rejects; sessions + refresh tokens revoked;
-/// prior activation/reset tokens superseded; external provider links
-/// deactivated. Only the new owner can complete activation via the
-/// fresh activation link on the NEW email.
-/// </para>
-/// </summary>
 public sealed class AdminReassignAccountCommandHandler(
     ISecurityService securityService,
     IActivationTokenRepository activationTokenRepository,
@@ -78,9 +36,6 @@ public sealed class AdminReassignAccountCommandHandler(
         AdminReassignAccountCommand request,
         CancellationToken cancellationToken)
     {
-        // 1. Actor must be authenticated. Endpoint authorization should
-        //    already enforce this; the defensive check surfaces a clean
-        //    Unauthorized for non-endpoint call sites.
         if (!currentUser.IsAuthenticated || currentUser.UserId is null)
         {
             return Result<AdminReassignAccountResult>.Failure(
@@ -91,21 +46,9 @@ public sealed class AdminReassignAccountCommandHandler(
         var actorId = currentUser.UserId.Value;
         var normalizedNewEmail = request.NewEmail.Trim().ToLowerInvariant();
 
-        // 2. Cross-module atomic unit. On any exception the ambient
-        //    TransactionScope is disposed without completion and both
-        //    Security + Auth writes roll back. Transient SQL failures
-        //    are retried by the execution strategy; the delegate is
-        //    idempotent because each retry starts from the
-        //    pre-reassignment Security state.
         var outcome = await txExecutor.ExecuteAsync<ReassignOutcome>(
             async innerCt =>
             {
-                // 2a. Security-side mutation. Performs hierarchy/self
-                //     check, lifecycle gate, email uniqueness gate,
-                //     and the domain reassignment via
-                //     User.ReassignToPendingActivation. Security's UoW
-                //     commits inside this call (enlisted in the
-                //     ambient scope).
                 var securityResult = await securityService.ReassignUserByAdminAsync(
                     request.TargetUserId,
                     actorId,
@@ -121,42 +64,23 @@ public sealed class AdminReassignAccountCommandHandler(
                 }
 
                 var completed = securityResult.Value!;
-
-                // 2b. Revoke all active sessions + refresh tokens. The
-                //     service stages the tracked mutations; the single
-                //     Auth SaveChangesAsync at the end of the delegate
-                //     flushes them.
                 await sessionRevocation.RevokeAllForUserAsync(
                     request.TargetUserId,
                     SessionRevocationReason.AccountReassigned,
                     innerCt);
 
-                // 2c. Supersede every non-terminal ActivationToken for
-                //     the user. This is the per-user "at most one
-                //     active" invariant — a fresh token is issued
-                //     below; prior ones must die.
                 var activeActivationTokens = await activationTokenRepository.GetActiveForUserAsync(
                     request.TargetUserId, innerCt);
 
                 foreach (var prior in activeActivationTokens)
                     prior.Supersede();
 
-                // 2d. Supersede every non-terminal PasswordResetToken
-                //     for the user. Any outstanding reset code issued
-                //     to the OLD email must not be redeemable after
-                //     reassignment.
                 var activeResetTokens = await passwordResetTokenRepository.GetActiveForUserAsync(
                     request.TargetUserId, innerCt);
 
                 foreach (var prior in activeResetTokens)
                     prior.Supersede();
 
-                // 2e. Deactivate every active ExternalProvider link.
-                //     Without this, the old owner could sign in via
-                //     Google/Facebook despite the password + session
-                //     revocation. IsActive=false also releases the
-                //     filtered unique index so the link can be re-used
-                //     later if needed.
                 var activeProviderLinks = await externalProviderRepository.GetAllAsync(
                     filter: ep => ep.UserId == request.TargetUserId && ep.IsActive,
                     asNoTracking: false,
@@ -165,17 +89,6 @@ public sealed class AdminReassignAccountCommandHandler(
                 foreach (var providerLink in activeProviderLinks)
                     providerLink.Deactivate();
 
-                // 2f. Issue a fresh ActivationToken for the NEW email.
-                //     Same shape as SendActivationEmailCommandHandler:
-                //     generate plain token + hash + activation link,
-                //     create the aggregate in Issued/Pending, attach
-                //     ActivationTokenIssuedEvent carrying the plain
-                //     token + link. The
-                //     ActivationTokenIssuedDomainEventHandler
-                //     translates the event into an OutboxMessage in
-                //     the same AuthDbContext, so token + supersede
-                //     sweep + outbox row commit atomically on the
-                //     single SaveChanges below.
                 var plainToken = inviteTokenService.Generate();
                 var tokenHash  = inviteTokenService.Hash(plainToken);
                 var link       = inviteLinkBuilder.Build(completed.NewEmail, plainToken);
@@ -196,15 +109,6 @@ public sealed class AdminReassignAccountCommandHandler(
 
                 await activationTokenRepository.AddAsync(activationToken, innerCt);
 
-                // 2g. Phase 3D — scrub the Accounts profile. Runs
-                //     inside the same ambient TransactionScope: a
-                //     failure returned here (or an exception thrown
-                //     by the service) rolls back Security + Auth
-                //     reassignment atomically. Missing profile is a
-                //     logged no-op (idempotent) per Phase 3D
-                //     contract; Phase 4 carries that fact back via
-                //     ProfileReassignmentOutcome.Scrubbed for the
-                //     audit metadata.
                 var profileReset = await profileReassignmentService.ResetForReassignmentAsync(
                     new ProfileReassignmentRequest(
                         UserId:   request.TargetUserId,
@@ -221,12 +125,6 @@ public sealed class AdminReassignAccountCommandHandler(
 
                 var profileScrubbed = profileReset.Value!.Scrubbed;
 
-                // 2h. Phase 4 — append the admin audit timeline row
-                //     INSIDE the ambient TransactionScope so it rolls
-                //     back together with the rest of the reassignment
-                //     if anything below fails. Single row per
-                //     reassignment (Option C); profileScrubbed lives
-                //     in the metadata JSON, not as a second row.
                 var metadata = BuildReassignMetadata(
                     oldEmail:              completed.OldEmail,
                     newEmail:              completed.NewEmail,
@@ -247,14 +145,6 @@ public sealed class AdminReassignAccountCommandHandler(
                         IpAddress:    requestContext.IpAddress),
                     innerCt);
 
-                // 2i. Single Auth SaveChanges commits: session/refresh
-                //     revocations, activation token supersede sweep,
-                //     password-reset token supersede sweep, external
-                //     provider deactivations, new activation token,
-                //     and the outbox row emitted by the domain-event
-                //     dispatcher. The Accounts UoW + Security audit
-                //     UoW SaveChanges above already flushed inside
-                //     the same ambient scope.
                 await unitOfWork.SaveChangesAsync(innerCt);
 
                 return ReassignOutcome.Ok(
@@ -276,12 +166,6 @@ public sealed class AdminReassignAccountCommandHandler(
                 outcome.FailureErrors);
         }
 
-        // 3. Structured log. NEVER logs the plain activation token —
-        //    the event payload already carries it to the outbox
-        //    dispatcher; the audit trail only records what happened
-        //    and to whom. Phase 4 — the durable audit row was already
-        //    appended inside the transactional delegate via
-        //    IAdminAuditWriter.
         logger.LogInformation(
             "Auth: Admin {AdminActorId} reassigned user {TargetUserId} from {OldEmail} to {NewEmail}. " +
             "Activation token {TokenId} issued; {ActivationsSuperseded} activation token(s), " +
@@ -302,13 +186,6 @@ public sealed class AdminReassignAccountCommandHandler(
             new AdminReassignAccountResult(SuccessMessage));
     }
 
-    /// <summary>
-    /// Phase 4 — builds the compact metadata JSON embedded in the
-    /// single <c>ADMIN_REASSIGN_ACCOUNT</c> audit row. Per the Option C
-    /// decision, profile-scrub is recorded as a metadata field rather
-    /// than a separate audit event. No secrets (plain activation
-    /// token, password placeholder) are included.
-    /// </summary>
     private static string BuildReassignMetadata(
         string oldEmail,
         string newEmail,
@@ -332,13 +209,6 @@ public sealed class AdminReassignAccountCommandHandler(
         });
     }
 
-    /// <summary>
-    /// Local outcome record so the transactional delegate can carry
-    /// either success metadata (for audit) or a typed failure payload
-    /// out of the executor without throwing for expected business
-    /// refusals (which would otherwise roll back the scope and obscure
-    /// the original Outcome).
-    /// </summary>
     private readonly record struct ReassignOutcome(
         bool Success,
         Outcome FailureOutcome,

@@ -1,4 +1,4 @@
-namespace Auth.Application.ExternalAuth;
+namespace Auth.Application.Interfaces.ExternalAuth;
 
 public sealed record ExternalAuthTicket(
     Guid TicketId,

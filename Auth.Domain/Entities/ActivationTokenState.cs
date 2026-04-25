@@ -1,24 +1,5 @@
 namespace Auth.Domain.Entities;
 
-/// <summary>
-/// Explicit lifecycle of an <see cref="ActivationToken"/>. Phase 2C-1
-/// replaces the overloaded <c>Otp(Purpose="UserInvite")</c> row with a
-/// dedicated aggregate, so activation tokens get a state machine that
-/// distinguishes "sent", "consumed", and "revoked" cleanly instead of
-/// smearing them across a single <c>IsUsed</c> boolean.
-/// <para>
-/// Allowed transitions (enforced by <c>ActivationToken</c> verbs):
-/// <code>
-///   Issued     → Delivered | Revoked
-///   Delivered  → Consumed  | Revoked
-///   Consumed   → ∅ (terminal)
-///   Revoked    → ∅ (terminal)
-///   Expired    → ∅ (virtual — inferred from ExpiresAt at validation time;
-///                    no explicit transition exists in 2C-1 to avoid
-///                    requiring a background sweeper)
-/// </code>
-/// </para>
-/// </summary>
 public enum ActivationTokenState
 {
     /// <summary>

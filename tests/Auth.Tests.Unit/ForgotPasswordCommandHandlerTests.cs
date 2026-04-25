@@ -7,7 +7,7 @@ using FluentAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 using Security.Contracts.Abstractions;
-using YallaJo.SharedKernel.Domain.Abstractions.Results;
+
 
 namespace Auth.Tests.Unit;
 

@@ -2,9 +2,6 @@ using FluentValidation;
 
 namespace Auth.Application.Commands.AdminResetPassword;
 
-/// <summary>
-/// Input validation for <see cref="AdminResetPasswordCommand"/>.
-/// </summary>
 public sealed class AdminResetPasswordCommandValidator : AbstractValidator<AdminResetPasswordCommand>
 {
     public AdminResetPasswordCommandValidator()

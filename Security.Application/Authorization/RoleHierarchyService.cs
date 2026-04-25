@@ -6,7 +6,7 @@ using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
 namespace Security.Application.Authorization;
 
-/// <inheritdoc />
+
 public sealed class RoleHierarchyService(
     ICurrentUser currentUser,
     IUserRepository userRepository)

@@ -2,10 +2,10 @@ using Microsoft.Extensions.Caching.Hybrid;
 using Security.Application.Caching;
 using Security.Application.Authorization;
 using Security.Application.Interfaces;
-using Security.Contracts.Abstractions;
 using Security.Domain.Entities;
 using Security.Domain.Repositories;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
+using Security.Contracts.Abstractions;
 
 namespace Security.Infrastructure.Services;
 
@@ -177,11 +177,7 @@ internal sealed class SecurityService(
             Lifecycle:       ToContractSnapshot(user.LifecycleState));
     }
 
-    /// <summary>
-    /// Maps the domain enum to its contract counterpart. Both enums are
-    /// guaranteed ordinal-aligned (Phase 2A discipline), so the cast is safe;
-    /// kept as a method so any future divergence has one place to break.
-    /// </summary>
+    
     private static AccountLifecycleSnapshot ToContractSnapshot(AccountLifecycleState state)
         => (AccountLifecycleSnapshot)(int)state;
 
@@ -190,15 +186,6 @@ internal sealed class SecurityService(
         string newPassword,
         CancellationToken ct = default)
     {
-        // Phase 1: same domain transition as the legacy ResetPasswordAsync —
-        // this contract verb exists so audit / telemetry downstream can
-        // distinguish self-service from (future) admin-initiated resets
-        // without digging through event metadata.
-        //
-        // Phase 3A: if the user is in PendingPasswordReset (admin forced
-        // the reset), clear it back to Active once the new password is
-        // committed. Single atomic commit — the password change and the
-        // lifecycle transition land together.
         var user = await userRepository.GetByIdAsync(userId, ct, asNoTracking: false);
         if (user is null)
             return false;
@@ -207,11 +194,6 @@ internal sealed class SecurityService(
 
         if (user.LifecycleState == AccountLifecycleState.PendingPasswordReset)
         {
-            // Legal transition: PendingPasswordReset -> Active. Idempotent
-            // self-transition is already a no-op inside User.TransitionTo,
-            // so the guard above is a documentation hint rather than a
-            // required branch — but keeping it explicit makes the intent
-            // obvious to future readers.
             user.Activate();
         }
 
@@ -224,13 +206,6 @@ internal sealed class SecurityService(
         Guid actorUserId,
         CancellationToken ct = default)
     {
-        // Hierarchy check first. The service reads the CURRENT actor from
-        // ICurrentUser internally, so actorUserId is not strictly required
-        // for the check; it's captured in the signature so future audit
-        // telemetry can log both sides without another DI dance. The
-        // service's deny rules also cover self-management for privileged
-        // accounts (verified in RoleHierarchyServiceTests), so an admin
-        // invoking this against their own id is refused here.
         _ = actorUserId;
 
         var hierarchy = await roleHierarchy.EnsureCanManageUserAsync(targetUserId, ct);

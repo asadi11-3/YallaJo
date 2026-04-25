@@ -1,15 +1,9 @@
-using Auth.Application.Interfaces;
+using Auth.Application.Interfaces.SessionRevocation;
 using Auth.Domain.Repositories;
 using Microsoft.Extensions.Logging;
 
 namespace Auth.Application.Services;
 
-/// <summary>
-/// Default implementation — stages tracked mutations on the Session and
-/// RefreshToken aggregates. The caller's <c>IAuthUnitOfWork.SaveChangesAsync</c>
-/// is responsible for flushing (and for raising <c>SessionRevokedEvent</c> via
-/// domain-event dispatch on save).
-/// </summary>
 internal sealed class SessionRevocationService(
     ISessionRepository sessionRepository,
     IRefreshTokenRepository refreshTokenRepository,

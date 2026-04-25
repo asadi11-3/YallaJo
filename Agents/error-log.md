@@ -194,3 +194,12 @@
 - **Root Cause**: Overlapping project dependency graph (`Security.*` references SharedKernel) caused concurrent compilers to contend for shared `obj/bin` artifacts.
 - **Fix Applied**: Re-ran builds sequentially; `Security.Domain` and `Security.Infrastructure --no-dependencies` then built successfully.
 - **Prevention Rule**: Never run parallel `dotnet build/test` commands for projects that share dependencies or output paths; validate those projects sequentially to avoid file-lock contention.
+
+### ERR-020: Contract namespace refactor broke consumers importing old sub-namespaces
+- **Date**: 2026-04-25
+- **Module**: Security.Contracts / Auth.Application / Security.Application
+- **What Happened**: Split `Security.Contracts/Abstractions` types into one-file-per-public-type and standardized moved types under `Security.Contracts.Abstractions`, then solution build failed with missing namespace/type errors.
+- **Error Message**: `CS0234: The type or namespace name 'SecurityService'/'UserRegistrationService'/'AdminAuditWriter' does not exist in the namespace 'Security.Contracts.Abstractions'` and cascading `CS0246` for interface types.
+- **Root Cause**: Many consumers import folder-style sub-namespaces (`Security.Contracts.Abstractions.SecurityService`, etc.). Flattening all moved types to only the root namespace removed those namespace symbols.
+- **Fix Applied**: Kept Security.Contracts split refactor in place and captured the compatibility break for follow-up alignment (consumer import updates or namespace-compat shim layer).
+- **Prevention Rule**: Before namespace refactors in shared contract assemblies, run a repo-wide usage scan for `using` directives and keep compatibility aliases/shims when downstream modules depend on old namespace paths.

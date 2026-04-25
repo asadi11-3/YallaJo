@@ -1,7 +1,7 @@
 using Auth.Application.Commands.AdminArchiveUser;
 using Auth.Application.Commands.AdminReactivateUser;
 using Auth.Application.Commands.AdminSuspendUser;
-using Auth.Application.Interfaces;
+using Auth.Application.Interfaces.SessionRevocation;
 using Auth.Domain.Repositories;
 using FluentAssertions;
 using Microsoft.Extensions.Logging.Abstractions;

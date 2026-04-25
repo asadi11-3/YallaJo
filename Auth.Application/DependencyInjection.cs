@@ -1,4 +1,4 @@
-using Auth.Application.Interfaces;
+using Auth.Application.Interfaces.SessionRevocation;
 using Auth.Application.Recaptcha;
 using Auth.Application.Services;
 using FluentValidation;
@@ -21,9 +21,6 @@ public static class DependencyInjection
 
         services.AddValidatorsFromAssembly(assembly, includeInternalTypes: true);
 
-        // Bulk session/refresh-token revocation used by credential and admin
-        // lifecycle flows (self-service reset, activation, admin reset,
-        // suspend, archive).
         services.AddScoped<ISessionRevocationService, SessionRevocationService>();
 
         return services;

@@ -11,10 +11,6 @@ using YallaJo.SharedKernel.Infrastructure.Outbox;
 
 namespace ContentPlaces.Infrastructure.EventHandlers;
 
-/// <summary>
-/// Re-triggers translation when a Place's Name, Description, or Address changes.
-/// Runs in the same UoW scope as the command — does NOT call SaveChangesAsync.
-/// </summary>
 public sealed class PlaceUpdatedDomainEventHandler(
     IPlaceRepository placeRepository,
     IEntityTranslationOrchestrator orchestrator,

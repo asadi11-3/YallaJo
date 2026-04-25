@@ -8,19 +8,6 @@ using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
 namespace Auth.Application.Commands.ResendOtp;
 
-/// <summary>
-/// Resends a short-lived <see cref="Otp"/>-backed verification code.
-/// <para>
-/// Phase 2C-5 scope lock: this command is reserved for OTP purposes
-/// that do NOT have their own dedicated aggregate. The password-reset
-/// lifecycle is owned end-to-end by <c>ForgotPasswordCommand</c> +
-/// <see cref="PasswordResetToken"/>; the activation lifecycle is owned
-/// by <c>SendActivationEmailCommand</c> +
-/// <see cref="ActivationToken"/>. Both purposes are rejected at the
-/// validator. The only currently-legal purpose is
-/// <c>EmailVerification</c>.
-/// </para>
-/// </summary>
 public sealed class ResendOtpCommandHandler(
     ISecurityService securityService,
     IOtpRepository otpRepository,
@@ -84,9 +71,6 @@ public sealed class ResendOtpCommandHandler(
         await otpRepository.AddAsync(otp, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        // Phase 2C-5: the subject is now a single constant —
-        // ResendOtpCommandValidator rejects every purpose other than
-        // EmailVerification before this handler runs.
         const string subject = "YallaJo — Verify Your Email";
 
         try

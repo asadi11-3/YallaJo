@@ -6,13 +6,6 @@ using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
 namespace Auth.Application.Commands.AcceptInvite;
 
-/// <summary>
-/// Phase 2B — legacy accept-invite entry point. Retained as a thin façade
-/// over <see cref="ActivateAccountCommand"/>. The HTTP endpoint contract
-/// (<c>POST /invitations/accept</c>) and response DTO
-/// (<see cref="AcceptInviteResult"/>) are unchanged — only the underlying
-/// command and the lifecycle-transition discipline were split out.
-/// </summary>
 public sealed class AcceptInviteCommandHandler(IMediator mediator)
     : ICommandHandler<AcceptInviteCommand, AcceptInviteResult>
 {

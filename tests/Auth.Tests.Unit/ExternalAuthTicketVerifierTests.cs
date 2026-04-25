@@ -2,7 +2,6 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
-using Auth.Application.ExternalAuth;
 using Auth.Infrastructure.ExternalAuth;
 using FluentAssertions;
 using Microsoft.Extensions.Options;

@@ -1,15 +1,5 @@
 namespace Auth.Domain.Entities;
 
-/// <summary>
-/// Tracks the email-delivery side of an <see cref="ActivationToken"/>,
-/// orthogonal to the token's own lifecycle <see cref="ActivationTokenState"/>.
-/// <para>
-/// Recorded on the aggregate so the admin UI (and future telemetry) can
-/// answer "was the activation email actually sent?" without digging through
-/// logs. Phase 2C-3 will promote this further when email moves to an
-/// event-driven dispatcher with its own delivery record per attempt.
-/// </para>
-/// </summary>
 public enum ActivationTokenDeliveryStatus
 {
     /// <summary>

@@ -80,17 +80,6 @@ public sealed class VerifyEmailCommandHandler(
 
         otp.MarkUsed();
 
-        // Cross-module consistency: Auth session/device/refresh-token writes
-        // and Security's email-verified flag must commit as ONE retriable
-        // transactional unit. The executor drives the delegate via
-        // AuthDbContext's retrying execution strategy — required because
-        // EnableRetryOnFailure forbids user-initiated transactions unless
-        // wrapped in CreateExecutionStrategy().
-        //
-        // Note: the delegate creates fresh Device/Session/RefreshToken on
-        // each strategy attempt; on a transient-failure retry the rolled-back
-        // previous attempt's rows are gone, and only the committed attempt's
-        // identifiers flow out of the delegate to the caller below.
         var outcome = await txExecutor.ExecuteAsync<VerificationOutcome>(
             async innerCt =>
             {

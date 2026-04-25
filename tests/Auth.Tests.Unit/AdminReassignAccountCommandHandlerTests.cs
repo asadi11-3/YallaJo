@@ -1,6 +1,7 @@
 using Accounts.Contracts.Abstractions;
 using Auth.Application.Commands.AdminReassignAccount;
 using Auth.Application.Interfaces;
+using Auth.Application.Interfaces.SessionRevocation;
 using Auth.Domain.Entities;
 using Auth.Domain.Events;
 using Auth.Domain.Repositories;

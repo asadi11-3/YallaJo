@@ -9,21 +9,6 @@ using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
 namespace Auth.Application.Commands.Register;
 
-/// <summary>
-/// Auth-side orchestration for new-account registration.
-/// <para>
-/// This handler does NOT write to any Security aggregate directly — it only
-/// delegates to <see cref="IUserRegistrationService"/> and
-/// <see cref="IProfileCreationService"/>.
-/// </para>
-/// <para>
-/// The EmailVerification OTP + email send is performed INLINE (synchronous) so
-/// that a successful HTTP 201 response truly means "a code has been delivered".
-/// Outbox-based email would let the handler return 201 before the user can
-/// actually verify, and would race with a subsequent ResendOtp call — both
-/// problems are eliminated here.
-/// </para>
-/// </summary>
 public sealed class RegisterCommandHandler(
     IUserRegistrationService userRegistrationService,
     IProfileCreationService  profileCreationService,
@@ -74,8 +59,6 @@ public sealed class RegisterCommandHandler(
                 profileResult.Errors.ToArray());
         }
 
-        // Inline OTP + email — returning success is the honest signal that
-        // the verification email has been handed to the SMTP server.
         var normalizedEmail = request.Email.Trim().ToLowerInvariant();
         var plainOtp        = otpService.Generate();
         var otpHash         = otpService.Hash(plainOtp);
@@ -109,7 +92,8 @@ public sealed class RegisterCommandHandler(
                 normalizedEmail);
 
             return Result<RegisterResult>.Failure(
-                Error.Failure("Registration.EmailDeliveryFailed",
+                Error.Failure(
+                    "Registration.EmailDeliveryFailed",
                     "Account created but we couldn't send the verification email. Please use Resend Code."),
                 Outcome.ServerError);
         }

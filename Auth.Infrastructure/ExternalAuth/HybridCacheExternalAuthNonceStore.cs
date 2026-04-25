@@ -1,4 +1,4 @@
-using Auth.Application.ExternalAuth;
+using Auth.Application.Interfaces.ExternalAuth;
 using Microsoft.Extensions.Caching.Hybrid;
 
 namespace Auth.Infrastructure.ExternalAuth;
