@@ -47,87 +47,66 @@
     </permission>
 
     @*
-        Phase 5B — admin lifecycle actions. Inline confirm() dialogs;
-        modals arrive in Phase 5C. Every action posts to LifecycleController
-        and redirects back to this Details page. Buttons render for any
-        admin with User.UpdateAny; the backend enforces hierarchy/
-        self-management/lifecycle eligibility and surfaces 403/409 messages
-        in TempData.
+        Phase 5C — admin lifecycle actions, now driven by Bootstrap 5 modals.
+        Every trigger button uses `data-bs-toggle="modal"` and the matching
+        modal posts to LifecycleController on submit. Backend, API endpoints,
+        and controller routes are unchanged from Phase 5B; only the UX
+        layer was upgraded from confirm() prompts.
+
+        Buttons render for any admin with User.UpdateAny; the backend
+        enforces hierarchy / self-management / lifecycle eligibility and
+        surfaces 403/409 messages in TempData on redirect.
     *@
     <permission require="@WebPermission.User.UpdateAny">
+        @{
+            var modalViewData = new ViewDataDictionary(ViewData) { ["TargetEmail"] = Model.Email };
+        }
         <div class="card mb-4">
             <div class="card-header bg-light">
                 <strong>Admin actions</strong>
                 <span class="text-muted small">— governed by lifecycle rules on the server</span>
             </div>
             <div class="card-body">
-                <div class="d-flex flex-wrap gap-2 mb-3">
-                    <form asp-area="Admin" asp-controller="Lifecycle"
-                          asp-action="Suspend" asp-route-userId="@Model.UserId" method="post" class="d-inline">
-                        @Html.AntiForgeryToken()
-                        <button type="submit" class="btn btn-warning btn-sm"
-                                onclick="return confirm('Suspend this user? They will be signed out of all sessions and cannot log in until reactivated.')">
-                            Suspend
-                        </button>
-                    </form>
+                <div class="d-flex flex-wrap gap-2">
+                    <button type="button" class="btn btn-warning btn-sm"
+                            data-bs-toggle="modal"
+                            data-bs-target="#mdl-suspend-@Model.UserId">
+                        Suspend
+                    </button>
 
-                    <form asp-area="Admin" asp-controller="Lifecycle"
-                          asp-action="Reactivate" asp-route-userId="@Model.UserId" method="post" class="d-inline">
-                        @Html.AntiForgeryToken()
-                        <button type="submit" class="btn btn-success btn-sm"
-                                onclick="return confirm('Reactivate this user? They will be able to log in again with their existing credentials.')">
-                            Reactivate
-                        </button>
-                    </form>
+                    <button type="button" class="btn btn-success btn-sm"
+                            data-bs-toggle="modal"
+                            data-bs-target="#mdl-reactivate-@Model.UserId">
+                        Reactivate
+                    </button>
 
-                    <form asp-area="Admin" asp-controller="Lifecycle"
-                          asp-action="Archive" asp-route-userId="@Model.UserId" method="post" class="d-inline">
-                        @Html.AntiForgeryToken()
-                        <button type="submit" class="btn btn-dark btn-sm"
-                                onclick="return confirm('Archive this user? This is irreversible. They will be signed out and cannot log in.')">
-                            Archive
-                        </button>
-                    </form>
+                    <button type="button" class="btn btn-dark btn-sm"
+                            data-bs-toggle="modal"
+                            data-bs-target="#mdl-archive-@Model.UserId">
+                        Archive
+                    </button>
+
+                    <button type="button" class="btn btn-outline-warning btn-sm"
+                            data-bs-toggle="modal"
+                            data-bs-target="#mdl-reset-pwd-@Model.UserId">
+                        Reset password
+                    </button>
+
+                    <button type="button" class="btn btn-outline-danger btn-sm"
+                            data-bs-toggle="modal"
+                            data-bs-target="#mdl-reassign-@Model.UserId">
+                        Reassign
+                    </button>
                 </div>
-
-                @* Reset password (with optional reason) *@
-                <form asp-area="Admin" asp-controller="Lifecycle"
-                      asp-action="ResetPassword" asp-route-userId="@Model.UserId" method="post"
-                      class="row g-2 align-items-end mb-3"
-                      onsubmit="return confirm('Force a password reset for this user? This will sign them out of all sessions and email a reset code.');">
-                    @Html.AntiForgeryToken()
-                    <div class="col-md-6">
-                        <label class="form-label small text-muted mb-0" for="ResetPasswordReason">Reason (optional)</label>
-                        <input id="ResetPasswordReason" name="Reason" maxlength="500"
-                               class="form-control form-control-sm" placeholder="e.g. suspected compromise" />
-                    </div>
-                    <div class="col-auto">
-                        <button type="submit" class="btn btn-outline-warning btn-sm">Reset password</button>
-                    </div>
-                </form>
-
-                @* Reassign account (new email + optional reason) *@
-                <form asp-area="Admin" asp-controller="Lifecycle"
-                      asp-action="Reassign" asp-route-userId="@Model.UserId" method="post"
-                      class="row g-2 align-items-end"
-                      onsubmit="return confirm('Reassign this account to a new owner? This will invalidate the password, revoke all sessions, deactivate external sign-in links, scrub the profile, and email an activation link to the new email. The old owner loses access immediately.');">
-                    @Html.AntiForgeryToken()
-                    <div class="col-md-4">
-                        <label class="form-label small text-muted mb-0" for="ReassignNewEmail">New email</label>
-                        <input id="ReassignNewEmail" name="NewEmail" type="email" required maxlength="320"
-                               class="form-control form-control-sm" placeholder="newowner@example.com" />
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label small text-muted mb-0" for="ReassignReason">Reason (optional)</label>
-                        <input id="ReassignReason" name="Reason" maxlength="500"
-                               class="form-control form-control-sm" placeholder="e.g. ownership transfer" />
-                    </div>
-                    <div class="col-auto">
-                        <button type="submit" class="btn btn-outline-danger btn-sm">Reassign</button>
-                    </div>
-                </form>
             </div>
         </div>
+
+        @* Modals (rendered once per page; opened via the buttons above). *@
+        <partial name="Partials/_SuspendModal"            model="Model.UserId" view-data="modalViewData" />
+        <partial name="Partials/_ReactivateModal"         model="Model.UserId" view-data="modalViewData" />
+        <partial name="Partials/_ArchiveModal"            model="Model.UserId" view-data="modalViewData" />
+        <partial name="Partials/_AdminResetPasswordModal" model="Model.UserId" view-data="modalViewData" />
+        <partial name="Partials/_ReassignModal"           model="Model.UserId" view-data="modalViewData" />
     </permission>
 
     <hr />
@@ -242,4 +221,49 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+
+    @*
+        Phase 5C — minimal modal helpers (no third-party deps; Bootstrap is
+        already loaded by the layout). All three handlers degrade safely:
+        the server-side validators on AdminArchiveVm.ConfirmText and
+        AdminReassignAccountVm.IUnderstand reject submissions that bypass
+        the JS gates.
+    *@
+    <script>
+        (function () {
+            // 1) Archive: enable Submit only when "ARCHIVE" is typed exactly.
+            const archiveForm = document.getElementById('archive-form');
+            if (archiveForm) {
+                const input  = archiveForm.querySelector('input[name="ConfirmText"]');
+                const submit = archiveForm.querySelector('[data-archive-submit]');
+                const sync   = function () { submit.disabled = (input.value !== 'ARCHIVE'); };
+                input.addEventListener('input', sync);
+                sync();
+            }
+
+            // 2) Reassign: enable Submit only when "I understand" is ticked
+            //    AND the new email field has a non-empty value.
+            const reassignForm = document.getElementById('reassign-form');
+            if (reassignForm) {
+                const cb     = reassignForm.querySelector('input[name="IUnderstand"]');
+                const email  = reassignForm.querySelector('input[name="NewEmail"]');
+                const submit = reassignForm.querySelector('[data-reassign-submit]');
+                const sync   = function () {
+                    submit.disabled = !(cb.checked && email.value.trim().length > 0);
+                };
+                cb.addEventListener('change', sync);
+                email.addEventListener('input', sync);
+                sync();
+            }
+
+            // 3) Disable submit-on-click on every admin-action modal form to
+            //    block double-fire while the redirect runs.
+            document.querySelectorAll('.admin-action-modal form').forEach(function (form) {
+                form.addEventListener('submit', function () {
+                    const btn = form.querySelector('button[type="submit"]');
+                    if (btn) { btn.disabled = true; }
+                });
+            });
+        })();
+    </script>
 }

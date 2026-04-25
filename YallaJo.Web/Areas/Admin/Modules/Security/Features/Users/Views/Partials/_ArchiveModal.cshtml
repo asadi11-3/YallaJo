@@ -1,0 +1,71 @@
+@*
+    Phase 5C — Archive admin lifecycle modal (DESTRUCTIVE, terminal).
+    Triggered by `data-bs-toggle="modal" data-bs-target="#mdl-archive-{userId}"`.
+    Posts to LifecycleController.Archive with AdminArchiveVm.ConfirmText.
+    Requires the operator to type ARCHIVE (capitals) before Submit
+    enables; the same regex is enforced server-side as defense-in-depth.
+*@
+@model Guid
+@{
+    var userId = Model;
+    var email = (ViewData["TargetEmail"] as string) ?? string.Empty;
+    var modalId = $"mdl-archive-{userId}";
+    var titleId = $"{modalId}-title";
+    var bannerId = $"{modalId}-banner";
+    var inputId = $"{modalId}-confirm";
+}
+
+<div class="modal fade admin-action-modal" id="@modalId" tabindex="-1"
+     aria-labelledby="@titleId" aria-describedby="@bannerId" aria-hidden="true"
+     data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form asp-area="Admin" asp-controller="Lifecycle"
+                  asp-action="Archive" asp-route-userId="@userId"
+                  method="post" id="archive-form">
+                @Html.AntiForgeryToken()
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="@titleId">
+                        <i class="bi bi-archive-fill me-1"></i>
+                        Archive account — irreversible
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white"
+                            data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-danger small mb-3" id="@bannerId">
+                        Archiving is <strong>permanent</strong>. The user will be
+                        signed out, locked out of every reset / reassign /
+                        reactivate path, and cannot recover the account. Roles
+                        and historical data remain in the database (audit only).
+                    </div>
+                    <p class="mb-2">
+                        About to archive
+                        @if (!string.IsNullOrWhiteSpace(email))
+                        {
+                            <strong>@email</strong>
+                        }
+                        else
+                        {
+                            <span>this user</span>
+                        }.
+                    </p>
+                    <label class="form-label small text-muted mb-1" for="@inputId">
+                        Type <code>ARCHIVE</code> in capitals to confirm:
+                    </label>
+                    <input id="@inputId" name="ConfirmText" type="text"
+                           autocomplete="off" required
+                           class="form-control" placeholder="ARCHIVE" />
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary"
+                            data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger" disabled
+                            data-archive-submit>
+                        Archive permanently
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

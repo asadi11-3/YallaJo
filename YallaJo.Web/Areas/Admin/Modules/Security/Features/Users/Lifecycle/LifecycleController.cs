@@ -45,8 +45,23 @@ public sealed class LifecycleController : Controller
 
     [HttpPost("admin/users/{userId:guid}/archive")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Archive(Guid userId, CancellationToken ct)
+    public async Task<IActionResult> Archive(
+        Guid userId, AdminArchiveVm vm, CancellationToken ct)
     {
+        // Phase 5C — server-side guard for the typed-ARCHIVE
+        // confirmation. The Archive modal's JS-disabled-button gate is
+        // cosmetic; this validation is authoritative.
+        if (!ModelState.IsValid)
+        {
+            var firstError = ModelState.Values
+                .SelectMany(v => v.Errors)
+                .Select(e => e.ErrorMessage)
+                .FirstOrDefault(m => !string.IsNullOrWhiteSpace(m))
+                ?? "Type ARCHIVE in capitals to confirm.";
+            TempData["Error"] = firstError;
+            return RedirectToDetails(userId);
+        }
+
         var result = await _facade.ArchiveAsync(userId, ct);
         return RedirectAfter(userId, result, "User archived.");
     }
