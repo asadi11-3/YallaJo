@@ -15,9 +15,9 @@ public sealed class UpdateRoleCommandHandler(
     HybridCache cache)
     : ICommandHandler<UpdateRoleCommand>
 {
-    public async Task<Result> Handle(UpdateRoleCommand request, CancellationToken ct)
+    public async Task<Result> Handle(UpdateRoleCommand request, CancellationToken cancellationToken)
     {
-        var role = await roleRepository.GetByIdAsync(request.RoleId, ct, asNoTracking: false);
+        var role = await roleRepository.GetByIdAsync(request.RoleId, cancellationToken, asNoTracking: false);
         if (role is null)
             return Result.Failure(RoleErrors.NotFound, Outcome.NotFound);
 
@@ -29,9 +29,9 @@ public sealed class UpdateRoleCommandHandler(
             return roleGuard;
 
         role.UpdateDescription(request.Description);
-        await unitOfWork.SaveChangesAsync(ct);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        await cache.RemoveByTagAsync(SecurityCacheKeys.RolesTag, ct);
+        await cache.RemoveByTagAsync(SecurityCacheKeys.RolesTag, cancellationToken);
 
         return Result.Success();
     }

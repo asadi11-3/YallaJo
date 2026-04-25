@@ -8,12 +8,12 @@ namespace Security.Application.Queries.ListRoles;
 public sealed class ListRolesQueryHandler(IRoleRepository roleRepository)
     : IQueryHandler<ListRolesQuery, IReadOnlyList<RoleDto>>
 {
-    public async Task<Result<IReadOnlyList<RoleDto>>> Handle(ListRolesQuery request, CancellationToken ct)
+    public async Task<Result<IReadOnlyList<RoleDto>>> Handle(ListRolesQuery request, CancellationToken cancellationToken)
     {
         var roles = await roleRepository.GetAllAsync(
             filter: r => r.IsActive,
             asNoTracking: true,
-            ct: ct);
+            ct: cancellationToken);
 
         var dtos = roles
             .Select(r => new RoleDto(r.Id, r.Name, r.Description, r.IsActive))

@@ -17,15 +17,15 @@ public sealed class AddUserClaimCommandHandler(
     HybridCache cache)
     : ICommandHandler<AddUserClaimCommand>
 {
-    public async Task<Result> Handle(AddUserClaimCommand request, CancellationToken ct)
+    public async Task<Result> Handle(AddUserClaimCommand request, CancellationToken cancellationToken)
     {
-        var user = await userRepository.GetByIdAsync(request.UserId, ct);
+        var user = await userRepository.GetByIdAsync(request.UserId, cancellationToken);
         if (user is null)
             return Result.Failure(UserErrors.NotFound, Outcome.NotFound);
 
         // Hierarchy: direct user claims can silently grant effective permissions
         // (a privilege-escalation vector). Require actor to outrank the target user.
-        var guard = await hierarchy.EnsureCanManageUserAsync(request.UserId, ct);
+        var guard = await hierarchy.EnsureCanManageUserAsync(request.UserId, cancellationToken);
         if (!guard.IsSuccess)
             return guard;
 
@@ -33,7 +33,7 @@ public sealed class AddUserClaimCommandHandler(
             uc => uc.UserId == request.UserId
                && uc.ClaimType == request.ClaimType
                && uc.ClaimValue == request.ClaimValue,
-            ct);
+            cancellationToken);
 
         if (alreadyExists)
         {
@@ -43,14 +43,13 @@ public sealed class AddUserClaimCommandHandler(
         }
 
         var claim = UserClaim.Create(request.UserId, request.ClaimType, request.ClaimValue);
-        await userClaimRepository.AddAsync(claim, ct);
-        await unitOfWork.SaveChangesAsync(ct);
+        await userClaimRepository.AddAsync(claim, cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         // UserDto does not expose claims directly, but invalidate per-user cache
         // to ensure any future extension remains consistent.
-        await cache.RemoveByTagAsync(SecurityCacheKeys.UserTag(request.UserId), ct);
+        await cache.RemoveByTagAsync(SecurityCacheKeys.UserTag(request.UserId), cancellationToken);
 
         return Result.Success();
     }
 }
-

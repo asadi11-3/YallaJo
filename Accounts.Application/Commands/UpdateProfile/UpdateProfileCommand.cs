@@ -3,10 +3,6 @@ using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 
 namespace Accounts.Application.Commands.UpdateProfile;
 
-public sealed record UpdateProfileResult(
-    string FirstName,
-    string LastName);
-
 public sealed record UpdateProfileCommand(
     string FirstName,
     string LastName,

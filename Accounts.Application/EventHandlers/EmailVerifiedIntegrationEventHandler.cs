@@ -7,10 +7,6 @@ using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 
 namespace Accounts.Application.EventHandlers;
 
-/// <summary>
-/// Consumes EmailVerifiedIntegrationEvent from the Security outbox.
-/// No Accounts-specific action at this time — ensures the outbox message is drained.
-/// </summary>
 public sealed class EmailVerifiedIntegrationEventHandler(
     IAccountsInboxStore inboxStore,
     IAccountsUnitOfWork unitOfWork,

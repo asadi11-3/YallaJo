@@ -3,10 +3,6 @@ using YallaJo.SharedKernel.Domain.Entities;
 
 namespace Security.Domain.Entities;
 
-/// <summary>
-/// The ONLY identity aggregate root in the system.
-/// All other modules reference this entity's Id (UserId) via logical relationships only.
-/// </summary>
 public sealed class User : AuditableEntity, IAggregateRoot
 {
     private readonly List<Email> _emails = [];
@@ -16,22 +12,8 @@ public sealed class User : AuditableEntity, IAggregateRoot
 
     private User() { } // EF Core
 
-    /// <summary>
-    /// Persisted lifecycle state — Phase 2A+2B source of truth.
-    /// <see cref="IsActive"/> is derived from this for backward compatibility
-    /// with existing callers (queries, projections, admin UI). Will become
-    /// the sole representation when <c>IsActive</c> is removed in Phase 4.
-    /// </summary>
     public AccountLifecycleState LifecycleState { get; private set; } = AccountLifecycleState.Provisioned;
 
-    /// <summary>
-    /// Backward-compatibility shim: <c>true</c> iff
-    /// <see cref="LifecycleState"/> equals <see cref="AccountLifecycleState.Active"/>.
-    /// Persisted as a normal column for the duration of Phase 2A+2B so
-    /// existing LINQ queries (<c>Where(u =&gt; u.IsActive)</c>) continue to
-    /// translate. The property is read-only; mutations flow through the
-    /// lifecycle transitions instead. Removal deferred to Phase 4.
-    /// </summary>
     public bool IsActive { get; private set; }
 
     public string PasswordHash { get; private set; } = string.Empty;
@@ -79,11 +61,6 @@ public sealed class User : AuditableEntity, IAggregateRoot
 
         email.MarkVerified();
 
-        // Pre-Phase-2A invariant: verifying the primary email also activates
-        // the account. Preserved here so the existing self-registration +
-        // external-login + invite-acceptance flows keep their atomic
-        // semantics. The lifecycle transition is routed through TransitionTo
-        // so the AccountLifecycleTransitionedEvent fires alongside.
         if (LifecycleState != AccountLifecycleState.Active)
         {
             TransitionTo(AccountLifecycleState.Active);
@@ -94,88 +71,19 @@ public sealed class User : AuditableEntity, IAggregateRoot
         return email;
     }
 
-    /// <summary>
-    /// Returns the primary email entity, or null if none exists.
-    /// </summary>
     public Email? GetPrimaryEmail() => _emails.FirstOrDefault(e => e.IsPrimary);
 
-    // ── Lifecycle transitions ─────────────────────────────────────────────────
-    //
-    // Each public verb maps a business intent to a state-machine transition.
-    // The private TransitionTo(...) method is the SOLE place that mutates
-    // LifecycleState + IsActive — keeps invariants in one spot and emits a
-    // single AccountLifecycleTransitionedEvent per real change.
-
-    /// <summary>
-    /// Admin issued an activation token (and sent the email) for a freshly
-    /// provisioned account. <c>Provisioned → PendingActivation</c>.
-    /// Idempotent on <c>PendingActivation</c>.
-    /// </summary>
     public void MarkPendingActivation() => TransitionTo(AccountLifecycleState.PendingActivation);
 
-    /// <summary>
-    /// Activation completed by the user (password set, email verified) OR
-    /// admin lifted a suspension. Allowed transitions:
-    /// <c>PendingActivation → Active</c>, <c>Suspended → Active</c>,
-    /// <c>PendingPasswordReset → Active</c>, plus the legacy implicit path
-    /// from <c>Provisioned → Active</c> retained for the external-login
-    /// auto-create flow that has no separate activation step.
-    /// </summary>
     public void Activate() => TransitionTo(AccountLifecycleState.Active);
-
-    /// <summary>
-    /// Admin temporarily disabled the account. <c>Active → Suspended</c>.
-    /// Idempotent on <c>Suspended</c>.
-    /// <para>
-    /// Phase 2A note: existing <see cref="Deactivate"/> verb is preserved as
-    /// a façade that delegates here, keeping <c>DeactivateUserCommandHandler</c>
-    /// working unchanged.
-    /// </para>
-    /// </summary>
     public void Suspend() => TransitionTo(AccountLifecycleState.Suspended);
 
-    /// <summary>Lifts a suspension. <c>Suspended → Active</c>.</summary>
     public void Reactivate() => TransitionTo(AccountLifecycleState.Active);
-
-    /// <summary>
-    /// Admin forced a password reset (Phase 2C+ wiring). Blocks login until
-    /// the user completes the reset. <c>Active → PendingPasswordReset</c>.
-    /// </summary>
     public void MarkPendingPasswordReset() => TransitionTo(AccountLifecycleState.PendingPasswordReset);
 
-    /// <summary>
-    /// Terminal: archive the account. Permitted from any non-Archived state.
-    /// </summary>
     public void Archive() => TransitionTo(AccountLifecycleState.Archived);
-
-    /// <summary>
-    /// Legacy verb retained for backward compatibility (existing
-    /// DeactivateUserCommandHandler call site). Maps to <see cref="Suspend"/>
-    /// in the lifecycle model. Will be removed in Phase 4 along with the
-    /// command rename to <c>SuspendUserCommand</c>.
-    /// </summary>
     public void Deactivate() => Suspend();
 
-    /// <summary>
-    /// Phase 3C — admin-driven account reassignment. Retargets the primary
-    /// email to <paramref name="newEmail"/>, resets email verification,
-    /// installs <paramref name="replacementPasswordHash"/> (must be a
-    /// non-empty unusable placeholder — the column is NOT NULL), and
-    /// transitions lifecycle to <see cref="AccountLifecycleState.PendingActivation"/>.
-    /// <para>
-    /// Eligible source states (enforced here as the last-line invariant):
-    /// <see cref="AccountLifecycleState.Active"/>,
-    /// <see cref="AccountLifecycleState.Suspended"/>,
-    /// <see cref="AccountLifecycleState.PendingPasswordReset"/>.
-    /// Rejected: Provisioned, PendingActivation, Archived.
-    /// </para>
-    /// <para>
-    /// The transition matrix in <see cref="IsTransitionAllowed"/> was
-    /// extended in Phase 3C to permit these three edges to
-    /// <c>PendingActivation</c>. No other caller may perform these
-    /// transitions — the guards above keep them reassignment-scoped.
-    /// </para>
-    /// </summary>
     public void ReassignToPendingActivation(string newEmail, string replacementPasswordHash)
     {
         if (string.IsNullOrWhiteSpace(newEmail))
@@ -194,25 +102,10 @@ public sealed class User : AuditableEntity, IAggregateRoot
         if (primary is null)
             throw new InvalidOperationException("User has no primary email to reassign.");
 
-        // Domain-method chain: change email address + reset verification
-        // state atomically on the same Email entity (row preserved for
-        // FK continuity; DB unique index on Address is enforced by EF
-        // when the UoW flushes).
         primary.ChangeAddress(newEmail);
 
-        // Invalidate password via the domain's reset verb so a
-        // PasswordResetEvent is raised and audit telemetry sees the
-        // credential mutation. The replacement hash MUST be a
-        // non-usable placeholder produced by the caller (e.g.
-        // "REASSIGNED:" + random GUID) — the same fail-closed pattern
-        // RegisterExternalAsync uses for its password column.
         ResetPassword(replacementPasswordHash);
 
-        // Lifecycle: route through TransitionTo so the single
-        // AccountLifecycleTransitionedEvent fires with the correct
-        // From/To pair. The extended transition matrix permits
-        // Active | Suspended | PendingPasswordReset -> PendingActivation
-        // exclusively for reassignment.
         TransitionTo(AccountLifecycleState.PendingActivation);
     }
 
@@ -226,7 +119,7 @@ public sealed class User : AuditableEntity, IAggregateRoot
 
         var from = LifecycleState;
         LifecycleState = target;
-        IsActive = (target == AccountLifecycleState.Active);
+        IsActive = target == AccountLifecycleState.Active;
         MarkUpdated();
 
         AddDomainEvent(new AccountLifecycleTransitionedEvent(Id, from, target));
@@ -255,21 +148,8 @@ public sealed class User : AuditableEntity, IAggregateRoot
             (AccountLifecycleState.Active,             AccountLifecycleState.PendingPasswordReset) => true,
             (AccountLifecycleState.PendingPasswordReset, AccountLifecycleState.Active)             => true,
 
-            // Legacy implicit path: external-login auto-create + self-registration's
-            // VerifyEmail flow currently jumps Provisioned -> Active in one move
-            // (no separate activation step exists for those code paths). Phase 2C
-            // will route the external/self-registration flows through
-            // PendingActivation explicitly; until then, allow this shortcut to
-            // preserve current behaviour.
             (AccountLifecycleState.Provisioned,        AccountLifecycleState.Active)               => true,
 
-            // Phase 3C — admin reassignment. Active / Suspended /
-            // PendingPasswordReset may transition back to PendingActivation
-            // ONLY through User.ReassignToPendingActivation, which guards
-            // on these source states before calling TransitionTo. The
-            // matrix edges are opened here so the state machine accepts
-            // the move; the semantic "only reassignment may use them"
-            // is enforced at the domain-method level, not the matrix.
             (AccountLifecycleState.Active,               AccountLifecycleState.PendingActivation) => true,
             (AccountLifecycleState.Suspended,            AccountLifecycleState.PendingActivation) => true,
             (AccountLifecycleState.PendingPasswordReset, AccountLifecycleState.PendingActivation) => true,
@@ -288,11 +168,6 @@ public sealed class User : AuditableEntity, IAggregateRoot
         AddDomainEvent(new PasswordChangedEvent(Id));
     }
 
-    /// <summary>
-    /// Sets the password hash for a brand-new user during initial registration.
-    /// Does NOT raise <see cref="PasswordChangedEvent"/> — the user was just created
-    /// and <see cref="UserCreatedEvent"/> already covers the initial state.
-    /// </summary>
     public void SetInitialPasswordHash(string passwordHash)
     {
         if (string.IsNullOrWhiteSpace(passwordHash))
@@ -342,6 +217,7 @@ public sealed class User : AuditableEntity, IAggregateRoot
         MarkUpdated();
         return primary;
     }
+
     public void AssignRole(Role role)
     {
         var userRole = UserRole.Create(Id, role.Id);

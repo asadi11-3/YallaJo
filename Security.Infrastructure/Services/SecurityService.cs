@@ -394,9 +394,6 @@ internal sealed class SecurityService(
 
         var normalizedNewEmail = newEmail.Trim().ToLowerInvariant();
 
-        // 1. Hierarchy / self-management guard. RoleHierarchyService
-        //    denies unauthenticated, under-privileged, self-management,
-        //    and same-level management.
         var guard = await roleHierarchy.EnsureCanManageUserAsync(targetUserId, ct);
         if (guard.IsFailure)
         {
@@ -428,9 +425,6 @@ internal sealed class SecurityService(
                 Outcome.Conflict);
         }
 
-        // 4. Primary email presence — domain method also guards, but we
-        //    surface a clean Conflict rather than the raw
-        //    InvalidOperationException that would escape otherwise.
         var primary = user.GetPrimaryEmail();
         if (primary is null)
         {
@@ -440,10 +434,6 @@ internal sealed class SecurityService(
         }
 
         var oldEmail = primary.Address;
-
-        // 5. Email uniqueness pre-check. The DB unique index on
-        //    Emails.Address remains the final authority, but we surface
-        //    a clean Conflict before attempting the mutation.
         if (!string.Equals(oldEmail, normalizedNewEmail, StringComparison.Ordinal))
         {
             var inUse = await userRepository.AnyAsync(
@@ -457,25 +447,12 @@ internal sealed class SecurityService(
                     Outcome.Conflict);
             }
         }
-
-        // 6. Build the fail-closed placeholder hash. Same pattern
-        //    RegisterExternalAsync uses: the "REASSIGNED:" prefix is
-        //    structurally unrecognizable to PasswordHasher.Verify, so
-        //    any password-login attempt against it fails closed. The
-        //    random GUID suffix guarantees each reassignment produces
-        //    a distinct placeholder (no collision signal).
         var placeholderHash = "REASSIGNED:" + Guid.NewGuid().ToString("N");
 
-        // 7. Domain mutation — email retarget + verification reset +
-        //    password invalidation + lifecycle transition all flow
-        //    through User.ReassignToPendingActivation, which guards
-        //    source states internally as a last-line invariant.
         user.ReassignToPendingActivation(normalizedNewEmail, placeholderHash);
 
         await unitOfWork.SaveChangesAsync(ct);
 
-        // 8. Cache invalidation — the target user's snapshot has
-        //    moved, and the users list may need a fresh read.
         await cache.RemoveByTagAsync(SecurityCacheKeys.UserTag(targetUserId), ct);
         await cache.RemoveByTagAsync(SecurityCacheKeys.UsersTag, ct);
 
@@ -485,8 +462,4 @@ internal sealed class SecurityService(
             NewEmail:     normalizedNewEmail,
             Lifecycle:    ToContractSnapshot(user.LifecycleState)));
     }
-
-    [Obsolete("Use ReplacePasswordBySelfAsync for self-service recovery. An admin-initiated variant will be introduced in Phase 2.")]
-    public Task<bool> ResetPasswordAsync(Guid userId, string newPassword, CancellationToken ct = default)
-        => ReplacePasswordBySelfAsync(userId, newPassword, ct);
 }

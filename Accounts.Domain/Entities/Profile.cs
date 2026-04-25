@@ -8,7 +8,6 @@ public sealed class Profile : AuditableEntity, IAggregateRoot
 {
     private Profile() { } // EF Core
 
-    /// <summary>Logical reference to Security.User.Id — not a FK.</summary>
     public Guid UserId { get; private set; }
     public string FirstName { get; private set; } = string.Empty;
     public string LastName { get; private set; } = string.Empty;
@@ -80,31 +79,6 @@ public sealed class Profile : AuditableEntity, IAggregateRoot
         MarkUpdated();
     }
 
-    /// <summary>
-    /// Phase 3D — scrubs this profile for admin account reassignment.
-    /// Called by <c>IProfileReassignmentService.ResetForReassignmentAsync</c>
-    /// after the Security/Auth reassignment has succeeded, so the old
-    /// owner's personal data does not remain visible on the new
-    /// assignee's row.
-    /// <para>
-    /// Behavior:
-    /// </para>
-    /// <list type="bullet">
-    ///   <item><description><see cref="FirstName"/> → <c>"Pending"</c> (required field must stay valid).</description></item>
-    ///   <item><description><see cref="LastName"/> → <c>"Activation"</c> (required field must stay valid).</description></item>
-    ///   <item><description><see cref="DisplayName"/> → trimmed <paramref name="newEmailLocalPart"/>, or <c>null</c> if empty/whitespace.</description></item>
-    ///   <item><description><see cref="AvatarUrl"/>, <see cref="DateOfBirth"/>, <see cref="Gender"/>, <see cref="Country"/>, <see cref="City"/>, <see cref="AddressLine"/> → <c>null</c>.</description></item>
-    ///   <item><description><see cref="UserId"/> unchanged — the system-required link to Security.User must remain stable.</description></item>
-    ///   <item><description>The row is NOT soft-deleted — Phase 3D preserves profile existence.</description></item>
-    ///   <item><description><c>MarkUpdated()</c> bumps <c>UpdatedAt</c>.</description></item>
-    /// </list>
-    /// <para>
-    /// The literal placeholder values (<c>"Pending"</c>/<c>"Activation"</c>)
-    /// mirror the Security <c>AccountLifecycleState.PendingActivation</c>
-    /// phrasing the reassigned account enters. No domain event is raised
-    /// — Phase 3D does not add an audit timeline (deferred).
-    /// </para>
-    /// </summary>
     public void ResetForReassignment(string? newEmailLocalPart)
     {
         FirstName = "Pending";

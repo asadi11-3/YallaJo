@@ -6,19 +6,6 @@ using Security.Infrastructure.Persistence;
 
 namespace Security.Infrastructure.Services;
 
-/// <summary>
-/// Phase 4 implementation of <see cref="IAdminAuditWriter"/>. Appends a
-/// row to <c>security.AuditLogs</c> via the
-/// <see cref="AuditLog.CreateAdmin"/> domain factory and saves on the
-/// Security UoW.
-/// <para>
-/// Atomicity:
-/// </para>
-/// <list type="bullet">
-///   <item><description>When called inside an ambient <c>TransactionScope</c> (e.g. <c>AdminReassignAccountCommandHandler</c> running under <c>ITransactionalExecutor</c>), the save enlists in that scope and rolls back with the rest of the transaction. No row appears if the outer scope fails to <c>Complete()</c>.</description></item>
-///   <item><description>When called outside an ambient scope (suspend / reactivate / archive / admin-reset paths), the save commits immediately on the Security UoW. This is a deliberate two-step commit (matching the existing <c>AdminResetPasswordCommandHandler</c> posture for <c>MarkPendingPasswordResetAsync</c>) — accepted because the failure mode is benign: if Auth's subsequent session-revocation save fails, the audit row still correctly reflects what the admin requested and what Security committed.</description></item>
-/// </list>
-/// </summary>
 internal sealed class AdminAuditWriter(
     SecurityDbContext dbContext,
     ISecurityUnitOfWork unitOfWork,

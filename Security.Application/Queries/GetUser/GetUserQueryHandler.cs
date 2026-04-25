@@ -9,9 +9,9 @@ namespace Security.Application.Queries.GetUser;
 public sealed class GetUserQueryHandler(IUserRepository userRepository)
     : IQueryHandler<GetUserQuery, UserDto>
 {
-    public async Task<Result<UserDto>> Handle(GetUserQuery request, CancellationToken ct)
+    public async Task<Result<UserDto>> Handle(GetUserQuery request, CancellationToken cancellationToken)
     {
-        var user = await userRepository.GetByIdWithDetailsAsync(request.UserId, ct);
+        var user = await userRepository.GetByIdWithDetailsAsync(request.UserId, cancellationToken);
         if (user is null)
             return Result<UserDto>.Failure(UserErrors.NotFound, Outcome.NotFound);
 

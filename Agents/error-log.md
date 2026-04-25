@@ -185,3 +185,12 @@
 - **Root Cause**: Handler was scaffolded manually from memory; dependency namespace import step was skipped.
 - **Fix Applied**: Added `using Auth.Domain.Repositories;` to the handler file and re-ran builds/tests.
 - **Prevention Rule**: For every new handler, verify all injected dependency namespaces immediately after file creation (especially `IAuthUnitOfWork` / module UoW interfaces) before running the first build.
+
+### ERR-019: Parallel project builds during validation triggered transient CS2012 assembly lock
+- **Date**: 2026-04-25
+- **Module**: Security / SharedKernel (validation workflow)
+- **What Happened**: Ran multiple `dotnet build` commands in parallel while validating repository abstraction changes, and one build failed with a locked SharedKernel output assembly.
+- **Error Message**: `CS2012: Cannot open '...YallaJo.SharedKernel.Domain.dll' for writing -- The process cannot access the file because it is being used by another process`.
+- **Root Cause**: Overlapping project dependency graph (`Security.*` references SharedKernel) caused concurrent compilers to contend for shared `obj/bin` artifacts.
+- **Fix Applied**: Re-ran builds sequentially; `Security.Domain` and `Security.Infrastructure --no-dependencies` then built successfully.
+- **Prevention Rule**: Never run parallel `dotnet build/test` commands for projects that share dependencies or output paths; validate those projects sequentially to avoid file-lock contention.

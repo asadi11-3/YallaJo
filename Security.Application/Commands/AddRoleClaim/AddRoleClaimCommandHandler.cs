@@ -36,9 +36,11 @@ public sealed class AddRoleClaimCommandHandler(
             cancellationToken);
 
         if (alreadyExists)
+        {
             return Result.Failure(
-                new Error("RoleClaim.Duplicate", "This claim already exists on the role."),
-                Outcome.Conflict);
+               new Error("RoleClaim.Duplicate", "This claim already exists on the role."),
+               Outcome.Conflict);
+        }
 
         var claim = RoleClaim.Create(request.RoleId, request.ClaimType, request.ClaimValue);
         await roleClaimRepository.AddAsync(claim, cancellationToken);

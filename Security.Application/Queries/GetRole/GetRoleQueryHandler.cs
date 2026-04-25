@@ -9,9 +9,9 @@ namespace Security.Application.Queries.GetRole;
 public sealed class GetRoleQueryHandler(IRoleRepository roleRepository)
     : IQueryHandler<GetRoleQuery, RoleDetailsDto>
 {
-    public async Task<Result<RoleDetailsDto>> Handle(GetRoleQuery request, CancellationToken ct)
+    public async Task<Result<RoleDetailsDto>> Handle(GetRoleQuery request, CancellationToken cancellationToken)
     {
-        var role = await roleRepository.GetByIdWithClaimsAsync(request.RoleId, ct);
+        var role = await roleRepository.GetByIdWithClaimsAsync(request.RoleId, cancellationToken);
 
         if (role is null)
             return Result<RoleDetailsDto>.Failure(RoleErrors.NotFound, Outcome.NotFound);

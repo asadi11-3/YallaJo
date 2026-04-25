@@ -16,9 +16,9 @@ public sealed class RemoveRoleCommandHandler(
     HybridCache cache)
     : ICommandHandler<RemoveRoleCommand>
 {
-    public async Task<Result> Handle(RemoveRoleCommand request, CancellationToken ct)
+    public async Task<Result> Handle(RemoveRoleCommand request, CancellationToken cancellationToken)
     {
-        var role = await roleRepository.GetByIdAsync(request.RoleId, ct);
+        var role = await roleRepository.GetByIdAsync(request.RoleId, cancellationToken);
         if (role is null)
             return Result.Failure(RoleErrors.NotFound, Outcome.NotFound);
 
@@ -31,21 +31,20 @@ public sealed class RemoveRoleCommandHandler(
 
         // Hierarchy: actor must also outrank the target user (prevents Admin
         // from removing roles from a SuperAdmin/Owner, and same-level edits).
-        var targetGuard = await hierarchy.EnsureCanManageUserAsync(request.UserId, ct);
+        var targetGuard = await hierarchy.EnsureCanManageUserAsync(request.UserId, cancellationToken);
         if (!targetGuard.IsSuccess)
             return targetGuard;
 
-        var userRole = await userRepository.GetUserRoleAsync(request.UserId, request.RoleId, ct);
+        var userRole = await userRepository.GetUserRoleAsync(request.UserId, request.RoleId, cancellationToken);
         if (userRole is null)
             return Result.Failure(RoleErrors.NotAssigned, Outcome.NotFound);
 
         userRepository.RemoveUserRole(userRole);
-        await unitOfWork.SaveChangesAsync(ct);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        await cache.RemoveByTagAsync(SecurityCacheKeys.UserTag(request.UserId), ct);
-        await cache.RemoveByTagAsync(SecurityCacheKeys.UsersTag, ct);
+        await cache.RemoveByTagAsync(SecurityCacheKeys.UserTag(request.UserId), cancellationToken);
+        await cache.RemoveByTagAsync(SecurityCacheKeys.UsersTag, cancellationToken);
 
         return Result.Success();
     }
 }
-

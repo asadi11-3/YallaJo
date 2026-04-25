@@ -16,19 +16,19 @@ public sealed class RemoveUserClaimCommandHandler(
     HybridCache cache)
     : ICommandHandler<RemoveUserClaimCommand>
 {
-    public async Task<Result> Handle(RemoveUserClaimCommand request, CancellationToken ct)
+    public async Task<Result> Handle(RemoveUserClaimCommand request, CancellationToken cancellationToken)
     {
-        var user = await userRepository.GetByIdAsync(request.UserId, ct);
+        var user = await userRepository.GetByIdAsync(request.UserId, cancellationToken);
         if (user is null)
             return Result.Failure(UserErrors.NotFound, Outcome.NotFound);
 
         // Hierarchy: user claims can grant effective permissions. Actor must
         // outrank the target user to mutate them.
-        var guard = await hierarchy.EnsureCanManageUserAsync(request.UserId, ct);
+        var guard = await hierarchy.EnsureCanManageUserAsync(request.UserId, cancellationToken);
         if (!guard.IsSuccess)
             return guard;
 
-        var claim = await userClaimRepository.GetByIdAsync(request.ClaimId, ct);
+        var claim = await userClaimRepository.GetByIdAsync(request.ClaimId, cancellationToken);
         if (claim is null || claim.UserId != request.UserId)
         {
             return Result.Failure(
@@ -37,10 +37,9 @@ public sealed class RemoveUserClaimCommandHandler(
         }
 
         userClaimRepository.Remove(claim);
-        await unitOfWork.SaveChangesAsync(ct);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        await cache.RemoveByTagAsync(SecurityCacheKeys.UserTag(request.UserId), ct);
+        await cache.RemoveByTagAsync(SecurityCacheKeys.UserTag(request.UserId), cancellationToken);
         return Result.Success();
     }
 }
-

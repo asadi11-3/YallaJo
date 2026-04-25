@@ -80,20 +80,8 @@ public interface IUserRegistrationService
         Guid userId,
         CancellationToken cancellationToken = default);
 
-    /// <summary>
-    /// Admin-initiated invited registration (legacy, Phase 2A).
-    /// <para>
-    /// Equivalent to <see cref="RegisterProvisionedAsync"/> immediately
-    /// followed by <see cref="MarkPendingActivationAsync"/>. Kept as a shim
-    /// so the legacy <c>InviteUserCommand</c> façade and any other
-    /// pre-Phase-2B callers keep compiling; new code should prefer the
-    /// split verbs.
-    /// </para>
-    /// </summary>
-    [Obsolete("Use RegisterProvisionedAsync (then MarkPendingActivationAsync once the activation email is dispatched). Kept for Phase 2A+2B backward compatibility; will be removed in Phase 4.")]
-    Task<Result<Guid>> RegisterInvitedAsync(
-        InvitedUserRegistrationRequest request,
-        CancellationToken cancellationToken = default);
+    
+ 
 
     /// <summary>
     /// Lists active roles that the current authenticated inviter is allowed to
@@ -132,12 +120,7 @@ public interface IUserRegistrationService
     /// legacy <c>AcceptInviteCommand</c> façade. New code should call
     /// <see cref="CompleteActivationAsync"/> directly.
     /// </summary>
-    [Obsolete("Use CompleteActivationAsync. Kept for Phase 2A+2B backward compatibility; will be removed in Phase 4.")]
-    Task<Result> CompleteInviteAsync(
-        Guid userId,
-        string email,
-        string password,
-        CancellationToken cancellationToken = default);
+   
 
     /// <summary>
     /// External-provider first-login provisioning.

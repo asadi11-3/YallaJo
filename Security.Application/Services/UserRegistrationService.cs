@@ -12,12 +12,6 @@ using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
 namespace Security.Application.Services;
 
-/// <summary>
-/// Implementation of <see cref="IUserRegistrationService"/> — keeps the
-/// <c>User</c> aggregate, password hashing, persistence, cache invalidation,
-/// and the invite-finalization state transition entirely inside Security.
-/// Exposed to other modules only through the contract.
-/// </summary>
 internal sealed class UserRegistrationService(
     IUserRepository userRepository,
     IRoleRepository roleRepository,
@@ -64,8 +58,7 @@ internal sealed class UserRegistrationService(
 
         var roleIds = request.InitialRoleIds
             .Where(id => id != Guid.Empty)
-            .Distinct()
-            .ToList();
+            .Distinct().ToList();
 
         if (roleIds.Count == 0)
         {
@@ -91,14 +84,6 @@ internal sealed class UserRegistrationService(
                 Error.Forbidden("You are not allowed to assign one or more selected roles."),
                 Outcome.Forbidden);
         }
-
-        // Phase 2B — pure provisioning. The identity is created in
-        // Provisioned state with no password, unverified email, and NO
-        // lifecycle advance. The Provisioned -> PendingActivation transition
-        // is the responsibility of MarkPendingActivationAsync, invoked by
-        // the SendActivationEmail pipeline after email delivery succeeds.
-        // This keeps the on-record lifecycle honest: an account never sits
-        // in PendingActivation unless an activation email was actually sent.
         var user = User.Register(normalizedEmail, request.FirstName, request.LastName);
 
         foreach (var roleId in roleIds)
@@ -119,7 +104,6 @@ internal sealed class UserRegistrationService(
 
         await userRepository.AddAsync(user, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
-
         await cache.RemoveByTagAsync(SecurityCacheKeys.UsersTag, cancellationToken);
 
         return Result<Guid>.Created(user.Id);
@@ -137,11 +121,6 @@ internal sealed class UserRegistrationService(
                 Outcome.NotFound);
         }
 
-        // Gate: only Provisioned (first send) or PendingActivation (resend)
-        // may transition here. Any later state indicates the account is
-        // already past the activation window and must be rejected so an
-        // activation email can't silently reset an active/suspended/
-        // archived account.
         if (user.LifecycleState != AccountLifecycleState.Provisioned
          && user.LifecycleState != AccountLifecycleState.PendingActivation)
         {
@@ -152,9 +131,6 @@ internal sealed class UserRegistrationService(
                 Outcome.Conflict);
         }
 
-        // Idempotent: domain MarkPendingActivation is a no-op self-transition
-        // when already in PendingActivation. We still call SaveChanges only
-        // when a real transition occurs, to avoid UoW churn on no-ops.
         if (user.LifecycleState == AccountLifecycleState.PendingActivation)
         {
             return Result.Success();
@@ -181,12 +157,6 @@ internal sealed class UserRegistrationService(
                 Outcome.NotFound);
         }
 
-        // Phase 3A gate: only Active (primary case) or PendingPasswordReset
-        // (re-issue / idempotent) are acceptable entry points. Other states
-        // are admin-workflow errors:
-        //   Provisioned / PendingActivation → use SendActivationEmail
-        //   Suspended                         → admin must Reactivate first
-        //   Archived                          → terminal
         if (user.LifecycleState != AccountLifecycleState.Active
          && user.LifecycleState != AccountLifecycleState.PendingPasswordReset)
         {
@@ -197,10 +167,6 @@ internal sealed class UserRegistrationService(
                 Outcome.Conflict);
         }
 
-        // Idempotent fast-path: already PendingPasswordReset → no save,
-        // no cache churn. The Auth-side handler still issues a fresh
-        // reset token and supersedes the old one; the lifecycle column
-        // simply stays put.
         if (user.LifecycleState == AccountLifecycleState.PendingPasswordReset)
         {
             return Result.Success();
@@ -213,34 +179,6 @@ internal sealed class UserRegistrationService(
         await cache.RemoveByTagAsync(SecurityCacheKeys.UsersTag, cancellationToken);
 
         return Result.Success();
-    }
-
-    [Obsolete("Use RegisterProvisionedAsync (then MarkPendingActivationAsync once the activation email is dispatched). Kept for Phase 2A+2B backward compatibility; will be removed in Phase 4.")]
-    public async Task<Result<Guid>> RegisterInvitedAsync(
-        InvitedUserRegistrationRequest request,
-        CancellationToken cancellationToken = default)
-    {
-        // Phase 2B compatibility shim — provision + immediate pending-activation
-        // transition in a single call, matching the pre-split observable
-        // behavior. Callers that need the honest "email-sent ⇒ pending-
-        // activation" semantics should use RegisterProvisionedAsync +
-        // MarkPendingActivationAsync via the SendActivationEmailCommand.
-        var provisioned = await RegisterProvisionedAsync(request, cancellationToken);
-        if (provisioned.IsFailure)
-            return provisioned;
-
-        var transition = await MarkPendingActivationAsync(provisioned.Value, cancellationToken);
-        if (transition.IsFailure)
-        {
-            // Should not happen — the account was just created in Provisioned.
-            // Propagate the failure faithfully rather than masking it.
-            return Result<Guid>.Fail(
-                transition.Outcome,
-                transition.Messages.FirstOrDefault() ?? "Failed to mark account pending activation.",
-                transition.Errors.ToArray());
-        }
-
-        return Result<Guid>.Created(provisioned.Value);
     }
 
     public async Task<Result<Guid>> RegisterExternalAsync(
@@ -256,18 +194,12 @@ internal sealed class UserRegistrationService(
                 Outcome.Invalid);
         }
 
-        // Refuse to silently merge into an existing local account — the caller
-        // (ExternalLoginCommandHandler) is responsible for auto-linking when a
-        // local account exists. Auto-create only fires for TRULY new users.
         if (await EmailExistsAsync(normalizedEmail, cancellationToken))
         {
             return Result<Guid>.Conflict(
                 Error.Conflict("User.Email", "An account with this email already exists."));
         }
 
-        // Create the User aggregate and mark the primary email verified BEFORE
-        // persistence — VerifyEmail() also flips IsActive=true via the domain
-        // invariant, so the user is fully onboarded in one transaction.
         var firstName = string.IsNullOrWhiteSpace(request.FirstName) ? "User" : request.FirstName.Trim();
         var lastName  = string.IsNullOrWhiteSpace(request.LastName)  ? string.Empty : request.LastName.Trim();
 
@@ -276,8 +208,6 @@ internal sealed class UserRegistrationService(
         var primaryEmail = user.GetPrimaryEmail();
         if (primaryEmail is null)
         {
-            // Defensive — User.Register always adds a primary email; tripping
-            // this means the aggregate contract changed.
             return Result<Guid>.Failure(
                 Error.Failure("User.NoPrimaryEmail", "Could not create primary email."),
                 Outcome.ServerError);
@@ -285,12 +215,6 @@ internal sealed class UserRegistrationService(
 
         user.VerifyEmail(primaryEmail.Id);
 
-        // NO password is set — the `PasswordHash` column is NOT NULL in the
-        // schema, so we seed an inert, non-usable placeholder that no
-        // plaintext can ever match (the hash format is unrecognizable to
-        // PasswordHasher.Verify, guaranteeing any password-login attempt
-        // fails closed). The user sets a real password later via
-        // forgot-password → reset, which replaces this placeholder.
         user.SetInitialPasswordHash("EXTERNAL-ONLY:" + Guid.NewGuid().ToString("N"));
 
         await userRepository.AddAsync(user, cancellationToken);
@@ -353,7 +277,6 @@ internal sealed class UserRegistrationService(
                 Outcome.Invalid);
         }
 
-        // Already onboarded (or partially finalized) → refuse re-acceptance.
         if (user.IsActive || primary.IsVerified)
         {
             return Result.Failure(
@@ -361,16 +284,6 @@ internal sealed class UserRegistrationService(
                 Outcome.Conflict);
         }
 
-        // Phase 2B — explicit activation:
-        //   1. Set the initial password.
-        //   2. Mark the primary email verified. User.VerifyEmail internally
-        //      routes through TransitionTo(Active), which in this context
-        //      represents the explicit PendingActivation -> Active
-        //      transition (PendingActivation is a legal predecessor for
-        //      Active in IsTransitionAllowed). The lifecycle transition
-        //      event fires alongside the EmailVerifiedEvent, giving
-        //      downstream audit/telemetry a single deterministic record of
-        //      the activation.
         user.SetPasswordHash(passwordHasher.Hash(password));
         user.VerifyEmail(primary.Id);
 
@@ -382,20 +295,6 @@ internal sealed class UserRegistrationService(
         return Result.Success();
     }
 
-    [Obsolete("Use CompleteActivationAsync. Kept for Phase 2A+2B backward compatibility; will be removed in Phase 4.")]
-    public Task<Result> CompleteInviteAsync(
-        Guid userId,
-        string email,
-        string password,
-        CancellationToken cancellationToken = default)
-        => CompleteActivationAsync(userId, email, password, cancellationToken);
-
-    /// <summary>
-    /// Maps the domain <see cref="AccountLifecycleState"/> enum to its
-    /// cross-module contract counterpart. Ordinals are guaranteed aligned
-    /// by Phase 2A discipline — kept as a helper method so any future
-    /// divergence has a single point of failure.
-    /// </summary>
     private static AccountLifecycleSnapshot ToContractSnapshot(AccountLifecycleState state)
         => (AccountLifecycleSnapshot)(int)state;
 

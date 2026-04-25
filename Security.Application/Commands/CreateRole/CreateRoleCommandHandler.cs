@@ -17,7 +17,7 @@ public sealed class CreateRoleCommandHandler(
     HybridCache cache)
     : ICommandHandler<CreateRoleCommand, CreateRoleResult>
 {
-    public async Task<Result<CreateRoleResult>> Handle(CreateRoleCommand request, CancellationToken ct)
+    public async Task<Result<CreateRoleResult>> Handle(CreateRoleCommand request, CancellationToken cancellationToken)
     {
         // Hierarchy: creating a role with a reserved/privileged name would let
         // a lower-tier actor smuggle in an elevated role definition. Actor must
@@ -29,14 +29,14 @@ public sealed class CreateRoleCommandHandler(
         if (AppRoles.ProtectedRoles.Contains(request.Name, StringComparer.OrdinalIgnoreCase))
             return Result<CreateRoleResult>.Failure(RoleErrors.Protected, Outcome.Conflict);
 
-        if (await roleRepository.AnyAsync(r => r.Name == request.Name, ct))
+        if (await roleRepository.AnyAsync(r => r.Name == request.Name, cancellationToken))
             return Result<CreateRoleResult>.Failure(RoleErrors.AlreadyExists, Outcome.Conflict);
 
         var role = Role.Create(request.Name, request.Description);
-        await roleRepository.AddAsync(role, ct);
-        await unitOfWork.SaveChangesAsync(ct);
+        await roleRepository.AddAsync(role, cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        await cache.RemoveByTagAsync(SecurityCacheKeys.RolesTag, ct);
+        await cache.RemoveByTagAsync(SecurityCacheKeys.RolesTag, cancellationToken);
 
         return Result<CreateRoleResult>.Created(new CreateRoleResult(role.Id, role.Name));
     }

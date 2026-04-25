@@ -15,15 +15,15 @@ public sealed class ActivateUserCommandHandler(
     HybridCache cache)
     : ICommandHandler<ActivateUserCommand>
 {
-    public async Task<Result> Handle(ActivateUserCommand request, CancellationToken ct)
+    public async Task<Result> Handle(ActivateUserCommand request, CancellationToken cancellationToken)
     {
-        var user = await userRepository.GetByIdAsync(request.UserId, ct, asNoTracking: false);
+        var user = await userRepository.GetByIdAsync(request.UserId, cancellationToken, asNoTracking: false);
         if (user is null)
             return Result.Failure(UserErrors.NotFound, Outcome.NotFound);
 
         // Hierarchy: activation can silently restore elevated privileges —
         // require actor to outrank the target user.
-        var guard = await hierarchy.EnsureCanManageUserAsync(request.UserId, ct);
+        var guard = await hierarchy.EnsureCanManageUserAsync(request.UserId, cancellationToken);
         if (!guard.IsSuccess)
             return guard;
 
@@ -31,12 +31,11 @@ public sealed class ActivateUserCommandHandler(
             return Result.Success(); // idempotent — already active
 
         user.Activate();
-        await unitOfWork.SaveChangesAsync(ct);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        await cache.RemoveByTagAsync(SecurityCacheKeys.UserTag(request.UserId), ct);
-        await cache.RemoveByTagAsync(SecurityCacheKeys.UsersTag, ct);
+        await cache.RemoveByTagAsync(SecurityCacheKeys.UserTag(request.UserId), cancellationToken);
+        await cache.RemoveByTagAsync(SecurityCacheKeys.UsersTag, cancellationToken);
 
         return Result.Success();
     }
 }
-

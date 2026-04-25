@@ -24,6 +24,12 @@
     <ProjectReference Include="..\..\Security.Application\Security.Application.csproj" />
     <ProjectReference Include="..\..\Security.Contracts\Security.Contracts.csproj" />
     <ProjectReference Include="..\..\Security.Domain\Security.Domain.csproj" />
+    <!--
+      Bug-fix: PasswordHasherTests load Security.Infrastructure.Services.PasswordHasher
+      via reflection. The reference is needed so the Infrastructure DLL is copied
+      into the test bin and resolvable at runtime.
+    -->
+    <ProjectReference Include="..\..\Security.Infrastructure\Security.Infrastructure.csproj" />
     <ProjectReference Include="..\YallaJo.Tests.Shared\YallaJo.Tests.Shared.csproj" />
   </ItemGroup>
 

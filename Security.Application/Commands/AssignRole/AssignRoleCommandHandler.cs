@@ -17,9 +17,9 @@ public sealed class AssignRoleCommandHandler(
     HybridCache cache)
     : ICommandHandler<AssignRoleCommand>
 {
-    public async Task<Result> Handle(AssignRoleCommand request, CancellationToken ct)
+    public async Task<Result> Handle(AssignRoleCommand request, CancellationToken cancellationToken)
     {
-        var role = await roleRepository.GetByIdAsync(request.RoleId, ct);
+        var role = await roleRepository.GetByIdAsync(request.RoleId, cancellationToken);
         if (role is null)
             return Result.Failure(RoleErrors.NotFound, Outcome.NotFound);
 
@@ -36,30 +36,29 @@ public sealed class AssignRoleCommandHandler(
 
         // OwnerSingleton: only one user may hold the Owner role.
         if (role.Name == AppRoles.Owner
-            && await userRepository.AnyWithRoleAsync(AppRoles.Owner, ct))
+            && await userRepository.AnyWithRoleAsync(AppRoles.Owner, cancellationToken))
             return Result.Failure(RoleErrors.OwnerSingleton, Outcome.Conflict);
 
-        var user = await userRepository.GetByIdAsync(request.UserId, ct, asNoTracking: false);
+        var user = await userRepository.GetByIdAsync(request.UserId, cancellationToken, asNoTracking: false);
         if (user is null)
             return Result.Failure(UserErrors.NotFound, Outcome.NotFound);
 
         // Hierarchy: actor must also outrank the target user. This prevents
         // Admin from touching SuperAdmin/Owner, and blocks same-level edits.
-        var targetGuard = await hierarchy.EnsureCanManageUserAsync(request.UserId, ct);
+        var targetGuard = await hierarchy.EnsureCanManageUserAsync(request.UserId, cancellationToken);
         if (!targetGuard.IsSuccess)
             return targetGuard;
 
-        var existing = await userRepository.GetUserRoleAsync(request.UserId, request.RoleId, ct);
+        var existing = await userRepository.GetUserRoleAsync(request.UserId, request.RoleId, cancellationToken);
         if (existing is not null)
             return Result.Failure(RoleErrors.AlreadyAssigned, Outcome.Conflict);
 
         user.AssignRole(role);
-        await unitOfWork.SaveChangesAsync(ct);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        await cache.RemoveByTagAsync(SecurityCacheKeys.UserTag(request.UserId), ct);
-        await cache.RemoveByTagAsync(SecurityCacheKeys.UsersTag, ct);
+        await cache.RemoveByTagAsync(SecurityCacheKeys.UserTag(request.UserId), cancellationToken);
+        await cache.RemoveByTagAsync(SecurityCacheKeys.UsersTag, cancellationToken);
 
         return Result.Success();
     }
 }
-
