@@ -4,4 +4,5 @@ public sealed record UpdateSpecializationRequest(
     string Name,
     string? Description = null,
     string? Icon = null,
-    bool? IsActive = null);
+    bool? IsActive = null,
+    string SourceLanguageCode = "en");

@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using YallaJo.SharedKernel.Infrastructure.Data;
+using YallaJo.SharedKernel.Infrastructure.Outbox;
 using YallaJo.SharedKernel.Infrastructure.BackgroundJobs;
 
 namespace ContentSeo.Infrastructure;
@@ -33,6 +34,7 @@ public static class DependencyInjection
         services.AddScoped<IModuleDbInitializer, ContentSeoDbInitializer>();
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
         services.AddScoped<IOutboxProcessor, OutboxProcessor<ContentSeoDbContext>>();
+        services.AddScoped<IOutboxCleaner, OutboxCleaner<ContentSeoDbContext>>();
 
         return services;
     }

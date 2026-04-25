@@ -1,6 +1,7 @@
 using Messaging.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using YallaJo.SharedKernel.Application.Abstractions.Data;
+using YallaJo.SharedKernel.Infrastructure.Inbox;
 using YallaJo.SharedKernel.Infrastructure.Outbox;
 
 namespace Messaging.Infrastructure.Persistence;
@@ -21,6 +22,7 @@ public sealed class MessagingDbContext : DbContext, IDbContext
     public DbSet<ChatBotConversation> ChatBotConversations => Set<ChatBotConversation>();
     public DbSet<ChatBotMessage> ChatBotMessages => Set<ChatBotMessage>();
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
+    public DbSet<InboxMessage> InboxMessages => Set<InboxMessage>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

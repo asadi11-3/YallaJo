@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using YallaJo.SharedKernel.Infrastructure.Data;
+using YallaJo.SharedKernel.Infrastructure.Outbox;
 using YallaJo.SharedKernel.Infrastructure.BackgroundJobs;
 
 namespace Finance.Infrastructure;
@@ -30,6 +31,7 @@ public static class DependencyInjection
         services.AddScoped<IModuleDbInitializer, FinanceDbInitializer>();
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
         services.AddScoped<IOutboxProcessor, OutboxProcessor<FinanceDbContext>>();
+        services.AddScoped<IOutboxCleaner, OutboxCleaner<FinanceDbContext>>();
 
         return services;
     }

@@ -6,6 +6,6 @@ using YallaJo.SharedKernel.Infrastructure.Data.Repositories;
 namespace ContentPlaces.Infrastructure.Repositories;
 
 internal sealed class ServiceItemRepository(ContentPlacesDbContext context)
-    : EfRepository<ServiceItem, Guid>(context), IServiceItemRepository
+    : EfEntityRepository<ServiceItem, Guid>(context), IServiceItemRepository
 {
 }

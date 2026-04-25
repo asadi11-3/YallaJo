@@ -1,5 +1,6 @@
 using ContentCore.Application.Commands.Language.CreateLanguage;
 using ContentCore.Application.Commands.Language.UpdateLanguage;
+using ContentCore.Application.Queries.Language.GetLanguageById;
 using ContentCore.Application.Queries.Language.ListLanguages;
 using ContentCore.Presentation.Endpoints.Language.Models;
 using MediatR;
@@ -28,6 +29,17 @@ internal static class LanguageEndpoints
         .WithName("ListLanguages")
         .Produces<IReadOnlyList<LanguageDto>>(StatusCodes.Status200OK)
         .WithSummary("List all active languages")
+        .AllowAnonymous();
+
+        languages.MapGet("/{id:guid}", async (Guid id, ISender sender, CancellationToken ct) =>
+        {
+            var result = await sender.Send(new GetLanguageByIdQuery(id), ct);
+            return result.ToApiResult();
+        })
+        .WithName("GetLanguageById")
+        .Produces<LanguageDto>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .WithSummary("Get a language by ID")
         .AllowAnonymous();
 
         languages.MapPost("/", async (CreateLanguageRequest request, ISender sender, CancellationToken ct = default) =>

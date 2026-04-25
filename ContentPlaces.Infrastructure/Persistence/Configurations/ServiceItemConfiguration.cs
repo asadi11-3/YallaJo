@@ -27,10 +27,6 @@ public class ServiceItemConfiguration : IEntityTypeConfiguration<ServiceItem>
             .IsRequired()
             .HasPrecision(19, 4);
 
-        builder.Property(x => x.PriceCurrency)
-            .IsRequired()
-            .HasMaxLength(3);
-
         builder.Property(x => x.Currency)
             .IsRequired()
             .IsUnicode(false)
@@ -52,10 +48,6 @@ public class ServiceItemConfiguration : IEntityTypeConfiguration<ServiceItem>
         builder.Property(x => x.SalePrice)
             .IsRequired(false)
             .HasPrecision(19, 4);
-
-        builder.Property(x => x.SalePriceCurrency)
-            .IsRequired(false)
-            .HasMaxLength(3);
 
         builder.Property(x => x.DiscountValidFrom).IsRequired(false);
         builder.Property(x => x.DiscountValidTo).IsRequired(false);

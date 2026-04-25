@@ -25,7 +25,8 @@ public sealed class CreateSpecializationCommandHandler(
             var specialization = SpecializationEntity.Create(
                 request.Name,
                 request.Description,
-                request.Icon);
+                request.Icon,
+                request.SourceLanguageCode);
 
             await specializationRepository.AddAsync(specialization, cancellationToken);
 

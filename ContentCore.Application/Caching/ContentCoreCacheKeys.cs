@@ -38,9 +38,14 @@ public static class ContentCoreCacheKeys
     public static string Tag(Guid id) =>
         $"cc:tag:{id}";
 
+    // ── Languages (single) ──────────────────────────────────────────────────
+    public static string LanguageById(Guid id) => $"cc:lang:{id}";
+
     // ── Specializations ─────────────────────────────────────────────────────
     public static string Specializations(bool activeOnly) =>
         $"cc:specs:{activeOnly}";
+
+    public static string SpecializationById(Guid id) => $"cc:spec:{id}";
 
     // ── Attachments ─────────────────────────────────────────────────────────
     public static string Attachment(Guid id) =>
@@ -59,4 +64,11 @@ public static class ContentCoreCacheKeys
     // ── Translations ────────────────────────────────────────────────────────
     public static string EntityTranslations(string entityType, Guid entityId) =>
         $"cc:trans:{entityType}:{entityId}";
+
+    public static string EntityTranslations(
+        string entityType,
+        Guid entityId,
+        string? languageCode,
+        ContentCore.Domain.Enums.TranslationStatus? status) =>
+        $"cc:trans:{entityType}:{entityId}:{languageCode ?? "all"}:{status?.ToString() ?? "all"}";
 }

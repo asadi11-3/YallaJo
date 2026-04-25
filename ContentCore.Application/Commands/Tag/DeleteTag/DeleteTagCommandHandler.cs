@@ -1,6 +1,7 @@
 using ContentCore.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
+using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 using Outcome = YallaJo.SharedKernel.Domain.Abstractions.Results.Outcome;
@@ -10,7 +11,8 @@ namespace ContentCore.Application.Commands.Tag.DeleteTag;
 public sealed class DeleteTagCommandHandler(
     ITagRepository tagRepository,
     IContentCoreUnitOfWork unitOfWork,
-    HybridCache cache)
+    HybridCache cache,
+    ILogger<DeleteTagCommandHandler> logger)
     : ICommandHandler<DeleteTagCommand>
 {
     public async Task<Result> Handle(DeleteTagCommand request, CancellationToken cancellationToken)
@@ -43,6 +45,8 @@ public sealed class DeleteTagCommandHandler(
             }
 
             await cache.RemoveByTagAsync("tags", cancellationToken);
+
+            logger.LogInformation("Tag deleted: {TagId}", request.Id);
 
             return Result.Success();
         }

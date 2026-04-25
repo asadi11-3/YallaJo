@@ -7,7 +7,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.7.0" />
+    <PackageReference Include="MediatR" Version="14.1.0" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.17.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="9.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.Facebook" Version="9.0.0" />
   </ItemGroup>
@@ -56,6 +57,10 @@
     <Folder Include="Shared\TagHelpers\" />
     <Folder Include="Shared\ViewModels\" />
     <Folder Include="Shared\Views\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Update="AsyncAwaitBestPractices" Version="9.0.0" />
   </ItemGroup>
 
 </Project>

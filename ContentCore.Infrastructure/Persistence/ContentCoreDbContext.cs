@@ -13,11 +13,13 @@ public sealed class ContentCoreDbContext : DbContext, IDbContext
     public DbSet<Category> Categories => Set<Category>();
     public DbSet<CategoryTranslation> CategoryTranslations => Set<CategoryTranslation>();
     public DbSet<Tag> Tags => Set<Tag>();
+    public DbSet<TagTranslation> TagTranslations => Set<TagTranslation>();
     public DbSet<Attachment> Attachments => Set<Attachment>();
     public DbSet<EntityImage> EntityImages => Set<EntityImage>();
     public DbSet<EntityCategory> EntityCategories => Set<EntityCategory>();
     public DbSet<EntityTag> EntityTags => Set<EntityTag>();
     public DbSet<Specialization> Specializations => Set<Specialization>();
+    public DbSet<SpecializationTranslation> SpecializationTranslations => Set<SpecializationTranslation>();
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
     public DbSet<TranslationCache> TranslationCaches => Set<TranslationCache>();
 

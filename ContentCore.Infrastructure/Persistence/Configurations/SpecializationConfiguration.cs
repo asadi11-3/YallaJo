@@ -32,6 +32,12 @@ public class SpecializationConfiguration : IEntityTypeConfiguration<Specializati
             .IsRequired()
             .HasDefaultValue(true);
 
+        builder.Property(x => x.SourceLanguageCode)
+            .IsRequired()
+            .IsUnicode(false)
+            .HasMaxLength(10)
+            .HasDefaultValue("en");
+
         builder.Property(x => x.CreatedAt).IsRequired();
         builder.Property(x => x.UpdatedAt).IsRequired(false);
         builder.Property(x => x.IsDeleted).IsRequired().HasDefaultValue(false);

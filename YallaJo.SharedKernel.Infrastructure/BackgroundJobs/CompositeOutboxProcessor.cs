@@ -8,12 +8,18 @@ namespace YallaJo.SharedKernel.Infrastructure.BackgroundJobs;
 /// Single hosted service that processes outbox messages for ALL modules in sequence.
 /// Replaces per-module OutboxProcessor&lt;TContext&gt; hosted-service registrations with
 /// one background loop that resolves every <see cref="IOutboxProcessor"/> from DI.
+///
+/// <b>Adaptive polling</b>: when any processor returns > 0 messages processed, the loop
+/// immediately re-polls after 200 ms (drain mode). When all processors return 0 (idle),
+/// it backs off to the standard 10-second interval. This reduces end-to-end delivery
+/// latency under load without increasing DB queries at rest.
 /// </summary>
 public sealed class CompositeOutboxProcessor(
     IServiceProvider serviceProvider,
     ILogger<CompositeOutboxProcessor> logger) : BackgroundService
 {
-    private static readonly TimeSpan Interval = TimeSpan.FromSeconds(10);
+    private static readonly TimeSpan IdleInterval  = TimeSpan.FromSeconds(10);
+    private static readonly TimeSpan DrainInterval = TimeSpan.FromMilliseconds(200);
 
     protected override async Task ExecuteAsync(CancellationToken ct)
     {
@@ -21,6 +27,8 @@ public sealed class CompositeOutboxProcessor(
 
         while (!ct.IsCancellationRequested)
         {
+            var processedAny = false;
+
             try
             {
                 using var scope = serviceProvider.CreateScope();
@@ -32,7 +40,8 @@ public sealed class CompositeOutboxProcessor(
 
                     try
                     {
-                        await processor.ProcessOutboxMessagesAsync(ct);
+                        var count = await processor.ProcessOutboxMessagesAsync(ct);
+                        if (count > 0) processedAny = true;
                     }
                     catch (OperationCanceledException) when (ct.IsCancellationRequested)
                     {
@@ -55,7 +64,10 @@ public sealed class CompositeOutboxProcessor(
                 logger.LogError(ex, "Unexpected error in composite outbox processing loop");
             }
 
-            try { await Task.Delay(Interval, ct); }
+            // Adaptive delay: drain quickly while messages are flowing, back off when idle.
+            var delay = processedAny ? DrainInterval : IdleInterval;
+
+            try { await Task.Delay(delay, ct); }
             catch (OperationCanceledException) when (ct.IsCancellationRequested) { break; }
         }
 

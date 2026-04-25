@@ -1,13 +1,14 @@
 using ContentPlaces.Contracts.Authorization;
 using ContentPlaces.Application.Interfaces;
-using YallaJo.SharedKernel.Application.Authorization;
-using ContentPlaces.Domain.Repositories;
 using ContentPlaces.Infrastructure.Persistence;
 using ContentPlaces.Infrastructure.Persistence.Seeding;
+using YallaJo.SharedKernel.Application.Authorization;
+using ContentPlaces.Domain.Repositories;
 using ContentPlaces.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using YallaJo.SharedKernel.Infrastructure.Outbox;
 using YallaJo.SharedKernel.Infrastructure.BackgroundJobs;
 using YallaJo.SharedKernel.Application.Abstractions.Translation;
 using YallaJo.SharedKernel.Infrastructure.Data;
@@ -44,10 +45,11 @@ public static class DependencyInjection
         services.AddScoped<IUnitOfWork<ContentPlacesDbContext>, UnitOfWork<ContentPlacesDbContext>>();
         services.AddScoped<IContentPlacesUnitOfWork, ContentPlacesUnitOfWork>();
         services.AddScoped<IContentPlacesInboxStore, ContentPlacesInboxStore>();
+        services.AddScoped<IContentPlacesOutboxWriter, ContentPlacesOutboxWriter>();
         services.AddScoped<IModuleDbInitializer, ContentPlacesDbInitializer>();
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
         services.AddScoped<IOutboxProcessor, OutboxProcessor<ContentPlacesDbContext>>();
-        services.AddScoped<IBusinessRepository, BusinessRepository>();
+        services.AddScoped<IOutboxCleaner, OutboxCleaner<ContentPlacesDbContext>>();
 
         // ── Translation Orchestrator (shared from ContentCore via DI) ─────────
         // IEntityTranslationOrchestrator is registered by ContentCore.Infrastructure.

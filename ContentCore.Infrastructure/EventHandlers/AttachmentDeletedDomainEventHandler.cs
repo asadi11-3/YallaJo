@@ -1,20 +1,23 @@
+using ContentCore.Contracts.IntegrationEvents;
 using ContentCore.Domain.Events;
+using ContentCore.Infrastructure.Persistence;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
+using YallaJo.SharedKernel.Infrastructure.Outbox;
 
 namespace ContentCore.Infrastructure.EventHandlers;
 
 /// <summary>
-/// WS4 (2026-04-17): Physical file deletion has been moved to DeleteAttachmentCommandHandler
-/// which runs it AFTER SaveChanges succeeds. This ensures the file is never deleted if the
-/// DB commit fails, and removes the pre-commit side-effect race condition.
+/// Handles AttachmentDeletedDomainEvent:
+///   1. Publishes <see cref="AttachmentDeletedIntegrationEvent"/> to the outbox so downstream
+///      modules (e.g. ContentSeo) can clear cached OgImageUrl when the primary image is removed.
+///   2. Logs the deletion for auditing.
 ///
-/// This handler is intentionally a no-op. The AttachmentDeletedDomainEvent and MarkForDeletion()
-/// domain method are preserved for future use (e.g., audit logging, soft-delete tracking)
-/// but file I/O is no longer triggered from here.
+/// Physical file deletion is handled post-commit in DeleteAttachmentCommandHandler (not here).
 /// </summary>
 public sealed class AttachmentDeletedDomainEventHandler(
+    ContentCoreDbContext dbContext,
     ILogger<AttachmentDeletedDomainEventHandler> logger)
     : INotificationHandler<DomainEventNotification<AttachmentDeletedDomainEvent>>
 {
@@ -22,9 +25,20 @@ public sealed class AttachmentDeletedDomainEventHandler(
         DomainEventNotification<AttachmentDeletedDomainEvent> notification,
         CancellationToken ct)
     {
-        logger.LogDebug(
-            "AttachmentDeletedDomainEvent raised for {AttachmentId} — file deletion handled post-commit in command handler.",
-            notification.Event.AttachmentId);
+        var evt = notification.Event;
+
+        logger.LogInformation(
+            "AttachmentDeletedDomainEvent: queueing outbox for attachment {AttachmentId} ({EntityType}/{EntityId}).",
+            evt.AttachmentId, evt.EntityType, evt.EntityId);
+
+        dbContext.OutboxMessages.Add(OutboxMessage.Create(
+            new AttachmentDeletedIntegrationEvent(
+                evt.AttachmentId,
+                evt.EntityType.ToString(),
+                evt.EntityId,
+                evt.AttachmentType.ToString(),
+                evt.Url)));
+
         return Task.CompletedTask;
     }
 }

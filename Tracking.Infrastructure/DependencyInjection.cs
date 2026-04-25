@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Tracking.Infrastructure.Persistence.Seeding;
 using Tracking.Infrastructure.Persistence;
 using YallaJo.SharedKernel.Infrastructure.Data;
+using YallaJo.SharedKernel.Infrastructure.Outbox;
 using YallaJo.SharedKernel.Infrastructure.BackgroundJobs;
 
 namespace Tracking.Infrastructure;
@@ -31,6 +32,7 @@ public static class DependencyInjection
         services.AddScoped<IModuleDbInitializer, TrackingDbInitializer>();
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
         services.AddScoped<IOutboxProcessor, OutboxProcessor<TrackingDbContext>>();
+        services.AddScoped<IOutboxCleaner, OutboxCleaner<TrackingDbContext>>();
 
         return services;
     }

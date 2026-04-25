@@ -1,6 +1,7 @@
 using ContentCore.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
+using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 using Outcome = YallaJo.SharedKernel.Domain.Abstractions.Results.Outcome;
@@ -10,7 +11,8 @@ namespace ContentCore.Application.Commands.Category.DeactivateCategory;
 public sealed class DeactivateCategoryCommandHandler(
     ICategoryRepository categoryRepository,
     IContentCoreUnitOfWork unitOfWork,
-    HybridCache cache)
+    HybridCache cache,
+    ILogger<DeactivateCategoryCommandHandler> logger)
     : ICommandHandler<DeactivateCategoryCommand, DeactivateCategoryResult>
 {
     public async Task<Result<DeactivateCategoryResult>> Handle(
@@ -44,6 +46,8 @@ public sealed class DeactivateCategoryCommandHandler(
             }
 
             await cache.RemoveByTagAsync("categories", cancellationToken);
+
+            logger.LogInformation("Category deactivated: {CategoryId}", request.Id);
 
             return Result<DeactivateCategoryResult>.Success(
                 new DeactivateCategoryResult(category.Id, category.IsActive));

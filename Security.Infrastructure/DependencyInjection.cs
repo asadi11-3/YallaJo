@@ -12,6 +12,7 @@ using Security.Contracts.Authorization;
 using Security.Infrastructure.Seeding;
 using Security.Infrastructure.Services;
 using YallaJo.SharedKernel.Application.Authorization;
+using YallaJo.SharedKernel.Infrastructure.Outbox;
 using YallaJo.SharedKernel.Infrastructure.BackgroundJobs;
 using YallaJo.SharedKernel.Infrastructure.Data;
 
@@ -58,6 +59,7 @@ public static class DependencyInjection
 
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
         services.AddScoped<IOutboxProcessor, OutboxProcessor<SecurityDbContext>>();
+        services.AddScoped<IOutboxCleaner, OutboxCleaner<SecurityDbContext>>();
 
         return services;
     }

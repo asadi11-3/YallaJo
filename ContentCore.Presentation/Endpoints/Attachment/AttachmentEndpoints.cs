@@ -98,7 +98,8 @@ internal static class AttachmentEndpoints
         .Produces(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Delete an attachment and its file")
-        .RequireAuthorization("Permission.Attachment.Delete");
+        .WithMetadata(new MustHavePermissionAttribute(ContentCoreFeatures.Attachment, AppAction.Delete))
+        .RequireAuthorization();
 
         // Reorder attachments
         attachments.MapPut("/reorder", async (ReorderAttachmentsRequest request, ISender sender, CancellationToken ct = default) =>

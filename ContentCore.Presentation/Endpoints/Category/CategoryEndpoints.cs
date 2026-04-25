@@ -3,16 +3,21 @@ using ContentCore.Application.Commands.Category.DeactivateCategory;
 using ContentCore.Application.Commands.Category.DeleteCategory;
 using ContentCore.Application.Commands.Category.ReactivateCategory;
 using ContentCore.Application.Commands.Category.ReorderCategories;
+using ContentCore.Application.Commands.Category.RestoreCategory;
 using ContentCore.Application.Commands.Category.UpdateCategory;
 using ContentCore.Application.Queries.Category.Common;
 using ContentCore.Application.Queries.Category.GetCategoryById;
 using ContentCore.Application.Queries.Category.ListCategories;
+using ContentCore.Contracts.Authorization;
 using ContentCore.Presentation.Endpoints.Category.Models;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using Security.Contracts.Authorization;
+using YallaJo.SharedKernel.Application.Authorization;
 using YallaJo.SharedKernel.Presentation;
+using YallaJo.SharedKernel.Presentation.Authorization;
 
 namespace ContentCore.Presentation.Endpoints.Category;
 
@@ -72,7 +77,8 @@ internal static class CategoryEndpoints
         .WithName("ListCategoriesAdmin")
         .Produces<IReadOnlyList<CategoryDto>>(StatusCodes.Status200OK)
         .WithSummary("List categories (admin — may include inactive, requires read permission)")
-        .RequireAuthorization("Permission.Category.Read");
+        .WithMetadata(new MustHavePermissionAttribute(ContentCoreFeatures.Category, AppAction.Read))
+        .RequireAuthorization();
 
         // GET /admin/{id} — Admin single category lookup including inactive.
         categories.MapGet("/admin/{id:guid}", async (Guid id, HttpContext http, ISender sender,
@@ -87,7 +93,8 @@ internal static class CategoryEndpoints
         .Produces<CategoryDto>(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Get category by ID (admin — may include inactive)")
-        .RequireAuthorization("Permission.Category.Read");
+        .WithMetadata(new MustHavePermissionAttribute(ContentCoreFeatures.Category, AppAction.Read))
+        .RequireAuthorization();
 
         // ── Write endpoints ────────────────────────────────────────────────────────────
 
@@ -110,7 +117,8 @@ internal static class CategoryEndpoints
         .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Create a category with auto-translation to all active languages")
-        .RequireAuthorization("Permission.Category.Create");
+        .WithMetadata(new MustHavePermissionAttribute(ContentCoreFeatures.Category, AppAction.Create))
+        .RequireAuthorization();
 
         // PUT /{id} — Update category (admin only)
         categories.MapPut("/{id:guid}", async (Guid id, UpdateCategoryRequest request, ISender sender,
@@ -133,7 +141,8 @@ internal static class CategoryEndpoints
         .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Update a category with auto re-translation")
-        .RequireAuthorization("Permission.Category.Update");
+        .WithMetadata(new MustHavePermissionAttribute(ContentCoreFeatures.Category, AppAction.Update))
+        .RequireAuthorization();
 
         // DELETE /{id} — Soft-delete category (admin only)
         categories.MapDelete("/{id:guid}", async (Guid id, ISender sender,
@@ -146,7 +155,8 @@ internal static class CategoryEndpoints
         .Produces(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Soft-delete a category (sets IsDeleted = true)")
-        .RequireAuthorization("Permission.Category.Delete");
+        .WithMetadata(new MustHavePermissionAttribute(ContentCoreFeatures.Category, AppAction.Delete))
+        .RequireAuthorization();
 
         // PATCH /{id}/deactivate — Hide category from listings without deleting it
         categories.MapPatch("/{id:guid}/deactivate", async (Guid id, ISender sender,
@@ -159,7 +169,8 @@ internal static class CategoryEndpoints
         .Produces<DeactivateCategoryResult>(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Deactivate (hide) a category without deleting it")
-        .RequireAuthorization("Permission.Category.Update");
+        .WithMetadata(new MustHavePermissionAttribute(ContentCoreFeatures.Category, AppAction.Update))
+        .RequireAuthorization();
 
         // PATCH /{id}/activate — Restore a deactivated category
         categories.MapPatch("/{id:guid}/activate", async (Guid id, ISender sender,
@@ -172,7 +183,22 @@ internal static class CategoryEndpoints
         .Produces<ReactivateCategoryResult>(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Activate (restore) a deactivated category")
-        .RequireAuthorization("Permission.Category.Update");
+        .WithMetadata(new MustHavePermissionAttribute(ContentCoreFeatures.Category, AppAction.Update))
+        .RequireAuthorization();
+
+        // PATCH /{id}/restore — Restore a soft-deleted category (admin only)
+        categories.MapPatch("/{id:guid}/restore", async (Guid id, ISender sender,
+            CancellationToken ct = default) =>
+        {
+            var result = await sender.Send(new RestoreCategoryCommand(id), ct);
+            return result.ToApiResult();
+        })
+        .WithName("RestoreCategory")
+        .Produces<RestoreCategoryResult>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .WithSummary("Restore a soft-deleted category (sets IsDeleted = false)")
+        .WithMetadata(new MustHavePermissionAttribute(ContentCoreFeatures.Category, AppAction.Update))
+        .RequireAuthorization();
 
         // PUT /reorder — Batch sort order update (admin only)
         categories.MapPut("/reorder", async (ReorderCategoriesRequest request, ISender sender,
@@ -190,6 +216,7 @@ internal static class CategoryEndpoints
         .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Reorder categories via batch sort order update")
-        .RequireAuthorization("Permission.Category.Update");
+        .WithMetadata(new MustHavePermissionAttribute(ContentCoreFeatures.Category, AppAction.Update))
+        .RequireAuthorization();
     }
 }

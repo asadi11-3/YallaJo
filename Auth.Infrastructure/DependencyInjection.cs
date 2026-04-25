@@ -11,6 +11,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using YallaJo.SharedKernel.Infrastructure.Outbox;
 using YallaJo.SharedKernel.Infrastructure.BackgroundJobs;
 using Auth.Infrastructure.BackgroundJobs;
 using YallaJo.SharedKernel.Infrastructure.Data;
@@ -99,6 +100,7 @@ public static class DependencyInjection
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
 
         services.AddScoped<IOutboxProcessor, OutboxProcessor<AuthDbContext>>();
+        services.AddScoped<IOutboxCleaner, OutboxCleaner<AuthDbContext>>();
 
         // Phase 2C-4 — retention policy for disposable Auth state.
         // AuthCleanupService (BackgroundService) runs the loop; the
