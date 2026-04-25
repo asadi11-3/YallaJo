@@ -23,7 +23,7 @@
         <dd class="col-sm-9">@string.Join(", ", Model.CurrentRoles)</dd>
     </dl>
 
-    @* Activate / Deactivate *@
+    @* Activate / Deactivate (legacy — kept per Phase 5B scope) *@
     <permission require="@WebPermission.User.UpdateAny">
         <div class="mb-4">
             @if (Model.IsActive)
@@ -43,6 +43,90 @@
                     <button type="submit" class="btn btn-success btn-sm">Activate</button>
                 </form>
             }
+        </div>
+    </permission>
+
+    @*
+        Phase 5B — admin lifecycle actions. Inline confirm() dialogs;
+        modals arrive in Phase 5C. Every action posts to LifecycleController
+        and redirects back to this Details page. Buttons render for any
+        admin with User.UpdateAny; the backend enforces hierarchy/
+        self-management/lifecycle eligibility and surfaces 403/409 messages
+        in TempData.
+    *@
+    <permission require="@WebPermission.User.UpdateAny">
+        <div class="card mb-4">
+            <div class="card-header bg-light">
+                <strong>Admin actions</strong>
+                <span class="text-muted small">— governed by lifecycle rules on the server</span>
+            </div>
+            <div class="card-body">
+                <div class="d-flex flex-wrap gap-2 mb-3">
+                    <form asp-area="Admin" asp-controller="Lifecycle"
+                          asp-action="Suspend" asp-route-userId="@Model.UserId" method="post" class="d-inline">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-warning btn-sm"
+                                onclick="return confirm('Suspend this user? They will be signed out of all sessions and cannot log in until reactivated.')">
+                            Suspend
+                        </button>
+                    </form>
+
+                    <form asp-area="Admin" asp-controller="Lifecycle"
+                          asp-action="Reactivate" asp-route-userId="@Model.UserId" method="post" class="d-inline">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-success btn-sm"
+                                onclick="return confirm('Reactivate this user? They will be able to log in again with their existing credentials.')">
+                            Reactivate
+                        </button>
+                    </form>
+
+                    <form asp-area="Admin" asp-controller="Lifecycle"
+                          asp-action="Archive" asp-route-userId="@Model.UserId" method="post" class="d-inline">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-dark btn-sm"
+                                onclick="return confirm('Archive this user? This is irreversible. They will be signed out and cannot log in.')">
+                            Archive
+                        </button>
+                    </form>
+                </div>
+
+                @* Reset password (with optional reason) *@
+                <form asp-area="Admin" asp-controller="Lifecycle"
+                      asp-action="ResetPassword" asp-route-userId="@Model.UserId" method="post"
+                      class="row g-2 align-items-end mb-3"
+                      onsubmit="return confirm('Force a password reset for this user? This will sign them out of all sessions and email a reset code.');">
+                    @Html.AntiForgeryToken()
+                    <div class="col-md-6">
+                        <label class="form-label small text-muted mb-0" for="ResetPasswordReason">Reason (optional)</label>
+                        <input id="ResetPasswordReason" name="Reason" maxlength="500"
+                               class="form-control form-control-sm" placeholder="e.g. suspected compromise" />
+                    </div>
+                    <div class="col-auto">
+                        <button type="submit" class="btn btn-outline-warning btn-sm">Reset password</button>
+                    </div>
+                </form>
+
+                @* Reassign account (new email + optional reason) *@
+                <form asp-area="Admin" asp-controller="Lifecycle"
+                      asp-action="Reassign" asp-route-userId="@Model.UserId" method="post"
+                      class="row g-2 align-items-end"
+                      onsubmit="return confirm('Reassign this account to a new owner? This will invalidate the password, revoke all sessions, deactivate external sign-in links, scrub the profile, and email an activation link to the new email. The old owner loses access immediately.');">
+                    @Html.AntiForgeryToken()
+                    <div class="col-md-4">
+                        <label class="form-label small text-muted mb-0" for="ReassignNewEmail">New email</label>
+                        <input id="ReassignNewEmail" name="NewEmail" type="email" required maxlength="320"
+                               class="form-control form-control-sm" placeholder="newowner@example.com" />
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small text-muted mb-0" for="ReassignReason">Reason (optional)</label>
+                        <input id="ReassignReason" name="Reason" maxlength="500"
+                               class="form-control form-control-sm" placeholder="e.g. ownership transfer" />
+                    </div>
+                    <div class="col-auto">
+                        <button type="submit" class="btn btn-outline-danger btn-sm">Reassign</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </permission>
 

@@ -167,6 +167,12 @@ builder.Services.AddScoped<RolesFacade>();
 builder.Services.AddScoped<AuditLogsApiClient>();
 builder.Services.AddScoped<AuditLogsFacade>();
 
+// Phase 5B — admin lifecycle wiring (Suspend/Reactivate/Archive/
+// Reset Password/Reassign). Lives in Users/Lifecycle/ to keep the
+// existing UsersController/Facade lean.
+builder.Services.AddScoped<YallaJo.Web.Areas.Admin.Modules.Security.Features.Users.Lifecycle.LifecycleApiClient>();
+builder.Services.AddScoped<YallaJo.Web.Areas.Admin.Modules.Security.Features.Users.Lifecycle.LifecycleFacade>();
+
 // ── Admin / ContentCore services ─────────────────────────────────────────────
 builder.Services.AddScoped<LanguagesApiClient>();
 builder.Services.AddScoped<LanguagesFacade>();
