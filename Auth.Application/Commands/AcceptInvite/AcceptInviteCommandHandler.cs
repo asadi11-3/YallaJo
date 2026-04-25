@@ -1,3 +1,4 @@
+
 using Auth.Application.Commands.ActivateAccount;
 using MediatR;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;

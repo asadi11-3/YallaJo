@@ -21,6 +21,72 @@
     var hasContentCoreMenu = hasLanguageRead || hasTagRead || hasSpecializationRead
                              || hasCategoryRead || hasAttachmentRead || hasTranslationRead;
 
+    @*
+        ⚠ TEMPORARY — DEV/TEST QUICK NAV
+        ──────────────────────────────────────────────────────────────────
+        Phase 5E manual-testing helper. Renders a flat one-click strip
+        above the main navbar with the most-used IAM admin pages so the
+        full Phase 3 + 4 + 5 lifecycle flow can be smoke-tested without
+        digging through dropdowns. **Remove before production rollout.**
+        Each link is permission-gated using the same `<permission>`
+        tag helpers the main dropdowns use, so no admin can see a link
+        they cannot follow. Routes are existing pages only — nothing
+        new is wired here.
+    *@
+    var hasAnyTestNavLink =
+        CurrentUser.HasPermission(WebPermission.User.Read)
+        || CurrentUser.HasPermission(WebPermission.Role.Read)
+        || CurrentUser.HasPermission(WebPermission.System.Read)
+        || CurrentUser.HasPermission(WebPermission.User.Create);
+
+    @if (hasAnyTestNavLink)
+    {
+        <div class="bg-warning-subtle border-bottom small py-1" id="dev-test-nav"
+             role="navigation" aria-label="Developer quick navigation">
+            <div class="container-fluid d-flex flex-wrap gap-2 align-items-center">
+                <span class="badge bg-warning text-dark" title="Temporary: remove before production">
+                    DEV
+                </span>
+                <span class="text-muted">Quick nav:</span>
+
+                <permission require="@WebPermission.User.Read">
+                    <a class="btn btn-sm btn-link p-0"
+                       asp-area="Admin" asp-controller="Users" asp-action="Index">Users list</a>
+                </permission>
+
+                <permission require="@WebPermission.Role.Read">
+                    <a class="btn btn-sm btn-link p-0"
+                       asp-area="Admin" asp-controller="Roles" asp-action="Index">Roles</a>
+                </permission>
+
+                <permission require="@WebPermission.System.Read">
+                    <a class="btn btn-sm btn-link p-0"
+                       asp-area="Admin" asp-controller="AuditLogs" asp-action="Index">Audit timeline</a>
+                </permission>
+
+                <permission require="@WebPermission.User.Create">
+                    <a class="btn btn-sm btn-link p-0"
+                       asp-area="Admin" asp-controller="Invitations" asp-action="Index">Invite user</a>
+                </permission>
+
+                <permission require="@WebPermission.User.Create">
+                    <a class="btn btn-sm btn-link p-0"
+                       asp-area="Admin" asp-controller="Invitations" asp-action="Resend">Resend invite</a>
+                </permission>
+
+                <span class="text-muted ms-auto small">
+                    Self-service:
+                </span>
+                <a class="btn btn-sm btn-link p-0"
+                   asp-area="Auth" asp-controller="Sessions" asp-action="Index">Sessions</a>
+                <a class="btn btn-sm btn-link p-0"
+                   asp-area="Auth" asp-controller="Devices" asp-action="Index">Devices</a>
+                <a class="btn btn-sm btn-link p-0 text-danger"
+                   asp-area="Auth" asp-controller="Logout" asp-action="Index">Sign out</a>
+            </div>
+        </div>
+    }
+
     <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom mb-3">
         <div class="container-fluid">
             <a class="navbar-brand" asp-area="Accounts" asp-controller="Profile" asp-action="Index">YallaJo</a>
