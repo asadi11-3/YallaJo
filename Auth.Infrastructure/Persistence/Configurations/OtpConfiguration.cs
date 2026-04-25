@@ -57,9 +57,18 @@ public sealed class OtpConfiguration : IEntityTypeConfiguration<Otp>
         //   ORDER BY CreatedAt DESC
         // The partial filter on IsUsed = 0 shrinks the index to active OTPs only,
         // keeping it small as records are marked used and eventually cleaned up.
-        builder.HasIndex(o => new { o.UserId, o.Purpose, o.IsUsed })
-            .HasFilter("[IsUsed] = 0")
-            .HasDatabaseName("IX_Otps_UserId_Purpose_IsUsed_Active");
+        //
+        // UNIQUE filter: at most ONE active (unused, non-deleted) OTP can exist
+        // per (UserId, Purpose). This eliminates concurrent-issuance races
+        // (ResendOtp × 2 tabs, ForgotPassword × 2 tabs) that would otherwise
+        // leave multiple valid reset/verification codes outstanding. Handlers
+        // invalidate prior OTPs before inserting a new one; if a race slips
+        // through, the DB rejects the second insert with a unique-constraint
+        // violation (handled as a transient conflict by the caller).
+        builder.HasIndex(o => new { o.UserId, o.Purpose })
+            .IsUnique()
+            .HasFilter("[IsUsed] = 0 AND [IsDeleted] = 0")
+            .HasDatabaseName("IX_Otps_UserId_Purpose_Active_Unique");
 
         // Retained for the cleanup job's range scan on ExpiresAt
         builder.HasIndex(o => o.ExpiresAt)

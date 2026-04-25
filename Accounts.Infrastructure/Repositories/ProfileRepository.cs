@@ -8,5 +8,4 @@ namespace Accounts.Infrastructure.Repositories;
 public sealed class ProfileRepository(AccountsDbContext context)
     : EfRepository<Profile, Guid>(context), IProfileRepository
 {
-    // No custom methods — all callers use the inherited generic FirstOrDefaultAsync surface.
 }

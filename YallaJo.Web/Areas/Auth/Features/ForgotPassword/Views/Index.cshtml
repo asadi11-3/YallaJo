@@ -1,3 +1,4 @@
+@using YallaJo.Web.Infrastructure.Security.Recaptcha
 @model YallaJo.Web.Areas.Auth.Features.ForgotPassword.ViewModels.ForgotPasswordVm
 @{
     ViewData["Title"] = "Forgot Password";
@@ -16,6 +17,8 @@
             <input asp-for="Email" class="form-control" autocomplete="email" />
             <span asp-validation-for="Email" class="text-danger"></span>
         </div>
+
+        <partial name="_RecaptchaField" model="@RecaptchaActions.ForgotPassword" />
 
         <button type="submit" class="btn btn-primary w-100">Send Reset Code</button>
     </form>

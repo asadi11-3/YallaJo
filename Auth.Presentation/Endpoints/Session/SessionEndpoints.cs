@@ -1,3 +1,8 @@
+using Auth.Application.Commands.AdminReassignAccount;
+using Auth.Application.Commands.AdminResetPassword;
+using Auth.Application.Commands.AdminArchiveUser;
+using Auth.Application.Commands.AdminReactivateUser;
+using Auth.Application.Commands.AdminSuspendUser;
 using Auth.Application.Commands.ForceRevokeUserSessions;
 using Auth.Application.Commands.Logout;
 using Auth.Application.Commands.LogoutAll;
@@ -9,6 +14,8 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Security.Contracts.Authorization;
+using YallaJo.SharedKernel.Presentation.Authorization;
+using YallaJo.SharedKernel.Application.Authorization;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Presentation;
 
@@ -97,7 +104,124 @@ internal static class SessionEndpoints
         .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status401Unauthorized)
         .WithSummary("Admin: force-revoke all sessions and refresh tokens for a user")
-        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.User, AppAction.UpdateAny))
+        .WithMetadata(new MustHavePermissionAttribute(SecurityFeatures.User, AppAction.UpdateAny))
+        .RequireAuthorization();
+
+        // Phase 3A — admin-initiated password reset. Lives next to
+        // ForceRevokeUserSessions because both are admin-level verbs
+        // that tear down a target user's active credentials. The
+        // command issues a PasswordResetToken with origin=AdminInitiated,
+        // transitions the user to PendingPasswordReset (blocks login),
+        // revokes sessions + refresh tokens with reason
+        // PasswordResetByAdmin, and queues the reset email via the
+        // existing outbox dispatch pipeline.
+        admin.MapPost("/users/{userId:guid}/reset-password", async (
+            Guid userId,
+            AdminResetPasswordRequest request,
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            var result = await sender.Send(
+                new AdminResetPasswordCommand(userId, request.Reason), ct);
+            return result.ToApiResult();
+        })
+        .WithName("AdminResetPassword")
+        .Produces<AdminResetPasswordResult>(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status409Conflict)
+        .WithSummary("Admin: force a password reset for a user — revokes sessions and sends a reset email.")
+        .WithMetadata(new MustHavePermissionAttribute(SecurityFeatures.User, AppAction.UpdateAny))
+        .RequireAuthorization();
+
+        admin.MapPatch("/users/{userId:guid}/suspend", async (
+            Guid userId,
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            var result = await sender.Send(new AdminSuspendUserCommand(userId), ct);
+            return result.ToApiResult();
+        })
+        .WithName("AdminSuspendUser")
+        .Produces(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status409Conflict)
+        .WithSummary("Admin: suspend a user account and revoke all active sessions.")
+        .WithMetadata(new MustHavePermissionAttribute(SecurityFeatures.User, AppAction.UpdateAny))
+        .RequireAuthorization();
+
+        admin.MapPatch("/users/{userId:guid}/reactivate", async (
+            Guid userId,
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            var result = await sender.Send(new AdminReactivateUserCommand(userId), ct);
+            return result.ToApiResult();
+        })
+        .WithName("AdminReactivateUser")
+        .Produces(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status409Conflict)
+        .WithSummary("Admin: reactivate a suspended user account.")
+        .WithMetadata(new MustHavePermissionAttribute(SecurityFeatures.User, AppAction.UpdateAny))
+        .RequireAuthorization();
+
+        admin.MapPatch("/users/{userId:guid}/archive", async (
+            Guid userId,
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            var result = await sender.Send(new AdminArchiveUserCommand(userId), ct);
+            return result.ToApiResult();
+        })
+        .WithName("AdminArchiveUser")
+        .Produces(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status409Conflict)
+        .WithSummary("Admin: archive a user account and revoke all active sessions.")
+        .WithMetadata(new MustHavePermissionAttribute(SecurityFeatures.User, AppAction.UpdateAny))
+        .RequireAuthorization();
+
+        // Phase 3C — admin-initiated account reassignment. Retargets
+        // the account to a new primary email / new real user, revokes
+        // all active sessions and refresh tokens
+        // (reason=AccountReassigned), supersedes any outstanding
+        // activation/reset tokens, deactivates external-provider
+        // links, and issues a fresh activation email to the new
+        // address via the existing outbox dispatch pipeline. The old
+        // owner loses access immediately: password is replaced with
+        // an unusable placeholder and lifecycle moves back to
+        // PendingActivation (login gate blocks).
+        admin.MapPost("/users/{userId:guid}/reassign", async (
+            Guid userId,
+            AdminReassignAccountRequest request,
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            var result = await sender.Send(
+                new AdminReassignAccountCommand(userId, request.NewEmail, request.Reason), ct);
+            return result.ToApiResult();
+        })
+        .WithName("AdminReassignAccount")
+        .Produces<AdminReassignAccountResult>(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status409Conflict)
+        .WithSummary("Admin: reassign a user account to a new email — invalidates credentials, revokes sessions, and sends a fresh activation email.")
+        .WithMetadata(new MustHavePermissionAttribute(SecurityFeatures.User, AppAction.UpdateAny))
         .RequireAuthorization();
     }
 }

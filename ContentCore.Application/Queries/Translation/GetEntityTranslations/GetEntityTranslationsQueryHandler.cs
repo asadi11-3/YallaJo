@@ -22,7 +22,16 @@ public sealed class GetEntityTranslationsQueryHandler(
                 request.EntityId,
                 ct);
 
-            var dtos = translations
+            var filtered = translations.AsEnumerable();
+
+            if (request.LanguageCode is not null)
+                filtered = filtered.Where(t =>
+                    string.Equals(t.ToLanguage, request.LanguageCode, StringComparison.OrdinalIgnoreCase));
+
+            if (request.Status is not null)
+                filtered = filtered.Where(t => t.Status == request.Status.Value);
+
+            var dtos = filtered
                 .Select(t => new EntityTranslationDto(
                     t.Id,
                     t.OriginalText,

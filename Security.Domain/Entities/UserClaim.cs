@@ -4,7 +4,7 @@ namespace Security.Domain.Entities;
 
 public sealed class UserClaim : AuditableEntity
 {
-    private UserClaim() { } // EF Core
+    private UserClaim() { }
 
     public Guid UserId { get; private set; }
     public string ClaimType { get; private set; } = string.Empty;

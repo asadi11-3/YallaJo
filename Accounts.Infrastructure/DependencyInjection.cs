@@ -6,6 +6,7 @@ using Accounts.Application.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using YallaJo.SharedKernel.Infrastructure.Outbox;
 using YallaJo.SharedKernel.Infrastructure.BackgroundJobs;
 using YallaJo.SharedKernel.Infrastructure.Data;
 
@@ -37,6 +38,7 @@ public static class DependencyInjection
 
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
         services.AddScoped<IOutboxProcessor, OutboxProcessor<AccountsDbContext>>();
+        services.AddScoped<IOutboxCleaner, OutboxCleaner<AccountsDbContext>>();
 
         // Distributed cache — idempotent, safe if host already registered it
         services.AddHybridCache();

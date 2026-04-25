@@ -7,8 +7,4 @@ namespace Security.Application.Queries.Dtos
         IReadOnlyList<string> Roles,
         IReadOnlyList<UserClaimDto> Claims);
 
-    public sealed record UserClaimDto(
-        Guid Id,
-        string ClaimType,
-        string ClaimValue);
 }

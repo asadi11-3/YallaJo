@@ -14,7 +14,7 @@ public sealed class UpdatePrimaryPhoneCommandHandler(
 {
     public async Task<Result<UpdatePrimaryPhoneResult>> Handle(
         UpdatePrimaryPhoneCommand request,
-        CancellationToken ct)
+        CancellationToken cancellationToken)
     {
         if (!currentUser.IsAuthenticated || currentUser.UserId is null)
         {
@@ -23,15 +23,16 @@ public sealed class UpdatePrimaryPhoneCommandHandler(
                 Outcome.Unauthorized);
         }
 
-        var user = await userRepository.GetByIdWithPhonesAsync(currentUser.UserId.Value, ct);
-        if (user is null) {
+        var user = await userRepository.GetByIdWithPhonesAsync(currentUser.UserId.Value, cancellationToken);
+        if (user is null)
+        {
             return Result<UpdatePrimaryPhoneResult>.Failure(
                    Error.NotFound("User", "User not found."),
                    Outcome.NotFound);
         }
 
         var phone = user.UpdatePrimaryPhone(request.PhoneNumber);
-        await unitOfWork.SaveChangesAsync(ct);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<UpdatePrimaryPhoneResult>.Success(
             new UpdatePrimaryPhoneResult(true, phone.PhoneNumber));

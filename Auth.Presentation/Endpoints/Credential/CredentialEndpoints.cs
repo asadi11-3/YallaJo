@@ -19,7 +19,8 @@ internal static class CredentialEndpoints
     {
         group.MapPost("/verify-email", async (VerifyEmailRequest request, ISender sender, CancellationToken ct) =>
         {
-            var result = await sender.Send(new VerifyEmailCommand(request.Email, request.OtpCode), ct);
+            var result = await sender.Send(
+                new VerifyEmailCommand(request.Email, request.OtpCode, request.RecaptchaToken), ct);
             return result.ToApiResult();
         })
         .WithName("VerifyEmail")
@@ -33,7 +34,8 @@ internal static class CredentialEndpoints
 
         group.MapPost("/login", async (LoginRequest request, ISender sender, CancellationToken ct) =>
         {
-            var result = await sender.Send(new LoginCommand(request.Email, request.Password), ct);
+            var result = await sender.Send(
+                new LoginCommand(request.Email, request.Password, request.RecaptchaToken), ct);
             return result.ToApiResult();
         })
         .WithName("Login")
@@ -59,7 +61,8 @@ internal static class CredentialEndpoints
 
         group.MapPost("/forgot-password", async (ForgotPasswordRequest request, ISender sender, CancellationToken ct) =>
         {
-            var result = await sender.Send(new ForgotPasswordCommand(request.Email), ct);
+            var result = await sender.Send(
+                new ForgotPasswordCommand(request.Email, request.RecaptchaToken), ct);
             return result.ToApiResult();
         })
         .WithName("ForgotPassword")
@@ -90,13 +93,15 @@ internal static class CredentialEndpoints
 
         group.MapPost("/resend-otp", async (ResendOtpRequest request, ISender sender, CancellationToken ct) =>
         {
-            var result = await sender.Send(new ResendOtpCommand(request.Email, request.Purpose), ct);
+            var result = await sender.Send(
+                new ResendOtpCommand(request.Email, request.Purpose, request.RecaptchaToken), ct);
             return result.ToApiResult();
         })
         .WithName("ResendOtp")
         .Produces<ResendOtpResult>(StatusCodes.Status200OK)
         .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status429TooManyRequests)
+        .ProducesProblem(StatusCodes.Status500InternalServerError)
         .WithSummary("Resend OTP code for email verification or password reset")
         .AllowAnonymous()
         .RequireRateLimiting(RateLimitPolicies.OtpPolicy);

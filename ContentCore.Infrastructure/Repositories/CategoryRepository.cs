@@ -18,4 +18,9 @@ namespace ContentCore.Infrastructure.Repositories;
 internal sealed class CategoryRepository(ContentCoreDbContext context)
     : EfRepository<Category, Guid>(context), ICategoryRepository
 {
+    /// <inheritdoc />
+    public Task<Category?> GetByIdIncludingDeletedAsync(Guid id, CancellationToken ct = default)
+        => context.Categories
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(c => c.Id == id, ct);
 }

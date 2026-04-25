@@ -1,12 +1,16 @@
 using ContentCore.Application.Commands.Language.CreateLanguage;
 using ContentCore.Application.Commands.Language.UpdateLanguage;
+using ContentCore.Application.Queries.Language.GetLanguageById;
 using ContentCore.Application.Queries.Language.ListLanguages;
 using ContentCore.Presentation.Endpoints.Language.Models;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using ContentCore.Contracts.Authorization;
 using Security.Contracts.Authorization;
+using YallaJo.SharedKernel.Presentation.Authorization;
+using YallaJo.SharedKernel.Application.Authorization;
 using YallaJo.SharedKernel.Presentation;
 
 namespace ContentCore.Presentation.Endpoints.Language;
@@ -27,9 +31,21 @@ internal static class LanguageEndpoints
         .WithSummary("List all active languages")
         .AllowAnonymous();
 
+        languages.MapGet("/{id:guid}", async (Guid id, ISender sender, CancellationToken ct) =>
+        {
+            var result = await sender.Send(new GetLanguageByIdQuery(id), ct);
+            return result.ToApiResult();
+        })
+        .WithName("GetLanguageById")
+        .Produces<LanguageDto>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .WithSummary("Get a language by ID")
+        .AllowAnonymous();
+
         languages.MapPost("/", async (CreateLanguageRequest request, ISender sender, CancellationToken ct = default) =>
         {
-            var result = await sender.Send(new CreateLanguageCommand(
+            var result = await sender.Send(
+                new CreateLanguageCommand(
                 request.Code, request.Name, request.NativeName, request.IsRtl), ct);
             return result.ToApiResult();
         })
@@ -38,12 +54,13 @@ internal static class LanguageEndpoints
         .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status409Conflict)
         .WithSummary("Add a new language")
-        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.Language, AppAction.Create))
+        .WithMetadata(new MustHavePermissionAttribute(ContentCoreFeatures.Language, AppAction.Create))
         .RequireAuthorization();
 
         languages.MapPut("/{id:guid}", async (Guid id, UpdateLanguageRequest request, ISender sender, CancellationToken ct = default) =>
         {
-            var result = await sender.Send(new UpdateLanguageCommand(
+            var result = await sender.Send(
+                new UpdateLanguageCommand(
                 id, request.Name, request.NativeName, request.IsRtl, request.IsActive), ct);
             return result.ToApiResult();
         })
@@ -52,7 +69,7 @@ internal static class LanguageEndpoints
         .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Update language settings")
-        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.Language, AppAction.Update))
+        .WithMetadata(new MustHavePermissionAttribute(ContentCoreFeatures.Language, AppAction.Update))
         .RequireAuthorization();
     }
 }

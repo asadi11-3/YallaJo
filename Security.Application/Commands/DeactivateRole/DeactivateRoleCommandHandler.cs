@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Caching.Hybrid;
+using Security.Application.Authorization;
 using Security.Application.Caching;
-using Security.Contracts.Authorization;
 using Security.Domain.Errors;
 using Security.Domain.Repositories;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
@@ -11,29 +11,32 @@ namespace Security.Application.Commands.DeactivateRole;
 public sealed class DeactivateRoleCommandHandler(
     IRoleRepository roleRepository,
     ISecurityUnitOfWork unitOfWork,
+    IRoleHierarchyService hierarchy,
     HybridCache cache)
     : ICommandHandler<DeactivateRoleCommand>
 {
-    public async Task<Result> Handle(DeactivateRoleCommand request, CancellationToken ct)
+    public async Task<Result> Handle(DeactivateRoleCommand request, CancellationToken cancellationToken)
     {
-        var role = await roleRepository.GetByIdAsync(request.RoleId, ct, asNoTracking: false);
+        var role = await roleRepository.GetByIdAsync(request.RoleId, cancellationToken, asNoTracking: false);
         if (role is null)
             return Result.Failure(RoleErrors.NotFound, Outcome.NotFound);
 
-       
-        if (AppRoles.ProtectedRoles.Contains(role.Name, StringComparer.OrdinalIgnoreCase))
-            return Result.Failure(RoleErrors.Protected, Outcome.Conflict);
+        // Hierarchy: deactivating a role silently strips permissions from
+        // every holder. Actor must strictly outrank the role.
+        var roleGuard = hierarchy.EnsureCanModifyRoleDefinition(role.Name);
+        if (!roleGuard.IsSuccess)
+            return roleGuard;
 
         if (!role.IsActive)
             return Result.Success(); // idempotent — already deactivated
 
         role.Deactivate();
-        await unitOfWork.SaveChangesAsync(ct);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         // Invalidate roles list AND all user caches: GetUserQuery filters by ur.Role.IsActive,
         // so deactivating a role changes which roles appear in cached UserDto.Roles.
-        await cache.RemoveByTagAsync(SecurityCacheKeys.RolesTag, ct);
-        await cache.RemoveByTagAsync(SecurityCacheKeys.UsersTag, ct);
+        await cache.RemoveByTagAsync(SecurityCacheKeys.RolesTag, cancellationToken);
+        await cache.RemoveByTagAsync(SecurityCacheKeys.UsersTag, cancellationToken);
 
         return Result.Success();
     }

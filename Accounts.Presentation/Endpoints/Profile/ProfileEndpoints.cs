@@ -1,4 +1,3 @@
-using Accounts.Application.Commands.CreateProfile;
 using Accounts.Application.Commands.DeleteAvatar;
 using Accounts.Application.Commands.DeleteProfile;
 using Accounts.Application.Commands.UpdateAvatar;
@@ -9,7 +8,6 @@ using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
-using Security.Contracts.Authorization;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Abstractions.Storage;
 using YallaJo.SharedKernel.Presentation;
@@ -20,38 +18,7 @@ internal static class ProfileEndpoints
 {
     internal static void MapProfileEndpoints(RouteGroupBuilder group)
     {
-        MapAdminEndpoints(group);
         MapSelfServiceEndpoints(group);
-    }
-
-    // ── Admin: collection-scoped operations (/profiles) ───────────────────────
-
-    private static void MapAdminEndpoints(RouteGroupBuilder group)
-    {
-        var profiles = group.MapGroup("/profiles");
-
-        profiles.MapPost("/", async (CreateProfileRequest request, ISender sender, CancellationToken ct) =>
-        {
-            var result = await sender.Send(
-                new CreateProfileCommand(
-                request.UserId,
-                request.FirstName,
-                request.LastName,
-                request.DisplayName,
-                request.AvatarUrl), ct);
-
-            return result.ToApiResult(id => $"/api/v1/accounts/profiles/{id}");
-        })
-        .WithName("CreateProfile")
-        .Produces<Guid>(StatusCodes.Status201Created)
-        .ProducesValidationProblem()
-        .ProducesProblem(StatusCodes.Status401Unauthorized)
-        .ProducesProblem(StatusCodes.Status403Forbidden)
-        .ProducesProblem(StatusCodes.Status404NotFound)
-        .ProducesProblem(StatusCodes.Status409Conflict)
-        .WithSummary("Create a user profile linked to an existing security user")
-        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.User, AppAction.Create))
-        .RequireAuthorization();
     }
 
     // ── Self-service: current user's own profile (/profile) ──────────────────
@@ -114,6 +81,12 @@ internal static class ProfileEndpoints
                 stream, file.FileName, file.ContentType, "avatars", ct);
 
             var result = await sender.Send(new UpdateAvatarCommand(upload.Url), ct);
+
+            if (!result.IsSuccess)
+            {
+                await fileStorage.DeleteAsync(upload.Url, ct);
+            }
+
             return result.ToApiResult();
         })
         .WithName("UpdateAvatar")

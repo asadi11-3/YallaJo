@@ -33,12 +33,18 @@ namespace Security.Infrastructure.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
+                    b.Property<Guid?>("ActorUserId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("IpAddress")
                         .HasMaxLength(45)
                         .HasColumnType("nvarchar(45)");
+
+                    b.Property<string>("Metadata")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("NewValue")
                         .HasColumnType("nvarchar(max)");
@@ -48,6 +54,10 @@ namespace Security.Infrastructure.Migrations
 
                     b.Property<string>("OldValue")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Reason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<Guid?>("ResourceId")
                         .HasColumnType("uniqueidentifier");
@@ -68,6 +78,9 @@ namespace Security.Infrastructure.Migrations
                     b.HasIndex("OccurredAt");
 
                     b.HasIndex("UserId");
+
+                    b.HasIndex("ActorUserId", "OccurredAt")
+                        .HasDatabaseName("IX_AuditLogs_ActorUserId_OccurredAt");
 
                     b.HasIndex("ResourceType", "ResourceId");
 
@@ -306,6 +319,12 @@ namespace Security.Infrastructure.Migrations
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
 
+                    b.Property<int>("LifecycleState")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0)
+                        .HasColumnName("LifecycleState");
+
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasMaxLength(512)
@@ -325,6 +344,8 @@ namespace Security.Infrastructure.Migrations
                     b.HasIndex("IsActive");
 
                     b.HasIndex("IsDeleted");
+
+                    b.HasIndex("LifecycleState");
 
                     b.ToTable("Users", "security");
                 });
@@ -409,7 +430,8 @@ namespace Security.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("RoleId");
+                    b.HasIndex("RoleId")
+                        .HasDatabaseName("IX_UserRoles_RoleId");
 
                     b.HasIndex("UserId", "RoleId")
                         .IsUnique()
@@ -460,6 +482,15 @@ namespace Security.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
                         .HasDefaultValue(0);
+
+                    b.Property<int>("Status")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.Property<string>("TraceContext")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("Type")
                         .IsRequired()

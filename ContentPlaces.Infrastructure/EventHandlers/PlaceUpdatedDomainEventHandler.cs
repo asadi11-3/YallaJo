@@ -1,20 +1,20 @@
+using ContentPlaces.Contracts.IntegrationEvents;
 using ContentPlaces.Domain.Events;
 using ContentPlaces.Domain.Repositories;
+using ContentPlaces.Infrastructure.Persistence;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Application.Abstractions.Translation;
+using YallaJo.SharedKernel.Infrastructure.Outbox;
 
 namespace ContentPlaces.Infrastructure.EventHandlers;
 
-/// <summary>
-/// Re-triggers translation when a Place's Name, Description, or Address changes.
-/// Runs in the same UoW scope as the command — does NOT call SaveChangesAsync.
-/// </summary>
 public sealed class PlaceUpdatedDomainEventHandler(
     IPlaceRepository placeRepository,
     IEntityTranslationOrchestrator orchestrator,
+    ContentPlacesDbContext dbContext,
     ILogger<PlaceUpdatedDomainEventHandler> logger)
     : INotificationHandler<DomainEventNotification<PlaceUpdatedDomainEvent>>
 {
@@ -81,6 +81,9 @@ public sealed class PlaceUpdatedDomainEventHandler(
                 addedCount++;
             }
         }
+
+        dbContext.OutboxMessages.Add(OutboxMessage.Create(
+            new PlaceUpdatedIntegrationEvent(evt.PlaceId, evt.Name, evt.Description, evt.Address)));
 
         logger.LogInformation(
             "PlaceUpdatedDomainEvent: Updated {Updated}, added {Added} translations for place {PlaceId}.",

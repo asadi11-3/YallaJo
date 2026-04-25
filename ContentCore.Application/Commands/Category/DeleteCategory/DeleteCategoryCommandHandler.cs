@@ -1,5 +1,6 @@
-using ContentCore.Domain.Exceptions;
+using ContentCore.Domain.Events;
 using ContentCore.Domain.Repositories;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
@@ -41,12 +42,13 @@ public sealed class DeleteCategoryCommandHandler(
             }
 
             category.SoftDelete();
+            category.AddDomainEvent(new CategoryDeletedDomainEvent(category.Id, category.Slug));
 
             try
             {
                 await unitOfWork.SaveChangesAsync(ct);
             }
-            catch (ContentCoreConcurrencyException)
+            catch (DbUpdateConcurrencyException)
             {
                 return Result.Failure(
                     new Error(

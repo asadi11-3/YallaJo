@@ -1,6 +1,6 @@
 using ContentPlaces.Application.Interfaces;
-using ContentPlaces.Domain.Exceptions;
 using ContentPlaces.Domain.Repositories;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
@@ -97,7 +97,7 @@ public sealed class CreateBusinessCommandHandler(
             await unitOfWork.SaveChangesAsync(ct);
             return null;
         }
-        catch (ContentPlacesConcurrencyException ex)
+        catch (DbUpdateConcurrencyException ex)
         {
             logger.LogWarning(ex, "Concurrency conflict creating business with slug '{Slug}'.", slug);
             return Result<CreateBusinessResult>.Conflict(

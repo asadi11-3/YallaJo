@@ -33,7 +33,6 @@ public sealed class LoginCommandHandler(
     {
         var normalizedEmail = request.Email.Trim().ToLowerInvariant();
 
-        // 1. Verify credentials via Security module (password check + get roles/claims)
         var userData = await securityService.VerifyCredentialsAsync(normalizedEmail, request.Password, cancellationToken);
         if (userData is null)
             return _invalidCredentials;
@@ -46,7 +45,14 @@ public sealed class LoginCommandHandler(
                     Outcome.Unauthorized);
         }
 
-        // 3. Create Device
+        if (userData.Lifecycle != AccountLifecycleSnapshot.Active)
+        {
+            return Result<LoginResult>.Failure(
+                Error.Unauthorized("This account is not currently active. Contact your administrator."),
+                Outcome.Unauthorized);
+        }
+
+        // 4. Create Device
         var device = Device.Create(
             userId:      userData.UserId,
             deviceToken: Guid.CreateVersion7().ToString(),
@@ -54,7 +60,7 @@ public sealed class LoginCommandHandler(
             deviceName:  requestContext.DeviceName);
         await deviceRepository.AddAsync(device, cancellationToken);
 
-        // 4. Create Session
+        // 5. Create Session
         var session = Session.Create(
             userId: userData.UserId,
             deviceId: device.Id,
@@ -62,7 +68,7 @@ public sealed class LoginCommandHandler(
             ipAddress: requestContext.IpAddress);
         await sessionRepository.AddAsync(session, cancellationToken);
 
-        // 5. Generate & store RefreshToken (hash only in DB)
+        // 6. Generate & store RefreshToken (hash only in DB)
         var plainRefreshToken = tokenService.GenerateRefreshToken();
         var refreshTokenHash = tokenService.HashRefreshToken(plainRefreshToken);
         var refreshTokenExpiresAt = DateTime.UtcNow.AddDays(RefreshTokenDays);
@@ -74,10 +80,10 @@ public sealed class LoginCommandHandler(
             expiresAt: refreshTokenExpiresAt);
         await refreshTokenRepository.AddAsync(refreshToken, cancellationToken);
 
-        // 6. Persist all Auth entities
+        // 7. Persist all Auth entities
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        // 7. Generate JWT AccessToken
+        // 8. Generate JWT AccessToken
         var accessToken = tokenService.GenerateAccessToken(new TokenData(
             UserId: userData.UserId,
             Email: userData.Email,

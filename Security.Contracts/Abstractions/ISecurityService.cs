@@ -1,4 +1,7 @@
+using YallaJo.SharedKernel.Domain.Abstractions.Results;
+
 namespace Security.Contracts.Abstractions;
+
 public interface ISecurityService
 {
     Task<Guid?> GetUserIdByEmailAsync(string normalizedEmail, CancellationToken ct = default);
@@ -7,16 +10,34 @@ public interface ISecurityService
     Task<SecurityUserData?> GetUserDataByIdAsync(Guid userId, CancellationToken ct = default);
     Task<string?> GetPrimaryPhoneNumberAsync(Guid userId, CancellationToken ct = default);
     Task<SecurityContactData?> GetPrimaryContactDataAsync(Guid userId, CancellationToken ct = default);
-    Task<bool> ResetPasswordAsync(Guid userId, string newPassword, CancellationToken ct = default);
+
+    Task<AccountStatus?> GetAccountStatusByEmailAsync(string normalizedEmail, CancellationToken ct = default);
+
+    Task<bool> ReplacePasswordBySelfAsync(Guid userId, string newPassword, CancellationToken ct = default);
+
+    Task<Result<AdminResetEligibility>> GetAdminResetEligibilityAsync(
+        Guid targetUserId,
+        Guid actorUserId,
+        CancellationToken ct = default);
+
+    Task<Result> SuspendUserByAdminAsync(
+        Guid targetUserId,
+        Guid actorUserId,
+        CancellationToken ct = default);
+
+    Task<Result> ReactivateUserByAdminAsync(
+        Guid targetUserId,
+        Guid actorUserId,
+        CancellationToken ct = default);
+
+    Task<Result> ArchiveUserByAdminAsync(
+        Guid targetUserId,
+        Guid actorUserId,
+        CancellationToken ct = default);
+
+    Task<Result<ReassignmentCompleted>> ReassignUserByAdminAsync(
+        Guid targetUserId,
+        Guid actorUserId,
+        string newEmail,
+        CancellationToken ct = default);
 }
-
-public sealed record SecurityUserData(
-    Guid UserId,
-    string Email,
-    bool IsEmailVerified,
-    IReadOnlyList<string> Roles,
-    IReadOnlyList<(string Type, string Value)> Claims);
-
-public sealed record SecurityContactData(
-    string Email,
-    string? PhoneNumber);

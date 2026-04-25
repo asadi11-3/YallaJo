@@ -1,3 +1,5 @@
+using System.Linq.Expressions;
+using Security.Domain.Entities;
 using Security.Domain.Repositories;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Pagination;
@@ -9,16 +11,19 @@ public sealed class GetAuditLogsQueryHandler(IAuditLogRepository auditLogReposit
     : IQueryHandler<GetAuditLogsQuery, PaginatedResult<AuditLogDto>>
 {
     public async Task<Result<PaginatedResult<AuditLogDto>>> Handle(
-        GetAuditLogsQuery request, CancellationToken ct)
+        GetAuditLogsQuery request, CancellationToken cancellationToken)
     {
-        var pagedLogs = await auditLogRepository.GetPagedAsync(
-            request.UserId, request.Page, request.PageSize, ct);
+        var action = string.IsNullOrWhiteSpace(request.Action) ? null : request.Action;
 
-        var dtos = pagedLogs.Items
-            .Select(a => new AuditLogDto(a.Id, a.UserId, a.Action, a.IpAddress, a.OccurredAt))
-            .ToList();
 
-        return Result<PaginatedResult<AuditLogDto>>.Success(
-            new PaginatedResult<AuditLogDto>(dtos, pagedLogs.TotalCount, request.Page, request.PageSize));
+        var pagedLogs = await auditLogRepository.SelectPaginatedAsync(
+            request.Page,
+            request.PageSize,
+            GetAuditLogsQueryExpressions.Selector,
+            GetAuditLogsQueryExpressions.Filter(request, action),
+            query => query.OrderByDescending(auditLog => auditLog.OccurredAt),
+            cancellationToken);
+
+        return Result<PaginatedResult<AuditLogDto>>.Success(pagedLogs);
     }
 }

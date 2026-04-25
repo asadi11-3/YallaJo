@@ -1,4 +1,6 @@
 using Auth.Application.Interfaces;
+using Auth.Application.Interfaces.SessionRevocation;
+using Auth.Domain.Entities;
 using Auth.Domain.Repositories;
 using Security.Contracts.Abstractions;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
@@ -8,13 +10,13 @@ namespace Auth.Application.Commands.ResetPassword;
 
 public sealed class ResetPasswordCommandHandler(
     ISecurityService securityService,
-    IOtpRepository otpRepository,
+    IPasswordResetTokenRepository resetTokenRepository,
     IAuthUnitOfWork unitOfWork,
-    IOtpService otpService)
+    IOtpService otpService,
+    ITransactionalExecutor txExecutor,
+    ISessionRevocationService sessionRevocation)
     : ICommandHandler<ResetPasswordCommand, ResetPasswordResult>
 {
-    private const string OtpPurpose = "PasswordReset";
-
     public async Task<Result<ResetPasswordResult>> Handle(
         ResetPasswordCommand request,
         CancellationToken cancellationToken)
@@ -29,57 +31,65 @@ public sealed class ResetPasswordCommandHandler(
                 Outcome.NotFound);
         }
 
-        var otp = await otpRepository.FirstOrDefaultAsync(
-            filter:  o => o.UserId == userId.Value
-                       && o.Purpose == OtpPurpose
-                       && !o.IsUsed,
-            orderBy: q => q.OrderByDescending(o => o.CreatedAt),
-            asNoTracking: false,
-            ct: cancellationToken);
+        var token = await resetTokenRepository.GetLatestActiveForUserAsync(
+            userId.Value, cancellationToken);
 
-        if (otp is null)
+        if (token is null)
         {
             return Result<ResetPasswordResult>.Failure(
                 Error.NotFound("Otp.NotFound", "No pending reset code found. Please request a new one."),
                 Outcome.NotFound);
         }
 
-        // ── Domain invariants (moved out of handler into Otp entity) ─────────
-        if (otp.IsExhausted)
+        if (token.IsExhausted)
         {
             return Result<ResetPasswordResult>.Fail(
                 Outcome.TooManyRequests,
                 "Too many verification attempts. Please request a new code.");
         }
 
-        if (otp.IsExpired())
+        if (token.IsExpired())
         {
             return Result<ResetPasswordResult>.Failure(
                 Error.Validation("Otp.Expired", "Reset code has expired. Please request a new one."),
                 Outcome.Invalid);
         }
 
-        otp.IncrementAttempt();
+        token.IncrementAttempt();
 
-        if (!otpService.Verify(request.OtpCode, otp.CodeHash))
+        if (!otpService.Verify(request.OtpCode, token.TokenHash))
         {
-            await unitOfWork.SaveChangesAsync(cancellationToken); // persist incremented attempt
+            await unitOfWork.SaveChangesAsync(cancellationToken);
             return Result<ResetPasswordResult>.Failure(
                 Error.Validation("Otp.Invalid", "Invalid reset code."),
                 Outcome.Invalid);
         }
 
-        var reset = await securityService.ResetPasswordAsync(
-            userId.Value, request.NewPassword, cancellationToken);
-        if (!reset)
+        var executed = await txExecutor.ExecuteAsync(
+            async innerCt =>
+            {
+                var reset = await securityService.ReplacePasswordBySelfAsync(
+                    userId.Value, request.NewPassword, innerCt);
+                if (!reset) return false;
+
+                await sessionRevocation.RevokeAllForUserAsync(
+                    userId.Value,
+                    SessionRevocationReason.PasswordReplacedBySelf,
+                    innerCt);
+
+                token.Consume();
+
+                await unitOfWork.SaveChangesAsync(innerCt);
+                return true;
+            },
+            cancellationToken);
+
+        if (!executed)
         {
             return Result<ResetPasswordResult>.Failure(
                 Error.Failure("Reset.Failed", "Could not reset password. Please try again."),
                 Outcome.ServerError);
         }
-
-        otp.MarkUsed();
-        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<ResetPasswordResult>.Success(new ResetPasswordResult(true));
     }

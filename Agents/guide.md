@@ -519,55 +519,60 @@ public static class DependencyInjection
 **Minimal API endpoints** — one static class per module.
 
 ```csharp
+using Booking.Contracts.Authorization;
+using YallaJo.SharedKernel.Application.Authorization;
+using YallaJo.SharedKernel.Presentation.Authorization;
+
 public static class BookingEndpoints
 {
     public static IEndpointRouteBuilder MapBookingEndpoints(
         this IEndpointRouteBuilder endpoints)
     {
-        var group = endpoints.MapGroup("/api/bookings")
+        var group = endpoints.MapGroup("/api/v1/bookings")
             .WithTags("Bookings");
 
-        // ── POST /api/bookings ──────────────────────────────
+        // ── POST /api/v1/bookings ────────────────────────────
         group.MapPost("/", CreateBooking)
             .WithName("CreateBooking")
+            .WithMetadata(new MustHavePermissionAttribute(BookingFeatures.Booking, AppAction.Create))
             .Produces<Guid>(StatusCodes.Status201Created)
-            .ProducesValidationProblem()
-            .RequireAuthorization();
+            .ProducesValidationProblem();
 
-        // ── GET /api/bookings/{id} ──────────────────────────
+        // ── GET /api/v1/bookings/{id} ────────────────────────
         group.MapGet("/{id:guid}", GetBooking)
             .WithName("GetBooking")
+            .WithMetadata(new MustHavePermissionAttribute(BookingFeatures.Booking, AppAction.Read))
             .Produces<TourBookingDto>()
-            .ProducesProblem(StatusCodes.Status404NotFound)
-            .RequireAuthorization();
+            .ProducesProblem(StatusCodes.Status404NotFound);
 
-        // ── GET /api/bookings ───────────────────────────────
+        // ── GET /api/v1/bookings ─────────────────────────────
         group.MapGet("/", ListBookings)
             .WithName("ListBookings")
-            .Produces<PaginatedResult<TourBookingDto>>()
-            .RequireAuthorization();
+            .WithMetadata(new MustHavePermissionAttribute(BookingFeatures.Booking, AppAction.Read))
+            .Produces<PaginatedResult<TourBookingDto>>();
 
-        // ── PUT /api/bookings/{id} ──────────────────────────
+        // ── PUT /api/v1/bookings/{id} ────────────────────────
         group.MapPut("/{id:guid}", UpdateBooking)
             .WithName("UpdateBooking")
+            .WithMetadata(new MustHavePermissionAttribute(BookingFeatures.Booking, AppAction.Update))
             .Produces<TourBookingDto>()
             .ProducesProblem(StatusCodes.Status404NotFound)
-            .ProducesValidationProblem()
-            .RequireAuthorization();
+            .ProducesProblem(StatusCodes.Status409Conflict)  // concurrency
+            .ProducesValidationProblem();
 
-        // ── PATCH /api/bookings/{id}/confirm ────────────────
+        // ── PATCH /api/v1/bookings/{id}/confirm ─────────────
         group.MapPatch("/{id:guid}/confirm", ConfirmBooking)
             .WithName("ConfirmBooking")
+            .WithMetadata(new MustHavePermissionAttribute(BookingFeatures.Booking, AppAction.Approve))
             .Produces(StatusCodes.Status204NoContent)
-            .ProducesProblem(StatusCodes.Status404NotFound)
-            .RequireAuthorization("Permission.Booking.Confirm");
+            .ProducesProblem(StatusCodes.Status404NotFound);
 
-        // ── DELETE /api/bookings/{id} ───────────────────────
+        // ── DELETE /api/v1/bookings/{id} ────────────────────
         group.MapDelete("/{id:guid}", CancelBooking)
             .WithName("CancelBooking")
+            .WithMetadata(new MustHavePermissionAttribute(BookingFeatures.Booking, AppAction.Delete))
             .Produces(StatusCodes.Status204NoContent)
-            .ProducesProblem(StatusCodes.Status404NotFound)
-            .RequireAuthorization();
+            .ProducesProblem(StatusCodes.Status404NotFound);
 
         return endpoints;
     }
@@ -670,26 +675,36 @@ public sealed record ListBookingsRequest(int Page = 1, int PageSize = 20);
 - Use `MapGroup()` for shared prefix + tags
 - Each endpoint → `ISender.Send(Command/Query)` → `Result<T>` → `IResult`
 - Request DTOs are **separate** from Commands (decoupled API shape from use case)
-- `ToProblem()` converts `Result.Outcome` (enum maps to HTTP status code) to `ProblemDetails`
-- Auth: `.RequireAuthorization()` or `.RequireAuthorization("Permission.Xxx.Yyy")`
-- Anonymous: `.AllowAnonymous()`
+- `ToProblem()` / `result.ToApiResult()` converts `Result.Outcome` (enum maps to HTTP status code) to `ProblemDetails`
+- Auth (protected): `.WithMetadata(new MustHavePermissionAttribute({Module}Features.X, AppAction.Y))`
+- Auth (public): `.AllowAnonymous()`
 - Rate limiting: `.RequireRateLimiting(RateLimitPolicies.LoginPolicy)`
 
-> **📌 Rule:** Every endpoint MUST have explicit `.RequireAuthorization()` or `.AllowAnonymous()`. An endpoint without either is a security hole — the framework won't reject unauthenticated requests by default.
+> **📌 Rule 1 (non-negotiable):** Every endpoint MUST have EITHER `.WithMetadata(new MustHavePermissionAttribute(...))` OR `.AllowAnonymous()`. See `agent-context.md §2.1`.
+>
+> **Forbidden**:
+> - `.RequireAuthorization()` alone — "any authenticated user" is almost never what you mean; use a permission.
+> - `.RequireAuthorization("Permission.X.Y")` — string-based policies bypass the attribute and the `PermissionSeeder` won't find the permission. Use `MustHavePermissionAttribute` so the permission is declared in the module's `IPermissionCatalog` and auto-seeded.
+> - No decoration at all — the framework will NOT reject anonymous requests by default.
 
 ---
 
 ### 2.5 Contracts Layer (`{Module}.Contracts/`)
 
-Contains **integration events** published for other modules.
+The module's **public surface**. Contains exactly two things: integration events and the authorization catalog.
 
 ```
 {Module}.Contracts/
-└── IntegrationEvents/
-    ├── TourBookingCreatedIntegrationEvent.cs
-    ├── TourBookingConfirmedIntegrationEvent.cs
-    └── TourBookingCancelledIntegrationEvent.cs
+├── IntegrationEvents/
+│   ├── TourBookingCreatedIntegrationEvent.cs
+│   ├── TourBookingConfirmedIntegrationEvent.cs
+│   └── TourBookingCancelledIntegrationEvent.cs
+└── Authorization/
+    ├── {Module}Features.cs            ← feature string constants OWNED by this module
+    └── {Module}PermissionCatalog.cs   ← implements IPermissionCatalog
 ```
+
+#### Integration Events
 
 ```csharp
 public sealed record TourBookingCreatedIntegrationEvent(
@@ -700,10 +715,61 @@ public sealed record TourBookingCreatedIntegrationEvent(
     int ParticipantCount) : IntegrationEventBase;
 ```
 
+#### Authorization Catalog (required for every module with endpoints)
+
+**Features constants** — one file per module. Other modules MUST NOT add constants here.
+
+```csharp
+// Booking.Contracts/Authorization/BookingFeatures.cs
+namespace Booking.Contracts.Authorization;
+
+public static class BookingFeatures
+{
+    public const string Booking      = nameof(Booking);
+    public const string Refund       = nameof(Refund);
+    public const string Availability = nameof(Availability);
+}
+```
+
+**Permission catalog** — lists every permission this module contributes:
+
+```csharp
+// Booking.Contracts/Authorization/BookingPermissionCatalog.cs
+using YallaJo.SharedKernel.Application.Authorization;
+
+namespace Booking.Contracts.Authorization;
+
+public sealed class BookingPermissionCatalog : IPermissionCatalog
+{
+    public string ModuleName => "Booking";
+
+    public IReadOnlyList<PermissionDescriptor> Permissions { get; } =
+    [
+        new(BookingFeatures.Booking, AppAction.Read,    PermissionGroup.BookingOperations, "View bookings"),
+        new(BookingFeatures.Booking, AppAction.Create,  PermissionGroup.BookingOperations, "Create a booking"),
+        new(BookingFeatures.Booking, AppAction.Update,  PermissionGroup.BookingOperations, "Update a booking"),
+        new(BookingFeatures.Booking, AppAction.Approve, PermissionGroup.BookingOperations, "Approve a pending booking"),
+        new(BookingFeatures.Booking, AppAction.Reject,  PermissionGroup.BookingOperations, "Reject a booking"),
+        new(BookingFeatures.Booking, AppAction.Delete,  PermissionGroup.BookingOperations, "Cancel a booking"),
+    ];
+}
+```
+
+**DI registration** — goes in `{Module}.Infrastructure/DependencyInjection.cs` (NOT in Contracts, to keep Contracts DI-free):
+
+```csharp
+services.AddSingleton<IPermissionCatalog, BookingPermissionCatalog>();
+```
+
+`PermissionSeeder` in `Security.Infrastructure` auto-discovers every registered `IPermissionCatalog` and seeds the database at startup. **Adding a new module requires zero changes to Security** — it just registers its catalog and the permissions appear.
+
 **Rules:**
-- ONLY integration events and shared DTOs (things other modules need to reference)
-- Other modules add a project reference to `{Module}.Contracts` (never `{Module}.Domain`)
-- Inherits from `IntegrationEventBase` (which implements `IIntegrationEvent`)
+- ONLY integration events + authorization catalog + shared DTOs that OTHER modules need to reference
+- Other modules add a project reference to `{Module}.Contracts` — NEVER to `{Module}.Domain` or `{Module}.Application`
+- Integration events inherit from `IntegrationEventBase` (which implements `IIntegrationEvent`)
+- **NEVER add another module's features to your `{Module}Features.cs`** — the boundary is strict
+- See `agent-context.md §4.2` for the full "How to Add a New Permission" walkthrough
+- See `authorization-refactor-plan.md` for the complete authorization architecture
 
 [↑ Back to Table of Contents](#table-of-contents)
 
@@ -822,13 +888,90 @@ public sealed class TourUnitOfWork(IUnitOfWork<TourDbContext> inner) : ITourUnit
 
 **DbContext + Configuration** in `{Module}.Infrastructure/Persistence/`.
 
-**Register in DI** in `{Module}.Infrastructure/DependencyInjection.cs`.
+**Register in DI** in `{Module}.Infrastructure/DependencyInjection.cs`:
 
-### Step 5: Wire Endpoints
+```csharp
+public static IServiceCollection AddTourInfrastructure(
+    this IServiceCollection services, IConfiguration config)
+{
+    // DbContext, UoW, repos, event handlers, outbox/inbox, seeders...
+    services.AddScoped<ITourRepository, TourRepository>();
+    services.AddScoped<ITourUnitOfWork, TourUnitOfWork>();
 
-In `{Module}.Presentation/TourEndpoints.cs` — map to commands/queries.
+    // ── Permission catalog (discovered by Security's PermissionSeeder) ──
+    services.AddSingleton<IPermissionCatalog, TourPermissionCatalog>();
 
-### Step 6: Register in Program.cs
+    return services;
+}
+```
+
+### Step 5: Define the Permission Catalog
+
+In `{Module}.Contracts/Authorization/`:
+
+```csharp
+// TourFeatures.cs
+namespace Tour.Contracts.Authorization;
+
+public static class TourFeatures
+{
+    public const string Tour    = nameof(Tour);
+    public const string Pricing = nameof(Pricing);
+}
+
+// TourPermissionCatalog.cs
+using YallaJo.SharedKernel.Application.Authorization;
+
+namespace Tour.Contracts.Authorization;
+
+public sealed class TourPermissionCatalog : IPermissionCatalog
+{
+    public string ModuleName => "Tour";
+
+    public IReadOnlyList<PermissionDescriptor> Permissions { get; } =
+    [
+        new(TourFeatures.Tour, AppAction.Read,   PermissionGroup.ContentManagement, "View tours"),
+        new(TourFeatures.Tour, AppAction.Create, PermissionGroup.ContentManagement, "Create a tour"),
+        new(TourFeatures.Tour, AppAction.Update, PermissionGroup.ContentManagement, "Update a tour"),
+        new(TourFeatures.Tour, AppAction.Delete, PermissionGroup.ContentManagement, "Delete a tour"),
+    ];
+}
+```
+
+### Step 6: Wire Endpoints
+
+In `{Module}.Presentation/TourEndpoints.cs`:
+
+```csharp
+using Tour.Contracts.Authorization;
+using YallaJo.SharedKernel.Application.Authorization;
+using YallaJo.SharedKernel.Presentation.Authorization;
+
+public static IEndpointRouteBuilder MapTourEndpoints(this IEndpointRouteBuilder endpoints)
+{
+    var group = endpoints.MapGroup("/api/v1/tours").WithTags("Tours");
+
+    group.MapPost("/", CreateTour)
+        .WithName("CreateTour")
+        .WithMetadata(new MustHavePermissionAttribute(TourFeatures.Tour, AppAction.Create))
+        .Produces<Guid>(StatusCodes.Status201Created)
+        .ProducesValidationProblem();
+
+    group.MapGet("/{id:guid}", GetTour)
+        .WithName("GetTour")
+        .WithMetadata(new MustHavePermissionAttribute(TourFeatures.Tour, AppAction.Read))
+        .Produces<TourDto>()
+        .ProducesProblem(StatusCodes.Status404NotFound);
+
+    // ... rest of CRUD endpoints, each with its own MustHavePermission attribute
+
+    return endpoints;
+}
+```
+
+> **📌 Rule 1 check**: Every endpoint must have `.WithMetadata(new MustHavePermissionAttribute(...))` OR `.AllowAnonymous()`. No exceptions. See `agent-context.md §2.1`.
+
+### Step 7: Register in Program.cs
 
 ```csharp
 // In YallaJo.Api/Program.cs
@@ -838,183 +981,1675 @@ builder.Services.AddTourInfrastructure(builder.Configuration);
 app.MapTourEndpoints();
 ```
 
+**Verify seed**: start the app and check the startup log:
+
+```
+[INFO] Seeding 64 permissions from 5 modules: Security, ContentCore, ContentPlaces, Accounts, Tour
+```
+
+If your module isn't in that list, the catalog wasn't registered in DI. Fix `DependencyInjection.cs`.
+
 [↑ Back to Table of Contents](#table-of-contents)
 
 ---
 
 ## 📢 4. Domain Events — When & How
 
-*Side effects within a module boundary. Use domain events when one aggregate's action should trigger behavior in another part of the same module.*
+*In-module, in-transaction side effects. Raised by aggregates, dispatched by `UnitOfWork<TContext>` BEFORE `SaveChangesAsync`, handlers may mutate the same DbContext so the aggregate + handler changes commit atomically.*
 
-### What Are They?
+### 4.1 What Are They?
 
-Domain events represent **something that happened** within a single aggregate/module. They are **synchronous** and execute **within the same transaction**.
+A domain event says **"something business-significant happened inside this module"**. Another piece of the same module (translation cache, audit log, read model, outbox writer) needs to react — **but only if the main change actually succeeds**.
 
-### When to Write a Domain Event
+**Guarantees**:
+- Synchronous, in-process
+- Same database transaction as the aggregate that raised it
+- Handler's DbContext changes commit atomically with the aggregate
+- If any handler throws → the whole transaction rolls back (nothing is saved)
+- Events are cleared from aggregates **before** dispatch (prevents infinite recursion)
 
-| Trigger | Example Event |
-|---------|--------------|
-| Aggregate created | `TourBookingCreatedEvent` |
-| State transition | `TourBookingConfirmedEvent`, `TourBookingCancelledEvent` |
-| Business-significant change | `PriceChangedEvent`, `EmailVerifiedEvent` |
-| Side effect needed | Need to create an outbox message for another module |
+### 4.2 When to Raise a Domain Event
 
-**Do NOT write a domain event for:**
-- Simple property updates (just `MarkUpdated()`)
-- Reads/queries
-- Validation failures
+| Trigger | Example event |
+|---|---|
+| Aggregate created via factory | `CategoryCreatedDomainEvent`, `UserCreatedEvent` |
+| State transition | `BookingConfirmedDomainEvent`, `LanguageActivatedDomainEvent` |
+| Business-significant change | `PriceChangedDomainEvent`, `EmailVerifiedDomainEvent` |
+| Cross-module notification needed | Any event that must produce an outbox row |
 
-### How to Write a Domain Event
+**Do NOT raise a domain event for**:
+- Simple field updates (use `MarkUpdated()` instead)
+- Read/query operations
+- Validation failures (those are `Result.Invalid`, not events)
+- Purely technical concerns (logging, metrics — use pipeline behaviors)
 
-**Step 1 — Define in `{Module}.Domain/Events/`:**
+### 4.3 The Five Moving Parts
+
+```
+┌──────────────────────────────────────────────────────────┐
+│ Domain Layer (zero external deps)                        │
+│                                                          │
+│  IDomainEvent (marker)                                   │
+│     │                                                    │
+│     └── DomainEventBase (abstract record: EventId,       │
+│         │                OccurredOn)                     │
+│         │                                                │
+│         └── TagCreatedDomainEvent (concrete)             │
+│                                                          │
+│  BaseEntity                                              │
+│     ├── _domainEvents: List<IDomainEvent>                │
+│     ├── DomainEvents: IReadOnlyCollection<IDomainEvent>  │
+│     ├── protected AddDomainEvent(IDomainEvent)           │
+│     └── ClearDomainEvents()                              │
+└──────────────────────────────────────────────────────────┘
+                          ▼
+┌──────────────────────────────────────────────────────────┐
+│ Application Layer                                        │
+│                                                          │
+│  DomainEventNotification<TEvent> : INotification         │
+│    └── wraps the domain event for MediatR               │
+└──────────────────────────────────────────────────────────┘
+                          ▼
+┌──────────────────────────────────────────────────────────┐
+│ Infrastructure Layer                                     │
+│                                                          │
+│  UnitOfWork<TContext> ─── collects, clears, dispatches,  │
+│                           saves — in that exact order    │
+│                                                          │
+│  MediatRDomainEventDispatcher ─── wraps each event       │
+│                                    and calls IMediator   │
+│                                    .Publish              │
+│                                                          │
+│  Handlers: INotificationHandler<DomainEventNotification<T>>│
+└──────────────────────────────────────────────────────────┘
+```
+
+### 4.4 The Dispatch Pipeline (annotated)
+
+**`UnitOfWork<TContext>.SaveChangesAsync`** — the beating heart. 35 lines. Read it twice.
 
 ```csharp
-public sealed record TourBookingCreatedEvent(
+// YallaJo.SharedKernel.Infrastructure/Data/UnitOfWork.cs
+public async Task<int> SaveChangesAsync(CancellationToken ct = default)
+{
+    // 1. Collect aggregates with pending events
+    //    - ONLY IAggregateRoot entries are scanned. BaseEntity children are ignored.
+    //    - This is why you MUST mark your aggregate with IAggregateRoot.
+    var aggregates = context.ChangeTracker
+        .Entries<IAggregateRoot>()
+        .Where(e => e.Entity.DomainEvents.Count > 0)
+        .Select(e => e.Entity)
+        .ToList();
+
+    // 2. Snapshot all events across all aggregates
+    var domainEvents = aggregates
+        .SelectMany(a => a.DomainEvents)
+        .ToList();
+
+    // 3. Clear events from aggregates BEFORE dispatch
+    //    - Prevents infinite recursion if a handler triggers another SaveChanges
+    //    - If a handler raises NEW events on the same aggregate, they accumulate
+    //      in a fresh (empty) list and would be picked up by a subsequent save
+    foreach (var aggregate in aggregates)
+        aggregate.ClearDomainEvents();
+
+    // 4. Dispatch BEFORE SaveChanges
+    //    - Handlers can write OutboxMessages / translations / audit logs to the
+    //      same DbContext
+    //    - If a handler throws, we never reach step 5 → aggregate is not saved
+    //    - If a handler succeeds, its changes piggyback on the aggregate's commit
+    if (domainEvents.Count > 0)
+        await dispatcher.DispatchAsync(domainEvents, ct);
+
+    // 5. ONE commit: aggregate changes + handler changes (outbox/translations/audit)
+    return await context.SaveChangesAsync(ct);
+}
+```
+
+**`MediatRDomainEventDispatcher`** — 24 lines. Wraps each domain event in a `DomainEventNotification<T>` and publishes via MediatR.
+
+```csharp
+// YallaJo.SharedKernel.Infrastructure/Events/MediatRDomainEventDispatcher.cs
+public sealed class MediatRDomainEventDispatcher(IMediator mediator) : IDomainEventDispatcher
+{
+    public async Task DispatchAsync(IEnumerable<IDomainEvent> domainEvents, CancellationToken ct = default)
+    {
+        foreach (var domainEvent in domainEvents)
+        {
+            // Runtime generic construction — required because the event type
+            // is known only at dispatch time (not at compile time).
+            var notificationType = typeof(DomainEventNotification<>).MakeGenericType(domainEvent.GetType());
+            var notification = Activator.CreateInstance(notificationType, domainEvent)!;
+
+            // MediatR's default ForeachAwaitPublisher runs handlers sequentially
+            // and SHORT-CIRCUITS on the first exception (see §4.8).
+            await mediator.Publish((INotification)notification, ct);
+        }
+    }
+}
+```
+
+**`DomainEventNotification<T>`** — just a wrapper so MediatR sees an `INotification`:
+
+```csharp
+// YallaJo.SharedKernel.Application/Abstractions/Messaging/DomainEventNotification.cs
+public sealed record DomainEventNotification<TEvent>(TEvent Event) : INotification
+    where TEvent : IDomainEvent;
+```
+
+> **Why the wrapper?** MediatR requires `INotification`. `IDomainEvent` stays in the Domain layer (no MediatR dependency). The wrapper is added at the Application boundary. Handlers implement `INotificationHandler<DomainEventNotification<TourBookingCreatedEvent>>` — the generic parameter carries the strong type.
+
+### 4.5 Writing a Domain Event Handler
+
+**Step 1** — Define the event in `{Module}.Domain/Events/`:
+
+```csharp
+public sealed record TourBookingCreatedDomainEvent(
     Guid BookingId,
     Guid UserId,
     Guid TourId) : DomainEventBase;
 ```
 
-**Step 2 — Raise from aggregate root:**
+**Step 2** — Raise it from the aggregate (factory method or state transition):
 
 ```csharp
-public static TourBooking Create(...)
+public static TourBooking Create(Guid userId, Guid tourId, Money price)
 {
-    var booking = new TourBooking { ... };
-    booking.AddDomainEvent(new TourBookingCreatedEvent(booking.Id, userId, tourId));
+    var booking = new TourBooking { /* ... */ };
+    booking.AddDomainEvent(new TourBookingCreatedDomainEvent(booking.Id, userId, tourId));
     return booking;
 }
 ```
 
-**Step 3 — Handle in `{Module}.Infrastructure/EventHandlers/`:**
+**Step 3** — Handle it in `{Module}.Infrastructure/EventHandlers/`:
 
 ```csharp
-public sealed class TourBookingCreatedDomainEventHandler(BookingDbContext dbContext)
-    : INotificationHandler<DomainEventNotification<TourBookingCreatedEvent>>
+public sealed class TourBookingCreatedDomainEventHandler(
+    BookingDbContext dbContext,
+    ILogger<TourBookingCreatedDomainEventHandler> logger)
+    : INotificationHandler<DomainEventNotification<TourBookingCreatedDomainEvent>>
 {
-    public async Task Handle(
-        DomainEventNotification<TourBookingCreatedEvent> notification, 
+    public Task Handle(
+        DomainEventNotification<TourBookingCreatedDomainEvent> notification,
         CancellationToken ct)
     {
-        var domainEvent = notification.Event;
-        
-        // Convert domain event → integration event → outbox message
+        var e = notification.Event;
+
+        logger.LogInformation(
+            "Handling TourBookingCreated for booking {BookingId}, writing integration event to outbox",
+            e.BookingId);
+
+        // Convert domain event → integration event → outbox row
         var integrationEvent = new TourBookingCreatedIntegrationEvent(
-            domainEvent.BookingId, 
-            domainEvent.UserId, 
-            domainEvent.TourId,
-            DateTime.UtcNow,
-            1);
-        
+            e.BookingId, e.UserId, e.TourId, DateTime.UtcNow, 1);
+
         dbContext.OutboxMessages.Add(OutboxMessage.Create(integrationEvent));
-        // No SaveChanges here! UnitOfWork will save atomically.
+
+        // ⚠️ NO SaveChangesAsync here. UnitOfWork will commit atomically.
+        return Task.CompletedTask;
     }
 }
 ```
 
-> **⚠️ Warning:** Never call `SaveChangesAsync()` inside a domain event handler. The UnitOfWork calls `SaveChanges` after all event handlers complete — calling it inside a handler creates a double-save within the same transaction.
+### 4.6 Handler Requirements (MANDATORY)
 
-### Domain Event Dispatch Flow
+| Rule | Why |
+|---|---|
+| **Never call `SaveChangesAsync`** | UoW commits atomically at step 5. Calling Save in the handler either double-saves (corrupting transaction state) or fails because your handler's changes are already buffered by EF. |
+| **Only mutate the same `DbContext`** | Writing to a *different* module's DbContext breaks atomicity — that's what integration events are for. |
+| **Never cross module boundaries** | Domain events are in-module. If you need to notify another module, emit an `IntegrationEvent` via the outbox (§5). |
+| **Inject `ILogger<THandler>`** | Mandatory for every handler. |
+| **Handle errors appropriately** | If the handler throws, the aggregate is NOT saved. That may or may not be what you want (see §4.8). |
+| **Keep handlers fast** | They run synchronously inside the request path. Heavy work → offload to a background service via `Channel<T>`. |
 
+### 4.7 The "BEFORE vs AFTER SaveChanges" Decision
+
+YallaJo dispatches domain events **BEFORE** `SaveChangesAsync`. This matches:
+
+| Template / Author | Timing | Reason |
+|---|---|---|
+| **YallaJo** | BEFORE | Atomic commit of aggregate + outbox row |
+| [eShop (Microsoft)](https://github.com/dotnet/eShop/blob/main/src/Ordering.Infrastructure/OrderingContext.cs) | BEFORE | Handler DbContext mutations join the same transaction |
+| [Jason Taylor CleanArchitecture](https://github.com/jasontaylordev/CleanArchitecture/blob/main/src/Infrastructure/Data/Interceptors/DispatchDomainEventsInterceptor.cs) | BEFORE | Via `SavingChangesAsync` interceptor |
+| [Kamil Grzybek modular-monolith-with-ddd](https://github.com/kgrzybek/modular-monolith-with-ddd) | BEFORE | "Command Handler defines the transaction boundary" |
+| Jimmy Bogard (2014) | BEFORE | "Just before we commit our transaction" |
+| [Milan Jovanović](https://www.milanjovanovic.tech/blog/how-to-use-ef-core-interceptors) | AFTER (with Outbox) | Eventual consistency — pair with Outbox pattern |
+
+**The BEFORE choice gives us**:
+- Atomic outbox (aggregate + outbox row commit together → at-least-once delivery)
+- Simple failure semantics (one transaction, one rollback)
+- Handler DbContext mutations persist with the aggregate
+
+**The cost**: a handler that calls an external service (email, HTTP) synchronously will block the request AND its failure will roll back the aggregate. Don't do that. External calls go in an **integration event handler** (§5), consumed out-of-band.
+
+### 4.8 Failure Semantics
+
+MediatR's default publisher (`ForeachAwaitPublisher`) invokes handlers **sequentially** and **short-circuits on the first exception**. YallaJo inherits this behavior for domain events.
+
+| Scenario | Behavior |
+|---|---|
+| Handler #1 throws | Handler #2 never runs. SaveChanges never runs. Aggregate NOT saved. |
+| Handler raises a new domain event on the same aggregate | Event is queued in the (now empty) events list. Current `SaveChangesAsync` does NOT re-dispatch. The event is raised on the next save or lost if there isn't one. ⚠️ |
+| Handler calls SaveChanges (anti-pattern) | Partial commit — aggregate saved without outbox row. Broken atomicity. **Do not do this.** |
+| SaveChanges throws (concurrency, unique constraint) | All handler mutations are rolled back. Aggregate not saved. Outbox row not written. Caller receives `DbUpdateException`. |
+
+**If you need handler failure isolation** (one handler's failure should not abort the whole save), do the work via an integration event instead — the outbox processor isolates handlers per-message.
+
+### 4.9 Concrete End-to-End Example
+
+Scenario: user creates a tag. Translation pipeline must translate the name. Outbox row must be written so Analytics module can increment tag-creation metric.
+
+```csharp
+// 1. Command handler
+public async Task<Result<Guid>> Handle(CreateTagCommand cmd, CancellationToken ct)
+{
+    var tag = Tag.Create(cmd.Name, cmd.Slug);           // raises TagCreatedDomainEvent
+    await tagRepository.AddAsync(tag, ct);
+    await unitOfWork.SaveChangesAsync(ct);              // ← triggers the pipeline below
+    return Result<Guid>.Created(tag.Id);
+}
+
+// 2. UnitOfWork.SaveChangesAsync runs:
+//    a. Collects [TagCreatedDomainEvent]
+//    b. Clears tag._domainEvents
+//    c. Dispatches via MediatR
+//    d. MediatR finds two handlers:
+//       - TagCreatedTranslationHandler  (runs first — adds TagTranslation rows)
+//       - TagCreatedOutboxHandler       (runs second — adds OutboxMessage row)
+//    e. Both handlers complete successfully
+//    f. context.SaveChangesAsync() commits: Tag + TagTranslations + OutboxMessage
+//       → ONE transaction, one commit, one rollback guarantee
+
+// 3. (Async, later) CompositeOutboxProcessor picks up the OutboxMessage (§5)
+//    → publishes TagCreatedIntegrationEvent
+//    → Analytics module consumes it, increments metric
 ```
-1. aggregate.AddDomainEvent(new MyEvent(...))
-2. unitOfWork.SaveChangesAsync() is called
-3. UoW collects domain events from ChangeTracker
-4. UoW clears events from aggregates
-5. UoW dispatches events via MediatR (BEFORE SaveChanges)
-6. Handler writes OutboxMessage to same DbContext
-7. Single SaveChangesAsync() persists aggregate + outbox atomically
+
+If any of steps a–f fails → nothing is saved → caller receives an error → safe to retry.
+
+### 4.10 Anti-Patterns
+
+```csharp
+// ❌ Raising from outside an aggregate method
+var booking = new TourBooking { UserId = userId };
+booking.AddDomainEvent(new TourBookingCreatedDomainEvent(...)); // compiler error
+                                                                  // AddDomainEvent is protected
+
+// ✅ Raise inside factory / state method
+booking.AddDomainEvent is called INSIDE Tour.Create(...) or Tour.Confirm(...)
+
+// ────────────────────────────────────────────────────────────────
+
+// ❌ Calling SaveChanges in a handler (breaks atomicity)
+public async Task Handle(DomainEventNotification<TagCreatedEvent> n, CancellationToken ct)
+{
+    dbContext.Something.Add(...);
+    await dbContext.SaveChangesAsync(ct);  // ❌ NO — UoW does this
+}
+
+// ❌ Crossing module boundaries in a domain event handler
+public async Task Handle(DomainEventNotification<TagCreatedEvent> n, CancellationToken ct)
+{
+    accountsDbContext.Profiles.Add(...);  // ❌ different module's DbContext
+    // Use an integration event instead (§5)
+}
+
+// ❌ Using a domain event for data-only transport (use the command itself)
+aggregate.AddDomainEvent(new UserTypedALetterDomainEvent(letter));  // ❌ not a business fact
+
+// ❌ Raising an event on BaseEntity (not IAggregateRoot)
+public sealed class TagTranslation : BaseEntity { /* no IAggregateRoot */ }
+translation.AddDomainEvent(new Something());  // ❌ UoW never scans non-aggregate entries — handler never runs, no error logged
+
+// ❌ Calling state method without state guard (duplicate event)
+language.Activate();  // If already active → raises LanguageActivatedEvent again
+                      // → duplicate outbox row → duplicate integration event
+                      // → re-translates ALL content (expensive)
+// ✅ FIX:
+if (!language.IsActive) language.Activate();
 ```
+
+### 4.11 Testing Domain Events
+
+```csharp
+[Fact]
+public void Create_Raises_TagCreatedDomainEvent()
+{
+    // Arrange & Act
+    var tag = Tag.Create("Food", "food");
+
+    // Assert — events observable via the IReadOnlyCollection exposed by BaseEntity
+    var domainEvent = tag.DomainEvents
+        .OfType<TagCreatedDomainEvent>()
+        .SingleOrDefault();
+
+    domainEvent.Should().NotBeNull();
+    domainEvent!.Name.Should().Be("Food");
+}
+
+[Fact]
+public void ClearDomainEvents_Empties_The_Collection()
+{
+    var tag = Tag.Create("Food", "food");
+    tag.ClearDomainEvents();
+    tag.DomainEvents.Should().BeEmpty();
+}
+```
+
+Full UoW + handler flow can be tested via in-memory DbContext + NSubstitute-mocked `IDomainEventDispatcher`. See `tests/ContentCore.Tests.Unit` for working examples.
 
 [↑ Back to Table of Contents](#table-of-contents)
 
 ---
 
-## 🔗 5. Integration Events — When & How
+## 🔗 5. Integration Events — Outbox / Inbox Pattern
 
-*Communication across module boundaries. Use integration events when one module's action must cause another module to react asynchronously via the Outbox/Inbox pattern.*
+*Cross-module asynchronous communication via the transactional outbox. Events are persisted as rows in the publisher's DbContext (same transaction as the aggregate change), then dispatched out-of-band by a background processor. Consumers use an inbox table for idempotency.*
 
-### What Are They?
+### 5.1 Why the Outbox Pattern?
 
-Integration events represent **something other modules need to know about**. They are **asynchronous**, delivered via the **Outbox/Inbox pattern**.
+Without it you have the **dual-write problem**:
+```
+await dbContext.SaveChangesAsync(ct);  // ← commits the user row
+await messageBus.PublishAsync(...);    // ← crashes: user saved but event lost
+```
+Or the reverse:
+```
+await messageBus.PublishAsync(...);    // ← event sent
+await dbContext.SaveChangesAsync(ct);  // ← crashes: event sent but user NOT saved
+```
+Both scenarios leave the system in an inconsistent state.
 
-### When to Write an Integration Event
+**Outbox fixes this** by writing the event as a row in the **same DbContext** as the aggregate. One `SaveChangesAsync`, one transaction, atomic: either the aggregate AND the outbox row commit, or neither does. A background processor then picks up committed outbox rows and dispatches them to handlers. Loss is impossible; duplicates are possible but handled by the inbox.
+
+### 5.2 When to Publish an Integration Event
 
 | Scenario | Example |
-|----------|---------|
-| Other module needs to react | User created → Accounts creates profile |
-| Cross-module data sync | Email verified → Auth updates session |
-| Audit trail needed | Any significant action → Security writes audit log |
-| External system notification | Booking confirmed → send email/SMS |
+|---|---|
+| Other module must react | User created (Security) → Accounts creates profile |
+| Cross-module data sync | Email verified (Auth) → Security updates claim |
+| Audit trail | Significant action → Analytics writes audit log |
+| External notification | Booking confirmed → Messaging sends email/SMS |
+| Async heavy work | Tag created → Translation orchestrator translates name |
 
-### How — The Full Pipeline
+**Do NOT publish an integration event for**:
+- Side effects within the same module (use a domain event)
+- UI read-model projections (use EF `SavingChangesInterceptor` or a dedicated read repo)
+- Validation errors / expected business failures (those are `Result.Failure`, not events)
 
-**Step 1 — Define in `{Module}.Contracts/IntegrationEvents/`:**
+### 5.3 The Eight Moving Parts
 
-```csharp
-public sealed record TourBookingCreatedIntegrationEvent(
-    Guid BookingId,
-    Guid UserId,
-    Guid TourId,
-    DateTime ScheduledDate,
-    int ParticipantCount) : IntegrationEventBase;
+```
+Publishing Module                     SharedKernel.Infrastructure            Consuming Module
+─────────────────                     ──────────────────────────             ────────────────
+1. IIntegrationEvent (marker)    ──►                                    
+2. IntegrationEventBase          ──►  3. OutboxMessage (row schema)
+   (EventId, OccurredOn)             
+                                      4. OutboxProcessor<TContext>      
+                                         - batch 20, lock 5min,
+                                         - max retry 10
+                                      5. CompositeOutboxProcessor
+                                         (10s background loop)
+                                      6. IntegrationEventNotification<T>
+                                         (wrapper with MessageId)
+                                                                          ◄── 7. INotificationHandler
+                                                                                 <IntegrationEventNotification<T>>
+                                                                          ◄── 8. IInboxStore / InboxMessage
+                                                                                 (idempotency)
 ```
 
-**Step 2 — Domain event handler writes to outbox** (see Section 4 Step 3 above)
-
-**Step 3 — Consume in ANOTHER module's Application/Infrastructure layer:**
+### 5.4 Outbox Schema — `OutboxMessage`
 
 ```csharp
-// In Accounts.Application/EventHandlers/
-public sealed class BookingCreatedIntegrationEventHandler(
-    IAccountsUnitOfWork unitOfWork,
-    IInboxStore inboxStore)
-    : INotificationHandler<IntegrationEventNotification<TourBookingCreatedIntegrationEvent>>
+// YallaJo.SharedKernel.Infrastructure/Outbox/OutboxMessage.cs
+public sealed class OutboxMessage
 {
-    public async Task Handle(
-        IntegrationEventNotification<TourBookingCreatedIntegrationEvent> notification,
+    public Guid      Id              { get; }  // Guid.CreateVersion7() — time-sortable
+    public string    Type            { get; }  // AssemblyQualifiedName of the event type
+    public string    Content         { get; }  // JSON-serialized event payload
+    public DateTime  OccurredOnUtc   { get; }  // Event creation timestamp
+    public DateTime? ProcessedOnUtc  { get; }  // null = pending; set = success
+    public string?   Error           { get; }  // last-failure aggregated error (truncated to 4000 chars)
+    public int       RetryCount      { get; }  // 0..10 (10 = dead-letter)
+    public DateTime? LockedUntil     { get; }  // distributed lock — prevents double-processing
+}
+```
+
+**Each module's DbContext has its own `OutboxMessages` table** in its own schema (`security.OutboxMessages`, `auth.OutboxMessages`, etc.). This is deliberate — it keeps the transactional atomicity per-module.
+
+### 5.5 Publishing an Integration Event
+
+**Step 1** — Define the event in `{Module}.Contracts/IntegrationEvents/`:
+
+```csharp
+public sealed record UserCreatedIntegrationEvent(
+    Guid UserId,
+    string Email,
+    string FirstName,
+    string LastName) : IntegrationEventBase;
+```
+
+`IntegrationEventBase` auto-populates `EventId = Guid.CreateVersion7()` and `OccurredOn = DateTime.UtcNow`.
+
+**Step 2** — Write it to the outbox from the **domain event handler** of the publishing module:
+
+```csharp
+// Security.Infrastructure/EventHandlers/UserCreatedDomainEventHandler.cs
+public sealed class UserCreatedDomainEventHandler(
+    SecurityDbContext dbContext,
+    ILogger<UserCreatedDomainEventHandler> logger)
+    : INotificationHandler<DomainEventNotification<UserCreatedEvent>>
+{
+    public Task Handle(
+        DomainEventNotification<UserCreatedEvent> notification,
         CancellationToken ct)
     {
-        // ── IDEMPOTENCY CHECK (MANDATORY) ──
-        if (await inboxStore.HasBeenProcessedAsync(notification.MessageId, ct))
-            return;
-        
-        var evt = notification.Event;
-        
-        // ── Business logic ──
-        // e.g., update user's booking count, send notification, etc.
-        
-        // ── Mark as processed ──
-        inboxStore.MarkAsProcessed(notification.MessageId);
-        
-        // ── Persist atomically (inbox + business change) ──
-        await unitOfWork.SaveChangesAsync(ct);
+        var e = notification.Event;
+
+        var integrationEvent = new UserCreatedIntegrationEvent(
+            e.UserId, e.Email, e.FirstName, e.LastName);
+
+        // OutboxMessage.Create serializes the event to JSON with AssemblyQualifiedName type info
+        dbContext.OutboxMessages.Add(OutboxMessage.Create(integrationEvent));
+
+        // ⚠️ NO SaveChanges — UoW commits atomically with the user aggregate (§4)
+        return Task.CompletedTask;
     }
 }
 ```
 
-### Integration Event Delivery Flow
+### 5.6 The Background Processor — How Events Are Dispatched
+
+`CompositeOutboxProcessor` runs as a single `BackgroundService` polling every **10 seconds**:
+
+```csharp
+// YallaJo.SharedKernel.Infrastructure/BackgroundJobs/CompositeOutboxProcessor.cs
+protected override async Task ExecuteAsync(CancellationToken ct)
+{
+    while (!ct.IsCancellationRequested)
+    {
+        using var scope = serviceProvider.CreateScope();
+
+        // Resolves every IOutboxProcessor from DI — one per module DbContext
+        var processors = scope.ServiceProvider.GetServices<IOutboxProcessor>();
+
+        foreach (var processor in processors)
+        {
+            try { await processor.ProcessOutboxMessagesAsync(ct); }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Outbox processing failed for {Processor}", processor.GetType().Name);
+                // One module's failure does NOT stop others
+            }
+        }
+
+        await Task.Delay(TimeSpan.FromSeconds(10), ct);
+    }
+}
+```
+
+**Per-module processor (`OutboxProcessor<TContext>`)** — 173 lines of careful logic:
+
+```csharp
+// YallaJo.SharedKernel.Infrastructure/BackgroundJobs/OutboxProcessor.cs
+internal const int MaxRetryCount = 10;                                      // dead-letter threshold
+private const int BatchSize = 20;                                           // messages per poll cycle
+private static readonly TimeSpan LockDuration = TimeSpan.FromMinutes(5);    // distributed lock TTL
+
+public async Task ProcessOutboxMessagesAsync(CancellationToken ct = default)
+{
+    using var scope = serviceProvider.CreateScope();
+    var dbContext = scope.ServiceProvider.GetRequiredService<TContext>();
+
+    var now = DateTime.UtcNow;
+
+    // ── Step 1: Fetch & lock unprocessed, un-dead-lettered, unlocked (or lock-expired) messages ──
+    var messages = await dbContext.Set<OutboxMessage>()
+        .Where(m => m.ProcessedOnUtc == null
+                 && m.RetryCount < MaxRetryCount
+                 && (m.LockedUntil == null || m.LockedUntil < now))
+        .OrderBy(m => m.OccurredOnUtc)
+        .Take(BatchSize)
+        .ToListAsync(ct);
+
+    if (messages.Count == 0) return;
+
+    // Claim them — prevents another instance from processing the same message
+    var lockUntil = now.Add(LockDuration);
+    foreach (var msg in messages) msg.Lock(lockUntil);
+    await dbContext.SaveChangesAsync(ct);
+
+    // ── Step 2: Process each message ──
+    foreach (var message in messages)
+    {
+        if (ct.IsCancellationRequested) break;
+
+        try
+        {
+            // Deserialize
+            var eventType = Type.GetType(message.Type);
+            if (eventType is null) { message.MarkAsFailed($"Unknown event type: {message.Type}"); continue; }
+
+            var integrationEvent = JsonSerializer.Deserialize(message.Content, eventType) as IIntegrationEvent;
+            if (integrationEvent is null) { message.MarkAsFailed("Deserialization returned null"); continue; }
+
+            // Wrap
+            var notificationType = typeof(IntegrationEventNotification<>).MakeGenericType(eventType);
+            var notification = (INotification)Activator.CreateInstance(notificationType, message.Id, integrationEvent)!;
+
+            // ── Step 3: Individual handler invocation via reflection (NOT mediator.Publish) ──
+            //     See §5.7 — this is the most important design decision.
+            var handlerType = typeof(INotificationHandler<>).MakeGenericType(notificationType);
+            var handlers = scope.ServiceProvider.GetServices(handlerType).Where(h => h is not null).ToList();
+
+            if (handlers.Count == 0)
+            {
+                // No consumers registered → nothing to do, mark processed (don't retry forever)
+                message.MarkAsProcessed();
+                continue;
+            }
+
+            var handlerFailures = new List<string>();
+            foreach (var handler in handlers)
+            {
+                try
+                {
+                    var task = (Task?)handlerType.GetMethod("Handle")!
+                        .Invoke(handler, new object[] { notification, ct });
+                    if (task is not null) await task;
+                }
+                catch (Exception ex)
+                {
+                    // Unwrap TargetInvocationException for clarity
+                    var actual = ex is TargetInvocationException tie && tie.InnerException is not null
+                        ? tie.InnerException : ex;
+
+                    logger.LogError(actual,
+                        "Handler {Handler} failed for outbox message {MessageId}. Other handlers will still run.",
+                        handler!.GetType().FullName, message.Id);
+
+                    handlerFailures.Add($"{handler.GetType().Name}: {actual.GetType().Name} {actual.Message}");
+                }
+            }
+
+            // ── Step 4: Mark processed ONLY if ALL handlers succeeded ──
+            if (handlerFailures.Count > 0)
+            {
+                var aggregate = string.Join(" | ", handlerFailures);
+                if (aggregate.Length > 4000) aggregate = aggregate[..4000];
+                message.MarkAsFailed(aggregate);   // RetryCount++, will retry next cycle
+            }
+            else
+            {
+                message.MarkAsProcessed();         // ProcessedOnUtc = DateTime.UtcNow
+            }
+        }
+        catch (Exception ex) { message.MarkAsFailed(ex.Message); }
+    }
+
+    // ── Step 5: Persist state changes (marks + retry counts) ──
+    await dbContext.SaveChangesAsync(ct);
+}
+```
+
+### 5.7 The Big Design Decision — Why Reflection Instead of `mediator.Publish`
+
+MediatR's default `ForeachAwaitPublisher` **short-circuits on the first exception**. For integration events that is **wrong**, because:
+
+1. **Multiple modules subscribe to the same event** — e.g., `UserCreatedIntegrationEvent` is consumed by Accounts (create profile), Auth (mark session-ready), Analytics (increment counter).
+2. **If Accounts fails, Auth and Analytics still need to run** — otherwise one failing module starves every other consumer.
+
+YallaJo replaces `mediator.Publish` with per-handler reflection invocation and per-handler try/catch:
+
+```csharp
+foreach (var handler in handlers)
+{
+    try { /* invoke handler */ }
+    catch (Exception ex) { handlerFailures.Add(...); /* continue to next handler */ }
+}
+
+// Only mark processed if ALL handlers succeeded
+if (handlerFailures.Count > 0) message.MarkAsFailed(aggregate);
+else message.MarkAsProcessed();
+```
+
+This gives **per-handler failure isolation** + **all-or-nothing retry semantics**:
+- Failed handlers cause the message to be retried next cycle
+- Successful handlers short-circuit on retry via their own **inbox** (§5.8)
+- Eventually all handlers succeed OR the message dead-letters after 10 retries
+
+### 5.8 Consuming an Integration Event — The Inbox Pattern
+
+**Step 1** — Register an `IInboxStore` for the consuming module:
+
+```csharp
+// Accounts.Infrastructure/DependencyInjection.cs
+services.AddScoped<IAccountsInboxStore, EfInboxStore<AccountsDbContext>>();
+```
+
+(Each module has its own typed inbox alias — `IAccountsInboxStore`, `IAuthInboxStore`, etc. — so the DI container resolves per-module.)
+
+**Step 2** — Write the handler in `{Module}.Application/EventHandlers/`:
+
+```csharp
+// Accounts.Application/EventHandlers/UserCreatedIntegrationEventHandler.cs
+public sealed class UserCreatedIntegrationEventHandler(
+    IProfileRepository profileRepository,
+    IAccountsUnitOfWork unitOfWork,
+    IAccountsInboxStore inboxStore,
+    ILogger<UserCreatedIntegrationEventHandler> logger)
+    : INotificationHandler<IntegrationEventNotification<UserCreatedIntegrationEvent>>
+{
+    public async Task Handle(
+        IntegrationEventNotification<UserCreatedIntegrationEvent> notification,
+        CancellationToken ct)
+    {
+        // ── Step A: Inbox idempotency check FIRST ──
+        if (await inboxStore.HasBeenProcessedAsync(notification.MessageId, ct))
+        {
+            logger.LogWarning(
+                "Accounts: Message {MessageId} (UserCreated for {UserId}) already processed — skipping.",
+                notification.MessageId, notification.Event.UserId);
+            return;
+        }
+
+        var evt = notification.Event;
+
+        // ── Step B: Defensive check for entity already existing (e.g., synchronous write path already ran) ──
+        if (await profileRepository.AnyAsync(p => p.UserId == evt.UserId, ct))
+        {
+            inboxStore.MarkAsProcessed(notification.MessageId);
+            await unitOfWork.SaveChangesAsync(ct);
+            return;
+        }
+
+        // ── Step C: Business logic ──
+        var profile = Profile.Create(evt.UserId, evt.FirstName, evt.LastName);
+        await profileRepository.AddAsync(profile, ct);
+
+        // ── Step D: Mark inbox + SaveChanges atomically ──
+        inboxStore.MarkAsProcessed(notification.MessageId);
+        await unitOfWork.SaveChangesAsync(ct);
+
+        logger.LogInformation(
+            "Accounts: Profile {ProfileId} created for user {UserId}.",
+            profile.Id, evt.UserId);
+    }
+}
+```
+
+**The inbox table** is tiny:
+
+```csharp
+// YallaJo.SharedKernel.Infrastructure/Inbox/InboxMessage.cs
+public sealed class InboxMessage
+{
+    public Guid Id { get; }              // = OutboxMessage.Id (unique constraint prevents duplicates)
+    public DateTime ProcessedAt { get; } // when this consumer handled it
+}
+```
+
+The inbox row's primary key **is** the outbox message ID. On duplicate delivery, `HasBeenProcessedAsync` returns true and the handler returns immediately — that's the idempotency guarantee.
+
+**`EfInboxStore`** defers persistence to the caller's UoW:
+
+```csharp
+public void MarkAsProcessed(Guid messageId)
+    => dbContext.Set<InboxMessage>().Add(InboxMessage.Create(messageId));
+    // NO SaveChanges — the handler's unitOfWork.SaveChangesAsync commits:
+    //   business change + inbox row   → atomic
+```
+
+### 5.9 Consumer Handler Requirements (MANDATORY)
+
+| Order | Rule | Why |
+|---|---|---|
+| 1 | Check inbox FIRST | Idempotency — prevents double-processing on retry |
+| 2 | (optional) Defensive existence check | If a synchronous path also ran, don't create duplicates |
+| 3 | Do the work | Business logic |
+| 4 | Mark inbox LAST | Only after work succeeds |
+| 5 | Single `SaveChangesAsync` | Atomic commit of work + inbox row |
+| 6 | Never external side effect before inbox mark | If email fails and inbox is marked, retry is lost |
+| 7 | Inject `ILogger<THandler>` | Mandatory |
+| 8 | Never catch exceptions for business flow | Let them throw — outbox processor isolates and retries |
+
+### 5.10 Concrete End-to-End Example — `UserCreatedIntegrationEvent`
 
 ```
-1. Domain event handler writes OutboxMessage (same transaction)
-2. CompositeOutboxProcessor runs every 10 seconds
-3. Picks up unprocessed messages, locks them (5min)
-4. Deserializes JSON → wraps in IntegrationEventNotification<T>
-5. Publishes via MediatR (in-process)
-6. Handler checks inbox, does work, marks inbox
-7. SaveChangesAsync persists inbox + business changes
-8. Outbox message marked as processed
+T=0s      HTTP POST /api/v1/auth/register
+            ↓
+          RegisterCommandHandler
+            ├─ User.Create(...)                                → raises UserCreatedDomainEvent
+            └─ unitOfWork.SaveChangesAsync()
+                 ├─ UoW collects UserCreatedDomainEvent
+                 ├─ UoW clears events
+                 ├─ UoW dispatches
+                 │    └─ UserCreatedDomainEventHandler
+                 │         └─ dbContext.OutboxMessages.Add(
+                 │              OutboxMessage.Create(
+                 │                new UserCreatedIntegrationEvent(...)))
+                 └─ context.SaveChangesAsync()                  ← ONE commit: User + OutboxMessage
+          ↓
+          201 Created returned to caller
+
+T≤10s    CompositeOutboxProcessor polls (every 10s)
+            ↓
+          OutboxProcessor<SecurityDbContext>.ProcessOutboxMessagesAsync()
+            ├─ Finds UserCreatedIntegrationEvent row (ProcessedOnUtc=null, RetryCount<10)
+            ├─ Locks it (LockedUntil = now + 5min)
+            ├─ Deserializes JSON
+            ├─ Resolves handlers:
+            │    • Accounts.UserCreatedIntegrationEventHandler
+            │    • Auth.UserCreatedIntegrationEventHandler
+            │    • Analytics.UserCreatedIntegrationEventHandler
+            │
+            ├─ Accounts handler runs
+            │    ├─ Inbox check → not found
+            │    ├─ Profile.Create(...)
+            │    ├─ profileRepository.AddAsync(profile)
+            │    ├─ inboxStore.MarkAsProcessed(messageId)
+            │    └─ accountsUnitOfWork.SaveChangesAsync()       ← atomic: Profile + Accounts.InboxMessage
+            │
+            ├─ Auth handler runs → same pattern → atomic: Session + Auth.InboxMessage
+            ├─ Analytics handler runs → same pattern → atomic: MetricRow + Analytics.InboxMessage
+            │
+            └─ All succeeded → message.MarkAsProcessed() → saves
+
+T=20s    Next poll → no unprocessed messages for this event → skipped
 ```
 
-### Key Rules
+### 5.11 Failure Scenarios
 
-- **Always check inbox first** — `HasBeenProcessedAsync(notification.MessageId)`
-- **Always mark inbox** — `MarkAsProcessed(notification.MessageId)`
-- **Always SaveChanges at the end** — ensures inbox + work are atomic
-- Integration event handlers live in the **consuming** module, not the publishing module
-- The **publishing** module only references `{Module}.Contracts` for the event type
+| Failure | What Happens | Recovery |
+|---|---|---|
+| Handler #2 throws `DbUpdateException` | Handlers #1 and #3 still ran (inbox marked). Message marked failed with aggregated error. RetryCount=1. | Next poll: handler #2 retries. Handlers #1, #3 short-circuit via inbox (return early). All succeed → message marked processed. |
+| Publisher commits aggregate but processor hasn't run yet | Outbox row exists, ProcessedOnUtc=null. Events will be delivered on next poll. | Normal operation — at-least-once delivery guarantee. |
+| Processor instance A crashes mid-processing | Message has `LockedUntil > now`. Other instances wait 5 min. | After 5 min, another instance claims the message and retries. |
+| Consumer succeeds but SaveChanges fails | Transaction rolled back — business change + inbox row both rolled back. Handler exception propagates to processor → RetryCount++. | Next poll: re-delivered. Inbox check fails (no row) → re-processes. |
+| Message has 10 failed retries | `RetryCount = 10` — filter `RetryCount < MaxRetryCount` excludes it. Dead-lettered. | **Manual intervention required.** Ops query: `SELECT * FROM OutboxMessages WHERE RetryCount >= 10` |
+| `Type.GetType(message.Type)` returns null (assembly renamed) | Message marked failed with "Unknown event type". Retried forever (actually capped at max). | Deploy with the old assembly name OR manually delete the bad rows. |
 
-> **📌 Rule:** Always call `SaveChangesAsync` at the end of integration event handlers to commit the inbox record and business changes atomically. Omitting this leaves the inbox un-marked, causing the outbox processor to reprocess the message indefinitely.
+### 5.12 Multi-Instance Safety
+
+The system is safe to run on multiple hosts because of optimistic locking:
+
+```sql
+-- Query the processor uses (reconstructed):
+SELECT TOP 20 * FROM OutboxMessages
+WHERE ProcessedOnUtc IS NULL
+  AND RetryCount < 10
+  AND (LockedUntil IS NULL OR LockedUntil < GETUTCDATE())
+ORDER BY OccurredOnUtc;
+
+-- Immediately after: UPDATE ... SET LockedUntil = @now + 5min; SaveChangesAsync
+```
+
+If two instances poll simultaneously, only one wins the `UPDATE` (by EF's optimistic concurrency). The other sees 0 rows updated and retries next cycle.
+
+**Lock expires after 5 minutes** — if the winning instance crashes, another can take over after that timeout. This is why handlers must be **idempotent** and the **inbox is mandatory**.
+
+### 5.13 Operational Queries
+
+Save these as dashboards / alerts:
+
+```sql
+-- Backlog size (should be near zero)
+SELECT COUNT(*) FROM OutboxMessages
+WHERE ProcessedOnUtc IS NULL AND RetryCount < 10;
+
+-- Currently in-flight (locked and not yet finished)
+SELECT COUNT(*) FROM OutboxMessages
+WHERE ProcessedOnUtc IS NULL AND LockedUntil > GETUTCDATE();
+
+-- DEAD LETTERS — manual intervention required
+SELECT Id, Type, Error, RetryCount, OccurredOnUtc
+FROM OutboxMessages
+WHERE RetryCount >= 10
+ORDER BY OccurredOnUtc DESC;
+
+-- Average processing latency
+SELECT AVG(DATEDIFF(SECOND, OccurredOnUtc, ProcessedOnUtc)) AS AvgSeconds
+FROM OutboxMessages
+WHERE ProcessedOnUtc IS NOT NULL
+  AND OccurredOnUtc > DATEADD(HOUR, -1, GETUTCDATE());
+```
+
+### 5.14 Industry Comparison
+
+| Approach | Dispatch | Locking | Retry | Failure isolation |
+|---|---|---|---|---|
+| **YallaJo** | Reflection, individual handler invocation | Optimistic via `LockedUntil` | Max 10, passive (next cycle, no backoff) | ✅ Per-handler try/catch |
+| [Milan Jovanović (simple)](https://www.milanjovanovic.tech/blog/implementing-the-outbox-pattern) | `mediator.Publish` | DB row lock | Max 3 typical | ❌ First failure aborts rest |
+| [Milan Jovanović (Quartz)](https://www.milanjovanovic.tech/blog/scheduling-background-jobs-with-quartz-net) | Quartz job + Mediator | Quartz cluster | Quartz built-in | Depends on Mediator |
+| [Kamil Grzybek modular-monolith-with-ddd](https://github.com/kgrzybek/modular-monolith-with-ddd) | Custom Autofac dispatcher | Row lock | Manual | ✅ Per-module isolation |
+| MassTransit v8 | MassTransit pipeline | Framework-managed | Exponential backoff | ✅ Built-in |
+| Wolverine | Wolverine transport | Framework-managed | Exponential backoff | ✅ Built-in |
+| [eShop (Microsoft)](https://learn.microsoft.com/en-us/dotnet/architecture/microservices/microservice-ddd-cqrs-patterns/integration-event-based-microservice-communications) | Service Bus | Broker | Broker | Broker |
+
+**YallaJo's trade-offs vs alternatives**:
+- ✅ Zero dependencies beyond EF + MediatR (no Quartz, Hangfire, Service Bus)
+- ✅ Strongest failure isolation (per-handler)
+- ❌ No exponential backoff (retries every 10s forever until success or max)
+- ❌ No dedicated dead-letter queue (dead messages stay in main table, queryable)
+- ❌ `AssemblyQualifiedName` fragility (integration event type rename breaks deserialization)
+
+### 5.15 Anti-Patterns
+
+```csharp
+// ❌ Publishing directly from the command handler (skips outbox = dual-write bug)
+public async Task<Result> Handle(RegisterCommand cmd, CancellationToken ct)
+{
+    var user = User.Create(...);
+    await userRepo.AddAsync(user, ct);
+    await unitOfWork.SaveChangesAsync(ct);            // commits user
+    await messageBus.PublishAsync(new UserCreated()); // ❌ second call — if this fails, user saved but event lost
+}
+
+// ✅ FIX: raise domain event inside User.Create; domain event handler writes to outbox;
+//        UoW commits user + outbox atomically
+
+// ────────────────────────────────────────────────────────────
+
+// ❌ Consumer that does external side effect BEFORE marking inbox
+public async Task Handle(...)
+{
+    if (await inboxStore.HasBeenProcessedAsync(id, ct)) return;
+
+    await emailService.SendAsync(...);                 // ❌ succeeds
+    inboxStore.MarkAsProcessed(id);
+    await unitOfWork.SaveChangesAsync(ct);             // ❌ throws → email sent but inbox not marked → email sent AGAIN on retry
+}
+
+// ✅ FIX: if external effect has its own idempotency, fine.
+//        Otherwise, queue the external work to a separate background service
+//        and only mark inbox after the work is durably queued.
+
+// ────────────────────────────────────────────────────────────
+
+// ❌ Forgetting the inbox check
+public async Task Handle(IntegrationEventNotification<UserCreatedIntegrationEvent> n, CancellationToken ct)
+{
+    var profile = Profile.Create(n.Event.UserId, ...);  // ❌ runs EVERY retry → creates duplicate profiles
+    await profileRepo.AddAsync(profile, ct);
+    await unitOfWork.SaveChangesAsync(ct);
+}
+
+// ────────────────────────────────────────────────────────────
+
+// ❌ Catching exceptions inside the handler (hides failures from the processor)
+public async Task Handle(...)
+{
+    try { /* work */ }
+    catch { /* swallow */ }  // ❌ processor thinks it succeeded, marks message processed → consumer never retries
+}
+
+// ✅ FIX: let it throw. The processor isolates the failure and retries next cycle.
+
+// ────────────────────────────────────────────────────────────
+
+// ❌ Integration event referencing Domain types
+public sealed record UserCreatedIntegrationEvent(
+    User User,                                         // ❌ Domain entity
+    Address Address) : IntegrationEventBase;           // ❌ ValueObject
+
+// ✅ FIX: integration events are FLAT DTOs with primitives / Guids / strings only
+public sealed record UserCreatedIntegrationEvent(
+    Guid UserId, string Email, string FirstName, string LastName) : IntegrationEventBase;
+```
+
+### 5.16 Known Limitations (document these as you hit them)
+
+| Limitation | Impact | Mitigation |
+|---|---|---|
+| `Type.GetType(AssemblyQualifiedName)` breaks on assembly rename / refactor | Messages fail to deserialize; dead-letter | Add an integration-event type registry keyed by short name. Defer renames until dead-letters drain. |
+| No exponential backoff | A broken dependency is hammered every 10s | Accept — queue depth is bounded (batch 20), monitor backlog |
+| No true dead-letter table | Dead messages sit in main table with `RetryCount >= 10` | Query `WHERE RetryCount >= 10` for ops dashboard |
+| Lock duration 5min fixed | Slow handlers may race after 5min timeout | Keep handlers fast; offload to separate background services if needed |
+| No integration-event versioning story | Schema change requires backward-compatible payloads | Add optional fields, never remove; handle defaults in consumers |
+| No CAP-style outbox across DBs | All modules share one SQL Server instance | Sufficient for the monolith; not applicable until split |
+
+### 5.17 Testing Integration Events
+
+```csharp
+// Publisher side — verify outbox row is written
+[Fact]
+public async Task RegisterCommand_Writes_UserCreatedIntegrationEvent_To_Outbox()
+{
+    // Arrange (InMemory DbContext + Substitute<IDomainEventDispatcher>)
+    var handler = new RegisterCommandHandler(...);
+
+    // Act
+    await handler.Handle(new RegisterCommand("a@b.com", "John", "Doe"), default);
+
+    // Assert
+    var outboxRow = await dbContext.OutboxMessages.SingleOrDefaultAsync();
+    outboxRow.Should().NotBeNull();
+    outboxRow!.Type.Should().Contain(nameof(UserCreatedIntegrationEvent));
+}
+
+// Consumer side — verify idempotency
+[Fact]
+public async Task Handler_Is_Idempotent_On_Duplicate_Delivery()
+{
+    var handler = new UserCreatedIntegrationEventHandler(...);
+    var notification = new IntegrationEventNotification<UserCreatedIntegrationEvent>(
+        Guid.CreateVersion7(),
+        new UserCreatedIntegrationEvent(userId, "a@b.com", "John", "Doe"));
+
+    await handler.Handle(notification, default);
+    await handler.Handle(notification, default);  // duplicate
+
+    (await profileRepository.CountAsync(p => p.UserId == userId)).Should().Be(1);
+}
+```
+
+### 5.18 Production Hardening
+
+This section covers the production-readiness concerns that are typically underdocumented: retention policy, schema versioning, dead-letter strategy, multi-instance polling, observability, and testing. Backed by 15+ industry references ([Chris Richardson microservices.io](https://microservices.io/patterns/data/transactional-outbox.html), [Milan Jovanović](https://www.milanjovanovic.tech/blog/scaling-the-outbox-pattern), [Kamil Grzybek](https://www.kamilgrzybek.com/design/the-outbox-pattern/), [Wolverine](https://wolverinefx.io/guide/durability), [MassTransit](https://masstransit.io/documentation/configuration/middleware/outbox), [NServiceBus](https://docs.particular.net/nservicebus/outbox/), [Brighter](https://brightercommand.gitbook.io/paramore-brighter-documentation/outbox-and-inbox/mssqloutbox), [João Antunes OutboxKit](https://blog.codingmilitia.com/2024/12/03/introducing-outboxkit/)).
+
+#### 5.18.1 Retention Policy
+
+Processed outbox rows accumulate forever today. Add a cleanup job to prune them while preserving audit trail + dead-letters.
+
+| Category | Retention | Reason |
+|---|---|---|
+| Successfully processed (`ProcessedOnUtc` IS NOT NULL, `RetryCount < 10`) | **30 days** default | Audit + replay window. Jovanović, Grzybek, NServiceBus converge on this. |
+| Dead-lettered (`RetryCount >= 10`) | **NEVER auto-delete** | Evidence for debugging + replay after bug fix. Keep indefinitely or with separate 180-day window. |
+| In-flight (`LockedUntil > now`) | N/A | Cleanup job excludes these. |
+| Pending (`ProcessedOnUtc` IS NULL, not locked) | N/A | Cleanup job excludes these. |
+
+**Recommended `OutboxCleanupBackgroundService`** (add to `YallaJo.SharedKernel.Infrastructure/BackgroundJobs/`):
+
+```csharp
+/// <summary>
+/// Deletes successfully processed outbox rows older than the retention window.
+/// Runs once per hour. Never deletes dead-lettered rows (RetryCount >= 10) —
+/// those require manual intervention.
+///
+/// Per-module cleanup: resolves every IOutboxProcessor via DI to locate each
+/// module's DbContext, then runs the cleanup query against that schema.
+/// </summary>
+public sealed class OutboxCleanupBackgroundService(
+    IServiceProvider serviceProvider,
+    ILogger<OutboxCleanupBackgroundService> logger,
+    IOptions<OutboxCleanupOptions> options) : BackgroundService
+{
+    private const int BatchSize = 1000; // delete in batches to avoid long-running transactions
+    private readonly TimeSpan _retentionPeriod = options.Value.RetentionPeriod;   // default 30 days
+    private readonly TimeSpan _cleanupInterval = options.Value.CleanupInterval;   // default 1 hour
+
+    protected override async Task ExecuteAsync(CancellationToken ct)
+    {
+        logger.LogInformation(
+            "Outbox cleanup service started — retention: {Retention}, interval: {Interval}",
+            _retentionPeriod, _cleanupInterval);
+
+        while (!ct.IsCancellationRequested)
+        {
+            try
+            {
+                await CleanupAllModulesAsync(ct);
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                logger.LogError(ex, "Outbox cleanup iteration failed");
+            }
+
+            try { await Task.Delay(_cleanupInterval, ct); }
+            catch (OperationCanceledException) when (ct.IsCancellationRequested) { break; }
+        }
+    }
+
+    private async Task CleanupAllModulesAsync(CancellationToken ct)
+    {
+        using var scope = serviceProvider.CreateScope();
+        var cutoff = DateTime.UtcNow - _retentionPeriod;
+        var cleaners = scope.ServiceProvider.GetServices<IOutboxCleaner>();
+
+        foreach (var cleaner in cleaners)
+        {
+            if (ct.IsCancellationRequested) break;
+
+            try
+            {
+                var deleted = await cleaner.DeleteProcessedBeforeAsync(cutoff, BatchSize, ct);
+                if (deleted > 0)
+                {
+                    logger.LogInformation(
+                        "Outbox cleanup: deleted {Count} rows for {Module} (cutoff {Cutoff})",
+                        deleted, cleaner.ModuleName, cutoff);
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Outbox cleanup failed for {Module}", cleaner.ModuleName);
+            }
+        }
+    }
+}
+
+/// <summary>Per-module cleanup abstraction. Each module registers its own implementation.</summary>
+public interface IOutboxCleaner
+{
+    string ModuleName { get; }
+    Task<int> DeleteProcessedBeforeAsync(DateTime cutoff, int batchSize, CancellationToken ct);
+}
+
+public sealed class OutboxCleaner<TContext>(IServiceScopeFactory scopeFactory) : IOutboxCleaner
+    where TContext : DbContext
+{
+    public string ModuleName => typeof(TContext).Name;
+
+    public async Task<int> DeleteProcessedBeforeAsync(
+        DateTime cutoff, int batchSize, CancellationToken ct)
+    {
+        using var scope = scopeFactory.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<TContext>();
+
+        int totalDeleted = 0;
+        int deletedInBatch;
+
+        do
+        {
+            // ExecuteDeleteAsync in EF 7+ does a single bulk DELETE statement
+            // Filter: only PROCESSED rows older than cutoff with RetryCount < 10 (exclude dead-letters)
+            deletedInBatch = await db.Set<OutboxMessage>()
+                .Where(m => m.ProcessedOnUtc != null
+                         && m.ProcessedOnUtc < cutoff
+                         && m.RetryCount < OutboxProcessor<TContext>.MaxRetryCount)
+                .Take(batchSize)
+                .ExecuteDeleteAsync(ct);
+
+            totalDeleted += deletedInBatch;
+
+        } while (deletedInBatch == batchSize && !ct.IsCancellationRequested);
+
+        return totalDeleted;
+    }
+}
+
+public sealed class OutboxCleanupOptions
+{
+    public TimeSpan RetentionPeriod { get; set; } = TimeSpan.FromDays(30);
+    public TimeSpan CleanupInterval { get; set; } = TimeSpan.FromHours(1);
+}
+```
+
+**Registration in each module's DI**:
+
+```csharp
+// {Module}.Infrastructure/DependencyInjection.cs
+services.AddScoped<IOutboxCleaner, OutboxCleaner<SecurityDbContext>>();
+```
+
+**Registration in `YallaJo.SharedKernel.Infrastructure/DependencyInjection.cs`**:
+
+```csharp
+services.Configure<OutboxCleanupOptions>(config.GetSection("OutboxCleanup"));
+services.AddHostedService<OutboxCleanupBackgroundService>();
+```
+
+**`appsettings.json`**:
+
+```json
+{
+  "OutboxCleanup": {
+    "RetentionPeriod": "30.00:00:00",
+    "CleanupInterval": "01:00:00"
+  }
+}
+```
+
+**Index for the cleanup query** (add via EF migration):
+
+```sql
+-- SQL Server — filtered index excludes dead-letters and includes only processed rows
+CREATE NONCLUSTERED INDEX IX_OutboxMessages_Cleanup
+ON OutboxMessages (ProcessedOnUtc)
+WHERE ProcessedOnUtc IS NOT NULL AND RetryCount < 10;
+```
+
+#### 5.18.2 Schema Versioning — Integration Event Type Registry
+
+`OutboxMessage.Type = integrationEvent.GetType().AssemblyQualifiedName!` is **fragile**. Renaming the class, namespace, or assembly breaks deserialization of outstanding outbox rows. This is a production risk.
+
+**Fix**: decouple stored type name from CLR `AssemblyQualifiedName` using a short-name registry.
+
+```csharp
+/// <summary>
+/// Maps stable logical names to CLR types.
+/// Every integration event MUST be registered here.
+/// NEVER remove or rename an existing key — only add new ones.
+/// To rename an event type, keep the old key as a legacy alias.
+/// </summary>
+public static class IntegrationEventTypeRegistry
+{
+    private static readonly Dictionary<string, Type> _nameToType = new()
+    {
+        ["user.created.v1"]              = typeof(UserCreatedIntegrationEvent),
+        ["user.email-verified.v1"]       = typeof(UserEmailVerifiedIntegrationEvent),
+        ["tag.created.v1"]               = typeof(TagCreatedIntegrationEvent),
+        ["place.created.v1"]             = typeof(PlaceCreatedIntegrationEvent),
+        // ... every integration event from every module
+    };
+
+    private static readonly Dictionary<Type, string> _typeToName =
+        _nameToType
+            .GroupBy(kv => kv.Value)
+            .ToDictionary(g => g.Key, g => g.First().Key); // canonical (first) name per type
+
+    public static string GetName(Type type)
+        => _typeToName.TryGetValue(type, out var name)
+            ? name
+            : throw new InvalidOperationException(
+                $"Type {type.FullName} not registered in IntegrationEventTypeRegistry. " +
+                "Add it before publishing.");
+
+    public static bool TryGetType(string name, out Type? type)
+        => _nameToType.TryGetValue(name, out type);
+}
+```
+
+**Modify `OutboxMessage.Create`** to use the registry:
+
+```csharp
+public static OutboxMessage Create(IIntegrationEvent integrationEvent)
+{
+    return new OutboxMessage
+    {
+        Id = Guid.CreateVersion7(),
+        // Was: integrationEvent.GetType().AssemblyQualifiedName!
+        Type = IntegrationEventTypeRegistry.GetName(integrationEvent.GetType()),
+        Content = JsonSerializer.Serialize(integrationEvent, integrationEvent.GetType()),
+        OccurredOnUtc = integrationEvent.OccurredOn,
+        ProcessedOnUtc = null,
+        Error = null,
+        RetryCount = 0,
+        LockedUntil = null
+    };
+}
+```
+
+**Modify `OutboxProcessor.ProcessOutboxMessagesAsync`** to use the registry:
+
+```csharp
+// Was: var eventType = Type.GetType(message.Type);
+if (!IntegrationEventTypeRegistry.TryGetType(message.Type, out var eventType) || eventType is null)
+{
+    logger.LogError(
+        "Unknown integration event type {Type} (message {MessageId}) — dead-lettering",
+        message.Type, message.Id);
+
+    // Force dead-letter: set RetryCount to MaxRetryCount so filter excludes it
+    // (Alternative: add a dedicated Status column — see §5.18.3)
+    while (message.RetryCount < OutboxProcessor<TContext>.MaxRetryCount)
+        message.MarkAsFailed($"Unknown type: {message.Type}");
+    continue;
+}
+```
+
+**Schema evolution rules** (from [Confluent schema evolution](https://developer.confluent.io/courses/microservices/schema-evolution)):
+
+| Change | Safe? | Notes |
+|---|---|---|
+| Add optional field with default | ✅ YES | Always safe — tolerant reader pattern |
+| Add required field (no default) | ❌ NO | Old consumers fail to deserialize |
+| Remove optional field | ⚠️ RISKY | New consumers may expect it |
+| Remove required field | ❌ NEVER | Hard break |
+| Rename field | ❌ NEVER | Use add-new + deprecate-old pattern |
+| Change field type | ❌ NEVER | Hard break |
+
+**Renaming an event type safely (3-step migration)**:
+
+1. Add new type name to registry alongside old name (both point to same CLR type): `["user.created.v2"] = typeof(UserCreatedIntegrationEvent), ["user.created.v1"] = typeof(UserCreatedIntegrationEvent),`
+2. Deploy. Producer starts writing `v2`. Consumers handle both keys. Old rows with `v1` still deserialize via the legacy alias.
+3. Wait for retention window + all `v1` rows processed. Remove `v1` key from registry.
+
+#### 5.18.3 Dead-Letter Strategy
+
+**Current YallaJo state**: dead-lettered messages (`RetryCount >= 10`) stay in the main table but are filtered out of dispatcher queries. They are queryable via SQL but there is no automated alerting.
+
+**Recommended enhancements** (listed in priority order):
+
+1. **Add explicit `Status` column** (`Pending` | `Processing` | `Processed` | `Failed` | `Dead`) — makes queries self-documenting:
+
+```csharp
+public sealed class OutboxMessage
+{
+    // ... existing fields ...
+    public OutboxMessageStatus Status { get; private set; } = OutboxMessageStatus.Pending;
+}
+
+public enum OutboxMessageStatus { Pending, Processing, Processed, Failed, Dead }
+```
+
+2. **Expose dead-letter health endpoint** — `/health/outbox-dead-letters` returns 200 if count is 0, 503 otherwise. Integrates with existing health-check infrastructure.
+
+3. **Add replay endpoint for ops** (guarded by `Permission.Ops.ReplayDeadLetter`):
+
+```csharp
+// YallaJo.Api/Endpoints/OpsEndpoints.cs
+ops.MapPost("/outbox/replay/{id:guid}", async (Guid id, ISender sender, CancellationToken ct) =>
+{
+    var result = await sender.Send(new ReplayDeadLetterCommand(id), ct);
+    return result.ToApiResult();
+})
+.WithMetadata(new MustHavePermissionAttribute(OpsFeatures.DeadLetter, AppAction.Replay))
+.WithName("ReplayDeadLetter");
+```
+
+**Replay strategy** (preferred: clone, don't mutate):
+
+```csharp
+public async Task<Result> Handle(ReplayDeadLetterCommand cmd, CancellationToken ct)
+{
+    var dead = await dbContext.OutboxMessages.FindAsync([cmd.MessageId], ct);
+    if (dead is null || dead.RetryCount < OutboxProcessor<T>.MaxRetryCount)
+        return Result.Failure(Error.NotFound("OutboxMessage.NotDead"), Outcome.NotFound);
+
+    // Clone → new row with fresh ID, RetryCount=0. Preserves dead-letter evidence.
+    dbContext.OutboxMessages.Add(new OutboxMessage {
+        Id = Guid.CreateVersion7(),
+        Type = dead.Type,
+        Content = dead.Content,
+        OccurredOnUtc = DateTime.UtcNow, // re-stamp so it's picked up on next poll
+        // ProcessedOnUtc, Error, RetryCount, LockedUntil all default
+    });
+    await dbContext.SaveChangesAsync(ct);
+    return Result.Success();
+}
+```
+
+4. **Ops dashboard queries** (add to documentation):
+
+```sql
+-- Dead-letter count per module (RUN THIS AS MONITORING)
+SELECT 'Security' AS Module, COUNT(*) AS DeadLetters, MIN(OccurredOnUtc) AS Oldest
+FROM security.OutboxMessages WHERE RetryCount >= 10
+UNION ALL
+SELECT 'Accounts', COUNT(*), MIN(OccurredOnUtc)
+FROM accounts.OutboxMessages WHERE RetryCount >= 10;
+
+-- Dead-letters with error details
+SELECT Id, Type, Error, RetryCount, OccurredOnUtc,
+       DATEDIFF(HOUR, OccurredOnUtc, GETUTCDATE()) AS AgeHours
+FROM security.OutboxMessages
+WHERE RetryCount >= 10
+ORDER BY OccurredOnUtc DESC;
+
+-- Processing backlog (should be near zero in healthy system)
+SELECT COUNT(*) AS Backlog
+FROM security.OutboxMessages
+WHERE ProcessedOnUtc IS NULL AND RetryCount < 10;
+
+-- Oldest unprocessed message age (processing lag)
+SELECT DATEDIFF(SECOND, MIN(OccurredOnUtc), GETUTCDATE()) AS LagSeconds
+FROM security.OutboxMessages
+WHERE ProcessedOnUtc IS NULL AND RetryCount < 10;
+```
+
+#### 5.18.4 Multi-Instance Polling Deep Dive
+
+YallaJo's current locking is optimistic — safe for multi-instance but not optimal. Industry comparison:
+
+| Framework | Locking mechanism | Polling interval |
+|---|---|---|
+| **YallaJo** | Optimistic via `LockedUntil` (5min) | 10 seconds fixed |
+| [Wolverine](https://wolverinefx.io/guide/durability) | Leadership election (1 instance owns outbox) | 5s default, per-queue override |
+| [MassTransit](https://masstransit.io/documentation/configuration/middleware/outbox) | `FOR UPDATE SKIP LOCKED` (PostgreSQL) | `QueryDelay` — 0 when active |
+| [NServiceBus](https://docs.particular.net/nservicebus/outbox/) | Depends on transport + persistence | Configurable per persistence |
+| [Milan Jovanović scaling](https://www.milanjovanovic.tech/blog/scaling-the-outbox-pattern) | `SKIP LOCKED` + parallel workers | Continuous (no sleep when active) |
+
+**Adaptive polling pattern** (optimization — poll faster when queue has work):
+
+```csharp
+// In CompositeOutboxProcessor.ExecuteAsync(), replace fixed Task.Delay with:
+var processedThisCycle = false;
+foreach (var processor in processors)
+{
+    try
+    {
+        var count = await processor.ProcessOutboxMessagesAsync(ct);
+        if (count > 0) processedThisCycle = true;
+    }
+    catch { /* log, continue */ }
+}
+
+// Adapt: short delay while draining, long delay when idle
+var delay = processedThisCycle
+    ? TimeSpan.FromMilliseconds(200)    // keep draining
+    : TimeSpan.FromSeconds(10);          // idle backoff (current default)
+
+await Task.Delay(delay, ct);
+```
+
+This requires `ProcessOutboxMessagesAsync` to return `int` (count of messages processed). Small, non-breaking change.
+
+#### 5.18.5 Observability — OpenTelemetry Metrics + Trace Propagation
+
+**Problem**: the outbox pattern creates a trace discontinuity. The HTTP request span ends after commit. The outbox processor picks up the row later in a separate span. Without explicit W3C trace context propagation, traces break at the outbox boundary.
+
+**Fix**: propagate `traceparent` through `OutboxMessage.TraceContext`.
+
+**Schema change**:
+
+```csharp
+public sealed class OutboxMessage
+{
+    // ... existing fields ...
+    public string? TraceContext { get; private set; } // W3C traceparent + baggage
+}
+```
+
+**Capture at write time**:
+
+```csharp
+using OpenTelemetry.Context.Propagation;
+
+public static class TraceContextHelpers
+{
+    public static string? Capture()
+    {
+        var activity = Activity.Current;
+        if (activity is null) return null;
+
+        var entries = new List<KeyValuePair<string, string>>();
+        Propagators.DefaultTextMapPropagator.Inject(
+            new PropagationContext(activity.Context, Baggage.Current),
+            entries,
+            (carrier, key, value) => carrier.Add(new(key, value)));
+
+        return JsonSerializer.Serialize(entries);
+    }
+
+    public static Activity? Restore(string? serialized, ActivitySource source, string spanName)
+    {
+        if (string.IsNullOrEmpty(serialized)) return source.StartActivity(spanName);
+
+        var entries = JsonSerializer.Deserialize<List<KeyValuePair<string, string>>>(serialized)!;
+        var parentContext = Propagators.DefaultTextMapPropagator.Extract(
+            default, entries,
+            (carrier, key) => carrier.Where(e => e.Key == key).Select(e => e.Value));
+
+        Baggage.Current = parentContext.Baggage;
+
+        return source.StartActivity(
+            spanName,
+            ActivityKind.Producer,
+            parentContext.ActivityContext);
+    }
+}
+```
+
+**Modify `OutboxMessage.Create`**:
+
+```csharp
+public static OutboxMessage Create(IIntegrationEvent integrationEvent)
+{
+    return new OutboxMessage
+    {
+        Id = Guid.CreateVersion7(),
+        Type = IntegrationEventTypeRegistry.GetName(integrationEvent.GetType()),
+        Content = JsonSerializer.Serialize(integrationEvent, integrationEvent.GetType()),
+        OccurredOnUtc = integrationEvent.OccurredOn,
+        TraceContext = TraceContextHelpers.Capture(),  // ← NEW
+        // ...
+    };
+}
+```
+
+**Modify `OutboxProcessor.ProcessOutboxMessagesAsync`** — restore context before dispatching:
+
+```csharp
+private static readonly ActivitySource _activitySource = new("YallaJo.Outbox");
+
+foreach (var message in messages)
+{
+    using var activity = TraceContextHelpers.Restore(
+        message.TraceContext, _activitySource, "outbox.dispatch");
+    activity?.SetTag("outbox.message.id", message.Id);
+    activity?.SetTag("outbox.message.type", message.Type);
+    activity?.SetTag("outbox.retry.count", message.RetryCount);
+
+    // ... existing deserialize + handler invocation ...
+
+    activity?.SetStatus(handlerFailures.Count == 0
+        ? ActivityStatusCode.Ok
+        : ActivityStatusCode.Error);
+}
+```
+
+**Metrics to export** (OpenTelemetry Metrics API):
+
+```csharp
+public static class OutboxMetrics
+{
+    private static readonly Meter _meter = new("YallaJo.Outbox", "1.0.0");
+
+    public static readonly Counter<long> ProcessedTotal =
+        _meter.CreateCounter<long>("outbox.processed.total",
+            description: "Total messages successfully dispatched");
+
+    public static readonly Counter<long> FailedTotal =
+        _meter.CreateCounter<long>("outbox.failed.total",
+            description: "Total messages that failed dispatch");
+
+    public static readonly Counter<long> DeadLetteredTotal =
+        _meter.CreateCounter<long>("outbox.dead_lettered.total",
+            description: "Total messages moved to dead-letter");
+
+    public static readonly Histogram<double> DispatchLatencyMs =
+        _meter.CreateHistogram<double>("outbox.dispatch.latency_ms",
+            description: "Time from message creation to successful dispatch");
+
+    public static readonly Histogram<int> RetryCountHist =
+        _meter.CreateHistogram<int>("outbox.retry.count",
+            description: "Retry count distribution");
+
+    public static readonly Counter<long> HandlerSuccessTotal =
+        _meter.CreateCounter<long>("outbox.handler.success.total",
+            description: "Per-handler success count (tag: handler_name)");
+
+    public static readonly Counter<long> HandlerFailureTotal =
+        _meter.CreateCounter<long>("outbox.handler.failure.total",
+            description: "Per-handler failure count (tag: handler_name)");
+}
+```
+
+**Recording metrics in `OutboxProcessor`**:
+
+```csharp
+// After successful dispatch:
+var latency = (DateTime.UtcNow - message.OccurredOnUtc).TotalMilliseconds;
+OutboxMetrics.ProcessedTotal.Add(1, new KeyValuePair<string, object?>("module", typeof(TContext).Name));
+OutboxMetrics.DispatchLatencyMs.Record(latency);
+OutboxMetrics.RetryCountHist.Record(message.RetryCount);
+
+// On handler success:
+OutboxMetrics.HandlerSuccessTotal.Add(1,
+    new KeyValuePair<string, object?>("handler", handler.GetType().Name));
+
+// On handler failure:
+OutboxMetrics.HandlerFailureTotal.Add(1,
+    new KeyValuePair<string, object?>("handler", handler.GetType().Name));
+
+// On dead-letter:
+OutboxMetrics.DeadLetteredTotal.Add(1,
+    new KeyValuePair<string, object?>("module", typeof(TContext).Name),
+    new KeyValuePair<string, object?>("type", message.Type));
+```
+
+**Alert thresholds** (from [asadali.dev](https://asadali.dev/blog/high-throughput-background-processing-aspnet-core-azure-service-bus-ef-core-outbox/)):
+
+| Alert | Threshold | Action |
+|---|---|---|
+| Dead-letter count > 0 for any module, sustained > 5 min | Critical | Page ops immediately |
+| Backlog size > N (baseline × 3) for > 10 min | Warning | Investigate handler slowdown |
+| `outbox.dispatch.latency_ms` p99 > SLA | Warning | Investigate DB or broker |
+| Zero messages processed for > 30 min during business hours | Critical | Processor crashed or broker down |
+
+#### 5.18.6 Payload Size Guidance
+
+| Concern | Limit | Notes |
+|---|---|---|
+| Practical outbox payload (industry consensus) | **< 64 KB** | Keeps hot rows in SQL Server in-row storage (under 8060-byte row limit with room for overhead) |
+| SQL Server 8060-byte row limit | NVARCHAR(MAX) values > 8000 bytes spill to LOB pages | Slower access, cannot be indexed |
+| PostgreSQL covered-index row limit | 2,712 bytes per B-tree tuple | Excludes large payloads from `INCLUDE` columns |
+| Azure Service Bus Standard | 256 KB | External broker if YallaJo later splits to microservices |
+| Kafka (recommended) | < 1 MB | External broker limit |
+
+**If a payload must exceed ~64 KB**: use the **Claim Check pattern** — store the large payload in blob storage, write only a reference token (URL or storage key) to the outbox row.
+
+```csharp
+// Conditional claim check (example sketch — not yet implemented in YallaJo):
+public static OutboxMessage Create(IIntegrationEvent evt, IBlobStore blobStore)
+{
+    var json = JsonSerializer.Serialize(evt, evt.GetType());
+
+    if (json.Length > 64 * 1024)
+    {
+        var blobKey = $"outbox/{Guid.NewGuid()}/{evt.GetType().Name}.json";
+        blobStore.UploadAsync(blobKey, json).GetAwaiter().GetResult();
+
+        return new OutboxMessage
+        {
+            Id = Guid.CreateVersion7(),
+            Type = IntegrationEventTypeRegistry.GetName(evt.GetType()),
+            Content = JsonSerializer.Serialize(new ClaimCheckReference(blobKey)),
+            // ...
+        };
+    }
+
+    // Small payload — inline as today
+    return new OutboxMessage { /* ... inline ... */ };
+}
+
+public sealed record ClaimCheckReference(string BlobKey);
+```
+
+Reference: [Microsoft Azure Architecture Center — Claim Check pattern](https://learn.microsoft.com/en-us/azure/architecture/patterns/claim-check).
+
+#### 5.18.7 Testing — Testcontainers + Respawn
+
+For integration tests that exercise the full publish-consume loop, use Testcontainers (SQL Server) + Respawn (fast DB reset between tests).
+
+```csharp
+public class IntegrationTestFixture : WebApplicationFactory<Program>, IAsyncLifetime
+{
+    private readonly MsSqlContainer _sql = new MsSqlBuilder()
+        .WithImage("mcr.microsoft.com/mssql/server:2022-latest")
+        .Build();
+
+    private Respawner _respawner = null!;
+    private SqlConnection _connection = null!;
+
+    public async Task InitializeAsync()
+    {
+        await _sql.StartAsync();
+
+        using var scope = Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<SecurityDbContext>();
+        await db.Database.MigrateAsync();
+
+        _connection = new SqlConnection(_sql.GetConnectionString());
+        await _connection.OpenAsync();
+
+        _respawner = await Respawner.CreateAsync(_connection, new RespawnerOptions
+        {
+            DbAdapter = DbAdapter.SqlServer,
+            TablesToIgnore = new Table[] { "__EFMigrationsHistory" },
+            SchemasToInclude = new[] { "security", "accounts", "auth" }
+            // Do NOT ignore OutboxMessages/InboxMessages — they must reset between tests
+        });
+    }
+
+    public async Task ResetAsync() => await _respawner.ResetAsync(_connection);
+    public async Task DisposeAsync() { await _connection.DisposeAsync(); await _sql.DisposeAsync(); }
+}
+
+// Test pattern:
+public class UserCreatedEndToEndTests(IntegrationTestFixture fixture) : IClassFixture<IntegrationTestFixture>
+{
+    [Fact]
+    public async Task Register_User_End_To_End_Creates_Profile_Via_Outbox()
+    {
+        await fixture.ResetAsync();
+
+        // Act — register user (writes OutboxMessage)
+        var response = await fixture.CreateClient().PostAsJsonAsync("/api/v1/auth/register",
+            new { Email = "a@b.com", Password = "Secret1!", FirstName = "John", LastName = "Doe" });
+        response.EnsureSuccessStatusCode();
+
+        // Outbox row was written
+        using var scope = fixture.Services.CreateScope();
+        var secDb = scope.ServiceProvider.GetRequiredService<SecurityDbContext>();
+        var outboxRow = await secDb.OutboxMessages.SingleAsync();
+        outboxRow.ProcessedOnUtc.Should().BeNull();
+
+        // Run processor manually
+        var processor = scope.ServiceProvider.GetRequiredService<IOutboxProcessor>();
+        await processor.ProcessOutboxMessagesAsync(default);
+
+        // Profile was created in Accounts module
+        var accDb = scope.ServiceProvider.GetRequiredService<AccountsDbContext>();
+        var profile = await accDb.Profiles.SingleAsync();
+        profile.FirstName.Should().Be("John");
+
+        // Inbox row was written (idempotency)
+        var inbox = await accDb.InboxMessages.SingleAsync();
+        inbox.Id.Should().Be(outboxRow.Id);
+
+        // Outbox row is now marked processed
+        await secDb.Entry(outboxRow).ReloadAsync();
+        outboxRow.ProcessedOnUtc.Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task Faulty_Handler_Retries_Then_Other_Handlers_Skip_Via_Inbox()
+    {
+        // Fault injection test — verify per-handler failure isolation
+        // Register a handler that fails 2 times then succeeds
+        // Verify: other handlers receive message once (idempotent skip on retry)
+    }
+}
+```
+
+References: [daninacan.com — Respawn with xUnit](https://daninacan.com/resetting-your-test-database-in-c-with-respawn/), [bakson.dev — EF Core + Respawn](https://bakson.dev/2023/08/17/ef-core-and-respawn.html).
+
+#### 5.18.8 Implementation Checklist (to adopt §5.18 hardening in YallaJo)
+
+Ordered by effort × impact:
+
+- [ ] **P0 — Retention**: add `OutboxCleanupBackgroundService` + per-module `IOutboxCleaner<TContext>` (§5.18.1). Default 30-day retention.
+- [ ] **P0 — Type registry**: add `IntegrationEventTypeRegistry` + migrate `OutboxMessage.Create` + `OutboxProcessor` (§5.18.2).
+- [ ] **P1 — Dead-letter health**: expose `/health/outbox-dead-letters` endpoint with threshold alerting.
+- [ ] **P1 — Dead-letter replay**: add `ReplayDeadLetterCommand` + ops endpoint (permission-guarded).
+- [ ] **P1 — OpenTelemetry metrics**: add `OutboxMetrics` class with 8 core metrics (§5.18.5).
+- [ ] **P2 — Trace context**: add `TraceContext` column to `OutboxMessage`, capture/restore via `TraceContextHelpers` (§5.18.5).
+- [ ] **P2 — Adaptive polling**: modify `CompositeOutboxProcessor` to adapt delay based on processed count (§5.18.4).
+- [ ] **P3 — Status column**: add explicit `Status` enum (`Pending`/`Processing`/`Processed`/`Failed`/`Dead`) — replaces current implicit-by-`RetryCount` scheme.
+- [ ] **P3 — Cleanup index**: add EF migration for `IX_OutboxMessages_Cleanup` filtered index (§5.18.1).
+- [ ] **P3 — Claim Check pattern**: implement for payloads > 64 KB (§5.18.6). Only needed when first encounter a large event.
+
+#### 5.18.9 References
+
+| # | Source | URL |
+|---|---|---|
+| 1 | Chris Richardson — Transactional Outbox canonical definition | [microservices.io/patterns/data/transactional-outbox.html](https://microservices.io/patterns/data/transactional-outbox.html) |
+| 2 | Milan Jovanović — Implementing the Outbox Pattern | [milanjovanovic.tech/blog/implementing-the-outbox-pattern](https://www.milanjovanovic.tech/blog/implementing-the-outbox-pattern) |
+| 3 | Milan Jovanović — Implementing the Inbox Pattern | [milanjovanovic.tech/blog/implementing-the-inbox-pattern-for-reliable-message-consumption](https://www.milanjovanovic.tech/blog/implementing-the-inbox-pattern-for-reliable-message-consumption) |
+| 4 | Milan Jovanović — Scaling the Outbox Pattern (2.8B msgs/day) | [milanjovanovic.tech/blog/scaling-the-outbox-pattern](https://www.milanjovanovic.tech/blog/scaling-the-outbox-pattern) |
+| 5 | Kamil Grzybek — The Outbox Pattern | [kamilgrzybek.com/design/the-outbox-pattern](https://www.kamilgrzybek.com/design/the-outbox-pattern/) |
+| 6 | Kamil Grzybek — modular-monolith-with-ddd repo | [github.com/kgrzybek/modular-monolith-with-ddd](https://github.com/kgrzybek/modular-monolith-with-ddd) |
+| 7 | Wolverine — Durable Messaging guide | [wolverinefx.io/guide/durability](https://wolverinefx.io/guide/durability) |
+| 8 | MassTransit — Outbox middleware configuration | [masstransit.io/documentation/configuration/middleware/outbox](https://masstransit.io/documentation/configuration/middleware/outbox) |
+| 9 | NServiceBus — Outbox pattern | [docs.particular.net/nservicebus/outbox](https://docs.particular.net/nservicebus/outbox/) |
+| 10 | Brighter — MSSQL Outbox | [brightercommand.gitbook.io — MsSqlOutbox](https://brightercommand.gitbook.io/paramore-brighter-documentation/outbox-and-inbox/mssqloutbox) |
+| 11 | João Antunes — OutboxKit introduction + OTel integration | [blog.codingmilitia.com — OutboxKit](https://blog.codingmilitia.com/2024/12/03/introducing-outboxkit/) |
+| 12 | Pat Helland — Life Beyond Distributed Transactions | [queue.acm.org/detail.cfm?id=3025012](https://queue.acm.org/detail.cfm?id=3025012) |
+| 13 | Microsoft — Claim Check pattern | [learn.microsoft.com/azure/architecture/patterns/claim-check](https://learn.microsoft.com/en-us/azure/architecture/patterns/claim-check) |
+| 14 | DevelopersVoice — Mastering Outbox Pattern in .NET | [developersvoice.com/blog/architecture/mastering-outbox-pattern-distributed-net](https://developersvoice.com/blog/architecture/mastering-outbox-pattern-distributed-net/) |
+| 15 | Asad Ali — Production outbox monitoring + alerting | [asadali.dev/blog/high-throughput-background-processing-aspnet-core-azure-service-bus-ef-core-outbox](https://asadali.dev/blog/high-throughput-background-processing-aspnet-core-azure-service-bus-ef-core-outbox/) |
 
 [↑ Back to Table of Contents](#table-of-contents)
 
@@ -2049,40 +3684,163 @@ WARN: Slow request detected: ListTourBookingsQuery took 1200ms (threshold: 500ms
 
 *Interfaces for accessing the current user's identity and HTTP request metadata. Inject these instead of reading from `HttpContext` directly — they're mockable and properly abstracted.*
 
-### ICurrentUser — Accessing the Authenticated User
+### ICurrentUser — The Ownership Rule (MANDATORY)
 
-Injected into handlers. Reads JWT claims automatically:
+> **📌 Rule 2 (non-negotiable):** Inject `ICurrentUser` into a handler **ONLY when comparing `ICurrentUser.UserId` against a resource's owner/creator/target field**. See `agent-context.md §2.2`.
+
+`ICurrentUser` is NOT a general-purpose "authenticated user" gate. Authorization is done at the endpoint with `MustHavePermissionAttribute` (see §2.4). A handler that only calls `currentUser.IsAuthenticated` is duplicating the job — remove the injection.
+
+#### The Interface
 
 ```csharp
 public interface ICurrentUser
 {
-    Guid? UserId { get; }                   // From "sub" claim
-    string? UserName { get; }               // From "name" claim
-    string? Email { get; }                  // From "email" claim
+    Guid? UserId { get; }                    // From "sub" claim
+    string? UserName { get; }                // From "name" claim
+    string? Email { get; }                   // From "email" claim
     bool IsAuthenticated { get; }
-    IEnumerable<string> Roles { get; }      // From "role" claims
-    IEnumerable<string> Permissions { get; } // From "permission" claims
+    IEnumerable<string> Roles { get; }       // From "role" claims
+    IEnumerable<string> Permissions { get; } // From "Permission" claims
     bool HasPermission(string permission);
     bool IsInRole(string role);
 }
+```
 
-// Usage in a handler:
-public sealed class GetMyBookingsQueryHandler(
-    IBookingRepository repo,
-    ICurrentUser currentUser)  // ← Inject
-    : IQueryHandler<GetMyBookingsQuery, List<BookingDto>>
+#### Decision Table — Should I Inject `ICurrentUser`?
+
+| Scenario | Inject? | Why |
+|---|---|---|
+| Query: "List MY bookings" (filter by userId) | ✅ YES | Compares `booking.UserId == currentUser.UserId` |
+| Command: "Update MY profile" (self-edit) | ✅ YES | Loads profile where `p.UserId == currentUser.UserId` |
+| Command: "Revoke MY session" (IDOR prevention) | ✅ YES | Guards `session.UserId != currentUser.UserId → Forbidden` |
+| Command: "Update ANY business" (admin can, owner can) | ✅ YES | Compares `business.OwnerId != currentUser.UserId && !isAdmin` |
+| Command: "Create business" (stamp owner) | ✅ YES | `ownerId: currentUser.UserId.Value` is a valid creator stamp |
+| Command: "Approve business" (admin-only action) | ❌ NO | Use `MustHavePermission(Business, Approve)` on endpoint. Don't gate inside the handler. |
+| Command: "Suspend business" (moderator action) | ❌ NO | Same — permission belongs on the endpoint |
+| Query: "List all users" (admin dashboard) | ❌ NO | Permission gates access; handler has no ownership concern |
+| Any handler that only checks `IsAuthenticated` | ❌ NO | `MustHavePermission` on endpoint already enforced authentication |
+
+#### ✅ Valid Patterns
+
+```csharp
+// ✅ Self-edit (list/update only the current user's resource)
+public sealed class UpdateProfileCommandHandler(
+    IProfileRepository profileRepository,
+    IAccountsUnitOfWork uow,
+    HybridCache cache,
+    ICurrentUser currentUser,
+    ILogger<UpdateProfileCommandHandler> logger)
+    : ICommandHandler<UpdateProfileCommand>
 {
-    public async Task<Result<List<BookingDto>>> Handle(...)
+    public async Task<Result> Handle(UpdateProfileCommand cmd, CancellationToken ct)
     {
-        if (!currentUser.IsAuthenticated)
-            return Result.Unauthorized<List<BookingDto>>();
-        
-        var bookings = await repo.GetAllAsync(
-            b => b.UserId == currentUser.UserId!.Value, ct);
+        if (currentUser.UserId is null)
+            return Result.Unauthorized("Authentication required.");
+
+        // ownership = self: load ONLY the current user's profile
+        var profile = await profileRepository.FirstOrDefaultAsync(
+            p => p.UserId == currentUser.UserId.Value, ct);
+
+        if (profile is null)
+            return Result.Failure(Error.NotFound("Profile.NotFound"), Outcome.NotFound);
+
+        profile.Update(cmd.FirstName, cmd.LastName);
+        await uow.SaveChangesAsync(ct);
+        await cache.RemoveByTagAsync($"profile:{currentUser.UserId.Value}", ct);
+        return Result.Success();
+    }
+}
+
+// ✅ IDOR prevention (owner-or-admin check)
+public sealed class UpdateBusinessCommandHandler(
+    IBusinessRepository repo,
+    IContentPlacesUnitOfWork uow,
+    HybridCache cache,
+    ICurrentUser currentUser,
+    ILogger<UpdateBusinessCommandHandler> logger)
+    : ICommandHandler<UpdateBusinessCommand>
+{
+    public async Task<Result> Handle(UpdateBusinessCommand cmd, CancellationToken ct)
+    {
+        // endpoint already verified: MustHavePermission(Business, Update)
+        var business = await repo.GetByIdAsync(cmd.Id, ct);
+        if (business is null)
+            return Result.Failure(Error.NotFound("Business.NotFound"), Outcome.NotFound);
+
+        // row-level ownership check
+        var isAdmin = currentUser.IsInRole("Admin");
+        if (!isAdmin && business.OwnerId != currentUser.UserId!.Value)
+            return Result.Failure(Error.Forbidden("Business.NotOwner"), Outcome.Forbidden);
+
+        business.Update(cmd.Name, cmd.Description);
+        await uow.SaveChangesAsync(ct);
+        await cache.RemoveByTagAsync($"business:{cmd.Id}", ct);
+        return Result.Success();
+    }
+}
+
+// ✅ Creator stamp at aggregate creation
+public sealed class CreateBusinessCommandHandler(
+    IBusinessRepository repo,
+    ICurrentUser currentUser,
+    ...)
+{
+    public async Task<Result<CreateBusinessResult>> Handle(CreateBusinessCommand cmd, CancellationToken ct)
+    {
+        if (currentUser.UserId is null)
+            return Result.Unauthorized("Authentication required.");
+
+        // stamping the creator is a legitimate domain concept
+        var business = BusinessEntity.Create(
+            name: cmd.Name,
+            slug: slug,
+            ownerId: currentUser.UserId.Value);
         // ...
     }
 }
 ```
+
+#### ❌ Anti-Patterns (REJECT in code review)
+
+```csharp
+// ❌ Gratuitous — only checks auth, no ownership comparison
+public sealed class SuspendBusinessCommandHandler(
+    IBusinessRepository repo,
+    ICurrentUser currentUser,  // ← REMOVE THIS
+    ...)
+{
+    public async Task<Result> Handle(SuspendBusinessCommand cmd, CancellationToken ct)
+    {
+        if (!currentUser.IsAuthenticated)  // ← permission on endpoint already enforced this
+            return Result.Unauthorized();
+
+        var business = await repo.GetByIdAsync(cmd.Id, ct);
+        business.Suspend(cmd.Reason);  // ← no ownership check anywhere
+        // ...
+    }
+}
+
+// ✅ FIX — remove ICurrentUser. Guard via MustHavePermission on endpoint:
+//    .WithMetadata(new MustHavePermissionAttribute(ContentPlacesFeatures.Business, AppAction.Suspend))
+public sealed class SuspendBusinessCommandHandler(
+    IBusinessRepository repo,
+    IContentPlacesUnitOfWork uow,
+    ILogger<SuspendBusinessCommandHandler> logger)
+{
+    public async Task<Result> Handle(SuspendBusinessCommand cmd, CancellationToken ct)
+    {
+        var business = await repo.GetByIdAsync(cmd.Id, ct);
+        if (business is null)
+            return Result.Failure(Error.NotFound("Business.NotFound"), Outcome.NotFound);
+
+        business.Suspend(cmd.Reason);
+        await uow.SaveChangesAsync(ct);
+        return Result.Success();
+    }
+}
+```
+
+> **Current violations in the codebase**: 8 handlers in `ContentPlaces.Application` violate this rule. See `agent-context.md §8.1` for the exact list + fixes.
 
 ### IRequestContext — HTTP Request Metadata
 
@@ -2138,24 +3896,42 @@ public sealed class ExpireOldLocksCommandHandler(
 ### File Creation Checklist (New Feature)
 
 ```
-□ Domain Entity          → {Module}.Domain/Entities/
-□ Domain Enums           → {Module}.Domain/Enums/
-□ Domain Events          → {Module}.Domain/Events/
-□ Repo Interface         → {Module}.Domain/Repositories/
-□ UoW Interface          → {Module}.Domain/Repositories/
-□ Commands + Handlers    → {Module}.Application/Commands/
-□ Queries + Handlers     → {Module}.Application/Queries/
-□ Validators             → With each command
-□ DbContext + Config     → {Module}.Infrastructure/Persistence/
-□ Repository Impl        → {Module}.Infrastructure/Repositories/
-□ UoW Impl               → {Module}.Infrastructure/Persistence/
-□ Domain Event Handlers  → {Module}.Infrastructure/EventHandlers/
-□ DI Registration        → {Module}.Infrastructure/DependencyInjection.cs
-□ Endpoints              → {Module}.Presentation/
-□ Integration Events     → {Module}.Contracts/IntegrationEvents/
-□ Register in Program.cs → YallaJo.Api/Program.cs
-□ EF Migration           → dotnet ef migrations add ...
+Domain
+□ Domain Entity              → {Module}.Domain/Entities/
+□ Domain Enums               → {Module}.Domain/Enums/
+□ Domain Events              → {Module}.Domain/Events/
+□ Repo Interface             → {Module}.Domain/Repositories/
+□ UoW Interface              → {Module}.Domain/Repositories/
+
+Contracts (public surface)
+□ Integration Events         → {Module}.Contracts/IntegrationEvents/
+□ Feature Constants          → {Module}.Contracts/Authorization/{Module}Features.cs
+□ Permission Catalog         → {Module}.Contracts/Authorization/{Module}PermissionCatalog.cs
+
+Application
+□ Commands + Handlers        → {Module}.Application/Commands/
+□ Queries + Handlers         → {Module}.Application/Queries/  (MUST implement ICacheableQuery)
+□ Validators                 → With each command
+□ Cache Keys                 → {Module}.Application/Caching/{Module}CacheKeys.cs
+
+Infrastructure
+□ DbContext + Config         → {Module}.Infrastructure/Persistence/
+□ Repository Impl            → {Module}.Infrastructure/Repositories/
+□ UoW Impl                   → {Module}.Infrastructure/Persistence/
+□ Domain Event Handlers      → {Module}.Infrastructure/EventHandlers/
+□ DI Registration            → {Module}.Infrastructure/DependencyInjection.cs
+  └─ services.AddSingleton<IPermissionCatalog, {Module}PermissionCatalog>();
+
+Presentation
+□ Endpoints                  → {Module}.Presentation/
+  └─ Every endpoint: .WithMetadata(new MustHavePermissionAttribute(...)) OR .AllowAnonymous()
+
+Host
+□ Register in Program.cs     → Add{Module}Application() + Add{Module}Infrastructure() + Map{Module}Endpoints()
+□ EF Migration               → dotnet ef migrations add Add{Entity} --project {Module}.Infrastructure --startup-project YallaJo.Api
 ```
+
+> **Authorization catalog is a new mandatory artifact as of the 2026-04-22 refactor.** Without it, your module's permissions never appear in the database and every endpoint returns 403. See `agent-context.md §4` and `authorization-refactor-plan.md` for the full architecture.
 
 ### Domain Event vs Integration Event Decision
 

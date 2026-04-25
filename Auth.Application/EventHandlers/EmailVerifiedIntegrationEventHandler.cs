@@ -14,9 +14,9 @@ public sealed class EmailVerifiedIntegrationEventHandler(
 {
     public async Task Handle(
         IntegrationEventNotification<EmailVerifiedIntegrationEvent> notification,
-        CancellationToken ct)
+        CancellationToken cancellationToken)
     {
-        if (await inboxStore.HasBeenProcessedAsync(notification.MessageId, ct))
+        if (await inboxStore.HasBeenProcessedAsync(notification.MessageId, cancellationToken))
         {
             logger.LogWarning(
                 "Auth: Message {MessageId} (EmailVerified for {UserId}) already processed — skipping.",
@@ -30,6 +30,6 @@ public sealed class EmailVerifiedIntegrationEventHandler(
             "Auth: EmailVerified event received for user {UserId}, email {Email}.",
             evt.UserId, evt.EmailAddress);
         inboxStore.MarkAsProcessed(notification.MessageId);
-        await unitOfWork.SaveChangesAsync(ct);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
     }
 }

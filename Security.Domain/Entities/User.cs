@@ -3,10 +3,6 @@ using YallaJo.SharedKernel.Domain.Entities;
 
 namespace Security.Domain.Entities;
 
-/// <summary>
-/// The ONLY identity aggregate root in the system.
-/// All other modules reference this entity's Id (UserId) via logical relationships only.
-/// </summary>
 public sealed class User : AuditableEntity, IAggregateRoot
 {
     private readonly List<Email> _emails = [];
@@ -16,7 +12,10 @@ public sealed class User : AuditableEntity, IAggregateRoot
 
     private User() { } // EF Core
 
+    public AccountLifecycleState LifecycleState { get; private set; } = AccountLifecycleState.Provisioned;
+
     public bool IsActive { get; private set; }
+
     public string PasswordHash { get; private set; } = string.Empty;
     public IReadOnlyCollection<Email> Emails => _emails.AsReadOnly();
     public IReadOnlyCollection<Phone> Phones => _phones.AsReadOnly();
@@ -25,12 +24,20 @@ public sealed class User : AuditableEntity, IAggregateRoot
 
     public static User Create()
     {
-        return new User { IsActive = false };
+        return new User
+        {
+            LifecycleState = AccountLifecycleState.Provisioned,
+            IsActive = false,
+        };
     }
 
     public static User Register(string email, string firstName, string lastName)
     {
-        var user = new User { IsActive = false };
+        var user = new User
+        {
+            LifecycleState = AccountLifecycleState.Provisioned,
+            IsActive = false,
+        };
         var primaryEmail = Email.Create(user.Id, email, true);
         user._emails.Add(primaryEmail);
 
@@ -54,9 +61,9 @@ public sealed class User : AuditableEntity, IAggregateRoot
 
         email.MarkVerified();
 
-        if (!IsActive)
+        if (LifecycleState != AccountLifecycleState.Active)
         {
-            Activate();
+            TransitionTo(AccountLifecycleState.Active);
         }
 
         AddDomainEvent(new EmailVerifiedEvent(Id, email.Id, email.Address));
@@ -64,18 +71,93 @@ public sealed class User : AuditableEntity, IAggregateRoot
         return email;
     }
 
-    /// <summary>
-    /// Returns the primary email entity, or null if none exists.
-    /// </summary>
     public Email? GetPrimaryEmail() => _emails.FirstOrDefault(e => e.IsPrimary);
 
-    public void Activate() => IsActive = true;
+    public void MarkPendingActivation() => TransitionTo(AccountLifecycleState.PendingActivation);
 
-    public void Deactivate()
+    public void Activate() => TransitionTo(AccountLifecycleState.Active);
+    public void Suspend() => TransitionTo(AccountLifecycleState.Suspended);
+
+    public void Reactivate() => TransitionTo(AccountLifecycleState.Active);
+    public void MarkPendingPasswordReset() => TransitionTo(AccountLifecycleState.PendingPasswordReset);
+
+    public void Archive() => TransitionTo(AccountLifecycleState.Archived);
+    public void Deactivate() => Suspend();
+
+    public void ReassignToPendingActivation(string newEmail, string replacementPasswordHash)
     {
-        IsActive = false;
-        MarkUpdated();
+        if (string.IsNullOrWhiteSpace(newEmail))
+            throw new ArgumentException("New email is required.", nameof(newEmail));
+        if (string.IsNullOrWhiteSpace(replacementPasswordHash))
+            throw new ArgumentException("Replacement password hash is required.", nameof(replacementPasswordHash));
+
+        if (LifecycleState is not (AccountLifecycleState.Active
+                                 or AccountLifecycleState.Suspended
+                                 or AccountLifecycleState.PendingPasswordReset))
+        {
+            throw new InvalidLifecycleTransitionException(LifecycleState, AccountLifecycleState.PendingActivation);
+        }
+
+        var primary = _emails.FirstOrDefault(e => e.IsPrimary);
+        if (primary is null)
+            throw new InvalidOperationException("User has no primary email to reassign.");
+
+        primary.ChangeAddress(newEmail);
+
+        ResetPassword(replacementPasswordHash);
+
+        TransitionTo(AccountLifecycleState.PendingActivation);
     }
+
+    private void TransitionTo(AccountLifecycleState target)
+    {
+        if (LifecycleState == target)
+            return; // idempotent self-transition — no event, no mutation
+
+        if (!IsTransitionAllowed(LifecycleState, target))
+            throw new InvalidLifecycleTransitionException(LifecycleState, target);
+
+        var from = LifecycleState;
+        LifecycleState = target;
+        IsActive = target == AccountLifecycleState.Active;
+        MarkUpdated();
+
+        AddDomainEvent(new AccountLifecycleTransitionedEvent(Id, from, target));
+    }
+
+    private static bool IsTransitionAllowed(AccountLifecycleState from, AccountLifecycleState to)
+    {
+        // Archived is terminal — no path out.
+        if (from == AccountLifecycleState.Archived)
+            return false;
+
+        // Anything non-Archived can be archived.
+        if (to == AccountLifecycleState.Archived)
+            return true;
+
+        return (from, to) switch
+        {
+            // Provisioning path
+            (AccountLifecycleState.Provisioned,        AccountLifecycleState.PendingActivation)    => true,
+            (AccountLifecycleState.PendingActivation,  AccountLifecycleState.Active)               => true,
+            (AccountLifecycleState.PendingActivation,  AccountLifecycleState.Provisioned)          => true, // admin revoke (Phase 2C)
+
+            // Active operations
+            (AccountLifecycleState.Active,             AccountLifecycleState.Suspended)            => true,
+            (AccountLifecycleState.Suspended,          AccountLifecycleState.Active)               => true,
+            (AccountLifecycleState.Active,             AccountLifecycleState.PendingPasswordReset) => true,
+            (AccountLifecycleState.PendingPasswordReset, AccountLifecycleState.Active)             => true,
+
+            (AccountLifecycleState.Provisioned,        AccountLifecycleState.Active)               => true,
+
+            (AccountLifecycleState.Active,               AccountLifecycleState.PendingActivation) => true,
+            (AccountLifecycleState.Suspended,            AccountLifecycleState.PendingActivation) => true,
+            (AccountLifecycleState.PendingPasswordReset, AccountLifecycleState.PendingActivation) => true,
+
+            _ => false,
+        };
+    }
+
     public void SetPasswordHash(string passwordHash)
     {
         if (string.IsNullOrWhiteSpace(passwordHash))
@@ -84,6 +166,14 @@ public sealed class User : AuditableEntity, IAggregateRoot
         PasswordHash = passwordHash;
         MarkUpdated();
         AddDomainEvent(new PasswordChangedEvent(Id));
+    }
+
+    public void SetInitialPasswordHash(string passwordHash)
+    {
+        if (string.IsNullOrWhiteSpace(passwordHash))
+            throw new ArgumentException("Password hash is required.", nameof(passwordHash));
+
+        PasswordHash = passwordHash;
     }
 
     public void ResetPassword(string newPasswordHash)
@@ -127,6 +217,7 @@ public sealed class User : AuditableEntity, IAggregateRoot
         MarkUpdated();
         return primary;
     }
+
     public void AssignRole(Role role)
     {
         var userRole = UserRole.Create(Id, role.Id);

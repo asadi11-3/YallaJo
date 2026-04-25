@@ -6,10 +6,10 @@ using Security.Infrastructure.Persistence;
 namespace Security.Infrastructure.Seeding;
 
 public sealed class SecurityDataSeeder(
-    SecurityDbContext dbContext,
     IRoleRepository roleRepository,
     IRoleClaimRepository roleClaimRepository,
-    ISecurityUnitOfWork unitOfWork)
+    ISecurityUnitOfWork unitOfWork,
+    RolePermissionMapping rolePermissionMapping)
 {
     public async Task SeedAsync(CancellationToken ct = default)
     {
@@ -45,7 +45,7 @@ public sealed class SecurityDataSeeder(
 
         foreach (var role in roles)
         {
-            var permissions = AppPermissions.GetPermissionsForRole(role.Name);
+            var permissions = rolePermissionMapping.GetPermissionsForRole(role.Name);
 
             foreach (var permission in permissions)
             {

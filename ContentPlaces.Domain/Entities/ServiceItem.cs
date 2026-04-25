@@ -3,7 +3,12 @@ using YallaJo.SharedKernel.Domain.Entities;
 
 namespace ContentPlaces.Domain.Entities;
 
-public sealed class ServiceItem : AuditableEntity, IAggregateRoot
+/// <summary>
+/// A service offered by a <see cref="Business"/> (e.g., guided tour, massage, cooking class).
+/// Non-aggregate entity — does NOT implement <see cref="IAggregateRoot"/>.
+/// Integration events are published from command handlers via IContentPlacesOutboxWriter.
+/// </summary>
+public sealed class ServiceItem : AuditableEntity
 {
     private ServiceItem() { } // EF Core
 
@@ -11,7 +16,6 @@ public sealed class ServiceItem : AuditableEntity, IAggregateRoot
     public string Name { get; private set; } = string.Empty;
     public string? Description { get; private set; }
     public decimal Price { get; private set; }
-    public string PriceCurrency { get; private set; } = "JOD";
     public string Currency { get; private set; } = "JOD";
     public ServiceCategory Category { get; private set; }
     public int DurationMinutes { get; private set; }
@@ -20,50 +24,70 @@ public sealed class ServiceItem : AuditableEntity, IAggregateRoot
     public int SortOrder { get; private set; }
     public decimal? DiscountPercent { get; private set; }
     public decimal? SalePrice { get; private set; }
-    public string? SalePriceCurrency { get; private set; }
     public DateTime? DiscountValidFrom { get; private set; }
     public DateTime? DiscountValidTo { get; private set; }
 
     public Business Business { get; private set; } = default!;
 
     public static ServiceItem Create(
-        Guid businessId, string name, decimal price,
-        int durationMinutes, int maxCapacity, string currency, int sortOrder)
+        Guid businessId,
+        string name,
+        decimal price,
+        string currency,
+        ServiceCategory category,
+        int durationMinutes,
+        int maxCapacity,
+        string? description = null,
+        int sortOrder = 0)
     {
-        if (price < 0) throw new ArgumentException("Price cannot be negative", nameof(price));
-        if (durationMinutes <= 0) throw new ArgumentException("Duration must be positive", nameof(durationMinutes));
-        if (maxCapacity <= 0) throw new ArgumentException("Capacity must be positive", nameof(maxCapacity));
+        if (price < 0)
+            throw new ArgumentException("Price cannot be negative.", nameof(price));
+        if (durationMinutes <= 0)
+            throw new ArgumentException("Duration must be positive.", nameof(durationMinutes));
+        if (maxCapacity <= 0)
+            throw new ArgumentException("Capacity must be positive.", nameof(maxCapacity));
 
         return new ServiceItem
         {
-            Id = Guid.CreateVersion7(),
-            BusinessId = businessId,
-            Name = name,
-            Price = price,
+            Id              = Guid.CreateVersion7(),
+            BusinessId      = businessId,
+            Name            = name.Trim(),
+            Description     = description?.Trim(),
+            Price           = price,
+            Currency        = currency.ToUpperInvariant(),
+            Category        = category,
             DurationMinutes = durationMinutes,
-            MaxCapacity = maxCapacity,
-            Currency = currency.ToUpperInvariant(),
-            PriceCurrency = currency.ToUpperInvariant(),
-            IsAvailable = true,
-            SortOrder = sortOrder,
+            MaxCapacity     = maxCapacity,
+            IsAvailable     = true,
+            SortOrder       = sortOrder,
         };
     }
 
     public void Update(
-        string name, decimal price, int durationMinutes,
-        int maxCapacity, string currency, int sortOrder)
+        string name,
+        decimal price,
+        string currency,
+        ServiceCategory category,
+        int durationMinutes,
+        int maxCapacity,
+        string? description = null,
+        int sortOrder = 0)
     {
-        if (price < 0) throw new ArgumentException("Price cannot be negative", nameof(price));
-        if (durationMinutes <= 0) throw new ArgumentException("Duration must be positive", nameof(durationMinutes));
-        if (maxCapacity <= 0) throw new ArgumentException("Capacity must be positive", nameof(maxCapacity));
+        if (price < 0)
+            throw new ArgumentException("Price cannot be negative.", nameof(price));
+        if (durationMinutes <= 0)
+            throw new ArgumentException("Duration must be positive.", nameof(durationMinutes));
+        if (maxCapacity <= 0)
+            throw new ArgumentException("Capacity must be positive.", nameof(maxCapacity));
 
-        Name = name;
-        Price = price;
+        Name            = name.Trim();
+        Description     = description?.Trim();
+        Price           = price;
+        Currency        = currency.ToUpperInvariant();
+        Category        = category;
         DurationMinutes = durationMinutes;
-        MaxCapacity = maxCapacity;
-        Currency = currency.ToUpperInvariant();
-        PriceCurrency = currency.ToUpperInvariant();
-        SortOrder = sortOrder;
+        MaxCapacity     = maxCapacity;
+        SortOrder       = sortOrder;
         MarkUpdated();
     }
 

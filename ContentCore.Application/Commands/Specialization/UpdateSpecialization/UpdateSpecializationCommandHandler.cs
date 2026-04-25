@@ -1,7 +1,7 @@
-using ContentCore.Application.Caching;
-using ContentCore.Domain.Exceptions;
 using ContentCore.Domain.Repositories;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
+using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 using Outcome = YallaJo.SharedKernel.Domain.Abstractions.Results.Outcome;
@@ -11,7 +11,8 @@ namespace ContentCore.Application.Commands.Specialization.UpdateSpecialization;
 public sealed class UpdateSpecializationCommandHandler(
     ISpecializationRepository specializationRepository,
     IContentCoreUnitOfWork unitOfWork,
-    HybridCache cache)
+    HybridCache cache,
+    ILogger<UpdateSpecializationCommandHandler> logger)
     : ICommandHandler<UpdateSpecializationCommand, UpdateSpecializationResult>
 {
     public async Task<Result<UpdateSpecializationResult>> Handle(
@@ -28,7 +29,7 @@ public sealed class UpdateSpecializationCommandHandler(
                    Outcome.NotFound);
             }
 
-            specialization.Update(request.Name, request.Description, request.Icon);
+            specialization.Update(request.Name, request.Description, request.Icon, request.SourceLanguageCode);
 
             if (request.IsActive.HasValue)
             {
@@ -42,7 +43,7 @@ public sealed class UpdateSpecializationCommandHandler(
             {
                 await unitOfWork.SaveChangesAsync(cancellationToken);
             }
-            catch (ContentCoreConcurrencyException)
+            catch (DbUpdateConcurrencyException)
             {
                 return Result<UpdateSpecializationResult>.Conflict(
                     new Error(
@@ -51,6 +52,9 @@ public sealed class UpdateSpecializationCommandHandler(
             }
 
             await cache.RemoveByTagAsync("specializations", cancellationToken);
+            await cache.RemoveByTagAsync($"specialization:{specialization.Id}", cancellationToken);
+
+            logger.LogInformation("Specialization updated: {SpecializationId} (Name={Name})", specialization.Id, specialization.Name);
 
             return Result<UpdateSpecializationResult>.Success(
                 new UpdateSpecializationResult(specialization.Id, specialization.Name));

@@ -1,6 +1,7 @@
-using ContentCore.Domain.Exceptions;
 using ContentCore.Domain.Repositories;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
+using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 using Outcome = YallaJo.SharedKernel.Domain.Abstractions.Results.Outcome;
@@ -10,7 +11,8 @@ namespace ContentCore.Application.Commands.Category.ReactivateCategory;
 public sealed class ReactivateCategoryCommandHandler(
     ICategoryRepository categoryRepository,
     IContentCoreUnitOfWork unitOfWork,
-    HybridCache cache)
+    HybridCache cache,
+    ILogger<ReactivateCategoryCommandHandler> logger)
     : ICommandHandler<ReactivateCategoryCommand, ReactivateCategoryResult>
 {
     public async Task<Result<ReactivateCategoryResult>> Handle(
@@ -32,7 +34,7 @@ public sealed class ReactivateCategoryCommandHandler(
             {
                 await unitOfWork.SaveChangesAsync(cancellationToken);
             }
-            catch (ContentCoreConcurrencyException)
+            catch (DbUpdateConcurrencyException)
             {
                 return Result<ReactivateCategoryResult>.Conflict(
                     new Error(
@@ -41,6 +43,8 @@ public sealed class ReactivateCategoryCommandHandler(
             }
 
             await cache.RemoveByTagAsync("categories", cancellationToken);
+
+            logger.LogInformation("Category reactivated: {CategoryId}", request.Id);
 
             return Result<ReactivateCategoryResult>.Success(
                 new ReactivateCategoryResult(category.Id, category.IsActive));

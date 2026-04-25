@@ -1,3 +1,4 @@
+using ContentPlaces.Domain.Enums;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 
 namespace ContentPlaces.Application.Commands.ServiceItem.UpdateServiceItem;
@@ -10,5 +11,7 @@ public sealed record UpdateServiceItemCommand(
     int DurationMinutes,
     int MaxCapacity,
     string Currency,
-    int SortOrder)
+    ServiceCategory Category,
+    string? Description = null,
+    int SortOrder = 0)
     : ICommand;

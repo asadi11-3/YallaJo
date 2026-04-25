@@ -19,7 +19,7 @@ public sealed class CategoryTests : DomainTestBase
     }
 
     [Fact]
-    public void Create_ShouldRaiseCategoryCreatedDomainEvent_WhenArgumentsAreValid()
+    public void CreateShouldRaiseCategoryCreatedDomainEventWhenArgumentsAreValid()
     {
         var category = Category.Create("Nature", "nature", DefaultSourceLanguageCode);
 
@@ -30,7 +30,7 @@ public sealed class CategoryTests : DomainTestBase
     }
 
     [Fact]
-    public void Update_ShouldChangeProperties_WhenArgumentsAreValid()
+    public void UpdateShouldChangePropertiesWhenArgumentsAreValid()
     {
         var category = Category.Create("Old Name", "old-name", DefaultSourceLanguageCode);
 

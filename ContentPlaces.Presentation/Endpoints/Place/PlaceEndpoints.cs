@@ -12,7 +12,10 @@ using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using ContentPlaces.Contracts.Authorization;
 using Security.Contracts.Authorization;
+using YallaJo.SharedKernel.Presentation.Authorization;
+using YallaJo.SharedKernel.Application.Authorization;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Domain.Abstractions.Pagination;
 using YallaJo.SharedKernel.Presentation;
@@ -26,8 +29,6 @@ internal static class PlaceEndpoints
     {
         var places = group.MapGroup("/places").WithTags("ContentPlaces | Places");
 
-        // ── Anonymous: public reads ───────────────────────────────────────────
-
         places.MapGet("/", async (
             ISender sender,
             CancellationToken ct,
@@ -37,10 +38,11 @@ internal static class PlaceEndpoints
             decimal? ratingMin = null,
             decimal? ratingMax = null,
             string? city = null,
-            string? country = null) =>
+            string? country = null,
+            bool? hasActiveTours = null) =>
         {
             var result = await sender.Send(
-                new ListPlacesQuery(page, pageSize, categoryId, ratingMin, ratingMax, city, country), ct);
+                new ListPlacesQuery(page, pageSize, categoryId, ratingMin, ratingMax, city, country, hasActiveTours), ct);
             return result.ToApiResult();
         })
         .WithName("ListPlaces")
@@ -104,8 +106,6 @@ internal static class PlaceEndpoints
         .WithSummary("Get lightweight map pins for the current viewport bounding box")
         .AllowAnonymous();
 
-        // ── Admin: write operations ───────────────────────────────────────────
-
         places.MapPost("/", async (CreatePlaceRequest request, ICurrentUser currentUser,
             ISender sender, CancellationToken ct) =>
         {
@@ -127,7 +127,7 @@ internal static class PlaceEndpoints
         .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status409Conflict)
         .WithSummary("Create a new place — admin only")
-        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.Place, AppAction.Create))
+        .WithMetadata(new MustHavePermissionAttribute(ContentPlacesFeatures.Place, AppAction.Create))
         .RequireAuthorization();
 
         places.MapPut("/{id:guid}", async (Guid id, UpdatePlaceRequest request, ISender sender, CancellationToken ct) =>
@@ -147,7 +147,7 @@ internal static class PlaceEndpoints
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status409Conflict)
         .WithSummary("Update a place — admin only")
-        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.Place, AppAction.Update))
+        .WithMetadata(new MustHavePermissionAttribute(ContentPlacesFeatures.Place, AppAction.Update))
         .RequireAuthorization();
 
         places.MapDelete("/{id:guid}", async (Guid id, ISender sender, CancellationToken ct) =>
@@ -160,7 +160,7 @@ internal static class PlaceEndpoints
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status400BadRequest)
         .WithSummary("Soft-delete a place — blocked if active businesses exist")
-        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.Place, AppAction.SoftDelete))
+        .WithMetadata(new MustHavePermissionAttribute(ContentPlacesFeatures.Place, AppAction.SoftDelete))
         .RequireAuthorization();
 
         places.MapPatch("/{id:guid}/feature", async (Guid id, ISender sender, CancellationToken ct,
@@ -173,7 +173,7 @@ internal static class PlaceEndpoints
         .Produces(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Toggle featured status of a place — admin only")
-        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.Place, AppAction.Update))
+        .WithMetadata(new MustHavePermissionAttribute(ContentPlacesFeatures.Place, AppAction.Update))
         .RequireAuthorization();
 
         places.MapPatch("/{id:guid}/verify", async (Guid id, ISender sender, CancellationToken ct,
@@ -186,7 +186,7 @@ internal static class PlaceEndpoints
         .Produces(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Toggle verified status of a place — admin only")
-        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.Place, AppAction.Update))
+        .WithMetadata(new MustHavePermissionAttribute(ContentPlacesFeatures.Place, AppAction.Update))
         .RequireAuthorization();
     }
 }

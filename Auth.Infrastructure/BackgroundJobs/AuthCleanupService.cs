@@ -1,12 +1,16 @@
-using Auth.Infrastructure.Persistence;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 namespace Auth.Infrastructure.BackgroundJobs;
 
-
+/// <summary>
+/// Hosted <see cref="BackgroundService"/> that runs the Auth module's
+/// retention cycle on a 24-hour interval. Phase 2C-4 refactored the
+/// actual work into <see cref="IAuthRetentionWorker"/> so the cleanup
+/// logic is unit-testable in isolation; this service owns the loop /
+/// scoping / scheduling concerns only.
+/// </summary>
 internal sealed class AuthCleanupService(
     IServiceProvider serviceProvider,
     ILogger<AuthCleanupService> logger) : BackgroundService
@@ -25,7 +29,7 @@ internal sealed class AuthCleanupService(
         {
             try
             {
-                await CleanupAsync(ct);
+                await RunCycleAsync(ct);
             }
             catch (OperationCanceledException) when (ct.IsCancellationRequested) { break; }
             catch (Exception ex)
@@ -40,29 +44,18 @@ internal sealed class AuthCleanupService(
         logger.LogInformation("AuthCleanupService stopped");
     }
 
-    private async Task CleanupAsync(CancellationToken ct)
+    private async Task RunCycleAsync(CancellationToken ct)
     {
         using var scope = serviceProvider.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<AuthDbContext>();
+        var worker = scope.ServiceProvider.GetRequiredService<IAuthRetentionWorker>();
 
-        var now = DateTime.UtcNow;
+        var outcome = await worker.ExecuteAsync(ct);
 
-        var refreshTokensDeleted = await dbContext.RefreshTokens
-            .Where(rt => !rt.IsDeleted && (rt.IsRevoked || rt.ExpiresAt < now))
-            .ExecuteDeleteAsync(ct);
-
-        logger.LogInformation("AuthCleanup: Deleted {Count} expired/revoked RefreshTokens", refreshTokensDeleted);
-
-        var sessionsDeleted = await dbContext.Sessions
-            .Where(s => !s.IsDeleted && (s.IsRevoked || s.ExpiresAt < now))
-            .ExecuteDeleteAsync(ct);
-
-        logger.LogInformation("AuthCleanup: Deleted {Count} expired/revoked Sessions", sessionsDeleted);
-
-        var otpsDeleted = await dbContext.Otps
-            .Where(o => !o.IsDeleted && (o.IsUsed || o.ExpiresAt < now))
-            .ExecuteDeleteAsync(ct);
-
-        logger.LogInformation("AuthCleanup: Deleted {Count} used/expired OTPs", otpsDeleted);
+        logger.LogInformation(
+            "AuthCleanupService: cycle complete — Otps={Otps}, Sessions={Sessions}, RefreshTokens={RefreshTokens}, ProcessedOutbox={Outbox}",
+            outcome.OtpsDeleted,
+            outcome.SessionsDeleted,
+            outcome.RefreshTokensDeleted,
+            outcome.ProcessedOutboxDeleted);
     }
 }

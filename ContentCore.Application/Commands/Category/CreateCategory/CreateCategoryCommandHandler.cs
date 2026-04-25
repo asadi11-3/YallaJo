@@ -1,13 +1,12 @@
-using CategoryEntity = ContentCore.Domain.Entities.Category;
-using ContentCore.Domain.Exceptions;
 using ContentCore.Domain.Repositories;
 using ContentCore.Domain.Services;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
+using CategoryEntity = ContentCore.Domain.Entities.Category;
 using Outcome = YallaJo.SharedKernel.Domain.Abstractions.Results.Outcome;
-
 namespace ContentCore.Application.Commands.Category.CreateCategory;
 
 public sealed class CreateCategoryCommandHandler(
@@ -112,7 +111,7 @@ public sealed class CreateCategoryCommandHandler(
             await unitOfWork.SaveChangesAsync(ct);
             return null;
         }
-        catch (ContentCoreConcurrencyException)
+        catch (DbUpdateConcurrencyException)
         {
             return Result<CreateCategoryResult>.Conflict(
                 new Error(

@@ -7,10 +7,15 @@ internal static class AuditLogsMapper
 {
     public static AuditLogRowVm ToRowVm(AuditLogItemResponse r) => new()
     {
-        Id         = r.Id,
-        UserId     = r.UserId,
-        Action     = r.Action,
-        IpAddress  = r.IpAddress,
-        OccurredAt = r.OccurredAt,
+        Id           = r.Id,
+        UserId       = r.UserId,
+        ActorUserId  = r.ActorUserId,
+        Action       = r.Action,
+        ResourceType = r.ResourceType,
+        ResourceId   = r.ResourceId,
+        IpAddress    = r.IpAddress,
+        Reason       = r.Reason,
+        Metadata     = r.Metadata,
+        OccurredAt   = r.OccurredAt,
     };
 }

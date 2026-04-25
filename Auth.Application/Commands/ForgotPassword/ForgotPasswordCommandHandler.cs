@@ -1,6 +1,8 @@
 using Auth.Application.Interfaces;
 using Auth.Domain.Entities;
+using Auth.Domain.Events;
 using Auth.Domain.Repositories;
+using Microsoft.Extensions.Logging;
 using Security.Contracts.Abstractions;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
@@ -9,43 +11,66 @@ namespace Auth.Application.Commands.ForgotPassword;
 
 public sealed class ForgotPasswordCommandHandler(
     ISecurityService securityService,
-    IOtpRepository otpRepository,
+    IPasswordResetTokenRepository resetTokenRepository,
     IAuthUnitOfWork unitOfWork,
     IOtpService otpService,
-    IEmailService emailService)
+    ILogger<ForgotPasswordCommandHandler> logger)
     : ICommandHandler<ForgotPasswordCommand, ForgotPasswordResult>
 {
-    private const string GenericMessage = "If this email exists, a reset code was sent.";
-    private const string OtpPurpose = "PasswordReset";
+    private const string GenericMessage  = "If this email exists, a reset code was sent.";
+    private const int    ThrottleSeconds = 60;
+    private const int    ExpiryMinutes   = 10;
 
     public async Task<Result<ForgotPasswordResult>> Handle(
         ForgotPasswordCommand request,
         CancellationToken ct)
     {
         var normalizedEmail = request.Email.Trim().ToLowerInvariant();
-
-        var userId = await securityService.GetUserIdByEmailAsync(normalizedEmail, ct);
-        if (userId is null)
+        var status = await securityService.GetAccountStatusByEmailAsync(normalizedEmail, ct);
+        if (status is null
+         || status.Lifecycle != AccountLifecycleSnapshot.Active
+         || !status.IsEmailVerified)
+        {
             return Result<ForgotPasswordResult>.Success(new ForgotPasswordResult(GenericMessage));
+        }
 
-        var plainOtp = otpService.Generate();
-        var otpHash = otpService.Hash(plainOtp);
+        var userId = status.UserId;
 
-        var otp = Otp.Create(
-            userId: userId.Value,
-            purpose: OtpPurpose,
-            codeHash: otpHash,
-            deliveryChannel: "Email",
-            deliveryAddress: normalizedEmail);
+        var recent = await resetTokenRepository.GetLatestActiveForUserReadOnlyAsync(userId, ct);
+        if (recent is not null
+            && recent.CreatedAt > DateTime.UtcNow.AddSeconds(-ThrottleSeconds))
+        {
+            return Result<ForgotPasswordResult>.Success(new ForgotPasswordResult(GenericMessage));
+        }
 
-        await otpRepository.AddAsync(otp, ct);
+        var plainCode = otpService.Generate();
+        var codeHash  = otpService.Hash(plainCode);
+
+        var active = await resetTokenRepository.GetActiveForUserAsync(userId, ct);
+        foreach (var prior in active)
+            prior.Supersede();
+
+        var token = PasswordResetToken.Issue(
+            userId:          userId,
+            tokenHash:       codeHash,
+            deliveryAddress: normalizedEmail,
+            expiryMinutes:   ExpiryMinutes,
+            origin:          PasswordResetOrigin.SelfService);
+
+        token.AddDomainEvent(new PasswordResetTokenIssuedEvent(
+            TokenId:         token.Id,
+            UserId:          token.UserId,
+            DeliveryAddress: token.DeliveryAddress,
+            PlainCode:       plainCode,
+            ExpiresAt:       token.ExpiresAt,
+            Origin:          token.ResetOrigin));
+
+        await resetTokenRepository.AddAsync(token, ct);
         await unitOfWork.SaveChangesAsync(ct);
 
-        await emailService.SendAsync(
-            normalizedEmail,
-            "YallaJo — Reset Your Password",
-            $"Your password reset code is: {plainOtp}. It expires in 10 minutes.",
-            ct);
+        logger.LogInformation(
+            "Auth: PasswordResetToken {TokenId} issued for user {UserId}; email queued on outbox.",
+            token.Id, userId);
 
         return Result<ForgotPasswordResult>.Success(new ForgotPasswordResult(GenericMessage));
     }

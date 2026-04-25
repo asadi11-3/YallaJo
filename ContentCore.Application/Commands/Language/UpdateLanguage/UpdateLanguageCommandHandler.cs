@@ -1,6 +1,5 @@
-using ContentCore.Application.Caching;
-using ContentCore.Domain.Exceptions;
 using ContentCore.Domain.Repositories;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
@@ -43,7 +42,7 @@ public sealed class UpdateLanguageCommandHandler(
             {
                 await unitOfWork.SaveChangesAsync(cancellationToken);
             }
-            catch (ContentCoreConcurrencyException)
+            catch (DbUpdateConcurrencyException)
             {
                 return Result<UpdateLanguageResult>.Conflict(
                     new Error(
@@ -52,6 +51,7 @@ public sealed class UpdateLanguageCommandHandler(
             }
 
             await cache.RemoveByTagAsync("languages", cancellationToken);
+            await cache.RemoveByTagAsync($"language:{language.Id}", cancellationToken);
 
             logger.LogInformation(
                 "Language updated: {LanguageId} (Code={Code}, IsActive={IsActive})",

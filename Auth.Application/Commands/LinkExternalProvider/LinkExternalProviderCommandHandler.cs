@@ -1,5 +1,7 @@
+using Auth.Application.Interfaces.ExternalAuth;
 using Auth.Domain.Entities;
 using Auth.Domain.Repositories;
+using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
@@ -9,22 +11,50 @@ namespace Auth.Application.Commands.LinkExternalProvider;
 public sealed class LinkExternalProviderCommandHandler(
     IExternalProviderRepository externalProviderRepository,
     IAuthUnitOfWork unitOfWork,
-    ICurrentUser currentUser)
+    ICurrentUser currentUser,
+    IExternalAuthTicketVerifier ticketVerifier,
+    IExternalAuthNonceStore nonceStore,
+    ILogger<LinkExternalProviderCommandHandler> logger)
     : ICommandHandler<LinkExternalProviderCommand, Guid>
 {
     public async Task<Result<Guid>> Handle(LinkExternalProviderCommand request, CancellationToken ct)
     {
         if (!currentUser.IsAuthenticated || currentUser.UserId is null)
         {
-            return Result.Failure<Guid>(
-               Error.Unauthorized("Authentication is required."),
-               Outcome.Unauthorized);
+            return Result<Guid>.Failure(
+                Error.Unauthorized("Authentication is required to link an external provider."),
+                Outcome.Unauthorized);
         }
 
         var userId = currentUser.UserId.Value;
-        var normalizedProvider = request.Provider.Trim().ToLowerInvariant();
 
-        // 1. Guard: this user already has an active link for this provider
+        var verification = ticketVerifier.Verify(request.Ticket);
+        if (verification.IsFailure)
+        {
+            logger.LogWarning(
+                "External provider link rejected for user {UserId}: invalid ticket ({Error})",
+                userId, verification.Error?.Message);
+
+            return Result<Guid>.Failure(
+                verification.Error ?? Error.Unauthorized("Invalid external provider ticket."),
+                Outcome.Unauthorized);
+        }
+
+        var ticket = verification.Value!;
+        var normalizedProvider = ticket.Provider.Trim().ToLowerInvariant();
+
+        var consumed = await nonceStore.TryConsumeAsync(ticket.TicketId, ticket.ExpiresAt, ct);
+        if (!consumed)
+        {
+            logger.LogWarning(
+                "External provider link rejected for user {UserId}: ticket {TicketId} already consumed (replay).",
+                userId, ticket.TicketId);
+
+            return Result<Guid>.Failure(
+                Error.Unauthorized("This external-provider authentication has already been used."),
+                Outcome.Unauthorized);
+        }
+
         var alreadyLinked = await externalProviderRepository.AnyAsync(
             ep => ep.UserId == userId
                && ep.Provider == normalizedProvider
@@ -36,12 +66,11 @@ public sealed class LinkExternalProviderCommandHandler(
             return Result<Guid>.Conflict(
                 Error.Conflict(
                     "ExternalProvider.AlreadyLinked",
-                    $"An active {request.Provider} account is already linked to your profile."));
+                    $"A {ticket.Provider} account is already linked to your profile."));
         }
 
-        // 2. Guard: this provider account isn't already claimed by another user
         var takenByOther = await externalProviderRepository.AnyAsync(
-            ep => ep.ProviderUserId == request.ProviderUserId
+            ep => ep.ProviderUserId == ticket.ProviderUserId
                && ep.Provider == normalizedProvider
                && ep.IsActive,
             ct);
@@ -49,20 +78,19 @@ public sealed class LinkExternalProviderCommandHandler(
         if (takenByOther)
         {
             return Result<Guid>.Conflict(
-               Error.Conflict(
-                   "ExternalProvider.ProviderIdTaken",
-                   $"This {request.Provider} account is already linked to another user."));
+                Error.Conflict(
+                    "ExternalProvider.ProviderIdTaken",
+                    $"This {ticket.Provider} account is already linked to another user."));
         }
 
         var externalProvider = ExternalProvider.Create(
-            userId,
-            normalizedProvider,
-            request.ProviderUserId,
-            request.ProviderEmail);
+            userId: userId,
+            provider: normalizedProvider,
+            providerUserId: ticket.ProviderUserId,
+            providerEmail: ticket.Email);
 
         await externalProviderRepository.AddAsync(externalProvider, ct);
         await unitOfWork.SaveChangesAsync(ct);
-
-        return Result.Success(externalProvider.Id);
+        return Result<Guid>.Success(externalProvider.Id);
     }
 }

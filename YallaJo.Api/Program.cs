@@ -49,7 +49,8 @@ using System.Text.Json.Serialization;
 using Tracking.Application;
 using Tracking.Infrastructure;
 using Tracking.Presentation;
-using YallaJo.Api.Authorization;
+using YallaJo.SharedKernel.Presentation.Authorization;
+using YallaJo.Api.Endpoints;
 using YallaJo.Api.ExceptionHandlers;
 using YallaJo.Api.Extensions;
 using YallaJo.Api.Middleware;
@@ -117,7 +118,7 @@ builder.Services.AddTrackingApplication();
 builder.Services.AddTrackingInfrastructure(builder.Configuration);
 
 // ── Shared cross-cutting: behaviors, clock, domain event dispatcher ───────
-builder.Services.AddSharedKernelInfrastructure();
+builder.Services.AddSharedKernelInfrastructure(builder.Configuration);
 builder.Services.AddDataSeeding();
 
 // ── HTTP Context services ────────────────────────────────────────────────
@@ -172,8 +173,7 @@ builder.Services.AddAuthorization(opts =>
     opts.AddPolicy("Admin", p => p.RequireRole(AppRoles.Owner, AppRoles.SuperAdmin, AppRoles.Admin));
 });
 
-builder.Services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
-builder.Services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
+builder.Services.AddPermissionAuthorization();
 
 // ── API Documentation ─────────────────────────────────────────────────────
 builder.Services.AddEndpointsApiExplorer();
@@ -280,6 +280,9 @@ app.MapFinanceEndpoints();
 app.MapMessagingEndpoints();
 app.MapSocialEndpoints();
 app.MapTrackingEndpoints();
+
+// ── Ops endpoints ─────────────────────────────────────────────────────────
+app.MapOpsEndpoints();
 
 // ── Infrastructure endpoints ──────────────────────────────────────────────
 app.MapGet("/", () => Results.Ok(new

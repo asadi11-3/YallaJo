@@ -1,0 +1,56 @@
+@*
+    Phase 5C — Suspend admin lifecycle modal.
+    Triggered by `data-bs-toggle="modal" data-bs-target="#mdl-suspend-{userId}"`.
+    Posts to LifecycleController.Suspend (anti-forgery enforced).
+*@
+@model Guid
+@{
+    var userId = Model;
+    var email = (ViewData["TargetEmail"] as string) ?? string.Empty;
+    var modalId = $"mdl-suspend-{userId}";
+    var titleId = $"{modalId}-title";
+    var bannerId = $"{modalId}-banner";
+}
+
+<div class="modal fade admin-action-modal" id="@modalId" tabindex="-1"
+     aria-labelledby="@titleId" aria-describedby="@bannerId" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form asp-area="Admin" asp-controller="Lifecycle"
+                  asp-action="Suspend" asp-route-userId="@userId" method="post">
+                @Html.AntiForgeryToken()
+                <div class="modal-header bg-warning-subtle">
+                    <h5 class="modal-title" id="@titleId">
+                        <i class="bi bi-pause-circle me-1"></i> Suspend account
+                    </h5>
+                    <button type="button" class="btn-close"
+                            data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-warning small mb-3" id="@bannerId">
+                        The user will be signed out of all sessions immediately and
+                        cannot log in until reactivated. Existing data and roles are
+                        preserved.
+                    </div>
+                    <p class="mb-0">
+                        Are you sure you want to suspend
+                        @if (!string.IsNullOrWhiteSpace(email))
+                        {
+                            <strong>@email</strong>
+                        }
+                        else
+                        {
+                            <span>this user</span>
+                        }
+                        ?
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary"
+                            data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-warning">Suspend</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

@@ -25,13 +25,15 @@ public sealed class ChangePasswordCommandHandler(
         }
 
         var user = await userRepository.GetByIdAsync(currentUser.UserId.Value, cancellationToken, asNoTracking: false);
-        if (user is null) {
+        if (user is null)
+        {
             return Result<ChangePasswordResult>.Failure(
                Error.NotFound("User", "User not found."),
                Outcome.NotFound);
         }
 
-        if (!passwordHasher.Verify(request.CurrentPassword, user.PasswordHash)) {
+        if (!passwordHasher.Verify(request.CurrentPassword, user.PasswordHash))
+        {
             return Result<ChangePasswordResult>.Failure(
                 Error.Unauthorized("Current password is incorrect."),
                 Outcome.Unauthorized);

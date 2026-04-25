@@ -2,7 +2,6 @@ using YallaJo.SharedKernel.Domain.Entities;
 
 namespace Auth.Domain.Entities;
 
-
 public sealed class ExternalProvider : AuditableEntity, IAggregateRoot
 {
     private ExternalProvider() { } // EF Core
@@ -17,11 +16,19 @@ public sealed class ExternalProvider : AuditableEntity, IAggregateRoot
     public static ExternalProvider Create(
         Guid userId, string provider, string providerUserId, string? providerEmail = null)
     {
+        if (string.IsNullOrWhiteSpace(provider))
+            throw new ArgumentException("Provider is required.", nameof(provider));
+        if (string.IsNullOrWhiteSpace(providerUserId))
+            throw new ArgumentException("Provider user ID is required.", nameof(providerUserId));
+
         return new ExternalProvider
         {
             UserId = userId,
-            Provider = provider.Trim(),
-            ProviderUserId = providerUserId,
+            // Provider name is normalized here so the filtered unique index
+            // (IX_ExternalProviders_Provider_ProviderUserId_Active) is
+            // deterministic regardless of which caller created the row.
+            Provider = provider.Trim().ToLowerInvariant(),
+            ProviderUserId = providerUserId.Trim(),
             ProviderEmail = providerEmail?.Trim().ToLowerInvariant(),
             IsActive = true,
             VerifiedAt = DateTime.UtcNow

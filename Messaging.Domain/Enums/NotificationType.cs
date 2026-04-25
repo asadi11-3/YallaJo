@@ -8,5 +8,6 @@ public enum NotificationType : byte
     Review = 3,
     Promotion = 4,
     Social = 5,
-    Chat = 6
+    Chat = 6,
+    Business = 7,
 }

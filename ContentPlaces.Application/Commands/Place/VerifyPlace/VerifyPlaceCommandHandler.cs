@@ -1,6 +1,7 @@
 using ContentPlaces.Application.Interfaces;
-using ContentPlaces.Domain.Exceptions;
 using ContentPlaces.Domain.Repositories;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
@@ -10,6 +11,7 @@ namespace ContentPlaces.Application.Commands.Place.VerifyPlace;
 public sealed class VerifyPlaceCommandHandler(
     IPlaceRepository placeRepository,
     IContentPlacesUnitOfWork unitOfWork,
+    HybridCache cache,
     ILogger<VerifyPlaceCommandHandler> logger)
     : ICommandHandler<VerifyPlaceCommand>
 {
@@ -24,13 +26,14 @@ public sealed class VerifyPlaceCommandHandler(
                    new Error("Place.NotFound", $"Place '{request.PlaceId}' was not found."),
                    Outcome.NotFound);
             }
+
             place.SetVerified(request.IsVerified);
 
             try
             {
                 await unitOfWork.SaveChangesAsync(cancellationToken);
             }
-            catch (ContentPlaceConcurrencyException)
+            catch (DbUpdateConcurrencyException)
             {
                 return Result.Failure(
                     new Error(
@@ -38,6 +41,9 @@ public sealed class VerifyPlaceCommandHandler(
                         "This record was modified by another user. Please refresh and try again."),
                     Outcome.Conflict);
             }
+
+            await cache.RemoveByTagAsync($"place:{request.PlaceId}", cancellationToken);
+            await cache.RemoveByTagAsync("places", cancellationToken);
 
             logger.LogInformation(
                 "Place {PlaceId} verified={IsVerified}", request.PlaceId, request.IsVerified);

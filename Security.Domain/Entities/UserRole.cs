@@ -4,7 +4,7 @@ namespace Security.Domain.Entities;
 
 public sealed class UserRole : AuditableEntity
 {
-    private UserRole() { } // EF Core
+    private UserRole() { }
 
     public Guid UserId { get; private set; }
     public Guid RoleId { get; private set; }

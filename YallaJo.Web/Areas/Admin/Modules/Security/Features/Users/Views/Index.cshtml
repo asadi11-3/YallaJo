@@ -1,3 +1,5 @@
+@using YallaJo.Web.Infrastructure.Authorization
+@using YallaJo.Web.Areas.Admin.Modules.Security.Features.Users.ViewModels
 @model YallaJo.Web.Areas.Admin.Modules.Security.Features.Users.ViewModels.UserListVm
 @{
     ViewData["Title"] = "Users";
@@ -5,52 +7,145 @@
 }
 
 <div class="container mt-4">
-    <h2>Users</h2>
+    @* ── Header strip: title + total count + page indicator ───────────────── *@
+    <div class="d-flex flex-wrap align-items-center justify-content-between mb-3">
+        <h2 class="mb-0">
+            Users
+            <span class="badge bg-light text-dark border ms-2 align-middle">@Model.TotalCount</span>
+        </h2>
+        @if (Model.TotalCount > 0)
+        {
+            <small class="text-muted">
+                Page @Model.Page · Showing @Model.Users.Count of @Model.TotalCount
+            </small>
+        }
+    </div>
 
     @if (TempData["Success"] is string ok)  { <div class="alert alert-success">@ok</div> }
     @if (TempData["Error"]   is string err) { <div class="alert alert-danger">@err</div> }
     @if (ViewBag.Error       is string vbe) { <div class="alert alert-danger">@vbe</div> }
 
-    <table class="table table-bordered">
-        <thead>
+    @*
+        Phase 5D — page-local filter input.
+        Substring-matches against Email + Roles in the rendered rows
+        only. Clearly labelled so admins know it does NOT page through
+        the server. Backend ListUsersQuery has no filter parameter, so
+        a server-side filter is deferred until the API supports it.
+    *@
+    <div class="row g-2 mb-3">
+        <div class="col-md-6">
+            <label for="users-filter" class="form-label small text-muted mb-1">
+                Filter rows on this page (email or role)
+            </label>
+            <input id="users-filter" type="search" class="form-control form-control-sm"
+                   placeholder="Type to filter visible rows…"
+                   autocomplete="off" />
+        </div>
+    </div>
+
+    <table class="table table-sm table-hover align-middle table-bordered" id="users-table">
+        <thead class="table-light">
             <tr>
                 <th>Email</th>
                 <th>Roles</th>
                 <th>Status</th>
-                <th></th>
+                <th class="text-end">Actions</th>
             </tr>
         </thead>
         <tbody>
-            @foreach (var u in Model.Users)
+            @if (Model.Users.Count == 0)
             {
                 <tr>
-                    <td>@u.Email</td>
-                    <td>@string.Join(", ", u.Roles)</td>
+                    <td colspan="4" class="text-center text-muted py-4">
+                        No users found.
+                    </td>
+                </tr>
+            }
+
+            @foreach (var u in Model.Users)
+            {
+                <tr data-filter-text="@(u.Email + " " + string.Join(" ", u.Roles))">
                     <td>
-                        <span class="badge @(u.IsActive ? "bg-success" : "bg-secondary")">
-                            @(u.IsActive ? "Active" : "Inactive")
-                        </span>
+                        <div>@u.Email</div>
+                        <div class="text-muted small font-monospace" title="User id (click Manage or Audit to act on this user)">
+                            @u.Id
+                        </div>
                     </td>
                     <td>
-                        <a asp-area="Admin" asp-controller="Users"
-                           asp-action="Details" asp-route-userId="@u.Id"
-                           class="btn btn-sm btn-outline-primary">Manage</a>
+                        @if (u.Roles.Count == 0)
+                        {
+                            <span class="text-muted small">—</span>
+                        }
+                        else
+                        {
+                            @foreach (var role in u.Roles)
+                            {
+                                <span class="badge bg-light text-dark border me-1">@role</span>
+                            }
+                        }
+                    </td>
+                    <td>
+                        <partial name="Partials/_LifecycleBadge"
+                                 model="@(new LifecycleBadgeVm(u.IsActive, null))" />
+                    </td>
+                    <td class="text-end">
+                        <div class="btn-group btn-group-sm" role="group" aria-label="User actions">
+                            <a asp-area="Admin" asp-controller="Users"
+                               asp-action="Details" asp-route-userId="@u.Id"
+                               class="btn btn-outline-primary">Manage</a>
+
+                            <permission require="@WebPermission.System.Read">
+                                <a asp-area="Admin" asp-controller="AuditLogs"
+                                   asp-action="Index" asp-route-userId="@u.Id"
+                                   class="btn btn-outline-secondary"
+                                   title="View audit timeline filtered by this user">
+                                    Audit
+                                </a>
+                            </permission>
+                        </div>
                     </td>
                 </tr>
             }
         </tbody>
     </table>
 
-    @* Pagination *@
-    <div class="d-flex gap-2">
+    @* ── Pagination ──────────────────────────────────────────────────────── *@
+    <div class="d-flex gap-2 align-items-center">
         @if (Model.HasPrevious)
         {
-            <a asp-action="Index" asp-route-page="@(Model.Page - 1)" class="btn btn-outline-secondary">← Previous</a>
+            <a asp-action="Index" asp-route-page="@(Model.Page - 1)" class="btn btn-outline-secondary btn-sm">← Previous</a>
         }
-        <span class="align-self-center text-muted">Page @Model.Page — @Model.TotalCount total</span>
+        <span class="text-muted small">Page @Model.Page — @Model.TotalCount total</span>
         @if (Model.HasNext)
         {
-            <a asp-action="Index" asp-route-page="@(Model.Page + 1)" class="btn btn-outline-secondary">Next →</a>
+            <a asp-action="Index" asp-route-page="@(Model.Page + 1)" class="btn btn-outline-secondary btn-sm">Next →</a>
         }
     </div>
 </div>
+
+@section Scripts {
+    @*
+        Phase 5D — page-local row filter. Substring (case-insensitive)
+        across the data-filter-text attribute on each row, which combines
+        Email + Roles. Pure progressive enhancement: with JS off, all
+        rows always show.
+    *@
+    <script>
+        (function () {
+            const input = document.getElementById('users-filter');
+            const table = document.getElementById('users-table');
+            if (!input || !table) return;
+
+            const rows = Array.from(table.tBodies[0].rows)
+                .filter(r => r.hasAttribute('data-filter-text'));
+
+            input.addEventListener('input', function () {
+                const q = this.value.trim().toLowerCase();
+                for (const row of rows) {
+                    const hay = (row.getAttribute('data-filter-text') || '').toLowerCase();
+                    row.style.display = (q.length === 0 || hay.indexOf(q) !== -1) ? '' : 'none';
+                }
+            });
+        })();
+    </script>
+}

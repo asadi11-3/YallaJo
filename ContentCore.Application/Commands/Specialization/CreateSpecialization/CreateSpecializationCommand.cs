@@ -5,4 +5,5 @@ namespace ContentCore.Application.Commands.Specialization.CreateSpecialization;
 public sealed record CreateSpecializationCommand(
     string Name,
     string? Description = null,
-    string? Icon = null) : ICommand<CreateSpecializationResult>;
+    string? Icon = null,
+    string SourceLanguageCode = "en") : ICommand<CreateSpecializationResult>;

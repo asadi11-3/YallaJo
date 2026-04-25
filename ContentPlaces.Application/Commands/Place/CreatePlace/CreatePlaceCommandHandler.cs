@@ -1,6 +1,7 @@
 using ContentPlaces.Application.Interfaces;
-using ContentPlaces.Domain.Exceptions;
 using ContentPlaces.Domain.Repositories;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
 using System.Threading;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
@@ -12,6 +13,7 @@ namespace ContentPlaces.Application.Commands.Place.CreatePlace;
 public sealed class CreatePlaceCommandHandler(
     IPlaceRepository placeRepository,
     IContentPlacesUnitOfWork unitOfWork,
+    HybridCache cache,
     ILogger<CreatePlaceCommandHandler> logger)
     : ICommandHandler<CreatePlaceCommand, CreatePlaceResult>
 {
@@ -25,7 +27,7 @@ public sealed class CreatePlaceCommandHandler(
                 ? PlaceEntity.GenerateSlug(request.Name)
                 : request.Slug.Trim().ToLowerInvariant();
 
-            if (await placeRepository.AnyAsync(t => t.Slug == request.Slug, cancellationToken))
+            if (await placeRepository.AnyAsync(t => t.Slug == slug, cancellationToken))
             {
                 return Result<CreatePlaceResult>.Conflict(
                     new Error("Place.SlugConflict", $"A place with slug '{slug}' already exists."));
@@ -55,13 +57,15 @@ public sealed class CreatePlaceCommandHandler(
             {
                 await unitOfWork.SaveChangesAsync(cancellationToken);
             }
-            catch (ContentPlaceConcurrencyException)
+            catch (DbUpdateConcurrencyException)
             {
                 return Result<CreatePlaceResult>.Conflict(
                     new Error(
                         "Place.ConcurrencyConflict",
                         "A concurrency conflict occurred. Please try again."));
             }
+
+            await cache.RemoveByTagAsync("places", cancellationToken);
 
             logger.LogInformation(
                 "Place created: {PlaceId} (Slug={Slug})", place.Id, place.Slug);

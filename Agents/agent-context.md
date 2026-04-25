@@ -1,29 +1,84 @@
-# YallaJo — Agent Onboarding & Progress Context
+# YallaJo — Agent Context & Build Guide
 
-> **Last Updated**: 2026-04-17 (ContentCore WS4/WS6 remediation + schema migration) | **Build State**: 0 errors, analyzer warnings only (pre-existing StyleCop/Meziantou/CA warnings; no new compile errors)
+> **Last Updated**: 2026-04-21 (ContentPlaces Place CQRS event/caching fix pass) | **Build State**: `ContentPlaces.Application` build 0 errors; `ContentPlaces.Presentation` build 0 errors; no ContentPlaces automated tests exist yet; full solution still has pre-existing analyzer warnings
 
-> **Purpose**: Single source of truth for any AI agent working on YallaJo. **Read this entire file once at the start of every session.** Every section contains rules you must follow — do not skip any.
-## 📑 Table of Contents
-### [CRITICAL] — Read first, always apply
-- §Reference Files · §Gotchas · §Common Mistakes · §Performance Rules · §Security Rules
-- §Error Handling · §Try/Catch & Exception Rules · §Pre-flight & Completion · §Error Learning
-### [REQUIRED] — Must know, apply on every task
-- §Update This File · §Entity Checklist · §Scaffold & Template Rules · §DI Registration
-- §Naming Conventions · §Validation Rules · §Concurrency & Data Integrity
-- §DateTime & Guid Rules · §Enum Handling · §String Column Rules · §Git Conventions
-### [REFERENCE] — Look up when your task involves this area
-- §Caching Rules · §Polly Resilience · §Module Dependencies · §Auth & Authorization
-- §Logging Rules · §Domain vs Integration Events · §Cross-Module Communication
-- §Localization & RTL · §Environment Rules · §Dependency Management
-- §Testing Strategy · §API Documentation · §Validation & Error Flow
-### [TRACKING] — Project status (not rules)
-- §Project Overview · §Module Status · §What Has Been Built · §What Needs To Be Done
-- §Key File Locations · §How to Run & Verify · §Constraints · §Agent Efficiency Rules
-- §Agent Decision-Making · §Session Handoff
+> **Purpose**: The single source of truth for any AI agent working on YallaJo.
+> **Read every section before writing code.** Every section is a rule you must follow.
 
 ---
-## 🔖 [CRITICAL] MANDATORY: Reference Files
-Before doing ANY work, read these files from `Agents/`:
+
+## 📑 Table of Contents
+
+### §0. Quick Start (2-minute read)
+- [§0.1 What YallaJo Is](#01-what-yallajo-is)
+- [§0.2 Tech Stack](#02-tech-stack)
+- [§0.3 The Five Non-Negotiable Rules](#03-the-five-non-negotiable-rules)
+- [§0.4 Reference Documents](#04-reference-documents)
+
+### §1. Architecture Foundations
+- [§1.1 Modular Monolith + Clean + DDD](#11-modular-monolith--clean--ddd)
+- [§1.2 Project Structure](#12-project-structure)
+- [§1.3 Dependency Graph (Strict)](#13-dependency-graph-strict)
+- [§1.4 Request Lifecycle](#14-request-lifecycle)
+
+### §2. The Hard Rules (non-negotiable)
+- [§2.1 Rule — Endpoint Authorization](#21-rule--endpoint-authorization-mandatory)
+- [§2.2 Rule — ICurrentUser Usage Policy](#22-rule--icurrentuser-usage-policy-mandatory)
+- [§2.3 Rule — Result Pattern](#23-rule--result-pattern-no-business-exceptions)
+- [§2.4 Rule — Per-Module Permission Catalog](#24-rule--per-module-permission-catalog)
+- [§2.5 Rule — Transaction Boundaries (UoW)](#25-rule--transaction-boundaries-uow)
+- [§2.6 Rule — Outbox/Inbox Atomicity](#26-rule--outboxinbox-atomicity)
+
+### §3. CQRS, MediatR, Events
+- [§3.1 Commands vs Queries](#31-commands-vs-queries)
+- [§3.2 MediatR Pipeline](#32-mediatr-pipeline)
+- [§3.3 Domain Events](#33-domain-events-same-module-same-transaction)
+- [§3.4 Integration Events (Outbox/Inbox)](#34-integration-events-outboxinbox)
+
+### §4. Authorization Architecture
+- [§4.1 Layered Authorization Model](#41-layered-authorization-model)
+- [§4.2 How to Add a New Permission](#42-how-to-add-a-new-permission)
+- [§4.3 Endpoint Decoration Cookbook](#43-endpoint-decoration-cookbook)
+- [§4.4 Ownership Checks in Handlers](#44-ownership-checks-in-handlers)
+
+### §5. Cross-Cutting Patterns
+- [§5.1 Caching (HybridCache)](#51-caching-hybridcache)
+- [§5.2 Validation (FluentValidation)](#52-validation-fluentvalidation)
+- [§5.3 Error Handling](#53-error-handling)
+- [§5.4 Concurrency & Data Integrity](#54-concurrency--data-integrity)
+- [§5.5 Try/Catch Policy](#55-trycatch-policy)
+- [§5.6 Logging & Observability](#56-logging--observability)
+
+### §6. Conventions
+- [§6.1 Naming](#61-naming)
+- [§6.2 DateTime & Guid](#62-datetime--guid)
+- [§6.3 Enums & Strings](#63-enums--strings)
+- [§6.4 Git](#64-git)
+
+### §7. Checklists
+- [§7.1 New Entity Checklist](#71-new-entity-checklist)
+- [§7.2 New Endpoint Checklist](#72-new-endpoint-checklist)
+- [§7.3 PR Review Checklist](#73-pr-review-checklist)
+- [§7.4 Pre-flight & Completion](#74-pre-flight--completion)
+
+### §8. Known Issues (from audits)
+- [§8.1 ICurrentUser Violations](#81-icurrentuser-violations-8-handlers)
+- [§8.2 Endpoint Authorization Violations](#82-endpoint-authorization-violations-28-endpoints)
+
+### §9. Gotchas (hard-won lessons)
+- [§9.1 Gotchas Registry](#91-gotchas-registry)
+
+### §10. Session Protocol
+- [§10.1 Session Start](#101-session-start)
+- [§10.2 Session End](#102-session-end)
+- [§10.3 Tracking](#103-tracking)
+
+### §11. Module Status (tracking)
+- [§11.1 Module Status Overview](#111-module-status-overview)
+- [§11.2 Work Log](#112-work-log)
+- [§11.3 Next Up](#113-next-up)
+
+---
 
 | File | Contains | When to Read |
 |------|----------|-------------|
@@ -33,22 +88,217 @@ Before doing ANY work, read these files from `Agents/`:
 | `Agents/YallaJo Business Rules & Edge Cases.pdf` | Business rules & edge cases (63 pages, 24 sections) — state machines, validation, booking, payments, reviews, etc. | **ALWAYS when implementing any module** — this is the business logic bible |
 | `Agents/error-log.md` | Mistakes previous agents made — with root cause and prevention rules | **ALWAYS** — read before writing any code |
 
-**`guide.md` = code patterns. `Business Rules PDF` = business logic. Never guess — look it up.**
-### ⛔ Business Rules PDF Rule (NON-NEGOTIABLE)
-Before implementing ANY domain logic, validator, state machine, or edge case handling for ANY module, you MUST:
+### §0.1 What YallaJo Is
 
-1. **Read the relevant section** of `Agents/YallaJo Business Rules & Edge Cases.pdf` for that module
-2. **Extract every rule** that applies to the entity/feature you're building
-3. **Implement every rule** — do not skip rules because they seem edge-case-y. They exist for a reason.
-4. **If a rule is ambiguous**, ask the user — do not interpret it yourself
+**YallaJo** is a tourism + booking platform for Jordan. Architecture: **.NET 9 modular monolith** with **Clean Architecture per module**, **CQRS via MediatR**, **Domain-Driven Design**, **Outbox/Inbox for cross-module events**. Single deployable process, 14 modules, ~196 planned endpoints across 4 phases.
 
-The PDF covers: provider registration flows, tour/place management rules, booking & slot locking logic, payment & refund policies, review/rating algorithms, wishlist notifications, SEO/sitemap rules, blog management, map display rules, weather integration, notification system, children-friendly/accessibility rules, packaging system, subscriptions & feature gating, referral & loyalty points, dispute center state machines, recommendation engine, AI chatbot rules, accessibility UI, discount & promotions with stacking/payout rules.
+### §0.2 Tech Stack
 
-**If you implement a module without reading its section in this PDF, your work is considered incomplete and must be redone.**
+| Layer | Technology |
+|---|---|
+| Runtime | .NET 9 (SDK 10.0.200-preview) |
+| Web | ASP.NET Core Minimal APIs |
+| Mediator | MediatR 14.0.0 |
+| ORM | EF Core 9.0.13 (SQL Server) |
+| Validation | FluentValidation 12.1.1 |
+| Caching | `Microsoft.Extensions.Caching.Hybrid` **9.3.0** (pinned) |
+| Resilience | `Microsoft.Extensions.Http.Resilience` 9.4.0 (Polly v8) |
+| Auth | JWT Bearer + permission-based policies (`IPermissionCatalog`) |
+| Logging | Serilog 10.0.0 (console + rolling file) |
+| Tracing | OpenTelemetry 1.15 (OTLP exporter) |
+| Versioning | `Asp.Versioning.Http` 8.1.1 (URL segment `/api/v1/`) |
+| Images | SixLabors.ImageSharp 3.1.12 |
+| Video | FFMpegCore 5.4.0 |
+| Translation | Azure Translator API |
+
+### §0.3 The Five Non-Negotiable Rules
+
+These rules are the **foundation of every code change**. Violate any of them and your PR is rejected.
+
+#### 🛑 Rule 1 — Every endpoint must have explicit authorization
+Every `MapGet` / `MapPost` / `MapPut` / `MapDelete` MUST be decorated with ONE of:
+- `.WithMetadata(new MustHavePermissionAttribute({Module}Features.X, AppAction.Y))` — for protected endpoints
+- `.AllowAnonymous()` — for public endpoints (login, register, public reads)
+
+**Never** use `.RequireAuthorization()` without a permission (that's just "authenticated, but anyone").
+**Never** use `.RequireAuthorization("Permission.X.Y")` string-based policies — use the attribute.
+
+Detail: [§2.1](#21-rule--endpoint-authorization-mandatory) · Violations list: [§8.2](#82-endpoint-authorization-violations-28-endpoints)
+
+#### 🛑 Rule 2 — `ICurrentUser` is ONLY for self/ownership comparisons
+Inject `ICurrentUser` in a handler **only when** you compare `ICurrentUser.UserId` against the resource's owner/creator/target to gate access (IDOR prevention, self-edit checks).
+
+**Never** inject `ICurrentUser` just to stamp a field or to check `IsAuthenticated` — that's what `MustHavePermission` is for. Authorization belongs on the endpoint, not inside the handler.
+
+Detail: [§2.2](#22-rule--icurrentuser-usage-policy-mandatory) · Violations list: [§8.1](#81-icurrentuser-violations-8-handlers)
+
+#### 🛑 Rule 3 — Commands return `Result<T>`. Never throw for business failures.
+Programming errors (null where not expected, violated invariants) → `ArgumentException` / `InvalidOperationException` → 500.
+Business errors (not found, conflict, forbidden, validation) → `Result<T>.Failure(Error.X, Outcome.Y)` → mapped HTTP status.
+Endpoints: `result.ToApiResult()`. **Never** try/catch in endpoints or command handlers for business errors.
+
+Detail: [§5.3](#53-error-handling)
+
+#### 🛑 Rule 4 — Every module owns its permission catalog
+Each module publishes `{Module}Features` + `{Module}PermissionCatalog : IPermissionCatalog` in its **Contracts** project.
+Security's `PermissionSeeder` auto-discovers all registered catalogs. **Never** add another module's features to your module's catalog.
+
+Detail: [§4](#4-authorization-architecture) · Background: `authorization-refactor-plan.md`
+
+#### 🛑 Rule 5 — Domain event handlers never call `SaveChangesAsync`
+`UnitOfWork.SaveChangesAsync()` dispatches domain events **before** SaveChanges. Your handler's changes piggyback on the aggregate's single commit. Calling Save in a handler breaks atomicity and can double-save.
+
+Detail: [§2.5](#25-rule--transaction-boundaries-uow) · [§3.3](#33-domain-events-same-module-same-transaction)
+
+### §0.4 Reference Documents
+
+| File | Purpose | When to Read |
+|---|---|---|
+| `Agents/agent-context.md` (this file) | Rules, architecture, checklists, gotchas | **Always, every session** |
+| `Agents/guide.md` | Deep code patterns — entity anatomy, CQRS templates, EF configs, pipeline internals | When implementing a new feature |
+| `Agents/YallaJo.md` | Product spec — 196 endpoints, middleware, background services, business logic | When implementing a specific endpoint |
+| `Agents/YallaJo Business Rules & Edge Cases.pdf` | Business rule bible — 63 pages, 24 sections, state machines, validation, edge cases | **Before implementing any module's business logic** |
+| `Agents/Endpoints.pdf` | Visual endpoint tier breakdown (Wave 1–6) | When planning an implementation order |
+| `Agents/error-log.md` | Every past mistake with root cause + prevention rule | **Always, session start** |
+| `Agents/authorization-refactor-plan.md` | The full authorization subsystem architecture + migration history | When touching authorization code |
+| `Agents/endpoint-authorization-audit.md` | Current endpoint authorization coverage (127 endpoints audited) | When adding/reviewing endpoints |
+| `Agents/decisions/ADR-001..004.md` | Architecture decisions (Modular Monolith, CQRS, No Hangfire, Result Pattern) | When an architectural choice seems wrong |
+| `Agents/patterns/` | Copy-paste code for caching, error handling, Polly | When you need a specific pattern |
+| `Agents/templates/` | Scaffold templates for all CQRS artifacts | When creating a new entity |
 
 ---
-## ⚠️ [CRITICAL] Critical Discoveries & Gotchas
-These are hard-won lessons. **Read before writing any code.**
+
+## §1. Architecture Foundations
+
+### §1.1 Modular Monolith + Clean + DDD
+
+YallaJo combines three complementary architectures:
+
+**Modular Monolith** — 14 bounded-context modules inside one deployable process. Each module owns its own schema, DbContext, migrations, outbox, inbox. Modules communicate **only** via integration events (no cross-module queries, no direct DbContext access across modules).
+
+**Clean Architecture per module** — Domain has zero dependencies. Application depends on Domain only. Infrastructure implements interfaces defined in Domain + Application. Presentation depends on Application only (via MediatR).
+
+**Domain-Driven Design** — Aggregates marked with `IAggregateRoot`. Private setters; state changes via business methods. Factory methods raise domain events. Repositories are per-aggregate. Unit of Work dispatches events before commit.
+
+### §1.2 Project Structure
+
+Every module has **exactly 5 projects**:
+
+```
+{Module}.Domain/           ← Pure business logic. Zero external deps.
+{Module}.Application/      ← Commands, Queries, Handlers, Validators
+{Module}.Infrastructure/   ← EF Core, repositories, DbContext, event handlers
+{Module}.Presentation/     ← Minimal API endpoints
+{Module}.Contracts/        ← Integration events + permission catalog (public surface)
+```
+
+Plus 3 SharedKernel projects:
+
+```
+YallaJo.SharedKernel.Domain/          ← Base entities, value objects, interfaces
+YallaJo.SharedKernel.Application/     ← CQRS interfaces, pipeline behaviors, IPermissionCatalog
+YallaJo.SharedKernel.Infrastructure/  ← UoW, outbox/inbox, domain event dispatcher
+YallaJo.SharedKernel.Presentation/    ← MustHavePermissionAttribute, ResultExtensions, auth runtime
+```
+
+And the host:
+
+```
+YallaJo.Api/   ← Program.cs, middleware, JWT config, module wiring
+```
+
+### §1.3 Dependency Graph (Strict)
+
+```
+                    ┌─────────────────────────┐
+                    │  SharedKernel.Domain    │
+                    └─────────────────────────┘
+                              ▲
+              ┌───────────────┼───────────────┐
+              │               │               │
+   ┌──────────────────┐ ┌─────────────┐ ┌────────────────────┐
+   │ SharedKernel     │ │ SharedKernel│ │ SharedKernel       │
+   │ .Application     │ │ .Infra      │ │ .Presentation      │
+   └──────────────────┘ └─────────────┘ └────────────────────┘
+              ▲               ▲               ▲
+   ┌──────────┴───────────────┴──────┐        │
+   │ {Module}.Contracts              │◄───────┤
+   │ (IntegrationEvents, Features,   │        │
+   │  PermissionCatalog)             │        │
+   └─────────────────────────────────┘        │
+              ▲                                │
+              │                                │
+   ┌──────────┴───┐  ┌────────────┐  ┌────────┴────────┐
+   │ {Module}.    │  │ {Module}.  │  │ {Module}.        │
+   │ Domain       │◄─│ Application│  │ Presentation     │
+   └──────────────┘  └────────────┘  └──────────────────┘
+                            ▲                ▲
+                            └───── YallaJo.Api (host)
+```
+
+**Rules**:
+- Domain depends on NOTHING except `SharedKernel.Domain`
+- Application depends on Domain + Contracts + `SharedKernel.Application`
+- Infrastructure depends on Application + Domain + `SharedKernel.Infrastructure`
+- Presentation depends on Application + `SharedKernel.Presentation`
+- Contracts depends on `SharedKernel.Domain` + `SharedKernel.Application` (for `IPermissionCatalog`)
+- **Infrastructure NEVER leaks into Application or Domain**
+- **Cross-module references only via Contracts or integration events**
+
+### §1.4 Request Lifecycle
+
+```
+HTTP POST /api/v1/content-core/tags
+  │
+  ├─ ASP.NET Core Pipeline
+  │    ├─ Serilog Request Logging
+  │    ├─ CorrelationId Middleware
+  │    ├─ Authentication (JWT)
+  │    ├─ Authorization (PermissionPolicyProvider synthesizes "Permission.Tag.Create")
+  │    │    └─ PermissionAuthorizationHandler checks User.HasClaim("Permission", "Permission.Tag.Create")
+  │    │         ├─ has claim → continue
+  │    │         └─ missing   → 403 Forbidden
+  │    ├─ RequestLocalization (Accept-Language → CultureInfo)
+  │    └─ RateLimiter
+  │
+  ├─ Endpoint Handler (Presentation)
+  │    └─ ISender.Send(CreateTagCommand)
+  │
+  ├─ MediatR Pipeline (SharedKernel.Application)
+  │    ├─ ValidationBehavior      → FluentValidation
+  │    ├─ LoggingBehavior         → stopwatch, structured log
+  │    ├─ PerformanceBehavior     → warn on >500ms handlers
+  │    ├─ QueryCachingBehavior    → HybridCache.GetOrCreateAsync (queries only)
+  │    └─ Command/Query Handler
+  │         ├─ Loads aggregate via repository
+  │         ├─ Calls business method (e.g., tag.Update(...))
+  │         ├─ Aggregate raises domain event (added to DomainEvents collection)
+  │         ├─ unitOfWork.SaveChangesAsync()
+  │         │    ├─ UoW collects domain events from all IAggregateRoot entries
+  │         │    ├─ Clears events from aggregates
+  │         │    ├─ Dispatches events via MediatR
+  │         │    │    └─ Domain event handlers may ADD outbox messages to DbContext
+  │         │    └─ context.SaveChangesAsync() (ONE atomic commit: aggregate + outbox)
+  │         ├─ cache.RemoveByTagAsync("tag:{id}", "tags") — AFTER save
+  │         └─ returns Result<T>
+  │
+  ├─ Endpoint maps Result<T> → HTTP via result.ToApiResult()
+  │
+  └─ Response (RFC 7807 ProblemDetails for failures)
+
+(Async, out-of-band)
+CompositeOutboxProcessor (BackgroundService, every 10s):
+  ├─ For each module DbContext: pick up unprocessed OutboxMessages
+  ├─ Lock message (LockedUntil = now + 5min) — prevents double-processing
+  ├─ Deserialize JSON → IntegrationEventNotification<T>
+  ├─ For each registered INotificationHandler<IntegrationEventNotification<T>>:
+  │    └─ Invoke individually (not via mediator.Publish — failure isolation)
+  │         └─ Handler checks inbox idempotency, does work, marks inbox, SaveChanges
+  ├─ If ALL handlers succeed: mark OutboxMessage.ProcessedOnUtc
+  └─ If any fails: RetryCount++, retry next cycle (max 10 retries → dead-letter)
+```
+
+### §1.5 Critical Gotchas (22 hard-earned rules)
 
 | # | Gotcha | What Happens If You Ignore It |
 |---|--------|-------------------------------|
@@ -70,129 +320,706 @@ These are hard-won lessons. **Read before writing any code.**
 | 16 | **Before calling any domain method that raises an event, guard the current state** | `language.Activate()` ALWAYS raises `LanguageActivatedDomainEvent`. If the language is already active and you call `Activate()` again, you get a duplicate outbox row → duplicate integration event → duplicate downstream work (re-translating all content). Always check: `if (!entity.IsInTargetState) entity.TransitionToTargetState()`. See ERR-009 in error-log.md. |
 | 17 | **Recursive tree builders MUST have cycle detection** | Any method that traverses parent-child relationships from DB data must use a `HashSet<Guid> visited` set to detect circular references. A circular parent chain in the DB causes `StackOverflowException` that crashes the process. See ERR-012 in error-log.md. |
 | 18 | **`ILogger<THandler>` is mandatory in ALL handlers — commands AND queries** | Query handlers are NOT exempt. 21 ContentCore handlers were found missing ILogger during audit (2026-04-17). The rule applies to every `ICommandHandler` and `IQueryHandler` implementation in every module. See BUG-005 in ContentCore-fixes-required.md. |
+| 19 | **Never mark an inbox/outbox-driven email notification as processed before the email send succeeds** | If you persist the OTP/token and mark the inbox message processed first, then swallow SMTP failure, registration returns success but no email is delivered and the event will never retry. Mark failed OTPs used and let the outbox retry instead. |
+| 20 | **Google App Passwords copied from UI may include spaces — normalize before SMTP auth** | Google shows app passwords in 4-character groups for readability. Passing the spaced value directly to `NetworkCredential` causes Gmail auth failure even when the password looks correct. Strip spaces and trim before calling `SendMailAsync`. |
+| 21 | **Do not run parallel `dotnet build/test` commands that share projects/output paths** | Concurrent compilation against shared `obj/bin` outputs can throw `CS2012` file-lock errors (dll in use by another process). Run build/test validations sequentially when targets overlap. |
+| 22 | **Do not fix ContentPlaces event dispatch by injecting `ContentPlacesDbContext` into Application handlers** | `ContentPlaces.Application` does not reference Infrastructure by design. Restore aggregate event dispatch by making `IContentPlacesUnitOfWork` delegate to the shared `IUnitOfWork<ContentPlacesDbContext>` inside Infrastructure, or raise domain events on the aggregate and handle outbox writes in Infrastructure event handlers. |
 
 ---
-## 🚨 [CRITICAL] Common Mistakes & Fixes
-### DI & Configuration Bugs
-| Mistake | Symptom | Fix |
-|---------|---------|-----|
-| Forgot DI registration | `InvalidOperationException: No service for type 'IXxxRepository'` | Add `services.AddScoped<IXxxRepository, XxxRepository>()` in `{Module}.Infrastructure/DependencyInjection.cs` |
-| Used `EfRepository<T>` for non-aggregate | Build error: type constraint `IAggregateRoot` not satisfied | Use `EfEntityRepository<T, TKey>` instead |
-| Forgot `ValueGeneratedNever()` in EF config | EF tries to auto-generate GUIDs, ignoring `Guid.CreateVersion7()` | Add `builder.Property(x => x.Id).ValueGeneratedNever();` |
-| Forgot `HasQueryFilter(x => !x.IsDeleted)` on AuditableEntity | Soft-deleted records appear in queries | Add the global query filter in entity configuration |
-| Registered wrong lifetime (Singleton for scoped dependency) | `Cannot consume scoped service from singleton` at runtime | Repos/UoW/DbContext = always `Scoped`. Background services = `Singleton` with `IServiceScopeFactory` to resolve scoped deps. |
-| Forgot to add `DbSet<T>` to module DbContext | EF doesn't know about the entity — migrations won't create the table | Add `public DbSet<{Entity}> {Entities} => Set<{Entity}>();` to the module's DbContext |
-| Module wiring missing in `Program.cs` | Endpoints return 404, handlers never execute | Add all 3 lines: `Add{Module}Application()`, `Add{Module}Infrastructure()`, `Map{Module}Endpoints()` |
-### Domain & Event Bugs
-| Mistake | Symptom | Fix |
-|---------|---------|-----|
-| Called `SaveChangesAsync()` in event handler | Duplicate saves, broken atomicity, intermittent data corruption | Remove the call — UoW saves everything atomically after all handlers run |
-| Raised domain event on `BaseEntity` | Event handler never executes, no error logged | Raise through the aggregate root, or use integration events |
-| Modifying a different aggregate in a domain event handler | Inconsistent state — second aggregate may not save, or may corrupt transaction | Use integration event (outbox) instead. One transaction = one aggregate. |
-| Entity has public setters | Any code can modify entity state bypassing business rules | All setters must be `private` or `private set`. Expose business methods instead (`Update()`, `Activate()`). |
-| Forgot to raise domain event in factory method | Downstream handlers (translation, audit) never trigger | Every `Create()` factory MUST raise `{Entity}CreatedDomainEvent` before returning. |
-| Called `Activate()` / state-transition method without checking current state | Duplicate domain events → duplicate outbox rows → duplicate integration events → duplicate downstream processing (e.g., re-translating all content) | Before calling any method that raises a domain event, guard: `if (!entity.IsActive) entity.Activate()`. Never call state-change methods unconditionally. ERR-009. |
-| Used `BaseEntity` for an entity that needs `UpdatedAt` / `RowVersion` | `UpdatedAt` manually set via `= DateTime.UtcNow` (two sources of truth), `[Timestamp]` attribute on a `BaseEntity` property bypasses interceptors | If an entity needs `UpdatedAt`, `IsDeleted`, or `RowVersion`, it MUST extend `AuditableEntity`. Use `MarkUpdated()` — never `UpdatedAt = DateTime.UtcNow`. See §guide.md §13 Entity Base Class Selection. |
-| Recursive tree builder with no cycle detection | `StackOverflowException` crashes the process when DB has circular parent references | Add `HashSet<Guid> visited` to recursive method. Before recursing, call `visited.Add(id)` and return leaf if false. ERR-012. |
-### EF Core & Query Bugs
-| Mistake | Symptom | Fix |
-|---------|---------|-----|
-| Navigation property causes JSON circular reference | `JsonException: A possible object cycle was detected` on serialization | Never return entities from endpoints. Always map to DTOs. DTOs must not have circular navigation. |
-| Forgot `.Include()` — accessed null navigation | `NullReferenceException` on `entity.RelatedEntity.Property` | Add `.Include(x => x.RelatedEntity)` to the query. Or use projection (`.Select()`) which auto-resolves. |
-| N+1 query inside a loop | Endpoint takes 5+ seconds, DB hammered with individual queries | Batch-fetch with `.Include()` or `GetByIdsAsync()`. See Performance Rule P11. |
-| Used `.ToListAsync()` without filter on large table | Out of memory, timeout on tables with 100K+ rows | Always filter and paginate. Never load an entire table. |
-| EF tracking conflict — same entity loaded twice | `InvalidOperationException: entity with same key is already being tracked` | Use `AsNoTracking()` for reads. For writes, load from the SAME DbContext instance. |
-| Migration merge conflict | Migration snapshot out of sync after merging branches | Run `dotnet ef migrations remove` then re-add the migration. Never hand-edit the snapshot. |
-| Decimal precision loss | Price `99.99` stored as `100.00` or `99.9900000000` | Configure: `builder.Property(x => x.Price).HasPrecision(18, 2);` — always specify precision for money. |
-| Used `DateTime.Now` instead of `DateTime.UtcNow` | Timestamps shift by UTC+3 (Jordan), sorting/filtering breaks | Always `DateTime.UtcNow`. See §DateTime Rules. |
-### Async & Runtime Bugs
-| Mistake | Symptom | Fix |
-|---------|---------|-----|
-| Dropped `CancellationToken` | Request cancellation doesn't propagate, wasted server resources | Pass `ct` through every async call chain |
-| Used `.Result` or `.Wait()` on async code | Deadlock — request hangs forever, thread pool starved | Always `await`. Never block on async. If you must call async from sync, use `Task.Run(() => ...).GetAwaiter().GetResult()` as absolute last resort. |
-| Fire-and-forget without error handling | `Task.Run(() => DoWork())` — exceptions silently swallowed | Queue to `Channel<T>` background service. If fire-and-forget is unavoidable, wrap in try/catch with logging. |
-| Disposed `HttpClient` per request | Socket exhaustion — `SocketException: address already in use` after ~100 requests | Use `IHttpClientFactory` (already configured in Web layer). Never `new HttpClient()`. |
-| Used `Results.Ok()` for create endpoints | Returns 200 instead of 201 Created | Use `result.Outcome == Outcome.Created ? Results.Created(...) : Results.Ok(...)` |
-### File & Media Bugs
-| Mistake | Symptom | Fix |
-|---------|---------|-----|
-| File path traversal in upload filename | Attacker uploads `../../../etc/passwd` or `..\..\web.config` | Always sanitize: `Path.GetFileName(uploadedFileName)`. Never use user-provided paths directly. |
-| Saved file without unique name | Files overwrite each other when two users upload `photo.jpg` | Generate unique name: `$"{Guid.CreateVersion7()}{Path.GetExtension(file.FileName)}"` |
-| Image processing on request thread | Endpoint times out on large images, thread pool blocked | Queue to `Channel<T>` background service. Return 202 Accepted with a status URL. |
-| No file type validation | User uploads `.exe` disguised as `.jpg` | Validate both extension AND MIME type. Check magic bytes for images (first 4-8 bytes of the file). |
+
+## §2. The Hard Rules (non-negotiable)
+
+### §2.1 Rule — Endpoint Authorization (MANDATORY)
+
+**Every Minimal API endpoint MUST have ONE of the following two decorators. No exceptions.**
+
+#### ✅ Option A — Permission-guarded (default for authenticated endpoints)
+
+```csharp
+tags.MapPost("/", async (CreateTagRequest req, ISender sender, CancellationToken ct) =>
+{
+    var result = await sender.Send(req.ToCommand(), ct);
+    return result.ToApiResult();
+})
+.WithName("CreateTag")
+.WithSummary("Create a new tag")
+.WithMetadata(new MustHavePermissionAttribute(ContentCoreFeatures.Tag, AppAction.Create))
+.Produces<Guid>(StatusCodes.Status201Created)
+.ProducesValidationProblem();
+```
+
+#### ✅ Option B — Anonymous (for truly public endpoints)
+
+```csharp
+auth.MapPost("/login", async (LoginRequest req, ISender sender, CancellationToken ct) =>
+{
+    ...
+})
+.WithName("Login")
+.AllowAnonymous();
+```
+
+#### ❌ Forbidden patterns
+
+```csharp
+// ❌ Authenticated but no permission — any logged-in user can hit it
+endpoint.RequireAuthorization();
+
+// ❌ String-based policy — bypasses the MustHavePermission attribute
+endpoint.RequireAuthorization("Permission.Tag.Create");
+
+// ❌ Role-based in code — hardcoded role list
+if (!user.IsInRole("Admin")) return Forbid();
+
+// ❌ No decoration at all — implicit auth is invisible
+endpoint.MapPost("/tags", ...);
+```
+
+#### Why this rule exists
+
+- **Explicit**: every endpoint declares intent. Grep finds every permission usage.
+- **Auditable**: `Security.Infrastructure/Seeding/PermissionSeeder` aggregates all permissions at startup. If the attribute isn't there, it's not in the DB.
+- **Refactor-safe**: renaming `AppAction.Create` → `AppAction.Add` updates all call sites via compile errors. Strings can't.
+- **Consistent**: one path for authorization → one security model → one audit log.
+
+### §2.2 Rule — `ICurrentUser` Usage Policy (MANDATORY)
+
+**Inject `ICurrentUser` in a handler ONLY when comparing the current user's ID against a resource's owner/creator/target field.**
+
+#### ✅ Valid uses (ownership / self-check / IDOR prevention)
+
+```csharp
+// ✅ VALID — updates ONLY the current user's profile (self-edit)
+public async Task<Result<UpdateProfileResult>> Handle(UpdateProfileCommand cmd, CancellationToken ct)
+{
+    if (currentUser.UserId is null)
+        return Result.Unauthorized("Authentication required.");
+
+    var profile = await repo.FirstOrDefaultAsync(p => p.UserId == currentUser.UserId.Value, ct);
+    // ... update profile ...
+}
+
+// ✅ VALID — verifies the booking belongs to the current user before revoking (IDOR prevention)
+if (session.UserId != currentUser.UserId.Value)
+    return Result.Forbidden("You cannot revoke another user's session.");
+
+// ✅ VALID — stamps the creator during aggregate construction
+var business = BusinessEntity.Create(
+    name: cmd.Name,
+    ownerId: currentUser.UserId.Value);  // ownerId is a domain concept; stamping is correct
+```
+
+#### ❌ Invalid uses (gratuitous injection)
+
+```csharp
+// ❌ INVALID — handler injects ICurrentUser but only checks auth, no ownership
+public sealed class SuspendBusinessCommandHandler(ICurrentUser currentUser, ...)
+{
+    public async Task<Result> Handle(SuspendBusinessCommand cmd, CancellationToken ct)
+    {
+        if (!currentUser.IsAuthenticated)  // ❌ "authentication check" — that's what MustHavePermission is for
+            return Result.Unauthorized();
+
+        var business = await repo.GetByIdAsync(cmd.Id, ct);
+        business.Suspend(cmd.Reason);  // no ownership check
+        // ...
+    }
+}
+
+// ✅ FIX — remove ICurrentUser entirely; guard via permission on the endpoint
+[endpoint] .WithMetadata(new MustHavePermissionAttribute(ContentPlacesFeatures.Business, AppAction.Suspend))
+
+public sealed class SuspendBusinessCommandHandler(IBusinessRepository repo, ...)
+{
+    public async Task<Result> Handle(SuspendBusinessCommand cmd, CancellationToken ct)
+    {
+        var business = await repo.GetByIdAsync(cmd.Id, ct);
+        business.Suspend(cmd.Reason);
+        // ...
+    }
+}
+```
+
+#### Decision table
+
+| Question | If "Yes" | If "No" |
+|---|---|---|
+| Does the handler compare `currentUser.UserId` against a resource field (owner, creator, target)? | ✅ Inject `ICurrentUser` | ❌ Do NOT inject |
+| Does the handler just check `IsAuthenticated`? | ❌ Remove `ICurrentUser` — use `MustHavePermission` on endpoint | |
+| Does the handler stamp `currentUser.UserId` into a new aggregate's `CreatedByUserId` / `OwnerId`? | ✅ Valid stamping — OK to inject | |
+| Does the handler need the user ID for a permission check? | ❌ Move the check to `MustHavePermission` on the endpoint | |
+
+**Why this rule exists**:
+- Authorization belongs at the perimeter (endpoint), not deep in the use case.
+- Handlers that inject `ICurrentUser` gratuitously are untestable — every unit test must mock ICurrentUser even when no ownership is checked.
+- Permission changes then require finding every handler that reads `currentUser.Permissions` — an n² audit. With `MustHavePermission` it's a single-file edit.
+
+Violations currently in the codebase: [§8.1](#81-icurrentuser-violations-8-handlers).
+
+### §2.3 Rule — Result Pattern (no business exceptions)
+
+Two categories of error:
+
+| Category | Source | How to handle |
+|---|---|---|
+| **Programming error** | Bug — null where not expected, broken invariant | `throw new ArgumentException(...)` → caught by global handler → 500. **Never catch.** |
+| **Business error** | User did something invalid, entity in wrong state | `return Result<T>.Failure(Error.X, Outcome.Y)` → endpoint maps to HTTP |
+| **Infrastructure error** | External API failed, DB down | Caught in Infrastructure layer only (see [§5.5](#55-trycatch-policy)) |
+
+**Every command handler** returns `Result<T>` — success AND failure.
+**Every query handler** returns `Result<T>` — success AND failure.
+**Endpoints**: `result.ToApiResult()` — never try/catch.
+
+Factory methods:
+
+```csharp
+Result<T>.Success(value)                               // 200
+Result<T>.Created(value)                               // 201
+Result<T>.Failure(Error.NotFound("X"), Outcome.NotFound)   // 404
+Result<T>.Failure(Error.Conflict("X"), Outcome.Conflict)   // 409
+Result<T>.Failure(Error.Forbidden("X"), Outcome.Forbidden) // 403
+Result<T>.Failure(Error.Invalid("X"), Outcome.Invalid)     // 400
+```
+
+Full patterns: `Agents/patterns/error-handling-patterns.md` · ADR-004 in `Agents/decisions/`.
+
+### §2.4 Rule — Per-Module Permission Catalog
+
+Every module owns its permission surface. Security is just another module — it only **aggregates** catalogs via DI discovery.
+
+```
+{Module}.Contracts/Authorization/
+├── {Module}Features.cs           ← feature string constants (e.g., Tag, Place, Booking)
+└── {Module}PermissionCatalog.cs  ← implements IPermissionCatalog
+```
+
+Registration in `{Module}.Infrastructure/DependencyInjection.cs`:
+```csharp
+services.AddSingleton<IPermissionCatalog, {Module}PermissionCatalog>();
+```
+
+`PermissionSeeder` (Security.Infrastructure) auto-discovers all `IPermissionCatalog` implementations at app startup and seeds the database. **Adding a new module never modifies another module.**
+
+Full architecture: `Agents/authorization-refactor-plan.md`.
+
+### §2.5 Rule — Transaction Boundaries (UoW)
+
+The Unit of Work is the ONLY place `SaveChangesAsync` is called. Never call it from:
+- Domain event handlers
+- Integration event handlers that don't have their own transaction
+- Validators
+- Mappers
+
+#### Why
+
+`UnitOfWork.SaveChangesAsync` does this atomically:
+1. Collect domain events from all `IAggregateRoot` entries being saved
+2. Clear events from aggregates (so they're not re-dispatched on next save)
+3. Dispatch events via MediatR (**before** SaveChanges)
+4. Domain event handlers may add outbox rows to the DbContext
+5. `context.SaveChangesAsync()` — ONE commit for aggregate + outbox
+
+If a domain event handler calls SaveChanges itself:
+- First SaveChanges commits aggregate changes before outbox is written → partial commit
+- Or it triggers re-dispatching events → infinite loop / duplicate outbox rows
+- Or it creates a second transaction → loses atomicity guarantee
+
+#### The aggregate-root rule
+
+`UnitOfWork` only collects events from `IAggregateRoot` entries. If you add a domain event to a `BaseEntity` (non-aggregate), your handler **never runs** and no error is logged. This is a silent bug.
+
+**Check**: Can this entity be reached as a root of an aggregate boundary? If yes, mark `IAggregateRoot`. If no, raise events on the parent aggregate instead.
+
+### §2.6 Rule — Outbox/Inbox Atomicity
+
+**Outbox side (publisher)**:
+- Domain event handler writes `OutboxMessage` to the DbContext — **never calls SaveChanges**
+- UoW commits aggregate + outbox row in one transaction
+- `CompositeOutboxProcessor` picks up the row, deserializes, invokes integration event handlers out-of-band
+
+**Inbox side (consumer)**:
+- Every integration event handler MUST check inbox first: `if (await inboxStore.HasBeenProcessedAsync(notification.MessageId, ct)) return;`
+- Do the work (create profile, send email, etc.)
+- Mark inbox: `inboxStore.MarkAsProcessed(notification.MessageId);`
+- Call `unitOfWork.SaveChangesAsync(ct);` — ONE transaction: business changes + inbox row
+
+**Why handlers are invoked individually** (not via `mediator.Publish`):
+`CompositeOutboxProcessor` uses reflection to invoke each `INotificationHandler<IntegrationEventNotification<T>>` individually. If one handler fails, others still run. The message is only marked Processed when ALL handlers succeed. On retry, successful handlers short-circuit via inbox idempotency check. This gives per-handler failure isolation — a single buggy module can't block the entire integration event.
+
+**Never**:
+- Do external side effects (email, SMS, HTTP call) **before** marking inbox processed — if it fails, you retry forever. Order: check inbox → do work → mark inbox → SaveChanges.
+- Actually, do external effects **last** and mark inbox only after they succeed. If email fails, throw — outbox retries.
+- **Exception**: if the external effect itself has idempotency (e.g., `SendGrid Message-Id`), you can mark inbox first. Default assumption: external effects are NOT idempotent.
 
 ---
-## 🏎️ [CRITICAL] Performance Rules (MANDATORY)
-Agents MUST follow these rules when writing any code. All code examples are in `guide.md`.
-### P1 — Always Propagate CancellationToken
-Every async method MUST accept and forward `CancellationToken ct`. Never drop it — dropped tokens = wasted server work on cancelled requests.
-### P2 — DTO Size Rules
-- **List endpoints** → return `SummaryDto` (5–8 key fields: Id, Name, Slug, Status, CreatedAt)
-- **Detail endpoints** → return `DetailDto` (all relevant fields)
-- **NEVER** return the full entity shape on list endpoints
-### P3 — Pagination Defaults & Limits
-Every list query MUST have pagination: default `PageSize = 20`, max `100`. Validator MUST enforce: `RuleFor(x => x.PageSize).InclusiveBetween(1, 100)`.
-### P4 — Split Queries for Multiple Includes
-When a query has 2+ `.Include()` calls, add `.AsSplitQuery()` to prevent cartesian row explosion.
-### P5 — Projections Over Full Entity Loads
-Use `.Select()` / `SelectAsync()` to load only needed columns. Never load full entity graphs then map in memory.
-### P6 — Bulk Operations (3+ Records)
-Use `AddRangeAsync()`, `RemoveRange()`, `ExecuteUpdateAsync()`, `ExecuteDeleteAsync()`. Never loop with individual saves (1 roundtrip vs N).
-### P7 — No Lazy Loading
-Never add `virtual` to navigation properties. Never install `Microsoft.EntityFrameworkCore.Proxies`. Always use explicit `.Include()`.
-### P8 — AsNoTracking for Reads
-All query handlers MUST use `asNoTracking: true` (repo default). Only disable when you intend to modify and save the entity.
-### P9 — Index-Aware Filtering
-- Every `Slug` → unique index
-- Every FK → index (EF auto-handles navigation properties)
-- Any column used in WHERE across 3+ queries → add explicit index
-- Soft-delete filtered index: `.HasFilter("IsDeleted = 0")`
-### P10 — Background Processing
-Never run heavy processing (image resize, video metadata, translation API) on the request thread. Always queue to `Channel<T>` background service. Set timeouts on external calls.
-### P11 — N+1 Query Prevention
-Never fetch related data inside a loop. Use `.Include()` for single query, or batch-fetch with `GetByIdsAsync()`.
-### P12 — Upload Size Limits
-Image uploads: max 50 MB. Video uploads: max 500 MB. Always validate file type and size in the validator BEFORE processing.
+
+## §3. CQRS, MediatR, Events
+
+### §3.1 Commands vs Queries
+
+| Aspect | Command | Query |
+|---|---|---|
+| Purpose | Change state | Return data |
+| Interface | `ICommand` / `ICommand<TResponse>` | `IQuery<TResponse>` |
+| Handler | `ICommandHandler<TCmd>` / `ICommandHandler<TCmd, TResp>` | `IQueryHandler<TQuery, TResp>` |
+| Return | `Result` / `Result<T>` | `Result<T>` |
+| Cacheable | ❌ Never | ✅ Must implement `ICacheableQuery` |
+| Side effects | Yes — domain events, outbox rows, cache eviction | None — read-only |
+| Validation | FluentValidation required | FluentValidation optional (rare) |
+| HybridCache | `RemoveByTagAsync` after save | `GetOrCreateAsync` via `QueryCachingBehavior` |
+
+All interfaces defined in `YallaJo.SharedKernel.Application/Abstractions/Messaging/`.
+
+### §3.2 MediatR Pipeline
+
+Order (SharedKernel.Application):
+1. `ValidationBehavior` — FluentValidation, throws `ValidationException` → 400
+2. `LoggingBehavior` — stopwatch, structured log with handler name + duration
+3. `PerformanceBehavior` — warn on >500ms handlers
+4. `QueryCachingBehavior` — queries implementing `ICacheableQuery` only
+5. Actual handler
+
+Registration: `Program.cs` → `AddSharedKernelInfrastructure()`.
+
+### §3.3 Domain Events (same module, same transaction)
+
+**Purpose**: side effects within the same module, same DB transaction — update translation cache, create audit log, write outbox row for cross-module notification.
+
+**Rules**:
+- Raised inside aggregate methods (factory / state-change methods)
+- Added via `AddDomainEvent(new XDomainEvent(...))` (inherited from `BaseEntity`)
+- Dispatched by UoW BEFORE `SaveChangesAsync`
+- Handlers: `INotificationHandler<DomainEventNotification<TEvent>>`
+- Handlers may mutate the DbContext (add outbox rows, update read models) — UoW commits everything atomically
+- **Handlers NEVER call `SaveChangesAsync`** (Rule 5)
+- **Never cross module boundaries** — domain events are in-module only
+
+**Naming**: `{Entity}{PastTenseVerb}DomainEvent` — e.g., `TagCreatedDomainEvent`, `BookingCancelledDomainEvent`.
+
+### §3.4 Integration Events (Outbox/Inbox)
+
+**Purpose**: cross-module asynchronous communication.
+
+**Publishing flow**:
+1. Domain event handler serializes integration event, writes `OutboxMessage` to DbContext
+2. UoW commits (aggregate + outbox atomic)
+3. `CompositeOutboxProcessor` polls every 10s across all module DbContexts
+4. Picks up unprocessed message, locks it, deserializes
+5. Invokes each `INotificationHandler<IntegrationEventNotification<T>>` individually
+6. Marks processed only if ALL handlers succeed
+
+**Consumer flow** (in the receiving module):
+```csharp
+public async Task Handle(IntegrationEventNotification<UserCreatedIntegrationEvent> notification, CancellationToken ct)
+{
+    // 1. Idempotency check FIRST
+    if (await inboxStore.HasBeenProcessedAsync(notification.MessageId, ct))
+        return;
+
+    // 2. Business logic
+    var profile = Profile.Create(evt.UserId, evt.FirstName, evt.LastName);
+    await profileRepository.AddAsync(profile, ct);
+
+    // 3. Mark inbox LAST (after all side effects succeed)
+    inboxStore.MarkAsProcessed(notification.MessageId);
+
+    // 4. ONE atomic save: business change + inbox row
+    await unitOfWork.SaveChangesAsync(ct);
+}
+```
+
+**Naming**: `{Entity}{PastTenseVerb}IntegrationEvent` — e.g., `UserCreatedIntegrationEvent`, `BookingConfirmedIntegrationEvent`.
+
+**Placement**: `{Module}.Contracts/IntegrationEvents/` (public surface consumed by other modules).
 
 ---
-## ⚡ [REQUIRED] MANDATORY: Update This File After Every Task
-After completing ANY work, do ALL of the following before ending your session:
 
-1. **"What Has Been Built" (Work Tracker)** — Add entry for every feature/entity/fix completed. Use `🤖 Agent` for your work, `👤 User` if user tells you they built something. Status: ✅ complete / 🟡 partial / ❌ broken
-2. **"Module Status Overview"** — Update module's status and notes
-3. **"What Needs To Be Done Next"** — Remove completed items, add new discoveries
-4. **"Gotchas"** — Add any new gotchas (number sequentially from last)
-5. **"Build State"** — Update error/warning count in header
-6. **`Agents/error-log.md`** — Verify all errors encountered during this session are logged with root cause and prevention rule
+## §4. Authorization Architecture
 
-**Why**: Next agent reads this file + the error log FIRST. Stale data = wrong decisions. Missing error entries = repeated mistakes.
+### §4.1 Layered Authorization Model
+
+```
+Caller's JWT with "Permission" claims
+              │
+              ▼
+┌─────────────────────────────────────────────────────┐
+│ ASP.NET Core Authorization Middleware               │
+│   ├─ Sees [MustHavePermission(X.Feature, X.Action)] │
+│   ├─ Policy name: "Permission.{Feature}.{Action}"   │
+│   ├─ PermissionPolicyProvider synthesizes policy    │
+│   │   with PermissionRequirement("Permission.X.Y")  │
+│   └─ PermissionAuthorizationHandler checks claim    │
+│       ├─ has → 200 OK → endpoint runs               │
+│       └─ missing → 403 Forbidden                    │
+└─────────────────────────────────────────────────────┘
+              │ (if authorized)
+              ▼
+┌─────────────────────────────────────────────────────┐
+│ Handler (no ICurrentUser unless ownership check)    │
+│   └─ Business logic runs                            │
+└─────────────────────────────────────────────────────┘
+              │
+              ▼
+┌─────────────────────────────────────────────────────┐
+│ (Optional, for ownership)                           │
+│   Compare ICurrentUser.UserId against resource's    │
+│   owner/creator/target → Forbidden if mismatch     │
+└─────────────────────────────────────────────────────┘
+```
+
+### §4.2 How to Add a New Permission
+
+**Scenario**: You're adding a `Booking` module and need `Create`/`Approve`/`Cancel` permissions.
+
+**Step 1**: Declare features in `Booking.Contracts/Authorization/BookingFeatures.cs`
+```csharp
+namespace Booking.Contracts.Authorization;
+
+public static class BookingFeatures
+{
+    public const string Booking     = nameof(Booking);
+    public const string Refund      = nameof(Refund);
+    public const string Availability = nameof(Availability);
+}
+```
+
+**Step 2**: Declare catalog in `Booking.Contracts/Authorization/BookingPermissionCatalog.cs`
+```csharp
+using YallaJo.SharedKernel.Application.Authorization;
+
+namespace Booking.Contracts.Authorization;
+
+public sealed class BookingPermissionCatalog : IPermissionCatalog
+{
+    public string ModuleName => "Booking";
+
+    public IReadOnlyList<PermissionDescriptor> Permissions { get; } =
+    [
+        new(BookingFeatures.Booking, AppAction.Read,    PermissionGroup.BookingOperations, "View bookings"),
+        new(BookingFeatures.Booking, AppAction.Create,  PermissionGroup.BookingOperations, "Create a booking"),
+        new(BookingFeatures.Booking, AppAction.Approve, PermissionGroup.BookingOperations, "Approve a pending booking"),
+        new(BookingFeatures.Booking, AppAction.Reject,  PermissionGroup.BookingOperations, "Reject a booking"),
+        new(BookingFeatures.Booking, AppAction.Delete,  PermissionGroup.BookingOperations, "Cancel a booking"),
+        // ...
+    ];
+}
+```
+
+**Step 3**: Register catalog in `Booking.Infrastructure/DependencyInjection.cs`
+```csharp
+services.AddSingleton<IPermissionCatalog, BookingPermissionCatalog>();
+```
+
+**Step 4**: Update `Security.Infrastructure/Seeding/RolePermissionMapping.cs` if the new permission needs to go to specific roles beyond defaults. Most permissions flow automatically via the existing role rules (Owner, SuperAdmin, Admin).
+
+**Step 5**: Restart app → `PermissionSeeder` logs `"Seeding N permissions from M modules: Security, ContentCore, ContentPlaces, Booking, ..."`. Database now has the new `Permission.Booking.Create` claim available for role assignment.
+
+**Step 6**: Use in endpoint:
+```csharp
+booking.MapPost("/", async (...) => ...)
+    .WithMetadata(new MustHavePermissionAttribute(BookingFeatures.Booking, AppAction.Create))
+    .WithName("CreateBooking");
+```
+
+**Never**:
+- Add `Booking.Features` constants to `Security.Contracts` or another module's Features class
+- Hardcode permission strings in endpoints (`.RequireAuthorization("Permission.Booking.Create")`)
+- Add role names to handlers (`if (user.IsInRole("Admin"))`)
+
+### §4.3 Endpoint Decoration Cookbook
+
+```csharp
+// ── Public read (no auth) ───────────────────────────────────────────
+group.MapGet("/", async (ISender sender, CancellationToken ct) => ...)
+    .AllowAnonymous()
+    .WithName("ListTags")
+    .Produces<IReadOnlyList<TagDto>>();
+
+// ── Protected read (authenticated + specific permission) ────────────
+group.MapGet("/admin", async (ISender sender, CancellationToken ct) => ...)
+    .WithMetadata(new MustHavePermissionAttribute(ContentCoreFeatures.Tag, AppAction.Read))
+    .WithName("ListTagsAdmin")
+    .Produces<IReadOnlyList<TagDto>>();
+
+// ── Protected create ────────────────────────────────────────────────
+group.MapPost("/", async (CreateTagRequest req, ISender sender, CancellationToken ct) => ...)
+    .WithMetadata(new MustHavePermissionAttribute(ContentCoreFeatures.Tag, AppAction.Create))
+    .WithName("CreateTag")
+    .Produces<Guid>(StatusCodes.Status201Created)
+    .ProducesValidationProblem();
+
+// ── Protected update ────────────────────────────────────────────────
+group.MapPut("/{id:guid}", async (Guid id, UpdateTagRequest req, ISender sender, CancellationToken ct) => ...)
+    .WithMetadata(new MustHavePermissionAttribute(ContentCoreFeatures.Tag, AppAction.Update))
+    .WithName("UpdateTag")
+    .Produces(StatusCodes.Status204NoContent)
+    .ProducesValidationProblem()
+    .ProducesProblem(StatusCodes.Status404NotFound);
+
+// ── Protected delete ────────────────────────────────────────────────
+group.MapDelete("/{id:guid}", async (Guid id, ISender sender, CancellationToken ct) => ...)
+    .WithMetadata(new MustHavePermissionAttribute(ContentCoreFeatures.Tag, AppAction.Delete))
+    .WithName("DeleteTag")
+    .Produces(StatusCodes.Status204NoContent)
+    .ProducesProblem(StatusCodes.Status404NotFound);
+```
+
+### §4.4 Ownership Checks in Handlers
+
+When `MustHavePermission` is not enough (user can access the feature but only for their OWN resources), inject `ICurrentUser` and add an ownership check.
+
+```csharp
+public sealed class UpdateBusinessCommandHandler(
+    IBusinessRepository repo,
+    IContentPlacesUnitOfWork uow,
+    HybridCache cache,
+    ICurrentUser currentUser,   // ✅ injected ONLY for the ownership check below
+    ILogger<UpdateBusinessCommandHandler> logger)
+    : ICommandHandler<UpdateBusinessCommand>
+{
+    public async Task<Result> Handle(UpdateBusinessCommand cmd, CancellationToken ct)
+    {
+        var business = await repo.GetByIdAsync(cmd.Id, ct);
+        if (business is null)
+            return Result.Failure(Error.NotFound("Business.NotFound"), Outcome.NotFound);
+
+        // ── Ownership check (IDOR prevention) ──
+        // Endpoint already verified user has Business.Update permission.
+        // Now verify this specific business belongs to them (or they're admin).
+        var isAdmin = currentUser.IsInRole("Admin");
+        if (!isAdmin && business.OwnerId != currentUser.UserId!.Value)
+            return Result.Failure(Error.Forbidden("Business.NotOwner"), Outcome.Forbidden);
+
+        business.Update(cmd.Name, cmd.Description);
+        await uow.SaveChangesAsync(ct);
+        await cache.RemoveByTagAsync($"business:{cmd.Id}", ct);
+        return Result.Success();
+    }
+}
+```
+
+**Decision**: if the ownership check can be expressed via a permission (`Business.UpdateAny` vs `Business.UpdateSelf`), prefer the permission. Use `ICurrentUser` only when ownership is a per-row check rather than a feature-level gate.
 
 ---
-## [TRACKING] Project Overview
-**YallaJo** — Tourism/Booking Modular Monolith, .NET 9, Clean Architecture per module, CQRS (MediatR), domain events, shared kernel.
-### Tech Stack
-`.NET 9` (SDK 10.0.200-preview) · `MediatR` · `EF Core` (SQL Server) · `FluentValidation` · `SixLabors.ImageSharp` · `FFMpegCore` · `Azure Translator API`
-### Solution Structure
-- **YallaJo.Api** (`:57065`) — REST API, JWT Bearer auth
-- **YallaJo.Web** (`:57070`) — MVC admin UI, Cookie auth, HttpClient BFF (calls API)
-- **YallaJo.SharedKernel** — Domain/Application/Infrastructure shared abstractions
-- **14 Modules**: Auth, Security, Accounts, ContentCore, ContentPlaces, ContentTours, ContentBlogs, ContentSeo, Booking, Finance, Messaging, Social, Tracking, Analytics
+
+## §5. Cross-Cutting Patterns
+
+### §5.1 Caching (HybridCache)
+
+**Current state**: All ContentCore queries + most commands use HybridCache. All new modules MUST follow the same pattern.
+
+#### Required for every query
+- Implements `ICacheableQuery` (`CacheKey`, `CacheDuration`, `Tags`)
+- Tags must be **specific**: `attachment:{id}` not `attachments`
+- Include `userId` / `isAdmin` in the cache key for auth-varied queries
+
+#### Required for every command handler
+- Inject `HybridCache`
+- `await cache.RemoveByTagAsync(tag, ct)` **after** a successful `SaveChangesAsync`
+
+#### Policy
+| Entity type | Absolute TTL | Local L1 TTL | Tag pattern |
+|---|---|---|---|
+| Reference data (categories, tags, languages) | 30–60 min | 15 min | `{entity}s` |
+| Entity detail | 5 min | 2 min | `{entity}`, `{entity}:{id}` |
+| Paginated list | 5 min | 2 min | `{entity}:list` |
+| Translations | 120 min | 30 min | `translations:{entityType}:{entityId}` |
+| Negative (not-found) cache | 30–60 sec | 30 sec | same as positive |
+
+Full reference: `Agents/patterns/caching-patterns.md`.
+
+#### MUST NEVER be cached
+- Booking state / slot availability (real-time)
+- Payment status / transaction state
+- User auth tokens / sessions
+- User permissions / roles
+- Any entity with `LockedUntil` or time-sensitive state
+
+### §5.2 Validation (FluentValidation)
+
+Three layers:
+1. **FluentValidation** (Application) — input shape: required fields, string lengths, format, enum, ranges
+2. **Domain guards** — invariants in aggregate `Create()`/`Update()`/state methods
+3. **Database constraints** — unique indexes, FKs, check constraints
+
+Validator rules:
+```csharp
+RuleFor(x => x.Name).NotEmpty().MaximumLength(200);
+RuleFor(x => x.Slug).Matches(@"^[a-z0-9\-]+$");
+RuleFor(x => x.Email).EmailAddress();
+RuleFor(x => x.Status).IsInEnum();
+RuleFor(x => x.Price).GreaterThan(0);
+RuleFor(x => x.PageSize).InclusiveBetween(1, 100);
+RuleFor(x => x.CategoryId).NotEqual(Guid.Empty);
+```
+
+**Uniqueness checks** (require DB call) → **in the handler**, not the validator. Return `Result.Failure(Error.Conflict("Slug.Taken"), Outcome.Conflict)`.
+
+### §5.3 Error Handling
+
+Error categories (from [§2.3](#23-rule--result-pattern-no-business-exceptions)):
+
+```csharp
+// Programming error (bug)
+throw new ArgumentException(nameof(name), "Name cannot be empty");  // caught globally → 500
+
+// Business error
+return Result<Guid>.Failure(Error.NotFound("Tag.NotFound"), Outcome.NotFound);  // → 404
+
+// Infrastructure error (wrap in Infra layer only)
+try { await azureTranslator.TranslateAsync(...); }
+catch (HttpRequestException ex)
+{
+    logger.LogError(ex, "Azure Translator failed");
+    return Result<string>.Failure(Error.ServiceUnavailable("Translation.Unavailable"), Outcome.ServerError);
+}
+```
+
+Error code convention: `{Entity}.{Reason}` — PascalCase, no spaces, stable (never rename after clients use it).
+
+| Code | HTTP | When |
+|---|---|---|
+| `{Entity}.NotFound` | 404 | Entity doesn't exist |
+| `{Entity}.AlreadyExists` | 409 | Duplicate |
+| `{Entity}.InvalidState` | 400 | Action not allowed in current state |
+| `{Entity}.ConcurrencyConflict` | 409 | RowVersion conflict |
+| `{Entity}.Unauthorized` | 401 | Missing/invalid auth |
+| `{Entity}.Forbidden` | 403 | Authenticated but no permission or ownership |
+| `{Entity}.QuotaExceeded` | 429 | Rate limit or quota hit |
+| `Service.Unavailable` | 503 | External API down |
+| `Service.Timeout` | 504 | External API timed out |
+
+Full reference: `Agents/patterns/error-handling-patterns.md`.
+
+### §5.4 Concurrency & Data Integrity
+
+| Rule | Detail |
+|---|---|
+| `AuditableEntity.RowVersion` + `.IsRowVersion()` in EF config | Optimistic concurrency — prevents silent overwrites |
+| Soft delete via `SoftDelete()` | User-facing entities. Junction tables use hard delete. |
+| Unique constraints at DB level | Code-level checks have race conditions. Always add unique index. |
+| `ExistsAsync()` in handler before `Create` | Optimization on top of DB constraint; return `Result.Conflict`. |
+| `DbUpdateConcurrencyException` | Catch in Infrastructure only. Convert to `Result.Failure("X.ConcurrencyConflict")`. |
+
+### §5.5 Try/Catch Policy
+
+**Whitelist** (only these catches are allowed):
+
+1. **Infrastructure layer, external service call** — `HttpRequestException`, `TaskCanceledException` → `Result.Failure`
+2. **Infrastructure layer, optimistic concurrency** — `DbUpdateConcurrencyException` → `Result.Failure("X.ConcurrencyConflict")`
+3. **Background services, per-item loop** — generic `Exception` to prevent worker crash — MUST log before continuing
+4. **Application layer, cancellation differentiation** — `OperationCanceledException when ct.IsCancellationRequested` to distinguish cancel vs timeout
+
+**Forbidden**:
+- Try/catch in endpoints
+- Try/catch in command/query handlers for general `Exception`
+- Empty catch blocks
+- Catching and swallowing without logging
+- Catching for "defensive programming" — let programming errors propagate to the global handler
+
+Full reference: `Agents/patterns/error-handling-patterns.md` → §Try/Catch Golden Rule.
+
+### §5.6 Logging & Observability
+
+| Layer | Tool |
+|---|---|
+| Application log (structured) | Serilog → console (dev) + rolling file (prod) + (future) external sink |
+| Per-request log | `UseSerilogRequestLogging()` — host, user-agent, client IP, user ID |
+| Per-handler log | `LoggingBehavior` — start + duration |
+| Traces | OpenTelemetry — ASP.NET Core, EF Core, HttpClient, custom MediatR activity source |
+| Metrics | OpenTelemetry — ASP.NET Core + HttpClient |
+| Exporter | OTLP (configurable via `OpenTelemetry:OtlpEndpoint`) + Console in dev |
+| Correlation | `X-Correlation-Id` header (set in `CorrelationIdMiddleware`) |
+| Exception handler | `GlobalExceptionHandler` → RFC 7807 ProblemDetails with correlation ID. Stack trace only in Development. |
+
+**Rules**:
+- **Every handler** injects `ILogger<THandler>` (commands AND queries)
+- Structured logging: `logger.LogInformation("Created {Entity} {Id}", entity, id)` — never `$"Created {entity}"`
+- **Never log** passwords, JWT tokens, credit card numbers, PII, full request bodies with auth data
+- **Log at module boundaries** — before/after external API calls, domain events raised, outbox messages written
+
+Health endpoints:
+- `/health/live` (liveness — zero checks)
+- `/health/ready` (readiness — DB + external services)
+- `/health` (all checks, legacy)
 
 ---
-## [TRACKING] Module Status Overview
+
+## §6. Conventions
+
+### §6.1 Naming
+
+| What | Pattern | Example |
+|---|---|---|
+| Command | `{Verb}{Entity}Command` | `CreatePlaceCommand`, `CancelBookingCommand` |
+| Query | `{Verb}{Entity}Query` | `ListToursQuery`, `GetTagByIdQuery` |
+| Handler | `{CommandOrQuery}Handler` | `CreatePlaceCommandHandler` |
+| Validator | `{CommandOrQuery}Validator` | `CreatePlaceCommandValidator` |
+| Domain event | `{Entity}{PastTenseVerb}DomainEvent` | `TagCreatedDomainEvent` |
+| Integration event | `{Entity}{PastTenseVerb}IntegrationEvent` | `UserCreatedIntegrationEvent` |
+| List DTO | `{Entity}SummaryDto` | `TourSummaryDto` (5–8 key fields) |
+| Detail DTO | `{Entity}DetailDto` | `TourDetailDto` (full shape) |
+| Repository | `I{Entity}Repository` → `{Entity}Repository` | `IPlaceRepository` → `PlaceRepository` |
+| EF Config | `{Entity}Configuration` | `PlaceConfiguration` |
+| Migration | `Add{Entity}` / `Update{Entity}{Change}` | `AddPlace`, `UpdateTourAddCapacity` |
+| Endpoint group | `{Module}Endpoints.cs` | `ContentPlacesEndpoints.cs` |
+| Feature class | `{Module}Features` | `ContentCoreFeatures`, `SecurityFeatures` |
+| Permission catalog | `{Module}PermissionCatalog` | `ContentCorePermissionCatalog` |
+| Error code | `{Entity}.{Reason}` | `Category.NotFound`, `Tour.SlugConflict` |
+| DB schema | lowercase snake_case | `content_core`, `content_places`, `booking` |
+
+### §6.2 DateTime & Guid
+
+- **Always `DateTime.UtcNow`** — never `DateTime.Now`. Jordan is UTC+3; mixing local/UTC corrupts data.
+- **Always `Guid.CreateVersion7()`** — never `Guid.NewGuid()`. V7 is time-sortable → better clustered index perf.
+- **`DateTimeOffset`** for user-facing timestamps in DTOs — timezone is explicit. Storage stays `DateTime` UTC.
+
+### §6.3 Enums & Strings
+
+**Enums**:
+- Store as `int` via `.HasConversion<int>()`
+- Define in `{Module}.Domain/Enums/`
+- Shared (cross-module) → `{Module}.Contracts`
+- Always include a safe default at `0`
+
+**Strings**:
+- Slugs, codes, status: `.IsUnicode(false).HasMaxLength(200)`
+- Names, titles: `.HasMaxLength(500)` (Unicode default — for Arabic)
+- Bodies, bios: `.HasMaxLength(4000)` or `.HasColumnType("nvarchar(max)")`
+- **Every string column MUST have `HasMaxLength()`** — unbounded `nvarchar(max)` is wasteful and unindexable
+
+### §6.4 Git
+
+| Rule | Detail |
+|---|---|
+| **NEVER push to remote** | You commit locally only. User handles all pushes. Hard block, no exceptions. |
+| **Never commit without being asked** | User will say when. |
+| Branch naming | `feature/{module}/{entity}` · `fix/{module}/{bug}` · `refactor/{scope}` |
+| Commit message | `{type}({module}): {description}` — e.g., `feat(Booking): add reservation state machine` |
+| Types | `feat` · `fix` · `refactor` · `docs` · `chore` · `test` |
+| One logical change per commit | Don't mix unrelated work |
+| Never commit secrets | Check `.gitignore` first |
+| Never force push | If history rewrite needed, ask user |
+
+---
+
+## §7. Checklists
+
+## §7.0 Tracking — Module Status Overview
 | Module | Status | Notes |
 |--------|--------|-------|
-| Auth | ✅ Complete | Pre-existing |
-| Security | ✅ Complete | Pre-existing |
-| Accounts | ✅ Complete | Pre-existing |
+| Auth | ✅ Fixed | Phase 4 — every admin lifecycle handler (`AdminSuspendUser`, `AdminReactivateUser`, `AdminArchiveUser`, `AdminResetPassword`, `AdminReassignAccount`) now calls `IAdminAuditWriter.RecordAsync` on the success path with action verbs from `AuditActions`. Reassignment emits exactly ONE row per Option C; `profileScrubbed: true|false` lives inside the row's metadata JSON. Failures (authn/authz/lifecycle/profile-scrub) write nothing. Phase 3D + 3C + 3B verbs unchanged. Validation: `Auth.Application` + `Auth.Presentation` build 0 errors; `tests/Auth.Tests.Unit` 258/258 passing. |
+| Security | ✅ Fixed | Phase 4 — `AuditLog` extended with three nullable columns (`ActorUserId`, `Reason`, `Metadata`) + factory `AuditLog.CreateAdmin` + composite index `IX_AuditLogs_ActorUserId_OccurredAt`. Migration `AddAdminAuditColumns` applied. New cross-module contract `IAdminAuditWriter` + `AdminAuditEntry` + `AuditActions` constants in `Security.Contracts`. Internal `AdminAuditWriter` registered in DI. `GetAuditLogsQuery` + endpoint extended with optional `actorUserId`/`action`/`from`/`to` filters; `AuditLogDto` exposes Phase 4 fields. Phase 3C reassignment primitives + 3B lifecycle verbs unchanged. Validation: `Security.Infrastructure` build 0 errors; `tests/Security.Tests.Unit` 119/119 passing. |
+| Accounts | ✅ Fixed | Phase 4 — `IProfileReassignmentService.ResetForReassignmentAsync` return type widened from `Result` to `Result<ProfileReassignmentOutcome>` carrying a `Scrubbed` flag. The flag flows back into the `ADMIN_REASSIGN_ACCOUNT` audit row's `Metadata.profileScrubbed`, keeping the audit timeline truthful about whether a profile row was actually mutated. Phase 3D scrub semantics unchanged. Validation: `Accounts.Application` build 0 errors; `tests/Accounts.Tests.Unit` 16/16 passing. |
+| Accounts | ✅ Fixed | Profile self-service flow hardened: UpdateProfile flat-binding fix retained, avatar upload contract fixed (relative `/uploads/...` now accepted by `UpdateAvatarCommandValidator`), and API avatar endpoint now deletes freshly uploaded files when profile update fails (prevents orphan files). Added `tests/Accounts.Tests.Unit` validator regressions. |
 | ContentCore | ✅ Fixed | Full audit + all 11 bugs fixed 2026-04-17, plus WS follow-up remediation: upload magic-byte signature validation (WS6), verified post-commit attachment deletion flow/no-op event handler consistency (WS4), and new migration `20260417115007_UpdateContentCoreUnicodeTranslationCacheAndStatus` for Unicode + CategoryTranslation.Status + TranslationCache hash index. Build: 0 errors. See `Agents/ContentCore-fixes-required.md`. |
-| ContentPlaces | 🟡 In Progress | Tasks 2+3 complete (Business CQRS + state machine + BusinessHours). Task 1 (Place) still needed before Task 2 endpoints are functional end-to-end. Tasks 4–8 remain. |
-| ContentTours | ⬜ Not started | Entities exist, endpoints empty |
+| ContentPlaces | 🟡 In Progress | Major fix pass complete 2026-04-23. Place module fully wired (events, cache, filters including `categoryId`+`hasActiveTours` backed by real entity fields). Business module: 5 integration events + 5 domain event handlers. ServiceItem: full rewrite (IDOR, outbox, correct entity, ICacheableQuery, route split). Geo-search: Haversine single-compute + bounding-box pre-filter + composite index. TourCount+CategoryId on Place entity with migrations. Remaining: Fadwa tasks (staff/amenity auth holes, accessibility guard, integration events, ICacheableQuery on 3 queries, DTO fixes). See `Agents/ContentPlaces-remaining-fix-plan.md`. |
+| ContentTours | 🟡 Partial | Tour entity has business methods (Publish/Archive/Suspend/AssignToPlace/RemoveFromPlace/Delete) + domain event + handler that publishes `PlaceTourCountUpdatedIntegrationEvent` to outbox. Full CQRS + endpoints not started. |
 | ContentBlogs | ⬜ Not started | Entities exist, endpoints empty |
-| ContentSeo | ⬜ Not started | Entities exist, endpoints empty |
+| ContentSeo | 🟡 Partial | 4 handlers consuming ContentPlaces events: PlaceCreated→SeoMetadata+SitemapEntry(active); PlaceUpdated→Touch; PlaceDeleted→Deactivate; BusinessCreated→SeoMetadata+SitemapEntry(inactive). SeoMetadata.Create + SitemapEntry.Create factories added. ContentPlaces.Contracts ref added. Endpoints empty. |
 | Booking | ⬜ Not started | Entities exist, endpoints empty |
 | Finance | ⬜ Not started | Entities exist, endpoints empty |
-| Messaging | ⬜ Not started | Entities exist, endpoints empty |
+| Messaging | 🟡 Partial | InboxMessages table + IMessagingInboxStore + IMessagingUnitOfWork added. Notification.Create factory + NotificationType.Business(7). 4 handlers: BusinessApproved(InApp+Email opt-in), BusinessRejected(InApp+Email unconditional), BusinessSuspended(InApp+Email Critical unconditional), BusinessReinstated(InApp+Email opt-in). ContentPlaces.Contracts ref added. Email/Push dispatch not started. Endpoints empty. |
 | Social | ⬜ Not started | Entities exist, endpoints empty |
 | Tracking | ⬜ Not started | Entities exist, endpoints empty |
 | Analytics | ⬜ Not started | Entities exist, endpoints empty |
@@ -243,26 +1070,48 @@ This section is the **single source of truth** for what exists in the codebase. 
 | 29 | ContentCore Full Audit | ✅ | 🤖 Agent | Full read of all 140+ ContentCore files. Build: 0 errors throughout. 11 bugs found across Domain, Application, Infrastructure — 2 high, 5 medium, 4 low. Full report written to `Agents/ContentCore-fixes-required.md`. Error log updated (ERR-009 through ERR-012). Guide.md updated: state-change guard rule, fine-grained vs coarse cache tag strategy. agent-context.md updated: gotchas #15–18 added. Notable: ContentCore is architecturally the best module — IContentCoreUnitOfWork correctly wraps IUnitOfWork<TContext> and dispatches domain events (unlike ContentPlaces). |
 | 30 | ContentCore All Bugs Fixed | ✅ | 🤖 Agent | Fixed all 11 bugs from ContentCore-fixes-required.md. BUG-001: UpdateLanguageCommandHandler now guards Activate/Deactivate with state checks (prevents duplicate domain events). BUG-002: DeleteAttachmentCommandHandler uses fine-grained cache tags (not coarse "attachments"). BUG-003: Tag.cs changed from BaseEntity→AuditableEntity, [Timestamp] removed, MarkUpdated() used, TagConfiguration cleaned. BUG-004: Dead coarse tags removed from GetEntityCategoriesQuery+GetEntityTagsQuery. BUG-005: ILogger added to all 21 handlers. BUG-006: Cycle detection (HashSet<Guid> visited) added to ListCategoriesQueryHandler.BuildNode. BUG-007: GetCategoryByIdQuery+Handler now support IncludeInactive param for admins. DESIGN-001: Cargo usings removed from IContentCoreUnitOfWork. DESIGN-003: TODO comment added for MediaProcessingBackgroundService. BUG-008/009: asNoTracking explicit, missing step 2 comment added. guide.md updated: BaseEntity vs AuditableEntity selection rule + IncludeInactive pattern. agent-context.md Common Mistakes updated. Build: 0 errors. |
 | 31 | ContentCore WS4/WS6 + migration follow-up | ✅ | 🤖 Agent | Implemented binary file signature (magic-byte) validation in `UploadAttachmentCommandHandler` before storage upload, with strict signature↔attachment-type↔MIME↔extension compatibility checks (SVG remains blocked by validator). Verified attachment deletion flow consistency: post-commit delete stays in `DeleteAttachmentCommandHandler`, `AttachmentDeletedDomainEventHandler` remains intentional no-op, upload rollback cleanup remains best-effort. Added EF migration `20260417115007_UpdateContentCoreUnicodeTranslationCacheAndStatus` covering Unicode column updates, `CategoryTranslations.Status`, and `TranslationCaches.OriginalTextHash` unique index (also includes pending Tag audit columns from model drift). Validation: `dotnet build` (0 errors) and `dotnet test tests/ContentCore.Tests.Unit` (6/6 passed). |
+| 32 | Auth registration email delivery retry fix | ✅ | 🤖 Agent | Fixed the false-success registration email path. `Auth.Application/EventHandlers/UserCreatedIntegrationEventHandler.cs` now keeps the inbox message unprocessed until `IEmailService.SendAsync` succeeds, invalidates failed OTPs, and rethrows so the outbox can retry cleanly. `ResendOtpCommandHandler.cs` now invalidates unsent codes and returns `Otp.EmailDeliveryFailed` instead of leaving a dead active OTP. Registration copy in `RegistrationEndpoints.cs` now says the code should arrive shortly instead of guaranteeing immediate delivery; `CredentialEndpoints.cs` documents the 500 resend case. Validation: `lsp_diagnostics` clean on 4 touched files; `dotnet build Auth.Application/Auth.Application.csproj` and `dotnet build Auth.Presentation/Auth.Presentation.csproj` both 0 errors. Full solution build was blocked by running `YallaJo.Api`/`YallaJo.Web` processes locking output files. |
+| 33 | Gmail SMTP app-password normalization fix | ✅ | 🤖 Agent | Root cause for `SendMailAsync` failure was likely Gmail app passwords copied with spaces from Google UI. `Auth.Infrastructure/Services/GmailEmailService.cs` now trims and de-spaces `GmailOptions.AppPassword`, trims and validates sender/recipient addresses with `MailAddress`, and adds a 30s SMTP timeout before calling `SendMailAsync`. Validation: `lsp_diagnostics` clean on `GmailEmailService.cs`; `dotnet build Auth.Infrastructure/Auth.Infrastructure.csproj -clp:ErrorsOnly -v:q` succeeded with 0 errors (pre-existing analyzer warnings remain). |
+| 34 | Registration profile creation made synchronous | ✅ | 🤖 Agent | Fixed the new-user `GET /api/v1/accounts/profile` 404 caused by registration returning before the Accounts profile existed. Added `ProfileCreationRequest` + `CreateForUserAsync` to `Accounts.Contracts/Abstractions/IProfileCreationService.cs`, refactored `Accounts.Application/Services/ProfileCreationService.cs` to share create logic, and updated `Auth.Application/Commands/Register/RegisterCommandHandler.cs` to create the Accounts profile immediately after Security user creation. Profile conflicts are treated as success so the existing Accounts integration-event handler can remain as a safe idempotent fallback. Validation: `lsp_diagnostics` clean on all 3 touched files; `dotnet build Accounts.Contracts/Accounts.Contracts.csproj`, `dotnet build Accounts.Application/Accounts.Application.csproj`, and `dotnet build Auth.Application/Auth.Application.csproj` all completed with 0 errors. |
+| 35 | Accounts profile avatar upload contract + cleanup | ✅ | 🤖 Agent | Fixed API/Web mismatch where avatar uploads were saved but rejected because `UpdateAvatarCommandValidator` only allowed absolute URLs while local storage returns rooted relative paths (`/uploads/...`). Validator now accepts absolute or rooted relative URLs. Added compensating cleanup in `Accounts.Presentation/Endpoints/Profile/ProfileEndpoints.cs` to delete uploaded files when `UpdateAvatarCommand` fails, preventing orphaned files. Improved Web UX in `YallaJo.Web/Areas/Accounts/Features/Profile/ProfileController.cs` to show first validation error instead of generic fallback. Added `tests/Accounts.Tests.Unit` with 3 validator regressions and added the project to `YallaJo.sln`. Validation: `dotnet build Accounts.Presentation/Accounts.Presentation.csproj -clp:ErrorsOnly` (0 errors), `dotnet test tests/Accounts.Tests.Unit/Accounts.Tests.Unit.csproj` (3/3), `dotnet test tests/Web.Tests.Unit/Web.Tests.Unit.csproj` (16/16). |
+| 36 | Security identity seed role alignment | ✅ | 🤖 Agent | Updated `SeedIdentityProfiles` and `SecurityDbInitializer` so seeded identities use canonical role names for hierarchy testing: exactly one `Owner`, plus `SuperAdmin`, `Admin`, `TourGuide`, and `User`. Removed legacy seed role names (`Guide`, `BusinessOwner`) and aligned role creation/claim mapping to `AppRoles` constants. Validation: `dotnet build Security.Infrastructure/Security.Infrastructure.csproj -clp:ErrorsOnly` (0 errors), `dotnet build YallaJo.SharedKernel.Infrastructure/YallaJo.SharedKernel.Infrastructure.csproj -clp:ErrorsOnly` (0 errors), `dotnet test tests/Security.Tests.Unit/Security.Tests.Unit.csproj` (64/64). |
+| 37 | Security seed expansion for Admin and SuperAdmin | ✅ | 🤖 Agent | Expanded `SeedIdentityProfiles` to add three more `Admin` users and three more `SuperAdmin` users for hierarchy and authorization testing. Resulting seed mix: 1 Owner, 4 SuperAdmins, 4 Admins, 2 TourGuides, 5 Users. Validation: `dotnet build Security.Infrastructure/Security.Infrastructure.csproj -clp:ErrorsOnly` (0 errors), `dotnet build YallaJo.SharedKernel.Infrastructure/YallaJo.SharedKernel.Infrastructure.csproj -clp:ErrorsOnly` (0 errors), `dotnet test tests/Security.Tests.Unit/Security.Tests.Unit.csproj` (64/64). |
+| 38 | ContentPlaces Place CQRS event/caching fix pass | 🟡 | 🤖 Agent | Fixed the Place delete guard to check `PlaceBusinesses` via `IPlaceRepository.HasActiveLinkedBusinessesAsync`, corrected create-slug uniqueness to use the normalized slug, made `IContentPlacesUnitOfWork` delegate to the shared UoW so aggregate domain events dispatch without breaking layer boundaries, added `PlaceDeletedDomainEvent` + outbox handler, added outbox writes to Place created/updated domain event handlers, made Place list/detail queries implement `ICacheableQuery`, added Place cache keys, and added HybridCache invalidation to Create/Update/Delete/Feature/Verify handlers. Validation: `lsp_diagnostics` clean for ContentPlaces.Application/Infrastructure/Domain, `dotnet build ContentPlaces.Application/ContentPlaces.Application.csproj -clp:ErrorsOnly` (0 errors), `dotnet build ContentPlaces.Presentation/ContentPlaces.Presentation.csproj -clp:ErrorsOnly` (0 errors). Remaining gap: `categoryId` and `hasActiveTours` list filtering still need underlying model/query support before they can be implemented correctly. |
+| 39 | Auth/Security Phase 3B — Admin lifecycle ops | ✅ | 🤖 Agent | Implemented admin lifecycle command flow for users: added `AdminSuspendUser`, `AdminReactivateUser`, and `AdminArchiveUser` handlers/validators in Auth, with endpoints at `/api/v1/auth/admin/users/{userId}/suspend|reactivate|archive`. Added new revocation reasons `AccountSuspended` and `AccountArchived` in `ISessionRevocationService`. Extended `ISecurityService` + `SecurityService` with hierarchy-enforced lifecycle transitions and state gating (`Suspend`: Active/PendingPasswordReset + idempotent Suspended; `Reactivate`: Suspended only; `Archive`: non-Archived only), including Security cache-tag invalidation. Validation: `dotnet build Security.Infrastructure`, `dotnet build Auth.Application`, `dotnet build Auth.Presentation` (all 0 errors), `dotnet test tests/Auth.Tests.Unit/Auth.Tests.Unit.csproj` (240/240 passed). |
+| 40 | Auth/Security Phase 3C — Admin account reassignment | ✅ | 🤖 Agent | Implemented admin-initiated account reassignment per the approved plan. **Security domain**: added `User.ReassignToPendingActivation(newEmail, replacementPasswordHash)` which chains `Email.ChangeAddress` (retarget + verification reset) + `User.ResetPassword` (placeholder hash) + `TransitionTo(PendingActivation)`; added `Email.ChangeAddress` and `Email.ResetVerification`; extended `IsTransitionAllowed` with `Active|Suspended|PendingPasswordReset → PendingActivation` edges reserved for the reassignment verb and documented the expanded transition matrix. **Security contracts/service**: added `ISecurityService.ReassignUserByAdminAsync(targetId, actorId, newEmail)` returning `ReassignmentCompleted` (old/new email + lifecycle snapshot); enforces hierarchy/self check via `RoleHierarchyService`, lifecycle eligibility gate (rejects `Provisioned`/`PendingActivation`/`Archived`), email-uniqueness pre-check, and uses a `REASSIGNED:<guid>` fail-closed password placeholder. **Auth**: added `AdminReassignAccountCommand` + validator + result + handler at `Auth.Application/Commands/AdminReassignAccount/`. Handler runs Security mutation + Auth teardown in a single `ITransactionalExecutor` scope: session+refresh-token revocation with new `SessionRevocationReason.AccountReassigned`, supersede all non-terminal `ActivationToken` + `PasswordResetToken` rows, deactivate every active `ExternalProvider` link, issue a fresh `ActivationToken` for the new email and attach `ActivationTokenIssuedEvent` for outbox dispatch, single Auth `SaveChangesAsync`. Added endpoint `POST /api/v1/auth/admin/users/{userId}/reassign` with `UpdateAny` permission. **Tests**: added `tests/Security.Tests.Unit/UserReassignmentTests.cs` (11 tests covering eligible/ineligible source states, email normalization, verification reset, password invalidation, event emission, and `Email.ChangeAddress`/`ResetVerification` in isolation) and `tests/Auth.Tests.Unit/AdminReassignAccountCommandHandlerTests.cs` (10 tests covering unauthenticated actor, Security-failure propagation for NotFound/Forbidden/Conflict/email-in-use, happy-path activation-token issuance, session revocation reason, supersede sweeps, external-provider deactivation, and plain-token-never-logged invariant). **Profile handling deferred**: Accounts profile reassignment/scrub is out of scope for Phase 3C (no contract exists); documented as a known limitation. Validation: `dotnet build YallaJo.sln` 0 errors; `dotnet test YallaJo.sln --no-build` all green — Security.Tests.Unit 108/108, Auth.Tests.Unit 250/250, Accounts.Tests.Unit 3/3, Web.Tests.Unit 31/31, SharedKernel.Tests.Unit 5/5, ContentCore.Tests.Unit 11/11. |
+| 48 | Bug-fix — Local login crashed for external-only / reassigned users | ✅ | 🤖 Agent | **Root cause**: `Microsoft.AspNetCore.Identity.PasswordHasher<>.VerifyHashedPassword` calls `Convert.FromBase64String` on the stored hash *before* any format-version check. For users whose `PasswordHash` is the intentional non-Base64 placeholder set by external auto-create (`EXTERNAL-ONLY:<guid>` from `Security.Application.Services.UserRegistrationService.RegisterExternalAsync`) or by Phase 3C admin reassignment (`REASSIGNED:<guid>` from `Security.Infrastructure.Services.SecurityService.ReassignUserByAdminAsync`), that decode threw `System.FormatException` — bubbling up as an unhandled 500 instead of the intended 401 "Invalid email or password.". Reproduces when a Google-created user (or a freshly-reassigned account) types email + any password into the local login form. **Fix** (single-boundary, in `Security.Infrastructure/Services/PasswordHasher.cs`): added a null/empty/whitespace guard returning `false`, and wrapped the framework `VerifyHashedPassword` call in `try { … } catch (FormatException) { return false; }`. Real Identity v2/v3 hashes flow through unchanged; the change converts a former throw into the documented "Failed" semantics the wrapper always promised. **NOT changed** per scope: `LoginCommandHandler` (already returns the right shape once `Verify` returns `false`), `SecurityService.VerifyCredentialsAsync` (already returns null = invalid credentials), `UserRegistrationService` placeholder strategy (correct and intentional), Google `ExternalLoginCommandHandler` flow (untouched — never goes through the local hasher), `IPasswordHasher` signature (unchanged). Per-scope generic message preserved (`"Invalid email or password."`) — anti-enumeration convention respected. **Tests added** (`tests/Security.Tests.Unit/PasswordHasherTests.cs`, 11 cases via `[Theory]` rows): EXTERNAL-ONLY placeholder → false (no throw); REASSIGNED placeholder → false (no throw); 4 arbitrary non-Base64 inputs → false; null/empty/whitespace → false; round-trip Hash→Verify with correct password → true; valid hash + wrong password → false. The test fixture instantiates `PasswordHasher` (internal sealed) via reflection (same pattern as `UserRegistrationServiceExternalTests`); a new project reference from `tests/Security.Tests.Unit/Security.Tests.Unit.csproj` to `Security.Infrastructure` was added so the assembly is loadable at runtime. **Behavior**: BEFORE — external-only / reassigned user posting to `/login` → 500 Internal Server Error (unhandled `FormatException`). AFTER — same request → 401 "Invalid email or password.". Google login, normal-user login, registration, and reassignment flows are unaffected. Validation: `dotnet build Security.Infrastructure/Security.Infrastructure.csproj` 0 errors; `dotnet test tests/Security.Tests.Unit/Security.Tests.Unit.csproj` 130/130 passing (was 119; +11); `dotnet test tests/Auth.Tests.Unit/Auth.Tests.Unit.csproj --no-build` 258/258 unchanged; full-solution `dotnet test YallaJo.sln --no-build` all green — Security 130/130, Auth 258/258, Accounts 16/16, Web 85/85, SharedKernel 5/5, ContentCore 11/11 (505 total). |
+| 50 | Security audit paging refactor — use base SelectPaginatedAsync | ✅ | 🤖 Agent | Removed the custom audit paging method and switched the query path to repository projection APIs. `IAuditLogRepository` no longer declares `GetPagedAsync(...)`; `AuditLogRepository` no longer implements it and now relies on inherited `EfEntityRepository` read methods. `GetAuditLogsQueryHandler` now builds the same optional filter set (`userId`, `actorUserId`, exact `action`, inclusive `from/to`) as a single expression, keeps `OccurredAt` descending ordering, and projects directly to `AuditLogDto` through `SelectPaginatedAsync(...)`. Response shape and semantics remain unchanged (same pagination envelope and fields). Validation: `dotnet build Security.Domain/Security.Domain.csproj -clp:ErrorsOnly` (0 errors), `dotnet build Security.Infrastructure/Security.Infrastructure.csproj --no-dependencies -clp:ErrorsOnly` (0 errors), while full Security/Application + solution/test runs remain blocked by unrelated pre-existing duplicate type files (`CS0101`). |
+| 51 | Security.Contracts abstractions split by type | 🟡 | 🤖 Agent | Refactored `Security.Contracts/Abstractions` so each interface stays in its original file and each public request/result/DTO/enum now lives in its own peer file in the same folder. Removed redundant placeholder internal stubs and kept namespaces on moved types as `Security.Contracts.Abstractions`. `dotnet build Security.Contracts/Security.Contracts.csproj` succeeded (warnings only). `dotnet build YallaJo.sln` currently fails: many consumers still import `Security.Contracts.Abstractions.SecurityService|UserRegistrationService|AdminAuditWriter` sub-namespaces, but contract types now live under `Security.Contracts.Abstractions` only; follow-up needed to align consumer imports or provide namespace-compat shims. `dotnet test YallaJo.sln --no-build` ran partially (Web/ContentCore/SharedKernel passing; several test DLLs missing due failed prior build). |
+| 49 | Security repository abstraction alignment — audit log repo | ✅ | 🤖 Agent | Updated `Security.Domain/Repositories/IAuditLogRepository.cs` to inherit `IReadRepository<AuditLog, Guid>` + `IWriteRepository<AuditLog, Guid>` so the interface matches shared repository abstractions. Updated `Security.Infrastructure/Repositories/AuditLogRepository.cs` to inherit `EfEntityRepository<AuditLog, Guid>` while preserving the existing filtered paging API `GetPagedAsync(...)` used by audit timeline queries. Validation: `dotnet build Security.Domain/Security.Domain.csproj -clp:ErrorsOnly` (0 errors), `dotnet build Security.Infrastructure/Security.Infrastructure.csproj --no-dependencies -clp:ErrorsOnly` (0 errors). Full solution build is currently blocked by unrelated pre-existing duplicate type errors in Accounts/Security Application projects. |
+| 47 | Web Phase 5E — Final IAM admin UI cleanup & polish | ✅ | 🤖 Agent | Concluded the Phase 5 frontend slice for the IAM lifecycle. **Pure view cleanup; no backend, controller, facade, API-client, VM, or test code touched.** **Modified** (1 file): `YallaJo.Web/Areas/Admin/Modules/Security/Features/Users/Views/Details.cshtml` — three surgical changes: (1) **Removed legacy Activate/Deactivate UI block** (the only remaining `confirm()` prompts in admin-lifecycle UI); the backend `UsersController.Activate`/`Deactivate` actions and the `/api/v1/security/users/{id}/activate|deactivate` endpoints **remain callable for non-UI clients per scope** — only the Razor view stops surfacing them. A scoped comment in the gap explains the deferral so the block is not reintroduced by accident. (2) **Replaced the inline Status `<span class="badge…">` with the `_LifecycleBadge` partial** introduced in Phase 5D, so binary status rendering has a single source of truth across Users list + Details. The `LifecycleState` parameter passes `null` until the backend exposes granular states. (3) **Upgraded TempData success/error alerts** to `alert alert-success/danger alert-dismissible fade show` with `role="alert"` and a Bootstrap `btn-close` so screen readers announce them and admins can dismiss long error messages. Added one `@using` for `Users.ViewModels`. **NOT modified** per scope: Users list page, Audit Timeline page (alerts there will be polished in a future scoped slice if requested), backend, API contracts, all controllers/facades/API clients/VMs, all five lifecycle modal partials (already correct from 5C), `_LifecycleBadge` helper/VM/partial (correct from 5D), legacy `Activate`/`Deactivate` controller actions and API endpoints (kept callable for non-UI clients). **Tests**: none added — pure view cleanup, no helper or VM changes. All 85 existing Web tests remain green. **Final consolidated deferred items** (post-Phase 5): granular lifecycle palette beyond Active/Inactive (needs `UserDto.LifecycleState` extension); `Created`/`Updated` columns (not on `UserDto`); server-side search/sort/bulk actions (`ListUsersQuery` is page/pageSize only); typed modal input not preserved across redirects (TempData-only error path); per-user audit timeline section on Details (deferred/optional, possibly Phase 6A); legacy `Activate`/`Deactivate` controller actions + API endpoints (UI-removed, kept callable; dedicated removal phase if/when product confirms no external callers); live char counter on Reason fields; action verb dropdown on audit-timeline filter; cross-module `ProfileReassignedIntegrationEvent` for downstream analytics (Phase 3D limitation); MSDTC posture when 3 DbContexts enlist (operational). Validation: `dotnet build YallaJo.Web/YallaJo.Web.csproj` 0 errors; `dotnet test tests/Web.Tests.Unit/Web.Tests.Unit.csproj --no-build` 85/85 passing; full-solution `dotnet test YallaJo.sln --no-build` all green — Security 119/119, Auth 258/258, Accounts 16/16, Web 85/85, SharedKernel 5/5, ContentCore 11/11. |
+| 46 | Web Phase 5D — Users list polish | ✅ | 🤖 Agent | Polished `/admin/users` using only data already on the page. **No backend / API / DTO changes.** **New** (`Areas/Admin/Modules/Security/Features/Users/`): `Helpers/LifecycleBadge.cs` (`internal static`, `GetCssClass` + `GetLabel`, today short-circuits to the binary `IsActive` mapping, accepts forward-compat `lifecycleState` parameter that is ignored until the backend exposes granular states); `ViewModels/LifecycleBadgeVm.cs` (record `(bool IsActive, string? LifecycleState = null)`); `Views/Partials/_LifecycleBadge.cshtml` (single source for the Active/Inactive pill — green `bg-success` or gray `bg-secondary` with ARIA label). **Index.cshtml redesigned**: header strip with title + total-count chip + page indicator; page-local search input (`<input type="search">` + ~12-line inline JS that toggles row visibility by case-insensitive substring match against `data-filter-text` = Email + Roles, clearly labeled "Filter rows on this page" so admins know it does NOT page through the server); table density bumped (`table-sm table-hover align-middle`); Email cell now shows email + muted-small monospaced GUID for copy/paste into audit URLs; Roles rendered as `<span class="badge bg-light text-dark border">` chips instead of comma-joined plaintext; Status cell delegates to the new `_LifecycleBadge` partial; Actions cell is a Bootstrap `btn-group` with **Manage** (existing) + new **Audit** quick-link → `/admin/audit-logs?userId={id}` gated by `<permission require="@WebPermission.System.Read">`; empty-state row when `Model.Users.Count == 0`. **Tests added** (`tests/Web.Tests.Unit/`): `LifecycleBadgeTests` (4 explicit + 8-row `[Theory]` + 1 determinism = 13 cases) — pins the binary mapping, verifies the helper currently ignores `lifecycleState` (forward-compat sanity), pins determinism; `UsersMapperTests` (3 cases) — round-trips Id/Email/IsActive/Roles, preserves empty roles as empty-not-null, flows `IsActive=false`. **NOT touched** per scope: backend; `UserItemResponse`/`UserRowVm`/`UsersMapper` field set; `UsersController`/`UsersFacade`/`UsersApiClient`; Details page; legacy Activate/Deactivate; audit timeline page; modal partials; lifecycle controller. **Deferred items** (no backend support today): granular lifecycle palette beyond Active/Inactive (helper accepts the field; partial wires through; needs `UserDto.LifecycleState` extension to light up); `Created`/`Updated` columns (not on `UserDto`); server-side search/sort (`ListUsersQuery` accepts only `page`/`pageSize`); bulk actions; sortable columns; inline lifecycle action buttons (kept on Details per scope). Validation: `dotnet build YallaJo.Web/YallaJo.Web.csproj` 0 errors; `dotnet test tests/Web.Tests.Unit/Web.Tests.Unit.csproj` 85/85 passing; full-solution `dotnet test YallaJo.sln --no-build` all green — Security 119/119, Auth 258/258, Accounts 16/16, Web 85/85 (was 69; +16), SharedKernel 5/5, ContentCore 11/11. |
+| 45 | Web Phase 5C — Lifecycle Bootstrap modals | ✅ | 🤖 Agent | Replaced browser `confirm()` prompts on `/admin/users/details/{id}` with production-quality Bootstrap 5 modals for the five admin lifecycle verbs. **Backend, API endpoints, `LifecycleApiClient`, and `LifecycleFacade` are unchanged.** **New partials** (`Areas/Admin/Modules/Security/Features/Users/Views/Partials/`): `_SuspendModal.cshtml`, `_ReactivateModal.cshtml`, `_ArchiveModal.cshtml`, `_AdminResetPasswordModal.cshtml`, `_ReassignModal.cshtml`. Each modal renders the existing form posting to `LifecycleController` with `@Html.AntiForgeryToken()`; cancel button dismisses; destructive modals (Archive, Reassign) use `data-bs-backdrop="static" data-bs-keyboard="false"` so accidental backdrop/Esc cannot dismiss mid-typing. ARIA: `role="dialog"`, `aria-labelledby`, `aria-describedby` on every modal. **VM additions**: new `AdminArchiveVm` with `[Required]+[RegularExpression("^ARCHIVE$")]` `ConfirmText`; `AdminReassignAccountVm` gained `IUnderstand` (`[Range(typeof(bool),"true","true")]`) so the modal's required confirmation checkbox is server-authoritative — bypassing the JS gate still produces a 4xx-class server-side rejection. **Controller change**: `LifecycleController.Archive(Guid userId, AdminArchiveVm vm, ct)` — now validates `ConfirmText` before calling the facade; same TempData-error pattern as the other VM-bound actions. Suspend / Reactivate / ResetPassword / Reassign signatures are unchanged. **Details.cshtml**: replaced the five inline confirm() forms in the "Admin actions" card with five `data-bs-toggle="modal"` trigger buttons plus the five partial renders (passing `Model.UserId` as model and `Model.Email` via `ViewDataDictionary["TargetEmail"]` so each modal title personalizes the action). Legacy Activate/Deactivate forms (lines 26-47) untouched per scope. **Inline JS**: ~30 lines added in `@section Scripts` for: typed-ARCHIVE enable/disable on `#archive-form`, reassign checkbox+email enable/disable on `#reassign-form`, and disable-submit-on-submit on every `.admin-action-modal form` to block double-fire during the redirect. No third-party deps; Bootstrap is already loaded by `_Layout.cshtml`. **Tests added** (`tests/Web.Tests.Unit/`): `AdminReassignAccountVmValidationTests` (6 cases: valid happy path, IUnderstand=false rejected, missing email, malformed email, email >320 chars, reason >500 chars); `AdminArchiveVmValidationTests` (10 cases via `[Theory]`: ARCHIVE accepted; null/empty rejected; archive/Archive/ARCHIV/ARCHIVED/leading-or-trailing-space/DELETE rejected). Existing `LifecycleApiClientTests` (6) untouched and green. **NOT touched** per scope: backend, `LifecycleApiClient`, `LifecycleFacade`, legacy Activate/Deactivate, Users list, granular lifecycle badge, per-user audit timeline section on Details (deferred). **Known limitations**: typed input is not preserved across redirects (TempData-only error path — accepted trade-off; modal reopen + retype on validation failure); legacy Activate/Deactivate keeps `confirm()` (Phase 5E cleanup); no live char counter on Reason fields (browser `maxlength` truncates, server `[StringLength]` enforces); no client-side hierarchy preview — backend 403/409 still drives copy. Validation: `dotnet build YallaJo.sln` 0 errors; `dotnet test YallaJo.sln --no-build` all green — Security 119/119, Auth 258/258, Accounts 16/16, Web 69/69 (was 53; +6 reassign-VM, +10 archive-VM via `[Theory]` rows), SharedKernel 5/5, ContentCore 11/11. |
+| 44 | Web Phase 5B — Admin lifecycle action wiring | ✅ | 🤖 Agent | Wired the five admin lifecycle verbs into the User Details page so admins can trigger them from UI without any backend change. **New components** (`YallaJo.Web/Areas/Admin/Modules/Security/Features/Users/Lifecycle/`): `LifecycleApiClient` (typed wrappers for `PATCH …/suspend|reactivate|archive`, `POST …/reset-password`, `POST …/reassign`); `LifecycleFacade` (single shared error mapper — 401 → ForceSignOut, 403 → "Not allowed.", 404 → "User not found.", 409 → API conflict message verbatim, 400/422 → ValidationErrors propagated, 429 → "Too many requests.", other → API message or fallback); `LifecycleController` (5 actions, all `[ValidateAntiForgeryToken]`, all gated by `User.UpdateAny`, all redirect back to `Users/Details/{id}` with TempData success/error); `Requests/AdminResetPasswordRequest` + `Requests/AdminReassignAccountRequest` (wire DTOs); `ViewModels/AdminResetPasswordVm` (Reason ≤500) + `ViewModels/AdminReassignAccountVm` (NewEmail required+email+≤320, Reason ≤500). DI registrations added in `Program.cs`. **Details view updated**: legacy Activate/Deactivate kept untouched per Phase 5B scope (deferred to Phase 5C); a new "Admin actions" card added below them with five forms — three plain `confirm()`-guarded buttons (Suspend/Reactivate/Archive) plus two inline forms (Reset password with optional reason; Reassign with required new email + optional reason). Each form uses `onsubmit="return confirm(...)"` with verb-specific copy (Suspend: signs-out warning; Archive: irreversible warning; Reassign: full credential-teardown summary). No modals (deferred to Phase 5C). **Tests added** (`tests/Web.Tests.Unit/LifecycleApiClientTests.cs`): 6 cases verifying HTTP method + URL + body shape for every endpoint — Suspend/Reactivate/Archive use PATCH with no body; ResetPassword uses POST with `{ reason }` (null reason omitted from JSON per `WhenWritingNull` policy); Reassign uses POST with `{ newEmail, reason }`. Each test uses a `CapturingHandler` injected into `ApiClient` so URL drift would fail loudly. **NOT touched** per scope: legacy `Activate`/`Deactivate` controller actions and forms; modals; backend; Users list (Phase 5D); lifecycle badge granularity. **Known limitations**: `confirm()` uses generic browser dialogs (modals in Phase 5C); reset-password reason input is not preserved on validation error (modal will preserve typed values); reassign form does not include the explicit "I understand" checkbox yet (deferred to modal in Phase 5C); no client-side hierarchy preview — backend 403/409 messages drive the UX. Validation: `dotnet build YallaJo.Web/YallaJo.Web.csproj` 0 errors; `dotnet test tests/Web.Tests.Unit/Web.Tests.Unit.csproj` 53/53 passing; full-solution `dotnet test YallaJo.sln --no-build` all green — Security 119/119, Auth 258/258, Accounts 16/16, Web 53/53, SharedKernel 5/5, ContentCore 11/11. |
+| 43 | Web Phase 5A — Audit timeline UI plumbing | ✅ | 🤖 Agent | Surfaced Phase 4 audit fields in the Admin Web UI without any backend change. **Web responses/VMs widened**: `AuditLogItemResponse` and `AuditLogRowVm` gained `ActorUserId`, `ResourceType`, `ResourceId`, `Reason`, `Metadata`. `AuditLogListVm` gained `FilterActorUserId`, `FilterAction`, `FilterFrom`, `FilterTo` so filters survive page navigation. **API client**: `AuditLogsApiClient` accepts `actorUserId` / `action` / `from` / `to`; introduced `internal static BuildUrl(...)` (with `InternalsVisibleTo("Web.Tests.Unit")`) so URL composition is unit-testable. **Facade + controller**: pass-through filter forwarding; controller defaults pageSize=50; legacy single-filter callers behave identically (`page` / `userId` only). **Audit Index view rebuilt**: filter bar (Subject UserId, Actor UserId, Action, From, To with `datetime-local` inputs); columns Occurred (UTC) · Actor · Action · Target · Reason · IP · Details; Actor + Target cells link to `/admin/users/details/{id}`. **Metadata rendering**: new `AuditMetadataFormatter` helper (null/empty → "—"; valid JSON → indented via `JsonSerializer.Serialize(JsonDocument, WriteIndented=true)`; invalid JSON → raw string Razor-encoded). New partial `_MetadataDetails.cshtml` wraps the formatter output in a Bootstrap collapse with a small "Details"/"Raw" toggle. Empty result row added. Pagination preserves every filter. Navbar label changed "Audit Logs" → "Audit Timeline". **Backward-compat preserved**: `AuditLogsController.Index(page, userId)` legacy-only invocations still work; new params are all optional with default null. **Tests added** (`tests/Web.Tests.Unit/`): `AuditLogsApiClientUrlTests` (7 cases) — backward-compat pagination-only URL, single subject/actor filters, action escaping, blank-action skipped, ISO-8601 round-trippable date encoding, stable param order; `AuditMetadataFormatterTests` (5 + 3 inline cases) — null/empty/whitespace returns "—", valid JSON pretty-prints, invalid/truncated JSON falls back to raw, JSON arrays accepted; `AuditLogsMapperTests` (2 cases) — Phase 4 fields mapped, legacy nulls preserved. **NOT touched** per scope: legacy Activate/Deactivate, lifecycle command UI, modals, backend, role hierarchy preview, granular lifecycle states. **Known limitations**: action filter is currently a free-text input (dropdown of `AuditActions` constants deferred); `from`/`to` use the browser's local-time `datetime-local` widget but are sent as ISO-8601 — operators in non-UTC timezones see a small offset until Phase 5E adds explicit timezone handling. Validation: `dotnet build YallaJo.Web/YallaJo.Web.csproj` 0 errors; `dotnet test tests/Web.Tests.Unit/Web.Tests.Unit.csproj` 47/47 passing; full-solution `dotnet test YallaJo.sln --no-build` all green — Security 119/119, Auth 258/258, Accounts 16/16, Web 47/47, SharedKernel 5/5, ContentCore 11/11. |
+| 42 | Security/Auth Phase 4 — Admin audit timeline | ✅ | 🤖 Agent | Added a durable, append-only audit trail for the five admin lifecycle verbs (suspend / reactivate / archive / reset-password / reassign). Reused the existing `Security.AuditLog` aggregate per the approved plan; extended it with three nullable columns: `ActorUserId` (admin who performed the action), `Reason` (≤500 chars), `Metadata` (`nvarchar(max)` JSON). Added `AuditLog.CreateAdmin(...)` factory + EF migration `AddAdminAuditColumns` (with composite index `IX_AuditLogs_ActorUserId_OccurredAt`). New cross-module contract `IAdminAuditWriter` + `AdminAuditEntry` + `AuditActions` constants in `Security.Contracts`. Internal `AdminAuditWriter` (Security.Infrastructure) registered in DI; appends rows on the Security UoW, enlisting in any ambient `TransactionScope`. Five admin handlers (Auth.Application) inject `IAdminAuditWriter` + `IRequestContext` and emit a row only on the success path; failures (authn / authz / lifecycle / profile-scrub) write nothing. **Reassignment per Option C**: emits exactly ONE `ADMIN_REASSIGN_ACCOUNT` row whose metadata JSON carries `oldEmail`, `newEmail`, `lifecycleFrom`, `lifecycleTo`, `activationsSuperseded`, `resetsSuperseded`, `providersDeactivated`, and `profileScrubbed: true|false` — no second audit row for the scrub. **Phase 3D contract tweak** (Option C requirement): `IProfileReassignmentService.ResetForReassignmentAsync` return type widened from `Result` to `Result<ProfileReassignmentOutcome>` carrying a `Scrubbed` flag (`true` when an existing profile row was mutated, `false` for the missing-profile no-op path). **AdminResetPassword metadata** carries `tokenId` + `origin` only — never the plain reset code. **Read-side**: `GetAuditLogsQuery` + endpoint extended with optional `actorUserId`/`action`/`from`/`to` filters; `AuditLogDto` now projects `ActorUserId`, `ResourceType`, `ResourceId`, `Reason`, `Metadata`. Existing audit handlers (REGISTER, LOGIN, LOGOUT, PASSWORD_CHANGED, PASSWORD_RESET) continue to work unchanged via the original `AuditLog.Create` factory. **Tests added**: `tests/Security.Tests.Unit/AuditLogAdminFactoryTests.cs` (11 cases counting `[Theory]` rows: factory population, reason trim/null, target → UserId, UTC timestamp, argument guards, legacy factory leaves admin columns null); 6 new tests in `tests/Auth.Tests.Unit/AdminReassignAccountCommandHandlerTests.cs` (single-row invariant, `profileScrubbed=true` and `profileScrubbed=false` metadata branches, no audit on Security/profile failure, no plain activation token in metadata); audit assertions added to existing `AdminUserLifecycleCommandHandlerTests` and `AdminResetPasswordCommandHandlerTests` (success-path emission with action/actor/target/reason matching, no audit on early-return failure, no plain code in metadata). **Known limitations**: two-step commit on suspend / reactivate / archive / admin-reset (Auth UoW saves before Security audit save — same posture as the Phase 3A `MarkPendingPasswordResetAsync` two-step commit; reassignment is unaffected because everything runs inside `ITransactionalExecutor`); audit rows are immutable / no compensating reverts; metadata schema is conventional, not enforced; no cross-module integration event for downstream analytics. Validation: `dotnet build YallaJo.sln` 0 errors; `dotnet test YallaJo.sln --no-build` all green — Security.Tests.Unit 119/119, Auth.Tests.Unit 258/258, Accounts.Tests.Unit 16/16, Web.Tests.Unit 31/31, SharedKernel.Tests.Unit 5/5, ContentCore.Tests.Unit 11/11. |
+| 41 | Accounts/Auth Phase 3D — Profile reassignment scrub | ✅ | 🤖 Agent | Closed the Phase 3C limitation by scrubbing the Accounts profile when an admin reassigns an account. **Accounts domain**: added `Profile.ResetForReassignment(newEmailLocalPart)` — sets `FirstName="Pending"`, `LastName="Activation"` (required fields stay valid), derives `DisplayName` from the trimmed email local-part (null when blank), nulls `AvatarUrl`/`DateOfBirth`/`Gender`/`Country`/`City`/`AddressLine`, keeps `UserId` stable, bumps `UpdatedAt`, does not soft-delete. **Accounts contracts**: new `IProfileReassignmentService` + `ProfileReassignmentRequest(UserId, NewEmail)` in `Accounts.Contracts/Abstractions`. **Accounts application**: internal `ProfileReassignmentService` loads the tracked profile via `FirstOrDefaultAsync(p => p.UserId == userId, asNoTracking: false)`, extracts the local-part of `NewEmail`, invokes the domain method, flushes via `IAccountsUnitOfWork`, and evicts `AccountsCacheKeys.UserProfileTag(userId)`. Missing profile → logged no-op returning `Result.Success` (idempotent vs. outbox lag). Persistence exceptions propagate so the outer `TransactionScope` rolls back. Registered in `Accounts.Application.DependencyInjection`. **Auth handler**: `AdminReassignAccountCommandHandler` now depends on `IProfileReassignmentService` and calls `ResetForReassignmentAsync` inside the transactional delegate after the fresh activation token is added and before the single Auth `SaveChangesAsync`. Failure propagates via `ReassignOutcome.Failed`; audit log line extended with `ProfileReset=true` marker. Endpoint / command / validator / result unchanged. **Tests**: added `tests/Accounts.Tests.Unit/ProfileReassignmentTests.cs` (6 domain tests, one `[Theory]` with 3 inline cases covering the null/empty/whitespace local-part branch) and `tests/Accounts.Tests.Unit/ProfileReassignmentServiceTests.cs` (5 service tests covering happy-path reset + save + cache eviction, missing-profile idempotent success, cache-tag targeting, persistence-exception propagation, and empty-UserId validation). Added NSubstitute + Microsoft.Extensions.Logging.Abstractions + Microsoft.Extensions.Caching.Hybrid package refs to `tests/Accounts.Tests.Unit/Accounts.Tests.Unit.csproj`. Updated `tests/Auth.Tests.Unit/AdminReassignAccountCommandHandlerTests.cs` with 2 new tests: handler forwards `ProfileReassignmentRequest(UserId, NewEmail)` to the service on happy path, and propagates a `Result.Failure` from the service (no silent success, no Auth `SaveChanges`). **Known limitations**: MSDTC required when Auth + Security + Accounts enlist in the same `TransactionScope` (existing cross-module posture); no `ProfileReassignedEvent`/audit timeline in Phase 3D (deferred); missing-profile is a logged no-op (idempotent); no cross-module integration event for downstream analytics (deferred). Validation: `dotnet build YallaJo.sln` 0 errors; `dotnet test YallaJo.sln --no-build` all green — Security.Tests.Unit 108/108, Auth.Tests.Unit 252/252, Accounts.Tests.Unit 16/16, Web.Tests.Unit 31/31, SharedKernel.Tests.Unit 5/5, ContentCore.Tests.Unit 11/11. |
 
 ---
 ## [TRACKING] What Needs To Be Done Next
 ### Wave 1 — ContentCore Completion
+- Auth/Security/Accounts lifecycle roadmap: **Phase 3 + Phase 4 + Phase 5 (5A–5E) all complete.** Web admins can read the Phase 4 audit timeline at `/admin/audit-logs` with the full filter surface; the `/admin/users` list shows binary lifecycle badges, role chips, page-local filter, and per-row Audit quick-links; and lifecycle actions (Suspend/Reactivate/Archive/Reset Password/Reassign) are triggered from the User Details page via Bootstrap 5 modals with verb-specific consequence copy, typed-ARCHIVE confirmation, and a required "I understand…" checkbox on Reassign. Phase 5E removed the last legacy Activate/Deactivate UI from User Details (backend remains callable for non-UI clients per scope), unified the Status badge through `_LifecycleBadge`, and upgraded TempData alerts to dismissible `role="alert"` boxes. Backend 403/409 messages flow through TempData on redirect. **Final consolidated deferred items**: granular lifecycle palette beyond Active/Inactive (needs `UserDto.LifecycleState` extension); `Created`/`Updated` columns (not on `UserDto`); server-side search/sort/bulk actions (`ListUsersQuery` is page/pageSize only); typed modal input not preserved across redirects; per-user audit timeline section on Details (Phase 6A candidate); removal of legacy `Activate`/`Deactivate` controller actions + API endpoints (UI-removed, kept callable); live char counter on Reason fields; action-verb dropdown on audit filter; cross-module `ProfileReassignedIntegrationEvent`; immutable audit rows; conventional metadata schema; MSDTC posture when 3 DbContexts enlist.
+- Resolve current compile blockers before full-solution validation: duplicate type definitions in `Accounts.Application/Commands/DeleteAvatar/DeleteAvatarResult.cs`, `Accounts.Application/Commands/UpdateAvatar/UpdateAvatarResult.cs`, `Accounts.Application/Commands/UpdateProfile/UpdateProfileResult.cs`, `Security.Application/Commands/CreateRole/CreateRoleResult.cs`, and `Security.Application/Commands/UpdatePhone/UpdatePrimaryPhoneResult.cs` (`CS0101`).
 - ~~Category tree, depth validation, slug auto-gen, reorder~~ ✅ Done
 - ~~Specialization CQRS~~ ✅ Done
 - Verify all endpoints end-to-end (recommend running Swagger after migration)
 - ~~EF Migrations — all ContentCore entity schemas were pre-existing; no new schema changes from this session's fixes~~ ✅ Updated: migration `20260417115007_UpdateContentCoreUnicodeTranslationCacheAndStatus` added for Unicode/Status/hash schema updates
 - Apply latest ContentCore migration to the target database and smoke-test ContentCore attachment/category/language flows in Swagger
 - Add WS10-focused automated tests for signature mismatch rejection, human-reviewed translation preservation, and translation-cache hash dedup race safety
-### Wave 2 — ContentPlaces Full Module (34 endpoints)
-- See `Agents/ContentPlaces-tasks.md` for the complete task breakdown, WBS, and implementation rules
-- **Task 1**: Place CQRS + Admin Actions (8 endpoints) — Phase 1
-- ~~**Task 2**: Business CQRS + Full State Machine (9 endpoints) — Phase 1~~ ✅ Done (+ Reinstate = 10 actual endpoints)
-- ~~**Task 3**: BusinessHours Batch Upsert (2 endpoints) — Phase 1~~ ✅ Done
-- **Task 4**: ServiceItem Full CQRS (5 endpoints) — Phase 1
-- **Task 5**: BusinessAmenity Management (3 endpoints) — Phase 1
-- **Task 6**: BusinessStaff Management (3 endpoints) — Phase 1
-- **Task 7**: Place Geo-Search — Nearby + Map Viewport (2 endpoints) — Phase 2
-- **Task 8**: AccessibilityFeature Get + Update (2 endpoints) — Phase 3
+### Wave 2 — ContentPlaces remaining
+- ~~**Task 1**: Place CQRS + Admin Actions~~ ✅ Done (CategoryId, TourCount, HasActiveTours, Haversine optimized)
+- ~~**Task 2**: Business CQRS + Full State Machine~~ ✅ Done
+- ~~**Task 3**: BusinessHours Batch Upsert~~ ✅ Done
+- ~~**Task 4**: ServiceItem Full CQRS~~ ✅ Done (IDOR, outbox, Category/Description, route split)
+- **Task 5**: BusinessAmenity Management — Fadwa fixes remaining (IDOR, ICacheableQuery, pagination)
+- **Task 6**: BusinessStaff Management — Fadwa fixes remaining (auth hole, IDOR, endpoint auth, ICacheableQuery)
+- ~~**Task 7**: Place Geo-Search~~ ✅ Done (Haversine optimized, bounding-box, composite index)
+- **Task 8**: AccessibilityFeature — Fadwa fixes remaining (admin guard, AccessibilityFeatureDto.Id, ICacheableQuery)
+- See `Agents/ContentPlaces-remaining-fix-plan.md` and `Agents/ContentPlaces-fixes-required.md` for Fadwa's 13 open items
 ### Wave 3 — Phase 1 MVP remaining (~80 endpoints)
 - **ContentTours**: Tours full CQRS (~34 endpoints)
 - **Booking**: Core booking state machine (~32 endpoints)
@@ -280,6 +1129,7 @@ This section is the **single source of truth** for what exists in the codebase. 
 - ~~Global Exception Handler~~ ✅ Done — catch-all with correlation IDs
 - ~~Health Checks~~ ✅ Done — /health/live, /health/ready, /health
 - ~~Test Infrastructure~~ ✅ Done — YallaJo.Tests.Shared + ContentCore.Tests.Unit (6 tests)
+- Smoke-test `/api/v1/auth/register` + `/api/v1/auth/resend-otp` against a running environment after stopping `YallaJo.Api`/`YallaJo.Web` so a full solution build can complete without file-lock errors
 - Clean up StyleCop SA1200 warnings (usings outside namespace) across existing files — low priority, cosmetic
 - Add integration tests with Testcontainers + Respawn (per module, as modules are implemented)
 - Docker + Aspire setup (when ready for deployment)
@@ -288,1105 +1138,561 @@ This section is the **single source of truth** for what exists in the codebase. 
 - User builds remaining MVC admin controllers/views
 
 ---
-## 🧱 [REQUIRED] New Entity Checklist
-**MUST follow this exact sequence. Do NOT skip steps. All code patterns are in `guide.md`.**
-### Step 1: Domain (`{Module}.Domain`)
-- [ ] Entity in `Entities/` — choose base: `AuditableEntity + IAggregateRoot` | `BaseEntity` | plain class (junction)
+
+### §7.1 New Entity Checklist
+
+Do ALL steps in order. Skip one → your work is rejected.
+
+**Domain** (`{Module}.Domain/`)
+- [ ] Entity class: choose base (`AuditableEntity + IAggregateRoot` / `BaseEntity` / plain class for junction)
 - [ ] Private EF constructor: `private {Entity}() { }`
-- [ ] Factory: `public static {Entity} Create(...)` — `Guid.CreateVersion7()`, raise domain event inside
+- [ ] Static factory: `public static {Entity} Create(...)` — uses `Guid.CreateVersion7()`, raises domain event
 - [ ] Business methods: `Update()`, `Activate()`, `SoftDelete()` (if AuditableEntity)
+- [ ] Private setters — no public setters
 - [ ] Domain events in `Events/`
-- [ ] Repository interface in `Repositories/` (see repo selection table below)
-### Step 2: Application (`{Module}.Application`)
-- [ ] `Commands/{Entity}/Create{Entity}/` — Command, Handler, Validator
-- [ ] `Commands/{Entity}/Update{Entity}/` — Command, Handler, Validator
-- [ ] `Commands/{Entity}/Delete{Entity}/` — Command, Handler, Validator
-- [ ] `Queries/{Entity}/List{Entities}/` — Query **with `ICacheableQuery`** (SummaryDto, paginated, AsNoTracking)
-- [ ] `Queries/{Entity}/Get{Entity}ById/` — Query **with `ICacheableQuery`** (DetailDto)
-- [ ] `Caching/{Module}CacheKeys.cs` — static key factory class (if not already exists for this module)
-- [ ] `Microsoft.Extensions.Caching.Hybrid` **`9.3.0`** in `{Module}.Application.csproj` (if not already present)
-- [ ] **All command handlers inject `HybridCache` and call `RemoveByTagAsync` after successful save**
+- [ ] Repository interface in `Repositories/` (see selection table below)
+
+**Contracts** (`{Module}.Contracts/`)
+- [ ] Add feature name to `{Module}Features.cs`
+- [ ] Add permissions to `{Module}PermissionCatalog.cs` (Read/Create/Update/Delete as needed)
+- [ ] Integration event records in `IntegrationEvents/` (if cross-module)
+
+**Application** (`{Module}.Application/`)
+- [ ] Commands: `Commands/{Entity}/Create{Entity}/` — Command + Handler + Validator
+- [ ] Commands: `Commands/{Entity}/Update{Entity}/` — Command + Handler + Validator
+- [ ] Commands: `Commands/{Entity}/Delete{Entity}/` — Command + Handler + Validator
+- [ ] Query: `Queries/{Entity}/List{Entities}/` — Query **implements `ICacheableQuery`**, returns `SummaryDto`, paginated, `asNoTracking: true`
+- [ ] Query: `Queries/{Entity}/Get{Entity}ById/` — Query **implements `ICacheableQuery`**, returns `DetailDto`
+- [ ] `Caching/{Module}CacheKeys.cs` — static key factory
+- [ ] **All command handlers inject `HybridCache` + call `RemoveByTagAsync` after save**
+- [ ] **Every handler injects `ILogger<THandler>`**
+- [ ] **`ICurrentUser` ONLY if comparing userId against entity field** (see [§2.2](#22-rule--icurrentuser-usage-policy-mandatory))
 - [ ] Domain event handlers in `EventHandlers/` (if needed)
-### Step 3: Infrastructure (`{Module}.Infrastructure`)
-- [ ] EF config in `Persistence/Configurations/` (MUST follow `guide.md` patterns)
-- [ ] Repository in `Repositories/`
-- [ ] `DbSet<{Entity}>` in module's DbContext
-- [ ] **⚠️ Register in `DependencyInjection.cs`** — #1 most forgotten step
+
+**Infrastructure** (`{Module}.Infrastructure/`)
+- [ ] EF configuration in `Persistence/Configurations/`
+- [ ] Add `DbSet<{Entity}>` to DbContext
+- [ ] Repository implementation in `Repositories/`
+- [ ] **DI registration in `DependencyInjection.cs`** (most forgotten step)
 - [ ] EF migration: `dotnet ef migrations add Add{Entity} --project {Module}.Infrastructure --startup-project YallaJo.Api`
-### Step 4: Presentation (`{Module}.Presentation`)
-- [ ] Endpoint mapping in `{Module}Endpoints.cs`
-- [ ] Wire in main `Map{Module}Endpoints()` method
-- [ ] Request DTOs at bottom of file
-### Step 5: Verify
-- [ ] `dotnet build` — 0 errors
-- [ ] `lsp_diagnostics` on all changed files
-- [ ] Test via Swagger
-### Repository Selection
-| Entity Type | Interface | Implementation |
-|-------------|-----------|----------------|
-| Aggregate Root (`IAggregateRoot`) | `IRepository<T, Guid>` | `EfRepository<T>` |
+
+**Presentation** (`{Module}.Presentation/`)
+- [ ] Endpoint group in `{Module}Endpoints.cs`
+- [ ] **Every endpoint: `.WithMetadata(new MustHavePermissionAttribute(...))` OR `.AllowAnonymous()`** — no exceptions
+- [ ] `.WithName()`, `.WithSummary()`, `.Produces<T>()`, `.ProducesValidationProblem()` on each endpoint
+- [ ] Request DTOs in `Endpoints/{Entity}/Models/`
+
+**Verify**
+- [ ] `dotnet build YallaJo.sln -c Debug --nologo` — 0 errors
+- [ ] `dotnet test YallaJo.sln --nologo` — all pass
+- [ ] Swagger loads, new endpoints listed with correct auth indicators
+- [ ] Startup log: `"Seeding N permissions from M modules: ..., {Module}"` shows new permissions seeded
+
+**Repository selection**:
+| Entity | Interface | Impl |
+|---|---|---|
+| Aggregate root (`IAggregateRoot`) | `IRepository<T, Guid>` | `EfRepository<T>` |
 | Non-aggregate (`BaseEntity` / `AuditableEntity`) | `IReadRepository<T,TKey>` + `IWriteRepository<T,TKey>` | `EfEntityRepository<T, TKey>` |
 | Junction table (plain class) | Custom interface | DbContext-direct |
 
----
-## 🔧 [REQUIRED] Scaffold & Template Usage Rules
-### Using the Scaffold Script
-When creating a new entity, ALWAYS use the scaffold script first:
+### §7.2 New Endpoint Checklist
 
-```powershell
-.\Agents\scaffold.ps1 -Module {Module} -Entity {Entity} -Schema {schema}
-```
-### Post-Scaffold Mandatory Review (NON-NEGOTIABLE)
-After running `scaffold.ps1`, you MUST review and customize EVERY generated file before building. The scaffold creates generic boilerplate - your job is to make it production-ready.
+- [ ] HTTP verb + route decided (follow `YallaJo.md` spec)
+- [ ] Auth decoration: `.WithMetadata(new MustHavePermissionAttribute(...))` OR `.AllowAnonymous()` — MUST have one
+- [ ] Command/Query created in `{Module}.Application`
+- [ ] Validator created (if input has any fields)
+- [ ] Request DTO + mapping method (`ToCommand()`)
+- [ ] Response: `result.ToApiResult()` — never try/catch
+- [ ] OpenAPI: `.WithName()`, `.WithSummary()`, `.Produces<T>()`, `.ProducesValidationProblem()`
+- [ ] `.ProducesProblem(404)` on GET/{id}, PUT, DELETE
+- [ ] `.ProducesProblem(409)` on PUT (concurrency) and POST (duplicate)
+- [ ] If handler needs the current user's ID for ownership check: inject `ICurrentUser` and compare → `Result.Forbidden` if mismatch
+- [ ] If handler doesn't need ownership check: do NOT inject `ICurrentUser`
 
-**Review Checklist - go through EVERY generated file:**
+### §7.3 PR Review Checklist
 
-1. **Entity file** (`{Module}.Domain/Entities/{Entity}.cs`)
-   - [ ] Add ALL entity-specific properties from the spec (`YallaJo.md` + Business Rules PDF)
-   - [ ] Add ALL entity-specific business methods (state transitions, validation logic)
-   - [ ] Add navigation properties (NO `virtual` keyword - lazy loading banned)
-   - [ ] Verify guard clauses in `Create()` and `Update()` cover all required fields
-   - [ ] Verify domain events carry all necessary data
+Before marking a feature complete, verify every item:
 
-2. **Domain Events** (`{Module}.Domain/Events/`)
-   - [ ] Add ALL fields the event handlers will need (not just Id and Name)
-   - [ ] Create additional events for entity-specific state changes (e.g., `BookingCancelledDomainEvent`)
+**Architecture**
+- [ ] Domain has zero dependencies on Infrastructure/EF/MediatR
+- [ ] Application references only Domain + Contracts + SharedKernel.Application
+- [ ] Presentation references only Application + SharedKernel.Presentation
+- [ ] No cross-module `using` statements (only `{OtherModule}.Contracts`)
 
-3. **Command/Query files** (`{Module}.Application/`)
-   - [ ] Add ALL entity-specific fields to Command records
-   - [ ] Add uniqueness checks in handlers (slug, email, etc.)
-   - [ ] Add FK validation in handlers (verify referenced entities exist)
-   - [ ] Add ALL business rule validation from Business Rules PDF
-   - [ ] Add ILogger to every handler constructor
-   - [ ] Verify SummaryDto has only 5-8 fields (not full entity)
-   - [ ] Verify DetailDto has ALL relevant fields
-   - [ ] Add pagination validation to list query
-   - [ ] **Every `IQuery<T>` record implements `ICacheableQuery`** — `CacheKey` (from CacheKeys class), `CacheDuration` (5 min for lists/detail), `Tags` (coarse `"{entity}s"` + fine `"{entity}:{id}"` for detail)
-   - [ ] **Every command handler injects `HybridCache`** and calls `await cache.RemoveByTagAsync(...)` **after** successful save
-   - [ ] **`{Module}CacheKeys.cs`** exists with a method for every cached query
-   - [ ] **Auth-varied queries** (admin sees different data than public) include `userId` and `isAdmin` in the `CacheKey`
+**Authorization**
+- [ ] Every new endpoint has `MustHavePermission` OR `AllowAnonymous` — no bare `RequireAuthorization`
+- [ ] Permission declared in the module's `Features.cs` AND `PermissionCatalog.cs`
+- [ ] Catalog registered in module DI
+- [ ] Startup log shows new permissions seeded
 
-4. **Validators** (`{Module}.Application/Commands/`)
-   - [ ] Add validation rules for EVERY input field
-   - [ ] Add `.HasMaxLength()` matching the EF config
-   - [ ] Add range validation for numeric fields
-   - [ ] Add `.IsInEnum()` for enum fields
-   - [ ] Add `.NotEqual(Guid.Empty)` for FK references
+**Handlers**
+- [ ] Every handler injects `ILogger<THandler>`
+- [ ] Commands return `Result` / `Result<T>` (never throw for business failures)
+- [ ] Command handlers inject `HybridCache` and call `RemoveByTagAsync` after save
+- [ ] `ICurrentUser` injected ONLY when comparing `UserId` against a resource field (ownership/IDOR)
+- [ ] No `if (currentUser.IsAuthenticated)` checks — that's `MustHavePermission`'s job
 
-5. **EF Configuration** (`{Module}.Infrastructure/Persistence/Configurations/`)
-   - [ ] Add ALL entity-specific property configurations
-   - [ ] Add `.HasPrecision(18, 2)` for decimal/money fields
-   - [ ] Add `.HasConversion<int>()` for enum fields
-   - [ ] Add `.IsUnicode(false)` for ASCII-only fields (slugs, codes)
-   - [ ] Add ALL relationships (HasMany, HasOne, FK, delete behavior)
-   - [ ] Add ALL indexes (unique, filtered, composite)
-   - [ ] Verify `HasQueryFilter(!IsDeleted)` is present
+**Transactions**
+- [ ] Domain events on `IAggregateRoot` entities only (else handler never runs)
+- [ ] Domain event handlers never call `SaveChangesAsync`
+- [ ] Integration event handlers check inbox idempotency first, mark processed last
+- [ ] State-change methods guarded: `if (!entity.IsActive) entity.Activate()` — prevents duplicate events
 
-6. **Endpoints** (`{Module}.Presentation/`)
-   - [ ] Add ALL endpoint-specific request parameters
-   - [ ] Verify EVERY endpoint has `.RequireAuthorization()` or `.AllowAnonymous()`
-   - [ ] Verify EVERY endpoint has `.WithName()`, `.WithSummary()`, `.Produces<T>()`
-   - [ ] Add `.ProducesValidationProblem()` on POST/PUT
-   - [ ] Add `.ProducesProblem(404)` on GET/{id}, PUT, DELETE
+**Data**
+- [ ] `Guid.CreateVersion7()` — never `Guid.NewGuid()`
+- [ ] `DateTime.UtcNow` — never `DateTime.Now`
+- [ ] All string columns have `HasMaxLength()`
+- [ ] Money uses `decimal` with `HasPrecision(18, 2)`
+- [ ] Enums stored as `int` via `HasConversion<int>()`
+- [ ] Soft-delete filter `.HasQueryFilter(x => !x.IsDeleted)` on `AuditableEntity`
 
-7. **DI Registration** (`{Module}.Infrastructure/DependencyInjection.cs`)
-   - [ ] Verify the new repository is registered
-   - [ ] Verify ALL new services are registered
+**Performance**
+- [ ] `CancellationToken` propagated through every async call
+- [ ] `.AsNoTracking()` on read queries (default in repo)
+- [ ] `.AsSplitQuery()` when 2+ `.Include()`
+- [ ] `.Select()` projections over entity loads for large reads
+- [ ] Pagination max `PageSize` = 100
+- [ ] No lazy loading (`virtual` navigation properties banned)
+- [ ] Every query implements `ICacheableQuery`
 
-8. **DbContext**
-   - [ ] Verify `DbSet<{Entity}>` is added
-### After Review: Build & Verify
-```bash
-dotnet build  # MUST pass with 0 errors
-```
+**Security**
+- [ ] Raw SQL: use `SqlQuery<T>(FormattableString)` or `FromSqlInterpolated` — NOT `SqlQueryRaw`/`FromSqlRaw` with interpolation (injection risk). `SqlQuery<T>($"...")` IS safe — EF converts holes to DbParameter.
+- [ ] File uploads validate MIME + magic bytes, sanitize filename
+- [ ] Prices recalculated server-side (never trust client)
+- [ ] Payment endpoints have idempotency key
+- [ ] No stack traces / SQL errors / internal paths in response DTOs
+- [ ] Audit trail logged for sensitive operations (role changes, deletions, refunds)
 
-Then run `lsp_diagnostics` on every changed file.
+**Error handling**
+- [ ] No try/catch in endpoints
+- [ ] No try/catch in command/query handlers for general `Exception`
+- [ ] Infrastructure try/catch only for allowed types (HttpRequestException, DbUpdateConcurrencyException, etc.)
+- [ ] Every catch block logs before continuing
+- [ ] Error codes follow `{Entity}.{Reason}` convention
 
-**Scaffold output is NEVER production-ready. If you skip the review, you WILL ship broken or incomplete code.**
-### Using Templates Manually
-If not using the scaffold script, copy templates from `Agents/templates/`. Same review rules apply - every template file MUST be reviewed and customized before use.
+**Testing**
+- [ ] `dotnet build` — 0 errors
+- [ ] `dotnet test` — all pass
+- [ ] No new StyleCop/analyzer warnings beyond baseline
+- [ ] Swagger UI shows new endpoints with correct auth lock icons
 
----
-## 📦 [REQUIRED] DI Registration Rules
-**Every service/repository MUST be registered or you get runtime `InvalidOperationException`.**
+### §7.4 Pre-flight & Completion
 
-| What | Where | Lifetime |
-|------|-------|----------|
-| Repos, UoW, DbContext, Module services | `{Module}.Infrastructure/DependencyInjection.cs` | Scoped |
-| Background services | Same file | Singleton queue + `AddHostedService` |
-| SharedKernel behaviors | `SharedKernel.Infrastructure/DependencyInjection.cs` | Auto (MediatR) |
-| Cross-cutting (ICurrentUser, IRequestContext) | `YallaJo.Api/Program.cs` | Scoped |
-| Auth policies | `YallaJo.Api/Program.cs` | Singleton |
+**Session start** (before writing any code)
+1. Read this file (`agent-context.md`) in full
+2. Read `Agents/error-log.md` in full
+3. Run `dotnet build YallaJo.sln -c Debug --nologo` → verify 0 errors
+4. If baseline is broken: fix or report BEFORE starting new work. Never build on broken foundation.
 
-**Reference implementation**: See `ContentCore.Infrastructure/DependencyInjection.cs`
-
-**Wiring in Program.cs** — every module needs exactly 3 lines:
-```csharp
-builder.Services.Add{Module}Application();
-builder.Services.Add{Module}Infrastructure(builder.Configuration);
-app.Map{Module}Endpoints();
-```
-
----
-## 🗄️ [REFERENCE] Caching Rules
-
-**Current state**: ContentCore fully migrated to `HybridCache` (`Microsoft.Extensions.Caching.Hybrid` — GA March 2025). `QueryCachingBehavior` uses `HybridCache.GetOrCreateAsync` with built-in stampede prevention + tag-based eviction. 11 cached queries with `ICacheableQuery` (Tags property for group invalidation). 17 command handlers use `RemoveByTagAsync`. `Result<T>` and `Result` classes have `[JsonConstructor]` for future Redis L2 serialization. All new modules MUST use `HybridCache` from day one.
+**Completion** (before marking ✅)
+- All items in [§7.1](#71-new-entity-checklist) or [§7.2](#72-new-endpoint-checklist)
+- All items in [§7.3](#73-pr-review-checklist)
+- Updated `§11.2 Work Log` in this file
+- Updated `§11.1 Module Status Overview` if applicable
+- Updated `Agents/error-log.md` if any mistakes were made
+- `dotnet build` passes with 0 errors
+- `dotnet test` passes all
+- `lsp_diagnostics` clean on all changed files
 
 ---
-### Architecture Decision: HybridCache (Primary) + Output Caching (Selective)
 
-| Layer | Technology | When to Use |
-|-------|-----------|-------------|
-| **Data caching** (primary) | `HybridCache` | All CQRS query handlers, all modules — replaces `IMemoryCache` |
-| **Response caching** (selective) | Output Caching middleware | Read-only anonymous endpoints with identical responses for all users (e.g., `GET /api/places/nearby`, `GET /api/places/map/viewport`) |
-| **Distributed L2** (future) | Redis via `IDistributedCache` | Add when scaling to multiple servers — zero code changes to handlers |
+## §8. Known Issues (from audits)
 
-**Why HybridCache over raw IMemoryCache:**
-- **Stampede prevention built-in**: `GetOrCreateAsync` coalesces concurrent requests for the same key — only one DB call fires, all waiters get the same result. No manual `SemaphoreSlim`.
-- **Tag-based eviction**: `RemoveByTagAsync("categories")` removes all category-related entries in one call. Eliminates the fragile pattern of 6+ individual `cache.Remove()` calls per handler.
-- **Negative caching**: `GetOrCreateAsync` naturally caches the factory result even when it returns empty/default — protects the DB from repeated misses on non-existent entities.
-- **L1/L2 architecture**: Uses in-memory (L1) by default. Add `IDistributedCache` registration later for L2 (Redis) — handlers remain unchanged.
-- **Serialization built-in**: JSON by default. Configurable for Protobuf. No manual `Serialize`/`Deserialize` code.
+### §8.1 `ICurrentUser` Violations (8 handlers)
 
-**Why NOT Output Caching for most endpoints:**
-- YallaJo uses CQRS with `Result<T>`. Endpoints return different data based on auth context (admin vs anonymous, owner vs visitor).
-- Output Caching caches the **full HTTP response** including headers — it would serve admin data to anonymous users or vice versa.
-- **Only use Output Caching** on truly anonymous, read-only, identical-for-all-users endpoints with explicit `VaryByQueryKeys`.
+**Audited**: 2026-04-22. **Source**: `bg_a8b53a93`.
 
----
-### The "To Cache or Not to Cache" Decision
+Out of 26 handlers injecting `ICurrentUser`, 18 are valid (ownership/IDOR checks) and 8 are violations. Fix each per [§2.2](#22-rule--icurrentuser-usage-policy-mandatory).
 
-#### Read-to-Write Ratio Rule
-Calculate: **reads per minute / writes per minute** for each entity.
+| # | File | Issue | Fix |
+|---|---|---|---|
+| 1 | `ContentPlaces.Application/Commands/Business/ApproveBusiness/ApproveBusinessCommandHandler.cs` | Stamps approver ID but no permission check | Endpoint `MustHavePermission(Business, Approve)`. Keep `ICurrentUser` only for the ID stamp. |
+| 2 | `ContentPlaces.Application/Commands/Business/RejectBusiness/RejectBusinessCommandHandler.cs` | Stamps rejector ID but no permission check | Same — `MustHavePermission(Business, Reject)` on endpoint. |
+| 3 | `ContentPlaces.Application/Commands/Business/SuspendBusiness/SuspendBusinessCommandHandler.cs` | Injects `ICurrentUser` but never uses it for ownership | **Remove `ICurrentUser` injection entirely**. Use `MustHavePermission(Business, Suspend)` on endpoint. |
+| 4 | `ContentPlaces.Application/Commands/Business/ReinstateBusiness/ReinstateBusinessCommandHandler.cs` | Same as #3 | **Remove `ICurrentUser`**. Use `MustHavePermission(Business, Reinstate)`. |
+| 5 | `ContentPlaces.Application/Commands/BusinessStaff/AddBusinessStaff/AddBusinessStaffCommandHandler.cs` | Only checks `IsAuthenticated`, no ownership check | Add ownership check: load `business`, verify `business.OwnerId == currentUser.UserId.Value` OR `currentUser.IsInRole("Admin")` → `Result.Forbidden` otherwise. |
+| 6 | `ContentPlaces.Application/Commands/BusinessAmenity/AddBusinessAmenity/AddBusinessAmenityCommandHandler.cs` | Type mismatch bug: `business.OwnerId != currentUser.UserId` (comparing `Guid` vs `Guid?`) | Fix: `!= currentUser.UserId.Value`. Check is correct in intent. |
+| 7 | `ContentPlaces.Application/Commands/BusinessAmenity/RemoveBusinessAmenity/RemoveBusinessAmenityCommandHandler.cs` | Only checks `IsAuthenticated` | Add ownership check: load business from amenity.BusinessId, verify owner. |
+| 8 | `ContentPlaces.Application/Commands/BusinessHours/SetBusinessHours/SetBusinessHoursCommandHandler.cs` | Ownership check is correct but loaded with `asNoTracking: true` while modifying | Change to `asNoTracking: false` if the business entity itself is modified; otherwise current pattern is OK. |
 
-| Ratio | Decision | Example |
-|-------|----------|---------|
-| **> 100:1** | MUST cache | Languages (read on every API call, written once a month) |
-| **10:1 to 100:1** | SHOULD cache | Categories, Tags (read every page load, written by admin weekly) |
-| **1:1 to 10:1** | MAY cache with short TTL (1–5 min) | Paginated place lists (read often, new places added daily) |
-| **< 1:1** | MUST NOT cache | Bookings (written as often as read — stale data = double bookings) |
+### §8.2 Endpoint Authorization Violations (28 endpoints)
 
-#### What MUST Be Cached
-| Entity/Data | Why | TTL (Absolute) | TTL (Local) | Tags |
-|---|---|---|---|---|
-| Languages | Read every request (Accept-Language), written once a month | 60 min | 30 min | `languages` |
-| Categories (tree) | Read every page, written by admin rarely | 30 min | 15 min | `categories` |
-| Tags | Read on every listing page | 30 min | 15 min | `tags` |
-| Specializations | Reference data, rarely changes | 30 min | 15 min | `specializations` |
-| Entity attachments | Media URLs, rarely change after upload | 15 min | 10 min | `attachments:{entityType}:{entityId}` |
-| Entity categories/tags junctions | Read on every detail page | 15 min | 10 min | `entity-junctions:{entityType}:{entityId}` |
-| Translated content | Expensive to regenerate (Azure Translator API) | 120 min | 30 min | `translations:{entityType}:{entityId}` |
-| Place/Business detail by slug | High-traffic SEO pages | 10 min | 5 min | `places`, `place:{id}` |
+**Audited**: 2026-04-22. **Source**: `bg_a22d1b43`. **Full report**: `Agents/endpoint-authorization-audit.md` + `Agents/endpoint-violations.csv`.
 
-#### What MUST NEVER Be Cached
-| Data | Why |
-|------|-----|
-| Booking state / slot availability | Real-time — stale data = double bookings, overselling |
-| Payment status / transaction state | Financial accuracy is critical — always read from DB |
-| User authentication tokens / sessions | Security — cached tokens can't be revoked |
-| User permissions / roles | Security — must reflect DB state at all times |
-| Any entity with `LockedUntil` or time-sensitive state | Race condition risk |
-| Stock/inventory counts during checkout | Real-time accuracy required at point of sale |
-| Currency exchange rates (if < 1h old) | Financial data — cache only with exact absolute TTL matching data freshness |
+**Summary**:
 
-#### When to Intentionally Bypass the Cache
-- **Admin write-then-read flow**: After admin creates/updates an entity, the immediately following GET must see fresh data. Use `HybridCacheEntryFlags.None` or add a `?nocache=1` query param that the handler respects.
-- **Debug/troubleshooting**: Support a `Cache-Control: no-cache` header check in the pipeline behavior for admin users only.
-- **Data migration/import**: Bulk import operations should bypass cache entirely and invalidate by tag after completion.
-
----
-### HybridCache — API & Patterns
-
-#### Registration
-**Code**: See [`Agents/patterns/caching-patterns.md`](patterns/caching-patterns.md) → §HybridCache Registration
-
-#### GetOrCreateAsync — Cache-Aside in One Call (MANDATORY pattern)
-**Code**: See [`Agents/patterns/caching-patterns.md`](patterns/caching-patterns.md) → §HybridCache GetOrCreateAsync Pattern
-
-**Key behavior**: If 50 concurrent requests arrive for the same key and the cache is empty, `GetOrCreateAsync` executes the factory callback ONCE and returns the same result to all 50 callers. This is stampede prevention built into the API.
-
-#### Tag-Based Eviction (MANDATORY for command handlers)
-**Code**: See [`Agents/patterns/caching-patterns.md`](patterns/caching-patterns.md) → §HybridCache Tag-Based Eviction
-
-**Rules**:
-- Every `ICacheableQuery` MUST declare `Tags` (one or more strings)
-- Command handlers call `cache.RemoveByTagAsync("tag")` instead of individual `cache.Remove(key)` calls
-- Tag convention: `{module}:{entity}` for entity-level tags, `{module}:{entity}:{id}` for instance-level tags
-
-#### Negative Caching (Cache Penetration Defense)
-**Code**: See [`Agents/patterns/caching-patterns.md`](patterns/caching-patterns.md) → §HybridCache Negative Caching
-
-When `GetOrCreateAsync` factory returns `null` or a sentinel "not found" value, cache it with a **short TTL (30–60 seconds)**. This prevents an attacker from hammering `GET /api/tags/{random-guid}` and bypassing the cache on every request.
-
-#### ICacheableQuery Interface (Updated for HybridCache)
-**Code**: See [`Agents/patterns/caching-patterns.md`](patterns/caching-patterns.md) → §Updated ICacheableQuery Interface
-
----
-### Cache Key Convention (MANDATORY format)
-**Format**: `{module}:{entity}:{scope}:{params}` — all lowercase, colon-separated
-
-| Key Pattern | Example | What It Caches |
+| Classification | Count | % |
 |---|---|---|
-| `cc:cats:{activeOnly}:{parentId}:{withTranslations}` | `cc:cats:true:root:false` | Category list |
-| `cc:cat:{id}:{withTranslations}` | `cc:cat:abc123:true` | Single category |
-| `cc:tags:{activeOnly}` | `cc:tags:false` | Tag list |
-| `cc:langs:{activeOnly}` | `cc:langs:true` | Language list |
-| `cp:place:{id}` | `cp:place:abc123` | Place detail |
-| `cp:places:list:p{page}:s{size}` | `cp:places:list:p1:s20` | Paginated place list |
-| `{module}:{entity}:{id}:detail` | `cp:biz:abc123:detail` | Business detail |
+| `PERMISSION_GUARDED` (correct) | 89 | 70% |
+| `ANONYMOUS` (correct — public endpoints) | 25 | 20% |
+| `AUTH_ONLY` (violation — authenticated but no permission) | 11 | 9% |
+| `UNPROTECTED` (violation — no auth at all) | 0 | 0% |
+| `STRING_POLICY` (violation — `.RequireAuthorization("Permission.X.Y")` instead of attribute) | 9 | 7% |
+| `MISSING_METADATA` (violation — no auth metadata) | 4 | 3% |
 
-**Module prefixes**: `cc` = ContentCore, `cp` = ContentPlaces, `ct` = ContentTours, `bk` = Booking, `fn` = Finance
+**Total violations**: 28 endpoints across 5 Presentation projects.
 
-**Rules**:
-- NEVER use GUIDs directly as keys without a prefix (`cc:tag:{id}` not just `{id}`)
-- NEVER cache user-specific data with a shared key — include `user:{userId}` in key
-- NEVER use spaces in cache keys
-- Always use the module's static `CacheKeys` class — never hand-write key strings
+**Action plan** (3-phase, ~2.5 hrs):
+1. **Phase 1** (11 endpoints, ~1 hr): Add `MustHavePermissionAttribute` to auth-only endpoints in Auth.Presentation (7), Accounts.Presentation (5), Security.Presentation (2).
+2. **Phase 2** (9 endpoints, ~1 hr): Replace string-based `.RequireAuthorization("Permission.X.Y")` with `.WithMetadata(new MustHavePermissionAttribute(...))` in ContentCore.Presentation (9), ContentPlaces.Presentation (5).
+3. **Phase 3** (4 endpoints, ~30 min): Add missing permission metadata in ContentPlaces.Presentation (4).
+
+Full per-endpoint details: `Agents/endpoint-violations.csv`.
 
 ---
-### Expiration Strategy
 
-#### Absolute vs Local (Sliding) Expiration — When to Use Each
-| Expiration | What It Does | Use When |
+## §9. Gotchas (hard-won lessons)
+
+### §9.1 Gotchas Registry
+
+| # | Gotcha | What happens if you ignore |
 |---|---|---|
-| **Absolute** (`Expiration`) | Hard cap — entry evicted after this duration no matter what | ALL cached data — prevents serving infinitely stale content |
-| **Local** (`LocalCacheExpiration`) | L1 in-memory expiration (shorter than absolute) — keeps L1 fresh relative to L2 | Multi-tier cache (L1 memory + L2 Redis). Set L1 shorter to re-sync from L2 periodically |
-
-#### TTL Policy by Data Type
-| Data Type | Absolute TTL | Local L1 TTL | Tags | Reason |
-|---|---|---|---|---|
-| Reference data (categories, tags, languages, specializations) | 30–60 min | 15 min | `{entity}` | Rarely changes, invalidated on write |
-| Translated content | 120 min | 30 min | `translations:{entityType}:{entityId}` | Expensive to regenerate |
-| Single entity by ID (detail) | 5 min | 2 min | `{entity}`, `{entity}:{id}` | Short TTL protects against cached not-found (negative cache). Tag eviction handles write-then-read freshness. |
-| Paginated list | 5 min | 2 min | `{entity}:list` | Changes frequently with new data |
-| Negative cache (not-found sentinel) | 30–60 sec | 30 sec | same as positive entry | Short — entity may be created soon after |
-| Config / feature flags | 60 min | 15 min | `config` | Changes require app reaction |
-
-**Rule**: ALWAYS set `Expiration` (absolute). Set `LocalCacheExpiration` when using L2 (Redis). For single-server (current state), `Expiration` alone is sufficient.
-
----
-### Defensive Caching — Pitfalls & Prevention
-
-#### Cache Stampede (Thundering Herd)
-**Problem**: Cache expires → 100 concurrent requests all miss → 100 DB queries fire simultaneously.
-**Solution**: `HybridCache.GetOrCreateAsync` prevents this internally. It detects concurrent requests for the same key, executes the factory ONCE, and returns the result to all waiters. No manual locking needed.
-**Old pattern** (IMemoryCache): Required `SemaphoreSlim` + double-check. Error-prone and doesn't compose. **Avoid.**
-
-#### Cache Penetration (Non-Existent Entity Attacks)
-**Problem**: Attacker requests `GET /api/tags/{random-guid}` → always misses cache → always hits DB.
-**Solution**: Cache the "not found" result with a short TTL (30–60 seconds). `GetOrCreateAsync` makes this natural — the factory returns a sentinel or `default(T)`, and it gets cached like any other value.
-**Rule**: Query handlers MUST cache miss results. Use a wrapper DTO or `Result<T>` that distinguishes "cached not-found" from "never queried".
-
-#### Cache Avalanche (Mass Expiration)
-**Problem**: All cache entries expire at the same time → sudden spike of DB queries.
-**Solution**: Add jitter to TTLs. Instead of `30 minutes` for all categories, use `30 + Random(0, 5) minutes`. HybridCache does NOT do this automatically — add jitter in the `ICacheableQuery.CacheDuration` getter.
-
----
-### Output Caching — Selective Use Only
-
-**When to use**: Anonymous, read-only, identical-for-all-users Minimal API endpoints where the full HTTP response is the same for every caller.
-
-**Good candidates in YallaJo**:
-- `GET /api/places/nearby` (anonymous, geo-only, no auth context)
-- `GET /api/places/map/viewport` (anonymous, bounding-box only)
-- `GET /api/content-core/languages` (anonymous, same for everyone)
-
-**How to apply**: `.CacheOutput(policy => policy.Expire(TimeSpan.FromMinutes(5)).Tag("places"))` on the endpoint, plus `IOutputCacheStore.EvictByTagAsync("places")` in the corresponding command handler.
-
-**NEVER use Output Caching on**: Any endpoint where the response varies by auth (admin sees pending businesses, anonymous sees only approved). Any endpoint with pagination that changes per request. Any POST/PUT/DELETE endpoint.
+| 1 | Domain events on non-`IAggregateRoot` entities are NEVER dispatched | `UnitOfWork.SaveChangesAsync` only collects events from `IAggregateRoot` entries. Handler silently doesn't run. |
+| 2 | **NEVER call `SaveChangesAsync` in domain event handlers** | UoW dispatches events BEFORE SaveChanges. Double-save breaks atomicity. |
+| 3 | No Hangfire/Quartz — use `BackgroundService` + `Channel<T>` | ADR-003. Don't add those packages. |
+| 4 | `MarkUpdated()` exists only on `AuditableEntity`, not `BaseEntity` | For BaseEntity children: set `UpdatedAt = DateTime.UtcNow` directly (protected set). |
+| 5 | `BaseEntity.UpdatedAt` has `protected set` | Settable inside entity methods only. |
+| 6 | `EfRepository<T>` requires `IAggregateRoot` — non-aggregates use `EfEntityRepository<T, TKey>` | Build error if misused. |
+| 7 | Junction tables are plain classes — composite keys, DbContext-direct | Don't extend BaseEntity for junctions. |
+| 8 | **DI registration is the #1 most forgotten step** | Every repo, service, UoW MUST be in `DependencyInjection.cs`. Runtime `InvalidOperationException` otherwise. |
+| 9 | Business Rules PDF is MANDATORY before implementing any module | `Agents/YallaJo Business Rules & Edge Cases.pdf`. Skip = redo. |
+| 10 | `Microsoft.Extensions.*` packages MUST stay on `9.x` — NEVER `10.x` | `NU1605: Detected package downgrade`. Exception: `Caching.Hybrid` pinned at exactly `9.3.0`. |
+| 11 | ALL queries MUST implement `ICacheableQuery` | Forgetting = `QueryCachingBehavior` bypassed, every request hits DB. |
+| 12 | ALL command handlers MUST `RemoveByTagAsync` after save | Writing without invalidating = stale data until TTL. |
+| 13 | `RemoveByTagAsync` MUST use the MOST specific tag | `RemoveByTagAsync("attachments")` evicts ALL attachment caches. Single-entity mutations MUST use `$"attachments:{EntityType}:{EntityId}"`. |
+| 14 | Guard state before calling any method that raises a domain event | `if (!entity.IsActive) entity.Activate()` — unconditional calls produce duplicate outbox rows → duplicate downstream work. |
+| 15 | Recursive tree builders NEED `HashSet<Guid> visited` | Circular parent ref in DB → `StackOverflowException`. |
+| 16 | `ILogger<THandler>` mandatory in ALL handlers (cmd + query) | No exceptions. 21 ContentCore handlers were missing it at audit. |
+| 17 | Never mark inbox processed before external side effect succeeds | OTP email example — save OTP + mark processed + SMTP fails = dead event. Mark processed only after SMTP success. |
+| 18 | Gmail app passwords copied with spaces → SMTP auth fails | Strip spaces before `NetworkCredential`. |
+| 19 | No parallel `dotnet build/test` on shared projects → `CS2012` file lock | Run build/test sequentially. |
+| 20 | **Every endpoint MUST have explicit `MustHavePermission` OR `AllowAnonymous`** | Bare `.RequireAuthorization()` = "any authenticated user" — usually wrong. String-based policies = unauditable. |
+| 21 | **`ICurrentUser` ONLY for ownership/self-comparison** | Gratuitous injection for `IsAuthenticated` checks or stamping = rejected in review. That's `MustHavePermission`'s job. |
+| 22 | Each module owns its own `IPermissionCatalog` | Adding `Booking` features to `SecurityFeatures` or `AppPermissions.cs` breaks the per-module boundary. Use `BookingFeatures` + `BookingPermissionCatalog`. |
+| 23 | `PermissionPolicyNames.Build()` is the ONLY place the policy name format lives | Don't hard-code `"Permission." + feature + "." + action` anywhere. |
+| 24 | Forgetting to register `IPermissionCatalog` in module DI | Symptom: permissions don't appear in DB after seed. All endpoints return 403. Check startup log for `"Seeding N permissions from M modules: ..."` — your module should be listed. |
+| 25 | **Non-aggregate handlers CANNOT use domain events for outbox** | `ServiceItem`, `BusinessStaff`, `BusinessAmenity`, `BusinessHours`, `AccessibilityFeature` are NOT `IAggregateRoot`. UoW never collects their events. For these entities, inject `IContentPlacesOutboxWriter` (Application interface, Infrastructure impl) and call `outbox.Enqueue(event)` BEFORE `SaveChangesAsync`. Never inject `ContentPlacesDbContext` directly into Application handlers — violates gotcha #22 / Clean Architecture §1.3. |
+| 26 | **`IPublisher.Publish()` is NOT durable — always use the outbox** | `IPublisher.Publish()` is in-process MediatR. App restart between `SaveChanges` and `Publish` = event permanently lost. Every integration event MUST go through `OutboxMessage.Create()` staged in the DbContext and committed atomically with the entity row. See `ServiceItemCreatedIntegrationEvent` for the correct pattern. |
+| 27 | **`EfRepository<T>` requires `IAggregateRoot` — `ServiceItem` removed `IAggregateRoot` so `IServiceItemRepository` must use `IReadRepository + IWriteRepository`** | Changing `ServiceItem` from aggregate to non-aggregate also requires changing the repository interface from `IRepository<T, Guid>` (which has `IAggregateRoot` constraint) to `IReadRepository<T, Guid>, IWriteRepository<T, Guid>`. And the impl from `EfRepository<T, Guid>` to `EfEntityRepository<T, Guid>`. Both changes must be made together or the build breaks. |
+| 28 | **Every new integration event MUST be registered in `IntegrationEventTypeRegistry`** | `OutboxMessage.Create()` calls `IntegrationEventTypeRegistry.GetName()`. Publishing an unregistered event throws `InvalidOperationException` at runtime. Add the stable logical name (e.g. `"content-places.business.approved.v1"`) to `IntegrationEventTypeRegistry.cs` AND update `IntegrationEventTypeRegistryTests.cs` with the new count. Registry lives in `YallaJo.SharedKernel.Infrastructure/Abstractions/Integration/`. |
+| 29 | **Haversine double-computation anti-pattern** | Writing `6371 * ACOS(...)` in both `SELECT` (for alias) and `WHERE` (for filter) runs the formula TWICE per row. SQL Server does not CSE this. Fix: wrap in a derived table — compute once in inner query, filter on the alias in outer query. See `PlaceRepository.GetNearbyAsync` for the correct pattern. |
+| 30 | **`SqlQuery<T>($"...")` FormattableString IS injection-safe — do not confuse with `SqlQueryRaw`** | `context.Database.SqlQuery<T>(FormattableString)` (used with `$"""..."""` verbatim + interpolation) converts every `{hole}` to a `DbParameter`. This is identical safety to `FromSqlInterpolated`. `SqlQueryRaw(string)` is the dangerous overload. Never use `FromSqlRaw($"... {userInput} ...")` — that is a SQL injection vulnerability. |
+| 31 | **Add bounding-box pre-filter before Haversine for geo queries** | Running `ACOS/COS/SIN/RADIANS` on every row is expensive. Add a cheap arithmetic bounding-box (`Latitude BETWEEN minLat AND maxLat AND Longitude BETWEEN minLng AND maxLng`) before the Haversine formula. This eliminates ~99% of rows using the `IX_Places_IsDeleted_Latitude_Longitude` composite index before any trig runs. See `PlaceRepository.GetNearbyAsync`. |
+| 32 | **`TourCount` on Place is denormalized — update via `PlaceTourCountUpdatedIntegrationEvent` inbox** | `Place.TourCount` is owned by ContentPlaces but the authoritative count lives in ContentTours. ContentTours publishes `PlaceTourCountUpdatedIntegrationEvent(PlaceId, ActiveTourCount)` via outbox whenever Tour status or PlaceId changes. ContentPlaces handles it via `PlaceTourCountUpdatedIntegrationEventHandler` inbox handler calling `place.UpdateTourCount(count)`. The count is always a fresh re-query from ContentToursDbContext — never increment/decrement (avoids drift). |
+| 33 | **`HasActiveTours` filter on `ListPlacesQuery` requires `Place.TourCount > 0`** | The `PlaceFilterSpecification` uses `WhereIf(hasActiveTours == true, p => p.TourCount > 0)`. This field is denormalized and kept in sync by the TourCount event flow (gotcha #32). If TourCount is always 0 (e.g. no tours published), the filter will correctly return nothing. Do not try to cross-join ContentTours from ContentPlaces to compute this. |
 
 ---
-## 🔗 [REFERENCE] Module Dependency Rules
-```
-SharedKernel.Domain         → (no dependencies)
-SharedKernel.Application    → SharedKernel.Domain
-SharedKernel.Infrastructure → SharedKernel.Application + Domain
 
-{Module}.Domain             → SharedKernel.Domain
-{Module}.Application        → {Module}.Domain + Contracts + SharedKernel.Application
-{Module}.Infrastructure     → {Module}.Application + Domain + Contracts + SharedKernel.Infrastructure
-{Module}.Presentation       → {Module}.Application ONLY (never Infrastructure or Domain)
+## §10. Session Protocol
 
-YallaJo.Api                 → All Presentation + All Infrastructure + SharedKernel.Infrastructure
-YallaJo.Web                 → ZERO project references (pure HttpClient)
-```
-
-**Critical**: Presentation NEVER references Infrastructure/Domain. Application NEVER references Infrastructure. Cross-module = Contracts or integration events. Circular reference = build failure.
-
----
-## 🔐 [REFERENCE] Auth & Authorization
-**JWT**: Configured in `appsettings.json` under `"Jwt"`. Claims: `sub` (User ID), `role`.
-
-**Policies** (hierarchical — each includes higher roles):
-
-| Policy | Roles Included |
-|--------|---------------|
-| `"Owner"` | Owner only |
-| `"SuperAdmin"` | Owner, SuperAdmin |
-| `"Admin"` | Owner, SuperAdmin, Admin |
-
-**Roles**: Owner, SuperAdmin, Admin, User, TourGuide, Guest (from `Security.Contracts.Authorization.AppRoles`)
-
-**Endpoint auth**: `.RequireAuthorization("Admin")` · `.AllowAnonymous()` · `.RequireAuthorization()` (any valid JWT)
-
-**Permission-based**: `PermissionPolicyProvider` + `PermissionAuthorizationHandler` for fine-grained checks.
-
-**Web BFF flow**: Browser → Web (:57070, cookie) → `JwtAuthHandler` extracts JWT from cookie → HttpClient → API (:57065, bearer)
-
----
-## ✅ [REFERENCE] Validation & Error Flow
-**Pipeline**: Request → `LoggingBehavior` → `ValidationBehavior` (FluentValidation) → `PerformanceBehavior` (>500ms warning) → Handler → `Result<T>`
-
-**Validation failure**: `ValidationException` → `ValidationExceptionHandler` → RFC 7807 `ValidationProblemDetails` (400)
-
-**Result → HTTP mapping** (via `ToApiResult()`):
-
-| Result | HTTP |
-|--------|------|
-| Success | 200 OK |
-| Created | 201 Created |
-| NotFound | 404 |
-| Conflict | 409 |
-| Validation | 400 |
-
----
-## 📁 [TRACKING] Key File Locations
-### SharedKernel
-- `YallaJo.SharedKernel.Domain/Entities/` — BaseEntity, AuditableEntity, IAggregateRoot
-- `YallaJo.SharedKernel.Domain/Abstractions/Results/` — Result, ResultT, Error
-- `YallaJo.SharedKernel.Application/Abstractions/Messaging/` — ICommand, IQuery
-- `YallaJo.SharedKernel.Infrastructure/Data/Repositories/` — EfRepository (aggregate), EfEntityRepository (non-aggregate)
-### ContentCore (reference implementation)
-- `ContentCore.Domain/Entities/` — Category, Tag, EntityCategory, EntityTag, Attachment, EntityImage
-- `ContentCore.Domain/Enums/EntityType.cs` — Place, Tour, Business, Review, Blog, TourGuide
-- `ContentCore.Application/Commands/` + `Queries/` — all CQRS
-- `ContentCore.Infrastructure/DependencyInjection.cs` — reference DI registration
-- `ContentCore.Presentation/ContentCoreEndpoints.cs` — reference endpoint wiring
-### Web & API
-- `YallaJo.Api/Program.cs` — JWT, module wiring
-- `YallaJo.Web/Services/ApiClient.cs` + `JwtAuthHandler.cs` — BFF infrastructure
-- `YallaJo.Web/Controllers/AuthController.cs` — reference MVC controller
-
----
-## 🚀 [TRACKING] How to Run & Verify
-| Command | What It Does |
-|---------|-------------|
-| `dotnet run --project YallaJo.Api` | API on `https://localhost:57065` |
-| `dotnet run --project YallaJo.Web` | Admin UI on `https://localhost:57070` |
-| `dotnet build` | Build solution (expect 0 errors) |
-| Swagger | `https://localhost:57065/swagger` (dev only) |
-| Health | `GET https://localhost:57065/health` (anonymous) |
-
-**Prerequisites**: .NET SDK 10.0.200-preview, SQL Server (LocalDB/SQLEXPRESS), ffmpeg 8.0.1 (PATH)
-
-**Connection strings**: `appsettings.{Environment}.json` — Dev DB: `YallaJo_Dev`, Prod: `YallaJo`
-
----
-## 📋 [TRACKING] Constraints (From User)
-- Translation service: API-based, auto-translate, pluggable (Azure primary)
-- Events: Use outbox/inbox pattern
-- File storage: Local now, Cloudinary later — pluggable via `IFileStorageService`
-- YallaJo.Api = pure API. YallaJo.Web = separate UI layer via HttpClient BFF
-- Web: Only AuthController built by agent — user handles rest
-- MUST follow `guide.md` exactly for all code patterns
-- MUST follow `YallaJo.md` + Business Rules PDF for business logic
-
----
-## ⚙️ [TRACKING] Agent Efficiency Rules
-These rules minimize wasted work and token consumption. MUST follow them strictly.
-
-| Rule | Detail |
-|------|--------|
-| **Build once at the end** | Run `dotnet build` only after completing all files for a full entity/feature. Create all files first, THEN build once. |
-| **Create files in one batch** | Create ALL files in one pass: Domain -> Application -> Infrastructure -> Presentation. Do NOT build between layers. |
-| **Reuse ContentCore as template** | Copy existing files from ContentCore (the reference implementation), then rename and modify. Do NOT generate from scratch. |
-| **Read docs before searching code** | Check `guide.md`, `YallaJo.md`, and this file BEFORE searching the codebase. If the answer is documented, do NOT grep for it. |
-| **Read each file once per session** | Read a file once per session and retain its contents. Re-reading the same file wastes tokens. |
-| **Open known paths directly** | If you know the file path (from Section Key File Locations or this document), open it directly. Do NOT search for files whose locations are already documented. |
-
----
-## 📛 [REQUIRED] Naming Conventions
-Every name in this codebase follows a strict convention. Do not deviate.
-
-| What | Convention | Example |
-|------|-----------|---------|
-| Error codes | `{Entity}.{Reason}` | `Category.NotFound`, `Tour.SlugConflict`, `Booking.AlreadyCancelled` |
-| Commands | `{Verb}{Entity}Command` | `CreatePlaceCommand`, `UpdateTourCommand`, `DeleteBookingCommand` |
-| Queries | `{Verb}{Entity}Query` | `ListToursQuery`, `GetPlaceByIdQuery` |
-| DTOs (list) | `{Entity}SummaryDto` | `TourSummaryDto`, `PlaceSummaryDto` |
-| DTOs (detail) | `{Entity}DetailDto` | `TourDetailDto`, `PlaceDetailDto` |
-| Domain events | `{Entity}{PastTenseVerb}DomainEvent` | `PlaceCreatedDomainEvent`, `BookingCancelledDomainEvent` |
-| Validators | `{CommandName}Validator` | `CreatePlaceCommandValidator` |
-| EF configs | `{Entity}Configuration` | `PlaceConfiguration`, `TourConfiguration` |
-| Migrations | `Add{Entity}` / `Update{Entity}{Change}` | `AddPlace`, `UpdateTourAddCapacity` |
-| Repositories | `I{Entity}Repository` → `{Entity}Repository` | `IPlaceRepository` → `PlaceRepository` |
-| Endpoints file | `{Module}Endpoints.cs` | `ContentPlacesEndpoints.cs` |
-| DB schemas | lowercase with underscores | `content_core`, `content_places`, `booking` |
-
----
-## 🔒 [CRITICAL] Security Rules
-These are non-negotiable. Every agent MUST follow them on every task.
-### Authentication & Authorization
-| Rule | Detail |
-|------|--------|
-| **Every endpoint MUST have explicit auth** | Either `.RequireAuthorization()` or `.AllowAnonymous()`. Implicit auth = invisible bugs. |
-| **Use policy-based auth, not role checks in code** | Use `.RequireAuthorization("Admin")` — not `if (user.Role == "Admin")` in handlers. Policies are centralized and auditable. |
-| **IDOR protection on every data-access endpoint** | Always verify the authenticated user owns or has permission to access the requested resource. `GET /bookings/{id}` must check that the booking belongs to the current user (or user is admin). Never trust the client-provided ID alone. |
-| **JWT key minimum 256 bits (32 chars)** | Shorter keys are brute-forceable. The key in `appsettings.json` must be at least 32 characters. |
-| **Never expose user enumeration** | Login/register errors must not reveal whether an email exists. Use generic messages: "Invalid email or password" — not "User not found" or "Wrong password". |
-| **Account lockout after failed attempts** | After 5 consecutive failed login attempts, lock the account for 15 minutes. Track via `FailedLoginCount` and `LockoutEnd` on the user entity. |
-### Input Security
-| Rule | Detail |
-|------|--------|
-| **Always validate input via FluentValidation** | First line of defense. Never trust client data. |
-| **Never use raw SQL with string interpolation** | `dbContext.Database.ExecuteSqlRaw($"SELECT * FROM Users WHERE Name = '{name}'")` = SQL injection. Use parameterized: `ExecuteSqlRaw("SELECT * FROM Users WHERE Name = {0}", name)` or LINQ queries. |
-| **Sanitize HTML in user-generated content** | Tour descriptions, reviews, blog posts — any rich text must be sanitized to prevent XSS. Strip `<script>`, `onclick`, `javascript:` etc. Use a whitelist approach (allow only safe tags). |
-| **Validate file uploads beyond extension** | Check MIME type AND magic bytes (file signature). Reject executables, scripts, and unexpected types. Rename files to generated names — never preserve user-provided filenames in storage. |
-| **Regex DoS (ReDoS) protection** | Never use user input directly in `Regex` patterns. For slug validation or search, use pre-compiled static regex with a timeout: `new Regex(pattern, RegexOptions.None, TimeSpan.FromSeconds(1))`. |
-| **Request size limits** | Set `[RequestSizeLimit]` on upload endpoints. Default max request body MUST be 30MB globally, with explicit overrides only on upload endpoints. |
-### Data Protection
-| Rule | Detail |
-|------|--------|
-| **Never hardcode secrets** | No API keys, JWT keys, connection strings, or passwords in code. Use `appsettings.json`, environment variables, or `dotnet user-secrets`. |
-| **Never log sensitive data** | No passwords, JWT tokens, credit card numbers, PII, or full request bodies containing auth data in logs. Use structured logging with sanitized fields. |
-| **Never expose internal errors to clients** | API responses must never contain stack traces, SQL errors, file paths, or server internals. The global `IExceptionHandler` returns generic ProblemDetails. |
-| **Soft-delete user data, never hard-delete** | User-facing entities use `SoftDelete()`. Supports audit trails and data recovery. Only junction tables and truly internal records use hard delete. |
-| **Encrypt sensitive fields at rest** | Payment-related data, personal identification numbers, and API keys stored in DB MUST use column-level encryption or at minimum, hashing for passwords (already handled by Identity). |
-| **Audit trail for sensitive operations** | All admin actions (user role changes, account lockout/unlock, data deletion, payment refunds) must be logged with: who, what, when, from which IP. |
-### API Security
-| Rule | Detail |
-|------|--------|
-| **CORS policy — explicit origins only** | Never use `AllowAnyOrigin()` with `AllowCredentials()`. Whitelist specific origins: `WithOrigins("https://yallajo.com", "https://admin.yallajo.com")`. |
-| **Rate limiting on sensitive endpoints** | Login: max 10 requests/minute per IP. Register: max 5/minute. Password reset: max 3/minute. API: max 100 requests/minute per user. Use `Microsoft.AspNetCore.RateLimiting`. |
-| **HTTPS only — no HTTP** | `UseHttpsRedirection()` must be in the pipeline. Set HSTS headers in production. All cookies must have `Secure` flag. |
-| **Security headers on every response** | Add via middleware: `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `X-XSS-Protection: 0` (rely on CSP instead), `Referrer-Policy: strict-origin-when-cross-origin`, `Content-Security-Policy: default-src 'self'`. |
-| **Anti-forgery on Web MVC layer** | Every POST/PUT/DELETE form in `YallaJo.Web` must include `@Html.AntiForgeryToken()`. Controllers must have `[ValidateAntiForgeryToken]` on mutating actions. API layer uses JWT instead. |
-| **Prevent open redirects in Web auth** | After login, validate the return URL: `Url.IsLocalUrl(returnUrl)` before redirecting. Never redirect to user-provided external URLs. |
-### Booking & Payment Security (YallaJo-Specific)
-| Rule | Detail |
-|------|--------|
-| **Never trust client-sent prices** | When creating a booking, always recalculate the price server-side from the tour/place pricing rules. Client sends tour ID + slot + quantity — server computes total. |
-| **Idempotency on payment endpoints** | Payment creation must be idempotent — use an `IdempotencyKey` (client-generated GUID) to prevent double charges. If the same key is sent twice, return the original result. |
-| **Booking state machine validation** | Every state transition (Pending → Confirmed → Completed, Pending → Cancelled) must be validated in the domain entity. Reject invalid transitions: `if (Status != BookingStatus.Pending) return Result.Failure(...)`. |
-| **Financial amounts: decimal(18,2) — always** | No `float`, no `double` for money. SQL Server `decimal(18,2)`. C# `decimal`. Configure in EF: `.HasPrecision(18, 2)`. |
-| **Refund amount validation** | Refund amount must never exceed the original payment amount. Validate server-side: `if (refundAmount > originalPayment.Amount) return Result.Failure(...)`. |
-| **Slot locking with expiration** | When a user starts a booking, lock the slot for a limited time (e.g., 15 minutes). Use `LockedUntil` column. Expired locks are released by a background service. Never trust the client to release locks. |
-### Security Checklist for New Endpoints
-Before marking any endpoint as complete, verify:
-
-- [ ] Has explicit `.RequireAuthorization("Policy")` or `.AllowAnonymous()`?
-- [ ] If data-access: does it verify the user owns/can access the resource (IDOR check)?
-- [ ] All input validated via FluentValidation?
-- [ ] No raw SQL with string concatenation?
-- [ ] Response doesn't leak internal details (entity IDs of other users, stack traces)?
-- [ ] File uploads (if any) validate type, size, and sanitize filename?
-- [ ] Financial amounts use `decimal`, not `float`/`double`?
-- [ ] Prices recalculated server-side, not trusted from client?
-
----
-## 🔀 [REFERENCE] Cross-Module Communication Rules
-Modules are isolated by design. Breaking isolation creates coupling that compounds over time.
-
-| Rule | Why |
-|------|-----|
-| **Never `using` another module's Domain or Application namespace** | Breaks module isolation. |
-| **Shared DTOs and interfaces go in `{Module}.Contracts`** | That's what the Contracts projects exist for. |
-| **Cross-module data access = integration event via outbox/inbox** | Never query another module's DbContext directly. |
-| **Cross-module references only allowed through Contracts** | `{Module}.Application` can reference `{OtherModule}.Contracts` — nothing else. |
-
----
-## 🤔 [TRACKING] Agent Decision-Making Rules
-Decision matrix for acting vs. asking the user.
-
-| Situation | Action |
-|-----------|--------|
-| Answer is in `guide.md`, `YallaJo.md`, or Business Rules PDF | **MUST act** — NEVER ask the user when the docs already define the answer |
-| Business logic decision NOT covered in any doc | **MUST ask** — NEVER guess business rules |
-| Multiple valid approaches, similar effort | **MUST act** — pick the simpler option and record the assumption |
-| Multiple valid approaches, 2x+ effort difference | **MUST ask** — present options with effort estimate |
-| Existing code contradicts `guide.md` | **MUST ask** — use this exact prompt: "I see X in code but guide says Y. Which to follow?" |
-| Unsure if a feature is in scope | **MUST ask** — NEVER build unrequested scope |
-| About to delete or overwrite existing working code | **MUST ask** — confirm before destructive changes |
-
----
-## 🤝 [TRACKING] Session Handoff Rules
-Every session must leave the codebase in a clean, resumable state for the next agent.
-
-| Rule | Why |
-|------|-----|
-| **If you can't complete your task**, mark it 🟡 in "What Has Been Built" with a note saying exactly what's left | Next agent knows where to pick up |
-| **Never leave uncommitted broken code** — either finish the feature or revert | Next agent inherits a clean state |
-| **If you discover something that changes the plan**, update "What Needs To Be Done" immediately | Plans drift — the doc must reflect reality |
-| **If a module's status changed**, update the Module Status Overview table | Next agent trusts the table to be accurate |
-| **Update the Build State in the header** with your final `dotnet build` result | Next agent knows if the build is clean |
-
----
-## 🔐 [REQUIRED] Concurrency & Data Integrity Rules
-| Rule | Detail |
-|------|--------|
-| **AuditableEntity has `RowVersion`** — always configure `.IsRowVersion()` in EF config | Enables optimistic concurrency. Prevents silent data overwrites when two users edit the same record. |
-| **Soft delete for user-facing entities** | Use `SoftDelete()` method (sets `IsDeleted = true`, `DeletedAt = DateTime.UtcNow`). User data MUST be recoverable. |
-| **Hard delete for junction tables and internal records** | Junction rows (EntityCategory, EntityTag) are disposable — use real `DELETE`. |
-| **Unique constraints MUST be enforced at DB level** | Code-level uniqueness checks have race conditions. Always add a unique index in the EF configuration. Code checks are an optimization on top, not a replacement. |
-| **Check for existence before creating** (slug, email, etc.) | Use `ExistsAsync()` with the unique field, return `Result.Conflict()` if already taken. |
-
----
-## 🕐 [REQUIRED] DateTime & Guid Rules
-| Rule | Detail |
-|------|--------|
-| **Always `DateTime.UtcNow`** — never `DateTime.Now` | Store UTC everywhere. Convert to local only on the client/display layer. Jordan is UTC+3 — mixing local/UTC corrupts data. |
-| **Always `Guid.CreateVersion7()`** — never `Guid.NewGuid()` | V7 GUIDs are time-sortable, which means better clustered index performance in SQL Server. `NewGuid()` is random = index fragmentation. |
-| **`DateTimeOffset` for user-facing timestamps** | When an API response includes a timestamp the user will see, use `DateTimeOffset` so the timezone is explicit. Internal storage remains `DateTime` in UTC. |
-
----
-## 📊 [REQUIRED] Enum Handling Rules
-| Rule | Detail |
-|------|--------|
-| **Store enums as `int` in DB** | Always use `.HasConversion<int>()` in EF config. Never store as strings — ints are smaller, faster, and index-friendly. |
-| **Define all enums in `{Module}.Domain/Enums/`** | One file per enum. Keep them in the Domain layer — they are part of the domain model. |
-| **Shared enums go in `{Module}.Contracts`** | If another module needs to reference an enum (e.g., `EntityType`), put it in the Contracts project. |
-| **Always add a `None = 0` or meaningful default** | Uninitialized enums default to `0`. Make sure `0` is either invalid (caught by validation) or a safe default. |
-
----
-## 🔤 [REQUIRED] String Column Rules
-YallaJo is a Jordanian tourism app — **Arabic content is expected**. String handling must account for multilingual data.
-
-| Column Type | EF Config | Why |
-|-------------|-----------|-----|
-| Slugs, codes, status strings | `.IsUnicode(false).HasMaxLength(200)` | Always ASCII — no Arabic. Smaller storage + faster indexing. |
-| Names, titles, descriptions | `.HasMaxLength(500)` (default Unicode) | May contain Arabic, English, or other scripts. Unicode is EF default. |
-| Long text (body, bio, content) | `.HasMaxLength(4000)` or `.HasColumnType("nvarchar(max)")` | Large user content. Set a reasonable max or use max. |
-| **Every string column MUST have `HasMaxLength()`** | No exceptions | Unbounded `nvarchar(max)` on every column is wasteful and prevents indexing. |
-
----
-## 🚨 [CRITICAL] Error Handling Rules
-Errors are handled differently at each layer. MUST follow every rule in this section.
-
----
-### Rule: Two Categories of Error — Know the Difference
-| Category | Definition | How to Handle |
-|----------|-----------|---------------|
-| **Business error** | Expected, valid failure path. User did something invalid or entity is in wrong state. | Return `Result<T>.Failure(...)` — NEVER throw. |
-| **Programming error** | Bug in code. Null where not expected, wrong type, violated invariant. | Throw `ArgumentException` / `InvalidOperationException` — these are bugs to fix, not handle. |
-| **Infrastructure error** | External system failed (DB down, API 500, disk full). | Propagate — global handler catches and returns 500. OR catch and convert to `Result.Failure` in Infrastructure layer only. |
-
----
-### By Layer (STRICT — no exceptions to these rules)
-#### Domain Layer
-- MUST use `ArgumentException` / `ArgumentNullException` for guard clauses in `Create()` and `Update()` — these are programming errors, not business errors.
-- MUST use domain events for cross-aggregate side effects — never throw across aggregates.
-- MUST NOT return `Result<T>` from entity methods — entities return `void` or the entity itself.
-- MUST NOT reference `Result<T>` — Domain has no dependency on Application abstractions.
-
-**Code**: See [`Agents/patterns/error-handling-patterns.md`](patterns/error-handling-patterns.md) → §Domain Guard Clauses
-
-#### Application Layer
-- MUST return `Result<T>` for ALL handler outcomes — success AND failure.
-- MUST NOT throw for business logic failures.
-- MUST catch domain `ArgumentException` that indicates a programmer called Create() wrong — this is a 500, let it propagate.
-- MUST use specific error codes (`{Entity}.{Reason}`) — never generic strings.
-
-**Code**: See [`Agents/patterns/error-handling-patterns.md`](patterns/error-handling-patterns.md) → §Application Result Handler Example
-
-#### Infrastructure Layer
-- MUST NOT catch general `Exception` — only catch specific, known exception types.
-- MUST wrap external API calls (HTTP, file storage, third-party SDKs) in try/catch and return `Result.Failure`.
-- MUST propagate EF exceptions unless converting a specific type to a user-friendly error.
-- See §Try/Catch & Exception Rules for exact catch patterns.
-#### Presentation Layer
-- MUST NOT contain any try/catch.
-- MUST rely entirely on `result.ToApiResult()` for business errors.
-- MUST rely entirely on global `IExceptionHandler` for infrastructure errors.
-
----
-### Result<T> Usage Patterns
-#### All Result Factory Methods
-**Code**: See [`Agents/patterns/error-handling-patterns.md`](patterns/error-handling-patterns.md) → §Result Factory Methods
-
-#### Checking Results (in orchestration code)
-**Code**: See [`Agents/patterns/error-handling-patterns.md`](patterns/error-handling-patterns.md) → §Safe Result Checking Pattern
-
-#### Never Access .Value Without Checking IsSuccess
-**Code**: See [`Agents/patterns/error-handling-patterns.md`](patterns/error-handling-patterns.md) → §Safe .Value Access Pattern
-
----
-### Error Code Convention
-Error codes MUST follow `{Entity}.{Reason}` format. They MUST be:
-- **Unique** across the entire codebase — search before adding a new one
-- **Machine-readable** — PascalCase, no spaces, no punctuation except the dot
-- **Stable** — once a code is used by clients, NEVER rename it (it breaks client error handling)
-- **Documented** inline in the handler where they're used
-
-| Code Pattern | HTTP | When to Use | Example |
-|-------------|------|-------------|---------|
-| `{Entity}.NotFound` | 404 | Entity doesn't exist | `"Category.NotFound"` |
-| `{Entity}.AlreadyExists` | 409 | Duplicate slug, email, etc. | `"Tour.AlreadyExists"` |
-| `{Entity}.InvalidState` | 400 | Action not allowed in current state | `"Booking.InvalidState"` |
-| `{Entity}.InvalidTransition` | 400 | State machine — invalid move | `"Booking.InvalidTransition"` |
-| `{Entity}.Unauthorized` | 403 | User lacks permission | `"Place.Unauthorized"` |
-| `{Entity}.DependencyConflict` | 409 | Can't delete — other entities reference it | `"Category.DependencyConflict"` |
-| `{Entity}.ConcurrencyConflict` | 409 | RowVersion conflict — edited by another user | `"Tour.ConcurrencyConflict"` |
-| `{Entity}.QuotaExceeded` | 429 | User exceeded allowed limit | `"Booking.QuotaExceeded"` |
-| `Service.Unavailable` | 503 | External API down | `"Translation.ServiceUnavailable"` |
-| `Service.Timeout` | 504 | External API timed out | `"Payment.Timeout"` |
-| `Request.Cancelled` | 499 | Client disconnected | `"Request.Cancelled"` |
-
----
-### Global Exception Pipeline
-**Code**: See [`Agents/patterns/error-handling-patterns.md`](patterns/error-handling-patterns.md) → §Global Exception Pipeline Flow
-
-#### Global Exception Handler Shape (what the client receives)
-**Code**: See [`Agents/patterns/error-handling-patterns.md`](patterns/error-handling-patterns.md) → §ProblemDetails JSON Shapes
-
----
-### Custom Exception Types (When to Create)
-ONLY create a custom exception when:
-1. You need to carry additional context that `Exception.Message` cannot express
-2. A specific layer needs to react to it differently than a generic `Exception`
-3. It maps to a specific HTTP status code in the global handler
-
-**Code**: See [`Agents/patterns/error-handling-patterns.md`](patterns/error-handling-patterns.md) → §Custom Exception Example
-
-**NEVER create custom exceptions for business errors** — those belong in `Result<T>` as error codes.
-**NEVER create custom exceptions as wrappers** — they hide the real exception type.
-
----
-## 🔁 [REFERENCE] Polly Resilience & Retry Policy Rules
-Polly handles transient failures from external services (Azure Translator, payment APIs, HTTP calls). It MUST be used on every `HttpClient` that calls an external service. It MUST NOT be used on DB calls — EF's `EnableRetryOnFailure` already handles that.
-
----
-### Package & Registration
-**Code**: See [`Agents/patterns/polly-patterns.md`](patterns/polly-patterns.md) → §HttpClient Registration with Standard Resilience
-
----
-### Decision: Which Policy to Use
-| Scenario | Policy | Use When |
-|----------|--------|----------|
-| External API flaky (429, 503) | **Retry** | Transient errors expected to self-heal |
-| External API consistently failing | **Circuit Breaker** | Stop hammering a broken service |
-| External API slow | **Timeout** | Prevent blocking threads on slow responses |
-| Limit concurrent calls | **Bulkhead** | Isolate one service from starving others |
-| External API permanently down | **Fallback** | Return degraded response instead of error |
-| All of the above | **Resilience Pipeline** | Compose: Timeout → Retry → Circuit Breaker |
-
-**Rule**: ALWAYS compose policies in this order: **Timeout → Retry → Circuit Breaker → Fallback**. Inner policies execute first.
-
----
-### Retry Policy
-Use for transient HTTP errors: `408 Request Timeout`, `429 Too Many Requests`, `500`, `502`, `503`, `504`.
-
-**Code**: See [`Agents/patterns/polly-patterns.md`](patterns/polly-patterns.md) → §Retry Policy Configuration
-
-#### What MUST NOT be Retried
-**Code**: See [`Agents/patterns/polly-patterns.md`](patterns/polly-patterns.md) → §Non-Retryable Statuses Reference
-
-#### Retry with Respect-Retry-After Header (for 429 Rate Limits)
-**Code**: See [`Agents/patterns/polly-patterns.md`](patterns/polly-patterns.md) → §Retry-After Header Support
-
----
-### Circuit Breaker Policy
-Stops sending requests when a service is failing — gives it time to recover. MUST be combined with retry.
-
-**Code**: See [`Agents/patterns/polly-patterns.md`](patterns/polly-patterns.md) → §Circuit Breaker Configuration
-
-#### When Circuit Is Open — Handle BrokenCircuitException
-**Code**: See [`Agents/patterns/polly-patterns.md`](patterns/polly-patterns.md) → §BrokenCircuitException Handling
-
----
-### Timeout Policy
-Prevents requests from hanging indefinitely. MUST be the OUTERMOST policy (executes first).
-
-**Code**: See [`Agents/patterns/polly-patterns.md`](patterns/polly-patterns.md) → §Timeout Policy Configuration
-
-| External Service | Recommended Total Timeout | Per-Attempt Timeout |
-|-----------------|--------------------------|---------------------|
-| Azure Translator | 15s | 5s |
-| Payment Gateway | 30s | 10s |
-| File Upload (Cloudinary) | 60s | 30s |
-| Internal services | 5s | 2s |
-
----
-### Full Resilience Pipeline (Recommended Composition)
-**Code**: See [`Agents/patterns/polly-patterns.md`](patterns/polly-patterns.md) → §Full Resilience Pipeline Composition
-
----
-### EF Core — Already Has Retry (Do NOT add Polly on top)
-**Code**: See [`Agents/patterns/polly-patterns.md`](patterns/polly-patterns.md) → §EF Core Retry Note
-
----
-### Idempotency Rule for Retries
-**CRITICAL**: Only retry IDEMPOTENT operations.
-
-| Operation | Idempotent? | Safe to Retry? |
-|-----------|------------|----------------|
-| `GET` requests | ✅ Yes | ✅ Always |
-| `PUT` (full replace) | ✅ Yes | ✅ Always |
-| `DELETE` | ✅ Yes (second delete = 404, acceptable) | ✅ Yes |
-| `POST` (create) | ❌ No | ⚠️ Only with idempotency key |
-| Payment charge | ❌ No | ⚠️ Only with `IdempotencyKey` header |
-| Email/SMS send | ❌ No | ❌ NEVER — user gets duplicate |
-
-**Rule**: NEVER configure retry on payment creation, email sending, or SMS sending without an idempotency key mechanism in place.
-
----
-### Polly Logging (MANDATORY)
-Every resilience handler MUST log retry attempts:
-
-**Code**: See [`Agents/patterns/polly-patterns.md`](patterns/polly-patterns.md) → §Polly Logging Callback
-
-## 🔴 [CRITICAL] Try/Catch & Exception Rules
-Exception handling is one of the most misused patterns in .NET. Follow these rules exactly — every violation either swallows errors silently or crashes the pipeline unexpectedly.
-### The #1 Rule: Never Catch What You Can't Handle
-**Code**: See [`Agents/patterns/error-handling-patterns.md`](patterns/error-handling-patterns.md) → §Try/Catch Golden Rule
-
----
-### Where try/catch IS Allowed (Whitelist)
-Only add try/catch when you can take a MEANINGFUL action on the specific exception type.
-#### 1. Infrastructure Layer — External Service Calls
-Wrap calls to external APIs (Azure Translator, payment gateway, file storage) to convert infrastructure failures into `Result` failures:
-
-**Code**: See [`Agents/patterns/error-handling-patterns.md`](patterns/error-handling-patterns.md) → §Whitelist: External Service try/catch
-
-#### 2. Infrastructure Layer — Optimistic Concurrency
-Catch `DbUpdateConcurrencyException` ONLY when you want to return a user-friendly conflict response instead of a 500:
-
-**Code**: See [`Agents/patterns/error-handling-patterns.md`](patterns/error-handling-patterns.md) → §Whitelist: Optimistic Concurrency try/catch
-
-#### 3. Background Services — Prevent Worker Crash
-Background services MUST NOT crash on individual item failures — the worker loop MUST continue:
-
-**Code**: See [`Agents/patterns/error-handling-patterns.md`](patterns/error-handling-patterns.md) → §Whitelist: Background Worker try/catch
-
-#### 4. Application Layer — TaskCanceledException (Graceful Shutdown)
-If you want to distinguish between user-cancelled requests and app shutdown:
-
-**Code**: See [`Agents/patterns/error-handling-patterns.md`](patterns/error-handling-patterns.md) → §Whitelist: Cancellation Handling
-
----
-### Where try/catch is FORBIDDEN
-| Location | Why |
-|----------|-----|
-| **Domain entity methods** (`Create()`, `Update()`) | Domain uses `ArgumentException` for programming errors. These MUST propagate — they indicate a bug, not a user error. |
-| **Application command/query handlers** (general `Exception`) | Handlers return `Result<T>`. Catching `Exception` here masks infrastructure failures that the global handler needs to see. |
-| **Endpoint/Presentation layer** | Never. The global `IExceptionHandler` handles all unhandled exceptions. Adding try/catch in endpoints duplicates that responsibility. |
-| **Validators** | FluentValidation rules are pure — no exception handling. |
-| **Empty catch blocks** | `catch (Exception) { }` — NEVER. This is a bug, not error handling. |
-| **Catching and swallowing without logging** | If you catch it, you MUST log it. Silent swallowing hides failures. |
-
----
-### Exception Types Reference (this stack)
-| Exception | Source | When It Occurs | What To Do |
-|-----------|--------|----------------|------------|
-| `ArgumentException` / `ArgumentNullException` | Domain `Create()` / `Update()` | Programming error — caller passed invalid args | Let propagate → 500. It's a developer bug. |
-| `ValidationException` (FluentValidation) | MediatR `ValidationBehavior` | Input fails validator rules | Already handled by `ValidationExceptionHandler` → 400. Never catch this yourself. |
-| `DbUpdateConcurrencyException` | EF Core `SaveChangesAsync` | RowVersion conflict — two users edited same record | Catch only if returning 409 Conflict to user. Otherwise propagate → 500. |
-| `DbUpdateException` | EF Core `SaveChangesAsync` | DB constraint violation (FK, unique index) | Usually propagate → 500. Can catch to return 409 if you inspect `InnerException` for specific violation. |
-| `OperationCanceledException` / `TaskCanceledException` | `CancellationToken` cancellation | Client disconnected or app shutting down | Catch in background services. In handlers: propagate — MediatR handles it cleanly. |
-| `HttpRequestException` | `HttpClient` calls | External API unreachable or returns 4xx/5xx | Catch in Infrastructure layer. Convert to `Result.Failure`. Log with full context. |
-| `TimeoutException` | External service timeouts | API/DB call exceeded timeout | Catch in Infrastructure layer. Convert to `Result.Failure("X.Timeout", ...)`. |
-| `InvalidOperationException` | DI, EF state errors | Usually a programming error (misconfigured DI, wrong EF state) | Let propagate → 500. Fix the code, not the catch. |
-| `UnauthorizedAccessException` | File system | No permission to read/write file | Catch in `IFileStorageService`. Return `Result.Failure("File.AccessDenied", ...)`. |
-| `IOException` | File system | Disk full, file locked, path invalid | Catch in `IFileStorageService`. Return `Result.Failure("File.StorageFailed", ...)`. |
-| `JsonException` | `System.Text.Json` | Malformed JSON from external API | Catch in Infrastructure parsing code. Log + return `Result.Failure`. |
-
----
-### Logging Requirements Inside catch Blocks
-Every catch block that doesn't re-throw MUST log before returning:
-
-**Code**: See [`Agents/patterns/error-handling-patterns.md`](patterns/error-handling-patterns.md) → §Logging in catch Blocks
-
----
-### The finally Block Rule
-Use `finally` ONLY for resource cleanup — never for business logic:
-
-**Code**: See [`Agents/patterns/error-handling-patterns.md`](patterns/error-handling-patterns.md) → §finally Block Usage
-
----
-### Exception Wrapping Rule
-When you MUST wrap an exception (rare), ALWAYS include the original as `innerException` and log before wrapping:
-
-**Code**: See [`Agents/patterns/error-handling-patterns.md`](patterns/error-handling-patterns.md) → §Exception Wrapping Pattern
-
----
-## ✅ [REQUIRED] Validation Rules
-Validation happens at multiple levels. Each level has a specific responsibility.
-### Validation Layers
-| Layer | What to Validate | How |
-|-------|-----------------|-----|
-| **FluentValidation (Application)** | Input shape: required fields, string lengths, format (email, slug regex), numeric ranges, enum values | `AbstractValidator<TCommand>` — runs in MediatR `ValidationBehavior` before handler |
-| **Domain (Entity methods)** | Business invariants: state transitions, business rules, cross-field logic | Guard clauses inside `Create()`, `Update()`, `Activate()` etc. |
-| **Database (EF Config)** | Data integrity: unique constraints, foreign keys, check constraints | `HasIndex().IsUnique()`, `HasForeignKey()`, `HasCheckConstraint()` |
-### FluentValidation Rules
-| What | Validator Rule | Example |
-|------|---------------|---------|
-| Required string | `.NotEmpty().MaximumLength(N)` | `RuleFor(x => x.Name).NotEmpty().MaximumLength(200);` |
-| Optional string | `.MaximumLength(N).When(x => x.Field != null)` | Only validate length when provided |
-| Slug format | `.Matches(@"^[a-z0-9\-]+$")` | Lowercase, digits, hyphens only |
-| Email format | `.EmailAddress()` | Built-in FluentValidation rule |
-| Enum value | `.IsInEnum()` | Rejects values not defined in the enum |
-| Numeric range | `.InclusiveBetween(min, max)` | `RuleFor(x => x.Price).GreaterThan(0);` |
-| Pagination | `.InclusiveBetween(1, 100)` | On `PageSize`. Always enforce max. |
-| GUID (non-empty) | `.NotEqual(Guid.Empty)` | For ID references in commands |
-| Collection | `.NotEmpty().ForEach(x => x.NotEqual(Guid.Empty))` | For batch assignment commands |
-### Async Validation (Uniqueness Checks)
-For uniqueness validation that requires a DB call, do it in the **command handler**, NOT in the validator:
-
-```csharp
-// ✅ In the handler — has access to repository
-public async Task<Result<Guid>> Handle(CreatePlaceCommand cmd, CancellationToken ct)
-{
-    if (await repo.ExistsBySlugAsync(cmd.Slug, ct))
-        return Result<Guid>.Failure(Error.Conflict("Place.AlreadyExists", $"Slug '{cmd.Slug}' is taken."));
-
-    var place = Place.Create(cmd.Name, cmd.Slug, ...);
-    // ...
-}
-
-// ❌ Don't inject repositories into validators — validators should be pure and fast
-```
-### Validation Error Messages
-- Use clear, user-friendly language
-- Include the field name and the constraint that was violated
-- For business rules, explain what the user needs to do differently
-- Error messages will be shown to end users — write them accordingly
-
----
-## 📝 [REFERENCE] Logging Rules
-| Rule | Detail |
-|------|--------|
-| **Use structured logging** | `_logger.LogInformation("Created {EntityType} with {EntityId}", entityType, entityId)` — NOT `$"Created {entityType} with {entityId}"` |
-| **Never log sensitive data** | No passwords, JWT tokens, credit card numbers, or PII in logs |
-| **Log levels** | `Trace`: verbose debug. `Debug`: dev-only detail. `Information`: normal operations (entity created/updated/deleted). `Warning`: recoverable issues (retry, slow query). `Error`: failures requiring attention. `Critical`: app-stopping failures. |
-| **Log at handler boundaries** | Log at the start and end of command/query handlers. The `LoggingBehavior` does this automatically — don't duplicate. |
-| **Log external service calls** | Always log before/after calling external APIs (Azure Translator, payment gateway, etc.) with correlation IDs |
-
----
-## 🔁 [REFERENCE] Domain Events vs Integration Events
-| Aspect | Domain Event | Integration Event |
-|--------|-------------|-------------------|
-| **Scope** | Same module, same transaction | Cross-module, different transactions |
-| **Delivery** | Synchronous via MediatR (dispatched by UoW before SaveChanges) | Asynchronous via outbox/inbox pattern |
-| **When to use** | Side effects within the same aggregate/module: update translation cache, create audit log, cascade state change | Notify other modules: booking created → finance creates invoice, place updated → SEO regenerates sitemap |
-| **Handler rule** | NEVER call `SaveChangesAsync()` — changes piggyback on the aggregate's save | Writes to outbox table in handler — separate process picks up and delivers |
-| **Naming** | `{Entity}{PastTenseVerb}DomainEvent` | `{Entity}{PastTenseVerb}IntegrationEvent` |
-| **Never** cross module boundaries | ✅ Correct | If you need cross-module → use integration event |
-
----
-## 🛡️ [CRITICAL] Pre-flight & Completion Verification
-### Pre-flight (Session Start)
-Before writing ANY code at the start of a session:
-
-**FAILURE TO COMPLETE ANY ITEM = WORK NOT ACCEPTED.**
+### §10.1 Session Start
 
 1. Read `Agents/agent-context.md` (this file) in full
 2. Read `Agents/error-log.md` in full
-3. Run `dotnet build` — verify 0 errors before starting new work
-4. If build fails: fix or report the failure BEFORE starting new work. Never build on top of a broken foundation.
-### Completion Checklist (Before Marking ✅)
-Before marking ANY feature as ✅ complete in the Work Tracker, verify ALL of these:
+3. `dotnet build YallaJo.sln -c Debug --nologo` — verify 0 errors
+4. If build fails: fix OR report before starting new work
 
-**FAILURE TO COMPLETE ANY ITEM = WORK NOT ACCEPTED.**
+### §10.2 Session End
 
-- [ ] DI registration added in `DependencyInjection.cs`?
-- [ ] EF configuration created with all property configs?
-- [ ] `HasQueryFilter(x => !x.IsDeleted)` added (if AuditableEntity)?
-- [ ] `ValueGeneratedNever()` on Id property?
-- [ ] `.IsRowVersion()` on RowVersion (if AuditableEntity)?
-- [ ] FluentValidation validator covers ALL input fields?
-- [ ] Every endpoint has explicit `.RequireAuthorization()` or `.AllowAnonymous()`?
-- [ ] `CancellationToken` passed through entire call chain?
-- [ ] List endpoints use SummaryDto (not full entity)?
-- [ ] List endpoints have pagination with max PageSize=100?
-- [ ] **Every query record implements `ICacheableQuery` (CacheKey + CacheDuration + Tags)?**
-- [ ] **Every command handler injects `HybridCache` and calls `RemoveByTagAsync` after successful save?**
-- [ ] **`Microsoft.Extensions.Caching.Hybrid` `9.3.0` added to `{Module}.Application.csproj`?**
-- [ ] **`{Module}CacheKeys.cs` static class exists with all key methods?**
-- [ ] **Auth-varied queries include `userId`/`isAdmin` in cache key?**
-- [ ] `dotnet build` passes with 0 errors?
-- [ ] `lsp_diagnostics` clean on all changed files?
-### Rollback Strategy
-If your changes break the build after 3 consecutive fix attempts:
+1. Update `§11.2 Work Log` — add entry for every feature/entity/fix completed
+2. Update `§11.1 Module Status Overview` — reflect reality
+3. Update `§11.3 Next Up` — remove completed items, add new discoveries
+4. Update `Agents/error-log.md` — log every mistake with root cause + prevention rule
+5. Update `§9.1 Gotchas` — add new gotchas (number sequentially)
+6. Update header `Build State` — your final `dotnet build` result
 
-1. **Stop** — do not make more changes
-2. **`git stash`** your work to preserve it without polluting main
-3. **Report** what went wrong in the error log and in "What Has Been Built" (mark 🟡)
-4. **Let the next agent** try fresh with the documented context of what failed
+### §10.3 Tracking
+
+| Status | Meaning |
+|---|---|
+| ✅ | Complete, tested, shipped |
+| 🟡 | Partial — document exactly what's done and what remains |
+| ❌ | Broken / reverted — explain why, so next agent doesn't rebuild on it |
+| ⬜ | Not started |
+
+**Never remove entries** — only update their status. History matters.
+**Number entries sequentially** — never reuse or skip numbers.
 
 ---
-## 🧪 [REFERENCE] Testing Strategy & Rules
-No tests exist yet, but all code MUST be written to be testable. When tests are added, they MUST follow these rules.
-### Testability Rules (Apply NOW)
-| Rule | Detail |
-|------|--------|
-| **No static coupling** | Never use static methods for business logic. Always inject dependencies via constructor. |
-| **No `new` for services** | Never `new SomeService()` inside a handler. Inject via DI. |
-| **No hidden dependencies** | If a handler needs something, it must be in the constructor parameters. No `ServiceLocator`, no `HttpContext.RequestServices`. |
-| **Pure domain logic** | Entity methods (`Create()`, `Update()`, `SoftDelete()`) MUST have zero dependencies on infrastructure — they take primitives and return void or the entity. |
-| **Result pattern enables assertions** | `Result<T>.IsSuccess`, `result.Outcome`, `result.Errors` are all testable without HTTP. |
-### Test Naming Convention (For Future)
-`{MethodUnderTest}_Should{ExpectedBehavior}_When{Condition}`
 
-Examples:
-- `Create_ShouldRaiseDomainEvent_WhenCalledWithValidArgs`
-- `Handle_ShouldReturnNotFound_WhenEntityDoesNotExist`
-- `Handle_ShouldReturnConflict_WhenSlugAlreadyExists`
-### What to Test (Priority Order)
-1. **Domain entity methods** — factory methods, business rules, state transitions
-2. **Command/Query handlers** — mock the repository, verify correct Result
-3. **Validators** — verify all rules fire correctly for valid/invalid input
-4. **Do NOT test**: EF configurations, DI registration, endpoint routing (these are infrastructure concerns tested by integration tests)
+## §11. Module Status (tracking)
 
----
-## 🌿 [REQUIRED] Git Conventions
-| Rule | Detail |
-|------|--------|
-| **NEVER push to remote** | You MUST only commit locally. NEVER run `git push` under any circumstances. The user handles all pushes manually. This is a hard block — no exceptions, no "just this once." |
-| **Never commit without being asked** | The user will tell you when to commit. Do not auto-commit after completing work. |
-| **Commit only, never push** | When the user asks you to commit: `git add` + `git commit` ONLY. Stop there. Do NOT follow up with `git push`. |
-| **Branch naming** | `feature/{module}/{entity-or-feature}` — e.g., `feature/content-places/place-entity`, `fix/booking/cancel-state-bug` |
-| **Commit message format** | `{type}({module}): {description}` — e.g., `feat(ContentPlaces): add Place entity with full CQRS`, `fix(Booking): prevent double cancellation` |
-| **Commit types** | `feat` (new feature), `fix` (bug fix), `refactor` (no behavior change), `docs` (documentation), `chore` (build/config) |
-| **One logical change per commit** | Don't mix a new entity with a bug fix in the same commit. |
-| **Never commit secrets** | No `appsettings.Development.json` with real keys, no `.env` files, no credential files. Check `.gitignore` first. |
-| **Never force push** | NEVER run `git push --force` or `git push --force-with-lease`. If you need to rewrite history, ask the user first. |
+### §11.1 Module Status Overview
 
----
-## 📖 [REFERENCE] API Documentation Rules
-Every endpoint must be self-documenting via Swagger/OpenAPI annotations.
-
-| Annotation | When to Use | Example |
-|------------|-------------|---------|
-| `.WithName("OperationId")` | Every endpoint — unique operation ID | `.WithName("CreatePlace")` |
-| `.WithSummary("...")` | Every endpoint — one-line description | `.WithSummary("Create a new place")` |
-| `.WithDescription("...")` | Complex endpoints — detailed explanation | `.WithDescription("Creates a place and triggers auto-translation...")` |
-| `.Produces<T>(200)` | Every endpoint — success response type | `.Produces<PlaceDetailDto>(StatusCodes.Status200OK)` |
-| `.ProducesValidationProblem()` | Endpoints with input validation | On all POST/PUT endpoints |
-| `.ProducesProblem(404)` | Endpoints that can return NotFound | On GET-by-ID, PUT, DELETE |
-| `.WithTags("Group")` | Group-level — already set on MapGroup | `.WithTags("ContentPlaces")` |
-
----
-## 🌍 [REFERENCE] Localization & RTL Rules
-YallaJo is a Jordanian tourism platform. Arabic (RTL) and English (LTR) are the primary languages.
-### Content Rules
-| Rule | Detail |
-|------|--------|
-| **Translatable fields** | `Name`, `Description`, `Title`, `Body` — any user-facing text. Identified by having a corresponding `{Entity}Translation` entity. |
-| **Non-translatable fields** | `Slug` (always ASCII), `Icon`, `SortOrder`, `Price`, `Coordinates`, `Status`, `Email` — data that doesn't change by language. |
-| **Translation trigger** | When a translatable entity is created/updated, a domain event triggers `EntityTranslationOrchestrator` which calls Azure Translator for all active languages. |
-| **Source language** | Every create/update command includes `SourceLanguageCode` (defaults to `"en"`). This tells the translator what language the input is in. |
-| **Slug handling** | Slugs are ALWAYS lowercase ASCII (`^[a-z0-9\-]+$`). Arabic content gets an English slug. Slugs are NOT translated. |
-### API Response Localization
-| Rule | Detail |
-|------|--------|
-| **`Accept-Language` header** | API consumers send `Accept-Language: ar` or `Accept-Language: en` to get localized responses. |
-| **Fallback** | If translation doesn't exist for requested language, return the original (source) language content. Never return empty. |
-| **Direction hint** | When relevant, include `"direction": "rtl"` or `"direction": "ltr"` in response DTOs for Arabic and English respectively. |
-
----
-## 🌐 [REFERENCE] Environment Rules
-| Environment | DB | Logging | External Services | Swagger |
-|-------------|----|---------|--------------------|---------|
-| **Development** | `YallaJo_Dev` (LocalDB/SQLEXPRESS) | Debug level, console output | Azure Translator (dev key), Local file storage | Enabled |
-| **Staging** | `YallaJo_Staging` | Information level, structured JSON | Azure Translator (staging key), Cloudinary (staging) | Enabled |
-| **Production** | `YallaJo` | Warning level, structured JSON, external sink | Azure Translator (prod key), Cloudinary (prod) | Disabled |
-### Environment-Specific Rules
-| Rule | Detail |
-|------|--------|
-| **Never use Development config in Production** | JWT keys, connection strings, and API keys MUST be different per environment. |
-| **Seed data is Development-only** | `IModuleDbInitializer` seeds sample data only when `ASPNETCORE_ENVIRONMENT=Development`. |
-| **Feature flags** | Use `IConfiguration` sections to toggle features per environment — not `#if DEBUG`. |
-| **Error detail** | Development: include exception details in ProblemDetails. Production: generic error messages only. |
-
----
-## 📦 [REFERENCE] Dependency Management Rules
-| Rule | Detail |
-|------|--------|
-| **Never add a NuGet package without asking the user first** | New dependencies have long-term maintenance costs. Always propose before adding. |
-| **MUST use existing packages first** | If a capability is already covered by an installed package, use it. Do NOT add a second package for the same purpose. |
-| **No preview packages in production code** | Unless the project explicitly uses a preview SDK (YallaJo uses .NET SDK 10.0.200-preview, targeting net9.0 — this is fine). |
-| **Pin versions** | Always specify exact version in `.csproj` — no floating versions (`*`). |
-| **Version consistency is MANDATORY** | Every `Microsoft.Extensions.*` package MUST use the same major.minor version across ALL projects. The canonical version band for this project is **`9.x`** (e.g., `9.0.x`, `9.3.0`, `9.4.0`). NEVER add a `10.x` version of any `Microsoft.Extensions.*` package — even if the SDK is .NET 10 preview and NuGet resolves it. The target framework is `net9.0` and the extensions ecosystem must stay on `9.x`. |
-| **Before adding any `Microsoft.Extensions.*` package** | Search the solution for the same package family (`grep -r "Microsoft.Extensions" *.csproj`). Use the exact version already present. If not present, use the latest `9.x` stable. |
-
-### ⚠️ Version Consistency Rule (STRICT — violations cause NU1605 build errors)
-
-This project targets `net9.0` with SDK `10.0.x-preview`. This combination is valid.
-However, **NuGet package versions must stay internally consistent**:
-
-| Package Family | Canonical Version | Rule |
+| Module | Status | Notes |
 |---|---|---|
-| `Microsoft.Extensions.*` (Configuration, Hosting, DI, etc.) | `9.0.x` – `9.4.x` | Never use `10.x` |
-| `Microsoft.EntityFrameworkCore.*` | `9.0.x` | Never use `10.x` |
-| `Microsoft.AspNetCore.*` | `9.0.x` | Never use `10.x` |
-| `Microsoft.Extensions.Caching.Hybrid` | **`9.3.0`** (pinned) | This is the ONLY exception to automatic `9.0.x` — HybridCache reached GA at `9.3.0`. All three references (SharedKernel.Application, SharedKernel.Infrastructure, any module Application) MUST use exactly `9.3.0`. |
+| Auth | ✅ | Registration synchronously creates Accounts profile; email retry hardened; Gmail app-password normalization; JWT + refresh token rotation. |
+| Security | ✅ | Privilege hierarchy enforced. Seed identities cover all roles. `IPermissionCatalog` pattern (PR 3 of auth refactor). |
+| Accounts | ✅ | Profile + avatar self-service with validator + orphan-file cleanup. 3/3 unit tests. |
+| ContentCore | ✅ | Full audit — 11 bugs fixed. All queries cached, all commands evict by tag. 11/11 unit tests. |
+| ContentPlaces | 🟡 | Major fix pass complete (2026-04-23). Place module: all 8 fixes done. Business module: 5 integration events + 5 domain event handlers wired, duplicate DI fixed. ServiceItem: IAggregateRoot removed, Category/Description added, PriceCurrency/SalePriceCurrency columns dropped (migration), outbox pattern, IDOR checks, ICacheableQuery. Geo-search: Haversine single-compute + bounding-box + composite index. TourCount + CategoryId fields added to Place with migrations. Remaining open: Fadwa tasks (staff/amenity IDOR, accessibility admin guard, BusinessStaff integration events, 3 queries ICacheableQuery, AccessibilityFeatureDto.Id, amenity pagination). **Has `ICurrentUser` violations — see [§8.1](#81-icurrentuser-violations-8-handlers).** |
+| ContentTours | 🟡 | Tour entity has business methods (`Publish`, `Archive`, `Suspend`, `AssignToPlace`, `RemoveFromPlace`, `Delete`) + `TourPlaceCountChangedDomainEvent` + `TourPlaceCountChangedDomainEventHandler` that publishes `PlaceTourCountUpdatedIntegrationEvent` to outbox. `PlaceTourCountUpdatedIntegrationEvent` in Contracts. ContentPlaces has inbox handler. All wired end-to-end. Endpoints still empty. Full CQRS not started. |
+| ContentBlogs | ⬜ | Entities exist. Endpoints empty. |
+| ContentSeo | 🟡 | 4 integration event handlers wired (Place Created/Updated/Deleted + Business Created). SeoMetadata + SitemapEntry factories added. Business SEO created inactive until approval (Phase 2 handler pending). Endpoints empty. |
+| Booking | ⬜ | Entities exist. Endpoints empty. |
+| Finance | ⬜ | Entities exist. Endpoints empty. |
+| Messaging | 🟡 | InboxMessages table + UoW + InboxStore. Notification.Create factory. NotificationType.Business added. 4 handlers: BusinessApproved/Rejected/Suspended/Reinstated with correct channel + priority logic. Email/Push dispatch BackgroundService pending. Endpoints empty. |
+| Social | ⬜ | Entities exist. Endpoints empty. |
+| Tracking | ⬜ | Entities exist. Endpoints empty. |
+| Analytics | ⬜ | Entities exist. Endpoints empty. |
 
-**Why this matters**: Using `10.x` in one project while another project transitively pulls `9.x` of the same package causes `NU1605: Detected package downgrade`. This is treated as a build error in this solution (`TreatWarningsAsErrors` is set for analyzers).
+**Infrastructure status** (cross-cutting):
+- ✅ Serilog structured logging
+- ✅ OpenTelemetry tracing + metrics
+- ✅ API Versioning (`/api/v1/`)
+- ✅ Global Exception Handler + ProblemDetails
+- ✅ Health Checks (`/health/live`, `/health/ready`, `/health`)
+- ✅ HybridCache (L1 in-memory; L2 Redis future)
+- ✅ Authorization refactored to `IPermissionCatalog` pattern (4 PRs, 2026-04-22)
+- ✅ Rate limiting
+- ⬜ 6 middleware (CorrelationId ✅, Localization ✅, RateLimiting ✅, SeoRedirect, CORS ✅, ResponseCompression ✅)
+- ⬜ 18 background services (3 so far: MediaProcessing, AuthCleanup, CompositeOutboxProcessor)
+- ⬜ 3 SignalR hubs (NotificationHub, LiveTrackingHub, ChatBotHub)
 
-**How to verify before adding a package**:
-```powershell
-# Check what version is already used across the solution
-Select-String -Path "**/*.csproj" -Pattern "PackageName" -Recurse
-```
-Always match the version already in use. If no version exists yet, use the latest `9.x` stable.
+### §11.2 Work Log
 
-### Approved Packages (already in use)
-| Package | Pinned Version | Purpose | DO NOT replace with |
-|---------|---------------|---------|-------------------|
-| MediatR | `14.0.0` | CQRS pipeline | Wolverine, raw DI |
-| FluentValidation | `12.1.1` | Input validation | DataAnnotations |
-| EF Core (SqlServer) | `9.0.13` | ORM | Dapper (for CQRS queries it's OK to add later) |
-| **Microsoft.Extensions.Caching.Hybrid** | **`9.3.0`** | HybridCache — data caching with stampede prevention + tag eviction | IMemoryCache, IDistributedCache directly |
-| Microsoft.Extensions.Http.Resilience | `9.4.0` | Polly v8 resilience for HttpClient | Raw Polly setup |
-| SixLabors.ImageSharp | `3.1.12` | Image processing | System.Drawing, SkiaSharp |
-| FFMpegCore | `5.4.0` | Video/audio metadata | MediaToolkit |
-| Azure.AI.Translation.Text | (current) | Translation API | Google Translate SDK |
-| Serilog.AspNetCore | `10.0.0` | Structured logging | Microsoft.Extensions.Logging direct |
-| Asp.Versioning.Http | `8.1.1` | API versioning | Manual route strings |
+History preserved from previous sessions. Add entries immediately after completing work.
 
-### Banned Packages
-| Package | Why |
-|---------|-----|
-| Hangfire / Quartz | ADR-003: We use BackgroundService + Channel\<T\> |
-| AutoMapper | We use manual DTO mapping for explicitness and performance |
-| MediatR.Extensions.* | Unnecessary — pipeline behaviors are in SharedKernel |
-| EntityFramework.Proxies | No lazy loading — see Performance Rule P7 |
-| IMemoryCache (standalone) | Replaced by HybridCache. Zero new code should use `IMemoryCache`. |
+| # | Module / Feature | Status | Built By | Summary |
+|---|---|---|---|---|
+| 1–37 | (earlier entries) | ✅ | — | See git history before 2026-04-22 |
+| 44 | Messaging — Inbox foundation + 4 Business notification handlers | ✅ | 🤖 Agent | **Foundation**: `IMessagingInboxStore` + `IMessagingUnitOfWork` interfaces (Application), `MessagingInboxStore` + `MessagingUnitOfWork` impls (Infrastructure), `InboxMessageConfiguration` EF config, `InboxMessages` DbSet added to `MessagingDbContext`, DI registered, migration `Messaging_AddInboxMessagesTable` generated. **Entities**: `Notification.Create()` factory + `MarkSent()` + `MarkRead()` methods. `NotificationType.Business = 7` added. **Handlers** (4): `BusinessApprovedIntegrationEventHandler` (InApp always + Email opt-in via `NotificationPreference`); `BusinessRejectedIntegrationEventHandler` (InApp + Email both unconditional — preference override, plan Rule C); `BusinessSuspendedIntegrationEventHandler` (InApp + Email Critical both unconditional — revenue-blocking, plan Rule C); `BusinessReinstatedIntegrationEventHandler` (InApp always + Email opt-in). **Project ref**: `ContentPlaces.Contracts` added to `Messaging.Infrastructure.csproj`. Build: 0 errors. Tests: 183/183. |
+| 45 | ContentSeo — 4 Place+Business integration event handlers | ✅ | 🤖 Agent | **Entities**: `SeoMetadata.Create()` + `UpdateMeta()` (preserves editor ownership). `SitemapEntry.Create()` + `Touch()` + `ChangeUrl()` + `Deactivate()` + `Reactivate()`. **Handlers** (4): `PlaceCreatedIntegrationEventHandler` → creates `SeoMetadata(Place, priority=0.6)` + `SitemapEntry(/places/{slug}, active=true)`; `PlaceUpdatedIntegrationEventHandler` → `Touch()` SitemapEntry, self-heals missing records, logs TODO for slug URL update (event lacks OldSlug); `PlaceDeletedIntegrationEventHandler` → `SitemapEntry.Deactivate()`, SeoMetadata preserved for audit; `BusinessCreatedIntegrationEventHandler` → creates `SeoMetadata(Business, priority=0.5)` + `SitemapEntry(/businesses/{slug}, active=false)` — inactive until admin approves business. All handlers: idempotency guard + single `SaveChangesAsync` per §2.6. **Project ref**: `ContentPlaces.Contracts` added to `ContentSeo.Infrastructure.csproj`. Build: 0 errors. Tests: 183/183. |
+| 40 | ContentPlaces — Full Fix Pass (Mahmoud + Mohammad + Ezz) | ✅ | 🤖 Agent | **Phase 0**: `IContentPlacesOutboxWriter` interface (Application) + `ContentPlacesOutboxWriter` impl (Infrastructure) — clean abstraction for non-aggregate outbox writes, respects gotcha #22. **Phase 1**: `HasActiveTours` + `CategoryId` filters wired into `ListPlacesQuery` → `PlaceFilterSpecification` → `ContentPlacesCacheKeys`. **Phase 2 (Mohammad)**: Duplicate `IBusinessRepository` DI removed; 5 Business integration event records in Contracts (`BusinessCreated/Approved/Rejected/Suspended/Reinstated`); 5 Business domain event handlers in Infrastructure (load business for OwnerId, translate name for Created, write to outbox); `Business.AddOrUpdateTranslation()` method added. **Phase 3 (Ezz)**: `ServiceItem` entity rewritten — `IAggregateRoot` removed, `Category`+`Description` added to `Create`/`Update`, `PriceCurrency`+`SalePriceCurrency` dropped; `ServiceItemConfiguration` cleaned; EF migration `ServiceItem_RemoveDuplicateCurrencyColumns`; `ServiceItemCreate...Event` renamed → `ServiceItemCreated...Event`; `CreateServiceItemResult.cs` namespace cleaned; 3 write handlers rewritten (IDOR + `IContentPlacesOutboxWriter` + `HybridCache`); `ListServiceItemsQueryHandler` filters by `IsAvailable` for public, shows all for owner/admin; `ListServiceItemsQuery` + `GetServiceItemByIdQuery` implement `ICacheableQuery`; `GetNearbyPlacesQuery` + `GetMapViewportQuery` implement `ICacheableQuery`; `GetNearbyPlacesQueryHandler` replaced in-memory Haversine with `IPlaceRepository.GetNearbyAsync` SQL; `NearbyPlaceSummaryDto` corrected shape (Slug, Latitude, Longitude, AverageRating, DistanceKm); ServiceItem routes split (List+Create under `/{businessId}/services`, Get+Update+Delete under `/services/{id}`); `CreateServiceItemRequest`+`UpdateServiceItemRequest` updated with Category+Description. **IntegrationEventTypeRegistry** updated to 19 events (was 13); `IServiceItemRepository` fixed to use `IReadRepository+IWriteRepository` + `EfEntityRepository`. Build: 0 errors. Tests: 183/183. |
+| 41 | Place — CategoryId + TourCount fields | ✅ | 🤖 Agent | Added `Guid? CategoryId` and `int TourCount` (default 0) to `Place` entity with `SetCategory(Guid?)` and `UpdateTourCount(int)` business methods. EF config: nullable `CategoryId` column + `TourCount` column (default 0) + indexes `IX_Places_CategoryId` + `IX_Places_TourCount`. Migration `Place_AddCategoryIdAndTourCount` generated. `PlaceFilterSpecification` now uses real `WhereIf` expressions for both fields (TODOs resolved). Build: 0 errors. Tests: 183/183. |
+| 42 | ContentTours → ContentPlaces TourCount sync (full event flow) | ✅ | 🤖 Agent | **ContentTours.Domain**: `TourPlaceCountChangedDomainEvent(TourId, PlaceId?)` added; Tour entity gained business methods `Publish()`, `Archive()`, `Suspend()`, `AssignToPlace(Guid)`, `RemoveFromPlace()`, `Delete()` — each raises the domain event when a PlaceId is affected. **ContentTours.Contracts**: `PlaceTourCountUpdatedIntegrationEvent(PlaceId, ActiveTourCount)`. **ContentTours.Infrastructure**: `TourPlaceCountChangedDomainEventHandler` — re-queries `ContentToursDbContext.Tours.CountAsync(Published + non-deleted + PlaceId)` to get authoritative count, writes outbox row. **ContentPlaces.Infrastructure**: `PlaceTourCountUpdatedIntegrationEventHandler` inbox handler — idempotency check, `place.UpdateTourCount(count)`, mark processed, `SaveChangesAsync`. `ContentPlaces.Infrastructure.csproj` references `ContentTours.Contracts`. `IntegrationEventTypeRegistry` + test updated. Design principle: ContentTours sends authoritative count (fresh re-query), not delta — idempotent and drift-proof. Build: 0 errors. Tests: 183/183. |
+| 43 | PlaceRepository Haversine optimization | ✅ | 🤖 Agent | Fixed 3 issues in `GetNearbyAsync`: (1) **Double-computation** — Haversine was computed in both SELECT and WHERE (2× per row). Fixed by wrapping in derived table: compute once in inner query, filter on alias in outer query. (2) **No bounding-box pre-filter** — added cheap `Latitude/Longitude BETWEEN` filter (arithmetic, index-scannable) before trig functions, eliminating ~99% of rows early. (3) **No composite index for bounding-box** — added `IX_Places_IsDeleted_Latitude_Longitude` composite index to `PlaceConfiguration` + migration `Place_AddGeoBoundingBoxIndex`. Also confirmed: `SqlQuery<T>($"")` FormattableString IS injection-safe (EF Core converts holes to DbParameter). TODO logged: NetTopologySuite + `geography` column + SPATIAL INDEX when dataset > ~50k places. Build: 0 errors. Tests: 183/183. |
+| 38 | Authorization Refactor — 4 PRs | ✅ | 🤖 Agent | Relocated `MustHavePermissionAttribute` from `Security.Contracts` to `SharedKernel.Presentation`. Moved `PermissionRequirement`/`Handler`/`Provider` from `YallaJo.Api` to `SharedKernel.Presentation`. Moved `AppAction` to `SharedKernel.Application`. Added `IPermissionCatalog` + `PermissionDescriptor` + `PermissionGroup` abstractions. Created `SecurityFeatures` + `SecurityPermissionCatalog`, `ContentCoreFeatures` + `ContentCorePermissionCatalog`, `ContentPlacesFeatures` + `ContentPlacesPermissionCatalog`. Replaced `AppPermissions.cs` god-switch with `RolePermissionMapping` (DI discovery). Deleted `AppFeatures.cs`, `AppRoleGroup.cs`, `AppPermissions.cs`. Updated all 17 consumer endpoint files. Added scaffold templates. Full plan: `Agents/authorization-refactor-plan.md`. 4 commits: `b34ce3f`, `1b69478`, `0829aeb`, `e576f4d`. Build: 0 errors. Tests: 135/135 passed. |
+| 39 | Standardized Agent Context v2 | ✅ | 🤖 Agent | Rewrote `Agents/agent-context.md` from 1402-line legacy version into standardized rules-first structure (§0–§11). Added 2 new non-negotiable rules: (1) every endpoint must have `MustHavePermission` or `AllowAnonymous`; (2) `ICurrentUser` only for ownership/self-comparison. Audited codebase: 28 endpoint violations + 8 `ICurrentUser` handler violations catalogued in §8. Updated gotchas registry (24 entries). Moved `endpoint-authorization-audit.md` + `endpoint-violations.csv` to `Agents/`. References `authorization-refactor-plan.md` + `guide.md` + `YallaJo.md` + Business Rules PDF. |
+
+### §11.3 Next Up
+
+#### Immediate — authorization hygiene (before any new feature)
+- [ ] Fix 8 `ICurrentUser` violations per [§8.1](#81-icurrentuser-violations-8-handlers)
+- [ ] Fix 28 endpoint auth violations per [§8.2](#82-endpoint-authorization-violations-28-endpoints) — 3-phase plan, ~2.5 hrs total
+
+#### Wave 2 — ContentPlaces remaining (Fadwa tasks)
+See `Agents/ContentPlaces-fixes-required.md` for Fadwa's 13 open items. Summary:
+- [ ] `RemoveBusinessStaff` handler: no auth at all — add `ICurrentUser` + ownership check
+- [ ] `ListBusinessStaff` endpoint: still `.AllowAnonymous()` — must be `MustHavePermission(BusinessStaff, Read)`
+- [ ] `ListBusinessStaffQueryHandler`: no IDOR filtering — inject `ICurrentUser` + `IBusinessRepository`, verify ownership
+- [ ] `UpdateAccessibilityFeatures` handler: no admin guard — add `ICurrentUser` + `IsInRole("Admin")` check
+- [ ] Create `BusinessStaffAddedIntegrationEvent` + `BusinessStaffRemovedIntegrationEvent` in Contracts
+- [ ] 3 query records missing `ICacheableQuery`: `ListBusinessAmenitiesQuery`, `ListBusinessStaffQuery`, `GetAccessibilityFeaturesQuery`
+- [ ] `AccessibilityFeatureDto` missing `Guid Id` field
+- [ ] `ListAmenities` endpoint: `Page`/`PageSize` not bound from query string
+- [ ] Remove manual `CreatedAt = DateTime.UtcNow` from `BusinessAmenity.Create()` and `BusinessStaff.Create()` factories
+- [ ] Fix error codes in amenity/staff handlers (`"Auth.Unauthorized"` → `Error.Unauthorized(msg)`)
+- See `Agents/ContentPlaces-remaining-fix-plan.md` §"What's NOT in this plan" for full list
+
+#### Wave 3 — MVP remaining (~80 endpoints)
+- ContentTours: full CQRS (~34 endpoints)
+- Booking: core booking state machine (~32 endpoints)
+- Finance: payments + payouts (~52 endpoints)
+- Social: reviews + favorites (~22 endpoints)
+
+#### Infrastructure
+- [ ] StyleCop SA1200 cleanup (low priority, cosmetic)
+- [ ] Integration tests with Testcontainers + Respawn (per module)
+- [ ] Docker + Aspire setup
+- [ ] Cloudinary swap for `IFileStorageService` (when ready for production files)
+- [ ] Run remaining EF migrations manually (Finance, Messaging, Security, Social, Tracking for AddOutboxTraceContext; all 14 for AddOutboxStatusColumn)
 
 ---
-## 🧠 [CRITICAL] Error Learning System (MANDATORY)
-Agents make mistakes. The same mistakes get repeated across sessions. This system ensures every error is captured and never repeated.
-### Rule: Read Before Work, Write Before Leaving
-1. **At session start**: Read `Agents/error-log.md` in full. These are mistakes previous agents made — do NOT repeat them.
-2. **During work**: When you encounter ANY error (build failure, runtime exception, wrong assumption, logic bug, broken test, misused API), **log it immediately** to `Agents/error-log.md` before continuing your fix.
-3. **At session end**: Review your error log entries for completeness. Every entry must have a root cause and a prevention rule.
-### What Counts as a Loggable Error
-- Build errors caused by your code
-- Runtime exceptions from incorrect DI, wrong type usage, missing config
-- Incorrect assumptions about existing code (e.g., assumed a method existed, wrong signature)
-- Logic errors caught during testing
-- Patterns you tried that didn't work in this codebase
-- EF migration issues
-- Any fix that took you more than one attempt
-### What Does NOT Count
-- Pre-existing errors you didn't cause
-- Typos caught and fixed immediately (< 30 seconds to fix)
-- User-requested changes to your work
-### Entry Format
-Every entry in `Agents/error-log.md` MUST follow this exact format:
 
-```markdown
-### ERR-{number}: {Short descriptive title}
-- **Date**: {YYYY-MM-DD}
-- **Module**: {Which module were you working on}
-- **What Happened**: {What you did that caused the error — be specific}
-- **Error Message**: {Exact error message or symptom}
-- **Root Cause**: {WHY it happened — the actual underlying reason}
-- **Fix Applied**: {What you did to fix it}
-- **Prevention Rule**: {A concrete rule future agents must follow to avoid this}
+## §N. Outbox/Inbox Production Hardening — Session 2026-04-22
+
+**Plan source**: `Agents/outbox-hardening-implementation-plan.md`
+**Status**: All 5 PRs implemented. 0 build errors. 171 tests pass (was 135).
+**No commits made** (user preference).
+
+### PR 1 — Outbox Retention Cleanup ✅
+
+**New files**:
+- `SharedKernel.Infrastructure/Outbox/OutboxCleanupOptions.cs` — config POCO (Enabled, RetentionPeriod, CleanupInterval, BatchSize)
+- `SharedKernel.Infrastructure/Outbox/IOutboxCleaner.cs` — per-module interface (also has `CountDeadLetteredAsync`, `ListDeadLetteredAsync`, `ReplayDeadLetterAsync` added in PR 3)
+- `SharedKernel.Infrastructure/Outbox/OutboxCleaner<TContext>.cs` — EF impl; uses `ExecuteDeleteAsync` for SQL Server/Postgres, falls back to load-and-remove for InMemory
+- `SharedKernel.Infrastructure/BackgroundJobs/OutboxCleanupBackgroundService.cs` — hosted service, ticks every `CleanupInterval`, skips dead-lettered rows
+- `tests/SharedKernel.Tests.Unit/OutboxCleanerTests.cs` — 6 tests
+
+**Modified files**:
+- All 14 `{Module}.Infrastructure/DependencyInjection.cs` — added `services.AddScoped<IOutboxCleaner, OutboxCleaner<{Module}DbContext>>()`
+- `SharedKernel.Infrastructure/DependencyInjection.cs` — registers `OutboxCleanupBackgroundService` + binds `OutboxCleanupOptions`
+- `SharedKernel.Infrastructure/BackgroundJobs/OutboxProcessor.cs` — `MaxRetryCount` promoted to `public const`
+- `SharedKernel.Infrastructure/Outbox/OutboxMessage.cs` — added `MarkAsProcessedAt(DateTime)` for test-friendly state setting
+- `YallaJo.Api/appsettings.json` + `appsettings.Development.json` — `OutboxCleanup` section
+- `YallaJo.Api/Program.cs` — passes `builder.Configuration` to `AddSharedKernelInfrastructure`
+
+**Key gotchas**:
+- `InMemoryDatabaseRoot` must be shared across all scopes in tests or each scope sees empty DB
+- `ExecuteDeleteAsync` is NOT supported by InMemory provider — detect by `db.Database.ProviderName`
+
+---
+
+### PR 2 — Integration Event Type Registry ✅
+
+**New files**:
+- `SharedKernel.Infrastructure/Abstractions/Integration/IntegrationEventTypeRegistry.cs` — maps **19** stable logical names (e.g. `"security.user.created.v1"`) to CLR types; throws on unregistered publish attempts. Started at 13; grew to 19 after ContentPlaces fix pass + ContentTours TourCount event.
+- `tests/SharedKernel.Tests.Unit/IntegrationEventTypeRegistryTests.cs` — 5 tests (GetName, TryGetType, roundtrip, unregistered throws). Count assertion updated to 19.
+
+**Modified files**:
+- `SharedKernel.Infrastructure/YallaJo.SharedKernel.Infrastructure.csproj` — added `<ProjectReference>` to `Auth.Contracts`, `ContentCore.Contracts`, `ContentPlaces.Contracts`, `Security.Contracts`
+- `SharedKernel.Infrastructure/Outbox/OutboxMessage.cs` — `Create()` now calls `IntegrationEventTypeRegistry.GetName()` instead of `AssemblyQualifiedName`
+- `SharedKernel.Infrastructure/BackgroundJobs/OutboxProcessor.cs` — dual-read: tries registry first, falls back to `Type.GetType()` for legacy AQN rows
+- `tests/SharedKernel.Tests.Unit/OutboxProcessorTests.cs` — `SeedOutboxMessageAsync` now bypasses `Create()` via reflection (stores AQN) to exercise dual-read fallback; added `LegacyAssemblyQualifiedNameRow_ShouldProcessViaFallbackPath` test
+
+**Key gotchas**:
+- Tests that use `OutboxMessage.Create()` with stub events not in the registry will throw. Use `Activator.CreateInstance(typeof(OutboxMessage), nonPublic: true)` + reflection to set properties directly in tests.
+- Now **19 events** across 5 modules. Security (5), Auth (2), ContentCore (1), ContentPlaces (10), ContentTours (1).
+- `ServiceItemCreateIntegrationEvent` was **renamed** to `ServiceItemCreatedIntegrationEvent` (missing 'd' fixed). Old name no longer exists.
+
+**Registered events (short keys)** — current 19 total:
 ```
-### How This Improves Future Agents
-- The **Prevention Rule** field is the most important — it becomes a searchable rule that prevents the same class of error
-- Patterns in the error log reveal systemic issues (e.g., if 5 entries are about DI registration, the checklist needs strengthening)
-- The error log is append-only — never delete entries, even if they seem obvious. What's obvious to you may not be obvious to the next agent.
-### Error Log Location
-`Agents/error-log.md` — read at session start, append during work, never delete entries.
+security.user.created.v1, security.user.email-verified.v1,
+security.user.password-changed.v1, security.user.password-reset.v1,
+security.user.phone-updated.v1, auth.user.logged-in.v1,
+auth.session.revoked.v1, content-core.language.activated.v1,
+content-places.place.created.v1, content-places.place.updated.v1,
+content-places.place.deleted.v1,
+content-places.business.created.v1, content-places.business.approved.v1,
+content-places.business.rejected.v1, content-places.business.suspended.v1,
+content-places.business.reinstated.v1,
+content-places.service-item.created.v1, content-places.service-item.deleted.v1,
+content-tours.place.tour-count-updated.v1
+```
+
+---
+
+### PR 3 — Dead-Letter Ops + OpenTelemetry Metrics ✅
+
+**New files**:
+- `SharedKernel.Infrastructure/Outbox/OutboxMetrics.cs` — 8 OTel instruments (Meter: `YallaJo.Outbox`)
+- `SharedKernel.Infrastructure/Outbox/OutboxDeadLetterDto.cs` — read model for dead-letter ops
+- `SharedKernel.Infrastructure/Handlers/Outbox/ReplayDeadLetterCommandHandler.cs` — clones dead-lettered row, zeroes RetryCount, preserves original
+- `SharedKernel.Infrastructure/Handlers/Outbox/ListDeadLettersQueryHandler.cs` — aggregates dead-letters across all modules
+- `SharedKernel.Application/Abstractions/Outbox/ReplayDeadLetterCommand.cs`
+- `SharedKernel.Application/Abstractions/Outbox/ListDeadLettersQuery.cs` + result records
+- `SharedKernel.Application/Authorization/OpsFeatures.cs` — `OpsFeatures.Outbox` constant
+- `YallaJo.Api/HealthChecks/OutboxDeadLetterHealthCheck.cs` — returns Degraded if any module has dead-lettered messages
+- `YallaJo.Api/Endpoints/OpsEndpoints.cs` — `GET /api/v1/ops/outbox/dead-letters`, `POST /api/v1/ops/outbox/dead-letters/{module}/{id}/replay`
+
+**Modified files**:
+- `SharedKernel.Application/Authorization/AppAction.cs` — added `Replay` constant
+- `SharedKernel.Infrastructure/BackgroundJobs/OutboxProcessor.cs` — records 6 OTel metrics
+- `SharedKernel.Infrastructure/BackgroundJobs/OutboxCleanupBackgroundService.cs` — records `CleanupDeletedTotal`
+- `SharedKernel.Infrastructure/Outbox/IOutboxCleaner.cs` — added `CountDeadLetteredAsync`, `ListDeadLetteredAsync`, `ReplayDeadLetterAsync`
+- `SharedKernel.Infrastructure/Outbox/OutboxCleaner.cs` — implements new interface methods
+- `SharedKernel.Infrastructure/Outbox/OutboxMessage.cs` — added `CreateReplayCopy()`
+- `YallaJo.Api/Extensions/HealthCheckExtensions.cs` — registers `OutboxDeadLetterHealthCheck`
+- `YallaJo.Api/Extensions/OpenTelemetryExtensions.cs` — `.AddMeter("YallaJo.Outbox")`, `.AddSource("YallaJo.Outbox")`
+- `YallaJo.Api/Program.cs` — `app.MapOpsEndpoints()`
+
+**OTel metrics emitted** (all tagged with `module` and/or `type`/`handler`):
+- `outbox.processed.total`, `outbox.failed.total`, `outbox.dead_lettered.total`
+- `outbox.dispatch.latency_ms`, `outbox.retry.count`
+- `outbox.handler.success.total`, `outbox.handler.failure.total`
+- `outbox.cleanup.deleted.total`
+
+**Ops endpoints** (both require `Permission.Outbox.{Read|Replay}`):
+- `GET  /api/v1/ops/outbox/dead-letters?module=&limit=50`
+- `POST /api/v1/ops/outbox/dead-letters/{module}/{id}/replay`
+
+---
+
+### PR 4 — W3C Trace Context + Adaptive Polling ✅
+
+**New files**:
+- `SharedKernel.Infrastructure/Outbox/TraceContextHelpers.cs` — BCL-only (no OTel API dep); `Capture()` stores `Activity.Id` + `TraceStateString` as JSON; `TryRestoreContext()` parses back to `ActivityContext`
+- `SharedKernel.Infrastructure/BackgroundJobs/OutboxActivitySource.cs` — `ActivitySource("YallaJo.Outbox", "1.0.0")`
+
+**Modified files**:
+- `SharedKernel.Infrastructure/Outbox/OutboxMessage.cs` — added `TraceContext` property; `Create()` calls `TraceContextHelpers.Capture()`
+- `SharedKernel.Infrastructure/BackgroundJobs/OutboxProcessor.cs` — restores trace context before each message; sets activity tags + status; returns `int` (messages processed count)
+- `SharedKernel.Infrastructure/BackgroundJobs/IOutboxProcessor.cs` — `Task<int>` (was `Task`)
+- `SharedKernel.Infrastructure/BackgroundJobs/CompositeOutboxProcessor.cs` — **adaptive polling**: 200 ms drain delay when any processor returned > 0, 10 s idle delay when all returned 0
+- All 14 `OutboxMessageConfiguration.cs` — added `builder.Property(o => o.TraceContext).IsRequired(false).HasMaxLength(500)`
+
+**EF migrations** (`AddOutboxTraceContext`): Created for Accounts, Analytics, Auth, Booking, ContentBlogs, ContentCore, ContentPlaces, ContentSeo, ContentTours. **Still needed (manual)**: Finance, Messaging, Security, Social, Tracking.
+
+**Additional ContentPlaces migrations created in 2026-04-23 fix pass** (apply after AddOutboxTraceContext):
+- `ServiceItem_RemoveDuplicateCurrencyColumns` — drops `PriceCurrency` + `SalePriceCurrency` columns from `ServiceItems`
+- `Place_AddCategoryIdAndTourCount` — adds `CategoryId` (nullable Guid) + `TourCount` (int, default 0) + indexes `IX_Places_CategoryId` + `IX_Places_TourCount`
+- `Place_AddGeoBoundingBoxIndex` — adds composite index `IX_Places_IsDeleted_Latitude_Longitude` for geo bounding-box pre-filter
+
+**Migration command template**:
+```
+dotnet ef migrations add AddOutboxTraceContext \
+  --project {Module}.Infrastructure \
+  --startup-project YallaJo.Api \
+  --context {Module}DbContext
+```
+
+---
+
+### PR 5 — Explicit Status Column ✅
+
+**New files**:
+- `SharedKernel.Infrastructure/Outbox/OutboxMessageStatus.cs` — `enum { Pending=0, Processing=1, Processed=2, Failed=3, Dead=4 }`
+- `SharedKernel.Infrastructure/Outbox/OutboxConstants.cs` — `MaxRetryCount = 10` (single source of truth; `OutboxProcessor<T>.MaxRetryCount` delegates to this)
+
+**Modified files**:
+- `SharedKernel.Infrastructure/Outbox/OutboxMessage.cs` — added `Status` property; `Lock()`, `MarkAsProcessed()`, `MarkAsProcessedAt()`, `MarkAsFailed()`, `Create()`, `CreateReplayCopy()` all set `Status` correctly
+- All 14 `OutboxMessageConfiguration.cs` — added `builder.Property(o => o.Status).IsRequired().HasDefaultValue(OutboxMessageStatus.Pending).HasConversion<int>()`
+
+**EF migrations** (`AddOutboxStatusColumn`): **ALL 14 still needed (manual)**.
+
+**Migration command template**:
+```
+dotnet ef migrations add AddOutboxStatusColumn \
+  --project {Module}.Infrastructure \
+  --startup-project YallaJo.Api \
+  --context {Module}DbContext
+```
+
+**Key gotcha**: Use `HasDefaultValue(OutboxMessageStatus.Pending)` NOT `HasDefaultValue(0)`. EF validates that the default value type matches the CLR property type after conversion — `int` vs `OutboxMessageStatus` mismatch causes `DbContext.get_ContextServices()` to throw in tests using the InMemory provider.
+
+---
+
+### Remaining Manual Steps
+
+Run these commands to complete the database schema:
+
+```powershell
+# ── AddOutboxTraceContext (5 remaining) ──────────────────────────────────────
+$root = "C:\Users\admin1\source\repos\YallaJo"; $api = "$root\YallaJo.Api"
+foreach ($m in @("Finance","Messaging","Security","Social","Tracking")) {
+  dotnet ef migrations add AddOutboxTraceContext `
+    --project "$root\$m.Infrastructure" `
+    --startup-project $api `
+    --context "${m}DbContext"
+}
+
+# ── AddOutboxStatusColumn (all 14) ───────────────────────────────────────────
+foreach ($m in @("Accounts","Analytics","Auth","Booking","ContentBlogs","ContentCore",
+                  "ContentPlaces","ContentSeo","ContentTours","Finance","Messaging",
+                  "Security","Social","Tracking")) {
+  dotnet ef migrations add AddOutboxStatusColumn `
+    --project "$root\$m.Infrastructure" `
+    --startup-project $api `
+    --context "${m}DbContext"
+}
+
+# ── Apply all migrations ─────────────────────────────────────────────────────
+dotnet ef database update --project "$root\{Module}.Infrastructure" `
+  --startup-project $api --context {Module}DbContext
+# (repeat per module or run via the API startup auto-migration if configured)
+```
+
+---
+
+## End of Document
+
+**Questions? Check**:
+1. This file first (§0.4 has the doc index)
+2. `Agents/error-log.md` for past mistakes
+3. `Agents/guide.md` for deep code patterns
+4. `Agents/YallaJo.md` for endpoint specs
+5. `Agents/YallaJo Business Rules & Edge Cases.pdf` for business logic
+6. ADRs in `Agents/decisions/` for architectural decisions
+
+**Still stuck?** Ask the user. Never guess business rules. Never invent scope.

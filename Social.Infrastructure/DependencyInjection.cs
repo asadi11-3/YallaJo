@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Social.Infrastructure.Persistence;
 using Social.Infrastructure.Persistence.Seeding;
 using YallaJo.SharedKernel.Infrastructure.Data;
+using YallaJo.SharedKernel.Infrastructure.Outbox;
 using YallaJo.SharedKernel.Infrastructure.BackgroundJobs;
 
 namespace Social.Infrastructure;
@@ -30,6 +31,7 @@ public static class DependencyInjection
         services.AddScoped<IModuleDbInitializer, SocialDbInitializer>();
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
         services.AddScoped<IOutboxProcessor, OutboxProcessor<SocialDbContext>>();
+        services.AddScoped<IOutboxCleaner, OutboxCleaner<SocialDbContext>>();
 
         return services;
     }

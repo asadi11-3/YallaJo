@@ -9,7 +9,23 @@ public sealed class UpdateAvatarCommandValidator : AbstractValidator<UpdateAvata
         RuleFor(x => x.AvatarUrl)
             .NotEmpty()
             .MaximumLength(2048)
-            .Must(url => Uri.TryCreate(url, UriKind.Absolute, out _))
-            .WithMessage("AvatarUrl must be a valid URL.");
+            .Must(IsValidAvatarUrl)
+            .WithMessage("AvatarUrl must be an absolute URL or a rooted relative path.");
+    }
+
+    private static bool IsValidAvatarUrl(string? url)
+    {
+        if (string.IsNullOrWhiteSpace(url))
+        {
+            return false;
+        }
+
+        // Local file storage returns rooted relative URLs (e.g. /uploads/avatars/...).
+        if (url.StartsWith("/", StringComparison.Ordinal))
+        {
+            return true;
+        }
+
+        return Uri.TryCreate(url, UriKind.Absolute, out _);
     }
 }

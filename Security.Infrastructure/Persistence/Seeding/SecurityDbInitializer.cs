@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Security.Application.Interfaces;
+using Security.Contracts.Authorization;
 using Security.Domain.Entities;
 using YallaJo.SharedKernel.Infrastructure.Data;
 
@@ -11,10 +12,11 @@ public sealed class SecurityDbInitializer(
 {
     private static readonly Dictionary<string, Guid> RoleIds = new(StringComparer.OrdinalIgnoreCase)
     {
-        ["Admin"] = Guid.Parse("a1111111-1111-1111-1111-111111111111"),
-        ["Guide"] = Guid.Parse("a2222222-2222-2222-2222-222222222222"),
-        ["BusinessOwner"] = Guid.Parse("a3333333-3333-3333-3333-333333333333"),
-        ["User"] = Guid.Parse("a4444444-4444-4444-4444-444444444444")
+        [AppRoles.Owner] = Guid.Parse("a0000000-0000-0000-0000-000000000000"),
+        [AppRoles.SuperAdmin] = Guid.Parse("a0000000-0000-0000-0000-000000000001"),
+        [AppRoles.Admin] = Guid.Parse("a1111111-1111-1111-1111-111111111111"),
+        [AppRoles.TourGuide] = Guid.Parse("a2222222-2222-2222-2222-222222222222"),
+        [AppRoles.User] = Guid.Parse("a4444444-4444-4444-4444-444444444444")
     };
 
     public int Order => 30;
@@ -43,10 +45,11 @@ public sealed class SecurityDbInitializer(
     {
         var roleDefinitions = new[]
         {
-            (Name: "Admin", Description: "Platform administrator"),
-            (Name: "Guide", Description: "Tour guide"),
-            (Name: "BusinessOwner", Description: "Business owner"),
-            (Name: "User", Description: "Traveler customer")
+            (Name: AppRoles.Owner, Description: "Platform owner"),
+            (Name: AppRoles.SuperAdmin, Description: "Platform super administrator"),
+            (Name: AppRoles.Admin, Description: "Platform administrator"),
+            (Name: AppRoles.TourGuide, Description: "Tour guide"),
+            (Name: AppRoles.User, Description: "Traveler customer")
         };
 
         return roleDefinitions.Select(role =>
@@ -86,10 +89,11 @@ public sealed class SecurityDbInitializer(
     {
         var claimMap = new Dictionary<string, string[]>
         {
-            ["Admin"] = ["*"],
-            ["Guide"] = ["tours:write", "bookings:read", "bookings:update"],
-            ["BusinessOwner"] = ["places:write", "places:read", "staff:write"],
-            ["User"] = ["bookings:create", "bookings:read", "reviews:write"]
+            [AppRoles.Owner] = ["*"],
+            [AppRoles.SuperAdmin] = ["*"],
+            [AppRoles.Admin] = ["users:manage", "roles:manage", "claims:manage"],
+            [AppRoles.TourGuide] = ["tours:write", "bookings:read", "bookings:update"],
+            [AppRoles.User] = ["bookings:create", "bookings:read", "reviews:write"]
         };
 
         var claims = new List<RoleClaim>();

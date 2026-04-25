@@ -41,9 +41,27 @@ public class AuditLogConfiguration : IEntityTypeConfiguration<AuditLog>
         builder.Property(a => a.OccurredAt).IsRequired();
         builder.Property(a => a.CreatedAt).IsRequired();
 
+        // Phase 4 — admin audit columns. All nullable so legacy audit
+        // rows (REGISTER, LOGIN, LOGOUT, PASSWORD_CHANGED,
+        // PASSWORD_RESET) keep working unchanged via AuditLog.Create.
+        builder.Property(a => a.ActorUserId).IsRequired(false);
+
+        builder.Property(a => a.Reason)
+            .IsRequired(false)
+            .HasMaxLength(500);
+
+        builder.Property(a => a.Metadata)
+            .IsRequired(false)
+            .HasColumnType("nvarchar(max)");
+
         // Indexes
         builder.HasIndex(a => a.UserId);
         builder.HasIndex(a => a.OccurredAt);
         builder.HasIndex(a => new { a.ResourceType, a.ResourceId });
+
+        // Phase 4 — admin-by-admin queries (e.g. "what did admin X do
+        // last week?") — composite index keeps OccurredAt sortable.
+        builder.HasIndex(a => new { a.ActorUserId, a.OccurredAt })
+            .HasDatabaseName("IX_AuditLogs_ActorUserId_OccurredAt");
     }
 }

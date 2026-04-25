@@ -11,7 +11,10 @@ using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using ContentCore.Contracts.Authorization;
 using Security.Contracts.Authorization;
+using YallaJo.SharedKernel.Presentation.Authorization;
+using YallaJo.SharedKernel.Application.Authorization;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Presentation;
 
@@ -36,7 +39,8 @@ internal static class AttachmentEndpoints
                 return Results.Unauthorized();
 
             await using var stream = file.OpenReadStream();
-            var result = await sender.Send(new UploadAttachmentCommand(
+            var result = await sender.Send(
+                new UploadAttachmentCommand(
                 stream,
                 file.FileName,
                 file.ContentType,
@@ -55,7 +59,7 @@ internal static class AttachmentEndpoints
         .Produces<UploadAttachmentResult>(StatusCodes.Status201Created)
         .ProducesValidationProblem()
         .WithSummary("Upload a file attachment for an entity")
-        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.Attachment, AppAction.Create))
+        .WithMetadata(new MustHavePermissionAttribute(ContentCoreFeatures.Attachment, AppAction.Create))
         .RequireAuthorization()
         .DisableAntiforgery();
 
@@ -68,7 +72,7 @@ internal static class AttachmentEndpoints
         .WithName("GetEntityAttachments")
         .Produces<IReadOnlyList<AttachmentDto>>(StatusCodes.Status200OK)
         .WithSummary("List attachments for an entity")
-        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.Attachment, AppAction.Read))
+        .WithMetadata(new MustHavePermissionAttribute(ContentCoreFeatures.Attachment, AppAction.Read))
         .RequireAuthorization();
 
         // Get attachment by ID
@@ -81,7 +85,7 @@ internal static class AttachmentEndpoints
         .Produces<AttachmentDto>(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Get a single attachment by ID")
-        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.Attachment, AppAction.Read))
+        .WithMetadata(new MustHavePermissionAttribute(ContentCoreFeatures.Attachment, AppAction.Read))
         .RequireAuthorization();
 
         // Delete attachment
@@ -94,7 +98,8 @@ internal static class AttachmentEndpoints
         .Produces(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Delete an attachment and its file")
-        .RequireAuthorization("Permission.Attachment.Delete");
+        .WithMetadata(new MustHavePermissionAttribute(ContentCoreFeatures.Attachment, AppAction.Delete))
+        .RequireAuthorization();
 
         // Reorder attachments
         attachments.MapPut("/reorder", async (ReorderAttachmentsRequest request, ISender sender, CancellationToken ct = default) =>
@@ -102,7 +107,8 @@ internal static class AttachmentEndpoints
             if (!Enum.TryParse<EntityType>(request.EntityType, true, out var entityType))
                 return Results.BadRequest("Invalid EntityType.");
 
-            var result = await sender.Send(new ReorderAttachmentsCommand(
+            var result = await sender.Send(
+                new ReorderAttachmentsCommand(
                 entityType, request.EntityId, request.OrderedAttachmentIds), ct);
             return result.ToApiResult();
         })
@@ -111,7 +117,7 @@ internal static class AttachmentEndpoints
         .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Reorder attachments for an entity")
-        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.Attachment, AppAction.Update))
+        .WithMetadata(new MustHavePermissionAttribute(ContentCoreFeatures.Attachment, AppAction.Update))
         .RequireAuthorization();
 
         // Set primary image
@@ -120,7 +126,8 @@ internal static class AttachmentEndpoints
             if (!Enum.TryParse<EntityType>(request.EntityType, true, out var entityType))
                 return Results.BadRequest("Invalid EntityType.");
 
-            var result = await sender.Send(new SetPrimaryImageCommand(
+            var result = await sender.Send(
+                new SetPrimaryImageCommand(
                 entityType, request.EntityId, request.AttachmentId), ct);
             return result.ToApiResult();
         })
@@ -128,7 +135,7 @@ internal static class AttachmentEndpoints
         .Produces(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Set an attachment as the primary image for an entity")
-        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.EntityImage, AppAction.Update))
+        .WithMetadata(new MustHavePermissionAttribute(ContentCoreFeatures.EntityImage, AppAction.Update))
         .RequireAuthorization();
     }
 }

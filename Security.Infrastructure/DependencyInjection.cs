@@ -8,8 +8,11 @@ using Security.Domain.Repositories;
 using Security.Infrastructure.Persistence;
 using Security.Infrastructure.Persistence.Seeding;
 using Security.Infrastructure.Repositories;
+using Security.Contracts.Authorization;
 using Security.Infrastructure.Seeding;
 using Security.Infrastructure.Services;
+using YallaJo.SharedKernel.Application.Authorization;
+using YallaJo.SharedKernel.Infrastructure.Outbox;
 using YallaJo.SharedKernel.Infrastructure.BackgroundJobs;
 using YallaJo.SharedKernel.Infrastructure.Data;
 
@@ -43,14 +46,20 @@ public static class DependencyInjection
         services.AddScoped<IRoleClaimRepository, RoleClaimRepository>();
         services.AddScoped<IUserClaimRepository, UserClaimRepository>();
         services.AddScoped<SecurityDataSeeder>();
-        services.AddScoped<ISecurityUserExistenceChecker, SecurityUserExistenceChecker>();
+        services.AddScoped<RolePermissionMapping>();
+        services.AddSingleton<IPermissionCatalog, SecurityPermissionCatalog>();
         services.AddSingleton<IPasswordHasher, PasswordHasher>();
 
-     
         services.AddScoped<ISecurityService, SecurityService>();
+
+        // Phase 4 — admin audit timeline writer. Used by Auth admin
+        // command handlers to append rows to security.AuditLogs on the
+        // success path of admin lifecycle verbs.
+        services.AddScoped<IAdminAuditWriter, AdminAuditWriter>();
 
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
         services.AddScoped<IOutboxProcessor, OutboxProcessor<SecurityDbContext>>();
+        services.AddScoped<IOutboxCleaner, OutboxCleaner<SecurityDbContext>>();
 
         return services;
     }

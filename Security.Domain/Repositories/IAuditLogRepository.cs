@@ -1,11 +1,7 @@
 
 using Security.Domain.Entities;
-using YallaJo.SharedKernel.Domain.Abstractions.Pagination;
+using YallaJo.SharedKernel.Domain.Abstractions.Data;
 
 namespace Security.Domain.Repositories;
 
-public interface IAuditLogRepository
-{
-    Task<PaginatedResult<AuditLog>> GetPagedAsync(
-        Guid? userId, int page, int pageSize, CancellationToken ct = default);
-}
+public interface IAuditLogRepository : IReadRepository<AuditLog, Guid>, IWriteRepository<AuditLog, Guid>;

@@ -1,12 +1,11 @@
-using SpecializationEntity = ContentCore.Domain.Entities.Specialization;
-using ContentCore.Application.Caching;
-using ContentCore.Domain.Exceptions;
 using ContentCore.Domain.Repositories;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 using Outcome = YallaJo.SharedKernel.Domain.Abstractions.Results.Outcome;
+using SpecializationEntity = ContentCore.Domain.Entities.Specialization;
 
 namespace ContentCore.Application.Commands.Specialization.CreateSpecialization;
 
@@ -26,7 +25,8 @@ public sealed class CreateSpecializationCommandHandler(
             var specialization = SpecializationEntity.Create(
                 request.Name,
                 request.Description,
-                request.Icon);
+                request.Icon,
+                request.SourceLanguageCode);
 
             await specializationRepository.AddAsync(specialization, cancellationToken);
 
@@ -34,7 +34,7 @@ public sealed class CreateSpecializationCommandHandler(
             {
                 await unitOfWork.SaveChangesAsync(cancellationToken);
             }
-            catch (ContentCoreConcurrencyException)
+            catch (DbUpdateConcurrencyException)
             {
                 return Result<CreateSpecializationResult>.Conflict(
                     new Error(

@@ -17,4 +17,10 @@ namespace ContentCore.Domain.Repositories;
 /// </summary>
 public interface ICategoryRepository : IRepository<Category, Guid>
 {
+    /// <summary>
+    /// Retrieves a category by ID, bypassing the soft-delete query filter.
+    /// Required by <c>RestoreCategoryCommandHandler</c> to find deleted categories
+    /// without injecting DbContext into the Application layer (gotcha #22).
+    /// </summary>
+    Task<Category?> GetByIdIncludingDeletedAsync(Guid id, CancellationToken ct = default);
 }

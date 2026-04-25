@@ -1,50 +1,44 @@
 @model YallaJo.Web.Areas.Auth.Features.ExternalProviders.ViewModels.ExternalProvidersVm
 @{
-    ViewData["Title"] = "External Providers";
+    ViewData["Title"] = "Linked Providers";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
 <div class="container mt-4">
     <h2>Linked Providers</h2>
 
-    @if (TempData["ProviderMessage"] is string msg)
+    @if (!string.IsNullOrEmpty(Model.Message))
     {
-        <div class="alert alert-info">@msg</div>
-    }
-
-    @if (Model.Message is not null)
-    {
-        <div class="alert alert-success">@Model.Message</div>
+        <div class="alert alert-info">@Model.Message</div>
     }
 
     <h4 class="mt-4">Link a New Provider</h4>
-    <div asp-validation-summary="All" class="text-danger mb-3"></div>
+    <p class="text-muted">You will be redirected to the provider to sign in before the link is completed.</p>
 
-    <form asp-area="Auth" asp-controller="ExternalProviders" asp-action="Index" method="post" style="max-width:420px">
-        @Html.AntiForgeryToken()
-
-        <div class="mb-3">
-            <label asp-for="Provider" class="form-label">Provider (e.g. Google)</label>
-            <input asp-for="Provider" class="form-control" placeholder="Google" />
-            <span asp-validation-for="Provider" class="text-danger"></span>
+    @if (!Model.IsGoogleAvailable && !Model.IsFacebookAvailable)
+    {
+        <div class="alert alert-warning">
+            No external providers are configured on this server. Please contact your administrator.
         </div>
+    }
 
-        <div class="mb-3">
-            <label asp-for="ProviderUserId" class="form-label">Provider User ID</label>
-            <input asp-for="ProviderUserId" class="form-control" />
-            <span asp-validation-for="ProviderUserId" class="text-danger"></span>
-        </div>
+    @if (Model.IsGoogleAvailable)
+    {
+        <form asp-area="Auth" asp-controller="ExternalAuth" asp-action="Challenge" method="post" style="display:inline-block;margin-right:8px">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="provider" value="google" />
+            <input type="hidden" name="mode" value="link" />
+            <button type="submit" class="btn btn-outline-dark">Link Google</button>
+        </form>
+    }
 
-        <div class="mb-3">
-            <label asp-for="ProviderEmail" class="form-label">Provider Email (optional)</label>
-            <input asp-for="ProviderEmail" class="form-control" autocomplete="email" />
-            <span asp-validation-for="ProviderEmail" class="text-danger"></span>
-        </div>
-
-        <button type="submit" class="btn btn-primary">Link Provider</button>
-    </form>
+    @if (Model.IsFacebookAvailable)
+    {
+        <form asp-area="Auth" asp-controller="ExternalAuth" asp-action="Challenge" method="post" style="display:inline-block">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="provider" value="facebook" />
+            <input type="hidden" name="mode" value="link" />
+            <button type="submit" class="btn btn-outline-primary">Link Facebook</button>
+        </form>
+    }
 </div>
-
-@section Scripts {
-    <partial name="_ValidationScriptsPartial" />
-}

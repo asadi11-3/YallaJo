@@ -1,7 +1,7 @@
 using ContentPlaces.Application.Interfaces;
 using ContentPlaces.Domain.Enums;
-using ContentPlaces.Domain.Exceptions;
 using ContentPlaces.Domain.Repositories;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
@@ -38,7 +38,8 @@ public sealed class ReinstateBusinessCommandHandler(
             if (business.Status != BusinessStatus.Suspended)
             {
                 return Result.Failure(
-                    new Error("Business.InvalidTransition",
+                    new Error(
+                        "Business.InvalidTransition",
                         $"Cannot reinstate a business with status {business.Status}."),
                     Outcome.Conflict);
             }
@@ -70,7 +71,7 @@ public sealed class ReinstateBusinessCommandHandler(
             await unitOfWork.SaveChangesAsync(ct);
             return null;
         }
-        catch (ContentPlacesConcurrencyException ex)
+        catch (DbUpdateConcurrencyException ex)
         {
             logger.LogWarning(ex, "Concurrency conflict reinstating business '{BusinessId}'.", businessId);
             return Result.Failure(

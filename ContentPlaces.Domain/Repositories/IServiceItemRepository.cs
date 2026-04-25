@@ -3,6 +3,10 @@ using YallaJo.SharedKernel.Domain.Abstractions.Data;
 
 namespace ContentPlaces.Domain.Repositories;
 
-public interface IServiceItemRepository : IRepository<ServiceItem, Guid>
+/// <summary>
+/// ServiceItem is a non-aggregate entity (AuditableEntity, not IAggregateRoot).
+/// Uses IReadRepository + IWriteRepository rather than IRepository which requires IAggregateRoot.
+/// </summary>
+public interface IServiceItemRepository : IReadRepository<ServiceItem, Guid>, IWriteRepository<ServiceItem, Guid>
 {
 }

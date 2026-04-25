@@ -37,4 +37,22 @@ public sealed class Email : AuditableEntity
         IsPrimary = isPrimary;
         MarkUpdated();
     }
+
+    public void ChangeAddress(string newAddress)
+    {
+        if (string.IsNullOrWhiteSpace(newAddress))
+            throw new ArgumentException("Email address is required.", nameof(newAddress));
+
+        Address = newAddress.Trim().ToLowerInvariant();
+        IsVerified = false;
+        VerifiedAt = null;
+        MarkUpdated();
+    }
+
+    public void ResetVerification()
+    {
+        IsVerified = false;
+        VerifiedAt = null;
+        MarkUpdated();
+    }
 }

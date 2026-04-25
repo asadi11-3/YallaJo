@@ -6,5 +6,3 @@ public sealed record RoleDetailsDto(
     string? Description,
     bool IsActive,
     IReadOnlyList<RoleClaimDto> Claims);
-
-

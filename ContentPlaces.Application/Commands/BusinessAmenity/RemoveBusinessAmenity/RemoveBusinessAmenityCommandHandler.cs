@@ -1,6 +1,6 @@
 using ContentPlaces.Application.Interfaces;
-using ContentPlaces.Domain.Exceptions;
 using ContentPlaces.Domain.Repositories;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
@@ -56,7 +56,7 @@ public sealed class RemoveBusinessAmenityCommandHandler(
         {
             await unitOfWork.SaveChangesAsync(cancellationToken);
         }
-        catch (ContentPlaceConcurrencyException)
+        catch (DbUpdateConcurrencyException)
         {
             return Result.Failure(
                 Error.Conflict(

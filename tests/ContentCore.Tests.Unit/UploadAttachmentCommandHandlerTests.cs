@@ -14,7 +14,7 @@ namespace ContentCore.Tests.Unit;
 public sealed class UploadAttachmentCommandHandlerTests
 {
     [Fact]
-    public async Task Handle_ShouldReturnInvalid_WhenMimeTypeDoesNotMatchBinarySignature()
+    public async Task HandleShouldReturnInvalidWhenMimeTypeDoesNotMatchBinarySignature()
     {
         var userId = Guid.NewGuid();
 
@@ -60,7 +60,7 @@ public sealed class UploadAttachmentCommandHandlerTests
     }
 
     [Fact]
-    public async Task Handle_ShouldReturnInvalid_WhenFileExtensionDoesNotMatchBinarySignature()
+    public async Task HandleShouldReturnInvalidWhenFileExtensionDoesNotMatchBinarySignature()
     {
         var userId = Guid.NewGuid();
 

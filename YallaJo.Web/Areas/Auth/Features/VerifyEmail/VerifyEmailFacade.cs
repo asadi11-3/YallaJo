@@ -34,9 +34,19 @@ public sealed class VerifyEmailFacade
         return ApiResult.Fail(result.Error ?? "Email verification failed.");
     }
 
-    public async Task<string?> ResendOtpAsync(string email, string purpose, CancellationToken ct = default)
+    public async Task<ApiResult> ResendOtpAsync(
+        string email,
+        string purpose,
+        string recaptchaToken,
+        CancellationToken ct = default)
     {
-        var result = await _api.ResendOtpAsync(email, purpose, ct);
-        return result.IsSuccess ? null : result.Error ?? "Could not resend code.";
+        var result = await _api.ResendOtpAsync(email, purpose, recaptchaToken, ct);
+        if (result.IsSuccess)
+            return ApiResult.Ok(result.StatusCode);
+
+        if (result.IsValidationError)
+            return ApiResult.ValidationFail(result.StatusCode, result.ValidationErrors!);
+
+        return ApiResult.Fail(result.StatusCode, result.Error ?? "Could not resend code.");
     }
 }

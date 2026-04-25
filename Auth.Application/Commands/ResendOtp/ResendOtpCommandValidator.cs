@@ -1,10 +1,11 @@
+using Auth.Application.Recaptcha;
 using FluentValidation;
 
 namespace Auth.Application.Commands.ResendOtp;
 
 public sealed class ResendOtpCommandValidator : AbstractValidator<ResendOtpCommand>
 {
-    private static readonly string[] ValidPurposes = ["EmailVerification", "PasswordReset"];
+    private static readonly string[] ValidPurposes = ["EmailVerification"];
 
     public ResendOtpCommandValidator()
     {
@@ -15,6 +16,9 @@ public sealed class ResendOtpCommandValidator : AbstractValidator<ResendOtpComma
         RuleFor(x => x.Purpose)
             .NotEmpty()
             .Must(p => ValidPurposes.Contains(p))
-            .WithMessage("Purpose must be 'EmailVerification' or 'PasswordReset'.");
+            .WithMessage(
+                "Unsupported OTP purpose. Password reset resend must be requested via /forgot-password; /resend-otp is reserved for short-lived codes such as EmailVerification.");
+
+        RuleFor(x => x.RecaptchaToken).MustBeValidRecaptchaToken();
     }
 }

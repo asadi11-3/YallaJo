@@ -10,8 +10,6 @@ using Security.Infrastructure.Persistence;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 
 namespace Security.Infrastructure.EventHandlers;
-
-
 public sealed class UserLoggedInAuditHandler(
     SecurityDbContext dbContext,
     ISecurityInboxStore inboxStore,

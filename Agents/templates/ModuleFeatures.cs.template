@@ -1,0 +1,11 @@
+namespace {{Module}}.Contracts.Authorization;
+
+/// <summary>
+/// Feature string constants owned by the {{Module}} bounded context.
+/// Add one constant per aggregate/resource exposed through endpoints.
+/// Other modules MUST NOT add constants here.
+/// </summary>
+public static class {{Module}}Features
+{
+    public const string {{Entity}} = nameof({{Entity}});
+}

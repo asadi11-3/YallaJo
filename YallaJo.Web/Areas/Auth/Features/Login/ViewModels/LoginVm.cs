@@ -12,4 +12,10 @@ public sealed class LoginVm
     public string Password { get; set; } = string.Empty;
 
     public string? ReturnUrl { get; set; }
+
+    /// <summary>
+    /// Populated client-side by the centralized <c>_RecaptchaField</c> partial
+    /// before the form is submitted. Never displayed in the UI.
+    /// </summary>
+    public string RecaptchaToken { get; set; } = string.Empty;
 }

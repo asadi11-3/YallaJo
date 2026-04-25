@@ -8,6 +8,7 @@ namespace YallaJo.Web.Areas.Admin.Modules.Security.Features.Roles;
 
 [Area("Admin")]
 [Authorize]
+[RequirePermission(WebPermission.Role.Read)]
 public sealed class RolesController : Controller
 {
     private readonly RolesFacade _facade;
@@ -47,6 +48,7 @@ public sealed class RolesController : Controller
 
     [HttpPost("admin/roles/create")]
     [ValidateAntiForgeryToken]
+    [RequirePermission(WebPermission.Role.Create)]
     public async Task<IActionResult> Create(CreateRoleVm vm, CancellationToken ct)
     {
         if (!ModelState.IsValid)
@@ -81,6 +83,7 @@ public sealed class RolesController : Controller
 
     [HttpPost("admin/roles/{roleId:guid}/update")]
     [ValidateAntiForgeryToken]
+    [RequirePermission(WebPermission.Role.Update)]
     public async Task<IActionResult> Update(Guid roleId, UpdateRoleVm vm, CancellationToken ct)
     {
         var result = await _facade.UpdateAsync(roleId, vm, ct);
@@ -102,6 +105,7 @@ public sealed class RolesController : Controller
 
     [HttpPost("admin/roles/{roleId:guid}/deactivate")]
     [ValidateAntiForgeryToken]
+    [RequirePermission(WebPermission.Role.Update)]
     public async Task<IActionResult> Deactivate(Guid roleId, CancellationToken ct)
     {
         var result = await _facade.DeactivateAsync(roleId, ct);
@@ -117,6 +121,7 @@ public sealed class RolesController : Controller
 
     [HttpPost("admin/roles/{roleId:guid}/claims")]
     [ValidateAntiForgeryToken]
+    [RequirePermission(WebPermission.RoleClaim.Create)]
     public async Task<IActionResult> AddClaim(Guid roleId, AddRoleClaimVm vm, CancellationToken ct)
     {
         if (!ModelState.IsValid)
@@ -138,6 +143,7 @@ public sealed class RolesController : Controller
 
     [HttpPost("admin/roles/{roleId:guid}/claims/{claimId:guid}/remove")]
     [ValidateAntiForgeryToken]
+    [RequirePermission(WebPermission.RoleClaim.Delete)]
     public async Task<IActionResult> RemoveClaim(Guid roleId, Guid claimId, CancellationToken ct)
     {
         var result = await _facade.RemoveClaimAsync(roleId, claimId, ct);

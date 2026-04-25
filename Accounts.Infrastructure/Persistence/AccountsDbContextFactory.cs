@@ -3,7 +3,6 @@ using YallaJo.SharedKernel.Infrastructure.Data;
 
 namespace Accounts.Infrastructure.Persistence;
 
-
 internal sealed class AccountsDbContextFactory
     : ModuleDesignTimeDbContextFactoryBase<AccountsDbContext>
 {

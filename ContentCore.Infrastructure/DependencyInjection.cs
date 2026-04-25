@@ -1,4 +1,6 @@
+using ContentCore.Contracts.Authorization;
 using ContentCore.Application.Interfaces;
+using YallaJo.SharedKernel.Application.Authorization;
 using ContentCore.Domain.Repositories;
 using ContentCore.Domain.Services;
 using ContentCore.Infrastructure.BackgroundJobs;
@@ -13,6 +15,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Http.Resilience;
 using YallaJo.SharedKernel.Application.Abstractions.Storage;
 using YallaJo.SharedKernel.Application.Abstractions.Translation;
+using YallaJo.SharedKernel.Infrastructure.Outbox;
 using YallaJo.SharedKernel.Infrastructure.BackgroundJobs;
 using YallaJo.SharedKernel.Infrastructure.Data;
 
@@ -53,6 +56,7 @@ public static class DependencyInjection
         services.AddScoped<IModuleDbInitializer, ContentCoreDbInitializer>();
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
         services.AddScoped<IOutboxProcessor, OutboxProcessor<ContentCoreDbContext>>();
+        services.AddScoped<IOutboxCleaner, OutboxCleaner<ContentCoreDbContext>>();
 
         // ── Translation Service (decorator pattern) ─────────────────────────────
         // 1. Register the concrete Azure provider as a named/keyed inner service
@@ -92,6 +96,10 @@ public static class DependencyInjection
         // ffmpeg v8.0.1 confirmed installed (BinaryFolder configured in appsettings.json "FFmpeg:BinaryFolder").
         // SixLabors.ImageSharp handles image processing (no external binary needed).
         services.AddHostedService<MediaProcessingBackgroundService>();
+
+        // ── Permission catalog (discovered by Security.Infrastructure PermissionSeeder) ─
+        services.AddSingleton<IPermissionCatalog, ContentCorePermissionCatalog>();
+
         return services;
     }
 }

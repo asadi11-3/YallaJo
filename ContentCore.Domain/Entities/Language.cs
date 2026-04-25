@@ -55,6 +55,10 @@ public sealed class Language : AuditableEntity, IAggregateRoot
 
     public void Activate()
     {
+        // Gotcha #14: guard before raising — repeat calls are no-ops, preventing duplicate outbox rows.
+        if (IsActive)
+            return;
+
         IsActive = true;
         AddDomainEvent(new LanguageActivatedDomainEvent(Id, Code));
         MarkUpdated();
@@ -62,7 +66,12 @@ public sealed class Language : AuditableEntity, IAggregateRoot
 
     public void Deactivate()
     {
+        // Gotcha #14: guard before raising — repeat calls are no-ops, preventing duplicate outbox rows.
+        if (!IsActive)
+            return;
+
         IsActive = false;
+        AddDomainEvent(new LanguageDeactivatedDomainEvent(Id, Code));
         MarkUpdated();
     }
 }

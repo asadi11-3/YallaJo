@@ -1,4 +1,5 @@
 using ContentTours.Domain.Enums;
+using ContentTours.Domain.Events;
 using YallaJo.SharedKernel.Domain.Entities;
 using YallaJo.SharedKernel.Domain.ValueObjects;
 
@@ -51,4 +52,108 @@ public sealed class Tour : AuditableEntity, IAggregateRoot
     public IReadOnlyCollection<TourWaypoint> TourWaypoints => _tourWaypoints.AsReadOnly();
     public IReadOnlyCollection<TourPricingTier> TourPricingTiers => _tourPricingTiers.AsReadOnly();
     public IReadOnlyCollection<TourPackage> TourPackages => _tourPackages.AsReadOnly();
+
+    // ── Business Methods ──────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Transitions this tour from Draft to Published.
+    /// Raises <see cref="TourPlaceCountChangedDomainEvent"/> so the linked Place's
+    /// TourCount can be incremented via the ContentPlaces outbox.
+    /// </summary>
+    public void Publish()
+    {
+        if (Status == TourStatus.Published)
+            return; // already published — guard to avoid spurious domain events
+
+        Status = TourStatus.Published;
+        MarkUpdated();
+
+        // Notify ContentPlaces to recompute its denormalized TourCount.
+        if (PlaceId.HasValue)
+            AddDomainEvent(new TourPlaceCountChangedDomainEvent(Id, PlaceId.Value));
+    }
+
+    /// <summary>
+    /// Archives (deactivates) this tour.
+    /// Raises <see cref="TourPlaceCountChangedDomainEvent"/> so the linked Place's
+    /// TourCount can be decremented via the ContentPlaces outbox.
+    /// </summary>
+    public void Archive()
+    {
+        if (Status == TourStatus.Archived)
+            return;
+
+        Status = TourStatus.Archived;
+        MarkUpdated();
+
+        if (PlaceId.HasValue)
+            AddDomainEvent(new TourPlaceCountChangedDomainEvent(Id, PlaceId.Value));
+    }
+
+    /// <summary>Suspends this tour. Also affects the linked Place's TourCount.</summary>
+    public void Suspend()
+    {
+        if (Status == TourStatus.Suspended)
+            return;
+
+        Status = TourStatus.Suspended;
+        MarkUpdated();
+
+        if (PlaceId.HasValue)
+            AddDomainEvent(new TourPlaceCountChangedDomainEvent(Id, PlaceId.Value));
+    }
+
+    /// <summary>
+    /// Links this tour to a place (or moves it to a different place).
+    /// Raises a <see cref="TourPlaceCountChangedDomainEvent"/> for both the old and
+    /// the new PlaceId so both places get their counts recomputed.
+    /// </summary>
+    public void AssignToPlace(Guid placeId)
+    {
+        if (placeId == Guid.Empty)
+            throw new ArgumentException("PlaceId cannot be empty.", nameof(placeId));
+
+        if (PlaceId == placeId)
+            return; // no change
+
+        var oldPlaceId = PlaceId;
+        PlaceId = placeId;
+        MarkUpdated();
+
+        // Notify old place to decrement (if there was one)
+        if (oldPlaceId.HasValue)
+            AddDomainEvent(new TourPlaceCountChangedDomainEvent(Id, oldPlaceId.Value));
+
+        // Notify new place to increment (only relevant when tour is Published)
+        if (Status == TourStatus.Published)
+            AddDomainEvent(new TourPlaceCountChangedDomainEvent(Id, placeId));
+    }
+
+    /// <summary>Removes the place association from this tour.</summary>
+    public void RemoveFromPlace()
+    {
+        if (!PlaceId.HasValue)
+            return;
+
+        var oldPlaceId = PlaceId.Value;
+        PlaceId = null;
+        MarkUpdated();
+
+        if (Status == TourStatus.Published)
+            AddDomainEvent(new TourPlaceCountChangedDomainEvent(Id, oldPlaceId));
+    }
+
+    /// <summary>
+    /// Soft-deletes this tour and notifies the linked Place to recompute TourCount.
+    /// </summary>
+    public void Delete()
+    {
+        if (IsDeleted)
+            return;
+
+        SoftDelete();
+
+        if (PlaceId.HasValue && Status == TourStatus.Published)
+            AddDomainEvent(new TourPlaceCountChangedDomainEvent(Id, PlaceId.Value));
+    }
 }

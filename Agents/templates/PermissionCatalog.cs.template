@@ -1,0 +1,20 @@
+using YallaJo.SharedKernel.Application.Authorization;
+
+namespace {{Module}}.Contracts.Authorization;
+
+/// <summary>
+/// Permission catalog for the {{Module}} bounded context.
+/// Registered in {{Module}}.Infrastructure DI — auto-discovered by Security's PermissionSeeder.
+/// </summary>
+public sealed class {{Module}}PermissionCatalog : IPermissionCatalog
+{
+    public string ModuleName => "{{Module}}";
+
+    public IReadOnlyList<PermissionDescriptor> Permissions { get; } =
+    [
+        new({{Module}}Features.{{Entity}}, AppAction.Read,   PermissionGroup.ContentManagement, "View {{entity}}"),
+        new({{Module}}Features.{{Entity}}, AppAction.Create, PermissionGroup.ContentManagement, "Create a {{entity}}"),
+        new({{Module}}Features.{{Entity}}, AppAction.Update, PermissionGroup.ContentManagement, "Update a {{entity}}"),
+        new({{Module}}Features.{{Entity}}, AppAction.Delete, PermissionGroup.ContentManagement, "Delete a {{entity}}"),
+    ];
+}

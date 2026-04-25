@@ -1,10 +1,10 @@
-using LanguageEntity = ContentCore.Domain.Entities.Language;
-using ContentCore.Application.Caching;
-using ContentCore.Domain.Exceptions;
 using ContentCore.Domain.Repositories;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
+using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
+using LanguageEntity = ContentCore.Domain.Entities.Language;
 using Outcome = YallaJo.SharedKernel.Domain.Abstractions.Results.Outcome;
 
 namespace ContentCore.Application.Commands.Language.CreateLanguage;
@@ -12,7 +12,8 @@ namespace ContentCore.Application.Commands.Language.CreateLanguage;
 public sealed class CreateLanguageCommandHandler(
     ILanguageRepository languageRepository,
     IContentCoreUnitOfWork unitOfWork,
-    HybridCache cache)
+    HybridCache cache,
+    ILogger<CreateLanguageCommandHandler> logger)
     : ICommandHandler<CreateLanguageCommand, CreateLanguageResult>
 {
     public async Task<Result<CreateLanguageResult>> Handle(
@@ -37,7 +38,7 @@ public sealed class CreateLanguageCommandHandler(
             {
                 await unitOfWork.SaveChangesAsync(cancellationToken);
             }
-            catch (ContentCoreConcurrencyException)
+            catch (DbUpdateConcurrencyException)
             {
                 return Result<CreateLanguageResult>.Conflict(
                     new Error(
@@ -46,6 +47,10 @@ public sealed class CreateLanguageCommandHandler(
             }
 
             await cache.RemoveByTagAsync("languages", cancellationToken);
+
+            logger.LogInformation(
+                "Language created: {LanguageId} (Code={Code}, Name={Name})",
+                language.Id, language.Code, language.Name);
 
             return Result<CreateLanguageResult>.Created(
                 new CreateLanguageResult(language.Id, language.Code, language.Name));

@@ -7,7 +7,17 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.7.0" />
+    <PackageReference Include="MediatR" Version="14.1.0" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.17.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="9.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.Facebook" Version="9.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Phase 5A — internal helpers (e.g. AuditLogsApiClient.BuildUrl,
+         JsonMetadataFormatter) need to be testable from
+         tests/Web.Tests.Unit without forcing them onto the public API. -->
+    <InternalsVisibleTo Include="Web.Tests.Unit" />
   </ItemGroup>
 
   <ItemGroup>
@@ -16,8 +26,7 @@
     <Folder Include="Areas\Admin\Modules\Security\Features\Roles\Validators\" />
     <Folder Include="Areas\Admin\Modules\Security\Features\Users\Validators\" />
     <Folder Include="Areas\Auth\Features\Devices\" />
-    <Folder Include="Areas\Auth\Features\ExternalProviders\Mappers\" />
-    <Folder Include="Areas\Auth\Features\ExternalProviders\Validators\" />
+
     <Folder Include="Areas\Auth\Features\ForgotPassword\Validators\" />
     <Folder Include="Areas\Auth\Features\ForgotPassword\Views\" />
     <Folder Include="Areas\Auth\Features\ForgotPassword\ViewModels\" />
@@ -48,6 +57,10 @@
     <Folder Include="Shared\TagHelpers\" />
     <Folder Include="Shared\ViewModels\" />
     <Folder Include="Shared\Views\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Update="AsyncAwaitBestPractices" Version="9.0.0" />
   </ItemGroup>
 
 </Project>

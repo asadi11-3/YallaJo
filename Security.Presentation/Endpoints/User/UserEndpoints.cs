@@ -6,13 +6,14 @@ using Security.Application.Commands.ActivateUser;
 using Security.Application.Commands.AddUserClaim;
 using Security.Application.Commands.AssignRole;
 using Security.Application.Commands.DeactivateUser;
-using Security.Application.Commands.Register;
 using Security.Application.Commands.RemoveRole;
 using Security.Application.Commands.RemoveUserClaim;
 using Security.Application.Queries.Dtos;
 using Security.Application.Queries.GetUser;
 using Security.Application.Queries.ListUsers;
 using Security.Contracts.Authorization;
+using YallaJo.SharedKernel.Presentation.Authorization;
+using YallaJo.SharedKernel.Application.Authorization;
 using Security.Presentation.Endpoints.User.Models;
 using System.Security.Claims;
 using YallaJo.SharedKernel.Domain.Abstractions.Pagination;
@@ -22,16 +23,11 @@ namespace Security.Presentation.Endpoints.User;
 
 internal static class UserEndpoints
 {
-    // Matches Auth.Presentation.RateLimitPolicies.RegisterPolicy.
-    // Defined locally to avoid a cross-module project reference.
-    private const string RegisterRateLimitPolicy = "register-rate-limit";
-
     private static readonly HashSet<string> _jwtMetaClaims =
         new(StringComparer.Ordinal) { "jti", "iat", "nbf", "exp", "iss", "aud", "sub", "email", "role" };
 
     internal static void MapUserEndpoints(RouteGroupBuilder group)
     {
-        MapRegisterEndpoint(group);
         MapMeEndpoint(group);
         MapListUsersEndpoint(group);
         MapGetUserEndpoint(group);
@@ -41,25 +37,6 @@ internal static class UserEndpoints
         MapRemoveRoleEndpoint(group);
         MapAddUserClaimEndpoint(group);
         MapRemoveUserClaimEndpoint(group);
-    }
-
-    // ── Anonymous ─────────────────────────────────────────────────────────────
-
-    private static void MapRegisterEndpoint(RouteGroupBuilder group)
-    {
-        group.MapPost("/register", async (RegisterRequest request, ISender sender, CancellationToken ct) =>
-        {
-            var result = await sender.Send(
-                new RegisterCommand(request.FirstName, request.LastName, request.Email, request.Password), ct);
-            return result.ToApiResult();
-        })
-        .WithName("Register")
-        .Produces<RegisterResponse>(StatusCodes.Status201Created)
-        .ProducesValidationProblem()
-        .ProducesProblem(StatusCodes.Status409Conflict)
-        .WithSummary("Register a new account — verification email will be sent")
-        .AllowAnonymous()
-        .RequireRateLimiting(RegisterRateLimitPolicy);
     }
 
     private static void MapMeEndpoint(RouteGroupBuilder group)
@@ -84,8 +61,6 @@ internal static class UserEndpoints
         .RequireAuthorization();
     }
 
-    // ── Admin: user management (/users) ───────────────────────────────────────
-
     private static void MapListUsersEndpoint(RouteGroupBuilder group)
     {
         group.MapGet("/users", async (ISender sender, CancellationToken ct, int page = 1, int pageSize = 20) =>
@@ -96,7 +71,7 @@ internal static class UserEndpoints
         .WithName("ListUsers")
         .Produces<PaginatedResult<UserDto>>(StatusCodes.Status200OK)
         .WithSummary("List users with pagination")
-        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.User, AppAction.Read))
+        .WithMetadata(new MustHavePermissionAttribute(SecurityFeatures.User, AppAction.Read))
         .RequireAuthorization();
     }
 
@@ -111,7 +86,7 @@ internal static class UserEndpoints
         .Produces<UserDto>(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Get a user by ID")
-        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.User, AppAction.Read))
+        .WithMetadata(new MustHavePermissionAttribute(SecurityFeatures.User, AppAction.Read))
         .RequireAuthorization();
     }
 
@@ -127,7 +102,7 @@ internal static class UserEndpoints
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status401Unauthorized)
         .WithSummary("Activate a user account")
-        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.User, AppAction.Update))
+        .WithMetadata(new MustHavePermissionAttribute(SecurityFeatures.User, AppAction.UpdateAny))
         .RequireAuthorization();
     }
 
@@ -143,7 +118,7 @@ internal static class UserEndpoints
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status401Unauthorized)
         .WithSummary("Deactivate a user account")
-        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.User, AppAction.Update))
+        .WithMetadata(new MustHavePermissionAttribute(SecurityFeatures.User, AppAction.UpdateAny))
         .RequireAuthorization();
     }
 
@@ -160,7 +135,7 @@ internal static class UserEndpoints
         .ProducesProblem(StatusCodes.Status409Conflict)
         .ProducesProblem(StatusCodes.Status403Forbidden)
         .WithSummary("Assign a role to a user")
-        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.UserRole, AppAction.Create))
+        .WithMetadata(new MustHavePermissionAttribute(SecurityFeatures.UserRole, AppAction.Create))
         .RequireAuthorization();
     }
 
@@ -176,7 +151,7 @@ internal static class UserEndpoints
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status403Forbidden)
         .WithSummary("Remove a role from a user")
-        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.UserRole, AppAction.Delete))
+        .WithMetadata(new MustHavePermissionAttribute(SecurityFeatures.UserRole, AppAction.Delete))
         .RequireAuthorization();
     }
 
@@ -193,7 +168,7 @@ internal static class UserEndpoints
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status409Conflict)
         .WithSummary("Add a claim to a user")
-        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.User, AppAction.Update))
+        .WithMetadata(new MustHavePermissionAttribute(SecurityFeatures.User, AppAction.UpdateAny))
         .RequireAuthorization();
     }
 
@@ -208,7 +183,7 @@ internal static class UserEndpoints
         .Produces(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Remove a claim from a user")
-        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.User, AppAction.Update))
+        .WithMetadata(new MustHavePermissionAttribute(SecurityFeatures.User, AppAction.UpdateAny))
         .RequireAuthorization();
     }
 }

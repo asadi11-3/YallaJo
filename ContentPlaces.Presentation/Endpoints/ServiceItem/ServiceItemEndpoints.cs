@@ -9,7 +9,10 @@ using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using ContentPlaces.Contracts.Authorization;
 using Security.Contracts.Authorization;
+using YallaJo.SharedKernel.Presentation.Authorization;
+using YallaJo.SharedKernel.Application.Authorization;
 using YallaJo.SharedKernel.Presentation;
 
 namespace ContentPlaces.Presentation.Endpoints.ServiceItem;
@@ -18,11 +21,12 @@ internal static class ServiceItemEndpoints
 {
     internal static void MapServiceItemEndpoints(RouteGroupBuilder group)
     {
-        var services = group.MapGroup("/places/businesses/{businessId:guid}/services")
+        // ── Group 1: business-scoped (list + create, businessId in route) ─────
+        var bizServices = group.MapGroup("/places/businesses")
             .WithTags("ContentPlaces | ServiceItems");
 
-
-        services.MapGet("/", async (Guid businessId, ISender sender, CancellationToken ct) =>
+        bizServices.MapGet("/{businessId:guid}/services", async (
+            Guid businessId, ISender sender, CancellationToken ct) =>
         {
             var result = await sender.Send(new ListServiceItemsQuery(businessId), ct);
             return result.ToApiResult();
@@ -32,10 +36,35 @@ internal static class ServiceItemEndpoints
         .WithSummary("List service items for a business")
         .AllowAnonymous();
 
-        services.MapGet("/{serviceItemId:guid}", async (
-            Guid businessId, Guid serviceItemId, ISender sender, CancellationToken ct) =>
+        bizServices.MapPost("/{businessId:guid}/services", async (
+            Guid businessId, CreateServiceItemRequest request, ISender sender, CancellationToken ct) =>
         {
-            var result = await sender.Send(new GetServiceItemByIdQuery(businessId, serviceItemId), ct);
+            var result = await sender.Send(
+                new CreateServiceItemCommand(
+                    businessId, request.Name, request.Price,
+                    request.DurationMinutes, request.MaxCapacity, request.Currency,
+                    request.Category, request.Description, request.SortOrder), ct);
+            return result.ToApiResult();
+        })
+        .WithName("CreateServiceItem")
+        .Produces<CreateServiceItemResult>(StatusCodes.Status201Created)
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status409Conflict)
+        .WithSummary("Create a service item for a business")
+        .WithMetadata(new MustHavePermissionAttribute(ContentPlacesFeatures.ServiceItem, AppAction.Create))
+        .RequireAuthorization();
+
+        // ── Group 2: item-level (get / update / delete — no businessId in route) ─
+        var itemServices = group.MapGroup("/places/businesses/services")
+            .WithTags("ContentPlaces | ServiceItems");
+
+        itemServices.MapGet("/{id:guid}", async (
+            Guid id, ISender sender, CancellationToken ct) =>
+        {
+            // BusinessId = Guid.Empty because the handler loads by ServiceItemId only.
+            // The BusinessId in the query is used as a secondary validation; pass Empty for
+            // item-level routes where businessId is not in the URL.
+            var result = await sender.Send(new GetServiceItemByIdQuery(Guid.Empty, id), ct);
             return result.ToApiResult();
         })
         .WithName("GetServiceItemById")
@@ -44,28 +73,14 @@ internal static class ServiceItemEndpoints
         .WithSummary("Get service item details by ID")
         .AllowAnonymous();
 
-        services.MapPost("/", async (
-            Guid businessId, CreateServiceItemRequest request, ISender sender, CancellationToken ct) =>
+        itemServices.MapPut("/{id:guid}", async (
+            Guid id, UpdateServiceItemRequest request, ISender sender, CancellationToken ct) =>
         {
             var result = await sender.Send(
-                new CreateServiceItemCommand(businessId, request.Name, request.Price,
-                    request.DurationMinutes, request.MaxCapacity, request.Currency, request.SortOrder), ct);
-            return result.ToApiResult();
-        })
-        .WithName("CreateServiceItem")
-        .Produces<CreateServiceItemResult>(StatusCodes.Status201Created)
-        .ProducesValidationProblem()
-        .ProducesProblem(StatusCodes.Status409Conflict)
-        .WithSummary("Create a service item for a business")
-        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.ServiceItem, AppAction.Create))
-        .RequireAuthorization();
-
-        services.MapPut("/{serviceItemId:guid}", async (
-            Guid businessId, Guid serviceItemId, UpdateServiceItemRequest request, ISender sender, CancellationToken ct) =>
-        {
-            var result = await sender.Send(
-                new UpdateServiceItemCommand(serviceItemId, businessId, request.Name, request.Price,
-                    request.DurationMinutes, request.MaxCapacity, request.Currency, request.SortOrder), ct);
+                new UpdateServiceItemCommand(
+                    id, request.BusinessId, request.Name, request.Price,
+                    request.DurationMinutes, request.MaxCapacity, request.Currency,
+                    request.Category, request.Description, request.SortOrder), ct);
             return result.ToApiResult();
         })
         .WithName("UpdateServiceItem")
@@ -74,20 +89,20 @@ internal static class ServiceItemEndpoints
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status409Conflict)
         .WithSummary("Update a service item")
-        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.ServiceItem, AppAction.Update))
+        .WithMetadata(new MustHavePermissionAttribute(ContentPlacesFeatures.ServiceItem, AppAction.Update))
         .RequireAuthorization();
 
-        services.MapDelete("/{serviceItemId:guid}", async (
-            Guid businessId, Guid serviceItemId, ISender sender, CancellationToken ct) =>
+        itemServices.MapDelete("/{id:guid}", async (
+            Guid id, ISender sender, CancellationToken ct) =>
         {
-            var result = await sender.Send(new DeleteServiceItemCommand(serviceItemId, businessId), ct);
+            var result = await sender.Send(new DeleteServiceItemCommand(id, Guid.Empty), ct);
             return result.ToApiResult();
         })
         .WithName("DeleteServiceItem")
         .Produces(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Soft-delete a service item")
-        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.ServiceItem, AppAction.SoftDelete))
+        .WithMetadata(new MustHavePermissionAttribute(ContentPlacesFeatures.ServiceItem, AppAction.SoftDelete))
         .RequireAuthorization();
     }
 }

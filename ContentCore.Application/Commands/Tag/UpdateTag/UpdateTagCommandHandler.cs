@@ -1,7 +1,7 @@
-using ContentCore.Application.Caching;
-using ContentCore.Domain.Exceptions;
 using ContentCore.Domain.Repositories;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
+using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 using Outcome = YallaJo.SharedKernel.Domain.Abstractions.Results.Outcome;
@@ -11,7 +11,8 @@ namespace ContentCore.Application.Commands.Tag.UpdateTag;
 public sealed class UpdateTagCommandHandler(
     ITagRepository tagRepository,
     IContentCoreUnitOfWork unitOfWork,
-    HybridCache cache)
+    HybridCache cache,
+    ILogger<UpdateTagCommandHandler> logger)
     : ICommandHandler<UpdateTagCommand, UpdateTagResult>
 {
     public async Task<Result<UpdateTagResult>> Handle(
@@ -34,13 +35,13 @@ public sealed class UpdateTagCommandHandler(
                        new Error("Tag.AlreadyExists", $"Tag with slug '{request.Slug}' already exists."));
             }
 
-            tag.Update(request.Name, request.Slug);
+            tag.Update(request.Name, request.Slug, request.SourceLanguageCode);
 
             try
             {
                 await unitOfWork.SaveChangesAsync(ct);
             }
-            catch (ContentCoreConcurrencyException)
+            catch (DbUpdateConcurrencyException)
             {
                 return Result<UpdateTagResult>.Conflict(
                     new Error(
@@ -49,6 +50,9 @@ public sealed class UpdateTagCommandHandler(
             }
 
             await cache.RemoveByTagAsync("tags", ct);
+
+            logger.LogInformation(
+                "Tag updated: {TagId} (Name={Name}, Slug={Slug})", tag.Id, tag.Name, tag.Slug);
 
             return Result<UpdateTagResult>.Success(
                 new UpdateTagResult(tag.Id, tag.Name, tag.Slug));

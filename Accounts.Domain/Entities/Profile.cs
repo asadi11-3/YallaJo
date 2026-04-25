@@ -8,7 +8,6 @@ public sealed class Profile : AuditableEntity, IAggregateRoot
 {
     private Profile() { } // EF Core
 
-    /// <summary>Logical reference to Security.User.Id — not a FK.</summary>
     public Guid UserId { get; private set; }
     public string FirstName { get; private set; } = string.Empty;
     public string LastName { get; private set; } = string.Empty;
@@ -77,6 +76,25 @@ public sealed class Profile : AuditableEntity, IAggregateRoot
     public void SetAvatarUrl(string? avatarUrl)
     {
         AvatarUrl = avatarUrl?.Trim();
+        MarkUpdated();
+    }
+
+    public void ResetForReassignment(string? newEmailLocalPart)
+    {
+        FirstName = "Pending";
+        LastName  = "Activation";
+
+        DisplayName = string.IsNullOrWhiteSpace(newEmailLocalPart)
+            ? null
+            : newEmailLocalPart.Trim();
+
+        AvatarUrl   = null;
+        DateOfBirth = null;
+        Gender      = null;
+        Country     = null;
+        City        = null;
+        AddressLine = null;
+
         MarkUpdated();
     }
 }

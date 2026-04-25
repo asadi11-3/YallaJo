@@ -13,10 +13,6 @@ namespace YallaJo.SharedKernel.Domain.Abstractions.Results
 
         public Error? Error => Errors.FirstOrDefault();
 
-        /// <summary>
-        /// JSON deserialization constructor — required for HybridCache L2 (Redis) serialization.
-        /// Do NOT call directly in application code — use the static factory methods.
-        /// </summary>
         [JsonConstructor]
         public Result(
             bool isSuccess,

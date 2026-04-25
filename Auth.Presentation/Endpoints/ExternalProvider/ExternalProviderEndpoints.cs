@@ -1,3 +1,4 @@
+using Auth.Application.Commands.ExternalLogin;
 using Auth.Application.Commands.LinkExternalProvider;
 using Auth.Application.Commands.UnlinkExternalProvider;
 using Auth.Presentation.Endpoints.ExternalProvider.Models;
@@ -13,13 +14,14 @@ internal static class ExternalProviderEndpoints
 {
     internal static void MapExternalProviderEndpoints(RouteGroupBuilder group)
     {
-        group.MapPost("/external-providers", async (LinkExternalProviderRequest request, ISender sender, CancellationToken ct) =>
+        // ── Link: authenticated user binds a verified external identity ──────
+        group.MapPost("/external-providers", async (
+            LinkExternalProviderRequest request,
+            ISender sender,
+            CancellationToken ct) =>
         {
             var result = await sender.Send(
-                new LinkExternalProviderCommand(
-                request.Provider,
-                request.ProviderUserId,
-                request.ProviderEmail), ct);
+                new LinkExternalProviderCommand(request.Ticket, request.RecaptchaToken), ct);
             return result.ToApiResult();
         })
         .WithName("LinkExternalProvider")
@@ -27,10 +29,40 @@ internal static class ExternalProviderEndpoints
         .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status401Unauthorized)
         .ProducesProblem(StatusCodes.Status409Conflict)
-        .WithSummary("Link an external OAuth provider account to the current user")
-        .RequireAuthorization();
+        .WithSummary("Link a verified external OAuth provider account to the current user")
+        .RequireAuthorization()
+        .RequireRateLimiting(RateLimitPolicies.LoginPolicy);
 
-        group.MapDelete("/external-providers/{providerId:guid}", async (Guid providerId, ISender sender, CancellationToken ct) =>
+        // ── External login: sign in via an already-linked external provider ──
+        // Uses the same rate-limit bucket as password login so abuse surface is
+        // consistent across credential-bearing endpoints.
+        group.MapPost("/external-providers/login", async (
+            ExternalLoginRequest request,
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            var result = await sender.Send(
+                new ExternalLoginCommand(request.Ticket, request.RecaptchaToken), ct);
+            var projected = result.Map(r => new ExternalLoginResponse(
+                UserId: r.UserId,
+                AccessToken: r.AccessToken,
+                RefreshToken: r.RefreshToken,
+                RefreshTokenExpiresAt: r.RefreshTokenExpiresAt));
+            return projected.ToApiResult();
+        })
+        .WithName("ExternalLogin")
+        .Produces<ExternalLoginResponse>(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .WithSummary("Login via a previously-linked external provider using a signed BFF ticket")
+        .AllowAnonymous()
+        .RequireRateLimiting(RateLimitPolicies.LoginPolicy);
+
+        // ── Unlink ───────────────────────────────────────────────────────────
+        group.MapDelete("/external-providers/{providerId:guid}", async (
+            Guid providerId,
+            ISender sender,
+            CancellationToken ct) =>
         {
             var result = await sender.Send(new UnlinkExternalProviderCommand(providerId), ct);
             return result.ToApiResult();

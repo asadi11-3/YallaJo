@@ -1,6 +1,8 @@
 using Auth.Presentation.Endpoints.Credential;
 using Auth.Presentation.Endpoints.Device;
 using Auth.Presentation.Endpoints.ExternalProvider;
+using Auth.Presentation.Endpoints.Invitation;
+using Auth.Presentation.Endpoints.Registration;
 using Auth.Presentation.Endpoints.Session;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -15,6 +17,8 @@ public static class AuthEndpoints
         var group = endpoints.MapGroup("/api/v1/auth")
             .WithTags("Auth");
 
+        RegistrationEndpoints.MapRegistrationEndpoints(group);
+        InvitationEndpoints.MapInvitationEndpoints(group);
         CredentialEndpoints.MapCredentialEndpoints(group);
         SessionEndpoints.MapSessionEndpoints(group);
         DeviceEndpoints.MapDeviceEndpoints(group);

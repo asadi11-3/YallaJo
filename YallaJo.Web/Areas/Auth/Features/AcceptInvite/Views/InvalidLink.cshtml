@@ -1,0 +1,17 @@
+@{
+    ViewData["Title"] = "Invalid Invite Link";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="auth-card">
+    <h2>Invalid Invite Link</h2>
+    <p class="text-muted">
+        The invite link is missing required parameters.
+    </p>
+
+    <div class="alert alert-warning">
+        Ask your administrator to send a fresh invite.
+    </div>
+
+    <a asp-area="Auth" asp-controller="Login" asp-action="Index" class="btn btn-outline-primary w-100">Back to sign in</a>
+</div>

@@ -6,7 +6,10 @@ using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using ContentCore.Contracts.Authorization;
 using Security.Contracts.Authorization;
+using YallaJo.SharedKernel.Presentation.Authorization;
+using YallaJo.SharedKernel.Application.Authorization;
 using YallaJo.SharedKernel.Presentation;
 
 namespace ContentCore.Presentation.Endpoints.EntityCategory;
@@ -40,7 +43,7 @@ internal static class EntityCategoryEndpoints
         .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Assign categories to an entity")
-        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.EntityCategory, AppAction.Create))
+        .WithMetadata(new MustHavePermissionAttribute(ContentCoreFeatures.EntityCategory, AppAction.Create))
         .RequireAuthorization();
 
         entityCategories.MapDelete("/", async (string entityType, Guid entityId, Guid categoryId, ISender sender) =>
@@ -52,7 +55,7 @@ internal static class EntityCategoryEndpoints
         .Produces(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Remove category assignment from an entity")
-        .WithMetadata(new MustHavePermissionAttribute(AppFeatures.EntityCategory, AppAction.Delete))
+        .WithMetadata(new MustHavePermissionAttribute(ContentCoreFeatures.EntityCategory, AppAction.Delete))
         .RequireAuthorization();
     }
 }

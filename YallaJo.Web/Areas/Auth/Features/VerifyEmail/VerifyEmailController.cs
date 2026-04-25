@@ -47,9 +47,20 @@ public sealed class VerifyEmailController : Controller
         if (string.IsNullOrWhiteSpace(payload.Email))
             return BadRequest(new { error = "Email is required." });
 
-        var error = await _facade.ResendOtpAsync(payload.Email, "EmailVerification", ct);
-        return error is null
-            ? Ok(new { message = "A new code has been sent." })
-            : StatusCode(429, new { error });
+        if (string.IsNullOrWhiteSpace(payload.RecaptchaToken))
+            return BadRequest(new { error = "Captcha verification failed." });
+
+        var outcome = await _facade.ResendOtpAsync(
+            payload.Email, "EmailVerification", payload.RecaptchaToken, ct);
+        if (outcome.IsSuccess)
+            return Ok(new { message = "A new code has been sent." });
+
+        // Preserve the real status from the backend (429 throttle vs 500 SMTP
+        // failure vs 400 validation). Collapsing everything to 429 masked
+        // server errors from both users and ops.
+        var status = outcome.StatusCode is >= 400 and < 600
+            ? outcome.StatusCode
+            : StatusCodes.Status500InternalServerError;
+        return StatusCode(status, new { error = outcome.Error ?? "Could not resend code." });
     }
 }

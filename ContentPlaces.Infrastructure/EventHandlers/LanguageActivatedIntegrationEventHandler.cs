@@ -20,9 +20,9 @@ public sealed class LanguageActivatedIntegrationEventHandler(
 {
     public async Task Handle(
         IntegrationEventNotification<LanguageActivatedIntegrationEvent> notification,
-        CancellationToken ct)
+        CancellationToken cancellationToken)
     {
-        if (await inboxStore.HasBeenProcessedAsync(notification.MessageId, ct))
+        if (await inboxStore.HasBeenProcessedAsync(notification.MessageId, cancellationToken))
         {
             logger.LogWarning(
                 "ContentPlaces: Message {MessageId} for language {LanguageId} already processed; skipping.",
@@ -36,7 +36,7 @@ public sealed class LanguageActivatedIntegrationEventHandler(
 
         var places = await dbContext.Places
             .Include(p => p.PlaceTranslations)
-            .ToListAsync(ct);
+            .ToListAsync(cancellationToken);
 
         foreach (var place in places)
         {
@@ -52,12 +52,14 @@ public sealed class LanguageActivatedIntegrationEventHandler(
                 ["Address"] = place.Address ?? string.Empty
             };
 
-            var translatedSets = await orchestrator.TranslateAsync(fields, "en", targetCodes, ct);
-            var translated = translatedSets.FirstOrDefault();
-            if (translated is null)
+            var translatedSets = await orchestrator.TranslateAsync(fields, "en", targetCodes, cancellationToken);
+
+            if (translatedSets.Count == 0)
             {
                 continue;
             }
+
+            var translated = translatedSets[0];
 
             dbContext.PlaceTranslations.Add(PlaceTranslation.Create(
                 place.Id,
@@ -69,7 +71,7 @@ public sealed class LanguageActivatedIntegrationEventHandler(
 
         var businesses = await dbContext.Businesses
             .Include(b => b.BusinessTranslations)
-            .ToListAsync(ct);
+            .ToListAsync(cancellationToken);
 
         foreach (var business in businesses)
         {
@@ -85,12 +87,14 @@ public sealed class LanguageActivatedIntegrationEventHandler(
                 ["Address"] = business.Address ?? string.Empty
             };
 
-            var translatedSets = await orchestrator.TranslateAsync(fields, "en", targetCodes, ct);
-            var translated = translatedSets.FirstOrDefault();
-            if (translated is null)
+            var translatedSets = await orchestrator.TranslateAsync(fields, "en", targetCodes, cancellationToken);
+
+            if (translatedSets.Count == 0)
             {
                 continue;
             }
+
+            var translated = translatedSets[0];
 
             dbContext.BusinessTranslations.Add(BusinessTranslation.Create(
                 business.Id,
@@ -101,6 +105,6 @@ public sealed class LanguageActivatedIntegrationEventHandler(
         }
 
         inboxStore.MarkAsProcessed(notification.MessageId);
-        await unitOfWork.SaveChangesAsync(ct);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
     }
 }

@@ -27,6 +27,18 @@ public sealed class Place : AuditableEntity, IAggregateRoot
     public int ReviewCount { get; private set; }
     public bool IsFeatured { get; private set; }
     public bool IsVerified { get; private set; }
+
+    /// <summary>
+    /// Optional category tag for this place (e.g. "Historical", "Nature", "Religious").
+    /// References ContentCore categories by ID. Nullable — not all places are categorised.
+    /// </summary>
+    public Guid? CategoryId { get; private set; }
+
+    /// <summary>
+    /// Denormalised count of active tours linked to this place.
+    /// Updated by <see cref="UpdateTourCount"/> when the ContentTours module publishes tour events.
+    /// </summary>
+    public int TourCount { get; private set; }
     public bool IsWheelchairAccessible { get; private set; }
     public bool HasAudioGuide { get; private set; }
     public bool HasBrailleSignage { get; private set; }
@@ -132,6 +144,15 @@ public sealed class Place : AuditableEntity, IAggregateRoot
         AddDomainEvent(new PlaceUpdatedDomainEvent(Id, Name, Description, Address));
     }
 
+    public void Delete()
+    {
+        if (IsDeleted)
+            return;
+
+        SoftDelete();
+        AddDomainEvent(new PlaceDeletedDomainEvent(Id));
+    }
+
     public void SetFeatured(bool isFeatured)
     {
         IsFeatured = isFeatured;
@@ -141,6 +162,21 @@ public sealed class Place : AuditableEntity, IAggregateRoot
     public void SetVerified(bool isVerified)
     {
         IsVerified = isVerified;
+        MarkUpdated();
+    }
+
+    public void SetCategory(Guid? categoryId)
+    {
+        CategoryId = categoryId;
+        MarkUpdated();
+    }
+
+    public void UpdateTourCount(int tourCount)
+    {
+        if (tourCount < 0)
+            throw new ArgumentOutOfRangeException(nameof(tourCount), "Tour count cannot be negative.");
+
+        TourCount = tourCount;
         MarkUpdated();
     }
 
