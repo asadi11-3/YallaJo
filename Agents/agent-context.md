@@ -1,8 +1,6 @@
 # YallaJo — Agent Context & Build Guide
 
-> **Version**: 2.4 · **Last Updated**: 2026-04-25 (AuditLog paging refactor now uses SelectPaginatedAsync projection path)
-> **Build State (2026-04-25)**: `dotnet build YallaJo.sln -clp:ErrorsOnly` currently fails with pre-existing duplicate type errors (`Accounts.Application` avatar/profile result records and `Security.Application` `CreateRoleResult` + `UpdatePrimaryPhoneResult`), plus warnings; targeted validation: `dotnet build Security.Domain/Security.Domain.csproj -clp:ErrorsOnly` passes (0 errors), `dotnet build Security.Infrastructure/Security.Infrastructure.csproj --no-dependencies -clp:ErrorsOnly` passes (0 errors).
-> **Build State (2026-04-23)**: 0 errors · 916 warnings (style/lint, pre-existing) · ContentCore GAP audit complete (GAP-01→13). Added: ILogger to ReactivateCategoryCommandHandler; RestoreCategoryCommand/Handler/Validator/Result + PATCH /categories/{id}/restore (uses GetByIdIncludingDeletedAsync + AuditableEntity.Restore()); GetEntityTranslationsQuery now accepts optional LanguageCode+TranslationStatus filters (GAP-11); TODO comments added to CategoryCreatedDomainEventHandler, CategoryUpdatedDomainEventHandler, AttachmentUploadedDomainEventHandler for deferred GAP-09/10. GAP-14/15 deferred (multilingual tag/specialization — major design change).
+> **Last Updated**: 2026-04-21 (ContentPlaces Place CQRS event/caching fix pass) | **Build State**: `ContentPlaces.Application` build 0 errors; `ContentPlaces.Presentation` build 0 errors; no ContentPlaces automated tests exist yet; full solution still has pre-existing analyzer warnings
 
 > **Purpose**: The single source of truth for any AI agent working on YallaJo.
 > **Read every section before writing code.** Every section is a rule you must follow.
@@ -82,7 +80,13 @@
 
 ---
 
-## §0. Quick Start
+| File | Contains | When to Read |
+|------|----------|-------------|
+| `Agents/guide.md` | **HOW to build** — layer anatomy, CQRS patterns, events, repos, UoW, Result pattern, Specs, Value Objects, pipeline behaviors, translation system, code templates, EF config patterns, DI patterns (~2162 lines) | **ALWAYS** — this is the code pattern bible |
+| `Agents/YallaJo.md` | **WHAT to build** — all ~196 endpoints across 4 phases, middleware, 18 background services, 3 SignalR hubs, business logic (~1968 lines) | When implementing new features or endpoints |
+| `Agents/Endpoints.pdf` | Endpoint definitions (visual) | When implementing endpoints |
+| `Agents/YallaJo Business Rules & Edge Cases.pdf` | Business rules & edge cases (63 pages, 24 sections) — state machines, validation, booking, payments, reviews, etc. | **ALWAYS when implementing any module** — this is the business logic bible |
+| `Agents/error-log.md` | Mistakes previous agents made — with root cause and prevention rules | **ALWAYS** — read before writing any code |
 
 ### §0.1 What YallaJo Is
 
@@ -156,7 +160,6 @@ Detail: [§2.5](#25-rule--transaction-boundaries-uow) · [§3.3](#33-domain-even
 | `Agents/YallaJo Business Rules & Edge Cases.pdf` | Business rule bible — 63 pages, 24 sections, state machines, validation, edge cases | **Before implementing any module's business logic** |
 | `Agents/Endpoints.pdf` | Visual endpoint tier breakdown (Wave 1–6) | When planning an implementation order |
 | `Agents/error-log.md` | Every past mistake with root cause + prevention rule | **Always, session start** |
-| `Agents/smoke-test-iam.md` | End-to-end smoke test checklist for the Phase 2–3D IAM lifecycle flows (admin provision → activate → login → forgot/reset → admin reset → suspend/reactivate/archive → reassign + profile scrub + provider deactivation + outbox). Includes required seed users, exact endpoints, expected DB/lifecycle/token state per step, and a final pass/fail checklist. | Before cutting an IAM-touching release or after changes to Auth/Security/Accounts lifecycle code. |
 | `Agents/authorization-refactor-plan.md` | The full authorization subsystem architecture + migration history | When touching authorization code |
 | `Agents/endpoint-authorization-audit.md` | Current endpoint authorization coverage (127 endpoints audited) | When adding/reviewing endpoints |
 | `Agents/decisions/ADR-001..004.md` | Architecture decisions (Modular Monolith, CQRS, No Hangfire, Result Pattern) | When an architectural choice seems wrong |
