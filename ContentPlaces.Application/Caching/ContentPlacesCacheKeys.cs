@@ -17,7 +17,15 @@ public static class ContentPlacesCacheKeys
 
     // ── ServiceItem ───────────────────────────────────────────────────────────
 
-    public static string ServiceItemList(Guid businessId) => $"cp:biz:{businessId}:services";
+    /// <summary>
+    /// Paginated list of ServiceItems for a business. Varies only by viewer tier:
+    /// elevated callers (business owner OR RolePrivilegeLevel >= Admin) see all
+    /// items; anonymous and standard non-owner callers see only IsAvailable=true.
+    /// Two cache entries per business — one for each visibility level — eliminate
+    /// the prior cache-poisoning risk where one caller's view leaked to others.
+    /// </summary>
+    public static string ServiceItemList(Guid businessId, bool isElevated) =>
+        $"cp:biz:{businessId}:services:e:{isElevated}";
 
     public static string ServiceItem(Guid id) => $"cp:service:{id}";
 

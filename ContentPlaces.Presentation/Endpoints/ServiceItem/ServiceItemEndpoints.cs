@@ -4,6 +4,7 @@ using ContentPlaces.Application.Commands.ServiceItem.DeleteServiceItem;
 using ContentPlaces.Application.Queries.ServiceItem.Common;
 using ContentPlaces.Application.Queries.ServiceItem.ListServiceItems;
 using ContentPlaces.Application.Queries.ServiceItem.GetServiceItemById;
+using ContentPlaces.Domain.Repositories;
 using ContentPlaces.Presentation.Endpoints.ServiceItem.Models;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
@@ -11,6 +12,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using ContentPlaces.Contracts.Authorization;
 using Security.Contracts.Authorization;
+using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Presentation.Authorization;
 using YallaJo.SharedKernel.Application.Authorization;
 using YallaJo.SharedKernel.Presentation;
@@ -26,9 +28,26 @@ internal static class ServiceItemEndpoints
             .WithTags("ContentPlaces | ServiceItems");
 
         bizServices.MapGet("/{businessId:guid}/services", async (
-            Guid businessId, ISender sender, CancellationToken ct) =>
+            Guid businessId,
+            ISender sender,
+            ICurrentUser currentUser,
+            IBusinessRepository businessRepository,
+            CancellationToken ct) =>
         {
-            var result = await sender.Send(new ListServiceItemsQuery(businessId), ct);
+            // Compute IsElevated at the endpoint so it travels on the cache key.
+            // Elevated = admin-tier role OR owner of the target business.
+            var isAdminTier = AppRoles.HighestPrivilegeLevel(currentUser.Roles)
+                >= RolePrivilegeLevel.Admin;
+            var isOwner = false;
+            if (!isAdminTier && currentUser.UserId.HasValue)
+            {
+                var business = await businessRepository.GetByIdAsync(businessId, ct);
+                isOwner = business is not null && business.OwnerId == currentUser.UserId.Value;
+            }
+            var isElevated = isAdminTier || isOwner;
+
+            var result = await sender.Send(
+                new ListServiceItemsQuery(businessId, isElevated), ct);
             return result.ToApiResult();
         })
         .WithName("ListServiceItems")

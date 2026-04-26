@@ -5,16 +5,16 @@ using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 namespace ContentPlaces.Application.Queries.ServiceItem.ListServiceItems;
 
 /// <remarks>
-/// Cache key does NOT vary by caller role because owner/admin can see unavailable items.
-/// Public-only results are cached; owner/admin bypass the cache via a separate uncached code path
-/// (handled by the handler checking ICurrentUser and skipping cache for elevated callers).
-/// For simplicity, we cache only the public (IsAvailable) view; the tag "biz:{BusinessId}:services"
-/// ensures both lists are invalidated on any write operation.
+/// <see cref="IsElevated"/> is computed at the endpoint (business owner OR
+/// RolePrivilegeLevel >= Admin) and travels on the query so it participates in
+/// the cache key. Two cache entries exist per business — one for the public
+/// (IsAvailable=true) view and one for the elevated (all items) view. The tag
+/// "biz:{BusinessId}:services" invalidates both on any write.
 /// </remarks>
-public sealed record ListServiceItemsQuery(Guid BusinessId)
+public sealed record ListServiceItemsQuery(Guid BusinessId, bool IsElevated)
     : IQuery<IReadOnlyList<ServiceItemDto>>, ICacheableQuery
 {
-    public string CacheKey => ContentPlacesCacheKeys.ServiceItemList(BusinessId);
+    public string CacheKey => ContentPlacesCacheKeys.ServiceItemList(BusinessId, IsElevated);
     public TimeSpan? CacheDuration => TimeSpan.FromMinutes(5);
     public IReadOnlyList<string> Tags => ["businesses", $"biz:{BusinessId}:services"];
 }
