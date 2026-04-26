@@ -4,6 +4,7 @@ using ContentPlaces.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
+using Security.Contracts.Authorization;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
@@ -36,8 +37,9 @@ public sealed class CreateServiceItemCommandHandler(
             return Result<CreateServiceItemResult>.Failure(
                 new Error("Business.NotFound", "Business not found."), Outcome.NotFound);
 
-        var isAdmin = currentUser.IsInRole("Admin");
-        if (!isAdmin && business.OwnerId != currentUser.UserId.Value)
+        var isAdminTier = AppRoles.HighestPrivilegeLevel(currentUser.Roles)
+            >= RolePrivilegeLevel.Admin;
+        if (!isAdminTier && business.OwnerId != currentUser.UserId.Value)
             return Result<CreateServiceItemResult>.Failure(
                 Error.Forbidden("You do not own this business."), Outcome.Forbidden);
 
