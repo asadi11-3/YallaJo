@@ -7,10 +7,6 @@ using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
-using ContentPlaces.Contracts.Authorization;
-using Security.Contracts.Authorization;
-using YallaJo.SharedKernel.Presentation.Authorization;
-using YallaJo.SharedKernel.Application.Authorization;
 using YallaJo.SharedKernel.Presentation;
 
 namespace ContentPlaces.Presentation.Endpoints.BusinessAmenity;
@@ -26,10 +22,12 @@ internal static class BusinessAmenityEndpoints
         amenities.MapGet("/{businessId:guid}/amenities", async (
             Guid businessId,
             ISender sender,
-            CancellationToken ct) =>
+            CancellationToken ct,
+            int page = 1,
+            int pageSize = 10) =>
         {
             var result = await sender.Send(
-                new ListBusinessAmenitiesQuery(businessId), ct);
+                new ListBusinessAmenitiesQuery(businessId, page, pageSize), ct);
 
             return result.ToApiResult();
         })
@@ -39,7 +37,7 @@ internal static class BusinessAmenityEndpoints
         .WithSummary("List amenities for a business")
         .AllowAnonymous();
 
-        // Add amenity
+        // Add amenity (owner OR admin-tier role; enforced in handler)
         amenities.MapPost("/{businessId:guid}/amenities", async (
             Guid businessId,
             AddBusinessAmenityRequest request,
@@ -58,14 +56,14 @@ internal static class BusinessAmenityEndpoints
         .WithName("AddBusinessAmenity")
         .Produces<BusinessAmenityDto>(StatusCodes.Status201Created)
         .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status409Conflict)
-        .WithSummary("Add an amenity to a business")
-        .WithMetadata(new MustHavePermissionAttribute(
-            AppFeatures.BusinessAmenity,
-            AppAction.Create))
+        .WithSummary("Add an amenity to a business (owner OR admin-tier)")
         .RequireAuthorization();
 
-        // Remove amenity
+        // Remove amenity (owner OR admin-tier role; enforced in handler)
         amenities.MapDelete("/amenities/{amenityId:guid}", async (
             Guid amenityId,
             ISender sender,
@@ -78,11 +76,10 @@ internal static class BusinessAmenityEndpoints
         })
         .WithName("RemoveBusinessAmenity")
         .Produces(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
         .ProducesProblem(StatusCodes.Status404NotFound)
-        .WithSummary("Remove an amenity from a business")
-        .WithMetadata(new MustHavePermissionAttribute(
-            AppFeatures.BusinessAmenity,
-            AppAction.Delete))
+        .WithSummary("Remove an amenity from a business (owner OR admin-tier)")
         .RequireAuthorization();
     }
 }

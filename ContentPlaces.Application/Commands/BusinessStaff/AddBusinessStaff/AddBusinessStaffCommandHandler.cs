@@ -1,9 +1,9 @@
 using ContentPlaces.Application.Interfaces;
 using ContentPlaces.Application.Queries.BusinessStaff.Common;
-using ContentPlaces.Domain.Exceptions;
 using ContentPlaces.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Security.Contracts.Authorization;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
@@ -43,10 +43,11 @@ public sealed class AddBusinessStaffCommandHandler(
                     "Business not found"));
         }
 
-        // Authorization
-        var isAdmin = currentUser.IsInRole("Admin");
+        // Authorization: owner OR admin-tier role (Admin/SuperAdmin/Owner)
+        var isAdminTier = AppRoles.HighestPrivilegeLevel(currentUser.Roles)
+            >= RolePrivilegeLevel.Admin;
 
-        if (!isAdmin && business.OwnerId != currentUser.UserId)
+        if (!isAdminTier && business.OwnerId != currentUser.UserId)
         {
             return Result<BusinessStaffDto>.Failure(
                 Error.Forbidden(
@@ -76,12 +77,8 @@ public sealed class AddBusinessStaffCommandHandler(
 
         await staffRepository.AddAsync(staff, cancellationToken);
 
-        // Integration event
-        var integrationEvent = new BusinessStaffAddedIntegrationEvent(
-            staff.Id,
-            staff.BusinessId,
-            staff.UserId,
-            staff.Role.ToString());
+        // Integration event is published by BusinessStaffAddedDomainEventHandler
+        // (raised by StaffEntity.Create) — no in-handler outbox write needed.
 
         try
         {

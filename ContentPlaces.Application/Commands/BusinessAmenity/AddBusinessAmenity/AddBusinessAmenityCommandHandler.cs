@@ -4,6 +4,7 @@ using ContentPlaces.Application.Queries.BusinessAmenity.Common;
 using ContentPlaces.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Security.Contracts.Authorization;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
@@ -26,8 +27,7 @@ public sealed class AddBusinessAmenityCommandHandler(
         if (!currentUser.IsAuthenticated || currentUser.UserId is null)
         {
             return Result<BusinessAmenityDto>.Failure(
-                new Error("Auth.Unauthorized", "Authentication required"),
-                Outcome.Unauthorized);
+                Error.Unauthorized("Authentication required"));
         }
 
         var business = await businessRepository.GetByIdAsync(request.BusinessId, cancellationToken);
@@ -35,15 +35,17 @@ public sealed class AddBusinessAmenityCommandHandler(
         if (business is null)
         {
             return Result<BusinessAmenityDto>.Failure(
-                new Error("Business.NotFound", "Business not found"),
-                Outcome.NotFound);
+                Error.NotFound("Business.NotFound", "Business not found"));
         }
 
-        if (business.OwnerId != currentUser.UserId)
+        // Authorization: owner OR admin-tier role (Admin/SuperAdmin/Owner)
+        var isAdminTier = AppRoles.HighestPrivilegeLevel(currentUser.Roles)
+            >= RolePrivilegeLevel.Admin;
+
+        if (!isAdminTier && business.OwnerId != currentUser.UserId)
         {
             return Result<BusinessAmenityDto>.Failure(
-                new Error("Auth.Forbidden", "Not allowed"),
-                Outcome.Forbidden);
+                Error.Forbidden("You are not allowed to modify this business"));
         }
 
         var normalizedName = request.Name.Trim().ToLower(CultureInfo.InvariantCulture);

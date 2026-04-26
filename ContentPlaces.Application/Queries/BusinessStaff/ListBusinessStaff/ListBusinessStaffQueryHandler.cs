@@ -1,6 +1,7 @@
 using ContentPlaces.Application.Queries.BusinessStaff.Common;
 using ContentPlaces.Domain.Repositories;
 using Microsoft.Extensions.Logging;
+using Security.Contracts.Authorization;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
@@ -36,10 +37,11 @@ public sealed class ListBusinessStaffQueryHandler(
                 Error.NotFound("Business.NotFound", "Business not found"));
         }
 
-        // Authorization: Admin or Owner only
-        var isAdmin = currentUser.IsInRole("Admin");
+        // Authorization: owner OR admin-tier role (Admin/SuperAdmin/Owner)
+        var isAdminTier = AppRoles.HighestPrivilegeLevel(currentUser.Roles)
+            >= RolePrivilegeLevel.Admin;
 
-        if (!isAdmin && business.OwnerId != currentUser.UserId)
+        if (!isAdminTier && business.OwnerId != currentUser.UserId)
         {
             return Result<IReadOnlyList<BusinessStaffDto>>.Failure(
                 Error.Forbidden("You are not allowed to view this business"));

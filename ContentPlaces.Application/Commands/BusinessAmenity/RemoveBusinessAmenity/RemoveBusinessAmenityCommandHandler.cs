@@ -2,6 +2,7 @@ using ContentPlaces.Application.Interfaces;
 using ContentPlaces.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Security.Contracts.Authorization;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
@@ -39,10 +40,11 @@ public sealed class RemoveBusinessAmenityCommandHandler(
                     "Amenity not found"));
         }
 
-        // Authorization: only Admin or Business Owner
-        var isAdmin = currentUser.IsInRole("Admin");
+        // Authorization: owner OR admin-tier role (Admin/SuperAdmin/Owner)
+        var isAdminTier = AppRoles.HighestPrivilegeLevel(currentUser.Roles)
+            >= RolePrivilegeLevel.Admin;
 
-        if (!isAdmin && amenity.Business.OwnerId != currentUser.UserId)
+        if (!isAdminTier && amenity.Business.OwnerId != currentUser.UserId)
         {
             return Result.Failure(
                 Error.Forbidden(

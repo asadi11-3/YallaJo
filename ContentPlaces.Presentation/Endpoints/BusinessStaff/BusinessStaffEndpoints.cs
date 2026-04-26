@@ -7,10 +7,6 @@ using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
-using ContentPlaces.Contracts.Authorization;
-using Security.Contracts.Authorization;
-using YallaJo.SharedKernel.Presentation.Authorization;
-using YallaJo.SharedKernel.Application.Authorization;
 using YallaJo.SharedKernel.Presentation;
 
 namespace ContentPlaces.Presentation.Endpoints.BusinessStaff;
@@ -22,7 +18,7 @@ internal static class BusinessStaffEndpoints
         var staff = group.MapGroup("/places/businesses")
             .WithTags("ContentPlaces | BusinessStaff");
 
-        // List business staff (secured)
+        // List business staff (owner OR admin-tier role; enforced in handler)
         staff.MapGet("/{id:guid}/staff", async (
             Guid id,
             ISender sender,
@@ -35,14 +31,13 @@ internal static class BusinessStaffEndpoints
         })
         .WithName("ListBusinessStaff")
         .Produces<IReadOnlyList<BusinessStaffDto>>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
         .ProducesProblem(StatusCodes.Status404NotFound)
-        .WithSummary("List business staff members")
-        .WithMetadata(new MustHavePermissionAttribute(
-            AppFeatures.BusinessStaff,
-            AppAction.Read))
+        .WithSummary("List business staff members (owner OR admin-tier)")
         .RequireAuthorization();
 
-        // Add staff member
+        // Add staff member (owner OR admin-tier role; enforced in handler)
         staff.MapPost("/{id:guid}/staff", async (
             Guid id,
             AddBusinessStaffRequest request,
@@ -60,14 +55,14 @@ internal static class BusinessStaffEndpoints
         .WithName("AddBusinessStaff")
         .Produces<BusinessStaffDto>(StatusCodes.Status201Created)
         .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status409Conflict)
-        .WithSummary("Add a staff member to a business")
-        .WithMetadata(new MustHavePermissionAttribute(
-            AppFeatures.BusinessStaff,
-            AppAction.Create))
+        .WithSummary("Add a staff member to a business (owner OR admin-tier)")
         .RequireAuthorization();
 
-        // Remove (deactivate) staff member
+        // Remove (deactivate) staff member (owner OR admin-tier role; enforced in handler)
         staff.MapDelete("/staff/{id:guid}", async (
             Guid id,
             ISender sender,
@@ -80,12 +75,11 @@ internal static class BusinessStaffEndpoints
         })
         .WithName("RemoveBusinessStaff")
         .Produces(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status409Conflict)
-        .WithSummary("Deactivate a staff member (soft delete)")
-        .WithMetadata(new MustHavePermissionAttribute(
-            AppFeatures.BusinessStaff,
-            AppAction.Delete))
+        .WithSummary("Deactivate a staff member (soft delete; owner OR admin-tier)")
         .RequireAuthorization();
     }
 }

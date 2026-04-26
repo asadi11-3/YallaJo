@@ -23,18 +23,12 @@ public sealed class UpdateAccessibilityFeaturesCommandHandler(
         UpdateAccessibilityFeaturesCommand request,
         CancellationToken cancellationToken)
     {
-        // Authentication check
+        // Authentication defence-in-depth (endpoint MustHavePermissionAttribute
+        // handles authorization for AccessibilityFeature:Update).
         if (!currentUser.IsAuthenticated)
         {
             return Result.Failure(
                 Error.Unauthorized("Authentication required"));
-        }
-
-        // Authorization: Admin only
-        if (!currentUser.IsInRole("Admin"))
-        {
-            return Result.Failure(
-                Error.Forbidden("Admin access required"));
         }
 
         // Validate place existence
