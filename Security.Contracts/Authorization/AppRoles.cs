@@ -51,6 +51,7 @@ namespace Security.Contracts.Authorization
         {
             if (string.IsNullOrWhiteSpace(roleName))
             {
+
                 return RolePrivilegeLevel.None;
             }
 

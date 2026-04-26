@@ -38,7 +38,8 @@ public sealed class ApproveBusinessCommandHandler(
             if (business.Status != BusinessStatus.Pending)
             {
                 return Result.Failure(
-                    new Error("Business.InvalidTransition",
+                    new Error(
+                        "Business.InvalidTransition",
                         $"Cannot approve a business with status {business.Status}."),
                     Outcome.Conflict);
             }

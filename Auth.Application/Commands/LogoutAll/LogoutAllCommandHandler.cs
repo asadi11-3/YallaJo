@@ -15,7 +15,7 @@ public sealed class LogoutAllCommandHandler(
     HybridCache cache)
     : ICommandHandler<LogoutAllCommand>
 {
-    public async Task<Result> Handle(LogoutAllCommand request, CancellationToken canclellationToken)
+    public async Task<Result> Handle(LogoutAllCommand request, CancellationToken cancellationToken)
     {
         if (!currentUser.IsAuthenticated || currentUser.UserId is null)
             return Result.Unauthorized("Authentication is required.");
@@ -25,12 +25,12 @@ public sealed class LogoutAllCommandHandler(
         var activeSessions = await sessionRepository.GetAllAsync(
             filter: s => s.UserId == userId && !s.IsRevoked,
             asNoTracking: false,
-            ct: canclellationToken);
+            ct: cancellationToken);
 
         var activeRefreshTokens = await refreshTokenRepository.GetAllAsync(
             filter: rt => rt.UserId == userId && !rt.IsRevoked,
             asNoTracking: false,
-            ct: canclellationToken);
+            ct: cancellationToken);
 
         foreach (var session in activeSessions)
             session.Revoke();
@@ -38,9 +38,9 @@ public sealed class LogoutAllCommandHandler(
         foreach (var refreshToken in activeRefreshTokens)
             refreshToken.Revoke();
 
-        await unitOfWork.SaveChangesAsync(canclellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        await cache.RemoveByTagAsync(AuthCacheKeys.UserSessionsTag(userId), canclellationToken);
+        await cache.RemoveByTagAsync(AuthCacheKeys.UserSessionsTag(userId), cancellationToken);
 
         return Result.Success();
     }

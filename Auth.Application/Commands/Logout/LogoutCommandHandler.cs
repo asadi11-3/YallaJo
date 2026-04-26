@@ -15,20 +15,20 @@ public sealed class LogoutCommandHandler(
     HybridCache cache)
     : ICommandHandler<LogoutCommand>
 {
-    public async Task<Result> Handle(LogoutCommand request, CancellationToken ct)
+    public async Task<Result> Handle(LogoutCommand request, CancellationToken cancellationToken)
     {
         var hash = tokenService.HashRefreshToken(request.RefreshToken);
 
         var refreshToken = await refreshTokenRepository.FirstOrDefaultAsync(
             filter: rt => rt.TokenHash == hash,
             asNoTracking: false,
-            ct: ct);
+            ct: cancellationToken);
 
         if (refreshToken is null)
             return Result.Success(); // idempotent — token not found is still a successful logout
 
         var session = await sessionRepository.GetByIdAsync(
-            refreshToken.SessionId, ct: ct, asNoTracking: false);
+            refreshToken.SessionId, ct: cancellationToken, asNoTracking: false);
 
         if (!refreshToken.IsRevoked)
             refreshToken.Revoke();
@@ -36,9 +36,9 @@ public sealed class LogoutCommandHandler(
         if (session is not null && !session.IsRevoked)
             session.Revoke();
 
-        await unitOfWork.SaveChangesAsync(ct);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        await cache.RemoveByTagAsync(AuthCacheKeys.UserSessionsTag(refreshToken.UserId), ct);
+        await cache.RemoveByTagAsync(AuthCacheKeys.UserSessionsTag(refreshToken.UserId), cancellationToken);
 
         return Result.Success();
     }
