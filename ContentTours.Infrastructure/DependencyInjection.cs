@@ -6,6 +6,7 @@ using ContentTours.Infrastructure.Persistence.Seeding;
 using ContentTours.Infrastructure.Repositories;
 using ContentTours.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using YallaJo.SharedKernel.Application.Authorization;
@@ -24,14 +25,27 @@ public static class DependencyInjection
         var connectionString = configuration.GetConnectionString("DefaultConnection")
             ?? throw new InvalidOperationException("Connection string 'DefaultConnection' is not configured.");
 
+        var isDevelopment = string.Equals(
+            configuration["ASPNETCORE_ENVIRONMENT"] ?? Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"),
+            "Development",
+            StringComparison.OrdinalIgnoreCase);
+
         services.AddDbContext<ContentToursDbContext>(options =>
+        {
             options.UseSqlServer(
                 connectionString,
                 sql =>
                 {
                     sql.MigrationsHistoryTable("__EFMigrationsHistory", "content_tours");
                     sql.EnableRetryOnFailure(3);
-                }));
+                });
+
+            if (isDevelopment)
+            {
+                options.ConfigureWarnings(warnings =>
+                    warnings.Ignore(RelationalEventId.PendingModelChangesWarning));
+            }
+        });
 
         services.AddScoped<IUnitOfWork<ContentToursDbContext>, UnitOfWork<ContentToursDbContext>>();
         services.AddScoped<IContentToursUnitOfWork, ContentToursUnitOfWork>();
