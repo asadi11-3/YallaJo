@@ -203,3 +203,12 @@
 - **Root Cause**: Many consumers import folder-style sub-namespaces (`Security.Contracts.Abstractions.SecurityService`, etc.). Flattening all moved types to only the root namespace removed those namespace symbols.
 - **Fix Applied**: Kept Security.Contracts split refactor in place and captured the compatibility break for follow-up alignment (consumer import updates or namespace-compat shim layer).
 - **Prevention Rule**: Before namespace refactors in shared contract assemblies, run a repo-wide usage scan for `using` directives and keep compatibility aliases/shims when downstream modules depend on old namespace paths.
+
+### ERR-021: EF migration scaffold produced unrelated diff because previous migration chain already contained the new table
+- **Date**: 2026-04-26
+- **Module**: ContentTours.Infrastructure
+- **What Happened**: Ran `dotnet ef migrations add AddTourPricingTierTranslation` after implementing the `TourPricingTierTranslation` code. EF generated a migration that only altered `TourPricingTiers.ParticipantType` default value instead of creating `TourPricingTierTranslations`.
+- **Error Message**: Migration `20260426203821_AddTourPricingTierTranslation` `Up()` only contained `AlterColumn<byte>(ParticipantType, ...)`; no `CreateTable("TourPricingTierTranslations")` appeared.
+- **Root Cause**: The existing previous migration `20260426203753_DropTierCurrencyAddParticipantTypeAndTourNameIndex` and snapshot already contained `TourPricingTierTranslations`. The model change was already represented in the migration chain on this branch, so EF diffed only an unrelated model drift.
+- **Fix Applied**: Verified the prior migration already creates `TourPricingTierTranslations`, removed the incorrect new migration with `dotnet ef migrations remove --context ContentToursDbContext --project ContentTours.Infrastructure --startup-project YallaJo.Api --force`, and kept the code changes aligned with the existing migration chain.
+- **Prevention Rule**: Before accepting a newly scaffolded EF migration, inspect both the generated `Up()` and the previous migration/snapshot for the target table. If the previous migration chain already contains the schema, remove the bogus migration instead of committing unrelated DDL drift.

@@ -29,10 +29,12 @@ public class TourPricingTierConfiguration : IEntityTypeConfiguration<TourPricing
             money.Property(m => m.Currency).HasColumnName("PriceCurrency").HasMaxLength(3).HasDefaultValue("JOD");
         });
 
-        builder.Property(x => x.Currency)
+        // Currency is derived from Price.Currency (computed property) — no separate DB column.
+        builder.Ignore(x => x.Currency);
+
+        builder.Property(x => x.ParticipantType)
             .IsRequired()
-            .HasMaxLength(3)
-            .IsUnicode(false);
+            .HasConversion<byte>();
 
         builder.Property(x => x.MinParticipants)
             .IsRequired()

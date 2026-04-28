@@ -32,48 +32,61 @@ public sealed class LanguageActivatedIntegrationEventHandler(
         }
 
         var evt = notification.Event;
-        var targetCodes = new List<string> { evt.LanguageCode };
+        var normalizedLanguageCode = evt.LanguageCode.Trim().ToLowerInvariant();
+        var targetCodes = new List<string> { normalizedLanguageCode };
 
         var tours = await dbContext.Tours
             .Include(t => t.TourTranslations)
+            .Include(t => t.TourPricingTiers)
+                .ThenInclude(t => t.Translations)
             .ToListAsync(ct);
 
         foreach (var tour in tours)
         {
-            if (tour.TourTranslations.Any(t => t.LanguageId == evt.LanguageId))
+            if (!tour.TourTranslations.Any(t => t.LanguageId == evt.LanguageId))
             {
-                continue;
+                var fields = new Dictionary<string, string>
+                {
+                    ["Name"] = tour.Name,
+                    ["Description"] = tour.Description ?? string.Empty,
+                    ["ShortDescription"] = tour.ShortDescription ?? string.Empty,
+                    ["MeetingPoint"] = tour.MeetingPoint?.ToString() ?? string.Empty
+                };
+
+                var translatedSets = await orchestrator.TranslateAsync(fields, "en", targetCodes, ct);
+                var translated = translatedSets.FirstOrDefault();
+                if (translated is not null)
+                {
+                    dbContext.TourTranslations.Add(TourTranslation.Create(
+                        tour.Id,
+                        evt.LanguageId,
+                        translated.Fields["Name"],
+                        translated.Fields["Description"],
+                        translated.Fields["ShortDescription"],
+                        translated.Fields["MeetingPoint"]));
+                }
             }
 
-            var fields = new Dictionary<string, string>
+            foreach (var tier in tour.TourPricingTiers)
             {
-                ["Name"] = tour.Name,
-                ["Description"] = tour.Description ?? string.Empty,
-                ["ShortDescription"] = tour.ShortDescription ?? string.Empty,
-                ["MeetingPoint"] = tour.MeetingPoint?.ToString() ?? string.Empty
-            };
+                if (tier.Translations.Any(t => t.LanguageCode == normalizedLanguageCode))
+                {
+                    continue;
+                }
 
-            var translatedSets = await orchestrator.TranslateAsync(fields, "en", targetCodes, ct);
-            var translated = translatedSets.FirstOrDefault();
-            if (translated is null)
-            {
-                continue;
+                dbContext.TourPricingTierTranslations.Add(TourPricingTierTranslation.Create(
+                    tier.Id,
+                    normalizedLanguageCode,
+                    tier.Name,
+                    tier.Description));
             }
-
-            dbContext.TourTranslations.Add(TourTranslation.Create(
-                tour.Id,
-                evt.LanguageId,
-                translated.Fields["Name"],
-                translated.Fields["Description"],
-                translated.Fields["ShortDescription"],
-                translated.Fields["MeetingPoint"]));
         }
 
         inboxStore.MarkAsProcessed(notification.MessageId);
         await unitOfWork.SaveChangesAsync(ct);
 
         logger.LogInformation(
-            "ContentTours: Translated {TourCount} tours to language {LanguageCode}.",
-            tours.Count, evt.LanguageCode);
+            "ContentTours: Backfilled tours and pricing tiers for {TourCount} tours to language {LanguageCode}.",
+            tours.Count, normalizedLanguageCode);
     }
 }

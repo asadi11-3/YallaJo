@@ -58,7 +58,7 @@ public sealed class ContentToursDbInitializer(ContentToursDbContext dbContext) :
         SetProperty(tour, nameof(Tour.Currency), "JOD");
         SetProperty(tour, nameof(Tour.Location), new Location(30.3285m, 35.4444m));
         SetProperty(tour, nameof(Tour.MeetingPoint), new Location(30.3220m, 35.4780m));
-        SetProperty(tour, nameof(Tour.Status), TourStatus.Published);
+        SetProperty(tour, nameof(Tour.Status), TourStatus.Approved);
         SetProperty(tour, nameof(Tour.IsFeatured), true);
         SetProperty(tour, nameof(Tour.IsInstantBooking), true);
         SetProperty(tour, nameof(Tour.CancellationPolicyHours), 24);

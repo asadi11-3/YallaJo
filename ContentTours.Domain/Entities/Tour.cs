@@ -56,21 +56,97 @@ public sealed class Tour : AuditableEntity, IAggregateRoot
     // ── Business Methods ──────────────────────────────────────────────────────
 
     /// <summary>
-    /// Transitions this tour from Draft to Published.
-    /// Raises <see cref="TourPlaceCountChangedDomainEvent"/> so the linked Place's
-    /// TourCount can be incremented via the ContentPlaces outbox.
+    /// PW-1 lifecycle: transitions a Draft (or Rejected) tour to Pending so the admin can review.
+    /// Enforces submit-time invariants (must have at least one active schedule and one active
+    /// Adult pricing tier) so an incomplete tour can never enter the review queue.
+    ///
+    /// The collections are passed in (rather than read off navigation properties) so the caller
+    /// is forced to load them via the dedicated repositories — the Tour aggregate's children are
+    /// not eagerly loaded by default.
     /// </summary>
-    public void Publish()
+    /// <param name="hasActiveSchedule">True iff at least one <c>TourSchedule</c> with <c>IsActive == true</c> exists for this tour.</param>
+    /// <param name="hasActiveAdultTier">True iff at least one <c>TourPricingTier</c> with <c>IsActive &amp;&amp; ParticipantType == Adult</c> exists.</param>
+    /// <exception cref="InvalidOperationException">Thrown when status is not submittable, or invariants fail.</exception>
+    public void Submit(bool hasActiveSchedule, bool hasActiveAdultTier)
     {
-        if (Status == TourStatus.Published)
-            return; // already published — guard to avoid spurious domain events
+        if (!Status.IsSubmittable())
+            throw new InvalidOperationException(
+                $"Tour.InvalidStateForSubmit: status {Status} cannot be submitted. " +
+                $"Required: Draft or Rejected.");
 
-        Status = TourStatus.Published;
+        if (!hasActiveSchedule)
+            throw new InvalidOperationException(
+                "Tour.NoActiveSchedule: at least one active TourSchedule is required to submit.");
+
+        if (!hasActiveAdultTier)
+            throw new InvalidOperationException(
+                "Tour.NoAdultPricingTier: at least one active Adult TourPricingTier is required to submit.");
+
+        Status = TourStatus.Pending;
+        MarkUpdated();
+    }
+
+    /// <summary>
+    /// PW-1 lifecycle: admin approves a Pending tour, making it publicly visible.
+    /// Also fires when a Suspended/Archived tour is reinstated.
+    /// Raises <see cref="TourPlaceCountChangedDomainEvent"/> so the linked Place's TourCount can
+    /// be incremented via the ContentPlaces outbox.
+    /// </summary>
+    public void Approve()
+    {
+        if (Status == TourStatus.Approved)
+            return; // already approved — guard to avoid spurious domain events
+
+        Status = TourStatus.Approved;
         MarkUpdated();
 
         // Notify ContentPlaces to recompute its denormalized TourCount.
         if (PlaceId.HasValue)
             AddDomainEvent(new TourPlaceCountChangedDomainEvent(Id, PlaceId.Value));
+    }
+
+    /// <summary>
+    /// PW-1 lifecycle: admin rejects a Pending tour. Provider may amend and call <see cref="Submit"/> again.
+    /// </summary>
+    public void Reject()
+    {
+        if (Status == TourStatus.Rejected)
+            return;
+
+        Status = TourStatus.Rejected;
+        MarkUpdated();
+    }
+
+    /// <summary>
+    /// Updates the tour's pricing currency. Blocked when any <c>TourPricingTier</c> exists,
+    /// because changing currency would silently invalidate every tier's price/currency match.
+    /// The caller is responsible for passing the actual tier count (the aggregate does not load
+    /// tiers eagerly).
+    ///
+    /// Set <c>FIX-12</c> in <c>MOHAMMAD_TASK2_3_FIX_PLAN.md</c>.
+    /// </summary>
+    /// <param name="newCurrency">3-letter ISO currency code (e.g. "JOD"). Case-insensitive.</param>
+    /// <param name="existingTierCount">The number of <c>TourPricingTier</c> rows currently attached to this tour.</param>
+    /// <exception cref="ArgumentException">Thrown when the currency code is empty or not 3 characters.</exception>
+    /// <exception cref="InvalidOperationException">Thrown when tiers exist and the currency would change.</exception>
+    public void ChangeCurrency(string newCurrency, int existingTierCount)
+    {
+        if (string.IsNullOrWhiteSpace(newCurrency))
+            throw new ArgumentException("Currency is required.", nameof(newCurrency));
+        if (newCurrency.Length != 3)
+            throw new ArgumentException("Currency must be a 3-letter ISO code.", nameof(newCurrency));
+
+        var normalized = newCurrency.ToUpperInvariant();
+        if (Currency.Equals(normalized, StringComparison.OrdinalIgnoreCase))
+            return; // no-op — caller passed the same currency
+
+        if (existingTierCount > 0)
+            throw new InvalidOperationException(
+                "Tour.CurrencyLockedByPricingTiers: cannot change currency while pricing tiers exist. " +
+                "Delete or update all tiers to the new currency first.");
+
+        Currency = normalized;
+        MarkUpdated();
     }
 
     /// <summary>
@@ -124,8 +200,8 @@ public sealed class Tour : AuditableEntity, IAggregateRoot
         if (oldPlaceId.HasValue)
             AddDomainEvent(new TourPlaceCountChangedDomainEvent(Id, oldPlaceId.Value));
 
-        // Notify new place to increment (only relevant when tour is Published)
-        if (Status == TourStatus.Published)
+        // Notify new place to increment (only relevant when tour is Approved)
+        if (Status == TourStatus.Approved)
             AddDomainEvent(new TourPlaceCountChangedDomainEvent(Id, placeId));
     }
 
@@ -139,7 +215,7 @@ public sealed class Tour : AuditableEntity, IAggregateRoot
         PlaceId = null;
         MarkUpdated();
 
-        if (Status == TourStatus.Published)
+        if (Status == TourStatus.Approved)
             AddDomainEvent(new TourPlaceCountChangedDomainEvent(Id, oldPlaceId));
     }
 
@@ -153,7 +229,26 @@ public sealed class Tour : AuditableEntity, IAggregateRoot
 
         SoftDelete();
 
-        if (PlaceId.HasValue && Status == TourStatus.Published)
+        if (PlaceId.HasValue && Status == TourStatus.Approved)
             AddDomainEvent(new TourPlaceCountChangedDomainEvent(Id, PlaceId.Value));
+    }
+
+    /// <summary>
+    /// Toggles the IsFeatured flag. Idempotent — raises no event if value unchanged (ERR-009).
+    /// Only raises <see cref="TourFeaturedChangedDomainEvent"/> when the value actually changes.
+    /// </summary>
+    public void SetFeatured(bool isFeatured, Guid changedByUserId)
+    {
+        if (IsFeatured == isFeatured)
+            return; // ERR-009 idempotency: no event when value unchanged
+
+        IsFeatured = isFeatured;
+        MarkUpdated();
+
+        AddDomainEvent(new TourFeaturedChangedDomainEvent(
+            TourId: Id,
+            IsFeatured: isFeatured,
+            ChangedByUserId: changedByUserId,
+            ChangedAt: DateTime.UtcNow));
     }
 }
