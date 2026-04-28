@@ -21,16 +21,16 @@ public sealed class RemoveBusinessStaffCommandHandler(
         CancellationToken cancellationToken)
     {
         // Authentication
-        if (!currentUser.IsAuthenticated)
+        if (!currentUser.IsAuthenticated || currentUser.UserId is null)
         {
             return Result.Failure(
                 Error.Unauthorized("Authentication required"));
         }
 
-        var staff = await staffRepository.GetByIdAsync(
+        var staff = await staffRepository.GetByIdWithBusinessAsync(
             request.Id,
-            cancellationToken,
-            asNoTracking: false);
+            asNoTracking: false,
+            ct: cancellationToken);
 
         if (staff is null)
         {

@@ -21,7 +21,7 @@ public sealed class RemoveBusinessAmenityCommandHandler(
         CancellationToken cancellationToken)
     {
         // Authentication check
-        if (!currentUser.IsAuthenticated)
+        if (!currentUser.IsAuthenticated || currentUser.UserId is null)
         {
             return Result.Failure(
                 Error.Unauthorized("Authentication required"));

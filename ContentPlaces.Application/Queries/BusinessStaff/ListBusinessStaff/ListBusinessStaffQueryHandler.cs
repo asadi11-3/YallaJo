@@ -20,7 +20,7 @@ public sealed class ListBusinessStaffQueryHandler(
         CancellationToken cancellationToken)
     {
         // Authentication check
-        if (!currentUser.IsAuthenticated)
+        if (!currentUser.IsAuthenticated || currentUser.UserId is null)
         {
             return Result<IReadOnlyList<BusinessStaffDto>>.Failure(
                 Error.Unauthorized("Authentication required"));

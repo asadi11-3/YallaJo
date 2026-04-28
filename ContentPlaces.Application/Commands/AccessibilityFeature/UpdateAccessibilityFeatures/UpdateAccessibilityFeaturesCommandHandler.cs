@@ -25,7 +25,7 @@ public sealed class UpdateAccessibilityFeaturesCommandHandler(
     {
         // Authentication defence-in-depth (endpoint MustHavePermissionAttribute
         // handles authorization for AccessibilityFeature:Update).
-        if (!currentUser.IsAuthenticated)
+        if (!currentUser.IsAuthenticated || currentUser.UserId is null)
         {
             return Result.Failure(
                 Error.Unauthorized("Authentication required"));
