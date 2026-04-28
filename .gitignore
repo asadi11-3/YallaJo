@@ -370,3 +370,6 @@ FodyWeavers.xsd
 
 /Agents/ContentPlaces-tasks.md
 /Agents/ContentPlaces-team-tasks.md
+/YallaJo.Api/appsettings.Development.json
+/YallaJo.Api/appsettings.Production.json
+/YallaJo.Api/appsettings.json

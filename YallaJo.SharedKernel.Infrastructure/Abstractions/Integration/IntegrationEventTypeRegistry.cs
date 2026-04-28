@@ -56,8 +56,11 @@ public static class IntegrationEventTypeRegistry
         ["content-places.service-item.created.v1"]       = typeof(ServiceItemCreatedIntegrationEvent),
         ["content-places.service-item.deleted.v1"]       = typeof(ServiceItemDeletedIntegrationEvent),
 
-        // ── ContentTours (1 event) ──
+        // ── ContentTours (4 events) ──
         ["content-tours.place.tour-count-updated.v1"]    = typeof(PlaceTourCountUpdatedIntegrationEvent),
+        ["content-tours.schedule.changed.v1"]            = typeof(TourScheduleChangedIntegrationEvent),
+        ["content-tours.pricing-tier.changed.v1"]        = typeof(TourPricingTierChangedIntegrationEvent),
+        ["content-tours.tour.featured-changed.v1"]       = typeof(TourFeaturedChangedIntegrationEvent),
     };
 
     private static readonly Dictionary<Type, string> TypeToName =

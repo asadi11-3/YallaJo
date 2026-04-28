@@ -203,3 +203,66 @@
 - **Root Cause**: Many consumers import folder-style sub-namespaces (`Security.Contracts.Abstractions.SecurityService`, etc.). Flattening all moved types to only the root namespace removed those namespace symbols.
 - **Fix Applied**: Kept Security.Contracts split refactor in place and captured the compatibility break for follow-up alignment (consumer import updates or namespace-compat shim layer).
 - **Prevention Rule**: Before namespace refactors in shared contract assemblies, run a repo-wide usage scan for `using` directives and keep compatibility aliases/shims when downstream modules depend on old namespace paths.
+
+### ERR-021: EF migration scaffold produced unrelated diff because previous migration chain already contained the new table
+- **Date**: 2026-04-26
+- **Module**: ContentTours.Infrastructure
+- **What Happened**: Ran `dotnet ef migrations add AddTourPricingTierTranslation` after implementing the `TourPricingTierTranslation` code. EF generated a migration that only altered `TourPricingTiers.ParticipantType` default value instead of creating `TourPricingTierTranslations`.
+- **Error Message**: Migration `20260426203821_AddTourPricingTierTranslation` `Up()` only contained `AlterColumn<byte>(ParticipantType, ...)`; no `CreateTable("TourPricingTierTranslations")` appeared.
+- **Root Cause**: The existing previous migration `20260426203753_DropTierCurrencyAddParticipantTypeAndTourNameIndex` and snapshot already contained `TourPricingTierTranslations`. The model change was already represented in the migration chain on this branch, so EF diffed only an unrelated model drift.
+- **Fix Applied**: Verified the prior migration already creates `TourPricingTierTranslations`, removed the incorrect new migration with `dotnet ef migrations remove --context ContentToursDbContext --project ContentTours.Infrastructure --startup-project YallaJo.Api --force`, and kept the code changes aligned with the existing migration chain.
+- **Prevention Rule**: Before accepting a newly scaffolded EF migration, inspect both the generated `Up()` and the previous migration/snapshot for the target table. If the previous migration chain already contains the schema, remove the bogus migration instead of committing unrelated DDL drift.
+
+### ERR-022: Owned value-object columns referenced as root string properties in `HasIndex` crash EF model building
+- **Date**: 2026-04-28
+- **Module**: ContentPlaces.Infrastructure
+- **What Happened**: Startup failed while building `ContentPlacesDbContext` because `PlaceConfiguration` defined `builder.HasIndex("IsDeleted", "Latitude", "Longitude")` even though `Place` exposes `Latitude`/`Longitude` only through owned value object `Location`.
+- **Error Message**: `The property 'Latitude' cannot be added to the type 'Place' because no property type was specified and there is no corresponding CLR property or field.`
+- **Root Cause**: String-based index configuration treated owned-type columns as if they were direct CLR properties on the aggregate root. EF Core could not infer shadow property types in this path and threw during model creation.
+- **Fix Applied**: Replaced string-based index definition with owned-navigation lambda: `builder.HasIndex(x => new { x.IsDeleted, Latitude = x.Location.Latitude, Longitude = x.Location.Longitude })`.
+- **Prevention Rule**: When indexing owned/value-object members, never use stale root-level string property names. Prefer lambda expressions that navigate through the owned member (`x.Owned.Prop`) so refactors remain compile-safe and EF maps the index to the correct columns.
+
+### ERR-023: EF Core 9 `PendingModelChangesWarning` can be a Development startup false positive even when snapshot matches
+- **Date**: 2026-04-28
+- **Module**: ContentTours.Infrastructure
+- **What Happened**: `ContentToursDbContext.Database.MigrateAsync()` threw `PendingModelChangesWarning` during startup, but repository inspection showed `TourPricingTierConfiguration`, latest migration, and `ContentToursDbContextModelSnapshot` were aligned.
+- **Error Message**: `The model for context 'ContentToursDbContext' has pending changes. Add a new migration before updating the database.`
+- **Root Cause**: EF Core 9 treats pending-model warnings as exceptions on migrate. In this case the warning was a dev-time false positive/noise path rather than real drift.
+- **Fix Applied**: Added Development-only `ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning))` in `ContentTours.Infrastructure/DependencyInjection.cs` after verifying model/snapshot alignment.
+- **Prevention Rule**: Before scaffolding a new migration for `PendingModelChangesWarning`, compare the current configuration against the latest snapshot/designer first. If they already match and the warning appears only on local startup, suppress it only in Development and keep stricter behavior outside Development.
+
+### ERR-024: Owner-level `HasIndex` over owned navigation members can compile but still fail EF design-time model creation
+- **Date**: 2026-04-28
+- **Module**: ContentPlaces.Infrastructure
+- **What Happened**: After replacing string-based index names with a lambda over `x.Location.Latitude` / `x.Location.Longitude`, normal project build passed but `dotnet ef migrations add` and `dotnet ef database update` still failed when creating `ContentPlacesDbContext`.
+- **Error Message**: `The expression 'x => new ... x.Location.Latitude, x.Location.Longitude' is not a valid member access expression.`
+- **Root Cause**: EF Core design-time index parsing for owner-level `HasIndex` does not accept this owned-navigation expression shape, even though it looks like a valid anonymous type of member accesses.
+- **Fix Applied**: Moved the geo index definition into the owned builder: `builder.OwnsOne(e => e.Location, loc => loc.HasIndex(l => new { l.Latitude, l.Longitude }).HasDatabaseName("IX_Places_Latitude_Longitude"));` Then generated and applied migration `20260428134344_Place_AddGeoBoundingBoxIndex`.
+- **Prevention Rule**: For owned/value-object indexes, prefer configuring the index inside the `OwnsOne` builder. Don’t assume an owner-level lambda over nested owned members is accepted by EF CLI just because the project compiles.
+
+### ERR-025: Drifted local DB can make scaffolded `DropIndex` and `CreateIndex` operations both fail in the same migration
+- **Date**: 2026-04-28
+- **Module**: Auth.Infrastructure
+- **What Happened**: `20260425201632_FixAuthDevicesTable` first failed trying to drop legacy indexes that did not exist locally (`IX_Otps_IsUsed`, `IX_Otps_UserId`, `IX_ExternalProviders_Provider_UserId`). After guarding those drops, the same migration failed again when recreating `IX_ExternalProviders_Provider_ProviderUserId_Active` because that replacement index already existed in the local DB.
+- **Error Message**: `Cannot drop the index ... because it does not exist` followed by `The operation failed because an index or statistics with name 'IX_ExternalProviders_Provider_ProviderUserId_Active' already exists`.
+- **Root Cause**: Local Auth schema had drifted into a mixed state relative to migration assumptions: legacy indexes already gone, replacement index already present.
+- **Fix Applied**: Replaced generated `DropIndex` and `CreateIndex` calls in `20260425201632_FixAuthDevicesTable` with guarded SQL using `IF EXISTS` / `IF NOT EXISTS`, then re-ran `dotnet ef database update` successfully.
+- **Prevention Rule**: When a migration is meant to normalize legacy index names/shapes across inconsistent local databases, make index drops/creates defensive. Guard both sides (`DROP` and `CREATE`) if historical local states may vary.
+
+### ERR-026: Seeder reflection against computed getter-only property crashes startup after domain model refactor
+- **Date**: 2026-04-28
+- **Module**: ContentTours.Infrastructure
+- **What Happened**: `ContentToursDbInitializer` failed during startup inside `CreatePricingTiers()` because it still called `SetProperty(... nameof(TourPricingTier.Currency), "JOD")` after `TourPricingTier.Currency` had been refactored into a computed property derived from `Price.Currency`.
+- **Error Message**: `System.ArgumentException: Property set method not found.` from `PropertyInfo.SetValue(...)`.
+- **Root Cause**: The seeder used a generic reflection helper that assumes the target property has a setter (public or non-public). `TourPricingTier.Currency` no longer has any setter: `public string Currency => Price.Currency;`.
+- **Fix Applied**: Removed the two stale `Currency` assignments in `CreatePricingTiers()` and left `Price = new Money(..., "JOD")` as the sole currency source.
+- **Prevention Rule**: After changing a domain property from stored/private-set to computed/getter-only, grep all seeders/test helpers/reflection utilities for writes to that property. Reflection-based seed helpers do not protect you from stale writes to computed members.
+
+### ERR-027: Typed enum refactor can silently invalidate seed data even after runtime crash is fixed
+- **Date**: 2026-04-28
+- **Module**: ContentTours.Infrastructure
+- **What Happened**: After fixing the `TourPricingTier.Currency` reflection crash, seed pricing tiers still had no explicit `ParticipantType` values even though submit/approval guards now require at least one active `ParticipantType.Adult` tier.
+- **Error Message**: No immediate exception — logical data inconsistency risk. Pending/approved tour submission logic would fail if seed data were exercised through the guard paths.
+- **Root Cause**: The pricing-tier model moved from name-based Adult detection to typed enum `ParticipantType`, but the seeder was not updated to populate that new required semantic field.
+- **Fix Applied**: Updated `ContentToursDbInitializer.CreatePricingTiers()` to set `Standard` to `ParticipantType.Adult` and `VIP` to `ParticipantType.Other`.
+- **Prevention Rule**: When replacing magic-string semantics with typed enums or flags, audit all seed data and fixtures — not just compile/runtime breaks. Business-rule fields can become semantically required without causing immediate technical failures.

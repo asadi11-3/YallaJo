@@ -41,6 +41,52 @@
 
 ---
 
+## 🗂️ Entity Ownership Matrix (master reference)
+
+Every entity in `ContentTours.Domain/Entities/` is assigned to exactly ONE owner. Use this table to know who writes a given file and who ONLY reads it.
+
+| # | Entity File | Base Class | Aggregate? | Raises Domain Events? | **Owner** | Task |
+|---|---|---|---|---|---|---|
+| 1 | `Tour.cs` | `AuditableEntity` | ✅ `IAggregateRoot` | ✅ **8 events** (Created, Updated, Submitted, Approved, Rejected, Suspended, Reinstated, FeaturedChanged) | **Mahmoud** (primary) · Ezz adds `UpdateChildrenInfo` method · Mohammad adds `SetFeatured` method (if not by Mahmoud) | 1, 3, 4C |
+| 2 | `TourTranslation.cs` | `BaseEntity` | ❌ | ❌ | **Mahmoud** (read-only; populated by `IEntityTranslationOrchestrator` from the Created/Updated event handlers) | 1 |
+| 3 | `TourSchedule.cs` | `BaseEntity` | ❌ non-aggregate | ❌ direct outbox write only | **Mohammad** | 2A |
+| 4 | `TourPricingTier.cs` | `BaseEntity` | ❌ non-aggregate | ❌ direct outbox write only | **Mohammad** | 2B |
+| 5 | `TourWaypoint.cs` | `BaseEntity` | ❌ non-aggregate | ❌ direct outbox write only (optional, skipped this sprint) | **Ezz** | 4A |
+| 6 | `TourTourGuide.cs` | **Junction** (composite PK, no base class) | ❌ non-aggregate | ❌ direct outbox write only | **Ezz** | 4B |
+| 7 | `TourPackage.cs` | `AuditableEntity` → possibly `IAggregateRoot` (WBS 5.1 decision) | ⚠️ **TBD** | ⚠️ **TBD** (2 events if Option A: Created, Updated; else direct outbox writes) | **Fadwa** | 5 |
+| 8 | `TourPackageInclusion.cs` | `BaseEntity` | ❌ non-aggregate | ❌ no events (child of Package) | **Fadwa** | 5 |
+
+### New files Task 4 creates in `ContentTours.Domain/Enums/`
+
+| Enum | Purpose | Owner |
+|---|---|---|
+| `WaypointType` (byte) | Replaces raw byte field on `TourWaypoint` — `Start / Stop / Meal / Photo / Landmark / RestStop / End` | Ezz |
+| `ChildFacility` (byte) | Controlled vocabulary for the CSV `Tour.ChildFacilities` column | Ezz |
+
+### Schema migrations driven by this sprint
+
+| Migration | Driven by | Task | What changes |
+|---|---|---|---|
+| `UpdateTourStatusEnum` | Mahmoud | PW-1 (blocker, Mon Wk1) | Rewrites `TourStatus` enum from `{Draft, Published, Archived, Suspended}` → `{Draft, Pending, Approved, Rejected, Suspended, Archived}` |
+| `AddTourApprovalAuditFields` | Mahmoud | 1 (piggy-backs on PW-1) | Adds 9 audit columns to `Tours` table: `SubmittedAt`, `ApprovedAt`, `ApprovedByUserId`, `RejectedAt`, `RejectedByUserId`, `RejectionReason`, `SuspendedAt`, `SuspensionReason`, `ReinstatedAt` |
+| `AddTourChildrenInfoFields` | Ezz | 4C | Adds 3 nullable columns to `Tours` table: `MinChildAge int?`, `MaxChildAge int?`, `ChildFacilities nvarchar(500)?`. Also converts `TourWaypoint.WaypointType` storage to enum-backed byte |
+| `AddTourSearchDocument` (conditional) | Mohammad | 3 (R-3 mitigation) | Adds persisted computed column `SearchDocument` on `Tours` table if full-text performance is poor |
+| `AddTourPackageAudit` | Fadwa | 5 | Adds `CreatedByUserId Guid` to `TourPackages` table (for ownership tracking) + possibly marks `TourPackage` as `IAggregateRoot` (no schema change but EF config update) |
+| `AddTourTourGuideAuditFields` (optional, deferred) | Ezz | 4B (may skip) | Would add `CreatedAt` to `TourTourGuides` junction; this sprint uses deterministic "smallest-id" rule instead to avoid schema churn |
+
+### New interfaces / abstractions created this sprint
+
+| Interface | Location | Stub shipped this sprint | Real implementation owner | Consumers in this sprint |
+|---|---|---|---|---|
+| `IPlaceExistsService` | `ContentTours.Application/Interfaces/` | In-module EF cross-DbContext query | Future SharedKernel abstraction | Task 1 (Create/Update validation, Submit gate) |
+| `IAttachmentQueryService` | `ContentCore.Contracts` (may already exist; confirm) | None needed if exists | ContentCore | Task 1 Submit gate (`CountByEntityAsync`) |
+| `IScheduleBookingCountService` | `ContentTours.Application/Interfaces/` | `NoOpScheduleBookingCountService` returns 0 | Booking module (future) | Task 2A delete-blocker |
+| `ITourCapacityService` | `ContentTours.Application/Interfaces/` | `NoOpTourCapacityService` returns `AllHaveCapacity=true` | Booking module (future) | Task 5 (CreatePackage, AddInclusion) |
+| `IUserRoleChecker` | `ContentTours.Application/Interfaces/` | Stub returns `true` + TODO log | Security module (future) | Task 4B (AssignTourGuide role validation) |
+| `IProfileLookupService` | `ContentTours.Application/Interfaces/` | Fallback: `displayName = userId.ToString()` | Accounts module (future) | Task 4B (public `ListTourGuides` response) |
+
+---
+
 ## Pre-Work (BLOCKER — must land before any feature work starts)
 
 These two fixes are on the critical path. **Mahmoud drives, Tech Lead reviews same-day.** Target: PR merged by **Mon 2026-05-04 · 17:00**.
@@ -110,6 +156,15 @@ Read `Agents/agent-context.md` §0.3 (Five Non-Negotiable Rules) before writing 
 
 **11 endpoints · 44 hours · Deadline: Fri 2026-05-08 · 17:00**
 **No dependencies. START AT KICKOFF. Unblocks Tasks 2/3/4/5.**
+
+### 🎯 Entities Touched
+
+| Entity | Base Class | Role | Mahmoud's Responsibility |
+|---|---|---|---|
+| **`Tour`** | `AuditableEntity, IAggregateRoot` | **Primary aggregate** of this module | Own the full lifecycle: add all domain methods (`Create`, `Update`, `SoftDelete`, `Submit`, `Approve`, `Reject`, `Suspend`, `Reinstate`, `SetFeatured`, `UpdateRating`, `UpdateBookingCount`, `ApplyDiscount`, `RemoveDiscount`). Owns 7 domain events (Created, Updated, Submitted, Approved, Rejected, Suspended, Reinstated). Schema migration adds: `SubmittedAt`, `ApprovedAt`, `ApprovedByUserId`, `RejectedAt`, `RejectedByUserId`, `RejectionReason`, `SuspendedAt`, `SuspensionReason`, `ReinstatedAt`. |
+| `TourTranslation` | `BaseEntity` | Child of `Tour` (already scaffolded, has factory) | Read-only from Mahmoud's perspective: the `TourCreatedDomainEventHandler` invokes `IEntityTranslationOrchestrator` which populates `TourTranslation` rows — Mahmoud does NOT write to this entity directly, but DOES read it in `GetTourById` / `GetTourBySlug` / `ListTours` for `Accept-Language` resolution via `COALESCE(tt.Name, tour.Name)`. |
+
+> **Key rule**: `Tour` is the ONLY aggregate root in Task 1. All domain events flow through it. Use `IUnitOfWork<ContentToursDbContext>` to dispatch them — NOT `IContentToursUnitOfWork` (see PW-2).
 
 ### Endpoints
 
@@ -580,6 +635,16 @@ DiscountPercent:    .InclusiveBetween(0, 100).When(x => x.DiscountPercent.HasVal
 **8 endpoints · 28 hours · Deadline: Thu 2026-05-14 · 17:00**
 **Depends on: Task 1 (Tour must exist). Earliest start: W 2026-05-06 afternoon.**
 
+### 🎯 Entities Touched
+
+| Entity | Base Class | Role | Mohammad's Responsibility |
+|---|---|---|---|
+| **`TourSchedule`** | `BaseEntity` | **Non-aggregate child** of `Tour` | Own the full lifecycle. Add domain methods: `Create(tourId, dayOfWeek, startTime, endTime?, isActive)`, `Update(...)`, `Deactivate()`. Handler implements the **recurrence expansion engine** (Once / Daily / Weekly / Custom patterns → 1..N rows, 90-day cap, 120-row hard limit). Handler runs the **per-day overlap validation algorithm** before insert. **No domain events** (non-aggregate) — publish `TourScheduleChangedIntegrationEvent` optionally via direct outbox write. Hard delete (no `IsDeleted`), no `RowVersion`. Managed via `EfEntityRepository<TourSchedule, Guid>` or direct `DbContext`. |
+| **`TourPricingTier`** | `BaseEntity` | **Non-aggregate child** of `Tour` | Own the full lifecycle. Add domain methods: `Create(tourId, name, description?, price, currency, minParticipants, maxParticipants?)`, `Update(...)`, `Deactivate()`. Handler enforces: (1) **currency match** with parent Tour's currency, (2) **"Adult" tier is magic** — cannot delete/deactivate the last active Adult tier on a Pending/Approved tour, (3) name uniqueness case-insensitive per tour. **No domain events** (non-aggregate) — publish `TourPricingTierChangedIntegrationEvent` directly via outbox. Hard delete only, no `RowVersion`. |
+| `Tour` | `AuditableEntity, IAggregateRoot` (owned by Task 1) | Read-only from Mohammad's perspective | Loaded for ownership check (`tour.CreatedByUserId == currentUser.UserId`) and currency-coherence check. Mohammad does NOT mutate `Tour` fields; he only reads them. |
+
+> **Key rule**: Neither `TourSchedule` nor `TourPricingTier` raises domain events. Use `IContentToursUnitOfWork` (plain SaveChanges, no event dispatch) — events are silently ignored anyway. Write integration events directly via `dbContext.OutboxMessages.Add(...)` BEFORE `SaveChangesAsync` so the outbox row commits atomically with the entity change.
+
 ### Task 2A — TourSchedule (4 endpoints)
 
 | # | Method | Route | Auth | Handler |
@@ -901,6 +966,17 @@ MaxParticipants:   .GreaterThan(x => x.MinParticipants).When(x => x.MaxParticipa
 **5 endpoints · 24 hours · Deadline: Mon 2026-05-18 · 17:00**
 **Depends on: Task 1. Can start in parallel with Task 2B once Task 1 lists are done.**
 
+### 🎯 Entities Touched
+
+| Entity | Base Class | Role | Mohammad's Responsibility |
+|---|---|---|---|
+| `Tour` | `AuditableEntity, IAggregateRoot` (owned by Task 1) | **Read-heavy** for search/featured/my-tours; **single mutation** via `SetFeatured` | **4 of 5 endpoints are read-only** (Search, Suggest, Featured, MyTours) — no domain mutations, just complex LINQ projections. The 5th endpoint (`ToggleTourFeatured`) calls `Tour.SetFeatured(isFeatured, changedByUserId)` which must be added to the aggregate (owned by Task 1 but added here if Mahmoud didn't). Raises `TourFeaturedChangedDomainEvent` ONLY when value actually changes (idempotency per ERR-009). |
+| `TourTranslation` | `BaseEntity` (owned by Task 1) | Read-only | Search tokenizer matches `Tour.Name` OR `TourTranslation.Name` for the requested `Accept-Language`. Autocomplete (`SuggestTours`) also joins this. |
+
+> **Key rule**: Task 3 is **95% reads**. The only write is `ToggleTourFeatured` — use `IUnitOfWork<ContentToursDbContext>` there because it raises a domain event. All 4 read queries implement `ICacheableQuery` with fine-grained tags per `B10. Cache Policy`.
+>
+> **No new entities created.** Task 3 writes no new schema — it's search logic, facet computation, and a curation flag toggle.
+
 ### Endpoints
 
 | # | Method | Route | Auth | Handler |
@@ -1179,6 +1255,19 @@ Q:         .NotEmpty().MinimumLength(2).MaximumLength(100)
 
 **9 endpoints · 36 hours · Deadline: Mon 2026-05-18 · 17:00**
 **Depends on: Task 1. Earliest start: W 2026-05-06 afternoon.**
+
+### 🎯 Entities Touched
+
+| Entity | Base Class | Role | Ezz's Responsibility |
+|---|---|---|---|
+| **`TourWaypoint`** | `BaseEntity` | **Non-aggregate child** of `Tour` | Own the full lifecycle. Add domain methods: `Create(tourId, name, description?, location, waypointType, sortOrder, durationMinutes?)`, `Update(...)`, `SetSortOrder(int)` (package-private). Change `WaypointType` field from `byte` to a new `WaypointType` enum (`Start`, `Stop`, `Meal`, `Photo`, `Landmark`, `RestStop`, `End`). Implement the **dense SortOrder invariant** (0..N-1, no gaps) maintained on every add/remove/reorder inside a serializable transaction. No domain events, hard delete only, no `RowVersion` (accept concurrency trade-off per R-4). |
+| **`TourTourGuide`** | **Pure junction** (no base class, composite PK `(TourId, TourGuideId)`, only `IsPrimary` bool) | **Non-aggregate junction** between `Tour` and Security's User | Own the full lifecycle. Add `Create(tourId, tourGuideUserId, isPrimary)`. Handler enforces: (1) **exactly-one-primary invariant** per tour (demote old primary on new claim, promote oldest on primary removal — deterministic by smallest `TourGuideId` since junction has no `CreatedAt`), (2) **role validation** via stub `IUserRoleChecker.HasRoleAsync(userId, "TourGuide", ct)`, (3) composite PK enforces no-duplicate-assignment. List endpoint is **public** (unlike ContentPlaces BusinessStaff). Write `TourGuideAssigned/UnassignedIntegrationEvent` directly to outbox. |
+| `Tour` | `AuditableEntity, IAggregateRoot` (owned by Task 1) | **Task 4C (ChildrenInfo) mutates fields on Tour directly** — NO separate entity | Add `Tour.UpdateChildrenInfo(isChildFriendly, ageRestriction, minChildAge, maxChildAge, childFacilities)` domain method. Piggybacks on existing `TourUpdatedDomainEvent` with a new `ChildrenInfoChanged: bool` flag (add to Mahmoud's event record). Migration `AddTourChildrenInfoFields` adds 3 new columns to `Tour` table: `MinChildAge int?`, `MaxChildAge int?`, `ChildFacilities nvarchar(500)?`. Existing fields `IsChildFriendly` and `AgeRestriction` are reused. |
+| `ChildFacility` (new enum) | `byte` enum in `ContentTours.Domain.Enums` | Controlled vocabulary for `Tour.ChildFacilities` CSV column | Ezz ships a small CSV parser that validates each token against this enum: `Stroller`, `HighChair`, `ChangingStation`, `ChildMenu`, `NursingRoom`, `ChildToilet`, `PlayArea`, `ChildSeat`, `BabyCarrier`, `AirConditioning`. Unknown token → `Tour.UnknownChildFacility` 400. |
+
+> **Key rule**: Task 4C is **NOT a new entity** — it's fields on the `Tour` aggregate. Update Task 1's `TourUpdatedDomainEvent` record to add `ChildrenInfoChanged: bool = false` (backward-compatible default). `Tour.UpdateChildrenInfo()` raises this event with the flag = true, and Mahmoud's `TourUpdatedDomainEventHandler` writes `TourUpdatedIntegrationEvent` with the mirror flag so ContentSeo can re-index child-friendly facets.
+>
+> **Migration on Ezz's critical path**: `AddTourChildrenInfoFields` must land before endpoint work starts (see WBS 4.2). Also adds/updates the `WaypointType` enum conversion.
 
 ### Task 4A — TourWaypoint (4 endpoints)
 
@@ -1627,6 +1716,23 @@ ChildFacilities:    .MaximumLength(500).When(x => x.ChildFacilities != null)
 
 **6 endpoints · 36 hours · Deadline: Wed 2026-05-20 · 17:00**
 **Depends on: Task 1 (Tours must exist to bundle). Earliest start: W 2026-05-06 afternoon.**
+
+### 🎯 Entities Touched
+
+| Entity | Base Class | Role | Fadwa's Responsibility |
+|---|---|---|---|
+| **`TourPackage`** | `AuditableEntity` (current) — **possibly promoted to `IAggregateRoot`** in WBS 5.1 (Tech Lead decision, see B0) | **Primary entity** of this task — a bundle of ≥2 tours | Own the full lifecycle. Add domain methods: `Create(name, description?, price, currency, validFrom?, validTo?, maxParticipants?, createdByUserId, includedTourIds)`, `Update(...)`, `SoftDelete()`, `AddInclusion(description, sortOrder)`. Handler enforces: (1) **≥2 distinct tours** invariant, (2) **currency match** with every included tour, (3) **all tours are Approved + not deleted**, (4) **all tours owned by caller** (unless Admin — cross-owner allowed), (5) **atomic capacity check** via `ITourCapacityService` stub, (6) **validity window** (`ValidFrom` immutable post-create, `ValidTo > UtcNow`), (7) `MaxParticipants ≤ min(tours' MaxGroupSize)`. Has `RowVersion` (AuditableEntity). Schema migration `AddTourPackageAudit` adds `CreatedByUserId Guid` field. |
+| **`TourPackageInclusion`** | `BaseEntity` | **Non-aggregate junction/child** of `TourPackage` | Own the full lifecycle. Add domain method: `Create(tourPackageId, description, sortOrder)`. Handler enforces: (1) **composite uniqueness** `(TourPackageId, Description)` case-insensitive, (2) **auto-assigned `SortOrder`** (`existingMax + 1`, never trust client), (3) hard delete only, no `RowVersion`. These are **marketing bullet points** (e.g., "Jerash Old City"), NOT the tour-bundle list — the bundle is tracked separately via `TourPackage.IncludedTourIds` (a collection/JSON column or a separate junction to be clarified in WBS 5.2). |
+| `Tour` | `AuditableEntity, IAggregateRoot` (owned by Task 1) | **Read-only** from Fadwa's perspective | Handler loads included tours in bulk to run validation (currency match, approved status, ownership, `MaxGroupSize` cap). Fadwa does NOT mutate `Tour`. |
+| `ITourCapacityService` (new abstraction) | Interface in `ContentTours.Application/Interfaces/` | Cross-module capacity check hook | Fadwa ships `NoOpTourCapacityService` stub in Infrastructure returning `AllHaveCapacity = true`. Booking module later replaces the DI registration with a real implementation. Called from `CreateTourPackage` and `AddPackageInclusion` handlers. |
+
+> **Aggregate-marker decision (WBS 5.1)**: `TourPackage` is currently `AuditableEntity` (non-aggregate). Two options:
+> - **Option A — Promote to `IAggregateRoot`**: clean event dispatch via UoW, proper encapsulation, Inclusions raise events via parent. Requires Tech Lead approval + migration PR at start of Task 5. **Preferred.**
+> - **Option B — Keep as `AuditableEntity`**: handlers write outbox directly (same pattern as `TourSchedule`/`TourPricingTier`). Zero schema risk. Fallback if Option A is rejected.
+>
+> The business rules below apply IDENTICALLY regardless of choice — only the handler wiring differs (domain event handler in Option A vs direct outbox write in Option B).
+>
+> **`TourPackageInclusion` is always a non-aggregate.** Even if `TourPackage` becomes an aggregate, inclusions raise no events on their own — they're child entities of the package aggregate.
 
 ### Endpoints
 

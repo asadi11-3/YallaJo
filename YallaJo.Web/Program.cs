@@ -193,7 +193,7 @@ builder.Services.AddScoped<TranslationsApiClient>();
 builder.Services.AddScoped<TranslationsFacade>();
 
 // ── MVC + custom Razor view locations ────────────────────────────────────────
-builder.Services.AddControllersWithViews(options =>
+var mvcBuilder  = builder.Services.AddControllersWithViews(options =>
 {
     // ForbiddenResultFilter: the ONE code path that renders AccessDenied.cshtml.
     // Branches on content negotiation: HTML page → view, AJAX/JSON → ProblemDetails.
@@ -220,6 +220,13 @@ builder.Services.AddControllersWithViews(options =>
         o.ViewLocationExpanders.Add(
             new AdminModuleViewLocationExpander(builder.Environment.ContentRootPath));
     });
+
+if(builder.Environment.IsDevelopment())
+{
+    // In development, use the default Razor runtime compilation setup which
+    // watches the filesystem for changes and automatically recompiles views.
+    mvcBuilder.AddRazorRuntimeCompilation();
+}
 
 var app = builder.Build();
 
