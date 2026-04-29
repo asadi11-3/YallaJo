@@ -4,7 +4,9 @@ namespace ContentTours.Domain.Entities;
 
 public sealed class TourSchedule : BaseEntity
 {
-    private TourSchedule() { } // EF Core
+    private TourSchedule()
+    {
+    } // EF Core
 
     public Guid TourId { get; private set; }
     public byte DayOfWeek { get; private set; }

@@ -1,6 +1,6 @@
 using ContentPlaces.Application.Interfaces;
 using ContentPlaces.Domain.Repositories;
-using ContentTours.Contracts;
+using ContentTours.Contracts.IntegrationEvents;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;

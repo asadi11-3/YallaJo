@@ -1,7 +1,7 @@
 using Auth.Contracts.IntegrationEvents;
 using ContentCore.Contracts.IntegrationEvents;
 using ContentPlaces.Contracts.IntegrationEvents;
-using ContentTours.Contracts;
+using ContentTours.Contracts.IntegrationEvents;
 using Security.Contracts.IntegrationEvents;
 
 namespace YallaJo.SharedKernel.Infrastructure.Abstractions.Integration;
@@ -56,8 +56,10 @@ public static class IntegrationEventTypeRegistry
         ["content-places.service-item.created.v1"]       = typeof(ServiceItemCreatedIntegrationEvent),
         ["content-places.service-item.deleted.v1"]       = typeof(ServiceItemDeletedIntegrationEvent),
 
-        // ── ContentTours (1 event) ──
+        // ── ContentTours (3 events) ──
         ["content-tours.place.tour-count-updated.v1"]    = typeof(PlaceTourCountUpdatedIntegrationEvent),
+        ["content-tours.tour-guide.assigned.v1"] = typeof(TourGuideAssignedIntegrationEvent),
+        ["content-tours.tour-guide.unassigned.v1"] = typeof(TourGuideUnassignedIntegrationEvent),
     };
 
     private static readonly Dictionary<Type, string> TypeToName =

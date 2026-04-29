@@ -33,8 +33,8 @@ public class PlaceConfiguration : IEntityTypeConfiguration<Place>
 
         builder.OwnsOne(e => e.Location, loc =>
         {
-            loc.Property(l => l.Latitude).HasColumnName("Latitude").HasPrecision(10, 8);
-            loc.Property(l => l.Longitude).HasColumnName("Longitude").HasPrecision(11, 8);
+            loc.Property(l => l.Latitude).HasColumnName("Location_Latitude").HasPrecision(10, 8);
+            loc.Property(l => l.Longitude).HasColumnName("Location_Longitude").HasPrecision(11, 8);
         });
 
         builder.Property(x => x.Address)
@@ -130,14 +130,7 @@ public class PlaceConfiguration : IEntityTypeConfiguration<Place>
         builder.HasIndex(x => x.IsVerified);
         builder.HasIndex(x => x.CategoryId);
         builder.HasIndex(x => x.TourCount);
-
-        // Composite index for geo bounding-box pre-filter used by GetNearbyAsync.
-        // Column order matters: IsDeleted first (eliminates soft-deleted rows cheaply),
-        // then Latitude + Longitude so SQL Server can range-scan the bounding box
-        // before evaluating the expensive Haversine trig functions.
-        // TODO: Replace with a SPATIAL INDEX on a geography computed column when
-        // dataset grows beyond ~50k places (requires NetTopologySuite migration).
-        builder.HasIndex("IsDeleted", "Latitude", "Longitude")
+        builder.HasIndex("IsDeleted", "Location_Latitude", "Location_Longitude")
             .HasDatabaseName("IX_Places_IsDeleted_Latitude_Longitude");
     }
 }

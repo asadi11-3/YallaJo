@@ -1,12 +1,14 @@
 using ContentTours.Application.Interfaces;
+using ContentTours.Domain.Repositories;
 using ContentTours.Infrastructure.Persistence;
 using ContentTours.Infrastructure.Persistence.Seeding;
+using ContentTours.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using YallaJo.SharedKernel.Infrastructure.BackgroundJobs;
 using YallaJo.SharedKernel.Infrastructure.Data;
 using YallaJo.SharedKernel.Infrastructure.Outbox;
-using YallaJo.SharedKernel.Infrastructure.BackgroundJobs;
 
 namespace ContentTours.Infrastructure;
 
@@ -35,6 +37,8 @@ public static class DependencyInjection
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
         services.AddScoped<IOutboxProcessor, OutboxProcessor<ContentToursDbContext>>();
         services.AddScoped<IOutboxCleaner, OutboxCleaner<ContentToursDbContext>>();
+        services.AddScoped<ITourWaypointRepository, TourWaypointRepository>();
+        services.AddScoped<ITourTourGuideRepository, TourTourGuideRepository>();
 
         return services;
     }

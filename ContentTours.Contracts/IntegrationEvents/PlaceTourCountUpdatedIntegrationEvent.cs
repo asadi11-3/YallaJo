@@ -1,6 +1,6 @@
 using YallaJo.SharedKernel.Domain.Event;
 
-namespace ContentTours.Contracts;
+namespace ContentTours.Contracts.IntegrationEvents;
 
 /// <summary>
 /// Published by ContentTours whenever the active (Published, not deleted) tour count

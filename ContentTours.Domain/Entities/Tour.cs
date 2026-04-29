@@ -13,7 +13,9 @@ public sealed class Tour : AuditableEntity, IAggregateRoot
     private readonly List<TourPricingTier> _tourPricingTiers = [];
     private readonly List<TourPackage> _tourPackages = [];
 
-    private Tour() { } // EF Core
+    private Tour()
+    {
+    } // EF Core
 
     public string Name { get; private set; } = string.Empty;
     public string Slug { get; private set; } = string.Empty;
