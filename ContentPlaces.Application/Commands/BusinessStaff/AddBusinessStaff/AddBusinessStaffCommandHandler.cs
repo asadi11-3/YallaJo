@@ -24,7 +24,7 @@ public sealed class AddBusinessStaffCommandHandler(
         CancellationToken cancellationToken)
     {
         // Authentication
-        if (!currentUser.IsAuthenticated)
+        if (!currentUser.IsAuthenticated || currentUser.UserId is null)
         {
             return Result<BusinessStaffDto>.Failure(
                 Error.Unauthorized("Authentication required"));

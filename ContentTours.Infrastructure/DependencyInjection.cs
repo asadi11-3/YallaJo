@@ -1,14 +1,18 @@
 using ContentTours.Application.Interfaces;
+using ContentTours.Contracts.Authorization;
 using ContentTours.Domain.Repositories;
 using ContentTours.Infrastructure.Persistence;
 using ContentTours.Infrastructure.Persistence.Seeding;
 using ContentTours.Infrastructure.Repositories;
+using ContentTours.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using YallaJo.SharedKernel.Infrastructure.BackgroundJobs;
+using YallaJo.SharedKernel.Application.Authorization;
 using YallaJo.SharedKernel.Infrastructure.Data;
 using YallaJo.SharedKernel.Infrastructure.Outbox;
+using YallaJo.SharedKernel.Infrastructure.BackgroundJobs;
 
 namespace ContentTours.Infrastructure;
 
@@ -21,24 +25,51 @@ public static class DependencyInjection
         var connectionString = configuration.GetConnectionString("DefaultConnection")
             ?? throw new InvalidOperationException("Connection string 'DefaultConnection' is not configured.");
 
+        var isDevelopment = string.Equals(
+            configuration["ASPNETCORE_ENVIRONMENT"] ?? Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"),
+            "Development",
+            StringComparison.OrdinalIgnoreCase);
+
         services.AddDbContext<ContentToursDbContext>(options =>
+        {
             options.UseSqlServer(
                 connectionString,
                 sql =>
                 {
                     sql.MigrationsHistoryTable("__EFMigrationsHistory", "content_tours");
                     sql.EnableRetryOnFailure(3);
-                }));
+                });
+
+            if (isDevelopment)
+            {
+                options.ConfigureWarnings(warnings =>
+                    warnings.Ignore(RelationalEventId.PendingModelChangesWarning));
+            }
+        });
 
         services.AddScoped<IUnitOfWork<ContentToursDbContext>, UnitOfWork<ContentToursDbContext>>();
         services.AddScoped<IContentToursUnitOfWork, ContentToursUnitOfWork>();
+        services.AddScoped<IContentToursEventUnitOfWork, ContentToursEventUnitOfWork>();
         services.AddScoped<IContentToursInboxStore, ContentToursInboxStore>();
         services.AddScoped<IModuleDbInitializer, ContentToursDbInitializer>();
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
         services.AddScoped<IOutboxProcessor, OutboxProcessor<ContentToursDbContext>>();
         services.AddScoped<IOutboxCleaner, OutboxCleaner<ContentToursDbContext>>();
-        services.AddScoped<ITourWaypointRepository, TourWaypointRepository>();
-        services.AddScoped<ITourTourGuideRepository, TourTourGuideRepository>();
+
+        // ── Repositories ──────────────────────────────────────────────────────
+        services.AddScoped<ITourRepository, TourRepository>();
+        services.AddScoped<ITourScheduleRepository, TourScheduleRepository>();
+        services.AddScoped<ITourPricingTierRepository, TourPricingTierRepository>();
+        services.AddScoped<ITourPricingTierTranslationRepository, TourPricingTierTranslationRepository>();
+
+        // ── Outbox writer (Application layer uses this to avoid DbContext dependency) ──
+        services.AddScoped<IContentToursOutboxWriter, ContentToursOutboxWriter>();
+
+        // ── Cross-module stubs (replaced by real implementations in other modules) ──
+        services.AddScoped<IScheduleBookingCountService, NoOpScheduleBookingCountService>();
+
+        // ── Permission catalog (discovered by PermissionSeeder) ───────────────
+        services.AddSingleton<IPermissionCatalog, ContentToursPermissionCatalog>();
 
         return services;
     }

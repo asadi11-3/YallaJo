@@ -40,6 +40,10 @@ public class TourTranslationConfiguration : IEntityTypeConfiguration<TourTransla
             .HasForeignKey(x => x.TourId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        builder.HasIndex(x => new { x.TourId, x.LanguageId })
+            .IsUnique()
+            .HasDatabaseName("IX_TourTranslations_TourId_LanguageId");
+
         builder.HasQueryFilter(x => !x.Tour.IsDeleted);
     }
 }

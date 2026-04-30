@@ -15,8 +15,14 @@ public static class AppAction
     public const string DeleteAny  = nameof(DeleteAny);
     public const string SoftDelete = nameof(SoftDelete);
     public const string Approve    = nameof(Approve);
+    public const string Submit     = nameof(Submit);
     public const string Reject     = nameof(Reject);
     public const string Suspend    = nameof(Suspend);
     public const string Reinstate  = nameof(Reinstate);
     public const string Replay     = nameof(Replay);
+    public const string ReadOwn    = nameof(ReadOwn);
+    public const string ReadAny    = nameof(ReadAny);
+    public const string Feature    = nameof(Feature);
+    public const string Refresh    = nameof(Refresh);   // for batch/cache refresh admin endpoints (e.g. recommendations)
+    public const string Record     = nameof(Record);    // for write-only ingestion endpoints (e.g. interaction events)
 }

@@ -1,4 +1,4 @@
-using ContentTours.Presentation.Endpoints; // عشان يشوف المجلد الداخلي
+using ContentTours.Presentation.Endpoints.Tour;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -9,12 +9,20 @@ public static class ContentToursEndpoints
 {
     public static IEndpointRouteBuilder MapContentToursEndpoints(this IEndpointRouteBuilder endpoints)
     {
-        var group = endpoints.MapGroup("/api/v1")
-                             .WithTags("ContentTours");
+        var group = endpoints.MapGroup("/api/v1/tours")
+            .WithTags("ContentTours");
 
-        TourWaypointsEndpoints.MapTourWaypointsEndpoints(group);
-        TourGuidesEndpoints.MapTourGuidesEndpoints(group);
-        ChildrenInfoEndpoints.MapChildrenInfoEndpoints(group);
+        // Task 1 — Tour Core (endpoints 1–11)
+        TourEndpoints.MapTourEndpoints(group);
+
+        // Task 2A — TourSchedule (endpoints 12–15)
+        TourScheduleEndpoints.MapTourScheduleEndpoints(group);
+
+        // Task 2B — TourPricingTier (endpoints 16–19)
+        TourPricingTierEndpoints.MapTourPricingTierEndpoints(group);
+
+        // Task 3 — Search / Suggest / Featured / MyTours / FeatureToggle (endpoints 20–24)
+        TourSearchEndpoints.MapTourSearchEndpoints(group);
 
         return endpoints;
     }

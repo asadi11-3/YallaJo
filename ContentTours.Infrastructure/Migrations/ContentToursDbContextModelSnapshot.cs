@@ -18,7 +18,7 @@ namespace ContentTours.Infrastructure.Migrations
 #pragma warning disable 612, 618
             modelBuilder
                 .HasDefaultSchema("content_tours")
-                .HasAnnotation("ProductVersion", "9.0.13")
+                .HasAnnotation("ProductVersion", "9.0.15")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -30,6 +30,12 @@ namespace ContentTours.Infrastructure.Migrations
 
                     b.Property<int?>("AgeRestriction")
                         .HasColumnType("int");
+
+                    b.Property<DateTime?>("ApprovedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("ApprovedByUserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<decimal>("AverageRating")
                         .ValueGeneratedOnAdd()
@@ -128,6 +134,19 @@ namespace ContentTours.Infrastructure.Migrations
                     b.Property<Guid?>("PlaceId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<DateTime?>("ReinstatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("RejectedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("RejectedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("RejectionReason")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
                     b.Property<int>("ReviewCount")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
@@ -161,13 +180,30 @@ namespace ContentTours.Infrastructure.Migrations
                         .HasColumnType("int")
                         .HasDefaultValue(0);
 
+                    b.Property<DateTime?>("SubmittedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("SuspendedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("SuspensionReason")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Name");
+
                     b.HasIndex("PlaceId")
                         .HasFilter("[PlaceId] IS NOT NULL");
+
+                    b.HasIndex("Slug")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Tours_Slug")
+                        .HasFilter("[IsDeleted] = 0");
 
                     b.ToTable("Tours", "content_tours");
                 });
@@ -275,12 +311,6 @@ namespace ContentTours.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("Currency")
-                        .IsRequired()
-                        .HasMaxLength(3)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(3)");
-
                     b.Property<string>("Description")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
@@ -303,6 +333,9 @@ namespace ContentTours.Infrastructure.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
+                    b.Property<byte>("ParticipantType")
+                        .HasColumnType("tinyint");
+
                     b.Property<Guid>("TourId")
                         .HasColumnType("uniqueidentifier");
 
@@ -316,6 +349,43 @@ namespace ContentTours.Infrastructure.Migrations
                     b.ToTable("TourPricingTiers", "content_tours");
                 });
 
+            modelBuilder.Entity("ContentTours.Domain.Entities.TourPricingTierTranslation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("LanguageCode")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(10)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<Guid>("TourPricingTierId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TourPricingTierId", "LanguageCode")
+                        .IsUnique();
+
+                    b.ToTable("TourPricingTierTranslations", "content_tours");
+                });
+
             modelBuilder.Entity("ContentTours.Domain.Entities.TourSchedule", b =>
                 {
                     b.Property<Guid>("Id")
@@ -327,16 +397,16 @@ namespace ContentTours.Infrastructure.Migrations
                     b.Property<byte>("DayOfWeek")
                         .HasColumnType("tinyint");
 
-                    b.Property<TimeOnly?>("EndTime")
-                        .HasColumnType("time");
+                    b.Property<TimeSpan?>("EndTime")
+                        .HasColumnType("time(7)");
 
                     b.Property<bool>("IsActive")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
                         .HasDefaultValue(true);
 
-                    b.Property<TimeOnly>("StartTime")
-                        .HasColumnType("time");
+                    b.Property<TimeSpan>("StartTime")
+                        .HasColumnType("time(7)");
 
                     b.Property<Guid>("TourId")
                         .HasColumnType("uniqueidentifier");
@@ -346,7 +416,8 @@ namespace ContentTours.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("TourId");
+                    b.HasIndex("TourId", "DayOfWeek", "StartTime")
+                        .HasDatabaseName("IX_TourSchedules_TourId_DayOfWeek_StartTime");
 
                     b.ToTable("TourSchedules", "content_tours");
                 });
@@ -404,7 +475,9 @@ namespace ContentTours.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("TourId");
+                    b.HasIndex("TourId", "LanguageId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_TourTranslations_TourId_LanguageId");
 
                     b.ToTable("TourTranslations", "content_tours");
                 });
@@ -689,6 +762,17 @@ namespace ContentTours.Infrastructure.Migrations
                     b.Navigation("Tour");
                 });
 
+            modelBuilder.Entity("ContentTours.Domain.Entities.TourPricingTierTranslation", b =>
+                {
+                    b.HasOne("ContentTours.Domain.Entities.TourPricingTier", "TourPricingTier")
+                        .WithMany("Translations")
+                        .HasForeignKey("TourPricingTierId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("TourPricingTier");
+                });
+
             modelBuilder.Entity("ContentTours.Domain.Entities.TourSchedule", b =>
                 {
                     b.HasOne("ContentTours.Domain.Entities.Tour", "Tour")
@@ -773,6 +857,11 @@ namespace ContentTours.Infrastructure.Migrations
             modelBuilder.Entity("ContentTours.Domain.Entities.TourPackage", b =>
                 {
                     b.Navigation("TourPackageInclusions");
+                });
+
+            modelBuilder.Entity("ContentTours.Domain.Entities.TourPricingTier", b =>
+                {
+                    b.Navigation("Translations");
                 });
 #pragma warning restore 612, 618
         }

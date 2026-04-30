@@ -108,6 +108,26 @@ public class TourConfiguration : IEntityTypeConfiguration<Tour>
         builder.Property(x => x.IsChildFriendly).IsRequired().HasDefaultValue(false);
         builder.Property(x => x.IsAccessible).IsRequired().HasDefaultValue(false);
         builder.HasIndex(x => x.PlaceId).HasFilter("[PlaceId] IS NOT NULL");
+        builder.HasIndex(x => x.Name);
+
+        builder.HasIndex(x => x.Slug)
+            .IsUnique()
+            .HasFilter("[IsDeleted] = 0")
+            .HasDatabaseName("IX_Tours_Slug");
+
+        builder.Property(x => x.SubmittedAt).IsRequired(false);
+        builder.Property(x => x.ApprovedAt).IsRequired(false);
+        builder.Property(x => x.ApprovedByUserId).IsRequired(false);
+        builder.Property(x => x.RejectedAt).IsRequired(false);
+        builder.Property(x => x.RejectedByUserId).IsRequired(false);
+        builder.Property(x => x.RejectionReason)
+            .IsRequired(false)
+            .HasMaxLength(1000);
+        builder.Property(x => x.SuspendedAt).IsRequired(false);
+        builder.Property(x => x.SuspensionReason)
+            .IsRequired(false)
+            .HasMaxLength(1000);
+        builder.Property(x => x.ReinstatedAt).IsRequired(false);
 
         builder.Property(x => x.CreatedAt).IsRequired();
         builder.Property(x => x.UpdatedAt).IsRequired(false);

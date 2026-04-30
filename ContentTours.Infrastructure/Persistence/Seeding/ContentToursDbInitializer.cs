@@ -58,7 +58,7 @@ public sealed class ContentToursDbInitializer(ContentToursDbContext dbContext) :
         SetProperty(tour, nameof(Tour.Currency), "JOD");
         SetProperty(tour, nameof(Tour.Location), new Location(30.3285m, 35.4444m));
         SetProperty(tour, nameof(Tour.MeetingPoint), new Location(30.3220m, 35.4780m));
-        SetProperty(tour, nameof(Tour.Status), TourStatus.Published);
+        SetProperty(tour, nameof(Tour.Status), TourStatus.Approved);
         SetProperty(tour, nameof(Tour.IsFeatured), true);
         SetProperty(tour, nameof(Tour.IsInstantBooking), true);
         SetProperty(tour, nameof(Tour.CancellationPolicyHours), 24);
@@ -142,7 +142,7 @@ public sealed class ContentToursDbInitializer(ContentToursDbContext dbContext) :
         SetProperty(standard, nameof(TourPricingTier.Name), "Standard");
         SetProperty(standard, nameof(TourPricingTier.Description), "Core itinerary with guide.");
         SetProperty(standard, nameof(TourPricingTier.Price), new Money(75m, "JOD"));
-        SetProperty(standard, nameof(TourPricingTier.Currency), "JOD");
+        SetProperty(standard, nameof(TourPricingTier.ParticipantType), ParticipantType.Adult);
         SetProperty(standard, nameof(TourPricingTier.MinParticipants), 1);
         SetProperty(standard, nameof(TourPricingTier.MaxParticipants), 18);
         SetProperty(standard, nameof(TourPricingTier.IsActive), true);
@@ -152,7 +152,7 @@ public sealed class ContentToursDbInitializer(ContentToursDbContext dbContext) :
         SetProperty(vip, nameof(TourPricingTier.Name), "VIP");
         SetProperty(vip, nameof(TourPricingTier.Description), "Private pace and upgraded transport.");
         SetProperty(vip, nameof(TourPricingTier.Price), new Money(130m, "JOD"));
-        SetProperty(vip, nameof(TourPricingTier.Currency), "JOD");
+        SetProperty(vip, nameof(TourPricingTier.ParticipantType), ParticipantType.Other);
         SetProperty(vip, nameof(TourPricingTier.MinParticipants), 1);
         SetProperty(vip, nameof(TourPricingTier.MaxParticipants), 6);
         SetProperty(vip, nameof(TourPricingTier.IsActive), true);

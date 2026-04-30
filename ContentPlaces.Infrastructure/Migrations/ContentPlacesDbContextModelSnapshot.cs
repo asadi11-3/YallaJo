@@ -836,6 +836,9 @@ namespace ContentPlaces.Infrastructure.Migrations
 
                             b1.HasKey("PlaceId");
 
+                            b1.HasIndex("Latitude", "Longitude")
+                                .HasDatabaseName("IX_Places_Latitude_Longitude");
+
                             b1.ToTable("Places", "content_places");
 
                             b1.WithOwner()

@@ -42,11 +42,11 @@ public sealed class TourPlaceCountChangedDomainEventHandler(
 
         var placeId = evt.PlaceId.Value;
 
-        // Count live: Published tours linked to this place that are not soft-deleted.
+        // Count live: Approved tours linked to this place that are not soft-deleted.
         // Excludes the current tour if it was just soft-deleted (IsDeleted = true is
         // excluded by the EF query filter on AuditableEntity).
         var activeCount = await dbContext.Tours
-            .CountAsync(t => t.PlaceId == placeId && t.Status == TourStatus.Published, ct);
+            .CountAsync(t => t.PlaceId == placeId && t.Status == TourStatus.Approved, ct);
 
         dbContext.OutboxMessages.Add(OutboxMessage.Create(
             new PlaceTourCountUpdatedIntegrationEvent(placeId, activeCount)));

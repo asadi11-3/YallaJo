@@ -33,8 +33,13 @@ public class PlaceConfiguration : IEntityTypeConfiguration<Place>
 
         builder.OwnsOne(e => e.Location, loc =>
         {
-            loc.Property(l => l.Latitude).HasColumnName("Location_Latitude").HasPrecision(10, 8);
-            loc.Property(l => l.Longitude).HasColumnName("Location_Longitude").HasPrecision(11, 8);
+            loc.Property(l => l.Latitude).HasColumnName("Latitude").HasPrecision(10, 8);
+            loc.Property(l => l.Longitude).HasColumnName("Longitude").HasPrecision(11, 8);
+
+            // Bounding-box pre-filter support for GetNearbyAsync.
+            // Owned-navigation indexes must be configured from the owned builder.
+            loc.HasIndex(l => new { l.Latitude, l.Longitude })
+                .HasDatabaseName("IX_Places_Latitude_Longitude");
         });
 
         builder.Property(x => x.Address)
@@ -130,7 +135,11 @@ public class PlaceConfiguration : IEntityTypeConfiguration<Place>
         builder.HasIndex(x => x.IsVerified);
         builder.HasIndex(x => x.CategoryId);
         builder.HasIndex(x => x.TourCount);
-        builder.HasIndex("IsDeleted", "Location_Latitude", "Location_Longitude")
-            .HasDatabaseName("IX_Places_IsDeleted_Latitude_Longitude");
+
+        // Composite owned-type index for geo bounding-box pre-filter used by GetNearbyAsync.
+        // Latitude + Longitude let SQL Server range-scan the bounding box
+        // before evaluating the expensive Haversine trig functions.
+        // TODO: Replace with a SPATIAL INDEX on a geography computed column when
+        // dataset grows beyond ~50k places (requires NetTopologySuite migration).
     }
 }

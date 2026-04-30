@@ -51,6 +51,9 @@ namespace YallaJo.SharedKernel.Domain.Abstractions.Results
         public static Result<T> Conflict<T>(string? message = null)
             => Result<T>.Conflict(message);
 
+        public static Result<T> UnprocessableEntity<T>(params Error[] errors)
+            => Result<T>.Fail(Outcome.UnprocessableEntity, errors);
+
         public static Result<T> ServerError<T>(string? message = null)
             => Result<T>.ServerError(message);
 
@@ -90,6 +93,9 @@ namespace YallaJo.SharedKernel.Domain.Abstractions.Results
         public static Result Conflict(string? message = null)
             => new(false, Outcome.Conflict,
                 message != null ? new[] { message } : null, null);
+
+        public static Result UnprocessableEntity(params Error[] errors)
+            => new(false, Outcome.UnprocessableEntity, null, errors);
 
         public static Result ServerError(string? message = null)
             => new(false, Outcome.ServerError,

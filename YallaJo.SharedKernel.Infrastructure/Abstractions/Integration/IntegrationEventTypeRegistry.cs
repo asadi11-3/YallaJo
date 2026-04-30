@@ -1,7 +1,7 @@
 using Auth.Contracts.IntegrationEvents;
 using ContentCore.Contracts.IntegrationEvents;
 using ContentPlaces.Contracts.IntegrationEvents;
-using ContentTours.Contracts.IntegrationEvents;
+using ContentTours.Contracts;
 using Security.Contracts.IntegrationEvents;
 
 namespace YallaJo.SharedKernel.Infrastructure.Abstractions.Integration;
@@ -56,10 +56,19 @@ public static class IntegrationEventTypeRegistry
         ["content-places.service-item.created.v1"]       = typeof(ServiceItemCreatedIntegrationEvent),
         ["content-places.service-item.deleted.v1"]       = typeof(ServiceItemDeletedIntegrationEvent),
 
-        // ── ContentTours (3 events) ──
+        // ── ContentTours (12 events) ──
         ["content-tours.place.tour-count-updated.v1"]    = typeof(PlaceTourCountUpdatedIntegrationEvent),
-        ["content-tours.tour-guide.assigned.v1"] = typeof(TourGuideAssignedIntegrationEvent),
-        ["content-tours.tour-guide.unassigned.v1"] = typeof(TourGuideUnassignedIntegrationEvent),
+        ["content-tours.schedule.changed.v1"]            = typeof(TourScheduleChangedIntegrationEvent),
+        ["content-tours.pricing-tier.changed.v1"]        = typeof(TourPricingTierChangedIntegrationEvent),
+        ["content-tours.tour.featured-changed.v1"]       = typeof(TourFeaturedChangedIntegrationEvent),
+        ["content-tours.tour.deleted.v1"]                = typeof(TourDeletedIntegrationEvent),
+        ["content-tours.tour.created.v1"]                = typeof(TourCreatedIntegrationEvent),
+        ["content-tours.tour.updated.v1"]                = typeof(TourUpdatedIntegrationEvent),
+        ["content-tours.tour.submitted.v1"]              = typeof(TourSubmittedIntegrationEvent),
+        ["content-tours.tour.approved.v1"]               = typeof(TourApprovedIntegrationEvent),
+        ["content-tours.tour.rejected.v1"]               = typeof(TourRejectedIntegrationEvent),
+        ["content-tours.tour.suspended.v1"]              = typeof(TourSuspendedIntegrationEvent),
+        ["content-tours.tour.reinstated.v1"]             = typeof(TourReinstatedIntegrationEvent),
     };
 
     private static readonly Dictionary<Type, string> TypeToName =
