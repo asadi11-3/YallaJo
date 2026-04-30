@@ -266,3 +266,12 @@
 - **Root Cause**: The pricing-tier model moved from name-based Adult detection to typed enum `ParticipantType`, but the seeder was not updated to populate that new required semantic field.
 - **Fix Applied**: Updated `ContentToursDbInitializer.CreatePricingTiers()` to set `Standard` to `ParticipantType.Adult` and `VIP` to `ParticipantType.Other`.
 - **Prevention Rule**: When replacing magic-string semantics with typed enums or flags, audit all seed data and fixtures — not just compile/runtime breaks. Business-rule fields can become semantically required without causing immediate technical failures.
+
+### ERR-028: Parallel builds on overlapping targets triggered transient CS2012 lock during validation
+- **Date**: 2026-04-29
+- **Module**: Solution-wide validation workflow (SharedKernel/ContentTours)
+- **What Happened**: Ran `dotnet build ContentTours.Presentation/...` and `dotnet build YallaJo.sln` in parallel. One build failed with a locked `YallaJo.SharedKernel.Application.dll` output.
+- **Error Message**: `CS2012: Cannot open '...YallaJo.SharedKernel.Application.dll' for writing -- file is being used by another process ('VBCSCompiler')`.
+- **Root Cause**: Both build targets overlap in dependency graph/output artifacts; concurrent compilers contended for shared `obj/bin` files.
+- **Fix Applied**: Re-ran `dotnet build YallaJo.sln` sequentially after the parallel run finished; build succeeded.
+- **Prevention Rule**: Do not run solution build in parallel with project builds that transitively reference the same assemblies. Use sequential validation for overlapping targets.

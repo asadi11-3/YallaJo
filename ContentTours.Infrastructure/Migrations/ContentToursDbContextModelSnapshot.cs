@@ -31,6 +31,12 @@ namespace ContentTours.Infrastructure.Migrations
                     b.Property<int?>("AgeRestriction")
                         .HasColumnType("int");
 
+                    b.Property<DateTime?>("ApprovedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("ApprovedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<decimal>("AverageRating")
                         .ValueGeneratedOnAdd()
                         .HasPrecision(3, 2)
@@ -128,6 +134,19 @@ namespace ContentTours.Infrastructure.Migrations
                     b.Property<Guid?>("PlaceId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<DateTime?>("ReinstatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("RejectedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("RejectedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("RejectionReason")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
                     b.Property<int>("ReviewCount")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
@@ -161,13 +180,30 @@ namespace ContentTours.Infrastructure.Migrations
                         .HasColumnType("int")
                         .HasDefaultValue(0);
 
+                    b.Property<DateTime?>("SubmittedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("SuspendedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("SuspensionReason")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Name");
+
                     b.HasIndex("PlaceId")
                         .HasFilter("[PlaceId] IS NOT NULL");
+
+                    b.HasIndex("Slug")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Tours_Slug")
+                        .HasFilter("[IsDeleted] = 0");
 
                     b.ToTable("Tours", "content_tours");
                 });
@@ -298,9 +334,7 @@ namespace ContentTours.Infrastructure.Migrations
                         .HasColumnType("nvarchar(200)");
 
                     b.Property<byte>("ParticipantType")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("tinyint")
-                        .HasDefaultValue((byte)255);
+                        .HasColumnType("tinyint");
 
                     b.Property<Guid>("TourId")
                         .HasColumnType("uniqueidentifier");
@@ -441,7 +475,9 @@ namespace ContentTours.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("TourId");
+                    b.HasIndex("TourId", "LanguageId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_TourTranslations_TourId_LanguageId");
 
                     b.ToTable("TourTranslations", "content_tours");
                 });

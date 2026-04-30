@@ -1,0 +1,224 @@
+using ContentCore.Domain.Enums;
+using ContentCore.Domain.Repositories;
+using ContentPlaces.Contracts.Places;
+using ContentTours.Application.Caching;
+using ContentTours.Application.Interfaces;
+using ContentTours.Domain.Repositories;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Hybrid;
+using Microsoft.Extensions.Logging;
+using Security.Contracts.Authorization;
+using YallaJo.SharedKernel.Application.Abstractions.Context;
+using YallaJo.SharedKernel.Application.Abstractions.Messaging;
+using YallaJo.SharedKernel.Domain.Abstractions.Results;
+
+namespace ContentTours.Application.Commands.Tour.SubmitTour;
+
+public sealed class SubmitTourCommandHandler(
+    ITourRepository tourRepository,
+    IAttachmentRepository attachmentRepository,
+    IPlaceExistenceService placeExistenceService,
+    IContentToursEventUnitOfWork unitOfWork,
+    HybridCache cache,
+    ICurrentUser currentUser,
+    ILogger<SubmitTourCommandHandler> logger)
+    : ICommandHandler<SubmitTourCommand>
+{
+    private const int MinDescriptionLength = 100;
+
+    public async Task<Result> Handle(SubmitTourCommand request, CancellationToken cancellationToken)
+    {
+        try
+        {
+            if (currentUser.UserId is null)
+            {
+                return Result.Failure(
+                    Error.Unauthorized("Authentication is required."),
+                    Outcome.Unauthorized);
+            }
+
+            var tour = await tourRepository
+                .GetByIdAsync(request.Id, cancellationToken, asNoTracking: false)
+                .ConfigureAwait(false);
+            if (tour is null)
+            {
+                return Result.Failure(
+                    new Error("Tour.NotFound", $"Tour '{request.Id}' was not found."),
+                    Outcome.NotFound);
+            }
+
+            var isAdminTier = AppRoles.HighestPrivilegeLevel(currentUser.Roles)
+                >= RolePrivilegeLevel.Admin;
+            if (!isAdminTier && tour.CreatedByUserId != currentUser.UserId.Value)
+            {
+                return Result.Failure(
+                    new Error("Tour.NotOwner", "You do not have permission to submit this tour."),
+                    Outcome.Forbidden);
+            }
+
+            if (tour.Status != Domain.Enums.TourStatus.Draft)
+            {
+                return Result.Failure(
+                    new Error(
+                        "Tour.InvalidTransition",
+                        $"Cannot submit a tour with status {tour.Status}. Required: Draft."),
+                    Outcome.Conflict);
+            }
+
+            if (!RowVersionsEqual(tour.RowVersion, request.RowVersion))
+            {
+                return Result.Failure(
+                    new Error(
+                        "Tour.ConcurrencyConflict",
+                        "This tour was modified by another user. Please refresh and try again."),
+                    Outcome.Conflict);
+            }
+
+            // ── Aggregated pre-submit validation gate ─────────────────────────
+            var errors = new List<Error>();
+
+            // 3. At least 1 image attachment.
+            var images = await attachmentRepository
+                .GetEntityImagesAsync(EntityType.Tour, tour.Id, cancellationToken)
+                .ConfigureAwait(false);
+            if (images.Count == 0)
+            {
+                errors.Add(new Error("Tour.NoImages", "Tour must have at least one image."));
+            }
+
+            // 4. At least 1 active TourPricingTier.
+            var hasActivePricing = await tourRepository
+                .HasActivePricingAsync(tour.Id, cancellationToken)
+                .ConfigureAwait(false);
+            if (!hasActivePricing)
+            {
+                errors.Add(new Error("Tour.NoPricing", "Tour must have at least one active pricing tier."));
+            }
+
+            // 5. At least 1 active TourSchedule.
+            var hasActiveSchedule = await tourRepository
+                .HasActiveScheduleAsync(tour.Id, cancellationToken)
+                .ConfigureAwait(false);
+            if (!hasActiveSchedule)
+            {
+                errors.Add(new Error("Tour.NoSchedule", "Tour must have at least one active schedule."));
+            }
+
+            // 6. Description present and >= 100 chars.
+            if (string.IsNullOrWhiteSpace(tour.Description) || tour.Description.Trim().Length < MinDescriptionLength)
+            {
+                errors.Add(new Error(
+                    "Tour.DescriptionTooShort",
+                    $"Description is required and must be at least {MinDescriptionLength} characters."));
+            }
+
+            // 7. MeetingPoint exists with lat/lng.
+            if (tour.MeetingPoint is null)
+            {
+                errors.Add(new Error(
+                    "Tour.MissingMeetingPoint",
+                    "MeetingPoint coordinates are required to submit."));
+            }
+
+            // 8. PlaceId still references a non-deleted Place (only when tour has one).
+            if (tour.PlaceId.HasValue)
+            {
+                var status = await placeExistenceService
+                    .GetStatusAsync(tour.PlaceId.Value, cancellationToken)
+                    .ConfigureAwait(false);
+                switch (status)
+                {
+                    case PlaceExistenceStatus.NotFound:
+                        errors.Add(new Error(
+                            "Tour.PlaceNotFound",
+                            $"Linked Place '{tour.PlaceId.Value}' no longer exists."));
+                        break;
+                    case PlaceExistenceStatus.Deleted:
+                        errors.Add(new Error(
+                            "Tour.PlaceDeleted",
+                            $"Linked Place '{tour.PlaceId.Value}' has been deleted."));
+                        break;
+                }
+            }
+
+            // 9. At least 1 active Adult pricing tier.
+            var hasAdult = await tourRepository
+                .HasActiveAdultPricingAsync(tour.Id, cancellationToken)
+                .ConfigureAwait(false);
+            if (!hasAdult)
+            {
+                errors.Add(new Error(
+                    "Tour.NoAdultPricingTier",
+                    "Tour must have at least one active Adult pricing tier."));
+            }
+
+            if (errors.Count > 0)
+            {
+                logger.LogInformation(
+                    "Tour {TourId} submit blocked by {ErrorCount} validation failure(s).",
+                    tour.Id, errors.Count);
+
+                // Return all errors under one umbrella outcome (422).
+                var umbrella = new Error(
+                    "Tour.SubmitValidationFailed",
+                    "Tour cannot be submitted; one or more pre-submit checks failed.");
+                var combined = new List<Error> { umbrella };
+                combined.AddRange(errors);
+                return Result.Fail(Outcome.UnprocessableEntity, combined.ToArray());
+            }
+
+            // All gates passed — let the aggregate transition state and raise events.
+            try
+            {
+                tour.Submit();
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Result.Failure(
+                    new Error("Tour.InvalidTransition", ex.Message),
+                    Outcome.Conflict);
+            }
+
+            try
+            {
+                await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                return Result.Failure(
+                    new Error(
+                        "Tour.ConcurrencyConflict",
+                        "This tour was modified by another user. Please refresh and try again."),
+                    Outcome.Conflict);
+            }
+
+            await cache.RemoveByTagAsync(ContentToursCacheKeys.TagForTour(tour.Id), cancellationToken)
+                .ConfigureAwait(false);
+            await cache.RemoveByTagAsync(ContentToursCacheKeys.TagToursList, cancellationToken)
+                .ConfigureAwait(false);
+
+            logger.LogInformation(
+                "Tour submitted: {TourId} (CreatedBy={CreatedByUserId}, By={UserId})",
+                tour.Id, tour.CreatedByUserId, currentUser.UserId);
+
+            return Result.Success();
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            return Result.Failure(
+                new Error("Request.Cancelled", "The request was cancelled."),
+                Outcome.Canceled);
+        }
+    }
+
+    private static bool RowVersionsEqual(byte[] left, byte[] right)
+    {
+        if (left.Length != right.Length) return false;
+        for (var i = 0; i < left.Length; i++)
+        {
+            if (left[i] != right[i]) return false;
+        }
+
+        return true;
+    }
+}

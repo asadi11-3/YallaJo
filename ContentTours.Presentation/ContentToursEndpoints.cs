@@ -1,3 +1,4 @@
+using ContentTours.Presentation.Endpoints.Tour;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -10,6 +11,9 @@ public static class ContentToursEndpoints
     {
         var group = endpoints.MapGroup("/api/v1/tours")
             .WithTags("ContentTours");
+
+        // Task 1 — Tour Core (endpoints 1–11)
+        TourEndpoints.MapTourEndpoints(group);
 
         // Task 2A — TourSchedule (endpoints 12–15)
         TourScheduleEndpoints.MapTourScheduleEndpoints(group);

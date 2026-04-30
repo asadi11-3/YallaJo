@@ -17,6 +17,7 @@ public sealed class ContentToursPermissionCatalog : IPermissionCatalog
         new(ContentToursFeatures.Tour, AppAction.Create,    PermissionGroup.ContentManagement, "Create a tour"),
         new(ContentToursFeatures.Tour, AppAction.Update,    PermissionGroup.ContentManagement, "Update tour details"),
         new(ContentToursFeatures.Tour, AppAction.Delete,    PermissionGroup.ContentManagement, "Delete a tour"),
+        new(ContentToursFeatures.Tour, AppAction.Submit,    PermissionGroup.ContentManagement, "Submit a draft tour for review"),
         new(ContentToursFeatures.Tour, AppAction.Approve,   PermissionGroup.ContentManagement, "Approve a submitted tour"),
         new(ContentToursFeatures.Tour, AppAction.Reject,    PermissionGroup.ContentManagement, "Reject a submitted tour"),
         new(ContentToursFeatures.Tour, AppAction.Suspend,   PermissionGroup.ContentManagement, "Suspend an approved tour"),

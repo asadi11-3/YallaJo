@@ -15,6 +15,7 @@ public static class AppAction
     public const string DeleteAny  = nameof(DeleteAny);
     public const string SoftDelete = nameof(SoftDelete);
     public const string Approve    = nameof(Approve);
+    public const string Submit     = nameof(Submit);
     public const string Reject     = nameof(Reject);
     public const string Suspend    = nameof(Suspend);
     public const string Reinstate  = nameof(Reinstate);
