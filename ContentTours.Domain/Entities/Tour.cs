@@ -14,6 +14,7 @@ public sealed class Tour : AuditableEntity, IAggregateRoot
     private readonly List<TourSchedule> _tourSchedules = [];
     private readonly List<TourWaypoint> _tourWaypoints = [];
     private readonly List<TourPricingTier> _tourPricingTiers = [];
+    private readonly List<TourTourGuide> _tourGuides = [];
     private readonly List<TourPackage> _tourPackages = [];
 
     private Tour()
@@ -33,6 +34,9 @@ public sealed class Tour : AuditableEntity, IAggregateRoot
     public Location Location { get; private set; } = default!;
     public Location? MeetingPoint { get; private set; }
     public TourStatus Status { get; private set; } = TourStatus.Draft;
+    public int? ChildFreeAge { get; private set; }
+    public int? ChildDiscountedAge { get; private set; }
+    public decimal? ChildDiscountPercentage { get; private set; }
     public decimal AverageRating { get; private set; } = 0m;
     public int ReviewCount { get; private set; }
     public int BookingCount { get; private set; }
@@ -51,6 +55,7 @@ public sealed class Tour : AuditableEntity, IAggregateRoot
     public string? SalePriceCurrency { get; private set; }
     public DateTime? DiscountValidFrom { get; private set; }
     public DateTime? DiscountValidTo { get; private set; }
+    public IReadOnlyCollection<TourTourGuide> TourGuides => _tourGuides.AsReadOnly();
 
     public DateTime? SubmittedAt { get; private set; }
     public DateTime? ApprovedAt { get; private set; }
@@ -554,5 +559,26 @@ public sealed class Tour : AuditableEntity, IAggregateRoot
     {
         if (age.HasValue && (age.Value < 0 || age.Value > 120))
             throw new ArgumentOutOfRangeException(paramName, "Age must be between 0 and 120.");
+    }
+
+    public void UpdateChildrenInfo(bool isChildFriendly, int? childFreeAge, int? childDiscountedAge, decimal? childDiscountPercentage)
+    {
+        EnsureNotDeleted();
+        EnsureMutable();
+
+        IsChildFriendly = isChildFriendly;
+        ChildFreeAge = childFreeAge;
+        ChildDiscountedAge = childDiscountedAge;
+        ChildDiscountPercentage = childDiscountPercentage;
+
+        MarkUpdated();
+
+        AddDomainEvent(new TourUpdatedDomainEvent(
+            TourId: Id,
+            NameChanged: false,
+            DescriptionChanged: false,
+            ShortDescriptionChanged: false,
+            PlaceIdChanged: false,
+            ChildrenInfoChanged: true));
     }
 }
