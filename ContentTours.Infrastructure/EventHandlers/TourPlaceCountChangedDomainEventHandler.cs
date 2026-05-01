@@ -1,4 +1,4 @@
-using ContentTours.Contracts;
+using ContentTours.Contracts.IntegrationEvents;
 using ContentTours.Domain.Enums;
 using ContentTours.Domain.Events;
 using ContentTours.Infrastructure.Persistence;

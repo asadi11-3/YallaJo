@@ -1,7 +1,7 @@
 using Auth.Contracts.IntegrationEvents;
 using ContentCore.Contracts.IntegrationEvents;
 using ContentPlaces.Contracts.IntegrationEvents;
-using ContentTours.Contracts;
+using ContentTours.Contracts.IntegrationEvents;
 using FluentAssertions;
 using Security.Contracts.IntegrationEvents;
 using YallaJo.SharedKernel.Infrastructure.Abstractions.Integration;
