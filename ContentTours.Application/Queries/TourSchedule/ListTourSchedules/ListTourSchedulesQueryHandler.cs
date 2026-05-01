@@ -15,22 +15,35 @@ public sealed class ListTourSchedulesQueryHandler(
     public async Task<Result<IReadOnlyList<TourScheduleDto>>> Handle(
         ListTourSchedulesQuery query, CancellationToken ct)
     {
-        var tour = await tourRepo.GetByIdAsync(query.TourId, ct);
-        if (tour is null || tour.IsDeleted)
-            return Result.NotFound<IReadOnlyList<TourScheduleDto>>("Tour.NotFound");
+        try
+        {
+            var tour = await tourRepo.GetByIdAsync(query.TourId, ct);
+            if (tour is null || tour.IsDeleted)
+            {
+                return Result<IReadOnlyList<TourScheduleDto>>.Failure(
+                   new Error("Tour.NotFound", $"Tour '{query.TourId}' was not found."),
+                   Outcome.NotFound);
+            }
 
-        var schedules = await scheduleRepo.GetAllAsync(
-            filter: s => s.TourId == query.TourId && (!query.ActiveOnly || s.IsActive),
-            orderBy: q => q.OrderBy(s => s.DayOfWeek).ThenBy(s => s.StartTime),
-            ct: ct);
+            var schedules = await scheduleRepo.GetAllAsync(
+                filter: s => s.TourId == query.TourId && (!query.ActiveOnly || s.IsActive),
+                orderBy: q => q.OrderBy(s => s.DayOfWeek).ThenBy(s => s.StartTime),
+                ct: ct);
 
-        var dtos = schedules
-            .Select(s => new TourScheduleDto(
-                s.Id, s.TourId, s.DayOfWeek, s.StartTime, s.EndTime, s.IsActive, s.CreatedAt))
-            .ToList() as IReadOnlyList<TourScheduleDto>;
+            var dtos = schedules
+                .Select(s => new TourScheduleDto(
+                    s.Id, s.TourId, s.DayOfWeek, s.StartTime, s.EndTime, s.IsActive, s.CreatedAt))
+                .ToList() as IReadOnlyList<TourScheduleDto>;
 
-        logger.LogDebug("Listed {Count} schedules for TourId={TourId}", dtos.Count, query.TourId);
+            logger.LogDebug("Listed {Count} schedules for TourId={TourId}", dtos.Count, query.TourId);
 
-        return Result.Success(dtos);
+            return Result.Success(dtos);
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            return Result<IReadOnlyList<TourScheduleDto>>.Failure(
+                new Error("Request.Cancelled", "The request was cancelled."),
+                Outcome.Canceled);
+        }
     }
 }

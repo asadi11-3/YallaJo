@@ -5,22 +5,23 @@ using ContentTours.Application.Queries.Tour.ListMyTours;
 using ContentTours.Application.Queries.Tour.SearchTours;
 using ContentTours.Application.Queries.Tour.SuggestTours;
 using ContentTours.Contracts.Authorization;
+using ContentTours.Presentation.Endpoints.TourSearch.Models;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using Security.Contracts.Authorization;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Authorization;
 using YallaJo.SharedKernel.Presentation;
 using YallaJo.SharedKernel.Presentation.Authorization;
 
-namespace ContentTours.Presentation;
+namespace ContentTours.Presentation.Endpoints.TourSearch;
 
-public static class TourSearchEndpoints
+internal static class TourSearchEndpoints
 {
-    public static void MapTourSearchEndpoints(RouteGroupBuilder group)
+    internal static void MapTourSearchEndpoints(RouteGroupBuilder group)
     {
-        // ── GET /api/v1/tours/search ──────────────────────────────────────────
         group.MapGet("/search", async (
             string? q,
             Guid? placeId,
@@ -53,23 +54,26 @@ public static class TourSearchEndpoints
         .ProducesProblem(StatusCodes.Status400BadRequest)
         .AllowAnonymous();
 
-        // ── GET /api/v1/tours/search/suggest ─────────────────────────────────
         group.MapGet("/search/suggest", async (
             string q,
             string? lang,
+            HttpContext http,
             ISender sender,
             CancellationToken ct) =>
         {
-            var result = await sender.Send(new SuggestToursQuery(q, lang ?? "en"), ct);
+            var acceptLanguage = !string.IsNullOrWhiteSpace(lang)
+                ? lang
+                : http.Request.Headers.AcceptLanguage.ToString();
+
+            var result = await sender.Send(new SuggestToursQuery(q, acceptLanguage), ct);
             return result.ToApiResult();
         })
         .WithName("SuggestTours")
-        .WithSummary("Autocomplete tour name suggestions")
+        .WithSummary("Autocomplete tour name suggestions (matches Tour.Name + TourTranslation.Name)")
         .Produces<IReadOnlyList<TourSuggestDto>>(StatusCodes.Status200OK)
         .ProducesValidationProblem()
         .AllowAnonymous();
 
-        // ── GET /api/v1/tours/featured ────────────────────────────────────────
         group.MapGet("/featured", async (
             string? lang,
             ISender sender,
@@ -83,7 +87,6 @@ public static class TourSearchEndpoints
         .Produces<IReadOnlyList<TourSummaryDto>>(StatusCodes.Status200OK)
         .AllowAnonymous();
 
-        // ── GET /api/v1/tours/provider/my-tours ───────────────────────────────
         group.MapGet("/provider/my-tours", async (
             int? page, int? pageSize,
             string? status, string? sort,
@@ -93,10 +96,15 @@ public static class TourSearchEndpoints
             ICurrentUser currentUser,
             CancellationToken ct) =>
         {
-            // IDOR prevention: non-admins always see their own tours
-            var isAdmin = currentUser.IsInRole("Admin") ||
-                          currentUser.HasPermission($"ContentTours.Tour.{AppAction.ReadAny}");
-            var effectiveUserId = isAdmin && providerUserId.HasValue
+            // Admin-tier (Admin / SuperAdmin / Owner) OR explicit ReadAny permission
+            // can override providerUserId and view soft-deleted tours.
+            var isAdminTier = AppRoles.HighestPrivilegeLevel(currentUser.Roles)
+                              >= RolePrivilegeLevel.Admin;
+            var hasReadAny = currentUser.HasPermission(
+                $"ContentTours.Tour.{AppAction.ReadAny}");
+            var canOverride = isAdminTier || hasReadAny;
+
+            var effectiveUserId = canOverride && providerUserId.HasValue
                 ? providerUserId.Value
                 : currentUser.UserId!.Value;
 
@@ -106,7 +114,7 @@ public static class TourSearchEndpoints
                 pageSize ?? 20,
                 status,
                 sort,
-                isAdmin && (includeDeleted ?? false));
+                canOverride && (includeDeleted ?? false));
 
             var result = await sender.Send(query, ct);
             return result.ToApiResult();
@@ -118,7 +126,6 @@ public static class TourSearchEndpoints
         .ProducesProblem(StatusCodes.Status403Forbidden)
         .WithMetadata(new MustHavePermissionAttribute(ContentToursFeatures.Tour, AppAction.ReadOwn));
 
-        // ── PATCH /api/v1/tours/admin/{id}/feature ────────────────────────────
         group.MapPatch("/admin/{id:guid}/feature", async (
             Guid id,
             ToggleTourFeaturedRequest request,
@@ -137,7 +144,3 @@ public static class TourSearchEndpoints
         .WithMetadata(new MustHavePermissionAttribute(ContentToursFeatures.Tour, AppAction.Feature));
     }
 }
-
-// ── Request DTOs ──────────────────────────────────────────────────────────────
-
-public sealed record ToggleTourFeaturedRequest(bool IsFeatured);

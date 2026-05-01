@@ -18,22 +18,31 @@ public sealed class ListFeaturedToursQueryHandler(
     public async Task<Result<IReadOnlyList<TourSummaryDto>>> Handle(
         ListFeaturedToursQuery query, CancellationToken ct)
     {
-        // SQL-level Take via IQueryable — no full-table load
-        var dtos = await tourRepo
-            .Query(asNoTracking: true)
-            .Where(t => t.IsFeatured && t.Status == TourStatus.Approved && !t.IsDeleted)
-            .OrderByDescending(t => t.BookingCount)
-            .ThenByDescending(t => t.AverageRating)
-            .Take(FeaturedLimit)
-            .Select(t => new TourSummaryDto(
-                t.Id, t.Name, t.Slug,
-                t.BasePrice.Amount, t.Currency, t.SalePrice,
-                t.AverageRating, t.ReviewCount, t.BookingCount,
-                t.IsFeatured, t.Status.ToString(), t.CreatedAt))
-            .ToListAsync(ct);
+        try
+        {
+            // SQL-level Take via IQueryable — no full-table load
+            var dtos = await tourRepo
+                .Query(asNoTracking: true)
+                .Where(t => t.IsFeatured && t.Status == TourStatus.Approved && !t.IsDeleted)
+                .OrderByDescending(t => t.BookingCount)
+                .ThenByDescending(t => t.AverageRating)
+                .Take(FeaturedLimit)
+                .Select(t => new TourSummaryDto(
+                    t.Id, t.Name, t.Slug,
+                    t.BasePrice.Amount, t.Currency, t.SalePrice,
+                    t.AverageRating, t.ReviewCount, t.BookingCount,
+                    t.IsFeatured, t.Status.ToString(), t.CreatedAt))
+                .ToListAsync(ct);
 
-        logger.LogDebug("Listed {Count} featured tours", dtos.Count);
+            logger.LogDebug("Listed {Count} featured tours", dtos.Count);
 
-        return Result.Success((IReadOnlyList<TourSummaryDto>)dtos);
+            return Result.Success((IReadOnlyList<TourSummaryDto>)dtos);
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            return Result<IReadOnlyList<TourSummaryDto>>.Failure(
+                new Error("Request.Cancelled", "The request was cancelled."),
+                Outcome.Canceled);
+        }
     }
 }

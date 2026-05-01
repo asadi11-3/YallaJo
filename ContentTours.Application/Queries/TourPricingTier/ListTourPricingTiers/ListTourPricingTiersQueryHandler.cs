@@ -13,79 +13,94 @@ public sealed class ListTourPricingTiersQueryHandler(
     ITourPricingTierRepository tierRepo,
     ITourPricingTierTranslationRepository translationRepo,
     IRequestContext requestContext,
-    ICurrentUser currentUser,
     ILogger<ListTourPricingTiersQueryHandler> logger)
     : IQueryHandler<ListTourPricingTiersQuery, IReadOnlyList<TourPricingTierDto>>
 {
     public async Task<Result<IReadOnlyList<TourPricingTierDto>>> Handle(
         ListTourPricingTiersQuery query, CancellationToken ct)
     {
-        var tour = await tourRepo.GetByIdAsync(query.TourId, ct);
-        if (tour is null || tour.IsDeleted)
-            return Result.NotFound<IReadOnlyList<TourPricingTierDto>>("Tour.NotFound");
-
-        // Anonymous callers always see active-only.
-        // Owner/admin can see all tiers.
-        var isOwnerOrAdmin = currentUser.IsAuthenticated &&
-            (tour.CreatedByUserId == currentUser.UserId || currentUser.IsInRole("Admin"));
-
-        var activeOnly = !isOwnerOrAdmin || query.ActiveOnly;
-        var languageCode = ResolveLanguageCode(query.LanguageCode, requestContext.AcceptLanguage);
-        var neutralLanguageCode = GetNeutralLanguageCode(languageCode);
-
-        var tiers = await tierRepo.Query(asNoTracking: true)
-            .Where(t => t.TourId == query.TourId && (!activeOnly || t.IsActive))
-            .OrderBy(t => t.Name)
-            .ToListAsync(ct);
-
-        var tierIds = tiers.Select(t => t.Id).ToList();
-
-        List<ContentTours.Domain.Entities.TourPricingTierTranslation> translations;
-
-        if (tierIds.Count == 0)
+        try
         {
-            translations = [];
-        }
-        else
-        {
-            translations = await translationRepo.Query(asNoTracking: true)
-                .Where(t => tierIds.Contains(t.TourPricingTierId) &&
-                    (t.LanguageCode == languageCode || t.LanguageCode == neutralLanguageCode))
-                .OrderByDescending(t => t.LanguageCode == languageCode)
-                .ToListAsync(ct);
-        }
-
-        var translationsByTierId = translations
-            .GroupBy(t => t.TourPricingTierId)
-            .ToDictionary(g => g.Key, g => g.First());
-
-        var dtos = tiers
-            .Select(t =>
+            var tour = await tourRepo.GetByIdAsync(query.TourId, ct);
+            if (tour is null || tour.IsDeleted)
             {
-                translationsByTierId.TryGetValue(t.Id, out var translation);
+                return Result<IReadOnlyList<TourPricingTierDto>>.Failure(
+                   new Error("Tour.NotFound", $"Tour '{query.TourId}' was not found."),
+                   Outcome.NotFound);
+            }
 
-                return new TourPricingTierDto(
-                    t.Id,
-                    t.TourId,
-                    translation?.Name ?? t.Name,
-                    translation?.Description ?? t.Description,
-                    t.Price.Amount,
-                    t.Currency,
-                    t.ParticipantType,
-                    t.MinParticipants,
-                    t.MaxParticipants,
-                    t.IsActive,
-                    t.CreatedAt);
-            })
-            .ToList() as IReadOnlyList<TourPricingTierDto>;
+            // Visibility — driven by the query record (NOT by ICurrentUser) so the cached
+            // output and the cache key always agree on which tier set was returned.
+            // The endpoint is responsible for stamping CallerUserId + IsAdmin onto the
+            // query before dispatch (P1 #2 cache-key fix).
+            var isElevated = query.IsAdmin
+                || (query.CallerUserId.HasValue && tour.CreatedByUserId == query.CallerUserId.Value);
 
-        logger.LogDebug(
-            "Listed {Count} pricing tiers for TourId={TourId} Language={LanguageCode}",
-            dtos.Count,
-            query.TourId,
-            languageCode ?? "default");
+            // Non-elevated callers are forced to active-only regardless of what they asked for.
+            var activeOnly = !isElevated || query.ActiveOnly;
+            var languageCode = ResolveLanguageCode(query.LanguageCode, requestContext.AcceptLanguage);
+            var neutralLanguageCode = GetNeutralLanguageCode(languageCode);
 
-        return Result.Success(dtos);
+            var tiers = await tierRepo.Query(asNoTracking: true)
+                .Where(t => t.TourId == query.TourId && (!activeOnly || t.IsActive))
+                .OrderBy(t => t.Name)
+                .ToListAsync(ct);
+
+            var tierIds = tiers.Select(t => t.Id).ToList();
+
+            List<ContentTours.Domain.Entities.TourPricingTierTranslation> translations;
+
+            if (tierIds.Count == 0)
+            {
+                translations = [];
+            }
+            else
+            {
+                translations = await translationRepo.Query(asNoTracking: true)
+                    .Where(t => tierIds.Contains(t.TourPricingTierId) &&
+                        (t.LanguageCode == languageCode || t.LanguageCode == neutralLanguageCode))
+                    .OrderByDescending(t => t.LanguageCode == languageCode)
+                    .ToListAsync(ct);
+            }
+
+            var translationsByTierId = translations
+                .GroupBy(t => t.TourPricingTierId)
+                .ToDictionary(g => g.Key, g => g.First());
+
+            var dtos = tiers
+                .Select(t =>
+                {
+                    translationsByTierId.TryGetValue(t.Id, out var translation);
+
+                    return new TourPricingTierDto(
+                        t.Id,
+                        t.TourId,
+                        translation?.Name ?? t.Name,
+                        translation?.Description ?? t.Description,
+                        t.Price.Amount,
+                        t.Currency,
+                        t.ParticipantType,
+                        t.MinParticipants,
+                        t.MaxParticipants,
+                        t.IsActive,
+                        t.CreatedAt);
+                })
+                .ToList() as IReadOnlyList<TourPricingTierDto>;
+
+            logger.LogDebug(
+                "Listed {Count} pricing tiers for TourId={TourId} Language={LanguageCode}",
+                dtos.Count,
+                query.TourId,
+                languageCode ?? "default");
+
+            return Result.Success(dtos);
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            return Result<IReadOnlyList<TourPricingTierDto>>.Failure(
+                new Error("Request.Cancelled", "The request was cancelled."),
+                Outcome.Canceled);
+        }
     }
 
     private static string? ResolveLanguageCode(string? explicitLanguageCode, string? acceptLanguage)

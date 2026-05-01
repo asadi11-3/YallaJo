@@ -18,4 +18,10 @@
     <ProjectReference Include="..\Security.Contracts\Security.Contracts.csproj" />
     <ProjectReference Include="..\YallaJo.SharedKernel.Application\YallaJo.SharedKernel.Application.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <!-- Expose internal helpers (TourScheduleRecurrenceExpander, TourScheduleCandidate)
+         to the unit-test project so behaviour can be pinned at the contract surface
+         without going through the full MediatR pipeline. -->
+    <InternalsVisibleTo Include="ContentTours.Tests.Unit" />
+  </ItemGroup>
 </Project>

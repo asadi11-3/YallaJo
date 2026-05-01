@@ -18,4 +18,9 @@
     <ProjectReference Include="..\ContentTours.Domain\ContentTours.Domain.csproj" />
     <ProjectReference Include="..\YallaJo.SharedKernel.Infrastructure\YallaJo.SharedKernel.Infrastructure.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <!-- Expose internal repository implementations (TourRepository) to the unit-test
+         project so query handlers can be tested against an EF InMemory context. -->
+    <InternalsVisibleTo Include="ContentTours.Tests.Unit" />
+  </ItemGroup>
 </Project>

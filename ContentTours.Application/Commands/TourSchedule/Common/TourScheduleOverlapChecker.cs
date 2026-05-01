@@ -2,11 +2,6 @@ using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
 namespace ContentTours.Application.Commands.TourSchedule.Common;
 
-/// <summary>
-/// Detects time-interval overlaps across TourSchedule rows grouped by DayOfWeek.
-/// Intervals are half-open [StartTime, EndTime). EndTime==null = open-ended (treated as TimeOnly.MaxValue).
-/// Two rows on the same DayOfWeek overlap iff b.StartTime &lt; (a.EndTime ?? TimeOnly.MaxValue).
-/// </summary>
 internal static class TourScheduleOverlapChecker
 {
     public static Error? Check(
@@ -38,9 +33,12 @@ internal static class TourScheduleOverlapChecker
                 var b = sorted[i + 1];
                 var endA = a.End ?? TimeOnly.MaxValue;
                 if (b.Start < endA)
-                    return new Error("TourSchedule.OverlapDetected",
-                        $"Overlap on DayOfWeek={dow}: [{a.Start}–{a.End?.ToString() ?? "open"}] " +
-                        $"conflicts with [{b.Start}–{b.End?.ToString() ?? "open"}].");
+                {
+                    return new Error(
+                        "TourSchedule.OverlapDetected", $"Overlap on DayOfWeek={dow}:" +
+                        $" [{a.Start}–{a.End?.ToString() ?? "open"}] " +
+                      $"conflicts with [{b.Start}–{b.End?.ToString() ?? "open"}].");
+                }
             }
         }
 

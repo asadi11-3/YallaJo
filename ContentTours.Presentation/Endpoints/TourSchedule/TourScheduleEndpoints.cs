@@ -4,6 +4,7 @@ using ContentTours.Application.Commands.TourSchedule.UpdateTourSchedule;
 using ContentTours.Application.Queries.TourSchedule.Common;
 using ContentTours.Application.Queries.TourSchedule.ListTourSchedules;
 using ContentTours.Contracts.Authorization;
+using ContentTours.Presentation.Endpoints.TourSchedule.Models;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -12,16 +13,15 @@ using YallaJo.SharedKernel.Application.Authorization;
 using YallaJo.SharedKernel.Presentation;
 using YallaJo.SharedKernel.Presentation.Authorization;
 
-namespace ContentTours.Presentation;
+namespace ContentTours.Presentation.Endpoints.TourSchedule;
 
-public static class TourScheduleEndpoints
+internal static class TourScheduleEndpoints
 {
-    public static void MapTourScheduleEndpoints(RouteGroupBuilder group)
+    internal static void MapTourScheduleEndpoints(RouteGroupBuilder group)
     {
         var schedules = group.MapGroup("/{id:guid}/schedules")
             .WithTags("ContentTours | Schedules");
 
-        // ── GET /api/v1/tours/{id}/schedules ─────────────────────────────────
         schedules.MapGet("/", async (
             Guid id,
             bool? activeOnly,
@@ -37,7 +37,6 @@ public static class TourScheduleEndpoints
         .ProducesProblem(StatusCodes.Status404NotFound)
         .AllowAnonymous();
 
-        // ── POST /api/v1/tours/{id}/schedules ────────────────────────────────
         schedules.MapPost("/", async (
             Guid id,
             CreateTourScheduleRequest request,
@@ -45,24 +44,28 @@ public static class TourScheduleEndpoints
             CancellationToken ct) =>
         {
             var cmd = new CreateTourScheduleCommand(
-                id,
-                request.DaysOfWeek,
-                request.StartTime,
-                request.EndTime,
-                request.IsActive);
+                TourId: id,
+                Pattern: request.Pattern,
+                DaysOfWeek: request.DaysOfWeek,
+                CustomDates: request.CustomDates,
+                StartTime: request.StartTime,
+                EndTime: request.EndTime,
+                ValidFrom: request.ValidFrom,
+                ValidTo: request.ValidTo,
+                IsActive: request.IsActive);
             var result = await sender.Send(cmd, ct);
             return result.ToApiResult();
         })
         .WithName("CreateTourSchedule")
-        .WithSummary("Create tour schedules via recurrence pattern")
+        .WithSummary("Create tour schedules via recurrence pattern (Once/Daily/Weekly/Custom; 90-day cap; 120-row limit)")
         .Produces<CreateTourScheduleResult>(StatusCodes.Status201Created)
         .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status403Forbidden)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status409Conflict)
+        .ProducesProblem(StatusCodes.Status422UnprocessableEntity)
         .WithMetadata(new MustHavePermissionAttribute(ContentToursFeatures.Tour, AppAction.Update));
 
-        // ── PUT /api/v1/tours/{id}/schedules/{scheduleId} ────────────────────
         schedules.MapPut("/{scheduleId:guid}", async (
             Guid id,
             Guid scheduleId,
@@ -85,7 +88,6 @@ public static class TourScheduleEndpoints
         .ProducesProblem(StatusCodes.Status409Conflict)
         .WithMetadata(new MustHavePermissionAttribute(ContentToursFeatures.Tour, AppAction.Update));
 
-        // ── DELETE /api/v1/tours/{id}/schedules/{scheduleId} ─────────────────
         schedules.MapDelete("/{scheduleId:guid}", async (
             Guid id,
             Guid scheduleId,
@@ -104,18 +106,3 @@ public static class TourScheduleEndpoints
         .WithMetadata(new MustHavePermissionAttribute(ContentToursFeatures.Tour, AppAction.Update));
     }
 }
-
-// ── Request DTOs ──────────────────────────────────────────────────────────────
-
-public sealed record CreateTourScheduleRequest(
-    /// <summary>Days of week to schedule (0=Sunday, 1=Monday … 6=Saturday). At least one required.</summary>
-    List<byte> DaysOfWeek,
-    TimeOnly StartTime,
-    TimeOnly? EndTime,
-    bool IsActive = true);
-
-public sealed record UpdateTourScheduleRequest(
-    byte DayOfWeek,
-    TimeOnly StartTime,
-    TimeOnly? EndTime,
-    bool IsActive);

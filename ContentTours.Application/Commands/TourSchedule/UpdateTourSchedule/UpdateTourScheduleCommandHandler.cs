@@ -3,8 +3,10 @@ using ContentTours.Application.Commands.TourSchedule.Common;
 using ContentTours.Application.Interfaces;
 using ContentTours.Contracts;
 using ContentTours.Domain.Repositories;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
+using Security.Contracts.Authorization;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
@@ -21,42 +23,80 @@ public sealed class UpdateTourScheduleCommandHandler(
     ILogger<UpdateTourScheduleCommandHandler> logger)
     : ICommandHandler<UpdateTourScheduleCommand>
 {
-    public async Task<Result> Handle(UpdateTourScheduleCommand cmd, CancellationToken ct)
+    public async Task<Result> Handle(UpdateTourScheduleCommand request, CancellationToken cancellationToken)
     {
-        var tour = await tourRepo.GetByIdAsync(cmd.TourId, ct);
-        if (tour is null || tour.IsDeleted)
-            return Result.NotFound("Tour.NotFound");
+        try
+        {
+            var tour = await tourRepo.GetByIdAsync(request.TourId, cancellationToken);
+            if (tour is null || tour.IsDeleted)
+            {
+                return Result.Failure(
+                    new Error("Tour.NotFound", $"Tour '{request.TourId}' was not found."),
+                    Outcome.NotFound);
+            }
 
-        if (tour.CreatedByUserId != currentUser.UserId!.Value && !currentUser.IsInRole("Admin"))
-            return Result.Forbidden("Tour.NotOwner");
+            var isAdminTier = AppRoles.HighestPrivilegeLevel(currentUser.Roles)
+                >= RolePrivilegeLevel.Admin;
+            if (!isAdminTier && tour.CreatedByUserId != currentUser.UserId!.Value)
+            {
+                return Result.Failure(
+                    new Error("Tour.NotOwner", "You do not have permission to update schedules for this tour."),
+                    Outcome.Forbidden);
+            }
 
-        var schedule = await scheduleRepo.GetByIdAsync(cmd.ScheduleId, ct);
-        if (schedule is null || schedule.TourId != cmd.TourId)
-            return Result.NotFound("TourSchedule.NotFound");
+            var schedule = await scheduleRepo.GetByIdAsync(request.ScheduleId, cancellationToken);
+            if (schedule is null || schedule.TourId != request.TourId)
+            {
+                return Result.Failure(
+                   new Error("TourSchedule.NotFound", $"Schedule '{request.ScheduleId}' was not found on this tour."),
+                   Outcome.NotFound);
+            }
 
-        // Overlap check: existing active rows minus this one + proposed change
-        var existing = await scheduleRepo.GetAllAsync(
-            filter: s => s.TourId == cmd.TourId && s.IsActive && s.Id != cmd.ScheduleId,
-            ct: ct);
+            // Overlap check: existing active rows minus this one + proposed change
+            var existing = await scheduleRepo.GetAllAsync(
+                filter: s => s.TourId == request.TourId && s.IsActive && s.Id != request.ScheduleId,
+                ct: cancellationToken);
 
-        var proposed = new[] { (cmd.DayOfWeek, cmd.StartTime, cmd.EndTime) };
-        var overlapError = TourScheduleOverlapChecker.Check(existing, proposed);
-        if (overlapError is not null)
-            return Result.UnprocessableEntity(overlapError);
+            var proposed = new[] { (request.DayOfWeek, request.StartTime, request.EndTime) };
+            var overlapError = TourScheduleOverlapChecker.Check(existing, proposed);
+            if (overlapError is not null)
+                return Result.UnprocessableEntity(overlapError);
 
-        schedule.Update(cmd.DayOfWeek, cmd.StartTime, cmd.EndTime, cmd.IsActive);
+            schedule.Update(request.DayOfWeek, request.StartTime, request.EndTime, request.IsActive);
 
-        outbox.Enqueue(new TourScheduleChangedIntegrationEvent(
-            schedule.Id, cmd.TourId, cmd.DayOfWeek, cmd.StartTime, cmd.EndTime, TourEntityChangeType.Updated));
+            outbox.Enqueue(new TourScheduleChangedIntegrationEvent(
+                schedule.Id, request.TourId, request.DayOfWeek, request.StartTime, request.EndTime, TourEntityChangeType.Updated));
 
-        await unitOfWork.SaveChangesAsync(ct);
+            try
+            {
+                await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            }
+            catch (DbUpdateConcurrencyException ex)
+            {
+                logger.LogWarning(
+                    ex,
+                    "Concurrency conflict while {Action}: ScheduleId={ScheduleId} TourId={TourId}",
+                    nameof(UpdateTourScheduleCommand), request.ScheduleId, request.TourId);
 
-        await cache.RemoveByTagAsync(TourScheduleCacheKeys.TagForTour(cmd.TourId), ct);
-        await cache.RemoveByTagAsync(TourCacheKeys.TagForTour(cmd.TourId), ct);
+                return Result.Failure(
+                    new Error(
+                        "TourSchedule.ConcurrencyConflict",
+                        "This schedule was modified by another user. Please refresh and try again."),
+                    Outcome.Conflict);
+            }
 
-        logger.LogInformation("Updated TourSchedule {ScheduleId} on TourId={TourId}", schedule.Id, cmd.TourId);
+            await cache.RemoveByTagAsync(TourScheduleCacheKeys.TagForTour(request.TourId), cancellationToken);
+            await cache.RemoveByTagAsync(TourCacheKeys.TagForTour(request.TourId), cancellationToken);
 
-        return Result.Success();
+            logger.LogInformation("Updated TourSchedule {ScheduleId} on TourId={TourId}", schedule.Id, request.TourId);
+
+            return Result.Success();
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            return Result.Failure(
+                new Error("Request.Cancelled", "The request was cancelled."),
+                Outcome.Canceled);
+        }
     }
-
 }

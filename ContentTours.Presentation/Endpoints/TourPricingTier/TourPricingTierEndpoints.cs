@@ -4,36 +4,48 @@ using ContentTours.Application.Commands.TourPricingTier.UpdateTourPricingTier;
 using ContentTours.Application.Queries.TourPricingTier.Common;
 using ContentTours.Application.Queries.TourPricingTier.ListTourPricingTiers;
 using ContentTours.Contracts.Authorization;
-using ContentTours.Domain.Enums;
+using ContentTours.Presentation.Endpoints.TourPricingTier.Models;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using Security.Contracts.Authorization;
+using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Authorization;
 using YallaJo.SharedKernel.Presentation;
 using YallaJo.SharedKernel.Presentation.Authorization;
 
-namespace ContentTours.Presentation;
+namespace ContentTours.Presentation.Endpoints.TourPricingTier;
 
-public static class TourPricingTierEndpoints
+internal static class TourPricingTierEndpoints
 {
-    public static void MapTourPricingTierEndpoints(RouteGroupBuilder group)
+    internal static void MapTourPricingTierEndpoints(RouteGroupBuilder group)
     {
         var pricing = group.MapGroup("/{id:guid}/pricing")
             .WithTags("ContentTours | Pricing");
 
-        // ── GET /api/v1/tours/{id}/pricing ────────────────────────────────────
         pricing.MapGet("/", async (
             Guid id,
             bool? activeOnly,
             string? lang,
             HttpContext http,
+            ICurrentUser currentUser,
             ISender sender,
             CancellationToken ct) =>
         {
             var languageCode = lang ?? http.Request.Headers.AcceptLanguage.ToString();
+            var callerUserId = currentUser.IsAuthenticated ? currentUser.UserId : null;
+            var isAdminTier = AppRoles.HighestPrivilegeLevel(currentUser.Roles)
+                >= RolePrivilegeLevel.Admin;
+
             var result = await sender.Send(
-                new ListTourPricingTiersQuery(id, activeOnly ?? true, languageCode), ct);
+                new ListTourPricingTiersQuery(
+                    TourId: id,
+                    ActiveOnly: activeOnly ?? true,
+                    LanguageCode: languageCode,
+                    CallerUserId: callerUserId,
+                    IsAdmin: isAdminTier),
+                ct);
             return result.ToApiResult();
         })
         .WithName("ListTourPricingTiers")
@@ -42,7 +54,6 @@ public static class TourPricingTierEndpoints
         .ProducesProblem(StatusCodes.Status404NotFound)
         .AllowAnonymous();
 
-        // ── POST /api/v1/tours/{id}/pricing ───────────────────────────────────
         pricing.MapPost("/", async (
             Guid id,
             CreateTourPricingTierRequest request,
@@ -67,7 +78,6 @@ public static class TourPricingTierEndpoints
         .ProducesProblem(StatusCodes.Status409Conflict)
         .WithMetadata(new MustHavePermissionAttribute(ContentToursFeatures.Tour, AppAction.Update));
 
-        // ── PUT /api/v1/tours/{id}/pricing/{tierId} ───────────────────────────
         pricing.MapPut("/{tierId:guid}", async (
             Guid id,
             Guid tierId,
@@ -95,7 +105,6 @@ public static class TourPricingTierEndpoints
         .ProducesProblem(StatusCodes.Status409Conflict)
         .WithMetadata(new MustHavePermissionAttribute(ContentToursFeatures.Tour, AppAction.Update));
 
-        // ── DELETE /api/v1/tours/{id}/pricing/{tierId} ────────────────────────
         pricing.MapDelete("/{tierId:guid}", async (
             Guid id,
             Guid tierId,
@@ -114,24 +123,3 @@ public static class TourPricingTierEndpoints
         .WithMetadata(new MustHavePermissionAttribute(ContentToursFeatures.Tour, AppAction.Update));
     }
 }
-
-// ── Request DTOs ──────────────────────────────────────────────────────────────
-
-public sealed record CreateTourPricingTierRequest(
-    string Name,
-    string? Description,
-    decimal Price,
-    string Currency,
-    ParticipantType ParticipantType,
-    int MinParticipants = 1,
-    int? MaxParticipants = null);
-
-public sealed record UpdateTourPricingTierRequest(
-    string Name,
-    string? Description,
-    decimal Price,
-    string Currency,
-    ParticipantType ParticipantType,
-    int MinParticipants,
-    int? MaxParticipants,
-    bool IsActive);

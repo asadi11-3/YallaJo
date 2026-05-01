@@ -4,11 +4,6 @@ using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
 namespace ContentTours.Application.Commands.TourPricingTier.Common;
 
-/// <summary>
-/// Encapsulates the "Adult tier is magic" business rule.
-/// Cannot delete or deactivate the last active Adult tier on a Pending or Approved tour.
-/// Allowed on Draft tours (provider still editing).
-/// </summary>
 internal static class AdultTierGuard
 {
     public static Result EnsureCanRemoveOrDeactivate(
@@ -29,7 +24,8 @@ internal static class AdultTierGuard
 
         return Result.Fail(
             Outcome.Conflict,
-            new Error("TourPricingTier.AdultTierRequired",
+            new Error(
+                "TourPricingTier.AdultTierRequired",
                 "Cannot delete or deactivate the last active Adult tier on a Pending or Approved tour."));
     }
 }

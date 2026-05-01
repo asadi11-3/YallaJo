@@ -16,6 +16,8 @@ public sealed class SearchToursQueryHandler(
     public async Task<Result<SearchToursResult>> Handle(
         SearchToursQuery query, CancellationToken ct)
     {
+        try
+        {
         var req = query.Request;
 
         // 1. Tokenize
@@ -99,6 +101,13 @@ public sealed class SearchToursQueryHandler(
 
         return Result.Success(new SearchToursResult(
             page, total, req.Page, req.PageSize, totalPages, facets, facetsAreApproximate, req));
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            return Result<SearchToursResult>.Failure(
+                new Error("Request.Cancelled", "The request was cancelled."),
+                Outcome.Canceled);
+        }
     }
 
     private static bool HasAnyFilter(SearchToursRequest req) =>

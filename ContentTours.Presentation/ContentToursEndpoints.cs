@@ -1,4 +1,7 @@
 using ContentTours.Presentation.Endpoints.Tour;
+using ContentTours.Presentation.Endpoints.TourPricingTier;
+using ContentTours.Presentation.Endpoints.TourSchedule;
+using ContentTours.Presentation.Endpoints.TourSearch;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;

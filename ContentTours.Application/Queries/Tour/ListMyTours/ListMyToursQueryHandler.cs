@@ -16,6 +16,8 @@ public sealed class ListMyToursQueryHandler(
     public async Task<Result<ListMyToursResult>> Handle(
         ListMyToursQuery query, CancellationToken ct)
     {
+        try
+        {
         // Parse StatusFilter string once in-process — Enum.ToString() is NOT EF-translatable
         TourStatus? statusFilter = null;
         if (query.StatusFilter is not null)
@@ -71,5 +73,12 @@ public sealed class ListMyToursQueryHandler(
             query.EffectiveUserId, total, query.Page, totalPages);
 
         return Result.Success(new ListMyToursResult(dtos, total, query.Page, query.PageSize, totalPages));
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            return Result<ListMyToursResult>.Failure(
+                new Error("Request.Cancelled", "The request was cancelled."),
+                Outcome.Canceled);
+        }
     }
 }
