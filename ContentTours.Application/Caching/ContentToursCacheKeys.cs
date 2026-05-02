@@ -28,6 +28,22 @@ public static class ContentToursCacheKeys
         bool isElevated) =>
         $"ct:tours:p{page}:s{pageSize}:sort:{sort}:status:{status}:place:{placeId}:feat:{isFeatured}:lang:{NormalizeLanguage(acceptLanguage)}:e:{isElevated}";
 
+    /// <summary>
+    /// Public/anonymous variant of <see cref="TourList"/>. The list endpoint
+    /// (<c>GET /api/v1/tours</c>) is <c>AllowAnonymous</c> and never returns
+    /// elevated content, so it should not pollute the key with a constant
+    /// <c>e:False</c> token via the elevated-aware overload.
+    /// </summary>
+    public static string PublicTourList(
+        int page,
+        int pageSize,
+        string? sort,
+        string? status,
+        Guid? placeId,
+        bool? isFeatured,
+        string? acceptLanguage) =>
+        $"ct:tours:p{page}:s{pageSize}:sort:{sort}:status:{status}:place:{placeId}:feat:{isFeatured}:lang:{NormalizeLanguage(acceptLanguage)}:pub";
+
     public static string NormalizeLanguage(string? acceptLanguage)
     {
         if (string.IsNullOrWhiteSpace(acceptLanguage))

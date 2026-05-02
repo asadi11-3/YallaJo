@@ -1,5 +1,6 @@
 using ContentPlaces.Contracts.Places;
 using ContentTours.Application.Caching;
+using ContentTours.Application.Common;
 using ContentTours.Application.Interfaces;
 using ContentTours.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -22,11 +23,6 @@ public sealed class UpdateTourCommandHandler(
     ILogger<UpdateTourCommandHandler> logger)
     : ICommandHandler<UpdateTourCommand>
 {
-    private const decimal JordanMinLat = 29.18m;
-    private const decimal JordanMaxLat = 33.38m;
-    private const decimal JordanMinLng = 34.95m;
-    private const decimal JordanMaxLng = 39.30m;
-
     public async Task<Result> Handle(UpdateTourCommand request, CancellationToken cancellationToken)
     {
         try
@@ -57,7 +53,7 @@ public sealed class UpdateTourCommandHandler(
                     Outcome.Forbidden);
             }
 
-            if (!RowVersionsEqual(tour.RowVersion, request.RowVersion))
+            if (!RowVersionUtil.Equal(tour.RowVersion, request.RowVersion))
             {
                 return Result.Failure(
                     new Error(
@@ -95,8 +91,8 @@ public sealed class UpdateTourCommandHandler(
                 }
             }
 
-            if (request.Latitude < JordanMinLat || request.Latitude > JordanMaxLat
-                || request.Longitude < JordanMinLng || request.Longitude > JordanMaxLng)
+            if (request.Latitude < JordanBounds.MinLat || request.Latitude > JordanBounds.MaxLat
+                || request.Longitude < JordanBounds.MinLng || request.Longitude > JordanBounds.MaxLng)
             {
                 logger.LogWarning(
                     "Tour {TourId} updated to a location outside Jordan bounding box: ({Latitude}, {Longitude})",
@@ -176,14 +172,4 @@ public sealed class UpdateTourCommandHandler(
         }
     }
 
-    private static bool RowVersionsEqual(byte[] left, byte[] right)
-    {
-        if (left.Length != right.Length) return false;
-        for (var i = 0; i < left.Length; i++)
-        {
-            if (left[i] != right[i]) return false;
-        }
-
-        return true;
-    }
 }

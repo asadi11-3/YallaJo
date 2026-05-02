@@ -119,7 +119,7 @@ public sealed class UnassignTourGuideCommandHandler(
             await cache.RemoveByTagAsync(
                 TourGuideCacheKeys.TagForTour(tour.Id), cancellationToken);
             await cache.RemoveByTagAsync(
-                TourCacheKeys.TagForTour(tour.Id), cancellationToken);
+                ContentToursCacheKeys.TagForTour(tour.Id), cancellationToken);
 
             logger.LogInformation(
                 "Unassigned TourGuide {TourGuideId} from TourId={TourId}; " +

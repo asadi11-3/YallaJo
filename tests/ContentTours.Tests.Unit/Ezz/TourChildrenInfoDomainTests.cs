@@ -56,6 +56,29 @@ public sealed class TourChildrenInfoDomainTests : DomainTestBase
         tour.ChildFacilities.Should().BeEmpty();
     }
 
+    // ── replace-set semantics across two PUTs ────────────────────────────────
+
+    [Fact]
+    public void UpdateChildrenInfo_TwoSuccessivePUTsWithDifferentFacilities_ReplacesSet()
+    {
+        var tour = TestTourFactory.CreateDraft();
+
+        tour.UpdateChildrenInfo(
+            allowsChildren: true,
+            minChildAge:    4,
+            maxChildAge:    9,
+            childFacilities: [ChildFacility.Stroller, ChildFacility.PlayArea]);
+
+        tour.UpdateChildrenInfo(
+            allowsChildren: true,
+            minChildAge:    4,
+            maxChildAge:    9,
+            childFacilities: [ChildFacility.ChildSeat]);
+
+        tour.ChildFacilities.Should().HaveCount(1);
+        tour.ChildFacilities.Single().Facility.Should().Be(ChildFacility.ChildSeat);
+    }
+
     // ── invalid ages ──────────────────────────────────────────────────────────
 
     [Fact]

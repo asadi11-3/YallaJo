@@ -1,9 +1,11 @@
 using ContentTours.Application.Caching;
+using ContentTours.Application.Common;
 using ContentTours.Application.Interfaces;
 using ContentTours.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
+using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
@@ -13,6 +15,7 @@ public sealed class SuspendTourCommandHandler(
     ITourRepository tourRepository,
     IContentToursEventUnitOfWork unitOfWork,
     HybridCache cache,
+    ICurrentUser currentUser,
     ILogger<SuspendTourCommandHandler> logger)
     : ICommandHandler<SuspendTourCommand>
 {
@@ -39,7 +42,7 @@ public sealed class SuspendTourCommandHandler(
                     Outcome.Conflict);
             }
 
-            if (!RowVersionsEqual(tour.RowVersion, request.RowVersion))
+            if (!RowVersionUtil.Equal(tour.RowVersion, request.RowVersion))
             {
                 return Result.Failure(
                     new Error(
@@ -93,8 +96,8 @@ public sealed class SuspendTourCommandHandler(
             }
 
             logger.LogInformation(
-                "Tour suspended: {TourId} (CreatedBy={CreatedByUserId})",
-                tour.Id, tour.CreatedByUserId);
+                "Tour suspended: {TourId} (CreatedBy={CreatedByUserId}, By={UserId})",
+                tour.Id, tour.CreatedByUserId, currentUser.UserId);
 
             return Result.Success();
         }
@@ -106,14 +109,4 @@ public sealed class SuspendTourCommandHandler(
         }
     }
 
-    private static bool RowVersionsEqual(byte[] left, byte[] right)
-    {
-        if (left.Length != right.Length) return false;
-        for (var i = 0; i < left.Length; i++)
-        {
-            if (left[i] != right[i]) return false;
-        }
-
-        return true;
-    }
 }

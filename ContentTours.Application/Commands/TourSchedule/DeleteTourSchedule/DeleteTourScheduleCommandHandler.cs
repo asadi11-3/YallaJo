@@ -89,7 +89,7 @@ public sealed class DeleteTourScheduleCommandHandler(
             }
 
             await cache.RemoveByTagAsync(TourScheduleCacheKeys.TagForTour(request.TourId), cancellationToken);
-            await cache.RemoveByTagAsync(TourCacheKeys.TagForTour(request.TourId), cancellationToken);
+            await cache.RemoveByTagAsync(ContentToursCacheKeys.TagForTour(request.TourId), cancellationToken);
 
             logger.LogInformation("Deleted TourSchedule {ScheduleId} from TourId={TourId}", schedule.Id, request.TourId);
 

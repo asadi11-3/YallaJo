@@ -97,7 +97,7 @@ public sealed class CreateTourPricingTierCommandHandler(
             }
 
             await cache.RemoveByTagAsync(TourPricingTierCacheKeys.TagForTour(tour.Id), cancellationToken);
-            await cache.RemoveByTagAsync(TourCacheKeys.TagForTour(tour.Id), cancellationToken);
+            await cache.RemoveByTagAsync(ContentToursCacheKeys.TagForTour(tour.Id), cancellationToken);
 
             logger.LogInformation(
                 "Created TourPricingTier {TierId} '{Name}' on TourId={TourId} at {Price} {Currency}",

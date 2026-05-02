@@ -190,7 +190,7 @@ public sealed class CreateTourScheduleCommandHandler(
             }
 
             await cache.RemoveByTagAsync(TourScheduleCacheKeys.TagForTour(request.TourId), cancellationToken);
-            await cache.RemoveByTagAsync(TourCacheKeys.TagForTour(request.TourId), cancellationToken);
+            await cache.RemoveByTagAsync(ContentToursCacheKeys.TagForTour(request.TourId), cancellationToken);
 
             logger.LogInformation(
                 "Created {Created} TourSchedule rows for TourId={TourId} (pattern={Pattern}, skipped={Skipped})",

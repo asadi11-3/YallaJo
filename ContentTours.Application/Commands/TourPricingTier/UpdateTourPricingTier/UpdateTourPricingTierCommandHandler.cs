@@ -115,7 +115,7 @@ public sealed class UpdateTourPricingTierCommandHandler(
             }
 
             await cache.RemoveByTagAsync(TourPricingTierCacheKeys.TagForTour(tour.Id), cancellationToken);
-            await cache.RemoveByTagAsync(TourCacheKeys.TagForTour(tour.Id), cancellationToken);
+            await cache.RemoveByTagAsync(ContentToursCacheKeys.TagForTour(tour.Id), cancellationToken);
 
             logger.LogInformation("Updated TourPricingTier {TierId} on TourId={TourId}", tier.Id, tour.Id);
 

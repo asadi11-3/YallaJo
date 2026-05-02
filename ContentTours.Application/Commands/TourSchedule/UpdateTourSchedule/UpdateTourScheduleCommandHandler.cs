@@ -86,7 +86,7 @@ public sealed class UpdateTourScheduleCommandHandler(
             }
 
             await cache.RemoveByTagAsync(TourScheduleCacheKeys.TagForTour(request.TourId), cancellationToken);
-            await cache.RemoveByTagAsync(TourCacheKeys.TagForTour(request.TourId), cancellationToken);
+            await cache.RemoveByTagAsync(ContentToursCacheKeys.TagForTour(request.TourId), cancellationToken);
 
             logger.LogInformation("Updated TourSchedule {ScheduleId} on TourId={TourId}", schedule.Id, request.TourId);
 

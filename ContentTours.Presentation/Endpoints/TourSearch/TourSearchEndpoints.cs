@@ -34,14 +34,19 @@ internal static class TourSearchEndpoints
             string? lang,
             SearchSort? sort,
             int? page, int? pageSize,
+            HttpContext http,
             ISender sender,
             CancellationToken ct) =>
         {
+            var acceptLanguage = !string.IsNullOrWhiteSpace(lang)
+                ? lang
+                : http.Request.Headers.AcceptLanguage.ToString();
+
             var req = new SearchToursRequest(
                 q, placeId, priceMin, priceMax, difficulty,
                 durationMinutesMin, durationMinutesMax,
                 isChildFriendly, isAccessible, isInstantBooking,
-                hasDiscount, minRating, lang ?? "en",
+                hasDiscount, minRating, acceptLanguage,
                 sort ?? SearchSort.Relevance,
                 page ?? 1, pageSize ?? 20);
             var result = await sender.Send(new SearchToursQuery(req), ct);

@@ -2,6 +2,7 @@ using ContentCore.Domain.Enums;
 using ContentCore.Domain.Repositories;
 using ContentPlaces.Contracts.Places;
 using ContentTours.Application.Caching;
+using ContentTours.Application.Common;
 using ContentTours.Application.Interfaces;
 using ContentTours.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -65,7 +66,7 @@ public sealed class SubmitTourCommandHandler(
                     Outcome.Conflict);
             }
 
-            if (!RowVersionsEqual(tour.RowVersion, request.RowVersion))
+            if (!RowVersionUtil.Equal(tour.RowVersion, request.RowVersion))
             {
                 return Result.Failure(
                     new Error(
@@ -211,14 +212,4 @@ public sealed class SubmitTourCommandHandler(
         }
     }
 
-    private static bool RowVersionsEqual(byte[] left, byte[] right)
-    {
-        if (left.Length != right.Length) return false;
-        for (var i = 0; i < left.Length; i++)
-        {
-            if (left[i] != right[i]) return false;
-        }
-
-        return true;
-    }
 }

@@ -69,7 +69,7 @@ public sealed class ToggleTourFeaturedCommandHandler(
             if (willChange)
             {
                 await cache.RemoveByTagAsync("tours:featured", cancellationToken);
-                await cache.RemoveByTagAsync(TourCacheKeys.TagForTour(tour.Id), cancellationToken);
+                await cache.RemoveByTagAsync(ContentToursCacheKeys.TagForTour(tour.Id), cancellationToken);
                 await cache.RemoveByTagAsync("tours:list", cancellationToken);
                 await cache.RemoveByTagAsync("tours:search", cancellationToken);
                 await cache.RemoveByTagAsync($"my-tours:{tour.CreatedByUserId}", cancellationToken);

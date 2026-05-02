@@ -151,7 +151,7 @@ public sealed class AddTourWaypointCommandHandler(
             await cache.RemoveByTagAsync(
                 TourWaypointCacheKeys.TagForTour(tour.Id), cancellationToken);
             await cache.RemoveByTagAsync(
-                TourCacheKeys.TagForTour(tour.Id), cancellationToken);
+                ContentToursCacheKeys.TagForTour(tour.Id), cancellationToken);
 
 
             logger.LogInformation(

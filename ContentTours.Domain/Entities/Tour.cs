@@ -604,6 +604,7 @@ public sealed class Tour : AuditableEntity, IAggregateRoot
             MaxChildAge = null;
         }
 
+        _childFacilities.Clear();
 
         if (allowsChildren && childFacilities is not null && childFacilities.Count > 0)
         {

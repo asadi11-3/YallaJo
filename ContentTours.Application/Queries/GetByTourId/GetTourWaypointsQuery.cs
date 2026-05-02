@@ -10,5 +10,5 @@ public sealed record GetTourWaypointsQuery(Guid TourId)
     public string CacheKey => TourWaypointCacheKeys.List(TourId);
     public TimeSpan? CacheDuration => TimeSpan.FromMinutes(10);
     public IReadOnlyList<string> Tags =>
-        [TourWaypointCacheKeys.TagForTour(TourId), TourCacheKeys.TagForTour(TourId)];
+        [TourWaypointCacheKeys.TagForTour(TourId), ContentToursCacheKeys.TagForTour(TourId)];
 }

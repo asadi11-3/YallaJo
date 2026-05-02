@@ -11,5 +11,5 @@ public sealed record GetTourChildrenInfoQuery(Guid TourId)
     public TimeSpan? CacheDuration => TimeSpan.FromMinutes(10);
 
     public IReadOnlyList<string> Tags =>
-        [TourChildrenInfoCacheKeys.TagForTour(TourId), TourCacheKeys.TagForTour(TourId)];
+        [TourChildrenInfoCacheKeys.TagForTour(TourId), ContentToursCacheKeys.TagForTour(TourId)];
 }

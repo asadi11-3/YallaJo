@@ -131,12 +131,13 @@ public sealed class AdminLifecycleCommandHandlerTests
         var repo = Substitute.For<ITourRepository>();
         var uow = Substitute.For<IContentToursEventUnitOfWork>();
         var cache = Substitute.For<HybridCache>();
+        var currentUser = Substitute.For<ICurrentUser>();
         var logger = Substitute.For<ILogger<SuspendTourCommandHandler>>();
 
         var tour = TestTourFactory.CreateApproved();
         repo.GetByIdAsync(tour.Id, Arg.Any<CancellationToken>(), Arg.Any<bool>()).Returns(tour);
 
-        var handler = new SuspendTourCommandHandler(repo, uow, cache, logger);
+        var handler = new SuspendTourCommandHandler(repo, uow, cache, currentUser, logger);
 
         var result = await handler.Handle(
             new SuspendTourCommand(tour.Id, tour.RowVersion, Reason: "Compliance review."),

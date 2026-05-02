@@ -42,7 +42,6 @@ internal static class ChildrenInfoEndpoints
             var cmd = new UpdateTourChildrenInfoCommand(
                 id,
                 request.AllowsChildren,
-                request.AgeRestriction,
                 request.MinChildAge,
                 request.MaxChildAge,
                 request.ChildFacilities);

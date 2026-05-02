@@ -128,6 +128,6 @@ public sealed class GetTourChildrenInfoQueryHandlerTests
         cacheable.CacheKey.Should().Be(TourChildrenInfoCacheKeys.Get(tourId));
         cacheable.CacheDuration.Should().Be(TimeSpan.FromMinutes(10));
         cacheable.Tags.Should().Contain(TourChildrenInfoCacheKeys.TagForTour(tourId));
-        cacheable.Tags.Should().Contain(TourCacheKeys.TagForTour(tourId));
+        cacheable.Tags.Should().Contain(ContentToursCacheKeys.TagForTour(tourId));
     }
 }

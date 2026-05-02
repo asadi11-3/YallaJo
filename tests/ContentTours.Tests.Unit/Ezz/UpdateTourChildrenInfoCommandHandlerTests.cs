@@ -46,7 +46,7 @@ public sealed class UpdateTourChildrenInfoCommandHandlerTests
         int? minChildAge = 5,
         int? maxChildAge = 10,
         string? childFacilities = "Stroller,PlayArea")
-        => new(tourId, allowsChildren, AgeRestriction: null, minChildAge, maxChildAge, childFacilities);
+        => new(tourId, allowsChildren, minChildAge, maxChildAge, childFacilities);
 
     private static void AsOwner(ICurrentUser currentUser, Guid ownerId)
     {

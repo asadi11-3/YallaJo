@@ -126,7 +126,7 @@ public sealed class AssignTourGuideCommandHandler(
             await cache.RemoveByTagAsync(
                 TourGuideCacheKeys.TagForTour(tour.Id), cancellationToken);
             await cache.RemoveByTagAsync(
-                TourCacheKeys.TagForTour(tour.Id), cancellationToken);
+                ContentToursCacheKeys.TagForTour(tour.Id), cancellationToken);
 
             logger.LogInformation(
                 "Assigned TourGuide {TourGuideUserId} to TourId={TourId} (IsPrimary={IsPrimary}, AutoPromoted={AutoPromoted}, AssignedBy={AssignedBy})",
