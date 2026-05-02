@@ -14,8 +14,8 @@ public sealed class Tour : AuditableEntity, IAggregateRoot
     private readonly List<TourSchedule> _tourSchedules = [];
     private readonly List<TourWaypoint> _tourWaypoints = [];
     private readonly List<TourPricingTier> _tourPricingTiers = [];
-    private readonly List<TourTourGuide> _tourGuides = [];
     private readonly List<TourPackage> _tourPackages = [];
+    private readonly List<TourChildFacility> _childFacilities = [];
 
     private Tour()
     {
@@ -34,9 +34,6 @@ public sealed class Tour : AuditableEntity, IAggregateRoot
     public Location Location { get; private set; } = default!;
     public Location? MeetingPoint { get; private set; }
     public TourStatus Status { get; private set; } = TourStatus.Draft;
-    public int? ChildFreeAge { get; private set; }
-    public int? ChildDiscountedAge { get; private set; }
-    public decimal? ChildDiscountPercentage { get; private set; }
     public decimal AverageRating { get; private set; } = 0m;
     public int ReviewCount { get; private set; }
     public int BookingCount { get; private set; }
@@ -50,12 +47,14 @@ public sealed class Tour : AuditableEntity, IAggregateRoot
     public bool IsChildFriendly { get; private set; }
     public bool IsAccessible { get; private set; }
     public int? AgeRestriction { get; private set; }
+    public bool AllowsChildren { get; private set; }
+    public int? MinChildAge { get; private set; }
+    public int? MaxChildAge { get; private set; }
     public decimal? DiscountPercent { get; private set; }
     public decimal? SalePrice { get; private set; }
     public string? SalePriceCurrency { get; private set; }
     public DateTime? DiscountValidFrom { get; private set; }
     public DateTime? DiscountValidTo { get; private set; }
-    public IReadOnlyCollection<TourTourGuide> TourGuides => _tourGuides.AsReadOnly();
 
     public DateTime? SubmittedAt { get; private set; }
     public DateTime? ApprovedAt { get; private set; }
@@ -72,6 +71,7 @@ public sealed class Tour : AuditableEntity, IAggregateRoot
     public IReadOnlyCollection<TourWaypoint> TourWaypoints => _tourWaypoints.AsReadOnly();
     public IReadOnlyCollection<TourPricingTier> TourPricingTiers => _tourPricingTiers.AsReadOnly();
     public IReadOnlyCollection<TourPackage> TourPackages => _tourPackages.AsReadOnly();
+    public IReadOnlyList<TourChildFacility> ChildFacilities => _childFacilities.AsReadOnly();
 
     public static Tour Create(
         string name,
@@ -561,15 +561,57 @@ public sealed class Tour : AuditableEntity, IAggregateRoot
             throw new ArgumentOutOfRangeException(paramName, "Age must be between 0 and 120.");
     }
 
-    public void UpdateChildrenInfo(bool isChildFriendly, int? childFreeAge, int? childDiscountedAge, decimal? childDiscountPercentage)
+    private static void ValidateChildAge(int? age, string paramName)
+    {
+        if (age.HasValue && (age.Value < 0 || age.Value > 18))
+            throw new ArgumentOutOfRangeException(paramName, "Child age must be between 0 and 18.");
+    }
+
+    public void UpdateChildrenInfo(
+        bool allowsChildren,
+        int? minChildAge,
+        int? maxChildAge,
+        IReadOnlyList<ChildFacility>? childFacilities)
     {
         EnsureNotDeleted();
         EnsureMutable();
 
-        IsChildFriendly = isChildFriendly;
-        ChildFreeAge = childFreeAge;
-        ChildDiscountedAge = childDiscountedAge;
-        ChildDiscountPercentage = childDiscountPercentage;
+        if (allowsChildren)
+        {
+            ValidateChildAge(minChildAge, nameof(minChildAge));
+            ValidateChildAge(maxChildAge, nameof(maxChildAge));
+
+            if (minChildAge.HasValue && maxChildAge.HasValue && maxChildAge.Value < minChildAge.Value)
+            {
+                throw new ArgumentException(
+                    "Tour.ChildrenInfoInvalid: MaxChildAge must be greater than or equal to MinChildAge.",
+                    nameof(maxChildAge));
+            }
+        }
+
+        AllowsChildren = allowsChildren;
+
+        IsChildFriendly = allowsChildren;
+
+        if (allowsChildren)
+        {
+            MinChildAge = minChildAge;
+            MaxChildAge = maxChildAge;
+        }
+        else
+        {
+            MinChildAge = null;
+            MaxChildAge = null;
+        }
+
+
+        if (allowsChildren && childFacilities is not null && childFacilities.Count > 0)
+        {
+            foreach (var facility in childFacilities.Distinct().OrderBy(f => f))
+            {
+                _childFacilities.Add(new TourChildFacility(Id, facility));
+            }
+        }
 
         MarkUpdated();
 

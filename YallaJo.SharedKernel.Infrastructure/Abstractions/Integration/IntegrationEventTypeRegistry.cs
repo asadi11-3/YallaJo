@@ -56,7 +56,7 @@ public static class IntegrationEventTypeRegistry
         ["content-places.service-item.created.v1"]       = typeof(ServiceItemCreatedIntegrationEvent),
         ["content-places.service-item.deleted.v1"]       = typeof(ServiceItemDeletedIntegrationEvent),
 
-        // ── ContentTours (12 events) ──
+        // ── ContentTours (14 events) ──
         ["content-tours.place.tour-count-updated.v1"]    = typeof(PlaceTourCountUpdatedIntegrationEvent),
         ["content-tours.schedule.changed.v1"]            = typeof(TourScheduleChangedIntegrationEvent),
         ["content-tours.pricing-tier.changed.v1"]        = typeof(TourPricingTierChangedIntegrationEvent),
@@ -69,6 +69,10 @@ public static class IntegrationEventTypeRegistry
         ["content-tours.tour.rejected.v1"]               = typeof(TourRejectedIntegrationEvent),
         ["content-tours.tour.suspended.v1"]              = typeof(TourSuspendedIntegrationEvent),
         ["content-tours.tour.reinstated.v1"]             = typeof(TourReinstatedIntegrationEvent),
+
+        // ContentTours — Task 4B TourGuide assignment (2 events — Phase C)
+        ["content-tours.tour-guide.assigned.v1"]         = typeof(TourGuideAssignedIntegrationEvent),
+        ["content-tours.tour-guide.unassigned.v1"]       = typeof(TourGuideUnassignedIntegrationEvent),
     };
 
     private static readonly Dictionary<Type, string> TypeToName =

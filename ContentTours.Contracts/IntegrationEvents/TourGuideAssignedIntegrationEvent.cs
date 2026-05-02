@@ -1,11 +1,7 @@
 using YallaJo.SharedKernel.Domain.Event;
 
-namespace ContentTours.Contracts.IntegrationEvents;
+namespace ContentTours.Contracts;
 
-/// <summary>
-/// Raised when a Tour Guide is assigned to a Tour.
-/// Consumers: Messaging (notify guide they were assigned), Analytics (guide activity).
-/// </summary>
 public sealed record TourGuideAssignedIntegrationEvent(
     Guid TourId,
     Guid TourGuideUserId,

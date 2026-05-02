@@ -11,35 +11,211 @@ public sealed class ContentToursDbInitializer(ContentToursDbContext dbContext) :
     private static readonly Guid GuideUserId = Guid.Parse("22222222-2222-2222-2222-222222222222");
     private static readonly Guid LanguageEnglish = Guid.Parse("eeeeeeee-0000-0000-0000-000000000001");
     private static readonly Guid LanguageArabic = Guid.Parse("eeeeeeee-0000-0000-0000-000000000002");
+    private const string EnglishLanguageCode = "en";
+    private const string ArabicLanguageCode = "ar";
 
     public int Order => 80;
 
     public async Task InitializeAsync(CancellationToken cancellationToken = default)
     {
-        if (await dbContext.Tours.AnyAsync(cancellationToken))
+        if (!await dbContext.Tours.AnyAsync(cancellationToken))
+        {
+            var tour = CreateTour();
+            var translations = CreateTranslations();
+            var schedules = CreateSchedules();
+            var waypoints = CreateWaypoints();
+            var pricingTiers = CreatePricingTiers();
+            var packages = CreatePackages();
+            var packageInclusions = CreatePackageInclusions(packages);
+            var tourGuides = CreateTourGuides();
+
+            dbContext.Tours.Add(tour);
+            dbContext.TourTranslations.AddRange(translations);
+            dbContext.TourSchedules.AddRange(schedules);
+            dbContext.TourWaypoints.AddRange(waypoints);
+            dbContext.TourPricingTiers.AddRange(pricingTiers);
+            dbContext.TourPackages.AddRange(packages);
+            dbContext.TourPackageInclusions.AddRange(packageInclusions);
+            dbContext.TourTourGuides.AddRange(tourGuides);
+
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+
+        await SeedTourChildFacilitiesAsync(cancellationToken);
+        await SeedTourPricingTierTranslationsAsync(cancellationToken);
+
+        if (dbContext.ChangeTracker.HasChanges())
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+    }
+
+    private async Task SeedTourChildFacilitiesAsync(CancellationToken cancellationToken)
+    {
+        await EnsureTourChildFacilitiesAsync(
+            SeedContentIds.TourPetraExplorer,
+            [
+                ChildFacility.Stroller,
+                ChildFacility.HighChair,
+                ChildFacility.PlayArea,
+                ChildFacility.ChildSeat
+            ],
+            cancellationToken);
+
+        var secondTourId = await dbContext.Tours
+            .Where(x => x.Id != SeedContentIds.TourPetraExplorer)
+            .Select(x => x.Id)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (secondTourId == Guid.Empty)
         {
             return;
         }
 
-        var tour = CreateTour();
-        var translations = CreateTranslations();
-        var schedules = CreateSchedules();
-        var waypoints = CreateWaypoints();
-        var pricingTiers = CreatePricingTiers();
-        var packages = CreatePackages();
-        var packageInclusions = CreatePackageInclusions(packages);
-        var tourGuides = CreateTourGuides();
+        await EnsureTourChildFacilitiesAsync(
+            secondTourId,
+            [
+                ChildFacility.ChangingStation,
+                ChildFacility.ChildMenu,
+                ChildFacility.AirConditioning
+            ],
+            cancellationToken);
+    }
 
-        dbContext.Tours.Add(tour);
-        dbContext.TourTranslations.AddRange(translations);
-        dbContext.TourSchedules.AddRange(schedules);
-        dbContext.TourWaypoints.AddRange(waypoints);
-        dbContext.TourPricingTiers.AddRange(pricingTiers);
-        dbContext.TourPackages.AddRange(packages);
-        dbContext.TourPackageInclusions.AddRange(packageInclusions);
-        dbContext.TourTourGuides.AddRange(tourGuides);
+    private async Task EnsureTourChildFacilitiesAsync(
+        Guid tourId,
+        IReadOnlyList<ChildFacility> facilities,
+        CancellationToken cancellationToken)
+    {
+        foreach (var facility in facilities)
+        {
+            var exists = await dbContext.TourChildFacilities
+                .AnyAsync(x => x.TourId == tourId && x.Facility == facility, cancellationToken);
 
-        await dbContext.SaveChangesAsync(cancellationToken);
+            if (exists)
+            {
+                continue;
+            }
+
+            dbContext.TourChildFacilities.Add(new TourChildFacility(tourId, facility));
+        }
+    }
+
+    private async Task SeedTourPricingTierTranslationsAsync(CancellationToken cancellationToken)
+    {
+        var existingTierNames = await dbContext.TourPricingTiers
+            .Where(x => x.TourId == SeedContentIds.TourPetraExplorer)
+            .Select(x => x.Name)
+            .Distinct()
+            .ToListAsync(cancellationToken);
+
+        await TrySeedTierTranslationsByNameAsync(
+            SeedContentIds.TourPetraExplorer,
+            existingTierNames,
+            "Adult",
+            "Adult",
+            "بالغ",
+            "Standard adult ticket.",
+            "تذكرة البالغين.",
+            cancellationToken);
+
+        await TrySeedTierTranslationsByNameAsync(
+            SeedContentIds.TourPetraExplorer,
+            existingTierNames,
+            "Child",
+            "Child",
+            "طفل",
+            "Standard child ticket.",
+            "تذكرة الأطفال.",
+            cancellationToken);
+
+        await TrySeedTierTranslationsByNameAsync(
+            SeedContentIds.TourPetraExplorer,
+            existingTierNames,
+            "Standard",
+            "Standard",
+            "قياسي",
+            "Core itinerary with guide.",
+            "المسار الأساسي مع دليل.",
+            cancellationToken);
+
+        await TrySeedTierTranslationsByNameAsync(
+            SeedContentIds.TourPetraExplorer,
+            existingTierNames,
+            "VIP",
+            "VIP",
+            "كبار الشخصيات",
+            "Premium tier with extra comfort.",
+            "فئة مميزة مع راحة إضافية.",
+            cancellationToken);
+    }
+
+    private async Task TrySeedTierTranslationsByNameAsync(
+        Guid tourId,
+        IReadOnlyCollection<string> existingTierNames,
+        string tierName,
+        string englishName,
+        string arabicName,
+        string englishDescription,
+        string arabicDescription,
+        CancellationToken cancellationToken)
+    {
+        if (!existingTierNames.Contains(tierName, StringComparer.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        var tierId = await dbContext.TourPricingTiers
+            .Where(x => x.TourId == tourId && x.Name == tierName)
+            .Select(x => x.Id)
+            .FirstAsync(cancellationToken);
+
+        await EnsurePricingTierTranslationAsync(
+            tierId,
+            LanguageEnglish,
+            EnglishLanguageCode,
+            englishName,
+            englishDescription,
+            cancellationToken);
+
+        await EnsurePricingTierTranslationAsync(
+            tierId,
+            LanguageArabic,
+            ArabicLanguageCode,
+            arabicName,
+            arabicDescription,
+            cancellationToken);
+    }
+
+    private async Task EnsurePricingTierTranslationAsync(
+        Guid tierId,
+        Guid languageId,
+        string languageCode,
+        string name,
+        string description,
+        CancellationToken cancellationToken)
+    {
+        var languageExistsOnTour = await dbContext.TourTranslations
+            .AnyAsync(x => x.TourId == SeedContentIds.TourPetraExplorer && x.LanguageId == languageId, cancellationToken);
+
+        if (!languageExistsOnTour)
+        {
+            return;
+        }
+
+        var exists = await dbContext.TourPricingTierTranslations
+            .AnyAsync(x => x.TourPricingTierId == tierId && x.LanguageCode == languageCode, cancellationToken);
+
+        if (exists)
+        {
+            return;
+        }
+
+        dbContext.TourPricingTierTranslations.Add(TourPricingTierTranslation.Create(
+            tierId,
+            languageCode,
+            name,
+            description));
     }
 
     private static Tour CreateTour()

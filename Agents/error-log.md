@@ -275,3 +275,12 @@
 - **Root Cause**: Both build targets overlap in dependency graph/output artifacts; concurrent compilers contended for shared `obj/bin` files.
 - **Fix Applied**: Re-ran `dotnet build YallaJo.sln` sequentially after the parallel run finished; build succeeded.
 - **Prevention Rule**: Do not run solution build in parallel with project builds that transitively reference the same assemblies. Use sequential validation for overlapping targets.
+
+### ERR-029: Async IQueryable test double did not implement ordered query contract, breaking `OrderByDescending` in query-handler tests
+- **Date**: 2026-05-02
+- **Module**: ContentTours.Tests.Unit (Ezz TourGuide query tests)
+- **What Happened**: New `GetTourGuidesQueryHandler` tests failed with `InvalidCastException` during `OrderByDescending(...).ThenBy(...)` when the repository returned `TestAsyncQueryable<T>`.
+- **Error Message**: `Unable to cast object of type 'TestAsyncQueryable<TourTourGuide>' to type 'IOrderedQueryable<TourTourGuide>'`.
+- **Root Cause**: `Queryable.OrderBy*` expects an ordered-query shape from the provider path. The in-house async test queryable implemented `IQueryable<T>` only, so ordered LINQ calls could not cast the provider result to `IOrderedQueryable<T>`.
+- **Fix Applied**: Updated `tests/ContentTours.Tests.Unit/Ezz/TestAsyncQueryable.cs` so `TestAsyncQueryable<T>` implements `IOrderedQueryable<T>`.
+- **Prevention Rule**: Any async IQueryable test double used against handlers that call `OrderBy/ThenBy` must implement `IOrderedQueryable<T>` (not just `IQueryable<T>`), or those handlers should be tested with a provider that supports ordered query composition.

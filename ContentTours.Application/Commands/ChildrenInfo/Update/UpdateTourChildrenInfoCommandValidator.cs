@@ -15,9 +15,9 @@ public sealed class UpdateTourChildrenInfoCommandValidator : AbstractValidator<U
 
         RuleFor(x => x.MaxChildAge)
             .InclusiveBetween(0, 18)
-            .GreaterThan(x => x.MinChildAge)
+            .GreaterThanOrEqualTo(x => x.MinChildAge!.Value)
             .When(x => x.MaxChildAge.HasValue && x.MinChildAge.HasValue)
-            .WithMessage("MaxChildAge must be greater than MinChildAge.");
+            .WithMessage("MaxChildAge must be greater than or equal to MinChildAge.");
 
         RuleFor(x => x.ChildFacilities)
             .MaximumLength(500)

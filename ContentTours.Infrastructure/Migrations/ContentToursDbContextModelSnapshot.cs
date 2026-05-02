@@ -31,6 +31,9 @@ namespace ContentTours.Infrastructure.Migrations
                     b.Property<int?>("AgeRestriction")
                         .HasColumnType("int");
 
+                    b.Property<bool>("AllowsChildren")
+                        .HasColumnType("bit");
+
                     b.Property<DateTime?>("ApprovedAt")
                         .HasColumnType("datetime2");
 
@@ -112,6 +115,9 @@ namespace ContentTours.Infrastructure.Migrations
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
 
+                    b.Property<int?>("MaxChildAge")
+                        .HasColumnType("int");
+
                     b.Property<int>("MaxGroupSize")
                         .HasColumnType("int");
 
@@ -124,6 +130,9 @@ namespace ContentTours.Infrastructure.Migrations
                         .HasColumnType("nvarchar(200)");
 
                     b.Property<int?>("MinAge")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("MinChildAge")
                         .HasColumnType("int");
 
                     b.Property<string>("Name")
@@ -206,6 +215,19 @@ namespace ContentTours.Infrastructure.Migrations
                         .HasFilter("[IsDeleted] = 0");
 
                     b.ToTable("Tours", "content_tours");
+                });
+
+            modelBuilder.Entity("ContentTours.Domain.Entities.TourChildFacility", b =>
+                {
+                    b.Property<Guid>("TourId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte>("Facility")
+                        .HasColumnType("tinyint");
+
+                    b.HasKey("TourId", "Facility");
+
+                    b.ToTable("TourChildFacilities", "content_tours");
                 });
 
             modelBuilder.Entity("ContentTours.Domain.Entities.TourPackage", b =>
@@ -671,6 +693,17 @@ namespace ContentTours.Infrastructure.Migrations
                     b.Navigation("MeetingPoint");
                 });
 
+            modelBuilder.Entity("ContentTours.Domain.Entities.TourChildFacility", b =>
+                {
+                    b.HasOne("ContentTours.Domain.Entities.Tour", "Tour")
+                        .WithMany("ChildFacilities")
+                        .HasForeignKey("TourId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Tour");
+                });
+
             modelBuilder.Entity("ContentTours.Domain.Entities.TourPackage", b =>
                 {
                     b.HasOne("ContentTours.Domain.Entities.Tour", "Tour")
@@ -843,6 +876,8 @@ namespace ContentTours.Infrastructure.Migrations
 
             modelBuilder.Entity("ContentTours.Domain.Entities.Tour", b =>
                 {
+                    b.Navigation("ChildFacilities");
+
                     b.Navigation("TourPackages");
 
                     b.Navigation("TourPricingTiers");

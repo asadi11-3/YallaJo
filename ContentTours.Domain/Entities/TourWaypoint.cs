@@ -19,7 +19,14 @@ public sealed class TourWaypoint : BaseEntity
     public Tour Tour { get; private set; } = default!;
 
 
-    public static TourWaypoint Create(Guid tourId, string name, string? description, Location location, int? durationMinutes, int sorteOrder, WaypointType waypointType)
+    public static TourWaypoint Create(
+        Guid tourId,
+        string name,
+        string? description,
+        Location location,
+        WaypointType waypointType,
+        int sortOrder,
+        int? durationMinutes)
     {
         return new TourWaypoint
         {
@@ -27,7 +34,7 @@ public sealed class TourWaypoint : BaseEntity
             Name = name.Trim(),
             Description = description?.Trim(),
             Location = location,
-            SortOrder = sorteOrder,
+            SortOrder = sortOrder,
             DurationMinutes = durationMinutes,
             WaypointType = waypointType
         };

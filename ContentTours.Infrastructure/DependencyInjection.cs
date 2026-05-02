@@ -61,12 +61,21 @@ public static class DependencyInjection
         services.AddScoped<ITourScheduleRepository, TourScheduleRepository>();
         services.AddScoped<ITourPricingTierRepository, TourPricingTierRepository>();
         services.AddScoped<ITourPricingTierTranslationRepository, TourPricingTierTranslationRepository>();
+        services.AddScoped<ITourTourGuideRepository, TourTourGuideRepository>();
+        services.AddScoped<ITourWaypointRepository, TourWaypointRepository>();
 
         // ── Outbox writer (Application layer uses this to avoid DbContext dependency) ──
         services.AddScoped<IContentToursOutboxWriter, ContentToursOutboxWriter>();
 
         // ── Cross-module stubs (replaced by real implementations in other modules) ──
         services.AddScoped<IScheduleBookingCountService, NoOpScheduleBookingCountService>();
+
+        // Phase C cross-module stubs — placeholder bindings until Security and
+        // Accounts modules ship their canonical implementations. The real
+        // adapters will replace these bindings via their own DI registrations
+        // in Program.cs / module-specific extension methods.
+        services.AddScoped<IUserRoleChecker, NoOpUserRoleChecker>();
+        services.AddScoped<IProfileLookupService, NoOpProfileLookupService>();
 
         // ── Permission catalog (discovered by PermissionSeeder) ───────────────
         services.AddSingleton<IPermissionCatalog, ContentToursPermissionCatalog>();

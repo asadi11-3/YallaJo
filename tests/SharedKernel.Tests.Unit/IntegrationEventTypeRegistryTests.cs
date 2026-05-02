@@ -1,7 +1,7 @@
 using Auth.Contracts.IntegrationEvents;
 using ContentCore.Contracts.IntegrationEvents;
 using ContentPlaces.Contracts.IntegrationEvents;
-using ContentTours.Contracts.IntegrationEvents;
+using ContentTours.Contracts;
 using FluentAssertions;
 using Security.Contracts.IntegrationEvents;
 using YallaJo.SharedKernel.Infrastructure.Abstractions.Integration;
@@ -83,6 +83,10 @@ public sealed class IntegrationEventTypeRegistryTests
         ("content-tours.tour.rejected.v1",                typeof(TourRejectedIntegrationEvent)),
         ("content-tours.tour.suspended.v1",               typeof(TourSuspendedIntegrationEvent)),
         ("content-tours.tour.reinstated.v1",              typeof(TourReinstatedIntegrationEvent)),
+
+        // ContentTours — Task 4B TourGuide assignment (2 events — Phase C)
+        ("content-tours.tour-guide.assigned.v1",          typeof(TourGuideAssignedIntegrationEvent)),
+        ("content-tours.tour-guide.unassigned.v1",        typeof(TourGuideUnassignedIntegrationEvent)),
     ];
 
     // ── Tests ─────────────────────────────────────────────────────────────────
