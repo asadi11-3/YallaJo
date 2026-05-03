@@ -1,6 +1,6 @@
+using ContentTours.Application.Interfaces;
 using ContentTours.Domain.Repositories;
 using Microsoft.Extensions.Logging;
-using YallaJo.SharedKernel.Application.Abstractions.Data;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
@@ -10,14 +10,14 @@ namespace ContentTours.Application.Commands.TourPackage.UpdateTourPackage;
 
 public sealed class UpdateTourPackageCommandHandler(
     ITourPackageRepository packageRepository,
-    IDbContext dbContext,
+    IContentToursUnitOfWork unitOfWork,
     ICurrentUser currentUser,
     ILogger<UpdateTourPackageCommandHandler> logger)
     : ICommandHandler<UpdateTourPackageCommand>
 {
     public async Task<Result> Handle(
         UpdateTourPackageCommand request,
-        CancellationToken ct)
+        CancellationToken cancellationToken)
     {
         logger.LogInformation(
             "Updating TourPackage {Id}",
@@ -29,7 +29,9 @@ public sealed class UpdateTourPackageCommandHandler(
                 Error.Unauthorized("Authentication required"));
         }
 
-        var package = await packageRepository.GetByIdAsync(request.Id, ct);
+        var package = await packageRepository
+            .GetByIdAsync(request.Id, cancellationToken)
+            .ConfigureAwait(false);
 
         if (package is null)
         {
@@ -71,7 +73,9 @@ public sealed class UpdateTourPackageCommandHandler(
                 request.ValidTo
             );
 
-            await dbContext.SaveChangesAsync(ct);
+            await unitOfWork
+                .SaveChangesAsync(cancellationToken)
+                .ConfigureAwait(false);
         }
         catch (ArgumentException ex)
         {

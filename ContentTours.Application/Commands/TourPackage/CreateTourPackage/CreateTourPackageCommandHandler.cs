@@ -21,7 +21,7 @@ public sealed class CreateTourPackageCommandHandler(
 {
     public async Task<Result<Guid>> Handle(
         CreateTourPackageCommand request,
-        CancellationToken ct)
+        CancellationToken cancellationToken)
     {
         logger.LogInformation(
             "Creating TourPackage for TourId {TourId} by User {UserId}",
@@ -34,7 +34,9 @@ public sealed class CreateTourPackageCommandHandler(
                 Error.Unauthorized("Authentication required"));
         }
 
-        var tour = await tourRepository.GetByIdAsync(request.TourId, ct);
+        var tour = await tourRepository
+            .GetByIdAsync(request.TourId, cancellationToken)
+            .ConfigureAwait(false);
 
         if (tour is null)
         {
@@ -93,9 +95,13 @@ public sealed class CreateTourPackageCommandHandler(
                 request.ValidFrom,
                 request.ValidTo);
 
-            await packageRepository.AddAsync(package, ct);
+            await packageRepository
+                .AddAsync(package, cancellationToken)
+                .ConfigureAwait(false);
 
-            await unitOfWork.SaveChangesAsync(ct);
+            await unitOfWork
+                .SaveChangesAsync(cancellationToken)
+                .ConfigureAwait(false);
         }
         catch (ArgumentException ex)
         {

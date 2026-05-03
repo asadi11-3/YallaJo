@@ -17,6 +17,9 @@ public sealed class TourPackage : AuditableEntity, IAggregateRoot
 
     public Money Price { get; private set; } = default!;
 
+    // Persisted column kept in sync with Money.Currency on every write
+    // (Create/Update). Both are derived from the same normalized input,
+    // so they cannot drift. Schema unchanged.
     public string Currency { get; private set; } = string.Empty;
 
     public int? MaxParticipants { get; private set; }
@@ -133,7 +136,12 @@ public sealed class TourPackage : AuditableEntity, IAggregateRoot
         if (inclusion is null)
             throw new ArgumentNullException(nameof(inclusion));
 
-        if (_tourPackageInclusions.Contains(inclusion))
+        // Deduplicate by normalized description (case-insensitive),
+        // not by reference — a freshly-created entity never matches by reference.
+        var normalized = inclusion.Description?.Trim() ?? string.Empty;
+
+        if (_tourPackageInclusions.Any(x =>
+                string.Equals(x.Description, normalized, StringComparison.OrdinalIgnoreCase)))
             return;
 
         _tourPackageInclusions.Add(inclusion);

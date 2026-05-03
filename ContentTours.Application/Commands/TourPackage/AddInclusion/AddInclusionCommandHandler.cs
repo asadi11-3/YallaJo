@@ -1,7 +1,7 @@
+using ContentTours.Application.Interfaces;
 using ContentTours.Domain.Entities;
 using ContentTours.Domain.Repositories;
 using Microsoft.Extensions.Logging;
-using YallaJo.SharedKernel.Application.Abstractions.Data;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
@@ -11,12 +11,12 @@ namespace ContentTours.Application.Commands.TourPackage.AddInclusion;
 
 public sealed class AddInclusionCommandHandler(
     ITourPackageRepository repository,
-    IDbContext dbContext,
+    IContentToursUnitOfWork unitOfWork,
     ICurrentUser currentUser,
     ILogger<AddInclusionCommandHandler> logger)
     : ICommandHandler<AddInclusionCommand>
 {
-    public async Task<Result> Handle(AddInclusionCommand request, CancellationToken ct)
+    public async Task<Result> Handle(AddInclusionCommand request, CancellationToken cancellationToken)
     {
         logger.LogInformation(
             "Adding inclusion to TourPackage {Id} by User {UserId}",
@@ -29,7 +29,9 @@ public sealed class AddInclusionCommandHandler(
                 Error.Unauthorized("Authentication required"));
         }
 
-        var package = await repository.GetByIdAsync(request.PackageId, ct);
+        var package = await repository
+            .GetByIdAsync(request.PackageId, cancellationToken)
+            .ConfigureAwait(false);
 
         if (package is null)
         {
@@ -60,7 +62,9 @@ public sealed class AddInclusionCommandHandler(
 
             package.AddInclusion(inclusion);
 
-            await dbContext.SaveChangesAsync(ct);
+            await unitOfWork
+                .SaveChangesAsync(cancellationToken)
+                .ConfigureAwait(false);
         }
         catch (ArgumentException ex)
         {

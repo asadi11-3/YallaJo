@@ -1,8 +1,8 @@
+using ContentTours.Application.Interfaces;
 using ContentTours.Domain.Repositories;
 using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
-using YallaJo.SharedKernel.Application.Abstractions.Data;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,14 +10,14 @@ namespace ContentTours.Application.Commands.TourPackage.DeleteTourPackage;
 
 public sealed class DeleteTourPackageCommandHandler(
     ITourPackageRepository repository,
-    IDbContext dbContext,
+    IContentToursUnitOfWork unitOfWork,
     ICurrentUser currentUser,
     ILogger<DeleteTourPackageCommandHandler> logger)
     : ICommandHandler<DeleteTourPackageCommand>
 {
     public async Task<Result> Handle(
         DeleteTourPackageCommand request,
-        CancellationToken ct)
+        CancellationToken cancellationToken)
     {
         logger.LogInformation(
             "Deleting TourPackage {Id}",
@@ -29,7 +29,9 @@ public sealed class DeleteTourPackageCommandHandler(
                 Error.Unauthorized("Authentication required"));
         }
 
-        var package = await repository.GetByIdAsync(request.Id, ct);
+        var package = await repository
+            .GetByIdAsync(request.Id, cancellationToken)
+            .ConfigureAwait(false);
 
         if (package is null)
         {
@@ -63,7 +65,9 @@ public sealed class DeleteTourPackageCommandHandler(
         {
             package.Deactivate();
 
-            await dbContext.SaveChangesAsync(ct);
+            await unitOfWork
+                .SaveChangesAsync(cancellationToken)
+                .ConfigureAwait(false);
         }
         catch (InvalidOperationException ex)
         {

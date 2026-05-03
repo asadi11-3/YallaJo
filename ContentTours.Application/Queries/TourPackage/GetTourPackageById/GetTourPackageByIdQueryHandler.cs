@@ -23,7 +23,9 @@ public sealed class GetTourPackageByIdQueryHandler
         GetTourPackageByIdQuery request,
         CancellationToken cancellationToken)
     {
-        var package = await _repository.GetByIdAsync(request.Id, cancellationToken);
+        var package = await _repository
+            .GetByIdAsync(request.Id, cancellationToken)
+            .ConfigureAwait(false);
 
         if (package is null)
         {

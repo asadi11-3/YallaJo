@@ -29,6 +29,9 @@ public class TourPackageConfiguration : IEntityTypeConfiguration<TourPackage>
             money.Property(m => m.Currency).HasColumnName("PriceCurrency").HasMaxLength(3).HasDefaultValue("JOD");
         });
 
+        // Legacy "Currency" column preserved (no schema change). The domain
+        // keeps it in sync with Money.Currency on every write, so reads from
+        // either property are always consistent.
         builder.Property(x => x.Currency)
             .IsRequired()
             .HasMaxLength(3)

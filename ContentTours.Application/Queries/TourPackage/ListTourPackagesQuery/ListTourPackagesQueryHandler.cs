@@ -16,27 +16,24 @@ public sealed class ListTourPackagesQueryHandler(
 
     public async Task<Result<PaginatedResult<TourPackageDto>>> Handle(
         ListTourPackagesQuery request,
-        CancellationToken ct)
+        CancellationToken cancellationToken)
     {
         try
         {
             var page = Math.Max(1, request.Page);
             var pageSize = Math.Clamp(request.PageSize, 1, MaxPageSize);
 
-            var allPackages = await repository.GetAllAsync(ct);
+            // DB-level pagination + filtering (was previously in-memory)
+            var (items, total) = await repository
+                .GetPagedAsync(
+                    page,
+                    pageSize,
+                    request.IsActive,
+                    request.TourId,
+                    cancellationToken)
+                .ConfigureAwait(false);
 
-            // filtering
-            var filtered = allPackages
-                .Where(p =>
-                    (!request.IsActive.HasValue || p.IsActive == request.IsActive.Value) &&
-                    (!request.TourId.HasValue || p.TourId == request.TourId.Value))
-                .OrderByDescending(p => p.CreatedAt);
-
-            var total = filtered.Count();
-
-            var items = filtered
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
+            var dtos = items
                 .Select(p => new TourPackageDto(
                     p.Id,
                     p.TourId,
@@ -53,7 +50,7 @@ public sealed class ListTourPackagesQueryHandler(
                 .ToList();
 
             var result = new PaginatedResult<TourPackageDto>(
-                items,
+                dtos,
                 total,
                 page,
                 pageSize
@@ -61,7 +58,7 @@ public sealed class ListTourPackagesQueryHandler(
 
             return Result.Success(result);
         }
-        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
             return Result.Failure<PaginatedResult<TourPackageDto>>(
                 new Error("Request.Cancelled", "The request was cancelled."),
