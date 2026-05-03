@@ -1,6 +1,7 @@
 using ContentTours.Presentation.Endpoints.ChildrenInfo;
 using ContentTours.Presentation.Endpoints.Tour;
 using ContentTours.Presentation.Endpoints.TourGuide;
+using ContentTours.Presentation.Endpoints.TourPackage;
 using ContentTours.Presentation.Endpoints.TourPricingTier;
 using ContentTours.Presentation.Endpoints.TourSchedule;
 using ContentTours.Presentation.Endpoints.TourSearch;
@@ -38,6 +39,9 @@ public static class ContentToursEndpoints
 
         // Task 4C — ChildrenInfo (endpoints 32–33)
         ChildrenInfoEndpoints.MapChildrenInfoEndpoints(group);
+
+        //  Task 5 — TourPackage 
+        TourPackageEndpoints.MapTourPackageEndpoints(group);
 
         return endpoints;
     }

@@ -9,10 +9,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using YallaJo.SharedKernel.Application.Abstractions.Data;
 using YallaJo.SharedKernel.Application.Authorization;
+using YallaJo.SharedKernel.Infrastructure.BackgroundJobs;
 using YallaJo.SharedKernel.Infrastructure.Data;
 using YallaJo.SharedKernel.Infrastructure.Outbox;
-using YallaJo.SharedKernel.Infrastructure.BackgroundJobs;
 
 namespace ContentTours.Infrastructure;
 
@@ -47,6 +48,9 @@ public static class DependencyInjection
             }
         });
 
+        services.AddScoped<IDbContext>(sp =>
+            sp.GetRequiredService<ContentToursDbContext>());
+
         services.AddScoped<IUnitOfWork<ContentToursDbContext>, UnitOfWork<ContentToursDbContext>>();
         services.AddScoped<IContentToursUnitOfWork, ContentToursUnitOfWork>();
         services.AddScoped<IContentToursEventUnitOfWork, ContentToursEventUnitOfWork>();
@@ -63,6 +67,7 @@ public static class DependencyInjection
         services.AddScoped<ITourPricingTierTranslationRepository, TourPricingTierTranslationRepository>();
         services.AddScoped<ITourTourGuideRepository, TourTourGuideRepository>();
         services.AddScoped<ITourWaypointRepository, TourWaypointRepository>();
+        services.AddScoped<ITourPackageRepository, TourPackageRepository>();
 
         // ── Outbox writer (Application layer uses this to avoid DbContext dependency) ──
         services.AddScoped<IContentToursOutboxWriter, ContentToursOutboxWriter>();
