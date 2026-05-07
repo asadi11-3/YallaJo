@@ -223,7 +223,7 @@ internal sealed class SecurityService(
         if (user is null)
         {
             return Result<AdminResetEligibility>.Failure(
-                Error.NotFound("User.NotFound", "No account found."),
+                UserErrors.NotFound,
                 Outcome.NotFound);
         }
 
@@ -275,9 +275,7 @@ internal sealed class SecurityService(
         var user = await userRepository.GetByIdAsync(targetUserId, ct, asNoTracking: false);
         if (user is null)
         {
-            return Result.Failure(
-                Error.NotFound("User.NotFound", "No account found."),
-                Outcome.NotFound);
+            return Result.Failure(UserErrors.NotFound, Outcome.NotFound);
         }
 
         if (user.LifecycleState is AccountLifecycleState.Provisioned
@@ -317,9 +315,7 @@ internal sealed class SecurityService(
         var user = await userRepository.GetByIdAsync(targetUserId, ct, asNoTracking: false);
         if (user is null)
         {
-            return Result.Failure(
-                Error.NotFound("User.NotFound", "No account found."),
-                Outcome.NotFound);
+            return Result.Failure(UserErrors.NotFound, Outcome.NotFound);
         }
 
         if (user.LifecycleState != AccountLifecycleState.Suspended)
@@ -354,9 +350,7 @@ internal sealed class SecurityService(
         var user = await userRepository.GetByIdAsync(targetUserId, ct, asNoTracking: false);
         if (user is null)
         {
-            return Result.Failure(
-                Error.NotFound("User.NotFound", "No account found."),
-                Outcome.NotFound);
+            return Result.Failure(UserErrors.NotFound, Outcome.NotFound);
         }
 
         if (user.LifecycleState == AccountLifecycleState.Archived)
@@ -406,7 +400,7 @@ internal sealed class SecurityService(
         if (user is null)
         {
             return Result<ReassignmentCompleted>.Failure(
-                Error.NotFound("User.NotFound", "No account found."),
+                UserErrors.NotFound,
                 Outcome.NotFound);
         }
 

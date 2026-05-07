@@ -43,7 +43,7 @@ public sealed class ProvisionAccountCommandHandler(
                 AvatarUrl:   string.IsNullOrWhiteSpace(request.AvatarUrl)   ? null : request.AvatarUrl.Trim()),
             cancellationToken);
 
-        if (profile.IsFailure)
+        if (profile.IsFailure && profile.Outcome != Outcome.Conflict)
         {
             return Result<ProvisionAccountResult>.Fail(
                 profile.Outcome,

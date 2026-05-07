@@ -11,12 +11,13 @@ public static class IntegrationEventTypeRegistry
 {
     private static readonly Dictionary<string, Type> NameToType = new(StringComparer.Ordinal)
     {
-        // ── Security (5 events) ──
+        // ── Security (6 events) ──
         ["security.user.created.v1"]              = typeof(UserCreatedIntegrationEvent),
         ["security.user.email-verified.v1"]       = typeof(EmailVerifiedIntegrationEvent),
         ["security.user.password-changed.v1"]     = typeof(PasswordChangedIntegrationEvent),
         ["security.user.password-reset.v1"]       = typeof(PasswordResetIntegrationEvent),
         ["security.user.phone-updated.v1"]        = typeof(PhoneNumberUpdatedIntegrationEvent),
+        ["security.user.lifecycle-changed.v1"]    = typeof(UserLifecycleChangedIntegrationEvent),
 
         // ── Auth (2 events) ──
         ["auth.user.logged-in.v1"]                = typeof(UserLoggedInIntegrationEvent),

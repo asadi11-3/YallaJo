@@ -2,6 +2,7 @@ using Auth.Contracts.IntegrationEvents;
 using ContentCore.Contracts.IntegrationEvents;
 using ContentPlaces.Contracts.IntegrationEvents;
 using ContentTours.Contracts;
+using ContentTours.Contracts.IntegrationEvents;
 using FluentAssertions;
 using Security.Contracts.IntegrationEvents;
 using YallaJo.SharedKernel.Infrastructure.Abstractions.Integration;
@@ -31,12 +32,13 @@ public sealed class IntegrationEventTypeRegistryTests
 
     private static readonly (string Key, Type Type)[] KnownMappings =
     [
-        // Security (5)
+        // Security (6)
         ("security.user.created.v1",                      typeof(UserCreatedIntegrationEvent)),
         ("security.user.email-verified.v1",               typeof(EmailVerifiedIntegrationEvent)),
         ("security.user.password-changed.v1",             typeof(PasswordChangedIntegrationEvent)),
         ("security.user.password-reset.v1",               typeof(PasswordResetIntegrationEvent)),
         ("security.user.phone-updated.v1",                typeof(PhoneNumberUpdatedIntegrationEvent)),
+        ("security.user.lifecycle-changed.v1",            typeof(UserLifecycleChangedIntegrationEvent)),
 
         // Auth (2)
         ("auth.user.logged-in.v1",                        typeof(UserLoggedInIntegrationEvent)),
@@ -87,6 +89,11 @@ public sealed class IntegrationEventTypeRegistryTests
         // ContentTours — Task 4B TourGuide assignment (2 events — Phase C)
         ("content-tours.tour-guide.assigned.v1",          typeof(TourGuideAssignedIntegrationEvent)),
         ("content-tours.tour-guide.unassigned.v1",        typeof(TourGuideUnassignedIntegrationEvent)),
+
+        // ContentTours — TourPackage (3)
+        ("content-tours.package.created.v1",              typeof(TourPackageCreatedIntegrationEvent)),
+        ("content-tours.package.updated.v1",              typeof(TourPackageUpdatedIntegrationEvent)),
+        ("content-tours.package.deleted.v1",              typeof(TourPackageDeletedIntegrationEvent)),
     ];
 
     // ── Tests ─────────────────────────────────────────────────────────────────

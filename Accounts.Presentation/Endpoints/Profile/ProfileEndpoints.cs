@@ -1,5 +1,6 @@
 using Accounts.Application.Commands.DeleteAvatar;
 using Accounts.Application.Commands.DeleteProfile;
+using Accounts.Application.Commands.RestoreProfile;
 using Accounts.Application.Commands.UpdateAvatar;
 using Accounts.Application.Commands.UpdateProfile;
 using Accounts.Application.Queries.GetProfile;
@@ -121,6 +122,18 @@ internal static class ProfileEndpoints
         .ProducesProblem(StatusCodes.Status401Unauthorized)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Delete the current user's profile")
+        .RequireAuthorization();
+
+        profile.MapPost("/restore", async (ISender sender, CancellationToken ct) =>
+        {
+            var result = await sender.Send(new RestoreProfileCommand(), ct);
+            return result.ToApiResult();
+        })
+        .WithName("RestoreProfile")
+        .Produces(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .WithSummary("Restore the current user's previously soft-deleted profile")
         .RequireAuthorization();
     }
 }

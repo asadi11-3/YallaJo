@@ -87,6 +87,17 @@ public sealed class RefreshTokenCommandHandler(
                 Outcome.Unauthorized);
         }
 
+       
+        if (!userData.IsEmailVerified)
+        {
+            return _invalidToken;
+        }
+
+        if (userData.Lifecycle != AccountLifecycleSnapshot.Active)
+        {
+            return _invalidToken;
+        }
+
         // ── Token rotation ──────────────────────────────────────────────────
         var newPlainRefreshToken = tokenService.GenerateRefreshToken();
         var newHash              = tokenService.HashRefreshToken(newPlainRefreshToken);
