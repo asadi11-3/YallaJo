@@ -102,5 +102,4 @@ public sealed class ApproveTourCommandHandler(
                 Outcome.Canceled);
         }
     }
-
 }

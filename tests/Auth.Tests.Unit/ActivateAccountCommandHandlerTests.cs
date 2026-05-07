@@ -4,6 +4,7 @@ using Auth.Application.Interfaces.SessionRevocation;
 using Auth.Domain.Entities;
 using Auth.Domain.Repositories;
 using FluentAssertions;
+using Microsoft.Extensions.Caching.Hybrid;
 using NSubstitute;
 using Security.Contracts.Abstractions;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
@@ -26,9 +27,10 @@ public sealed class ActivateAccountCommandHandlerTests
     private readonly IAuthUnitOfWork            _uow               = Substitute.For<IAuthUnitOfWork>();
     private readonly IInviteTokenService        _tokens            = Substitute.For<IInviteTokenService>();
     private readonly ISessionRevocationService  _sessionRevocation = Substitute.For<ISessionRevocationService>();
+    private readonly HybridCache                _cache             = Substitute.For<HybridCache>();
 
     private ActivateAccountCommandHandler CreateSut() =>
-        new(_users, _tokenRepo, _uow, _tokens, _sessionRevocation);
+        new(_users, _tokenRepo, _uow, _tokens, _sessionRevocation, _cache);
 
     private static ActivateAccountCommand Command(string token = "token-xyz") =>
         new(

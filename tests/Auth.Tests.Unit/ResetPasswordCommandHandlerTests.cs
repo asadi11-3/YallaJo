@@ -5,6 +5,7 @@ using Auth.Domain.Entities;
 using Auth.Domain.Repositories;
 using Auth.Tests.Unit.TestDoubles;
 using FluentAssertions;
+using Microsoft.Extensions.Caching.Hybrid;
 using NSubstitute;
 using Security.Contracts.Abstractions;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
@@ -29,6 +30,7 @@ public sealed class ResetPasswordCommandHandlerTests
     private readonly IAuthUnitOfWork               _uow               = Substitute.For<IAuthUnitOfWork>();
     private readonly IOtpService                   _otpService        = Substitute.For<IOtpService>();
     private readonly ISessionRevocationService     _sessionRevocation = Substitute.For<ISessionRevocationService>();
+    private readonly HybridCache                   _cache             = Substitute.For<HybridCache>();
     private readonly PassThroughTransactionalExecutor _tx = new();
 
     public ResetPasswordCommandHandlerTests()
@@ -39,7 +41,7 @@ public sealed class ResetPasswordCommandHandlerTests
     }
 
     private ResetPasswordCommandHandler CreateSut() =>
-        new(_security, _tokenRepo, _uow, _otpService, _tx, _sessionRevocation);
+        new(_security, _tokenRepo, _uow, _otpService, _tx, _sessionRevocation, _cache);
 
     private static ResetPasswordCommand Command(string email = "user@example.com") =>
         new(email, "123456", "NewPass123", "NewPass123");

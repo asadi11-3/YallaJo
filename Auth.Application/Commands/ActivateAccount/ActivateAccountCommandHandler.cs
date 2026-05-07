@@ -1,7 +1,10 @@
+using Auth.Application.Caching;
 using Auth.Application.Interfaces;
 using Auth.Application.Interfaces.SessionRevocation;
 using Auth.Domain.Entities;
+using Auth.Domain.Errors;
 using Auth.Domain.Repositories;
+using Microsoft.Extensions.Caching.Hybrid;
 using Security.Contracts.Abstractions;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
@@ -13,7 +16,8 @@ public sealed class ActivateAccountCommandHandler(
     IActivationTokenRepository activationTokenRepository,
     IAuthUnitOfWork unitOfWork,
     IInviteTokenService inviteTokenService,
-    ISessionRevocationService sessionRevocation)
+    ISessionRevocationService sessionRevocation,
+    HybridCache cache)
     : ICommandHandler<ActivateAccountCommand, ActivateAccountResult>
 {
     public async Task<Result<ActivateAccountResult>> Handle(
@@ -27,9 +31,10 @@ public sealed class ActivateAccountCommandHandler(
 
         if (status is null)
         {
-            return Result<ActivateAccountResult>.Failure(
-                Error.NotFound("Invite.NotFound", "This invite is invalid or has expired."),
-                Outcome.NotFound);
+            return Result<ActivateAccountResult>.Fail(
+                Outcome.NotFound,
+                "This invite is invalid or has expired.",
+                InviteErrors.NotFound);
         }
 
         if (status.IsActive || status.IsEmailVerified)
@@ -46,9 +51,10 @@ public sealed class ActivateAccountCommandHandler(
 
         if (token is null)
         {
-            return Result<ActivateAccountResult>.Failure(
-                Error.NotFound("Invite.NotFound", "This invite is invalid or has expired."),
-                Outcome.NotFound);
+            return Result<ActivateAccountResult>.Fail(
+                Outcome.NotFound,
+                "This invite is invalid or has expired.",
+                InviteErrors.NotFound);
         }
 
         if (token.IsExhausted)
@@ -101,6 +107,9 @@ public sealed class ActivateAccountCommandHandler(
             cancellationToken);
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        await cache.RemoveByTagAsync(
+            AuthCacheKeys.UserSessionsTag(status.UserId), cancellationToken);
 
         return Result<ActivateAccountResult>.Success(new ActivateAccountResult(status.UserId));
     }

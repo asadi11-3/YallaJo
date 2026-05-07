@@ -20,6 +20,11 @@ public interface ISecurityService
         Guid actorUserId,
         CancellationToken ct = default);
 
+    Task<Result> EnsureCanManageUserAsync(
+        Guid actorUserId,
+        Guid targetUserId,
+        CancellationToken cancellationToken = default);
+
     Task<Result> SuspendUserByAdminAsync(
         Guid targetUserId,
         Guid actorUserId,

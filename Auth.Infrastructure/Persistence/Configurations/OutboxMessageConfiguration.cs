@@ -36,7 +36,7 @@ namespace Auth.Infrastructure.Persistence.Configurations;
 /// plain token in a short-TTL distributed cache.
 /// </para>
 /// </summary>
-public class OutboxMessageConfiguration : IEntityTypeConfiguration<OutboxMessage>
+public sealed class OutboxMessageConfiguration : IEntityTypeConfiguration<OutboxMessage>
 {
     public void Configure(EntityTypeBuilder<OutboxMessage> builder)
     {

@@ -1,10 +1,13 @@
 using Accounts.Contracts.Abstractions;
+using Auth.Application.Caching;
+using Auth.Application.Errors;
 using Auth.Application.Interfaces;
 using Auth.Application.Interfaces.SessionRevocation;
 using Auth.Application.Invitations;
 using Auth.Domain.Entities;
 using Auth.Domain.Events;
 using Auth.Domain.Repositories;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
 using Security.Contracts.Abstractions;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
@@ -27,6 +30,7 @@ public sealed class AdminReassignAccountCommandHandler(
     IAdminAuditWriter adminAuditWriter,
     IRequestContext requestContext,
     ICurrentUser currentUser,
+    HybridCache cache,
     ILogger<AdminReassignAccountCommandHandler> logger)
     : ICommandHandler<AdminReassignAccountCommand, AdminReassignAccountResult>
 {
@@ -39,7 +43,7 @@ public sealed class AdminReassignAccountCommandHandler(
         if (!currentUser.IsAuthenticated || currentUser.UserId is null)
         {
             return Result<AdminReassignAccountResult>.Failure(
-                Error.Failure("Auth.Unauthenticated", "Admin actor is not authenticated."),
+                AuthErrors.AdminUnauthenticated,
                 Outcome.Unauthorized);
         }
 
@@ -59,7 +63,7 @@ public sealed class AdminReassignAccountCommandHandler(
                 {
                     return ReassignOutcome.Failed(
                         securityResult.Outcome,
-                        securityResult.Messages.FirstOrDefault() ?? string.Empty,
+                        securityResult.Messages.Count > 0 ? securityResult.Messages[0] : string.Empty,
                         securityResult.Errors.ToArray());
                 }
 
@@ -119,7 +123,7 @@ public sealed class AdminReassignAccountCommandHandler(
                 {
                     return ReassignOutcome.Failed(
                         profileReset.Outcome,
-                        profileReset.Messages.FirstOrDefault() ?? string.Empty,
+                        profileReset.Messages.Count > 0 ? profileReset.Messages[0] : string.Empty,
                         profileReset.Errors.ToArray());
                 }
 
@@ -165,6 +169,9 @@ public sealed class AdminReassignAccountCommandHandler(
                 outcome.FailureMessage,
                 outcome.FailureErrors);
         }
+
+        await cache.RemoveByTagAsync(
+            AuthCacheKeys.UserSessionsTag(request.TargetUserId), cancellationToken);
 
         logger.LogInformation(
             "Auth: Admin {AdminActorId} reassigned user {TargetUserId} from {OldEmail} to {NewEmail}. " +

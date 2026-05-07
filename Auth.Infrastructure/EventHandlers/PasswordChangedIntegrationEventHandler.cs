@@ -1,7 +1,9 @@
 
+using Auth.Application.Caching;
 using Auth.Application.Interfaces;
 using Auth.Domain.Repositories;
 using MediatR;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
 using Security.Contracts.IntegrationEvents;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
@@ -12,6 +14,7 @@ public sealed class PasswordChangedIntegrationEventHandler(
     IRefreshTokenRepository refreshTokenRepository,
     IAuthInboxStore inboxStore,
     IAuthUnitOfWork unitOfWork,
+    HybridCache cache,
     ILogger<PasswordChangedIntegrationEventHandler> logger)
     : INotificationHandler<IntegrationEventNotification<PasswordChangedIntegrationEvent>>
 {
@@ -45,6 +48,9 @@ public sealed class PasswordChangedIntegrationEventHandler(
 
         inboxStore.MarkAsProcessed(notification.MessageId);
         await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        await cache.RemoveByTagAsync(
+            AuthCacheKeys.UserSessionsTag(userId), cancellationToken);
 
         logger.LogInformation(
             "Auth: Revoked {SessionCount} sessions and {TokenCount} refresh tokens for user {UserId} after password change.",

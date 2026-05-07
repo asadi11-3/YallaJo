@@ -4,6 +4,7 @@ using Auth.Application.Commands.AdminSuspendUser;
 using Auth.Application.Interfaces.SessionRevocation;
 using Auth.Domain.Repositories;
 using FluentAssertions;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 using Security.Contracts.Abstractions;
@@ -20,6 +21,7 @@ public sealed class AdminUserLifecycleCommandHandlerTests
     private readonly IAdminAuditWriter _auditWriter = Substitute.For<IAdminAuditWriter>();
     private readonly IRequestContext _requestContext = Substitute.For<IRequestContext>();
     private readonly ICurrentUser _currentUser = Substitute.For<ICurrentUser>();
+    private readonly HybridCache _cache = Substitute.For<HybridCache>();
     private readonly Guid _actorId = Guid.NewGuid();
 
     public AdminUserLifecycleCommandHandlerTests()
@@ -45,6 +47,7 @@ public sealed class AdminUserLifecycleCommandHandlerTests
             _auditWriter,
             _requestContext,
             _currentUser,
+            _cache,
             NullLogger<AdminSuspendUserCommandHandler>.Instance);
 
         var result = await sut.Handle(new AdminSuspendUserCommand(Guid.NewGuid()), CancellationToken.None);
@@ -75,6 +78,7 @@ public sealed class AdminUserLifecycleCommandHandlerTests
             _auditWriter,
             _requestContext,
             _currentUser,
+            _cache,
             NullLogger<AdminSuspendUserCommandHandler>.Instance);
 
         var result = await sut.Handle(new AdminSuspendUserCommand(targetUserId), CancellationToken.None);
@@ -113,6 +117,7 @@ public sealed class AdminUserLifecycleCommandHandlerTests
             _auditWriter,
             _requestContext,
             _currentUser,
+            _cache,
             NullLogger<AdminSuspendUserCommandHandler>.Instance);
 
         var result = await sut.Handle(new AdminSuspendUserCommand(targetUserId), CancellationToken.None);
@@ -180,6 +185,7 @@ public sealed class AdminUserLifecycleCommandHandlerTests
             _auditWriter,
             _requestContext,
             _currentUser,
+            _cache,
             NullLogger<AdminArchiveUserCommandHandler>.Instance);
 
         var result = await sut.Handle(new AdminArchiveUserCommand(targetUserId), CancellationToken.None);

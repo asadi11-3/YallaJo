@@ -1,3 +1,4 @@
+using Auth.Application.Errors;
 using Microsoft.Extensions.Logging;
 using Security.Contracts.Abstractions;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
@@ -18,9 +19,7 @@ public sealed class AdminReactivateUserCommandHandler(
     {
         if (!currentUser.IsAuthenticated || currentUser.UserId is null)
         {
-            return Result.Failure(
-                Error.Failure("Auth.Unauthenticated", "Admin actor is not authenticated."),
-                Outcome.Unauthorized);
+            return Result.Failure(AuthErrors.AdminUnauthenticated, Outcome.Unauthorized);
         }
 
         var actorId = currentUser.UserId.Value;

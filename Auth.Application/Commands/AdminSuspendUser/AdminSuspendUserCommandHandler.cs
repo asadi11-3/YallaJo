@@ -1,5 +1,8 @@
+using Auth.Application.Caching;
+using Auth.Application.Errors;
 using Auth.Application.Interfaces.SessionRevocation;
 using Auth.Domain.Repositories;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
 using Security.Contracts.Abstractions;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
@@ -15,6 +18,7 @@ public sealed class AdminSuspendUserCommandHandler(
     IAdminAuditWriter adminAuditWriter,
     IRequestContext requestContext,
     ICurrentUser currentUser,
+    HybridCache cache,
     ILogger<AdminSuspendUserCommandHandler> logger)
     : ICommandHandler<AdminSuspendUserCommand>
 {
@@ -22,9 +26,7 @@ public sealed class AdminSuspendUserCommandHandler(
     {
         if (!currentUser.IsAuthenticated || currentUser.UserId is null)
         {
-            return Result.Failure(
-                Error.Failure("Auth.Unauthenticated", "Admin actor is not authenticated."),
-                Outcome.Unauthorized);
+            return Result.Failure(AuthErrors.AdminUnauthenticated, Outcome.Unauthorized);
         }
 
         var actorId = currentUser.UserId.Value;
@@ -43,6 +45,9 @@ public sealed class AdminSuspendUserCommandHandler(
             cancellationToken);
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        await cache.RemoveByTagAsync(
+            AuthCacheKeys.UserSessionsTag(request.UserId), cancellationToken);
 
         await adminAuditWriter.RecordAsync(
             new AdminAuditEntry(

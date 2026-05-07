@@ -1,5 +1,7 @@
+using Auth.Application.Errors;
 using Auth.Application.Interfaces;
 using Auth.Domain.Entities;
+using Auth.Domain.Errors;
 using Auth.Domain.Repositories;
 using Security.Contracts.Abstractions;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
@@ -34,9 +36,10 @@ public sealed class VerifyEmailCommandHandler(
         var userId = await securityService.GetUserIdByEmailAsync(normalizedEmail, cancellationToken);
         if (userId is null)
         {
-            return Result<VerifyEmailResult>.Failure(
-                Error.NotFound("User.NotFound", "No account found with this email."),
-                Outcome.NotFound);
+            return Result<VerifyEmailResult>.Fail(
+                Outcome.NotFound,
+                "No account found with this email.",
+                AuthErrors.UserNotFound);
         }
 
         var otp = await otpRepository.FirstOrDefaultAsync(
@@ -49,9 +52,10 @@ public sealed class VerifyEmailCommandHandler(
 
         if (otp is null)
         {
-            return Result<VerifyEmailResult>.Failure(
-                Error.NotFound("Otp.NotFound", "No pending verification code found. Please register again."),
-                Outcome.NotFound);
+            return Result<VerifyEmailResult>.Fail(
+                Outcome.NotFound,
+                "No pending verification code found. Please register again.",
+                OtpErrors.NotFound);
         }
 
         if (otp.IsExhausted)

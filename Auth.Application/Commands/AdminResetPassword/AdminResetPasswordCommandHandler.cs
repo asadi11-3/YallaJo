@@ -1,8 +1,11 @@
+using Auth.Application.Caching;
+using Auth.Application.Errors;
 using Auth.Application.Interfaces;
 using Auth.Application.Interfaces.SessionRevocation;
 using Auth.Domain.Entities;
 using Auth.Domain.Events;
 using Auth.Domain.Repositories;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
 using Security.Contracts.Abstractions;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
@@ -21,6 +24,7 @@ public sealed class AdminResetPasswordCommandHandler(
     IAdminAuditWriter adminAuditWriter,
     IRequestContext requestContext,
     ICurrentUser currentUser,
+    HybridCache cache,
     ILogger<AdminResetPasswordCommandHandler> logger)
     : ICommandHandler<AdminResetPasswordCommand, AdminResetPasswordResult>
 {
@@ -34,7 +38,7 @@ public sealed class AdminResetPasswordCommandHandler(
         if (!currentUser.IsAuthenticated || currentUser.UserId is null)
         {
             return Result<AdminResetPasswordResult>.Failure(
-                Error.Failure("Auth.Unauthenticated", "Admin actor is not authenticated."),
+                AuthErrors.AdminUnauthenticated,
                 Outcome.Unauthorized);
         }
 
@@ -118,6 +122,9 @@ public sealed class AdminResetPasswordCommandHandler(
             cancellationToken);
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        await cache.RemoveByTagAsync(
+            AuthCacheKeys.UserSessionsTag(request.TargetUserId), cancellationToken);
 
         var metadata = BuildMetadata(token.Id);
         await adminAuditWriter.RecordAsync(

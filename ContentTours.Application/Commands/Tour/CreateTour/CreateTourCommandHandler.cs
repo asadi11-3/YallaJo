@@ -37,7 +37,6 @@ public sealed class CreateTourCommandHandler(
             }
 
             var slug = (request.Slug ?? string.Empty).Trim().ToLowerInvariant();
- 
             if (await tourRepository.IsSlugReservedAsync(slug, excludeTourId: null, cancellationToken)
                 .ConfigureAwait(false))
             {

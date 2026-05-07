@@ -3,6 +3,7 @@ using Security.Application.Caching;
 using Security.Application.Authorization;
 using Security.Application.Interfaces;
 using Security.Domain.Entities;
+using Security.Domain.Errors;
 using Security.Domain.Repositories;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 using Security.Contracts.Abstractions;
@@ -170,14 +171,13 @@ internal sealed class SecurityService(
         var primary = user.GetPrimaryEmail();
 
         return new AccountStatus(
-            UserId:          user.Id,
-            Email:           primary?.Address ?? normalizedEmail,
-            IsActive:        user.IsActive,
+            UserId: user.Id,
+            Email: primary?.Address ?? normalizedEmail,
+            IsActive: user.IsActive,
             IsEmailVerified: primary?.IsVerified ?? false,
-            Lifecycle:       ToContractSnapshot(user.LifecycleState));
+            Lifecycle: ToContractSnapshot(user.LifecycleState));
     }
 
-    
     private static AccountLifecycleSnapshot ToContractSnapshot(AccountLifecycleState state)
         => (AccountLifecycleSnapshot)(int)state;
 
@@ -215,7 +215,7 @@ internal sealed class SecurityService(
             // denial, Unauthorized if the actor is not authenticated).
             return Result<AdminResetEligibility>.Fail(
                 hierarchy.Outcome,
-                hierarchy.Messages.FirstOrDefault() ?? string.Empty,
+                hierarchy.Messages.Count > 0 ? hierarchy.Messages[0] : string.Empty,
                 hierarchy.Errors.ToArray());
         }
 
@@ -229,13 +229,36 @@ internal sealed class SecurityService(
 
         var primary = user.GetPrimaryEmail();
         var primaryEmail = primary?.Address ?? string.Empty;
-        var isVerified   = primary?.IsVerified ?? false;
+        var isVerified = primary?.IsVerified ?? false;
 
         return Result<AdminResetEligibility>.Success(new AdminResetEligibility(
-            TargetUserId:           user.Id,
-            PrimaryEmail:           primaryEmail,
+            TargetUserId: user.Id,
+            PrimaryEmail: primaryEmail,
             IsPrimaryEmailVerified: isVerified,
-            Lifecycle:              ToContractSnapshot(user.LifecycleState)));
+            Lifecycle: ToContractSnapshot(user.LifecycleState)));
+    }
+
+    public async Task<Result> EnsureCanManageUserAsync(
+        Guid actorUserId,
+        Guid targetUserId,
+        CancellationToken cancellationToken = default)
+    {
+        _ = actorUserId;
+
+        var guard = await roleHierarchy.EnsureCanManageUserAsync(targetUserId, cancellationToken);
+        if (guard.IsFailure)
+            return guard;
+
+        var targetExists = await userRepository.AnyAsync(
+            u => u.Id == targetUserId,
+            cancellationToken);
+
+        if (!targetExists)
+        {
+            return Result.Failure(UserErrors.NotFound, Outcome.NotFound);
+        }
+
+        return Result.Success();
     }
 
     public async Task<Result> SuspendUserByAdminAsync(
@@ -374,7 +397,7 @@ internal sealed class SecurityService(
         {
             return Result<ReassignmentCompleted>.Fail(
                 guard.Outcome,
-                guard.Messages.FirstOrDefault() ?? string.Empty,
+                guard.Messages.Count > 0 ? guard.Messages[0] : string.Empty,
                 guard.Errors.ToArray());
         }
 
@@ -433,8 +456,8 @@ internal sealed class SecurityService(
 
         return Result<ReassignmentCompleted>.Success(new ReassignmentCompleted(
             TargetUserId: targetUserId,
-            OldEmail:     oldEmail,
-            NewEmail:     normalizedNewEmail,
-            Lifecycle:    ToContractSnapshot(user.LifecycleState)));
+            OldEmail: oldEmail,
+            NewEmail: normalizedNewEmail,
+            Lifecycle: ToContractSnapshot(user.LifecycleState)));
     }
 }

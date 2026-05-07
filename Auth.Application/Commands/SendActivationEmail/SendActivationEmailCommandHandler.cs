@@ -1,6 +1,7 @@
 using Auth.Application.Interfaces;
 using Auth.Application.Invitations;
 using Auth.Domain.Entities;
+using Auth.Domain.Errors;
 using Auth.Domain.Events;
 using Auth.Domain.Repositories;
 using Microsoft.Extensions.Logging;
@@ -31,9 +32,10 @@ public sealed class SendActivationEmailCommandHandler(
 
         if (status is null)
         {
-            return Result<SendActivationEmailResult>.Failure(
-                Error.NotFound("Invite.NotFound", "No account found for this email."),
-                Outcome.NotFound);
+            return Result<SendActivationEmailResult>.Fail(
+                Outcome.NotFound,
+                "No account found for this email.",
+                InviteErrors.NotFound);
         }
 
         if (status.Lifecycle != AccountLifecycleSnapshot.Provisioned
