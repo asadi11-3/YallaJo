@@ -5,7 +5,7 @@ using YallaJo.SharedKernel.Infrastructure.Inbox;
 
 namespace Security.Infrastructure.Persistence.Configurations;
 
-public class InboxMessageConfiguration : IEntityTypeConfiguration<InboxMessage>
+public sealed class InboxMessageConfiguration : IEntityTypeConfiguration<InboxMessage>
 {
     public void Configure(EntityTypeBuilder<InboxMessage> builder)
     {

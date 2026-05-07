@@ -37,5 +37,8 @@ public sealed class SecurityPermissionCatalog : IPermissionCatalog
 
         // ── System settings ──────────────────────────────────────────────────
         new(SecurityFeatures.System, AppAction.Update, PermissionGroup.SystemAccess, "Manage system settings"),
+
+        // ── Audit log ────────────────────────────────────────────────────────
+        new(SecurityFeatures.AuditLog, AppAction.Read, PermissionGroup.SystemAccess, "View the admin audit log timeline"),
     ];
 }

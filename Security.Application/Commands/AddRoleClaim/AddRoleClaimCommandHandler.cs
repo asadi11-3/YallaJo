@@ -37,9 +37,7 @@ public sealed class AddRoleClaimCommandHandler(
 
         if (alreadyExists)
         {
-            return Result.Failure(
-               new Error("RoleClaim.Duplicate", "This claim already exists on the role."),
-               Outcome.Conflict);
+            return Result.Failure(RoleClaimErrors.Duplicate, Outcome.Conflict);
         }
 
         var claim = RoleClaim.Create(request.RoleId, request.ClaimType, request.ClaimValue);

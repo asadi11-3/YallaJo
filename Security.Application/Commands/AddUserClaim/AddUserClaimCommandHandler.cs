@@ -37,9 +37,7 @@ public sealed class AddUserClaimCommandHandler(
 
         if (alreadyExists)
         {
-            return Result.Failure(
-             new Error("UserClaim.Duplicate", "This claim already exists on the user."),
-             Outcome.Conflict);
+            return Result.Failure(UserClaimErrors.Duplicate, Outcome.Conflict);
         }
 
         var claim = UserClaim.Create(request.UserId, request.ClaimType, request.ClaimValue);

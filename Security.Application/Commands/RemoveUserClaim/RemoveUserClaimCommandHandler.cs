@@ -31,9 +31,7 @@ public sealed class RemoveUserClaimCommandHandler(
         var claim = await userClaimRepository.GetByIdAsync(request.ClaimId, cancellationToken);
         if (claim is null || claim.UserId != request.UserId)
         {
-            return Result.Failure(
-               new Error("NotFound.UserClaim", "The specified claim was not found on this user."),
-               Outcome.NotFound);
+            return Result.Failure(UserClaimErrors.NotFound, Outcome.NotFound);
         }
 
         userClaimRepository.Remove(claim);

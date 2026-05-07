@@ -9,8 +9,13 @@ public static class SecurityCacheKeys
     /// <summary>Tag covering ALL role queries (ListRoles).</summary>
     public const string RolesTag = "security:roles";
 
-    /// <summary>Per-user tag for GetUser queries. Used for precise single-user invalidation.</summary>
-    public static string UserTag(Guid userId) => $"security:user:{userId}";
+    /// <summary>
+    /// Per-user tag for GetUser queries. Used for precise single-user invalidation.
+    /// The <c>:tag</c> suffix keeps tags in a separate namespace from cache keys
+    /// so the two cannot collide if HybridCache providers ever share storage
+    /// between key and tag indexes.
+    /// </summary>
+    public static string UserTag(Guid userId) => $"security:user:{userId}:tag";
 
     // ── Cache key builders ────────────────────────────────────────────────────
     public static string User(Guid userId) => $"security:user:{userId}";
