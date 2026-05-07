@@ -54,6 +54,6 @@ internal static class ChildrenInfoEndpoints
         .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status403Forbidden)
         .ProducesProblem(StatusCodes.Status404NotFound)
-        .WithMetadata(new MustHavePermissionAttribute(ContentToursFeatures.Tour, AppAction.Update));
+        .WithMetadata(new MustHavePermissionAttribute(ContentToursFeatures.TourChildrenInfo, AppAction.Update));
     }
 }

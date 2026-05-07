@@ -2,19 +2,11 @@ using Auth.Contracts.IntegrationEvents;
 using ContentCore.Contracts.IntegrationEvents;
 using ContentPlaces.Contracts.IntegrationEvents;
 using ContentTours.Contracts;
+using ContentTours.Contracts.IntegrationEvents;
 using Security.Contracts.IntegrationEvents;
 
 namespace YallaJo.SharedKernel.Infrastructure.Abstractions.Integration;
 
-/// <summary>
-/// Maps stable logical names to CLR types for integration events.
-/// Every integration event MUST be registered here.
-/// NEVER remove or rename an existing key — only add new ones.
-/// To rename an event type, add a new v2 alias pointing to the same CLR type.
-///
-/// The stored OutboxMessage.Type column uses these short names, not
-/// AssemblyQualifiedName — making refactors safe.
-/// </summary>
 public static class IntegrationEventTypeRegistry
 {
     private static readonly Dictionary<string, Type> NameToType = new(StringComparer.Ordinal)
@@ -73,6 +65,10 @@ public static class IntegrationEventTypeRegistry
         // ContentTours — Task 4B TourGuide assignment (2 events — Phase C)
         ["content-tours.tour-guide.assigned.v1"]         = typeof(TourGuideAssignedIntegrationEvent),
         ["content-tours.tour-guide.unassigned.v1"]       = typeof(TourGuideUnassignedIntegrationEvent),
+
+        ["content-tours.package.created.v1"]             = typeof(TourPackageCreatedIntegrationEvent),
+        ["content-tours.package.updated.v1"]             = typeof(TourPackageUpdatedIntegrationEvent),
+        ["content-tours.package.deleted.v1"]             = typeof(TourPackageDeletedIntegrationEvent),
     };
 
     private static readonly Dictionary<Type, string> TypeToName =

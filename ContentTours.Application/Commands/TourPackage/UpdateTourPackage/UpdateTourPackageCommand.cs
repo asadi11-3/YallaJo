@@ -9,5 +9,8 @@ public sealed record UpdateTourPackageCommand(
     decimal Price,
     string Currency,
     int? MaxParticipants,
-    DateTime? ValidTo
+    DateTime? ValidFrom,
+    DateTime? ValidTo,
+    IReadOnlyCollection<Guid> IncludedTourIds,
+    byte[] RowVersion
 ) : ICommand;

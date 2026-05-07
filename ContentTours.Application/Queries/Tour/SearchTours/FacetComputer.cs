@@ -1,9 +1,5 @@
 namespace ContentTours.Application.Queries.Tour.SearchTours;
 
-/// <summary>
-/// Computes search facets from a bounded in-memory set of FacetRow projections.
-/// Called after materialising up to 5000 rows from the filtered IQueryable.
-/// </summary>
 internal static class FacetComputer
 {
     private static readonly RatingBucket[] RatingBuckets =

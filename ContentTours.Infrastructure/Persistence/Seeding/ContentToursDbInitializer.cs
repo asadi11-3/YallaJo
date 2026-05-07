@@ -25,8 +25,6 @@ public sealed class ContentToursDbInitializer(ContentToursDbContext dbContext) :
             var schedules = CreateSchedules();
             var waypoints = CreateWaypoints();
             var pricingTiers = CreatePricingTiers();
-            var packages = CreatePackages();
-            var packageInclusions = CreatePackageInclusions(packages);
             var tourGuides = CreateTourGuides();
 
             dbContext.Tours.Add(tour);
@@ -34,8 +32,6 @@ public sealed class ContentToursDbInitializer(ContentToursDbContext dbContext) :
             dbContext.TourSchedules.AddRange(schedules);
             dbContext.TourWaypoints.AddRange(waypoints);
             dbContext.TourPricingTiers.AddRange(pricingTiers);
-            dbContext.TourPackages.AddRange(packages);
-            dbContext.TourPackageInclusions.AddRange(packageInclusions);
             dbContext.TourTourGuides.AddRange(tourGuides);
 
             await dbContext.SaveChangesAsync(cancellationToken);
@@ -336,38 +332,7 @@ public sealed class ContentToursDbInitializer(ContentToursDbContext dbContext) :
         return [standard, vip];
     }
 
-    private static List<TourPackage> CreatePackages()
-    {
-        var package = CreateEntity<TourPackage>();
-        SetProperty(package, nameof(TourPackage.Id), SeedContentIds.TourPackageEssentials);
-        SetProperty(package, nameof(TourPackage.TourId), SeedContentIds.TourPetraExplorer);
-        SetProperty(package, nameof(TourPackage.Name), "Petra Essentials");
-        SetProperty(package, nameof(TourPackage.Description), "Guide, transport, and entry support.");
-        SetProperty(package, nameof(TourPackage.Price), new Money(95m, "JOD"));
-        SetProperty(package, nameof(TourPackage.Currency), "JOD");
-        SetProperty(package, nameof(TourPackage.MaxParticipants), 18);
-        SetProperty(package, nameof(TourPackage.ValidFrom), DateTime.UtcNow.AddDays(-30));
-        SetProperty(package, nameof(TourPackage.ValidTo), DateTime.UtcNow.AddMonths(6));
-        SetProperty(package, nameof(TourPackage.IsActive), true);
-        return [package];
-    }
-
-    private static List<TourPackageInclusion> CreatePackageInclusions(IReadOnlyList<TourPackage> packages)
-    {
-        var packageId = packages[0].Id;
-
-        var inclusion1 = CreateEntity<TourPackageInclusion>();
-        SetProperty(inclusion1, nameof(TourPackageInclusion.TourPackageId), packageId);
-        SetProperty(inclusion1, nameof(TourPackageInclusion.Description), "Licensed local guide");
-        SetProperty(inclusion1, nameof(TourPackageInclusion.SortOrder), 1);
-
-        var inclusion2 = CreateEntity<TourPackageInclusion>();
-        SetProperty(inclusion2, nameof(TourPackageInclusion.TourPackageId), packageId);
-        SetProperty(inclusion2, nameof(TourPackageInclusion.Description), "Hotel pickup in Petra area");
-        SetProperty(inclusion2, nameof(TourPackageInclusion.SortOrder), 2);
-
-        return [inclusion1, inclusion2];
-    }
+    // Task 5 — Package seeders intentionally removed (see initializer note above).
 
     private static List<TourTourGuide> CreateTourGuides()
     {

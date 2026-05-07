@@ -17,11 +17,11 @@ public sealed class ListTourPricingTiersQueryHandler(
     : IQueryHandler<ListTourPricingTiersQuery, IReadOnlyList<TourPricingTierDto>>
 {
     public async Task<Result<IReadOnlyList<TourPricingTierDto>>> Handle(
-        ListTourPricingTiersQuery query, CancellationToken ct)
+        ListTourPricingTiersQuery query, CancellationToken cancellationToken)
     {
         try
         {
-            var tour = await tourRepo.GetByIdAsync(query.TourId, ct);
+            var tour = await tourRepo.GetByIdAsync(query.TourId, cancellationToken);
             if (tour is null || tour.IsDeleted)
             {
                 return Result<IReadOnlyList<TourPricingTierDto>>.Failure(
@@ -44,7 +44,7 @@ public sealed class ListTourPricingTiersQueryHandler(
             var tiers = await tierRepo.Query(asNoTracking: true)
                 .Where(t => t.TourId == query.TourId && (!activeOnly || t.IsActive))
                 .OrderBy(t => t.Name)
-                .ToListAsync(ct);
+                .ToListAsync(cancellationToken);
 
             var tierIds = tiers.Select(t => t.Id).ToList();
 
@@ -60,7 +60,7 @@ public sealed class ListTourPricingTiersQueryHandler(
                     .Where(t => tierIds.Contains(t.TourPricingTierId) &&
                         (t.LanguageCode == languageCode || t.LanguageCode == neutralLanguageCode))
                     .OrderByDescending(t => t.LanguageCode == languageCode)
-                    .ToListAsync(ct);
+                    .ToListAsync(cancellationToken);
             }
 
             var translationsByTierId = translations
@@ -95,7 +95,7 @@ public sealed class ListTourPricingTiersQueryHandler(
 
             return Result.Success(dtos);
         }
-        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
             return Result<IReadOnlyList<TourPricingTierDto>>.Failure(
                 new Error("Request.Cancelled", "The request was cancelled."),

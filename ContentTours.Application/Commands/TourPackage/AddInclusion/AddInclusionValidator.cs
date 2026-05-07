@@ -12,8 +12,5 @@ public sealed class AddInclusionValidator : AbstractValidator<AddInclusionComman
         RuleFor(x => x.Description)
             .NotEmpty()
             .MaximumLength(500);
-
-        RuleFor(x => x.SortOrder)
-            .GreaterThanOrEqualTo(0);
     }
 }

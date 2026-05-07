@@ -10,11 +10,11 @@ namespace ContentTours.Application.Queries.TourPackage.ListTourPackages;
 public sealed class ListTourPackagesQueryHandler(
     ITourPackageRepository repository,
     ILogger<ListTourPackagesQueryHandler> logger)
-    : IQueryHandler<ListTourPackagesQuery, PaginatedResult<TourPackageDto>>
+    : IQueryHandler<ListTourPackagesQuery, PaginatedResult<TourPackageSummaryDto>>
 {
     private const int MaxPageSize = 50;
 
-    public async Task<Result<PaginatedResult<TourPackageDto>>> Handle(
+    public async Task<Result<PaginatedResult<TourPackageSummaryDto>>> Handle(
         ListTourPackagesQuery request,
         CancellationToken cancellationToken)
     {
@@ -22,47 +22,60 @@ public sealed class ListTourPackagesQueryHandler(
         {
             var page = Math.Max(1, request.Page);
             var pageSize = Math.Clamp(request.PageSize, 1, MaxPageSize);
+            var effectiveDate = (request.ValidOnDate ?? DateTime.UtcNow).Date;
+            var sort = ParseSort(request.Sort);
 
-            // DB-level pagination + filtering (was previously in-memory)
-            var (items, total) = await repository
-                .GetPagedAsync(
-                    page,
-                    pageSize,
-                    request.IsActive,
-                    request.TourId,
-                    cancellationToken)
+            var (rows, total) = await repository
+                .GetPagedSummariesAsync(
+                    page:             page,
+                    pageSize:         pageSize,
+                    providerId:       request.ProviderId,
+                    minPrice:         request.MinPrice,
+                    maxPrice:         request.MaxPrice,
+                    currency:         request.Currency,
+                    includeTourId:    request.IncludeTourId,
+                    effectiveDateUtc: effectiveDate,
+                    sort:             sort,
+                    ct:               cancellationToken)
                 .ConfigureAwait(false);
 
-            var dtos = items
-                .Select(p => new TourPackageDto(
-                    p.Id,
-                    p.TourId,
-                    p.Name,
-                    p.Description,
-                    p.Price.Amount,
-                    p.Currency,
-                    p.MaxParticipants,
-                    p.ValidFrom,
-                    p.ValidTo,
-                    p.IsActive,
-                    p.CreatedAt
-                ))
+            var dtos = rows
+                .Select(r => new TourPackageSummaryDto(
+                    Id:                 r.Id,
+                    CreatedByUserId:    r.CreatedByUserId,
+                    Name:               r.Name,
+                    Description:        r.Description,
+                    PriceAmount:        r.PriceAmount,
+                    Currency:           r.Currency,
+                    MaxParticipants:    r.MaxParticipants,
+                    ValidFrom:          r.ValidFrom,
+                    ValidTo:            r.ValidTo,
+                    IncludedTourCount:  r.IncludedTourCount,
+                    CreatedAt:          r.CreatedAt))
                 .ToList();
 
-            var result = new PaginatedResult<TourPackageDto>(
-                dtos,
-                total,
-                page,
-                pageSize
-            );
+            var result = new PaginatedResult<TourPackageSummaryDto>(dtos, total, page, pageSize);
+
+            logger.LogDebug(
+                "Listed TourPackages: page={Page}, pageSize={PageSize}, total={Total}",
+                page, pageSize, total);
 
             return Result.Success(result);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
-            return Result.Failure<PaginatedResult<TourPackageDto>>(
+            return Result.Failure<PaginatedResult<TourPackageSummaryDto>>(
                 new Error("Request.Cancelled", "The request was cancelled."),
                 Outcome.Canceled);
         }
     }
+
+    private static TourPackageSortOption ParseSort(string? sort) =>
+        (sort ?? string.Empty).Trim().ToLowerInvariant() switch
+        {
+            "price_asc"            => TourPackageSortOption.PriceAscending,
+            "price_desc"           => TourPackageSortOption.PriceDescending,
+            "validity_ending_soon" => TourPackageSortOption.ValidityEndingSoon,
+            _                      => TourPackageSortOption.Newest,
+        };
 }

@@ -155,11 +155,6 @@ public class TourConfiguration : IEntityTypeConfiguration<Tour>
             .HasForeignKey(x => x.TourId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasMany(x => x.TourPackages)
-            .WithOne(x => x.Tour)
-            .HasForeignKey(x => x.TourId)
-            .OnDelete(DeleteBehavior.Cascade);
-
         builder.HasQueryFilter(x => !x.IsDeleted);
     }
 }

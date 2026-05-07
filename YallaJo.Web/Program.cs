@@ -41,6 +41,9 @@ using YallaJo.Web.Areas.Admin.Modules.ContentCore.Features.Categories;
 using YallaJo.Web.Areas.Admin.Modules.ContentCore.Features.Attachments;
 using YallaJo.Web.Areas.Admin.Modules.ContentCore.Features.Translations;
 
+// ── Admin / ContentPlaces feature registrations ──────────────────────────────
+using YallaJo.Web.Areas.Admin.Modules.ContentPlaces.Features.Places;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // ── Authentication (cookie — MVC frontend, BFF pattern) ──────────────────────
@@ -54,10 +57,6 @@ var authBuilder = builder.Services
         options.ExpireTimeSpan   = TimeSpan.FromHours(8);
         options.SlidingExpiration = true;
         options.Cookie.HttpOnly   = true;
-        // Lax (not Strict) so that top-level redirects back from an external
-        // OAuth provider still carry the primary cookie. The external callback
-        // flow is still CSRF-safe because the intermediate cookie uses SameSite=Lax
-        // AND the Challenge action is POST+anti-forgery.
         options.Cookie.SameSite   = SameSiteMode.Lax;
         options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
         options.Cookie.Name       = "YallaJo.Web";
@@ -192,6 +191,10 @@ builder.Services.AddScoped<AttachmentsFacade>();
 builder.Services.AddScoped<TranslationsApiClient>();
 builder.Services.AddScoped<TranslationsFacade>();
 
+// ── Admin / ContentPlaces services ───────────────────────────────────────────
+builder.Services.AddScoped<PlacesApiClient>();
+builder.Services.AddScoped<PlacesFacade>();
+
 // ── MVC + custom Razor view locations ────────────────────────────────────────
 var mvcBuilder  = builder.Services.AddControllersWithViews(options =>
 {
@@ -251,7 +254,7 @@ app.MapControllerRoute(
 // Root landing → Auth/Login (area-aware).
 app.MapControllerRoute(
     name:    "root",
-    pattern: "",
+    pattern: string.Empty,
     defaults: new { area = "Auth", controller = "Login", action = "Index" });
 
 app.MapControllerRoute(

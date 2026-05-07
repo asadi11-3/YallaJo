@@ -11,7 +11,6 @@ using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
-using Security.Contracts.Authorization;
 using YallaJo.SharedKernel.Application.Authorization;
 using YallaJo.SharedKernel.Domain.Abstractions.Pagination;
 using YallaJo.SharedKernel.Presentation;
@@ -26,46 +25,57 @@ internal static class TourPackageEndpoints
         var packages = group.MapGroup("/packages")
             .WithTags("ContentTours | TourPackages");
 
-        // ── GET /packages ─────────────────────────────────────────────
         packages.MapGet("/", async (
             int? page,
             int? pageSize,
-            bool? isActive,
-            Guid? tourId,
+            Guid? providerId,
+            decimal? minPrice,
+            decimal? maxPrice,
+            string? currency,
+            Guid? includeTourId,
+            DateTime? validOnDate,
+            string? sort,
             ISender sender,
             CancellationToken ct) =>
         {
             var result = await sender.Send(
-                new ListTourPackagesQuery(page ?? 1, pageSize ?? 20, isActive, tourId),
+                new ListTourPackagesQuery(
+                    Page:          page ?? 1,
+                    PageSize:      pageSize ?? 20,
+                    ProviderId:    providerId,
+                    MinPrice:      minPrice,
+                    MaxPrice:      maxPrice,
+                    Currency:      currency,
+                    IncludeTourId: includeTourId,
+                    ValidOnDate:   validOnDate,
+                    Sort:          sort ?? "newest"),
                 ct);
 
             return result.ToApiResult();
         })
         .WithName("ListTourPackages")
         .WithSummary("List tour packages with pagination")
-        .Produces<PaginatedResult<TourPackageDto>>(StatusCodes.Status200OK)
+        .Produces<PaginatedResult<TourPackageSummaryDto>>(StatusCodes.Status200OK)
         .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status400BadRequest)
-        .WithMetadata(new MustHavePermissionAttribute(
-            ContentToursFeatures.Tour,
-            AppAction.Read));
+        .AllowAnonymous();
 
         // ── GET /packages/{id} ────────────────────────────────────────
         packages.MapGet("/{id:guid}", async (
             Guid id,
+            HttpRequest httpRequest,
             ISender sender,
             CancellationToken ct) =>
         {
-            var result = await sender.Send(new GetTourPackageByIdQuery(id), ct);
+            var acceptLanguage = httpRequest.Headers.AcceptLanguage.ToString();
+            var result = await sender.Send(new GetTourPackageByIdQuery(id, acceptLanguage), ct);
             return result.ToApiResult();
         })
         .WithName("GetTourPackageById")
         .WithSummary("Get tour package by id")
-        .Produces<TourPackageDto>(StatusCodes.Status200OK)
+        .Produces<TourPackageDetailDto>(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status404NotFound)
-        .WithMetadata(new MustHavePermissionAttribute(
-            ContentToursFeatures.Tour,
-            AppAction.Read));
+        .AllowAnonymous();
 
         // ── POST /packages ────────────────────────────────────────────
         packages.MapPost("/", async (
@@ -74,14 +84,15 @@ internal static class TourPackageEndpoints
             CancellationToken ct) =>
         {
             var cmd = new CreateTourPackageCommand(
-                request.TourId,
-                request.Name?.Trim()!,
-                request.Description?.Trim(),
-                request.Price,
-                request.Currency?.Trim().ToUpperInvariant()!,
-                request.MaxParticipants,
-                request.ValidFrom,
-                request.ValidTo);
+                Name:            request.Name?.Trim() ?? string.Empty,
+                Description:     request.Description?.Trim(),
+                Price:           request.Price,
+                Currency:        request.Currency?.Trim().ToUpperInvariant() ?? string.Empty,
+                MaxParticipants: request.MaxParticipants,
+                ValidFrom:       request.ValidFrom,
+                ValidTo:         request.ValidTo,
+                IncludedTourIds: request.IncludedTourIds ?? Array.Empty<Guid>(),
+                Inclusions:      request.Inclusions ?? Array.Empty<string>());
 
             var result = await sender.Send(cmd, ct);
 
@@ -95,8 +106,8 @@ internal static class TourPackageEndpoints
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status409Conflict)
         .WithMetadata(new MustHavePermissionAttribute(
-            ContentToursFeatures.Tour,
-            AppAction.Update));
+            ContentToursFeatures.Package,
+            AppAction.Create));
 
         // ── PUT /packages/{id} ────────────────────────────────────────
         packages.MapPut("/{id:guid}", async (
@@ -105,14 +116,29 @@ internal static class TourPackageEndpoints
             ISender sender,
             CancellationToken ct) =>
         {
+            byte[] rowVersion;
+            try
+            {
+                rowVersion = string.IsNullOrWhiteSpace(request.RowVersion)
+                    ? Array.Empty<byte>()
+                    : Convert.FromBase64String(request.RowVersion);
+            }
+            catch (FormatException)
+            {
+                rowVersion = Array.Empty<byte>();
+            }
+
             var cmd = new UpdateTourPackageCommand(
-                id,
-                request.Name,
-                request.Description,
-                request.Price,
-                request.Currency,
-                request.MaxParticipants,
-                request.ValidTo);
+                Id:              id,
+                Name:            request.Name,
+                Description:     request.Description,
+                Price:           request.Price,
+                Currency:        request.Currency,
+                MaxParticipants: request.MaxParticipants,
+                ValidFrom:       request.ValidFrom,
+                ValidTo:         request.ValidTo,
+                IncludedTourIds: request.IncludedTourIds ?? Array.Empty<Guid>(),
+                RowVersion:      rowVersion);
 
             var result = await sender.Send(cmd, ct);
             return result.ToApiResult();
@@ -125,7 +151,7 @@ internal static class TourPackageEndpoints
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status409Conflict)
         .WithMetadata(new MustHavePermissionAttribute(
-            ContentToursFeatures.Tour,
+            ContentToursFeatures.Package,
             AppAction.Update));
 
         // ── DELETE /packages/{id} ─────────────────────────────────────
@@ -138,14 +164,14 @@ internal static class TourPackageEndpoints
             return result.ToApiResult();
         })
         .WithName("DeleteTourPackage")
-        .WithSummary("Deactivate a tour package")
+        .WithSummary("Soft-delete a tour package")
         .Produces(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status403Forbidden)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status409Conflict)
         .WithMetadata(new MustHavePermissionAttribute(
-            ContentToursFeatures.Tour,
-            AppAction.Update));
+            ContentToursFeatures.Package,
+            AppAction.Delete));
 
         // ── POST /packages/{id}/inclusions ────────────────────────────
         packages.MapPost("/{id:guid}/inclusions", async (
@@ -155,9 +181,8 @@ internal static class TourPackageEndpoints
             CancellationToken ct) =>
         {
             var cmd = new AddInclusionCommand(
-                id,
-                request.Description,
-                request.SortOrder);
+                PackageId:   id,
+                Description: request.Description);
 
             var result = await sender.Send(cmd, ct);
 
@@ -165,14 +190,13 @@ internal static class TourPackageEndpoints
         })
         .WithName("AddTourPackageInclusion")
         .WithSummary("Add inclusion to tour package")
-        .Produces(StatusCodes.Status200OK)
+        .Produces<Guid>(StatusCodes.Status200OK)
         .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status403Forbidden)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status409Conflict)
         .WithMetadata(new MustHavePermissionAttribute(
-            ContentToursFeatures.Tour,
+            ContentToursFeatures.Package,
             AppAction.Update));
-
     }
 }

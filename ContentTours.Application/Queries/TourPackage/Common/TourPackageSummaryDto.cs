@@ -1,8 +1,8 @@
 namespace ContentTours.Application.Queries.TourPackage.Common;
 
-public sealed record TourPackageDto(
+public sealed record TourPackageSummaryDto(
     Guid Id,
-    Guid TourId,
+    Guid CreatedByUserId,
     string Name,
     string? Description,
     decimal PriceAmount,
@@ -10,6 +10,5 @@ public sealed record TourPackageDto(
     int? MaxParticipants,
     DateTime? ValidFrom,
     DateTime? ValidTo,
-    bool IsActive,
-    DateTime CreatedAt
-);
+    int IncludedTourCount,
+    DateTime CreatedAt);

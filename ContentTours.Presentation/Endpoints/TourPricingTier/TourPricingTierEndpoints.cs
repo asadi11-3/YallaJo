@@ -75,7 +75,7 @@ internal static class TourPricingTierEndpoints
         .ProducesProblem(StatusCodes.Status403Forbidden)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status409Conflict)
-        .WithMetadata(new MustHavePermissionAttribute(ContentToursFeatures.Tour, AppAction.Update));
+        .WithMetadata(new MustHavePermissionAttribute(ContentToursFeatures.TourPricingTier, AppAction.Create));
 
         pricing.MapPut("/{tierId:guid}", async (
             Guid id,
@@ -102,7 +102,7 @@ internal static class TourPricingTierEndpoints
         .ProducesProblem(StatusCodes.Status403Forbidden)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status409Conflict)
-        .WithMetadata(new MustHavePermissionAttribute(ContentToursFeatures.Tour, AppAction.Update));
+        .WithMetadata(new MustHavePermissionAttribute(ContentToursFeatures.TourPricingTier, AppAction.Update));
 
         pricing.MapDelete("/{tierId:guid}", async (
             Guid id,
@@ -119,7 +119,7 @@ internal static class TourPricingTierEndpoints
         .ProducesProblem(StatusCodes.Status403Forbidden)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status409Conflict)
-        .WithMetadata(new MustHavePermissionAttribute(ContentToursFeatures.Tour, AppAction.Update));
+        .WithMetadata(new MustHavePermissionAttribute(ContentToursFeatures.TourPricingTier, AppAction.Delete));
     }
 
 }

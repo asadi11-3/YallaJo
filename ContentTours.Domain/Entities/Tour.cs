@@ -14,7 +14,6 @@ public sealed class Tour : AuditableEntity, IAggregateRoot
     private readonly List<TourSchedule> _tourSchedules = [];
     private readonly List<TourWaypoint> _tourWaypoints = [];
     private readonly List<TourPricingTier> _tourPricingTiers = [];
-    private readonly List<TourPackage> _tourPackages = [];
     private readonly List<TourChildFacility> _childFacilities = [];
 
     private Tour()
@@ -70,7 +69,6 @@ public sealed class Tour : AuditableEntity, IAggregateRoot
     public IReadOnlyCollection<TourSchedule> TourSchedules => _tourSchedules.AsReadOnly();
     public IReadOnlyCollection<TourWaypoint> TourWaypoints => _tourWaypoints.AsReadOnly();
     public IReadOnlyCollection<TourPricingTier> TourPricingTiers => _tourPricingTiers.AsReadOnly();
-    public IReadOnlyCollection<TourPackage> TourPackages => _tourPackages.AsReadOnly();
     public IReadOnlyList<TourChildFacility> ChildFacilities => _childFacilities.AsReadOnly();
 
     public static Tour Create(

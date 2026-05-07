@@ -3,13 +3,14 @@ using YallaJo.SharedKernel.Domain.ValueObjects;
 
 namespace ContentTours.Domain.Entities;
 
-public sealed class TourPackage : AuditableEntity, IAggregateRoot
+public sealed class TourPackage : AuditableEntity
 {
-    private readonly List<TourPackageInclusion> _tourPackageInclusions = [];
+    private readonly List<TourPackageTour> _includedTours = [];
+    private readonly List<TourPackageInclusion> _inclusions = [];
 
     private TourPackage() { } // EF Core
 
-    public Guid TourId { get; private set; }
+    public Guid CreatedByUserId { get; private set; }
 
     public string Name { get; private set; } = string.Empty;
 
@@ -17,155 +18,208 @@ public sealed class TourPackage : AuditableEntity, IAggregateRoot
 
     public Money Price { get; private set; } = default!;
 
-    // Persisted column kept in sync with Money.Currency on every write
-    // (Create/Update). Both are derived from the same normalized input,
-    // so they cannot drift. Schema unchanged.
+    /// <summary>
+    /// Persisted column kept in sync with <see cref="Price"/>.<c>Currency</c> on every
+    /// write (Create/Update). Both are derived from the same normalized input, so they
+    /// cannot drift. Schema unchanged.
+    /// </summary>
     public string Currency { get; private set; } = string.Empty;
 
     public int? MaxParticipants { get; private set; }
 
+    /// <summary>
+    /// Immutable after Create (handler enforces; returns
+    /// <c>TourPackage.ValidFromImmutable</c> 409 when the request attempts a change).
+    /// </summary>
     public DateTime? ValidFrom { get; private set; }
 
     public DateTime? ValidTo { get; private set; }
 
     public bool IsActive { get; private set; } = true;
 
-    public Tour Tour { get; private set; } = default!;
+    public IReadOnlyCollection<TourPackageTour> IncludedTours => _includedTours.AsReadOnly();
 
-    public IReadOnlyCollection<TourPackageInclusion> TourPackageInclusions =>
-        _tourPackageInclusions.AsReadOnly();
+    public IReadOnlyCollection<TourPackageInclusion> Inclusions => _inclusions.AsReadOnly();
 
-    // Factory
+    /// <summary>
+    /// Constructs a valid package shell with ≥2 distinct tour links and 0+ marketing
+    /// inclusions. The handler is responsible for cross-tour validation (currency match,
+    /// ownership, status, capacity). This factory enforces only structural invariants.
+    /// </summary>
     public static TourPackage Create(
-        Guid tourId,
         string name,
         string? description,
-        decimal priceAmount,
+        Money price,
         string currency,
         int? maxParticipants,
         DateTime? validFrom,
-        DateTime? validTo)
+        DateTime? validTo,
+        Guid createdByUserId,
+        IReadOnlyCollection<Guid> includedTourIds,
+        IReadOnlyCollection<string> inclusionDescriptions)
     {
-        if (tourId == Guid.Empty)
-            throw new ArgumentException("TourId is required", nameof(tourId));
-
         if (string.IsNullOrWhiteSpace(name))
-            throw new ArgumentException("Name is required", nameof(name));
-
-        if (priceAmount <= 0)
-            throw new ArgumentException("Price must be greater than zero", nameof(priceAmount));
-
+            throw new ArgumentException("Name is required.", nameof(name));
+        if (price is null)
+            throw new ArgumentNullException(nameof(price));
         if (string.IsNullOrWhiteSpace(currency) || currency.Length != 3)
-            throw new ArgumentException("Currency must be 3-letter ISO code", nameof(currency));
+            throw new ArgumentException("Currency must be a 3-letter ISO code.", nameof(currency));
+        if (createdByUserId == Guid.Empty)
+            throw new ArgumentException("CreatedByUserId is required.", nameof(createdByUserId));
+        if (includedTourIds is null)
+            throw new ArgumentNullException(nameof(includedTourIds));
+        if (inclusionDescriptions is null)
+            throw new ArgumentNullException(nameof(inclusionDescriptions));
 
-        if (validTo.HasValue && validFrom.HasValue && validTo < validFrom)
-            throw new ArgumentException("ValidTo must be after ValidFrom", nameof(validTo));
+        var distinctTourIds = includedTourIds
+            .Where(id => id != Guid.Empty)
+            .Distinct()
+            .ToList();
+
+        if (distinctTourIds.Count < 2)
+        {
+            // Defence-in-depth — the handler must surface
+            // TourPackage.InsufficientInclusions / TourPackage.DuplicateInclusions BEFORE
+            // calling Create. Reaching this branch indicates a programming error.
+            throw new ArgumentException(
+                "A tour package must include at least 2 distinct tours.",
+                nameof(includedTourIds));
+        }
+
+        if (validFrom.HasValue && validTo.HasValue && validFrom.Value >= validTo.Value)
+        {
+            throw new ArgumentException(
+                "ValidFrom must be earlier than ValidTo.",
+                nameof(validFrom));
+        }
 
         var normalizedCurrency = currency.ToUpperInvariant();
 
-        return new TourPackage
+        var package = new TourPackage
         {
-            Id = Guid.CreateVersion7(),
-            TourId = tourId,
+            // Id auto-assigned by AuditableEntity ctor (Guid.CreateVersion7()).
+            CreatedByUserId = createdByUserId,
             Name = name.Trim(),
             Description = description?.Trim(),
-            Price = new Money(priceAmount, normalizedCurrency),
+            Price = new Money(price.Amount, normalizedCurrency),
             Currency = normalizedCurrency,
             MaxParticipants = maxParticipants,
             ValidFrom = validFrom,
             ValidTo = validTo,
-            IsActive = true
+            IsActive = true,
         };
+
+        foreach (var tourId in distinctTourIds)
+        {
+            package._includedTours.Add(TourPackageTour.Create(package.Id, tourId));
+        }
+
+        var sortOrder = 1;
+        foreach (var description1 in inclusionDescriptions)
+        {
+            if (string.IsNullOrWhiteSpace(description1))
+                continue;
+
+            var trimmed = description1.Trim();
+            var alreadyAdded = package._inclusions.Any(i =>
+                string.Equals(i.Description, trimmed, StringComparison.OrdinalIgnoreCase));
+            if (alreadyAdded)
+                continue;
+
+            package._inclusions.Add(TourPackageInclusion.Create(package.Id, trimmed, sortOrder));
+            sortOrder++;
+        }
+
+        return package;
     }
 
-    // Update
     public void Update(
         string name,
         string? description,
-        decimal priceAmount,
+        Money price,
         string currency,
         int? maxParticipants,
-        DateTime? validTo)
+        DateTime? validTo,
+        IReadOnlyCollection<Guid> includedTourIds)
     {
         EnsureNotDeleted();
 
-        if (!IsActive)
-            throw new InvalidOperationException("Cannot update inactive package");
-
         if (string.IsNullOrWhiteSpace(name))
-            throw new ArgumentException("Name is required", nameof(name));
-
-        if (priceAmount <= 0)
-            throw new ArgumentException("Price must be greater than zero", nameof(priceAmount));
-
+            throw new ArgumentException("Name is required.", nameof(name));
+        if (price is null)
+            throw new ArgumentNullException(nameof(price));
         if (string.IsNullOrWhiteSpace(currency) || currency.Length != 3)
-            throw new ArgumentException("Currency must be 3-letter ISO code", nameof(currency));
+            throw new ArgumentException("Currency must be a 3-letter ISO code.", nameof(currency));
+        if (includedTourIds is null)
+            throw new ArgumentNullException(nameof(includedTourIds));
 
-        if (validTo.HasValue && ValidFrom.HasValue && validTo < ValidFrom)
-            throw new ArgumentException("ValidTo must be after ValidFrom", nameof(validTo));
+        var distinctTourIds = includedTourIds
+            .Where(id => id != Guid.Empty)
+            .Distinct()
+            .ToList();
+
+        if (distinctTourIds.Count < 2)
+        {
+            throw new ArgumentException(
+                "A tour package must include at least 2 distinct tours.",
+                nameof(includedTourIds));
+        }
+
+        if (ValidFrom.HasValue && validTo.HasValue && ValidFrom.Value >= validTo.Value)
+        {
+            throw new ArgumentException(
+                "ValidTo must be after the existing ValidFrom.",
+                nameof(validTo));
+        }
 
         var normalizedCurrency = currency.ToUpperInvariant();
 
         Name = name.Trim();
         Description = description?.Trim();
-        Price = new Money(priceAmount, normalizedCurrency);
+        Price = new Money(price.Amount, normalizedCurrency);
         Currency = normalizedCurrency;
         MaxParticipants = maxParticipants;
         ValidTo = validTo;
 
+        var existingIds = _includedTours.Select(x => x.TourId).ToHashSet();
+        var newIds = distinctTourIds.ToHashSet();
+
+        _includedTours.RemoveAll(link => !newIds.Contains(link.TourId));
+
+        // Add links new to this update.
+        foreach (var tourId in distinctTourIds.Where(id => !existingIds.Contains(id)))
+        {
+            _includedTours.Add(TourPackageTour.Create(Id, tourId));
+        }
+
         MarkUpdated();
     }
 
-    // Soft delete
-    public void Deactivate()
+    public TourPackageInclusion AddInclusion(string description)
     {
         EnsureNotDeleted();
 
-        if (!IsActive)
-            return;
+        if (string.IsNullOrWhiteSpace(description))
+            throw new ArgumentException("Description is required.", nameof(description));
 
-        IsActive = false;
+        var trimmed = description.Trim();
+
+        var nextSortOrder = _inclusions.Count == 0
+            ? 1
+            : _inclusions.Max(i => i.SortOrder) + 1;
+
+        var inclusion = TourPackageInclusion.Create(Id, trimmed, nextSortOrder);
+        _inclusions.Add(inclusion);
         MarkUpdated();
-    }
-
-    // Add inclusion
-    public void AddInclusion(TourPackageInclusion inclusion)
-    {
-        EnsureNotDeleted();
-
-        if (inclusion is null)
-            throw new ArgumentNullException(nameof(inclusion));
-
-        // Deduplicate by normalized description (case-insensitive),
-        // not by reference — a freshly-created entity never matches by reference.
-        var normalized = inclusion.Description?.Trim() ?? string.Empty;
-
-        if (_tourPackageInclusions.Any(x =>
-                string.Equals(x.Description, normalized, StringComparison.OrdinalIgnoreCase)))
-            return;
-
-        _tourPackageInclusions.Add(inclusion);
-        MarkUpdated();
-    }
-
-    // Remove inclusion
-    public void RemoveInclusion(Guid inclusionId)
-    {
-        EnsureNotDeleted();
-
-        var inclusion = _tourPackageInclusions
-            .FirstOrDefault(x => x.Id == inclusionId);
-
-        if (inclusion is null)
-            throw new InvalidOperationException("Inclusion not found");
-
-        _tourPackageInclusions.Remove(inclusion);
-        MarkUpdated();
+        return inclusion;
     }
 
     private void EnsureNotDeleted()
     {
         if (IsDeleted)
-            throw new InvalidOperationException("TourPackage is deleted");
+        {
+            throw new InvalidOperationException(
+                "TourPackage.Deleted: operation not permitted on a soft-deleted package.");
+        }
     }
 }

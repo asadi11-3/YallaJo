@@ -13,7 +13,7 @@ public class TourPackageConfiguration : IEntityTypeConfiguration<TourPackage>
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Id).ValueGeneratedNever();
 
-        builder.Property(x => x.TourId).IsRequired();
+        builder.Property(x => x.CreatedByUserId).IsRequired();
 
         builder.Property(x => x.Name)
             .IsRequired()
@@ -48,15 +48,19 @@ public class TourPackageConfiguration : IEntityTypeConfiguration<TourPackage>
         builder.Property(x => x.DeletedAt).IsRequired(false);
         builder.Property(x => x.RowVersion).IsRowVersion();
 
-        builder.HasOne(x => x.Tour)
-            .WithMany(x => x.TourPackages)
-            .HasForeignKey(x => x.TourId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        builder.HasMany(x => x.TourPackageInclusions)
+        // Task 5 — bundle membership through the junction (TourPackageTour).
+        builder.HasMany(x => x.IncludedTours)
             .WithOne(x => x.TourPackage)
             .HasForeignKey(x => x.TourPackageId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasMany(x => x.Inclusions)
+            .WithOne(x => x.TourPackage)
+            .HasForeignKey(x => x.TourPackageId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasIndex(x => x.CreatedByUserId);
+        builder.HasIndex(x => x.ValidTo);
 
         builder.HasQueryFilter(x => !x.IsDeleted);
     }

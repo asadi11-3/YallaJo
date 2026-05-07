@@ -1,0 +1,30 @@
+@using YallaJo.Web.Areas.Admin.Modules.ContentPlaces.Features.Places.ViewModels
+@model EditPlaceVm
+@{
+    ViewData["Title"] = "Edit Place";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-4">
+    <h2>Edit Place</h2>
+
+    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+    <form asp-area="Admin" asp-controller="Places" asp-action="Edit"
+          asp-route-id="@Model.Id" method="post">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="Id" />
+
+        @* Strongly typed against the shared abstract PlaceFormVm. *@
+        <partial name="_Form" model="(PlaceFormVm)Model" />
+
+        <div class="mt-4">
+            <button type="submit" class="btn btn-primary">Save</button>
+            <a asp-action="Index" class="btn btn-link">Cancel</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

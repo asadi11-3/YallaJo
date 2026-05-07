@@ -2,73 +2,112 @@ using ContentTours.Domain.Entities;
 using ContentTours.Domain.Repositories;
 using ContentTours.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using YallaJo.SharedKernel.Infrastructure.Data.Repositories;
 
 namespace ContentTours.Infrastructure.Repositories;
 
-public sealed class TourPackageRepository : ITourPackageRepository
+/// <summary>
+/// EF Core implementation of <see cref="ITourPackageRepository"/>.
+/// Inherits the standard read/write surface from <see cref="EfEntityRepository{TEntity,TKey}"/>
+/// and adds Task 5–specific eager loads, duplicate checks, and summary projections.
+/// </summary>
+internal sealed class TourPackageRepository(ContentToursDbContext context)
+    : EfEntityRepository<TourPackage, Guid>(context), ITourPackageRepository
 {
-    private readonly ContentToursDbContext _context;
+    private readonly ContentToursDbContext _context = context;
 
-    public TourPackageRepository(ContentToursDbContext context)
+    public Task<TourPackage?> GetByIdWithDetailsAsync(Guid id, CancellationToken ct)
     {
-        _context = context;
-    }
-
-    public async Task<TourPackage?> GetByIdAsync(Guid id, CancellationToken ct)
-    {
-        return await _context.TourPackages
-            .Include(p => p.Tour)
-            .Include(p => p.TourPackageInclusions)
+        return _context.TourPackages
+            .Include(p => p.IncludedTours)
+                .ThenInclude(link => link.Tour)
+            .Include(p => p.Inclusions)
             .FirstOrDefaultAsync(p => p.Id == id, ct);
     }
 
-    public async Task AddAsync(TourPackage package, CancellationToken ct)
-    {
-        await _context.TourPackages.AddAsync(package, ct);
-    }
-
-    public void Update(TourPackage package)
-    {
-        _context.TourPackages.Update(package);
-    }
-
-    public async Task<bool> ExistsAsync(Guid id, CancellationToken ct)
-    {
-        return await _context.TourPackages
-            .AnyAsync(p => p.Id == id, ct);
-    }
-
-    public async Task<List<TourPackage>> GetAllAsync(CancellationToken ct)
-    {
-        return await _context.TourPackages
-            .AsNoTracking()
-            .ToListAsync(ct);
-    }
-
-    public async Task<(List<TourPackage> Items, int TotalCount)> GetPagedAsync(
-        int page,
-        int pageSize,
-        bool? isActive,
-        Guid? tourId,
+    public Task<bool> InclusionDescriptionExistsAsync(
+        Guid tourPackageId,
+        string description,
         CancellationToken ct)
     {
-        var query = _context.TourPackages.AsNoTracking();
+        if (string.IsNullOrWhiteSpace(description))
+            return Task.FromResult(false);
 
-        if (isActive.HasValue)
-            query = query.Where(p => p.IsActive == isActive.Value);
+        var trimmed = description.Trim();
 
-        if (tourId.HasValue)
-            query = query.Where(p => p.TourId == tourId.Value);
+        return _context.TourPackageInclusions
+            .AsNoTracking()
+            .AnyAsync(
+                i => i.TourPackageId == tourPackageId
+                  && i.Description == trimmed,
+                ct);
+    }
 
-        var orderedQuery = query.OrderByDescending(p => p.CreatedAt);
+    public async Task<(IReadOnlyList<TourPackageSummaryRow> Items, int TotalCount)> GetPagedSummariesAsync(
+        int page,
+        int pageSize,
+        Guid? providerId,
+        decimal? minPrice,
+        decimal? maxPrice,
+        string? currency,
+        Guid? includeTourId,
+        DateTime effectiveDateUtc,
+        TourPackageSortOption sort,
+        CancellationToken ct)
+    {
+        // Base query: AsNoTracking + soft-delete filter (auto) + exclude expired packages.
+        var query = _context.TourPackages
+            .AsNoTracking()
+            .Where(p => p.ValidTo == null || p.ValidTo >= effectiveDateUtc);
 
-        var totalCount = await orderedQuery.CountAsync(ct);
+        if (providerId.HasValue && providerId.Value != Guid.Empty)
+            query = query.Where(p => p.CreatedByUserId == providerId.Value);
 
-        var items = await orderedQuery
+        if (minPrice.HasValue)
+            query = query.Where(p => p.Price.Amount >= minPrice.Value);
+
+        if (maxPrice.HasValue)
+            query = query.Where(p => p.Price.Amount <= maxPrice.Value);
+
+        if (!string.IsNullOrWhiteSpace(currency))
+        {
+            var normalized = currency.Trim().ToUpperInvariant();
+            query = query.Where(p => p.Currency == normalized);
+        }
+
+        if (includeTourId.HasValue && includeTourId.Value != Guid.Empty)
+        {
+            query = query.Where(p => p.IncludedTours.Any(link => link.TourId == includeTourId.Value));
+        }
+
+        var total = await query.CountAsync(ct).ConfigureAwait(false);
+
+        IOrderedQueryable<TourPackage> ordered = sort switch
+        {
+            TourPackageSortOption.PriceAscending      => query.OrderBy(p => p.Price.Amount),
+            TourPackageSortOption.PriceDescending     => query.OrderByDescending(p => p.Price.Amount),
+            TourPackageSortOption.ValidityEndingSoon  => query.OrderBy(p => p.ValidTo ?? DateTime.MaxValue),
+            _                                         => query.OrderByDescending(p => p.CreatedAt),
+        };
+
+        var items = await ordered
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
-            .ToListAsync(ct);
+            .Select(p => new TourPackageSummaryRow(
+                p.Id,
+                p.CreatedByUserId,
+                p.Name,
+                p.Description,
+                p.Price.Amount,
+                p.Currency,
+                p.MaxParticipants,
+                p.ValidFrom,
+                p.ValidTo,
+                p.IncludedTours.Count,
+                p.CreatedAt))
+            .ToListAsync(ct)
+            .ConfigureAwait(false);
 
-        return (items, totalCount);
+        return (items, total);
     }
 }

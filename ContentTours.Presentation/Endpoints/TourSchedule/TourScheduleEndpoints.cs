@@ -64,7 +64,7 @@ internal static class TourScheduleEndpoints
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status409Conflict)
         .ProducesProblem(StatusCodes.Status422UnprocessableEntity)
-        .WithMetadata(new MustHavePermissionAttribute(ContentToursFeatures.Tour, AppAction.Update));
+        .WithMetadata(new MustHavePermissionAttribute(ContentToursFeatures.TourSchedule, AppAction.Create));
 
         schedules.MapPut("/{scheduleId:guid}", async (
             Guid id,
@@ -86,7 +86,7 @@ internal static class TourScheduleEndpoints
         .ProducesProblem(StatusCodes.Status403Forbidden)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status409Conflict)
-        .WithMetadata(new MustHavePermissionAttribute(ContentToursFeatures.Tour, AppAction.Update));
+        .WithMetadata(new MustHavePermissionAttribute(ContentToursFeatures.TourSchedule, AppAction.Update));
 
         schedules.MapDelete("/{scheduleId:guid}", async (
             Guid id,
@@ -103,6 +103,6 @@ internal static class TourScheduleEndpoints
         .ProducesProblem(StatusCodes.Status403Forbidden)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status409Conflict)
-        .WithMetadata(new MustHavePermissionAttribute(ContentToursFeatures.Tour, AppAction.Update));
+        .WithMetadata(new MustHavePermissionAttribute(ContentToursFeatures.TourSchedule, AppAction.Delete));
     }
 }

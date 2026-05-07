@@ -8,9 +8,7 @@ public sealed record ListTourPricingTiersQuery(
     Guid TourId,
     bool ActiveOnly,
     string? LanguageCode,
-    /// <summary>The authenticated user's id, or null for anonymous callers.</summary>
     Guid? CallerUserId,
-    /// <summary>True when the caller carries the Admin role.</summary>
     bool IsAdmin)
     : IQuery<IReadOnlyList<TourPricingTierDto>>, ICacheableQuery
 {

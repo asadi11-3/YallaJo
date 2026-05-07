@@ -1,11 +1,14 @@
 namespace ContentTours.Contracts.Authorization;
 
-/// <summary>
-/// Feature string constants owned by the ContentTours bounded context.
-/// Add one constant per aggregate/resource exposed through endpoints.
-/// Other modules MUST NOT add constants here.
-/// </summary>
 public static class ContentToursFeatures
 {
     public const string Tour = nameof(Tour);
+    public const string Package = nameof(Package);
+
+    // ── Sub-resources of a Tour (managed via dedicated endpoints) ────────────
+    public const string TourGuide         = nameof(TourGuide);
+    public const string TourPricingTier   = nameof(TourPricingTier);
+    public const string TourSchedule      = nameof(TourSchedule);
+    public const string TourWaypoint      = nameof(TourWaypoint);
+    public const string TourChildrenInfo  = nameof(TourChildrenInfo);
 }

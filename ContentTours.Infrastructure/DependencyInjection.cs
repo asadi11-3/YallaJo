@@ -75,6 +75,8 @@ public static class DependencyInjection
         // ── Cross-module stubs (replaced by real implementations in other modules) ──
         services.AddScoped<IScheduleBookingCountService, NoOpScheduleBookingCountService>();
 
+        services.AddScoped<ITourCapacityService, NoOpTourCapacityService>();
+
         // Phase C cross-module stubs — placeholder bindings until Security and
         // Accounts modules ship their canonical implementations. The real
         // adapters will replace these bindings via their own DI registrations

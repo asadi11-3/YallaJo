@@ -148,16 +148,6 @@ public sealed class ApiClient
     public Task<ApiResult> DeleteAsync(string path, CancellationToken ct = default) =>
         SendNoBodyAsync(path, () => _http.DeleteAsync(path, ct), ct);
 
-    // ── Transport-error handling ─────────────────────────────────────────────
-    // Every HTTP verb above routes through one of these two wrappers. A network
-    // failure (API offline, DNS failure, TLS handshake error, response timeout)
-    // used to bubble all the way up to the controller and produce a stack-trace
-    // page for the user. We translate them to ApiResult.Fail(503, ...) so that:
-    //   - facades keep their ordinary "result.IsSuccess == false" branches,
-    //   - the user sees a short generic message instead of the API's address,
-    //   - cancellation requested BY THE CALLER is still propagated (we only
-    //     catch OperationCanceledException when the caller's token did NOT fire).
-
     private async Task<ApiResult<T>> SendWithBodyAsync<T>(
         string path,
         Func<Task<HttpResponseMessage>> send,
@@ -175,7 +165,8 @@ public sealed class ApiClient
         }
         catch (Exception ex) when (IsTransportFailure(ex))
         {
-            _logger.LogWarning(ex,
+            _logger.LogWarning(
+                ex,
                 "API call to {Path} failed at the transport layer; returning 503 to caller.",
                 path);
             return ApiResult<T>.Fail(ServiceUnavailableStatusCode, ServiceUnavailableMessage);
@@ -203,7 +194,8 @@ public sealed class ApiClient
         }
         catch (Exception ex) when (IsTransportFailure(ex))
         {
-            _logger.LogWarning(ex,
+            _logger.LogWarning(
+                ex,
                 "API call to {Path} failed at the transport layer; returning 503 to caller.",
                 path);
             return ApiResult.Fail(ServiceUnavailableStatusCode, ServiceUnavailableMessage);
@@ -281,8 +273,6 @@ public sealed class ApiClient
         {
             var problem = JsonSerializer.Deserialize<ProblemDetails>(raw, DeserializeOpts);
 
-            // 400 = FluentValidation errors (Outcome.Invalid = 400 on the backend)
-            // 422 = semantic validation (kept for defensive compatibility)
             if (statusCode is 400 or 422 && problem?.Errors?.Count > 0)
             {
                 var errors = problem.Errors
@@ -292,12 +282,41 @@ public sealed class ApiClient
                 return ApiResult<T>.CreateValidationFailure(statusCode, errors);
             }
 
-            var msg = problem?.Title ?? problem?.Detail ?? $"HTTP {statusCode}";
+            // ── (2) SharedKernel single-error Problem with "Validation.<Field>" title ──
+            if (statusCode is 400 or 422
+                && problem?.Title is { } title
+                && title.StartsWith("Validation.", StringComparison.Ordinal))
+            {
+                var field = title["Validation.".Length..];
+                if (!string.IsNullOrWhiteSpace(field))
+                {
+                    var message = !string.IsNullOrWhiteSpace(problem.Detail) ? problem.Detail! : title;
+                    var single  = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase)
+                    {
+                        [field] = [message],
+                    };
+                    return ApiResult<T>.CreateValidationFailure(statusCode, single);
+                }
+            }
+
+            // ── (3) Any other failure: prefer Detail (human) over Title (code). ─
+            var msg = !string.IsNullOrWhiteSpace(problem?.Detail) ? problem!.Detail!
+                    : !string.IsNullOrWhiteSpace(problem?.Title)  ? problem!.Title!
+                    : $"HTTP {statusCode}";
+
+            // Append correlation id on server errors so admins can grep logs.
+            if (statusCode >= 500 && !string.IsNullOrWhiteSpace(problem?.CorrelationId))
+                msg = $"{msg} [correlationId={problem!.CorrelationId}]";
+
             return ApiResult<T>.CreateFailure(statusCode, msg);
         }
-        catch
+        catch (JsonException)
         {
-            return ApiResult<T>.CreateFailure(statusCode, $"HTTP {statusCode}");
+            // Body wasn't JSON — surface a short snippet so admins aren't blind.
+            var snippet = string.IsNullOrWhiteSpace(raw)
+                ? $"HTTP {statusCode}"
+                : $"HTTP {statusCode}: {raw[..Math.Min(raw.Length, 200)]}";
+            return ApiResult<T>.CreateFailure(statusCode, snippet);
         }
     }
 
@@ -306,5 +325,7 @@ public sealed class ApiClient
         public string? Title  { get; init; }
         public string? Detail { get; init; }
         public Dictionary<string, List<string>>? Errors { get; init; }
+
+        public string? CorrelationId { get; init; }
     }
 }

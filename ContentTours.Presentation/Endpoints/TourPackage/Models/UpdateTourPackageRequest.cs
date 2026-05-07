@@ -6,5 +6,7 @@ public sealed record UpdateTourPackageRequest(
     decimal Price,
     string Currency,
     int? MaxParticipants,
-    DateTime? ValidTo
-);
+    DateTime? ValidFrom,
+    DateTime? ValidTo,
+    IReadOnlyCollection<Guid> IncludedTourIds,
+    string RowVersion);

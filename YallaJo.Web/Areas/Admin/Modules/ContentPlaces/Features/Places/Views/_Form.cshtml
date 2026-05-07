@@ -1,0 +1,102 @@
+@using YallaJo.Web.Areas.Admin.Modules.ContentPlaces.Features.Places.ViewModels
+@model PlaceFormVm
+
+@*
+    Shared form fields for Create.cshtml and Edit.cshtml. Strongly typed against the abstract
+    base PlaceFormVm so both flows reuse the same field layout. The hidden Id input lives in
+    Edit.cshtml — it is not part of PlaceFormVm.
+*@
+
+<div class="row g-3">
+    <div class="col-md-6">
+        <label asp-for="Name" class="form-label"></label>
+        <input asp-for="Name" class="form-control" />
+        <span asp-validation-for="Name" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-6">
+        <label asp-for="Slug" class="form-label"></label>
+        <input asp-for="Slug" class="form-control" placeholder="lowercase-and-hyphens" />
+        <span asp-validation-for="Slug" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-4">
+        <label asp-for="PlaceType" class="form-label"></label>
+        <select asp-for="PlaceType"
+                asp-items="Html.GetEnumSelectList<PlaceTypeOption>()"
+                class="form-select"></select>
+        <span asp-validation-for="PlaceType" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-4">
+        <label asp-for="Latitude" class="form-label"></label>
+        <input asp-for="Latitude" type="number" step="any" class="form-control" />
+        <span asp-validation-for="Latitude" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-4">
+        <label asp-for="Longitude" class="form-label"></label>
+        <input asp-for="Longitude" type="number" step="any" class="form-control" />
+        <span asp-validation-for="Longitude" class="text-danger"></span>
+    </div>
+
+    <div class="col-12">
+        <label asp-for="Description" class="form-label"></label>
+        <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+        <span asp-validation-for="Description" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-8">
+        <label asp-for="Address" class="form-label"></label>
+        <input asp-for="Address" class="form-control" />
+        <span asp-validation-for="Address" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-4">
+        <label asp-for="PostalCode" class="form-label"></label>
+        <input asp-for="PostalCode" class="form-control" />
+        <span asp-validation-for="PostalCode" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-6">
+        <label asp-for="City" class="form-label"></label>
+        <input asp-for="City" class="form-control" />
+        <span asp-validation-for="City" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-6">
+        <label asp-for="Country" class="form-label"></label>
+        <input asp-for="Country" class="form-control" />
+        <span asp-validation-for="Country" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-4">
+        <label asp-for="Phone" class="form-label"></label>
+        <input asp-for="Phone" class="form-control" />
+        <span asp-validation-for="Phone" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-4">
+        <label asp-for="Email" class="form-label"></label>
+        <input asp-for="Email" type="email" class="form-control" />
+        <span asp-validation-for="Email" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-4">
+        <label asp-for="Website" class="form-label"></label>
+        <input asp-for="Website" type="url" class="form-control" />
+        <span asp-validation-for="Website" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-6">
+        <label asp-for="MetaTitle" class="form-label"></label>
+        <input asp-for="MetaTitle" class="form-control" />
+        <span asp-validation-for="MetaTitle" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-6">
+        <label asp-for="MetaDescription" class="form-label"></label>
+        <input asp-for="MetaDescription" class="form-control" />
+        <span asp-validation-for="MetaDescription" class="text-danger"></span>
+    </div>
+</div>

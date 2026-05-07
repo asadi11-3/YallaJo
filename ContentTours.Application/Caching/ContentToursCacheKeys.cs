@@ -11,6 +11,28 @@ public static class ContentToursCacheKeys
 
     public static string TagForTour(Guid tourId) => $"tour:{tourId}";
 
+    public const string TagPackages = "packages";
+
+    public const string TagPackagesList = "packages:list";
+
+    public static string TagForPackage(Guid packageId) => $"package:{packageId}";
+
+    public static string Package(Guid packageId, string? acceptLanguage) =>
+        $"ct:package:{packageId}:lang:{NormalizeLanguage(acceptLanguage)}";
+    public static string PackagesList(
+        int page,
+        int pageSize,
+        Guid? providerId,
+        decimal? minPrice,
+        decimal? maxPrice,
+        string? currency,
+        Guid? includeTourId,
+        DateTime effectiveDateUtc,
+        string? sort) =>
+        $"ct:packages:p{page}:s{pageSize}" +
+        $":prov:{providerId}:min:{minPrice}:max:{maxPrice}:cur:{currency}" +
+        $":incl:{includeTourId}:valid:{effectiveDateUtc:yyyyMMdd}:sort:{sort ?? "newest"}";
+
     public static string Tour(Guid id, string? acceptLanguage, bool isElevated) =>
         $"ct:tour:{id}:lang:{NormalizeLanguage(acceptLanguage)}:e:{isElevated}";
 
@@ -28,12 +50,6 @@ public static class ContentToursCacheKeys
         bool isElevated) =>
         $"ct:tours:p{page}:s{pageSize}:sort:{sort}:status:{status}:place:{placeId}:feat:{isFeatured}:lang:{NormalizeLanguage(acceptLanguage)}:e:{isElevated}";
 
-    /// <summary>
-    /// Public/anonymous variant of <see cref="TourList"/>. The list endpoint
-    /// (<c>GET /api/v1/tours</c>) is <c>AllowAnonymous</c> and never returns
-    /// elevated content, so it should not pollute the key with a constant
-    /// <c>e:False</c> token via the elevated-aware overload.
-    /// </summary>
     public static string PublicTourList(
         int page,
         int pageSize,

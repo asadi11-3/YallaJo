@@ -51,14 +51,6 @@ public sealed record TourDetailDto(
     DateTime? ReinstatedAt,
     IReadOnlyList<TourTranslationDto> Translations)
 {
-    /// <summary>
-    /// Projects an aggregate to the full detail DTO. Caller is responsible for
-    /// suppressing approval-audit and PII fields when visibility is anonymous.
-    /// When <paramref name="preferredLanguageId"/> is supplied and a matching
-    /// <c>TourTranslation</c> exists, the translated <c>Name</c> /
-    /// <c>Description</c> / <c>ShortDescription</c> / <c>MeetingPoint</c> are
-    /// returned with <c>COALESCE(translation, source)</c> fallback.
-    /// </summary>
     public static TourDetailDto From(TourEntity tour, Guid? preferredLanguageId = null)
     {
         var translation = preferredLanguageId.HasValue

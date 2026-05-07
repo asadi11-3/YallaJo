@@ -4,6 +4,5 @@ namespace ContentTours.Application.Commands.TourPackage.AddInclusion;
 
 public sealed record AddInclusionCommand(
     Guid PackageId,
-    string Description,
-    int SortOrder
-) : ICommand;
+    string Description
+) : ICommand<Guid>;

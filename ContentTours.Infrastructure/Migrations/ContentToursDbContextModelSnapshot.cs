@@ -238,6 +238,9 @@ namespace ContentTours.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<Guid>("CreatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("Currency")
                         .IsRequired()
                         .HasMaxLength(3)
@@ -275,9 +278,6 @@ namespace ContentTours.Infrastructure.Migrations
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("rowversion");
 
-                    b.Property<Guid>("TourId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
@@ -289,7 +289,9 @@ namespace ContentTours.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("TourId");
+                    b.HasIndex("CreatedByUserId");
+
+                    b.HasIndex("ValidTo");
 
                     b.ToTable("TourPackages", "content_tours");
                 });
@@ -310,7 +312,7 @@ namespace ContentTours.Infrastructure.Migrations
                     b.Property<int>("SortOrder")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
-                        .HasDefaultValue(0);
+                        .HasDefaultValue(1);
 
                     b.Property<Guid>("TourPackageId")
                         .HasColumnType("uniqueidentifier");
@@ -320,9 +322,26 @@ namespace ContentTours.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("TourPackageId");
+                    b.HasIndex("TourPackageId", "Description")
+                        .IsUnique()
+                        .HasDatabaseName("UX_TourPackageInclusions_PackageId_Description");
 
                     b.ToTable("TourPackageInclusions", "content_tours");
+                });
+
+            modelBuilder.Entity("ContentTours.Domain.Entities.TourPackageTour", b =>
+                {
+                    b.Property<Guid>("TourPackageId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("TourId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("TourPackageId", "TourId");
+
+                    b.HasIndex("TourId");
+
+                    b.ToTable("TourPackageTours", "content_tours");
                 });
 
             modelBuilder.Entity("ContentTours.Domain.Entities.TourPricingTier", b =>
@@ -706,12 +725,6 @@ namespace ContentTours.Infrastructure.Migrations
 
             modelBuilder.Entity("ContentTours.Domain.Entities.TourPackage", b =>
                 {
-                    b.HasOne("ContentTours.Domain.Entities.Tour", "Tour")
-                        .WithMany("TourPackages")
-                        .HasForeignKey("TourId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.OwnsOne("YallaJo.SharedKernel.Domain.ValueObjects.Money", "Price", b1 =>
                         {
                             b1.Property<Guid>("TourPackageId")
@@ -740,17 +753,34 @@ namespace ContentTours.Infrastructure.Migrations
 
                     b.Navigation("Price")
                         .IsRequired();
-
-                    b.Navigation("Tour");
                 });
 
             modelBuilder.Entity("ContentTours.Domain.Entities.TourPackageInclusion", b =>
                 {
                     b.HasOne("ContentTours.Domain.Entities.TourPackage", "TourPackage")
-                        .WithMany("TourPackageInclusions")
+                        .WithMany("Inclusions")
                         .HasForeignKey("TourPackageId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("TourPackage");
+                });
+
+            modelBuilder.Entity("ContentTours.Domain.Entities.TourPackageTour", b =>
+                {
+                    b.HasOne("ContentTours.Domain.Entities.Tour", "Tour")
+                        .WithMany()
+                        .HasForeignKey("TourId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ContentTours.Domain.Entities.TourPackage", "TourPackage")
+                        .WithMany("IncludedTours")
+                        .HasForeignKey("TourPackageId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Tour");
 
                     b.Navigation("TourPackage");
                 });
@@ -878,8 +908,6 @@ namespace ContentTours.Infrastructure.Migrations
                 {
                     b.Navigation("ChildFacilities");
 
-                    b.Navigation("TourPackages");
-
                     b.Navigation("TourPricingTiers");
 
                     b.Navigation("TourSchedules");
@@ -891,7 +919,9 @@ namespace ContentTours.Infrastructure.Migrations
 
             modelBuilder.Entity("ContentTours.Domain.Entities.TourPackage", b =>
                 {
-                    b.Navigation("TourPackageInclusions");
+                    b.Navigation("IncludedTours");
+
+                    b.Navigation("Inclusions");
                 });
 
             modelBuilder.Entity("ContentTours.Domain.Entities.TourPricingTier", b =>

@@ -1,0 +1,123 @@
+@using YallaJo.Web.Infrastructure.Authorization
+@model YallaJo.Web.Areas.Admin.Modules.ContentPlaces.Features.Places.ViewModels.PlaceDetailsVm
+@{
+    ViewData["Title"] = $"Place — {Model.Name}";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h2 class="mb-0">@Model.Name</h2>
+            <span class="text-muted small">@Model.Slug · @Model.PlaceType</span>
+        </div>
+        <div class="d-flex gap-2">
+            <a asp-area="Admin" asp-controller="Places" asp-action="Index"
+               class="btn btn-outline-secondary">Back to list</a>
+            <permission require="@WebPermission.Place.Update">
+                <a asp-area="Admin" asp-controller="Places" asp-action="Edit"
+                   asp-route-id="@Model.Id" class="btn btn-primary">Edit</a>
+            </permission>
+        </div>
+    </div>
+
+    @if (TempData["Success"] is string ok)  { <div class="alert alert-success">@ok</div> }
+    @if (TempData["Error"]   is string err) { <div class="alert alert-danger">@err</div> }
+
+    <div class="row g-3">
+        <div class="col-md-6">
+            <div class="card p-3">
+                <h5>Location</h5>
+                <dl class="row mb-0">
+                    <dt class="col-sm-4">Latitude</dt>     <dd class="col-sm-8">@Model.Latitude</dd>
+                    <dt class="col-sm-4">Longitude</dt>    <dd class="col-sm-8">@Model.Longitude</dd>
+                    <dt class="col-sm-4">Address</dt>      <dd class="col-sm-8">@(Model.Address ?? "—")</dd>
+                    <dt class="col-sm-4">City</dt>         <dd class="col-sm-8">@(Model.City ?? "—")</dd>
+                    <dt class="col-sm-4">Country</dt>      <dd class="col-sm-8">@(Model.Country ?? "—")</dd>
+                    <dt class="col-sm-4">Postal code</dt>  <dd class="col-sm-8">@(Model.PostalCode ?? "—")</dd>
+                </dl>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card p-3">
+                <h5>Contact</h5>
+                <dl class="row mb-0">
+                    <dt class="col-sm-4">Phone</dt>   <dd class="col-sm-8">@(Model.Phone ?? "—")</dd>
+                    <dt class="col-sm-4">Email</dt>   <dd class="col-sm-8">@(Model.Email ?? "—")</dd>
+                    <dt class="col-sm-4">Website</dt> <dd class="col-sm-8">@(Model.Website ?? "—")</dd>
+                </dl>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card p-3">
+                <h5>Status</h5>
+                <dl class="row mb-0">
+                    <dt class="col-sm-6">Average rating</dt>  <dd class="col-sm-6">@Model.AverageRating.ToString("0.0")</dd>
+                    <dt class="col-sm-6">Review count</dt>    <dd class="col-sm-6">@Model.ReviewCount</dd>
+                    <dt class="col-sm-6">Featured</dt>        <dd class="col-sm-6">@(Model.IsFeatured ? "✓" : "—")</dd>
+                    <dt class="col-sm-6">Verified</dt>        <dd class="col-sm-6">@(Model.IsVerified ? "✓" : "—")</dd>
+                </dl>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card p-3">
+                <h5>Accessibility</h5>
+                <dl class="row mb-0">
+                    <dt class="col-sm-7">Wheelchair accessible</dt> <dd class="col-sm-5">@(Model.IsWheelchairAccessible ? "✓" : "—")</dd>
+                    <dt class="col-sm-7">Audio guide</dt>           <dd class="col-sm-5">@(Model.HasAudioGuide ? "✓" : "—")</dd>
+                    <dt class="col-sm-7">Braille signage</dt>       <dd class="col-sm-5">@(Model.HasBrailleSignage ? "✓" : "—")</dd>
+                </dl>
+            </div>
+        </div>
+
+        <div class="col-12">
+            <div class="card p-3">
+                <h5>Description</h5>
+                <p class="mb-0">@(string.IsNullOrWhiteSpace(Model.Description) ? "—" : Model.Description)</p>
+            </div>
+        </div>
+
+        <div class="col-12">
+            <div class="card p-3">
+                <h5>SEO</h5>
+                <dl class="row mb-0">
+                    <dt class="col-sm-2">Meta title</dt>       <dd class="col-sm-10">@(Model.MetaTitle ?? "—")</dd>
+                    <dt class="col-sm-2">Meta description</dt> <dd class="col-sm-10">@(Model.MetaDescription ?? "—")</dd>
+                </dl>
+            </div>
+        </div>
+
+        @if (Model.Translations.Count > 0)
+        {
+            <div class="col-12">
+                <div class="card p-3">
+                    <h5>Translations</h5>
+                    <table class="table table-sm mb-0">
+                        <thead>
+                            <tr>
+                                <th>Language Id</th>
+                                <th>Name</th>
+                                <th>Description</th>
+                                <th>Address</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var t in Model.Translations)
+                            {
+                                <tr>
+                                    <td><code>@t.LanguageId</code></td>
+                                    <td>@(t.Name ?? "—")</td>
+                                    <td>@(t.Description ?? "—")</td>
+                                    <td>@(t.Address ?? "—")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        }
+    </div>
+</div>

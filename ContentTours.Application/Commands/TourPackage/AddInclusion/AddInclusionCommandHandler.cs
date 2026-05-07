@@ -1,92 +1,118 @@
+using ContentTours.Application.Caching;
 using ContentTours.Application.Interfaces;
-using ContentTours.Domain.Entities;
 using ContentTours.Domain.Repositories;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
+using Security.Contracts.Authorization;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
-using Microsoft.EntityFrameworkCore;
 
 namespace ContentTours.Application.Commands.TourPackage.AddInclusion;
 
 public sealed class AddInclusionCommandHandler(
     ITourPackageRepository repository,
     IContentToursUnitOfWork unitOfWork,
+    HybridCache cache,
     ICurrentUser currentUser,
     ILogger<AddInclusionCommandHandler> logger)
-    : ICommandHandler<AddInclusionCommand>
+    : ICommandHandler<AddInclusionCommand, Guid>
 {
-    public async Task<Result> Handle(AddInclusionCommand request, CancellationToken cancellationToken)
+    public async Task<Result<Guid>> Handle(
+        AddInclusionCommand request,
+        CancellationToken cancellationToken)
     {
-        logger.LogInformation(
-            "Adding inclusion to TourPackage {Id} by User {UserId}",
-            request.PackageId,
-            currentUser.UserId);
-
-        if (!currentUser.IsAuthenticated)
-        {
-            return Result.Failure(
-                Error.Unauthorized("Authentication required"));
-        }
-
-        var package = await repository
-            .GetByIdAsync(request.PackageId, cancellationToken)
-            .ConfigureAwait(false);
-
-        if (package is null)
-        {
-            return Result.Failure(
-                new Error("TourPackage.NotFound", "Tour package not found"),
-                Outcome.NotFound);
-        }
-
-        if (!package.IsActive)
-        {
-            return Result.Failure(
-                new Error("TourPackage.Inactive", "Cannot modify inactive package"));
-        }
-
-        if (!currentUser.IsInRole("Admin") &&
-            currentUser.UserId != package.Tour.CreatedByUserId)
-        {
-            return Result.Failure(
-                Error.Forbidden("Not allowed"));
-        }
-
         try
         {
-            var inclusion = TourPackageInclusion.Create(
-                request.PackageId,
-                request.Description,
-                request.SortOrder);
+            if (currentUser.UserId is null)
+            {
+                return Result.Failure<Guid>(
+                    new Error("Auth.Unauthorized", "Authentication is required."),
+                    Outcome.Unauthorized);
+            }
 
-            package.AddInclusion(inclusion);
+            var callerId = currentUser.UserId.Value;
 
-            await unitOfWork
-                .SaveChangesAsync(cancellationToken)
+            var package = await repository
+                .GetByIdWithDetailsAsync(request.PackageId, cancellationToken)
                 .ConfigureAwait(false);
-        }
-        catch (ArgumentException ex)
-        {
-            return Result.Failure(
-                new Error("TourPackage.Invalid", ex.Message));
-        }
-        catch (InvalidOperationException ex)
-        {
-            return Result.Failure(
-                new Error("TourPackage.Invalid", ex.Message));
-        }
-        catch (DbUpdateConcurrencyException)
-        {
-            return Result.Failure(
-                new Error("TourPackage.ConcurrencyConflict", "Concurrency conflict"),
-                Outcome.Conflict);
-        }
 
-        logger.LogInformation(
-            "Inclusion added successfully to TourPackage {Id}",
-            request.PackageId);
+            if (package is null)
+            {
+                return Result.Failure<Guid>(
+                    new Error("TourPackage.NotFound", $"Tour package '{request.PackageId}' was not found."),
+                    Outcome.NotFound);
+            }
 
-        return Result.Success();
+            var isAdminTier = AppRoles.HighestPrivilegeLevel(currentUser.Roles)
+                >= RolePrivilegeLevel.Admin;
+            if (!isAdminTier && package.CreatedByUserId != callerId)
+            {
+                return Result.Failure<Guid>(
+                    new Error(
+                        "TourPackage.NotOwner",
+                        "You do not have permission to modify this tour package."),
+                    Outcome.Forbidden);
+            }
+
+            var trimmedDescription = (request.Description ?? string.Empty).Trim();
+            if (string.IsNullOrWhiteSpace(trimmedDescription))
+            {
+                return Result.Failure<Guid>(
+                    new Error(
+                        "TourPackageInclusion.InvalidDescription",
+                        "Description is required."),
+                    Outcome.Invalid);
+            }
+
+            // Pre-check duplicate via in-memory loaded inclusions, then defence-in-depth via DB.
+            var inMemoryDuplicate = package.Inclusions.Any(i =>
+                string.Equals(i.Description, trimmedDescription, StringComparison.OrdinalIgnoreCase));
+            if (inMemoryDuplicate
+                || await repository.InclusionDescriptionExistsAsync(
+                       package.Id, trimmedDescription, cancellationToken).ConfigureAwait(false))
+            {
+                return Result.Failure<Guid>(
+                    new Error(
+                        "TourPackageInclusion.Duplicate",
+                        "An inclusion with the same description already exists for this package."),
+                    Outcome.Conflict);
+            }
+
+            var inclusion = package.AddInclusion(trimmedDescription);
+
+            try
+            {
+                await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            }
+            catch (DbUpdateConcurrencyException ex)
+            {
+                logger.LogWarning(ex,
+                    "Concurrency conflict adding inclusion to TourPackage {PackageId}", package.Id);
+                return Result.Failure<Guid>(
+                    new Error(
+                        "TourPackage.ConcurrencyConflict",
+                        "The package was modified by another user. Please refresh and try again."),
+                    Outcome.Conflict);
+            }
+
+            await cache.RemoveByTagAsync(ContentToursCacheKeys.TagForPackage(package.Id), cancellationToken)
+                .ConfigureAwait(false);
+            await cache.RemoveByTagAsync(ContentToursCacheKeys.TagPackagesList, cancellationToken)
+                .ConfigureAwait(false);
+
+            logger.LogInformation(
+                "Inclusion {InclusionId} added to TourPackage {PackageId} (SortOrder={SortOrder}) by {UserId}",
+                inclusion.Id, package.Id, inclusion.SortOrder, callerId);
+
+            return Result.Success(inclusion.Id);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            return Result.Failure<Guid>(
+                new Error("Request.Cancelled", "The request was cancelled."),
+                Outcome.Canceled);
+        }
     }
 }

@@ -34,11 +34,11 @@ internal sealed class TourRepository(ContentToursDbContext context)
         if (hasActiveSchedule) return true;
 
         var now = DateTime.UtcNow;
-        return await context.TourPackages
+        return await context.TourPackageTours
             .AnyAsync(
-                p => p.TourId == tourId
-                  && p.IsActive
-                  && (p.ValidTo == null || p.ValidTo >= now),
+                link => link.TourId == tourId
+                  && link.TourPackage.IsActive
+                  && (link.TourPackage.ValidTo == null || link.TourPackage.ValidTo >= now),
                 ct)
             .ConfigureAwait(false);
     }

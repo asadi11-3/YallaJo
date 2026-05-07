@@ -59,7 +59,7 @@ internal static class TourWaypointEndpoints
         .ProducesProblem(StatusCodes.Status403Forbidden)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status409Conflict)
-        .WithMetadata(new MustHavePermissionAttribute(ContentToursFeatures.Tour, AppAction.Update));
+        .WithMetadata(new MustHavePermissionAttribute(ContentToursFeatures.TourWaypoint, AppAction.Create));
 
         // PDF Task 4A B2: batch reorder — body provides the full ordered WaypointIds list;
         // handler reassigns SortOrder = 0..N-1. Handler validates set-equality + duplicates.
@@ -79,7 +79,7 @@ internal static class TourWaypointEndpoints
         .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status403Forbidden)
         .ProducesProblem(StatusCodes.Status404NotFound)
-        .WithMetadata(new MustHavePermissionAttribute(ContentToursFeatures.Tour, AppAction.Update));
+        .WithMetadata(new MustHavePermissionAttribute(ContentToursFeatures.TourWaypoint, AppAction.Update));
 
         waypoints.MapDelete("/{waypointId:guid}", async (
             Guid id,
@@ -96,6 +96,6 @@ internal static class TourWaypointEndpoints
         .Produces(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status403Forbidden)
         .ProducesProblem(StatusCodes.Status404NotFound)
-        .WithMetadata(new MustHavePermissionAttribute(ContentToursFeatures.Tour, AppAction.Update));
+        .WithMetadata(new MustHavePermissionAttribute(ContentToursFeatures.TourWaypoint, AppAction.Delete));
     }
 }
