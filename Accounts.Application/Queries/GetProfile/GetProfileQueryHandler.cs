@@ -1,3 +1,4 @@
+using Accounts.Domain.Errors;
 using Accounts.Domain.Repositories;
 using Security.Contracts.Abstractions;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
@@ -23,7 +24,7 @@ public sealed class GetProfileQueryHandler(
         if (profile is null)
         {
             return Result<GetProfileResult>.Failure(
-                Error.NotFound("Profile", "Profile not found."),
+                ProfileErrors.NotFound,
                 Outcome.NotFound);
         }
 

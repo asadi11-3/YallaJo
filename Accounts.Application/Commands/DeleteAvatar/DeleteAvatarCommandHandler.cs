@@ -1,4 +1,5 @@
 using Accounts.Application.Caching;
+using Accounts.Domain.Errors;
 using Accounts.Domain.Repositories;
 using Microsoft.Extensions.Caching.Hybrid;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
@@ -35,7 +36,7 @@ public sealed class DeleteAvatarCommandHandler(
         if (profile is null)
         {
             return Result<DeleteAvatarResult>.Failure(
-                Error.NotFound("Profile", "Profile not found."),
+                ProfileErrors.NotFound,
                 Outcome.NotFound);
         }
 
