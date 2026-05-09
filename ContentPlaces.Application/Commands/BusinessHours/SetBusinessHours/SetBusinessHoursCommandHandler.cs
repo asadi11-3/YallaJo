@@ -3,6 +3,7 @@ using ContentPlaces.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
+using Security.Contracts.Authorization;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
@@ -36,8 +37,11 @@ public sealed class SetBusinessHoursCommandHandler(
                     Outcome.NotFound);
             }
 
-            var isAdmin = currentUser.IsInRole("Admin");
-            if (!isAdmin && business.OwnerId != currentUser.UserId.Value)
+            // Owner-or-admin-tier check using the privilege ladder so SuperAdmin/Owner
+            // tiers are honored even without the literal "Admin" role.
+            var isAdminTier = AppRoles.HighestPrivilegeLevel(currentUser.Roles)
+                >= RolePrivilegeLevel.Admin;
+            if (!isAdminTier && business.OwnerId != currentUser.UserId.Value)
             {
                 return Result.Failure(
                     Error.Forbidden("You do not have permission to manage hours for this business."),

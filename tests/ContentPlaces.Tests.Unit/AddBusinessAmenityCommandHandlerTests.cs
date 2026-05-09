@@ -4,6 +4,7 @@ using ContentPlaces.Application.Interfaces;
 using ContentPlaces.Domain.Entities;
 using ContentPlaces.Domain.Repositories;
 using FluentAssertions;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Security.Contracts.Authorization;
@@ -25,10 +26,11 @@ public sealed class AddBusinessAmenityCommandHandlerTests
         var businessRepo = Substitute.For<IBusinessRepository>();
         var uow = Substitute.For<IContentPlacesUnitOfWork>();
         var currentUser = Substitute.For<ICurrentUser>();
+        var cache = Substitute.For<HybridCache>();
         var logger = Substitute.For<ILogger<AddBusinessAmenityCommandHandler>>();
 
         var handler = new AddBusinessAmenityCommandHandler(
-            amenityRepo, businessRepo, uow, currentUser, logger);
+            amenityRepo, businessRepo, uow, currentUser, cache, logger);
 
         return (handler, amenityRepo, businessRepo, uow, currentUser);
     }

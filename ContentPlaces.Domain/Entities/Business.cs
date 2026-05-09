@@ -213,6 +213,7 @@ public sealed class Business : AuditableEntity, IAggregateRoot
         RejectionReason = null;
 
         MarkUpdated();
+        AddDomainEvent(new BusinessResubmittedDomainEvent(Id));
     }
 
     public void Suspend(string reason)

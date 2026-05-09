@@ -1,6 +1,9 @@
 using ContentPlaces.Application.Interfaces;
+using ContentPlaces.Application.Caching;
+using ContentPlaces.Contracts.BusinessStaff;
 using ContentPlaces.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
 using Security.Contracts.Authorization;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
@@ -12,7 +15,9 @@ namespace ContentPlaces.Application.Commands.BusinessStaff.RemoveBusinessStaff;
 public sealed class RemoveBusinessStaffCommandHandler(
     IBusinessStaffRepository staffRepository,
     IContentPlacesUnitOfWork unitOfWork,
+    IContentPlacesOutboxWriter outbox,
     ICurrentUser currentUser,
+    HybridCache cache,
     ILogger<RemoveBusinessStaffCommandHandler> logger)
     : ICommandHandler<RemoveBusinessStaffCommand>
 {
@@ -58,6 +63,14 @@ public sealed class RemoveBusinessStaffCommandHandler(
         // deactivate
         staff.Deactivate();
 
+        // BusinessStaff is NOT IAggregateRoot; the BusinessStaffRemovedDomainEvent raised
+        // by Deactivate() would be silently dropped by UnitOfWork. Stage the integration
+        // event directly on the outbox (gotcha #25 / ServiceItem pattern).
+        outbox.Enqueue(new BusinessStaffRemovedIntegrationEvent(
+            staff.Id,
+            staff.BusinessId,
+            staff.UserId));
+
         try
         {
             await unitOfWork.SaveChangesAsync(cancellationToken);
@@ -69,6 +82,9 @@ public sealed class RemoveBusinessStaffCommandHandler(
                     "BusinessStaff.ConcurrencyConflict",
                     "A concurrency conflict occurred. Please refresh and try again."));
         }
+
+        // Evict scoped business tag so ListBusinessStaffQuery returns fresh data.
+        await cache.RemoveByTagAsync(ContentPlacesCacheKeys.BusinessTag(staff.BusinessId), cancellationToken);
 
         logger.LogInformation("Staff {StaffId} deactivated", request.Id);
 

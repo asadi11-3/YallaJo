@@ -47,7 +47,7 @@ public sealed class BusinessStaff : AuditableEntity
     {
         IsActive = false;
         DeactivatedAt = DateTime.UtcNow;
-        UpdatedAt = DateTime.UtcNow;
+        MarkUpdated();
 
         AddDomainEvent(
             new BusinessStaffRemovedDomainEvent(

@@ -2,12 +2,15 @@ using ContentPlaces.Application.Commands.BusinessAmenity.AddBusinessAmenity;
 using ContentPlaces.Application.Commands.BusinessAmenity.RemoveBusinessAmenity;
 using ContentPlaces.Application.Queries.BusinessAmenity.Common;
 using ContentPlaces.Application.Queries.BusinessAmenity.ListBusinessAmenities;
+using ContentPlaces.Contracts.Authorization;
 using ContentPlaces.Presentation.Endpoints.BusinessAmenity.Models;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using YallaJo.SharedKernel.Application.Authorization;
 using YallaJo.SharedKernel.Presentation;
+using YallaJo.SharedKernel.Presentation.Authorization;
 
 namespace ContentPlaces.Presentation.Endpoints.BusinessAmenity;
 
@@ -61,6 +64,7 @@ internal static class BusinessAmenityEndpoints
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status409Conflict)
         .WithSummary("Add an amenity to a business (owner OR admin-tier)")
+        .WithMetadata(new MustHavePermissionAttribute(ContentPlacesFeatures.BusinessAmenity, AppAction.Create))
         .RequireAuthorization();
 
         // Remove amenity (owner OR admin-tier role; enforced in handler)
@@ -80,6 +84,7 @@ internal static class BusinessAmenityEndpoints
         .ProducesProblem(StatusCodes.Status403Forbidden)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Remove an amenity from a business (owner OR admin-tier)")
+        .WithMetadata(new MustHavePermissionAttribute(ContentPlacesFeatures.BusinessAmenity, AppAction.Delete))
         .RequireAuthorization();
     }
 }

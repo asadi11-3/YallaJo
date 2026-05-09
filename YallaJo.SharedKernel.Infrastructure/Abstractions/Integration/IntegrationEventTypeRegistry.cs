@@ -1,5 +1,6 @@
 using Auth.Contracts.IntegrationEvents;
 using ContentCore.Contracts.IntegrationEvents;
+using ContentPlaces.Contracts.BusinessStaff;
 using ContentPlaces.Contracts.IntegrationEvents;
 using ContentTours.Contracts;
 using ContentTours.Contracts.IntegrationEvents;
@@ -38,16 +39,21 @@ public static class IntegrationEventTypeRegistry
         ["content-places.place.updated.v1"]              = typeof(PlaceUpdatedIntegrationEvent),
         ["content-places.place.deleted.v1"]              = typeof(PlaceDeletedIntegrationEvent),
 
-        // ── ContentPlaces — Businesses (5 events) ──
+        // ── ContentPlaces — Businesses (6 events) ──
         ["content-places.business.created.v1"]           = typeof(BusinessCreatedIntegrationEvent),
         ["content-places.business.approved.v1"]          = typeof(BusinessApprovedIntegrationEvent),
         ["content-places.business.rejected.v1"]          = typeof(BusinessRejectedIntegrationEvent),
         ["content-places.business.suspended.v1"]         = typeof(BusinessSuspendedIntegrationEvent),
         ["content-places.business.reinstated.v1"]        = typeof(BusinessReinstatedIntegrationEvent),
+        ["content-places.business.resubmitted.v1"]       = typeof(BusinessResubmittedIntegrationEvent),
 
         // ── ContentPlaces — ServiceItems (2 events) ──
         ["content-places.service-item.created.v1"]       = typeof(ServiceItemCreatedIntegrationEvent),
         ["content-places.service-item.deleted.v1"]       = typeof(ServiceItemDeletedIntegrationEvent),
+
+        // ── ContentPlaces — BusinessStaff (2 events) ──
+        ["content-places.business-staff.added.v1"]       = typeof(BusinessStaffAddedIntegrationEvent),
+        ["content-places.business-staff.removed.v1"]     = typeof(BusinessStaffRemovedIntegrationEvent),
 
         // ── ContentTours (14 events) ──
         ["content-tours.place.tour-count-updated.v1"]    = typeof(PlaceTourCountUpdatedIntegrationEvent),

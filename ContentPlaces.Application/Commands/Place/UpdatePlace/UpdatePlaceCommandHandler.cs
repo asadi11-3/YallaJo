@@ -3,6 +3,8 @@ using ContentPlaces.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
+using Security.Contracts.Authorization;
+using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
@@ -11,6 +13,7 @@ namespace ContentPlaces.Application.Commands.Place.UpdatePlace;
 public sealed class UpdatePlaceCommandHandler(
     IPlaceRepository placeRepository,
     IContentPlacesUnitOfWork unitOfWork,
+    ICurrentUser currentUser,
     HybridCache cache,
     ILogger<UpdatePlaceCommandHandler> logger)
     : ICommandHandler<UpdatePlaceCommand, UpdatePlaceResult>
@@ -21,12 +24,30 @@ public sealed class UpdatePlaceCommandHandler(
     {
         try
         {
+            if (!currentUser.IsAuthenticated || currentUser.UserId is null)
+            {
+                return Result<UpdatePlaceResult>.Failure(
+                    Error.Unauthorized("Authentication is required."),
+                    Outcome.Unauthorized);
+            }
+
             var place = await placeRepository.GetByIdAsync(request.Id, cancellationToken, asNoTracking: false);
             if (place is null)
             {
                 return Result<UpdatePlaceResult>.Failure(
                    new Error("Place.NotFound", $"Place '{request.Id}' was not found."),
                    Outcome.NotFound);
+            }
+
+            // Owner-or-admin-tier authorization (IDOR prevention).
+            // Endpoint already verified Place.Update permission; per-row ownership is enforced here.
+            var isAdminTier = AppRoles.HighestPrivilegeLevel(currentUser.Roles)
+                >= RolePrivilegeLevel.Admin;
+            if (!isAdminTier && place.CreatedByUserId != currentUser.UserId.Value)
+            {
+                return Result<UpdatePlaceResult>.Failure(
+                    Error.Forbidden("You do not have permission to update this place."),
+                    Outcome.Forbidden);
             }
 
             if (await placeRepository.AnyAsync(p => p.Slug == request.Slug && p.Id != request.Id, cancellationToken))

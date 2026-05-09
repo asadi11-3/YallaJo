@@ -8,6 +8,7 @@ namespace ContentPlaces.Application.Queries.AccessibilityFeature.GetAccessibilit
 
 public sealed class GetAccessibilityFeaturesQueryHandler(
     IAccessibilityFeatureRepository featureRepository,
+    IPlaceRepository placeRepository,
     ILogger<GetAccessibilityFeaturesQueryHandler> logger)
     : IQueryHandler<GetAccessibilityFeaturesQuery, IReadOnlyList<AccessibilityFeatureDto>>
 {
@@ -15,6 +16,23 @@ public sealed class GetAccessibilityFeaturesQueryHandler(
         GetAccessibilityFeaturesQuery request,
         CancellationToken cancellationToken)
     {
+        // Validate the parent Place is active (not missing, not soft-deleted).
+        // IPlaceRepository.AnyAsync runs through the IsDeleted query filter on Place,
+        // so soft-deleted/missing Places naturally return false. Without this guard,
+        // accessibility features would remain visible after the parent Place is deleted
+        // because AccessibilityFeature has no covering query filter (BaseEntity, no
+        // soft-delete, keyed by composite EntityType+EntityId rather than a parent FK).
+        var placeExists = await placeRepository.AnyAsync(
+            p => p.Id == request.PlaceId,
+            cancellationToken);
+
+        if (!placeExists)
+        {
+            return Result<IReadOnlyList<AccessibilityFeatureDto>>.Failure(
+                new Error("Place.NotFound", $"Place '{request.PlaceId}' was not found."),
+                Outcome.NotFound);
+        }
+
         var features = await featureRepository.SelectAsync(
             selector: x => AccessibilityFeatureDto.From(x),
             filter: x => x.EntityId == request.PlaceId && x.EntityType == 1,

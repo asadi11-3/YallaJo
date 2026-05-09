@@ -25,6 +25,8 @@ public sealed class UploadAttachmentCommandHandler(
     ILogger<UploadAttachmentCommandHandler> logger)
     : ICommandHandler<UploadAttachmentCommand, UploadAttachmentResult>
 {
+    private const int SignatureProbeLength = 32;
+
     private enum DetectedFileType
     {
         Unknown = 0,
@@ -41,8 +43,6 @@ public sealed class UploadAttachmentCommandHandler(
         Wav,
         Pdf,
     }
-
-    private const int SignatureProbeLength = 32;
 
     public async Task<Result<UploadAttachmentResult>> Handle(
         UploadAttachmentCommand request,

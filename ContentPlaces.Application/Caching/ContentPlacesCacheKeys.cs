@@ -39,6 +39,8 @@ public static class ContentPlacesCacheKeys
 
     public static string Place(Guid id) => $"cp:place:{id}";
 
+    public static string PlaceTag(Guid placeId) => $"place:{placeId}";
+
     public static string PlaceBySlug(string slug) => $"cp:place:slug:{slug.Trim().ToLowerInvariant()}";
 
     // ── Business ──────────────────────────────────────────────────────────────
@@ -50,6 +52,8 @@ public static class ContentPlacesCacheKeys
     /// <summary>Single business detail. Varies by caller visibility (owner/admin see extra fields).</summary>
     public static string Business(Guid id, Guid? userId, bool isAdmin) =>
         $"cp:biz:{id}:u:{userId}:a:{isAdmin}";
+
+    public static string BusinessTag(Guid businessId) => $"biz:{businessId}";
 
     // ── BusinessHours ─────────────────────────────────────────────────────────
 
