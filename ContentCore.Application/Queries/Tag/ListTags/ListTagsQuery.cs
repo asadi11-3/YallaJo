@@ -9,5 +9,5 @@ public sealed record ListTagsQuery(bool ActiveOnly = false, bool WithTranslation
 {
     public string CacheKey => $"{ContentCoreCacheKeys.Tags(ActiveOnly)}:{WithTranslations}";
     public TimeSpan? CacheDuration => TimeSpan.FromMinutes(30);
-    public IReadOnlyList<string> Tags => ["tags"];
+    public IReadOnlyList<string> Tags => [ContentCoreCacheKeys.TagsTag];
 }

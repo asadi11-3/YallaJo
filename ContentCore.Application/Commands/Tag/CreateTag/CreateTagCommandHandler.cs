@@ -1,3 +1,4 @@
+using ContentCore.Application.Caching;
 using ContentCore.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
@@ -44,7 +45,7 @@ public sealed class CreateTagCommandHandler(
                         "This record was modified by another user. Please refresh and try again."));
             }
 
-            await cache.RemoveByTagAsync("tags", cancellationToken);
+            await cache.RemoveByTagAsync(ContentCoreCacheKeys.TagsTag, cancellationToken);
 
             logger.LogInformation(
                 "Tag created: {TagId} (Name={Name}, Slug={Slug})", tag.Id, tag.Name, tag.Slug);

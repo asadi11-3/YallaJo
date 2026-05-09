@@ -1,4 +1,4 @@
-using ContentCore.Domain.Events;
+using ContentCore.Application.Caching;
 using ContentCore.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
@@ -16,11 +16,11 @@ public sealed class DeleteCategoryCommandHandler(
     ILogger<DeleteCategoryCommandHandler> logger)
     : ICommandHandler<DeleteCategoryCommand>
 {
-    public async Task<Result> Handle(DeleteCategoryCommand request, CancellationToken ct)
+    public async Task<Result> Handle(DeleteCategoryCommand request, CancellationToken cancellationToken)
     {
         try
         {
-            var category = await categoryRepository.GetByIdAsync(request.Id, ct, asNoTracking: false);
+            var category = await categoryRepository.GetByIdAsync(request.Id, cancellationToken, asNoTracking: false);
 
             if (category is null)
             {
@@ -32,7 +32,7 @@ public sealed class DeleteCategoryCommandHandler(
             }
 
             // Prevent deletion when subcategories exist (avoids orphaned children)
-            if (await categoryRepository.AnyAsync(c => c.ParentCategoryId == category.Id, ct))
+            if (await categoryRepository.AnyAsync(c => c.ParentCategoryId == category.Id, cancellationToken))
             {
                 return Result.Failure(
                     new Error(
@@ -41,12 +41,12 @@ public sealed class DeleteCategoryCommandHandler(
                     Outcome.Invalid);
             }
 
+            // CategoryDeletedDomainEvent is now raised inside Category.SoftDelete() (encapsulated).
             category.SoftDelete();
-            category.AddDomainEvent(new CategoryDeletedDomainEvent(category.Id, category.Slug));
 
             try
             {
-                await unitOfWork.SaveChangesAsync(ct);
+                await unitOfWork.SaveChangesAsync(cancellationToken);
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -57,13 +57,13 @@ public sealed class DeleteCategoryCommandHandler(
                     Outcome.Conflict);
             }
 
-            await cache.RemoveByTagAsync("categories", ct);
+            await cache.RemoveByTagAsync(ContentCoreCacheKeys.CategoriesTag, cancellationToken);
 
             logger.LogInformation("Category soft-deleted: {CategoryId}", request.Id);
 
             return Result.Success();
         }
-        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
             return Result.Failure(
                 new Error(

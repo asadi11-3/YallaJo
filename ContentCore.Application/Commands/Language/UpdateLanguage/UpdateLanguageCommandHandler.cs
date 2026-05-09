@@ -1,3 +1,4 @@
+using ContentCore.Application.Caching;
 using ContentCore.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
@@ -22,7 +23,8 @@ public sealed class UpdateLanguageCommandHandler(
         try
         {
             var language = await languageRepository.GetByIdAsync(request.Id, cancellationToken, asNoTracking: false);
-            if (language is null) {
+            if (language is null)
+            {
                 return Result<UpdateLanguageResult>.Failure(
                   new Error("Language.NotFound", $"Language '{request.Id}' was not found."),
                   Outcome.NotFound);
@@ -50,8 +52,8 @@ public sealed class UpdateLanguageCommandHandler(
                         "This record was modified by another user. Please refresh and try again."));
             }
 
-            await cache.RemoveByTagAsync("languages", cancellationToken);
-            await cache.RemoveByTagAsync($"language:{language.Id}", cancellationToken);
+            await cache.RemoveByTagAsync(ContentCoreCacheKeys.LanguagesTag, cancellationToken);
+            await cache.RemoveByTagAsync(ContentCoreCacheKeys.LanguageTag(language.Id), cancellationToken);
 
             logger.LogInformation(
                 "Language updated: {LanguageId} (Code={Code}, IsActive={IsActive})",

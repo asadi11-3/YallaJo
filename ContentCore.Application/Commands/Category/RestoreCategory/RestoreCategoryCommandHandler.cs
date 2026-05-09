@@ -1,4 +1,4 @@
-using ContentCore.Domain.Events;
+using ContentCore.Application.Caching;
 using ContentCore.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
@@ -39,8 +39,8 @@ public sealed class RestoreCategoryCommandHandler(
                     Outcome.Invalid);
             }
 
+            // CategoryRestoredDomainEvent is now raised inside Category.Restore() (encapsulated).
             category.Restore();
-            category.AddDomainEvent(new CategoryRestoredDomainEvent(category.Id, category.Slug));
 
             try
             {
@@ -54,7 +54,7 @@ public sealed class RestoreCategoryCommandHandler(
                         "This record was modified by another user. Please refresh and try again."));
             }
 
-            await cache.RemoveByTagAsync("categories", cancellationToken);
+            await cache.RemoveByTagAsync(ContentCoreCacheKeys.CategoriesTag, cancellationToken);
 
             logger.LogInformation("Category restored (un-deleted): {CategoryId}", request.Id);
 

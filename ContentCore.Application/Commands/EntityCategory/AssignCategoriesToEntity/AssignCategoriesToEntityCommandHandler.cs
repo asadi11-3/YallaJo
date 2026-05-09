@@ -1,8 +1,12 @@
+using ContentCore.Application.Authorization;
+using ContentCore.Application.Caching;
 using ContentCore.Domain.Enums;
 using ContentCore.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
+using Security.Contracts.Authorization;
+using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 using Outcome = YallaJo.SharedKernel.Domain.Abstractions.Results.Outcome;
@@ -14,6 +18,8 @@ public sealed class AssignCategoriesToEntityCommandHandler(
     ICategoryRepository categoryRepository,
     IContentCoreUnitOfWork unitOfWork,
     HybridCache cache,
+    ICurrentUser currentUser,
+    IEntityOwnershipResolver ownershipResolver,
     ILogger<AssignCategoriesToEntityCommandHandler> logger)
     : ICommandHandler<AssignCategoriesToEntityCommand>
 {
@@ -21,7 +27,65 @@ public sealed class AssignCategoriesToEntityCommandHandler(
     {
         try
         {
-            var entityType = Enum.Parse<EntityType>(request.EntityType, true);
+            // 1. Authentication
+            if (!currentUser.IsAuthenticated || currentUser.UserId is null)
+            {
+                return Result.Failure(
+                    Error.Unauthorized("Authentication is required."),
+                    Outcome.Unauthorized);
+            }
+
+            // 2. EntityType parse / validation
+            if (!Enum.TryParse<EntityType>(request.EntityType, true, out var entityType))
+            {
+                return Result.Failure(
+                    new Error("EntityCategory.InvalidEntityType", "Invalid entity type."),
+                    Outcome.Invalid);
+            }
+
+            // 3. Admin-tier short-circuit
+            var isAdminTier = AppRoles.HighestPrivilegeLevel(currentUser.Roles)
+                >= RolePrivilegeLevel.Admin;
+
+            // 4. Ownership probe (skipped for admin-tier callers)
+            if (!isAdminTier)
+            {
+                var ownership = await ownershipResolver.ResolveAsync(entityType, request.EntityId, cancellationToken);
+
+                if (!ownership.IsSupported)
+                {
+                    return Result.Failure(
+                        new Error(
+                            "EntityCategory.UnsupportedEntityType",
+                            "This entity type cannot be authorized for assignment."),
+                        Outcome.Invalid);
+                }
+
+                if (!ownership.Exists)
+                {
+                    return Result.Failure(
+                        new Error(
+                            "EntityCategory.TargetNotFound",
+                            $"{entityType} '{request.EntityId}' was not found."),
+                        Outcome.NotFound);
+                }
+
+                if (ownership.IsDeleted)
+                {
+                    return Result.Failure(
+                        new Error(
+                            "EntityCategory.TargetDeleted",
+                            $"{entityType} '{request.EntityId}' is deleted."),
+                        Outcome.Invalid);
+                }
+
+                if (ownership.OwnerUserId != currentUser.UserId.Value)
+                {
+                    return Result.Failure(
+                        Error.Forbidden("You do not have permission to assign categories to this entity."),
+                        Outcome.Forbidden);
+                }
+            }
 
             var categories = await categoryRepository.GetAllAsync(
                 filter: c => request.CategoryIds.Contains(c.Id),
@@ -71,7 +135,9 @@ public sealed class AssignCategoriesToEntityCommandHandler(
                     Outcome.Conflict);
             }
 
-            await cache.RemoveByTagAsync($"entity-categories:{request.EntityType}:{request.EntityId}", cancellationToken);
+            await cache.RemoveByTagAsync(
+                ContentCoreCacheKeys.EntityCategoriesTag(request.EntityType, request.EntityId),
+                cancellationToken);
 
             logger.LogInformation(
                 "Assigned {Count} categories to {EntityType}/{EntityId}",

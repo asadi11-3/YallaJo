@@ -13,6 +13,12 @@
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.3.0" />
     <PackageReference Include="NSubstitute" Version="5.3.0" />
     <PackageReference Include="FluentAssertions" Version="7.0.0" />
+    <!--
+      T5 (CONTENTCORE-STD-P1-002): SQLite in-memory is required to exercise the real
+      EF Core HasQueryFilter on EntityTag / EntityCategory. EF InMemory silently ignores
+      query filters and cannot validate this requirement.
+    -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.15" />
   </ItemGroup>
 
   <ItemGroup>
@@ -23,6 +29,13 @@
     <ProjectReference Include="..\..\ContentCore.Domain\ContentCore.Domain.csproj" />
     <ProjectReference Include="..\..\ContentCore.Application\ContentCore.Application.csproj" />
     <ProjectReference Include="..\YallaJo.Tests.Shared\YallaJo.Tests.Shared.csproj" />
+    <!--
+      T5: ContentCore.Infrastructure is referenced so the test exercises the production
+      ContentCoreDbContext (with all real EF configurations applied via
+      ApplyConfigurationsFromAssembly). Duplicating EntityTagConfiguration in the test
+      project would validate a copy, not the artifact that ships.
+    -->
+    <ProjectReference Include="..\..\ContentCore.Infrastructure\ContentCore.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

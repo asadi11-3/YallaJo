@@ -19,7 +19,11 @@ public sealed class GetEntityTagsQueryHandler(
         try
         {
             if (!Enum.TryParse<EntityType>(request.EntityType, true, out var entityType))
-                return Result<IReadOnlyList<EntityTagDto>>.Success(Array.Empty<EntityTagDto>());
+            {
+                return Result<IReadOnlyList<EntityTagDto>>.Failure(
+                   new Error("EntityTag.InvalidEntityType", "Invalid entity type."),
+                   Outcome.Invalid);
+            }
 
             var entityTags = await entityTagRepository.GetByEntityAsync(entityType, request.EntityId, ct);
             var dtos = entityTags

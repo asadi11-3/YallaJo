@@ -50,27 +50,35 @@ public sealed class TriggerTranslationBackfillCommandHandler(
         }
     }
 
-    // ── Tags ─────────────────────────────────────────────────────────────────
-
     private async Task<Result<TriggerTranslationBackfillResult>> BackfillTagsAsync(
-        CancellationToken ct)
+        CancellationToken cancellationToken)
     {
         var tags = await tagRepository.GetAllAsync(
             include: q => q.Include(t => t.Translations),
-            ct: ct);
+            ct: cancellationToken);
 
         var totalAdded = 0;
         var skipped = 0;
 
         foreach (var tag in tags)
         {
-            var added = await TranslateTagAsync(tag, ct);
+            var added = await TranslateTagAsync(tag, cancellationToken);
             if (added == 0) skipped++;
             else totalAdded += added;
         }
 
         // Single save for all changes
-        await unitOfWork.SaveChangesAsync(ct);
+        try
+        {
+            await unitOfWork.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Result<TriggerTranslationBackfillResult>.Conflict(
+                new Error(
+                    "Translation.ConcurrencyConflict",
+                    "One or more records were modified by another user. Please retry."));
+        }
 
         logger.LogInformation(
             "Tag translation backfill complete: {Total} tags, {Added} translations added, {Skipped} skipped.",
@@ -100,8 +108,6 @@ public sealed class TriggerTranslationBackfillCommandHandler(
         return added;
     }
 
-    // ── Specializations ──────────────────────────────────────────────────────
-
     private async Task<Result<TriggerTranslationBackfillResult>> BackfillSpecializationsAsync(
         CancellationToken ct)
     {
@@ -119,7 +125,17 @@ public sealed class TriggerTranslationBackfillCommandHandler(
             else totalAdded += added;
         }
 
-        await unitOfWork.SaveChangesAsync(ct);
+        try
+        {
+            await unitOfWork.SaveChangesAsync(ct);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Result<TriggerTranslationBackfillResult>.Conflict(
+                new Error(
+                    "Translation.ConcurrencyConflict",
+                    "One or more records were modified by another user. Please retry."));
+        }
 
         logger.LogInformation(
             "Specialization translation backfill complete: {Total} specs, {Added} translations added, {Skipped} skipped.",

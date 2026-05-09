@@ -61,6 +61,7 @@ public static class DependencyInjection
         // Owned & implemented here so consumers (ContentTours, etc.) depend only on
         // ContentPlaces.Contracts and never on the Places schema directly.
         services.AddScoped<IPlaceExistenceService, PlaceExistenceService>();
+        services.AddScoped<IPlaceOwnershipService, PlaceOwnershipService>();
 
         // ── Permission catalog (discovered by Security.Infrastructure PermissionSeeder) ─
         services.AddSingleton<IPermissionCatalog, ContentPlacesPermissionCatalog>();

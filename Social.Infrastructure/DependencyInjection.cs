@@ -1,8 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Social.Contracts.Authorization;
 using Social.Infrastructure.Persistence;
 using Social.Infrastructure.Persistence.Seeding;
+using Social.Infrastructure.Services;
 using YallaJo.SharedKernel.Infrastructure.Data;
 using YallaJo.SharedKernel.Infrastructure.Outbox;
 using YallaJo.SharedKernel.Infrastructure.BackgroundJobs;
@@ -32,6 +34,11 @@ public static class DependencyInjection
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
         services.AddScoped<IOutboxProcessor, OutboxProcessor<SocialDbContext>>();
         services.AddScoped<IOutboxCleaner, OutboxCleaner<SocialDbContext>>();
+
+        // ── Cross-module read-only services ──────────────────────────────────
+        // Owned & implemented here so consumers (ContentCore, etc.) depend only on
+        // Social.Contracts and never on the Social schema directly.
+        services.AddScoped<IReviewOwnershipService, ReviewOwnershipService>();
 
         return services;
     }

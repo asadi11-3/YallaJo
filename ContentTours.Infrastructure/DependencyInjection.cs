@@ -84,6 +84,11 @@ public static class DependencyInjection
         services.AddScoped<IUserRoleChecker, NoOpUserRoleChecker>();
         services.AddScoped<IProfileLookupService, NoOpProfileLookupService>();
 
+        // ── Cross-module read-only services ──────────────────────────────────
+        // Owned & implemented here so consumers (ContentCore, etc.) depend only on
+        // ContentTours.Contracts and never on the Tours schema directly.
+        services.AddScoped<ITourOwnershipService, TourOwnershipService>();
+
         // ── Permission catalog (discovered by PermissionSeeder) ───────────────
         services.AddSingleton<IPermissionCatalog, ContentToursPermissionCatalog>();
 

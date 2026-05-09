@@ -1,3 +1,4 @@
+using ContentCore.Application.Caching;
 using ContentCore.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
@@ -49,7 +50,7 @@ public sealed class ReorderCategoriesCommandHandler(
                     Outcome.Conflict);
             }
 
-            await cache.RemoveByTagAsync("categories", cancellationToken);
+            await cache.RemoveByTagAsync(ContentCoreCacheKeys.CategoriesTag, cancellationToken);
 
             logger.LogInformation(
                 "Reordered {Count} categories", request.SortOrders.Count);

@@ -9,5 +9,5 @@ public sealed record GetEntityCategoriesQuery(string EntityType, Guid EntityId)
     public string CacheKey => ContentCoreCacheKeys.EntityCategories(EntityType, EntityId);
     public TimeSpan? CacheDuration => TimeSpan.FromMinutes(15);
     // Fine-grained only: commands evict by $"entity-categories:{Type}:{Id}", not by the coarse tag.
-    public IReadOnlyList<string> Tags => [$"entity-categories:{EntityType}:{EntityId}"];
+    public IReadOnlyList<string> Tags => [ContentCoreCacheKeys.EntityCategoriesTag(EntityType, EntityId)];
 }

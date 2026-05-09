@@ -1,3 +1,4 @@
+using ContentCore.Application.Caching;
 using ContentCore.Domain.Repositories;
 using ContentCore.Domain.Services;
 using Microsoft.EntityFrameworkCore;
@@ -62,7 +63,7 @@ public sealed class UpdateCategoryCommandHandler(
                 return saveResult;
             }
 
-            await cache.RemoveByTagAsync("categories", cancellationToken);
+            await cache.RemoveByTagAsync(ContentCoreCacheKeys.CategoriesTag, cancellationToken);
 
             logger.LogInformation("Category updated: {CategoryId} (Slug={Slug})", category.Id, category.Slug);
 

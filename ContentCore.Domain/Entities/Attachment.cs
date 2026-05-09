@@ -3,9 +3,6 @@ using ContentCore.Domain.Events;
 using YallaJo.SharedKernel.Domain.Entities;
 
 namespace ContentCore.Domain.Entities;
-
-
-
 public sealed class Attachment : BaseEntity, IAggregateRoot
 {
     private Attachment() { } // EF Core
@@ -71,8 +68,6 @@ public sealed class Attachment : BaseEntity, IAggregateRoot
 
         return attachment;
     }
-
-    // ── Business Methods ──
 
     public void SetThumbnailUrl(string? thumbnailUrl)
     {

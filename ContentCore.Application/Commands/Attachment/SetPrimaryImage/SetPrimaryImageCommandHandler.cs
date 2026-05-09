@@ -1,9 +1,12 @@
+using ContentCore.Application.Authorization;
+using ContentCore.Application.Caching;
 using ContentCore.Domain.Entities;
 using ContentCore.Domain.Enums;
 using ContentCore.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
+using Security.Contracts.Authorization;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
@@ -15,6 +18,7 @@ public sealed class SetPrimaryImageCommandHandler(
     IAttachmentRepository attachmentRepository,
     IContentCoreUnitOfWork unitOfWork,
     ICurrentUser currentUser,
+    IEntityOwnershipResolver ownershipResolver,
     HybridCache cache,
     ILogger<SetPrimaryImageCommandHandler> logger)
     : ICommandHandler<SetPrimaryImageCommand>
@@ -46,13 +50,50 @@ public sealed class SetPrimaryImageCommandHandler(
                     Outcome.Invalid);
             }
 
-            // IDOR: only the uploader or an admin may set the primary image
-            var isAdmin = currentUser.IsInRole("Admin");
-            if (!isAdmin && attachment.UploadedByUserId != currentUser.UserId.Value)
+            // IDOR: only the target-entity owner or an admin-tier role (Admin/SuperAdmin/Owner)
+            // may set the primary image. Setting primary mutates the target entity's public-facing
+            // gallery, so authorization belongs to that entity's owner — not to whoever uploaded.
+            var isAdminTier = AppRoles.HighestPrivilegeLevel(currentUser.Roles)
+                >= RolePrivilegeLevel.Admin;
+
+            if (!isAdminTier)
             {
-                return Result.Failure(
-                    Error.Forbidden("You do not have permission to set the primary image for this entity."),
-                    Outcome.Forbidden);
+                var ownership = await ownershipResolver.ResolveAsync(
+                    request.EntityType, request.EntityId, cancellationToken);
+
+                if (!ownership.IsSupported)
+                {
+                    return Result.Failure(
+                        new Error(
+                            "Attachment.UnsupportedEntityType",
+                            "This entity type cannot be authorized for attachment operations."),
+                        Outcome.Invalid);
+                }
+
+                if (!ownership.Exists)
+                {
+                    return Result.Failure(
+                        new Error(
+                            "Attachment.TargetNotFound",
+                            $"{request.EntityType} '{request.EntityId}' was not found."),
+                        Outcome.NotFound);
+                }
+
+                if (ownership.IsDeleted)
+                {
+                    return Result.Failure(
+                        new Error(
+                            "Attachment.TargetDeleted",
+                            $"{request.EntityType} '{request.EntityId}' is deleted."),
+                        Outcome.Invalid);
+                }
+
+                if (ownership.OwnerUserId != currentUser.UserId.Value)
+                {
+                    return Result.Failure(
+                        Error.Forbidden("You do not have permission to set the primary image for this entity."),
+                        Outcome.Forbidden);
+                }
             }
 
             var entityImages = await attachmentRepository.GetEntityImagesAsync(
@@ -91,7 +132,9 @@ public sealed class SetPrimaryImageCommandHandler(
                     Outcome.Conflict);
             }
 
-            await cache.RemoveByTagAsync($"attachments:{request.EntityType}:{request.EntityId}", cancellationToken);
+            await cache.RemoveByTagAsync(
+                ContentCoreCacheKeys.EntityAttachmentsTag(request.EntityType.ToString(), request.EntityId),
+                cancellationToken);
 
             logger.LogInformation(
                 "Primary image set: Attachment={AttachmentId} for {EntityType}/{EntityId}",

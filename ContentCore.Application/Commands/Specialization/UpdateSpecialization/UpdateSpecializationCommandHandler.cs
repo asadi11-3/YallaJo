@@ -1,3 +1,4 @@
+using ContentCore.Application.Caching;
 using ContentCore.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
@@ -51,8 +52,8 @@ public sealed class UpdateSpecializationCommandHandler(
                         "This record was modified by another user. Please refresh and try again."));
             }
 
-            await cache.RemoveByTagAsync("specializations", cancellationToken);
-            await cache.RemoveByTagAsync($"specialization:{specialization.Id}", cancellationToken);
+            await cache.RemoveByTagAsync(ContentCoreCacheKeys.SpecializationsTag, cancellationToken);
+            await cache.RemoveByTagAsync(ContentCoreCacheKeys.SpecializationTag(specialization.Id), cancellationToken);
 
             logger.LogInformation("Specialization updated: {SpecializationId} (Name={Name})", specialization.Id, specialization.Name);
 

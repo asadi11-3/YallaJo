@@ -9,5 +9,9 @@ public sealed record GetLanguageByIdQuery(Guid Id)
 {
     public string CacheKey => ContentCoreCacheKeys.LanguageById(Id);
     public TimeSpan? CacheDuration => TimeSpan.FromHours(1);
-    public IReadOnlyList<string> Tags => ["languages", $"language:{Id}"];
+    public IReadOnlyList<string> Tags =>
+    [
+        ContentCoreCacheKeys.LanguagesTag,
+        ContentCoreCacheKeys.LanguageTag(Id),
+    ];
 }

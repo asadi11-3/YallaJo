@@ -1,3 +1,4 @@
+using ContentCore.Application.Caching;
 using ContentCore.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
@@ -17,11 +18,11 @@ public sealed class UpdateTagCommandHandler(
 {
     public async Task<Result<UpdateTagResult>> Handle(
         UpdateTagCommand request,
-        CancellationToken ct)
+        CancellationToken cancellationToken)
     {
         try
         {
-            var tag = await tagRepository.GetByIdAsync(request.Id, ct, asNoTracking: false);
+            var tag = await tagRepository.GetByIdAsync(request.Id, cancellationToken, asNoTracking: false);
             if (tag is null)
             {
                 return Result<UpdateTagResult>.Failure(
@@ -29,7 +30,7 @@ public sealed class UpdateTagCommandHandler(
                        Outcome.NotFound);
             }
 
-            if (await tagRepository.AnyAsync(t => t.Slug == request.Slug && t.Id != request.Id, ct))
+            if (await tagRepository.AnyAsync(t => t.Slug == request.Slug && t.Id != request.Id, cancellationToken))
             {
                 return Result<UpdateTagResult>.Conflict(
                        new Error("Tag.AlreadyExists", $"Tag with slug '{request.Slug}' already exists."));
@@ -39,7 +40,7 @@ public sealed class UpdateTagCommandHandler(
 
             try
             {
-                await unitOfWork.SaveChangesAsync(ct);
+                await unitOfWork.SaveChangesAsync(cancellationToken);
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -49,7 +50,7 @@ public sealed class UpdateTagCommandHandler(
                         "This record was modified by another user. Please refresh and try again."));
             }
 
-            await cache.RemoveByTagAsync("tags", ct);
+            await cache.RemoveByTagAsync(ContentCoreCacheKeys.TagsTag, cancellationToken);
 
             logger.LogInformation(
                 "Tag updated: {TagId} (Name={Name}, Slug={Slug})", tag.Id, tag.Name, tag.Slug);
@@ -57,7 +58,7 @@ public sealed class UpdateTagCommandHandler(
             return Result<UpdateTagResult>.Success(
                 new UpdateTagResult(tag.Id, tag.Name, tag.Slug));
         }
-        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
             return Result<UpdateTagResult>.Failure(
                 new Error("Request.Cancelled", "The request was cancelled."),

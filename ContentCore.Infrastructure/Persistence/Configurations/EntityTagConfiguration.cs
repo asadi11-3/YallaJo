@@ -23,5 +23,7 @@ public class EntityTagConfiguration : IEntityTypeConfiguration<EntityTag>
             .WithMany()
             .HasForeignKey(x => x.TagId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasQueryFilter(x => !x.Tag.IsDeleted);
     }
 }

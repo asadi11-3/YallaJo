@@ -1,3 +1,4 @@
+using ContentCore.Application.Caching;
 using ContentCore.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
@@ -22,7 +23,8 @@ public sealed class ApproveTranslationCommandHandler(
         try
         {
             var cached = await translationCacheRepository.GetByIdAsync(request.Id, cancellationToken, asNoTracking: false);
-            if (cached is null) {
+            if (cached is null)
+            {
                 return Result.Failure(
                    new Error("Translation.NotFound", "Translation was not found."),
                    Outcome.NotFound);
@@ -46,7 +48,7 @@ public sealed class ApproveTranslationCommandHandler(
             if (cached.EntityType is not null && cached.EntityId.HasValue)
             {
                 await cache.RemoveByTagAsync(
-                    $"translations:{cached.EntityType}:{cached.EntityId.Value}",
+                    ContentCoreCacheKeys.EntityTranslationsTag(cached.EntityType, cached.EntityId.Value),
                     cancellationToken);
             }
 

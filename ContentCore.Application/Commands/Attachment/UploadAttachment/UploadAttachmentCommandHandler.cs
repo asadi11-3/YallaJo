@@ -1,8 +1,11 @@
+using ContentCore.Application.Authorization;
+using ContentCore.Application.Caching;
 using ContentCore.Application.Interfaces;
 using ContentCore.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
+using Security.Contracts.Authorization;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Application.Abstractions.Storage;
@@ -16,6 +19,7 @@ public sealed class UploadAttachmentCommandHandler(
     IAttachmentRepository attachmentRepository,
     IContentCoreUnitOfWork unitOfWork,
     ICurrentUser currentUser,
+    IEntityOwnershipResolver ownershipResolver,
     IMediaProcessingQueue mediaProcessingQueue,
     HybridCache cache,
     ILogger<UploadAttachmentCommandHandler> logger)
@@ -53,13 +57,59 @@ public sealed class UploadAttachmentCommandHandler(
                     Outcome.Unauthorized);
             }
 
-            // IDOR / spoofing guard: only the current user (or admin) may upload as UploadedByUserId.
-            var isAdmin = currentUser.IsInRole("Admin");
-            if (!isAdmin && request.UploadedByUserId != currentUser.UserId.Value)
+            // IDOR / spoofing guard: only the current user (or an admin-tier role: Admin/SuperAdmin/Owner)
+            // may upload as UploadedByUserId.
+            var isAdminTier = AppRoles.HighestPrivilegeLevel(currentUser.Roles)
+                >= RolePrivilegeLevel.Admin;
+
+            if (!isAdminTier && request.UploadedByUserId != currentUser.UserId.Value)
             {
                 return Result<UploadAttachmentResult>.Failure(
                     Error.Forbidden("You cannot upload attachments on behalf of another user."),
                     Outcome.Forbidden);
+            }
+
+            // Target-entity ownership probe (skipped for admin-tier callers).
+            // Runs BEFORE file validation, storage upload, DB write, cache eviction,
+            // and media-queue enqueue. A non-admin caller must own the target entity.
+            if (!isAdminTier)
+            {
+                var ownership = await ownershipResolver.ResolveAsync(
+                    request.EntityType, request.EntityId, cancellationToken);
+
+                if (!ownership.IsSupported)
+                {
+                    return Result<UploadAttachmentResult>.Failure(
+                        new Error(
+                            "Attachment.UnsupportedEntityType",
+                            "This entity type cannot be authorized for attachment operations."),
+                        Outcome.Invalid);
+                }
+
+                if (!ownership.Exists)
+                {
+                    return Result<UploadAttachmentResult>.Failure(
+                        new Error(
+                            "Attachment.TargetNotFound",
+                            $"{request.EntityType} '{request.EntityId}' was not found."),
+                        Outcome.NotFound);
+                }
+
+                if (ownership.IsDeleted)
+                {
+                    return Result<UploadAttachmentResult>.Failure(
+                        new Error(
+                            "Attachment.TargetDeleted",
+                            $"{request.EntityType} '{request.EntityId}' is deleted."),
+                        Outcome.Invalid);
+                }
+
+                if (ownership.OwnerUserId != currentUser.UserId.Value)
+                {
+                    return Result<UploadAttachmentResult>.Failure(
+                        Error.Forbidden("You do not have permission to upload attachments to this entity."),
+                        Outcome.Forbidden);
+                }
             }
 
             var detectedFileType = await DetectFileTypeAsync(request.FileStream, cancellationToken);
@@ -151,7 +201,8 @@ public sealed class UploadAttachmentCommandHandler(
             }
 
             await cache.RemoveByTagAsync(
-                $"attachments:{request.EntityType}:{request.EntityId}", cancellationToken);
+                ContentCoreCacheKeys.EntityAttachmentsTag(request.EntityType.ToString(), request.EntityId),
+                cancellationToken);
 
             // 5. Enqueue background media processing AFTER confirmed DB save.
             await mediaProcessingQueue.EnqueueAsync(

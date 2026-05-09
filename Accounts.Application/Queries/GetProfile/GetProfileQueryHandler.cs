@@ -16,7 +16,7 @@ public sealed class GetProfileQueryHandler(
     public async Task<Result<GetProfileResult>> Handle(
         GetProfileQuery request,
         CancellationToken cancellationToken)
-    {.
+    {
         if (!currentUser.IsAuthenticated || currentUser.UserId is null)
         {
             return Result<GetProfileResult>.Failure(
