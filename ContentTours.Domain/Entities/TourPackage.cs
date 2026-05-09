@@ -3,7 +3,7 @@ using YallaJo.SharedKernel.Domain.ValueObjects;
 
 namespace ContentTours.Domain.Entities;
 
-public sealed class TourPackage : AuditableEntity
+public sealed class TourPackage : AuditableEntity, IAggregateRoot
 {
     private readonly List<TourPackageTour> _includedTours = [];
     private readonly List<TourPackageInclusion> _inclusions = [];

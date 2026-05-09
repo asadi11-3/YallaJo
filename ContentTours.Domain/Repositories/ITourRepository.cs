@@ -14,4 +14,7 @@ public interface ITourRepository : IRepository<Tour, Guid>
     Task<bool> HasActiveAdultPricingAsync(Guid tourId, CancellationToken ct = default);
 
     Task<bool> HasActiveScheduleAsync(Guid tourId, CancellationToken ct = default);
+    Task<IReadOnlyList<Tour>> GetByIdsIncludingDeletedAsync(
+        IReadOnlyCollection<Guid> ids,
+        CancellationToken ct = default);
 }

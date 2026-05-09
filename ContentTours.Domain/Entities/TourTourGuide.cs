@@ -10,6 +10,8 @@ public sealed class TourTourGuide
     public Guid TourGuideId { get; private set; }
     public bool IsPrimary { get; private set; }
 
+    public Tour Tour { get; private set; } = default!;
+
 
     public static TourTourGuide Create(Guid tourId, Guid tourGuideId, bool isPrimary)
     {

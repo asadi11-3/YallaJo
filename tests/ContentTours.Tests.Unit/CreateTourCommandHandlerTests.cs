@@ -20,12 +20,12 @@ public sealed class CreateTourCommandHandlerTests
         CreateTourCommandHandler Handler,
         ITourRepository Repo,
         IPlaceExistenceService PlaceExists,
-        IContentToursEventUnitOfWork Uow,
+        IContentToursUnitOfWork Uow,
         ICurrentUser CurrentUser) BuildSubject()
     {
         var repo = Substitute.For<ITourRepository>();
         var place = Substitute.For<IPlaceExistenceService>();
-        var uow = Substitute.For<IContentToursEventUnitOfWork>();
+        var uow = Substitute.For<IContentToursUnitOfWork>();
         var cache = Substitute.For<HybridCache>();
         var currentUser = Substitute.For<ICurrentUser>();
         var logger = Substitute.For<ILogger<CreateTourCommandHandler>>();

@@ -1,18 +1,14 @@
 using ContentTours.Application.Queries.Tour.Common;
 using ContentTours.Application.Queries.TourPackage.Common;
+using ContentTours.Domain.Repositories;
 using Microsoft.Extensions.Logging;
-using Security.Contracts.Authorization;
-using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
-
-using ContentTours.Domain.Repositories;
 
 namespace ContentTours.Application.Queries.TourPackage.GetTourPackageById;
 
 public sealed class GetTourPackageByIdQueryHandler(
     ITourPackageRepository repository,
-    ICurrentUser currentUser,
     ILogger<GetTourPackageByIdQueryHandler> logger)
     : IQueryHandler<GetTourPackageByIdQuery, TourPackageDetailDto>
 {
@@ -56,12 +52,8 @@ public sealed class GetTourPackageByIdQueryHandler(
                 .Select(i => new TourPackageInclusionDto(i.Id, i.Description, i.SortOrder))
                 .ToList();
 
-            var isAdminTier = AppRoles.HighestPrivilegeLevel(currentUser.Roles)
-                >= RolePrivilegeLevel.Admin;
-
             var dto = new TourPackageDetailDto(
                 Id:               package.Id,
-                CreatedByUserId:  package.CreatedByUserId,
                 Name:             package.Name,
                 Description:      package.Description,
                 PriceAmount:      package.Price.Amount,
@@ -71,10 +63,8 @@ public sealed class GetTourPackageByIdQueryHandler(
                 ValidTo:          package.ValidTo,
                 IsActive:         package.IsActive,
                 CreatedAt:        package.CreatedAt,
-                RowVersion:       Convert.ToBase64String(package.RowVersion ?? Array.Empty<byte>()),
                 IncludedTours:    includedTours,
-                Inclusions:       inclusions,
-                IsDeleted:        isAdminTier ? package.IsDeleted : null);
+                Inclusions:       inclusions);
 
             return Result.Success(dto);
         }

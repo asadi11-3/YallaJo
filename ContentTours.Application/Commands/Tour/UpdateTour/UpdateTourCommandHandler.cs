@@ -17,7 +17,7 @@ namespace ContentTours.Application.Commands.Tour.UpdateTour;
 public sealed class UpdateTourCommandHandler(
     ITourRepository tourRepository,
     IPlaceExistenceService placeExistenceService,
-    IContentToursEventUnitOfWork unitOfWork,
+    IContentToursUnitOfWork unitOfWork,
     HybridCache cache,
     ICurrentUser currentUser,
     ILogger<UpdateTourCommandHandler> logger)
@@ -107,6 +107,10 @@ public sealed class UpdateTourCommandHandler(
                     request.MeetingPointLongitude.Value);
             }
 
+            // Capture old slug BEFORE Tour.Update mutates it so we can invalidate
+            // the slug-keyed cache entry for the old slug after a successful save.
+            var oldSlug = tour.Slug;
+
             try
             {
                 tour.Update(
@@ -157,6 +161,18 @@ public sealed class UpdateTourCommandHandler(
                 .ConfigureAwait(false);
             await cache.RemoveByTagAsync(ContentToursCacheKeys.TagToursSearch, cancellationToken)
                 .ConfigureAwait(false);
+
+            // P1-005: invalidate slug-keyed cache entries (GetTourBySlugQuery) for both
+            // the old and the new slug so a slug change cannot serve stale rows.  When
+            // the slug is unchanged we evict only once.
+            var newSlug = tour.Slug;
+            await cache.RemoveByTagAsync(ContentToursCacheKeys.TagForTourSlug(oldSlug), cancellationToken)
+                .ConfigureAwait(false);
+            if (!string.Equals(oldSlug, newSlug, StringComparison.Ordinal))
+            {
+                await cache.RemoveByTagAsync(ContentToursCacheKeys.TagForTourSlug(newSlug), cancellationToken)
+                    .ConfigureAwait(false);
+            }
 
             logger.LogInformation(
                 "Tour updated: {TourId} (Slug={Slug}, By={UserId})",

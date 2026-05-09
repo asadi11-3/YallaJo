@@ -17,7 +17,7 @@ namespace ContentTours.Application.Commands.Tour.CreateTour;
 public sealed class CreateTourCommandHandler(
     ITourRepository tourRepository,
     IPlaceExistenceService placeExistenceService,
-    IContentToursEventUnitOfWork unitOfWork,
+    IContentToursUnitOfWork unitOfWork,
     HybridCache cache,
     ICurrentUser currentUser,
     ILogger<CreateTourCommandHandler> logger)

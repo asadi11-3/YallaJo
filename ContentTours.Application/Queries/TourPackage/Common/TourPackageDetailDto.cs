@@ -4,7 +4,6 @@ namespace ContentTours.Application.Queries.TourPackage.Common;
 
 public sealed record TourPackageDetailDto(
     Guid Id,
-    Guid CreatedByUserId,
     string Name,
     string? Description,
     decimal PriceAmount,
@@ -14,7 +13,5 @@ public sealed record TourPackageDetailDto(
     DateTime? ValidTo,
     bool IsActive,
     DateTime CreatedAt,
-    string RowVersion,
     IReadOnlyList<TourSummaryDto> IncludedTours,
-    IReadOnlyList<TourPackageInclusionDto> Inclusions,
-    bool? IsDeleted);
+    IReadOnlyList<TourPackageInclusionDto> Inclusions);

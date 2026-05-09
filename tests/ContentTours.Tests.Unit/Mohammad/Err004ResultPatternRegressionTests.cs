@@ -96,7 +96,7 @@ public sealed class Err004ResultPatternRegressionTests
 
         var handler = new ToggleTourFeaturedCommandHandler(
             tourRepo,
-            Substitute.For<IContentToursEventUnitOfWork>(),
+            Substitute.For<IContentToursUnitOfWork>(),
             Substitute.For<HybridCache>(),
             currentUser,
             Substitute.For<ILogger<ToggleTourFeaturedCommandHandler>>());

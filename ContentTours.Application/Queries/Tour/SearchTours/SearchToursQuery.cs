@@ -28,7 +28,7 @@ public sealed record SearchToursQuery(SearchToursRequest Request)
 {
     public string CacheKey => TourSearchCacheKeys.Search(BuildCanonicalKey(Request));
     public TimeSpan? CacheDuration => TimeSpan.FromMinutes(2);
-    public IReadOnlyList<string> Tags => ["tours:search", "tours:list"];
+    public IReadOnlyList<string> Tags => [ContentToursCacheKeys.TagToursSearch, ContentToursCacheKeys.TagToursList];
 
     /// <summary>
     /// Builds a deterministic, sort-stable canonical string covering every

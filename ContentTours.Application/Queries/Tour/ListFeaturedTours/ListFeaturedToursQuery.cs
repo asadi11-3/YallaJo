@@ -9,5 +9,5 @@ public sealed record ListFeaturedToursQuery(string LanguageCode = "en")
 {
     public string CacheKey => TourSearchCacheKeys.Featured(LanguageCode);
     public TimeSpan? CacheDuration => TimeSpan.FromMinutes(10);
-    public IReadOnlyList<string> Tags => ["tours:featured", "tours:list"];
+    public IReadOnlyList<string> Tags => [ContentToursCacheKeys.TagToursFeatured, ContentToursCacheKeys.TagToursList];
 }

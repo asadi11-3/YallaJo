@@ -8,5 +8,5 @@ public sealed record SuggestToursQuery(string Q, string? AcceptLanguage = null)
 {
     public string CacheKey => TourSearchCacheKeys.Suggest(Q, AcceptLanguage);
     public TimeSpan? CacheDuration => TimeSpan.FromSeconds(30);
-    public IReadOnlyList<string> Tags => ["tours:suggest", "tours:list"];
+    public IReadOnlyList<string> Tags => [ContentToursCacheKeys.TagToursSuggest, ContentToursCacheKeys.TagToursList];
 }

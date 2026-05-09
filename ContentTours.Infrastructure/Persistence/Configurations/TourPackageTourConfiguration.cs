@@ -31,5 +31,7 @@ public class TourPackageTourConfiguration : IEntityTypeConfiguration<TourPackage
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasIndex(x => x.TourId);
+
+        builder.HasQueryFilter(x => !x.Tour.IsDeleted && !x.TourPackage.IsDeleted);
     }
 }

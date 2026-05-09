@@ -16,9 +16,11 @@ public class TourTourGuideConfiguration : IEntityTypeConfiguration<TourTourGuide
         builder.Property(x => x.TourGuideId).IsRequired();
         builder.Property(x => x.IsPrimary).IsRequired().HasDefaultValue(false);
 
-        builder.HasOne<Tour>()
+        builder.HasOne(x => x.Tour)
             .WithMany()
             .HasForeignKey(x => x.TourId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasQueryFilter(x => !x.Tour.IsDeleted);
     }
 }

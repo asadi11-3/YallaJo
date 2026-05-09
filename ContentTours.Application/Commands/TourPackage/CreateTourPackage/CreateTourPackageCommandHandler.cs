@@ -65,12 +65,12 @@ public sealed class CreateTourPackageCommandHandler(
                     Outcome.Invalid);
             }
 
-            // ── 2. Bulk-load tours via the read-side repository surface ────────
+            // ── 2. Bulk-load tours INCLUDING soft-deleted rows so the deleted-tour
+            //      check below is actually reachable (P1-006).  The default
+            //      GetAllAsync path would apply the !IsDeleted query filter and
+            //      mis-classify a soft-deleted tour as "unknown".
             var tours = await tourRepository
-                .GetAllAsync(
-                    filter: t => distinctIds.Contains(t.Id),
-                    ct: cancellationToken,
-                    asNoTracking: true)
+                .GetByIdsIncludingDeletedAsync(distinctIds, cancellationToken)
                 .ConfigureAwait(false);
 
             // ── 3. Unknown tours ───────────────────────────────────────────────
@@ -86,7 +86,7 @@ public sealed class CreateTourPackageCommandHandler(
                     Outcome.Invalid);
             }
 
-            // ── 4. Soft-deleted tours ──────────────────────────────────────────
+            // ── 4. Soft-deleted tours (now reachable thanks to step 2) ─────────
             if (tours.Any(t => t.IsDeleted))
             {
                 return Result.Failure<Guid>(

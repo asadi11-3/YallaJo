@@ -53,6 +53,23 @@ internal sealed class TourRepository(ContentToursDbContext context)
     public Task<bool> HasActiveScheduleAsync(Guid tourId, CancellationToken ct = default) =>
         context.TourSchedules.AnyAsync(s => s.TourId == tourId && s.IsActive, ct);
 
+    public async Task<IReadOnlyList<Tour>> GetByIdsIncludingDeletedAsync(
+        IReadOnlyCollection<Guid> ids,
+        CancellationToken ct = default)
+    {
+        if (ids is null || ids.Count == 0)
+        {
+            return Array.Empty<Tour>();
+        }
+
+        return await context.Tours
+            .IgnoreQueryFilters()
+            .AsNoTracking()
+            .Where(t => ids.Contains(t.Id))
+            .ToListAsync(ct)
+            .ConfigureAwait(false);
+    }
+
     private static string NormalizeSlug(string slug) =>
         (slug ?? string.Empty).Trim().ToLowerInvariant();
 }

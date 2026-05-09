@@ -12,7 +12,7 @@ namespace ContentTours.Application.Commands.Tour.ReinstateTour;
 
 public sealed class ReinstateTourCommandHandler(
     ITourRepository tourRepository,
-    IContentToursEventUnitOfWork unitOfWork,
+    IContentToursUnitOfWork unitOfWork,
     HybridCache cache,
     ILogger<ReinstateTourCommandHandler> logger)
     : ICommandHandler<ReinstateTourCommand>

@@ -51,9 +51,14 @@ public static class DependencyInjection
         services.AddScoped<IDbContext>(sp =>
             sp.GetRequiredService<ContentToursDbContext>());
 
+        // Single canonical UoW for ContentTours.
+        // ContentToursUnitOfWork wraps IUnitOfWork<ContentToursDbContext> which
+        // dispatches IAggregateRoot domain events before SaveChangesAsync.
+        // There is intentionally one SaveChanges path through the module so that
+        // future domain events on any aggregate (Tour, TourPackage, ...) cannot
+        // be silently dropped via a non-dispatching code path.
         services.AddScoped<IUnitOfWork<ContentToursDbContext>, UnitOfWork<ContentToursDbContext>>();
         services.AddScoped<IContentToursUnitOfWork, ContentToursUnitOfWork>();
-        services.AddScoped<IContentToursEventUnitOfWork, ContentToursEventUnitOfWork>();
         services.AddScoped<IContentToursInboxStore, ContentToursInboxStore>();
         services.AddScoped<IModuleDbInitializer, ContentToursDbInitializer>();
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));

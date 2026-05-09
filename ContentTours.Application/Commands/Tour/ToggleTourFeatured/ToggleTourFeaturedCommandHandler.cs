@@ -13,7 +13,7 @@ namespace ContentTours.Application.Commands.Tour.ToggleTourFeatured;
 
 public sealed class ToggleTourFeaturedCommandHandler(
     ITourRepository tourRepo,
-    IContentToursEventUnitOfWork unitOfWork,
+    IContentToursUnitOfWork unitOfWork,
     HybridCache cache,
     ICurrentUser currentUser,
     ILogger<ToggleTourFeaturedCommandHandler> logger)
@@ -68,11 +68,11 @@ public sealed class ToggleTourFeaturedCommandHandler(
 
             if (willChange)
             {
-                await cache.RemoveByTagAsync("tours:featured", cancellationToken);
+                await cache.RemoveByTagAsync(ContentToursCacheKeys.TagToursFeatured, cancellationToken);
                 await cache.RemoveByTagAsync(ContentToursCacheKeys.TagForTour(tour.Id), cancellationToken);
-                await cache.RemoveByTagAsync("tours:list", cancellationToken);
-                await cache.RemoveByTagAsync("tours:search", cancellationToken);
-                await cache.RemoveByTagAsync($"my-tours:{tour.CreatedByUserId}", cancellationToken);
+                await cache.RemoveByTagAsync(ContentToursCacheKeys.TagToursList, cancellationToken);
+                await cache.RemoveByTagAsync(ContentToursCacheKeys.TagToursSearch, cancellationToken);
+                await cache.RemoveByTagAsync(ContentToursCacheKeys.TagForMyTours(tour.CreatedByUserId), cancellationToken);
 
                 logger.LogInformation(
                     "Tour {TourId} featured set to {IsFeatured} by {UserId}",

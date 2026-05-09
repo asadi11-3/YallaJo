@@ -1,6 +1,6 @@
 # YallaJo — Agent Context & Build Guide
 
-> **Last Updated**: 2026-04-28 (ContentTours participant-type seed update + cross-seeder/model audit) | **Build State**: Changed projects build clean (`ContentPlaces.Infrastructure`, `ContentTours.Infrastructure`, `Auth.Infrastructure`); full `YallaJo.sln` build still blocked by pre-existing `YallaJo.Web.exe` file lock (`MSB3021`/`MSB3027`)
+> **Last Updated**: 2026-05-09 (ContentTours P2-001 cache-tag helper centralization) | **Build State**: `dotnet test tests/ContentTours.Tests.Unit/ContentTours.Tests.Unit.csproj --nologo` PASS (250/250); `dotnet build YallaJo.sln --nologo` PASS (0 errors)
 
 > **Purpose**: The single source of truth for any AI agent working on YallaJo.
 > **Read every section before writing code.** Every section is a rule you must follow.

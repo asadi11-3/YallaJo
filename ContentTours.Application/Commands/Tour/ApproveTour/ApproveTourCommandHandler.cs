@@ -13,7 +13,7 @@ namespace ContentTours.Application.Commands.Tour.ApproveTour;
 
 public sealed class ApproveTourCommandHandler(
     ITourRepository tourRepository,
-    IContentToursEventUnitOfWork unitOfWork,
+    IContentToursUnitOfWork unitOfWork,
     HybridCache cache,
     ICurrentUser currentUser,
     ILogger<ApproveTourCommandHandler> logger)

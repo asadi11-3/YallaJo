@@ -26,7 +26,7 @@ public sealed class AdminLifecycleCommandHandlerTests
     public async Task Approve_PendingTransitionsToApprovedAndStampsApprover()
     {
         var repo = Substitute.For<ITourRepository>();
-        var uow  = Substitute.For<IContentToursEventUnitOfWork>();
+        var uow  = Substitute.For<IContentToursUnitOfWork>();
         var cache = Substitute.For<HybridCache>();
         var currentUser = Substitute.For<ICurrentUser>();
         var logger = Substitute.For<ILogger<ApproveTourCommandHandler>>();
@@ -52,7 +52,7 @@ public sealed class AdminLifecycleCommandHandlerTests
         // sees the same original RowVersion but EF re-checks at write time and
         // throws DbUpdateConcurrencyException — handler must translate that to 409.
         var repo = Substitute.For<ITourRepository>();
-        var uow  = Substitute.For<IContentToursEventUnitOfWork>();
+        var uow  = Substitute.For<IContentToursUnitOfWork>();
         var cache = Substitute.For<HybridCache>();
         var currentUser = Substitute.For<ICurrentUser>();
         var logger = Substitute.For<ILogger<ApproveTourCommandHandler>>();
@@ -78,7 +78,7 @@ public sealed class AdminLifecycleCommandHandlerTests
         // The validator runs in the MediatR pipeline; we test the handler-level fallback
         // here because the handler must still defend itself if a caller bypasses validation.
         var repo = Substitute.For<ITourRepository>();
-        var uow = Substitute.For<IContentToursEventUnitOfWork>();
+        var uow = Substitute.For<IContentToursUnitOfWork>();
         var cache = Substitute.For<HybridCache>();
         var currentUser = Substitute.For<ICurrentUser>();
         var logger = Substitute.For<ILogger<RejectTourCommandHandler>>();
@@ -102,7 +102,7 @@ public sealed class AdminLifecycleCommandHandlerTests
     public async Task Reject_PendingTransitionsToRejectedWithReasonAndAuditFields()
     {
         var repo = Substitute.For<ITourRepository>();
-        var uow = Substitute.For<IContentToursEventUnitOfWork>();
+        var uow = Substitute.For<IContentToursUnitOfWork>();
         var cache = Substitute.For<HybridCache>();
         var currentUser = Substitute.For<ICurrentUser>();
         var logger = Substitute.For<ILogger<RejectTourCommandHandler>>();
@@ -129,7 +129,7 @@ public sealed class AdminLifecycleCommandHandlerTests
     public async Task Suspend_ApprovedTransitionsToSuspendedAndStoresReason()
     {
         var repo = Substitute.For<ITourRepository>();
-        var uow = Substitute.For<IContentToursEventUnitOfWork>();
+        var uow = Substitute.For<IContentToursUnitOfWork>();
         var cache = Substitute.For<HybridCache>();
         var currentUser = Substitute.For<ICurrentUser>();
         var logger = Substitute.For<ILogger<SuspendTourCommandHandler>>();
@@ -153,7 +153,7 @@ public sealed class AdminLifecycleCommandHandlerTests
     public async Task Reinstate_SuspendedTransitionsBackToApprovedAndClearsSuspension()
     {
         var repo = Substitute.For<ITourRepository>();
-        var uow = Substitute.For<IContentToursEventUnitOfWork>();
+        var uow = Substitute.For<IContentToursUnitOfWork>();
         var cache = Substitute.For<HybridCache>();
         var logger = Substitute.For<ILogger<ReinstateTourCommandHandler>>();
 

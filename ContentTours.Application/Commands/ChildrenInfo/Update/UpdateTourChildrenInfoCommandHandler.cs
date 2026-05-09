@@ -14,7 +14,7 @@ namespace ContentTours.Application.Commands.ChildrenInfo.Update;
 
 public sealed class UpdateTourChildrenInfoCommandHandler(
     ITourRepository tourRepository,
-    IContentToursEventUnitOfWork unitOfWork,
+    IContentToursUnitOfWork unitOfWork,
     HybridCache cache,
     ICurrentUser currentUser,
     ILogger<UpdateTourChildrenInfoCommandHandler> logger)

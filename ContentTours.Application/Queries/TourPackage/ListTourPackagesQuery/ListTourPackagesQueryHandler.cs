@@ -42,7 +42,6 @@ public sealed class ListTourPackagesQueryHandler(
             var dtos = rows
                 .Select(r => new TourPackageSummaryDto(
                     Id:                 r.Id,
-                    CreatedByUserId:    r.CreatedByUserId,
                     Name:               r.Name,
                     Description:        r.Description,
                     PriceAmount:        r.PriceAmount,

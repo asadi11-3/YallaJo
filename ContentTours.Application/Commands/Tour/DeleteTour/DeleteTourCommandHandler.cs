@@ -15,7 +15,7 @@ namespace ContentTours.Application.Commands.Tour.DeleteTour;
 public sealed class DeleteTourCommandHandler(
     ITourRepository tourRepository,
     IContentToursOutboxWriter outboxWriter,
-    IContentToursEventUnitOfWork unitOfWork,
+    IContentToursUnitOfWork unitOfWork,
     HybridCache cache,
     ICurrentUser currentUser,
     ILogger<DeleteTourCommandHandler> logger)

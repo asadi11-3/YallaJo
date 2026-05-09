@@ -25,13 +25,13 @@ public sealed class UpdateTourChildrenInfoCommandHandlerTests
     private static (
         UpdateTourChildrenInfoCommandHandler Handler,
         ITourRepository TourRepo,
-        IContentToursEventUnitOfWork Uow,
+        IContentToursUnitOfWork Uow,
         HybridCache Cache,
         ICurrentUser CurrentUser)
         Build()
     {
         var tourRepo = Substitute.For<ITourRepository>();
-        var uow = Substitute.For<IContentToursEventUnitOfWork>();
+        var uow = Substitute.For<IContentToursUnitOfWork>();
         var cache = Substitute.For<HybridCache>();
         var currentUser = Substitute.For<ICurrentUser>();
         var logger = Substitute.For<ILogger<UpdateTourChildrenInfoCommandHandler>>();

@@ -13,7 +13,7 @@ namespace ContentTours.Application.Commands.Tour.SuspendTour;
 
 public sealed class SuspendTourCommandHandler(
     ITourRepository tourRepository,
-    IContentToursEventUnitOfWork unitOfWork,
+    IContentToursUnitOfWork unitOfWork,
     HybridCache cache,
     ICurrentUser currentUser,
     ILogger<SuspendTourCommandHandler> logger)

@@ -9,7 +9,14 @@ public static class ContentToursCacheKeys
 
     public const string TagToursFeatured = "tours:featured";
 
+    public const string TagToursSuggest = "tours:suggest";
+
     public static string TagForTour(Guid tourId) => $"tour:{tourId}";
+
+    public static string TagForMyTours(Guid userId) => $"my-tours:{userId}";
+
+    public static string TagForTourSlug(string slug) =>
+        $"tour:slug:{(slug ?? string.Empty).Trim().ToLowerInvariant()}";
 
     public const string TagPackages = "packages";
 

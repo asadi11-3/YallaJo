@@ -1,3 +1,4 @@
+using ContentCore.Contracts.Attachments;
 using ContentCore.Contracts.Authorization;
 using ContentCore.Application.Authorization;
 using ContentCore.Application.Interfaces;
@@ -47,6 +48,8 @@ public static class DependencyInjection
         services.AddScoped<ISpecializationRepository, SpecializationRepository>();
         services.AddScoped<ITranslationCacheRepository, TranslationCacheRepository>();
         services.AddScoped<IAttachmentRepository, AttachmentRepository>();
+
+        services.AddScoped<IAttachmentExistenceService, AttachmentExistenceService>();
         services.AddScoped<IEntityCategoryRepository, EntityCategoryRepository>();
         services.AddScoped<IEntityTagRepository, EntityTagRepository>();
         services.AddScoped<ICategoryHierarchyService, CategoryHierarchyService>();

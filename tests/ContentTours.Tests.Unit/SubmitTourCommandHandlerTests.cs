@@ -1,6 +1,4 @@
-using ContentCore.Domain.Entities;
-using ContentCore.Domain.Enums;
-using ContentCore.Domain.Repositories;
+using ContentCore.Contracts.Attachments;
 using ContentPlaces.Contracts.Places;
 using ContentTours.Application.Commands.Tour.SubmitTour;
 using ContentTours.Application.Interfaces;
@@ -22,21 +20,21 @@ public sealed class SubmitTourCommandHandlerTests
     private static (
         SubmitTourCommandHandler Handler,
         ITourRepository TourRepo,
-        IAttachmentRepository AttachmentRepo,
+        IAttachmentExistenceService AttachmentExistence,
         IPlaceExistenceService PlaceExists,
         ICurrentUser CurrentUser) BuildSubject()
     {
         var tourRepo = Substitute.For<ITourRepository>();
-        var attachmentRepo = Substitute.For<IAttachmentRepository>();
+        var attachmentExistence = Substitute.For<IAttachmentExistenceService>();
         var place = Substitute.For<IPlaceExistenceService>();
-        var uow = Substitute.For<IContentToursEventUnitOfWork>();
+        var uow = Substitute.For<IContentToursUnitOfWork>();
         var cache = Substitute.For<HybridCache>();
         var currentUser = Substitute.For<ICurrentUser>();
         var logger = Substitute.For<ILogger<SubmitTourCommandHandler>>();
 
         var handler = new SubmitTourCommandHandler(
-            tourRepo, attachmentRepo, place, uow, cache, currentUser, logger);
-        return (handler, tourRepo, attachmentRepo, place, currentUser);
+            tourRepo, attachmentExistence, place, uow, cache, currentUser, logger);
+        return (handler, tourRepo, attachmentExistence, place, currentUser);
     }
 
     private static Tour DraftWithoutMeetingPoint(Guid owner) =>
@@ -45,7 +43,7 @@ public sealed class SubmitTourCommandHandlerTests
     [Fact]
     public async Task MissingPreSubmitRequirementsReturnAggregatedUmbrella422()
     {
-        var (handler, tourRepo, attachmentRepo, _, currentUser) = BuildSubject();
+        var (handler, tourRepo, attachmentExistence, _, currentUser) = BuildSubject();
         var owner = Guid.NewGuid();
 
         // A pristine Draft tour fails every pre-submit check (no images, no pricing,
@@ -55,8 +53,8 @@ public sealed class SubmitTourCommandHandlerTests
         currentUser.UserId.Returns(owner);
         currentUser.Roles.Returns(new[] { AppRoles.User });
         tourRepo.GetByIdAsync(tour.Id, Arg.Any<CancellationToken>(), Arg.Any<bool>()).Returns(tour);
-        attachmentRepo.GetEntityImagesAsync(EntityType.Tour, tour.Id, Arg.Any<CancellationToken>())
-            .Returns(Array.Empty<EntityImage>());
+        attachmentExistence.HasEntityImageAsync("Tour", tour.Id, Arg.Any<CancellationToken>())
+            .Returns(false);
         tourRepo.HasActivePricingAsync(tour.Id, Arg.Any<CancellationToken>()).Returns(false);
         tourRepo.HasActiveScheduleAsync(tour.Id, Arg.Any<CancellationToken>()).Returns(false);
         tourRepo.HasActiveAdultPricingAsync(tour.Id, Arg.Any<CancellationToken>()).Returns(false);
@@ -80,7 +78,7 @@ public sealed class SubmitTourCommandHandlerTests
     [Fact]
     public async Task ValidDraftTransitionsToPending()
     {
-        var (handler, tourRepo, attachmentRepo, _, currentUser) = BuildSubject();
+        var (handler, tourRepo, attachmentExistence, _, currentUser) = BuildSubject();
         var owner = Guid.NewGuid();
 
         // Build a Draft tour that satisfies every pre-submit gate the aggregate does
@@ -95,8 +93,8 @@ public sealed class SubmitTourCommandHandlerTests
         tourRepo.GetByIdAsync(tour.Id, Arg.Any<CancellationToken>(), Arg.Any<bool>()).Returns(tour);
 
         // Repository checks all pass.
-        attachmentRepo.GetEntityImagesAsync(EntityType.Tour, tour.Id, Arg.Any<CancellationToken>())
-            .Returns(new[] { CreateEntityImage(tour.Id) });
+        attachmentExistence.HasEntityImageAsync("Tour", tour.Id, Arg.Any<CancellationToken>())
+            .Returns(true);
         tourRepo.HasActivePricingAsync(tour.Id, Arg.Any<CancellationToken>()).Returns(true);
         tourRepo.HasActiveScheduleAsync(tour.Id, Arg.Any<CancellationToken>()).Returns(true);
         tourRepo.HasActiveAdultPricingAsync(tour.Id, Arg.Any<CancellationToken>()).Returns(true);
@@ -106,13 +104,4 @@ public sealed class SubmitTourCommandHandlerTests
         result.IsSuccess.Should().BeTrue();
         tour.Status.Should().Be(TourStatus.Pending);
     }
-
-    private static EntityImage CreateEntityImage(Guid tourId) =>
-        EntityImage.Create(
-            entityType:   EntityType.Tour,
-            entityId:     tourId,
-            attachmentId: Guid.NewGuid(),
-            imageSize:    ImageSize.Medium,
-            sortOrder:    0,
-            isPrimary:    true);
 }

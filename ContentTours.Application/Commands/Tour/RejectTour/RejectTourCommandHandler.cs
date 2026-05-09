@@ -13,7 +13,7 @@ namespace ContentTours.Application.Commands.Tour.RejectTour;
 
 public sealed class RejectTourCommandHandler(
     ITourRepository tourRepository,
-    IContentToursEventUnitOfWork unitOfWork,
+    IContentToursUnitOfWork unitOfWork,
     HybridCache cache,
     ICurrentUser currentUser,
     ILogger<RejectTourCommandHandler> logger)
