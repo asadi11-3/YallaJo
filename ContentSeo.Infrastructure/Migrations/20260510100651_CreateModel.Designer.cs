@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ContentSeo.Infrastructure.Migrations
 {
     [DbContext(typeof(ContentSeoDbContext))]
-    [Migration("20260429210232_CreateModel")]
+    [Migration("20260510100651_CreateModel")]
     partial class CreateModel
     {
         /// <inheritdoc />

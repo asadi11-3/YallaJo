@@ -849,11 +849,13 @@ namespace ContentTours.Infrastructure.Migrations
 
             modelBuilder.Entity("ContentTours.Domain.Entities.TourTourGuide", b =>
                 {
-                    b.HasOne("ContentTours.Domain.Entities.Tour", null)
+                    b.HasOne("ContentTours.Domain.Entities.Tour", "Tour")
                         .WithMany()
                         .HasForeignKey("TourId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Tour");
                 });
 
             modelBuilder.Entity("ContentTours.Domain.Entities.TourTranslation", b =>

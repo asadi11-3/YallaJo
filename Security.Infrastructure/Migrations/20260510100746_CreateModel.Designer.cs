@@ -12,7 +12,7 @@ using Security.Infrastructure.Persistence;
 namespace Security.Infrastructure.Migrations
 {
     [DbContext(typeof(SecurityDbContext))]
-    [Migration("20260429210344_CreateModel")]
+    [Migration("20260510100746_CreateModel")]
     partial class CreateModel
     {
         /// <inheritdoc />

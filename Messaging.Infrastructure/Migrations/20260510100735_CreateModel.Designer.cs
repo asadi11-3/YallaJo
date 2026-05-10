@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Messaging.Infrastructure.Migrations
 {
     [DbContext(typeof(MessagingDbContext))]
-    [Migration("20260429210324_CreateModel")]
+    [Migration("20260510100735_CreateModel")]
     partial class CreateModel
     {
         /// <inheritdoc />

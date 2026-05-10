@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Analytics.Infrastructure.Migrations
 {
     [DbContext(typeof(AnalyticsDbContext))]
-    [Migration("20260429210044_CreateModel")]
+    [Migration("20260510100527_CreateModel")]
     partial class CreateModel
     {
         /// <inheritdoc />

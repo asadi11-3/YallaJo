@@ -114,19 +114,6 @@ namespace ContentPlaces.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "PlaceBusinesses",
-                schema: "content_places",
-                columns: table => new
-                {
-                    PlaceId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    BusinessId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_PlaceBusinesses", x => new { x.PlaceId, x.BusinessId });
-                });
-
-            migrationBuilder.CreateTable(
                 name: "Places",
                 schema: "content_places",
                 columns: table => new
@@ -309,6 +296,33 @@ namespace ContentPlaces.Infrastructure.Migrations
                         column: x => x.BusinessId,
                         principalSchema: "content_places",
                         principalTable: "Businesses",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "PlaceBusinesses",
+                schema: "content_places",
+                columns: table => new
+                {
+                    PlaceId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    BusinessId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_PlaceBusinesses", x => new { x.PlaceId, x.BusinessId });
+                    table.ForeignKey(
+                        name: "FK_PlaceBusinesses_Businesses_BusinessId",
+                        column: x => x.BusinessId,
+                        principalSchema: "content_places",
+                        principalTable: "Businesses",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_PlaceBusinesses_Places_PlaceId",
+                        column: x => x.PlaceId,
+                        principalSchema: "content_places",
+                        principalTable: "Places",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });

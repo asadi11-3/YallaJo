@@ -49,6 +49,33 @@ namespace ContentTours.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "TourPackages",
+                schema: "content_tours",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    CreatedByUserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
+                    Price = table.Column<decimal>(type: "decimal(19,4)", precision: 19, scale: 4, nullable: false),
+                    PriceCurrency = table.Column<string>(type: "nvarchar(3)", maxLength: 3, nullable: false, defaultValue: "JOD"),
+                    Currency = table.Column<string>(type: "varchar(3)", unicode: false, maxLength: 3, nullable: false),
+                    MaxParticipants = table.Column<int>(type: "int", nullable: true),
+                    ValidFrom = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    ValidTo = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false, defaultValue: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
+                    DeletedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_TourPackages", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Tours",
                 schema: "content_tours",
                 columns: table => new
@@ -112,6 +139,30 @@ namespace ContentTours.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "TourPackageInclusions",
+                schema: "content_tours",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    TourPackageId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
+                    SortOrder = table.Column<int>(type: "int", nullable: false, defaultValue: 1),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_TourPackageInclusions", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_TourPackageInclusions_TourPackages_TourPackageId",
+                        column: x => x.TourPackageId,
+                        principalSchema: "content_tours",
+                        principalTable: "TourPackages",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "TourChildFacilities",
                 schema: "content_tours",
                 columns: table => new
@@ -132,37 +183,30 @@ namespace ContentTours.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "TourPackages",
+                name: "TourPackageTours",
                 schema: "content_tours",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    TourId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Name = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
-                    Description = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
-                    Price = table.Column<decimal>(type: "decimal(19,4)", precision: 19, scale: 4, nullable: false),
-                    PriceCurrency = table.Column<string>(type: "nvarchar(3)", maxLength: 3, nullable: false, defaultValue: "JOD"),
-                    Currency = table.Column<string>(type: "varchar(3)", unicode: false, maxLength: 3, nullable: false),
-                    MaxParticipants = table.Column<int>(type: "int", nullable: true),
-                    ValidFrom = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    ValidTo = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    IsActive = table.Column<bool>(type: "bit", nullable: false, defaultValue: true),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    IsDeleted = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
-                    DeletedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false)
+                    TourPackageId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    TourId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_TourPackages", x => x.Id);
+                    table.PrimaryKey("PK_TourPackageTours", x => new { x.TourPackageId, x.TourId });
                     table.ForeignKey(
-                        name: "FK_TourPackages_Tours_TourId",
+                        name: "FK_TourPackageTours_TourPackages_TourPackageId",
+                        column: x => x.TourPackageId,
+                        principalSchema: "content_tours",
+                        principalTable: "TourPackages",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_TourPackageTours_Tours_TourId",
                         column: x => x.TourId,
                         principalSchema: "content_tours",
                         principalTable: "Tours",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -299,30 +343,6 @@ namespace ContentTours.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "TourPackageInclusions",
-                schema: "content_tours",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    TourPackageId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Description = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
-                    SortOrder = table.Column<int>(type: "int", nullable: false, defaultValue: 0),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_TourPackageInclusions", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_TourPackageInclusions_TourPackages_TourPackageId",
-                        column: x => x.TourPackageId,
-                        principalSchema: "content_tours",
-                        principalTable: "TourPackages",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "TourPricingTierTranslations",
                 schema: "content_tours",
                 columns: table => new
@@ -360,15 +380,28 @@ namespace ContentTours.Infrastructure.Migrations
                 columns: new[] { "ProcessedOnUtc", "RetryCount", "OccurredOnUtc" });
 
             migrationBuilder.CreateIndex(
-                name: "IX_TourPackageInclusions_TourPackageId",
+                name: "UX_TourPackageInclusions_PackageId_Description",
                 schema: "content_tours",
                 table: "TourPackageInclusions",
-                column: "TourPackageId");
+                columns: new[] { "TourPackageId", "Description" },
+                unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_TourPackages_TourId",
+                name: "IX_TourPackages_CreatedByUserId",
                 schema: "content_tours",
                 table: "TourPackages",
+                column: "CreatedByUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_TourPackages_ValidTo",
+                schema: "content_tours",
+                table: "TourPackages",
+                column: "ValidTo");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_TourPackageTours_TourId",
+                schema: "content_tours",
+                table: "TourPackageTours",
                 column: "TourId");
 
             migrationBuilder.CreateIndex(
@@ -442,6 +475,10 @@ namespace ContentTours.Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "TourPackageInclusions",
+                schema: "content_tours");
+
+            migrationBuilder.DropTable(
+                name: "TourPackageTours",
                 schema: "content_tours");
 
             migrationBuilder.DropTable(

@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ContentPlaces.Infrastructure.Migrations
 {
     [DbContext(typeof(ContentPlacesDbContext))]
-    [Migration("20260429210213_CreateModel")]
+    [Migration("20260510100635_CreateModel")]
     partial class CreateModel
     {
         /// <inheritdoc />
@@ -850,6 +850,25 @@ namespace ContentPlaces.Infrastructure.Migrations
 
                     b.Navigation("Location")
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("ContentPlaces.Domain.Entities.PlaceBusiness", b =>
+                {
+                    b.HasOne("ContentPlaces.Domain.Entities.Business", "Business")
+                        .WithMany()
+                        .HasForeignKey("BusinessId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ContentPlaces.Domain.Entities.Place", "Place")
+                        .WithMany()
+                        .HasForeignKey("PlaceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Business");
+
+                    b.Navigation("Place");
                 });
 
             modelBuilder.Entity("ContentPlaces.Domain.Entities.PlaceTranslation", b =>

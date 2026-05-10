@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ContentTours.Infrastructure.Migrations
 {
     [DbContext(typeof(ContentToursDbContext))]
-    [Migration("20260504073849_RefactorTourPackageBundleModel")]
-    partial class RefactorTourPackageBundleModel
+    [Migration("20260510100703_CreateModel")]
+    partial class CreateModel
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -852,11 +852,13 @@ namespace ContentTours.Infrastructure.Migrations
 
             modelBuilder.Entity("ContentTours.Domain.Entities.TourTourGuide", b =>
                 {
-                    b.HasOne("ContentTours.Domain.Entities.Tour", null)
+                    b.HasOne("ContentTours.Domain.Entities.Tour", "Tour")
                         .WithMany()
                         .HasForeignKey("TourId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Tour");
                 });
 
             modelBuilder.Entity("ContentTours.Domain.Entities.TourTranslation", b =>

@@ -12,7 +12,7 @@ using Tracking.Infrastructure.Persistence;
 namespace Tracking.Infrastructure.Migrations
 {
     [DbContext(typeof(TrackingDbContext))]
-    [Migration("20260429210437_CreateModel")]
+    [Migration("20260510100836_CreateModel")]
     partial class CreateModel
     {
         /// <inheritdoc />
