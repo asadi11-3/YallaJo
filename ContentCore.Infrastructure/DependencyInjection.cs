@@ -91,6 +91,12 @@ public static class DependencyInjection
         services.AddScoped<IActiveLanguageProvider, ActiveLanguageProvider>();
         services.AddScoped<IEntityTranslationOrchestrator, EntityTranslationOrchestrator>();
 
+        // ── Translation Backfill Store (CONTENTCORE-FOLLOWUP-BACKFILL-001) ──
+        // Application port that encapsulates ContentCoreDbContext for the
+        // TriggerTranslationBackfillCommandHandler so the Application layer
+        // never depends on the Infrastructure DbContext directly.
+        services.AddScoped<ITranslationBackfillStore, TranslationBackfillStore>();
+
         // ── Cross-module ownership resolver ──────────────────────────────────
         // Fans out by EntityType to per-module ownership probes registered by
         // each owning module's *.Infrastructure DI (IPlaceOwnershipService,

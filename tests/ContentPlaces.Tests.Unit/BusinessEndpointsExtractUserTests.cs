@@ -70,8 +70,6 @@ public sealed class BusinessEndpointsExtractUserTests
             "Admin role must be recognised as admin-tier (RolePrivilegeLevel.Admin == 60)");
     }
 
-    // ── 2. SuperAdmin ─────────────────────────────────────────────────────────
-
     [Fact]
     public void ExtractUser_SuperAdminRole_IsAdminTrue()
     {

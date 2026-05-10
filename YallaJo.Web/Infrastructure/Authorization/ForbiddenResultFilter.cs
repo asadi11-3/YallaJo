@@ -20,8 +20,6 @@ public sealed class ForbiddenResultFilter : IAsyncResultFilter
         await next();
     }
 
-    // ── HTML page → AccessDenied.cshtml ───────────────────────────────────────
-
     private static IActionResult BuildHtmlResult(ResultExecutingContext context)
     {
         context.HttpContext.Response.StatusCode = StatusCodes.Status403Forbidden;
@@ -49,9 +47,6 @@ public sealed class ForbiddenResultFilter : IAsyncResultFilter
             StatusCode   = StatusCodes.Status403Forbidden,
             ContentTypes = { "application/problem+json" },
         };
-
-    // ── Request type detection ────────────────────────────────────────────────
-
     private static bool IsAjaxOrJsonRequest(HttpRequest request)
     {
         // XMLHttpRequest (jQuery AJAX, fetch with header)

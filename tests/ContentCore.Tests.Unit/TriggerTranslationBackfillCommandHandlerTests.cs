@@ -1,6 +1,5 @@
-using System.Linq.Expressions;
 using ContentCore.Application.Commands.Translation.TriggerTranslationBackfill;
-using ContentCore.Domain.Entities;
+using ContentCore.Application.Interfaces;
 using ContentCore.Domain.Repositories;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
@@ -18,27 +17,37 @@ file static class TranslationBackfillHandlerBuilder
     /// <summary>
     /// Builds the handler with sensible no-op defaults for dependencies that are
     /// not under test.  Individual tests override only the subs they care about.
+    ///
+    /// CONTENTCORE-FOLLOWUP-BACKFILL-001 — handler now takes
+    /// <see cref="IActiveLanguageProvider"/> and <see cref="ITranslationBackfillStore"/>
+    /// instead of the prior repository-based dependencies.
     /// </summary>
     internal static TriggerTranslationBackfillCommandHandler Build(
-        ITagRepository? tagRepository = null,
-        ISpecializationRepository? specializationRepository = null,
         IContentCoreUnitOfWork? unitOfWork = null,
-        IEntityTranslationOrchestrator? orchestrator = null) =>
+        IEntityTranslationOrchestrator? orchestrator = null,
+        IActiveLanguageProvider? activeLanguageProvider = null,
+        ITranslationBackfillStore? backfillStore = null) =>
         new(
-            tagRepository      ?? Substitute.For<ITagRepository>(),
-            specializationRepository ?? Substitute.For<ISpecializationRepository>(),
-            unitOfWork         ?? OwnershipAuthFixture.NoOpUnitOfWork(),
-            orchestrator       ?? NoOpOrchestrator(),
+            unitOfWork             ?? OwnershipAuthFixture.NoOpUnitOfWork(),
+            orchestrator           ?? NoOpOrchestrator(),
+            activeLanguageProvider ?? NoOpLanguageProvider(),
+            backfillStore          ?? NoOpBackfillStore(),
             Substitute.For<ILogger<TriggerTranslationBackfillCommandHandler>>());
 
     /// <summary>
     /// Orchestrator that always returns an empty translation set so the handler
-    /// iterates, produces zero new translations (skipped++) and falls straight
-    /// through to SaveChangesAsync — which is the seam under test.
+    /// iterates, produces zero new translations, and falls straight through to
+    /// the per-batch SaveChangesAsync seam.
     /// </summary>
     internal static IEntityTranslationOrchestrator NoOpOrchestrator()
     {
         var o = Substitute.For<IEntityTranslationOrchestrator>();
+        o.TranslateAsync(
+                Arg.Any<IReadOnlyDictionary<string, string>>(),
+                Arg.Any<string>(),
+                Arg.Any<IReadOnlyList<string>>(),
+                Arg.Any<CancellationToken>())
+            .Returns(Array.Empty<EntityFieldTranslationSet>());
         o.TranslateToAllActiveLanguagesAsync(
                 Arg.Any<IReadOnlyDictionary<string, string>>(),
                 Arg.Any<string>(),
@@ -47,44 +56,96 @@ file static class TranslationBackfillHandlerBuilder
         return o;
     }
 
-    // ── Entity helpers ───────────────────────────────────────────────────────
-
-    internal static Tag OneTag() =>
-        Tag.Create("Adventure", "adventure", "en");
-
-    internal static Specialization OneSpecialization() =>
-        Specialization.Create("Guide", null, null, "en");
-
-    // ── Repository helpers ────────────────────────────────────────────────────
-
     /// <summary>
-    /// Configures the tag repository to return the given list for any
-    /// GetAllAsync call (positional args matched via Arg.Any).
+    /// Active-language provider that returns zero active languages — the
+    /// anti-join then has nothing to filter against and yields zero
+    /// candidates.  Use this for the success / concurrency / case-insensitivity
+    /// tests that don't care about candidate iteration.
     /// </summary>
-    internal static ITagRepository TagRepoReturning(List<Tag> tags)
+    internal static IActiveLanguageProvider NoOpLanguageProvider()
     {
-        var repo = Substitute.For<ITagRepository>();
-        repo.GetAllAsync(
-                Arg.Any<Expression<Func<Tag, bool>>>(),
-                Arg.Any<Func<IQueryable<Tag>, IQueryable<Tag>>>(),
-                Arg.Any<Func<IQueryable<Tag>, IOrderedQueryable<Tag>>>(),
-                Arg.Any<bool>(),
-                Arg.Any<CancellationToken>())
-            .Returns(tags);
-        return repo;
+        var p = Substitute.For<IActiveLanguageProvider>();
+        p.GetActiveLanguagesAsync(Arg.Any<CancellationToken>())
+            .Returns(Array.Empty<ActiveLanguage>());
+        return p;
     }
 
-    internal static ISpecializationRepository SpecRepoReturning(List<Specialization> specs)
+    /// <summary>
+    /// Backfill store that returns empty candidate batches — the handler exits
+    /// the while-loop on the first iteration without calling Add* or
+    /// translator.  Use this for tests that exercise the inbox/concurrency
+    /// surface, not the iteration surface.
+    /// </summary>
+    internal static ITranslationBackfillStore NoOpBackfillStore()
     {
-        var repo = Substitute.For<ISpecializationRepository>();
-        repo.GetAllAsync(
-                Arg.Any<Expression<Func<Specialization, bool>>>(),
-                Arg.Any<Func<IQueryable<Specialization>, IQueryable<Specialization>>>(),
-                Arg.Any<Func<IQueryable<Specialization>, IOrderedQueryable<Specialization>>>(),
-                Arg.Any<bool>(),
+        var s = Substitute.For<ITranslationBackfillStore>();
+        s.FetchNextTagBackfillCandidatesAsync(
+                Arg.Any<IReadOnlyList<Guid>>(),
+                Arg.Any<int>(),
                 Arg.Any<CancellationToken>())
-            .Returns(specs);
-        return repo;
+            .Returns(Array.Empty<TagBackfillCandidate>());
+        s.FetchNextSpecializationBackfillCandidatesAsync(
+                Arg.Any<IReadOnlyList<Guid>>(),
+                Arg.Any<int>(),
+                Arg.Any<CancellationToken>())
+            .Returns(Array.Empty<SpecializationBackfillCandidate>());
+        s.GetExistingTagTranslationLanguageIdsAsync(
+                Arg.Any<IReadOnlyList<Guid>>(),
+                Arg.Any<CancellationToken>())
+            .Returns(Array.Empty<TranslationLanguagePair>());
+        s.GetExistingSpecializationTranslationLanguageIdsAsync(
+                Arg.Any<IReadOnlyList<Guid>>(),
+                Arg.Any<CancellationToken>())
+            .Returns(Array.Empty<TranslationLanguagePair>());
+        return s;
+    }
+
+    /// <summary>
+    /// Backfill store that returns ONE Tag candidate on the first fetch, then
+    /// empty.  Used to exercise the per-batch SaveChanges path with a non-zero
+    /// batch.
+    /// </summary>
+    internal static ITranslationBackfillStore TagStoreWithSingleCandidate(Guid tagId)
+    {
+        var s = NoOpBackfillStore();
+        s.FetchNextTagBackfillCandidatesAsync(
+                Arg.Any<IReadOnlyList<Guid>>(),
+                Arg.Any<int>(),
+                Arg.Any<CancellationToken>())
+            .Returns(
+                _ => new[] { new TagBackfillCandidate(tagId, "Adventure", "en") },
+                _ => Array.Empty<TagBackfillCandidate>());
+        return s;
+    }
+
+    /// <summary>
+    /// Backfill store that returns ONE Specialization candidate on the first
+    /// fetch, then empty.
+    /// </summary>
+    internal static ITranslationBackfillStore SpecStoreWithSingleCandidate(Guid specId)
+    {
+        var s = NoOpBackfillStore();
+        s.FetchNextSpecializationBackfillCandidatesAsync(
+                Arg.Any<IReadOnlyList<Guid>>(),
+                Arg.Any<int>(),
+                Arg.Any<CancellationToken>())
+            .Returns(
+                _ => new[] { new SpecializationBackfillCandidate(specId, "Guide", null, "en") },
+                _ => Array.Empty<SpecializationBackfillCandidate>());
+        return s;
+    }
+
+    /// <summary>
+    /// Active-language provider that returns ONE active language so the
+    /// anti-join has a non-empty filter set and the handler reaches the
+    /// per-candidate orchestrator/Add path.
+    /// </summary>
+    internal static IActiveLanguageProvider OneActiveLanguageProvider(Guid languageId, string code = "fr")
+    {
+        var p = Substitute.For<IActiveLanguageProvider>();
+        p.GetActiveLanguagesAsync(Arg.Any<CancellationToken>())
+            .Returns(new[] { new ActiveLanguage(languageId, code) });
+        return p;
     }
 
     /// <summary>Returns a unit of work whose SaveChangesAsync throws DbUpdateConcurrencyException.</summary>
@@ -97,18 +158,24 @@ file static class TranslationBackfillHandlerBuilder
     }
 }
 
-// ── Concurrency conflict tests (CONTENTCORE-STD-P2-001) ───────────────────
+// ── Concurrency conflict tests (CONTENTCORE-STD-P2-001 — preserved behavior) ─
 
 /// <summary>
-/// Regression tests for the DbUpdateConcurrencyException handling added to
-/// TriggerTranslationBackfillCommandHandler in CONTENTCORE-STD-P2-001.
+/// Regression tests for the DbUpdateConcurrencyException handling on the
+/// TriggerTranslationBackfillCommandHandler save path.
 ///
-/// Both backfill paths (tag and specialization) call a single
-/// unitOfWork.SaveChangesAsync at the end of the iteration loop.
-/// When that call throws DbUpdateConcurrencyException the handler must:
-///   - catch the exception (not let it escape),
-///   - return Outcome.Conflict,
-///   - include Error.Code == "Translation.ConcurrencyConflict".
+/// <para>
+/// Under CONTENTCORE-FOLLOWUP-BACKFILL-001 the handler now performs per-batch
+/// SaveChangesAsync — but only when there is a non-empty candidate batch.
+/// To force the save path we wire up a single-candidate store and a single
+/// active language so the handler reaches the Add → SaveChanges seam.
+/// </para>
+///
+/// <para>
+/// On <see cref="DbUpdateConcurrencyException"/> the handler must:
+/// catch the exception (not let it escape), return <c>Outcome.Conflict</c>,
+/// and include <c>Error.Code == "Translation.ConcurrencyConflict"</c>.
+/// </para>
 /// </summary>
 public sealed class TriggerTranslationBackfillConcurrencyTests
 {
@@ -117,10 +184,11 @@ public sealed class TriggerTranslationBackfillConcurrencyTests
     [Fact]
     public async Task Handle_ShouldReturnConflict_WhenTagSaveChangesThrowsDbUpdateConcurrencyException()
     {
+        var langId = Guid.NewGuid();
         var handler = TranslationBackfillHandlerBuilder.Build(
-            tagRepository: TranslationBackfillHandlerBuilder.TagRepoReturning(
-                [TranslationBackfillHandlerBuilder.OneTag()]),
-            unitOfWork: TranslationBackfillHandlerBuilder.ConcurrentUnitOfWork());
+            unitOfWork:             TranslationBackfillHandlerBuilder.ConcurrentUnitOfWork(),
+            activeLanguageProvider: TranslationBackfillHandlerBuilder.OneActiveLanguageProvider(langId),
+            backfillStore:          TranslationBackfillHandlerBuilder.TagStoreWithSingleCandidate(Guid.NewGuid()));
 
         var result = await handler.Handle(
             new TriggerTranslationBackfillCommand("tag"),
@@ -134,20 +202,23 @@ public sealed class TriggerTranslationBackfillConcurrencyTests
     }
 
     [Fact]
-    public async Task Handle_ShouldReturnConflict_WhenTagSaveChangesThrows_EvenWhenListIsEmpty()
+    public async Task Handle_ShouldReturnSuccess_WhenTagBatchIsEmpty_EvenIfUowWouldThrow()
     {
-        // SaveChangesAsync is called unconditionally after the loop,
-        // even when there are no entities to process.
+        // Under the new design, SaveChanges is called only when there is a
+        // non-empty candidate batch.  An empty backlog therefore never reaches
+        // the (would-be-throwing) save and the handler returns Success.
         var handler = TranslationBackfillHandlerBuilder.Build(
-            tagRepository: TranslationBackfillHandlerBuilder.TagRepoReturning([]),
             unitOfWork: TranslationBackfillHandlerBuilder.ConcurrentUnitOfWork());
 
         var result = await handler.Handle(
             new TriggerTranslationBackfillCommand("tag"),
             CancellationToken.None);
 
-        result.Outcome.Should().Be(Outcome.Conflict);
-        result.Error!.Code.Should().Be("Translation.ConcurrencyConflict");
+        result.IsSuccess.Should().BeTrue(
+            "with no candidates the handler exits before the per-batch SaveChanges and never sees the conflict");
+        result.Value!.TotalProcessed.Should().Be(0);
+        result.Value.TotalTranslationsAdded.Should().Be(0);
+        result.Value.TotalSkipped.Should().Be(0);
     }
 
     // ── specialization path ───────────────────────────────────────────────────
@@ -155,10 +226,11 @@ public sealed class TriggerTranslationBackfillConcurrencyTests
     [Fact]
     public async Task Handle_ShouldReturnConflict_WhenSpecializationSaveChangesThrowsDbUpdateConcurrencyException()
     {
+        var langId = Guid.NewGuid();
         var handler = TranslationBackfillHandlerBuilder.Build(
-            specializationRepository: TranslationBackfillHandlerBuilder.SpecRepoReturning(
-                [TranslationBackfillHandlerBuilder.OneSpecialization()]),
-            unitOfWork: TranslationBackfillHandlerBuilder.ConcurrentUnitOfWork());
+            unitOfWork:             TranslationBackfillHandlerBuilder.ConcurrentUnitOfWork(),
+            activeLanguageProvider: TranslationBackfillHandlerBuilder.OneActiveLanguageProvider(langId),
+            backfillStore:          TranslationBackfillHandlerBuilder.SpecStoreWithSingleCandidate(Guid.NewGuid()));
 
         var result = await handler.Handle(
             new TriggerTranslationBackfillCommand("specialization"),
@@ -172,18 +244,20 @@ public sealed class TriggerTranslationBackfillConcurrencyTests
     }
 
     [Fact]
-    public async Task Handle_ShouldReturnConflict_WhenSpecializationSaveChangesThrows_EvenWhenListIsEmpty()
+    public async Task Handle_ShouldReturnSuccess_WhenSpecializationBatchIsEmpty_EvenIfUowWouldThrow()
     {
         var handler = TranslationBackfillHandlerBuilder.Build(
-            specializationRepository: TranslationBackfillHandlerBuilder.SpecRepoReturning([]),
             unitOfWork: TranslationBackfillHandlerBuilder.ConcurrentUnitOfWork());
 
         var result = await handler.Handle(
             new TriggerTranslationBackfillCommand("specialization"),
             CancellationToken.None);
 
-        result.Outcome.Should().Be(Outcome.Conflict);
-        result.Error!.Code.Should().Be("Translation.ConcurrencyConflict");
+        result.IsSuccess.Should().BeTrue(
+            "with no candidates the handler exits before the per-batch SaveChanges and never sees the conflict");
+        result.Value!.TotalProcessed.Should().Be(0);
+        result.Value.TotalTranslationsAdded.Should().Be(0);
+        result.Value.TotalSkipped.Should().Be(0);
     }
 
     // ── exception does not escape ─────────────────────────────────────────────
@@ -191,12 +265,12 @@ public sealed class TriggerTranslationBackfillConcurrencyTests
     [Fact]
     public async Task Handle_ShouldNotThrow_WhenSaveChangesThrowsDbUpdateConcurrencyException()
     {
+        var langId = Guid.NewGuid();
         var handler = TranslationBackfillHandlerBuilder.Build(
-            tagRepository: TranslationBackfillHandlerBuilder.TagRepoReturning(
-                [TranslationBackfillHandlerBuilder.OneTag()]),
-            unitOfWork: TranslationBackfillHandlerBuilder.ConcurrentUnitOfWork());
+            unitOfWork:             TranslationBackfillHandlerBuilder.ConcurrentUnitOfWork(),
+            activeLanguageProvider: TranslationBackfillHandlerBuilder.OneActiveLanguageProvider(langId),
+            backfillStore:          TranslationBackfillHandlerBuilder.TagStoreWithSingleCandidate(Guid.NewGuid()));
 
-        // Must return a Result, never let DbUpdateConcurrencyException escape.
         var act = async () => await handler.Handle(
             new TriggerTranslationBackfillCommand("tag"),
             CancellationToken.None);
@@ -208,22 +282,27 @@ public sealed class TriggerTranslationBackfillConcurrencyTests
 // ── Success-path sanity (CONTENTCORE-STD-P2-001 non-regression) ───────────
 
 /// <summary>
-/// Light sanity checks that the success path still works after the concurrency-
-/// guard change. Intentionally minimal — exhaustive orchestration tests are out
-/// of scope for this backfill phase.
+/// Light sanity checks that the success path still works after the
+/// CONTENTCORE-FOLLOWUP-BACKFILL-001 redesign.  Reporting semantics shifted:
+/// the anti-join filters fully-translated rows out at the SQL layer, so
+/// <c>TotalSkipped</c> is now always <c>0</c> and <c>TotalProcessed</c> counts
+/// candidates that were actually touched (not pre-filter row counts).
+/// Comprehensive batching/anti-join behaviour is covered by
+/// <c>TriggerTranslationBackfillBatchingTests</c>.
 /// </summary>
 public sealed class TriggerTranslationBackfillSuccessTests
 {
     [Fact]
     public async Task Handle_ShouldReturnSuccess_WhenTagBackfillCompletesWithoutConflict()
     {
-        var tag = TranslationBackfillHandlerBuilder.OneTag();
+        // With no active languages the anti-join filter set is empty and the
+        // store returns zero candidates — nothing to process, nothing to add.
+        // The result record shape is preserved; only TotalProcessed/TotalSkipped
+        // semantics shifted (both 0 here under the new design).
         var uow = Substitute.For<IContentCoreUnitOfWork>();
         uow.SaveChangesAsync(Arg.Any<CancellationToken>()).Returns(0);
 
-        var handler = TranslationBackfillHandlerBuilder.Build(
-            tagRepository: TranslationBackfillHandlerBuilder.TagRepoReturning([tag]),
-            unitOfWork: uow);
+        var handler = TranslationBackfillHandlerBuilder.Build(unitOfWork: uow);
 
         var result = await handler.Handle(
             new TriggerTranslationBackfillCommand("tag"),
@@ -233,22 +312,20 @@ public sealed class TriggerTranslationBackfillSuccessTests
         result.Outcome.Should().Be(Outcome.Ok);
         result.Value.Should().NotBeNull();
         result.Value!.EntityKind.Should().Be("tag");
-        result.Value.TotalProcessed.Should().Be(1);
-        // Orchestrator returns empty sets → nothing added → entity is skipped
+        result.Value.TotalProcessed.Should().Be(0);
         result.Value.TotalTranslationsAdded.Should().Be(0);
-        result.Value.TotalSkipped.Should().Be(1);
+        result.Value.TotalSkipped.Should().Be(0,
+            "CONTENTCORE-FOLLOWUP-BACKFILL-001: anti-join filters fully-translated rows " +
+            "at the SQL layer, so the in-handler 'skipped' counter is always 0");
     }
 
     [Fact]
     public async Task Handle_ShouldReturnSuccess_WhenSpecializationBackfillCompletesWithoutConflict()
     {
-        var spec = TranslationBackfillHandlerBuilder.OneSpecialization();
         var uow = Substitute.For<IContentCoreUnitOfWork>();
         uow.SaveChangesAsync(Arg.Any<CancellationToken>()).Returns(0);
 
-        var handler = TranslationBackfillHandlerBuilder.Build(
-            specializationRepository: TranslationBackfillHandlerBuilder.SpecRepoReturning([spec]),
-            unitOfWork: uow);
+        var handler = TranslationBackfillHandlerBuilder.Build(unitOfWork: uow);
 
         var result = await handler.Handle(
             new TriggerTranslationBackfillCommand("specialization"),
@@ -256,7 +333,8 @@ public sealed class TriggerTranslationBackfillSuccessTests
 
         result.IsSuccess.Should().BeTrue();
         result.Value!.EntityKind.Should().Be("specialization");
-        result.Value.TotalProcessed.Should().Be(1);
+        result.Value.TotalProcessed.Should().Be(0);
+        result.Value.TotalSkipped.Should().Be(0);
     }
 
     [Fact]
@@ -281,9 +359,7 @@ public sealed class TriggerTranslationBackfillSuccessTests
         var uow = Substitute.For<IContentCoreUnitOfWork>();
         uow.SaveChangesAsync(Arg.Any<CancellationToken>()).Returns(0);
 
-        var handler = TranslationBackfillHandlerBuilder.Build(
-            tagRepository: TranslationBackfillHandlerBuilder.TagRepoReturning([]),
-            unitOfWork: uow);
+        var handler = TranslationBackfillHandlerBuilder.Build(unitOfWork: uow);
 
         var upper = await handler.Handle(
             new TriggerTranslationBackfillCommand("TAG"), CancellationToken.None);

@@ -1,3 +1,4 @@
+using ContentCore.Application.Interfaces;
 using ContentCore.Domain.Entities;
 using ContentCore.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -6,27 +7,21 @@ using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Application.Abstractions.Translation;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 using Outcome = YallaJo.SharedKernel.Domain.Abstractions.Results.Outcome;
-using SpecializationEntity = ContentCore.Domain.Entities.Specialization;
 using TagEntity = ContentCore.Domain.Entities.Tag;
 
 namespace ContentCore.Application.Commands.Translation.TriggerTranslationBackfill;
 
-/// <summary>
-/// Iterates all existing Tag or Specialization rows and triggers auto-translation
-/// for any that have zero translations. Safe to call multiple times — skips rows that
-/// already have translations for a given language.
-///
-/// <para>⚠️ This is a long-running admin operation. In production, consider moving
-/// it to a background job if the row count is large (1000+).</para>
 /// </summary>
 public sealed class TriggerTranslationBackfillCommandHandler(
-    ITagRepository tagRepository,
-    ISpecializationRepository specializationRepository,
     IContentCoreUnitOfWork unitOfWork,
     IEntityTranslationOrchestrator orchestrator,
+    IActiveLanguageProvider activeLanguageProvider,
+    ITranslationBackfillStore backfillStore,
     ILogger<TriggerTranslationBackfillCommandHandler> logger)
     : ICommandHandler<TriggerTranslationBackfillCommand, TriggerTranslationBackfillResult>
 {
+    private const int BatchSize = 200;
+
     public async Task<Result<TriggerTranslationBackfillResult>> Handle(
         TriggerTranslationBackfillCommand request,
         CancellationToken cancellationToken)
@@ -35,8 +30,8 @@ public sealed class TriggerTranslationBackfillCommandHandler(
         {
             return request.EntityKind.ToLowerInvariant() switch
             {
-                "tag"            => await BackfillTagsAsync(cancellationToken),
-                "specialization" => await BackfillSpecializationsAsync(cancellationToken),
+                "tag"            => await BackfillTagsAsync(cancellationToken).ConfigureAwait(false),
+                "specialization" => await BackfillSpecializationsAsync(cancellationToken).ConfigureAwait(false),
                 _                => Result<TriggerTranslationBackfillResult>.Failure(
                                        new Error("Backfill.InvalidKind", $"Unknown entity kind '{request.EntityKind}'."),
                                        Outcome.Invalid)
@@ -53,24 +48,86 @@ public sealed class TriggerTranslationBackfillCommandHandler(
     private async Task<Result<TriggerTranslationBackfillResult>> BackfillTagsAsync(
         CancellationToken cancellationToken)
     {
-        var tags = await tagRepository.GetAllAsync(
-            include: q => q.Include(t => t.Translations),
-            ct: cancellationToken);
+        var activeLanguages = await activeLanguageProvider
+            .GetActiveLanguagesAsync(cancellationToken)
+            .ConfigureAwait(false);
+        var activeLanguageIds = activeLanguages.Select(l => l.Id).ToList();
+        // Build an Id → Code lookup so we can request ONLY the missing target
+        // codes from the orchestrator and map LanguageCode results back to ids.
+        var codeById = activeLanguages.ToDictionary(l => l.Id, l => l.Code);
 
+        logger.LogInformation(
+            "Tag translation backfill starting: activeLanguages={Count} batchSize={BatchSize}",
+            activeLanguages.Count, BatchSize);
+
+        var totalProcessed = 0;
         var totalAdded = 0;
-        var skipped = 0;
 
-        foreach (var tag in tags)
-        {
-            var added = await TranslateTagAsync(tag, cancellationToken);
-            if (added == 0) skipped++;
-            else totalAdded += added;
-        }
-
-        // Single save for all changes
         try
         {
-            await unitOfWork.SaveChangesAsync(cancellationToken);
+            while (true)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                var batch = await backfillStore
+                    .FetchNextTagBackfillCandidatesAsync(activeLanguageIds, BatchSize, cancellationToken)
+                    .ConfigureAwait(false);
+
+                if (batch.Count == 0)
+                    break;
+
+                var batchIds = batch.Select(c => c.TagId).ToList();
+                var existing = await backfillStore
+                    .GetExistingTagTranslationLanguageIdsAsync(batchIds, cancellationToken)
+                    .ConfigureAwait(false);
+
+                var existingByTag = existing
+                    .GroupBy(p => p.EntityId)
+                    .ToDictionary(g => g.Key, g => g.Select(p => p.LanguageId).ToHashSet());
+
+                foreach (var candidate in batch)
+                {
+                    var have = existingByTag.GetValueOrDefault(candidate.TagId, []);
+                    var missingIds = activeLanguageIds.Where(id => !have.Contains(id)).ToList();
+
+                    if (missingIds.Count == 0)
+                        continue;
+
+                    var missingCodes = missingIds.Select(id => codeById[id]).ToList();
+
+                    var fields = new Dictionary<string, string>(StringComparer.Ordinal)
+                    {
+                        ["Name"] = candidate.Name,
+                    };
+
+                    var sets = await orchestrator.TranslateAsync(
+                        fields, candidate.SourceLanguageCode, missingCodes, cancellationToken)
+                        .ConfigureAwait(false);
+
+                    foreach (var set in sets)
+                    {
+                        if (!set.Fields.TryGetValue("Name", out var name) || string.IsNullOrWhiteSpace(name))
+                            continue;
+
+                        backfillStore.AddTagTranslation(
+                            candidate.TagId, set.LanguageId, name, TagEntity.GenerateSlug(name));
+                        totalAdded++;
+                    }
+
+                    totalProcessed++;
+                }
+
+                await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+                logger.LogDebug(
+                    "Tag backfill: batch saved (size={BatchCount}, addedSoFar={AddedSoFar})",
+                    batch.Count, totalAdded);
+
+                // If we got fewer than BatchSize rows the next anti-join would
+                // return zero — exit early to save one DB round-trip.
+                if (batch.Count < BatchSize)
+                    break;
+            }
         }
         catch (DbUpdateConcurrencyException)
         {
@@ -81,53 +138,102 @@ public sealed class TriggerTranslationBackfillCommandHandler(
         }
 
         logger.LogInformation(
-            "Tag translation backfill complete: {Total} tags, {Added} translations added, {Skipped} skipped.",
-            tags.Count, totalAdded, skipped);
+            "Tag translation backfill complete: {Processed} tags processed, {Added} translations added.",
+            totalProcessed, totalAdded);
 
         return Result<TriggerTranslationBackfillResult>.Success(
-            new TriggerTranslationBackfillResult("tag", tags.Count, totalAdded, skipped));
+            new TriggerTranslationBackfillResult(
+                EntityKind:             "tag",
+                TotalProcessed:         totalProcessed,
+                TotalTranslationsAdded: totalAdded,
+                TotalSkipped:           0));
     }
 
-    private async Task<int> TranslateTagAsync(TagEntity tag, CancellationToken ct)
-    {
-        var fields = new Dictionary<string, string> { ["Name"] = tag.Name };
-
-        var sets = await orchestrator.TranslateToAllActiveLanguagesAsync(
-            fields, tag.SourceLanguageCode, ct);
-
-        var added = 0;
-        foreach (var set in sets)
-        {
-            if (tag.Translations.Any(t => t.LanguageId == set.LanguageId)) continue;
-            if (!set.Fields.TryGetValue("Name", out var name) || string.IsNullOrWhiteSpace(name)) continue;
-
-            tag.AddTranslation(set.LanguageId, name, TagEntity.GenerateSlug(name));
-            added++;
-        }
-
-        return added;
-    }
+    // ── Specialization backfill ──────────────────────────────────────────────
 
     private async Task<Result<TriggerTranslationBackfillResult>> BackfillSpecializationsAsync(
-        CancellationToken ct)
+        CancellationToken cancellationToken)
     {
-        var specs = await specializationRepository.GetAllAsync(
-            include: q => q.Include(s => s.Translations),
-            ct: ct);
+        var activeLanguages = await activeLanguageProvider
+            .GetActiveLanguagesAsync(cancellationToken)
+            .ConfigureAwait(false);
+        var activeLanguageIds = activeLanguages.Select(l => l.Id).ToList();
+        var codeById = activeLanguages.ToDictionary(l => l.Id, l => l.Code);
 
+        logger.LogInformation(
+            "Specialization translation backfill starting: activeLanguages={Count} batchSize={BatchSize}",
+            activeLanguages.Count, BatchSize);
+
+        var totalProcessed = 0;
         var totalAdded = 0;
-        var skipped = 0;
-
-        foreach (var spec in specs)
-        {
-            var added = await TranslateSpecializationAsync(spec, ct);
-            if (added == 0) skipped++;
-            else totalAdded += added;
-        }
 
         try
         {
-            await unitOfWork.SaveChangesAsync(ct);
+            while (true)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                var batch = await backfillStore
+                    .FetchNextSpecializationBackfillCandidatesAsync(activeLanguageIds, BatchSize, cancellationToken)
+                    .ConfigureAwait(false);
+
+                if (batch.Count == 0)
+                    break;
+
+                var batchIds = batch.Select(c => c.SpecializationId).ToList();
+                var existing = await backfillStore
+                    .GetExistingSpecializationTranslationLanguageIdsAsync(batchIds, cancellationToken)
+                    .ConfigureAwait(false);
+
+                var existingBySpec = existing
+                    .GroupBy(p => p.EntityId)
+                    .ToDictionary(g => g.Key, g => g.Select(p => p.LanguageId).ToHashSet());
+
+                foreach (var candidate in batch)
+                {
+                    var have = existingBySpec.GetValueOrDefault(candidate.SpecializationId, []);
+                    var missingIds = activeLanguageIds.Where(id => !have.Contains(id)).ToList();
+
+                    if (missingIds.Count == 0)
+                        continue;
+
+                    var missingCodes = missingIds.Select(id => codeById[id]).ToList();
+
+                    var fields = new Dictionary<string, string>(StringComparer.Ordinal)
+                    {
+                        ["Name"] = candidate.Name,
+                    };
+                    if (!string.IsNullOrWhiteSpace(candidate.Description))
+                        fields["Description"] = candidate.Description;
+
+                    var sets = await orchestrator.TranslateAsync(
+                        fields, candidate.SourceLanguageCode, missingCodes, cancellationToken)
+                        .ConfigureAwait(false);
+
+                    foreach (var set in sets)
+                    {
+                        if (!set.Fields.TryGetValue("Name", out var name) || string.IsNullOrWhiteSpace(name))
+                            continue;
+
+                        set.Fields.TryGetValue("Description", out var desc);
+
+                        backfillStore.AddSpecializationTranslation(
+                            candidate.SpecializationId, set.LanguageId, name, desc);
+                        totalAdded++;
+                    }
+
+                    totalProcessed++;
+                }
+
+                await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+                logger.LogDebug(
+                    "Specialization backfill: batch saved (size={BatchCount}, addedSoFar={AddedSoFar})",
+                    batch.Count, totalAdded);
+
+                if (batch.Count < BatchSize)
+                    break;
+            }
         }
         catch (DbUpdateConcurrencyException)
         {
@@ -138,33 +244,14 @@ public sealed class TriggerTranslationBackfillCommandHandler(
         }
 
         logger.LogInformation(
-            "Specialization translation backfill complete: {Total} specs, {Added} translations added, {Skipped} skipped.",
-            specs.Count, totalAdded, skipped);
+            "Specialization translation backfill complete: {Processed} specs processed, {Added} translations added.",
+            totalProcessed, totalAdded);
 
         return Result<TriggerTranslationBackfillResult>.Success(
-            new TriggerTranslationBackfillResult("specialization", specs.Count, totalAdded, skipped));
-    }
-
-    private async Task<int> TranslateSpecializationAsync(SpecializationEntity spec, CancellationToken ct)
-    {
-        var fields = new Dictionary<string, string> { ["Name"] = spec.Name };
-        if (!string.IsNullOrWhiteSpace(spec.Description))
-            fields["Description"] = spec.Description;
-
-        var sets = await orchestrator.TranslateToAllActiveLanguagesAsync(
-            fields, spec.SourceLanguageCode, ct);
-
-        var added = 0;
-        foreach (var set in sets)
-        {
-            if (spec.Translations.Any(t => t.LanguageId == set.LanguageId)) continue;
-            if (!set.Fields.TryGetValue("Name", out var name) || string.IsNullOrWhiteSpace(name)) continue;
-
-            set.Fields.TryGetValue("Description", out var desc);
-            spec.AddTranslation(set.LanguageId, name, desc);
-            added++;
-        }
-
-        return added;
+            new TriggerTranslationBackfillResult(
+                EntityKind:             "specialization",
+                TotalProcessed:         totalProcessed,
+                TotalTranslationsAdded: totalAdded,
+                TotalSkipped:           0));
     }
 }

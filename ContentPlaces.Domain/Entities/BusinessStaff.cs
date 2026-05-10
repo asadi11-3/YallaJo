@@ -5,7 +5,9 @@ namespace ContentPlaces.Domain.Entities;
 
 public sealed class BusinessStaff : AuditableEntity
 {
-    private BusinessStaff() { } // EF Core
+    private BusinessStaff()
+    {
+    }
 
     public Guid BusinessId { get; private set; }
     public Guid UserId { get; private set; }

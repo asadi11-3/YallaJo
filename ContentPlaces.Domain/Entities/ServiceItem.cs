@@ -10,7 +10,9 @@ namespace ContentPlaces.Domain.Entities;
 /// </summary>
 public sealed class ServiceItem : AuditableEntity
 {
-    private ServiceItem() { } // EF Core
+    private ServiceItem()
+    {
+    } // EF Core
 
     public Guid BusinessId { get; private set; }
     public string Name { get; private set; } = string.Empty;

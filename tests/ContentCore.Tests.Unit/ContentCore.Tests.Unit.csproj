@@ -19,6 +19,14 @@
       query filters and cannot validate this requirement.
     -->
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.15" />
+    <!--
+      CONTENTCORE-FOLLOWUP-BACKFILL-001: EF InMemory provider used for the
+      TranslationBackfillStore batching tests. SQLite cannot translate the
+      SQL Server-specific column types in the production EF configurations
+      (e.g. nvarchar(max)). InMemory ignores query filters but those aren't
+      under test here — we only need projection + anti-join behaviour.
+    -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.15" />
   </ItemGroup>
 
   <ItemGroup>

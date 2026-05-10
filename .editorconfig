@@ -123,3 +123,10 @@ dotnet_diagnostic.SA1208.severity = suggestion
 dotnet_diagnostic.SA1210.severity = suggestion
 dotnet_diagnostic.SA1313.severity = suggestion
 dotnet_diagnostic.MA0008.severity = suggestion
+ # ── Test naming rules ─────────────────────────────────────────────────────
+
+# CA1707: Identifiers should not contain underscores
+# SUPPRESS for tests: test method names commonly use Method_State_ExpectedResult.
+# Example: LanguageActivated_AddsMissingPlaceTranslations
+[tests/**/*.cs]
+dotnet_diagnostic.CA1707.severity = none

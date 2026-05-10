@@ -4,41 +4,8 @@ using YallaJo.SharedKernel.Domain.Entities;
 
 namespace ContentPlaces.Tests.Unit;
 
-/// <summary>
-/// CONTENTPLACES-FOLLOWUP-AGGREGATE-ROOT-001 architectural consistency test.
-///
-/// <para>
-/// The shared <c>UnitOfWork&lt;TContext&gt;.SaveChangesAsync</c> only
-/// dispatches domain events from entities tracked as
-/// <c>IAggregateRoot</c>.  Any entity that intends to raise domain events
-/// MUST therefore implement <see cref="IAggregateRoot"/>; otherwise events
-/// would be silently dropped — and reversing the omission later (without
-/// also removing any compensating manual outbox enqueue) would cause
-/// <b>double-publish</b> of integration events.
-/// </para>
-///
-/// <para>
-/// This test pins the canonical aggregate-root membership matrix for the
-/// ContentPlaces domain so the foot-gun cannot be silently reintroduced.
-/// Aggregate roots: <c>Place</c>, <c>Business</c>.  Non-aggregate child
-/// entities (which use <c>IContentPlacesOutboxWriter</c> when integration
-/// events are required): everything else.
-/// </para>
-///
-/// <para>
-/// If a future change adds <see cref="IAggregateRoot"/> to one of the
-/// non-aggregate entries below, this test fails — forcing the contributor
-/// to also remove any manual outbox enqueue from the corresponding command
-/// handlers (preventing double-publish).  Conversely, if a future change
-/// removes <see cref="IAggregateRoot"/> from <c>Place</c> or
-/// <c>Business</c>, this test fails — forcing the contributor to ensure no
-/// domain events are dropped.
-/// </para>
-/// </summary>
 public sealed class AggregateRootDomainEventConsistencyTests
 {
-    // ── Aggregate roots — must implement IAggregateRoot ──────────────────────
-
     [Fact]
     public void Place_IsAggregateRoot()
     {

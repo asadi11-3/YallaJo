@@ -185,7 +185,8 @@ public sealed class LanguageActivatedIntegrationEventHandlerTests
         (await ctx.PlaceTranslations.CountAsync()).Should().Be(0);
         (await ctx.BusinessTranslations.CountAsync()).Should().Be(0);
 
-        uow.SaveCount.Should().Be(0,
+        uow.SaveCount.Should().Be(
+            0,
             "the inbox-already-processed branch must not invoke SaveChangesAsync");
 
         await orchestrator.DidNotReceiveWithAnyArgs().TranslateAsync(

@@ -29,14 +29,18 @@ internal sealed class ExternalAuthTicketBuilder : IExternalAuthTicketBuilder
         _opts = options.Value;
 
         if (string.IsNullOrWhiteSpace(_opts.SigningKey))
+        {
             throw new InvalidOperationException(
                 "ExternalAuth:SigningKey is not configured on the Web host. " +
                 "Configure a strong shared secret (>=32 bytes) identical to the API's ExternalAuth:SigningKey.");
+        }
 
         var keyBytes = Encoding.UTF8.GetBytes(_opts.SigningKey);
         if (keyBytes.Length < 32)
+        {
             throw new InvalidOperationException(
                 "ExternalAuth:SigningKey must be at least 32 bytes (UTF-8).");
+        }
 
         var key = new SymmetricSecurityKey(keyBytes);
         _credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
