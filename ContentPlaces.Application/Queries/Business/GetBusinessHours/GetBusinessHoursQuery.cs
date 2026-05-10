@@ -13,5 +13,10 @@ public sealed record GetBusinessHoursQuery(
 
     public TimeSpan? CacheDuration => TimeSpan.FromMinutes(5);
 
-    public IReadOnlyList<string> Tags => ["businesses", $"biz:{BusinessId}", $"biz:{BusinessId}:hours"];
+    public IReadOnlyList<string> Tags =>
+    [
+        ContentPlacesCacheKeys.TagBusinesses,
+        ContentPlacesCacheKeys.TagForBusiness(BusinessId),
+        ContentPlacesCacheKeys.TagForBusinessHours(BusinessId),
+    ];
 }

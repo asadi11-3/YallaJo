@@ -13,4 +13,10 @@
     <ProjectReference Include="..\Security.Contracts\Security.Contracts.csproj" />
     <ProjectReference Include="..\YallaJo.SharedKernel.Presentation\YallaJo.SharedKernel.Presentation.csproj" />
   </ItemGroup>
+  <!-- CONTENTPLACES-FOLLOWUP-ADMIN-TIER-001: expose internals to the unit-test
+       project so focused tests can pin BusinessEndpoints.ExtractUser
+       admin-tier behaviour. -->
+  <ItemGroup>
+    <InternalsVisibleTo Include="ContentPlaces.Tests.Unit" />
+  </ItemGroup>
 </Project>

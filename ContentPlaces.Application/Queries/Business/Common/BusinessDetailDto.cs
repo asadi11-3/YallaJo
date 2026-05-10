@@ -20,11 +20,8 @@ public sealed record BusinessDetailDto(
     int ReviewCount,
     bool IsVerified,
     bool IsFeatured,
-    Guid OwnerId,
     string Status,
     string? RejectionReason,
-    string? LicenseNumber,
-    string? TaxId,
     string? MetaTitle,
     string? MetaDescription,
     string? SubscriptionTier,
@@ -35,4 +32,3 @@ public sealed record BusinessDetailDto(
     IReadOnlyList<BusinessHoursDto> BusinessHours,
     DateTime CreatedAt,
     DateTime? UpdatedAt);
-

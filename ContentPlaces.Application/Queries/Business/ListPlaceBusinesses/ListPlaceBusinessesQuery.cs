@@ -22,6 +22,10 @@ namespace ContentPlaces.Application.Queries.Business.ListPlaceBusinesses
 
         public TimeSpan? CacheDuration => TimeSpan.FromMinutes(5);
 
-        public IReadOnlyList<string> Tags => ["businesses", $"place:{PlaceId}:businesses"];
+        public IReadOnlyList<string> Tags =>
+        [
+            ContentPlacesCacheKeys.TagBusinesses,
+            ContentPlacesCacheKeys.TagForPlaceBusinesses(PlaceId),
+        ];
     }
 }

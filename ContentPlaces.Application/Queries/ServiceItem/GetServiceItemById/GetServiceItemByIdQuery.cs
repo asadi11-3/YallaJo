@@ -9,5 +9,9 @@ public sealed record GetServiceItemByIdQuery(Guid BusinessId, Guid ServiceItemId
 {
     public string CacheKey => ContentPlacesCacheKeys.ServiceItem(ServiceItemId);
     public TimeSpan? CacheDuration => TimeSpan.FromMinutes(5);
-    public IReadOnlyList<string> Tags => ["businesses", $"service:{ServiceItemId}"];
+    public IReadOnlyList<string> Tags =>
+    [
+        ContentPlacesCacheKeys.TagBusinesses,
+        ContentPlacesCacheKeys.TagForServiceItem(ServiceItemId),
+    ];
 }

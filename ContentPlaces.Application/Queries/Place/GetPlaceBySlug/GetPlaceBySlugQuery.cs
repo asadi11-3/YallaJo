@@ -10,5 +10,12 @@ public sealed record GetPlaceBySlugQuery(string Slug) : IQuery<PlaceDetailDto>, 
 
     public TimeSpan? CacheDuration => TimeSpan.FromMinutes(5);
 
-    public IReadOnlyList<string> Tags => ["places"];
+    // CONTENTPLACES-FOLLOWUP-CACHE-SLUG-001: per-slug tag is added so that a slug
+    // rename can evict the stale cache entry without a broad sweep.  The broad
+    // TagPlaces tag is preserved for parity with the existing list/detail queries.
+    public IReadOnlyList<string> Tags =>
+    [
+        ContentPlacesCacheKeys.TagPlaces,
+        ContentPlacesCacheKeys.TagForPlaceSlug(Slug),
+    ];
 }

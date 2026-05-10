@@ -1,3 +1,4 @@
+using ContentPlaces.Application.Caching;
 using ContentPlaces.Application.Interfaces;
 using ContentPlaces.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -84,7 +85,7 @@ public sealed class UpdateServiceItemCommandHandler(
         }
 
         await cache.RemoveByTagAsync($"service:{request.Id}", cancellationToken);
-        await cache.RemoveByTagAsync($"biz:{item.BusinessId}:services", cancellationToken);
+        await cache.RemoveByTagAsync(ContentPlacesCacheKeys.TagForBusinessServices(item.BusinessId), cancellationToken);
 
         logger.LogInformation("ServiceItem {ServiceItemId} updated", request.Id);
 

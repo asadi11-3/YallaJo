@@ -54,6 +54,10 @@ public sealed class GetBusinessByIdQueryHandler(
                     h.IsClosed))
                 .ToList();
 
+            // CONTENTPLACES-FOLLOWUP-DTO-REDACTION-001: OwnerId, LicenseNumber and
+            // TaxId are intentionally NOT projected onto the public DTO. They have
+            // been removed from BusinessDetailDto entirely — admin/management UI
+            // must use a future protected management query/DTO.
             var dto = new BusinessDetailDto(
                 Id: business.Id,
                 Name: business.Name,
@@ -74,11 +78,8 @@ public sealed class GetBusinessByIdQueryHandler(
                 ReviewCount: business.ReviewCount,
                 IsVerified: business.IsVerified,
                 IsFeatured: business.IsFeatured,
-                OwnerId: business.OwnerId,
                 Status: business.Status.ToString(),
                 RejectionReason: rejectionReason,
-                LicenseNumber: business.LicenseNumber,
-                TaxId: business.TaxId,
                 MetaTitle: business.MetaTitle,
                 MetaDescription: business.MetaDescription,
                 SubscriptionTier: business.SubscriptionTier?.ToString(),

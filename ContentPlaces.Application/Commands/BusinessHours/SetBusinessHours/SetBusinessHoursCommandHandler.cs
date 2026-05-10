@@ -1,3 +1,4 @@
+using ContentPlaces.Application.Caching;
 using ContentPlaces.Application.Interfaces;
 using ContentPlaces.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -82,8 +83,8 @@ public sealed class SetBusinessHoursCommandHandler(
             }
 
             // Evict hours cache + detail cache (detail embeds hours)
-            await cache.RemoveByTagAsync($"biz:{request.BusinessId}:hours", cancellationToken);
-            await cache.RemoveByTagAsync($"biz:{request.BusinessId}", cancellationToken);
+            await cache.RemoveByTagAsync(ContentPlacesCacheKeys.TagForBusinessHours(request.BusinessId), cancellationToken);
+            await cache.RemoveByTagAsync(ContentPlacesCacheKeys.TagForBusiness(request.BusinessId), cancellationToken);
 
             return Result.Success();
         }

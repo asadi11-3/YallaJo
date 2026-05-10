@@ -1,3 +1,4 @@
+using ContentPlaces.Application.Caching;
 using ContentPlaces.Application.Interfaces;
 using ContentPlaces.Contracts.IntegrationEvents;
 using ContentPlaces.Domain.Repositories;
@@ -85,7 +86,7 @@ public sealed class CreateServiceItemCommandHandler(
                 Outcome.Conflict);
         }
 
-        await cache.RemoveByTagAsync($"biz:{request.BusinessId}:services", cancellationToken);
+        await cache.RemoveByTagAsync(ContentPlacesCacheKeys.TagForBusinessServices(request.BusinessId), cancellationToken);
 
         logger.LogInformation(
             "ServiceItem {ServiceItemId} created for Business {BusinessId}",

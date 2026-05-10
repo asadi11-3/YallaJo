@@ -18,19 +18,10 @@ public sealed class TourPackage : AuditableEntity, IAggregateRoot
 
     public Money Price { get; private set; } = default!;
 
-    /// <summary>
-    /// Persisted column kept in sync with <see cref="Price"/>.<c>Currency</c> on every
-    /// write (Create/Update). Both are derived from the same normalized input, so they
-    /// cannot drift. Schema unchanged.
-    /// </summary>
     public string Currency { get; private set; } = string.Empty;
 
     public int? MaxParticipants { get; private set; }
 
-    /// <summary>
-    /// Immutable after Create (handler enforces; returns
-    /// <c>TourPackage.ValidFromImmutable</c> 409 when the request attempts a change).
-    /// </summary>
     public DateTime? ValidFrom { get; private set; }
 
     public DateTime? ValidTo { get; private set; }
@@ -41,11 +32,6 @@ public sealed class TourPackage : AuditableEntity, IAggregateRoot
 
     public IReadOnlyCollection<TourPackageInclusion> Inclusions => _inclusions.AsReadOnly();
 
-    /// <summary>
-    /// Constructs a valid package shell with ≥2 distinct tour links and 0+ marketing
-    /// inclusions. The handler is responsible for cross-tour validation (currency match,
-    /// ownership, status, capacity). This factory enforces only structural invariants.
-    /// </summary>
     public static TourPackage Create(
         string name,
         string? description,
@@ -60,16 +46,13 @@ public sealed class TourPackage : AuditableEntity, IAggregateRoot
     {
         if (string.IsNullOrWhiteSpace(name))
             throw new ArgumentException("Name is required.", nameof(name));
-        if (price is null)
-            throw new ArgumentNullException(nameof(price));
+        ArgumentNullException.ThrowIfNull(price);
         if (string.IsNullOrWhiteSpace(currency) || currency.Length != 3)
             throw new ArgumentException("Currency must be a 3-letter ISO code.", nameof(currency));
         if (createdByUserId == Guid.Empty)
             throw new ArgumentException("CreatedByUserId is required.", nameof(createdByUserId));
-        if (includedTourIds is null)
-            throw new ArgumentNullException(nameof(includedTourIds));
-        if (inclusionDescriptions is null)
-            throw new ArgumentNullException(nameof(inclusionDescriptions));
+        ArgumentNullException.ThrowIfNull(includedTourIds);
+        ArgumentNullException.ThrowIfNull(inclusionDescriptions);
 
         var distinctTourIds = includedTourIds
             .Where(id => id != Guid.Empty)
@@ -146,12 +129,10 @@ public sealed class TourPackage : AuditableEntity, IAggregateRoot
 
         if (string.IsNullOrWhiteSpace(name))
             throw new ArgumentException("Name is required.", nameof(name));
-        if (price is null)
-            throw new ArgumentNullException(nameof(price));
+        ArgumentNullException.ThrowIfNull(price);
         if (string.IsNullOrWhiteSpace(currency) || currency.Length != 3)
             throw new ArgumentException("Currency must be a 3-letter ISO code.", nameof(currency));
-        if (includedTourIds is null)
-            throw new ArgumentNullException(nameof(includedTourIds));
+        ArgumentNullException.ThrowIfNull(includedTourIds);
 
         var distinctTourIds = includedTourIds
             .Where(id => id != Guid.Empty)

@@ -12,5 +12,5 @@ public sealed record GetMapViewportQuery(
 {
     public string CacheKey => ContentPlacesCacheKeys.MapViewport(NorthLat, SouthLat, EastLng, WestLng);
     public TimeSpan? CacheDuration => TimeSpan.FromMinutes(2);
-    public IReadOnlyList<string> Tags => ["places"];
+    public IReadOnlyList<string> Tags => [ContentPlacesCacheKeys.TagPlaces];
 }

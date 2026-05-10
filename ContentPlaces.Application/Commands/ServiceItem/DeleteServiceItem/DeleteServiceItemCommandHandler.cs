@@ -1,3 +1,4 @@
+using ContentPlaces.Application.Caching;
 using ContentPlaces.Application.Interfaces;
 using ContentPlaces.Contracts.IntegrationEvents;
 using ContentPlaces.Domain.Repositories;
@@ -68,7 +69,7 @@ public sealed class DeleteServiceItemCommandHandler(
         }
 
         await cache.RemoveByTagAsync($"service:{request.Id}", cancellationToken);
-        await cache.RemoveByTagAsync($"biz:{item.BusinessId}:services", cancellationToken);
+        await cache.RemoveByTagAsync(ContentPlacesCacheKeys.TagForBusinessServices(item.BusinessId), cancellationToken);
 
         logger.LogInformation("ServiceItem {ServiceItemId} soft-deleted", request.Id);
 

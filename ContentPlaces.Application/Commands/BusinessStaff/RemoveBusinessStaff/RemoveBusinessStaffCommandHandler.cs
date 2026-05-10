@@ -63,9 +63,10 @@ public sealed class RemoveBusinessStaffCommandHandler(
         // deactivate
         staff.Deactivate();
 
-        // BusinessStaff is NOT IAggregateRoot; the BusinessStaffRemovedDomainEvent raised
-        // by Deactivate() would be silently dropped by UnitOfWork. Stage the integration
-        // event directly on the outbox (gotcha #25 / ServiceItem pattern).
+        // BusinessStaff is a non-aggregate child of Business; integration events are
+        // staged manually through IContentPlacesOutboxWriter (this is the canonical
+        // path — same pattern as ServiceItem).  The outbox row commits atomically
+        // with the deactivation inside the same UnitOfWork.SaveChangesAsync call below.
         outbox.Enqueue(new BusinessStaffRemovedIntegrationEvent(
             staff.Id,
             staff.BusinessId,

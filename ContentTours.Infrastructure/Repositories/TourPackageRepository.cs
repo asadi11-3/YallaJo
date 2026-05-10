@@ -19,6 +19,7 @@ internal sealed class TourPackageRepository(ContentToursDbContext context)
     public Task<TourPackage?> GetByIdWithDetailsAsync(Guid id, CancellationToken ct)
     {
         return _context.TourPackages
+            .AsNoTracking()
             .Include(p => p.IncludedTours)
                 .ThenInclude(link => link.Tour)
             .Include(p => p.Inclusions)

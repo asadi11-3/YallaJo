@@ -16,5 +16,17 @@ public class PlaceBusinessConfiguration : IEntityTypeConfiguration<PlaceBusiness
         builder.Property(x => x.BusinessId).IsRequired();
 
         builder.HasIndex(x => x.BusinessId);
+
+        builder.HasOne(x => x.Place)
+            .WithMany()
+            .HasForeignKey(x => x.PlaceId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasOne(x => x.Business)
+            .WithMany()
+            .HasForeignKey(x => x.BusinessId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasQueryFilter(x => !x.Place.IsDeleted && !x.Business.IsDeleted);
     }
 }

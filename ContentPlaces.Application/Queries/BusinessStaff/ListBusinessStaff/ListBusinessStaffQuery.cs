@@ -1,3 +1,4 @@
+using ContentPlaces.Application.Caching;
 using ContentPlaces.Application.Queries.BusinessStaff.Common;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 
@@ -10,7 +11,7 @@ public sealed record ListBusinessStaffQuery(Guid BusinessId)
 
     public IReadOnlyList<string> Tags =>
     [
-        "businesses",
-        $"biz:{BusinessId}"
+        ContentPlacesCacheKeys.TagBusinesses,
+        ContentPlacesCacheKeys.TagForBusiness(BusinessId),
     ];
 }

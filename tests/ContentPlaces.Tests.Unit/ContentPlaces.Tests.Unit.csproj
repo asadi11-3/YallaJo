@@ -13,6 +13,10 @@
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.3.0" />
     <PackageReference Include="NSubstitute" Version="5.3.0" />
     <PackageReference Include="FluentAssertions" Version="7.0.0" />
+    <!-- Added for CONTENTPLACES-FOLLOWUP-LANGACT-001: in-memory EF DbContext is
+         used to drive the new LanguageActivatedIntegrationEventHandler tests so
+         that the projection-first anti-join queries actually run end-to-end. -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.15" />
   </ItemGroup>
 
   <ItemGroup>
@@ -22,8 +26,22 @@
   <ItemGroup>
     <ProjectReference Include="..\..\ContentPlaces.Domain\ContentPlaces.Domain.csproj" />
     <ProjectReference Include="..\..\ContentPlaces.Application\ContentPlaces.Application.csproj" />
+    <!-- Added for CONTENTPLACES-FOLLOWUP-LANGACT-001: required to construct
+         ContentPlacesDbContext + invoke the handler directly. -->
+    <ProjectReference Include="..\..\ContentPlaces.Infrastructure\ContentPlaces.Infrastructure.csproj" />
+    <!-- Added for CONTENTPLACES-FOLLOWUP-ADMIN-TIER-001: required to invoke
+         BusinessEndpoints.ExtractUser directly via InternalsVisibleTo. -->
+    <ProjectReference Include="..\..\ContentPlaces.Presentation\ContentPlaces.Presentation.csproj" />
+    <ProjectReference Include="..\..\ContentCore.Contracts\ContentCore.Contracts.csproj" />
     <ProjectReference Include="..\..\Security.Contracts\Security.Contracts.csproj" />
     <ProjectReference Include="..\YallaJo.Tests.Shared\YallaJo.Tests.Shared.csproj" />
+  </ItemGroup>
+
+  <!-- CONTENTPLACES-FOLLOWUP-ADMIN-TIER-001: Microsoft.AspNetCore.App is needed
+       so the new BusinessEndpointsExtractUserTests can construct DefaultHttpContext
+       and ClaimsPrincipal-based HTTP contexts. -->
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
 
 </Project>

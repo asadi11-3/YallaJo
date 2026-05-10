@@ -19,5 +19,5 @@ public sealed record ListPlacesQuery(
 
     public TimeSpan? CacheDuration => TimeSpan.FromMinutes(5);
 
-    public IReadOnlyList<string> Tags => ["places"];
+    public IReadOnlyList<string> Tags => [ContentPlacesCacheKeys.TagPlaces];
 }

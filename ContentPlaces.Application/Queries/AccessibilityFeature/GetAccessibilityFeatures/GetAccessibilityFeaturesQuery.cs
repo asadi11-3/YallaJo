@@ -1,3 +1,4 @@
+using ContentPlaces.Application.Caching;
 using ContentPlaces.Application.Queries.AccessibilityFeature.Common;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 
@@ -12,7 +13,7 @@ public sealed record GetAccessibilityFeaturesQuery(Guid PlaceId)
 
     public IReadOnlyList<string> Tags =>
     [
-        "places",
-        $"place:{PlaceId}"
+        ContentPlacesCacheKeys.TagPlaces,
+        ContentPlacesCacheKeys.TagForPlace(PlaceId),
     ];
 }

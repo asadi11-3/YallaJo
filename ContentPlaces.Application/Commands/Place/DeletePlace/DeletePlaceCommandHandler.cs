@@ -1,3 +1,4 @@
+using ContentPlaces.Application.Caching;
 using ContentPlaces.Application.Interfaces;
 using ContentPlaces.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -71,8 +72,8 @@ public sealed class DeletePlaceCommandHandler(
                     Outcome.Conflict);
             }
 
-            await cache.RemoveByTagAsync($"place:{request.PlaceId}", cancellationToken);
-            await cache.RemoveByTagAsync("places", cancellationToken);
+            await cache.RemoveByTagAsync(ContentPlacesCacheKeys.TagForPlace(request.PlaceId), cancellationToken);
+            await cache.RemoveByTagAsync(ContentPlacesCacheKeys.TagPlaces, cancellationToken);
 
             logger.LogInformation("Place soft-deleted: {PlaceId}", request.PlaceId);
 

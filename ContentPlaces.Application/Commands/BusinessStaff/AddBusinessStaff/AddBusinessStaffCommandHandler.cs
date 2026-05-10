@@ -82,10 +82,10 @@ public sealed class AddBusinessStaffCommandHandler(
 
         await staffRepository.AddAsync(staff, cancellationToken);
 
-        // BusinessStaff is NOT IAggregateRoot; UnitOfWork only dispatches domain events
-        // from aggregate roots, so the entity-raised BusinessStaffAddedDomainEvent would
-        // be silently dropped. Stage the integration event directly on the outbox so it
-        // commits atomically with the staff row (gotcha #25 / ServiceItem pattern).
+        // BusinessStaff is a non-aggregate child of Business; integration events are
+        // staged manually through IContentPlacesOutboxWriter (this is the canonical
+        // path — same pattern as ServiceItem).  The outbox row commits atomically
+        // with the staff row inside the same UnitOfWork.SaveChangesAsync call below.
         outbox.Enqueue(new BusinessStaffAddedIntegrationEvent(
             staff.Id,
             staff.BusinessId,

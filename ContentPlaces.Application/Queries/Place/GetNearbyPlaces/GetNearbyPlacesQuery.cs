@@ -14,5 +14,5 @@ public sealed record GetNearbyPlacesQuery(
     // Coordinates rounded to 4 decimal places (~11m precision) for effective cache reuse.
     public string CacheKey => ContentPlacesCacheKeys.NearbyPlaces(Lat, Lng, RadiusKm, PageSize);
     public TimeSpan? CacheDuration => TimeSpan.FromMinutes(2); // short TTL — geo data changes
-    public IReadOnlyList<string> Tags => ["places"];
+    public IReadOnlyList<string> Tags => [ContentPlacesCacheKeys.TagPlaces];
 }

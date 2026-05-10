@@ -1,3 +1,4 @@
+using ContentPlaces.Application.Caching;
 using ContentPlaces.Application.Interfaces;
 using ContentPlaces.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -56,9 +57,15 @@ public sealed class UpdatePlaceCommandHandler(
                     new Error("Place.SlugConflict", $"A place with slug '{request.Slug}' already exists."));
             }
 
+            // CONTENTPLACES-FOLLOWUP-CACHE-SLUG-001: capture the old slug BEFORE
+            // the in-memory update so we can evict the stale per-slug cache entry
+            // after a successful save.  Mirrors the ContentTours P1-005 standard.
+            var oldSlug = place.Slug;
+            var newSlug = request.Slug;
+
             place.Update(
                 name:            request.Name,
-                slug:            request.Slug,
+                slug:            newSlug,
                 placeType:       request.PlaceType,
                 latitude:        request.Latitude,
                 longitude:       request.Longitude,
@@ -85,8 +92,21 @@ public sealed class UpdatePlaceCommandHandler(
                         "This record was modified by another user. Please refresh and try again."));
             }
 
-            await cache.RemoveByTagAsync($"place:{place.Id}", cancellationToken);
-            await cache.RemoveByTagAsync("places", cancellationToken);
+            // Cache invalidation strictly AFTER successful SaveChanges.  Failure
+            // paths above (Unauthorized / NotFound / Forbidden / SlugConflict /
+            // ConcurrencyConflict) return early and never invalidate.
+            await cache.RemoveByTagAsync(ContentPlacesCacheKeys.TagForPlace(place.Id), cancellationToken);
+            await cache.RemoveByTagAsync(ContentPlacesCacheKeys.TagPlaces, cancellationToken);
+
+            // CONTENTPLACES-FOLLOWUP-CACHE-SLUG-001: per-slug eviction.  Always
+            // evict the new slug tag; additionally evict the old slug tag when
+            // the slug actually changed so the stale slug entry cannot serve
+            // the now-renamed Place.
+            await cache.RemoveByTagAsync(ContentPlacesCacheKeys.TagForPlaceSlug(newSlug), cancellationToken);
+            if (!string.Equals(oldSlug, newSlug, StringComparison.OrdinalIgnoreCase))
+            {
+                await cache.RemoveByTagAsync(ContentPlacesCacheKeys.TagForPlaceSlug(oldSlug), cancellationToken);
+            }
 
             logger.LogInformation("Place updated: {PlaceId}", place.Id);
 

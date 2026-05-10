@@ -17,6 +17,7 @@ using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using Security.Contracts.Authorization;
 using System.Security.Claims;
 using YallaJo.SharedKernel.Application.Authorization;
 using YallaJo.SharedKernel.Domain.Abstractions.Pagination;
@@ -281,11 +282,17 @@ internal static class BusinessEndpoints
         .RequireAuthorization();
     }
 
-    private static (Guid? UserId, bool IsAdmin) ExtractUser(HttpContext http)
+    internal static (Guid? UserId, bool IsAdmin) ExtractUser(HttpContext http)
     {
         var raw = http.User.FindFirstValue(ClaimTypes.NameIdentifier);
         var userId = Guid.TryParse(raw, out var parsed) ? parsed : (Guid?)null;
-        var isAdmin = http.User.IsInRole("Admin");
+
+        var roles = http.User
+            .FindAll(ClaimTypes.Role)
+            .Select(c => c.Value);
+
+        var isAdmin = AppRoles.HighestPrivilegeLevel(roles) >= RolePrivilegeLevel.Admin;
+
         return (userId, isAdmin);
     }
 }
