@@ -6,5 +6,7 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\YallaJo.SharedKernel.Domain\YallaJo.SharedKernel.Domain.csproj" />
+    <!-- Required by ContentSeoPermissionCatalog for IPermissionCatalog / PermissionDescriptor / AppAction / PermissionGroup -->
+    <ProjectReference Include="..\YallaJo.SharedKernel.Application\YallaJo.SharedKernel.Application.csproj" />
   </ItemGroup>
 </Project>

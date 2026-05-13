@@ -19,4 +19,8 @@
     <ProjectReference Include="..\ContentSeo.Domain\ContentSeo.Domain.csproj" />
     <ProjectReference Include="..\YallaJo.SharedKernel.Infrastructure\YallaJo.SharedKernel.Infrastructure.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="ContentSeo.Tests.Unit" />
+    <InternalsVisibleTo Include="ContentSeo.IntegrationTests" />
+  </ItemGroup>
 </Project>

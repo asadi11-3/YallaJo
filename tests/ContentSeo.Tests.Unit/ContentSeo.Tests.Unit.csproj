@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.3.0" />
+    <PackageReference Include="NSubstitute" Version="5.3.0" />
+    <PackageReference Include="FluentAssertions" Version="7.0.0" />
+    <!--
+      PW-1b: EF Core InMemory provider used to exercise the real ContentSeoDbContext
+      ChangeTracker so that UnitOfWork<ContentSeoDbContext> can discover IAggregateRoot
+      instances and dispatch their domain events.
+    -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.15" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\ContentSeo.Domain\ContentSeo.Domain.csproj" />
+    <ProjectReference Include="..\..\ContentSeo.Application\ContentSeo.Application.csproj" />
+    <ProjectReference Include="..\..\ContentSeo.Infrastructure\ContentSeo.Infrastructure.csproj" />
+    <ProjectReference Include="..\YallaJo.Tests.Shared\YallaJo.Tests.Shared.csproj" />
+  </ItemGroup>
+
+</Project>
