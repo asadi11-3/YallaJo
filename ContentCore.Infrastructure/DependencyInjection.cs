@@ -1,4 +1,6 @@
+using ContentCore.Contracts.Attachments;
 using ContentCore.Contracts.Authorization;
+using ContentCore.Application.Authorization;
 using ContentCore.Application.Interfaces;
 using YallaJo.SharedKernel.Application.Authorization;
 using ContentCore.Domain.Repositories;
@@ -46,6 +48,8 @@ public static class DependencyInjection
         services.AddScoped<ISpecializationRepository, SpecializationRepository>();
         services.AddScoped<ITranslationCacheRepository, TranslationCacheRepository>();
         services.AddScoped<IAttachmentRepository, AttachmentRepository>();
+
+        services.AddScoped<IAttachmentExistenceService, AttachmentExistenceService>();
         services.AddScoped<IEntityCategoryRepository, EntityCategoryRepository>();
         services.AddScoped<IEntityTagRepository, EntityTagRepository>();
         services.AddScoped<ICategoryHierarchyService, CategoryHierarchyService>();
@@ -72,9 +76,11 @@ public static class DependencyInjection
 
         // 2. Register ITranslationService as the AutoSaveTranslationService decorator
         //    wrapping the AzureTranslateService inner implementation.
-        //    AutoSaveTranslationService does NOT hold IContentCoreUnitOfWork — it stages
-        //    cache entries but delegates the commit to the calling handler or the outer
-        //    UnitOfWork.SaveChangesAsync so persistence is always atomic.
+        //    AutoSaveTranslationService persists translation cache rows immediately via
+        //    ITranslationCacheRepository.TryAddCacheEntryAsync (raw INSERT ... WHERE NOT EXISTS
+        //    with UPDLOCK/HOLDLOCK for race-safe dedup). Cache writes are auxiliary and do
+        //    NOT participate in the caller's UnitOfWork — callers do not need to call
+        //    SaveChangesAsync to persist cache rows.
         services.AddScoped<ITranslationService>(sp =>
             new AutoSaveTranslationService(
                 inner: sp.GetRequiredService<AzureTranslateService>(),
@@ -84,6 +90,20 @@ public static class DependencyInjection
         // ── Entity Translation Orchestrator ──────────────────────────────────
         services.AddScoped<IActiveLanguageProvider, ActiveLanguageProvider>();
         services.AddScoped<IEntityTranslationOrchestrator, EntityTranslationOrchestrator>();
+
+        // ── Translation Backfill Store (CONTENTCORE-FOLLOWUP-BACKFILL-001) ──
+        // Application port that encapsulates ContentCoreDbContext for the
+        // TriggerTranslationBackfillCommandHandler so the Application layer
+        // never depends on the Infrastructure DbContext directly.
+        services.AddScoped<ITranslationBackfillStore, TranslationBackfillStore>();
+
+        // ── Cross-module ownership resolver ──────────────────────────────────
+        // Fans out by EntityType to per-module ownership probes registered by
+        // each owning module's *.Infrastructure DI (IPlaceOwnershipService,
+        // ITourOwnershipService, IBlogOwnershipService, IReviewOwnershipService,
+        // ITourGuideOwnershipService). ContentCore.Application depends only on
+        // those modules' Contracts projects.
+        services.AddScoped<IEntityOwnershipResolver, EntityOwnershipResolver>();
 
         // ── File Storage ─────────────────────────────────────────────────────
         services.AddScoped<IFileStorageService, LocalFileStorageService>();

@@ -1,5 +1,6 @@
 using ContentPlaces.Contracts.Places;
 using ContentTours.Application.Caching;
+using ContentTours.Application.Common;
 using ContentTours.Application.Interfaces;
 using ContentTours.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -16,18 +17,12 @@ namespace ContentTours.Application.Commands.Tour.CreateTour;
 public sealed class CreateTourCommandHandler(
     ITourRepository tourRepository,
     IPlaceExistenceService placeExistenceService,
-    IContentToursEventUnitOfWork unitOfWork,
+    IContentToursUnitOfWork unitOfWork,
     HybridCache cache,
     ICurrentUser currentUser,
     ILogger<CreateTourCommandHandler> logger)
     : ICommandHandler<CreateTourCommand, CreateTourResult>
 {
-    // Jordan bounding box (warning-only, never blocks creation).
-    private const decimal JordanMinLat = 29.18m;
-    private const decimal JordanMaxLat = 33.38m;
-    private const decimal JordanMinLng = 34.95m;
-    private const decimal JordanMaxLng = 39.30m;
-
     public async Task<Result<CreateTourResult>> Handle(
         CreateTourCommand request,
         CancellationToken cancellationToken)
@@ -42,7 +37,6 @@ public sealed class CreateTourCommandHandler(
             }
 
             var slug = (request.Slug ?? string.Empty).Trim().ToLowerInvariant();
- 
             if (await tourRepository.IsSlugReservedAsync(slug, excludeTourId: null, cancellationToken)
                 .ConfigureAwait(false))
             {
@@ -69,8 +63,8 @@ public sealed class CreateTourCommandHandler(
                 }
             }
 
-            if (request.Latitude < JordanMinLat || request.Latitude > JordanMaxLat
-                || request.Longitude < JordanMinLng || request.Longitude > JordanMaxLng)
+            if (request.Latitude < JordanBounds.MinLat || request.Latitude > JordanBounds.MaxLat
+                || request.Longitude < JordanBounds.MinLng || request.Longitude > JordanBounds.MaxLng)
             {
                 logger.LogWarning(
                     "Tour location outside Jordan bounding box: ({Latitude}, {Longitude})",

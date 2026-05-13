@@ -80,4 +80,20 @@ public sealed class ContentToursCacheKeysTests
 
         actual.Should().Be(expected);
     }
+
+    [Fact]
+    public void TagForMyTours_UsesExpectedFormat()
+    {
+        var userId = Guid.NewGuid();
+
+        var actual = ContentToursCacheKeys.TagForMyTours(userId);
+
+        actual.Should().Be($"my-tours:{userId}");
+    }
+
+    [Fact]
+    public void TagToursSuggest_HasStableLiteral()
+    {
+        ContentToursCacheKeys.TagToursSuggest.Should().Be("tours:suggest");
+    }
 }

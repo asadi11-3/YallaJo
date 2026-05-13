@@ -849,6 +849,25 @@ namespace ContentPlaces.Infrastructure.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("ContentPlaces.Domain.Entities.PlaceBusiness", b =>
+                {
+                    b.HasOne("ContentPlaces.Domain.Entities.Business", "Business")
+                        .WithMany()
+                        .HasForeignKey("BusinessId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ContentPlaces.Domain.Entities.Place", "Place")
+                        .WithMany()
+                        .HasForeignKey("PlaceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Business");
+
+                    b.Navigation("Place");
+                });
+
             modelBuilder.Entity("ContentPlaces.Domain.Entities.PlaceTranslation", b =>
                 {
                     b.HasOne("ContentPlaces.Domain.Entities.Place", "Place")

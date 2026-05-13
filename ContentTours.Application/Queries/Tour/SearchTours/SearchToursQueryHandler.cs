@@ -146,8 +146,18 @@ public sealed class SearchToursQueryHandler(
         if (req.IsInstantBooking.HasValue)
             q = q.Where(t => t.IsInstantBooking == req.IsInstantBooking.Value);
 
+        // hasDiscount=true  → only tours with an active discount window now.
+        // hasDiscount=false → only tours with NO active discount window now.
+        // hasDiscount=null  → no filter (any).
         if (req.HasDiscount == true)
+        {
             q = q.Where(t => t.DiscountValidFrom <= DateTime.UtcNow && t.DiscountValidTo > DateTime.UtcNow);
+        }
+        else if (req.HasDiscount == false)
+        {
+            q = q.Where(t => t.DiscountValidFrom == null || t.DiscountValidTo == null
+                          || t.DiscountValidFrom > DateTime.UtcNow || t.DiscountValidTo <= DateTime.UtcNow);
+        }
 
         if (req.MinRating.HasValue)
             q = q.Where(t => t.AverageRating >= req.MinRating.Value);

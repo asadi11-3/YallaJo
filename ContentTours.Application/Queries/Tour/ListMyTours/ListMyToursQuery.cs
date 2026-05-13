@@ -16,7 +16,7 @@ public sealed record ListMyToursQuery(
     public string CacheKey => TourSearchCacheKeys.MyTours(
         EffectiveUserId, Page, PageSize, StatusFilter, Sort, IncludeDeleted);
     public TimeSpan? CacheDuration => TimeSpan.FromMinutes(2);
-    public IReadOnlyList<string> Tags => [$"my-tours:{EffectiveUserId}"];
+    public IReadOnlyList<string> Tags => [ContentToursCacheKeys.TagForMyTours(EffectiveUserId)];
 }
 
 public sealed record ListMyToursResult(

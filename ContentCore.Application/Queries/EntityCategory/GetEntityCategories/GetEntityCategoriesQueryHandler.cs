@@ -19,7 +19,11 @@ public sealed class GetEntityCategoriesQueryHandler(
         try
         {
             if (!Enum.TryParse<EntityType>(request.EntityType, true, out var entityType))
-                return Result<IReadOnlyList<EntityCategoryDto>>.Success(Array.Empty<EntityCategoryDto>());
+            {
+                return Result<IReadOnlyList<EntityCategoryDto>>.Failure(
+                   new Error("EntityCategory.InvalidEntityType", "Invalid entity type."),
+                   Outcome.Invalid);
+            }
 
             var entityCategories = await entityCategoryRepository.GetByEntityAsync(entityType, request.EntityId, ct);
             var dtos = entityCategories

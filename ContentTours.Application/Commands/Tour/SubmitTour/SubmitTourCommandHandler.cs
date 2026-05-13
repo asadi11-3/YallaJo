@@ -1,7 +1,7 @@
-using ContentCore.Domain.Enums;
-using ContentCore.Domain.Repositories;
+using ContentCore.Contracts.Attachments;
 using ContentPlaces.Contracts.Places;
 using ContentTours.Application.Caching;
+using ContentTours.Application.Common;
 using ContentTours.Application.Interfaces;
 using ContentTours.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -16,15 +16,20 @@ namespace ContentTours.Application.Commands.Tour.SubmitTour;
 
 public sealed class SubmitTourCommandHandler(
     ITourRepository tourRepository,
-    IAttachmentRepository attachmentRepository,
+    IAttachmentExistenceService attachmentExistenceService,
     IPlaceExistenceService placeExistenceService,
-    IContentToursEventUnitOfWork unitOfWork,
+    IContentToursUnitOfWork unitOfWork,
     HybridCache cache,
     ICurrentUser currentUser,
     ILogger<SubmitTourCommandHandler> logger)
     : ICommandHandler<SubmitTourCommand>
 {
     private const int MinDescriptionLength = 100;
+
+    // Stable Contracts-level entity-type string. Matches the
+    // ContentCore.Domain.Enums.EntityType.Tour member name (case-insensitive parse on
+    // the implementation side). Keeps the cross-module call enum-free.
+    private const string TourEntityType = "Tour";
 
     public async Task<Result> Handle(SubmitTourCommand request, CancellationToken cancellationToken)
     {
@@ -65,7 +70,7 @@ public sealed class SubmitTourCommandHandler(
                     Outcome.Conflict);
             }
 
-            if (!RowVersionsEqual(tour.RowVersion, request.RowVersion))
+            if (!RowVersionUtil.Equal(tour.RowVersion, request.RowVersion))
             {
                 return Result.Failure(
                     new Error(
@@ -78,10 +83,10 @@ public sealed class SubmitTourCommandHandler(
             var errors = new List<Error>();
 
             // 3. At least 1 image attachment.
-            var images = await attachmentRepository
-                .GetEntityImagesAsync(EntityType.Tour, tour.Id, cancellationToken)
+            var hasImage = await attachmentExistenceService
+                .HasEntityImageAsync(TourEntityType, tour.Id, cancellationToken)
                 .ConfigureAwait(false);
-            if (images.Count == 0)
+            if (!hasImage)
             {
                 errors.Add(new Error("Tour.NoImages", "Tour must have at least one image."));
             }
@@ -211,14 +216,4 @@ public sealed class SubmitTourCommandHandler(
         }
     }
 
-    private static bool RowVersionsEqual(byte[] left, byte[] right)
-    {
-        if (left.Length != right.Length) return false;
-        for (var i = 0; i < left.Length; i++)
-        {
-            if (left[i] != right[i]) return false;
-        }
-
-        return true;
-    }
 }

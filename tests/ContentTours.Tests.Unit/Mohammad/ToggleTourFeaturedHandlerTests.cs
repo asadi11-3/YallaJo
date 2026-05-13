@@ -20,11 +20,11 @@ public sealed class ToggleTourFeaturedHandlerTests
     private static (
         ToggleTourFeaturedCommandHandler Handler,
         ITourRepository Repo,
-        IContentToursEventUnitOfWork Uow,
+        IContentToursUnitOfWork Uow,
         ICurrentUser CurrentUser) BuildSubject()
     {
         var repo = Substitute.For<ITourRepository>();
-        var uow = Substitute.For<IContentToursEventUnitOfWork>();
+        var uow = Substitute.For<IContentToursUnitOfWork>();
         var cache = Substitute.For<HybridCache>();
         var currentUser = Substitute.For<ICurrentUser>();
         var logger = Substitute.For<ILogger<ToggleTourFeaturedCommandHandler>>();

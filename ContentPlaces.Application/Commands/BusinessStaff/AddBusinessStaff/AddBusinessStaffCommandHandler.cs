@@ -1,7 +1,10 @@
 using ContentPlaces.Application.Interfaces;
 using ContentPlaces.Application.Queries.BusinessStaff.Common;
+using ContentPlaces.Application.Caching;
+using ContentPlaces.Contracts.BusinessStaff;
 using ContentPlaces.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
 using Security.Contracts.Authorization;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
@@ -15,7 +18,9 @@ public sealed class AddBusinessStaffCommandHandler(
     IBusinessStaffRepository staffRepository,
     IBusinessRepository businessRepository,
     IContentPlacesUnitOfWork unitOfWork,
+    IContentPlacesOutboxWriter outbox,
     ICurrentUser currentUser,
+    HybridCache cache,
     ILogger<AddBusinessStaffCommandHandler> logger)
     : ICommandHandler<AddBusinessStaffCommand, BusinessStaffDto>
 {
@@ -77,8 +82,15 @@ public sealed class AddBusinessStaffCommandHandler(
 
         await staffRepository.AddAsync(staff, cancellationToken);
 
-        // Integration event is published by BusinessStaffAddedDomainEventHandler
-        // (raised by StaffEntity.Create) — no in-handler outbox write needed.
+        // BusinessStaff is a non-aggregate child of Business; integration events are
+        // staged manually through IContentPlacesOutboxWriter (this is the canonical
+        // path — same pattern as ServiceItem).  The outbox row commits atomically
+        // with the staff row inside the same UnitOfWork.SaveChangesAsync call below.
+        outbox.Enqueue(new BusinessStaffAddedIntegrationEvent(
+            staff.Id,
+            staff.BusinessId,
+            staff.UserId,
+            staff.Role.ToString()));
 
         try
         {
@@ -91,6 +103,9 @@ public sealed class AddBusinessStaffCommandHandler(
                     "BusinessStaff.ConcurrencyConflict",
                     "A concurrency conflict occurred. Please refresh and try again."));
         }
+
+        // Evict scoped business tag so ListBusinessStaffQuery returns fresh data.
+        await cache.RemoveByTagAsync(ContentPlacesCacheKeys.BusinessTag(request.BusinessId), cancellationToken);
 
         logger.LogInformation(
             "Staff {StaffId} created: User {UserId} as {Role} in Business {BusinessId}",

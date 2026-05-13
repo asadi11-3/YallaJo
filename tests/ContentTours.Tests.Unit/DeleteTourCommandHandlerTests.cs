@@ -25,7 +25,7 @@ public sealed class DeleteTourCommandHandlerTests
     {
         var repo = Substitute.For<ITourRepository>();
         var outbox = Substitute.For<IContentToursOutboxWriter>();
-        var uow = Substitute.For<IContentToursEventUnitOfWork>();
+        var uow = Substitute.For<IContentToursUnitOfWork>();
         var cache = Substitute.For<HybridCache>();
         var currentUser = Substitute.For<ICurrentUser>();
         var logger = Substitute.For<ILogger<DeleteTourCommandHandler>>();

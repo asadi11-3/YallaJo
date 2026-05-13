@@ -3,13 +3,10 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using ContentTours.Domain.Entities;
+using YallaJo.SharedKernel.Domain.Abstractions.Data;
 
 namespace ContentTours.Domain.Repositories;
 
-public interface ITourTourGuideRepository
+public interface ITourTourGuideRepository : IReadRepository<TourTourGuide, Guid>, IWriteRepository<TourTourGuide, Guid>
 {
-    Task<List<TourTourGuide>> GetByTourIdAsync(Guid tourId, CancellationToken cancellationToken = default);
-    Task<TourTourGuide?> GetAsync(Guid tourId, Guid guideUserId, CancellationToken cancellationToken = default);
-    void Add(TourTourGuide guide);
-    void Remove(TourTourGuide guide);
 }

@@ -275,3 +275,21 @@
 - **Root Cause**: Both build targets overlap in dependency graph/output artifacts; concurrent compilers contended for shared `obj/bin` files.
 - **Fix Applied**: Re-ran `dotnet build YallaJo.sln` sequentially after the parallel run finished; build succeeded.
 - **Prevention Rule**: Do not run solution build in parallel with project builds that transitively reference the same assemblies. Use sequential validation for overlapping targets.
+
+### ERR-029: Async IQueryable test double did not implement ordered query contract, breaking `OrderByDescending` in query-handler tests
+- **Date**: 2026-05-02
+- **Module**: ContentTours.Tests.Unit (Ezz TourGuide query tests)
+- **What Happened**: New `GetTourGuidesQueryHandler` tests failed with `InvalidCastException` during `OrderByDescending(...).ThenBy(...)` when the repository returned `TestAsyncQueryable<T>`.
+- **Error Message**: `Unable to cast object of type 'TestAsyncQueryable<TourTourGuide>' to type 'IOrderedQueryable<TourTourGuide>'`.
+- **Root Cause**: `Queryable.OrderBy*` expects an ordered-query shape from the provider path. The in-house async test queryable implemented `IQueryable<T>` only, so ordered LINQ calls could not cast the provider result to `IOrderedQueryable<T>`.
+- **Fix Applied**: Updated `tests/ContentTours.Tests.Unit/Ezz/TestAsyncQueryable.cs` so `TestAsyncQueryable<T>` implements `IOrderedQueryable<T>`.
+- **Prevention Rule**: Any async IQueryable test double used against handlers that call `OrderBy/ThenBy` must implement `IOrderedQueryable<T>` (not just `IQueryable<T>`), or those handlers should be tested with a provider that supports ordered query composition.
+
+### ERR-030: Test helper injected `null` HybridCache into success-path handler and caused false negative NRE
+- **Date**: 2026-05-09
+- **Module**: ContentCore.Tests.Unit
+- **What Happened**: New owner-allowed authorization test for `UploadAttachmentCommandHandler` failed with `NullReferenceException` at cache eviction after successful save.
+- **Error Message**: `System.NullReferenceException` in `UploadAttachmentCommandHandler.Handle(...)` on `cache.RemoveByTagAsync(...)`.
+- **Root Cause**: The test-only `UploadAttachmentHandlerBuilder` passed `cache: null!` to the handler. Earlier tests only exercised failure paths that returned before cache usage, so the helper bug stayed hidden until a success-path test was added.
+- **Fix Applied**: Updated `UploadAttachmentHandlerBuilder` to inject `OwnershipAuthFixture.NoOpCache()` instead of `null!`.
+- **Prevention Rule**: Shared handler builders must provide non-null defaults for all runtime dependencies, even if current tests mostly target early-return paths. Always include at least one success-path test to validate helper wiring.

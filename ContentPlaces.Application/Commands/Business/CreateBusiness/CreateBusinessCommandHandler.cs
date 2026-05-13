@@ -1,3 +1,4 @@
+using ContentPlaces.Application.Caching;
 using ContentPlaces.Application.Interfaces;
 using ContentPlaces.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -77,7 +78,7 @@ public sealed class CreateBusinessCommandHandler(
             }
 
             // Evict all cached business lists for this place
-            await cache.RemoveByTagAsync("businesses", cancellationToken);
+            await cache.RemoveByTagAsync(ContentPlacesCacheKeys.TagBusinesses, cancellationToken);
 
             return Result<CreateBusinessResult>.Created(
                 new CreateBusinessResult(business.Id, business.Name, business.Slug));

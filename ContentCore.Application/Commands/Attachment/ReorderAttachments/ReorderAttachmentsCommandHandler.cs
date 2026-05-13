@@ -1,7 +1,10 @@
+using ContentCore.Application.Authorization;
+using ContentCore.Application.Caching;
 using ContentCore.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
+using Security.Contracts.Authorization;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
@@ -13,6 +16,7 @@ public sealed class ReorderAttachmentsCommandHandler(
     IAttachmentRepository attachmentRepository,
     IContentCoreUnitOfWork unitOfWork,
     ICurrentUser currentUser,
+    IEntityOwnershipResolver ownershipResolver,
     HybridCache cache,
     ILogger<ReorderAttachmentsCommandHandler> logger)
     : ICommandHandler<ReorderAttachmentsCommand>
@@ -38,13 +42,51 @@ public sealed class ReorderAttachmentsCommandHandler(
                     Outcome.NotFound);
             }
 
-            // IDOR: only the uploader of any attachment in this set or an admin may reorder
-            var isAdmin = currentUser.IsInRole("Admin");
-            if (!isAdmin && attachments.All(a => a.UploadedByUserId != currentUser.UserId.Value))
+            // IDOR: only the target-entity owner or an admin-tier role (Admin/SuperAdmin/Owner)
+            // may reorder. Reordering mutates the target entity's gallery presentation, so
+            // authorization belongs to that entity's owner — not to anyone who uploaded a single
+            // attachment in the set.
+            var isAdminTier = AppRoles.HighestPrivilegeLevel(currentUser.Roles)
+                >= RolePrivilegeLevel.Admin;
+
+            if (!isAdminTier)
             {
-                return Result.Failure(
-                    Error.Forbidden("You do not have permission to reorder attachments for this entity."),
-                    Outcome.Forbidden);
+                var ownership = await ownershipResolver.ResolveAsync(
+                    request.EntityType, request.EntityId, cancellationToken);
+
+                if (!ownership.IsSupported)
+                {
+                    return Result.Failure(
+                        new Error(
+                            "Attachment.UnsupportedEntityType",
+                            "This entity type cannot be authorized for attachment operations."),
+                        Outcome.Invalid);
+                }
+
+                if (!ownership.Exists)
+                {
+                    return Result.Failure(
+                        new Error(
+                            "Attachment.TargetNotFound",
+                            $"{request.EntityType} '{request.EntityId}' was not found."),
+                        Outcome.NotFound);
+                }
+
+                if (ownership.IsDeleted)
+                {
+                    return Result.Failure(
+                        new Error(
+                            "Attachment.TargetDeleted",
+                            $"{request.EntityType} '{request.EntityId}' is deleted."),
+                        Outcome.Invalid);
+                }
+
+                if (ownership.OwnerUserId != currentUser.UserId.Value)
+                {
+                    return Result.Failure(
+                        Error.Forbidden("You do not have permission to reorder attachments for this entity."),
+                        Outcome.Forbidden);
+                }
             }
 
             var attachmentMap = attachments.ToDictionary(a => a.Id);
@@ -76,7 +118,9 @@ public sealed class ReorderAttachmentsCommandHandler(
                     Outcome.Conflict);
             }
 
-            await cache.RemoveByTagAsync($"attachments:{request.EntityType}:{request.EntityId}", cancellationToken);
+            await cache.RemoveByTagAsync(
+                ContentCoreCacheKeys.EntityAttachmentsTag(request.EntityType.ToString(), request.EntityId),
+                cancellationToken);
 
             logger.LogInformation(
                 "Reordered {Count} attachments for {EntityType}/{EntityId}",

@@ -4,7 +4,7 @@ using Security.Domain.Entities;
 
 namespace Security.Infrastructure.Persistence.Configurations;
 
-public class PhoneConfiguration : IEntityTypeConfiguration<Phone>
+public sealed class PhoneConfiguration : IEntityTypeConfiguration<Phone>
 {
     public void Configure(EntityTypeBuilder<Phone> builder)
     {

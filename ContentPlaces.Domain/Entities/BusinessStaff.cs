@@ -1,13 +1,13 @@
 using ContentPlaces.Domain.Enums;
-using ContentPlaces.Domain.Events;
-using ContentPlaces.Domain.Events.BusinessStaffEvents;
 using YallaJo.SharedKernel.Domain.Entities;
 
 namespace ContentPlaces.Domain.Entities;
 
 public sealed class BusinessStaff : AuditableEntity
 {
-    private BusinessStaff() { } // EF Core
+    private BusinessStaff()
+    {
+    }
 
     public Guid BusinessId { get; private set; }
     public Guid UserId { get; private set; }
@@ -23,7 +23,7 @@ public sealed class BusinessStaff : AuditableEntity
         Guid userId,
         BusinessStaffRole role)
     {
-        var staff = new BusinessStaff
+        return new BusinessStaff
         {
             Id = Guid.CreateVersion7(),
             BusinessId = businessId,
@@ -32,27 +32,12 @@ public sealed class BusinessStaff : AuditableEntity
             IsActive = true,
             DeactivatedAt = null
         };
-
-        staff.AddDomainEvent(
-            new BusinessStaffAddedDomainEvent(
-                staff.Id,
-                staff.BusinessId,
-                staff.UserId,
-                staff.Role.ToString()));
-
-        return staff;
     }
 
     public void Deactivate()
     {
         IsActive = false;
         DeactivatedAt = DateTime.UtcNow;
-        UpdatedAt = DateTime.UtcNow;
-
-        AddDomainEvent(
-            new BusinessStaffRemovedDomainEvent(
-                Id,
-                BusinessId,
-                UserId));
+        MarkUpdated();
     }
 }

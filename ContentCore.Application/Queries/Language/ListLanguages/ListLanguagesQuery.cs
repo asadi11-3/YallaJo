@@ -9,5 +9,5 @@ public sealed record ListLanguagesQuery(bool ActiveOnly = true)
     public string CacheKey => ContentCoreCacheKeys.Languages(ActiveOnly);
     // Languages rarely change — cache for 1 hour
     public TimeSpan? CacheDuration => TimeSpan.FromHours(1);
-    public IReadOnlyList<string> Tags => ["languages"];
+    public IReadOnlyList<string> Tags => [ContentCoreCacheKeys.LanguagesTag];
 }

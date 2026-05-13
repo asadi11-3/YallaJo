@@ -13,5 +13,9 @@ public sealed record GetCategoryByIdQuery(
     // Cache key varies by IncludeInactive so admin/public views don't share the same entry.
     public string CacheKey => ContentCoreCacheKeys.Category(Id, WithTranslations, IncludeInactive);
     public TimeSpan? CacheDuration => TimeSpan.FromMinutes(5);
-    public IReadOnlyList<string> Tags => ["categories", $"category:{Id}"];
+    public IReadOnlyList<string> Tags =>
+    [
+        ContentCoreCacheKeys.CategoriesTag,
+        ContentCoreCacheKeys.CategoryTag(Id),
+    ];
 }

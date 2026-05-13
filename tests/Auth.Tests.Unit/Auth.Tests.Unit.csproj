@@ -28,6 +28,9 @@
     <ProjectReference Include="..\..\Security.Contracts\Security.Contracts.csproj" />
     <ProjectReference Include="..\..\Accounts.Contracts\Accounts.Contracts.csproj" />
     <ProjectReference Include="..\..\Security.Domain\Security.Domain.csproj" />
+    <!-- JWT-401 hardening: needed by CurrentUserClaimReadingTests to exercise
+         the Api-side ICurrentUser implementation that reads JWT claims. -->
+    <ProjectReference Include="..\..\YallaJo.Api\YallaJo.Api.csproj" />
     <ProjectReference Include="..\YallaJo.Tests.Shared\YallaJo.Tests.Shared.csproj" />
   </ItemGroup>
 

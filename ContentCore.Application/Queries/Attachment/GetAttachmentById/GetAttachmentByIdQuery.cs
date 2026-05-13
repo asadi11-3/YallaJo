@@ -9,5 +9,9 @@ public sealed record GetAttachmentByIdQuery(Guid AttachmentId)
 {
     public string CacheKey => ContentCoreCacheKeys.Attachment(AttachmentId);
     public TimeSpan? CacheDuration => TimeSpan.FromMinutes(5);
-    public IReadOnlyList<string> Tags => ["attachments", $"attachment:{AttachmentId}"];
+    public IReadOnlyList<string> Tags =>
+    [
+        ContentCoreCacheKeys.AttachmentsTag,
+        ContentCoreCacheKeys.AttachmentTag(AttachmentId),
+    ];
 }

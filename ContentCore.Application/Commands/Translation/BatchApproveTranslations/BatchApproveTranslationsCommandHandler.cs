@@ -1,3 +1,4 @@
+using ContentCore.Application.Caching;
 using ContentCore.Domain.Enums;
 using ContentCore.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -69,7 +70,7 @@ public sealed class BatchApproveTranslationsCommandHandler(
 
             // Invalidate cache for this entity's translations
             await cache.RemoveByTagAsync(
-                $"translations:{request.EntityType}:{request.EntityId}",
+                ContentCoreCacheKeys.EntityTranslationsTag(request.EntityType, request.EntityId),
                 cancellationToken);
 
             logger.LogInformation(

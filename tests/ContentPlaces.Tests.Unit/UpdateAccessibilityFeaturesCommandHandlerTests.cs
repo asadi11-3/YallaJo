@@ -3,6 +3,7 @@ using ContentPlaces.Application.Commands.AccessibilityFeature.UpdateAccessibilit
 using ContentPlaces.Application.Interfaces;
 using ContentPlaces.Domain.Repositories;
 using FluentAssertions;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
@@ -24,10 +25,11 @@ public sealed class UpdateAccessibilityFeaturesCommandHandlerTests
         var placeRepo = Substitute.For<IPlaceRepository>();
         var uow = Substitute.For<IContentPlacesUnitOfWork>();
         var currentUser = Substitute.For<ICurrentUser>();
+        var cache = Substitute.For<HybridCache>();
         var logger = Substitute.For<ILogger<UpdateAccessibilityFeaturesCommandHandler>>();
 
         var handler = new UpdateAccessibilityFeaturesCommandHandler(
-            featureRepo, placeRepo, uow, currentUser, logger);
+            featureRepo, placeRepo, uow, currentUser, cache, logger);
 
         return (handler, featureRepo, placeRepo, uow, currentUser);
     }
@@ -51,6 +53,7 @@ public sealed class UpdateAccessibilityFeaturesCommandHandlerTests
     {
         var (handler, _, placeRepo, _, currentUser) = BuildSubject();
         currentUser.IsAuthenticated.Returns(true);
+        currentUser.UserId.Returns(Guid.NewGuid());
         placeRepo
             .AnyAsync(
                 Arg.Any<Expression<Func<ContentPlaces.Domain.Entities.Place, bool>>>(),
@@ -72,6 +75,7 @@ public sealed class UpdateAccessibilityFeaturesCommandHandlerTests
         // handler must no longer re-check IsInRole("Admin").
         var (handler, featureRepo, placeRepo, uow, currentUser) = BuildSubject();
         currentUser.IsAuthenticated.Returns(true);
+        currentUser.UserId.Returns(Guid.NewGuid());
         // Roles intentionally NOT set — handler should not consult them.
         placeRepo
             .AnyAsync(

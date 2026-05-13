@@ -1,6 +1,8 @@
 using ContentBlogs.Application.Interfaces;
+using ContentBlogs.Contracts.Authorization;
 using ContentBlogs.Infrastructure.Persistence;
 using ContentBlogs.Infrastructure.Persistence.Seeding;
+using ContentBlogs.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -35,6 +37,11 @@ public static class DependencyInjection
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
         services.AddScoped<IOutboxProcessor, OutboxProcessor<ContentBlogsDbContext>>();
         services.AddScoped<IOutboxCleaner, OutboxCleaner<ContentBlogsDbContext>>();
+
+        // ── Cross-module read-only services ──────────────────────────────────
+        // Owned & implemented here so consumers (ContentCore, etc.) depend only on
+        // ContentBlogs.Contracts and never on the Blogs schema directly.
+        services.AddScoped<IBlogOwnershipService, BlogOwnershipService>();
 
         return services;
     }

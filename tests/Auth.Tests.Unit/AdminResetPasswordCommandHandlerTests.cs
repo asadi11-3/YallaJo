@@ -5,6 +5,7 @@ using Auth.Domain.Entities;
 using Auth.Domain.Events;
 using Auth.Domain.Repositories;
 using FluentAssertions;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
@@ -42,6 +43,7 @@ public sealed class AdminResetPasswordCommandHandlerTests
     private readonly IAdminAuditWriter             _auditWriter       = Substitute.For<IAdminAuditWriter>();
     private readonly IRequestContext               _requestContext    = Substitute.For<IRequestContext>();
     private readonly ICurrentUser                  _currentUser       = Substitute.For<ICurrentUser>();
+    private readonly HybridCache                   _cache             = Substitute.For<HybridCache>();
     private readonly Guid                          _actorId           = Guid.NewGuid();
 
     public AdminResetPasswordCommandHandlerTests()
@@ -57,7 +59,7 @@ public sealed class AdminResetPasswordCommandHandlerTests
 
     private AdminResetPasswordCommandHandler CreateSut(ILogger<AdminResetPasswordCommandHandler>? logger = null) =>
         new(_security, _registration, _tokenRepo, _uow, _otpService, _sessionRevocation,
-            _auditWriter, _requestContext, _currentUser,
+            _auditWriter, _requestContext, _currentUser, _cache,
             logger ?? NullLogger<AdminResetPasswordCommandHandler>.Instance);
 
     private static AdminResetPasswordCommand Command(Guid targetId, string? reason = "left company") =>

@@ -1,19 +1,14 @@
-using System;
-using System.Collections.Generic;
+using ContentTours.Application.Caching;
+using ContentTours.Application.Queries.TourGuides.Common;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 
-namespace ContentTours.Application.Features.TourWaypoints.Queries.GetByTourId;
-
-public sealed record TourWaypointResponse(
-    Guid Id,
-    string Name,
-    string? Description,
-    decimal Latitude,
-    decimal Longitude,
-    int SortOrder,
-    int? DurationMinutes,
-    string WaypointType
-);
+namespace ContentTours.Application.Queries.TourWaypoints.GetByTourId;
 
 public sealed record GetTourWaypointsQuery(Guid TourId)
-    : IQuery<IReadOnlyCollection<TourWaypointResponse>>;
+    : IQuery<IReadOnlyCollection<TourWaypointDto>>, ICacheableQuery
+{
+    public string CacheKey => TourWaypointCacheKeys.List(TourId);
+    public TimeSpan? CacheDuration => TimeSpan.FromMinutes(10);
+    public IReadOnlyList<string> Tags =>
+        [TourWaypointCacheKeys.TagForTour(TourId), ContentToursCacheKeys.TagForTour(TourId)];
+}

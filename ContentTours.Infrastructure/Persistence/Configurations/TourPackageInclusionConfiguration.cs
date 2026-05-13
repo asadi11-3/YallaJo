@@ -21,15 +21,19 @@ public class TourPackageInclusionConfiguration : IEntityTypeConfiguration<TourPa
 
         builder.Property(x => x.SortOrder)
             .IsRequired()
-            .HasDefaultValue(0);
+            .HasDefaultValue(1);
 
         builder.Property(x => x.CreatedAt).IsRequired();
         builder.Property(x => x.UpdatedAt).IsRequired(false);
 
         builder.HasOne(x => x.TourPackage)
-            .WithMany(x => x.TourPackageInclusions)
+            .WithMany(x => x.Inclusions)
             .HasForeignKey(x => x.TourPackageId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasIndex(x => new { x.TourPackageId, x.Description })
+            .IsUnique()
+            .HasDatabaseName("UX_TourPackageInclusions_PackageId_Description");
 
         builder.HasQueryFilter(x => !x.TourPackage.IsDeleted);
     }

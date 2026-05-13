@@ -7,4 +7,5 @@ public static class SecurityFeatures
     public const string RoleClaim = nameof(RoleClaim);
     public const string User      = nameof(User);
     public const string System    = nameof(System);
+    public const string AuditLog  = nameof(AuditLog);
 }

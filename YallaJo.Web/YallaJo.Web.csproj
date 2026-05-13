@@ -7,6 +7,21 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Controllers\**" />
+    <Compile Remove="Models\**" />
+    <Compile Remove="Shared\**" />
+    <Content Remove="Controllers\**" />
+    <Content Remove="Models\**" />
+    <Content Remove="Shared\**" />
+    <EmbeddedResource Remove="Controllers\**" />
+    <EmbeddedResource Remove="Models\**" />
+    <EmbeddedResource Remove="Shared\**" />
+    <None Remove="Controllers\**" />
+    <None Remove="Models\**" />
+    <None Remove="Shared\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="MediatR" Version="14.1.0" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="9.0.15" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.17.0" />
@@ -37,7 +52,6 @@
     <Folder Include="Areas\Auth\Features\Logout\Responses\" />
     <Folder Include="Areas\Auth\Features\Sessions\Validators\" />
     <Folder Include="Areas\Auth\Features\ResetPassword\" />
-    <Folder Include="Controllers\" />
     <Folder Include="Infrastructure\Api\Core\" />
     <Folder Include="Infrastructure\Api\Handlers\" />
     <Folder Include="Infrastructure\Authentication\Claims\" />
@@ -48,16 +62,6 @@
     <Folder Include="Infrastructure\DependencyInjection\" />
     <Folder Include="Infrastructure\Navigation\" />
     <Folder Include="Infrastructure\State\" />
-    <Folder Include="Models\" />
-    <Folder Include="Shared\Components\" />
-    <Folder Include="Shared\Extensions\" />
-    <Folder Include="Shared\Filters\" />
-    <Folder Include="Shared\Layout\" />
-    <Folder Include="Shared\Notifications\" />
-    <Folder Include="Shared\Results\" />
-    <Folder Include="Shared\TagHelpers\" />
-    <Folder Include="Shared\ViewModels\" />
-    <Folder Include="Shared\Views\" />
   </ItemGroup>
 
   <ItemGroup>

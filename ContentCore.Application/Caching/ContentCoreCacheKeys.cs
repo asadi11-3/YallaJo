@@ -71,4 +71,38 @@ public static class ContentCoreCacheKeys
         string? languageCode,
         ContentCore.Domain.Enums.TranslationStatus? status) =>
         $"cc:trans:{entityType}:{entityId}:{languageCode ?? "all"}:{status?.ToString() ?? "all"}";
+
+    // ── Cache Tags (for HybridCache.RemoveByTagAsync invalidation) ─────────
+    // NOTE: tag strings are intentionally distinct from key strings.
+    // Tags here MUST remain byte-for-byte identical to the historical literals
+    // used by query Tags properties; do not change values without a migration plan.
+
+    public const string CategoriesTag = "categories";
+    public const string TagsTag = "tags";
+    public const string LanguagesTag = "languages";
+    public const string SpecializationsTag = "specializations";
+    public const string AttachmentsTag = "attachments";
+    public const string TranslationsTag = "translations";
+
+    public static string CategoryTag(Guid id) => $"category:{id}";
+
+    public static string TagTag(Guid id) => $"tag:{id}";
+
+    public static string LanguageTag(Guid id) => $"language:{id}";
+
+    public static string SpecializationTag(Guid id) => $"specialization:{id}";
+
+    public static string AttachmentTag(Guid id) => $"attachment:{id}";
+
+    public static string EntityAttachmentsTag(string entityType, Guid entityId) =>
+        $"attachments:{entityType}:{entityId}";
+
+    public static string EntityCategoriesTag(string entityType, Guid entityId) =>
+        $"entity-categories:{entityType}:{entityId}";
+
+    public static string EntityTagsTag(string entityType, Guid entityId) =>
+        $"entity-tags:{entityType}:{entityId}";
+
+    public static string EntityTranslationsTag(string entityType, Guid entityId) =>
+        $"translations:{entityType}:{entityId}";
 }

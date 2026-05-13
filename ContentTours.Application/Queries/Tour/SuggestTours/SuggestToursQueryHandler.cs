@@ -9,18 +9,6 @@ using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
 namespace ContentTours.Application.Queries.Tour.SuggestTours;
 
-/// <summary>
-/// Resolves the requested language id once via <see cref="AcceptLanguageResolver"/>,
-/// then runs a single SQL round-trip that prefix-matches <c>Tour.Name</c>
-/// OR <c>TourTranslation.Name</c> for that language. Source-name match is the path
-/// for English (or any tour whose source language equals the request); translation
-/// match is the path for Arabic / any non-source language.
-///
-/// One row per Tour is emitted (the inner <c>.Any(...)</c> is an existence check, not
-/// a join — natural deduplication). The displayed name is the matching translation
-/// when present, else the source <c>Tour.Name</c>. Ordering uses the same display
-/// expression so prefix matches sort by their visible value, not by source.
-/// </summary>
 public sealed class SuggestToursQueryHandler(
     ITourRepository tourRepo,
     IActiveLanguageProvider activeLanguageProvider,
@@ -35,8 +23,6 @@ public sealed class SuggestToursQueryHandler(
             var prefix = query.Q.Trim();
             var pattern = prefix + "%";
 
-            // Resolve the requested language to an active language id (with neutral
-            // fallback). When null, only source-name matching applies.
             var languageId = await AcceptLanguageResolver
                 .ResolveAsync(query.AcceptLanguage, activeLanguageProvider, ct)
                 .ConfigureAwait(false);
@@ -53,8 +39,6 @@ public sealed class SuggestToursQueryHandler(
                             EF.Functions.Like(tt.Name, pattern)))
                     ))
                 .OrderByDescending(t => t.BookingCount)
-                // Sort by the same display name the caller will see — Arabic translations
-                // shown in Arabic order, untranslated tours by source name.
                 .ThenBy(t => languageId == null
                     ? t.Name
                     : (t.TourTranslations

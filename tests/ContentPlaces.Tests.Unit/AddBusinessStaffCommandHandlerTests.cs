@@ -5,6 +5,7 @@ using ContentPlaces.Domain.Entities;
 using ContentPlaces.Domain.Enums;
 using ContentPlaces.Domain.Repositories;
 using FluentAssertions;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Security.Contracts.Authorization;
@@ -25,11 +26,13 @@ public sealed class AddBusinessStaffCommandHandlerTests
         var staffRepo = Substitute.For<IBusinessStaffRepository>();
         var businessRepo = Substitute.For<IBusinessRepository>();
         var uow = Substitute.For<IContentPlacesUnitOfWork>();
+        var outbox = Substitute.For<IContentPlacesOutboxWriter>();
         var currentUser = Substitute.For<ICurrentUser>();
+        var cache = Substitute.For<HybridCache>();
         var logger = Substitute.For<ILogger<AddBusinessStaffCommandHandler>>();
 
         var handler = new AddBusinessStaffCommandHandler(
-            staffRepo, businessRepo, uow, currentUser, logger);
+            staffRepo, businessRepo, uow, outbox, currentUser, cache, logger);
 
         return (handler, staffRepo, businessRepo, uow, currentUser);
     }

@@ -2,12 +2,15 @@ using ContentPlaces.Application.Commands.BusinessStaff.AddBusinessStaff;
 using ContentPlaces.Application.Commands.BusinessStaff.RemoveBusinessStaff;
 using ContentPlaces.Application.Queries.BusinessStaff.Common;
 using ContentPlaces.Application.Queries.BusinessStaff.ListBusinessStaff;
+using ContentPlaces.Contracts.Authorization;
 using ContentPlaces.Presentation.Endpoints.BusinessStaff.Models;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using YallaJo.SharedKernel.Application.Authorization;
 using YallaJo.SharedKernel.Presentation;
+using YallaJo.SharedKernel.Presentation.Authorization;
 
 namespace ContentPlaces.Presentation.Endpoints.BusinessStaff;
 
@@ -35,6 +38,7 @@ internal static class BusinessStaffEndpoints
         .ProducesProblem(StatusCodes.Status403Forbidden)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("List business staff members (owner OR admin-tier)")
+        .WithMetadata(new MustHavePermissionAttribute(ContentPlacesFeatures.BusinessStaff, AppAction.Read))
         .RequireAuthorization();
 
         // Add staff member (owner OR admin-tier role; enforced in handler)
@@ -60,6 +64,7 @@ internal static class BusinessStaffEndpoints
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status409Conflict)
         .WithSummary("Add a staff member to a business (owner OR admin-tier)")
+        .WithMetadata(new MustHavePermissionAttribute(ContentPlacesFeatures.BusinessStaff, AppAction.Create))
         .RequireAuthorization();
 
         // Remove (deactivate) staff member (owner OR admin-tier role; enforced in handler)
@@ -80,6 +85,7 @@ internal static class BusinessStaffEndpoints
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status409Conflict)
         .WithSummary("Deactivate a staff member (soft delete; owner OR admin-tier)")
+        .WithMetadata(new MustHavePermissionAttribute(ContentPlacesFeatures.BusinessStaff, AppAction.Delete))
         .RequireAuthorization();
     }
 }

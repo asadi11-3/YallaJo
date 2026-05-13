@@ -1,4 +1,4 @@
-using ContentTours.Contracts.IntegrationEvents;
+using ContentTours.Contracts;
 using ContentTours.Domain.Enums;
 using ContentTours.Domain.Events;
 using ContentTours.Infrastructure.Persistence;
@@ -10,19 +10,6 @@ using YallaJo.SharedKernel.Infrastructure.Outbox;
 
 namespace ContentTours.Infrastructure.EventHandlers;
 
-/// <summary>
-/// Handles <see cref="TourPlaceCountChangedDomainEvent"/>.
-///
-/// Re-queries the live count of active (Published, not deleted) tours for the affected
-/// Place from <see cref="ContentToursDbContext"/>, then writes a
-/// <see cref="PlaceTourCountUpdatedIntegrationEvent"/> to the outbox so ContentPlaces
-/// can update its denormalized <c>Place.TourCount</c> column.
-///
-/// Re-querying the count (rather than incrementing/decrementing) makes the event
-/// idempotent and tolerant of retries or out-of-order processing.
-///
-/// Does NOT call SaveChangesAsync — UoW commits atomically.
-/// </summary>
 public sealed class TourPlaceCountChangedDomainEventHandler(
     ContentToursDbContext dbContext,
     ILogger<TourPlaceCountChangedDomainEventHandler> logger)

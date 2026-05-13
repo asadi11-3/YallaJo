@@ -16,11 +16,10 @@ public sealed class ListFeaturedToursQueryHandler(
     private const int FeaturedLimit = 20;
 
     public async Task<Result<IReadOnlyList<TourSummaryDto>>> Handle(
-        ListFeaturedToursQuery query, CancellationToken ct)
+        ListFeaturedToursQuery query, CancellationToken cancellationToken)
     {
         try
         {
-            // SQL-level Take via IQueryable — no full-table load
             var dtos = await tourRepo
                 .Query(asNoTracking: true)
                 .Where(t => t.IsFeatured && t.Status == TourStatus.Approved && !t.IsDeleted)
@@ -32,13 +31,13 @@ public sealed class ListFeaturedToursQueryHandler(
                     t.BasePrice.Amount, t.Currency, t.SalePrice,
                     t.AverageRating, t.ReviewCount, t.BookingCount,
                     t.IsFeatured, t.Status.ToString(), t.CreatedAt))
-                .ToListAsync(ct);
+                .ToListAsync(cancellationToken);
 
             logger.LogDebug("Listed {Count} featured tours", dtos.Count);
 
             return Result.Success((IReadOnlyList<TourSummaryDto>)dtos);
         }
-        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
             return Result<IReadOnlyList<TourSummaryDto>>.Failure(
                 new Error("Request.Cancelled", "The request was cancelled."),

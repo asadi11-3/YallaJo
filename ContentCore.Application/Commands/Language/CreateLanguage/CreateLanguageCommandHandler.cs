@@ -1,3 +1,4 @@
+using ContentCore.Application.Caching;
 using ContentCore.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
@@ -24,7 +25,8 @@ public sealed class CreateLanguageCommandHandler(
         {
             var normalizedCode = request.Code.Trim().ToLowerInvariant();
 
-            if (await languageRepository.AnyAsync(l => l.Code == normalizedCode, cancellationToken)) {
+            if (await languageRepository.AnyAsync(l => l.Code == normalizedCode, cancellationToken))
+            {
                 return Result<CreateLanguageResult>.Conflict(
                    Error.Conflict("Language", $"Language with code '{normalizedCode}' already exists."));
             }
@@ -46,7 +48,7 @@ public sealed class CreateLanguageCommandHandler(
                         "This record was modified by another user. Please refresh and try again."));
             }
 
-            await cache.RemoveByTagAsync("languages", cancellationToken);
+            await cache.RemoveByTagAsync(ContentCoreCacheKeys.LanguagesTag, cancellationToken);
 
             logger.LogInformation(
                 "Language created: {LanguageId} (Code={Code}, Name={Name})",

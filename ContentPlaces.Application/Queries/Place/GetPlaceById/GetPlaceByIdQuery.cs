@@ -10,5 +10,9 @@ public sealed record GetPlaceByIdQuery(Guid PlaceId) : IQuery<PlaceDetailDto>, I
 
     public TimeSpan? CacheDuration => TimeSpan.FromMinutes(5);
 
-    public IReadOnlyList<string> Tags => ["places", $"place:{PlaceId}"];
+    public IReadOnlyList<string> Tags =>
+    [
+        ContentPlacesCacheKeys.TagPlaces,
+        ContentPlacesCacheKeys.TagForPlace(PlaceId),
+    ];
 }

@@ -4,7 +4,7 @@ using Security.Domain.Entities;
 
 namespace Security.Infrastructure.Persistence.Configurations;
 
-public class RoleClaimConfiguration : IEntityTypeConfiguration<RoleClaim>
+public sealed class RoleClaimConfiguration : IEntityTypeConfiguration<RoleClaim>
 {
     public void Configure(EntityTypeBuilder<RoleClaim> builder)
     {

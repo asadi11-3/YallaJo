@@ -17,6 +17,22 @@ public sealed class ContentPlacesPermissionCatalog : IPermissionCatalog
         new(ContentPlacesFeatures.Place, AppAction.Create, PermissionGroup.ContentManagement, "Create a place"),
         new(ContentPlacesFeatures.Place, AppAction.Update, PermissionGroup.ContentManagement, "Update place details"),
         new(ContentPlacesFeatures.Place, AppAction.Delete, PermissionGroup.ContentManagement, "Delete a place"),
+        new(ContentPlacesFeatures.Place, AppAction.SoftDelete, PermissionGroup.ContentManagement, "Soft-delete a place"),
+        new(ContentPlacesFeatures.Place, AppAction.Feature,    PermissionGroup.ContentManagement, "Feature/unfeature a place"),
+
+        // ── Business ─────────────────────────────────────────────────────────
+        new(ContentPlacesFeatures.Business, AppAction.Read,      PermissionGroup.ContentManagement, "View businesses"),
+        new(ContentPlacesFeatures.Business, AppAction.Create,    PermissionGroup.ContentManagement, "Create a business"),
+        new(ContentPlacesFeatures.Business, AppAction.Update,    PermissionGroup.ContentManagement, "Update business details"),
+        new(ContentPlacesFeatures.Business, AppAction.Delete,    PermissionGroup.ContentManagement, "Delete a business"),
+        new(ContentPlacesFeatures.Business, AppAction.Submit,    PermissionGroup.ContentManagement, "Resubmit a rejected business"),
+        new(ContentPlacesFeatures.Business, AppAction.Approve,   PermissionGroup.ContentManagement, "Approve a pending business"),
+        new(ContentPlacesFeatures.Business, AppAction.Reject,    PermissionGroup.ContentManagement, "Reject a pending business"),
+        new(ContentPlacesFeatures.Business, AppAction.Suspend,   PermissionGroup.ContentManagement, "Suspend an approved business"),
+        new(ContentPlacesFeatures.Business, AppAction.Reinstate, PermissionGroup.ContentManagement, "Reinstate a suspended business"),
+
+        // ── BusinessHours ────────────────────────────────────────────────────
+        new(ContentPlacesFeatures.BusinessHours, AppAction.Update, PermissionGroup.ContentManagement, "Update business operating hours"),
 
         // ── BusinessStaff ────────────────────────────────────────────────────
         new(ContentPlacesFeatures.BusinessStaff, AppAction.Read,   PermissionGroup.ContentManagement, "View business staff"),

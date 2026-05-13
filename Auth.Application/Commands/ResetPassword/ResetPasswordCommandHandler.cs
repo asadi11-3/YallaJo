@@ -1,7 +1,11 @@
+using Auth.Application.Caching;
+using Auth.Application.Errors;
 using Auth.Application.Interfaces;
 using Auth.Application.Interfaces.SessionRevocation;
 using Auth.Domain.Entities;
+using Auth.Domain.Errors;
 using Auth.Domain.Repositories;
+using Microsoft.Extensions.Caching.Hybrid;
 using Security.Contracts.Abstractions;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
@@ -14,7 +18,8 @@ public sealed class ResetPasswordCommandHandler(
     IAuthUnitOfWork unitOfWork,
     IOtpService otpService,
     ITransactionalExecutor txExecutor,
-    ISessionRevocationService sessionRevocation)
+    ISessionRevocationService sessionRevocation,
+    HybridCache cache)
     : ICommandHandler<ResetPasswordCommand, ResetPasswordResult>
 {
     public async Task<Result<ResetPasswordResult>> Handle(
@@ -26,9 +31,10 @@ public sealed class ResetPasswordCommandHandler(
         var userId = await securityService.GetUserIdByEmailAsync(normalizedEmail, cancellationToken);
         if (userId is null)
         {
-            return Result<ResetPasswordResult>.Failure(
-                Error.NotFound("User.NotFound", "No account found with this email."),
-                Outcome.NotFound);
+            return Result<ResetPasswordResult>.Fail(
+                Outcome.NotFound,
+                "No account found with this email.",
+                AuthErrors.UserNotFound);
         }
 
         var token = await resetTokenRepository.GetLatestActiveForUserAsync(
@@ -36,9 +42,10 @@ public sealed class ResetPasswordCommandHandler(
 
         if (token is null)
         {
-            return Result<ResetPasswordResult>.Failure(
-                Error.NotFound("Otp.NotFound", "No pending reset code found. Please request a new one."),
-                Outcome.NotFound);
+            return Result<ResetPasswordResult>.Fail(
+                Outcome.NotFound,
+                "No pending reset code found. Please request a new one.",
+                OtpErrors.NotFound);
         }
 
         if (token.IsExhausted)
@@ -90,6 +97,9 @@ public sealed class ResetPasswordCommandHandler(
                 Error.Failure("Reset.Failed", "Could not reset password. Please try again."),
                 Outcome.ServerError);
         }
+
+        await cache.RemoveByTagAsync(
+            AuthCacheKeys.UserSessionsTag(userId.Value), cancellationToken);
 
         return Result<ResetPasswordResult>.Success(new ResetPasswordResult(true));
     }

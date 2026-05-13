@@ -1,4 +1,5 @@
 using Auth.Domain.Repositories;
+using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
@@ -6,13 +7,26 @@ namespace Auth.Application.Queries.ListSessions;
 
 public sealed class ListActiveSessionsQueryHandler(
     ISessionRepository sessionRepository,
-    IDeviceRepository deviceRepository)
+    IDeviceRepository deviceRepository,
+    ICurrentUser currentUser)
     : IQueryHandler<ListActiveSessionsQuery, IReadOnlyList<ActiveSessionListItemDto>>
 {
     public async Task<Result<IReadOnlyList<ActiveSessionListItemDto>>> Handle(
         ListActiveSessionsQuery request,
         CancellationToken cancellationToken)
     {
+        if (!currentUser.IsAuthenticated || currentUser.UserId is null)
+        {
+            return Result<IReadOnlyList<ActiveSessionListItemDto>>.Unauthorized(
+                "Authentication is required.");
+        }
+
+        if (currentUser.UserId.Value != request.UserId)
+        {
+            return Result<IReadOnlyList<ActiveSessionListItemDto>>.Forbidden(
+                "You may only list your own sessions.");
+        }
+
         var userId = request.UserId;
 
         var now = DateTime.UtcNow;

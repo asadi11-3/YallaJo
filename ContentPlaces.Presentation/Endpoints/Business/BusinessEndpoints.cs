@@ -11,14 +11,18 @@ using ContentPlaces.Application.Queries.Business.Common;
 using ContentPlaces.Application.Queries.Business.GetBusinessById;
 using ContentPlaces.Application.Queries.Business.GetBusinessHours;
 using ContentPlaces.Application.Queries.Business.ListPlaceBusinesses;
+using ContentPlaces.Contracts.Authorization;
 using ContentPlaces.Presentation.Endpoints.Business.Models;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using Security.Contracts.Authorization;
 using System.Security.Claims;
+using YallaJo.SharedKernel.Application.Authorization;
 using YallaJo.SharedKernel.Domain.Abstractions.Pagination;
 using YallaJo.SharedKernel.Presentation;
+using YallaJo.SharedKernel.Presentation.Authorization;
 
 namespace ContentPlaces.Presentation.Endpoints.Business;
 
@@ -97,6 +101,7 @@ internal static class BusinessEndpoints
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status409Conflict)
         .WithSummary("Create a business linked to a Place (status starts as Pending)")
+        .WithMetadata(new MustHavePermissionAttribute(ContentPlacesFeatures.Business, AppAction.Create))
         .RequireAuthorization();
 
         // PUT /places/businesses/{id} — update a business
@@ -127,6 +132,7 @@ internal static class BusinessEndpoints
         .ProducesProblem(StatusCodes.Status403Forbidden)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Update a business (owner or admin only)")
+        .WithMetadata(new MustHavePermissionAttribute(ContentPlacesFeatures.Business, AppAction.Update))
         .RequireAuthorization();
 
         // DELETE /places/businesses/{id} — soft-delete a business (admin only)
@@ -141,6 +147,7 @@ internal static class BusinessEndpoints
         .Produces(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Soft-delete a business (admin only)")
+        .WithMetadata(new MustHavePermissionAttribute(ContentPlacesFeatures.Business, AppAction.Delete))
         .RequireAuthorization("Admin");
 
         // POST /places/businesses/{id}/resubmit — owner resubmits a rejected business
@@ -158,6 +165,7 @@ internal static class BusinessEndpoints
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status409Conflict)
         .WithSummary("Resubmit a rejected business for review (owner only; status must be Rejected)")
+        .WithMetadata(new MustHavePermissionAttribute(ContentPlacesFeatures.Business, AppAction.Submit))
         .RequireAuthorization();
 
         // ── Admin transitions ──────────────────────────────────────────────────
@@ -175,6 +183,7 @@ internal static class BusinessEndpoints
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status409Conflict)
         .WithSummary("Approve a pending business (admin only; status must be Pending)")
+        .WithMetadata(new MustHavePermissionAttribute(ContentPlacesFeatures.Business, AppAction.Approve))
         .RequireAuthorization("Admin");
 
         // POST /places/businesses/admin/{id}/reject
@@ -192,6 +201,7 @@ internal static class BusinessEndpoints
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status409Conflict)
         .WithSummary("Reject a pending business with a reason (admin only; status must be Pending)")
+        .WithMetadata(new MustHavePermissionAttribute(ContentPlacesFeatures.Business, AppAction.Reject))
         .RequireAuthorization("Admin");
 
         // POST /places/businesses/admin/{id}/suspend
@@ -209,6 +219,7 @@ internal static class BusinessEndpoints
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status409Conflict)
         .WithSummary("Suspend an approved business with a reason (admin only; status must be Approved)")
+        .WithMetadata(new MustHavePermissionAttribute(ContentPlacesFeatures.Business, AppAction.Suspend))
         .RequireAuthorization("Admin");
 
         // POST /places/businesses/admin/{id}/reinstate
@@ -224,6 +235,7 @@ internal static class BusinessEndpoints
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status409Conflict)
         .WithSummary("Reinstate a suspended business (admin only; status must be Suspended)")
+        .WithMetadata(new MustHavePermissionAttribute(ContentPlacesFeatures.Business, AppAction.Reinstate))
         .RequireAuthorization("Admin");
 
         // ── Business Hours ─────────────────────────────────────────────────────
@@ -266,14 +278,21 @@ internal static class BusinessEndpoints
         .ProducesProblem(StatusCodes.Status403Forbidden)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Replace all operating hours for a business (owner or admin only; max 2 entries/day)")
+        .WithMetadata(new MustHavePermissionAttribute(ContentPlacesFeatures.BusinessHours, AppAction.Update))
         .RequireAuthorization();
     }
 
-    private static (Guid? UserId, bool IsAdmin) ExtractUser(HttpContext http)
+    internal static (Guid? UserId, bool IsAdmin) ExtractUser(HttpContext http)
     {
         var raw = http.User.FindFirstValue(ClaimTypes.NameIdentifier);
         var userId = Guid.TryParse(raw, out var parsed) ? parsed : (Guid?)null;
-        var isAdmin = http.User.IsInRole("Admin");
+
+        var roles = http.User
+            .FindAll(ClaimTypes.Role)
+            .Select(c => c.Value);
+
+        var isAdmin = AppRoles.HighestPrivilegeLevel(roles) >= RolePrivilegeLevel.Admin;
+
         return (userId, isAdmin);
     }
 }

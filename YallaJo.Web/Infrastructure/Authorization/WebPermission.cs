@@ -96,6 +96,7 @@ public static class WebPermission
         public const string Create = "Permission.Place.Create";
         public const string Update = "Permission.Place.Update";
         public const string Delete = "Permission.Place.Delete";
+        public const string SoftDelete = "Permission.Place.SoftDelete";
     }
 
     // ── Attachment ────────────────────────────────────────────────────────────

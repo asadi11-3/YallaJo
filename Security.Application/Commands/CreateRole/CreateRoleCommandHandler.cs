@@ -24,7 +24,12 @@ public sealed class CreateRoleCommandHandler(
         // strictly outrank the privilege level implied by the role name.
         var roleGuard = hierarchy.EnsureCanModifyRoleDefinition(request.Name);
         if (!roleGuard.IsSuccess)
-            return Result<CreateRoleResult>.Failure(roleGuard.Errors[0], roleGuard.Outcome);
+        {
+            return Result<CreateRoleResult>.Fail(
+                roleGuard.Outcome,
+                roleGuard.Messages.Count > 0 ? roleGuard.Messages[0] : string.Empty,
+                roleGuard.Errors.ToArray());
+        }
 
         if (AppRoles.ProtectedRoles.Contains(request.Name, StringComparer.OrdinalIgnoreCase))
             return Result<CreateRoleResult>.Failure(RoleErrors.Protected, Outcome.Conflict);

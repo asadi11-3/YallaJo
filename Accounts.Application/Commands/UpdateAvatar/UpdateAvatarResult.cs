@@ -1,10 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+namespace Accounts.Application.Commands.UpdateAvatar;
 
-namespace Accounts.Application.Commands.UpdateAvatar
-{
-    public sealed record UpdateAvatarResult(string AvatarUrl);
-}
+public sealed record UpdateAvatarResult(string AvatarUrl);

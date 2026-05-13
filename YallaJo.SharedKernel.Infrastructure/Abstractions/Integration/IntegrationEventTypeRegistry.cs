@@ -1,30 +1,24 @@
 using Auth.Contracts.IntegrationEvents;
 using ContentCore.Contracts.IntegrationEvents;
+using ContentPlaces.Contracts.BusinessStaff;
 using ContentPlaces.Contracts.IntegrationEvents;
 using ContentTours.Contracts;
+using ContentTours.Contracts.IntegrationEvents;
 using Security.Contracts.IntegrationEvents;
 
 namespace YallaJo.SharedKernel.Infrastructure.Abstractions.Integration;
 
-/// <summary>
-/// Maps stable logical names to CLR types for integration events.
-/// Every integration event MUST be registered here.
-/// NEVER remove or rename an existing key — only add new ones.
-/// To rename an event type, add a new v2 alias pointing to the same CLR type.
-///
-/// The stored OutboxMessage.Type column uses these short names, not
-/// AssemblyQualifiedName — making refactors safe.
-/// </summary>
 public static class IntegrationEventTypeRegistry
 {
     private static readonly Dictionary<string, Type> NameToType = new(StringComparer.Ordinal)
     {
-        // ── Security (5 events) ──
+        // ── Security (6 events) ──
         ["security.user.created.v1"]              = typeof(UserCreatedIntegrationEvent),
         ["security.user.email-verified.v1"]       = typeof(EmailVerifiedIntegrationEvent),
         ["security.user.password-changed.v1"]     = typeof(PasswordChangedIntegrationEvent),
         ["security.user.password-reset.v1"]       = typeof(PasswordResetIntegrationEvent),
         ["security.user.phone-updated.v1"]        = typeof(PhoneNumberUpdatedIntegrationEvent),
+        ["security.user.lifecycle-changed.v1"]    = typeof(UserLifecycleChangedIntegrationEvent),
 
         // ── Auth (2 events) ──
         ["auth.user.logged-in.v1"]                = typeof(UserLoggedInIntegrationEvent),
@@ -45,18 +39,23 @@ public static class IntegrationEventTypeRegistry
         ["content-places.place.updated.v1"]              = typeof(PlaceUpdatedIntegrationEvent),
         ["content-places.place.deleted.v1"]              = typeof(PlaceDeletedIntegrationEvent),
 
-        // ── ContentPlaces — Businesses (5 events) ──
+        // ── ContentPlaces — Businesses (6 events) ──
         ["content-places.business.created.v1"]           = typeof(BusinessCreatedIntegrationEvent),
         ["content-places.business.approved.v1"]          = typeof(BusinessApprovedIntegrationEvent),
         ["content-places.business.rejected.v1"]          = typeof(BusinessRejectedIntegrationEvent),
         ["content-places.business.suspended.v1"]         = typeof(BusinessSuspendedIntegrationEvent),
         ["content-places.business.reinstated.v1"]        = typeof(BusinessReinstatedIntegrationEvent),
+        ["content-places.business.resubmitted.v1"]       = typeof(BusinessResubmittedIntegrationEvent),
 
         // ── ContentPlaces — ServiceItems (2 events) ──
         ["content-places.service-item.created.v1"]       = typeof(ServiceItemCreatedIntegrationEvent),
         ["content-places.service-item.deleted.v1"]       = typeof(ServiceItemDeletedIntegrationEvent),
 
-        // ── ContentTours (12 events) ──
+        // ── ContentPlaces — BusinessStaff (2 events) ──
+        ["content-places.business-staff.added.v1"]       = typeof(BusinessStaffAddedIntegrationEvent),
+        ["content-places.business-staff.removed.v1"]     = typeof(BusinessStaffRemovedIntegrationEvent),
+
+        // ── ContentTours (14 events) ──
         ["content-tours.place.tour-count-updated.v1"]    = typeof(PlaceTourCountUpdatedIntegrationEvent),
         ["content-tours.schedule.changed.v1"]            = typeof(TourScheduleChangedIntegrationEvent),
         ["content-tours.pricing-tier.changed.v1"]        = typeof(TourPricingTierChangedIntegrationEvent),
@@ -69,6 +68,14 @@ public static class IntegrationEventTypeRegistry
         ["content-tours.tour.rejected.v1"]               = typeof(TourRejectedIntegrationEvent),
         ["content-tours.tour.suspended.v1"]              = typeof(TourSuspendedIntegrationEvent),
         ["content-tours.tour.reinstated.v1"]             = typeof(TourReinstatedIntegrationEvent),
+
+        // ContentTours — Task 4B TourGuide assignment (2 events — Phase C)
+        ["content-tours.tour-guide.assigned.v1"]         = typeof(TourGuideAssignedIntegrationEvent),
+        ["content-tours.tour-guide.unassigned.v1"]       = typeof(TourGuideUnassignedIntegrationEvent),
+
+        ["content-tours.package.created.v1"]             = typeof(TourPackageCreatedIntegrationEvent),
+        ["content-tours.package.updated.v1"]             = typeof(TourPackageUpdatedIntegrationEvent),
+        ["content-tours.package.deleted.v1"]             = typeof(TourPackageDeletedIntegrationEvent),
     };
 
     private static readonly Dictionary<Type, string> TypeToName =

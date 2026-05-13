@@ -1,5 +1,7 @@
+using Accounts.Domain.Errors;
 using Accounts.Domain.Repositories;
 using Security.Contracts.Abstractions;
+using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
@@ -7,13 +9,28 @@ namespace Accounts.Application.Queries.GetProfile;
 
 public sealed class GetProfileQueryHandler(
     IProfileRepository profileRepository,
-    ISecurityService securityService)
+    ISecurityService securityService,
+    ICurrentUser currentUser)
     : IQueryHandler<GetProfileQuery, GetProfileResult>
 {
     public async Task<Result<GetProfileResult>> Handle(
         GetProfileQuery request,
         CancellationToken cancellationToken)
     {
+        if (!currentUser.IsAuthenticated || currentUser.UserId is null)
+        {
+            return Result<GetProfileResult>.Failure(
+                Error.Unauthorized("Authentication is required."),
+                Outcome.Unauthorized);
+        }
+
+        if (currentUser.UserId.Value != request.UserId)
+        {
+            return Result<GetProfileResult>.Failure(
+                Error.Forbidden("You may only access your own profile."),
+                Outcome.Forbidden);
+        }
+
         var userId = request.UserId;
 
         var profile = await profileRepository.FirstOrDefaultAsync(
@@ -23,7 +40,7 @@ public sealed class GetProfileQueryHandler(
         if (profile is null)
         {
             return Result<GetProfileResult>.Failure(
-                Error.NotFound("Profile", "Profile not found."),
+                ProfileErrors.NotFound,
                 Outcome.NotFound);
         }
 

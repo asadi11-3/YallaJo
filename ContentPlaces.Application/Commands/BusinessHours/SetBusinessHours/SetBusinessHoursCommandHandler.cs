@@ -1,8 +1,10 @@
+using ContentPlaces.Application.Caching;
 using ContentPlaces.Application.Interfaces;
 using ContentPlaces.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
+using Security.Contracts.Authorization;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
@@ -36,8 +38,11 @@ public sealed class SetBusinessHoursCommandHandler(
                     Outcome.NotFound);
             }
 
-            var isAdmin = currentUser.IsInRole("Admin");
-            if (!isAdmin && business.OwnerId != currentUser.UserId.Value)
+            // Owner-or-admin-tier check using the privilege ladder so SuperAdmin/Owner
+            // tiers are honored even without the literal "Admin" role.
+            var isAdminTier = AppRoles.HighestPrivilegeLevel(currentUser.Roles)
+                >= RolePrivilegeLevel.Admin;
+            if (!isAdminTier && business.OwnerId != currentUser.UserId.Value)
             {
                 return Result.Failure(
                     Error.Forbidden("You do not have permission to manage hours for this business."),
@@ -78,8 +83,8 @@ public sealed class SetBusinessHoursCommandHandler(
             }
 
             // Evict hours cache + detail cache (detail embeds hours)
-            await cache.RemoveByTagAsync($"biz:{request.BusinessId}:hours", cancellationToken);
-            await cache.RemoveByTagAsync($"biz:{request.BusinessId}", cancellationToken);
+            await cache.RemoveByTagAsync(ContentPlacesCacheKeys.TagForBusinessHours(request.BusinessId), cancellationToken);
+            await cache.RemoveByTagAsync(ContentPlacesCacheKeys.TagForBusiness(request.BusinessId), cancellationToken);
 
             return Result.Success();
         }

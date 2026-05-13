@@ -1,4 +1,5 @@
 using ContentTours.Application.Caching;
+using ContentTours.Application.Common;
 using ContentTours.Application.Interfaces;
 using ContentTours.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -12,7 +13,7 @@ namespace ContentTours.Application.Commands.Tour.ApproveTour;
 
 public sealed class ApproveTourCommandHandler(
     ITourRepository tourRepository,
-    IContentToursEventUnitOfWork unitOfWork,
+    IContentToursUnitOfWork unitOfWork,
     HybridCache cache,
     ICurrentUser currentUser,
     ILogger<ApproveTourCommandHandler> logger)
@@ -48,7 +49,7 @@ public sealed class ApproveTourCommandHandler(
                     Outcome.Conflict);
             }
 
-            if (!RowVersionsEqual(tour.RowVersion, request.RowVersion))
+            if (!RowVersionUtil.Equal(tour.RowVersion, request.RowVersion))
             {
                 return Result.Failure(
                     new Error(
@@ -100,16 +101,5 @@ public sealed class ApproveTourCommandHandler(
                 new Error("Request.Cancelled", "The request was cancelled."),
                 Outcome.Canceled);
         }
-    }
-
-    private static bool RowVersionsEqual(byte[] left, byte[] right)
-    {
-        if (left.Length != right.Length) return false;
-        for (var i = 0; i < left.Length; i++)
-        {
-            if (left[i] != right[i]) return false;
-        }
-
-        return true;
     }
 }

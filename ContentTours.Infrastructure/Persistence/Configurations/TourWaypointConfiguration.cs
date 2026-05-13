@@ -1,4 +1,5 @@
 using ContentTours.Domain.Entities;
+using ContentTours.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -31,7 +32,9 @@ public class TourWaypointConfiguration : IEntityTypeConfiguration<TourWaypoint>
 
         builder.Property(x => x.SortOrder).IsRequired();
         builder.Property(x => x.DurationMinutes).IsRequired(false);
-        builder.Property(x => x.WaypointType).IsRequired().HasDefaultValue((byte)0);
+        builder.Property(x => x.WaypointType).
+            HasConversion<byte>().IsRequired().
+            HasDefaultValue(WaypointType.Start);
 
         builder.Property(x => x.CreatedAt).IsRequired();
         builder.Property(x => x.UpdatedAt).IsRequired(false);

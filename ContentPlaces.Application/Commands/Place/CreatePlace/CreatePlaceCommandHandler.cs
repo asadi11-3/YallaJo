@@ -1,3 +1,4 @@
+using ContentPlaces.Application.Caching;
 using ContentPlaces.Application.Interfaces;
 using ContentPlaces.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -65,7 +66,7 @@ public sealed class CreatePlaceCommandHandler(
                         "A concurrency conflict occurred. Please try again."));
             }
 
-            await cache.RemoveByTagAsync("places", cancellationToken);
+            await cache.RemoveByTagAsync(ContentPlacesCacheKeys.TagPlaces, cancellationToken);
 
             logger.LogInformation(
                 "Place created: {PlaceId} (Slug={Slug})", place.Id, place.Slug);

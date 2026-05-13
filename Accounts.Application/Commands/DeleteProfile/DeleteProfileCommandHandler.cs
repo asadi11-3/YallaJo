@@ -1,4 +1,5 @@
 using Accounts.Application.Caching;
+using Accounts.Domain.Errors;
 using Accounts.Domain.Repositories;
 using Microsoft.Extensions.Caching.Hybrid;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
@@ -14,7 +15,7 @@ public sealed class DeleteProfileCommandHandler(
     HybridCache cache)
     : ICommandHandler<DeleteProfileCommand>
 {
-    public async Task<Result> Handle(DeleteProfileCommand request, CancellationToken ct)
+    public async Task<Result> Handle(DeleteProfileCommand request, CancellationToken cancellationToken)
     {
         if (!currentUser.IsAuthenticated || currentUser.UserId is null)
             return Result.Failure(Error.Unauthorized("Authentication is required."), Outcome.Unauthorized);
@@ -24,12 +25,12 @@ public sealed class DeleteProfileCommandHandler(
         var profile = await profileRepository.FirstOrDefaultAsync(
             filter: p => p.UserId == userId,
             asNoTracking: false,
-            ct: ct);
+            ct: cancellationToken);
 
         if (profile is null)
         {
             return Result.Failure(
-                Error.NotFound("Profile", "Profile not found."),
+                ProfileErrors.NotFound,
                 Outcome.NotFound);
         }
 
@@ -37,8 +38,8 @@ public sealed class DeleteProfileCommandHandler(
         // EF change tracker detects the mutation and issues UPDATE, not DELETE.
         profile.SoftDelete();
 
-        await unitOfWork.SaveChangesAsync(ct);
-        await cache.RemoveByTagAsync(AccountsCacheKeys.UserProfileTag(userId), ct);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+        await cache.RemoveByTagAsync(AccountsCacheKeys.UserProfileTag(userId), cancellationToken);
 
         return Result.Success();
     }

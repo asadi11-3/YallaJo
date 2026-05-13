@@ -1,6 +1,8 @@
 using ContentPlaces.Application.Interfaces;
+using ContentPlaces.Application.Caching;
 using ContentPlaces.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
 using Security.Contracts.Authorization;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
@@ -13,6 +15,7 @@ public sealed class RemoveBusinessAmenityCommandHandler(
     IBusinessAmenityRepository amenityRepository,
     IContentPlacesUnitOfWork unitOfWork,
     ICurrentUser currentUser,
+    HybridCache cache,
     ILogger<RemoveBusinessAmenityCommandHandler> logger)
     : ICommandHandler<RemoveBusinessAmenityCommand>
 {
@@ -65,6 +68,9 @@ public sealed class RemoveBusinessAmenityCommandHandler(
                     "BusinessAmenity.ConcurrencyConflict",
                     "A concurrency conflict occurred. Please refresh and try again."));
         }
+
+        // Evict scoped business tag so ListBusinessAmenitiesQuery returns fresh data.
+        await cache.RemoveByTagAsync(ContentPlacesCacheKeys.BusinessTag(amenity.BusinessId), cancellationToken);
 
         logger.LogInformation(
             "Amenity removed successfully. AmenityId: {AmenityId}",

@@ -26,7 +26,7 @@
     <ProjectReference Include="..\..\ContentTours.Application\ContentTours.Application.csproj" />
     <ProjectReference Include="..\..\ContentTours.Infrastructure\ContentTours.Infrastructure.csproj" />
     <ProjectReference Include="..\..\ContentTours.Contracts\ContentTours.Contracts.csproj" />
-    <ProjectReference Include="..\..\ContentCore.Domain\ContentCore.Domain.csproj" />
+    <ProjectReference Include="..\..\ContentCore.Contracts\ContentCore.Contracts.csproj" />
     <ProjectReference Include="..\..\Security.Contracts\Security.Contracts.csproj" />
     <ProjectReference Include="..\YallaJo.Tests.Shared\YallaJo.Tests.Shared.csproj" />
   </ItemGroup>

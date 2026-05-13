@@ -7,6 +7,7 @@ using Auth.Domain.Events;
 using Auth.Domain.Repositories;
 using Auth.Tests.Unit.TestDoubles;
 using FluentAssertions;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 using Security.Contracts.Abstractions;
@@ -41,6 +42,7 @@ public sealed class AdminReassignAccountCommandHandlerTests
     private readonly IAdminAuditWriter             _auditWriter                 = Substitute.For<IAdminAuditWriter>();
     private readonly IRequestContext               _requestContext              = Substitute.For<IRequestContext>();
     private readonly ICurrentUser                  _currentUser                 = Substitute.For<ICurrentUser>();
+    private readonly HybridCache                   _cache                       = Substitute.For<HybridCache>();
     private readonly Guid                          _actorId                     = Guid.NewGuid();
 
     public AdminReassignAccountCommandHandlerTests()
@@ -68,7 +70,7 @@ public sealed class AdminReassignAccountCommandHandlerTests
     private AdminReassignAccountCommandHandler CreateSut() =>
         new(_security, _activationTokens, _resetTokens, _externalProviders,
             _sessionRevocation, _uow, _txExecutor, _inviteTokenService, _inviteLinkBuilder,
-            _profileReassignment, _auditWriter, _requestContext, _currentUser,
+            _profileReassignment, _auditWriter, _requestContext, _currentUser, _cache,
             NullLogger<AdminReassignAccountCommandHandler>.Instance);
 
     private static AdminReassignAccountCommand Command(
@@ -430,7 +432,7 @@ public sealed class AdminReassignAccountCommandHandlerTests
         var sut = new AdminReassignAccountCommandHandler(
             _security, _activationTokens, _resetTokens, _externalProviders,
             _sessionRevocation, _uow, _txExecutor, _inviteTokenService, _inviteLinkBuilder,
-            _profileReassignment, _auditWriter, _requestContext, _currentUser, spy);
+            _profileReassignment, _auditWriter, _requestContext, _currentUser, _cache, spy);
 
         await sut.Handle(Command(targetId), CancellationToken.None);
 

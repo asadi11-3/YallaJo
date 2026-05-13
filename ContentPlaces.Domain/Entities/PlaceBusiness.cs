@@ -9,6 +9,10 @@ public sealed class PlaceBusiness
     public Guid PlaceId { get; private set; }
     public Guid BusinessId { get; private set; }
 
+    public Place Place { get; private set; } = default!;
+
+    public Business Business { get; private set; } = default!;
+
     public static PlaceBusiness Create(Guid placeId, Guid businessId)
     {
         if (placeId == Guid.Empty) throw new ArgumentException("PlaceId cannot be empty.", nameof(placeId));

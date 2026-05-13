@@ -1,3 +1,4 @@
+using ContentCore.Application.Caching;
 using ContentCore.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
@@ -22,7 +23,8 @@ public sealed class ReactivateCategoryCommandHandler(
         try
         {
             var category = await categoryRepository.GetByIdAsync(request.Id, cancellationToken, asNoTracking: false);
-            if (category is null) {
+            if (category is null)
+            {
                 return Result<ReactivateCategoryResult>.Failure(
                   new Error("Category.NotFound", $"Category '{request.Id}' was not found."),
                   Outcome.NotFound);
@@ -42,7 +44,7 @@ public sealed class ReactivateCategoryCommandHandler(
                         "This record was modified by another user. Please refresh and try again."));
             }
 
-            await cache.RemoveByTagAsync("categories", cancellationToken);
+            await cache.RemoveByTagAsync(ContentCoreCacheKeys.CategoriesTag, cancellationToken);
 
             logger.LogInformation("Category reactivated: {CategoryId}", request.Id);
 

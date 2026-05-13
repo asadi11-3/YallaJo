@@ -1,8 +1,10 @@
+using ContentPlaces.Application.Caching;
 using ContentPlaces.Application.Interfaces;
 using ContentPlaces.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
+using Security.Contracts.Authorization;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
@@ -35,8 +37,11 @@ public sealed class UpdateBusinessCommandHandler(
                     Outcome.NotFound);
             }
 
-            var isAdmin = currentUser.IsInRole("Admin");
-            if (!isAdmin && business.OwnerId != currentUser.UserId.Value)
+            // Owner-or-admin-tier check using the privilege ladder so SuperAdmin/Owner
+            // tiers are honored even without the literal "Admin" role.
+            var isAdminTier = AppRoles.HighestPrivilegeLevel(currentUser.Roles)
+                >= RolePrivilegeLevel.Admin;
+            if (!isAdminTier && business.OwnerId != currentUser.UserId.Value)
             {
                 return Result.Failure(
                     Error.Forbidden("You do not have permission to update this business."),
@@ -84,8 +89,8 @@ public sealed class UpdateBusinessCommandHandler(
                 return saveResult;
 
             // Evict this business detail + all lists that include it
-            await cache.RemoveByTagAsync($"biz:{request.Id}", cancellationToken);
-            await cache.RemoveByTagAsync("businesses", cancellationToken);
+            await cache.RemoveByTagAsync(ContentPlacesCacheKeys.TagForBusiness(request.Id), cancellationToken);
+            await cache.RemoveByTagAsync(ContentPlacesCacheKeys.TagBusinesses, cancellationToken);
 
             return Result.Success();
         }

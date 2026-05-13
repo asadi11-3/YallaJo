@@ -1,4 +1,6 @@
 using System.Linq.Expressions;
+using System.Reflection;
+using System.Text.Json;
 using Auth.Domain.Entities;
 using Auth.Infrastructure.BackgroundJobs;
 using Auth.Infrastructure.Persistence;
@@ -79,8 +81,42 @@ public sealed class AuthRetentionWorkerTests
 
     private sealed record ProbeIntegrationEvent(string Payload) : IntegrationEventBase;
 
+    /// <summary>
+    /// Creates an OutboxMessage bypassing <c>OutboxMessage.Create</c> and
+    /// <c>IntegrationEventTypeRegistry</c>. <see cref="ProbeIntegrationEvent"/>
+    /// is a test-only shape and is intentionally NOT registered in the
+    /// production registry; the retention worker's predicate references
+    /// only <c>ProcessedOnUtc</c>, so <c>Type</c>/<c>Content</c> semantics
+    /// are immaterial to these tests.
+    /// <para>
+    /// Mirrors the established pattern in
+    /// <c>SharedKernel.Tests.Unit/OutboxCleanerTests.MakeRawMessage</c> and
+    /// <c>SharedKernel.Tests.Unit/OutboxProcessorTests.CreateTestOutboxMessage</c>.
+    /// </para>
+    /// </summary>
     private static OutboxMessage NewOutbox(string payload = "x")
-        => OutboxMessage.Create(new ProbeIntegrationEvent(payload));
+    {
+        var evt = new ProbeIntegrationEvent(payload);
+
+        // Construct via the private parameterless constructor.
+        var msg = (OutboxMessage)Activator.CreateInstance(typeof(OutboxMessage), nonPublic: true)!;
+
+        void Set(string propName, object? value) =>
+            typeof(OutboxMessage)
+                .GetProperty(propName, BindingFlags.Public | BindingFlags.Instance)!
+                .SetValue(msg, value);
+
+        Set(nameof(OutboxMessage.Id), Guid.CreateVersion7());
+        // Use AssemblyQualifiedName as the stable Type string — same approach
+        // as OutboxProcessorTests.CreateTestOutboxMessage. The retention
+        // worker does not read Type, so this value is purely for shape parity.
+        Set(nameof(OutboxMessage.Type), typeof(ProbeIntegrationEvent).AssemblyQualifiedName!);
+        Set(nameof(OutboxMessage.Content), JsonSerializer.Serialize(evt, typeof(ProbeIntegrationEvent)));
+        Set(nameof(OutboxMessage.OccurredOnUtc), evt.OccurredOn);
+        Set(nameof(OutboxMessage.RetryCount), 0);
+
+        return msg;
+    }
 
     private static void SetProcessedAt(OutboxMessage message, DateTime processedAt)
     {

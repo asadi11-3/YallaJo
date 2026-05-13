@@ -1,3 +1,4 @@
+using ContentPlaces.Application.Caching;
 using ContentPlaces.Application.Interfaces;
 using ContentPlaces.Domain.Enums;
 using ContentPlaces.Domain.Repositories;
@@ -51,8 +52,8 @@ public sealed class ApproveBusinessCommandHandler(
                 return saveResult;
 
             // Status change: evict detail (status visible to public now) + all lists
-            await cache.RemoveByTagAsync($"biz:{request.Id}", cancellationToken);
-            await cache.RemoveByTagAsync("businesses", cancellationToken);
+            await cache.RemoveByTagAsync(ContentPlacesCacheKeys.TagForBusiness(request.Id), cancellationToken);
+            await cache.RemoveByTagAsync(ContentPlacesCacheKeys.TagBusinesses, cancellationToken);
 
             return Result.Success();
         }

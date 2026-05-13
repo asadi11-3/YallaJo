@@ -12,5 +12,9 @@ public sealed record GetTourBySlugQuery(string Slug, string? AcceptLanguage = nu
 
     public TimeSpan? CacheDuration => TimeSpan.FromMinutes(5);
 
-    public IReadOnlyList<string> Tags => [ContentToursCacheKeys.TagToursList];
+    public IReadOnlyList<string> Tags =>
+    [
+        ContentToursCacheKeys.TagToursList,
+        ContentToursCacheKeys.TagForTourSlug(Slug),
+    ];
 }

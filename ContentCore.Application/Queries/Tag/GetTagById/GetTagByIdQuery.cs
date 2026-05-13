@@ -9,5 +9,9 @@ public sealed record GetTagByIdQuery(Guid Id)
 {
     public string CacheKey => ContentCoreCacheKeys.Tag(Id);
     public TimeSpan? CacheDuration => TimeSpan.FromMinutes(5);
-    public IReadOnlyList<string> Tags => ["tags", $"tag:{Id}"];
+    public IReadOnlyList<string> Tags =>
+    [
+        ContentCoreCacheKeys.TagsTag,
+        ContentCoreCacheKeys.TagTag(Id),
+    ];
 }

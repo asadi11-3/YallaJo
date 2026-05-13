@@ -1,6 +1,8 @@
 using ContentPlaces.Application.Interfaces;
+using ContentPlaces.Application.Caching;
 using ContentPlaces.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
@@ -14,6 +16,7 @@ public sealed class UpdateAccessibilityFeaturesCommandHandler(
     IPlaceRepository placeRepository,
     IContentPlacesUnitOfWork unitOfWork,
     ICurrentUser currentUser,
+    HybridCache cache,
     ILogger<UpdateAccessibilityFeaturesCommandHandler> logger)
     : ICommandHandler<UpdateAccessibilityFeaturesCommand>
 {
@@ -76,6 +79,9 @@ public sealed class UpdateAccessibilityFeaturesCommandHandler(
                     "AccessibilityFeature.ConcurrencyConflict",
                     "A concurrency conflict occurred. Please refresh and try again."));
         }
+
+        // Evict scoped place tag so GetAccessibilityFeaturesQuery returns fresh data.
+        await cache.RemoveByTagAsync(ContentPlacesCacheKeys.PlaceTag(request.PlaceId), cancellationToken);
 
         logger.LogInformation(
             "Accessibility updated for Place {PlaceId}. New count: {Count}",

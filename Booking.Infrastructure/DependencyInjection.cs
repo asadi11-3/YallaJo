@@ -1,5 +1,7 @@
+using Booking.Contracts.Authorization;
 using Booking.Infrastructure.Persistence;
 using Booking.Infrastructure.Persistence.Seeding;
+using Booking.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -32,6 +34,11 @@ public static class DependencyInjection
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
         services.AddScoped<IOutboxProcessor, OutboxProcessor<BookingDbContext>>();
         services.AddScoped<IOutboxCleaner, OutboxCleaner<BookingDbContext>>();
+
+        // ── Cross-module read-only services ──────────────────────────────────
+        // Owned & implemented here so consumers (ContentCore, etc.) depend only on
+        // Booking.Contracts and never on the Booking schema directly.
+        services.AddScoped<ITourGuideOwnershipService, TourGuideOwnershipService>();
 
         return services;
     }

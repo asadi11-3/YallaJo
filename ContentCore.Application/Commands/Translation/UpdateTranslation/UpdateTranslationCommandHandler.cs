@@ -1,3 +1,4 @@
+using ContentCore.Application.Caching;
 using ContentCore.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
@@ -45,7 +46,7 @@ public sealed class UpdateTranslationCommandHandler(
             if (cached.EntityType is not null && cached.EntityId.HasValue)
             {
                 await cache.RemoveByTagAsync(
-                    $"translations:{cached.EntityType}:{cached.EntityId.Value}",
+                    ContentCoreCacheKeys.EntityTranslationsTag(cached.EntityType, cached.EntityId.Value),
                     cancellationToken);
             }
 

@@ -1,6 +1,9 @@
 using Auth.Application.Caching;
+using Auth.Application.Errors;
 using Auth.Domain.Repositories;
 using Microsoft.Extensions.Caching.Hybrid;
+using Security.Contracts.Abstractions;
+using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
@@ -10,6 +13,8 @@ public sealed class ForceRevokeUserSessionsCommandHandler(
     ISessionRepository sessionRepository,
     IRefreshTokenRepository refreshTokenRepository,
     IAuthUnitOfWork unitOfWork,
+    ISecurityService securityService,
+    ICurrentUser currentUser,
     HybridCache cache)
     : ICommandHandler<ForceRevokeUserSessionsCommand>
 {
@@ -17,9 +22,19 @@ public sealed class ForceRevokeUserSessionsCommandHandler(
         ForceRevokeUserSessionsCommand request,
         CancellationToken cancellationToken)
     {
-        // Authentication and permission (UpdateAny) are enforced by the endpoint.
-        // This handler operates on the target user supplied in the command, not the caller.
+        if (!currentUser.IsAuthenticated || currentUser.UserId is null)
+        {
+            return Result.Failure(AuthErrors.AdminUnauthenticated, Outcome.Unauthorized);
+        }
+
+        var actorId = currentUser.UserId.Value;
         var targetUserId = request.UserId;
+
+        var guard = await securityService.EnsureCanManageUserAsync(
+            actorId, targetUserId, cancellationToken);
+
+        if (guard.IsFailure)
+            return guard;
 
         var activeSessions = await sessionRepository.GetAllAsync(
             filter: s => s.UserId == targetUserId && !s.IsRevoked,

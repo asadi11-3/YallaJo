@@ -16,5 +16,9 @@ public sealed record GetEntityTranslationsQuery(
         : ContentCoreCacheKeys.EntityTranslations(EntityType, EntityId, LanguageCode, Status);
 
     public TimeSpan? CacheDuration => TimeSpan.FromMinutes(15);
-    public IReadOnlyList<string> Tags => ["translations", $"translations:{EntityType}:{EntityId}"];
+    public IReadOnlyList<string> Tags =>
+    [
+        ContentCoreCacheKeys.TranslationsTag,
+        ContentCoreCacheKeys.EntityTranslationsTag(EntityType, EntityId),
+    ];
 }

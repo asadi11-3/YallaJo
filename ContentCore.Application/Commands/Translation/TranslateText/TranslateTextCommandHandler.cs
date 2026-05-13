@@ -1,4 +1,3 @@
-using ContentCore.Domain.Repositories;
 using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Application.Abstractions.Translation;
@@ -9,7 +8,6 @@ namespace ContentCore.Application.Commands.Translation.TranslateText;
 
 public sealed class TranslateTextCommandHandler(
     ITranslationService translationService,
-    IContentCoreUnitOfWork unitOfWork,
     ILogger<TranslateTextCommandHandler> logger)
     : ICommandHandler<TranslateTextCommand, TranslateTextResult>
 {
@@ -25,9 +23,6 @@ public sealed class TranslateTextCommandHandler(
                 request.ToLanguageCode,
                 cancellationToken);
 
-            // AutoSaveTranslationService stages the cache entry but does not commit.
-            // Commit here so the cache row is persisted atomically with this operation.
-            await unitOfWork.SaveChangesAsync(cancellationToken);
 
             logger.LogInformation(
                 "TranslateText: {From}→{To}, confidence={Confidence}",

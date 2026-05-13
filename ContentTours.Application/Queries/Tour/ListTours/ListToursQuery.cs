@@ -13,16 +13,19 @@ public sealed record ListToursQuery(
     bool? IsFeatured = null,
     string? AcceptLanguage = null) : IQuery<PaginatedResult<TourSummaryDto>>, ICacheableQuery
 {
+    // ListTours is AllowAnonymous and never returns elevated content,
+    // so we use the public variant of the helper to avoid a dead `e:False`
+    // token in the cache key (the elevated-aware overload still exists for
+    // callers that genuinely partition on elevation).
     public string CacheKey =>
-        ContentToursCacheKeys.TourList(
+        ContentToursCacheKeys.PublicTourList(
             Page,
             PageSize,
             Sort,
             status: null,
             PlaceId,
             IsFeatured,
-            AcceptLanguage,
-            isElevated: false);
+            AcceptLanguage);
 
     public TimeSpan? CacheDuration => TimeSpan.FromMinutes(5);
 

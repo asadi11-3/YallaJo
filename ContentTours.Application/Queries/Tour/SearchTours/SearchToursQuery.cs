@@ -1,7 +1,5 @@
+using System.Globalization;
 using ContentTours.Application.Caching;
-using System.Security.Cryptography;
-using System.Text;
-using System.Text.Json;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 
 namespace ContentTours.Application.Queries.Tour.SearchTours;
@@ -28,14 +26,41 @@ public sealed record SearchToursRequest(
 public sealed record SearchToursQuery(SearchToursRequest Request)
     : IQuery<SearchToursResult>, ICacheableQuery
 {
-    public string CacheKey => TourSearchCacheKeys.Search(ComputeHash(Request));
+    public string CacheKey => TourSearchCacheKeys.Search(BuildCanonicalKey(Request));
     public TimeSpan? CacheDuration => TimeSpan.FromMinutes(2);
-    public IReadOnlyList<string> Tags => ["tours:search", "tours:list"];
+    public IReadOnlyList<string> Tags => [ContentToursCacheKeys.TagToursSearch, ContentToursCacheKeys.TagToursList];
 
-    private static string ComputeHash(SearchToursRequest req)
+    /// <summary>
+    /// Builds a deterministic, sort-stable canonical string covering every
+    /// request field that affects the result. Replaces the prior
+    /// <c>JsonSerializer.Serialize + SHA1</c> approach so the key cannot drift
+    /// across runtimes/serializer settings, and so that a future field added
+    /// to <see cref="SearchToursRequest"/> requires an explicit edit here
+    /// instead of silently changing every cache key.
+    /// </summary>
+    private static string BuildCanonicalKey(SearchToursRequest r)
     {
-        var json = JsonSerializer.Serialize(req);
-        var bytes = SHA1.HashData(Encoding.UTF8.GetBytes(json));
-        return Convert.ToHexString(bytes).ToLowerInvariant();
+        var inv = CultureInfo.InvariantCulture;
+        var pairs = new SortedDictionary<string, string>(StringComparer.Ordinal)
+        {
+            ["q"]                  = (r.Q ?? string.Empty).Trim().ToLowerInvariant(),
+            ["placeId"]            = r.PlaceId?.ToString() ?? string.Empty,
+            ["priceMin"]           = r.PriceMin?.ToString(inv) ?? string.Empty,
+            ["priceMax"]           = r.PriceMax?.ToString(inv) ?? string.Empty,
+            ["difficulty"]         = (r.Difficulty ?? string.Empty).ToLowerInvariant(),
+            ["durationMinutesMin"] = r.DurationMinutesMin?.ToString(inv) ?? string.Empty,
+            ["durationMinutesMax"] = r.DurationMinutesMax?.ToString(inv) ?? string.Empty,
+            ["isChildFriendly"]    = r.IsChildFriendly?.ToString() ?? string.Empty,
+            ["isAccessible"]       = r.IsAccessible?.ToString() ?? string.Empty,
+            ["isInstantBooking"]   = r.IsInstantBooking?.ToString() ?? string.Empty,
+            ["hasDiscount"]        = r.HasDiscount?.ToString() ?? string.Empty,
+            ["minRating"]          = r.MinRating?.ToString(inv) ?? string.Empty,
+            ["lang"]               = ContentToursCacheKeys.NormalizeLanguage(r.LanguageCode),
+            ["sort"]               = r.Sort.ToString(),
+            ["page"]               = r.Page.ToString(inv),
+            ["pageSize"]           = r.PageSize.ToString(inv),
+        };
+
+        return string.Join("&", pairs.Select(kv => $"{kv.Key}={kv.Value}"));
     }
 }

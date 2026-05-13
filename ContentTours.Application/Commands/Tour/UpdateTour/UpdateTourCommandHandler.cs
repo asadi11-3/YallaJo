@@ -1,5 +1,6 @@
 using ContentPlaces.Contracts.Places;
 using ContentTours.Application.Caching;
+using ContentTours.Application.Common;
 using ContentTours.Application.Interfaces;
 using ContentTours.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -16,17 +17,12 @@ namespace ContentTours.Application.Commands.Tour.UpdateTour;
 public sealed class UpdateTourCommandHandler(
     ITourRepository tourRepository,
     IPlaceExistenceService placeExistenceService,
-    IContentToursEventUnitOfWork unitOfWork,
+    IContentToursUnitOfWork unitOfWork,
     HybridCache cache,
     ICurrentUser currentUser,
     ILogger<UpdateTourCommandHandler> logger)
     : ICommandHandler<UpdateTourCommand>
 {
-    private const decimal JordanMinLat = 29.18m;
-    private const decimal JordanMaxLat = 33.38m;
-    private const decimal JordanMinLng = 34.95m;
-    private const decimal JordanMaxLng = 39.30m;
-
     public async Task<Result> Handle(UpdateTourCommand request, CancellationToken cancellationToken)
     {
         try
@@ -57,7 +53,7 @@ public sealed class UpdateTourCommandHandler(
                     Outcome.Forbidden);
             }
 
-            if (!RowVersionsEqual(tour.RowVersion, request.RowVersion))
+            if (!RowVersionUtil.Equal(tour.RowVersion, request.RowVersion))
             {
                 return Result.Failure(
                     new Error(
@@ -95,8 +91,8 @@ public sealed class UpdateTourCommandHandler(
                 }
             }
 
-            if (request.Latitude < JordanMinLat || request.Latitude > JordanMaxLat
-                || request.Longitude < JordanMinLng || request.Longitude > JordanMaxLng)
+            if (request.Latitude < JordanBounds.MinLat || request.Latitude > JordanBounds.MaxLat
+                || request.Longitude < JordanBounds.MinLng || request.Longitude > JordanBounds.MaxLng)
             {
                 logger.LogWarning(
                     "Tour {TourId} updated to a location outside Jordan bounding box: ({Latitude}, {Longitude})",
@@ -110,6 +106,10 @@ public sealed class UpdateTourCommandHandler(
                     request.MeetingPointLatitude.Value,
                     request.MeetingPointLongitude.Value);
             }
+
+            // Capture old slug BEFORE Tour.Update mutates it so we can invalidate
+            // the slug-keyed cache entry for the old slug after a successful save.
+            var oldSlug = tour.Slug;
 
             try
             {
@@ -162,6 +162,18 @@ public sealed class UpdateTourCommandHandler(
             await cache.RemoveByTagAsync(ContentToursCacheKeys.TagToursSearch, cancellationToken)
                 .ConfigureAwait(false);
 
+            // P1-005: invalidate slug-keyed cache entries (GetTourBySlugQuery) for both
+            // the old and the new slug so a slug change cannot serve stale rows.  When
+            // the slug is unchanged we evict only once.
+            var newSlug = tour.Slug;
+            await cache.RemoveByTagAsync(ContentToursCacheKeys.TagForTourSlug(oldSlug), cancellationToken)
+                .ConfigureAwait(false);
+            if (!string.Equals(oldSlug, newSlug, StringComparison.Ordinal))
+            {
+                await cache.RemoveByTagAsync(ContentToursCacheKeys.TagForTourSlug(newSlug), cancellationToken)
+                    .ConfigureAwait(false);
+            }
+
             logger.LogInformation(
                 "Tour updated: {TourId} (Slug={Slug}, By={UserId})",
                 tour.Id, tour.Slug, currentUser.UserId);
@@ -176,14 +188,4 @@ public sealed class UpdateTourCommandHandler(
         }
     }
 
-    private static bool RowVersionsEqual(byte[] left, byte[] right)
-    {
-        if (left.Length != right.Length) return false;
-        for (var i = 0; i < left.Length; i++)
-        {
-            if (left[i] != right[i]) return false;
-        }
-
-        return true;
-    }
 }

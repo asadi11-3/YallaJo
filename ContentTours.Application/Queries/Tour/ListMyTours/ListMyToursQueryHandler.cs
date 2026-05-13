@@ -14,7 +14,7 @@ public sealed class ListMyToursQueryHandler(
     : IQueryHandler<ListMyToursQuery, ListMyToursResult>
 {
     public async Task<Result<ListMyToursResult>> Handle(
-        ListMyToursQuery query, CancellationToken ct)
+        ListMyToursQuery query, CancellationToken cancellationToken)
     {
         try
         {
@@ -22,24 +22,25 @@ public sealed class ListMyToursQueryHandler(
         TourStatus? statusFilter = null;
         if (query.StatusFilter is not null)
         {
-            if (!Enum.TryParse<TourStatus>(query.StatusFilter, ignoreCase: true, out var parsed))
-                return Result.Invalid<ListMyToursResult>(
-                    new Error("Tour.InvalidStatusFilter",
-                        $"'{query.StatusFilter}' is not a valid status. " +
-                        $"Valid values: {string.Join(", ", Enum.GetNames<TourStatus>())}."));
-            statusFilter = parsed;
+                if (!Enum.TryParse<TourStatus>(query.StatusFilter, ignoreCase: true, out var parsed)) {
+                    return Result.Invalid<ListMyToursResult>(
+                   new Error(
+                       "Tour.InvalidStatusFilter",
+                       $"'{query.StatusFilter}' is not a valid status. " +
+                       $"Valid values: {string.Join(", ", Enum.GetNames<TourStatus>())}."));
+                }
+
+                statusFilter = parsed;
         }
 
-        // Build SQL-translatable IQueryable — all predicates use enum comparisons, no ToString()
         var q = tourRepo.Query(asNoTracking: true)
             .Where(t => t.CreatedByUserId == query.EffectiveUserId
                      && (query.IncludeDeleted || !t.IsDeleted)
                      && (statusFilter == null || t.Status == statusFilter.Value))
             .OrderByDescending(t => t.UpdatedAt ?? t.CreatedAt);
 
-        var total = await q.CountAsync(ct);
+        var total = await q.CountAsync(cancellationToken);
 
-        // Project Status as byte (SQL-safe), convert to name in-process after materialisation
         var raw = await q
             .Skip((query.Page - 1) * query.PageSize)
             .Take(query.PageSize)
@@ -49,10 +50,10 @@ public sealed class ListMyToursQueryHandler(
                 BasePrice = t.BasePrice.Amount, t.Currency, t.SalePrice,
                 t.AverageRating, t.ReviewCount, t.BookingCount,
                 t.IsFeatured,
-                StatusByte = (byte)t.Status,   // byte is SQL-safe; ToString() is not
+                StatusByte = (byte)t.Status,
                 t.CreatedAt
             })
-            .ToListAsync(ct);
+            .ToListAsync(cancellationToken);
 
         var dtos = raw
             .Select(r => new TourSummaryDto(
@@ -60,7 +61,7 @@ public sealed class ListMyToursQueryHandler(
                 r.BasePrice, r.Currency, r.SalePrice,
                 r.AverageRating, r.ReviewCount, r.BookingCount,
                 r.IsFeatured,
-                ((TourStatus)r.StatusByte).ToString(),   // safe: in-process
+                ((TourStatus)r.StatusByte).ToString(),
                 r.CreatedAt))
             .ToList() as IReadOnlyList<TourSummaryDto>;
 
@@ -74,7 +75,7 @@ public sealed class ListMyToursQueryHandler(
 
         return Result.Success(new ListMyToursResult(dtos, total, query.Page, query.PageSize, totalPages));
         }
-        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
             return Result<ListMyToursResult>.Failure(
                 new Error("Request.Cancelled", "The request was cancelled."),

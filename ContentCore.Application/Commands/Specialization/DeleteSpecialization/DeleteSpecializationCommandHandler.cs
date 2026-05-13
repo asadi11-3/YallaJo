@@ -1,3 +1,4 @@
+using ContentCore.Application.Caching;
 using ContentCore.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
@@ -15,17 +16,19 @@ public sealed class DeleteSpecializationCommandHandler(
     ILogger<DeleteSpecializationCommandHandler> logger)
     : ICommandHandler<DeleteSpecializationCommand>
 {
-    public async Task<Result> Handle(DeleteSpecializationCommand request, CancellationToken ct)
+    public async Task<Result> Handle(DeleteSpecializationCommand request, CancellationToken cancellationToken)
     {
         try
         {
             var specialization = await specializationRepository.GetByIdAsync(
-                request.Id, ct, asNoTracking: false);
+                request.Id, cancellationToken, asNoTracking: false);
 
             if (specialization is null)
+            {
                 return Result.Failure(
-                    new Error("Specialization.NotFound", $"Specialization '{request.Id}' was not found."),
-                    Outcome.NotFound);
+                   new Error("Specialization.NotFound", $"Specialization '{request.Id}' was not found."),
+                   Outcome.NotFound);
+            }
 
             // Specialization is AuditableEntity — soft-delete preserves history.
             // Hard Remove() is NOT used (unlike Tag which is simpler reference data).
@@ -33,24 +36,25 @@ public sealed class DeleteSpecializationCommandHandler(
 
             try
             {
-                await unitOfWork.SaveChangesAsync(ct);
+                await unitOfWork.SaveChangesAsync(cancellationToken);
             }
             catch (DbUpdateConcurrencyException)
             {
                 return Result.Failure(
-                    new Error("Specialization.ConcurrencyConflict",
+                    new Error(
+                        "Specialization.ConcurrencyConflict",
                         "This record was modified by another user. Please refresh and try again."),
                     Outcome.Conflict);
             }
 
-            await cache.RemoveByTagAsync("specializations", ct);
-            await cache.RemoveByTagAsync($"specialization:{specialization.Id}", ct);
+            await cache.RemoveByTagAsync(ContentCoreCacheKeys.SpecializationsTag, cancellationToken);
+            await cache.RemoveByTagAsync(ContentCoreCacheKeys.SpecializationTag(specialization.Id), cancellationToken);
 
             logger.LogInformation("Specialization {SpecializationId} soft-deleted.", specialization.Id);
 
             return Result.Success();
         }
-        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
             return Result.Failure(
                 new Error("Request.Cancelled", "The request was cancelled."),

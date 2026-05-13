@@ -1,14 +1,8 @@
 using Auth.Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using YallaJo.SharedKernel.Domain.Abstractions.Data;
 
-namespace Auth.Domain.Repositories
+namespace Auth.Domain.Repositories;
+
+public interface IOtpRepository : IWriteRepository<Otp, Guid>, IReadRepository<Otp, Guid>
 {
-    public interface IOtpRepository : IWriteRepository<Otp, Guid>, IReadRepository<Otp, Guid>
-    {
-    }
 }

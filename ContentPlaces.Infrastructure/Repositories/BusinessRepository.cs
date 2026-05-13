@@ -30,6 +30,7 @@ internal sealed class BusinessRepository(ContentPlacesDbContext context)
     public async Task<Business?> GetByIdWithDetailsAsync(Guid id, CancellationToken ct = default)
         => await context.Businesses
             .AsNoTracking()
+            .AsSplitQuery()
             .Include(b => b.BusinessTranslations)
             .Include(b => b.BusinessHours)
             .Include(b => b.ServiceItems)

@@ -16,5 +16,9 @@ public sealed record ListServiceItemsQuery(Guid BusinessId, bool IsElevated)
 {
     public string CacheKey => ContentPlacesCacheKeys.ServiceItemList(BusinessId, IsElevated);
     public TimeSpan? CacheDuration => TimeSpan.FromMinutes(5);
-    public IReadOnlyList<string> Tags => ["businesses", $"biz:{BusinessId}:services"];
+    public IReadOnlyList<string> Tags =>
+    [
+        ContentPlacesCacheKeys.TagBusinesses,
+        ContentPlacesCacheKeys.TagForBusinessServices(BusinessId),
+    ];
 }

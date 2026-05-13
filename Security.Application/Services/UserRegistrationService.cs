@@ -116,9 +116,7 @@ internal sealed class UserRegistrationService(
         var user = await userRepository.GetByIdAsync(userId, cancellationToken, asNoTracking: false);
         if (user is null)
         {
-            return Result.Failure(
-                Error.NotFound("User.NotFound", "No account found."),
-                Outcome.NotFound);
+            return Result.Fail(Outcome.NotFound, "No account found.", UserErrors.NotFound);
         }
 
         if (user.LifecycleState != AccountLifecycleState.Provisioned
@@ -152,9 +150,7 @@ internal sealed class UserRegistrationService(
         var user = await userRepository.GetByIdAsync(userId, cancellationToken, asNoTracking: false);
         if (user is null)
         {
-            return Result.Failure(
-                Error.NotFound("User.NotFound", "No account found."),
-                Outcome.NotFound);
+            return Result.Fail(Outcome.NotFound, "No account found.", UserErrors.NotFound);
         }
 
         if (user.LifecycleState != AccountLifecycleState.Active
@@ -264,9 +260,7 @@ internal sealed class UserRegistrationService(
         var user = await userRepository.GetByIdWithEmailsAsync(userId, cancellationToken);
         if (user is null)
         {
-            return Result.Failure(
-                Error.NotFound("User.NotFound", "No account found for this invite."),
-                Outcome.NotFound);
+            return Result.Fail(Outcome.NotFound, "No account found for this invite.", UserErrors.NotFound);
         }
 
         var primary = user.GetPrimaryEmail();

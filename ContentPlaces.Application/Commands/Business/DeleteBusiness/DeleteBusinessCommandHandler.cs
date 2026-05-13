@@ -1,3 +1,4 @@
+using ContentPlaces.Application.Caching;
 using ContentPlaces.Application.Interfaces;
 using ContentPlaces.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -33,8 +34,8 @@ public sealed class DeleteBusinessCommandHandler(
             if (saveResult is not null)
                 return saveResult;
 
-            await cache.RemoveByTagAsync($"biz:{request.Id}", cancellationToken);
-            await cache.RemoveByTagAsync("businesses", cancellationToken);
+            await cache.RemoveByTagAsync(ContentPlacesCacheKeys.TagForBusiness(request.Id), cancellationToken);
+            await cache.RemoveByTagAsync(ContentPlacesCacheKeys.TagBusinesses, cancellationToken);
 
             return Result.Success();
         }

@@ -154,7 +154,28 @@ public sealed class Category : AuditableEntity, IAggregateRoot
         MarkUpdated();
     }
 
-  
+    public new void SoftDelete()
+    {
+        if (IsDeleted)
+        {
+            return;
+        }
+
+        base.SoftDelete();
+        AddDomainEvent(new CategoryDeletedDomainEvent(Id, Slug));
+    }
+
+    public new void Restore()
+    {
+        if (!IsDeleted)
+        {
+            return;
+        }
+
+        base.Restore();
+        AddDomainEvent(new CategoryRestoredDomainEvent(Id, Slug));
+    }
+
     public static string GenerateSlug(string name) =>
         System.Text.RegularExpressions.Regex
             .Replace(name.Trim().ToLowerInvariant().Replace(' ', '-'), @"[^a-z0-9\-]", string.Empty)

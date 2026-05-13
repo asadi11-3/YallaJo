@@ -3,6 +3,7 @@ using ContentPlaces.Application.Interfaces;
 using ContentPlaces.Domain.Enums;
 using ContentPlaces.Domain.Repositories;
 using FluentAssertions;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Security.Contracts.Authorization;
@@ -22,11 +23,13 @@ public sealed class RemoveBusinessStaffCommandHandlerTests
     {
         var staffRepo = Substitute.For<IBusinessStaffRepository>();
         var uow = Substitute.For<IContentPlacesUnitOfWork>();
+        var outbox = Substitute.For<IContentPlacesOutboxWriter>();
         var currentUser = Substitute.For<ICurrentUser>();
+        var cache = Substitute.For<HybridCache>();
         var logger = Substitute.For<ILogger<RemoveBusinessStaffCommandHandler>>();
 
         var handler = new RemoveBusinessStaffCommandHandler(
-            staffRepo, uow, currentUser, logger);
+            staffRepo, uow, outbox, currentUser, cache, logger);
 
         return (handler, staffRepo, uow, currentUser);
     }
@@ -65,7 +68,7 @@ public sealed class RemoveBusinessStaffCommandHandlerTests
         currentUser.IsAuthenticated.Returns(true);
         currentUser.UserId.Returns(Guid.NewGuid());
         staffRepo
-            .GetByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>(), Arg.Any<bool>())
+            .GetByIdWithBusinessAsync(Arg.Any<Guid>(), Arg.Any<bool>(), Arg.Any<CancellationToken>())
             .Returns((StaffEntity?)null);
 
         var result = await handler.Handle(
@@ -88,7 +91,7 @@ public sealed class RemoveBusinessStaffCommandHandlerTests
         currentUser.UserId.Returns(callerId);
         currentUser.Roles.Returns(new[] { AppRoles.User });
         staffRepo
-            .GetByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>(), Arg.Any<bool>())
+            .GetByIdWithBusinessAsync(Arg.Any<Guid>(), Arg.Any<bool>(), Arg.Any<CancellationToken>())
             .Returns(staff);
 
         var result = await handler.Handle(
@@ -111,7 +114,7 @@ public sealed class RemoveBusinessStaffCommandHandlerTests
         currentUser.UserId.Returns(ownerId);
         currentUser.Roles.Returns(new[] { AppRoles.User });
         staffRepo
-            .GetByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>(), Arg.Any<bool>())
+            .GetByIdWithBusinessAsync(Arg.Any<Guid>(), Arg.Any<bool>(), Arg.Any<CancellationToken>())
             .Returns(staff);
 
         var result = await handler.Handle(
@@ -133,7 +136,7 @@ public sealed class RemoveBusinessStaffCommandHandlerTests
         currentUser.UserId.Returns(ownerId);
         currentUser.Roles.Returns(new[] { AppRoles.User });
         staffRepo
-            .GetByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>(), Arg.Any<bool>())
+            .GetByIdWithBusinessAsync(Arg.Any<Guid>(), Arg.Any<bool>(), Arg.Any<CancellationToken>())
             .Returns(staff);
 
         var result = await handler.Handle(
@@ -160,7 +163,7 @@ public sealed class RemoveBusinessStaffCommandHandlerTests
         currentUser.UserId.Returns(callerId);
         currentUser.Roles.Returns(new[] { role });
         staffRepo
-            .GetByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>(), Arg.Any<bool>())
+            .GetByIdWithBusinessAsync(Arg.Any<Guid>(), Arg.Any<bool>(), Arg.Any<CancellationToken>())
             .Returns(staff);
 
         var result = await handler.Handle(

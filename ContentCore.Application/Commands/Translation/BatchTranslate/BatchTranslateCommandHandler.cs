@@ -1,4 +1,3 @@
-using ContentCore.Domain.Repositories;
 using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Application.Abstractions.Translation;
@@ -9,7 +8,6 @@ namespace ContentCore.Application.Commands.Translation.BatchTranslate;
 
 public sealed class BatchTranslateCommandHandler(
     ITranslationService translationService,
-    IContentCoreUnitOfWork unitOfWork,
     ILogger<BatchTranslateCommandHandler> logger)
     : ICommandHandler<BatchTranslateCommand, BatchTranslateResult>
 {
@@ -25,10 +23,6 @@ public sealed class BatchTranslateCommandHandler(
                 request.ToLanguageCode,
                 cancellationToken);
 
-            // AutoSaveTranslationService stages cache entries but does not commit.
-            // Commit here so all cache rows are persisted atomically with this operation.
-            await unitOfWork.SaveChangesAsync(cancellationToken);
-
             var items = results
                 .Select(r => new BatchTranslateResultItem(
                     r.OriginalText,
@@ -36,7 +30,7 @@ public sealed class BatchTranslateCommandHandler(
                     r.FromLanguage,
                     r.ToLanguage,
                     r.Confidence))
-                .ToList() as IReadOnlyList<BatchTranslateResultItem>;
+                .ToList();
 
             logger.LogInformation(
                 "BatchTranslate completed: {Count} items ({From}→{To})",

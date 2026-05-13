@@ -1,8 +1,10 @@
 using System.Globalization;
+using ContentPlaces.Application.Caching;
 using ContentPlaces.Application.Interfaces;
 using ContentPlaces.Application.Queries.BusinessAmenity.Common;
 using ContentPlaces.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
 using Security.Contracts.Authorization;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
@@ -17,6 +19,7 @@ public sealed class AddBusinessAmenityCommandHandler(
     IBusinessRepository businessRepository,
     IContentPlacesUnitOfWork unitOfWork,
     ICurrentUser currentUser,
+    HybridCache cache,
     ILogger<AddBusinessAmenityCommandHandler> logger)
     : ICommandHandler<AddBusinessAmenityCommand, BusinessAmenityDto>
 {
@@ -79,6 +82,9 @@ public sealed class AddBusinessAmenityCommandHandler(
                     "A concurrency conflict occurred. Please refresh and try again."),
                 Outcome.Conflict);
         }
+
+        // Evict scoped business tag so ListBusinessAmenitiesQuery returns fresh data.
+        await cache.RemoveByTagAsync(ContentPlacesCacheKeys.BusinessTag(request.BusinessId), cancellationToken);
 
         logger.LogInformation(
             "Amenity {AmenityId} added to Business {BusinessId}",

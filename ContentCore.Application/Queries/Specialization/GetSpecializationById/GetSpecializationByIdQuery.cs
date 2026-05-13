@@ -9,5 +9,9 @@ public sealed record GetSpecializationByIdQuery(Guid Id)
 {
     public string CacheKey => ContentCoreCacheKeys.SpecializationById(Id);
     public TimeSpan? CacheDuration => TimeSpan.FromMinutes(30);
-    public IReadOnlyList<string> Tags => ["specializations", $"specialization:{Id}"];
+    public IReadOnlyList<string> Tags =>
+    [
+        ContentCoreCacheKeys.SpecializationsTag,
+        ContentCoreCacheKeys.SpecializationTag(Id),
+    ];
 }

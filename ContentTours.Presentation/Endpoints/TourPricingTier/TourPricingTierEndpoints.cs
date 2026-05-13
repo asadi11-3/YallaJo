@@ -21,8 +21,7 @@ internal static class TourPricingTierEndpoints
 {
     internal static void MapTourPricingTierEndpoints(RouteGroupBuilder group)
     {
-        var pricing = group.MapGroup("/{id:guid}/pricing")
-            .WithTags("ContentTours | Pricing");
+        var pricing = group.MapGroup("/{id}/pricing").WithTags("ContentTours | Pricing");
 
         pricing.MapGet("/", async (
             Guid id,
@@ -76,7 +75,7 @@ internal static class TourPricingTierEndpoints
         .ProducesProblem(StatusCodes.Status403Forbidden)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status409Conflict)
-        .WithMetadata(new MustHavePermissionAttribute(ContentToursFeatures.Tour, AppAction.Update));
+        .WithMetadata(new MustHavePermissionAttribute(ContentToursFeatures.TourPricingTier, AppAction.Create));
 
         pricing.MapPut("/{tierId:guid}", async (
             Guid id,
@@ -103,7 +102,7 @@ internal static class TourPricingTierEndpoints
         .ProducesProblem(StatusCodes.Status403Forbidden)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status409Conflict)
-        .WithMetadata(new MustHavePermissionAttribute(ContentToursFeatures.Tour, AppAction.Update));
+        .WithMetadata(new MustHavePermissionAttribute(ContentToursFeatures.TourPricingTier, AppAction.Update));
 
         pricing.MapDelete("/{tierId:guid}", async (
             Guid id,
@@ -120,6 +119,7 @@ internal static class TourPricingTierEndpoints
         .ProducesProblem(StatusCodes.Status403Forbidden)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status409Conflict)
-        .WithMetadata(new MustHavePermissionAttribute(ContentToursFeatures.Tour, AppAction.Update));
+        .WithMetadata(new MustHavePermissionAttribute(ContentToursFeatures.TourPricingTier, AppAction.Delete));
     }
+
 }

@@ -1,8 +1,12 @@
+using ContentCore.Application.Authorization;
+using ContentCore.Application.Caching;
 using ContentCore.Domain.Enums;
 using ContentCore.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
+using Security.Contracts.Authorization;
+using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 using Outcome = YallaJo.SharedKernel.Domain.Abstractions.Results.Outcome;
@@ -13,6 +17,8 @@ public sealed class RemoveTagFromEntityCommandHandler(
     IEntityTagRepository entityTagRepository,
     IContentCoreUnitOfWork unitOfWork,
     HybridCache cache,
+    ICurrentUser currentUser,
+    IEntityOwnershipResolver ownershipResolver,
     ILogger<RemoveTagFromEntityCommandHandler> logger)
     : ICommandHandler<RemoveTagFromEntityCommand>
 {
@@ -20,7 +26,65 @@ public sealed class RemoveTagFromEntityCommandHandler(
     {
         try
         {
-            var entityType = Enum.Parse<EntityType>(request.EntityType, true);
+            // 1. Authentication
+            if (!currentUser.IsAuthenticated || currentUser.UserId is null)
+            {
+                return Result.Failure(
+                    Error.Unauthorized("Authentication is required."),
+                    Outcome.Unauthorized);
+            }
+
+            // 2. EntityType parse / validation
+            if (!Enum.TryParse<EntityType>(request.EntityType, true, out var entityType))
+            {
+                return Result.Failure(
+                    new Error("EntityTag.InvalidEntityType", "Invalid entity type."),
+                    Outcome.Invalid);
+            }
+
+            // 3. Admin-tier short-circuit
+            var isAdminTier = AppRoles.HighestPrivilegeLevel(currentUser.Roles)
+                >= RolePrivilegeLevel.Admin;
+
+            // 4. Ownership probe (skipped for admin-tier callers)
+            if (!isAdminTier)
+            {
+                var ownership = await ownershipResolver.ResolveAsync(entityType, request.EntityId, cancellationToken);
+
+                if (!ownership.IsSupported)
+                {
+                    return Result.Failure(
+                        new Error(
+                            "EntityTag.UnsupportedEntityType",
+                            "This entity type cannot be authorized for assignment."),
+                        Outcome.Invalid);
+                }
+
+                if (!ownership.Exists)
+                {
+                    return Result.Failure(
+                        new Error(
+                            "EntityTag.TargetNotFound",
+                            $"{entityType} '{request.EntityId}' was not found."),
+                        Outcome.NotFound);
+                }
+
+                if (ownership.IsDeleted)
+                {
+                    return Result.Failure(
+                        new Error(
+                            "EntityTag.TargetDeleted",
+                            $"{entityType} '{request.EntityId}' is deleted."),
+                        Outcome.Invalid);
+                }
+
+                if (ownership.OwnerUserId != currentUser.UserId.Value)
+                {
+                    return Result.Failure(
+                        Error.Forbidden("You do not have permission to remove tags from this entity."),
+                        Outcome.Forbidden);
+                }
+            }
 
             var entityTags = await entityTagRepository.GetByEntityAsync(entityType, request.EntityId, cancellationToken);
             var entityTag = entityTags.FirstOrDefault(et => et.TagId == request.TagId);
@@ -47,7 +111,9 @@ public sealed class RemoveTagFromEntityCommandHandler(
                     Outcome.Conflict);
             }
 
-            await cache.RemoveByTagAsync($"entity-tags:{request.EntityType}:{request.EntityId}", cancellationToken);
+            await cache.RemoveByTagAsync(
+                ContentCoreCacheKeys.EntityTagsTag(request.EntityType, request.EntityId),
+                cancellationToken);
 
             logger.LogInformation(
                 "Removed tag {TagId} from {EntityType}/{EntityId}",

@@ -1,3 +1,4 @@
+using ContentCore.Application.Caching;
 using ContentCore.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
@@ -15,15 +16,17 @@ public sealed class DeactivateTagCommandHandler(
     ILogger<DeactivateTagCommandHandler> logger)
     : ICommandHandler<DeactivateTagCommand>
 {
-    public async Task<Result> Handle(DeactivateTagCommand request, CancellationToken ct)
+    public async Task<Result> Handle(DeactivateTagCommand request, CancellationToken cancellationToken)
     {
         try
         {
-            var tag = await tagRepository.GetByIdAsync(request.Id, ct, asNoTracking: false);
+            var tag = await tagRepository.GetByIdAsync(request.Id, cancellationToken, asNoTracking: false);
             if (tag is null)
+            {
                 return Result.Failure(
-                    new Error("Tag.NotFound", $"Tag '{request.Id}' was not found."),
-                    Outcome.NotFound);
+                   new Error("Tag.NotFound", $"Tag '{request.Id}' was not found."),
+                   Outcome.NotFound);
+            }
 
             // Gotcha #14: guard state before raising — idempotent no-op if already inactive.
             if (!tag.IsActive)
@@ -33,23 +36,24 @@ public sealed class DeactivateTagCommandHandler(
 
             try
             {
-                await unitOfWork.SaveChangesAsync(ct);
+                await unitOfWork.SaveChangesAsync(cancellationToken);
             }
             catch (DbUpdateConcurrencyException)
             {
                 return Result.Failure(
-                    new Error("Tag.ConcurrencyConflict",
+                    new Error(
+                        "Tag.ConcurrencyConflict",
                         "This record was modified by another user. Please refresh and try again."),
                     Outcome.Conflict);
             }
 
-            await cache.RemoveByTagAsync("tags", ct);
+            await cache.RemoveByTagAsync(ContentCoreCacheKeys.TagsTag, cancellationToken);
 
             logger.LogInformation("Tag {TagId} deactivated.", tag.Id);
 
             return Result.Success();
         }
-        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
             return Result.Failure(
                 new Error("Request.Cancelled", "The request was cancelled."),

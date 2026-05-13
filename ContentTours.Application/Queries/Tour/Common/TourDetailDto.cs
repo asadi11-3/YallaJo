@@ -36,29 +36,11 @@ public sealed record TourDetailDto(
     int? AgeRestriction,
     string? MetaTitle,
     string? MetaDescription,
-    Guid CreatedByUserId,
     Guid? PlaceId,
     DateTime CreatedAt,
     DateTime? UpdatedAt,
-    DateTime? SubmittedAt,
-    DateTime? ApprovedAt,
-    Guid? ApprovedByUserId,
-    DateTime? RejectedAt,
-    Guid? RejectedByUserId,
-    string? RejectionReason,
-    DateTime? SuspendedAt,
-    string? SuspensionReason,
-    DateTime? ReinstatedAt,
     IReadOnlyList<TourTranslationDto> Translations)
 {
-    /// <summary>
-    /// Projects an aggregate to the full detail DTO. Caller is responsible for
-    /// suppressing approval-audit and PII fields when visibility is anonymous.
-    /// When <paramref name="preferredLanguageId"/> is supplied and a matching
-    /// <c>TourTranslation</c> exists, the translated <c>Name</c> /
-    /// <c>Description</c> / <c>ShortDescription</c> / <c>MeetingPoint</c> are
-    /// returned with <c>COALESCE(translation, source)</c> fallback.
-    /// </summary>
     public static TourDetailDto From(TourEntity tour, Guid? preferredLanguageId = null)
     {
         var translation = preferredLanguageId.HasValue
@@ -98,19 +80,9 @@ public sealed record TourDetailDto(
         AgeRestriction:           tour.AgeRestriction,
         MetaTitle:                tour.MetaTitle,
         MetaDescription:          tour.MetaDescription,
-        CreatedByUserId:          tour.CreatedByUserId,
         PlaceId:                  tour.PlaceId,
         CreatedAt:                tour.CreatedAt,
         UpdatedAt:                tour.UpdatedAt,
-        SubmittedAt:              tour.SubmittedAt,
-        ApprovedAt:               tour.ApprovedAt,
-        ApprovedByUserId:         tour.ApprovedByUserId,
-        RejectedAt:               tour.RejectedAt,
-        RejectedByUserId:         tour.RejectedByUserId,
-        RejectionReason:          tour.RejectionReason,
-        SuspendedAt:              tour.SuspendedAt,
-        SuspensionReason:         tour.SuspensionReason,
-        ReinstatedAt:             tour.ReinstatedAt,
         Translations:             tour.TourTranslations
             .Select(t => new TourTranslationDto(t.LanguageId, t.Name, t.Description, t.ShortDescription, t.MeetingPoint))
             .ToList());

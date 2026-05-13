@@ -1,3 +1,4 @@
+using ContentCore.Application.Caching;
 using ContentCore.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
@@ -22,8 +23,6 @@ public sealed class DeleteTagCommandHandler(
             var tag = await tagRepository.GetByIdAsync(request.Id, cancellationToken, asNoTracking: false);
             if (tag is null)
             {
-
-
                 return Result.Failure(
                         new Error("Tag.NotFound", $"Tag '{request.Id}' was not found."),
                         Outcome.NotFound);
@@ -44,7 +43,7 @@ public sealed class DeleteTagCommandHandler(
                     Outcome.Conflict);
             }
 
-            await cache.RemoveByTagAsync("tags", cancellationToken);
+            await cache.RemoveByTagAsync(ContentCoreCacheKeys.TagsTag, cancellationToken);
 
             logger.LogInformation("Tag deleted: {TagId}", request.Id);
 

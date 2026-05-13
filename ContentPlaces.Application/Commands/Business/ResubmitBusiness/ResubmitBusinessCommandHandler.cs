@@ -1,3 +1,4 @@
+using ContentPlaces.Application.Caching;
 using ContentPlaces.Application.Interfaces;
 using ContentPlaces.Domain.Enums;
 using ContentPlaces.Domain.Repositories;
@@ -56,8 +57,8 @@ public sealed class ResubmitBusinessCommandHandler(
             if (saveResult is not null)
                 return saveResult;
 
-            await cache.RemoveByTagAsync($"biz:{request.Id}", cancellationToken);
-            await cache.RemoveByTagAsync("businesses", cancellationToken);
+            await cache.RemoveByTagAsync(ContentPlacesCacheKeys.TagForBusiness(request.Id), cancellationToken);
+            await cache.RemoveByTagAsync(ContentPlacesCacheKeys.TagBusinesses, cancellationToken);
 
             return Result.Success();
         }

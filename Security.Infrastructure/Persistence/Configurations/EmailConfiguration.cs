@@ -4,7 +4,7 @@ using Security.Domain.Entities;
 
 namespace Security.Infrastructure.Persistence.Configurations;
 
-public class EmailConfiguration : IEntityTypeConfiguration<Email>
+public sealed class EmailConfiguration : IEntityTypeConfiguration<Email>
 {
     public void Configure(EntityTypeBuilder<Email> builder)
     {

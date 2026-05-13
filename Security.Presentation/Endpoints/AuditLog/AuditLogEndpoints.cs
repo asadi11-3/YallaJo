@@ -33,8 +33,8 @@ internal static class AuditLogEndpoints
         })
         .WithName("GetAuditLogs")
         .Produces<PaginatedResult<AuditLogDto>>(StatusCodes.Status200OK)
-        .WithSummary("Phase 4: paginated admin audit timeline. Optional filters: userId (subject), actorUserId (admin), action verb, from/to date range.")
-        .WithMetadata(new MustHavePermissionAttribute(SecurityFeatures.System, AppAction.Read))
+        .WithSummary("Get paginated admin audit logs with optional filters (userId, actorUserId, action, from, to).")
+        .WithMetadata(new MustHavePermissionAttribute(SecurityFeatures.AuditLog, AppAction.Read))
         .RequireAuthorization();
     }
 }

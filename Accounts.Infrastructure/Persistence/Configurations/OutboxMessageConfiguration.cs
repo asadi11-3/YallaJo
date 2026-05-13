@@ -4,7 +4,7 @@ using YallaJo.SharedKernel.Infrastructure.Outbox;
 
 namespace Accounts.Infrastructure.Persistence.Configurations;
 
-public class OutboxMessageConfiguration : IEntityTypeConfiguration<OutboxMessage>
+public sealed class OutboxMessageConfiguration : IEntityTypeConfiguration<OutboxMessage>
 {
     public void Configure(EntityTypeBuilder<OutboxMessage> builder)
     {
