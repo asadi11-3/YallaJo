@@ -3,7 +3,7 @@ using YallaJo.SharedKernel.Domain.Entities;
 
 namespace ContentSeo.Domain.Entities;
 
-public sealed class FaqItem : AuditableEntity
+public sealed class FaqItem : AuditableEntity, IAggregateRoot
 {
     private readonly List<FaqItemTranslation> _translations = [];
 

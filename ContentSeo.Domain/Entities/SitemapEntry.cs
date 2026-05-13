@@ -2,7 +2,7 @@ using YallaJo.SharedKernel.Domain.Entities;
 
 namespace ContentSeo.Domain.Entities;
 
-public sealed class SitemapEntry : AuditableEntity
+public sealed class SitemapEntry : AuditableEntity, IAggregateRoot
 {
     private SitemapEntry() { } // EF Core
 

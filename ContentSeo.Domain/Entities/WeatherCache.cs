@@ -2,7 +2,7 @@ using YallaJo.SharedKernel.Domain.Entities;
 
 namespace ContentSeo.Domain.Entities;
 
-public sealed class WeatherCache : BaseEntity
+public sealed class WeatherCache : AuditableEntity, IAggregateRoot
 {
     private WeatherCache() { } // EF Core
 

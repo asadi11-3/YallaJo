@@ -2,7 +2,7 @@ using YallaJo.SharedKernel.Domain.Entities;
 
 namespace ContentSeo.Domain.Entities;
 
-public sealed class Redirect : AuditableEntity
+public sealed class Redirect : AuditableEntity, IAggregateRoot
 {
     private Redirect() { } // EF Core
 

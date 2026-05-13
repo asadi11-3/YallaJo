@@ -3,7 +3,7 @@ using YallaJo.SharedKernel.Domain.Entities;
 
 namespace ContentSeo.Domain.Entities;
 
-public sealed class SeoMetadata : AuditableEntity
+public sealed class SeoMetadata : AuditableEntity , IAggregateRoot
 {
     private SeoMetadata() { } // EF Core
 
