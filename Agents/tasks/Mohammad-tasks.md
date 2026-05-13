@@ -220,6 +220,37 @@ services.AddSingleton<IPermissionCatalog, ContentSeoPermissionCatalog>();
 
 ### PW Merge Checklist (your items only -- full list in team file)
 
+### Pre-Work Completion Log (Mohammad's ContentSeo half — Tech Lead to verify and tick official checklist below)
+
+**Status:** All Mohammad-owned PW items complete on first build pass. `dotnet build YallaJo.sln` = 0 errors. `dotnet test tests/ContentSeo.Tests.Unit` = 2/2 passing.
+
+| Item | Status | Files touched | Notes / deviations from brief |
+|---|---|---|---|
+| **PW-1** ContentSeo half | ✅ Done | `ContentSeo.Infrastructure/Persistence/ContentSeoUnitOfWork.cs` | Rewritten to forward to `IUnitOfWork<ContentSeoDbContext>`. DI already wired correctly in `DependencyInjection.cs` line 31 — only the wrapper class was bypassing the SharedKernel UoW. **ContentBlogs half is Tech Lead's parallel work — untouched.** |
+| **PW-1b** unit test | ✅ Done | `tests/ContentSeo.Tests.Unit/Persistence/ContentSeoUnitOfWorkDispatchesEventsTests.cs` | 2 tests (positive + negative path) — both green. Verifies `IDomainEventDispatcher.DispatchAsync` is invoked exactly once when an aggregate raises one event, and not invoked when no events are raised. |
+| **PW-4a** `IAggregateRoot` markers | ✅ Done | `SeoMetadata.cs`, `Redirect.cs`, `FaqItem.cs`, `SitemapEntry.cs` | All four entities already declared `: AuditableEntity, IAggregateRoot` in source on inspection — likely added by an earlier setup script. Verified compiles clean. |
+| **PW-4b** WeatherCache schema upgrade (code) | ✅ Done | `ContentSeo.Domain/Entities/WeatherCache.cs` | Already `: AuditableEntity, IAggregateRoot` in source. EF model now diffs against snapshot → migration generated automatically. |
+| **PW-4c** stub domain event records | ✅ Done | `ContentSeo.Domain/Events/` × 10 files | `SeoMetadata{Created,Updated,Deleted}DomainEvent`, `Redirect{Created,Deactivated,ChainFlattened}DomainEvent`, `FaqItem{Created,Updated,Deleted,Reordered}DomainEvent`. All `: DomainEventBase`. Use `using YallaJo.SharedKernel.Domain.Event;` — note SharedKernel namespace is `Event` (singular), file dir is `Events`. |
+| **PW-4d** migration | ✅ Done | `ContentSeo.Infrastructure/Migrations/20260513122151_UpgradeWeatherCacheToAuditableEntity.cs` | Generated via `dotnet ef migrations add UpgradeWeatherCacheToAuditableEntity --project ContentSeo.Infrastructure --startup-project YallaJo.Api --context ContentSeoDbContext`. ADD-COLUMN exactly as specified: `IsDeleted bit NOT NULL DEFAULT 0`, `DeletedAt datetime2 NULL`, `RowVersion rowversion NOT NULL`. Migration NOT yet applied to DB — Tech Lead to `dotnet ef database update` in deployment window. |
+| **PW-5a** repository interfaces | ✅ Done | `ContentSeo.Application/Interfaces/` × 5 files | `I{SeoMetadata,Redirect,FaqItem,SitemapEntry,WeatherCache}Repository.cs` — all empty bodies, all `: IRepository<T>` (Guid key). |
+| **PW-5b** EF repo impls | ✅ Done | `ContentSeo.Infrastructure/Repositories/` × 5 files | All `internal sealed class FooRepository(ContentSeoDbContext context) : EfRepository<Foo, Guid>(context), IFooRepository;` primary-constructor pattern. Mirrors ContentPlaces convention. Registered in DI as `services.AddScoped<IFooRepository, FooRepository>()`. |
+| **PW-6** features + catalog | ✅ Done | `ContentSeo.Contracts/Authorization/ContentSeoFeatures.cs`, `ContentSeoPermissionCatalog.cs` | 5 features (`SeoMetadata`, `Redirect`, `Sitemap`, `FaqItem`, `Weather`) — all use bare `nameof()` constants (no module prefix) to match existing ContentCore/ContentTours convention. **DEVIATION from brief** which suggested `"ContentSeo.SeoMetadata"` literal. Catalog declares 21 `PermissionDescriptor` rows. **AppAction.Manage doesn't exist in the codebase** — used `AppAction.Refresh` for Sitemap regen (perfect semantic match per AppAction docstring "for batch/cache refresh admin endpoints"). Weather force-refresh also uses `AppAction.Refresh`. `ContentSeo.Contracts.csproj` now references `SharedKernel.Application` for `IPermissionCatalog`. Registered as `IPermissionCatalog` singleton in `ContentSeo.Infrastructure/DependencyInjection.cs`. |
+| **PW-7** sanity test | ⚠️ Partial — written with documented deviation | `tests/ContentSeo.IntegrationTests/EventDispatchSanityTests.cs` | **DEVIATION:** Uses `ServiceCollection.BuildServiceProvider()` + `AddContentSeoInfrastructure(...)` + InMemory EF swap, NOT `WebApplicationFactory<Program>`. Rationale: the brief's outbox-row assertion requires (a) `SeoMetadataChangedIntegrationEvent` class, (b) `IntegrationEventTypeRegistry` registration, (c) `INotificationHandler<SeoMetadataCreatedDomainEvent>` mapper → all are T3 deliverables, NOT pre-work. Pragmatic version asserts the contract that IS pre-work-verifiable: domain-event dispatch via the fixed UoW. 2nd test smoke-resolves all 5 repos + UoW + PermissionCatalog. **`YallaJo.Api/Program.cs` HAS `public partial class Program;` appended** so the brief-exact `WebApplicationFactory<Program>` test can land later in T3 once the integration-event plumbing exists. |
+
+**ROI improvements applied this round (out-of-scope additions, raised in m0010):**
+
+- ✅ **ROI-1** `AsyncAwaitBestPractices` version drift fixed. Removed redundant `<PackageReference Update="AsyncAwaitBestPractices" Version="9.0.0" />` from `SharedKernel.Domain.csproj` and `SharedKernel.Presentation.csproj` (was overriding the global `10.0.0` pin from `Directory.Build.props`). Also removed the now-redundant 3-line `<PackageReference Update>` block in `SharedKernel.Application.csproj`.
+- ✅ **ROI-2 / ROI-3** Created `tests/ContentSeo.Tests.Unit` and `tests/ContentSeo.IntegrationTests` projects + added both to `YallaJo.sln`. Conventions mirror `ContentCore.Tests.Unit` (xunit 2.9.3, NSubstitute 5.3.0, FluentAssertions 7.0.0, EF InMemory 9.0.15). Integration project adds `Microsoft.AspNetCore.Mvc.Testing 9.0.15` + reference to `YallaJo.Api`.
+- ✅ **ROI-4** Audited `Directory.Build.props` — analyzers (AsyncAwaitBestPractices, StyleCop, Meziantou, Roslynator) are globally `Include`'d with `PrivateAssets="all"`, so they ARE inherited by all `ContentSeo.*` projects already. No action needed.
+- ✅ **ROI-5** `IntegrationEventTypeRegistry` test pattern (`tests/SharedKernel.Tests.Unit/IntegrationEventTypeRegistryTests.cs`) already uses drift-proof reverse-parity (KnownMappings ↔ NameToType). When the 4 ContentSeo integration events get added in T3, just append 4 rows to both the registry AND the test array.
+- 🔜 **ROI-6** `PeriodicTimer` over `while + Task.Delay` — deferred to T4 BG service implementation (no code exists yet to refactor).
+- 🔜 **ROI-7** XxHash64 over SHA-256 for redirect cache keys — deferred to T3 query handler implementation.
+
+**Infrastructure side-effects discovered:**
+
+- `ContentSeo.Infrastructure.csproj` gained `<InternalsVisibleTo Include="ContentSeo.Tests.Unit" />` + `<InternalsVisibleTo Include="ContentSeo.IntegrationTests" />` (required because `ContentSeoUnitOfWork` is `internal sealed`, matching the convention used by Auth.Infrastructure, ContentPlaces.Presentation, ContentTours.* in the repo).
+- `YallaJo.Api/Program.cs` gained `public partial class Program;` at end (idiomatic enabler for `WebApplicationFactory<Program>` integration tests).
+
 ### Pre-work merge checklist (Tech Lead signs off)
 
 - [ ] PW-1 merged. `dotnet test` green for both modules.

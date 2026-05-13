@@ -12,9 +12,5 @@
   <ItemGroup>
     <ProjectReference Include="..\YallaJo.SharedKernel.Domain\YallaJo.SharedKernel.Domain.csproj" />
   </ItemGroup>
-  <ItemGroup>
-    <PackageReference Update="AsyncAwaitBestPractices" Version="10.0.0" />
-    <PackageReference Update="Meziantou.Analyzer" Version="3.0.52" />
-    <PackageReference Update="Roslynator.Analyzers" Version="4.15.0" />
-  </ItemGroup>
+  <!-- Analyzer + AsyncAwaitBestPractices versions are centrally pinned in Directory.Build.props -->
 </Project>

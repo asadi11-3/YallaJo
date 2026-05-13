@@ -301,3 +301,6 @@ app.MapGet("/", () => Results.Ok(new
 app.MapYallaJoHealthChecks();
 
 app.Run();
+
+// Exposed for WebApplicationFactory<Program> in integration tests.
+public partial class Program;
