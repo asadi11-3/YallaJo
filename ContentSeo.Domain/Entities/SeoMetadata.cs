@@ -1,9 +1,10 @@
 using ContentSeo.Domain.Enums;
+using ContentSeo.Domain.Events;
 using YallaJo.SharedKernel.Domain.Entities;
 
 namespace ContentSeo.Domain.Entities;
 
-public sealed class SeoMetadata : AuditableEntity , IAggregateRoot
+public sealed class SeoMetadata : AuditableEntity, IAggregateRoot
 {
     private SeoMetadata() { } // EF Core
 
@@ -37,7 +38,7 @@ public sealed class SeoMetadata : AuditableEntity , IAggregateRoot
             throw new ArgumentOutOfRangeException(
                 nameof(sitemapPriority), "SitemapPriority must be between 0.0 and 1.0.");
 
-        return new SeoMetadata
+        var meta = new SeoMetadata
         {
             Id                     = Guid.CreateVersion7(),
             EntityType             = entityType,
@@ -48,6 +49,10 @@ public sealed class SeoMetadata : AuditableEntity , IAggregateRoot
             SitemapPriority        = sitemapPriority,
             SitemapChangeFrequency = sitemapChangeFrequency,
         };
+
+        meta.AddDomainEvent(new SeoMetadataCreatedDomainEvent(meta.Id, meta.EntityType, meta.EntityId));
+
+        return meta;
     }
 
     // ── Business Methods ──────────────────────────────────────────────────────
@@ -58,8 +63,55 @@ public sealed class SeoMetadata : AuditableEntity , IAggregateRoot
     /// </summary>
     public void UpdateMeta(string? metaTitle, string? metaDescription)
     {
+        EnsureNotDeleted();
         MetaTitle       = metaTitle?.Trim();
         MetaDescription = metaDescription?.Trim();
         MarkUpdated();
+        AddDomainEvent(new SeoMetadataUpdatedDomainEvent(Id, EntityType, EntityId));
+    }
+
+    public void UpdateOg(string? ogTitle, string? ogDescription, string? ogImageUrl)
+    {
+        EnsureNotDeleted();
+        OgTitle       = ogTitle?.Trim();
+        OgDescription = ogDescription?.Trim();
+        OgImageUrl    = ogImageUrl?.Trim();
+        MarkUpdated();
+        AddDomainEvent(new SeoMetadataUpdatedDomainEvent(Id, EntityType, EntityId));
+    }
+
+    public void UpdateSchema(string? schemaMarkup)
+    {
+        EnsureNotDeleted();
+        SchemaMarkup = schemaMarkup?.Trim();
+        MarkUpdated();
+        AddDomainEvent(new SeoMetadataUpdatedDomainEvent(Id, EntityType, EntityId));
+    }
+
+    public void UpdateSitemapHints(
+        decimal sitemapPriority,
+        string? sitemapChangeFrequency,
+        string? canonicalUrl)
+    {
+        EnsureNotDeleted();
+
+        if (sitemapPriority is < 0m or > 1m)
+            throw new ArgumentOutOfRangeException(
+                nameof(sitemapPriority), "SitemapPriority must be between 0.0 and 1.0.");
+
+        SitemapPriority        = sitemapPriority;
+        SitemapChangeFrequency = sitemapChangeFrequency;
+        CanonicalUrl           = canonicalUrl?.Trim();
+        MarkUpdated();
+        AddDomainEvent(new SeoMetadataUpdatedDomainEvent(Id, EntityType, EntityId));
+    }
+
+    // ── Guards ────────────────────────────────────────────────────────────────
+
+    private void EnsureNotDeleted()
+    {
+        if (IsDeleted)
+            throw new InvalidOperationException(
+                "SeoMetadata.Deleted: operation not permitted on a soft-deleted record.");
     }
 }

@@ -8,4 +8,7 @@ namespace ContentSeo.Application.Interfaces;
 /// Compile-only stub for Wave-4 pre-work — list-by-entity / reorder query
 /// methods will be added during TASK 3 implementation.
 /// </summary>
-public interface IFaqItemRepository : IRepository<FaqItem>;
+public interface IFaqItemRepository : IRepository<FaqItem>
+{
+    
+}
