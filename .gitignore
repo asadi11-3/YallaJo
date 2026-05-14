@@ -371,3 +371,7 @@ FodyWeavers.xsd
 /Agents/ContentPlaces-tasks.md
 /Agents/ContentPlaces-team-tasks.md
 
+
+# Serena agent tool artifacts
+.serena/
+
