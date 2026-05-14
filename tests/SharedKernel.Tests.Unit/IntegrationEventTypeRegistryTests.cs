@@ -1,4 +1,5 @@
 using Auth.Contracts.IntegrationEvents;
+using ContentBlogs.Contracts.IntegrationEvents;
 using ContentCore.Contracts.IntegrationEvents;
 using ContentPlaces.Contracts.BusinessStaff;
 using ContentPlaces.Contracts.IntegrationEvents;
@@ -100,6 +101,14 @@ public sealed class IntegrationEventTypeRegistryTests
         ("content-tours.package.created.v1",              typeof(TourPackageCreatedIntegrationEvent)),
         ("content-tours.package.updated.v1",              typeof(TourPackageUpdatedIntegrationEvent)),
         ("content-tours.package.deleted.v1",              typeof(TourPackageDeletedIntegrationEvent)),
+
+        // ContentBlogs (6)
+        ("content-blogs.blog.created.v1",                 typeof(BlogCreatedIntegrationEvent)),
+        ("content-blogs.blog.updated.v1",                 typeof(BlogUpdatedIntegrationEvent)),
+        ("content-blogs.blog.deleted.v1",                 typeof(BlogDeletedIntegrationEvent)),
+        ("content-blogs.blog.published.v1",               typeof(BlogPublishedIntegrationEvent)),
+        ("content-blogs.blog.unpublished.v1",             typeof(BlogUnpublishedIntegrationEvent)),
+        ("content-blogs.blog.archived.v1",                typeof(BlogArchivedIntegrationEvent)),
     ];
 
     // ── Tests ─────────────────────────────────────────────────────────────────

@@ -28,7 +28,9 @@ public class BlogCommentReactionConfiguration : IEntityTypeConfiguration<BlogCom
             .HasForeignKey(x => x.CommentId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasQueryFilter(x => !x.BlogComment.IsDeleted);
+        builder.HasQueryFilter(x =>
+            !x.BlogComment.IsDeleted &&
+            !x.BlogComment.Blog.IsDeleted);
 
         builder.HasIndex(x => new { x.CommentId, x.UserId }).IsUnique();
     }

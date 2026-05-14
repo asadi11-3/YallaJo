@@ -1,8 +1,9 @@
 using ContentBlogs.Application.Interfaces;
+using YallaJo.SharedKernel.Infrastructure.Data;
 
 namespace ContentBlogs.Infrastructure.Persistence;
 
-internal sealed class ContentBlogsUnitOfWork(ContentBlogsDbContext context) : IContentBlogsUnitOfWork
+internal sealed class ContentBlogsUnitOfWork(IUnitOfWork<ContentBlogsDbContext> inner) : IContentBlogsUnitOfWork
 {
-    public Task<int> SaveChangesAsync(CancellationToken ct = default) => context.SaveChangesAsync(ct);
+    public Task<int> SaveChangesAsync(CancellationToken ct = default) => inner.SaveChangesAsync(ct);
 }

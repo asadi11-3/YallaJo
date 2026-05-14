@@ -6,9 +6,12 @@ using ContentBlogs.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using YallaJo.SharedKernel.Application.Authorization;
+using YallaJo.SharedKernel.Infrastructure.BackgroundJobs;
 using YallaJo.SharedKernel.Infrastructure.Data;
 using YallaJo.SharedKernel.Infrastructure.Outbox;
-using YallaJo.SharedKernel.Infrastructure.BackgroundJobs;
+using ContentBlogs.Domain.Repositories;
+using ContentBlogs.Infrastructure.Repositories;
 
 namespace ContentBlogs.Infrastructure;
 
@@ -37,6 +40,11 @@ public static class DependencyInjection
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
         services.AddScoped<IOutboxProcessor, OutboxProcessor<ContentBlogsDbContext>>();
         services.AddScoped<IOutboxCleaner, OutboxCleaner<ContentBlogsDbContext>>();
+
+        services.AddScoped<IBlogRepository, BlogRepository>();
+        services.AddScoped<IBlogCommentRepository,BlogCommentRepository>();
+
+        services.AddSingleton<IPermissionCatalog, ContentBlogPermissionCatalog>();
 
         // ── Cross-module read-only services ──────────────────────────────────
         // Owned & implemented here so consumers (ContentCore, etc.) depend only on
