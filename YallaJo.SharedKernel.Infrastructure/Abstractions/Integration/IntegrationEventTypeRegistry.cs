@@ -2,6 +2,7 @@ using Auth.Contracts.IntegrationEvents;
 using ContentCore.Contracts.IntegrationEvents;
 using ContentPlaces.Contracts.BusinessStaff;
 using ContentPlaces.Contracts.IntegrationEvents;
+using ContentSeo.Contracts.IntegrationEvents;
 using ContentTours.Contracts;
 using ContentTours.Contracts.IntegrationEvents;
 using Security.Contracts.IntegrationEvents;
@@ -76,6 +77,12 @@ public static class IntegrationEventTypeRegistry
         ["content-tours.package.created.v1"]             = typeof(TourPackageCreatedIntegrationEvent),
         ["content-tours.package.updated.v1"]             = typeof(TourPackageUpdatedIntegrationEvent),
         ["content-tours.package.deleted.v1"]             = typeof(TourPackageDeletedIntegrationEvent),
+
+        // ── ContentSeo (4 events) ──
+        ["content-seo.redirect.created.v1"]              = typeof(RedirectCreatedIntegrationEvent),
+        ["content-seo.redirect.chain-flattened.v1"]      = typeof(RedirectChainFlattenedIntegrationEvent),
+        ["content-seo.seo-metadata.changed.v1"]          = typeof(SeoMetadataChangedIntegrationEvent),
+        ["content-seo.faq-item.changed.v1"]              = typeof(FaqItemChangedIntegrationEvent),
     };
 
     private static readonly Dictionary<Type, string> TypeToName =

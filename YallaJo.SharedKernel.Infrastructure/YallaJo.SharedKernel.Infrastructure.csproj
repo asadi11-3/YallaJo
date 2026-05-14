@@ -20,6 +20,7 @@
     <ProjectReference Include="..\Auth.Contracts\Auth.Contracts.csproj" />
     <ProjectReference Include="..\ContentCore.Contracts\ContentCore.Contracts.csproj" />
     <ProjectReference Include="..\ContentPlaces.Contracts\ContentPlaces.Contracts.csproj" />
+    <ProjectReference Include="..\ContentSeo.Contracts\ContentSeo.Contracts.csproj" />
     <ProjectReference Include="..\ContentTours.Contracts\ContentTours.Contracts.csproj" />
     <ProjectReference Include="..\Security.Contracts\Security.Contracts.csproj" />
   </ItemGroup>

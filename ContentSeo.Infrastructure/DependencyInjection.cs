@@ -1,8 +1,11 @@
 using ContentSeo.Application.Interfaces;
 using ContentSeo.Contracts.Authorization;
+using ContentSeo.Infrastructure.BackgroundServices;
 using ContentSeo.Infrastructure.Persistence;
 using ContentSeo.Infrastructure.Persistence.Seeding;
 using ContentSeo.Infrastructure.Repositories;
+using ContentSeo.Infrastructure.Sitemap;
+using ContentSeo.Infrastructure.Weather;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -53,6 +56,15 @@ public static class DependencyInjection
         // ── Outbox processor + cleaner ──────────────────────────────────────
         services.AddScoped<IOutboxProcessor, OutboxProcessor<ContentSeoDbContext>>();
         services.AddScoped<IOutboxCleaner, OutboxCleaner<ContentSeoDbContext>>();
+
+        // ── Task 4 — External services (stubs) + Sitemap renderer ──────────
+        services.AddSingleton<IWeatherProvider, NoOpWeatherProvider>();
+        services.AddSingleton<ISearchConsolePinger, NoOpSearchConsolePinger>();
+        services.AddScoped<ISitemapRenderer, SitemapRenderer>();
+
+        // ── Task 4 — Background services ───────────────────────────────────
+        services.AddHostedService<SitemapRegenerationService>();
+        services.AddHostedService<WeatherPreFetchService>();
 
         return services;
     }
