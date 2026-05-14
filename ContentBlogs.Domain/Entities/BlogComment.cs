@@ -2,7 +2,7 @@ using YallaJo.SharedKernel.Domain.Entities;
 
 namespace ContentBlogs.Domain.Entities;
 
-public sealed class BlogComment : AuditableEntity
+public sealed class BlogComment : AuditableEntity ,IAggregateRoot
 {
     private readonly List<BlogComment> _replies = [];
     private readonly List<BlogCommentReaction> _reactions = [];

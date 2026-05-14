@@ -1,6 +1,7 @@
+using YallaJo.SharedKernel.Domain.Abstractions.Data;
+
 namespace ContentBlogs.Application.Interfaces;
 
-public interface IContentBlogsUnitOfWork
+public interface IContentBlogsUnitOfWork : IUnitOfWork
 {
-    Task<int> SaveChangesAsync(CancellationToken ct = default);
 }
