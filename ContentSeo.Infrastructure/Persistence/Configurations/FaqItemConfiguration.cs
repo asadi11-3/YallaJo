@@ -21,11 +21,11 @@ public class FaqItemConfiguration : IEntityTypeConfiguration<FaqItem>
 
         builder.Property(x => x.Question)
             .IsRequired()
-            .HasMaxLength(1000);
+            .HasMaxLength(500);
 
         builder.Property(x => x.Answer)
             .IsRequired()
-            .HasColumnType("nvarchar(max)");
+            .HasMaxLength(5000);
 
         builder.Property(x => x.SortOrder)
             .IsRequired()

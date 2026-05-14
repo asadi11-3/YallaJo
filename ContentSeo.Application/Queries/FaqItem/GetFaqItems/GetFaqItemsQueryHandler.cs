@@ -5,6 +5,7 @@
 namespace ContentSeo.Application.Queries.FaqItem.GetFaqItems;
 
 using ContentSeo.Application.Interfaces;
+using ContentSeo.Domain.Repositories;
 using ContentSeo.Application.Queries.Common;
 using ContentSeo.Application.Queries.FaqItem.Common;
 using Microsoft.Extensions.Logging;
@@ -24,16 +25,8 @@ public sealed class GetFaqItemsQueryHandler(
         {
             var items = await faqItemRepository.GetByEntityWithTranslationsAsync(request.EntityType, request.EntityId, ct);
 
-            Guid? languageId = null;
-            try
-            {
-                languageId = await AcceptLanguageResolver.ResolveAsync(request.AcceptLanguage, languageProvider, ct);
-            }
-            catch
-            {
-                // Fall back to source language if resolver fails.
-                languageId = null;
-            }
+            // AcceptLanguageResolver returns null when no translation match exists; consumer (FaqItemDto.From) falls back to source language in that case.
+            var languageId = await AcceptLanguageResolver.ResolveAsync(request.AcceptLanguage, languageProvider, ct);
 
             var active = items.Where(i => i.IsActive).Select(i => FaqItemDto.From(i, languageId)).ToList();
 

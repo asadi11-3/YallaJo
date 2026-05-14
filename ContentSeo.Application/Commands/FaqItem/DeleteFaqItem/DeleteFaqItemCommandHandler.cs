@@ -1,8 +1,8 @@
-// <copyright file="UpdateFaqItemCommandHandler.cs" company="YallaJo">
+// <copyright file="DeleteFaqItemCommandHandler.cs" company="YallaJo">
 // Copyright (c) YallaJo. All rights reserved.
 // </copyright>
 
-namespace ContentSeo.Application.Commands.FaqItem.UpdateFaqItem;
+namespace ContentSeo.Application.Commands.FaqItem.DeleteFaqItem;
 
 using ContentSeo.Application.Caching;
 using ContentSeo.Application.Interfaces;
@@ -13,14 +13,14 @@ using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
-public sealed class UpdateFaqItemCommandHandler(
+public sealed class DeleteFaqItemCommandHandler(
     IFaqItemRepository faqItemRepository,
     IContentSeoUnitOfWork unitOfWork,
     HybridCache cache,
-    ILogger<UpdateFaqItemCommandHandler> logger)
-    : ICommandHandler<UpdateFaqItemCommand>
+    ILogger<DeleteFaqItemCommandHandler> logger)
+    : ICommandHandler<DeleteFaqItemCommand>
 {
-    public async Task<Result> Handle(UpdateFaqItemCommand request, CancellationToken ct)
+    public async Task<Result> Handle(DeleteFaqItemCommand request, CancellationToken ct)
     {
         try
         {
@@ -32,7 +32,7 @@ public sealed class UpdateFaqItemCommandHandler(
                 return Result.Failure(new Error("FaqItem.NotFound", $"FAQ item {request.Id} not found."), Outcome.NotFound);
             }
 
-            entity.Update(request.Question, request.Answer);
+            entity.SoftDelete();
 
             try
             {
@@ -44,7 +44,7 @@ public sealed class UpdateFaqItemCommandHandler(
             }
 
             await cache.RemoveByTagAsync(ContentSeoCacheKeys.TagForFaq(entity.EntityType, entity.EntityId), ct);
-            logger.LogInformation("Updated FAQ item {Id}", entity.Id);
+            logger.LogInformation("Deleted FAQ item {Id}", entity.Id);
             return Result.Success();
         }
         catch (OperationCanceledException) when (ct.IsCancellationRequested)

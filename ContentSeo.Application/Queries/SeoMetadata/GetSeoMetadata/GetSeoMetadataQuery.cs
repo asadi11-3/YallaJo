@@ -8,7 +8,6 @@ using ContentSeo.Application.Caching;
 using ContentSeo.Application.Queries.SeoMetadata.Common;
 using ContentSeo.Domain.Enums;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
-using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 
 public sealed record GetSeoMetadataQuery(SeoEntityType EntityType, Guid EntityId, string? AcceptLanguage = null)
     : IQuery<SeoMetadataDto>, ICacheableQuery

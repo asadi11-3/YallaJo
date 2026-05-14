@@ -6,10 +6,10 @@ namespace ContentSeo.Application.Commands.Redirect.CreateRedirect;
 
 using ContentSeo.Application.Caching;
 using ContentSeo.Application.Interfaces;
+using ContentSeo.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
-using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
@@ -19,7 +19,6 @@ public sealed class CreateRedirectCommandHandler(
     IRedirectRepository redirectRepository,
     IContentSeoUnitOfWork unitOfWork,
     HybridCache cache,
-    ICurrentUser currentUser,
     ILogger<CreateRedirectCommandHandler> logger)
     : ICommandHandler<CreateRedirectCommand, CreateRedirectResult>
 {
@@ -29,12 +28,7 @@ public sealed class CreateRedirectCommandHandler(
     {
         try
         {
-            if (currentUser.UserId is null)
-            {
-                return Result<CreateRedirectResult>.Failure(
-                    Error.Unauthorized("Authentication is required to create redirects."),
-                    Outcome.Unauthorized);
-            }
+            // Auth handled by endpoint MustHavePermissionAttribute.
 
             var oldUrl = request.OldUrl.Trim();
             var newUrl = request.NewUrl.Trim();
@@ -115,7 +109,7 @@ public sealed class CreateRedirectCommandHandler(
             await cache.RemoveByTagAsync(ContentSeoCacheKeys.TagRedirectsList, ct);
             await cache.RemoveByTagAsync(ContentSeoCacheKeys.TagRedirectsLookup, ct);
 
-            logger.LogInformation("Created redirect {Id}: {OldUrl} -> {Target} (flattened {Existing} existing chains)", entity.Id, oldUrl, finalTarget, existing.Count);
+            logger.LogInformation("Created redirect {Id}: {OldUrl} -> {Target} (flattened {Existing} existing chains)", entity.Id, Sanitize(oldUrl), Sanitize(finalTarget), existing.Count);
 
             return Result<CreateRedirectResult>.Created(new CreateRedirectResult(entity.Id, finalTarget, existing.Count));
         }
@@ -129,5 +123,12 @@ public sealed class CreateRedirectCommandHandler(
     {
         var dup = await redirectRepository.GetActiveByOldUrlAsync(oldUrl, ct);
         return dup is not null && dup.Id != excludeId;
+    }
+
+    private static string Sanitize(string url)
+    {
+        if (string.IsNullOrEmpty(url)) return string.Empty;
+        var qIdx = url.IndexOf('?');
+        return qIdx >= 0 ? url[..qIdx] : url;
     }
 }

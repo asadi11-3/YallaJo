@@ -5,7 +5,7 @@
 using ContentSeo.Domain.Entities;
 using YallaJo.SharedKernel.Domain.Abstractions.Data;
 
-namespace ContentSeo.Application.Interfaces;
+namespace ContentSeo.Domain.Repositories;
 
 public interface IWeatherCacheRepository : IRepository<WeatherCache>
 {

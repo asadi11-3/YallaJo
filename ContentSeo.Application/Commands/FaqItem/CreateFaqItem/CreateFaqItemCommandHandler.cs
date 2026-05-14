@@ -6,10 +6,10 @@ namespace ContentSeo.Application.Commands.FaqItem.CreateFaqItem;
 
 using ContentSeo.Application.Caching;
 using ContentSeo.Application.Interfaces;
+using ContentSeo.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
-using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
@@ -19,7 +19,6 @@ public sealed class CreateFaqItemCommandHandler(
     IFaqItemRepository faqItemRepository,
     IContentSeoUnitOfWork unitOfWork,
     HybridCache cache,
-    ICurrentUser currentUser,
     ILogger<CreateFaqItemCommandHandler> logger)
     : ICommandHandler<CreateFaqItemCommand, CreateFaqItemResult>
 {
@@ -27,12 +26,7 @@ public sealed class CreateFaqItemCommandHandler(
     {
         try
         {
-            if (currentUser.UserId is null)
-            {
-                return Result<CreateFaqItemResult>.Failure(
-                    Error.Unauthorized("Authentication is required to create FAQ items."),
-                    Outcome.Unauthorized);
-            }
+            // Auth handled by endpoint MustHavePermissionAttribute.
 
             // Check sort-order uniqueness within entity
             var existing = await faqItemRepository.GetByEntityAsync(request.EntityType, request.EntityId, ct);

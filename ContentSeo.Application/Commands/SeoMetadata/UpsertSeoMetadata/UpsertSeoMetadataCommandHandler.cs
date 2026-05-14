@@ -6,10 +6,10 @@ namespace ContentSeo.Application.Commands.SeoMetadata.UpsertSeoMetadata;
 
 using ContentSeo.Application.Caching;
 using ContentSeo.Application.Interfaces;
+using ContentSeo.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
-using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
@@ -19,7 +19,6 @@ public sealed class UpsertSeoMetadataCommandHandler(
     ISeoMetadataRepository seoMetadataRepository,
     IContentSeoUnitOfWork unitOfWork,
     HybridCache cache,
-    ICurrentUser currentUser,
     ILogger<UpsertSeoMetadataCommandHandler> logger)
     : ICommandHandler<UpsertSeoMetadataCommand, UpsertSeoMetadataResult>
 {
@@ -27,12 +26,7 @@ public sealed class UpsertSeoMetadataCommandHandler(
     {
         try
         {
-            if (currentUser.UserId is null)
-            {
-                return Result<UpsertSeoMetadataResult>.Failure(
-                    Error.Unauthorized("Authentication is required to manage SEO metadata."),
-                    Outcome.Unauthorized);
-            }
+            // Auth handled by endpoint MustHavePermissionAttribute.
 
             var existing = await seoMetadataRepository.GetByEntityAsync(request.EntityType, request.EntityId, ct);
             bool created;

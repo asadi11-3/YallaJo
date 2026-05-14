@@ -1,4 +1,5 @@
 using ContentSeo.Application.Interfaces;
+using ContentSeo.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
 using YallaJo.SharedKernel.Infrastructure.Inbox;
 

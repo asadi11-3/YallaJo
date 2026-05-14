@@ -67,9 +67,8 @@ internal static class TranslationEndpoints
         })
         .WithName("GetEntityTranslations")
         .Produces<IReadOnlyList<EntityTranslationDto>>(StatusCodes.Status200OK)
-        .WithSummary("Get translations for an entity (optional: ?languageCode=ar&status=AutoTranslated)")
-        .WithMetadata(new MustHavePermissionAttribute(ContentCoreFeatures.TranslationCache, AppAction.Read))
-        .RequireAuthorization();
+        .WithSummary("Get translations for an entity (optional: ?languageCode=ar&status=AutoTranslated). Public.")
+        .AllowAnonymous();
 
         translations.MapPut("/{id:guid}", async (Guid id, UpdateTranslationRequest request, ISender sender, CancellationToken ct = default) =>
         {

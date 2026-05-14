@@ -24,14 +24,20 @@ internal static class WeatherEndpoints
         // GET /api/v1/seo/weather/{placeId}
         group.MapGet("/weather/{placeId:guid}", async (
             Guid placeId,
+            HttpContext http,
             ISender sender,
             CancellationToken ct) =>
         {
             var result = await sender.Send(new GetWeatherQuery(placeId), ct);
+            if (result.IsSuccess && result.Value is { IsStale: true })
+            {
+                http.Response.Headers["X-Weather-Stale"] = "true";
+            }
+
             return result.ToApiResult();
         })
         .WithName("GetWeather")
-        .WithSummary("Returns cached weather data for a place.")
+        .WithSummary("Returns cached weather data for a place. Sets X-Weather-Stale:true header when the snapshot has expired.")
         .Produces<WeatherDto>(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .AllowAnonymous();

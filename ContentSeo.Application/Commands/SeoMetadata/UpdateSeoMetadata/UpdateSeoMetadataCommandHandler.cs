@@ -6,10 +6,10 @@ namespace ContentSeo.Application.Commands.SeoMetadata.UpdateSeoMetadata;
 
 using ContentSeo.Application.Caching;
 using ContentSeo.Application.Interfaces;
+using ContentSeo.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
-using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
@@ -17,7 +17,6 @@ public sealed class UpdateSeoMetadataCommandHandler(
     ISeoMetadataRepository seoMetadataRepository,
     IContentSeoUnitOfWork unitOfWork,
     HybridCache cache,
-    ICurrentUser currentUser,
     ILogger<UpdateSeoMetadataCommandHandler> logger)
     : ICommandHandler<UpdateSeoMetadataCommand>
 {
@@ -25,12 +24,7 @@ public sealed class UpdateSeoMetadataCommandHandler(
     {
         try
         {
-            if (currentUser.UserId is null)
-            {
-                return Result.Failure(
-                    Error.Unauthorized("Authentication is required to update SEO metadata."),
-                    Outcome.Unauthorized);
-            }
+            // Auth handled by endpoint MustHavePermissionAttribute.
 
             var entity = await seoMetadataRepository.GetByIdAsync(request.Id, ct);
             if (entity is null)

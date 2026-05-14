@@ -6,10 +6,10 @@ namespace ContentSeo.Application.Commands.FaqItem.ReorderFaqItems;
 
 using ContentSeo.Application.Caching;
 using ContentSeo.Application.Interfaces;
+using ContentSeo.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
-using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
@@ -17,7 +17,6 @@ public sealed class ReorderFaqItemsCommandHandler(
     IFaqItemRepository faqItemRepository,
     IContentSeoUnitOfWork unitOfWork,
     HybridCache cache,
-    ICurrentUser currentUser,
     ILogger<ReorderFaqItemsCommandHandler> logger)
     : ICommandHandler<ReorderFaqItemsCommand>
 {
@@ -25,10 +24,7 @@ public sealed class ReorderFaqItemsCommandHandler(
     {
         try
         {
-            if (currentUser.UserId is null)
-            {
-                return Result.Failure(Error.Unauthorized("Authentication is required."), Outcome.Unauthorized);
-            }
+            // Auth handled by endpoint MustHavePermissionAttribute.
 
             // Tracked load (no include) so Reorder mutations persist
             var entities = await faqItemRepository.GetByEntityAsync(request.EntityType, request.EntityId, ct);

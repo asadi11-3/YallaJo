@@ -1,4 +1,5 @@
 using ContentSeo.Application.Interfaces;
+using ContentSeo.Domain.Repositories;
 using ContentSeo.Domain.Entities;
 using ContentSeo.Infrastructure.Persistence;
 using YallaJo.SharedKernel.Infrastructure.Data.Repositories;

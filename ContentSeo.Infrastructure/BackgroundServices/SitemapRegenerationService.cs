@@ -5,6 +5,7 @@
 namespace ContentSeo.Infrastructure.BackgroundServices;
 
 using ContentSeo.Application.Interfaces;
+using ContentSeo.Domain.Repositories;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;

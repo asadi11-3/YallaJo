@@ -7,7 +7,6 @@ namespace ContentSeo.Application.Queries.Redirect.ListRedirects;
 using ContentSeo.Application.Caching;
 using ContentSeo.Application.Queries.Redirect.Common;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
-using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Pagination;
 
 public sealed record ListRedirectsQuery(

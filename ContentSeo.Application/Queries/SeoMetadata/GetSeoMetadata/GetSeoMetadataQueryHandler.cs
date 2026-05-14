@@ -5,6 +5,7 @@
 namespace ContentSeo.Application.Queries.SeoMetadata.GetSeoMetadata;
 
 using ContentSeo.Application.Interfaces;
+using ContentSeo.Domain.Repositories;
 using ContentSeo.Application.Queries.SeoMetadata.Common;
 using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;

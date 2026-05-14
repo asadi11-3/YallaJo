@@ -1,4 +1,5 @@
 using ContentSeo.Application.Interfaces;
+using ContentSeo.Domain.Repositories;
 using ContentSeo.Contracts.Authorization;
 using ContentSeo.Infrastructure.BackgroundServices;
 using ContentSeo.Infrastructure.Persistence;

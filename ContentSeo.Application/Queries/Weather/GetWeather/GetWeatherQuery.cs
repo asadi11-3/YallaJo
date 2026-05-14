@@ -7,7 +7,6 @@ namespace ContentSeo.Application.Queries.Weather.GetWeather;
 using ContentSeo.Application.Caching;
 using ContentSeo.Application.Queries.Weather.Common;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
-using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 
 public sealed record GetWeatherQuery(Guid PlaceId) : IQuery<WeatherDto>, ICacheableQuery
 {

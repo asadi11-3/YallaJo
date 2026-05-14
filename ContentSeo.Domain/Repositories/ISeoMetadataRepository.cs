@@ -2,7 +2,7 @@ using ContentSeo.Domain.Entities;
 using ContentSeo.Domain.Enums;
 using YallaJo.SharedKernel.Domain.Abstractions.Data;
 
-namespace ContentSeo.Application.Interfaces;
+namespace ContentSeo.Domain.Repositories;
 
 /// <summary>
 /// Repository for the <see cref="SeoMetadata"/> aggregate root.

@@ -8,7 +8,6 @@ using ContentSeo.Application.Caching;
 using ContentSeo.Application.Queries.FaqItem.Common;
 using ContentSeo.Domain.Enums;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
-using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 
 public sealed record GetFaqItemsQuery(
     SeoEntityType EntityType,

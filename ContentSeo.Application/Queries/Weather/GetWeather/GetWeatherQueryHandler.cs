@@ -5,6 +5,7 @@
 namespace ContentSeo.Application.Queries.Weather.GetWeather;
 
 using ContentSeo.Application.Interfaces;
+using ContentSeo.Domain.Repositories;
 using ContentSeo.Application.Queries.Weather.Common;
 using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;

@@ -5,6 +5,7 @@
 namespace ContentSeo.Infrastructure.Sitemap;
 
 using ContentSeo.Application.Interfaces;
+using ContentSeo.Domain.Repositories;
 using Microsoft.Extensions.Logging;
 
 internal sealed class NoOpSearchConsolePinger(ILogger<NoOpSearchConsolePinger> logger) : ISearchConsolePinger

@@ -8,6 +8,7 @@ using System.Globalization;
 using System.Text;
 using ContentSeo.Application.Caching;
 using ContentSeo.Application.Interfaces;
+using ContentSeo.Domain.Repositories;
 using ContentSeo.Domain.Entities;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;

@@ -6,8 +6,8 @@ namespace ContentSeo.Domain.Entities;
 
 public sealed class FaqItem : AuditableEntity, IAggregateRoot
 {
-    private const int MaxQuestionLength = 1000;
-    private const int MaxAnswerLength   = 1000;
+    private const int MaxQuestionLength = 500;
+    private const int MaxAnswerLength   = 5000;
 
     private readonly List<FaqItemTranslation> _translations = [];
 

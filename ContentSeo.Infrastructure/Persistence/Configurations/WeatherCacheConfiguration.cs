@@ -45,14 +45,26 @@ public class WeatherCacheConfiguration : IEntityTypeConfiguration<WeatherCache>
 
         builder.Property(x => x.Forecast)
             .IsRequired(false)
-            .HasColumnType("nvarchar(max)");
+            .HasMaxLength(4000);
 
         builder.Property(x => x.FetchedAt).IsRequired();
         builder.Property(x => x.ExpiresAt).IsRequired();
 
         builder.Property(x => x.CreatedAt).IsRequired();
         builder.Property(x => x.UpdatedAt).IsRequired(false);
+        builder.Property(x => x.IsDeleted).IsRequired().HasDefaultValue(false);
+        builder.Property(x => x.DeletedAt).IsRequired(false);
+        builder.Property(x => x.RowVersion).IsRowVersion();
 
-        builder.HasIndex(x => new { x.PlaceId, x.FetchedAt });
+        builder.HasQueryFilter(x => !x.IsDeleted);
+
+        // One active weather row per place (soft-delete safe).
+        builder.HasIndex(x => x.PlaceId)
+            .IsUnique()
+            .HasFilter("[IsDeleted] = 0")
+            .HasDatabaseName("IX_WeatherCache_PlaceId_Active");
+
+        builder.HasIndex(x => x.ExpiresAt)
+            .HasDatabaseName("IX_WeatherCache_ExpiresAt");
     }
 }
