@@ -5,27 +5,33 @@
 namespace ContentSeo.Infrastructure.BackgroundServices;
 
 using ContentSeo.Application.Interfaces;
-using ContentSeo.Domain.Repositories;
+using ContentSeo.Infrastructure.Weather;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using YallaJo.SharedKernel.Application.Abstractions.Clock;
+using Microsoft.Extensions.Options;
 
 internal sealed class WeatherPreFetchService(
     IServiceScopeFactory scopeFactory,
+    IOptions<WeatherOptions> options,
     ILogger<WeatherPreFetchService> logger) : BackgroundService
 {
-    private const int DailyBudget = 1000;
-    private static readonly TimeSpan ScheduledHour = TimeSpan.FromHours(5); // 05:00 UTC
+    private readonly WeatherOptions options = options.Value;
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        logger.LogInformation("WeatherPreFetchService started; runs daily at {Hour:hh\\:mm} UTC", ScheduledHour);
+        var scheduledHour = Math.Clamp(this.options.PreFetchHourUtc, 0, 23);
+        var dailyBudget = Math.Max(0, this.options.DailyBudget);
+
+        logger.LogInformation(
+            "WeatherPreFetchService started; runs daily at {Hour:00}:00 UTC, daily budget={Budget}",
+            scheduledHour,
+            dailyBudget);
 
         while (!stoppingToken.IsCancellationRequested)
         {
-            var delay = ComputeDelayToNext5AmUtc(DateTime.UtcNow);
-            logger.LogInformation("WeatherPreFetchService sleeping for {Delay} until next 05:00 UTC", delay);
+            var delay = ComputeDelayToNextScheduledHour(DateTime.UtcNow, scheduledHour);
+            logger.LogInformation("WeatherPreFetchService sleeping for {Delay} until next {Hour:00}:00 UTC", delay, scheduledHour);
 
             try
             {
@@ -47,8 +53,9 @@ internal sealed class WeatherPreFetchService(
                 }
 
                 // Real implementation would resolve IPlaceQueryService.GetTop50ByPopularityAsync(ct)
-                // and iterate. For v1, this is a no-op placeholder respecting the daily budget.
-                logger.LogInformation("WeatherPreFetchService: daily run executed (budget={Budget})", DailyBudget);
+                // and iterate within the daily budget. For Wave-4, this is a no-op placeholder
+                // honoring the configured budget value.
+                logger.LogInformation("WeatherPreFetchService: daily run executed (budget={Budget})", dailyBudget);
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
             {
@@ -65,14 +72,14 @@ internal sealed class WeatherPreFetchService(
         logger.LogInformation("WeatherPreFetchService stopped.");
     }
 
-    private static TimeSpan ComputeDelayToNext5AmUtc(DateTime nowUtc)
+    private static TimeSpan ComputeDelayToNextScheduledHour(DateTime nowUtc, int hourUtc)
     {
-        var today5Am = nowUtc.Date.AddHours(5);
-        if (nowUtc >= today5Am)
+        var todayAtHour = nowUtc.Date.AddHours(hourUtc);
+        if (nowUtc >= todayAtHour)
         {
-            today5Am = today5Am.AddDays(1);
+            todayAtHour = todayAtHour.AddDays(1);
         }
 
-        return today5Am - nowUtc;
+        return todayAtHour - nowUtc;
     }
 }

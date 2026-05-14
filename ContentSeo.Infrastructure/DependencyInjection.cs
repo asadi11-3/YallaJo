@@ -58,6 +58,9 @@ public static class DependencyInjection
         services.AddScoped<IOutboxProcessor, OutboxProcessor<ContentSeoDbContext>>();
         services.AddScoped<IOutboxCleaner, OutboxCleaner<ContentSeoDbContext>>();
 
+        // ── Task 4 — External service options ──────────────────────────────
+        services.Configure<WeatherOptions>(configuration.GetSection(WeatherOptions.SectionName));
+
         // ── Task 4 — External services (stubs) + Sitemap renderer ──────────
         services.AddSingleton<IWeatherProvider, NoOpWeatherProvider>();
         services.AddSingleton<ISearchConsolePinger, NoOpSearchConsolePinger>();

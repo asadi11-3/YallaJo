@@ -10,6 +10,7 @@
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.15" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.15" />
     <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="9.0.15" />
+    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="9.0.15" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ContentCore.Contracts\ContentCore.Contracts.csproj" />
