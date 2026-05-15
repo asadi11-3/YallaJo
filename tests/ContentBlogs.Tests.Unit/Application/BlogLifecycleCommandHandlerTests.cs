@@ -1,3 +1,4 @@
+using ContentBlogs.Application.Authorization;
 using ContentBlogs.Application.Caching;
 using ContentBlogs.Application.Commands.Blog.ArchiveBlog;
 using ContentBlogs.Application.Commands.Blog.Common;
@@ -32,6 +33,16 @@ public sealed class BlogLifecycleCommandHandlerTests
     private static readonly Guid TestUserId = Guid.NewGuid();
     private static readonly Guid EnglishLanguageId = Guid.NewGuid();
     private static readonly Guid ArabicLanguageId = Guid.NewGuid();
+
+    // A deterministic non-empty token used wherever the test needs *some*
+    // RowVersion value but the specific bytes do not matter (e.g. the blog
+    // does not exist so the handler returns NotFound before comparing).
+    private static readonly byte[] SomeRowVersion = [0x01, 0x02, 0x03, 0x04];
+
+    // Distinct from SomeRowVersion so RowVersionUtil.Equal returns false —
+    // used to drive the optimistic-concurrency mismatch path.
+    private static readonly byte[] StaleRowVersion = [0xDE, 0xAD, 0xBE, 0xEF];
+
     private const string ValidContent =
         "Petra is one of the most famous archaeological sites in the world, " +
         "carved into rose-coloured sandstone cliffs in the southern Jordanian " +
@@ -270,10 +281,11 @@ public sealed class BlogLifecycleCommandHandlerTests
 
         var result = await handler.Handle(
             new UpdateBlogCommand(
-                BlogId:  Guid.NewGuid(),
-                Title:   "New Title",
-                Slug:    "new-slug",
-                Content: ValidContent),
+                BlogId:     Guid.NewGuid(),
+                RowVersion: SomeRowVersion,
+                Title:      "New Title",
+                Slug:       "new-slug",
+                Content:    ValidContent),
             CancellationToken.None);
 
         result.IsSuccess.Should().BeFalse();
@@ -293,10 +305,11 @@ public sealed class BlogLifecycleCommandHandlerTests
         var handler = CreateUpdateHandler(dbContext);
         var result = await handler.Handle(
             new UpdateBlogCommand(
-                BlogId:  blog.Id,
-                Title:   "Updated",
-                Slug:    "taken",
-                Content: ValidContent),
+                BlogId:     blog.Id,
+                RowVersion: blog.RowVersion,
+                Title:      "Updated",
+                Slug:       "taken",
+                Content:    ValidContent),
             CancellationToken.None);
 
         result.IsSuccess.Should().BeFalse();
@@ -315,10 +328,11 @@ public sealed class BlogLifecycleCommandHandlerTests
         var handler = CreateUpdateHandler(dbContext);
         var result = await handler.Handle(
             new UpdateBlogCommand(
-                BlogId:  blog.Id,
-                Title:   "Updated Title",
-                Slug:    "updated-slug",
-                Content: ValidContent),
+                BlogId:     blog.Id,
+                RowVersion: blog.RowVersion,
+                Title:      "Updated Title",
+                Slug:       "updated-slug",
+                Content:    ValidContent),
             CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
@@ -340,10 +354,11 @@ public sealed class BlogLifecycleCommandHandlerTests
 
         await handler.Handle(
             new UpdateBlogCommand(
-                BlogId:  blog.Id,
-                Title:   blog.Title,
-                Slug:    "renamed",
-                Content: ValidContent),
+                BlogId:     blog.Id,
+                RowVersion: blog.RowVersion,
+                Title:      blog.Title,
+                Slug:       "renamed",
+                Content:    ValidContent),
             CancellationToken.None);
 
         await cache.Received(1).RemoveByTagAsync(
@@ -365,7 +380,7 @@ public sealed class BlogLifecycleCommandHandlerTests
         var handler = CreateDeleteHandler(dbContext);
 
         var result = await handler.Handle(
-            new DeleteBlogCommand(Guid.NewGuid()),
+            new DeleteBlogCommand(Guid.NewGuid(), SomeRowVersion),
             CancellationToken.None);
 
         result.IsSuccess.Should().BeFalse();
@@ -382,7 +397,7 @@ public sealed class BlogLifecycleCommandHandlerTests
 
         var handler = CreateDeleteHandler(dbContext);
         var result = await handler.Handle(
-            new DeleteBlogCommand(blog.Id),
+            new DeleteBlogCommand(blog.Id, blog.RowVersion),
             CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
@@ -408,7 +423,7 @@ public sealed class BlogLifecycleCommandHandlerTests
         var cache = Substitute.For<HybridCache>();
         var handler = CreateDeleteHandler(dbContext, cache: cache);
 
-        await handler.Handle(new DeleteBlogCommand(blog.Id), CancellationToken.None);
+        await handler.Handle(new DeleteBlogCommand(blog.Id, blog.RowVersion), CancellationToken.None);
 
         await cache.Received(1).RemoveByTagAsync(
             ContentBlogsCacheKeys.BlogTag(blog.Id), Arg.Any<CancellationToken>());
@@ -427,7 +442,7 @@ public sealed class BlogLifecycleCommandHandlerTests
         var handler = CreatePublishHandler(dbContext);
 
         var result = await handler.Handle(
-            new PublishBlogCommand(Guid.NewGuid()),
+            new PublishBlogCommand(Guid.NewGuid(), SomeRowVersion),
             CancellationToken.None);
 
         result.Outcome.Should().Be(Outcome.NotFound);
@@ -444,7 +459,7 @@ public sealed class BlogLifecycleCommandHandlerTests
 
         var handler = CreatePublishHandler(dbContext);
         var result = await handler.Handle(
-            new PublishBlogCommand(blog.Id), CancellationToken.None);
+            new PublishBlogCommand(blog.Id, blog.RowVersion), CancellationToken.None);
 
         result.Outcome.Should().Be(Outcome.Conflict);
         result.Errors[0].Code.Should().Be("Blog.InvalidTransition");
@@ -460,7 +475,7 @@ public sealed class BlogLifecycleCommandHandlerTests
 
         var handler = CreatePublishHandler(dbContext);
         var result = await handler.Handle(
-            new PublishBlogCommand(blog.Id), CancellationToken.None);
+            new PublishBlogCommand(blog.Id, blog.RowVersion), CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
         var reloaded = await dbContext.Blogs.AsNoTracking().FirstAsync(b => b.Id == blog.Id);
@@ -479,7 +494,7 @@ public sealed class BlogLifecycleCommandHandlerTests
         var cache = Substitute.For<HybridCache>();
         var handler = CreatePublishHandler(dbContext, cache: cache);
 
-        await handler.Handle(new PublishBlogCommand(blog.Id), CancellationToken.None);
+        await handler.Handle(new PublishBlogCommand(blog.Id, blog.RowVersion), CancellationToken.None);
 
         await cache.Received(1).RemoveByTagAsync(
             ContentBlogsCacheKeys.SitemapRenderedTag, Arg.Any<CancellationToken>());
@@ -497,7 +512,7 @@ public sealed class BlogLifecycleCommandHandlerTests
 
         var handler = CreateUnpublishHandler(dbContext);
         var result = await handler.Handle(
-            new UnpublishBlogCommand(blog.Id), CancellationToken.None);
+            new UnpublishBlogCommand(blog.Id, blog.RowVersion), CancellationToken.None);
 
         result.Outcome.Should().Be(Outcome.Conflict);
         result.Errors[0].Code.Should().Be("Blog.InvalidTransition");
@@ -514,7 +529,7 @@ public sealed class BlogLifecycleCommandHandlerTests
 
         var handler = CreateUnpublishHandler(dbContext);
         var result = await handler.Handle(
-            new UnpublishBlogCommand(blog.Id), CancellationToken.None);
+            new UnpublishBlogCommand(blog.Id, blog.RowVersion), CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
         var reloaded = await dbContext.Blogs.AsNoTracking().FirstAsync(b => b.Id == blog.Id);
@@ -533,7 +548,7 @@ public sealed class BlogLifecycleCommandHandlerTests
 
         var handler = CreateArchiveHandler(dbContext);
         var result = await handler.Handle(
-            new ArchiveBlogCommand(blog.Id), CancellationToken.None);
+            new ArchiveBlogCommand(blog.Id, blog.RowVersion), CancellationToken.None);
 
         result.Outcome.Should().Be(Outcome.Conflict);
         result.Errors[0].Code.Should().Be("Blog.InvalidTransition");
@@ -550,11 +565,396 @@ public sealed class BlogLifecycleCommandHandlerTests
 
         var handler = CreateArchiveHandler(dbContext);
         var result = await handler.Handle(
-            new ArchiveBlogCommand(blog.Id), CancellationToken.None);
+            new ArchiveBlogCommand(blog.Id, blog.RowVersion), CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
         var reloaded = await dbContext.Blogs.AsNoTracking().FirstAsync(b => b.Id == blog.Id);
         reloaded.Status.Should().Be(BlogStatus.Archived);
+    }
+
+    // ── RowVersion pre-flight concurrency ─────────────────────────────────────
+
+    [Fact]
+    public async Task UpdateBlog_ReturnsConflict_WhenRowVersionMismatch()
+    {
+        await using var dbContext = CreateDbContext();
+        var blog = NewBlog(slug: "rv-update");
+        dbContext.Blogs.Add(blog);
+        await dbContext.SaveChangesAsync();
+        SetRowVersion(blog, [0xAA, 0xBB, 0xCC, 0xDD]);
+
+        var cache = Substitute.For<HybridCache>();
+        var handler = CreateUpdateHandler(dbContext, cache: cache);
+
+        var result = await handler.Handle(
+            new UpdateBlogCommand(
+                BlogId:     blog.Id,
+                RowVersion: StaleRowVersion,
+                Title:      blog.Title,
+                Slug:       blog.Slug,
+                Content:    ValidContent),
+            CancellationToken.None);
+
+        result.IsSuccess.Should().BeFalse();
+        result.Outcome.Should().Be(Outcome.Conflict);
+        result.Errors[0].Code.Should().Be("Blog.ConcurrencyConflict");
+
+        // No cache eviction on the mismatch path.
+        await cache.DidNotReceiveWithAnyArgs()
+            .RemoveByTagAsync(default(string)!, Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task UpdateBlog_Continues_WhenRowVersionMatches()
+    {
+        await using var dbContext = CreateDbContext();
+        var blog = NewBlog(slug: "rv-update-ok");
+        dbContext.Blogs.Add(blog);
+        await dbContext.SaveChangesAsync();
+        var token = new byte[] { 0x10, 0x20, 0x30, 0x40 };
+        SetRowVersion(blog, token);
+
+        var handler = CreateUpdateHandler(dbContext);
+        var result = await handler.Handle(
+            new UpdateBlogCommand(
+                BlogId:     blog.Id,
+                RowVersion: token,
+                Title:      "RV ok",
+                Slug:       "rv-update-renamed",
+                Content:    ValidContent),
+            CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task DeleteBlog_ReturnsConflict_WhenRowVersionMismatch()
+    {
+        await using var dbContext = CreateDbContext();
+        var blog = NewBlog(slug: "rv-delete");
+        dbContext.Blogs.Add(blog);
+        await dbContext.SaveChangesAsync();
+        SetRowVersion(blog, [0xAA]);
+
+        var handler = CreateDeleteHandler(dbContext);
+        var result = await handler.Handle(
+            new DeleteBlogCommand(blog.Id, StaleRowVersion),
+            CancellationToken.None);
+
+        result.Outcome.Should().Be(Outcome.Conflict);
+        result.Errors[0].Code.Should().Be("Blog.ConcurrencyConflict");
+
+        // SaveChanges must NOT have run — blog must still exist.
+        (await dbContext.Blogs.IgnoreQueryFilters().AnyAsync(b => b.Id == blog.Id))
+            .Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task PublishBlog_ReturnsConflict_WhenRowVersionMismatch()
+    {
+        await using var dbContext = CreateDbContext();
+        var blog = NewBlog(slug: "rv-publish");
+        dbContext.Blogs.Add(blog);
+        await dbContext.SaveChangesAsync();
+        SetRowVersion(blog, [0xAA]);
+
+        var handler = CreatePublishHandler(dbContext);
+        var result = await handler.Handle(
+            new PublishBlogCommand(blog.Id, StaleRowVersion),
+            CancellationToken.None);
+
+        result.Outcome.Should().Be(Outcome.Conflict);
+        result.Errors[0].Code.Should().Be("Blog.ConcurrencyConflict");
+
+        var reloaded = await dbContext.Blogs.AsNoTracking().FirstAsync(b => b.Id == blog.Id);
+        reloaded.Status.Should().Be(BlogStatus.Draft,
+            "RowVersion mismatch must abort before domain mutation");
+    }
+
+    [Fact]
+    public async Task UnpublishBlog_ReturnsConflict_WhenRowVersionMismatch()
+    {
+        await using var dbContext = CreateDbContext();
+        var blog = NewBlog(slug: "rv-unpublish");
+        blog.Publish(DateTime.UtcNow);
+        dbContext.Blogs.Add(blog);
+        await dbContext.SaveChangesAsync();
+        SetRowVersion(blog, [0xAA]);
+
+        var handler = CreateUnpublishHandler(dbContext);
+        var result = await handler.Handle(
+            new UnpublishBlogCommand(blog.Id, StaleRowVersion),
+            CancellationToken.None);
+
+        result.Outcome.Should().Be(Outcome.Conflict);
+        result.Errors[0].Code.Should().Be("Blog.ConcurrencyConflict");
+    }
+
+    [Fact]
+    public async Task ArchiveBlog_ReturnsConflict_WhenRowVersionMismatch()
+    {
+        await using var dbContext = CreateDbContext();
+        var blog = NewBlog(slug: "rv-archive");
+        blog.Publish(DateTime.UtcNow);
+        dbContext.Blogs.Add(blog);
+        await dbContext.SaveChangesAsync();
+        SetRowVersion(blog, [0xAA]);
+
+        var handler = CreateArchiveHandler(dbContext);
+        var result = await handler.Handle(
+            new ArchiveBlogCommand(blog.Id, StaleRowVersion),
+            CancellationToken.None);
+
+        result.Outcome.Should().Be(Outcome.Conflict);
+        result.Errors[0].Code.Should().Be("Blog.ConcurrencyConflict");
+    }
+
+    [Fact]
+    public async Task RowVersionMismatch_DoesNotInvalidateCache()
+    {
+        await using var dbContext = CreateDbContext();
+        var blog = NewBlog(slug: "rv-cache");
+        dbContext.Blogs.Add(blog);
+        await dbContext.SaveChangesAsync();
+        SetRowVersion(blog, [0x99]);
+
+        var cache = Substitute.For<HybridCache>();
+
+        // Cover all four state-transition handlers in one assertion.
+        await CreateDeleteHandler(dbContext, cache).Handle(
+            new DeleteBlogCommand(blog.Id, StaleRowVersion), CancellationToken.None);
+        await CreatePublishHandler(dbContext, cache).Handle(
+            new PublishBlogCommand(blog.Id, StaleRowVersion), CancellationToken.None);
+        await CreateUnpublishHandler(dbContext, cache).Handle(
+            new UnpublishBlogCommand(blog.Id, StaleRowVersion), CancellationToken.None);
+        await CreateArchiveHandler(dbContext, cache).Handle(
+            new ArchiveBlogCommand(blog.Id, StaleRowVersion), CancellationToken.None);
+
+        await cache.DidNotReceiveWithAnyArgs()
+            .RemoveByTagAsync(default(string)!, Arg.Any<CancellationToken>());
+    }
+
+    // ── Author-hierarchy guard — handler-level wiring ─────────────────────────
+
+    [Fact]
+    public async Task UpdateBlog_ReturnsForbidden_WhenActorCannotManageAuthor()
+    {
+        await using var db = CreateDbContext();
+        var blog = NewBlog("hierarchy-update");
+        db.Blogs.Add(blog);
+        await db.SaveChangesAsync();
+
+        var cache = Substitute.For<HybridCache>();
+        var handler = CreateUpdateHandler(db, cache: cache, guard: ForbiddenGuard());
+
+        var result = await handler.Handle(
+            new UpdateBlogCommand(
+                BlogId:     blog.Id,
+                RowVersion: blog.RowVersion,
+                Title:      "Updated",
+                Slug:       "updated-slug",
+                Content:    ValidContent),
+            CancellationToken.None);
+
+        result.Outcome.Should().Be(Outcome.Forbidden);
+        result.Errors[0].Code.Should().Be("Blog.AuthorHierarchyForbidden");
+
+        // No mutation persisted.
+        var reloaded = await db.Blogs.AsNoTracking().FirstAsync(b => b.Id == blog.Id);
+        reloaded.Title.Should().Be(blog.Title);
+
+        // No cache eviction on the forbidden path.
+        await cache.DidNotReceiveWithAnyArgs()
+            .RemoveByTagAsync(default(string)!, Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task DeleteBlog_ReturnsForbidden_WhenActorCannotManageAuthor()
+    {
+        await using var db = CreateDbContext();
+        var blog = NewBlog("hierarchy-delete");
+        db.Blogs.Add(blog);
+        await db.SaveChangesAsync();
+
+        var cache = Substitute.For<HybridCache>();
+        var handler = CreateDeleteHandler(db, cache: cache, guard: ForbiddenGuard());
+
+        var result = await handler.Handle(
+            new DeleteBlogCommand(blog.Id, blog.RowVersion), CancellationToken.None);
+
+        result.Outcome.Should().Be(Outcome.Forbidden);
+        result.Errors[0].Code.Should().Be("Blog.AuthorHierarchyForbidden");
+
+        // Blog still exists; not soft-deleted.
+        (await db.Blogs.IgnoreQueryFilters().FirstAsync(b => b.Id == blog.Id))
+            .IsDeleted.Should().BeFalse();
+
+        await cache.DidNotReceiveWithAnyArgs()
+            .RemoveByTagAsync(default(string)!, Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task PublishBlog_ReturnsForbidden_WhenActorCannotManageAuthor()
+    {
+        await using var db = CreateDbContext();
+        var blog = NewBlog("hierarchy-publish");
+        db.Blogs.Add(blog);
+        await db.SaveChangesAsync();
+
+        var cache = Substitute.For<HybridCache>();
+        var handler = CreatePublishHandler(db, cache: cache, guard: ForbiddenGuard());
+
+        var result = await handler.Handle(
+            new PublishBlogCommand(blog.Id, blog.RowVersion), CancellationToken.None);
+
+        result.Outcome.Should().Be(Outcome.Forbidden);
+        result.Errors[0].Code.Should().Be("Blog.AuthorHierarchyForbidden");
+
+        var reloaded = await db.Blogs.AsNoTracking().FirstAsync(b => b.Id == blog.Id);
+        reloaded.Status.Should().Be(BlogStatus.Draft, "no publish mutation occurred");
+
+        await cache.DidNotReceiveWithAnyArgs()
+            .RemoveByTagAsync(default(string)!, Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task UnpublishBlog_ReturnsForbidden_WhenActorCannotManageAuthor()
+    {
+        await using var db = CreateDbContext();
+        var blog = NewBlog("hierarchy-unpublish");
+        blog.Publish(DateTime.UtcNow);
+        db.Blogs.Add(blog);
+        await db.SaveChangesAsync();
+
+        var cache = Substitute.For<HybridCache>();
+        var handler = CreateUnpublishHandler(db, cache: cache, guard: ForbiddenGuard());
+
+        var result = await handler.Handle(
+            new UnpublishBlogCommand(blog.Id, blog.RowVersion), CancellationToken.None);
+
+        result.Outcome.Should().Be(Outcome.Forbidden);
+        result.Errors[0].Code.Should().Be("Blog.AuthorHierarchyForbidden");
+
+        var reloaded = await db.Blogs.AsNoTracking().FirstAsync(b => b.Id == blog.Id);
+        reloaded.Status.Should().Be(BlogStatus.Published, "no unpublish mutation occurred");
+    }
+
+    [Fact]
+    public async Task ArchiveBlog_ReturnsForbidden_WhenActorCannotManageAuthor()
+    {
+        await using var db = CreateDbContext();
+        var blog = NewBlog("hierarchy-archive");
+        blog.Publish(DateTime.UtcNow);
+        db.Blogs.Add(blog);
+        await db.SaveChangesAsync();
+
+        var cache = Substitute.For<HybridCache>();
+        var handler = CreateArchiveHandler(db, cache: cache, guard: ForbiddenGuard());
+
+        var result = await handler.Handle(
+            new ArchiveBlogCommand(blog.Id, blog.RowVersion), CancellationToken.None);
+
+        result.Outcome.Should().Be(Outcome.Forbidden);
+        result.Errors[0].Code.Should().Be("Blog.AuthorHierarchyForbidden");
+
+        var reloaded = await db.Blogs.AsNoTracking().FirstAsync(b => b.Id == blog.Id);
+        reloaded.Status.Should().Be(BlogStatus.Published, "no archive mutation occurred");
+    }
+
+    // ── No-leak ordering: hierarchy is checked BEFORE RowVersion ──────────────
+
+    [Fact]
+    public async Task ForbiddenHierarchy_DoesNotCheckRowVersionFirst()
+    {
+        // CRITICAL invariant: a stale RowVersion combined with a forbidden
+        // hierarchy MUST surface as Forbidden, NOT Conflict.  Otherwise an
+        // attacker could detect concurrency state of content they have no
+        // right to manage.
+        await using var db = CreateDbContext();
+        var blog = NewBlog("hierarchy-ordering");
+        db.Blogs.Add(blog);
+        await db.SaveChangesAsync();
+
+        var handler = CreateUpdateHandler(db, guard: ForbiddenGuard());
+
+        var result = await handler.Handle(
+            new UpdateBlogCommand(
+                BlogId:     blog.Id,
+                RowVersion: StaleRowVersion, // deliberately stale
+                Title:      "Updated",
+                Slug:       "updated-slug",
+                Content:    ValidContent),
+            CancellationToken.None);
+
+        result.Outcome.Should().Be(Outcome.Forbidden,
+            "hierarchy is checked BEFORE RowVersion; stale-RowVersion path must NOT leak");
+        result.Errors[0].Code.Should().Be("Blog.AuthorHierarchyForbidden");
+        result.Errors[0].Code.Should().NotBe("Blog.ConcurrencyConflict");
+    }
+
+    [Fact]
+    public async Task ForbiddenHierarchy_DoesNotInvalidateCache_AcrossAllHandlers()
+    {
+        await using var db = CreateDbContext();
+        var blog = NewBlog("hierarchy-no-cache");
+        blog.Publish(DateTime.UtcNow);
+        db.Blogs.Add(blog);
+        await db.SaveChangesAsync();
+
+        var cache = Substitute.For<HybridCache>();
+        var guard = ForbiddenGuard();
+
+        // Hit every state-transition handler with a forbidden guard;
+        // none of them should invalidate cache.
+        await CreateUpdateHandler(db, cache, guard).Handle(
+            new UpdateBlogCommand(blog.Id, blog.RowVersion, blog.Title, blog.Slug, ValidContent),
+            CancellationToken.None);
+        await CreateDeleteHandler(db, cache, guard).Handle(
+            new DeleteBlogCommand(blog.Id, blog.RowVersion), CancellationToken.None);
+        await CreatePublishHandler(db, cache, guard).Handle(
+            new PublishBlogCommand(blog.Id, blog.RowVersion), CancellationToken.None);
+        await CreateUnpublishHandler(db, cache, guard).Handle(
+            new UnpublishBlogCommand(blog.Id, blog.RowVersion), CancellationToken.None);
+        await CreateArchiveHandler(db, cache, guard).Handle(
+            new ArchiveBlogCommand(blog.Id, blog.RowVersion), CancellationToken.None);
+
+        await cache.DidNotReceiveWithAnyArgs()
+            .RemoveByTagAsync(default(string)!, Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ForbiddenHierarchy_DoesNotSaveChanges()
+    {
+        await using var db = CreateDbContext();
+        var blog = NewBlog("hierarchy-no-save");
+        blog.Publish(DateTime.UtcNow);
+        db.Blogs.Add(blog);
+        await db.SaveChangesAsync();
+
+        var guard = ForbiddenGuard();
+        var originalStatus = blog.Status;
+        var originalTitle = blog.Title;
+
+        await CreateUpdateHandler(db, guard: guard).Handle(
+            new UpdateBlogCommand(blog.Id, blog.RowVersion, "Hacked", "hacked", ValidContent),
+            CancellationToken.None);
+        await CreatePublishHandler(db, guard: guard).Handle(
+            new PublishBlogCommand(blog.Id, blog.RowVersion), CancellationToken.None);
+        await CreateUnpublishHandler(db, guard: guard).Handle(
+            new UnpublishBlogCommand(blog.Id, blog.RowVersion), CancellationToken.None);
+        await CreateArchiveHandler(db, guard: guard).Handle(
+            new ArchiveBlogCommand(blog.Id, blog.RowVersion), CancellationToken.None);
+        await CreateDeleteHandler(db, guard: guard).Handle(
+            new DeleteBlogCommand(blog.Id, blog.RowVersion), CancellationToken.None);
+
+        var reloaded = await db.Blogs
+            .IgnoreQueryFilters()
+            .AsNoTracking()
+            .FirstAsync(b => b.Id == blog.Id);
+
+        reloaded.Title.Should().Be(originalTitle, "no Update mutation persisted");
+        reloaded.Status.Should().Be(originalStatus, "no state-transition mutation persisted");
+        reloaded.IsDeleted.Should().BeFalse("no Delete mutation persisted");
     }
 
     // ── Test helpers ───────────────────────────────────────────────────────────
@@ -642,48 +1042,108 @@ public sealed class BlogLifecycleCommandHandlerTests
             currentUser:            CurrentUser((userId ?? DefaultUser).Value),
             logger:                 NullLogger<CreateBlogCommandHandler>.Instance);
 
+    /// <summary>
+    /// Returns an <see cref="IBlogAuthorHierarchyGuard"/> that always allows the
+    /// caller through.  Used by every existing test except the dedicated
+    /// hierarchy regression cases so that pre-existing scenarios continue to
+    /// focus on the behaviour they were originally written to verify.
+    /// </summary>
+    private static IBlogAuthorHierarchyGuard PermissiveGuard()
+    {
+        var guard = Substitute.For<IBlogAuthorHierarchyGuard>();
+        guard.EnsureCanManageBlogOwnedByAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
+            .Returns(Result.Success());
+        return guard;
+    }
+
+    /// <summary>
+    /// Returns a guard that ALWAYS refuses with
+    /// <c>Blog.AuthorHierarchyForbidden</c> / <c>Outcome.Forbidden</c>.  Used by
+    /// the dedicated regression tests in this file to drive the
+    /// hierarchy-failure path through every handler.
+    /// </summary>
+    private static IBlogAuthorHierarchyGuard ForbiddenGuard()
+    {
+        var guard = Substitute.For<IBlogAuthorHierarchyGuard>();
+        guard.EnsureCanManageBlogOwnedByAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
+            .Returns(Result.Failure(
+                new Error(
+                    "Blog.AuthorHierarchyForbidden",
+                    "You cannot manage content created by a user at the same or higher privilege level."),
+                Outcome.Forbidden));
+        return guard;
+    }
+
     private static UpdateBlogCommandHandler CreateUpdateHandler(
         ContentBlogsDbContext dbContext,
-        HybridCache? cache = null) =>
+        HybridCache? cache = null,
+        IBlogAuthorHierarchyGuard? guard = null) =>
         new(
-            blogRepository: Repository(dbContext),
-            unitOfWork:     UnitOfWork(dbContext),
-            cache:          cache ?? Substitute.For<HybridCache>(),
-            logger:         NullLogger<UpdateBlogCommandHandler>.Instance);
+            blogRepository:        Repository(dbContext),
+            authorHierarchyGuard:  guard ?? PermissiveGuard(),
+            unitOfWork:            UnitOfWork(dbContext),
+            cache:                 cache ?? Substitute.For<HybridCache>(),
+            logger:                NullLogger<UpdateBlogCommandHandler>.Instance);
 
     private static DeleteBlogCommandHandler CreateDeleteHandler(
         ContentBlogsDbContext dbContext,
-        HybridCache? cache = null) =>
+        HybridCache? cache = null,
+        IBlogAuthorHierarchyGuard? guard = null) =>
         new(
-            blogRepository: Repository(dbContext),
-            unitOfWork:     UnitOfWork(dbContext),
-            cache:          cache ?? Substitute.For<HybridCache>(),
-            logger:         NullLogger<DeleteBlogCommandHandler>.Instance);
+            blogRepository:        Repository(dbContext),
+            authorHierarchyGuard:  guard ?? PermissiveGuard(),
+            unitOfWork:            UnitOfWork(dbContext),
+            cache:                 cache ?? Substitute.For<HybridCache>(),
+            logger:                NullLogger<DeleteBlogCommandHandler>.Instance);
 
     private static PublishBlogCommandHandler CreatePublishHandler(
         ContentBlogsDbContext dbContext,
-        HybridCache? cache = null) =>
+        HybridCache? cache = null,
+        IBlogAuthorHierarchyGuard? guard = null) =>
         new(
-            blogRepository: Repository(dbContext),
-            unitOfWork:     UnitOfWork(dbContext),
-            cache:          cache ?? Substitute.For<HybridCache>(),
-            logger:         NullLogger<PublishBlogCommandHandler>.Instance);
+            blogRepository:        Repository(dbContext),
+            authorHierarchyGuard:  guard ?? PermissiveGuard(),
+            unitOfWork:            UnitOfWork(dbContext),
+            cache:                 cache ?? Substitute.For<HybridCache>(),
+            logger:                NullLogger<PublishBlogCommandHandler>.Instance);
 
     private static UnpublishBlogCommandHandler CreateUnpublishHandler(
         ContentBlogsDbContext dbContext,
-        HybridCache? cache = null) =>
+        HybridCache? cache = null,
+        IBlogAuthorHierarchyGuard? guard = null) =>
         new(
-            blogRepository: Repository(dbContext),
-            unitOfWork:     UnitOfWork(dbContext),
-            cache:          cache ?? Substitute.For<HybridCache>(),
-            logger:         NullLogger<UnpublishBlogCommandHandler>.Instance);
+            blogRepository:        Repository(dbContext),
+            authorHierarchyGuard:  guard ?? PermissiveGuard(),
+            unitOfWork:            UnitOfWork(dbContext),
+            cache:                 cache ?? Substitute.For<HybridCache>(),
+            logger:                NullLogger<UnpublishBlogCommandHandler>.Instance);
 
     private static ArchiveBlogCommandHandler CreateArchiveHandler(
         ContentBlogsDbContext dbContext,
-        HybridCache? cache = null) =>
+        HybridCache? cache = null,
+        IBlogAuthorHierarchyGuard? guard = null) =>
         new(
-            blogRepository: Repository(dbContext),
-            unitOfWork:     UnitOfWork(dbContext),
-            cache:          cache ?? Substitute.For<HybridCache>(),
-            logger:         NullLogger<ArchiveBlogCommandHandler>.Instance);
+            blogRepository:        Repository(dbContext),
+            authorHierarchyGuard:  guard ?? PermissiveGuard(),
+            unitOfWork:            UnitOfWork(dbContext),
+            cache:                 cache ?? Substitute.For<HybridCache>(),
+            logger:                NullLogger<ArchiveBlogCommandHandler>.Instance);
+
+    /// <summary>
+    /// Sets <see cref="YallaJo.SharedKernel.Domain.Entities.AuditableEntity.RowVersion"/>
+    /// on a tracked entity via reflection, because the EF Core InMemory provider
+    /// does NOT auto-populate <c>[Timestamp]</c> values the way SQL Server does.
+    /// Tests need a deterministic non-empty token to exercise the pre-flight
+    /// concurrency check on both the match and mismatch paths.
+    /// </summary>
+    private static void SetRowVersion(Blog blog, byte[] value)
+    {
+        var prop = typeof(YallaJo.SharedKernel.Domain.Entities.AuditableEntity)
+            .GetProperty(
+                nameof(YallaJo.SharedKernel.Domain.Entities.AuditableEntity.RowVersion),
+                System.Reflection.BindingFlags.Instance |
+                System.Reflection.BindingFlags.Public |
+                System.Reflection.BindingFlags.NonPublic);
+        prop!.SetValue(blog, value);
+    }
 }

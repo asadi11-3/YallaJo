@@ -1,7 +1,10 @@
+using ContentBlogs.Application.Authorization;
 using ContentBlogs.Application.Interfaces;
 using ContentBlogs.Contracts.Authorization;
+using ContentBlogs.Domain.Repositories;
 using ContentBlogs.Infrastructure.Persistence;
 using ContentBlogs.Infrastructure.Persistence.Seeding;
+using ContentBlogs.Infrastructure.Repositories;
 using ContentBlogs.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -10,8 +13,6 @@ using YallaJo.SharedKernel.Application.Authorization;
 using YallaJo.SharedKernel.Infrastructure.BackgroundJobs;
 using YallaJo.SharedKernel.Infrastructure.Data;
 using YallaJo.SharedKernel.Infrastructure.Outbox;
-using ContentBlogs.Domain.Repositories;
-using ContentBlogs.Infrastructure.Repositories;
 
 namespace ContentBlogs.Infrastructure;
 
@@ -45,6 +46,14 @@ public static class DependencyInjection
         services.AddScoped<IBlogCommentRepository,BlogCommentRepository>();
 
         services.AddSingleton<IPermissionCatalog, ContentBlogPermissionCatalog>();
+
+        // ── Author-hierarchy authorization (Phase 1 closure) ─────────────────
+        // BlogAuthorHierarchyGuard lives in ContentBlogs.Application and depends
+        // on Security.Contracts.Authorization.IUserPrivilegeLevelReader.  The
+        // implementation is registered by AddSecurityApplication(), so this
+        // module no longer needs a ProjectReference to Security.Application nor
+        // a local adapter — the IRoleHierarchyService coupling is gone.
+        services.AddScoped<IBlogAuthorHierarchyGuard, BlogAuthorHierarchyGuard>();
 
         // ── Cross-module read-only services ──────────────────────────────────
         // Owned & implemented here so consumers (ContentCore, etc.) depend only on

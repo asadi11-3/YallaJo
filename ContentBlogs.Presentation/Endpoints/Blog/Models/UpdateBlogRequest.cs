@@ -1,6 +1,7 @@
 namespace ContentBlogs.Presentation.Endpoints.Blog.Models;
 
 public sealed record UpdateBlogRequest(
+    byte[] RowVersion,
     string Title,
     string Slug,
     string Content,
