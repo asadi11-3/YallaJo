@@ -13,4 +13,8 @@ public interface IBlogRepository : IRepository<Blog, Guid>
     Task<Blog?> GetBySlugAsync(
         string slug,
         CancellationToken cancellationToken = default);
+
+    Task<bool> IncrementViewCountIfPublishedAsync(
+        Guid blogId,
+        CancellationToken cancellationToken = default);
 }

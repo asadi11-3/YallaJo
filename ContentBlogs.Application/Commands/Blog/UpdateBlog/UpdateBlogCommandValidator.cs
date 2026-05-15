@@ -14,6 +14,11 @@ public sealed class UpdateBlogCommandValidator : AbstractValidator<UpdateBlogCom
         RuleFor(x => x.BlogId)
             .NotEqual(Guid.Empty);
 
+        RuleFor(x => x.RowVersion)
+            .NotNull()
+            .Must(rv => rv.Length > 0)
+            .WithMessage("RowVersion is required for optimistic concurrency.");
+
         RuleFor(x => x.Title)
             .NotEmpty().WithMessage("Title is required.")
             .MaximumLength(500);

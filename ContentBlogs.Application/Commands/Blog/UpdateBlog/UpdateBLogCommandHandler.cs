@@ -1,5 +1,7 @@
+using ContentBlogs.Application.Authorization;
 using ContentBlogs.Application.Caching;
 using ContentBlogs.Application.Commands.Blog.Common;
+using ContentBlogs.Application.Common;
 using ContentBlogs.Application.Interfaces;
 using ContentBlogs.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -12,6 +14,7 @@ namespace ContentBlogs.Application.Commands.Blog.UpdateBlog;
 
 public sealed class UpdateBlogCommandHandler(
     IBlogRepository blogRepository,
+    IBlogAuthorHierarchyGuard authorHierarchyGuard,
     IContentBlogsUnitOfWork unitOfWork,
     HybridCache cache,
     ILogger<UpdateBlogCommandHandler> logger)
@@ -32,6 +35,25 @@ public sealed class UpdateBlogCommandHandler(
                 return Result.Failure(
                     new Error("Blog.NotFound", $"Blog '{request.BlogId}' was not found."),
                     Outcome.NotFound);
+            }
+
+            var hierarchy = await authorHierarchyGuard
+                .EnsureCanManageBlogOwnedByAsync(blog.AuthorId, cancellationToken)
+                .ConfigureAwait(false);
+            if (!hierarchy.IsSuccess)
+            {
+                return hierarchy;
+            }
+
+            if (!RowVersionUtil.Equal(blog.RowVersion, request.RowVersion))
+            {
+                logger.LogWarning(
+                    "UpdateBlog rejected: stale RowVersion for blog {BlogId}.", blog.Id);
+                return Result.Failure(
+                    new Error(
+                        "Blog.ConcurrencyConflict",
+                        "Blog was modified by another user. Please refresh and try again."),
+                    Outcome.Conflict);
             }
 
             var oldSlug = blog.Slug;

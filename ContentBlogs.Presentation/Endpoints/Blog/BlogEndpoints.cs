@@ -5,6 +5,7 @@ using ContentBlogs.Application.Commands.Blog.PublishBlog;
 using ContentBlogs.Application.Commands.Blog.UnpublishBlog;
 using ContentBlogs.Application.Commands.Blog.UpdateBlog;
 using ContentBlogs.Application.Queries.Blog.Dtos;
+using ContentBlogs.Application.Queries.Blog.GetAdminBlogById;
 using ContentBlogs.Application.Queries.Blog.GetBlogById;
 using ContentBlogs.Application.Queries.Blog.GetBlogBySlug;
 using ContentBlogs.Application.Queries.Blog.ListBlogs;
@@ -13,6 +14,7 @@ using ContentBlogs.Presentation.Endpoints.Blog.Models;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using YallaJo.SharedKernel.Application.Authorization;
 using YallaJo.SharedKernel.Domain.Abstractions.Pagination;
@@ -88,6 +90,25 @@ internal static class BlogEndpoints
         .ProducesProblem(StatusCodes.Status404NotFound)
         .AllowAnonymous();
 
+        group.MapGet("/admin/{id:guid}", async (
+            Guid id,
+            HttpContext http,
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            var acceptLanguage = http.Request.Headers.AcceptLanguage.ToString();
+
+            var result = await sender.Send(new GetAdminBlogByIdQuery(id, acceptLanguage), ct);
+            return result.ToApiResult();
+        })
+        .WithName("GetAdminBlogById")
+        .WithSummary("Admin — get any non-deleted blog by ID with RowVersion (any status)")
+        .Produces<AdminBlogDetailDto>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .WithMetadata(new MustHavePermissionAttribute(ContentBlogFeatures.Blog, AppAction.Read));
+
         group.MapPost("/", async (
             CreateBlogRequest request,
             ISender sender,
@@ -124,6 +145,7 @@ internal static class BlogEndpoints
         {
             var cmd = new UpdateBlogCommand(
                 BlogId:          id,
+                RowVersion:      request.RowVersion,
                 Title:           request.Title,
                 Slug:            request.Slug,
                 Content:         request.Content,
@@ -144,18 +166,19 @@ internal static class BlogEndpoints
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status409Conflict)
         .WithMetadata(new MustHavePermissionAttribute(ContentBlogFeatures.Blog, AppAction.Update));
-
         group.MapDelete("/{id:guid}", async (
             Guid id,
+            [FromBody] BlogRowVersionRequest request,
             ISender sender,
             CancellationToken ct) =>
         {
-            var result = await sender.Send(new DeleteBlogCommand(id), ct);
+            var result = await sender.Send(new DeleteBlogCommand(id, request.RowVersion), ct);
             return result.ToApiResult();
         })
         .WithName("DeleteBlog")
         .WithSummary("Soft-delete a blog")
         .Produces(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status403Forbidden)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status409Conflict)
@@ -163,15 +186,17 @@ internal static class BlogEndpoints
 
         group.MapPost("/{id:guid}/publish", async (
             Guid id,
+            BlogRowVersionRequest request,
             ISender sender,
             CancellationToken ct) =>
         {
-            var result = await sender.Send(new PublishBlogCommand(id), ct);
+            var result = await sender.Send(new PublishBlogCommand(id, request.RowVersion), ct);
             return result.ToApiResult();
         })
         .WithName("PublishBlog")
         .WithSummary("Publish a Draft blog")
         .Produces(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status403Forbidden)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status409Conflict)
@@ -179,34 +204,54 @@ internal static class BlogEndpoints
 
         group.MapPost("/{id:guid}/unpublish", async (
             Guid id,
+            BlogRowVersionRequest request,
             ISender sender,
             CancellationToken ct) =>
         {
-            var result = await sender.Send(new UnpublishBlogCommand(id), ct);
+            var result = await sender.Send(new UnpublishBlogCommand(id, request.RowVersion), ct);
             return result.ToApiResult();
         })
         .WithName("UnpublishBlog")
         .WithSummary("Unpublish a Published blog (back to Draft)")
         .Produces(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status403Forbidden)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status409Conflict)
         .WithMetadata(new MustHavePermissionAttribute(ContentBlogFeatures.Blog, AppAction.Approve));
-
         group.MapPost("/{id:guid}/archive", async (
             Guid id,
+            BlogRowVersionRequest request,
             ISender sender,
             CancellationToken ct) =>
         {
-            var result = await sender.Send(new ArchiveBlogCommand(id), ct);
+            var result = await sender.Send(new ArchiveBlogCommand(id, request.RowVersion), ct);
             return result.ToApiResult();
         })
         .WithName("ArchiveBlog")
         .WithSummary("Archive a Published blog (read-only state)")
         .Produces(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status403Forbidden)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status409Conflict)
         .WithMetadata(new MustHavePermissionAttribute(ContentBlogFeatures.Blog, AppAction.Approve));
+
+        group.MapPost("/{id:guid}/views", async (
+            Guid id,
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            var result = await sender.Send(
+                new ContentBlogs.Application.Commands.Blog.IncrementBlogViewCount.IncrementBlogViewCountCommand(id),
+                ct);
+            return result.ToApiResult();
+        })
+        .WithName("IncrementBlogViewCount")
+        .WithSummary("Atomically increment the view count for a Published blog")
+        .Produces(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .AllowAnonymous();
     }
 }

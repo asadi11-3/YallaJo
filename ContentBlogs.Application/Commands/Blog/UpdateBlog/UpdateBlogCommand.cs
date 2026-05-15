@@ -4,6 +4,7 @@ namespace ContentBlogs.Application.Commands.Blog.UpdateBlog;
 
 public sealed record UpdateBlogCommand(
     Guid BlogId,
+    byte[] RowVersion,
     string Title,
     string Slug,
     string Content,
