@@ -12,6 +12,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ContentBlogs.Application\ContentBlogs.Application.csproj" />
+    <ProjectReference Include="..\ContentBlogs.Contracts\ContentBlogs.Contracts.csproj" />
+    <ProjectReference Include="..\YallaJo.SharedKernel.Presentation\YallaJo.SharedKernel.Presentation.csproj" />
   </ItemGroup>
 
 </Project>
