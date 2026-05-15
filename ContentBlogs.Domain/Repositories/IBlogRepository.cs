@@ -1,14 +1,16 @@
 using ContentBlogs.Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using YallaJo.SharedKernel.Domain.Abstractions.Data;
 
-namespace ContentBlogs.Domain.Repositories
+namespace ContentBlogs.Domain.Repositories;
+
+public interface IBlogRepository : IRepository<Blog, Guid>
 {
-    public  interface IBlogRepository : IRepository<Blog,Guid>
-    {
-    }
+    Task<bool> IsSlugReservedAsync(
+        string slug,
+        Guid? excludeId,
+        CancellationToken cancellationToken = default);
+
+    Task<Blog?> GetBySlugAsync(
+        string slug,
+        CancellationToken cancellationToken = default);
 }

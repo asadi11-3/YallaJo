@@ -2,11 +2,10 @@ using YallaJo.SharedKernel.Domain.Event;
 
 namespace ContentBlogs.Domain.Events;
 
-public sealed record BlogCreatedDomainEvent(
+public sealed record BlogPublishedDomainEvent(
     Guid BlogId,
     string Slug,
     string Title,
     Guid AuthorId,
-    Guid SourceLanguageId,
     Guid? PlaceId,
-    DateTime CreatedAtUtc) : DomainEventBase;
+    DateTime PublishedAtUtc) : DomainEventBase;
