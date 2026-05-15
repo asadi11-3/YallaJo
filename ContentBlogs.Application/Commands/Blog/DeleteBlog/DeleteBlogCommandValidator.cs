@@ -1,12 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using FluentValidation;
 
-namespace ContentBlogs.Application.Commands.Blog.DeleteBlog
+namespace ContentBlogs.Application.Commands.Blog.DeleteBlog;
+
+public sealed class DeleteBlogCommandValidator : AbstractValidator<DeleteBlogCommand>
 {
-    internal class DeleteBlogCommandValidator
+    public DeleteBlogCommandValidator()
     {
+        RuleFor(x => x.BlogId).NotEqual(Guid.Empty);
     }
 }

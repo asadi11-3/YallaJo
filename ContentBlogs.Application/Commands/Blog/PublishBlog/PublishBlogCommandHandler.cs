@@ -7,17 +7,17 @@ using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
-namespace ContentBlogs.Application.Commands.Blog.DeleteBlog;
+namespace ContentBlogs.Application.Commands.Blog.PublishBlog;
 
-public sealed class DeleteBlogCommandHandler(
+public sealed class PublishBlogCommandHandler(
     IBlogRepository blogRepository,
     IContentBlogsUnitOfWork unitOfWork,
     HybridCache cache,
-    ILogger<DeleteBlogCommandHandler> logger)
-    : ICommandHandler<DeleteBlogCommand>
+    ILogger<PublishBlogCommandHandler> logger)
+    : ICommandHandler<PublishBlogCommand>
 {
     public async Task<Result> Handle(
-        DeleteBlogCommand request,
+        PublishBlogCommand request,
         CancellationToken cancellationToken)
     {
         try
@@ -33,7 +33,23 @@ public sealed class DeleteBlogCommandHandler(
                     Outcome.NotFound);
             }
 
-            blog.Delete(DateTime.UtcNow);
+            if (await blogRepository
+                .IsSlugReservedAsync(blog.Slug, excludeId: blog.Id, cancellationToken)
+                .ConfigureAwait(false))
+            {
+                return Result.Failure(
+                    new Error("Blog.SlugConflict", $"Slug '{blog.Slug}' is no longer available."),
+                    Outcome.Conflict);
+            }
+
+            try
+            {
+                blog.Publish(DateTime.UtcNow);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return MapDomainGuardFailure(ex);
+            }
 
             try
             {
@@ -56,7 +72,7 @@ public sealed class DeleteBlogCommandHandler(
                 .ConfigureAwait(false);
 
             logger.LogInformation(
-                "Blog soft-deleted: {BlogId} (Slug={Slug})", blog.Id, blog.Slug);
+                "Blog published: {BlogId} (Slug={Slug})", blog.Id, blog.Slug);
 
             return Result.Success();
         }
@@ -66,5 +82,21 @@ public sealed class DeleteBlogCommandHandler(
                 new Error("Request.Cancelled", "The request was cancelled."),
                 Outcome.Canceled);
         }
+    }
+
+    private static Result MapDomainGuardFailure(InvalidOperationException ex)
+    {
+        var message = ex.Message ?? string.Empty;
+
+        if (message.StartsWith("Blog.Deleted", StringComparison.Ordinal))
+        {
+            return Result.Failure(
+                new Error("Blog.NotFound", "Blog was not found."),
+                Outcome.NotFound);
+        }
+
+        return Result.Failure(
+            new Error("Blog.InvalidTransition", message),
+            Outcome.Conflict);
     }
 }

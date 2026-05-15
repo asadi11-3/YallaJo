@@ -1,12 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 
-namespace ContentBlogs.Application.Commands.Blog.DeleteBlog
-{
-    internal class DeleteBlogCommand
-    {
-    }
-}
+namespace ContentBlogs.Application.Commands.Blog.DeleteBlog;
+
+public sealed record DeleteBlogCommand(Guid BlogId) : ICommand;

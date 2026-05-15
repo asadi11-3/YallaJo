@@ -7,17 +7,17 @@ using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
-namespace ContentBlogs.Application.Commands.Blog.DeleteBlog;
+namespace ContentBlogs.Application.Commands.Blog.ArchiveBlog;
 
-public sealed class DeleteBlogCommandHandler(
+public sealed class ArchiveBlogCommandHandler(
     IBlogRepository blogRepository,
     IContentBlogsUnitOfWork unitOfWork,
     HybridCache cache,
-    ILogger<DeleteBlogCommandHandler> logger)
-    : ICommandHandler<DeleteBlogCommand>
+    ILogger<ArchiveBlogCommandHandler> logger)
+    : ICommandHandler<ArchiveBlogCommand>
 {
     public async Task<Result> Handle(
-        DeleteBlogCommand request,
+        ArchiveBlogCommand request,
         CancellationToken cancellationToken)
     {
         try
@@ -33,7 +33,14 @@ public sealed class DeleteBlogCommandHandler(
                     Outcome.NotFound);
             }
 
-            blog.Delete(DateTime.UtcNow);
+            try
+            {
+                blog.Archive(DateTime.UtcNow);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return MapDomainGuardFailure(ex);
+            }
 
             try
             {
@@ -56,7 +63,7 @@ public sealed class DeleteBlogCommandHandler(
                 .ConfigureAwait(false);
 
             logger.LogInformation(
-                "Blog soft-deleted: {BlogId} (Slug={Slug})", blog.Id, blog.Slug);
+                "Blog archived: {BlogId} (Slug={Slug})", blog.Id, blog.Slug);
 
             return Result.Success();
         }
@@ -66,5 +73,21 @@ public sealed class DeleteBlogCommandHandler(
                 new Error("Request.Cancelled", "The request was cancelled."),
                 Outcome.Canceled);
         }
+    }
+
+    private static Result MapDomainGuardFailure(InvalidOperationException ex)
+    {
+        var message = ex.Message ?? string.Empty;
+
+        if (message.StartsWith("Blog.Deleted", StringComparison.Ordinal))
+        {
+            return Result.Failure(
+                new Error("Blog.NotFound", "Blog was not found."),
+                Outcome.NotFound);
+        }
+
+        return Result.Failure(
+            new Error("Blog.InvalidTransition", message),
+            Outcome.Conflict);
     }
 }
