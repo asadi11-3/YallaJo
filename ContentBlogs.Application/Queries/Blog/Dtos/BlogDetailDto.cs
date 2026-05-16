@@ -12,4 +12,6 @@ public sealed record BlogDetailDto(
     string? MetaTitle,
     string? MetaDescription,
     Guid? PlaceId,
-    string LanguageCode);
+    string LanguageCode,
+    int TourCount,
+    IReadOnlyCollection<BlogTourSummaryDto> LinkedTours);

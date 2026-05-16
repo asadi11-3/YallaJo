@@ -48,6 +48,18 @@ public class BlogRepository(ContentBlogsDbContext context)
         return rowsAffected > 0;
     }
 
+    public Task<Blog?> GetFeaturedBlogInPlaceScopeAsync(
+        Guid? placeId,
+        Guid? excludeBlogId,
+        CancellationToken cancellationToken = default)
+    {
+        return FirstOrDefaultAsync(
+            blog => blog.IsFeatured
+                 && blog.PlaceId == placeId
+                 && (excludeBlogId == null || blog.Id != excludeBlogId.Value),
+            ct: cancellationToken);
+    }
+
     private static string NormalizeSlug(string slug) =>
         (slug ?? string.Empty).Trim().ToLowerInvariant();
 }

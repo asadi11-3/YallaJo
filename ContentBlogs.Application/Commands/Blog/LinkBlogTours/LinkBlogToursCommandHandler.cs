@@ -141,6 +141,10 @@ public sealed class LinkBlogToursCommandHandler(
                 await cache.RemoveByTagAsync(
                         ContentBlogsCacheKeys.BlogToursTag(blog.Id), cancellationToken)
                     .ConfigureAwait(false);
+
+                await cache.RemoveByTagAsync(
+                        ContentBlogsCacheKeys.BlogSlugTag(blog.Slug), cancellationToken)
+                    .ConfigureAwait(false);
             }
 
             logger.LogInformation(

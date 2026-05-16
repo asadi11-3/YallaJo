@@ -102,7 +102,7 @@ public sealed class IntegrationEventTypeRegistryTests
         ("content-tours.package.updated.v1",              typeof(TourPackageUpdatedIntegrationEvent)),
         ("content-tours.package.deleted.v1",              typeof(TourPackageDeletedIntegrationEvent)),
 
-        // ContentBlogs (8)
+        // ContentBlogs (10)
         ("content-blogs.blog.created.v1",                 typeof(BlogCreatedIntegrationEvent)),
         ("content-blogs.blog.updated.v1",                 typeof(BlogUpdatedIntegrationEvent)),
         ("content-blogs.blog.deleted.v1",                 typeof(BlogDeletedIntegrationEvent)),
@@ -111,6 +111,8 @@ public sealed class IntegrationEventTypeRegistryTests
         ("content-blogs.blog.archived.v1",                typeof(BlogArchivedIntegrationEvent)),
         ("content-blogs.blog-tour.linked.v1",             typeof(BlogTourLinkedIntegrationEvent)),
         ("content-blogs.blog-tour.unlinked.v1",           typeof(BlogTourUnlinkedIntegrationEvent)),
+        ("content-blogs.blog.featured.v1",                typeof(BlogFeaturedIntegrationEvent)),
+        ("content-blogs.blog.unfeatured.v1",              typeof(BlogUnfeaturedIntegrationEvent)),
     ];
 
     // ── Tests ─────────────────────────────────────────────────────────────────

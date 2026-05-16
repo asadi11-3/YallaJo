@@ -321,6 +321,54 @@ public sealed class Blog : AuditableEntity, IAggregateRoot
         UpdatedAt = utcNow;
     }
 
+    public void MarkAsFeatured(DateTime utcNow)
+    {
+        EnsureNotDeleted();
+
+        if (Status != BlogStatus.Published)
+        {
+            throw new InvalidOperationException(
+                $"Blog.InvalidTransition: cannot feature a blog with status {Status}. Required: Published.");
+        }
+
+        if (IsFeatured)
+        {
+            throw new InvalidOperationException(
+                "Blog.InvalidTransition: blog is already featured.");
+        }
+
+        IsFeatured = true;
+        UpdatedAt = utcNow;
+
+        AddDomainEvent(new BlogFeaturedDomainEvent(
+            BlogId:        Id,
+            Slug:          Slug,
+            Title:         Title,
+            AuthorId:      AuthorId,
+            PlaceId:       PlaceId,
+            FeaturedAtUtc: utcNow));
+    }
+
+    public void MarkAsUnfeatured(DateTime utcNow)
+    {
+        EnsureNotDeleted();
+
+        if (!IsFeatured)
+        {
+            throw new InvalidOperationException(
+                "Blog.InvalidTransition: blog is not currently featured.");
+        }
+
+        IsFeatured = false;
+        UpdatedAt = utcNow;
+
+        AddDomainEvent(new BlogUnfeaturedDomainEvent(
+            BlogId:          Id,
+            Slug:            Slug,
+            PlaceId:         PlaceId,
+            UnfeaturedAtUtc: utcNow));
+    }
+
     private void EnsureNotDeleted()
     {
         if (IsDeleted)

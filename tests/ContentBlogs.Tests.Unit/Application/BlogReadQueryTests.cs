@@ -357,6 +357,152 @@ public sealed class BlogReadQueryTests
         result.Value!.Slug.Should().Be("public-blog");
     }
 
+    // ── Linked-tours summary (read-model) ─────────────────────────────────────
+
+    [Fact]
+    public async Task GetBlogById_ReturnsTourSummary_WhenBlogHasLinkedTours()
+    {
+        await using var db = NewDb();
+        var blog = NewBlog("with-tours");
+        blog.Publish(DateTime.UtcNow);
+
+        var t1 = Guid.NewGuid();
+        var t2 = Guid.NewGuid();
+        db.Blogs.Add(blog);
+        db.BlogTours.Add(BlogTour.Create(blog.Id, t1, 0));
+        db.BlogTours.Add(BlogTour.Create(blog.Id, t2, 1));
+        await db.SaveChangesAsync();
+
+        var result = await NewGetByIdHandler(db).Handle(
+            new GetBlogByIdQuery(blog.Id, "en"),
+            CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value!.TourCount.Should().Be(2);
+        result.Value.LinkedTours.Should().HaveCount(2);
+        result.Value.LinkedTours.Select(lt => lt.TourId)
+            .Should().BeEquivalentTo(new[] { t1, t2 });
+    }
+
+    [Fact]
+    public async Task GetBlogById_ReturnsEmptyTourSummary_WhenNoLinkedTours()
+    {
+        await using var db = NewDb();
+        var blog = NewBlog("no-tours");
+        blog.Publish(DateTime.UtcNow);
+        db.Blogs.Add(blog);
+        await db.SaveChangesAsync();
+
+        var result = await NewGetByIdHandler(db).Handle(
+            new GetBlogByIdQuery(blog.Id, "en"),
+            CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value!.TourCount.Should().Be(0);
+        result.Value.LinkedTours.Should().NotBeNull("expected an empty array, never null");
+        result.Value.LinkedTours.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task GetBlogById_OrdersLinkedTours_BySortOrderThenTourId()
+    {
+        await using var db = NewDb();
+        var blog = NewBlog("ordered-tours");
+        blog.Publish(DateTime.UtcNow);
+
+        // Deterministic Guids so the TourId-tiebreak ordering is observable.
+        var tourA = new Guid("00000000-0000-0000-0000-0000000000A1");
+        var tourB = new Guid("00000000-0000-0000-0000-0000000000B2");
+        var tourC = new Guid("00000000-0000-0000-0000-0000000000C3");
+
+        db.Blogs.Add(blog);
+        // Insertion order is intentionally NOT the expected output order.
+        db.BlogTours.Add(BlogTour.Create(blog.Id, tourC, 5)); // SortOrder=5
+        db.BlogTours.Add(BlogTour.Create(blog.Id, tourB, 2)); // SortOrder=2
+        db.BlogTours.Add(BlogTour.Create(blog.Id, tourA, 2)); // SortOrder=2  (tiebreaker by TourId)
+        await db.SaveChangesAsync();
+
+        var result = await NewGetByIdHandler(db).Handle(
+            new GetBlogByIdQuery(blog.Id, "en"),
+            CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        // Expected: (tourA,2), (tourB,2), (tourC,5) — TourA precedes TourB at
+        // SortOrder=2 because A < B as Guids; both precede TourC at SortOrder=5.
+        result.Value!.LinkedTours.Select(lt => lt.TourId)
+            .Should().Equal(new[] { tourA, tourB, tourC });
+    }
+
+    [Fact]
+    public async Task GetBlogBySlug_ReturnsSameTourSummary_AsGetById()
+    {
+        await using var db = NewDb();
+        var blog = NewBlog("same-summary");
+        blog.Publish(DateTime.UtcNow);
+
+        var t1 = Guid.NewGuid();
+        var t2 = Guid.NewGuid();
+        db.Blogs.Add(blog);
+        db.BlogTours.Add(BlogTour.Create(blog.Id, t1, 0));
+        db.BlogTours.Add(BlogTour.Create(blog.Id, t2, 1));
+        await db.SaveChangesAsync();
+
+        var byId = await NewGetByIdHandler(db).Handle(
+            new GetBlogByIdQuery(blog.Id, "en"),
+            CancellationToken.None);
+        var bySlug = await NewGetBySlugHandler(db).Handle(
+            new GetBlogBySlugQuery(blog.Slug, "en"),
+            CancellationToken.None);
+
+        byId.IsSuccess.Should().BeTrue();
+        bySlug.IsSuccess.Should().BeTrue();
+
+        bySlug.Value!.TourCount.Should().Be(byId.Value!.TourCount);
+        bySlug.Value.LinkedTours.Should().BeEquivalentTo(byId.Value.LinkedTours,
+            options => options.WithStrictOrdering());
+    }
+
+    // ── Visibility regression: tour summary never leaks the blog ─────────────
+
+    [Fact]
+    public async Task GetBlogById_ReturnsNotFound_ForDraftEvenIfHasLinkedTours()
+    {
+        await using var db = NewDb();
+        var draft = NewBlog("draft-with-tours"); // remains Draft
+
+        db.Blogs.Add(draft);
+        db.BlogTours.Add(BlogTour.Create(draft.Id, Guid.NewGuid(), 0));
+        await db.SaveChangesAsync();
+
+        var result = await NewGetByIdHandler(db).Handle(
+            new GetBlogByIdQuery(draft.Id, "en"),
+            CancellationToken.None);
+
+        result.IsSuccess.Should().BeFalse();
+        result.Outcome.Should().Be(Outcome.NotFound,
+            "Draft blogs must remain invisible to anonymous callers regardless of linked-tour data");
+        result.Value.Should().BeNull("no DTO body should be returned for not-visible blogs");
+    }
+
+    [Fact]
+    public async Task GetBlogBySlug_ReturnsNotFound_ForDraftEvenIfHasLinkedTours()
+    {
+        await using var db = NewDb();
+        var draft = NewBlog("draft-slug-with-tours");
+
+        db.Blogs.Add(draft);
+        db.BlogTours.Add(BlogTour.Create(draft.Id, Guid.NewGuid(), 0));
+        await db.SaveChangesAsync();
+
+        var result = await NewGetBySlugHandler(db).Handle(
+            new GetBlogBySlugQuery(draft.Slug, "en"),
+            CancellationToken.None);
+
+        result.IsSuccess.Should().BeFalse();
+        result.Outcome.Should().Be(Outcome.NotFound);
+        result.Value.Should().BeNull();
+    }
+
     // ── Cache key wiring ──────────────────────────────────────────────────────
 
     [Fact]
@@ -429,6 +575,9 @@ public sealed class BlogReadQueryTests
         var translationProps = typeof(BlogTranslationDto).GetProperties(BindingFlags.Instance | BindingFlags.Public)
             .Select(p => p.Name)
             .ToList();
+        var tourSummaryProps = typeof(BlogTourSummaryDto).GetProperties(BindingFlags.Instance | BindingFlags.Public)
+            .Select(p => p.Name)
+            .ToList();
 
         var forbiddenNames = new[]
         {
@@ -447,7 +596,24 @@ public sealed class BlogReadQueryTests
                 $"BlogDetailDto must not expose '{prop}'");
             translationProps.Should().NotContain(prop,
                 $"BlogTranslationDto must not expose '{prop}'");
+            tourSummaryProps.Should().NotContain(prop,
+                $"BlogTourSummaryDto must not expose '{prop}'");
         }
+    }
+
+    [Fact]
+    public void BlogTourSummaryDto_ExposesOnly_TourIdAndSortOrder()
+    {
+        // Positive lock — any new property added to BlogTourSummaryDto would
+        // require both an explicit test update and a Tour-metadata coupling
+        // review (we MUST NOT leak Tour name/slug/status from ContentBlogs).
+        var props = typeof(BlogTourSummaryDto)
+            .GetProperties(BindingFlags.Instance | BindingFlags.Public)
+            .Select(p => p.Name)
+            .OrderBy(n => n)
+            .ToList();
+
+        props.Should().Equal(new[] { nameof(BlogTourSummaryDto.SortOrder), nameof(BlogTourSummaryDto.TourId) });
     }
 
     // ── Test helpers ──────────────────────────────────────────────────────────

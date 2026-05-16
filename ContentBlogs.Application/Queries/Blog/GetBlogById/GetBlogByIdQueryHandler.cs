@@ -25,7 +25,9 @@ public sealed class GetBlogByIdQueryHandler(
         {
             var blog = await blogRepository.GetAsync(
                 filter:       b => b.Id == request.BlogId,
-                include:      q => q.Include(b => b.BlogTranslations),
+                include:      q => q
+                    .Include(b => b.BlogTranslations)
+                    .Include(b => b.BlogTours),
                 asNoTracking: true,
                 ct:           cancellationToken)
                 .ConfigureAwait(false);
@@ -70,6 +72,13 @@ internal static class BlogDetailMapper
             ? resolvedLanguage.Code
             : DefaultLanguageMarker;
 
+        var linkedTours = blog.BlogTours
+            .OrderBy(bt => bt.SortOrder)
+            .ThenBy(bt => bt.TourId)
+            .Select(bt => new BlogTourSummaryDto(bt.TourId, bt.SortOrder))
+            .ToList()
+            .AsReadOnly();
+
         return new BlogDetailDto(
             Id:               blog.Id,
             Slug:             blog.Slug,
@@ -82,6 +91,8 @@ internal static class BlogDetailMapper
             MetaTitle:        blog.MetaTitle,
             MetaDescription:  blog.MetaDescription,
             PlaceId:          blog.PlaceId,
-            LanguageCode:     languageCode);
+            LanguageCode:     languageCode,
+            TourCount:        linkedTours.Count,
+            LinkedTours:      linkedTours);
     }
 }

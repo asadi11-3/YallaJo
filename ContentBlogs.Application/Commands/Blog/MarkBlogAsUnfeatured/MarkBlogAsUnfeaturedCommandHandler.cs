@@ -9,19 +9,18 @@ using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
-namespace ContentBlogs.Application.Commands.Blog.UnlinkBlogFromTour;
+namespace ContentBlogs.Application.Commands.Blog.MarkBlogAsUnfeatured;
 
-public sealed class UnlinkBlogFromTourCommandHandler(
+public sealed class MarkBlogAsUnfeaturedCommandHandler(
     IBlogRepository blogRepository,
-    IBlogTourRepository blogTourRepository,
     IBlogAuthorHierarchyGuard authorHierarchyGuard,
     IContentBlogsUnitOfWork unitOfWork,
     HybridCache cache,
-    ILogger<UnlinkBlogFromTourCommandHandler> logger)
-    : ICommandHandler<UnlinkBlogFromTourCommand>
+    ILogger<MarkBlogAsUnfeaturedCommandHandler> logger)
+    : ICommandHandler<MarkBlogAsUnfeaturedCommand>
 {
     public async Task<Result> Handle(
-        UnlinkBlogFromTourCommand request,
+        MarkBlogAsUnfeaturedCommand request,
         CancellationToken cancellationToken)
     {
         try
@@ -41,32 +40,29 @@ public sealed class UnlinkBlogFromTourCommandHandler(
                 .EnsureCanManageBlogOwnedByAsync(blog.AuthorId, cancellationToken)
                 .ConfigureAwait(false);
             if (!hierarchy.IsSuccess)
+            {
                 return hierarchy;
+            }
 
             if (!RowVersionUtil.Equal(blog.RowVersion, request.RowVersion))
             {
                 logger.LogWarning(
-                    "UnlinkBlogFromTour rejected: stale RowVersion for blog {BlogId}.", blog.Id);
+                    "MarkBlogAsUnfeatured rejected: stale RowVersion for blog {BlogId}.", blog.Id);
                 return Result.Failure(
                     new Error(
                         "Blog.ConcurrencyConflict",
                         "Blog was modified by another user. Please refresh and try again."),
                     Outcome.Conflict);
             }
-            var removed = await blogTourRepository
-                .RemoveAsync(blog.Id, request.TourId, cancellationToken)
-                .ConfigureAwait(false);
 
-            if (!removed)
+            try
             {
-                return Result.Failure(
-                    new Error(
-                        "Blog.TourLinkNotFound",
-                        $"Blog '{blog.Id}' is not linked to tour '{request.TourId}'."),
-                    Outcome.NotFound);
+                blog.MarkAsUnfeatured(DateTime.UtcNow);
             }
-
-            blog.RegisterTourUnlinked(request.TourId, DateTime.UtcNow);
+            catch (InvalidOperationException ex)
+            {
+                return MapDomainGuardFailure(ex);
+            }
 
             try
             {
@@ -85,15 +81,21 @@ public sealed class UnlinkBlogFromTourCommandHandler(
                     ContentBlogsCacheKeys.BlogTag(blog.Id), cancellationToken)
                 .ConfigureAwait(false);
             await cache.RemoveByTagAsync(
-                    ContentBlogsCacheKeys.BlogToursTag(blog.Id), cancellationToken)
+                    ContentBlogsCacheKeys.BlogSlugTag(blog.Slug), cancellationToken)
                 .ConfigureAwait(false);
             await cache.RemoveByTagAsync(
-                    ContentBlogsCacheKeys.BlogSlugTag(blog.Slug), cancellationToken)
+                    ContentBlogsCacheKeys.BlogsListTag, cancellationToken)
+                .ConfigureAwait(false);
+            await cache.RemoveByTagAsync(
+                    ContentBlogsCacheKeys.SitemapRenderedTag, cancellationToken)
+                .ConfigureAwait(false);
+            await cache.RemoveByTagAsync(
+                    ContentBlogsCacheKeys.FeaturedBlogsTag, cancellationToken)
                 .ConfigureAwait(false);
 
             logger.LogInformation(
-                "UnlinkBlogFromTour: blog {BlogId} unlinked from tour {TourId}.",
-                blog.Id, request.TourId);
+                "Blog feature removed: {BlogId} (Slug={Slug}, PlaceId={PlaceId})",
+                blog.Id, blog.Slug, blog.PlaceId);
 
             return Result.Success();
         }
@@ -103,5 +105,21 @@ public sealed class UnlinkBlogFromTourCommandHandler(
                 new Error("Request.Cancelled", "The request was cancelled."),
                 Outcome.Canceled);
         }
+    }
+
+    private static Result MapDomainGuardFailure(InvalidOperationException ex)
+    {
+        var message = ex.Message ?? string.Empty;
+
+        if (message.StartsWith("Blog.Deleted", StringComparison.Ordinal))
+        {
+            return Result.Failure(
+                new Error("Blog.NotFound", "Blog was not found."),
+                Outcome.NotFound);
+        }
+
+        return Result.Failure(
+            new Error("Blog.InvalidTransition", message),
+            Outcome.Conflict);
     }
 }

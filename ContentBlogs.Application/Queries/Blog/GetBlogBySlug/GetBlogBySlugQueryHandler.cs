@@ -27,7 +27,9 @@ public sealed class GetBlogBySlugQueryHandler(
 
             var blog = await blogRepository.GetAsync(
                 filter:       b => b.Slug == normalized,
-                include:      q => q.Include(b => b.BlogTranslations),
+                include:      q => q
+                    .Include(b => b.BlogTranslations)
+                    .Include(b => b.BlogTours),
                 asNoTracking: true,
                 ct:           cancellationToken)
                 .ConfigureAwait(false);

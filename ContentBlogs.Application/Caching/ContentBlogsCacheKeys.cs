@@ -22,6 +22,8 @@ public static class ContentBlogsCacheKeys
 
     public const string BlogsListTag = "blogs:list";
 
+    public const string FeaturedBlogsTag = "blogs:featured";
+
     public const string SitemapRenderedTag = "sitemap:rendered";
 
     public static string BlogTag(Guid id) => $"blog:{id}";

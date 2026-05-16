@@ -245,6 +245,33 @@ public sealed class BlogTourLinkCommandHandlerTests
             ContentBlogsCacheKeys.BlogTag(blog.Id), Arg.Any<CancellationToken>());
         await cache.Received(1).RemoveByTagAsync(
             ContentBlogsCacheKeys.BlogToursTag(blog.Id), Arg.Any<CancellationToken>());
+        // D-CR1: BlogDetailDto now embeds linked-tour summary, so the slug-keyed
+        // cache must also be evicted.
+        await cache.Received(1).RemoveByTagAsync(
+            ContentBlogsCacheKeys.BlogSlugTag(blog.Slug), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task LinkBlogTours_InvalidatesBlogSlugCache_AfterSuccess()
+    {
+        // Isolated regression lock for D-CR1.  Without this invalidation,
+        // GetBlogBySlug would return stale LinkedTours for up to the cache TTL
+        // after a successful Link.
+        await using var db = NewDb();
+        var blog = NewBlog("slug-cache-link");
+        db.Blogs.Add(blog);
+        await db.SaveChangesAsync();
+
+        var cache = Substitute.For<HybridCache>();
+        var handler = NewLinkHandler(db, cache);
+
+        await handler.Handle(
+            new LinkBlogToursCommand(blog.Id, blog.RowVersion,
+                [new LinkBlogTourItem(Guid.NewGuid())]),
+            CancellationToken.None);
+
+        await cache.Received(1).RemoveByTagAsync(
+            ContentBlogsCacheKeys.BlogSlugTag(blog.Slug), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -373,6 +400,8 @@ public sealed class BlogTourLinkCommandHandlerTests
             ContentBlogsCacheKeys.BlogTag(blog.Id), Arg.Any<CancellationToken>());
         await cache.Received(1).RemoveByTagAsync(
             ContentBlogsCacheKeys.BlogToursTag(blog.Id), Arg.Any<CancellationToken>());
+        await cache.Received(1).RemoveByTagAsync(
+            ContentBlogsCacheKeys.BlogSlugTag(blog.Slug), Arg.Any<CancellationToken>());
     }
 
     [Fact]
