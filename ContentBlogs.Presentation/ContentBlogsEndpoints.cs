@@ -1,4 +1,5 @@
 using ContentBlogs.Presentation.Endpoints.Blog;
+using ContentBlogs.Presentation.Endpoints.BlogComment;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -13,6 +14,7 @@ public static class ContentBlogsEndpoints
             .WithTags("ContentBlogs");
 
         BlogEndpoints.MapBlogEndpoints(group);
+        BlogCommentEndpoints.MapBlogCommentEndpoints(group);
 
         return endpoints;
     }
