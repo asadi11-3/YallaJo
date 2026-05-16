@@ -25,6 +25,10 @@ public class BlogCommentConfiguration : IEntityTypeConfiguration<BlogComment>
             .IsRequired()
             .HasDefaultValue(0);
 
+        builder.Property(x => x.IsContentRedacted)
+            .IsRequired()
+            .HasDefaultValue(false);
+
         builder.Property(x => x.CreatedAt).IsRequired();
         builder.Property(x => x.UpdatedAt).IsRequired(false);
         builder.Property(x => x.IsDeleted).IsRequired().HasDefaultValue(false);
