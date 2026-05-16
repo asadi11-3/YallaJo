@@ -20,7 +20,7 @@ public class BlogTourConfiguration : IEntityTypeConfiguration<BlogTour>
             .HasDefaultValue(0);
 
         builder.HasOne(x => x.Blog)
-            .WithMany()
+            .WithMany(b => b.BlogTours)
             .HasForeignKey(x => x.BlogId)
             .OnDelete(DeleteBehavior.Cascade);
 

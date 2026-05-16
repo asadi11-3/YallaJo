@@ -1,5 +1,6 @@
 using ContentTours.Application.Interfaces;
 using ContentTours.Contracts.Authorization;
+using ContentTours.Contracts.Tours;
 using ContentTours.Domain.Repositories;
 using ContentTours.Infrastructure.Persistence;
 using ContentTours.Infrastructure.Persistence.Seeding;
@@ -81,6 +82,7 @@ public static class DependencyInjection
         services.AddScoped<IScheduleBookingCountService, NoOpScheduleBookingCountService>();
 
         services.AddScoped<ITourCapacityService, NoOpTourCapacityService>();
+        services.AddScoped<ITourExistenceService,TourExistenceService>();
 
         // Phase C cross-module stubs — placeholder bindings until Security and
         // Accounts modules ship their canonical implementations. The real

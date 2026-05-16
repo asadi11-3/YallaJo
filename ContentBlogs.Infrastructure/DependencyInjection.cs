@@ -44,6 +44,7 @@ public static class DependencyInjection
 
         services.AddScoped<IBlogRepository, BlogRepository>();
         services.AddScoped<IBlogCommentRepository,BlogCommentRepository>();
+        services.AddScoped<IBlogTourRepository, BlogTourRepository>();
 
         services.AddSingleton<IPermissionCatalog, ContentBlogPermissionCatalog>();
 

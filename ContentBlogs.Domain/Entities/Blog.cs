@@ -8,6 +8,7 @@ public sealed class Blog : AuditableEntity, IAggregateRoot
 {
     private readonly List<BlogTranslation> _blogTranslations = [];
     private readonly List<BlogComment> _blogComments = [];
+    private readonly List<BlogTour> _blogTours = [];
 
     private Blog()
     {
@@ -29,6 +30,7 @@ public sealed class Blog : AuditableEntity, IAggregateRoot
 
     public IReadOnlyCollection<BlogTranslation> BlogTranslations => _blogTranslations.AsReadOnly();
     public IReadOnlyCollection<BlogComment> BlogComments => _blogComments.AsReadOnly();
+    public IReadOnlyCollection<BlogTour> BlogTours => _blogTours.AsReadOnly();
 
     public static Blog Create(
         string title,
@@ -247,7 +249,69 @@ public sealed class Blog : AuditableEntity, IAggregateRoot
             throw new InvalidOperationException(
                 $"Blog.TranslationDuplicate: a translation for language {translation.LanguageId} already exists.");
         }
+
         _blogTranslations.Add(translation);
+    }
+
+    public IReadOnlyList<Guid> LinkTours(
+        IEnumerable<(Guid TourId, int? SortOrder)> tours,
+        DateTime utcNow)
+    {
+        ArgumentNullException.ThrowIfNull(tours);
+        EnsureNotDeleted();
+        EnsureMutable();
+
+        var existing = _blogTours.Select(bt => bt.TourId).ToHashSet();
+        var addedTourIds = new List<Guid>();
+        var nextSortOrder = _blogTours.Count == 0 ? 0 : _blogTours.Max(bt => bt.SortOrder) + 1;
+
+        foreach (var (tourId, sortOrder) in tours)
+        {
+            if (tourId == Guid.Empty)
+                throw new ArgumentException("TourId cannot be Guid.Empty.", nameof(tours));
+
+            if (existing.Contains(tourId))
+                continue;
+
+            var link = BlogTour.Create(
+                blogId: Id,
+                tourId: tourId,
+                sortOrder: sortOrder ?? nextSortOrder++);
+
+            _blogTours.Add(link);
+            existing.Add(tourId);
+            addedTourIds.Add(tourId);
+
+            AddDomainEvent(new BlogTourLinkedDomainEvent(
+                BlogId: Id,
+                TourId: tourId,
+                LinkedAtUtc: utcNow));
+        }
+
+        if (addedTourIds.Count > 0)
+            UpdatedAt = utcNow;
+
+        return addedTourIds;
+    }
+
+    public void RegisterTourUnlinked(Guid tourId, DateTime utcNow)
+    {
+        if (tourId == Guid.Empty)
+            throw new ArgumentException("TourId cannot be Guid.Empty.", nameof(tourId));
+
+        EnsureNotDeleted();
+        EnsureMutable();
+
+        var local = _blogTours.FirstOrDefault(bt => bt.TourId == tourId);
+        if (local is not null)
+            _blogTours.Remove(local);
+
+        UpdatedAt = utcNow;
+
+        AddDomainEvent(new BlogTourUnlinkedDomainEvent(
+            BlogId: Id,
+            TourId: tourId,
+            UnlinkedAtUtc: utcNow));
     }
 
     public void IncrementViewCount(DateTime utcNow)

@@ -85,6 +85,8 @@ public static class IntegrationEventTypeRegistry
         ["content-blogs.blog.published.v1"]   = typeof(BlogPublishedIntegrationEvent),
         ["content-blogs.blog.unpublished.v1"] = typeof(BlogUnpublishedIntegrationEvent),
         ["content-blogs.blog.archived.v1"]    = typeof(BlogArchivedIntegrationEvent),
+        ["content-blogs.blog-tour.linked.v1"]   = typeof(BlogTourLinkedIntegrationEvent),
+        ["content-blogs.blog-tour.unlinked.v1"] = typeof(BlogTourUnlinkedIntegrationEvent),
     };
 
     private static readonly Dictionary<Type, string> TypeToName =

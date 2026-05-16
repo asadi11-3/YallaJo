@@ -1,7 +1,9 @@
 using ContentBlogs.Application.Commands.Blog.ArchiveBlog;
 using ContentBlogs.Application.Commands.Blog.CreateBlog;
 using ContentBlogs.Application.Commands.Blog.DeleteBlog;
+using ContentBlogs.Application.Commands.Blog.LinkBlogTours;
 using ContentBlogs.Application.Commands.Blog.PublishBlog;
+using ContentBlogs.Application.Commands.Blog.UnlinkBlogFromTour;
 using ContentBlogs.Application.Commands.Blog.UnpublishBlog;
 using ContentBlogs.Application.Commands.Blog.UpdateBlog;
 using ContentBlogs.Application.Queries.Blog.Dtos;
@@ -253,5 +255,55 @@ internal static class BlogEndpoints
         .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status404NotFound)
         .AllowAnonymous();
+
+        group.MapPost("/{id:guid}/tours", async (
+            Guid id,
+            BlogLinkToursRequest request,
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            var cmd = new LinkBlogToursCommand(
+                BlogId:     id,
+                RowVersion: request.RowVersion,
+                Tours:      request.Tours
+                    .Select(item => new LinkBlogTourItem(item.TourId, item.SortOrder))
+                    .ToList());
+
+            var result = await sender.Send(cmd, ct);
+            return result.ToApiResult();
+        })
+        .WithName("LinkBlogTours")
+        .WithSummary("Link one or more Tours to a Blog")
+        .Produces(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status409Conflict)
+        .ProducesProblem(StatusCodes.Status422UnprocessableEntity)
+        .WithMetadata(new MustHavePermissionAttribute(ContentBlogFeatures.BlogTourLink, AppAction.Create));
+
+        group.MapDelete("/{id:guid}/tours/{tourId:guid}", async (
+            Guid id,
+            Guid tourId,
+            [FromBody] BlogRowVersionRequest request,
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            var cmd = new UnlinkBlogFromTourCommand(
+                BlogId:     id,
+                TourId:     tourId,
+                RowVersion: request.RowVersion);
+
+            var result = await sender.Send(cmd, ct);
+            return result.ToApiResult();
+        })
+        .WithName("UnlinkBlogFromTour")
+        .WithSummary("Remove a Blog ↔ Tour link")
+        .Produces(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status409Conflict)
+        .WithMetadata(new MustHavePermissionAttribute(ContentBlogFeatures.BlogTourLink, AppAction.Delete));
     }
 }
