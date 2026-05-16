@@ -1,14 +1,17 @@
 using ContentBlogs.Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using YallaJo.SharedKernel.Domain.Abstractions.Data;
 
-namespace ContentBlogs.Domain.Repositories
+namespace ContentBlogs.Domain.Repositories;
+
+public interface IBlogCommentRepository : IRepository<BlogComment, Guid>
 {
-    public  interface IBlogCommentRepository :IRepository<BlogComment,Guid>
-    {
-    }
+    /// <summary>
+    /// Loads a comment with its parent chain eagerly populated (parent and
+    /// parent-of-parent). Required by <c>BlogComment.Create</c> to validate the
+    /// nesting-depth invariant without issuing extra round-trips.
+    /// Tracking is enabled because callers typically follow up with a write.
+    /// </summary>
+    Task<BlogComment?> GetWithParentChainAsync(
+        Guid commentId,
+        CancellationToken cancellationToken = default);
 }
