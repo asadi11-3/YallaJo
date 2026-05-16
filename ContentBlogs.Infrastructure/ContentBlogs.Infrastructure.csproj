@@ -19,6 +19,11 @@
     <ProjectReference Include="..\ContentBlogs.Application\ContentBlogs.Application.csproj" />
     <ProjectReference Include="..\ContentBlogs.Contracts\ContentBlogs.Contracts.csproj" />
     <ProjectReference Include="..\ContentBlogs.Domain\ContentBlogs.Domain.csproj" />
+    <!-- ContentPlaces.Contracts: consume PlaceDeletedIntegrationEvent so the
+         PlaceDeletedIntegrationEventHandler can clear dead cross-module Place
+         references on Blog.  Same scoped pattern ContentSeo.Infrastructure
+         uses; Contracts assemblies are designed for cross-module consumption. -->
+    <ProjectReference Include="..\ContentPlaces.Contracts\ContentPlaces.Contracts.csproj" />
     <!-- Security.Contracts only: provides Security.Contracts.Authorization
          (RolePrivilegeLevel, AppRoles, IUserPrivilegeLevelReader, etc.).
          The IUserPrivilegeLevelReader implementation is registered by

@@ -86,7 +86,8 @@ public sealed class GetAdminBlogByIdQueryHandler(
                 MetaDescription:  blog.MetaDescription,
                 PlaceId:          blog.PlaceId,
                 LanguageCode:     languageCode,
-                RowVersion:       blog.RowVersion);
+                RowVersion:       blog.RowVersion,
+                IsFeatured:       blog.IsFeatured);
 
             return Result<AdminBlogDetailDto>.Success(dto);
         }

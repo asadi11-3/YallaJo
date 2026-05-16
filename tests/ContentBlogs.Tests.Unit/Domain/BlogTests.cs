@@ -446,4 +446,240 @@ public sealed class BlogTests : DomainTestBase
 
         blog.UpdatedAt.Should().Be(now);
     }
+
+    // ── Restore ───────────────────────────────────────────────────────────────
+
+    [Fact]
+    public void Blog_Restore_WhenDeleted_ClearsDeletionFlags()
+    {
+        var blog = TestBlogFactory.CreateDraft();
+        blog.Delete(DateTime.UtcNow);
+        var restoreAt = new DateTime(2026, 7, 1, 12, 0, 0, DateTimeKind.Utc);
+
+        blog.Restore(restoreAt);
+
+        blog.IsDeleted.Should().BeFalse();
+        blog.DeletedAt.Should().BeNull();
+        blog.UpdatedAt.Should().Be(restoreAt);
+    }
+
+    [Fact]
+    public void Blog_Restore_WhenDeleted_RaisesDomainEvent()
+    {
+        var blog = TestBlogFactory.CreateDraft();
+        blog.Delete(DateTime.UtcNow);
+        blog.ClearDomainEvents();
+        var restoreAt = new DateTime(2026, 7, 2, 9, 0, 0, DateTimeKind.Utc);
+
+        blog.Restore(restoreAt);
+
+        var evt = DomainEventAssertions.ShouldContainDomainEvent<BlogRestoredDomainEvent>(blog);
+        evt.BlogId.Should().Be(blog.Id);
+        evt.Slug.Should().Be(blog.Slug);
+        evt.RestoredAtUtc.Should().Be(restoreAt);
+    }
+
+    [Fact]
+    public void Blog_Restore_WhenNotDeleted_ThrowsInvalidTransition()
+    {
+        var blog = TestBlogFactory.CreateDraft();
+
+        var act = () => blog.Restore(DateTime.UtcNow);
+
+        act.Should().Throw<InvalidOperationException>()
+            .WithMessage("*InvalidTransition*");
+        blog.IsDeleted.Should().BeFalse();
+    }
+
+    [Fact]
+    public void Blog_Restore_FromDeletedDraft_KeepsDraftStatus()
+    {
+        var blog = TestBlogFactory.CreateDraft();
+        blog.Delete(DateTime.UtcNow);
+        blog.ClearDomainEvents();
+
+        blog.Restore(DateTime.UtcNow.AddMinutes(1));
+
+        blog.Status.Should().Be(BlogStatus.Draft);
+        blog.PublishedAt.Should().BeNull();
+    }
+
+    [Fact]
+    public void Blog_Restore_FromDeletedPublished_KeepsPublishedStatusAndPublishedAt()
+    {
+        var publishAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        var blog = TestBlogFactory.CreateDraft();
+        blog.Publish(publishAt);
+        blog.Delete(DateTime.UtcNow);
+        blog.ClearDomainEvents();
+
+        blog.Restore(DateTime.UtcNow.AddMinutes(1));
+
+        blog.Status.Should().Be(BlogStatus.Published);
+        blog.PublishedAt.Should().Be(publishAt,
+            "PublishedAt is preserved across delete→restore (plan D1)");
+    }
+
+    [Fact]
+    public void Blog_Restore_FromDeletedArchived_KeepsArchivedStatus()
+    {
+        var blog = TestBlogFactory.CreatePublished();
+        blog.Archive(DateTime.UtcNow.AddMinutes(1));
+        blog.Delete(DateTime.UtcNow.AddMinutes(2));
+        blog.ClearDomainEvents();
+
+        blog.Restore(DateTime.UtcNow.AddMinutes(3));
+
+        blog.Status.Should().Be(BlogStatus.Archived);
+    }
+
+    [Fact]
+    public void Blog_Restore_KeepsFeaturedFlag()
+    {
+        // Domain-level: Restore preserves IsFeatured regardless of any scope
+        // collision.  Per-PlaceId uniqueness re-check is the handler's job
+        // (plan D2), not the aggregate's.
+        var blog = TestBlogFactory.CreatePublished();
+        blog.MarkAsFeatured(DateTime.UtcNow);
+        blog.Delete(DateTime.UtcNow.AddMinutes(1));
+        blog.ClearDomainEvents();
+
+        blog.Restore(DateTime.UtcNow.AddMinutes(2));
+
+        blog.IsFeatured.Should().BeTrue();
+    }
+
+    // ── UnlinkFromPlace ───────────────────────────────────────────────────────
+
+    [Fact]
+    public void Blog_UnlinkFromPlace_ClearsPlaceId_AndBumpsUpdatedAt()
+    {
+        var placeId = Guid.NewGuid();
+        var blog = NewBlogWithPlace(placeId);
+        var unlinkAt = new DateTime(2026, 8, 1, 12, 0, 0, DateTimeKind.Utc);
+
+        blog.UnlinkFromPlace(unlinkAt);
+
+        blog.PlaceId.Should().BeNull();
+        blog.UpdatedAt.Should().Be(unlinkAt);
+    }
+
+    [Fact]
+    public void Blog_UnlinkFromPlace_RaisesBlogUpdatedEvent_WithPlaceIdFieldChanged()
+    {
+        var blog = NewBlogWithPlace(Guid.NewGuid());
+        blog.ClearDomainEvents();
+        var unlinkAt = new DateTime(2026, 8, 2, 12, 0, 0, DateTimeKind.Utc);
+
+        blog.UnlinkFromPlace(unlinkAt);
+
+        var evt = DomainEventAssertions.ShouldContainDomainEvent<BlogUpdatedDomainEvent>(blog);
+        evt.BlogId.Should().Be(blog.Id);
+        evt.OldSlug.Should().Be(blog.Slug);
+        evt.NewSlug.Should().Be(blog.Slug,
+            "UnlinkFromPlace does not change the slug — Old and New must match");
+        evt.FieldsChanged.Should().ContainSingle().Which.Should().Be(nameof(Blog.PlaceId));
+        evt.UpdatedAtUtc.Should().Be(unlinkAt);
+    }
+
+    [Fact]
+    public void Blog_UnlinkFromPlace_DoesNothing_WhenPlaceIdAlreadyNull()
+    {
+        // Draft default constructor leaves PlaceId == null.
+        var blog = TestBlogFactory.CreateDraft();
+        blog.PlaceId.Should().BeNull("precondition: factory creates blog with no Place");
+        var updatedAtBefore = blog.UpdatedAt;
+        blog.ClearDomainEvents();
+
+        blog.UnlinkFromPlace(DateTime.UtcNow.AddDays(1));
+
+        blog.PlaceId.Should().BeNull();
+        blog.UpdatedAt.Should().Be(updatedAtBefore,
+            "no-op path must NOT bump UpdatedAt");
+        blog.DomainEvents.Should().BeEmpty(
+            "no-op path must NOT raise a domain event");
+    }
+
+    [Fact]
+    public void Blog_UnlinkFromPlace_DoesNothing_WhenBlogIsDeleted()
+    {
+        // Defensive guard: even if a soft-deleted entity reaches this path
+        // (e.g. someone bypasses the consumer's repo filter), it must not
+        // mutate.  See plan D2 callout.
+        var placeId = Guid.NewGuid();
+        var blog = NewBlogWithPlace(placeId);
+        blog.Delete(DateTime.UtcNow);
+        var updatedAtAfterDelete = blog.UpdatedAt;
+        blog.ClearDomainEvents();
+
+        blog.UnlinkFromPlace(DateTime.UtcNow.AddHours(1));
+
+        blog.PlaceId.Should().Be(placeId,
+            "deleted blogs must remain frozen with their old PlaceId");
+        blog.UpdatedAt.Should().Be(updatedAtAfterDelete,
+            "defensive no-op must NOT bump UpdatedAt");
+        blog.DomainEvents.Should().BeEmpty(
+            "defensive no-op must NOT raise a domain event");
+    }
+
+    [Theory]
+    [InlineData(BlogStatus.Draft)]
+    [InlineData(BlogStatus.Published)]
+    [InlineData(BlogStatus.Archived)]
+    public void Blog_UnlinkFromPlace_PreservesStatusPublishedAtIsFeaturedViewCount(
+        BlogStatus startStatus)
+    {
+        var placeId = Guid.NewGuid();
+        var blog = NewBlogWithPlace(placeId);
+
+        DateTime? expectedPublishedAt = null;
+        switch (startStatus)
+        {
+            case BlogStatus.Published:
+                blog.Publish(new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc));
+                blog.MarkAsFeatured(DateTime.UtcNow);
+                expectedPublishedAt = blog.PublishedAt;
+                break;
+            case BlogStatus.Archived:
+                blog.Publish(new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc));
+                blog.MarkAsFeatured(DateTime.UtcNow);
+                blog.Archive(DateTime.UtcNow.AddMinutes(1));
+                expectedPublishedAt = blog.PublishedAt;
+                break;
+            case BlogStatus.Draft:
+            default:
+                break;
+        }
+
+        var expectedStatus = blog.Status;
+        var expectedFeatured = blog.IsFeatured;
+        var expectedViewCount = blog.ViewCount;
+        var expectedTransCount = blog.BlogTranslations.Count;
+        var expectedTourCount = blog.BlogTours.Count;
+        var expectedCommentCount = blog.BlogComments.Count;
+        blog.ClearDomainEvents();
+
+        blog.UnlinkFromPlace(DateTime.UtcNow.AddDays(7));
+
+        blog.PlaceId.Should().BeNull("PlaceId is the only field cleared");
+        blog.Status.Should().Be(expectedStatus);
+        blog.PublishedAt.Should().Be(expectedPublishedAt);
+        blog.IsFeatured.Should().Be(expectedFeatured);
+        blog.ViewCount.Should().Be(expectedViewCount);
+        blog.BlogTranslations.Should().HaveCount(expectedTransCount);
+        blog.BlogTours.Should().HaveCount(expectedTourCount);
+        blog.BlogComments.Should().HaveCount(expectedCommentCount);
+    }
+
+    // ── UnlinkFromPlace helpers ───────────────────────────────────────────────
+
+    private static Blog NewBlogWithPlace(Guid placeId) =>
+        Blog.Create(
+            title:            "Petra Sunrise: A Practical Guide",
+            slug:             $"petra-sunrise-{Guid.NewGuid():N}",
+            content:          new string('x', 200),
+            authorId:         Guid.NewGuid(),
+            sourceLanguageId: Guid.NewGuid(),
+            utcNow:           DateTime.UtcNow,
+            placeId:          placeId);
 }

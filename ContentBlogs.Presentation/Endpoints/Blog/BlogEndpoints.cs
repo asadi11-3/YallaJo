@@ -5,6 +5,7 @@ using ContentBlogs.Application.Commands.Blog.MarkBlogAsFeatured;
 using ContentBlogs.Application.Commands.Blog.LinkBlogTours;
 using ContentBlogs.Application.Commands.Blog.PublishBlog;
 using ContentBlogs.Application.Commands.Blog.MarkBlogAsUnfeatured;
+using ContentBlogs.Application.Commands.Blog.RestoreBlog;
 using ContentBlogs.Application.Commands.Blog.UnlinkBlogFromTour;
 using ContentBlogs.Application.Commands.Blog.UnpublishBlog;
 using ContentBlogs.Application.Commands.Blog.UpdateBlog;
@@ -12,7 +13,9 @@ using ContentBlogs.Application.Queries.Blog.Dtos;
 using ContentBlogs.Application.Queries.Blog.GetAdminBlogById;
 using ContentBlogs.Application.Queries.Blog.GetBlogById;
 using ContentBlogs.Application.Queries.Blog.GetBlogBySlug;
+using ContentBlogs.Application.Queries.Blog.GetDeletedBlogsAdmin;
 using ContentBlogs.Application.Queries.Blog.ListBlogs;
+using ContentBlogs.Domain.Enums;
 using ContentBlogs.Contracts.Authorization;
 using ContentBlogs.Presentation.Endpoints.Blog.Models;
 using MediatR;
@@ -37,6 +40,7 @@ internal static class BlogEndpoints
             int? pageSize,
             Guid? placeId,
             string? search,
+            bool? isFeatured,
             HttpContext http,
             ISender sender,
             CancellationToken ct) =>
@@ -49,13 +53,14 @@ internal static class BlogEndpoints
                     PageSize:       pageSize ?? 20,
                     PlaceId:        placeId,
                     Search:         search,
+                    IsFeatured:     isFeatured,
                     AcceptLanguage: acceptLanguage),
                 ct);
 
             return result.ToApiResult();
         })
         .WithName("ListBlogs")
-        .WithSummary("List public Published blogs with pagination and optional filters")
+        .WithSummary("List public Published blogs with pagination and optional filters (incl. isFeatured)")
         .Produces<PaginatedResult<BlogSummaryDto>>(StatusCodes.Status200OK)
         .ProducesValidationProblem()
         .AllowAnonymous();
@@ -112,6 +117,37 @@ internal static class BlogEndpoints
         .ProducesProblem(StatusCodes.Status403Forbidden)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithMetadata(new MustHavePermissionAttribute(ContentBlogFeatures.Blog, AppAction.Read));
+
+        group.MapGet("/admin/deleted", async (
+            int? pageNumber,
+            int? pageSize,
+            string? q,
+            BlogStatus? status,
+            Guid? placeId,
+            string? sortBy,
+            string? sortOrder,
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            var result = await sender.Send(
+                new GetDeletedBlogsAdminQuery(
+                    Page:      pageNumber ?? 1,
+                    PageSize:  pageSize ?? 20,
+                    Search:    q,
+                    Status:    status,
+                    PlaceId:   placeId,
+                    SortBy:    sortBy,
+                    SortOrder: sortOrder),
+                ct);
+            return result.ToApiResult();
+        })
+        .WithName("GetDeletedBlogsAdmin")
+        .WithSummary("Admin — list soft-deleted blogs (with RowVersion for restore)")
+        .Produces<PaginatedResult<AdminDeletedBlogListItemDto>>(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .WithMetadata(new MustHavePermissionAttribute(ContentBlogFeatures.Blog, AppAction.Delete));
 
         group.MapPost("/", async (
             CreateBlogRequest request,
@@ -181,6 +217,24 @@ internal static class BlogEndpoints
         })
         .WithName("DeleteBlog")
         .WithSummary("Soft-delete a blog")
+        .Produces(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status409Conflict)
+        .WithMetadata(new MustHavePermissionAttribute(ContentBlogFeatures.Blog, AppAction.Delete));
+
+        group.MapPost("/{id:guid}/restore", async (
+            Guid id,
+            BlogRowVersionRequest request,
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            var result = await sender.Send(new RestoreBlogCommand(id, request.RowVersion), ct);
+            return result.ToApiResult();
+        })
+        .WithName("RestoreBlog")
+        .WithSummary("Restore a soft-deleted blog")
         .Produces(StatusCodes.Status200OK)
         .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status403Forbidden)

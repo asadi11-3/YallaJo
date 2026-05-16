@@ -14,4 +14,5 @@ public sealed record BlogDetailDto(
     Guid? PlaceId,
     string LanguageCode,
     int TourCount,
-    IReadOnlyCollection<BlogTourSummaryDto> LinkedTours);
+    IReadOnlyCollection<BlogTourSummaryDto> LinkedTours,
+    bool IsFeatured);

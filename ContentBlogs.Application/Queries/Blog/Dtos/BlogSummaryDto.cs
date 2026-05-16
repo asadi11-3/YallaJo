@@ -10,4 +10,5 @@ public sealed record BlogSummaryDto(
     int ViewCount,
     int? ReadTimeMinutes,
     Guid? PlaceId,
-    string LanguageCode);
+    string LanguageCode,
+    bool IsFeatured);

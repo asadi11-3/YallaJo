@@ -93,6 +93,7 @@ internal static class BlogDetailMapper
             PlaceId:          blog.PlaceId,
             LanguageCode:     languageCode,
             TourCount:        linkedTours.Count,
-            LinkedTours:      linkedTours);
+            LinkedTours:      linkedTours,
+            IsFeatured:       blog.IsFeatured);
     }
 }

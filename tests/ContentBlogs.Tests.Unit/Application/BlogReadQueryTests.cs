@@ -1,6 +1,8 @@
 using System.Reflection;
+using ContentBlogs.Application.Authorization;
 using ContentBlogs.Application.Caching;
 using ContentBlogs.Application.Queries.Blog.Dtos;
+using ContentBlogs.Application.Queries.Blog.GetAdminBlogById;
 using ContentBlogs.Application.Queries.Blog.GetBlogById;
 using ContentBlogs.Application.Queries.Blog.GetBlogBySlug;
 using ContentBlogs.Application.Queries.Blog.ListBlogs;
@@ -616,6 +618,251 @@ public sealed class BlogReadQueryTests
         props.Should().Equal(new[] { nameof(BlogTourSummaryDto.SortOrder), nameof(BlogTourSummaryDto.TourId) });
     }
 
+    // ── IsFeatured read-model (CONTENTBLOGS-FEATURE-READMODEL-IMPL-001) ───────
+
+    // DTO surface — 3 tests
+
+    [Fact]
+    public void BlogSummaryDto_ExposesIsFeatured()
+    {
+        var prop = typeof(BlogSummaryDto).GetProperty(
+            nameof(BlogSummaryDto.IsFeatured),
+            BindingFlags.Instance | BindingFlags.Public);
+
+        prop.Should().NotBeNull(
+            "BlogSummaryDto must expose IsFeatured so public list cards can render a Featured badge");
+        prop!.PropertyType.Should().Be(typeof(bool));
+    }
+
+    [Fact]
+    public void BlogDetailDto_ExposesIsFeatured()
+    {
+        var prop = typeof(BlogDetailDto).GetProperty(
+            nameof(BlogDetailDto.IsFeatured),
+            BindingFlags.Instance | BindingFlags.Public);
+
+        prop.Should().NotBeNull(
+            "BlogDetailDto must expose IsFeatured so public detail pages can render a Featured badge");
+        prop!.PropertyType.Should().Be(typeof(bool));
+    }
+
+    [Fact]
+    public void AdminBlogDetailDto_ExposesIsFeatured()
+    {
+        var prop = typeof(AdminBlogDetailDto).GetProperty(
+            nameof(AdminBlogDetailDto.IsFeatured),
+            BindingFlags.Instance | BindingFlags.Public);
+
+        prop.Should().NotBeNull(
+            "AdminBlogDetailDto must expose IsFeatured so the Admin UI can render the " +
+            "Mark/Unmark feature toggle without an extra round-trip");
+        prop!.PropertyType.Should().Be(typeof(bool));
+    }
+
+    // ListBlogs query/handler — 5 tests
+
+    [Fact]
+    public async Task ListBlogs_SurfacesIsFeatured_InSummary()
+    {
+        await using var db = NewDb();
+        var featured = NewBlog("featured");
+        featured.Publish(DateTime.UtcNow);
+        featured.MarkAsFeatured(DateTime.UtcNow.AddMinutes(1));
+        var ordinary = NewBlog("ordinary");
+        ordinary.Publish(DateTime.UtcNow);
+        db.Blogs.AddRange(featured, ordinary);
+        await db.SaveChangesAsync();
+
+        var result = await NewListHandler(db).Handle(
+            new ListBlogsQuery(Page: 1, PageSize: 20, AcceptLanguage: "en"),
+            CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value!.Items.Should().HaveCount(2);
+        result.Value.Items.Single(i => i.Slug == "featured").IsFeatured.Should().BeTrue();
+        result.Value.Items.Single(i => i.Slug == "ordinary").IsFeatured.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task ListBlogs_FiltersByIsFeaturedTrue_WhenRequested()
+    {
+        await using var db = NewDb();
+        var featured = NewBlog("featured");
+        featured.Publish(DateTime.UtcNow);
+        featured.MarkAsFeatured(DateTime.UtcNow.AddMinutes(1));
+        var ordinary1 = NewBlog("ordinary-1");
+        ordinary1.Publish(DateTime.UtcNow);
+        var ordinary2 = NewBlog("ordinary-2");
+        ordinary2.Publish(DateTime.UtcNow);
+        db.Blogs.AddRange(featured, ordinary1, ordinary2);
+        await db.SaveChangesAsync();
+
+        var result = await NewListHandler(db).Handle(
+            new ListBlogsQuery(IsFeatured: true, AcceptLanguage: "en"),
+            CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value!.Items.Should().ContainSingle()
+            .Which.Slug.Should().Be("featured");
+    }
+
+    [Fact]
+    public async Task ListBlogs_FiltersByIsFeaturedFalse_WhenRequested()
+    {
+        await using var db = NewDb();
+        var featured = NewBlog("featured");
+        featured.Publish(DateTime.UtcNow);
+        featured.MarkAsFeatured(DateTime.UtcNow.AddMinutes(1));
+        var ordinary1 = NewBlog("ordinary-1");
+        ordinary1.Publish(DateTime.UtcNow);
+        var ordinary2 = NewBlog("ordinary-2");
+        ordinary2.Publish(DateTime.UtcNow);
+        db.Blogs.AddRange(featured, ordinary1, ordinary2);
+        await db.SaveChangesAsync();
+
+        var result = await NewListHandler(db).Handle(
+            new ListBlogsQuery(IsFeatured: false, AcceptLanguage: "en"),
+            CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value!.Items.Should().HaveCount(2);
+        result.Value.Items.Select(i => i.Slug).Should().BeEquivalentTo(["ordinary-1", "ordinary-2"]);
+    }
+
+    [Fact]
+    public async Task ListBlogs_ReturnsBothFeaturedAndNonFeatured_WhenFilterNull()
+    {
+        await using var db = NewDb();
+        var featured = NewBlog("featured");
+        featured.Publish(DateTime.UtcNow);
+        featured.MarkAsFeatured(DateTime.UtcNow.AddMinutes(1));
+        var ordinary1 = NewBlog("ordinary-1");
+        ordinary1.Publish(DateTime.UtcNow);
+        var ordinary2 = NewBlog("ordinary-2");
+        ordinary2.Publish(DateTime.UtcNow);
+        db.Blogs.AddRange(featured, ordinary1, ordinary2);
+        await db.SaveChangesAsync();
+
+        var result = await NewListHandler(db).Handle(
+            new ListBlogsQuery(AcceptLanguage: "en"),
+            CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value!.Items.Should().HaveCount(3,
+            "default (null) filter must include both featured and non-featured blogs");
+    }
+
+    [Fact]
+    public async Task ListBlogs_DefaultOrder_IsPublishedAtDescending_NotFeaturedFirst()
+    {
+        // Pins D5: featured blogs are NOT promoted in the default sort order.
+        // A recent non-featured blog must appear before an older featured blog
+        // when the caller does not opt in to the featured filter.
+        await using var db = NewDb();
+        var oldFeatured = NewBlog("old-featured");
+        oldFeatured.Publish(new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc));
+        oldFeatured.MarkAsFeatured(DateTime.UtcNow);
+        var recentOrdinary = NewBlog("recent-ordinary");
+        recentOrdinary.Publish(new DateTime(2026, 6, 1, 0, 0, 0, DateTimeKind.Utc));
+        db.Blogs.AddRange(oldFeatured, recentOrdinary);
+        await db.SaveChangesAsync();
+
+        var result = await NewListHandler(db).Handle(
+            new ListBlogsQuery(AcceptLanguage: "en"),
+            CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value!.Items.Should().HaveCount(2);
+        result.Value.Items[0].Slug.Should().Be("recent-ordinary",
+            "default order is PublishedAt desc — featured is filterable but not promoted (plan D5)");
+        result.Value.Items[1].Slug.Should().Be("old-featured");
+    }
+
+    // Detail / admin handler — 2 tests
+
+    [Fact]
+    public async Task GetBlogById_SurfacesIsFeatured()
+    {
+        await using var db = NewDb();
+        var blog = NewBlog("featured-detail");
+        blog.Publish(DateTime.UtcNow);
+        blog.MarkAsFeatured(DateTime.UtcNow.AddMinutes(1));
+        db.Blogs.Add(blog);
+        await db.SaveChangesAsync();
+
+        var result = await NewGetByIdHandler(db).Handle(
+            new GetBlogByIdQuery(blog.Id, AcceptLanguage: "en"),
+            CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value!.IsFeatured.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task GetAdminBlogById_SurfacesIsFeatured()
+    {
+        await using var db = NewDb();
+        var blog = NewBlog("admin-featured");
+        blog.Publish(DateTime.UtcNow);
+        blog.MarkAsFeatured(DateTime.UtcNow.AddMinutes(1));
+        db.Blogs.Add(blog);
+        await db.SaveChangesAsync();
+
+        var handler = new GetAdminBlogByIdQueryHandler(
+            Repo(db),
+            PermissiveGuard(),
+            Languages(),
+            NullLogger<GetAdminBlogByIdQueryHandler>.Instance);
+
+        var result = await handler.Handle(
+            new GetAdminBlogByIdQuery(blog.Id, AcceptLanguage: "en"),
+            CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value!.IsFeatured.Should().BeTrue();
+    }
+
+    // Cache key / tag behaviour — 3 tests
+
+    [Fact]
+    public void ListBlogsQuery_CacheKey_IncludesIsFeaturedSegment()
+    {
+        var any = new ListBlogsQuery(AcceptLanguage: "en");
+        var yes = new ListBlogsQuery(IsFeatured: true, AcceptLanguage: "en");
+        var no = new ListBlogsQuery(IsFeatured: false, AcceptLanguage: "en");
+
+        var keys = new[] { any.CacheKey, yes.CacheKey, no.CacheKey };
+
+        keys.Distinct().Should().HaveCount(3,
+            "the three filter states (null/true/false) must produce distinct cache keys " +
+            "so cached responses never collide across filter selections");
+
+        any.CacheKey.Should().Contain("featured:any");
+        yes.CacheKey.Should().Contain("featured:true");
+        no.CacheKey.Should().Contain("featured:false");
+    }
+
+    [Fact]
+    public void ListBlogsQuery_Tags_AddsFeaturedTag_WhenFilterRequested()
+    {
+        new ListBlogsQuery(IsFeatured: true).Tags
+            .Should().Contain(ContentBlogsCacheKeys.FeaturedBlogsTag);
+        new ListBlogsQuery(IsFeatured: false).Tags
+            .Should().Contain(ContentBlogsCacheKeys.FeaturedBlogsTag,
+                "the FeaturedBlogsTag must be added for BOTH true and false filter states so " +
+                "Mark/Unmark write-side eviction reaches every featured-filtered cache entry");
+    }
+
+    [Fact]
+    public void ListBlogsQuery_Tags_DoesNotAddFeaturedTag_WhenFilterNull()
+    {
+        var q = new ListBlogsQuery();
+        q.Tags.Should().NotContain(ContentBlogsCacheKeys.FeaturedBlogsTag,
+            "unfiltered list caches must not be evicted by every Mark/Unmark mutation; " +
+            "BlogsListTag already covers them");
+        q.Tags.Should().Contain(ContentBlogsCacheKeys.BlogsListTag);
+    }
+
     // ── Test helpers ──────────────────────────────────────────────────────────
 
     private static ContentBlogsDbContext NewDb()
@@ -648,6 +895,14 @@ public sealed class BlogReadQueryTests
                 new ActiveLanguage(ArabicLanguageId, "ar"),
             });
         return p;
+    }
+
+    private static IBlogAuthorHierarchyGuard PermissiveGuard()
+    {
+        var g = Substitute.For<IBlogAuthorHierarchyGuard>();
+        g.EnsureCanManageBlogOwnedByAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
+            .Returns(Result.Success());
+        return g;
     }
 
     private static ListBlogsQueryHandler NewListHandler(ContentBlogsDbContext db) =>

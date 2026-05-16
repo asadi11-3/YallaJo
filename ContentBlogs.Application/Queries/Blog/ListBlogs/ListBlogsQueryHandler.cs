@@ -63,9 +63,12 @@ public sealed class ListBlogsQueryHandler(
                         blog.ViewCount,
                         blog.ReadTimeMinutes,
                         blog.PlaceId,
-                        resolvedLanguageCode),
+                        resolvedLanguageCode,
+                        blog.IsFeatured),
                     filter: blog => blog.Status == BlogStatus.Published
                         && (request.PlaceId == null || blog.PlaceId == request.PlaceId)
+                        && (request.IsFeatured == null
+                            || blog.IsFeatured == request.IsFeatured.Value)
                         && (search == null
                             || blog.Slug.Contains(search)
                             || blog.Title.Contains(search)

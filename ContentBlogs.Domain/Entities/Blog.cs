@@ -369,6 +369,45 @@ public sealed class Blog : AuditableEntity, IAggregateRoot
             UnfeaturedAtUtc: utcNow));
     }
 
+    public void Restore(DateTime utcNow)
+    {
+        if (!IsDeleted)
+        {
+            throw new InvalidOperationException(
+                "Blog.InvalidTransition: cannot restore a blog that is not deleted.");
+        }
+
+        IsDeleted = false;
+        DeletedAt = null;
+        UpdatedAt = utcNow;
+
+        AddDomainEvent(new BlogRestoredDomainEvent(
+            BlogId:        Id,
+            Slug:          Slug,
+            RestoredAtUtc: utcNow));
+    }
+
+    public void UnlinkFromPlace(DateTime utcNow)
+    {
+        if (IsDeleted)
+            return;
+
+        // Idempotent — no event, no UpdatedAt bump when nothing to clear.
+        if (PlaceId is null)
+            return;
+
+        var oldSlug = Slug;
+        PlaceId = null;
+        UpdatedAt = utcNow;
+
+        AddDomainEvent(new BlogUpdatedDomainEvent(
+            BlogId:        Id,
+            OldSlug:       oldSlug,
+            NewSlug:       Slug,
+            FieldsChanged: new List<string> { nameof(PlaceId) }.AsReadOnly(),
+            UpdatedAtUtc:  utcNow));
+    }
+
     private void EnsureNotDeleted()
     {
         if (IsDeleted)

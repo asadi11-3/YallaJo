@@ -119,6 +119,50 @@ public sealed class BlogRepositoryTests
         found!.Id.Should().Be(blog.Id);
     }
 
+    // ── GetActiveByPlaceIdAsync (CONTENTBLOGS-PLACE-DELETED-CONSUMER-IMPL-001) ─
+
+    [Fact]
+    public async Task BlogRepository_GetActiveByPlaceIdAsync_ReturnsOnlyMatchingNonDeletedBlogs()
+    {
+        await using var dbContext = CreateDbContext();
+        var placeA = Guid.NewGuid();
+        var placeB = Guid.NewGuid();
+        var a1 = CreateBlog("a1", placeId: placeA);
+        var a2 = CreateBlog("a2", placeId: placeA);
+        var b1 = CreateBlog("b1", placeId: placeB);
+        var orphan = CreateBlog("orphan"); // PlaceId == null
+        dbContext.Blogs.AddRange(a1, a2, b1, orphan);
+        await dbContext.SaveChangesAsync();
+
+        var repository = new BlogRepository(dbContext);
+
+        var found = await repository.GetActiveByPlaceIdAsync(placeA);
+
+        found.Should().HaveCount(2);
+        found.Select(b => b.Slug).Should().BeEquivalentTo(["a1", "a2"]);
+    }
+
+    [Fact]
+    public async Task BlogRepository_GetActiveByPlaceIdAsync_DoesNotReturnDeletedBlogs()
+    {
+        await using var dbContext = CreateDbContext();
+        var placeA = Guid.NewGuid();
+        var liveBlog = CreateBlog("live", placeId: placeA);
+        var deletedBlog = CreateBlog("deleted", placeId: placeA);
+        deletedBlog.Delete(UtcNow.AddMinutes(1));
+        dbContext.Blogs.AddRange(liveBlog, deletedBlog);
+        await dbContext.SaveChangesAsync();
+
+        var repository = new BlogRepository(dbContext);
+
+        var found = await repository.GetActiveByPlaceIdAsync(placeA);
+
+        found.Should().ContainSingle()
+            .Which.Slug.Should().Be("live",
+                "soft-deleted blogs are excluded by the global !IsDeleted query filter " +
+                "— GetActiveByPlaceIdAsync must NOT use IgnoreQueryFilters");
+    }
+
     private static ContentBlogsDbContext CreateDbContext()
     {
         var options = new DbContextOptionsBuilder<ContentBlogsDbContext>()
@@ -128,7 +172,7 @@ public sealed class BlogRepositoryTests
         return new ContentBlogsDbContext(options);
     }
 
-    private static Blog CreateBlog(string slug)
+    private static Blog CreateBlog(string slug, Guid? placeId = null)
     {
         return Blog.Create(
             title: "Petra Guide",
@@ -136,7 +180,8 @@ public sealed class BlogRepositoryTests
             content: new string('x', 200),
             authorId: Guid.NewGuid(),
             sourceLanguageId: Guid.NewGuid(),
-            utcNow: UtcNow);
+            utcNow: UtcNow,
+            placeId: placeId);
     }
 
     private static readonly DateTime UtcNow =

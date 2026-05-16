@@ -14,4 +14,5 @@ public sealed record AdminBlogDetailDto(
     string? MetaDescription,
     Guid? PlaceId,
     string LanguageCode,
-    byte[] RowVersion);
+    byte[] RowVersion,
+    bool IsFeatured);
