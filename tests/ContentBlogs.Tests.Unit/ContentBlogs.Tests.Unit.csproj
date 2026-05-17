@@ -8,6 +8,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- Required for DefaultHttpContext / CookieOptions used by
+         AnonymousViewerProvider cookie tests (CONTENTBLOGS-VIEW-DEBOUNCE-IMPL-001).
+         Tests-only; no production code depends on this. -->
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="xunit" Version="2.9.3" />
     <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.3.0" />
@@ -26,6 +33,8 @@
     <ProjectReference Include="..\..\ContentBlogs.Application\ContentBlogs.Application.csproj" />
     <ProjectReference Include="..\..\ContentBlogs.Domain\ContentBlogs.Domain.csproj" />
     <ProjectReference Include="..\..\ContentBlogs.Infrastructure\ContentBlogs.Infrastructure.csproj" />
+    <!-- For AnonymousViewerProvider cookie tests (CONTENTBLOGS-VIEW-DEBOUNCE-IMPL-001). -->
+    <ProjectReference Include="..\..\ContentBlogs.Presentation\ContentBlogs.Presentation.csproj" />
     <ProjectReference Include="..\YallaJo.Tests.Shared\YallaJo.Tests.Shared.csproj" />
   </ItemGroup>
 

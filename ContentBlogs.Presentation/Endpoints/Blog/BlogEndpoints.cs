@@ -6,23 +6,28 @@ using ContentBlogs.Application.Commands.Blog.LinkBlogTours;
 using ContentBlogs.Application.Commands.Blog.PublishBlog;
 using ContentBlogs.Application.Commands.Blog.MarkBlogAsUnfeatured;
 using ContentBlogs.Application.Commands.Blog.RestoreBlog;
+using ContentBlogs.Application.Commands.Blog.TrackBlogView;
 using ContentBlogs.Application.Commands.Blog.UnlinkBlogFromTour;
 using ContentBlogs.Application.Commands.Blog.UnpublishBlog;
 using ContentBlogs.Application.Commands.Blog.UpdateBlog;
+using ContentBlogs.Application.Interfaces;
 using ContentBlogs.Application.Queries.Blog.Dtos;
 using ContentBlogs.Application.Queries.Blog.GetAdminBlogById;
 using ContentBlogs.Application.Queries.Blog.GetBlogById;
 using ContentBlogs.Application.Queries.Blog.GetBlogBySlug;
 using ContentBlogs.Application.Queries.Blog.GetDeletedBlogsAdmin;
 using ContentBlogs.Application.Queries.Blog.ListBlogs;
+using ContentBlogs.Domain.Entities;
 using ContentBlogs.Domain.Enums;
 using ContentBlogs.Contracts.Authorization;
 using ContentBlogs.Presentation.Endpoints.Blog.Models;
+using ContentBlogs.Presentation.Identity;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
+using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Authorization;
 using YallaJo.SharedKernel.Domain.Abstractions.Pagination;
 using YallaJo.SharedKernel.Presentation;
@@ -334,17 +339,23 @@ internal static class BlogEndpoints
 
         group.MapPost("/{id:guid}/views", async (
             Guid id,
+            ICurrentUser currentUser,
+            AnonymousViewerProvider anonymousViewer,
             ISender sender,
             CancellationToken ct) =>
         {
+            var (kind, viewerId) = currentUser.IsAuthenticated && currentUser.UserId.HasValue
+                ? (BlogViewerKind.Authenticated, currentUser.UserId.Value.ToString())
+                : (BlogViewerKind.Anonymous,    anonymousViewer.GetOrCreate());
+
             var result = await sender.Send(
-                new ContentBlogs.Application.Commands.Blog.IncrementBlogViewCount.IncrementBlogViewCountCommand(id),
+                new TrackBlogViewCommand(id, kind, viewerId),
                 ct);
             return result.ToApiResult();
         })
-        .WithName("IncrementBlogViewCount")
-        .WithSummary("Atomically increment the view count for a Published blog")
-        .Produces(StatusCodes.Status200OK)
+        .WithName("TrackBlogView")
+        .WithSummary("Track a unique blog view (lifetime-debounced per viewer)")
+        .Produces<BlogViewCountResult>(StatusCodes.Status200OK)
         .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status404NotFound)
         .AllowAnonymous();

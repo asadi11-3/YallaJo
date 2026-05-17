@@ -2,6 +2,7 @@ using ContentBlogs.Application.Authorization;
 using ContentBlogs.Application.Interfaces;
 using ContentBlogs.Contracts.Authorization;
 using ContentBlogs.Domain.Repositories;
+using ContentBlogs.Infrastructure.Configuration;
 using ContentBlogs.Infrastructure.Persistence;
 using ContentBlogs.Infrastructure.Persistence.Seeding;
 using ContentBlogs.Infrastructure.Repositories;
@@ -9,6 +10,7 @@ using ContentBlogs.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using YallaJo.SharedKernel.Application.Authorization;
 using YallaJo.SharedKernel.Infrastructure.BackgroundJobs;
 using YallaJo.SharedKernel.Infrastructure.Data;
@@ -60,6 +62,11 @@ public static class DependencyInjection
         // Owned & implemented here so consumers (ContentCore, etc.) depend only on
         // ContentBlogs.Contracts and never on the Blogs schema directly.
         services.AddScoped<IBlogOwnershipService, BlogOwnershipService>();
+
+        services.Configure<ContentBlogsViewerHashOptions>(
+            configuration.GetSection(ContentBlogsViewerHashOptions.SectionName));
+        services.AddSingleton<IBlogViewerHashService, BlogViewerHashService>();
+        services.AddScoped<IBlogViewCounter, BlogViewCounter>();
 
         return services;
     }
