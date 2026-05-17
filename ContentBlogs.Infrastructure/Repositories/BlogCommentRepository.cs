@@ -18,4 +18,11 @@ public class BlogCommentRepository(ContentBlogsDbContext context)
             .Include(c => c.ParentComment!)
                 .ThenInclude(p => p.ParentComment)
             .FirstOrDefaultAsync(c => c.Id == commentId, cancellationToken);
+
+    public Task<BlogComment?> GetWithReactionsAsync(
+        Guid commentId,
+        CancellationToken cancellationToken = default) =>
+        _context.BlogComments
+            .Include(c => c.Reactions)
+            .FirstOrDefaultAsync(c => c.Id == commentId, cancellationToken);
 }

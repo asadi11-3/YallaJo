@@ -165,6 +165,84 @@ public sealed class BlogComment : AuditableEntity, IAggregateRoot
             DeletedAtUtc: utcNow));
     }
 
+    // Adds or replaces the current user's reaction. If the same reaction already
+    // exists, nothing changes. Redacted comments cannot be reacted to 
+    public void AddOrReplaceReaction(Guid userId, ReactionType reactionType, DateTime utcNow)
+    {
+        if (userId == Guid.Empty)
+            throw new ArgumentException("UserId is required.", nameof(userId));
+
+        if (IsContentRedacted)
+        {
+            throw new InvalidOperationException(
+                "BlogComment.Redacted: redacted comments cannot be reacted to.");
+        }
+
+        var existing = _reactions.FirstOrDefault(r => r.UserId == userId);
+        if (existing is null)
+        {
+            var reaction = BlogCommentReaction.Create(Id, userId, reactionType, utcNow);
+            _reactions.Add(reaction);
+            UpdatedAt = utcNow;
+
+            AddDomainEvent(new BlogCommentReactionChangedDomainEvent(
+                CommentId: Id,
+                BlogId: BlogId,
+                UserId: userId,
+                OldType: null,
+                NewType: reactionType,
+                OccurredAtUtc: utcNow));
+            return;
+        }
+
+        if (existing.ReactionType == reactionType)
+        {
+            // Idempotent: same user, same reaction → no state change, no event.
+            return;
+        }
+
+        var oldType = existing.ReactionType;
+        existing.ChangeType(reactionType, utcNow);
+        UpdatedAt = utcNow;
+
+        AddDomainEvent(new BlogCommentReactionChangedDomainEvent(
+            CommentId: Id,
+            BlogId: BlogId,
+            UserId: userId,
+            OldType: oldType,
+            NewType: reactionType,
+            OccurredAtUtc: utcNow));
+    }
+
+    /// <summary>
+    /// Removes the current user's reaction if it exists, even on redacted comments.
+    /// Returns false if no reaction was found.
+    /// </summary>
+   
+    public bool RemoveReaction(Guid userId, DateTime utcNow)
+    {
+        if (userId == Guid.Empty)
+            throw new ArgumentException("UserId is required.", nameof(userId));
+
+        var existing = _reactions.FirstOrDefault(r => r.UserId == userId);
+        if (existing is null)
+            return false;
+
+        var removedType = existing.ReactionType;
+        _reactions.Remove(existing);
+        UpdatedAt = utcNow;
+
+        AddDomainEvent(new BlogCommentReactionChangedDomainEvent(
+            CommentId: Id,
+            BlogId: BlogId,
+            UserId: userId,
+            OldType: removedType,
+            NewType: null,
+            OccurredAtUtc: utcNow));
+
+        return true;
+    }
+
     private static int ComputeDepthFromLoadedChain(BlogComment node)
     {
         // Walks the already-loaded ParentComment chain. Caller is responsible for

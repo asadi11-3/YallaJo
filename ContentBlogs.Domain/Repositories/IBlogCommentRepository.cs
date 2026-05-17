@@ -14,4 +14,14 @@ public interface IBlogCommentRepository : IRepository<BlogComment, Guid>
     Task<BlogComment?> GetWithParentChainAsync(
         Guid commentId,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Loads a comment with its <c>Reactions</c> collection eagerly populated.
+    /// Required by reaction commands so the aggregate can enforce the
+    /// one-reaction-per-user invariant in memory before persistence.
+    /// Tracking is enabled because callers follow up with a write.
+    /// </summary>
+    Task<BlogComment?> GetWithReactionsAsync(
+        Guid commentId,
+        CancellationToken cancellationToken = default);
 }

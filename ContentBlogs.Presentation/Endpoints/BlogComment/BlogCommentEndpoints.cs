@@ -1,5 +1,7 @@
+using ContentBlogs.Application.Commands.BlogComment.AddOrReplaceBlogCommentReaction;
 using ContentBlogs.Application.Commands.BlogComment.CreateBlogComment;
 using ContentBlogs.Application.Commands.BlogComment.DeleteBlogComment;
+using ContentBlogs.Application.Commands.BlogComment.RemoveBlogCommentReaction;
 using ContentBlogs.Application.Commands.BlogComment.UpdateBlogComment;
 using ContentBlogs.Application.Queries.BlogComment.Dtos;
 using ContentBlogs.Application.Queries.BlogComment.ListBlogComments;
@@ -114,5 +116,49 @@ internal static class BlogCommentEndpoints
         .ProducesProblem(StatusCodes.Status409Conflict)
         .WithMetadata(new MustHavePermissionAttribute(
             ContentBlogFeatures.BlogComment, AppAction.Delete));
+
+        // ── POST /api/v1/blogs/comments/{commentId}/reactions ─────────────────
+        group.MapPost("/comments/{commentId:guid}/reactions", async (
+            Guid commentId,
+            AddOrReplaceBlogCommentReactionRequest request,
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            var cmd = new AddOrReplaceBlogCommentReactionCommand(
+                CommentId: commentId,
+                ReactionType: request.ReactionType);
+
+            var result = await sender.Send(cmd, ct);
+            return result.ToApiResult();
+        })
+        .WithName("AddOrReplaceBlogCommentReaction")
+        .WithSummary("Add or replace the current user's reaction on a blog comment (idempotent).")
+        .Produces(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status409Conflict)
+        .WithMetadata(new MustHavePermissionAttribute(
+            ContentBlogFeatures.BlogReaction, AppAction.Create));
+
+        // ── DELETE /api/v1/blogs/comments/{commentId}/reactions ───────────────
+        group.MapDelete("/comments/{commentId:guid}/reactions", async (
+            Guid commentId,
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            var result = await sender.Send(new RemoveBlogCommentReactionCommand(commentId), ct);
+            return result.ToApiResult();
+        })
+        .WithName("RemoveBlogCommentReaction")
+        .WithSummary("Remove the current user's reaction on a blog comment (idempotent).")
+        .Produces(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .WithMetadata(new MustHavePermissionAttribute(
+            ContentBlogFeatures.BlogReaction, AppAction.Delete));
     }
 }
