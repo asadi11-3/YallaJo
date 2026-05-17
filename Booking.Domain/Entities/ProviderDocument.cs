@@ -3,7 +3,7 @@ using YallaJo.SharedKernel.Domain.Entities;
 
 namespace Booking.Domain.Entities;
 
-public sealed class ProviderDocument : AuditableEntity
+public sealed class ProviderDocument : AuditableEntity, IAggregateRoot
 {
     private ProviderDocument() { } // EF Core
 

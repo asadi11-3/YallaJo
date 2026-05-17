@@ -25,4 +25,48 @@ public static class AppAction
     public const string Feature    = nameof(Feature);
     public const string Refresh    = nameof(Refresh);   // for batch/cache refresh admin endpoints (e.g. recommendations)
     public const string Record     = nameof(Record);    // for write-only ingestion endpoints (e.g. interaction events)
+
+    // ── Extended verbs (Wave 5–6 modules) ──────────────────────────────────
+
+    /// <summary>Messaging: assign support ticket.</summary>
+    public const string Assign   = nameof(Assign);
+
+    /// <summary>Social: ban user (moderation).</summary>
+    public const string Ban      = nameof(Ban);
+
+    /// <summary>Booking: cancel booking.</summary>
+    public const string Cancel   = nameof(Cancel);
+
+    /// <summary>Social/Messaging: close report or ticket.</summary>
+    public const string Close    = nameof(Close);
+
+    /// <summary>Booking: mark booking complete.</summary>
+    public const string Complete = nameof(Complete);
+
+    /// <summary>Booking: confirm booking.</summary>
+    public const string Confirm  = nameof(Confirm);
+
+    /// <summary>Finance/Analytics: download invoice/export.</summary>
+    public const string Download = nameof(Download);
+
+    /// <summary>Analytics/Finance: admin data export.</summary>
+    public const string Export   = nameof(Export);
+
+    /// <summary>Analytics: PII redaction.</summary>
+    public const string Redact   = nameof(Redact);
+
+    /// <summary>Finance: issue refund.</summary>
+    public const string Refund   = nameof(Refund);
+
+    /// <summary>Messaging/Finance: resolve ticket or dispute.</summary>
+    public const string Resolve  = nameof(Resolve);
+
+    /// <summary>Booking/Finance: trigger background batch.</summary>
+    public const string Trigger  = nameof(Trigger);
+
+    /// <summary>Auth-Cleanup/Booking: verify document/identity.</summary>
+    public const string Verify   = nameof(Verify);
+
+    /// <summary>Social: warn user (moderation).</summary>
+    public const string Warn     = nameof(Warn);
 }

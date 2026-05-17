@@ -2,7 +2,7 @@ using YallaJo.SharedKernel.Domain.Entities;
 
 namespace Finance.Domain.Entities;
 
-public sealed class ProviderBankAccount : AuditableEntity
+public sealed class ProviderBankAccount : AuditableEntity, IAggregateRoot
 {
     private ProviderBankAccount() { } // EF Core
 

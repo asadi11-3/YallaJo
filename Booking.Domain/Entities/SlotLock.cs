@@ -2,7 +2,7 @@ using YallaJo.SharedKernel.Domain.Entities;
 
 namespace Booking.Domain.Entities;
 
-public sealed class SlotLock : BaseEntity
+public sealed class SlotLock : BaseEntity, IAggregateRoot
 {
     private SlotLock() { } // EF Core
 

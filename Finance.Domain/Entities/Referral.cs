@@ -2,7 +2,7 @@ using YallaJo.SharedKernel.Domain.Entities;
 
 namespace Finance.Domain.Entities;
 
-public sealed class Referral : AuditableEntity
+public sealed class Referral : AuditableEntity, IAggregateRoot
 {
     private Referral() { } // EF Core
 

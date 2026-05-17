@@ -4,7 +4,7 @@ using YallaJo.SharedKernel.Domain.ValueObjects;
 
 namespace Finance.Domain.Entities;
 
-public sealed class Discount : AuditableEntity
+public sealed class Discount : AuditableEntity, IAggregateRoot
 {
     private readonly List<DiscountUsage> _discountUsages = [];
 

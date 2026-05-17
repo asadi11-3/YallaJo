@@ -5,7 +5,7 @@ using YallaJo.SharedKernel.Domain.ValueObjects;
 
 namespace Analytics.Domain.Entities;
 
-public sealed class UserInteraction : BaseEntity<long>
+public sealed class UserInteraction : BaseEntity<long>, IAggregateRoot
 {
     private UserInteraction() { } // EF Core
 

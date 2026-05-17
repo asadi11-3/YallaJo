@@ -2,7 +2,7 @@ using YallaJo.SharedKernel.Domain.Entities;
 
 namespace Analytics.Domain.Entities;
 
-public sealed class AuditLog : BaseEntity<long>
+public sealed class AuditLog : BaseEntity<long>, IAggregateRoot
 {
     private AuditLog() { } // EF Core
 

@@ -3,7 +3,7 @@ using YallaJo.SharedKernel.Domain.Entities;
 
 namespace Booking.Domain.Entities;
 
-public sealed class AvailabilitySlot : AuditableEntity
+public sealed class AvailabilitySlot : AuditableEntity, IAggregateRoot
 {
     private AvailabilitySlot() { } // EF Core
 

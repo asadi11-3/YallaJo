@@ -3,7 +3,7 @@ using YallaJo.SharedKernel.Domain.Entities;
 
 namespace Finance.Domain.Entities;
 
-public sealed class Dispute : AuditableEntity
+public sealed class Dispute : AuditableEntity, IAggregateRoot
 {
     private readonly List<DisputeMessage> _messages = [];
     private readonly List<DisputeEvidence> _evidence = [];

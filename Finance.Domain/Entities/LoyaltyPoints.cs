@@ -2,7 +2,7 @@ using YallaJo.SharedKernel.Domain.Entities;
 
 namespace Finance.Domain.Entities;
 
-public sealed class LoyaltyPoints : AuditableEntity
+public sealed class LoyaltyPoints : AuditableEntity, IAggregateRoot
 {
     private readonly List<LoyaltyTransaction> _transactions = [];
 

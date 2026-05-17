@@ -1,0 +1,29 @@
+file,line,violation_type,snippet,proposed_fix
+ContentPlaces.Presentation/Endpoints/Business/BusinessEndpoints.cs,151,STRING_POLICY,".RequireAuthorization(""Admin"")",".WithMetadata(new MustHavePermissionAttribute(ContentPlacesFeatures.Business, AppAction.UpdateAny))"
+ContentPlaces.Presentation/Endpoints/Business/BusinessEndpoints.cs,187,STRING_POLICY,".RequireAuthorization(""Admin"")",".WithMetadata(new MustHavePermissionAttribute(ContentPlacesFeatures.Business, AppAction.Approve))"
+ContentPlaces.Presentation/Endpoints/Business/BusinessEndpoints.cs,205,STRING_POLICY,".RequireAuthorization(""Admin"")",".WithMetadata(new MustHavePermissionAttribute(ContentPlacesFeatures.Business, AppAction.Reject))"
+ContentPlaces.Presentation/Endpoints/Business/BusinessEndpoints.cs,223,STRING_POLICY,".RequireAuthorization(""Admin"")",".WithMetadata(new MustHavePermissionAttribute(ContentPlacesFeatures.Business, AppAction.Suspend))"
+ContentPlaces.Presentation/Endpoints/Business/BusinessEndpoints.cs,239,STRING_POLICY,".RequireAuthorization(""Admin"")",".WithMetadata(new MustHavePermissionAttribute(ContentPlacesFeatures.Business, AppAction.Reinstate))"
+Auth.Presentation/Endpoints/Session/SessionEndpoints.cs,*,AUTH_AND_PERM_MIX,"RequireAuthorization() paired with MustHavePermission","Remove .RequireAuthorization() - keep MustHavePermission only (auth implied)"
+Auth.Presentation/Endpoints/Invitation/InvitationEndpoints.cs,*,AUTH_AND_PERM_MIX,Same,Same
+Auth.Presentation/Endpoints/Device/DeviceEndpoints.cs,*,AUTH_ONLY,".RequireAuthorization() with no permission",Add MustHavePermissionAttribute or AllowAnonymous explicitly
+Auth.Presentation/Endpoints/ExternalProvider/ExternalProviderEndpoints.cs,*,AUTH_ONLY,Same,Same
+Accounts.Presentation/Endpoints/Profile/ProfileEndpoints.cs,*,AUTH_ONLY,Same,Add AccountsFeatures.Profile + AppAction.ReadOwn/UpdateSelf
+Security.Presentation/Endpoints/Account/AccountEndpoints.cs,*,AUTH_ONLY,Same,Add SecurityFeatures + AppAction
+Security.Presentation/Endpoints/AuditLog/AuditLogEndpoints.cs,*,AUTH_ONLY,Same,Add SecurityFeatures.AuditLog + AppAction.ReadAny
+Security.Presentation/Endpoints/Role/RoleEndpoints.cs,*,AUTH_ONLY,Same,Add SecurityFeatures.Role + AppAction
+Security.Presentation/Endpoints/User/UserEndpoints.cs,*,AUTH_AND_PERM_MIX,Same,Remove .RequireAuthorization()
+ContentCore.Presentation/Endpoints/Attachment/AttachmentEndpoints.cs,*,AUTH_AND_PERM_MIX,Same,Remove .RequireAuthorization()
+ContentCore.Presentation/Endpoints/Category/CategoryEndpoints.cs,*,AUTH_AND_PERM_MIX,Same,Remove .RequireAuthorization()
+ContentCore.Presentation/Endpoints/Tag/TagEndpoints.cs,*,AUTH_AND_PERM_MIX,Same,Remove .RequireAuthorization()
+ContentCore.Presentation/Endpoints/Specialization/SpecializationEndpoints.cs,*,AUTH_AND_PERM_MIX,Same,Remove .RequireAuthorization()
+ContentCore.Presentation/Endpoints/Translation/TranslationEndpoints.cs,*,AUTH_AND_PERM_MIX,Same,Remove .RequireAuthorization()
+ContentCore.Presentation/Endpoints/Language/LanguageEndpoints.cs,*,AUTH_AND_PERM_MIX,Same,Remove .RequireAuthorization()
+ContentCore.Presentation/Endpoints/EntityTag/EntityTagEndpoints.cs,*,AUTH_AND_PERM_MIX,Same,Remove .RequireAuthorization()
+ContentCore.Presentation/Endpoints/EntityCategory/EntityCategoryEndpoints.cs,*,AUTH_AND_PERM_MIX,Same,Remove .RequireAuthorization()
+ContentPlaces.Presentation/Endpoints/Place/PlaceEndpoints.cs,*,AUTH_AND_PERM_MIX,Same,Remove .RequireAuthorization()
+ContentPlaces.Presentation/Endpoints/ServiceItem/ServiceItemEndpoints.cs,*,AUTH_AND_PERM_MIX,Same,Remove .RequireAuthorization()
+ContentPlaces.Presentation/Endpoints/BusinessStaff/BusinessStaffEndpoints.cs,*,AUTH_AND_PERM_MIX,Same,Remove .RequireAuthorization()
+ContentPlaces.Presentation/Endpoints/BusinessAmenity/BusinessAmenityEndpoints.cs,*,AUTH_AND_PERM_MIX,Same,Remove .RequireAuthorization()
+ContentPlaces.Presentation/Endpoints/AccessibilityFeature/AccessibilityFeatureEndpoints.cs,*,AUTH_AND_PERM_MIX,Same,Remove .RequireAuthorization()
+YallaJo.Api/Endpoints/OpsEndpoints.cs,*,AUTH_ONLY,Same,Add OpsFeatures or use AllowAnonymous if health probe

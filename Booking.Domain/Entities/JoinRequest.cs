@@ -3,7 +3,7 @@ using YallaJo.SharedKernel.Domain.Entities;
 
 namespace Booking.Domain.Entities;
 
-public sealed class JoinRequest : AuditableEntity
+public sealed class JoinRequest : AuditableEntity, IAggregateRoot
 {
     private JoinRequest() { } // EF Core
 

@@ -2,7 +2,7 @@ using YallaJo.SharedKernel.Domain.Entities;
 
 namespace Analytics.Domain.Entities;
 
-public sealed class UserPreference : AuditableEntity
+public sealed class UserPreference : AuditableEntity, IAggregateRoot
 {
     private UserPreference() { } // EF Core
 

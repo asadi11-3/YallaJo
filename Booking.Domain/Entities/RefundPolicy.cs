@@ -2,7 +2,7 @@ using YallaJo.SharedKernel.Domain.Entities;
 
 namespace Booking.Domain.Entities;
 
-public sealed class RefundPolicy : AuditableEntity
+public sealed class RefundPolicy : AuditableEntity, IAggregateRoot
 {
     private RefundPolicy() { } // EF Core
 

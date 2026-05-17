@@ -4,7 +4,7 @@ using YallaJo.SharedKernel.Domain.ValueObjects;
 
 namespace Finance.Domain.Entities;
 
-public sealed class Subscription : AuditableEntity
+public sealed class Subscription : AuditableEntity, IAggregateRoot
 {
     private Subscription() { } // EF Core
 

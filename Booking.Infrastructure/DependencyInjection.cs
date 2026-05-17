@@ -1,10 +1,14 @@
+using Booking.Application.Interfaces;
 using Booking.Contracts.Authorization;
+using Booking.Domain.Repositories;
 using Booking.Infrastructure.Persistence;
 using Booking.Infrastructure.Persistence.Seeding;
+using Booking.Infrastructure.Repositories;
 using Booking.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using YallaJo.SharedKernel.Application.Authorization;
 using YallaJo.SharedKernel.Infrastructure.Data;
 using YallaJo.SharedKernel.Infrastructure.Outbox;
 using YallaJo.SharedKernel.Infrastructure.BackgroundJobs;
@@ -30,10 +34,23 @@ public static class DependencyInjection
                 }));
 
         services.AddScoped<IUnitOfWork<BookingDbContext>, UnitOfWork<BookingDbContext>>();
+        services.AddScoped<IBookingUnitOfWork, BookingUnitOfWork>();
         services.AddScoped<IModuleDbInitializer, BookingDbInitializer>();
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
         services.AddScoped<IOutboxProcessor, OutboxProcessor<BookingDbContext>>();
         services.AddScoped<IOutboxCleaner, OutboxCleaner<BookingDbContext>>();
+
+        // ── Repositories ─────────────────────────────────────────────────────
+        services.AddScoped<ITourBookingRepository, TourBookingRepository>();
+        services.AddScoped<IAvailabilitySlotRepository, AvailabilitySlotRepository>();
+        services.AddScoped<IRefundPolicyRepository, RefundPolicyRepository>();
+        services.AddScoped<IJoinRequestRepository, JoinRequestRepository>();
+        services.AddScoped<IProviderDocumentRepository, ProviderDocumentRepository>();
+        services.AddScoped<ISlotLockRepository, SlotLockRepository>();
+        services.AddScoped<IBookingOutboxWriter, BookingOutboxWriter>();
+
+        // ── Permission catalog ───────────────────────────────────────────────
+        services.AddSingleton<IPermissionCatalog, BookingPermissionCatalog>();
 
         // ── Cross-module read-only services ──────────────────────────────────
         // Owned & implemented here so consumers (ContentCore, etc.) depend only on

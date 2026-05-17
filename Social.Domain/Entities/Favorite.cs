@@ -2,7 +2,7 @@ using YallaJo.SharedKernel.Domain.Entities;
 
 namespace Social.Domain.Entities;
 
-public sealed class Favorite : BaseEntity
+public sealed class Favorite : BaseEntity, IAggregateRoot
 {
     private Favorite() { } // EF Core
 

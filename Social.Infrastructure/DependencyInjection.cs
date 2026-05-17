@@ -1,10 +1,15 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Social.Application.Interfaces;
 using Social.Contracts.Authorization;
+using Social.Contracts.Services;
+using Social.Domain.Repositories;
 using Social.Infrastructure.Persistence;
 using Social.Infrastructure.Persistence.Seeding;
+using Social.Infrastructure.Repositories;
 using Social.Infrastructure.Services;
+using YallaJo.SharedKernel.Application.Authorization;
 using YallaJo.SharedKernel.Infrastructure.Data;
 using YallaJo.SharedKernel.Infrastructure.Outbox;
 using YallaJo.SharedKernel.Infrastructure.BackgroundJobs;
@@ -39,6 +44,20 @@ public static class DependencyInjection
         // Owned & implemented here so consumers (ContentCore, etc.) depend only on
         // Social.Contracts and never on the Social schema directly.
         services.AddScoped<IReviewOwnershipService, ReviewOwnershipService>();
+
+        // UoW + Repositories
+        services.AddScoped<ISocialUnitOfWork, SocialUnitOfWork>();
+        services.AddScoped<IReviewRepository, ReviewRepository>();
+        services.AddScoped<IFavoriteRepository, FavoriteRepository>();
+        services.AddScoped<IReportRepository, ReportRepository>();
+        services.AddScoped<ISocialOutboxWriter, SocialOutboxWriter>();
+
+        // Content moderation stubs
+        services.AddScoped<IProfanityFilter, NoopProfanityFilter>();
+        services.AddScoped<INsfwClassifier, NoopNsfwClassifier>();
+
+        // Permission catalog
+        services.AddSingleton<IPermissionCatalog, SocialPermissionCatalog>();
 
         return services;
     }

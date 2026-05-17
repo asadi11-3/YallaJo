@@ -3,7 +3,7 @@ using YallaJo.SharedKernel.Domain.Entities;
 
 namespace Messaging.Domain.Entities;
 
-public sealed class NotificationTemplate : AuditableEntity
+public sealed class NotificationTemplate : AuditableEntity, IAggregateRoot
 {
     private NotificationTemplate() { } // EF Core
 

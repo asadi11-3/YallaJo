@@ -3,7 +3,7 @@ using YallaJo.SharedKernel.Domain.ValueObjects;
 
 namespace Finance.Domain.Entities;
 
-public sealed class CommissionRule : AuditableEntity
+public sealed class CommissionRule : AuditableEntity, IAggregateRoot
 {
     private CommissionRule() { } // EF Core
 

@@ -2,7 +2,7 @@ using YallaJo.SharedKernel.Domain.Entities;
 
 namespace Analytics.Domain.Entities;
 
-public sealed class PopularityScore : AuditableEntity
+public sealed class PopularityScore : AuditableEntity, IAggregateRoot
 {
     private PopularityScore() { } // EF Core
 

@@ -4,7 +4,7 @@ using YallaJo.SharedKernel.Domain.ValueObjects;
 
 namespace Finance.Domain.Entities;
 
-public sealed class SubscriptionPlan : AuditableEntity
+public sealed class SubscriptionPlan : AuditableEntity, IAggregateRoot
 {
     private readonly List<PlanFeature> _planFeatures = [];
     private readonly List<Subscription> _subscriptions = [];

@@ -3,7 +3,7 @@ using YallaJo.SharedKernel.Domain.Entities;
 
 namespace Social.Domain.Entities;
 
-public sealed class Report : AuditableEntity
+public sealed class Report : AuditableEntity, IAggregateRoot
 {
     private Report() { } // EF Core
 

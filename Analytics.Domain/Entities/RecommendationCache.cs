@@ -2,7 +2,7 @@ using YallaJo.SharedKernel.Domain.Entities;
 
 namespace Analytics.Domain.Entities;
 
-public sealed class RecommendationCache : BaseEntity
+public sealed class RecommendationCache : BaseEntity, IAggregateRoot
 {
     private RecommendationCache() { } // EF Core
 

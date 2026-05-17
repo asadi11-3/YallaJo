@@ -3,7 +3,7 @@ using YallaJo.SharedKernel.Domain.Entities;
 
 namespace Messaging.Domain.Entities;
 
-public sealed class DeviceToken : AuditableEntity
+public sealed class DeviceToken : AuditableEntity, IAggregateRoot
 {
     private DeviceToken() { } // EF Core
 
