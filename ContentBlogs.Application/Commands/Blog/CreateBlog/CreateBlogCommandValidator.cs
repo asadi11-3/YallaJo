@@ -1,0 +1,53 @@
+using System.Text.RegularExpressions;
+using ContentBlogs.Application.Commands.Blog.Common;
+using FluentValidation;
+
+namespace ContentBlogs.Application.Commands.Blog.CreateBlog;
+
+public sealed class CreateBlogCommandValidator : AbstractValidator<CreateBlogCommand>
+{
+    private static readonly Regex SlugRegex =
+        new("^[a-z0-9]+(?:-[a-z0-9]+)*$", RegexOptions.Compiled, TimeSpan.FromMilliseconds(100));
+
+    public CreateBlogCommandValidator()
+    {
+        RuleFor(x => x.Title)
+            .NotEmpty().WithMessage("Title is required.")
+            .MaximumLength(500);
+
+        RuleFor(x => x.Slug!)
+            .Must(slug => SlugRegex.IsMatch(slug))
+                .WithMessage("Slug must be lowercase alphanumeric segments separated by '-'.")
+            .MaximumLength(200)
+            .When(x => !string.IsNullOrEmpty(x.Slug));
+
+        RuleFor(x => x.Content)
+            .NotEmpty()
+            .Must(BeAtLeast150CharsAfterStripHtml)
+                .WithMessage("Content must be at least 150 chars (excluding HTML).");
+
+        RuleFor(x => x.Summary!)
+            .MaximumLength(1000)
+            .When(x => !string.IsNullOrEmpty(x.Summary));
+
+        RuleFor(x => x.MetaTitle!)
+            .MaximumLength(60)
+            .When(x => !string.IsNullOrEmpty(x.MetaTitle));
+
+        RuleFor(x => x.MetaDescription!)
+            .MaximumLength(160)
+            .When(x => !string.IsNullOrEmpty(x.MetaDescription));
+
+        RuleFor(x => x.PlaceId!.Value)
+            .NotEqual(Guid.Empty)
+            .When(x => x.PlaceId.HasValue);
+
+        RuleFor(x => x.SourceLanguageCode)
+            .NotEmpty()
+            .Length(2)
+            .Matches("^[a-z]{2}$");
+    }
+
+    private static bool BeAtLeast150CharsAfterStripHtml(string content) =>
+        BlogContentTextHelper.StripHtml(content).Length >= 150;
+}

@@ -1,6 +1,5 @@
 using Analytics.Contracts.IntegrationEvents;
 using Auth.Contracts.IntegrationEvents;
-using Booking.Contracts.IntegrationEvents;
 using ContentCore.Contracts.IntegrationEvents;
 using ContentPlaces.Contracts.BusinessStaff;
 using ContentPlaces.Contracts.IntegrationEvents;
@@ -82,58 +81,6 @@ public static class IntegrationEventTypeRegistry
         ["content-tours.package.created.v1"]             = typeof(TourPackageCreatedIntegrationEvent),
         ["content-tours.package.updated.v1"]             = typeof(TourPackageUpdatedIntegrationEvent),
         ["content-tours.package.deleted.v1"]             = typeof(TourPackageDeletedIntegrationEvent),
-
-        // ── Booking (12 events) ──
-        ["booking.tour-booking.created.v1"]              = typeof(TourBookingCreatedIntegrationEvent),
-        ["booking.tour-booking.confirmed.v1"]            = typeof(TourBookingConfirmedIntegrationEvent),
-        ["booking.tour-booking.cancelled.v1"]            = typeof(TourBookingCancelledIntegrationEvent),
-        ["booking.tour-booking.completed.v1"]            = typeof(TourBookingCompletedIntegrationEvent),
-        ["booking.tour-booking.rejected.v1"]             = typeof(TourBookingRejectedIntegrationEvent),
-        ["booking.tour-booking.payment-expired.v1"]      = typeof(TourBookingPaymentExpiredIntegrationEvent),
-        ["booking.slot-lock.created.v1"]                 = typeof(SlotLockCreatedIntegrationEvent),
-        ["booking.slot-lock.released.v1"]                = typeof(SlotLockReleasedIntegrationEvent),
-        ["booking.availability-slot.capacity-changed.v1"] = typeof(AvailabilitySlotCapacityChangedIntegrationEvent),
-        ["booking.join-request.created.v1"]              = typeof(JoinRequestCreatedIntegrationEvent),
-        ["booking.join-request.approved.v1"]             = typeof(JoinRequestApprovedIntegrationEvent),
-        ["booking.join-request.rejected.v1"]             = typeof(JoinRequestRejectedIntegrationEvent),
-
-        // ── Finance (10 events) ──
-        ["finance.payment.succeeded.v1"]                 = typeof(PaymentSucceededIntegrationEvent),
-        ["finance.payment.failed.v1"]                    = typeof(PaymentFailedIntegrationEvent),
-        ["finance.payment.refunded.v1"]                  = typeof(PaymentRefundedIntegrationEvent),
-        ["finance.payout.processed.v1"]                  = typeof(PayoutProcessedIntegrationEvent),
-        ["finance.payout.failed.v1"]                     = typeof(PayoutFailedIntegrationEvent),
-        ["finance.invoice.issued.v1"]                    = typeof(InvoiceIssuedIntegrationEvent),
-        ["finance.invoice.paid.v1"]                      = typeof(InvoicePaidIntegrationEvent),
-        ["finance.dispute.opened.v1"]                    = typeof(DisputeOpenedIntegrationEvent),
-        ["finance.subscription.activated.v1"]            = typeof(SubscriptionActivatedIntegrationEvent),
-        ["finance.subscription.cancelled.v1"]            = typeof(SubscriptionCancelledIntegrationEvent),
-
-        // ── Social (5 events) ──
-        ["social.review.created.v1"]                     = typeof(ReviewCreatedIntegrationEvent),
-        ["social.review.deleted.v1"]                     = typeof(ReviewDeletedIntegrationEvent),
-        ["social.favorite.added.v1"]                     = typeof(FavoriteAddedIntegrationEvent),
-        ["social.report.created.v1"]                     = typeof(ReportCreatedIntegrationEvent),
-        ["social.content.hidden.v1"]                     = typeof(ContentHiddenIntegrationEvent),
-
-        // ── Analytics (3 events) ──
-        ["analytics.popularity.refreshed.v1"]            = typeof(PopularityScoresRefreshedIntegrationEvent),
-        ["analytics.recommendation-cache.expired.v1"]    = typeof(RecommendationCacheExpiredIntegrationEvent),
-        ["analytics.audit.exported.v1"]                  = typeof(AnalyticsAuditExportedIntegrationEvent),
-
-        // ── Messaging (6 events) ──
-        ["messaging.notification.delivered.v1"]          = typeof(NotificationDeliveredIntegrationEvent),
-        ["messaging.notification.failed.v1"]             = typeof(NotificationFailedIntegrationEvent),
-        ["messaging.device-token.registered.v1"]         = typeof(DeviceTokenRegisteredIntegrationEvent),
-        ["messaging.support-ticket.opened.v1"]           = typeof(SupportTicketOpenedIntegrationEvent),
-        ["messaging.support-ticket.resolved.v1"]         = typeof(SupportTicketResolvedIntegrationEvent),
-        ["messaging.notification-template.updated.v1"]   = typeof(NotificationTemplateUpdatedIntegrationEvent),
-
-        // ── ContentSeo (4 events) ──
-        ["content-seo.redirect.created.v1"]              = typeof(RedirectCreatedIntegrationEvent),
-        ["content-seo.redirect.chain-flattened.v1"]      = typeof(RedirectChainFlattenedIntegrationEvent),
-        ["content-seo.seo-metadata.changed.v1"]          = typeof(SeoMetadataChangedIntegrationEvent),
-        ["content-seo.faq-item.changed.v1"]              = typeof(FaqItemChangedIntegrationEvent),
     };
 
     private static readonly Dictionary<Type, string> TypeToName =

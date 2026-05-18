@@ -18,9 +18,22 @@
     <ProjectReference Include="..\ContentBlogs.Domain\ContentBlogs.Domain.csproj" />
     <ProjectReference Include="..\ContentCore.Contracts\ContentCore.Contracts.csproj" />
     <ProjectReference Include="..\ContentPlaces.Contracts\ContentPlaces.Contracts.csproj" />
+    <!-- ContentTours.Contracts: needed for ITourExistenceService consumed
+         by LinkBlogToursCommandHandler.  Do NOT add ContentTours.Application
+         or ContentTours.Infrastructure — the service implementation is
+         registered by AddContentToursInfrastructure() at the host. -->
     <ProjectReference Include="..\ContentTours.Contracts\ContentTours.Contracts.csproj" />
+    <!-- Security.Contracts: needed for RolePrivilegeLevel,
+         AppRoles.HighestPrivilegeLevel, and the read-only
+         IUserPrivilegeLevelReader port consumed by BlogAuthorHierarchyGuard.
+         Do NOT add Security.Application or Security.Domain — the reader's
+         implementation is registered by AddSecurityApplication() at the host. -->
     <ProjectReference Include="..\Security.Contracts\Security.Contracts.csproj" />
     <ProjectReference Include="..\YallaJo.SharedKernel.Application\YallaJo.SharedKernel.Application.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="ContentBlogs.Tests.Unit" />
   </ItemGroup>
 
 </Project>

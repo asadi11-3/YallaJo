@@ -15,6 +15,7 @@ public sealed class ContentBlogsDbContext : DbContext, IDbContext
     public DbSet<BlogTour> BlogTours => Set<BlogTour>();
     public DbSet<BlogComment> BlogComments => Set<BlogComment>();
     public DbSet<BlogCommentReaction> BlogCommentReactions => Set<BlogCommentReaction>();
+    public DbSet<BlogView> BlogViews => Set<BlogView>();
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
     public DbSet<InboxMessage> InboxMessages => Set<InboxMessage>();
 

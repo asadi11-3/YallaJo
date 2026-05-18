@@ -1,14 +1,20 @@
+using ContentBlogs.Application.Authorization;
 using ContentBlogs.Application.Interfaces;
 using ContentBlogs.Contracts.Authorization;
+using ContentBlogs.Domain.Repositories;
+using ContentBlogs.Infrastructure.Configuration;
 using ContentBlogs.Infrastructure.Persistence;
 using ContentBlogs.Infrastructure.Persistence.Seeding;
+using ContentBlogs.Infrastructure.Repositories;
 using ContentBlogs.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
+using YallaJo.SharedKernel.Application.Authorization;
+using YallaJo.SharedKernel.Infrastructure.BackgroundJobs;
 using YallaJo.SharedKernel.Infrastructure.Data;
 using YallaJo.SharedKernel.Infrastructure.Outbox;
-using YallaJo.SharedKernel.Infrastructure.BackgroundJobs;
 
 namespace ContentBlogs.Infrastructure;
 
@@ -38,10 +44,29 @@ public static class DependencyInjection
         services.AddScoped<IOutboxProcessor, OutboxProcessor<ContentBlogsDbContext>>();
         services.AddScoped<IOutboxCleaner, OutboxCleaner<ContentBlogsDbContext>>();
 
+        services.AddScoped<IBlogRepository, BlogRepository>();
+        services.AddScoped<IBlogCommentRepository,BlogCommentRepository>();
+        services.AddScoped<IBlogTourRepository, BlogTourRepository>();
+
+        services.AddSingleton<IPermissionCatalog, ContentBlogPermissionCatalog>();
+
+        // ── Author-hierarchy authorization (Phase 1 closure) ─────────────────
+        // BlogAuthorHierarchyGuard lives in ContentBlogs.Application and depends
+        // on Security.Contracts.Authorization.IUserPrivilegeLevelReader.  The
+        // implementation is registered by AddSecurityApplication(), so this
+        // module no longer needs a ProjectReference to Security.Application nor
+        // a local adapter — the IRoleHierarchyService coupling is gone.
+        services.AddScoped<IBlogAuthorHierarchyGuard, BlogAuthorHierarchyGuard>();
+
         // ── Cross-module read-only services ──────────────────────────────────
         // Owned & implemented here so consumers (ContentCore, etc.) depend only on
         // ContentBlogs.Contracts and never on the Blogs schema directly.
         services.AddScoped<IBlogOwnershipService, BlogOwnershipService>();
+
+        services.Configure<ContentBlogsViewerHashOptions>(
+            configuration.GetSection(ContentBlogsViewerHashOptions.SectionName));
+        services.AddSingleton<IBlogViewerHashService, BlogViewerHashService>();
+        services.AddScoped<IBlogViewCounter, BlogViewCounter>();
 
         return services;
     }

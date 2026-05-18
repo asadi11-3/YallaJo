@@ -4,6 +4,16 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
+
+  <!--
+    ContentTours.Contracts is the public API surface of the ContentTours module.
+    It contains:
+      - Integration event DTOs (TourCreatedIntegrationEvent, ...).
+      - Read-only cross-module abstractions (ITourExistenceService, ...).
+    No domain logic, no EF, no MediatR handlers, no command/query types.
+    Any module that needs to consume ContentTours public surface references
+    THIS project, NOT ContentTours.Application or ContentTours.Infrastructure.
+  -->
   <ItemGroup>
     <ProjectReference Include="..\YallaJo.SharedKernel.Domain\YallaJo.SharedKernel.Domain.csproj" />
     <ProjectReference Include="..\YallaJo.SharedKernel.Application\YallaJo.SharedKernel.Application.csproj" />

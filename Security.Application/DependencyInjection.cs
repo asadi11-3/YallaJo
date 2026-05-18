@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Security.Application.Authorization;
 using Security.Application.Services;
 using Security.Contracts.Abstractions;
+using Security.Contracts.Authorization;
 
 namespace Security.Application;
 
@@ -16,6 +17,7 @@ public static class DependencyInjection
 
         services.AddScoped<IUserRegistrationService, UserRegistrationService>();
         services.AddScoped<IRoleHierarchyService, RoleHierarchyService>();
+        services.AddScoped<IUserPrivilegeLevelReader, UserPrivilegeLevelReader>();
 
         return services;
     }

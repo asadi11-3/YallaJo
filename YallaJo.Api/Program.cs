@@ -95,6 +95,7 @@ builder.Services.AddContentToursInfrastructure(builder.Configuration);
 
 builder.Services.AddContentBlogsApplication();
 builder.Services.AddContentBlogsInfrastructure(builder.Configuration);
+builder.Services.AddContentBlogsPresentation();
 
 builder.Services.AddContentSeoApplication();
 builder.Services.AddContentSeoInfrastructure(builder.Configuration);
