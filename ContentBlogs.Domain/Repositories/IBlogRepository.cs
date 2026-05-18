@@ -38,4 +38,13 @@ public interface IBlogRepository : IRepository<Blog, Guid>
     Task<IReadOnlyList<Blog>> GetActiveByPlaceIdAsync(
         Guid placeId,
         CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<Blog>> GetActiveByTourIdAsync(
+        Guid tourId,
+        CancellationToken cancellationToken = default);
+
+    Task<bool> HasTranslationForLanguageAsync(
+        Guid blogId,
+        Guid languageId,
+        CancellationToken cancellationToken = default);
 }

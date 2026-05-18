@@ -119,6 +119,26 @@ public class BlogRepository(ContentBlogsDbContext context)
         return list;
     }
 
+    public async Task<IReadOnlyList<Blog>> GetActiveByTourIdAsync(
+        Guid tourId,
+        CancellationToken cancellationToken = default)
+    {
+        var list = await context.Blogs
+            .Where(b => b.BlogTours.Any(bt => bt.TourId == tourId))
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+        return list;
+    }
+
+    public Task<bool> HasTranslationForLanguageAsync(
+        Guid blogId,
+        Guid languageId,
+        CancellationToken cancellationToken = default)
+    {
+        return context.BlogTranslations
+            .AnyAsync(t => t.BlogId == blogId && t.LanguageId == languageId, cancellationToken);
+    }
+
     private static IQueryable<Blog> ApplyDeletedSort(
         IQueryable<Blog> query,
         string sortBy,

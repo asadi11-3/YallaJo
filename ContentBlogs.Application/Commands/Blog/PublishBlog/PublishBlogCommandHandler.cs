@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
+using YallaJo.SharedKernel.Application.Abstractions.Translation;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
 namespace ContentBlogs.Application.Commands.Blog.PublishBlog;
@@ -14,6 +15,7 @@ namespace ContentBlogs.Application.Commands.Blog.PublishBlog;
 public sealed class PublishBlogCommandHandler(
     IBlogRepository blogRepository,
     IBlogAuthorHierarchyGuard authorHierarchyGuard,
+    IActiveLanguageProvider activeLanguageProvider,
     IContentBlogsUnitOfWork unitOfWork,
     HybridCache cache,
     ILogger<PublishBlogCommandHandler> logger)
@@ -62,6 +64,33 @@ public sealed class PublishBlogCommandHandler(
                 return Result.Failure(
                     new Error("Blog.SlugConflict", $"Slug '{blog.Slug}' is no longer available."),
                     Outcome.Conflict);
+            }
+
+            // ── AR + EN translation gate (PDF §9) ────────────────────────────
+            // Both Arabic and English translations must exist before a blog can
+            // be published. English is the source language (always present after
+            // Create); Arabic must be explicitly added.
+            var activeLanguages = await activeLanguageProvider
+                .GetActiveLanguagesAsync(cancellationToken)
+                .ConfigureAwait(false);
+
+            var arabicLanguage = activeLanguages.FirstOrDefault(
+                l => string.Equals(l.Code, "ar", StringComparison.OrdinalIgnoreCase));
+
+            if (arabicLanguage is not null)
+            {
+                var hasArabic = await blogRepository
+                    .HasTranslationForLanguageAsync(blog.Id, arabicLanguage.Id, cancellationToken)
+                    .ConfigureAwait(false);
+
+                if (!hasArabic)
+                {
+                    return Result.Failure(
+                        new Error(
+                            "Blog.Translation.ArabicRequired",
+                            "An Arabic (ar) translation is required before publishing."),
+                        Outcome.UnprocessableEntity);
+                }
             }
 
             try
