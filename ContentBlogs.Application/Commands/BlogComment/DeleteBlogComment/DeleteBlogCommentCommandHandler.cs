@@ -1,5 +1,6 @@
 using ContentBlogs.Application.Authorization;
 using ContentBlogs.Application.Caching;
+using ContentBlogs.Application.Common;
 using ContentBlogs.Application.Interfaces;
 using ContentBlogs.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -42,6 +43,19 @@ public sealed class DeleteBlogCommentCommandHandler(
             if (!authz.IsSuccess)
                 return authz;
 
+            // RowVersion check AFTER authorization (matches Blog handler ordering).
+            if (!RowVersionUtil.Equal(comment.RowVersion, request.RowVersion))
+            {
+                logger.LogWarning(
+                    "DeleteBlogComment rejected: stale RowVersion for comment {CommentId}.",
+                    comment.Id);
+                return Result.Failure(
+                    new Error(
+                        "BlogComment.ConcurrencyConflict",
+                        "This comment was modified by another user. Please refresh and try again."),
+                    Outcome.Conflict);
+            }
+
             // Idempotent: domain short-circuits if already redacted.
             comment.Redact(DateTime.UtcNow);
 
@@ -70,7 +84,9 @@ public sealed class DeleteBlogCommentCommandHandler(
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
-            return Result.Canceled("The request was cancelled.");
+            return Result.Failure(
+                new Error("Request.Cancelled", "The request was cancelled."),
+                Outcome.Canceled);
         }
     }
 }

@@ -35,20 +35,6 @@ public class BlogRepository(ContentBlogsDbContext context)
             ct: cancellationToken);
     }
 
-    public async Task<bool> IncrementViewCountIfPublishedAsync(
-        Guid blogId,
-        CancellationToken cancellationToken = default)
-    {
-        var rowsAffected = await context.Blogs
-            .Where(b => b.Id == blogId && b.Status == BlogStatus.Published)
-            .ExecuteUpdateAsync(
-                setters => setters.SetProperty(b => b.ViewCount, b => b.ViewCount + 1),
-                cancellationToken)
-            .ConfigureAwait(false);
-
-        return rowsAffected > 0;
-    }
-
     public Task<Blog?> GetFeaturedBlogInPlaceScopeAsync(
         Guid? placeId,
         Guid? excludeBlogId,

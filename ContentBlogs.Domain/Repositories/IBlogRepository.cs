@@ -16,10 +16,6 @@ public interface IBlogRepository : IRepository<Blog, Guid>
         string slug,
         CancellationToken cancellationToken = default);
 
-    Task<bool> IncrementViewCountIfPublishedAsync(
-        Guid blogId,
-        CancellationToken cancellationToken = default);
-
     Task<Blog?> GetFeaturedBlogInPlaceScopeAsync(
         Guid? placeId,
         Guid? excludeBlogId,

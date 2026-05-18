@@ -29,8 +29,9 @@ public sealed class CreateBlogCommentCommandHandler(
         {
             if (!currentUser.IsAuthenticated || currentUser.UserId is null)
             {
-                return Result<CreateBlogCommentResult>.Unauthorized(
-                    "Authenticated user is required.");
+                return Result<CreateBlogCommentResult>.Failure(
+                    new Error("BlogComment.Unauthorized", "Authenticated user is required."),
+                    Outcome.Unauthorized);
             }
 
             // ── Blog must exist (and we need its status). Read-only.
@@ -40,8 +41,9 @@ public sealed class CreateBlogCommentCommandHandler(
 
             if (blog is null)
             {
-                return Result<CreateBlogCommentResult>.NotFound(
-                    $"Blog '{request.BlogId}' was not found.");
+                return Result<CreateBlogCommentResult>.Failure(
+                    new Error("Blog.NotFound", $"Blog '{request.BlogId}' was not found."),
+                    Outcome.NotFound);
             }
 
             if (blog.Status != BlogStatus.Published)
@@ -66,8 +68,11 @@ public sealed class CreateBlogCommentCommandHandler(
 
                 if (parent is null)
                 {
-                    return Result<CreateBlogCommentResult>.NotFound(
-                        $"Parent comment '{request.ParentCommentId.Value}' was not found.");
+                    return Result<CreateBlogCommentResult>.Failure(
+                        new Error(
+                            "BlogComment.ParentNotFound",
+                            $"Parent comment '{request.ParentCommentId.Value}' was not found."),
+                        Outcome.NotFound);
                 }
 
                 // IDOR / cross-blog reply defense: re-derive truth from DB and compare
@@ -118,8 +123,11 @@ public sealed class CreateBlogCommentCommandHandler(
             }
             catch (DbUpdateConcurrencyException)
             {
-                return Result<CreateBlogCommentResult>.Conflict(
-                    "Comment could not be saved due to a concurrency conflict. Please retry.");
+                return Result<CreateBlogCommentResult>.Failure(
+                    new Error(
+                        "BlogComment.ConcurrencyConflict",
+                        "Comment could not be saved due to a concurrency conflict. Please retry."),
+                    Outcome.Conflict);
             }
 
             await cache.RemoveByTagAsync(
@@ -130,12 +138,13 @@ public sealed class CreateBlogCommentCommandHandler(
                 "BlogComment created: {CommentId} (BlogId={BlogId}, ParentId={ParentId}, UserId={UserId})",
                 comment.Id, comment.BlogId, comment.ParentCommentId, comment.UserId);
 
-            return Result<CreateBlogCommentResult>.Created(
-                new CreateBlogCommentResult(comment.Id));
+            return Result.Created(new CreateBlogCommentResult(comment.Id));
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
-            return Result<CreateBlogCommentResult>.Canceled("The request was cancelled.");
+            return Result<CreateBlogCommentResult>.Failure(
+                new Error("Request.Cancelled", "The request was cancelled."),
+                Outcome.Canceled);
         }
     }
 

@@ -26,7 +26,9 @@ public sealed class RemoveBlogCommentReactionCommandHandler(
         {
             if (!currentUser.IsAuthenticated || currentUser.UserId is null)
             {
-                return Result.Unauthorized("Authenticated user is required.");
+                return Result.Failure(
+                    new Error("BlogCommentReaction.Unauthorized", "Authenticated user is required."),
+                    Outcome.Unauthorized);
             }
 
             var comment = await blogCommentRepository
@@ -72,7 +74,9 @@ public sealed class RemoveBlogCommentReactionCommandHandler(
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
-            return Result.Canceled("The request was cancelled.");
+            return Result.Failure(
+                new Error("Request.Cancelled", "The request was cancelled."),
+                Outcome.Canceled);
         }
     }
 }

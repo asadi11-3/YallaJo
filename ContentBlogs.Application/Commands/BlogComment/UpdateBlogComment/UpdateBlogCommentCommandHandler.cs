@@ -1,5 +1,6 @@
 using ContentBlogs.Application.Authorization;
 using ContentBlogs.Application.Caching;
+using ContentBlogs.Application.Common;
 using ContentBlogs.Application.Interfaces;
 using ContentBlogs.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -46,6 +47,19 @@ public sealed class UpdateBlogCommentCommandHandler(
             if (!authz.IsSuccess)
                 return authz;
 
+            // RowVersion check AFTER authorization (matches Blog handler ordering).
+            if (!RowVersionUtil.Equal(comment.RowVersion, request.RowVersion))
+            {
+                logger.LogWarning(
+                    "UpdateBlogComment rejected: stale RowVersion for comment {CommentId}.",
+                    comment.Id);
+                return Result.Failure(
+                    new Error(
+                        "BlogComment.ConcurrencyConflict",
+                        "This comment was modified by another user. Please refresh and try again."),
+                    Outcome.Conflict);
+            }
+
             try
             {
                 comment.Edit(request.Content, utcNow);
@@ -89,7 +103,9 @@ public sealed class UpdateBlogCommentCommandHandler(
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
-            return Result.Canceled("The request was cancelled.");
+            return Result.Failure(
+                new Error("Request.Cancelled", "The request was cancelled."),
+                Outcome.Canceled);
         }
     }
 }

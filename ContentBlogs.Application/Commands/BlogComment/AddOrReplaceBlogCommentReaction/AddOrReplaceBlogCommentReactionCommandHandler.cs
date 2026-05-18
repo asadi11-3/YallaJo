@@ -26,7 +26,9 @@ public sealed class AddOrReplaceBlogCommentReactionCommandHandler(
         {
             if (!currentUser.IsAuthenticated || currentUser.UserId is null)
             {
-                return Result.Unauthorized("Authenticated user is required.");
+                return Result.Failure(
+                    new Error("BlogCommentReaction.Unauthorized", "Authenticated user is required."),
+                    Outcome.Unauthorized);
             }
 
             // Load tracked with reactions: aggregate enforces one-per-user invariant.
@@ -97,7 +99,9 @@ public sealed class AddOrReplaceBlogCommentReactionCommandHandler(
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
-            return Result.Canceled("The request was cancelled.");
+            return Result.Failure(
+                new Error("Request.Cancelled", "The request was cancelled."),
+                Outcome.Canceled);
         }
     }
 }

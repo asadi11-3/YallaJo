@@ -10,6 +10,7 @@ using ContentBlogs.Presentation.Endpoints.BlogComment.Models;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using YallaJo.SharedKernel.Application.Authorization;
 using YallaJo.SharedKernel.Domain.Abstractions.Pagination;
@@ -81,6 +82,7 @@ internal static class BlogCommentEndpoints
         {
             var cmd = new UpdateBlogCommentCommand(
                 CommentId: commentId,
+                RowVersion: request.RowVersion,
                 Content: request.Content);
 
             var result = await sender.Send(cmd, ct);
@@ -100,10 +102,12 @@ internal static class BlogCommentEndpoints
         // ── DELETE /api/v1/blogs/comments/{commentId} ─────────────────────────
         group.MapDelete("/comments/{commentId:guid}", async (
             Guid commentId,
+            [FromBody] DeleteBlogCommentRequest request,
             ISender sender,
             CancellationToken ct) =>
         {
-            var result = await sender.Send(new DeleteBlogCommentCommand(commentId), ct);
+            var result = await sender.Send(
+                new DeleteBlogCommentCommand(commentId, request.RowVersion), ct);
             return result.ToApiResult();
         })
         .WithName("DeleteBlogComment")

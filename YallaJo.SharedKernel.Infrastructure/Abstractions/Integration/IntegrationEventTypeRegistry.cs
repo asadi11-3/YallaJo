@@ -83,13 +83,18 @@ public static class IntegrationEventTypeRegistry
         ["content-tours.package.updated.v1"]             = typeof(TourPackageUpdatedIntegrationEvent),
         ["content-tours.package.deleted.v1"]             = typeof(TourPackageDeletedIntegrationEvent),
 
-        // ── ContentBlogs (6 events) ──
-        ["content-blogs.blog.created.v1"]     = typeof(BlogCreatedIntegrationEvent),
-        ["content-blogs.blog.updated.v1"]     = typeof(BlogUpdatedIntegrationEvent),
-        ["content-blogs.blog.deleted.v1"]     = typeof(BlogDeletedIntegrationEvent),
-        ["content-blogs.blog.published.v1"]   = typeof(BlogPublishedIntegrationEvent),
-        ["content-blogs.blog.unpublished.v1"] = typeof(BlogUnpublishedIntegrationEvent),
-        ["content-blogs.blog.archived.v1"]    = typeof(BlogArchivedIntegrationEvent),
+        // ── ContentBlogs (11 events) ──
+        ["content-blogs.blog.created.v1"]       = typeof(BlogCreatedIntegrationEvent),
+        ["content-blogs.blog.updated.v1"]       = typeof(BlogUpdatedIntegrationEvent),
+        ["content-blogs.blog.deleted.v1"]       = typeof(BlogDeletedIntegrationEvent),
+        ["content-blogs.blog.restored.v1"]      = typeof(BlogRestoredIntegrationEvent),
+        ["content-blogs.blog.published.v1"]     = typeof(BlogPublishedIntegrationEvent),
+        ["content-blogs.blog.unpublished.v1"]   = typeof(BlogUnpublishedIntegrationEvent),
+        ["content-blogs.blog.archived.v1"]      = typeof(BlogArchivedIntegrationEvent),
+        ["content-blogs.blog-tour.linked.v1"]   = typeof(BlogTourLinkedIntegrationEvent),
+        ["content-blogs.blog-tour.unlinked.v1"] = typeof(BlogTourUnlinkedIntegrationEvent),
+        ["content-blogs.blog.featured.v1"]      = typeof(BlogFeaturedIntegrationEvent),
+        ["content-blogs.blog.unfeatured.v1"]    = typeof(BlogUnfeaturedIntegrationEvent),
     };
 
     private static readonly Dictionary<Type, string> TypeToName =

@@ -314,13 +314,6 @@ public sealed class Blog : AuditableEntity, IAggregateRoot
             UnlinkedAtUtc: utcNow));
     }
 
-    public void IncrementViewCount(DateTime utcNow)
-    {
-        EnsureNotDeleted();
-        ViewCount++;
-        UpdatedAt = utcNow;
-    }
-
     public void MarkAsFeatured(DateTime utcNow)
     {
         EnsureNotDeleted();
