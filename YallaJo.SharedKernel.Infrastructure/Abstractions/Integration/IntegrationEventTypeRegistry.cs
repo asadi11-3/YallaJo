@@ -95,6 +95,12 @@ public static class IntegrationEventTypeRegistry
         ["content-blogs.blog-tour.unlinked.v1"] = typeof(BlogTourUnlinkedIntegrationEvent),
         ["content-blogs.blog.featured.v1"]      = typeof(BlogFeaturedIntegrationEvent),
         ["content-blogs.blog.unfeatured.v1"]    = typeof(BlogUnfeaturedIntegrationEvent),
+
+        // ── ContentSeo (4 events) ──
+        ["content-seo.faq.changed.v1"]                  = typeof(FaqItemChangedIntegrationEvent),
+        ["content-seo.redirect.created.v1"]             = typeof(RedirectCreatedIntegrationEvent),
+        ["content-seo.redirect.chain-flattened.v1"]     = typeof(RedirectChainFlattenedIntegrationEvent),
+        ["content-seo.metadata.changed.v1"]             = typeof(SeoMetadataChangedIntegrationEvent),
     };
 
     private static readonly Dictionary<Type, string> TypeToName =
