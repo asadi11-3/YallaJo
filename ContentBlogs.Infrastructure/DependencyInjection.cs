@@ -57,6 +57,7 @@ public static class DependencyInjection
         // module no longer needs a ProjectReference to Security.Application nor
         // a local adapter — the IRoleHierarchyService coupling is gone.
         services.AddScoped<IBlogAuthorHierarchyGuard, BlogAuthorHierarchyGuard>();
+        services.AddScoped<IBlogCommentAuthorizationGuard, BlogCommentAuthorizationGuard>();
 
         // ── Cross-module read-only services ──────────────────────────────────
         // Owned & implemented here so consumers (ContentCore, etc.) depend only on

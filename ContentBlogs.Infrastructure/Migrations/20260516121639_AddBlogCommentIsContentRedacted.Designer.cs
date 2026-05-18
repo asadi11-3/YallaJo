@@ -4,6 +4,7 @@ using ContentBlogs.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ContentBlogs.Infrastructure.Migrations
 {
     [DbContext(typeof(ContentBlogsDbContext))]
-    partial class ContentBlogsDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260516121639_AddBlogCommentIsContentRedacted")]
+    partial class AddBlogCommentIsContentRedacted
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -253,34 +256,6 @@ namespace ContentBlogs.Infrastructure.Migrations
                     b.ToTable("BlogTranslations", "content_blogs");
                 });
 
-            modelBuilder.Entity("ContentBlogs.Domain.Entities.BlogView", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("BlogId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("ViewedAtUtc")
-                        .HasColumnType("datetime2");
-
-                    b.Property<byte[]>("ViewerHash")
-                        .IsRequired()
-                        .HasMaxLength(32)
-                        .HasColumnType("binary(32)");
-
-                    b.Property<byte>("ViewerKind")
-                        .HasColumnType("tinyint");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("BlogId", "ViewerHash")
-                        .IsUnique()
-                        .HasDatabaseName("IX_BlogViews_BlogId_ViewerHash_Unique");
-
-                    b.ToTable("BlogViews", "content_blogs");
-                });
-
             modelBuilder.Entity("YallaJo.SharedKernel.Infrastructure.Inbox.InboxMessage", b =>
                 {
                     b.Property<Guid>("Id")
@@ -378,7 +353,7 @@ namespace ContentBlogs.Infrastructure.Migrations
             modelBuilder.Entity("ContentBlogs.Domain.Entities.BlogTour", b =>
                 {
                     b.HasOne("ContentBlogs.Domain.Entities.Blog", "Blog")
-                        .WithMany("BlogTours")
+                        .WithMany()
                         .HasForeignKey("BlogId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -397,20 +372,9 @@ namespace ContentBlogs.Infrastructure.Migrations
                     b.Navigation("Blog");
                 });
 
-            modelBuilder.Entity("ContentBlogs.Domain.Entities.BlogView", b =>
-                {
-                    b.HasOne("ContentBlogs.Domain.Entities.Blog", null)
-                        .WithMany()
-                        .HasForeignKey("BlogId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("ContentBlogs.Domain.Entities.Blog", b =>
                 {
                     b.Navigation("BlogComments");
-
-                    b.Navigation("BlogTours");
 
                     b.Navigation("BlogTranslations");
                 });
