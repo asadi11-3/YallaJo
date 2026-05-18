@@ -7,6 +7,7 @@ namespace ContentSeo.Presentation.Endpoints.Weather;
 using ContentSeo.Application.Commands.Weather.RefreshWeather;
 using ContentSeo.Application.Queries.Weather.Common;
 using ContentSeo.Application.Queries.Weather.GetWeather;
+using ContentSeo.Application.Queries.Weather.GetWeatherByLocation;
 using ContentSeo.Contracts.Authorization;
 using ContentSeo.Presentation.Endpoints.Weather.Models;
 using MediatR;
@@ -38,6 +39,28 @@ internal static class WeatherEndpoints
         })
         .WithName("GetWeather")
         .WithSummary("Returns cached weather data for a place. Sets X-Weather-Stale:true header when the snapshot has expired.")
+        .Produces<WeatherDto>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .AllowAnonymous();
+
+        // GET /api/v1/seo/weather?lat=&lng=  (PDF §11 coordinate-based cache key)
+        group.MapGet("/weather", async (
+            decimal lat,
+            decimal lng,
+            HttpContext http,
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            var result = await sender.Send(new GetWeatherByLocationQuery(lat, lng), ct);
+            if (result.IsSuccess && result.Value is { IsStale: true })
+            {
+                http.Response.Headers["X-Weather-Stale"] = "true";
+            }
+
+            return result.ToApiResult();
+        })
+        .WithName("GetWeatherByLocation")
+        .WithSummary("Returns cached weather data for a location (lat/lng). PDF §11: cache key = (lat-rounded-2dp, lng-rounded-2dp, date).")
         .Produces<WeatherDto>(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .AllowAnonymous();

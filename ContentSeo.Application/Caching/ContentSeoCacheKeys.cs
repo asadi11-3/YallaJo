@@ -49,6 +49,17 @@ public static class ContentSeoCacheKeys
 
     public static string Weather(Guid placeId) => $"weather:{placeId}";
 
+    /// <summary>
+    /// PDF §11: cache key = (lat rounded to 2 dp, lng rounded to 2 dp, date).
+    /// Nearby tours share the same cache row.
+    /// </summary>
+    public static string WeatherByLocation(decimal roundedLat, decimal roundedLng, DateOnly date) =>
+        $"weather:loc:{roundedLat:F2}:{roundedLng:F2}:{date:yyyy-MM-dd}";
+
+    /// <summary>Tag for all weather cache entries at a given location.</summary>
+    public static string TagForWeatherLocation(decimal roundedLat, decimal roundedLng) =>
+        $"weather:loc:{roundedLat:F2}:{roundedLng:F2}";
+
     // ---- Helpers ----
     public static string Hash(string input)
     {

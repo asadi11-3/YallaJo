@@ -47,6 +47,8 @@ public static class DependencyInjection
         services.AddScoped<IFaqItemRepository, FaqItemRepository>();
         services.AddScoped<ISitemapEntryRepository, SitemapEntryRepository>();
         services.AddScoped<IWeatherCacheRepository, WeatherCacheRepository>();
+        services.AddScoped<IWeatherDailyBudgetRepository, WeatherDailyBudgetRepository>();
+        services.AddScoped<IWeatherBudgetGate, WeatherBudgetGate>();
 
         // ── Authorization (PW-6) ────────────────────────────────────────────
         services.AddSingleton<IPermissionCatalog, ContentSeoPermissionCatalog>();

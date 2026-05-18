@@ -101,6 +101,7 @@ public static class IntegrationEventTypeRegistry
         ["content-seo.redirect.created.v1"]             = typeof(RedirectCreatedIntegrationEvent),
         ["content-seo.redirect.chain-flattened.v1"]     = typeof(RedirectChainFlattenedIntegrationEvent),
         ["content-seo.metadata.changed.v1"]             = typeof(SeoMetadataChangedIntegrationEvent),
+        ["content-seo.weather.budget-exhausted.v1"]     = typeof(WeatherBudgetExhaustedIntegrationEvent),
     };
 
     private static readonly Dictionary<Type, string> TypeToName =

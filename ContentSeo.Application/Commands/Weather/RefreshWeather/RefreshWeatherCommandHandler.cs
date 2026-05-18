@@ -20,6 +20,7 @@ public sealed class RefreshWeatherCommandHandler(
     IWeatherCacheRepository weatherCacheRepository,
     IWeatherProvider provider,
     IContentSeoUnitOfWork unitOfWork,
+    IWeatherBudgetGate budgetGate,
     HybridCache cache,
     IDateTimeProvider clock,
     ILogger<RefreshWeatherCommandHandler> logger)
@@ -38,14 +39,39 @@ public sealed class RefreshWeatherCommandHandler(
                     Outcome.ServerError);
             }
 
-            var snapshot = await provider.FetchAsync(request.PlaceId, request.Latitude, request.Longitude, ct);
+            // PDF §11: cache key = (lat rounded to 2 dp, lng rounded to 2 dp, date).
+            var roundedLat = DomainWeatherCache.RoundCoordinate(request.Latitude);
+            var roundedLng = DomainWeatherCache.RoundCoordinate(request.Longitude);
             var now = clock.UtcNow;
+            var forecastDate = DateOnly.FromDateTime(now);
             var expiresAt = now.AddHours(12);
 
-            var entity = await weatherCacheRepository.GetByPlaceIdAsync(request.PlaceId, ct);
+            if (!await budgetGate.TryConsumeAsync(ct))
+            {
+                return Result<RefreshWeatherResult>.Failure(
+                    new Error("Weather.BudgetExhausted", "Daily weather API budget exhausted."),
+                    Outcome.TooManyRequests);
+            }
+
+            var snapshot = await provider.FetchAsync(request.Latitude, request.Longitude, ct);
+
+            // Validate 7-day forecast horizon (PDF §11).
+            if (snapshot.DailyForecasts.Count != 7)
+            {
+                logger.LogWarning(
+                    "Weather provider returned {Count} daily forecasts; expected 7. PlaceId={PlaceId}",
+                    snapshot.DailyForecasts.Count, request.PlaceId);
+            }
+
+            var forecastJson = System.Text.Json.JsonSerializer.Serialize(snapshot.DailyForecasts);
+
+            var entity = await weatherCacheRepository.GetByLocationAsync(roundedLat, roundedLng, forecastDate, ct);
             if (entity is null)
             {
                 entity = DomainWeatherCache.Create(
+                    request.Latitude,
+                    request.Longitude,
+                    forecastDate,
                     request.PlaceId,
                     snapshot.Temperature,
                     snapshot.FeelsLike,
@@ -55,7 +81,7 @@ public sealed class RefreshWeatherCommandHandler(
                     snapshot.Condition,
                     snapshot.IconCode,
                     snapshot.UvIndex,
-                    snapshot.ForecastJson,
+                    forecastJson,
                     now,
                     expiresAt);
                 await weatherCacheRepository.AddAsync(entity, ct);
@@ -71,7 +97,7 @@ public sealed class RefreshWeatherCommandHandler(
                     snapshot.Condition,
                     snapshot.IconCode,
                     snapshot.UvIndex,
-                    snapshot.ForecastJson,
+                    forecastJson,
                     now,
                     expiresAt);
             }
@@ -87,8 +113,12 @@ public sealed class RefreshWeatherCommandHandler(
                     Outcome.Conflict);
             }
 
+            // Invalidate both old PlaceId-based tag and new location-based tag.
             await cache.RemoveByTagAsync(ContentSeoCacheKeys.TagForWeather(request.PlaceId), ct);
-            logger.LogInformation("Refreshed weather for {PlaceId}", request.PlaceId);
+            await cache.RemoveByTagAsync(ContentSeoCacheKeys.TagForWeatherLocation(roundedLat, roundedLng), ct);
+            logger.LogInformation(
+                "Refreshed weather for PlaceId={PlaceId} at ({Lat},{Lng})",
+                request.PlaceId, roundedLat, roundedLng);
 
             return Result<RefreshWeatherResult>.Success(new RefreshWeatherResult(request.PlaceId, now, expiresAt));
         }

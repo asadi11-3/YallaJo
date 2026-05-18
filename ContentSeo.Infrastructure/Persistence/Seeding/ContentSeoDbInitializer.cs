@@ -83,6 +83,9 @@ public sealed class ContentSeoDbInitializer(ContentSeoDbContext dbContext) : IMo
         var weather = CreateEntity<WeatherCache>();
         SetProperty(weather, nameof(WeatherCache.Id), WeatherId);
         SetProperty(weather, nameof(WeatherCache.PlaceId), SeedContentIds.PlacePetra);
+        SetProperty(weather, nameof(WeatherCache.RoundedLatitude), WeatherCache.RoundCoordinate(30.3285m));
+        SetProperty(weather, nameof(WeatherCache.RoundedLongitude), WeatherCache.RoundCoordinate(35.4444m));
+        SetProperty(weather, nameof(WeatherCache.ForecastDate), DateOnly.FromDateTime(DateTime.UtcNow));
         SetProperty(weather, nameof(WeatherCache.Temperature), 24.5m);
         SetProperty(weather, nameof(WeatherCache.FeelsLike), 25.8m);
         SetProperty(weather, nameof(WeatherCache.Humidity), 37);
@@ -91,7 +94,7 @@ public sealed class ContentSeoDbInitializer(ContentSeoDbContext dbContext) : IMo
         SetProperty(weather, nameof(WeatherCache.Condition), "Clear");
         SetProperty(weather, nameof(WeatherCache.Icon), "clear-day");
         SetProperty(weather, nameof(WeatherCache.UvIndex), 7.4m);
-        SetProperty(weather, nameof(WeatherCache.Forecast), "Clear morning with mild afternoon breeze.");
+        SetProperty(weather, nameof(WeatherCache.ForecastJson), "[]");
         SetProperty(weather, nameof(WeatherCache.FetchedAt), DateTime.UtcNow.AddMinutes(-20));
         SetProperty(weather, nameof(WeatherCache.ExpiresAt), DateTime.UtcNow.AddHours(2));
         return [weather];

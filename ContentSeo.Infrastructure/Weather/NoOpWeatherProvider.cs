@@ -33,12 +33,13 @@ internal sealed class NoOpWeatherProvider(
         }
     }
 
-    public Task<WeatherSnapshot> FetchAsync(Guid placeId, decimal latitude, decimal longitude, CancellationToken ct)
+    public Task<WeatherSnapshot> FetchAsync(decimal latitude, decimal longitude, CancellationToken ct)
     {
         logger.LogWarning(
-            "NoOpWeatherProvider.FetchAsync called for {PlaceId} — provider='{Provider}', hasKey={HasKey}. " +
+            "NoOpWeatherProvider.FetchAsync called for ({Lat},{Lng}) — provider='{Provider}', hasKey={HasKey}. " +
             "Real OpenWeatherMap implementation is Wave 6.",
-            placeId,
+            latitude,
+            longitude,
             this.options.Provider,
             !string.IsNullOrWhiteSpace(this.options.ApiKey));
         throw new InvalidOperationException("Weather provider is not configured. Real OpenWeatherMap implementation is Wave 6.");

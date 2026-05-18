@@ -293,3 +293,12 @@
 - **Root Cause**: The test-only `UploadAttachmentHandlerBuilder` passed `cache: null!` to the handler. Earlier tests only exercised failure paths that returned before cache usage, so the helper bug stayed hidden until a success-path test was added.
 - **Fix Applied**: Updated `UploadAttachmentHandlerBuilder` to inject `OwnershipAuthFixture.NoOpCache()` instead of `null!`.
 - **Prevention Rule**: Shared handler builders must provide non-null defaults for all runtime dependencies, even if current tests mostly target early-return paths. Always include at least one success-path test to validate helper wiring.
+
+### ERR-031: WeatherCache seed data still referenced renamed Forecast property
+- **Date**: 2026-05-18
+- **Module**: ContentSeo.Infrastructure
+- **What Happened**: While completing Weather PDF §11 compliance, `dotnet build ContentSeo.Infrastructure/ContentSeo.Infrastructure.csproj --nologo` failed because `ContentSeoDbInitializer.CreateWeatherCaches()` still reflection-set `nameof(WeatherCache.Forecast)` after Phase 4 renamed the domain property to `ForecastJson` and added coordinate/date key fields.
+- **Error Message**: `CS0117: 'WeatherCache' does not contain a definition for 'Forecast'`.
+- **Root Cause**: The weather cache entity/configuration had been updated for the 7-day forecast JSON payload, but seed data was not updated with the property rename or new required `RoundedLatitude`, `RoundedLongitude`, and `ForecastDate` fields.
+- **Fix Applied**: Updated `ContentSeoDbInitializer` to seed `RoundedLatitude`, `RoundedLongitude`, `ForecastDate`, and `ForecastJson` instead of the removed `Forecast` property.
+- **Prevention Rule**: After renaming a domain property or adding required EF columns, scan all module seeders for `SetProperty(... nameof(Entity.OldProperty))` and update seed values before running migrations/builds.

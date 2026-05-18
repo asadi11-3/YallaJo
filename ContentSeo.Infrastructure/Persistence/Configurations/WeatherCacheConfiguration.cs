@@ -13,7 +13,19 @@ public class WeatherCacheConfiguration : IEntityTypeConfiguration<WeatherCache>
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Id).ValueGeneratedNever();
 
-        builder.Property(x => x.PlaceId).IsRequired();
+        // PDF §11: PlaceId is now optional (cache is keyed by coordinates, not PlaceId).
+        builder.Property(x => x.PlaceId).IsRequired(false);
+
+        // PDF §11: composite cache key = (RoundedLatitude, RoundedLongitude, ForecastDate).
+        builder.Property(x => x.RoundedLatitude)
+            .IsRequired()
+            .HasPrecision(7, 2);
+
+        builder.Property(x => x.RoundedLongitude)
+            .IsRequired()
+            .HasPrecision(8, 2);
+
+        builder.Property(x => x.ForecastDate).IsRequired();
 
         builder.Property(x => x.Temperature)
             .IsRequired(false)
@@ -43,9 +55,10 @@ public class WeatherCacheConfiguration : IEntityTypeConfiguration<WeatherCache>
             .IsRequired(false)
             .HasPrecision(4, 2);
 
-        builder.Property(x => x.Forecast)
+        // Renamed from Forecast → ForecastJson; nvarchar(max) for 7-day JSON array.
+        builder.Property(x => x.ForecastJson)
             .IsRequired(false)
-            .HasMaxLength(4000);
+            .HasColumnType("nvarchar(max)");
 
         builder.Property(x => x.FetchedAt).IsRequired();
         builder.Property(x => x.ExpiresAt).IsRequired();
@@ -58,11 +71,15 @@ public class WeatherCacheConfiguration : IEntityTypeConfiguration<WeatherCache>
 
         builder.HasQueryFilter(x => !x.IsDeleted);
 
-        // One active weather row per place (soft-delete safe).
-        builder.HasIndex(x => x.PlaceId)
+        // PDF §11: unique composite key (lat, lng, date) — nearby tours share cache.
+        builder.HasIndex(x => new { x.RoundedLatitude, x.RoundedLongitude, x.ForecastDate })
             .IsUnique()
             .HasFilter("[IsDeleted] = 0")
-            .HasDatabaseName("IX_WeatherCache_PlaceId_Active");
+            .HasDatabaseName("UX_WeatherCache_Lat_Lng_Date");
+
+        builder.HasIndex(x => x.PlaceId)
+            .HasFilter("[PlaceId] IS NOT NULL AND [IsDeleted] = 0")
+            .HasDatabaseName("IX_WeatherCache_PlaceId");
 
         builder.HasIndex(x => x.ExpiresAt)
             .HasDatabaseName("IX_WeatherCache_ExpiresAt");

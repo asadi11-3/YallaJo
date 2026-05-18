@@ -12,6 +12,7 @@ public sealed class ContentSeoDbContext : DbContext, IDbContext
 
     public DbSet<SeoMetadata> SeoMetadata => Set<SeoMetadata>();
     public DbSet<WeatherCache> WeatherCaches => Set<WeatherCache>();
+    public DbSet<WeatherDailyBudget> WeatherDailyBudgets => Set<WeatherDailyBudget>();
     public DbSet<FaqItem> FaqItems => Set<FaqItem>();
     public DbSet<FaqItemTranslation> FaqItemTranslations => Set<FaqItemTranslation>();
     public DbSet<SitemapEntry> SitemapEntries => Set<SitemapEntry>();

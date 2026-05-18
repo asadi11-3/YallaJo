@@ -18,4 +18,32 @@ internal sealed class WeatherCacheRepository(ContentSeoDbContext context)
 
     public async Task<WeatherCache?> GetByPlaceIdNoTrackingAsync(Guid placeId, CancellationToken ct = default)
         => await GetAsync(w => w.PlaceId == placeId && !w.IsDeleted, asNoTracking: true, ct: ct);
+
+    /// <inheritdoc/>
+    public async Task<WeatherCache?> GetByLocationAsync(
+        decimal roundedLat,
+        decimal roundedLng,
+        DateOnly date,
+        CancellationToken ct = default)
+        => await GetAsync(
+            w => w.RoundedLatitude == roundedLat
+              && w.RoundedLongitude == roundedLng
+              && w.ForecastDate == date
+              && !w.IsDeleted,
+            asNoTracking: false,
+            ct: ct);
+
+    /// <inheritdoc/>
+    public async Task<WeatherCache?> GetByLocationNoTrackingAsync(
+        decimal roundedLat,
+        decimal roundedLng,
+        DateOnly date,
+        CancellationToken ct = default)
+        => await GetAsync(
+            w => w.RoundedLatitude == roundedLat
+              && w.RoundedLongitude == roundedLng
+              && w.ForecastDate == date
+              && !w.IsDeleted,
+            asNoTracking: true,
+            ct: ct);
 }

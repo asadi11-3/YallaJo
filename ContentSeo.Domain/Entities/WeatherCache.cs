@@ -12,7 +12,23 @@ public sealed class WeatherCache : AuditableEntity, IAggregateRoot
     {
     } // EF Core
 
-    public Guid PlaceId { get; private set; }
+    /// <summary>
+    /// Optional: the Place this cache row was fetched for.
+    /// Nullable because PDF §11 keys by coordinates, not PlaceId.
+    /// </summary>
+    public Guid? PlaceId { get; private set; }
+
+    /// <summary>
+    /// PDF §11: cache key = (lat rounded to 2 dp, lng rounded to 2 dp, date).
+    /// Nearby tours share the same cache row.
+    /// </summary>
+    public decimal RoundedLatitude { get; private set; }
+
+    /// <summary>PDF §11: longitude component of the composite cache key.</summary>
+    public decimal RoundedLongitude { get; private set; }
+
+    /// <summary>PDF §11: date component of the composite cache key (UTC date).</summary>
+    public DateOnly ForecastDate { get; private set; }
 
     public decimal? Temperature { get; private set; }
 
@@ -30,17 +46,32 @@ public sealed class WeatherCache : AuditableEntity, IAggregateRoot
 
     public decimal? UvIndex { get; private set; }
 
-    public string? Forecast { get; private set; }
+    /// <summary>
+    /// JSON-serialised array of <c>DailyForecast</c> objects.
+    /// PDF §11: 7-day forecast horizon from today.
+    /// </summary>
+    public string? ForecastJson { get; private set; }
 
     public DateTime FetchedAt { get; private set; }
 
     public DateTime ExpiresAt { get; private set; }
 
+    // ── Helpers ───────────────────────────────────────────────────────────────
+
     /// <summary>
-    /// Creates a new WeatherCache row for the given place.
+    /// Rounds a coordinate to 2 decimal places (PDF §11 cache-key rule).
+    /// </summary>
+    public static decimal RoundCoordinate(decimal value) => Math.Round(value, 2, MidpointRounding.AwayFromZero);
+
+    /// <summary>
+    /// Creates a new WeatherCache row keyed by rounded coordinates + date.
+    /// PDF §11: cache key = (lat-rounded-2dp, lng-rounded-2dp, date).
     /// </summary>
     public static WeatherCache Create(
-        Guid placeId,
+        decimal latitude,
+        decimal longitude,
+        DateOnly forecastDate,
+        Guid? placeId,
         decimal? temperature,
         decimal? feelsLike,
         int? humidity,
@@ -49,15 +80,10 @@ public sealed class WeatherCache : AuditableEntity, IAggregateRoot
         string? condition,
         string? icon,
         decimal? uvIndex,
-        string? forecast,
+        string? forecastJson,
         DateTime fetchedAt,
         DateTime expiresAt)
     {
-        if (placeId == Guid.Empty)
-        {
-            throw new ArgumentException("PlaceId is required.", nameof(placeId));
-        }
-
         if (expiresAt <= fetchedAt)
         {
             throw new ArgumentException("ExpiresAt must be greater than FetchedAt.", nameof(expiresAt));
@@ -67,6 +93,9 @@ public sealed class WeatherCache : AuditableEntity, IAggregateRoot
         {
             Id = Guid.CreateVersion7(),
             PlaceId = placeId,
+            RoundedLatitude = RoundCoordinate(latitude),
+            RoundedLongitude = RoundCoordinate(longitude),
+            ForecastDate = forecastDate,
             Temperature = temperature,
             FeelsLike = feelsLike,
             Humidity = humidity,
@@ -75,7 +104,7 @@ public sealed class WeatherCache : AuditableEntity, IAggregateRoot
             Condition = Trim(condition),
             Icon = Trim(icon),
             UvIndex = uvIndex,
-            Forecast = forecast,
+            ForecastJson = forecastJson,
             FetchedAt = fetchedAt,
             ExpiresAt = expiresAt,
         };
@@ -94,7 +123,7 @@ public sealed class WeatherCache : AuditableEntity, IAggregateRoot
         string? condition,
         string? icon,
         decimal? uvIndex,
-        string? forecast,
+        string? forecastJson,
         DateTime fetchedAt,
         DateTime expiresAt)
     {
@@ -112,7 +141,7 @@ public sealed class WeatherCache : AuditableEntity, IAggregateRoot
         Condition = Trim(condition);
         Icon = Trim(icon);
         UvIndex = uvIndex;
-        Forecast = forecast;
+        ForecastJson = forecastJson;
         FetchedAt = fetchedAt;
         ExpiresAt = expiresAt;
         MarkUpdated();

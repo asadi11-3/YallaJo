@@ -46,6 +46,7 @@ internal sealed class WeatherPreFetchService(
             {
                 await using var scope = scopeFactory.CreateAsyncScope();
                 var provider = scope.ServiceProvider.GetRequiredService<IWeatherProvider>();
+                var budgetGate = scope.ServiceProvider.GetRequiredService<IWeatherBudgetGate>();
                 if (!provider.IsAvailable)
                 {
                     logger.LogInformation("WeatherPreFetchService: provider not available, skipping daily pre-fetch.");
@@ -54,8 +55,12 @@ internal sealed class WeatherPreFetchService(
 
                 // Real implementation would resolve IPlaceQueryService.GetTop50ByPopularityAsync(ct)
                 // and iterate within the daily budget. For Wave-4, this is a no-op placeholder
-                // honoring the configured budget value.
-                logger.LogInformation("WeatherPreFetchService: daily run executed (budget={Budget})", dailyBudget);
+                // honoring the configured budget value; the scoped gate is resolved here and
+                // would be checked before each upstream provider call.
+                logger.LogInformation(
+                    "WeatherPreFetchService: daily run executed (budget={Budget}); budget gate {GateType} ready for provider calls.",
+                    dailyBudget,
+                    budgetGate.GetType().Name);
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
             {
