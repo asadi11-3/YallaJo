@@ -49,5 +49,23 @@ internal static class SitemapEndpoints
         .Produces(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status503ServiceUnavailable)
         .AllowAnonymous();
+
+        // GET /sitemaps/{entityType}.xml — per-EntityType sub-sitemap (PDF §8 sharding)
+        endpoints.MapGet("/sitemaps/{entityType}.xml", async (
+            string entityType,
+            ISitemapRenderer renderer,
+            CancellationToken ct) =>
+        {
+            var xml = await renderer.GetSubSitemapXmlAsync(entityType, ct);
+            if (xml is null)
+                return Results.NotFound();
+            return Results.Text(xml, "application/xml");
+        })
+        .WithName("GetSubSitemap")
+        .WithSummary("Per-EntityType sub-sitemap (used when total URLs exceed 50,000).")
+        .WithTags("ContentSeo")
+        .Produces(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .AllowAnonymous();
     }
 }

@@ -22,7 +22,8 @@ public sealed class SitemapEntry : AuditableEntity, IAggregateRoot
         Guid? entityId = null,
         string? changeFrequency = "weekly",
         decimal? priority = 0.5m,
-        bool isActive = true)
+        bool isActive = true,
+        DateTime? lastModified = null)
     {
         if (string.IsNullOrWhiteSpace(url))
             throw new ArgumentException("Url is required.", nameof(url));
@@ -37,9 +38,20 @@ public sealed class SitemapEntry : AuditableEntity, IAggregateRoot
             EntityId        = entityId,
             ChangeFrequency = changeFrequency,
             Priority        = priority,
-            LastModified    = DateTime.UtcNow,
+            // PDF §8: LastModified = entity.UpdatedAt; fall back to UtcNow if not provided.
+            LastModified    = lastModified?.ToUniversalTime() ?? DateTime.UtcNow,
             IsActive        = isActive,
         };
+    }
+
+    /// <summary>
+    /// Updates LastModified to the entity's own UpdatedAt timestamp.
+    /// PDF §8: LastModified = entity.UpdatedAt.
+    /// </summary>
+    public void UpdateLastModified(DateTime entityUpdatedAt)
+    {
+        LastModified = entityUpdatedAt.ToUniversalTime();
+        MarkUpdated();
     }
 
     // ── Business Methods ──────────────────────────────────────────────────────

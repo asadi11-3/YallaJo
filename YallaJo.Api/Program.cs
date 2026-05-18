@@ -266,6 +266,9 @@ app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 
+// 9. SEO redirect middleware — intercepts 404s and issues 301/302 before error page
+app.UseMiddleware<SeoRedirectMiddleware>();
+
 // ── Module endpoints ──────────────────────────────────────────────────────
 app.MapAccountsEndpoints();
 app.MapAuthEndpoints();
