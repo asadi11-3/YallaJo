@@ -121,7 +121,7 @@ internal static class BlogEndpoints
         .ProducesProblem(StatusCodes.Status401Unauthorized)
         .ProducesProblem(StatusCodes.Status403Forbidden)
         .ProducesProblem(StatusCodes.Status404NotFound)
-        .WithMetadata(new MustHavePermissionAttribute(ContentBlogFeatures.Blog, AppAction.Read));
+        .WithMetadata(new MustHavePermissionAttribute(ContentBlogsFeatures.Blog, AppAction.Read));
 
         group.MapGet("/admin/deleted", async (
             int? pageNumber,
@@ -152,7 +152,7 @@ internal static class BlogEndpoints
         .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status401Unauthorized)
         .ProducesProblem(StatusCodes.Status403Forbidden)
-        .WithMetadata(new MustHavePermissionAttribute(ContentBlogFeatures.Blog, AppAction.Delete));
+        .WithMetadata(new MustHavePermissionAttribute(ContentBlogsFeatures.Blog, AppAction.Delete));
 
         group.MapPost("/", async (
             CreateBlogRequest request,
@@ -180,7 +180,7 @@ internal static class BlogEndpoints
         .ProducesProblem(StatusCodes.Status403Forbidden)
         .ProducesProblem(StatusCodes.Status409Conflict)
         .ProducesProblem(StatusCodes.Status422UnprocessableEntity)
-        .WithMetadata(new MustHavePermissionAttribute(ContentBlogFeatures.Blog, AppAction.Create));
+        .WithMetadata(new MustHavePermissionAttribute(ContentBlogsFeatures.Blog, AppAction.Create));
 
         group.MapPut("/{id:guid}", async (
             Guid id,
@@ -210,7 +210,7 @@ internal static class BlogEndpoints
         .ProducesProblem(StatusCodes.Status403Forbidden)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status409Conflict)
-        .WithMetadata(new MustHavePermissionAttribute(ContentBlogFeatures.Blog, AppAction.Update));
+        .WithMetadata(new MustHavePermissionAttribute(ContentBlogsFeatures.Blog, AppAction.Update));
         group.MapDelete("/{id:guid}", async (
             Guid id,
             [FromBody] BlogRowVersionRequest request,
@@ -227,7 +227,7 @@ internal static class BlogEndpoints
         .ProducesProblem(StatusCodes.Status403Forbidden)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status409Conflict)
-        .WithMetadata(new MustHavePermissionAttribute(ContentBlogFeatures.Blog, AppAction.Delete));
+        .WithMetadata(new MustHavePermissionAttribute(ContentBlogsFeatures.Blog, AppAction.Delete));
 
         group.MapPost("/{id:guid}/restore", async (
             Guid id,
@@ -245,7 +245,7 @@ internal static class BlogEndpoints
         .ProducesProblem(StatusCodes.Status403Forbidden)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status409Conflict)
-        .WithMetadata(new MustHavePermissionAttribute(ContentBlogFeatures.Blog, AppAction.Delete));
+        .WithMetadata(new MustHavePermissionAttribute(ContentBlogsFeatures.Blog, AppAction.Delete));
 
         group.MapPost("/{id:guid}/publish", async (
             Guid id,
@@ -263,7 +263,7 @@ internal static class BlogEndpoints
         .ProducesProblem(StatusCodes.Status403Forbidden)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status409Conflict)
-        .WithMetadata(new MustHavePermissionAttribute(ContentBlogFeatures.Blog, AppAction.Approve));
+        .WithMetadata(new MustHavePermissionAttribute(ContentBlogsFeatures.Blog, AppAction.Approve));
 
         group.MapPost("/{id:guid}/unpublish", async (
             Guid id,
@@ -281,7 +281,7 @@ internal static class BlogEndpoints
         .ProducesProblem(StatusCodes.Status403Forbidden)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status409Conflict)
-        .WithMetadata(new MustHavePermissionAttribute(ContentBlogFeatures.Blog, AppAction.Approve));
+        .WithMetadata(new MustHavePermissionAttribute(ContentBlogsFeatures.Blog, AppAction.Approve));
         group.MapPost("/{id:guid}/archive", async (
             Guid id,
             BlogRowVersionRequest request,
@@ -298,7 +298,7 @@ internal static class BlogEndpoints
         .ProducesProblem(StatusCodes.Status403Forbidden)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status409Conflict)
-        .WithMetadata(new MustHavePermissionAttribute(ContentBlogFeatures.Blog, AppAction.Approve));
+        .WithMetadata(new MustHavePermissionAttribute(ContentBlogsFeatures.Blog, AppAction.Approve));
 
         group.MapPatch("/{id:guid}/mark-as-featured", async (
             Guid id,
@@ -316,7 +316,7 @@ internal static class BlogEndpoints
         .ProducesProblem(StatusCodes.Status403Forbidden)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status409Conflict)
-        .WithMetadata(new MustHavePermissionAttribute(ContentBlogFeatures.Blog, AppAction.Approve));
+        .WithMetadata(new MustHavePermissionAttribute(ContentBlogsFeatures.Blog, AppAction.Approve));
 
 
         group.MapPatch("/{id:guid}/mark-as-unfeatured", async (
@@ -335,7 +335,7 @@ internal static class BlogEndpoints
         .ProducesProblem(StatusCodes.Status403Forbidden)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status409Conflict)
-        .WithMetadata(new MustHavePermissionAttribute(ContentBlogFeatures.Blog, AppAction.Approve));
+        .WithMetadata(new MustHavePermissionAttribute(ContentBlogsFeatures.Blog, AppAction.Approve));
 
         group.MapPost("/{id:guid}/views", async (
             Guid id,
@@ -384,7 +384,7 @@ internal static class BlogEndpoints
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status409Conflict)
         .ProducesProblem(StatusCodes.Status422UnprocessableEntity)
-        .WithMetadata(new MustHavePermissionAttribute(ContentBlogFeatures.BlogTourLink, AppAction.Create));
+        .WithMetadata(new MustHavePermissionAttribute(ContentBlogsFeatures.BlogTourLink, AppAction.Create));
 
         group.MapDelete("/{id:guid}/tours/{tourId:guid}", async (
             Guid id,
@@ -408,6 +408,6 @@ internal static class BlogEndpoints
         .ProducesProblem(StatusCodes.Status403Forbidden)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status409Conflict)
-        .WithMetadata(new MustHavePermissionAttribute(ContentBlogFeatures.BlogTourLink, AppAction.Delete));
+        .WithMetadata(new MustHavePermissionAttribute(ContentBlogsFeatures.BlogTourLink, AppAction.Delete));
     }
 }

@@ -71,7 +71,7 @@ internal static class BlogCommentEndpoints
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status409Conflict)
         .WithMetadata(new MustHavePermissionAttribute(
-            ContentBlogFeatures.BlogComment, AppAction.Create));
+            ContentBlogsFeatures.BlogComment, AppAction.Create));
 
         // ── PUT /api/v1/blogs/comments/{commentId} ────────────────────────────
         group.MapPut("/comments/{commentId:guid}", async (
@@ -97,7 +97,7 @@ internal static class BlogCommentEndpoints
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status409Conflict)
         .WithMetadata(new MustHavePermissionAttribute(
-            ContentBlogFeatures.BlogComment, AppAction.Update));
+            ContentBlogsFeatures.BlogComment, AppAction.Update));
 
         // ── DELETE /api/v1/blogs/comments/{commentId} ─────────────────────────
         group.MapDelete("/comments/{commentId:guid}", async (
@@ -119,7 +119,7 @@ internal static class BlogCommentEndpoints
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status409Conflict)
         .WithMetadata(new MustHavePermissionAttribute(
-            ContentBlogFeatures.BlogComment, AppAction.Delete));
+            ContentBlogsFeatures.BlogComment, AppAction.Delete));
 
         // ── POST /api/v1/blogs/comments/{commentId}/reactions ─────────────────
         group.MapPost("/comments/{commentId:guid}/reactions", async (
@@ -144,7 +144,7 @@ internal static class BlogCommentEndpoints
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status409Conflict)
         .WithMetadata(new MustHavePermissionAttribute(
-            ContentBlogFeatures.BlogReaction, AppAction.Create));
+            ContentBlogsFeatures.BlogReaction, AppAction.Create));
 
         // ── DELETE /api/v1/blogs/comments/{commentId}/reactions ───────────────
         group.MapDelete("/comments/{commentId:guid}/reactions", async (
@@ -163,6 +163,6 @@ internal static class BlogCommentEndpoints
         .ProducesProblem(StatusCodes.Status403Forbidden)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithMetadata(new MustHavePermissionAttribute(
-            ContentBlogFeatures.BlogReaction, AppAction.Delete));
+            ContentBlogsFeatures.BlogReaction, AppAction.Delete));
     }
 }

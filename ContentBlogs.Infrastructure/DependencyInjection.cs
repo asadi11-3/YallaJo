@@ -48,7 +48,7 @@ public static class DependencyInjection
         services.AddScoped<IBlogCommentRepository,BlogCommentRepository>();
         services.AddScoped<IBlogTourRepository, BlogTourRepository>();
 
-        services.AddSingleton<IPermissionCatalog, ContentBlogPermissionCatalog>();
+        services.AddSingleton<IPermissionCatalog, ContentBlogsPermissionCatalog>();
 
         // ── Author-hierarchy authorization (Phase 1 closure) ─────────────────
         // BlogAuthorHierarchyGuard lives in ContentBlogs.Application and depends

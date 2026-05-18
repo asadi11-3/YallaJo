@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ContentBlogs.Contracts.Authorization
 {
-    public static class ContentBlogFeatures
+    public static class ContentBlogsFeatures
     {
         public const string Blog = nameof(Blog);
         public const string BlogComment = nameof(BlogComment);
