@@ -1,8 +1,7 @@
-# Booking Module — Combined Sprint Task File
+﻿# Booking Module — Combined Sprint Task File
 
 > **Phase 1 (Wave 5) sprint covering the Booking module.**
 > **Sprint window:** Mon 2026-06-15 → Thu 2026-08-13 (8 weeks, 40 working days, 190 person-hours)
-> **Combined from 13 separate files** in `Agents/tasks/Booking/` for single-file review.
 
 ---
 
@@ -21,6 +20,7 @@
 - [10-task-background-services](#10-task-background-services)
 - [11-cross-cutting](#11-cross-cutting)
 - [99-acceptance-gate](#99-acceptance-gate)
+- [pre-work-kickoff](#pre-work-kickoff)
 
 ---
 
@@ -28,7 +28,6 @@
 
 ## 00-README
 
-> Source: `Booking/00-README.md`
 
 # Booking Module — Wave 5 Sprint
 
@@ -88,27 +87,29 @@ This sprint is intentionally over-budgeted on buffer (19%) because **the 5-step 
 |---|---|---|---|---|---|---|
 | **Mohammad** (lead) | Intermediate | TASK 4 (Booking Engine) + TASK 5 (Confirm/Reject/Cancel) | 9 | 0 | 80 | 2026-08-12 |
 | **Mahmoud** | Intermediate | TASK 1 (Availability Slots) + TASK 7 (BG Services) | 5 | 4 | 60 | 2026-08-12 |
-| **Fadwa** | Beginner | TASK 2 (Refund Policy + Commission) + TASK 3 (Provider Documents) + TASK 6 (Join Request) | 8 | 0 | 50 | 2026-08-12 |
+| **Fadwa** | Beginner | TASK 2 (Refund Policy + Commission) + TASK 6 (Join Request) | 6 | 0 | 38 | 2026-07-27 |
+| **Ezz** | Beginner | TASK 3 (Provider Documents) | 4 | 0 | 20 | 2026-07-13 |
 | **Tech Lead** | Senior | Pre-Work (PW-1..PW-8) + code review + integration test harness | 0 | 0 | 40 | 2026-06-16 (PW) / 2026-08-13 (review) |
 
 ---
 
 ## 3. Deliverable Manifest (table of contents)
 
-| File | Section | Owner | Status |
-|---|---|---|---|
-| [`01-pre-work.md`](./01-pre-work.md) | Pre-Work PW-1..PW-8 (Tech Lead) | Tech Lead | Pending |
-| [`02-critical-rules.md`](./02-critical-rules.md) | Booking-specific rules (additive to INDEX §4) | Tech Lead | Pending |
-| [`03-entities-matrix.md`](./03-entities-matrix.md) | Entity ownership matrix for all 11 Booking entities | Tech Lead | Pending |
-| [`04-task-availability-slots.md`](./04-task-availability-slots.md) | TASK 1 — AvailabilitySlot CRUD + bulk-recurring 90-day | Mahmoud | Pending |
-| [`05-task-refund-policy-commission.md`](./05-task-refund-policy-commission.md) | TASK 2 — RefundPolicy CRUD + CommissionRule CRUD | Fadwa | Pending |
-| [`06-task-provider-documents.md`](./06-task-provider-documents.md) | TASK 3 — Provider documents upload + expiry tracking | Fadwa | Pending |
-| [`07-task-booking-engine.md`](./07-task-booking-engine.md) | TASK 4 — **The 5-step `POST /tour` booking engine** | Mohammad | Pending |
-| [`08-task-confirm-reject-cancel.md`](./08-task-confirm-reject-cancel.md) | TASK 5 — Provider confirm/reject, user cancel-with-refund | Mohammad | Pending |
-| [`09-task-join-request.md`](./09-task-join-request.md) | TASK 6 — Join-request workflow (request, approve, reject) | Fadwa | Pending |
-| [`10-task-background-services.md`](./10-task-background-services.md) | TASK 7 — 4 background services (SlotLockCleanup, BookingAutoExpire, ProviderAutoAccept, DocumentExpiryCheck) | Mahmoud | Pending |
-| [`11-cross-cutting.md`](./11-cross-cutting.md) | DI audit, permission seeder, outbox registry, migrations, build lock | Tech Lead | Pending |
-| [`99-acceptance-gate.md`](./99-acceptance-gate.md) | Final acceptance gate sign-off checklist | Tech Lead | Pending |
+| Section | Owner | Status |
+|---|---|---|
+| Pre-Work PW-1..PW-8 (Tech Lead) | Tech Lead | Pending |
+| Booking-specific rules (additive to INDEX §4) | Tech Lead | Pending |
+| Entity ownership matrix for all 11 Booking entities | Tech Lead | Pending |
+| TASK 1 — AvailabilitySlot CRUD + bulk-recurring 90-day | Mahmoud | Pending |
+| TASK 2 — RefundPolicy CRUD + CommissionRule CRUD | Fadwa | Pending |
+| TASK 3 — Provider documents upload + expiry tracking | Ezz | Pending |
+| TASK 4 — **The 5-step `POST /tour` booking engine** | Mohammad | Pending |
+| TASK 5 — Provider confirm/reject, user cancel-with-refund | Mohammad | Pending |
+| TASK 6 — Join-request workflow (request, approve, reject) | Fadwa | Pending |
+| TASK 7 — 4 background services (SlotLockCleanup, BookingAutoExpire, ProviderAutoAccept, DocumentExpiryCheck) | Mahmoud | Pending |
+| DI audit, permission seeder, outbox registry, migrations, build lock | Tech Lead | Pending |
+| Final acceptance gate sign-off checklist | Tech Lead | Pending |
+| Pre-Work Kickoff Briefing | Mohammad | Pending |
 
 ---
 
@@ -190,7 +191,6 @@ Every event follows logical name convention `booking.{entity}.{verb}.v1` and is 
 
 ## 01-pre-work
 
-> Source: `Booking/01-pre-work.md`
 
 # Booking — Pre-Work (PW-1..PW-8)
 
@@ -533,7 +533,6 @@ All 8 boxes ticked + PR `sprint/booking-prework → main` merged by **2026-06-16
 
 ## 02-critical-rules
 
-> Source: `Booking/02-critical-rules.md`
 
 # Booking Sprint — Critical Rules (Additive to Master INDEX §4)
 
@@ -697,7 +696,6 @@ All 8 boxes ticked + PR `sprint/booking-prework → main` merged by **2026-06-16
 
 ## 03-entities-matrix
 
-> Source: `Booking/03-entities-matrix.md`
 
 # Booking Sprint — Entity Ownership Matrix
 
@@ -841,7 +839,6 @@ All 8 boxes ticked + PR `sprint/booking-prework → main` merged by **2026-06-16
 
 ## 04-task-availability-slots
 
-> Source: `Booking/04-task-availability-slots.md`
 
 # TASK 1 — Availability Slots (TourBooking-side)
 
@@ -1089,7 +1086,6 @@ tests/Booking.IntegrationTests/AvailabilitySlotsRoundTripTests.cs
 
 ## 05-task-refund-policy-commission
 
-> Source: `Booking/05-task-refund-policy-commission.md`
 
 # TASK 2 — Refund Policy + Commission CRUD
 
@@ -1316,11 +1312,10 @@ When TASK 4 (Booking Engine) starts implementing POST /tour Step 3 pricing calcu
 
 ## 06-task-provider-documents
 
-> Source: `Booking/06-task-provider-documents.md`
 
 # TASK 3 — Provider Documents (upload, list, expiry tracking foundation)
 
-**Owner:** Fadwa (Beginner)
+**Owner:** Ezz (Beginner — first sprint; mentored by Mahmoud on EF migration + attachment plumbing)
 **Endpoints:** 4
 **Estimated hours:** 20
 **Earliest start:** Tue 2026-06-30 (after TASK 2 merges)
@@ -1338,7 +1333,7 @@ When TASK 4 (Booking Engine) starts implementing POST /tour Step 3 pricing calcu
 | 3 | `GET /api/v1/booking/provider/documents` | `ProviderDocument + Read` (provider self) | 200 + list |
 | 4 | `GET /api/v1/booking/provider/documents/{id}` | `ProviderDocument + Read` (provider self OR admin) | 200 + DTO with attachment URL |
 
-> **NOTE:** Provider-document upload happens via Accounts-flow provider-onboarding originally (`POST /accounts/provider/documents` per PDF 1 Wave 2). This sprint OWNS the Booking-module copy because Booking is the one that runs `DocumentExpiryCheckService`. **The Accounts endpoint stays as a thin facade** that internally forwards to the Booking module via an in-process MediatR call (eventually replace with integration event in Wave 5 sprint #2). For now: provider uploads through EITHER endpoint; both write to the same `Booking.ProviderDocuments` table. Fadwa's job is to:
+> **NOTE:** Provider-document upload happens via Accounts-flow provider-onboarding originally (`POST /accounts/provider/documents` per PDF 1 Wave 2). This sprint OWNS the Booking-module copy because Booking is the one that runs `DocumentExpiryCheckService`. **The Accounts endpoint stays as a thin facade** that internally forwards to the Booking module via an in-process MediatR call (eventually replace with integration event in Wave 5 sprint #2). For now: provider uploads through EITHER endpoint; both write to the same `Booking.ProviderDocuments` table. Ezz's job is to:
 > 1. Make `Booking.ProviderDocuments` the authoritative table.
 > 2. Refactor the Accounts endpoint to forward (1-line MediatR Send).
 > 3. Wire DocumentExpiryCheckService (TASK 7 will wire the BG service itself; this task ensures the columns/indexes exist).
@@ -1528,7 +1523,7 @@ Doc types requiring expiry: MoTALicense, BusinessLicense, TaxRegistration, Insur
 
 ---
 
-## Files Fadwa touches
+## Files Ezz touches
 
 ```
 Booking.Domain/Entities/ProviderDocument.cs                       (refactor)
@@ -1556,7 +1551,6 @@ tests/Booking.IntegrationTests/ProviderDocumentRoundTripTests.cs
 
 ## 07-task-booking-engine
 
-> Source: `Booking/07-task-booking-engine.md`
 
 # TASK 4 — Booking Engine (POST /tour 5-step flow + GET endpoints)
 
@@ -1987,7 +1981,6 @@ tests/Booking.IntegrationTests/TourBookingConcurrencyTests.cs
 
 ## 08-task-confirm-reject-cancel
 
-> Source: `Booking/08-task-confirm-reject-cancel.md`
 
 # TASK 5 — Confirm / Reject / Cancel / Complete (state transitions)
 
@@ -2321,7 +2314,6 @@ tests/Booking.IntegrationTests/CapacityRestoreOnCancelTests.cs
 
 ## 09-task-join-request
 
-> Source: `Booking/09-task-join-request.md`
 
 # TASK 6 — Join Request (group booking participants)
 
@@ -2552,7 +2544,6 @@ tests/Booking.IntegrationTests/JoinRequestRoundTripTests.cs
 
 ## 10-task-background-services
 
-> Source: `Booking/10-task-background-services.md`
 
 # TASK 7 — Booking Background Services
 
@@ -2868,7 +2859,6 @@ public static IServiceCollection AddBookingInfrastructure(this IServiceCollectio
 
 ## 11-cross-cutting
 
-> Source: `Booking/11-cross-cutting.md`
 
 # Booking — Cross-Cutting Concerns
 
@@ -3015,7 +3005,7 @@ Applied in this exact order in production. **Squash forbidden — keep separate 
 | 2 | `BookingAddReadSnapshots` | Tech Lead | PW-9 (or T4 step 1 if PW slipped) | Create BookingTourSnapshots, BookingTourPricingSnapshots, BookingProviderSnapshots, BookingCommissionSnapshots tables in `booking` schema |
 | 3 | `BookingAddSlotLockFilteredIndex` | Mahmoud | T1 | UNIQUE filtered index `(UserId, AvailabilitySlotId) WHERE IsActive = 1`; also `IX_SlotLocks_ExpiresAt WHERE IsActive = 1` for BG service |
 | 4 | `BookingAddRefundPolicyJsonColumn` | Fadwa | T2 | `Tiers nvarchar(max) NOT NULL DEFAULT '[]'` owned-JSON column |
-| 5 | `BookingAddProviderDocumentExpiryColumns` | Fadwa | T3 | `ExpiryWarningSent bit NOT NULL DEFAULT 0`, `ExpiryProcessed bit NOT NULL DEFAULT 0`, `ApprovedAt datetime2 NULL`, `ApprovedByUserId Guid NULL`, `RejectedAt datetime2 NULL`, `RejectionReason nvarchar(500) NULL` + 2 indexes |
+| 5 | `BookingAddProviderDocumentExpiryColumns` | Ezz | T3 | `ExpiryWarningSent bit NOT NULL DEFAULT 0`, `ExpiryProcessed bit NOT NULL DEFAULT 0`, `ApprovedAt datetime2 NULL`, `ApprovedByUserId Guid NULL`, `RejectedAt datetime2 NULL`, `RejectionReason nvarchar(500) NULL` + 2 indexes |
 | 6 | `BookingAddTourBookingReferenceIndex` | Mohammad | T4 | UNIQUE index `IX_TourBookings_Reference (Reference)` |
 
 **Migration generation cmd (run from solution root):**
@@ -3082,7 +3072,6 @@ Each requires `MustHavePermission(BookingFeatures.AdminBookingDashboard, AppActi
 
 ## 99-acceptance-gate
 
-> Source: `Booking/99-acceptance-gate.md`
 
 # Booking Module — Final Acceptance Gate
 
@@ -3121,7 +3110,7 @@ A reviewer (Mohammad recommended) runs through this checklist live, recording re
 | 6 | POST | `/api/v1/refund-policies` | 201 | Fadwa T2, tier validation |
 | 7 | POST | `/api/v1/refund-policies` | 400 `RefundPolicy.InvalidTiers` | T2, strict-decreasing breached |
 | 8 | GET | `/api/v1/refund-policies/{tourId}` | 200 + default `{tiers: [{24,100}], isDefault:true}` when none set | T2 |
-| 9 | POST | `/api/v1/provider/documents` | 201 + doc DTO | Fadwa T3 |
+| 9 | POST | `/api/v1/provider/documents` | 201 + doc DTO | Ezz T3 |
 | 10 | POST | `/api/v1/provider/documents` | 413 `ProviderDocument.FileTooLarge` | T3, > 10MB |
 | 11 | POST | `/api/v1/provider/documents` | 400 `ProviderDocument.UnsupportedType` | T3, .docx |
 | 12 | POST | `/api/v1/booking/tour` | 201 + `{bookingId, reference YJ-…, paymentToken: "PENDING_FINANCE_INTEGRATION"}` | Mohammad T4 happy path |
@@ -3236,7 +3225,7 @@ Retro doc lives at `Agents/decisions/closed/Booking/_retro.md`:
 |---|---|---|---|
 | TASK 1 owner | Mahmoud | _____ | _____ |
 | TASK 2 owner | Fadwa | _____ | _____ |
-| TASK 3 owner | Fadwa | _____ | _____ |
+| TASK 3 owner | Ezz | _____ | _____ |
 | TASK 4 owner | Mohammad | _____ | _____ |
 | TASK 5 owner | Mohammad | _____ | _____ |
 | TASK 6 owner | Fadwa | _____ | _____ |
@@ -3244,6 +3233,37 @@ Retro doc lives at `Agents/decisions/closed/Booking/_retro.md`:
 | Tech Lead | _____ | _____ | _____ |
 
 **Once all signatures collected, folder moves; index updates; module marked ✅ in agent-context.md §11.1; Finance sprint kickoff scheduled.**
+
+---
+
+<a id="pre-work-kickoff"></a>
+
+## Pre-Work Kickoff Briefing
+
+> Sprint window: 2026-06-15 → 08-13 (Wave 5). Owner: Mohammad.
+
+### What's already wired (do NOT redo)
+
+- `IBookingUnitOfWork` interface + `BookingUnitOfWork` delegate (no domain-event bypass risk).
+- 6 aggregates marked `IAggregateRoot`: TourBooking, AvailabilitySlot, RefundPolicy, JoinRequest, ProviderDocument, SlotLock.
+- 14 domain event records in `Booking.Domain/Events/` (TourBookingCreated/Confirmed/Cancelled/Completed/Rejected/PaymentExpired, SlotLockCreated/Released, AvailabilitySlotCapacityChanged, JoinRequestCreated/Approved/Rejected, ProviderDocumentExpiring/Expired).
+- 12 integration event records in `Booking.Contracts/IntegrationEvents/` registered in `IntegrationEventTypeRegistry` with keys `booking.{aggregate}.{action}.v1`.
+- 7 repository interfaces in `Booking.Domain/Repositories/` + 7 EF stubs in `Booking.Infrastructure/Repositories/`: ITourBookingRepository, IAvailabilitySlotRepository, IRefundPolicyRepository, IJoinRequestRepository, IProviderDocumentRepository, ISlotLockRepository, IBookingOutboxWriter.
+- `ICommissionLookupService` + `CommissionResult` record in `Finance.Contracts/Services/` (stub `CommissionLookupService` returns Rate=0.10m).
+- `BookingFeatures` (8 features) + `BookingPermissionCatalog` (26 perms) registered as `IPermissionCatalog` singleton in DI.
+- Test projects: `tests/Booking.Tests.Unit/` + `tests/Booking.IntegrationTests/` in YallaJo.sln, build green.
+
+### Day-0 sprint tasks
+
+1. **Create EF migration** `BookingAddAggregateRootAndAuditMembers` — schema-no-op but locks in the marker change history.
+2. **Replace stub `CommissionLookupService`** with the real Finance-side implementation (table-lookup against `CommissionRule` aggregate).
+3. **Wire endpoints** under `Booking.Presentation/Endpoints/` — every endpoint must carry `[MustHavePermission(BookingFeatures.X, AppAction.Y)]` or `[AllowAnonymous]`.
+4. **Implement repository methods** beyond the stub (the EF stubs ship with empty domain-specific methods; sprint adds query bodies).
+
+### Watchpoints
+
+- `AvailabilitySlot.RowVersion` is the optimistic concurrency token for slot capacity. Use `IAvailabilitySlotRepository.GetByIdWithLockAsync` (already declared) and let EF surface `DbUpdateConcurrencyException` → translate to `Result.Conflict`.
+- `BookingOutboxWriter` requires `where TEvent : IIntegrationEvent` — pass strongly-typed integration events; do not stringly invoke.
 
 ---
 
