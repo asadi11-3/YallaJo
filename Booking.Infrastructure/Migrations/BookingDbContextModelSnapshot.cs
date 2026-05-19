@@ -475,6 +475,9 @@ namespace Booking.Infrastructure.Migrations
                     b.Property<Guid>("AvailabilitySlotId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid?>("BookingId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
@@ -489,6 +492,11 @@ namespace Booking.Infrastructure.Migrations
                     b.Property<DateTime>("LockedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<int>("ParticipantCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(1);
+
                     b.Property<DateTime?>("ReleasedAt")
                         .HasColumnType("datetime2");
 
@@ -500,6 +508,8 @@ namespace Booking.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("BookingId");
+
                     b.HasIndex("AvailabilitySlotId", "IsReleased");
 
                     b.ToTable("SlotLocks", "booking");
@@ -510,23 +520,35 @@ namespace Booking.Infrastructure.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("AvailabilitySlotId")
+                    b.Property<Guid>("AvailabilitySlotId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("CancellationReason")
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int?>("CancellationSource")
+                        .HasColumnType("int");
 
                     b.Property<DateTime?>("CancelledAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<decimal>("CommissionAmount")
+                        .HasPrecision(19, 4)
+                        .HasColumnType("decimal(19,4)");
+
+                    b.Property<decimal>("CommissionRate")
+                        .HasPrecision(9, 4)
+                        .HasColumnType("decimal(9,4)");
+
                     b.Property<DateTime?>("CompletedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("ConfirmationCode")
-                        .HasMaxLength(20)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(20)");
+                    b.Property<Guid?>("CompletedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int?>("ConfirmationSource")
+                        .HasColumnType("int");
 
                     b.Property<DateTime?>("ConfirmedAt")
                         .HasColumnType("datetime2");
@@ -536,43 +558,70 @@ namespace Booking.Infrastructure.Migrations
 
                     b.Property<string>("Currency")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(3)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(3)");
 
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<decimal>("DiscountAmount")
+                        .ValueGeneratedOnAdd()
+                        .HasPrecision(19, 4)
+                        .HasColumnType("decimal(19,4)")
+                        .HasDefaultValue(0m);
 
                     b.Property<bool>("IsDeleted")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
 
+                    b.Property<bool>("IsInstantBooking")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("LineItemsJson")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("LoyaltyAmount")
+                        .ValueGeneratedOnAdd()
+                        .HasPrecision(19, 4)
+                        .HasColumnType("decimal(19,4)")
+                        .HasDefaultValue(0m);
+
                     b.Property<int>("ParticipantCount")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
                         .HasDefaultValue(1);
 
-                    b.Property<decimal>("PointsDiscount")
+                    b.Property<DateTime>("PaymentExpiresAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("ProviderId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Reference")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(32)");
+
+                    b.Property<decimal?>("RefundAmount")
                         .HasPrecision(19, 4)
                         .HasColumnType("decimal(19,4)");
 
-                    b.Property<string>("PointsDiscountCurrency")
+                    b.Property<string>("RefundPolicySnapshot")
                         .IsRequired()
-                        .HasMaxLength(3)
-                        .HasColumnType("nvarchar(3)");
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("PointsRedeemed")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasDefaultValue(0);
+                    b.Property<DateTime?>("RejectedAt")
+                        .HasColumnType("datetime2");
 
-                    b.Property<decimal>("ReferralDiscount")
-                        .HasPrecision(19, 4)
-                        .HasColumnType("decimal(19,4)");
-
-                    b.Property<string>("ReferralDiscountCurrency")
-                        .IsRequired()
-                        .HasMaxLength(3)
-                        .HasColumnType("nvarchar(3)");
+                    b.Property<string>("RejectionReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
@@ -580,21 +629,20 @@ namespace Booking.Infrastructure.Migrations
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("rowversion");
 
-                    b.Property<DateOnly>("ScheduledDate")
-                        .HasColumnType("date");
-
                     b.Property<string>("SpecialRequests")
                         .HasMaxLength(2000)
                         .HasColumnType("nvarchar(2000)");
 
-                    b.Property<TimeOnly?>("StartTime")
-                        .HasColumnType("time");
-
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
-                    b.Property<Guid?>("TourGuideId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<decimal>("Subtotal")
+                        .HasPrecision(19, 4)
+                        .HasColumnType("decimal(19,4)");
+
+                    b.Property<decimal>("TotalAmount")
+                        .HasPrecision(19, 4)
+                        .HasColumnType("decimal(19,4)");
 
                     b.Property<Guid>("TourId")
                         .HasColumnType("uniqueidentifier");
@@ -607,13 +655,18 @@ namespace Booking.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ConfirmationCode")
-                        .IsUnique()
-                        .HasFilter("[ConfirmationCode] IS NOT NULL");
+                    b.HasIndex("AvailabilitySlotId");
+
+                    b.HasIndex("Reference")
+                        .IsUnique();
 
                     b.HasIndex("Status");
 
-                    b.HasIndex("UserId", "ScheduledDate");
+                    b.HasIndex("ProviderId", "Status");
+
+                    b.HasIndex("TourId", "Status");
+
+                    b.HasIndex("UserId", "Status");
 
                     b.ToTable("TourBookings", "booking");
                 });
@@ -855,38 +908,6 @@ namespace Booking.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("AvailabilitySlot");
-                });
-
-            modelBuilder.Entity("Booking.Domain.Entities.TourBooking", b =>
-                {
-                    b.OwnsOne("YallaJo.SharedKernel.Domain.ValueObjects.Money", "TotalPrice", b1 =>
-                        {
-                            b1.Property<Guid>("TourBookingId")
-                                .HasColumnType("uniqueidentifier");
-
-                            b1.Property<decimal>("Amount")
-                                .HasPrecision(19, 4)
-                                .HasColumnType("decimal(19,4)")
-                                .HasColumnName("TotalPrice");
-
-                            b1.Property<string>("Currency")
-                                .IsRequired()
-                                .ValueGeneratedOnAdd()
-                                .HasMaxLength(3)
-                                .HasColumnType("nvarchar(3)")
-                                .HasDefaultValue("JOD")
-                                .HasColumnName("TotalPriceCurrency");
-
-                            b1.HasKey("TourBookingId");
-
-                            b1.ToTable("TourBookings", "booking");
-
-                            b1.WithOwner()
-                                .HasForeignKey("TourBookingId");
-                        });
-
-                    b.Navigation("TotalPrice")
-                        .IsRequired();
                 });
 
             modelBuilder.Entity("Booking.Domain.Entities.TourGuideLanguage", b =>

@@ -15,6 +15,8 @@ public class SlotLockConfiguration : IEntityTypeConfiguration<SlotLock>
 
         builder.Property(x => x.AvailabilitySlotId).IsRequired();
         builder.Property(x => x.UserId).IsRequired();
+        builder.Property(x => x.BookingId).IsRequired(false);
+        builder.Property(x => x.ParticipantCount).IsRequired().HasDefaultValue(1);
         builder.Property(x => x.LockedAt).IsRequired();
         builder.Property(x => x.ExpiresAt).IsRequired();
         builder.Property(x => x.IsReleased).IsRequired().HasDefaultValue(false);
@@ -30,6 +32,11 @@ public class SlotLockConfiguration : IEntityTypeConfiguration<SlotLock>
 
         builder.HasQueryFilter(x => !x.AvailabilitySlot.IsDeleted);
 
+        // Lookup an active lock by slot
         builder.HasIndex(x => new { x.AvailabilitySlotId, x.IsReleased });
+
+        // Lookup a lock by its back-filled booking id (set in the same transaction
+        // immediately after the TourBooking aggregate is created)
+        builder.HasIndex(x => x.BookingId);
     }
 }

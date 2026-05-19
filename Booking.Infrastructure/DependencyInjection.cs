@@ -57,6 +57,23 @@ public static class DependencyInjection
         // Booking.Contracts and never on the Booking schema directly.
         services.AddScoped<ITourGuideOwnershipService, TourGuideOwnershipService>();
 
+        // ── Booking-engine services ──────────────────────────────────────────
+        services.AddScoped<IBookingReferenceGenerator, BookingReferenceGenerator>();
+
+        // ── Cross-module snapshot readers (STUB IMPLS) ───────────────────────
+        // TODO: Swap these stubs for the real snapshot readers when:
+        //   * ContentTours ships the booking.TourSnapshots inbox handler
+        //     (replace IBookingTourSnapshotReader + IBookingPricingSnapshotReader)
+        //   * Identity ships the booking.ProviderSnapshots inbox handler
+        //     (replace IBookingProviderSnapshotReader)
+        //   * Promotions module is built
+        //     (replace IDiscountEvaluator)
+        services.AddScoped<IBookingTourSnapshotReader, StubBookingTourSnapshotReader>();
+        services.AddScoped<IBookingProviderSnapshotReader, StubBookingProviderSnapshotReader>();
+        services.AddScoped<IBookingPricingSnapshotReader, StubBookingPricingSnapshotReader>();
+        services.AddScoped<IDiscountEvaluator, NoOpDiscountEvaluator>();
+        services.AddScoped<IBookingCommissionLookup, StubBookingCommissionLookup>();
+
         return services;
     }
 }
