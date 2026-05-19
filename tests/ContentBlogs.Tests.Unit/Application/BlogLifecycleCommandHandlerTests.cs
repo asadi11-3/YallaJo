@@ -1099,13 +1099,15 @@ public sealed class BlogLifecycleCommandHandlerTests
     private static PublishBlogCommandHandler CreatePublishHandler(
         ContentBlogsDbContext dbContext,
         HybridCache? cache = null,
-        IBlogAuthorHierarchyGuard? guard = null) =>
+        IBlogAuthorHierarchyGuard? guard = null,
+        IActiveLanguageProvider? languageProvider = null) =>
         new(
-            blogRepository:        Repository(dbContext),
-            authorHierarchyGuard:  guard ?? PermissiveGuard(),
-            unitOfWork:            UnitOfWork(dbContext),
-            cache:                 cache ?? Substitute.For<HybridCache>(),
-            logger:                NullLogger<PublishBlogCommandHandler>.Instance);
+            blogRepository:          Repository(dbContext),
+            authorHierarchyGuard:    guard ?? PermissiveGuard(),
+            activeLanguageProvider:  languageProvider ?? LanguageProviderWithEnglish(),
+            unitOfWork:              UnitOfWork(dbContext),
+            cache:                   cache ?? Substitute.For<HybridCache>(),
+            logger:                  NullLogger<PublishBlogCommandHandler>.Instance);
 
     private static UnpublishBlogCommandHandler CreateUnpublishHandler(
         ContentBlogsDbContext dbContext,
