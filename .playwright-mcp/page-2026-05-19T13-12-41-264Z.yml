@@ -1,0 +1,1 @@
+- generic [ref=e2]: "{\"title\":\"Internal Server Error\",\"status\":500,\"detail\":\"An unexpected error occurred. Use the correlation ID to find details in logs.\",\"instance\":\"/swagger\",\"correlationId\":\"00-4377240f9b05c822ddb143a53f3ece84-9ef7b783e3b7f707-00\",\"timestamp\":\"2026-05-19T13:12:41.1322397Z\"}"

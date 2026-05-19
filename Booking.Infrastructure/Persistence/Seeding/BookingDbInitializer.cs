@@ -16,6 +16,8 @@ public sealed class BookingDbInitializer(BookingDbContext dbContext) : IModuleDb
     private static readonly Guid SlotTwoId = Guid.Parse("abababab-2222-2222-2222-222222222222");
     private static readonly Guid BookingTourGuideOneId = Guid.Parse("abababab-3333-3333-3333-333333333333");
     private static readonly Guid BookingTourGuideTwoId = Guid.Parse("abababab-4444-4444-4444-444444444444");
+    // Provider IDs (placeholders; real values flow in from Content team's provider snapshot once shipped).
+    private static readonly Guid ProviderPetraId = Guid.Parse("abababab-5555-5555-5555-555555555555");
 
     public int Order => 90;
 
@@ -139,34 +141,51 @@ public sealed class BookingDbInitializer(BookingDbContext dbContext) : IModuleDb
 
     private static List<TourBooking> CreateTourBookings()
     {
+        // Booking 1: 2 participants @ 75 JOD/adult = 150 JOD subtotal; Confirmed (post-payment, instant).
         var first = CreateEntity<TourBooking>();
         SetProperty(first, nameof(TourBooking.Id), SeedBookingIds.BookingOne);
         SetProperty(first, nameof(TourBooking.UserId), TravelerOne);
         SetProperty(first, nameof(TourBooking.TourId), SeedContentIds.TourPetraExplorer);
-        SetProperty(first, nameof(TourBooking.TourGuideId), BookingTourGuideOneId);
+        SetProperty(first, nameof(TourBooking.ProviderId), ProviderPetraId);
         SetProperty(first, nameof(TourBooking.AvailabilitySlotId), SlotOneId);
-        SetProperty(first, nameof(TourBooking.ScheduledDate), DateOnly.FromDateTime(DateTime.UtcNow.AddDays(7)));
-        SetProperty(first, nameof(TourBooking.StartTime), new TimeOnly(8, 0));
         SetProperty(first, nameof(TourBooking.ParticipantCount), 2);
-        SetProperty(first, nameof(TourBooking.TotalPrice), new Money(150m, "JOD"));
+        SetProperty(first, nameof(TourBooking.Reference), "YJ-20260615-A7X3K9");
+        SetProperty(first, nameof(TourBooking.Subtotal), 150m);
+        SetProperty(first, nameof(TourBooking.DiscountAmount), 0m);
+        SetProperty(first, nameof(TourBooking.LoyaltyAmount), 0m);
+        SetProperty(first, nameof(TourBooking.TotalAmount), 150m);
         SetProperty(first, nameof(TourBooking.Currency), "JOD");
-        SetProperty(first, nameof(TourBooking.ConfirmationCode), "YJ-BOOK-001");
+        SetProperty(first, nameof(TourBooking.CommissionRate), 0.10m);
+        SetProperty(first, nameof(TourBooking.CommissionAmount), 15m);
+        SetProperty(first, nameof(TourBooking.LineItemsJson), "[{\"TierType\":1,\"Count\":2,\"UnitPrice\":75.00,\"Currency\":\"JOD\"}]");
+        SetProperty(first, nameof(TourBooking.RefundPolicySnapshot), "{\"FullRefundHours\":72,\"PartialRefundHours\":24,\"PartialRefundPercent\":50}");
+        SetProperty(first, nameof(TourBooking.IsInstantBooking), true);
+        SetProperty(first, nameof(TourBooking.PaymentExpiresAt), DateTime.UtcNow.AddYears(1));
         SetProperty(first, nameof(TourBooking.Status), BookingStatus.Confirmed);
         SetProperty(first, nameof(TourBooking.ConfirmedAt), DateTime.UtcNow);
+        SetProperty(first, nameof(TourBooking.ConfirmationSource), ConfirmationSource.PaymentWebhook);
 
+        // Booking 2: 1 participant @ 75 JOD = 75 JOD subtotal; still AwaitingPayment.
         var second = CreateEntity<TourBooking>();
         SetProperty(second, nameof(TourBooking.Id), SeedBookingIds.BookingTwo);
         SetProperty(second, nameof(TourBooking.UserId), TravelerTwo);
         SetProperty(second, nameof(TourBooking.TourId), SeedContentIds.TourPetraExplorer);
-        SetProperty(second, nameof(TourBooking.TourGuideId), BookingTourGuideOneId);
+        SetProperty(second, nameof(TourBooking.ProviderId), ProviderPetraId);
         SetProperty(second, nameof(TourBooking.AvailabilitySlotId), SlotOneId);
-        SetProperty(second, nameof(TourBooking.ScheduledDate), DateOnly.FromDateTime(DateTime.UtcNow.AddDays(14)));
-        SetProperty(second, nameof(TourBooking.StartTime), new TimeOnly(8, 0));
         SetProperty(second, nameof(TourBooking.ParticipantCount), 1);
-        SetProperty(second, nameof(TourBooking.TotalPrice), new Money(75m, "JOD"));
+        SetProperty(second, nameof(TourBooking.Reference), "YJ-20260622-B5N2M7");
+        SetProperty(second, nameof(TourBooking.Subtotal), 75m);
+        SetProperty(second, nameof(TourBooking.DiscountAmount), 0m);
+        SetProperty(second, nameof(TourBooking.LoyaltyAmount), 0m);
+        SetProperty(second, nameof(TourBooking.TotalAmount), 75m);
         SetProperty(second, nameof(TourBooking.Currency), "JOD");
-        SetProperty(second, nameof(TourBooking.ConfirmationCode), "YJ-BOOK-002");
-        SetProperty(second, nameof(TourBooking.Status), BookingStatus.Pending);
+        SetProperty(second, nameof(TourBooking.CommissionRate), 0.10m);
+        SetProperty(second, nameof(TourBooking.CommissionAmount), 7.5m);
+        SetProperty(second, nameof(TourBooking.LineItemsJson), "[{\"TierType\":1,\"Count\":1,\"UnitPrice\":75.00,\"Currency\":\"JOD\"}]");
+        SetProperty(second, nameof(TourBooking.RefundPolicySnapshot), "{\"FullRefundHours\":72,\"PartialRefundHours\":24,\"PartialRefundPercent\":50}");
+        SetProperty(second, nameof(TourBooking.IsInstantBooking), true);
+        SetProperty(second, nameof(TourBooking.PaymentExpiresAt), DateTime.UtcNow.AddMinutes(10));
+        SetProperty(second, nameof(TourBooking.Status), BookingStatus.AwaitingPayment);
 
         return [first, second];
     }

@@ -12,13 +12,14 @@ public sealed class BookingPermissionCatalog : IPermissionCatalog
 
     public IReadOnlyList<PermissionDescriptor> Permissions { get; } =
     [
-        // ── TourBooking (6) ─────────────────────────────────────────────────
-        new(BookingFeatures.TourBooking, AppAction.ReadOwn, PermissionGroup.BookingOperations, "View own bookings"),
-        new(BookingFeatures.TourBooking, AppAction.ReadAny, PermissionGroup.BookingOperations, "View any booking (admin)"),
-        new(BookingFeatures.TourBooking, AppAction.Create,  PermissionGroup.BookingOperations, "Create a booking"),
-        new(BookingFeatures.TourBooking, AppAction.Cancel,  PermissionGroup.BookingOperations, "Cancel a booking"),
-        new(BookingFeatures.TourBooking, AppAction.Confirm, PermissionGroup.BookingOperations, "Confirm a booking"),
-        new(BookingFeatures.TourBooking, AppAction.Reject,  PermissionGroup.BookingOperations, "Reject a booking"),
+        // ── TourBooking (7) ─────────────────────────────────────────────────
+        new(BookingFeatures.TourBooking, AppAction.ReadOwn,  PermissionGroup.BookingOperations, "View own bookings"),
+        new(BookingFeatures.TourBooking, AppAction.ReadAny,  PermissionGroup.BookingOperations, "View any booking (admin)"),
+        new(BookingFeatures.TourBooking, AppAction.Create,   PermissionGroup.BookingOperations, "Create a booking"),
+        new(BookingFeatures.TourBooking, AppAction.Cancel,   PermissionGroup.BookingOperations, "Cancel a booking"),
+        new(BookingFeatures.TourBooking, AppAction.Confirm,  PermissionGroup.BookingOperations, "Confirm a booking"),
+        new(BookingFeatures.TourBooking, AppAction.Reject,   PermissionGroup.BookingOperations, "Reject a booking"),
+        new(BookingFeatures.TourBooking, AppAction.Complete, PermissionGroup.BookingOperations, "Mark a booking as completed"),
 
         // ── AvailabilitySlot (4) ────────────────────────────────────────────
         new(BookingFeatures.AvailabilitySlot, AppAction.Read,   PermissionGroup.BookingOperations, "View availability slots"),
@@ -53,5 +54,9 @@ public sealed class BookingPermissionCatalog : IPermissionCatalog
 
         // ── BookingReports (1) ──────────────────────────────────────────────
         new(BookingFeatures.BookingReports, AppAction.Read, PermissionGroup.BookingOperations, "View booking reports"),
+
+        // ── AdminBookingDashboard (2) ───────────────────────────────────────
+        new(BookingFeatures.AdminBookingDashboard, AppAction.Read,   PermissionGroup.BookingOperations, "Admin: view booking dashboard (all bookings)"),
+        new(BookingFeatures.AdminBookingDashboard, AppAction.Update, PermissionGroup.BookingOperations, "Admin: force refund / dashboard updates"),
     ];
 }

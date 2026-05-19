@@ -4,9 +4,11 @@ using FluentAssertions;
 namespace Booking.Tests.Unit;
 
 /// <summary>
-/// PW-7 scaffold: verifies the BookingPermissionCatalog has the expected breadth
-/// (26 permissions across 8 features) and that every entry references a valid
-/// feature key. Real sprint work fills in additional behavioural tests.
+/// Verifies the BookingPermissionCatalog has the expected breadth
+/// (29 permissions across 9 features) and that every entry references a valid
+/// feature key. Mohammad sprint added <see cref="BookingFeatures.AdminBookingDashboard"/>
+/// (2 permissions) and <see cref="BookingFeatures.TourBooking"/> + Complete (1 permission).
+/// Original catalog had 26 perms / 8 features.
 /// </summary>
 public sealed class BookingPermissionCatalogTests
 {
@@ -18,15 +20,15 @@ public sealed class BookingPermissionCatalogTests
     }
 
     [Fact]
-    public void Catalog_contains_26_permissions_across_8_features()
+    public void Catalog_contains_29_permissions_across_9_features()
     {
         var catalog = new BookingPermissionCatalog();
-        catalog.Permissions.Should().HaveCount(26);
+        catalog.Permissions.Should().HaveCount(29);
         catalog.Permissions
             .Select(p => p.Feature)
             .Distinct()
             .Should()
-            .HaveCount(8);
+            .HaveCount(9);
     }
 
     [Fact]
@@ -43,11 +45,33 @@ public sealed class BookingPermissionCatalogTests
             BookingFeatures.SlotLock,
             BookingFeatures.BookingAdmin,
             BookingFeatures.BookingReports,
+            BookingFeatures.AdminBookingDashboard,
         };
 
         catalog.Permissions
             .Select(p => p.Feature)
             .Should()
             .OnlyContain(f => knownFeatures.Contains(f));
+    }
+
+    [Fact]
+    public void TourBooking_feature_includes_Complete_action()
+    {
+        var catalog = new BookingPermissionCatalog();
+        catalog.Permissions
+            .Should()
+            .Contain(p => p.Feature == BookingFeatures.TourBooking && p.Action == "Complete",
+                "Mohammad sprint added Complete action to TourBooking feature for endpoint POST /booking/{id}/complete");
+    }
+
+    [Fact]
+    public void AdminBookingDashboard_feature_includes_Read_and_Update_actions()
+    {
+        var catalog = new BookingPermissionCatalog();
+        catalog.Permissions
+            .Where(p => p.Feature == BookingFeatures.AdminBookingDashboard)
+            .Select(p => p.Action)
+            .Should()
+            .BeEquivalentTo(new[] { "Read", "Update" });
     }
 }

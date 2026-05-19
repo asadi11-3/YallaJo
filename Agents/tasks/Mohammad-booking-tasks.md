@@ -228,7 +228,7 @@ This is the largest single task in the sprint. It implements the core booking cr
 flowchart TD
     A[POST /tour request] --> B[Step 1: Validate availability]
     B -->|fail| FAIL[Return 4xx]
-    B -->|ok| C[Step 2: Lock slot (RowVersion + insert SlotLock)]
+    B -->|ok| C["Step 2: Lock slot (RowVersion + insert SlotLock)"]
     C -->|conflict| FAIL
     C -->|ok| D[Step 3: Calculate pricing + commission + discount stub]
     D --> E[Step 4: Create TourBooking aggregate AwaitingPayment]
