@@ -15,4 +15,7 @@ public interface ISlotLockRepository : IRepository<SlotLock, Guid>
 
     /// <summary>Lists locks that have expired but are not yet released.</summary>
     Task<IReadOnlyList<SlotLock>> GetExpiredLocksAsync(DateTime now, CancellationToken ct = default);
+
+    /// <summary>Lists a bounded batch of locks that have expired but are not yet released.</summary>
+    Task<IReadOnlyList<SlotLock>> GetExpiredActiveAsync(DateTime nowUtc, int batchSize, CancellationToken ct = default);
 }

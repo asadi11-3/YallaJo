@@ -1,4 +1,5 @@
 using Booking.Domain.Entities;
+using Booking.Domain.Enums;
 using Booking.Domain.Repositories;
 using Booking.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -18,5 +19,24 @@ internal sealed class ProviderDocumentRepository(BookingDbContext context)
     public async Task<IReadOnlyList<ProviderDocument>> GetExpiringAsync(DateTime threshold, CancellationToken ct = default)
         => await context.ProviderDocuments
             .Where(d => d.ExpiresAt != null && d.ExpiresAt <= threshold)
+            .ToListAsync(ct);
+
+    public async Task<IReadOnlyList<ProviderDocument>> GetExpiringSoonAsync(DateTime nowUtc, DateTime thresholdUtc, CancellationToken ct = default)
+        => await context.ProviderDocuments
+            .Where(d => d.Status == DocumentStatus.Approved
+                && d.ExpiresAt != null
+                && d.ExpiresAt > nowUtc
+                && d.ExpiresAt <= thresholdUtc
+                && d.ExpiringNotificationSentAt == null)
+            .OrderBy(d => d.ExpiresAt)
+            .ToListAsync(ct);
+
+    public async Task<IReadOnlyList<ProviderDocument>> GetNewlyExpiredAsync(DateTime nowUtc, CancellationToken ct = default)
+        => await context.ProviderDocuments
+            .Where(d => d.Status == DocumentStatus.Approved
+                && d.ExpiresAt != null
+                && d.ExpiresAt <= nowUtc
+                && d.ExpiredNotificationSentAt == null)
+            .OrderBy(d => d.ExpiresAt)
             .ToListAsync(ct);
 }

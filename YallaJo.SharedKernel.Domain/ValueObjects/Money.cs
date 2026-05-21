@@ -18,7 +18,7 @@ namespace YallaJo.SharedKernel.Domain.ValueObjects
             if (amount < 0) throw new ArgumentException("Amount cannot be negative.", nameof(amount));
             if (string.IsNullOrWhiteSpace(currency) || currency.Length != 3)
                 throw new ArgumentException("Currency must be a 3-letter ISO code.", nameof(currency));
-            Amount = Math.Round(amount, 2);
+            Amount = Math.Round(amount, 4, MidpointRounding.ToEven);
             Currency = currency.ToUpperInvariant();
         }
 

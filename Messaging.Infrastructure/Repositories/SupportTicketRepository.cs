@@ -10,21 +10,41 @@ namespace Messaging.Infrastructure.Repositories;
 internal sealed class SupportTicketRepository(MessagingDbContext context)
     : EfRepository<SupportTicket, Guid>(context), ISupportTicketRepository
 {
+    private readonly MessagingDbContext _context = context;
+
     public Task<SupportTicket?> GetByIdWithMessagesAsync(Guid id, CancellationToken ct = default)
-        => context.SupportTickets
+        => _context.SupportTickets
             .Include(t => t.TicketMessages)
             .FirstOrDefaultAsync(t => t.Id == id, ct);
 
-    public Task<IReadOnlyList<SupportTicket>> GetByUserIdAsync(Guid userId, CancellationToken ct = default)
-        => context.SupportTickets
-            .Where(t => t.UserId == userId)
-            .OrderByDescending(t => t.CreatedAt)
-            .ToListAsync(ct)
-            .ContinueWith(t => (IReadOnlyList<SupportTicket>)t.Result, ct);
+    public async Task<(IReadOnlyList<SupportTicket> Items, Guid? NextCursor)> GetByUserPagedAsync(
+        Guid userId, Guid? afterId, int pageSize, CancellationToken ct = default)
+    {
+        pageSize = Math.Clamp(pageSize, 1, 50);
+        var query = _context.SupportTickets.AsNoTracking()
+            .Where(t => t.CreatedByUserId == userId);
+        if (afterId.HasValue) query = query.Where(t => t.Id.CompareTo(afterId.Value) < 0);
+        var rows = await query.OrderByDescending(t => t.Id).Take(pageSize + 1).ToListAsync(ct);
+        Guid? next = rows.Count > pageSize ? rows[pageSize].Id : null;
+        return ((IReadOnlyList<SupportTicket>)rows.Take(pageSize).ToList(), next);
+    }
 
-    public Task<IReadOnlyList<SupportTicket>> GetByStatusAsync(TicketStatus status, CancellationToken ct = default)
-        => context.SupportTickets
-            .Where(t => t.Status == status)
-            .ToListAsync(ct)
-            .ContinueWith(t => (IReadOnlyList<SupportTicket>)t.Result, ct);
+    public async Task<(IReadOnlyList<SupportTicket> Items, Guid? NextCursor)> GetByAdminPagedAsync(
+        TicketStatus? status, TicketCategory? category, Guid? afterId, int pageSize, CancellationToken ct = default)
+    {
+        pageSize = Math.Clamp(pageSize, 1, 50);
+        var query = _context.SupportTickets.AsNoTracking();
+        if (status.HasValue) query = query.Where(t => t.Status == status.Value);
+        if (category.HasValue) query = query.Where(t => t.Category == category.Value);
+        if (afterId.HasValue) query = query.Where(t => t.Id.CompareTo(afterId.Value) < 0);
+        var rows = await query.OrderByDescending(t => t.Id).Take(pageSize + 1).ToListAsync(ct);
+        Guid? next = rows.Count > pageSize ? rows[pageSize].Id : null;
+        return ((IReadOnlyList<SupportTicket>)rows.Take(pageSize).ToList(), next);
+    }
+
+    public Task<SupportTicket?> GetUnassignedOldestAsync(CancellationToken ct = default)
+        => _context.SupportTickets
+            .Where(t => t.Status == TicketStatus.Open && t.AssignedToUserId == null)
+            .OrderBy(t => t.CreatedAt)
+            .FirstOrDefaultAsync(ct);
 }

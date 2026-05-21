@@ -203,6 +203,18 @@ internal sealed class TourBookingRepository(BookingDbContext context)
         return await query.CountAsync(cancellationToken).ConfigureAwait(false);
     }
 
+    public async Task<IReadOnlyList<TourBooking>> GetPendingConfirmationOlderThanAsync(
+        DateTime cutoffUtc,
+        int batchSize,
+        CancellationToken ct = default)
+        => await context.TourBookings
+            .Where(b => b.Status == BookingStatus.PendingConfirmation
+                && (b.UpdatedAt ?? b.CreatedAt) <= cutoffUtc)
+            .OrderBy(b => b.UpdatedAt ?? b.CreatedAt)
+            .Take(batchSize)
+            .ToListAsync(ct)
+            .ConfigureAwait(false);
+
     private IQueryable<TourBooking> BuildAdminBookingsQuery(
         IReadOnlyList<BookingStatus>? statuses,
         DateOnly? fromDate,

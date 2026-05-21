@@ -14,18 +14,17 @@ public class TicketMessageConfiguration : IEntityTypeConfiguration<TicketMessage
         builder.Property(x => x.Id).ValueGeneratedNever();
 
         builder.Property(x => x.TicketId).IsRequired();
-        builder.Property(x => x.SenderUserId).IsRequired();
+        builder.Property(x => x.AuthorUserId).IsRequired();
 
-        builder.Property(x => x.Message)
+        builder.Property(x => x.Body)
             .IsRequired()
             .HasColumnType("nvarchar(max)");
 
-        builder.Property(x => x.IsStaffReply)
+        builder.Property(x => x.IsInternal)
             .IsRequired()
             .HasDefaultValue(false);
 
         builder.Property(x => x.CreatedAt).IsRequired();
-        builder.Property(x => x.UpdatedAt).IsRequired(false);
 
         builder.HasQueryFilter(x => !x.SupportTicket.IsDeleted);
     }

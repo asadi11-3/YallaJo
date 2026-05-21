@@ -85,60 +85,30 @@ namespace Social.Infrastructure.Migrations
                     b.ToTable("AccessibilityReviews", "social");
                 });
 
-            modelBuilder.Entity("Social.Domain.Entities.ContentModerationLog", b =>
+            modelBuilder.Entity("Social.Domain.Entities.BookingEligibilitySnapshot", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("Action")
-                        .HasColumnType("int");
+                    b.Property<int>("CompletedBookingCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<Guid>("EntityId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("EntityType")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<Guid>("ModeratorUserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("OccurredAt")
+                    b.Property<DateTime>("FirstCompletedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("Reason")
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
-
-                    b.Property<DateTime?>("UpdatedAt")
+                    b.Property<DateTime>("LastCompletedAt")
                         .HasColumnType("datetime2");
 
-                    b.HasKey("Id");
-
-                    b.HasIndex("EntityType", "EntityId");
-
-                    b.ToTable("ContentModerationLogs", "social");
-                });
-
-            modelBuilder.Entity("Social.Domain.Entities.Favorite", b =>
-                {
-                    b.Property<Guid>("Id")
+                    b.Property<Guid>("TargetId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<Guid>("EntityId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("EntityType")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
+                    b.Property<byte>("TargetType")
+                        .HasColumnType("tinyint");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -148,12 +118,317 @@ namespace Social.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("IX_BookingEligibilitySnapshots_UserId");
+
+                    b.HasIndex("UserId", "TargetType", "TargetId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_BookingEligibilitySnapshots_User_Target_Unique");
+
+                    b.ToTable("BookingEligibilitySnapshots", "social");
+                });
+
+            modelBuilder.Entity("Social.Domain.Entities.BusinessSnapshot", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("BusinessId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<Guid>("OwnerId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("PlaceId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(220)
+                        .HasColumnType("nvarchar(220)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BusinessId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_BusinessSnapshots_BusinessId");
+
+                    b.HasIndex("IsDeleted")
+                        .HasDatabaseName("IX_BusinessSnapshots_IsDeleted");
+
+                    b.HasIndex("OwnerId")
+                        .HasDatabaseName("IX_BusinessSnapshots_OwnerId");
+
+                    b.HasIndex("PlaceId")
+                        .HasDatabaseName("IX_BusinessSnapshots_PlaceId");
+
+                    b.ToTable("BusinessSnapshots", "social");
+                });
+
+            modelBuilder.Entity("Social.Domain.Entities.ContentModerationLog", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte>("Action")
+                        .HasColumnType("tinyint");
+
+                    b.Property<DateTime>("ActionedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("AdminUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("EntityId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte>("EntityType")
+                        .HasColumnType("tinyint");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<Guid?>("SourceReportId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ActionedAt")
+                        .HasDatabaseName("IX_ContentModerationLogs_ActionedAt");
+
+                    b.HasIndex("AdminUserId")
+                        .HasDatabaseName("IX_ContentModerationLogs_AdminUserId");
+
+                    b.HasIndex("EntityType", "EntityId")
+                        .HasDatabaseName("IX_ContentModerationLogs_EntityType_EntityId");
+
+                    b.ToTable("ContentModerationLogs", "social");
+                });
+
+            modelBuilder.Entity("Social.Domain.Entities.EntityRatingCache", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("AverageRating")
+                        .HasPrecision(3, 2)
+                        .HasColumnType("decimal(3,2)");
+
+                    b.Property<decimal>("BayesianScore")
+                        .HasPrecision(5, 4)
+                        .HasColumnType("decimal(5,4)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<DateTime>("LastRecalculatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("ReviewCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<Guid>("TargetId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte>("TargetType")
+                        .HasColumnType("tinyint");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LastRecalculatedAt")
+                        .HasDatabaseName("IX_EntityRatingCaches_LastRecalculatedAt");
+
+                    b.HasIndex("TargetType", "TargetId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_EntityRatingCaches_TargetType_TargetId_Unique")
+                        .HasFilter("[IsDeleted] = 0");
+
+                    b.ToTable("EntityRatingCaches", "social");
+                });
+
+            modelBuilder.Entity("Social.Domain.Entities.Favorite", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("AddedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("EntityId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte>("EntityType")
+                        .HasColumnType("tinyint");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("IX_Favorites_UserId");
+
+                    b.HasIndex("EntityType", "EntityId")
+                        .HasDatabaseName("IX_Favorites_EntityType_EntityId");
 
                     b.HasIndex("UserId", "EntityType", "EntityId")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasDatabaseName("IX_Favorites_User_Entity_Unique")
+                        .HasFilter("[IsDeleted] = 0");
 
                     b.ToTable("Favorites", "social");
+                });
+
+            modelBuilder.Entity("Social.Domain.Entities.PlaceSnapshot", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Address")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<Guid>("PlaceId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(220)
+                        .HasColumnType("nvarchar(220)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IsDeleted")
+                        .HasDatabaseName("IX_PlaceSnapshots_IsDeleted");
+
+                    b.HasIndex("PlaceId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_PlaceSnapshots_PlaceId");
+
+                    b.ToTable("PlaceSnapshots", "social");
+                });
+
+            modelBuilder.Entity("Social.Domain.Entities.ProfanityBlocklistEntry", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LanguageCode")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(10)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Word")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LanguageCode")
+                        .HasDatabaseName("IX_ProfanityBlocklistEntries_LanguageCode");
+
+                    b.HasIndex("Word", "LanguageCode")
+                        .IsUnique()
+                        .HasDatabaseName("IX_ProfanityBlocklistEntries_Word_Language_Unique");
+
+                    b.ToTable("ProfanityBlocklistEntries", "social");
                 });
 
             modelBuilder.Entity("Social.Domain.Entities.Report", b =>
@@ -169,26 +444,28 @@ namespace Social.Infrastructure.Migrations
 
                     b.Property<string>("Description")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<Guid>("EntityId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("EntityType")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
+                    b.Property<byte>("EntityType")
+                        .HasColumnType("tinyint");
 
                     b.Property<bool>("IsDeleted")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
 
-                    b.Property<int>("Reason")
-                        .HasColumnType("int");
+                    b.Property<byte>("Reason")
+                        .HasColumnType("tinyint");
 
                     b.Property<Guid>("ReporterUserId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte?>("ResolutionAction")
+                        .HasColumnType("tinyint");
 
                     b.Property<string>("ResolutionNotes")
                         .HasMaxLength(1000)
@@ -206,17 +483,27 @@ namespace Social.Infrastructure.Migrations
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("rowversion");
 
-                    b.Property<int>("Status")
+                    b.Property<byte>("Status")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasDefaultValue(0);
+                        .HasColumnType("tinyint")
+                        .HasDefaultValue((byte)0);
+
+                    b.Property<DateTime>("SubmittedAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("EntityType", "EntityId", "Status");
+                    b.HasIndex("ReporterUserId")
+                        .HasDatabaseName("IX_Reports_ReporterUserId");
+
+                    b.HasIndex("Status", "CreatedAt")
+                        .HasDatabaseName("IX_Reports_Status_CreatedAt");
+
+                    b.HasIndex("EntityType", "EntityId", "Status")
+                        .HasDatabaseName("IX_Reports_EntityType_EntityId_Status");
 
                     b.ToTable("Reports", "social");
                 });
@@ -226,8 +513,8 @@ namespace Social.Infrastructure.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("BusinessId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<DateTime?>("AutoHiddenAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Content")
                         .IsRequired()
@@ -236,31 +523,31 @@ namespace Social.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("HelpfulCount")
+                    b.Property<int>("CurrentReportCount")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
                         .HasDefaultValue(0);
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<bool>("IsDeleted")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
 
-                    b.Property<bool>("IsReported")
+                    b.Property<bool>("IsVerifiedBooking")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
 
-                    b.Property<bool>("IsVerified")
+                    b.Property<DateTime?>("LastEditedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("ProfanityFlagged")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
-
-                    b.Property<Guid?>("PlaceId")
-                        .HasColumnType("uniqueidentifier");
 
                     b.Property<decimal>("Rating")
                         .HasPrecision(3, 2)
@@ -272,15 +559,20 @@ namespace Social.Infrastructure.Migrations
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("rowversion");
 
+                    b.Property<byte>("Status")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("tinyint")
+                        .HasDefaultValue((byte)0);
+
+                    b.Property<Guid>("TargetId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte>("TargetType")
+                        .HasColumnType("tinyint");
+
                     b.Property<string>("Title")
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
-
-                    b.Property<Guid?>("TourGuideId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid?>("TourId")
-                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -293,17 +585,97 @@ namespace Social.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("BusinessId");
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("IX_Reviews_UserId");
 
-                    b.HasIndex("PlaceId");
+                    b.HasIndex("Status", "CreatedAt")
+                        .HasDatabaseName("IX_Reviews_Status_CreatedAt");
 
-                    b.HasIndex("TourGuideId");
+                    b.HasIndex("TargetType", "TargetId")
+                        .HasDatabaseName("IX_Reviews_TargetType_TargetId");
 
-                    b.HasIndex("TourId");
-
-                    b.HasIndex("UserId");
+                    b.HasIndex("UserId", "TargetType", "TargetId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Reviews_User_Target_Unique")
+                        .HasFilter("[IsDeleted] = 0");
 
                     b.ToTable("Reviews", "social");
+                });
+
+            modelBuilder.Entity("Social.Domain.Entities.TourSnapshot", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("BusinessId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<Guid>("OwnerProviderId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("PlaceId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(220)
+                        .HasColumnType("nvarchar(220)");
+
+                    b.Property<Guid>("TourId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BusinessId")
+                        .HasDatabaseName("IX_TourSnapshots_BusinessId");
+
+                    b.HasIndex("IsDeleted")
+                        .HasDatabaseName("IX_TourSnapshots_IsDeleted");
+
+                    b.HasIndex("OwnerProviderId")
+                        .HasDatabaseName("IX_TourSnapshots_OwnerProviderId");
+
+                    b.HasIndex("PlaceId")
+                        .HasDatabaseName("IX_TourSnapshots_PlaceId");
+
+                    b.HasIndex("TourId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_TourSnapshots_TourId");
+
+                    b.ToTable("TourSnapshots", "social");
+                });
+
+            modelBuilder.Entity("YallaJo.SharedKernel.Infrastructure.Inbox.InboxMessage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("ProcessedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("InboxMessages", "social");
                 });
 
             modelBuilder.Entity("YallaJo.SharedKernel.Infrastructure.Outbox.OutboxMessage", b =>
@@ -353,6 +725,51 @@ namespace Social.Infrastructure.Migrations
                         .HasDatabaseName("IX_OutboxMessages_Unprocessed");
 
                     b.ToTable("OutboxMessages", "social");
+                });
+
+            modelBuilder.Entity("Social.Domain.Entities.Review", b =>
+                {
+                    b.OwnsMany("Social.Domain.Entities.ReviewReply", "Replies", b1 =>
+                        {
+                            b1.Property<Guid>("Id")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<string>("Content")
+                                .IsRequired()
+                                .HasMaxLength(2000)
+                                .HasColumnType("nvarchar(2000)");
+
+                            b1.Property<DateTime>("CreatedAt")
+                                .HasColumnType("datetime2");
+
+                            b1.Property<bool>("IsDeleted")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("bit")
+                                .HasDefaultValue(false);
+
+                            b1.Property<DateTime?>("LastEditedAt")
+                                .HasColumnType("datetime2");
+
+                            b1.Property<Guid>("ProviderUserId")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<Guid>("ReviewId")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<DateTime?>("UpdatedAt")
+                                .HasColumnType("datetime2");
+
+                            b1.HasKey("Id");
+
+                            b1.HasIndex("ReviewId");
+
+                            b1.ToTable("ReviewReplies", "social");
+
+                            b1.WithOwner()
+                                .HasForeignKey("ReviewId");
+                        });
+
+                    b.Navigation("Replies");
                 });
 #pragma warning restore 612, 618
         }

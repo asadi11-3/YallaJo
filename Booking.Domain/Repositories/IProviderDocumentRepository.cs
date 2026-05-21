@@ -19,4 +19,10 @@ public interface IProviderDocumentRepository : IRepository<ProviderDocument, Gui
     /// Used by ProviderDocumentExpiryMonitor BG service.
     /// </summary>
     Task<IReadOnlyList<ProviderDocument>> GetExpiringAsync(DateTime threshold, CancellationToken ct = default);
+
+    /// <summary>Lists approved documents expiring within the warning window that have not emitted an expiring notification.</summary>
+    Task<IReadOnlyList<ProviderDocument>> GetExpiringSoonAsync(DateTime nowUtc, DateTime thresholdUtc, CancellationToken ct = default);
+
+    /// <summary>Lists approved/non-expired documents past their expiry date that have not emitted an expired notification.</summary>
+    Task<IReadOnlyList<ProviderDocument>> GetNewlyExpiredAsync(DateTime nowUtc, CancellationToken ct = default);
 }

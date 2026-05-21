@@ -33,8 +33,28 @@ public class PaymentConfiguration : IEntityTypeConfiguration<Payment>
             money.Property(m => m.Amount).HasColumnName("RefundedAmount").HasPrecision(19, 4).HasDefaultValue(0m);
             money.Property(m => m.Currency).HasColumnName("RefundedAmountCurrency").HasMaxLength(3).HasDefaultValue("JOD");
         });
+        builder.OwnsOne(x => x.RefundedTotal, money =>
+        {
+            money.Property(m => m.Amount).HasColumnName("RefundedTotal").HasPrecision(19, 4).HasDefaultValue(0m);
+            money.Property(m => m.Currency).HasColumnName("RefundedTotalCurrency").HasMaxLength(3).HasDefaultValue("JOD");
+        });
         builder.Property(x => x.RefundedAt).IsRequired(false);
 
+        // ── T1/T2 new columns ──
+        builder.Property(x => x.ProviderId).IsRequired();
+        builder.Property(x => x.PaymentType).IsRequired().HasConversion<byte>().HasDefaultValue(Finance.Domain.Enums.PaymentType.Booking);
+        builder.Property(x => x.OriginalPaymentId).IsRequired(false);
+        builder.Property(x => x.GatewayProvider).IsRequired().HasMaxLength(50).IsUnicode(false).HasDefaultValue(string.Empty);
+        builder.Property(x => x.GatewayTransactionId).IsRequired(false).HasMaxLength(200).IsUnicode(false);
+        builder.Property(x => x.RedirectUrl).IsRequired(false).HasMaxLength(1000)
+            .HasConversion(v => v == null ? null : v.ToString(), s => string.IsNullOrEmpty(s) ? null : new Uri(s));
+        builder.Property(x => x.ClientSecret).IsRequired(false).HasMaxLength(500).IsUnicode(false);
+        builder.Property(x => x.RecipientAccount).IsRequired().HasMaxLength(100).HasDefaultValue("platform-escrow");
+        builder.Property(x => x.ExpiresAt).IsRequired(false);
+        builder.Property(x => x.EscrowReleaseEligibleAt).IsRequired(false);
+        builder.Property(x => x.RetryCount).IsRequired().HasDefaultValue(0);
+
+        // ── Audit ──
         builder.Property(x => x.CreatedAt).IsRequired();
         builder.Property(x => x.UpdatedAt).IsRequired(false);
         builder.Property(x => x.IsDeleted).IsRequired().HasDefaultValue(false);
@@ -47,6 +67,14 @@ public class PaymentConfiguration : IEntityTypeConfiguration<Payment>
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasQueryFilter(x => !x.IsDeleted);
+        // F-R3 idempotency: unique filtered index on GatewayTransactionId (where NOT NULL)
+        builder.HasIndex(x => x.GatewayTransactionId)
+            .HasFilter("[GatewayTransactionId] IS NOT NULL")
+            .IsUnique();
         builder.HasIndex(x => new { x.UserId, x.Status });
+        builder.HasIndex(x => new { x.BookingId, x.Status });
+        builder.HasIndex(x => new { x.ProviderId, x.Status });
+        builder.HasIndex(x => x.EscrowReleaseEligibleAt);
+        builder.HasIndex(x => new { x.PaymentType, x.Status, x.UpdatedAt });
     }
 }

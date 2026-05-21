@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Messaging.Infrastructure.Persistence.Configurations;
 
-public class NotificationTemplateConfiguration : IEntityTypeConfiguration<NotificationTemplate>
+internal sealed class NotificationTemplateConfiguration : IEntityTypeConfiguration<NotificationTemplate>
 {
     public void Configure(EntityTypeBuilder<NotificationTemplate> builder)
     {
@@ -13,34 +13,30 @@ public class NotificationTemplateConfiguration : IEntityTypeConfiguration<Notifi
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Id).ValueGeneratedNever();
 
-        builder.Property(x => x.Name)
-            .IsRequired()
-            .HasMaxLength(200);
-
-        builder.Property(x => x.Code)
-            .IsRequired()
-            .IsUnicode(false)
-            .HasMaxLength(100);
-
         builder.Property(x => x.Type)
             .IsRequired()
-            .HasConversion<int>();
+            .HasConversion<byte>();
 
         builder.Property(x => x.Channel)
             .IsRequired()
-            .HasConversion<int>();
+            .HasConversion<byte>();
 
-        builder.Property(x => x.Subject)
-            .IsRequired(false)
-            .HasMaxLength(500);
+        builder.Property(x => x.LanguageCode)
+            .IsRequired()
+            .IsUnicode(false)
+            .HasMaxLength(10);
 
-        builder.Property(x => x.BodyTemplate)
+        builder.Property(x => x.Title)
+            .IsRequired()
+            .HasMaxLength(200);
+
+        builder.Property(x => x.Body)
             .IsRequired()
             .HasColumnType("nvarchar(max)");
 
-        builder.Property(x => x.IsActive)
-            .IsRequired()
-            .HasDefaultValue(true);
+        builder.Property(x => x.HtmlBody)
+            .IsRequired(false)
+            .HasColumnType("nvarchar(max)");
 
         builder.Property(x => x.CreatedAt).IsRequired();
         builder.Property(x => x.UpdatedAt).IsRequired(false);
@@ -50,6 +46,9 @@ public class NotificationTemplateConfiguration : IEntityTypeConfiguration<Notifi
 
         builder.HasQueryFilter(x => !x.IsDeleted);
 
-        builder.HasIndex(x => x.Code).IsUnique();
+        // UNIQUE (Type, Channel, LanguageCode) — M-R4
+        builder.HasIndex(x => new { x.Type, x.Channel, x.LanguageCode })
+            .IsUnique()
+            .HasFilter("[IsDeleted] = 0");
     }
 }

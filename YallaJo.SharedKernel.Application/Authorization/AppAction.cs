@@ -59,6 +59,9 @@ public static class AppAction
     /// <summary>Finance: issue refund.</summary>
     public const string Refund   = nameof(Refund);
 
+    /// <summary>Social/Moderation: remove content (admin action).</summary>
+    public const string Remove   = nameof(Remove);
+
     /// <summary>Messaging/Finance: resolve ticket or dispute.</summary>
     public const string Resolve  = nameof(Resolve);
 

@@ -19,6 +19,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Security.Contracts.Authorization;
 using System.Security.Claims;
+using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Authorization;
 using YallaJo.SharedKernel.Domain.Abstractions.Pagination;
 using YallaJo.SharedKernel.Presentation;
@@ -173,9 +174,10 @@ internal static class BusinessEndpoints
         // POST /places/businesses/admin/{id}/approve
         businesses.MapPost("/places/businesses/admin/{id:guid}/approve", async (
             Guid id,
+            ICurrentUser currentUser,
             ISender sender) =>
         {
-            var result = await sender.Send(new ApproveBusinessCommand(id));
+            var result = await sender.Send(new ApproveBusinessCommand(id, currentUser.UserId!.Value));
             return result.ToApiResult();
         })
         .WithName("ApproveBusiness")
@@ -190,9 +192,10 @@ internal static class BusinessEndpoints
         businesses.MapPost("/places/businesses/admin/{id:guid}/reject", async (
             Guid id,
             RejectBusinessRequest request,
+            ICurrentUser currentUser,
             ISender sender) =>
         {
-            var result = await sender.Send(new RejectBusinessCommand(id, request.Reason));
+            var result = await sender.Send(new RejectBusinessCommand(id, request.Reason, currentUser.UserId!.Value));
             return result.ToApiResult();
         })
         .WithName("RejectBusiness")
@@ -208,9 +211,10 @@ internal static class BusinessEndpoints
         businesses.MapPost("/places/businesses/admin/{id:guid}/suspend", async (
             Guid id,
             SuspendBusinessRequest request,
+            ICurrentUser currentUser,
             ISender sender) =>
         {
-            var result = await sender.Send(new SuspendBusinessCommand(id, request.Reason));
+            var result = await sender.Send(new SuspendBusinessCommand(id, request.Reason, currentUser.UserId!.Value));
             return result.ToApiResult();
         })
         .WithName("SuspendBusiness")
@@ -225,9 +229,10 @@ internal static class BusinessEndpoints
         // POST /places/businesses/admin/{id}/reinstate
         businesses.MapPost("/places/businesses/admin/{id:guid}/reinstate", async (
             Guid id,
+            ICurrentUser currentUser,
             ISender sender) =>
         {
-            var result = await sender.Send(new ReinstateBusinessCommand(id));
+            var result = await sender.Send(new ReinstateBusinessCommand(id, currentUser.UserId!.Value));
             return result.ToApiResult();
         })
         .WithName("ReinstateBusiness")
@@ -262,13 +267,14 @@ internal static class BusinessEndpoints
         businesses.MapPut("/places/businesses/{id:guid}/hours", async (
             Guid id,
             SetBusinessHoursRequest request,
+            ICurrentUser currentUser,
             ISender sender) =>
         {
             var entries = request.Hours
                 .Select(h => new BusinessHoursEntry(h.DayOfWeek, h.OpenTime, h.CloseTime, h.IsClosed))
                 .ToList();
 
-            var result = await sender.Send(new SetBusinessHoursCommand(id, entries));
+            var result = await sender.Send(new SetBusinessHoursCommand(id, currentUser.UserId!.Value, entries));
             return result.ToApiResult();
         })
         .WithName("SetBusinessHours")

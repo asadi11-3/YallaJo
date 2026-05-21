@@ -302,3 +302,39 @@
 - **Root Cause**: The weather cache entity/configuration had been updated for the 7-day forecast JSON payload, but seed data was not updated with the property rename or new required `RoundedLatitude`, `RoundedLongitude`, and `ForecastDate` fields.
 - **Fix Applied**: Updated `ContentSeoDbInitializer` to seed `RoundedLatitude`, `RoundedLongitude`, `ForecastDate`, and `ForecastJson` instead of the removed `Forecast` property.
 - **Prevention Rule**: After renaming a domain property or adding required EF columns, scan all module seeders for `SetProperty(... nameof(Entity.OldProperty))` and update seed values before running migrations/builds.
+
+### ERR-032: Analytics reshape left stale scaffold/seeder and unrelated Messaging drift breaking builds
+- **Date**: 2026-05-20
+- **Module**: Analytics / Messaging
+- **What Happened**: Analytics.Infrastructure build failed after entity reshape because obsolete Domain repository interfaces and old EF seeder/repositories still referenced removed properties/interfaces. YallaJo.Api build then failed in Messaging.Application due stale imports and model drift.
+- **Error Message**: `CS0311` for UserInteraction no longer implementing IAggregateRoot through old Domain repository; `CS0246` for removed old repo interfaces; many `CS0117` stale AnalyticsDbInitializer property refs; Messaging `CS0234`, `CS1503`, `CS1061`.
+- **Root Cause**: Phase-1 Analytics moved repository contracts to Application and reshaped entities, but old Phase-3 scaffold artifacts and seed data remained compiled. Messaging had pre-existing stale code not aligned with current SharedKernel/Domain APIs.
+- **Fix Applied**: Deleted obsolete Analytics Domain repository interfaces except IAnalyticsOutboxWriter, removed obsolete infrastructure repositories, replaced AnalyticsDbInitializer with no-op, fixed Messaging stale usings, DeviceToken.Register argument order, and SupportTicket message property usage.
+- **Prevention Rule**: After entity/repository reshapes, delete or rewrite every old scaffold artifact (Domain repo interfaces, infrastructure repos, seeders, configs) before building. For host builds, treat unrelated module compile drift as blocking and fix minimal API-alignment errors before reporting YallaJo.Api status.
+
+### ERR-033: Messaging infrastructure DI used unavailable extension methods from non-Web SDK context
+- **Date**: 2026-05-20
+- **Module**: Messaging.Infrastructure / YallaJo.Api
+- **What Happened**: While wiring Messaging background services and SignalR, `lsp_diagnostics` reported `CS1061` for `IServiceCollection.AddSignalR()` inside `Messaging.Infrastructure/DependencyInjection.cs` and `CS1061` for `IConfigurationSection.GetValue(...)` in the same file.
+- **Error Message**: `'IServiceCollection' does not contain a definition for 'AddSignalR'`; `'IConfigurationSection' does not contain a definition for 'GetValue'`.
+- **Root Cause**: `Messaging.Infrastructure` is a plain SDK class library with limited package surface. SignalR service registration belongs in the Web host (`YallaJo.Api`) where ASP.NET Core extension methods are available. The project also lacked configuration binder extension availability for `GetValue<T>()`.
+- **Fix Applied**: Moved `services.AddSignalR()` to `YallaJo.Api/Program.cs`; replaced `GetValue<T>()` option binding with local manual parse helpers (`bool`, `int`, `TimeSpan`, `TimeOnly`, enum) in `Messaging.Infrastructure/DependencyInjection.cs`.
+- **Prevention Rule**: Register ASP.NET Core host services such as SignalR in the Web host unless the module already references the required ASP.NET Core abstractions. For manual module option binding, avoid `GetValue<T>()` unless `Microsoft.Extensions.Configuration.Binder` is explicitly referenced and version-aligned.
+
+### ERR-034: Auth SessionEndpoints using inserted after namespace caused CS1529
+- **Date**: 2026-05-20
+- **Module**: Auth.Presentation
+- **What Happened**: While adding `Auth.Contracts.Authorization` to `SessionEndpoints.cs`, the using directive was inserted at the end of the file after the namespace/type instead of with the other usings.
+- **Error Message**: `CS1529: A using clause must precede all other elements defined in the namespace except extern alias declarations` from `dotnet build Auth.Presentation\Auth.Presentation.csproj --nologo`.
+- **Root Cause**: Patch context inserted `using Auth.Contracts.Authorization;` at EOF because the target file's first using block did not match the patch anchor used.
+- **Fix Applied**: Moved the using directive into the top using block and rebuilt Auth.Presentation successfully.
+- **Prevention Rule**: After adding a namespace import via broad patch, inspect the top and tail of the file before building; prefer anchoring new usings immediately before an existing stable using in the file.
+
+### ERR-035: Analytics options binding used unavailable GetValue extension
+- **Date**: 2026-05-21
+- **Module**: Analytics.Infrastructure
+- **What Happened**: While registering `PopularityScoreCalculationOptions`, `dotnet build Analytics.Infrastructure/Analytics.Infrastructure.csproj` failed because `Configure<T>(IConfigurationSection)` and `IConfigurationSection.GetValue(...)` were unavailable in the module package surface.
+- **Error Message**: `CS1503: cannot convert from 'IConfigurationSection' to 'System.Action<PopularityScoreCalculationOptions>'`; then `CS1061: 'IConfigurationSection' does not contain a definition for 'GetValue'`.
+- **Root Cause**: `Analytics.Infrastructure` does not reference the configuration binder extensions, matching prior Messaging behavior.
+- **Fix Applied**: Replaced binder-based option registration with manual parsing for bool, TimeSpan, and int values.
+- **Prevention Rule**: In module Infrastructure projects, bind options manually or add a version-aligned `Microsoft.Extensions.Configuration.Binder` reference intentionally; do not assume binder extension methods exist.

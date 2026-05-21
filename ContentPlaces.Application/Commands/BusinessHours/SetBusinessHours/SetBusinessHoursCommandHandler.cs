@@ -4,8 +4,6 @@ using ContentPlaces.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
-using Security.Contracts.Authorization;
-using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 using BusinessHoursEntity = ContentPlaces.Domain.Entities.BusinessHours;
@@ -16,7 +14,6 @@ namespace ContentPlaces.Application.Commands.BusinessHours.SetBusinessHours;
 public sealed class SetBusinessHoursCommandHandler(
     IBusinessRepository businessRepository,
     IContentPlacesUnitOfWork unitOfWork,
-    ICurrentUser currentUser,
     HybridCache cache,
     ILogger<SetBusinessHoursCommandHandler> logger)
     : ICommandHandler<SetBusinessHoursCommand>
@@ -25,11 +22,6 @@ public sealed class SetBusinessHoursCommandHandler(
     {
         try
         {
-            if (!currentUser.IsAuthenticated || currentUser.UserId is null)
-            {
-                return Result.Failure(Error.Unauthorized("Authentication is required."), Outcome.Unauthorized);
-            }
-
             var business = await businessRepository.GetByIdAsync(request.BusinessId, cancellationToken, asNoTracking: true);
             if (business is null)
             {
@@ -38,14 +30,10 @@ public sealed class SetBusinessHoursCommandHandler(
                     Outcome.NotFound);
             }
 
-            // Owner-or-admin-tier check using the privilege ladder so SuperAdmin/Owner
-            // tiers are honored even without the literal "Admin" role.
-            var isAdminTier = AppRoles.HighestPrivilegeLevel(currentUser.Roles)
-                >= RolePrivilegeLevel.Admin;
-            if (!isAdminTier && business.OwnerId != currentUser.UserId.Value)
+            if (business.OwnerId != request.ActingUserId)
             {
                 return Result.Failure(
-                    Error.Forbidden("You do not have permission to manage hours for this business."),
+                    new Error("Business.Forbidden", "Not the owner"),
                     Outcome.Forbidden);
             }
 

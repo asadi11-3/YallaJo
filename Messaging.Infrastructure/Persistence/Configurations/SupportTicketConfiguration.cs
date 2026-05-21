@@ -14,33 +14,36 @@ public class SupportTicketConfiguration : IEntityTypeConfiguration<SupportTicket
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Id).ValueGeneratedNever();
 
-        builder.Property(x => x.UserId).IsRequired();
+        builder.Property(x => x.CreatedByUserId).IsRequired();
 
         builder.Property(x => x.Subject)
             .IsRequired()
-            .HasMaxLength(500);
+            .HasMaxLength(200);
 
-        builder.Property(x => x.Description)
+        builder.Property(x => x.InitialBody)
             .IsRequired()
             .HasColumnType("nvarchar(max)");
 
         builder.Property(x => x.Status)
             .IsRequired()
-            .HasConversion<int>()
+            .HasConversion<byte>()
             .HasDefaultValue(TicketStatus.Open);
 
         builder.Property(x => x.Priority)
             .IsRequired()
-            .HasConversion<int>();
-
-        builder.Property(x => x.AssignedToUserId).IsRequired(false);
+            .HasConversion<byte>();
 
         builder.Property(x => x.Category)
-            .IsRequired(false)
-            .HasMaxLength(100);
+            .IsRequired()
+            .HasConversion<byte>();
 
+        builder.Property(x => x.AssignedToUserId).IsRequired(false);
+        builder.Property(x => x.AssignedAt).IsRequired(false);
+        builder.Property(x => x.ResolvedByUserId).IsRequired(false);
         builder.Property(x => x.ResolvedAt).IsRequired(false);
+        builder.Property(x => x.ResolutionNotes).IsRequired(false).HasMaxLength(2000);
         builder.Property(x => x.ClosedAt).IsRequired(false);
+        builder.Property(x => x.SlaBreachAt).IsRequired();
 
         builder.Property(x => x.CreatedAt).IsRequired();
         builder.Property(x => x.UpdatedAt).IsRequired(false);
@@ -55,6 +58,7 @@ public class SupportTicketConfiguration : IEntityTypeConfiguration<SupportTicket
 
         builder.HasQueryFilter(x => !x.IsDeleted);
 
-        builder.HasIndex(x => new { x.UserId, x.Status });
+        builder.HasIndex(x => x.SlaBreachAt);
+        builder.HasIndex(x => new { x.CreatedByUserId, x.Status });
     }
 }

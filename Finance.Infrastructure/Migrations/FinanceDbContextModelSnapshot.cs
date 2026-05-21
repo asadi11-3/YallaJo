@@ -28,24 +28,17 @@ namespace Finance.Infrastructure.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<decimal>("CommissionPercentage")
-                        .HasPrecision(5, 2)
-                        .HasColumnType("decimal(5,2)");
-
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(3)");
+
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("datetime2");
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
-
-                    b.Property<string>("EntityType")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
 
                     b.Property<bool>("IsActive")
                         .ValueGeneratedOnAdd()
@@ -57,15 +50,21 @@ namespace Finance.Infrastructure.Migrations
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
 
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
+                    b.Property<decimal?>("MaxMonthlyRevenue")
+                        .HasPrecision(19, 4)
+                        .HasColumnType("decimal(19,4)");
 
-                    b.Property<int>("Priority")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasDefaultValue(0);
+                    b.Property<decimal>("MinMonthlyRevenue")
+                        .HasPrecision(19, 4)
+                        .HasColumnType("decimal(19,4)");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<decimal>("Percentage")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("decimal(5,2)");
 
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
@@ -73,10 +72,21 @@ namespace Finance.Infrastructure.Migrations
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("rowversion");
 
+                    b.Property<string>("Tier")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Tier", "Currency");
+
+                    b.HasIndex("Tier", "Currency", "MinMonthlyRevenue", "MaxMonthlyRevenue")
+                        .IsUnique()
+                        .HasFilter("[IsDeleted] = 0");
 
                     b.ToTable("CommissionRules", "finance");
                 });
@@ -351,10 +361,23 @@ namespace Finance.Infrastructure.Migrations
                     b.ToTable("DisputeMessages", "finance");
                 });
 
-            modelBuilder.Entity("Finance.Domain.Entities.InvoiceItem", b =>
+            modelBuilder.Entity("Finance.Domain.Entities.Invoice", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("BookingId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("BuyerEmail")
+                        .IsRequired()
+                        .HasMaxLength(320)
+                        .HasColumnType("nvarchar(320)");
+
+                    b.Property<string>("BuyerName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -368,25 +391,29 @@ namespace Finance.Infrastructure.Migrations
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<DateOnly>("DueDate")
-                        .HasColumnType("date");
-
                     b.Property<string>("InvoiceNumber")
                         .IsRequired()
-                        .HasMaxLength(50)
+                        .HasMaxLength(32)
                         .IsUnicode(false)
-                        .HasColumnType("varchar(50)");
+                        .HasColumnType("varchar(32)");
 
                     b.Property<bool>("IsDeleted")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
 
-                    b.Property<string>("Notes")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("PaidAt")
+                    b.Property<DateTime>("IssuedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<Guid>("PaymentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("PdfStoragePath")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<Guid>("ProviderId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
@@ -394,10 +421,19 @@ namespace Finance.Infrastructure.Migrations
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("rowversion");
 
-                    b.Property<int>("Status")
+                    b.Property<string>("SellerName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("SellerTaxId")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<byte>("Status")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasDefaultValue(0);
+                        .HasColumnType("tinyint")
+                        .HasDefaultValue((byte)0);
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -407,48 +443,19 @@ namespace Finance.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("BookingId");
+
                     b.HasIndex("InvoiceNumber")
                         .IsUnique();
 
-                    b.ToTable("InvoiceItems", "finance");
-                });
+                    b.HasIndex("PaymentId")
+                        .IsUnique();
 
-            modelBuilder.Entity("Finance.Domain.Entities.InvoiceLineItem", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uniqueidentifier");
+                    b.HasIndex("ProviderId", "IssuedAt");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                    b.HasIndex("UserId", "IssuedAt");
 
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<Guid?>("EntityId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("EntityType")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<Guid>("InvoiceId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("Quantity")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasDefaultValue(1);
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("InvoiceId");
-
-                    b.ToTable("InvoiceLineItems", "finance");
+                    b.ToTable("Invoices", "finance");
                 });
 
             modelBuilder.Entity("Finance.Domain.Entities.LoyaltyPoints", b =>
@@ -547,6 +554,11 @@ namespace Finance.Infrastructure.Migrations
                     b.Property<Guid?>("BookingId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("ClientSecret")
+                        .HasMaxLength(500)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(500)");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
@@ -559,13 +571,35 @@ namespace Finance.Infrastructure.Migrations
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<DateTime?>("EscrowReleaseEligibleAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("ExpiresAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("GatewayProvider")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(50)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(50)")
+                        .HasDefaultValue("");
+
                     b.Property<string>("GatewayResponse")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("GatewayTransactionId")
+                        .HasMaxLength(200)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(200)");
 
                     b.Property<bool>("IsDeleted")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
+
+                    b.Property<Guid?>("OriginalPaymentId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime?>("PaidAt")
                         .HasColumnType("datetime2");
@@ -573,11 +607,35 @@ namespace Finance.Infrastructure.Migrations
                     b.Property<int>("PaymentMethod")
                         .HasColumnType("int");
 
+                    b.Property<byte>("PaymentType")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("tinyint")
+                        .HasDefaultValue((byte)0);
+
+                    b.Property<Guid>("ProviderId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("RecipientAccount")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .HasDefaultValue("platform-escrow");
+
+                    b.Property<string>("RedirectUrl")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
                     b.Property<DateTime?>("RefundedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<Guid?>("ReservationId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("RetryCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
 
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
@@ -603,9 +661,78 @@ namespace Finance.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("EscrowReleaseEligibleAt");
+
+                    b.HasIndex("GatewayTransactionId")
+                        .IsUnique()
+                        .HasFilter("[GatewayTransactionId] IS NOT NULL");
+
+                    b.HasIndex("BookingId", "Status");
+
+                    b.HasIndex("ProviderId", "Status");
+
                     b.HasIndex("UserId", "Status");
 
+                    b.HasIndex("PaymentType", "Status", "UpdatedAt");
+
                     b.ToTable("Payments", "finance");
+                });
+
+            modelBuilder.Entity("Finance.Domain.Entities.PaymentExpectation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("BookingId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2(3)");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(3)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(3)")
+                        .HasDefaultValue("JOD");
+
+                    b.Property<Guid?>("PaymentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ProviderId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Reference")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<byte>("Status")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("tinyint")
+                        .HasDefaultValue((byte)0);
+
+                    b.Property<Guid>("TourId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BookingId")
+                        .IsUnique();
+
+                    b.HasIndex("ProviderId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("PaymentExpectations", "finance");
                 });
 
             modelBuilder.Entity("Finance.Domain.Entities.Payout", b =>
@@ -613,9 +740,27 @@ namespace Finance.Infrastructure.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<DateTime?>("ApprovedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("ApprovedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("BankAccountId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("BankAccountInfo")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateOnly>("BatchPeriodEnd")
+                        .HasColumnType("date");
+
+                    b.Property<DateOnly>("BatchPeriodStart")
+                        .HasColumnType("date");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -629,6 +774,15 @@ namespace Finance.Infrastructure.Migrations
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("FailureReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("GatewayPayoutId")
+                        .HasMaxLength(200)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(200)");
+
                     b.Property<bool>("IsDeleted")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
@@ -641,6 +795,9 @@ namespace Finance.Infrastructure.Migrations
                     b.Property<DateTime?>("ProcessedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<Guid>("ProviderId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<Guid>("RecipientUserId")
                         .HasColumnType("uniqueidentifier");
 
@@ -650,10 +807,10 @@ namespace Finance.Infrastructure.Migrations
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("rowversion");
 
-                    b.Property<int>("Status")
+                    b.Property<byte>("Status")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasDefaultValue(0);
+                        .HasColumnType("tinyint")
+                        .HasDefaultValue((byte)0);
 
                     b.Property<string>("TransactionId")
                         .HasMaxLength(200)
@@ -664,6 +821,13 @@ namespace Finance.Infrastructure.Migrations
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Status")
+                        .HasFilter("[Status] = 1");
+
+                    b.HasIndex("BatchPeriodStart", "BatchPeriodEnd");
+
+                    b.HasIndex("ProviderId", "Status");
 
                     b.ToTable("Payouts", "finance");
                 });
@@ -676,6 +840,9 @@ namespace Finance.Infrastructure.Migrations
                     b.Property<Guid>("BookingId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid?>("CommissionRuleSnapshotId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
@@ -686,6 +853,8 @@ namespace Finance.Infrastructure.Migrations
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("BookingId");
 
                     b.HasIndex("PayoutId");
 
@@ -1009,6 +1178,41 @@ namespace Finance.Infrastructure.Migrations
                     b.ToTable("SubscriptionPlans", "finance");
                 });
 
+            modelBuilder.Entity("Finance.Infrastructure.Persistence.InvoiceNumberCounter", b =>
+                {
+                    b.Property<string>("YearMonth")
+                        .HasMaxLength(6)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(6)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<int>("Seq")
+                        .HasColumnType("int");
+
+                    b.HasKey("YearMonth");
+
+                    b.ToTable("InvoiceNumberCounters", "finance");
+                });
+
+            modelBuilder.Entity("YallaJo.SharedKernel.Infrastructure.Inbox.InboxMessage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("ProcessedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("InboxMessages", "finance");
+                });
+
             modelBuilder.Entity("YallaJo.SharedKernel.Infrastructure.Outbox.OutboxMessage", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1056,90 +1260,6 @@ namespace Finance.Infrastructure.Migrations
                         .HasDatabaseName("IX_OutboxMessages_Unprocessed");
 
                     b.ToTable("OutboxMessages", "finance");
-                });
-
-            modelBuilder.Entity("Finance.Domain.Entities.CommissionRule", b =>
-                {
-                    b.OwnsOne("YallaJo.SharedKernel.Domain.ValueObjects.Money", "MaxAmount", b1 =>
-                        {
-                            b1.Property<Guid>("CommissionRuleId")
-                                .HasColumnType("uniqueidentifier");
-
-                            b1.Property<decimal>("Amount")
-                                .HasPrecision(19, 4)
-                                .HasColumnType("decimal(19,4)")
-                                .HasColumnName("MaxAmount");
-
-                            b1.Property<string>("Currency")
-                                .IsRequired()
-                                .ValueGeneratedOnAdd()
-                                .HasMaxLength(3)
-                                .HasColumnType("nvarchar(3)")
-                                .HasDefaultValue("JOD")
-                                .HasColumnName("MaxAmountCurrency");
-
-                            b1.HasKey("CommissionRuleId");
-
-                            b1.ToTable("CommissionRules", "finance");
-
-                            b1.WithOwner()
-                                .HasForeignKey("CommissionRuleId");
-                        });
-
-                    b.OwnsOne("YallaJo.SharedKernel.Domain.ValueObjects.Money", "MinAmount", b1 =>
-                        {
-                            b1.Property<Guid>("CommissionRuleId")
-                                .HasColumnType("uniqueidentifier");
-
-                            b1.Property<decimal>("Amount")
-                                .HasPrecision(19, 4)
-                                .HasColumnType("decimal(19,4)")
-                                .HasColumnName("MinAmount");
-
-                            b1.Property<string>("Currency")
-                                .IsRequired()
-                                .ValueGeneratedOnAdd()
-                                .HasMaxLength(3)
-                                .HasColumnType("nvarchar(3)")
-                                .HasDefaultValue("JOD")
-                                .HasColumnName("MinAmountCurrency");
-
-                            b1.HasKey("CommissionRuleId");
-
-                            b1.ToTable("CommissionRules", "finance");
-
-                            b1.WithOwner()
-                                .HasForeignKey("CommissionRuleId");
-                        });
-
-                    b.OwnsOne("YallaJo.SharedKernel.Domain.ValueObjects.DateRange", "ValidityPeriod", b1 =>
-                        {
-                            b1.Property<Guid>("CommissionRuleId")
-                                .HasColumnType("uniqueidentifier");
-
-                            b1.Property<DateTime>("End")
-                                .HasColumnType("datetime2")
-                                .HasColumnName("ValidTo");
-
-                            b1.Property<DateTime>("Start")
-                                .HasColumnType("datetime2")
-                                .HasColumnName("ValidFrom");
-
-                            b1.HasKey("CommissionRuleId");
-
-                            b1.ToTable("CommissionRules", "finance");
-
-                            b1.WithOwner()
-                                .HasForeignKey("CommissionRuleId");
-                        });
-
-                    b.Navigation("MaxAmount")
-                        .IsRequired();
-
-                    b.Navigation("MinAmount")
-                        .IsRequired();
-
-                    b.Navigation("ValidityPeriod");
                 });
 
             modelBuilder.Entity("Finance.Domain.Entities.Discount", b =>
@@ -1327,17 +1447,17 @@ namespace Finance.Infrastructure.Migrations
                     b.Navigation("Dispute");
                 });
 
-            modelBuilder.Entity("Finance.Domain.Entities.InvoiceItem", b =>
+            modelBuilder.Entity("Finance.Domain.Entities.Invoice", b =>
                 {
-                    b.OwnsOne("YallaJo.SharedKernel.Domain.ValueObjects.Money", "SubTotal", b1 =>
+                    b.OwnsOne("YallaJo.SharedKernel.Domain.ValueObjects.Money", "AmountDiscount", b1 =>
                         {
-                            b1.Property<Guid>("InvoiceItemId")
+                            b1.Property<Guid>("InvoiceId")
                                 .HasColumnType("uniqueidentifier");
 
                             b1.Property<decimal>("Amount")
                                 .HasPrecision(19, 4)
                                 .HasColumnType("decimal(19,4)")
-                                .HasColumnName("SubTotal");
+                                .HasColumnName("AmountDiscount");
 
                             b1.Property<string>("Currency")
                                 .IsRequired()
@@ -1345,147 +1465,197 @@ namespace Finance.Infrastructure.Migrations
                                 .HasMaxLength(3)
                                 .HasColumnType("nvarchar(3)")
                                 .HasDefaultValue("JOD")
-                                .HasColumnName("SubTotalCurrency");
+                                .HasColumnName("AmountDiscountCurrency");
 
-                            b1.HasKey("InvoiceItemId");
+                            b1.HasKey("InvoiceId");
+
+                            b1.ToTable("Invoices", "finance");
+
+                            b1.WithOwner()
+                                .HasForeignKey("InvoiceId");
+                        });
+
+                    b.OwnsOne("YallaJo.SharedKernel.Domain.ValueObjects.Money", "AmountSubtotal", b1 =>
+                        {
+                            b1.Property<Guid>("InvoiceId")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<decimal>("Amount")
+                                .HasPrecision(19, 4)
+                                .HasColumnType("decimal(19,4)")
+                                .HasColumnName("AmountSubtotal");
+
+                            b1.Property<string>("Currency")
+                                .IsRequired()
+                                .ValueGeneratedOnAdd()
+                                .HasMaxLength(3)
+                                .HasColumnType("nvarchar(3)")
+                                .HasDefaultValue("JOD")
+                                .HasColumnName("AmountSubtotalCurrency");
+
+                            b1.HasKey("InvoiceId");
+
+                            b1.ToTable("Invoices", "finance");
+
+                            b1.WithOwner()
+                                .HasForeignKey("InvoiceId");
+                        });
+
+                    b.OwnsOne("YallaJo.SharedKernel.Domain.ValueObjects.Money", "AmountTax", b1 =>
+                        {
+                            b1.Property<Guid>("InvoiceId")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<decimal>("Amount")
+                                .HasPrecision(19, 4)
+                                .HasColumnType("decimal(19,4)")
+                                .HasColumnName("AmountTax");
+
+                            b1.Property<string>("Currency")
+                                .IsRequired()
+                                .ValueGeneratedOnAdd()
+                                .HasMaxLength(3)
+                                .HasColumnType("nvarchar(3)")
+                                .HasDefaultValue("JOD")
+                                .HasColumnName("AmountTaxCurrency");
+
+                            b1.HasKey("InvoiceId");
+
+                            b1.ToTable("Invoices", "finance");
+
+                            b1.WithOwner()
+                                .HasForeignKey("InvoiceId");
+                        });
+
+                    b.OwnsOne("YallaJo.SharedKernel.Domain.ValueObjects.Money", "AmountTotal", b1 =>
+                        {
+                            b1.Property<Guid>("InvoiceId")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<decimal>("Amount")
+                                .HasPrecision(19, 4)
+                                .HasColumnType("decimal(19,4)")
+                                .HasColumnName("AmountTotal");
+
+                            b1.Property<string>("Currency")
+                                .IsRequired()
+                                .ValueGeneratedOnAdd()
+                                .HasMaxLength(3)
+                                .HasColumnType("nvarchar(3)")
+                                .HasDefaultValue("JOD")
+                                .HasColumnName("AmountTotalCurrency");
+
+                            b1.HasKey("InvoiceId");
+
+                            b1.ToTable("Invoices", "finance");
+
+                            b1.WithOwner()
+                                .HasForeignKey("InvoiceId");
+                        });
+
+                    b.OwnsMany("Finance.Domain.Entities.InvoiceItem", "Items", b1 =>
+                        {
+                            b1.Property<Guid>("Id")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<DateTime>("CreatedAt")
+                                .HasColumnType("datetime2");
+
+                            b1.Property<string>("Description")
+                                .IsRequired()
+                                .HasMaxLength(500)
+                                .HasColumnType("nvarchar(500)");
+
+                            b1.Property<Guid>("InvoiceId")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<int>("Quantity")
+                                .HasColumnType("int");
+
+                            b1.Property<DateTime?>("UpdatedAt")
+                                .HasColumnType("datetime2");
+
+                            b1.HasKey("Id");
+
+                            b1.HasIndex("InvoiceId");
 
                             b1.ToTable("InvoiceItems", "finance");
 
                             b1.WithOwner()
-                                .HasForeignKey("InvoiceItemId");
+                                .HasForeignKey("InvoiceId");
+
+                            b1.OwnsOne("YallaJo.SharedKernel.Domain.ValueObjects.Money", "Subtotal", b2 =>
+                                {
+                                    b2.Property<Guid>("InvoiceItemId")
+                                        .HasColumnType("uniqueidentifier");
+
+                                    b2.Property<decimal>("Amount")
+                                        .HasPrecision(19, 4)
+                                        .HasColumnType("decimal(19,4)")
+                                        .HasColumnName("Subtotal");
+
+                                    b2.Property<string>("Currency")
+                                        .IsRequired()
+                                        .ValueGeneratedOnAdd()
+                                        .HasMaxLength(3)
+                                        .HasColumnType("nvarchar(3)")
+                                        .HasDefaultValue("JOD")
+                                        .HasColumnName("SubtotalCurrency");
+
+                                    b2.HasKey("InvoiceItemId");
+
+                                    b2.ToTable("InvoiceItems", "finance");
+
+                                    b2.WithOwner()
+                                        .HasForeignKey("InvoiceItemId");
+                                });
+
+                            b1.OwnsOne("YallaJo.SharedKernel.Domain.ValueObjects.Money", "UnitPrice", b2 =>
+                                {
+                                    b2.Property<Guid>("InvoiceItemId")
+                                        .HasColumnType("uniqueidentifier");
+
+                                    b2.Property<decimal>("Amount")
+                                        .HasPrecision(19, 4)
+                                        .HasColumnType("decimal(19,4)")
+                                        .HasColumnName("UnitPrice");
+
+                                    b2.Property<string>("Currency")
+                                        .IsRequired()
+                                        .ValueGeneratedOnAdd()
+                                        .HasMaxLength(3)
+                                        .HasColumnType("nvarchar(3)")
+                                        .HasDefaultValue("JOD")
+                                        .HasColumnName("UnitPriceCurrency");
+
+                                    b2.HasKey("InvoiceItemId");
+
+                                    b2.ToTable("InvoiceItems", "finance");
+
+                                    b2.WithOwner()
+                                        .HasForeignKey("InvoiceItemId");
+                                });
+
+                            b1.Navigation("Subtotal")
+                                .IsRequired();
+
+                            b1.Navigation("UnitPrice")
+                                .IsRequired();
                         });
 
-                    b.OwnsOne("YallaJo.SharedKernel.Domain.ValueObjects.Money", "TaxAmount", b1 =>
-                        {
-                            b1.Property<Guid>("InvoiceItemId")
-                                .HasColumnType("uniqueidentifier");
-
-                            b1.Property<decimal>("Amount")
-                                .ValueGeneratedOnAdd()
-                                .HasPrecision(19, 4)
-                                .HasColumnType("decimal(19,4)")
-                                .HasDefaultValue(0m)
-                                .HasColumnName("TaxAmount");
-
-                            b1.Property<string>("Currency")
-                                .IsRequired()
-                                .ValueGeneratedOnAdd()
-                                .HasMaxLength(3)
-                                .HasColumnType("nvarchar(3)")
-                                .HasDefaultValue("JOD")
-                                .HasColumnName("TaxAmountCurrency");
-
-                            b1.HasKey("InvoiceItemId");
-
-                            b1.ToTable("InvoiceItems", "finance");
-
-                            b1.WithOwner()
-                                .HasForeignKey("InvoiceItemId");
-                        });
-
-                    b.OwnsOne("YallaJo.SharedKernel.Domain.ValueObjects.Money", "TotalAmount", b1 =>
-                        {
-                            b1.Property<Guid>("InvoiceItemId")
-                                .HasColumnType("uniqueidentifier");
-
-                            b1.Property<decimal>("Amount")
-                                .HasPrecision(19, 4)
-                                .HasColumnType("decimal(19,4)")
-                                .HasColumnName("TotalAmount");
-
-                            b1.Property<string>("Currency")
-                                .IsRequired()
-                                .ValueGeneratedOnAdd()
-                                .HasMaxLength(3)
-                                .HasColumnType("nvarchar(3)")
-                                .HasDefaultValue("JOD")
-                                .HasColumnName("TotalAmountCurrency");
-
-                            b1.HasKey("InvoiceItemId");
-
-                            b1.ToTable("InvoiceItems", "finance");
-
-                            b1.WithOwner()
-                                .HasForeignKey("InvoiceItemId");
-                        });
-
-                    b.Navigation("SubTotal")
+                    b.Navigation("AmountDiscount")
                         .IsRequired();
 
-                    b.Navigation("TaxAmount")
+                    b.Navigation("AmountSubtotal")
                         .IsRequired();
 
-                    b.Navigation("TotalAmount")
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("Finance.Domain.Entities.InvoiceLineItem", b =>
-                {
-                    b.HasOne("Finance.Domain.Entities.InvoiceItem", "InvoiceItem")
-                        .WithMany("InvoiceLineItems")
-                        .HasForeignKey("InvoiceId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                    b.Navigation("AmountTax")
                         .IsRequired();
 
-                    b.OwnsOne("YallaJo.SharedKernel.Domain.ValueObjects.Money", "Amount", b1 =>
-                        {
-                            b1.Property<Guid>("InvoiceLineItemId")
-                                .HasColumnType("uniqueidentifier");
-
-                            b1.Property<decimal>("Amount")
-                                .HasPrecision(19, 4)
-                                .HasColumnType("decimal(19,4)")
-                                .HasColumnName("Amount");
-
-                            b1.Property<string>("Currency")
-                                .IsRequired()
-                                .ValueGeneratedOnAdd()
-                                .HasMaxLength(3)
-                                .HasColumnType("nvarchar(3)")
-                                .HasDefaultValue("JOD")
-                                .HasColumnName("AmountCurrency");
-
-                            b1.HasKey("InvoiceLineItemId");
-
-                            b1.ToTable("InvoiceLineItems", "finance");
-
-                            b1.WithOwner()
-                                .HasForeignKey("InvoiceLineItemId");
-                        });
-
-                    b.OwnsOne("YallaJo.SharedKernel.Domain.ValueObjects.Money", "UnitPrice", b1 =>
-                        {
-                            b1.Property<Guid>("InvoiceLineItemId")
-                                .HasColumnType("uniqueidentifier");
-
-                            b1.Property<decimal>("Amount")
-                                .HasPrecision(19, 4)
-                                .HasColumnType("decimal(19,4)")
-                                .HasColumnName("UnitPrice");
-
-                            b1.Property<string>("Currency")
-                                .IsRequired()
-                                .ValueGeneratedOnAdd()
-                                .HasMaxLength(3)
-                                .HasColumnType("nvarchar(3)")
-                                .HasDefaultValue("JOD")
-                                .HasColumnName("UnitPriceCurrency");
-
-                            b1.HasKey("InvoiceLineItemId");
-
-                            b1.ToTable("InvoiceLineItems", "finance");
-
-                            b1.WithOwner()
-                                .HasForeignKey("InvoiceLineItemId");
-                        });
-
-                    b.Navigation("Amount")
+                    b.Navigation("AmountTotal")
                         .IsRequired();
 
-                    b.Navigation("InvoiceItem");
-
-                    b.Navigation("UnitPrice")
-                        .IsRequired();
+                    b.Navigation("Items");
                 });
 
             modelBuilder.Entity("Finance.Domain.Entities.LoyaltyTransaction", b =>
@@ -1555,15 +1725,156 @@ namespace Finance.Infrastructure.Migrations
                                 .HasForeignKey("PaymentId");
                         });
 
+                    b.OwnsOne("YallaJo.SharedKernel.Domain.ValueObjects.Money", "RefundedTotal", b1 =>
+                        {
+                            b1.Property<Guid>("PaymentId")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<decimal>("Amount")
+                                .ValueGeneratedOnAdd()
+                                .HasPrecision(19, 4)
+                                .HasColumnType("decimal(19,4)")
+                                .HasDefaultValue(0m)
+                                .HasColumnName("RefundedTotal");
+
+                            b1.Property<string>("Currency")
+                                .IsRequired()
+                                .ValueGeneratedOnAdd()
+                                .HasMaxLength(3)
+                                .HasColumnType("nvarchar(3)")
+                                .HasDefaultValue("JOD")
+                                .HasColumnName("RefundedTotalCurrency");
+
+                            b1.HasKey("PaymentId");
+
+                            b1.ToTable("Payments", "finance");
+
+                            b1.WithOwner()
+                                .HasForeignKey("PaymentId");
+                        });
+
                     b.Navigation("Amount")
                         .IsRequired();
 
                     b.Navigation("RefundedAmount")
                         .IsRequired();
+
+                    b.Navigation("RefundedTotal")
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Finance.Domain.Entities.PaymentExpectation", b =>
+                {
+                    b.OwnsOne("YallaJo.SharedKernel.Domain.ValueObjects.Money", "ExpectedAmount", b1 =>
+                        {
+                            b1.Property<Guid>("PaymentExpectationId")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<decimal>("Amount")
+                                .HasColumnType("decimal(19,4)")
+                                .HasColumnName("ExpectedAmount");
+
+                            b1.Property<string>("Currency")
+                                .IsRequired()
+                                .ValueGeneratedOnAdd()
+                                .HasMaxLength(3)
+                                .IsUnicode(false)
+                                .HasColumnType("varchar(3)")
+                                .HasDefaultValue("JOD")
+                                .HasColumnName("ExpectedAmountCurrency");
+
+                            b1.HasKey("PaymentExpectationId");
+
+                            b1.ToTable("PaymentExpectations", "finance");
+
+                            b1.WithOwner()
+                                .HasForeignKey("PaymentExpectationId");
+                        });
+
+                    b.Navigation("ExpectedAmount")
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Finance.Domain.Entities.Payout", b =>
                 {
+                    b.OwnsOne("YallaJo.SharedKernel.Domain.ValueObjects.Money", "CommissionAmount", b1 =>
+                        {
+                            b1.Property<Guid>("PayoutId")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<decimal>("Amount")
+                                .HasPrecision(19, 4)
+                                .HasColumnType("decimal(19,4)")
+                                .HasColumnName("CommissionAmount");
+
+                            b1.Property<string>("Currency")
+                                .IsRequired()
+                                .ValueGeneratedOnAdd()
+                                .HasMaxLength(3)
+                                .HasColumnType("nvarchar(3)")
+                                .HasDefaultValue("JOD")
+                                .HasColumnName("CommissionAmountCurrency");
+
+                            b1.HasKey("PayoutId");
+
+                            b1.ToTable("Payouts", "finance");
+
+                            b1.WithOwner()
+                                .HasForeignKey("PayoutId");
+                        });
+
+                    b.OwnsOne("YallaJo.SharedKernel.Domain.ValueObjects.Money", "GrossAmount", b1 =>
+                        {
+                            b1.Property<Guid>("PayoutId")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<decimal>("Amount")
+                                .HasPrecision(19, 4)
+                                .HasColumnType("decimal(19,4)")
+                                .HasColumnName("GrossAmount");
+
+                            b1.Property<string>("Currency")
+                                .IsRequired()
+                                .ValueGeneratedOnAdd()
+                                .HasMaxLength(3)
+                                .HasColumnType("nvarchar(3)")
+                                .HasDefaultValue("JOD")
+                                .HasColumnName("GrossAmountCurrency");
+
+                            b1.HasKey("PayoutId");
+
+                            b1.ToTable("Payouts", "finance");
+
+                            b1.WithOwner()
+                                .HasForeignKey("PayoutId");
+                        });
+
+                    b.OwnsOne("YallaJo.SharedKernel.Domain.ValueObjects.Money", "NetAmount", b1 =>
+                        {
+                            b1.Property<Guid>("PayoutId")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<decimal>("Amount")
+                                .HasPrecision(19, 4)
+                                .HasColumnType("decimal(19,4)")
+                                .HasColumnName("NetAmount");
+
+                            b1.Property<string>("Currency")
+                                .IsRequired()
+                                .ValueGeneratedOnAdd()
+                                .HasMaxLength(3)
+                                .HasColumnType("nvarchar(3)")
+                                .HasDefaultValue("JOD")
+                                .HasColumnName("NetAmountCurrency");
+
+                            b1.HasKey("PayoutId");
+
+                            b1.ToTable("Payouts", "finance");
+
+                            b1.WithOwner()
+                                .HasForeignKey("PayoutId");
+                        });
+
                     b.OwnsOne("YallaJo.SharedKernel.Domain.ValueObjects.Money", "TotalAmount", b1 =>
                         {
                             b1.Property<Guid>("PayoutId")
@@ -1590,6 +1901,15 @@ namespace Finance.Infrastructure.Migrations
                                 .HasForeignKey("PayoutId");
                         });
 
+                    b.Navigation("CommissionAmount")
+                        .IsRequired();
+
+                    b.Navigation("GrossAmount")
+                        .IsRequired();
+
+                    b.Navigation("NetAmount")
+                        .IsRequired();
+
                     b.Navigation("TotalAmount")
                         .IsRequired();
                 });
@@ -1602,33 +1922,7 @@ namespace Finance.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.OwnsOne("YallaJo.SharedKernel.Domain.ValueObjects.Money", "Amount", b1 =>
-                        {
-                            b1.Property<Guid>("PayoutItemId")
-                                .HasColumnType("uniqueidentifier");
-
-                            b1.Property<decimal>("Amount")
-                                .HasPrecision(19, 4)
-                                .HasColumnType("decimal(19,4)")
-                                .HasColumnName("Amount");
-
-                            b1.Property<string>("Currency")
-                                .IsRequired()
-                                .ValueGeneratedOnAdd()
-                                .HasMaxLength(3)
-                                .HasColumnType("nvarchar(3)")
-                                .HasDefaultValue("JOD")
-                                .HasColumnName("AmountCurrency");
-
-                            b1.HasKey("PayoutItemId");
-
-                            b1.ToTable("PayoutItems", "finance");
-
-                            b1.WithOwner()
-                                .HasForeignKey("PayoutItemId");
-                        });
-
-                    b.OwnsOne("YallaJo.SharedKernel.Domain.ValueObjects.Money", "Commission", b1 =>
+                    b.OwnsOne("YallaJo.SharedKernel.Domain.ValueObjects.Money", "CommissionAmount", b1 =>
                         {
                             b1.Property<Guid>("PayoutItemId")
                                 .HasColumnType("uniqueidentifier");
@@ -1645,6 +1939,32 @@ namespace Finance.Infrastructure.Migrations
                                 .HasColumnType("nvarchar(3)")
                                 .HasDefaultValue("JOD")
                                 .HasColumnName("CommissionCurrency");
+
+                            b1.HasKey("PayoutItemId");
+
+                            b1.ToTable("PayoutItems", "finance");
+
+                            b1.WithOwner()
+                                .HasForeignKey("PayoutItemId");
+                        });
+
+                    b.OwnsOne("YallaJo.SharedKernel.Domain.ValueObjects.Money", "GrossAmount", b1 =>
+                        {
+                            b1.Property<Guid>("PayoutItemId")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<decimal>("Amount")
+                                .HasPrecision(19, 4)
+                                .HasColumnType("decimal(19,4)")
+                                .HasColumnName("Amount");
+
+                            b1.Property<string>("Currency")
+                                .IsRequired()
+                                .ValueGeneratedOnAdd()
+                                .HasMaxLength(3)
+                                .HasColumnType("nvarchar(3)")
+                                .HasDefaultValue("JOD")
+                                .HasColumnName("AmountCurrency");
 
                             b1.HasKey("PayoutItemId");
 
@@ -1680,10 +2000,10 @@ namespace Finance.Infrastructure.Migrations
                                 .HasForeignKey("PayoutItemId");
                         });
 
-                    b.Navigation("Amount")
+                    b.Navigation("CommissionAmount")
                         .IsRequired();
 
-                    b.Navigation("Commission")
+                    b.Navigation("GrossAmount")
                         .IsRequired();
 
                     b.Navigation("NetAmount")
@@ -1787,11 +2107,6 @@ namespace Finance.Infrastructure.Migrations
                     b.Navigation("Evidence");
 
                     b.Navigation("Messages");
-                });
-
-            modelBuilder.Entity("Finance.Domain.Entities.InvoiceItem", b =>
-                {
-                    b.Navigation("InvoiceLineItems");
                 });
 
             modelBuilder.Entity("Finance.Domain.Entities.LoyaltyPoints", b =>

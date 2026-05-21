@@ -35,6 +35,11 @@ public class SlotLockConfiguration : IEntityTypeConfiguration<SlotLock>
         // Lookup an active lock by slot
         builder.HasIndex(x => new { x.AvailabilitySlotId, x.IsReleased });
 
+        builder.HasIndex(x => new { x.UserId, x.AvailabilitySlotId })
+            .IsUnique()
+            .HasFilter("[IsReleased] = 0")
+            .HasDatabaseName("UX_SlotLock_User_Slot_Active");
+
         // Lookup a lock by its back-filled booking id (set in the same transaction
         // immediately after the TourBooking aggregate is created)
         builder.HasIndex(x => x.BookingId);

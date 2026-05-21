@@ -16,9 +16,12 @@ public sealed class MessagingDbContext : DbContext, IDbContext
     public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<NotificationPreference> NotificationPreferences => Set<NotificationPreference>();
     public DbSet<NotificationTemplate> NotificationTemplates => Set<NotificationTemplate>();
+    public DbSet<NotificationDeliveryAttempt> NotificationDeliveryAttempts => Set<NotificationDeliveryAttempt>();
     public DbSet<DeviceToken> DeviceTokens => Set<DeviceToken>();
     public DbSet<SupportTicket> SupportTickets => Set<SupportTicket>();
     public DbSet<TicketMessage> TicketMessages => Set<TicketMessage>();
+    public DbSet<UserSnapshot> UserSnapshots => Set<UserSnapshot>();
+    public DbSet<AdminAssignmentRoster> AdminAssignmentRosters => Set<AdminAssignmentRoster>();
     public DbSet<ChatBotConversation> ChatBotConversations => Set<ChatBotConversation>();
     public DbSet<ChatBotMessage> ChatBotMessages => Set<ChatBotMessage>();
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();

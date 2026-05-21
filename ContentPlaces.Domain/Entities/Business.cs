@@ -216,7 +216,7 @@ public sealed class Business : AuditableEntity, IAggregateRoot
         AddDomainEvent(new BusinessResubmittedDomainEvent(Id));
     }
 
-    public void Suspend(string reason)
+    public void Suspend(string reason, Guid reviewedByUserId)
     {
         if (string.IsNullOrWhiteSpace(reason))
             throw new ArgumentException("Suspension reason is required.", nameof(reason));
@@ -225,17 +225,21 @@ public sealed class Business : AuditableEntity, IAggregateRoot
             throw new InvalidOperationException($"Cannot suspend a business with status {Status}.");
 
         Status = BusinessStatus.Suspended;
+        ReviewedByUserId = reviewedByUserId;
+        ReviewedAt = DateTime.UtcNow;
 
         MarkUpdated();
         AddDomainEvent(new BusinessSuspendedDomainEvent(Id, reason.Trim()));
     }
 
-    public void Reinstate()
+    public void Reinstate(Guid reviewedByUserId)
     {
         if (Status != BusinessStatus.Suspended)
             throw new InvalidOperationException($"Cannot reinstate a business with status {Status}.");
 
         Status = BusinessStatus.Approved;
+        ReviewedByUserId = reviewedByUserId;
+        ReviewedAt = DateTime.UtcNow;
 
         MarkUpdated();
         AddDomainEvent(new BusinessReinstatedDomainEvent(Id));

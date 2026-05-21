@@ -6,8 +6,6 @@ using ContentPlaces.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
-using Security.Contracts.Authorization;
-using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 using AmenityEntity = ContentPlaces.Domain.Entities.BusinessAmenity;
@@ -18,7 +16,6 @@ public sealed class AddBusinessAmenityCommandHandler(
     IBusinessAmenityRepository amenityRepository,
     IBusinessRepository businessRepository,
     IContentPlacesUnitOfWork unitOfWork,
-    ICurrentUser currentUser,
     HybridCache cache,
     ILogger<AddBusinessAmenityCommandHandler> logger)
     : ICommandHandler<AddBusinessAmenityCommand, BusinessAmenityDto>
@@ -27,12 +24,6 @@ public sealed class AddBusinessAmenityCommandHandler(
         AddBusinessAmenityCommand request,
         CancellationToken cancellationToken)
     {
-        if (!currentUser.IsAuthenticated || currentUser.UserId is null)
-        {
-            return Result<BusinessAmenityDto>.Failure(
-                Error.Unauthorized("Authentication required"));
-        }
-
         var business = await businessRepository.GetByIdAsync(request.BusinessId, cancellationToken);
 
         if (business is null)
@@ -41,14 +32,11 @@ public sealed class AddBusinessAmenityCommandHandler(
                 Error.NotFound("Business.NotFound", "Business not found"));
         }
 
-        // Authorization: owner OR admin-tier role (Admin/SuperAdmin/Owner)
-        var isAdminTier = AppRoles.HighestPrivilegeLevel(currentUser.Roles)
-            >= RolePrivilegeLevel.Admin;
-
-        if (!isAdminTier && business.OwnerId != currentUser.UserId)
+        if (business.OwnerId != request.ActingUserId)
         {
             return Result<BusinessAmenityDto>.Failure(
-                Error.Forbidden("You are not allowed to modify this business"));
+                new Error("Business.Forbidden", "Not the owner"),
+                Outcome.Forbidden);
         }
 
         var normalizedName = request.Name.Trim().ToLower(CultureInfo.InvariantCulture);

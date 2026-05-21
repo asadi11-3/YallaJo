@@ -1,6 +1,7 @@
 using Booking.Application.Interfaces;
 using Booking.Contracts.Authorization;
 using Booking.Domain.Repositories;
+using Booking.Infrastructure.BackgroundServices;
 using Booking.Infrastructure.Persistence;
 using Booking.Infrastructure.Persistence.Seeding;
 using Booking.Infrastructure.Repositories;
@@ -8,6 +9,7 @@ using Booking.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using YallaJo.SharedKernel.Application.Authorization;
 using YallaJo.SharedKernel.Infrastructure.Data;
 using YallaJo.SharedKernel.Infrastructure.Outbox;
@@ -39,6 +41,7 @@ public static class DependencyInjection
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
         services.AddScoped<IOutboxProcessor, OutboxProcessor<BookingDbContext>>();
         services.AddScoped<IOutboxCleaner, OutboxCleaner<BookingDbContext>>();
+        services.TryAddSingleton(TimeProvider.System);
 
         // ── Repositories ─────────────────────────────────────────────────────
         services.AddScoped<ITourBookingRepository, TourBookingRepository>();
@@ -74,6 +77,60 @@ public static class DependencyInjection
         services.AddScoped<IDiscountEvaluator, NoOpDiscountEvaluator>();
         services.AddScoped<IBookingCommissionLookup, StubBookingCommissionLookup>();
 
+        // ── Background services ──────────────────────────────────────────────
+        services.Configure<SlotLockCleanupOptions>(opts =>
+        {
+            var section = configuration.GetSection(SlotLockCleanupOptions.SectionName);
+            ApplyBool(section, nameof(SlotLockCleanupOptions.Enabled), value => opts.Enabled = value);
+            ApplyTimeSpan(section, nameof(SlotLockCleanupOptions.InitialDelay), value => opts.InitialDelay = value);
+            ApplyTimeSpan(section, nameof(SlotLockCleanupOptions.PollInterval), value => opts.PollInterval = value);
+            ApplyInt(section, nameof(SlotLockCleanupOptions.BatchSize), value => opts.BatchSize = value);
+        });
+        services.Configure<DocumentExpiryCheckOptions>(opts =>
+        {
+            var section = configuration.GetSection(DocumentExpiryCheckOptions.SectionName);
+            ApplyBool(section, nameof(DocumentExpiryCheckOptions.Enabled), value => opts.Enabled = value);
+            ApplyTimeSpan(section, nameof(DocumentExpiryCheckOptions.InitialDelay), value => opts.InitialDelay = value);
+            ApplyTimeSpan(section, nameof(DocumentExpiryCheckOptions.PollInterval), value => opts.PollInterval = value);
+            ApplyInt(section, nameof(DocumentExpiryCheckOptions.ExpiringSoonWindowDays), value => opts.ExpiringSoonWindowDays = value);
+        });
+        services.Configure<ProviderAutoAcceptOptions>(opts =>
+        {
+            var section = configuration.GetSection(ProviderAutoAcceptOptions.SectionName);
+            ApplyBool(section, nameof(ProviderAutoAcceptOptions.Enabled), value => opts.Enabled = value);
+            ApplyTimeSpan(section, nameof(ProviderAutoAcceptOptions.InitialDelay), value => opts.InitialDelay = value);
+            ApplyTimeSpan(section, nameof(ProviderAutoAcceptOptions.PollInterval), value => opts.PollInterval = value);
+            ApplyTimeSpan(section, nameof(ProviderAutoAcceptOptions.AutoAcceptAfter), value => opts.AutoAcceptAfter = value);
+            ApplyInt(section, nameof(ProviderAutoAcceptOptions.BatchSize), value => opts.BatchSize = value);
+        });
+        services.AddHostedService<SlotLockCleanupService>();
+        services.AddHostedService<DocumentExpiryCheckService>();
+        services.AddHostedService<ProviderAutoAcceptService>();
+
         return services;
+    }
+
+    private static void ApplyBool(IConfiguration section, string key, Action<bool> apply)
+    {
+        if (bool.TryParse(section[key], out var value))
+        {
+            apply(value);
+        }
+    }
+
+    private static void ApplyInt(IConfiguration section, string key, Action<int> apply)
+    {
+        if (int.TryParse(section[key], out var value) && value > 0)
+        {
+            apply(value);
+        }
+    }
+
+    private static void ApplyTimeSpan(IConfiguration section, string key, Action<TimeSpan> apply)
+    {
+        if (TimeSpan.TryParse(section[key], out var value) && value > TimeSpan.Zero)
+        {
+            apply(value);
+        }
     }
 }

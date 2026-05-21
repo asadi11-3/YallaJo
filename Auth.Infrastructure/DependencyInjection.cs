@@ -2,6 +2,7 @@ using Auth.Application.Interfaces;
 using Auth.Application.Recaptcha;
 using Auth.Domain.Repositories;
 using Auth.Infrastructure.ExternalAuth;
+using Auth.Infrastructure.Outbox;
 using Auth.Infrastructure.Persistence;
 using Auth.Infrastructure.Persistence.Seeding;
 using Auth.Infrastructure.Recaptcha;
@@ -16,6 +17,8 @@ using YallaJo.SharedKernel.Infrastructure.BackgroundJobs;
 using Auth.Infrastructure.BackgroundJobs;
 using YallaJo.SharedKernel.Infrastructure.Data;
 using Auth.Application.Interfaces.ExternalAuth;
+using Auth.Contracts.Authorization;
+using YallaJo.SharedKernel.Application.Authorization;
 
 namespace Auth.Infrastructure;
 
@@ -39,6 +42,7 @@ public static class DependencyInjection
 
         // UnitOfWork wraps AuthDbContext and dispatches domain events on SaveChanges
         services.AddScoped<IUnitOfWork<AuthDbContext>, UnitOfWork<AuthDbContext>>();
+        services.AddSingleton<IPermissionCatalog, AuthPermissionCatalog>();
         services.AddScoped<IModuleDbInitializer, AuthDbInitializer>();
         services.AddScoped<IAuthUnitOfWork, AuthUnitOfWork>();
 
@@ -60,6 +64,9 @@ public static class DependencyInjection
 
         // Inbox — consumer-side idempotency store for integration event handlers
         services.AddScoped<IAuthInboxStore, AuthInboxStore>();
+
+        // Outbox — producer-side writer that enqueues outbound integration events
+        services.AddScoped<IAuthOutboxWriter, AuthOutboxWriter>();
 
         // Application services
         services.AddSingleton<IOtpService, OtpService>();

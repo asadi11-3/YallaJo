@@ -4,6 +4,7 @@ using Accounts.Application.Commands.RestoreProfile;
 using Accounts.Application.Commands.UpdateAvatar;
 using Accounts.Application.Commands.UpdateProfile;
 using Accounts.Application.Queries.GetProfile;
+using Accounts.Contracts.Authorization;
 using Accounts.Presentation.Endpoints.Profile.Models;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
@@ -11,7 +12,9 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Abstractions.Storage;
+using YallaJo.SharedKernel.Application.Authorization;
 using YallaJo.SharedKernel.Presentation;
+using YallaJo.SharedKernel.Presentation.Authorization;
 
 namespace Accounts.Presentation.Endpoints.Profile;
 
@@ -42,6 +45,7 @@ internal static class ProfileEndpoints
         .ProducesProblem(StatusCodes.Status401Unauthorized)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Get the current user's profile")
+        .WithMetadata(new MustHavePermissionAttribute(AccountsFeatures.Profile, AppAction.Read))
         .RequireAuthorization();
 
         profile.MapPut("/", async (UpdateProfileRequest request, ISender sender, CancellationToken ct) =>
@@ -63,6 +67,7 @@ internal static class ProfileEndpoints
         .ProducesProblem(StatusCodes.Status401Unauthorized)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Update the current user's profile")
+        .WithMetadata(new MustHavePermissionAttribute(AccountsFeatures.Profile, AppAction.Update))
         .RequireAuthorization();
 
         profile.MapPut("/avatar", async (
@@ -97,6 +102,7 @@ internal static class ProfileEndpoints
         .ProducesProblem(StatusCodes.Status401Unauthorized)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Upload and set the current user's avatar image")
+        .WithMetadata(new MustHavePermissionAttribute(AccountsFeatures.Profile, AppAction.Update))
         .RequireAuthorization()
         .DisableAntiforgery();
 
@@ -110,6 +116,7 @@ internal static class ProfileEndpoints
         .ProducesProblem(StatusCodes.Status401Unauthorized)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Remove the current user's avatar")
+        .WithMetadata(new MustHavePermissionAttribute(AccountsFeatures.Profile, AppAction.Update))
         .RequireAuthorization();
 
         profile.MapDelete("/", async (ISender sender, CancellationToken ct) =>
@@ -122,6 +129,7 @@ internal static class ProfileEndpoints
         .ProducesProblem(StatusCodes.Status401Unauthorized)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Delete the current user's profile")
+        .WithMetadata(new MustHavePermissionAttribute(AccountsFeatures.Profile, AppAction.SoftDelete))
         .RequireAuthorization();
 
         profile.MapPost("/restore", async (ISender sender, CancellationToken ct) =>
@@ -134,6 +142,7 @@ internal static class ProfileEndpoints
         .ProducesProblem(StatusCodes.Status401Unauthorized)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Restore the current user's previously soft-deleted profile")
+        .WithMetadata(new MustHavePermissionAttribute(AccountsFeatures.Profile, AppAction.Update))
         .RequireAuthorization();
     }
 }

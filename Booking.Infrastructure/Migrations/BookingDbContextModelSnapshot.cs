@@ -262,7 +262,13 @@ namespace Booking.Infrastructure.Migrations
                         .HasMaxLength(2048)
                         .HasColumnType("nvarchar(2048)");
 
+                    b.Property<DateTime?>("ExpiredNotificationSentAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<DateTime?>("ExpiresAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("ExpiringNotificationSentAt")
                         .HasColumnType("datetime2");
 
                     b.Property<bool>("IsDeleted")
@@ -305,6 +311,12 @@ namespace Booking.Infrastructure.Migrations
                         .HasFilter("[BusinessId] IS NOT NULL");
 
                     b.HasIndex("TourGuideId", "DocumentType");
+
+                    b.HasIndex("Status", "ExpiresAt", "ExpiredNotificationSentAt")
+                        .HasDatabaseName("IX_ProviderDocuments_Status_ExpiresAt_ExpiredNotification");
+
+                    b.HasIndex("Status", "ExpiresAt", "ExpiringNotificationSentAt")
+                        .HasDatabaseName("IX_ProviderDocuments_Status_ExpiresAt_ExpiringNotification");
 
                     b.ToTable("ProviderDocuments", "booking", t =>
                         {
@@ -512,6 +524,11 @@ namespace Booking.Infrastructure.Migrations
 
                     b.HasIndex("AvailabilitySlotId", "IsReleased");
 
+                    b.HasIndex("UserId", "AvailabilitySlotId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_SlotLock_User_Slot_Active")
+                        .HasFilter("[IsReleased] = 0");
+
                     b.ToTable("SlotLocks", "booking");
                 });
 
@@ -663,6 +680,9 @@ namespace Booking.Infrastructure.Migrations
                     b.HasIndex("Status");
 
                     b.HasIndex("ProviderId", "Status");
+
+                    b.HasIndex("Status", "UpdatedAt")
+                        .HasDatabaseName("IX_TourBookings_Status_UpdatedAt");
 
                     b.HasIndex("TourId", "Status");
 

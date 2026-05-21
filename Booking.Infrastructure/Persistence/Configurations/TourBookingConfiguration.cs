@@ -89,6 +89,8 @@ public class TourBookingConfiguration : IEntityTypeConfiguration<TourBooking>
         builder.HasIndex(x => new { x.TourId, x.Status });
         builder.HasIndex(x => new { x.ProviderId, x.Status });
         builder.HasIndex(x => x.Status);
+        builder.HasIndex(x => new { x.Status, x.UpdatedAt })
+            .HasDatabaseName("IX_TourBookings_Status_UpdatedAt");
         builder.HasIndex(x => x.AvailabilitySlotId);
     }
 }

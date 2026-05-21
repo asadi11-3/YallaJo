@@ -2,9 +2,10 @@ namespace Messaging.Domain.Enums;
 
 public enum TicketStatus : byte
 {
-    Open = 0,
-    InProgress = 1,
-    WaitingOnCustomer = 2,
-    Resolved = 3,
-    Closed = 4
+    Open           = 0,
+    Assigned       = 1,
+    InProgress     = 2,
+    AwaitingUser   = 3,
+    Resolved       = 4,
+    Closed         = 5,
 }

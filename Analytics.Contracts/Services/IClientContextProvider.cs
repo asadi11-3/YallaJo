@@ -1,8 +1,8 @@
-namespace Analytics.Contracts.Services;
+﻿namespace Analytics.Contracts.Services;
 
 public interface IClientContextProvider
 {
-    ClientContext GetCurrent();
+    string? UserAgent { get; }
+    string? IpAddress { get; }
+    string? CorrelationId { get; }
 }
-
-public sealed record ClientContext(string? IpAddress, string? UserAgent, string? SessionId, string? DeviceType);

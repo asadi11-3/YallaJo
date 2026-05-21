@@ -16,7 +16,7 @@ public sealed class FinanceDbContextScaffoldTests
         using var context = new FinanceDbContext(options);
         context.Payments.Should().NotBeNull();
         context.Payouts.Should().NotBeNull();
-        context.InvoiceItems.Should().NotBeNull();
+        context.Invoices.Should().NotBeNull();
         context.OutboxMessages.Should().NotBeNull();
     }
 }

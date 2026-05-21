@@ -15,12 +15,14 @@ public class PayoutItemConfiguration : IEntityTypeConfiguration<PayoutItem>
 
         builder.Property(x => x.PayoutId).IsRequired();
         builder.Property(x => x.BookingId).IsRequired();
-        builder.OwnsOne(x => x.Amount, money =>
+        builder.Property(x => x.CommissionRuleSnapshotId).IsRequired(false);
+
+        builder.OwnsOne(x => x.GrossAmount, money =>
         {
             money.Property(m => m.Amount).HasColumnName("Amount").HasPrecision(19, 4);
             money.Property(m => m.Currency).HasColumnName("AmountCurrency").HasMaxLength(3).HasDefaultValue("JOD");
         });
-        builder.OwnsOne(x => x.Commission, money =>
+        builder.OwnsOne(x => x.CommissionAmount, money =>
         {
             money.Property(m => m.Amount).HasColumnName("Commission").HasPrecision(19, 4);
             money.Property(m => m.Currency).HasColumnName("CommissionCurrency").HasMaxLength(3).HasDefaultValue("JOD");
@@ -38,6 +40,9 @@ public class PayoutItemConfiguration : IEntityTypeConfiguration<PayoutItem>
             .WithMany(x => x.PayoutItems)
             .HasForeignKey(x => x.PayoutId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasIndex(x => x.PayoutId);
+        builder.HasIndex(x => x.BookingId);
 
         builder.HasQueryFilter(x => !x.Payout.IsDeleted);
     }

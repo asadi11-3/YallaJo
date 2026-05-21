@@ -4,9 +4,16 @@ using YallaJo.SharedKernel.Domain.Abstractions.Data;
 
 namespace Messaging.Domain.Repositories;
 
+/// <summary>Repository for SupportTicket aggregate queries.</summary>
 public interface ISupportTicketRepository : IRepository<SupportTicket, Guid>
 {
     Task<SupportTicket?> GetByIdWithMessagesAsync(Guid id, CancellationToken ct = default);
-    Task<IReadOnlyList<SupportTicket>> GetByUserIdAsync(Guid userId, CancellationToken ct = default);
-    Task<IReadOnlyList<SupportTicket>> GetByStatusAsync(TicketStatus status, CancellationToken ct = default);
+
+    Task<(IReadOnlyList<SupportTicket> Items, Guid? NextCursor)> GetByUserPagedAsync(
+        Guid userId, Guid? afterId, int pageSize, CancellationToken ct = default);
+
+    Task<(IReadOnlyList<SupportTicket> Items, Guid? NextCursor)> GetByAdminPagedAsync(
+        TicketStatus? status, TicketCategory? category, Guid? afterId, int pageSize, CancellationToken ct = default);
+
+    Task<SupportTicket?> GetUnassignedOldestAsync(CancellationToken ct = default);
 }

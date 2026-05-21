@@ -5,7 +5,6 @@ using ContentPlaces.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
-using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
@@ -14,7 +13,6 @@ namespace ContentPlaces.Application.Commands.Business.ReinstateBusiness;
 public sealed class ReinstateBusinessCommandHandler(
     IBusinessRepository businessRepository,
     IContentPlacesUnitOfWork unitOfWork,
-    ICurrentUser currentUser,
     HybridCache cache,
     ILogger<ReinstateBusinessCommandHandler> logger)
     : ICommandHandler<ReinstateBusinessCommand>
@@ -23,11 +21,6 @@ public sealed class ReinstateBusinessCommandHandler(
     {
         try
         {
-            if (currentUser.UserId is null)
-            {
-                return Result.Failure(Error.Unauthorized("Authentication is required."), Outcome.Unauthorized);
-            }
-
             var business = await businessRepository.GetByIdAsync(request.Id, cancellationToken, asNoTracking: false);
             if (business is null)
             {
@@ -45,7 +38,7 @@ public sealed class ReinstateBusinessCommandHandler(
                     Outcome.Conflict);
             }
 
-            business.Reinstate();
+            business.Reinstate(request.ReinstatedByUserId);
 
             var saveResult = await SaveAsync(request.Id, cancellationToken);
             if (saveResult is not null)

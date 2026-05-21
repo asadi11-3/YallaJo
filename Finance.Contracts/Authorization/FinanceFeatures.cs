@@ -1,17 +1,29 @@
 namespace Finance.Contracts.Authorization;
 
+/// <summary>
+/// Finance module feature surface. Each constant maps to a permission feature
+/// recognised by <see cref="FinancePermissionCatalog"/>.
+/// </summary>
 public static class FinanceFeatures
 {
-    public const string Payment = nameof(Payment);
-    public const string Payout = nameof(Payout);
-    public const string Invoice = nameof(Invoice);
-    public const string Subscription = nameof(Subscription);
-    public const string Discount = nameof(Discount);
-    public const string CommissionRule = nameof(CommissionRule);
-    public const string Dispute = nameof(Dispute);
-    public const string ProviderBankAccount = nameof(ProviderBankAccount);
-    public const string LoyaltyPoints = nameof(LoyaltyPoints);
-    public const string Referral = nameof(Referral);
-    public const string FinanceAdmin = nameof(FinanceAdmin);
-    public const string FinanceReports = nameof(FinanceReports);
+    /// <summary>Customer payments (booking-bound, escrow-routed).</summary>
+    public const string Payment               = nameof(Payment);
+
+    /// <summary>Refunds against completed payments (separate permission surface).</summary>
+    public const string Refund                = nameof(Refund);
+
+    /// <summary>Invoice records auto-generated on payment completion.</summary>
+    public const string Invoice               = nameof(Invoice);
+
+    /// <summary>Provider payouts (escrow release + commission deduction).</summary>
+    public const string Payout                = nameof(Payout);
+
+    /// <summary>Platform commission tiering rules.</summary>
+    public const string CommissionRule        = nameof(CommissionRule);
+
+    /// <summary>Provider bank account records (KYC + payout destination).</summary>
+    public const string ProviderBankAccount   = nameof(ProviderBankAccount);
+
+    /// <summary>Admin finance dashboard: aggregated reports + exports.</summary>
+    public const string AdminFinanceDashboard = nameof(AdminFinanceDashboard);
 }

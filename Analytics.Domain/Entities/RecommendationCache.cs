@@ -2,6 +2,7 @@ using YallaJo.SharedKernel.Domain.Entities;
 
 namespace Analytics.Domain.Entities;
 
+[Obsolete("Out of scope for Phase 1. Reserved for Phase 3.")]
 public sealed class RecommendationCache : BaseEntity, IAggregateRoot
 {
     private RecommendationCache() { } // EF Core
@@ -14,3 +15,5 @@ public sealed class RecommendationCache : BaseEntity, IAggregateRoot
     public DateTime GeneratedAt { get; private set; }
     public DateTime ExpiresAt { get; private set; }
 }
+
+

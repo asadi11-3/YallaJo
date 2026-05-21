@@ -12,6 +12,7 @@
     Any module that needs to react to Auth events references THIS project, not Auth.Application.
   -->
   <ItemGroup>
+    <ProjectReference Include="..\YallaJo.SharedKernel.Application\YallaJo.SharedKernel.Application.csproj" />
     <ProjectReference Include="..\YallaJo.SharedKernel.Domain\YallaJo.SharedKernel.Domain.csproj" />
   </ItemGroup>
   <ItemGroup>

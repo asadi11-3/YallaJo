@@ -4,49 +4,20 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Analytics.Infrastructure.Persistence.Configurations;
 
-public class UserInteractionConfiguration : IEntityTypeConfiguration<UserInteraction>
+public sealed class UserInteractionConfiguration : IEntityTypeConfiguration<UserInteraction>
 {
     public void Configure(EntityTypeBuilder<UserInteraction> builder)
     {
         builder.ToTable("UserInteractions", "analytics");
-
         builder.HasKey(x => x.Id);
-        builder.Property(x => x.Id).ValueGeneratedOnAdd();
-
-        builder.Property(x => x.UserId).IsRequired();
-
-        builder.Property(x => x.InteractionType)
-            .IsRequired()
-            .HasConversion<int>();
-
-        builder.Property(x => x.EntityType)
-            .IsRequired()
-            .HasMaxLength(200);
-
-        builder.Property(x => x.EntityId).IsRequired();
-
-        builder.OwnsOne(e => e.Location, loc =>
-        {
-            loc.Property(l => l.Latitude).HasColumnName("Latitude").HasPrecision(10, 8);
-            loc.Property(l => l.Longitude).HasColumnName("Longitude").HasPrecision(11, 8);
-        });
-
-        builder.Property(x => x.SessionId)
-            .IsRequired(false)
-            .IsUnicode(false)
-            .HasMaxLength(100);
-
-        builder.Property(x => x.DeviceType)
-            .IsRequired(false)
-            .HasMaxLength(50);
-
-        builder.Property(x => x.DurationSeconds).IsRequired(false);
-        builder.Property(x => x.OccurredAt).IsRequired();
-        builder.Property(x => x.CreatedAt).IsRequired();
-        builder.Property(x => x.UpdatedAt).IsRequired(false);
-
-        builder.HasIndex(x => x.UserId);
+        builder.Property(x => x.EntityType).HasConversion<byte>().IsRequired();
+        builder.Property(x => x.InteractionType).HasConversion<byte>().IsRequired();
+        builder.Property(x => x.ClientIpHash).HasMaxLength(64);
+        builder.Property(x => x.UserAgent).HasMaxLength(500);
+        builder.Property(x => x.SessionId).HasMaxLength(128);
+        builder.HasIndex(x => new { x.OccurredAt, x.Id }).HasDatabaseName("IX_UserInteractions_OccurredAt_Id").IsDescending(true, false);
         builder.HasIndex(x => new { x.EntityType, x.EntityId });
-        builder.HasIndex(x => x.OccurredAt);
+        builder.HasIndex(x => x.UserId);
+        builder.HasIndex(x => x.InteractionType);
     }
 }
