@@ -3,7 +3,7 @@
 > **Sources:** `Agents/agent-context.md` §Wave 3 (Endpoints) + `Agents/guide.md` §2 (Tour Management)
 > **Dependencies:** Wave 2 (Provider must be Approved to create tours)
 > **Focus:** Tour CRUD, Business listings, Tour Guide profiles
-> **Missing:** ~5 endpoints (~12h)
+> **Missing:** tests/runtime smoke for guide profiles
 
 ---
 
@@ -15,19 +15,19 @@
 | Tour search/listing | 5/5 ✅ | — |
 | Businesses | 13/13 ✅ | — |
 | Business hours | All ✅ | — |
-| Tour Guides | 3/8 ⚠️ | 5 sub-resources missing |
+| Tour Guides | 8/8 endpoints 🟡 | 5 profile/sub-resource endpoints + migration implemented; tests/runtime smoke still pending |
 
-### 1.1 Tour Guides — Missing endpoints (5)
+### 1.1 Tour Guides — Implemented profile endpoints (5)
 
 | # | Method | Path | Description |
 |---|---|---|---|
-| 1 | GET | `/api/v1/guides/{id}` | Get tour guide profile |
-| 2 | PUT | `/api/v1/guides/{id}` | Update guide profile |
-| 3 | POST | `/api/v1/guides/{id}/languages` | Add language to guide |
-| 4 | DELETE | `/api/v1/guides/{id}/languages/{langId}` | Remove language |
-| 5 | POST | `/api/v1/guides/{id}/specializations` | Add specialization to guide |
+| 1 | GET | `/api/v1/guides/{id}` | ✅ Get tour guide profile |
+| 2 | PUT | `/api/v1/guides/{id}` | ✅ Update guide profile |
+| 3 | POST | `/api/v1/guides/{id}/languages` | ✅ Add language to guide |
+| 4 | DELETE | `/api/v1/guides/{id}/languages/{langId}` | ✅ Remove language |
+| 5 | POST | `/api/v1/guides/{id}/specializations` | ✅ Add specialization to guide |
 
-Currently `POST /api/v1/guides` (register) + `GET /api/v1/guides` (list) exist. Sub-resources missing.
+Earlier notes claiming `POST /api/v1/guides` (register) + `GET /api/v1/guides` (list) existed were stale/mismatched with the current ContentTours codebase. This slice implemented the five Wave 3 profile/sub-resource endpoints above under the new root `/api/v1/guides` group and added migration `AddTourGuideProfiles`. Register/list endpoints, automated tests, and runtime HTTP smoke remain pending.
 
 ---
 
@@ -176,12 +176,13 @@ group.MapPost("/{id:guid}/specializations", ...)
 
 ## 7. Acceptance Criteria
 
-- [ ] All 5 missing endpoints respond per PDF1 spec
-- [ ] Ownership enforced — only guide.UserId can edit
-- [ ] Cannot add duplicate language/specialization
-- [ ] Cannot remove last language
-- [ ] Proficiency enum validated
-- [ ] Public GET works without auth
+- [x] All 5 missing endpoints implemented per PDF1 spec
+- [x] Ownership enforced — only guide.UserId can edit
+- [x] Cannot add duplicate language/specialization
+- [x] Cannot remove last language
+- [x] Proficiency enum validated
+- [x] Public GET configured without auth
+- [x] Domain events have infrastructure handlers that stage outbox integration events
 - [ ] Integration tests cover: get, update, add/remove language, add specialization
-- [ ] `dotnet build` green for ContentTours.*
+- [x] `dotnet build` green for ContentTours.Presentation
 - [ ] No regressions in existing Wave 3 tests

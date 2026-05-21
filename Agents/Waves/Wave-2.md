@@ -14,7 +14,7 @@
 | Places | 10/10 ✅ | — |
 | Attachments (generic) | ✅ | — |
 | Attachments image flows | ⚠️ | `POST /attachments/{entityType}/{entityId}/images`, `PUT .../reorder` |
-| Profile avatar | ⚠️ | `POST /profile/avatar` (currently PUT) |
+| Profile avatar | ✅ | `POST /profile/avatar` canonical verb added; existing PUT retained for compatibility |
 | **Provider Application module** | **0/11** 🔴 | **ENTIRE MODULE MISSING** |
 
 ### 1.1 Provider Application — Missing endpoints (11)
@@ -31,7 +31,7 @@
 | 8 | POST | `/api/v1/admin/providers/{id}/reject` | `AdminProviderQueue.Reject` |
 | 9 | POST | `/api/v1/admin/providers/{id}/request-docs` | `AdminProviderQueue.RequestDocs` |
 | 10 | POST | `/api/v1/admin/providers/{id}/suspend` | `AdminProviderQueue.Suspend` |
-| 11 | POST | `/api/v1/profile/avatar` (canonical) | self |
+| 11 | POST | `/api/v1/profile/avatar` (canonical) | ✅ implemented under existing Accounts route group as `/api/v1/accounts/profile/avatar` with `Profile.Update` permission |
 
 ---
 

@@ -338,3 +338,30 @@
 - **Root Cause**: `Analytics.Infrastructure` does not reference the configuration binder extensions, matching prior Messaging behavior.
 - **Fix Applied**: Replaced binder-based option registration with manual parsing for bool, TimeSpan, and int values.
 - **Prevention Rule**: In module Infrastructure projects, bind options manually or add a version-aligned `Microsoft.Extensions.Configuration.Binder` reference intentionally; do not assume binder extension methods exist.
+
+### ERR-036: Duplicate Minimal API endpoint names crash route matcher at startup
+- **Date**: 2026-05-21
+- **Module**: Analytics.Presentation / Security.Presentation
+- **What Happened**: Startup/runtime failed because Analytics admin audit logs and Security audit logs both registered `.WithName("GetAuditLogs")`.
+- **Error Message**: `System.InvalidOperationException: Duplicate endpoint name 'GetAuditLogs' found on 'HTTP: GET /api/v1/admin/audit-logs' and 'HTTP: GET /api/v1/security/audit-logs'. Endpoint names must be globally unique.`
+- **Root Cause**: ASP.NET Core endpoint names are global across the whole app, not scoped by route group/module. Analytics added an admin audit endpoint with the same route name already used by Security.
+- **Fix Applied**: Renamed only the Analytics admin endpoint name to `GetAdminAuditLogs`; left route path, handler/query, and authorization metadata unchanged.
+- **Prevention Rule**: Before adding or renaming `.WithName(...)`, search the entire solution for that exact endpoint name. Admin-specific endpoint names should include `Admin` where a non-admin/module endpoint with the same semantic name may already exist.
+
+### ERR-037: Full solution build failed because running YallaJo.Web locked its executable
+- **Date**: 2026-05-21
+- **Module**: Validation workflow / YallaJo.Web
+- **What Happened**: `dotnet build YallaJo.sln --nologo` was attempted while `YallaJo.Web` was already running, so MSBuild could not overwrite `YallaJo.Web/bin/Debug/net9.0/YallaJo.Web.exe`.
+- **Error Message**: `MSB3027: Could not copy ... YallaJo.Web.exe. Exceeded retry count of 10. Failed. The file is locked by: "YallaJo.Web (23376)"` and `MSB3021: Unable to copy file ... because it is being used by another process.`
+- **Root Cause**: The web executable was actively running during validation. The code change itself was not implicated; the affected API projects built successfully afterward.
+- **Fix Applied**: Left the running app untouched and validated the changed surface with `dotnet build Analytics.Presentation/Analytics.Presentation.csproj --nologo` and `dotnet build YallaJo.Api/YallaJo.Api.csproj --nologo`, both passing with 0 errors.
+- **Prevention Rule**: If a web app is intentionally running, do not use full solution build as the only validation path unless the user agrees to stop it. Build the changed project(s) and host API project directly, or stop the running process first with explicit user approval.
+
+### ERR-038: Bash command reused POSIX-style lean-ctx path in PowerShell
+- **Date**: 2026-05-21
+- **Module**: Validation workflow / Accounts.Presentation + ContentTours.Presentation
+- **What Happened**: While validating the Wave 2 profile avatar POST endpoint, the build command was accidentally invoked through a POSIX-style path (`/c/Users/.../lean-ctx.cmd`) that PowerShell cannot resolve, and the same invalid command was retried before switching tools. The same mistake recurred multiple times during Wave 3 TourGuide endpoint validation before switching back to direct project-shell commands.
+- **Error Message**: `The term '/c/Users/admin1/AppData/Roaming/npm/lean-ctx.cmd' is not recognized as the name of a cmdlet, function, script file, or operable program.`
+- **Root Cause**: Mixed shell conventions: the environment shell is Windows PowerShell, but the command used a Git Bash/MSYS path prefix.
+- **Fix Applied**: Stopped using the invalid wrapper path and ran validation through the project shell with real commands: `dotnet build "Accounts.Presentation\\Accounts.Presentation.csproj" -clp:ErrorsOnly`, `dotnet build "ContentTours.Presentation\\ContentTours.Presentation.csproj" -clp:ErrorsOnly`, and `dotnet build "YallaJo.Api\\YallaJo.Api.csproj" -clp:ErrorsOnly`; all passed with 0 errors in their respective slices.
+- **Prevention Rule**: In this Windows workspace, run build/test commands directly (`dotnet ...`) or use Windows paths; never prefix commands with `/c/...` unless running inside an actual Bash/MSYS shell.

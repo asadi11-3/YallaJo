@@ -106,6 +106,42 @@ internal static class ProfileEndpoints
         .RequireAuthorization()
         .DisableAntiforgery();
 
+        profile.MapPost("/avatar", async (
+            IFormFile file,
+            ISender sender,
+            IFileStorageService fileStorage,
+            CancellationToken ct) =>
+        {
+            if (file is null || file.Length == 0)
+            {
+                return Results.ValidationProblem(
+                   new Dictionary<string, string[]> { { "file", ["An image file is required."] } });
+            }
+
+            await using var stream = file.OpenReadStream();
+            var upload = await fileStorage.UploadAsync(
+                stream, file.FileName, file.ContentType, "avatars", ct);
+
+            var result = await sender.Send(new UpdateAvatarCommand(upload.Url), ct);
+
+            if (!result.IsSuccess)
+            {
+                await fileStorage.DeleteAsync(upload.Url, ct);
+            }
+
+            return result.ToApiResult();
+        })
+        .WithName("UploadProfileAvatar")
+        .Accepts<IFormFile>("multipart/form-data")
+        .Produces<UpdateAvatarResult>(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .WithSummary("Upload and set the current user's avatar image")
+        .WithMetadata(new MustHavePermissionAttribute(AccountsFeatures.Profile, AppAction.Update))
+        .RequireAuthorization()
+        .DisableAntiforgery();
+
         profile.MapDelete("/avatar", async (ISender sender, CancellationToken ct) =>
         {
             var result = await sender.Send(new DeleteAvatarCommand(), ct);

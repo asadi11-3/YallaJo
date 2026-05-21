@@ -43,6 +43,11 @@ public static class ContentToursEndpoints
         //  Task 5 — TourPackage 
         TourPackageEndpoints.MapTourPackageEndpoints(group);
 
+        var guidesGroup = endpoints.MapGroup("/api/v1/guides")
+            .WithTags("ContentTours | Guide Profiles");
+
+        TourGuideProfileEndpoints.MapTourGuideProfileEndpoints(guidesGroup);
+
         return endpoints;
     }
 }
