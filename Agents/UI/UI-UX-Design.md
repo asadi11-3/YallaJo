@@ -1757,7 +1757,673 @@ For every new page, verify:
 
 ---
 
-## 19. Next Steps
+## 19. User Experience Rules (UI-UX-*)
+
+These rules encode product decisions made via interactive Q&A. They complement §18 (Performance Rules) with user-facing behavior standards. All UI-UX rules are mandatory for production builds.
+
+### 19.1 Device & Layout (UI-UX-D)
+
+**UI-UX-D1 — Equal mobile + desktop priority**
+- Build responsively from 320px → 2560px. No "mobile version" or "desktop version".
+- All features available on all viewports (no feature-gating by screen size).
+- Layout breakpoints: `xs:0`, `sm:576`, `md:768`, `lg:992`, `xl:1200`, `xxl:1400` (Bootstrap defaults).
+
+**UI-UX-D2 — Touch target minimum 44×44px**
+- All clickable elements (buttons, links, icons) must meet Apple HIG / WCAG 2.5.5 touch target size.
+- Use `min-height: 2.75rem; min-width: 2.75rem` on icon buttons.
+
+**UI-UX-D3 — Mobile bottom navigation**
+- Bottom fixed nav bar on mobile (≤768px) with 4-5 primary actions: **Browse / Search / Wishlist / Bookings / Profile**.
+- Plus hamburger (top-left) for full menu (categories, settings, support, sign-out).
+- Hide bottom nav on auth screens (sign-in, sign-up, verify).
+- Use `<nav class="navbar fixed-bottom d-md-none">` Bootstrap pattern.
+
+**UI-UX-D4 — Bottom sheet for filters on mobile**
+- Filter sidebar (`_FilterSidebar.cshtml`) becomes bottom sheet on mobile via Bootstrap offcanvas + `bottom` placement.
+- Sticky "Apply" button at bottom of sheet.
+- Show active filter count badge on filter trigger button.
+
+**UI-UX-D5 — Sticky CTAs on mobile**
+- "Book Now" button on tour detail page sticky-bottom on mobile.
+- "Save & Continue" buttons in wizards sticky-bottom.
+
+### 19.2 Network Adaptation (UI-UX-N)
+
+**UI-UX-N1 — Honor Save-Data header**
+- Detect `Save-Data: on` request header server-side AND `navigator.connection.saveData` client-side.
+- Serve lower-quality images (60% JPEG quality, no AVIF), skip autoplay videos, disable parallax, no lazy-loaded video posters.
+- Add `Vary: Save-Data` response header on cached pages.
+
+**UI-UX-N2 — Adaptive image quality by Network Information API**
+- Client-side `navigator.connection.effectiveType` detection:
+  - `4g` / `wifi` → 85% quality hero, 75% gallery, 60% thumbs
+  - `3g` → 75% quality hero, 60% gallery, 50% thumbs
+  - `2g` / `slow-2g` → 60% quality across the board, no auto-play, no parallax
+- Server-side `Sec-CH-Save-Data` Client Hints support.
+
+**UI-UX-N3 — Service worker for asset caching (NOT content)**
+- Register service worker that caches:
+  - CSS, JS bundles (cache-first, 1 year)
+  - Vendor libs (cache-first, 1 year)
+  - Fonts (cache-first, 1 year)
+  - Logo + static images (cache-first, 30 days)
+- **Forbidden:** Caching API responses, HTML pages, or user data. (Per decision: asset caching only, no offline content.)
+- Cache strategy via Workbox or vanilla SW with `caches.match()` + `caches.open()`.
+
+**UI-UX-N4 — Service worker update lifecycle**
+- On new SW deploy → show non-blocking toast "App updated. [Reload]" → user-triggered refresh.
+- Don't auto-reload (interrupts user).
+
+**UI-UX-N5 — Offline page fallback**
+- Serve cached `offline.html` if network completely fails on navigation.
+- Page shows: "You're offline. Some features may be unavailable. [Retry]"
+
+### 19.3 Progressive Enhancement (UI-UX-PE)
+
+**UI-UX-PE1 — Core works without JS**
+- All forms submit via standard POST when JS disabled (MVC handles natively).
+- All links navigate normally; no `href="javascript:..."`.
+- Toggle states (favorite heart, expand/collapse) work via form submission fallback.
+
+**UI-UX-PE2 — JS-required features must degrade**
+- Mapbox failing → show text list of locations with distance.
+- SignalR failing → fall back to manual page refresh for notifications.
+- Web Speech API absent → hide voice search icon.
+- Service Worker absent → just lose offline asset caching, no other impact.
+
+**UI-UX-PE3 — Hydration-free**
+- Server renders complete HTML; JS only enhances (event handlers, dynamic updates).
+- **Forbidden:** Loading content via JS after initial render (use server-side data in ViewModel).
+
+**UI-UX-PE4 — Modernizr-free feature detection**
+- Use native `if ('IntersectionObserver' in window)`, `if ('serviceWorker' in navigator)`.
+- No browser-detection libraries.
+
+### 19.4 Accessibility (UI-UX-A11Y)
+
+**UI-UX-A11Y1 — WCAG 2.1 AA mandatory across all pages**
+- Color contrast 4.5:1 normal text, 3:1 large text (18pt+).
+- All interactive elements keyboard-accessible (Tab, Shift+Tab, Enter, Space, Esc, arrows).
+- ARIA labels on icon-only buttons (`aria-label="Add to wishlist"`).
+- Focus visible via `:focus-visible` outline (2px solid primary).
+
+**UI-UX-A11Y2 — Skip-to-main-content link**
+- First focusable element on every page: `<a href="#main" class="visually-hidden-focusable">Skip to main content</a>`.
+
+**UI-UX-A11Y3 — Semantic HTML**
+- Use `<nav>`, `<main>`, `<article>`, `<aside>`, `<section>`, `<button>`, `<a>` correctly.
+- **Forbidden:** `<div onclick>` (use `<button>` always).
+
+**UI-UX-A11Y4 — Form labels + error association**
+- Every input has `<label asp-for="X">` OR `aria-label`.
+- Errors via `<span asp-validation-for="X" role="alert">`.
+- `aria-describedby` linking helper text + errors to fields.
+
+**UI-UX-A11Y5 — Color never the only indicator**
+- Booking status uses color + icon + text (✓ "Confirmed", ✗ "Cancelled", ⏱ "Pending").
+- Form errors: red color + error icon + text message.
+- Charts: patterns/shapes in addition to colors.
+
+**UI-UX-A11Y6 — Heading hierarchy**
+- One `<h1>` per page (the main title).
+- No skipping levels (h2 → h4 forbidden).
+- Section headings ordered logically.
+
+**UI-UX-A11Y7 — Image alt text**
+- All `<img>` have meaningful `alt` text OR `alt=""` for decorative.
+- Hero images: descriptive alt ("Sunset over Petra ruins").
+- Avatars: `alt="{userName}'s avatar"`.
+- Icon images: `aria-hidden="true"` if accompanied by text.
+
+**UI-UX-A11Y8 — Keyboard shortcuts (provider/admin)**
+- `Ctrl+/` or `?` opens keyboard shortcut help dialog.
+- `Esc` closes any modal/sheet.
+- `Ctrl+K` opens search.
+
+**UI-UX-A11Y9 — Live regions for dynamic updates**
+- Notification bell badge: `aria-live="polite"`.
+- Toast container: `role="status" aria-live="polite"`.
+- Critical alerts: `role="alert" aria-live="assertive"`.
+
+### 19.5 AAA Accessibility Mode — Opt-in (UI-UX-AAA)
+
+User toggle in `/Account/Settings/Accessibility` saves preference to backend + localStorage.
+
+**UI-UX-AAA1 — High contrast mode**
+- 7:1 contrast ratio (vs AA's 4.5:1).
+- CSS variables `--bg: #000; --text: #fff; --accent: #ffff00; --border: 2px solid #fff`.
+- Apply via `<body class="a11y-high-contrast">`.
+
+**UI-UX-AAA2 — Font size scaling**
+- 4 levels: Normal (100%), Large (125%), Extra Large (150%), Maximum (200%).
+- CSS `--font-base` custom property scales all rem-based sizes.
+- Line height increases proportionally to maintain readability.
+
+**UI-UX-AAA3 — Reduced motion override**
+- Force-disable all animations even if system preference is "no preference".
+- All `transition` / `animation` set to `0.01ms` when class `a11y-reduced-motion` active.
+
+**UI-UX-AAA4 — Color blindness filters**
+- 3 sub-modes: Protanopia / Deuteranopia / Tritanopia.
+- Apply via SVG color matrix filter on root element.
+- All status badges + map pins use patterns/shapes in addition to color.
+
+**UI-UX-AAA5 — Screen reader enrichment**
+- Dynamically add extra ARIA labels (e.g., "Heart button, currently not in wishlist, click to add" instead of just "Add to wishlist").
+- Verbose mode for complex widgets (date picker, map).
+
+**UI-UX-AAA6 — Settings persistence**
+- Save to backend `PUT /api/v1/profile/accessibility-preferences` (server-side for logged-in users).
+- LocalStorage for guests, migrated to backend on signup.
+
+### 19.6 Loading States (UI-UX-L)
+
+**UI-UX-L1 — Skeleton loaders for list pages**
+- Tour grid, place grid, bookings list, reviews list, notifications panel: render skeleton placeholders matching final card layout.
+- Use Bootstrap placeholder utilities: `<span class="placeholder col-7"></span>`.
+- Show 4-6 skeleton cards while data loads.
+
+**UI-UX-L2 — Spinners for actions**
+- Button clicks (Submit, Add to Cart, Pay): replace button text with spinner + "Processing..."
+- Disable button during action.
+- Use Bootstrap spinner: `<span class="spinner-border spinner-border-sm" role="status"></span>`.
+
+**UI-UX-L3 — Progress bar for full-page navigation**
+- NProgress-style top bar on route changes (if AJAX-navigating).
+- Shows 0-100% based on `fetch` progress events where available.
+
+**UI-UX-L4 — Skeleton matches final structure**
+- Don't use generic grey rectangles. Match card structure: image placeholder + text lines + button placeholder.
+- Smooth pulse animation (1.5s loop).
+
+**UI-UX-L5 — Show skeletons within 100ms**
+- Skeletons appear before SSR completes (CSS-only via `:has()` or class on body).
+- Render skeleton, then progressively reveal real content as it loads.
+
+**UI-UX-L6 — Empty states**
+- Empty bookings: "No bookings yet. [Browse tours →]"
+- Empty wishlist: "Save tours you love. Tap the heart icon to add. [Browse tours →]"
+- Empty search results: "No tours match your filters. [Clear all filters]"
+
+### 19.7 Form Validation (UI-UX-F)
+
+**UI-UX-F1 — Validation on blur after first interaction**
+- Field validates when user leaves it (blur event).
+- Don't validate before user has typed anything.
+- All errors shown on submit attempt.
+
+**UI-UX-F2 — Helper text always visible**
+- Below every input: `<small class="form-text text-muted">Password must be 8+ characters with upper, lower, digit, special</small>`
+- Required field indicator: `<span class="text-danger" aria-label="required">*</span>` next to label.
+
+**UI-UX-F3 — Real-time password strength meter**
+- Strength bar updates as user types (debounced 200ms).
+- Visual: red (weak) → yellow (medium) → green (strong).
+- Show specific requirements not yet met.
+
+**UI-UX-F4 — Multi-step wizard for provider tour creation**
+- Bootstrap Stepper pattern from template.
+- Steps: 1) Basic info → 2) Pricing → 3) Schedule → 4) Images → 5) Review.
+- Validation per step before allowing Next.
+- Allow back navigation without losing data.
+
+**UI-UX-F5 — Auto-save drafts every 30s**
+- Wizard forms (tour creation, support ticket, blog post for admins) auto-save to localStorage every 30s.
+- Show indicator: "Saved 5s ago" near form title.
+- Backend draft sync: POST `/api/v1/drafts/{type}` (TODO endpoint).
+- Recovery banner on page reload: "You have an unsaved draft from 2 hours ago. [Continue editing] [Discard]"
+
+**UI-UX-F6 — Inline error messages**
+- Errors appear directly below the field in red.
+- `<span asp-validation-for="X" class="text-danger small mt-1"></span>`
+- Scroll to first error on submit failure.
+
+**UI-UX-F7 — Form submission button states**
+- Disabled state when form invalid (after first submit attempt).
+- Loading state during submission (spinner + "Saving...").
+- Re-enable on validation failure response.
+
+**UI-UX-F8 — Confirmation for destructive actions**
+- Delete account, cancel booking, remove review → modal with explicit confirm.
+- Modal title: "Cancel this booking?"
+- Body: details + refund amount preview.
+- Two buttons: "Keep booking" (primary, autofocus) and "Yes, cancel" (danger).
+
+**UI-UX-F9 — Forbid losing unsaved changes**
+- `beforeunload` event handler on dirty forms.
+- Warns user before navigating away with unsaved data.
+- Skip warning for short forms (<10 fields) where re-typing is trivial.
+
+### 19.8 Notifications & Feedback (UI-UX-NF)
+
+**UI-UX-NF1 — Toast for success messages**
+- Bottom-right placement, max 3 visible (queue rest).
+- Auto-dismiss after 5s.
+- Bootstrap toast component.
+- Examples: "Booking confirmed", "Review posted", "Added to wishlist".
+
+**UI-UX-NF2 — Inline errors next to action source**
+- Validation errors below the field/button that triggered them.
+- API errors below the action button: "Couldn't save changes. [Retry]"
+- Don't blast modals for recoverable errors.
+
+**UI-UX-NF3 — Modal dialogs for critical errors only**
+- Payment failed: full modal blocking further interaction.
+- Account locked: full modal with support contact.
+- Session expired: modal redirecting to sign-in.
+- All other errors → inline or toast.
+
+**UI-UX-NF4 — Toast queue + stacking**
+- Max 3 simultaneous toasts; new ones queue.
+- Same-message toasts deduped (don't spam "Saved!" 5 times).
+
+**UI-UX-NF5 — Toast accessibility**
+- `role="status" aria-live="polite"` on container.
+- Auto-focus dismiss button if user is keyboard-navigating.
+
+**UI-UX-NF6 — Optimistic UI updates**
+- Heart icon fills immediately on click (before API confirms).
+- Revert + show error toast if API call fails.
+- Examples: favorites, review-helpful reactions.
+
+**UI-UX-NF7 — SignalR bell badge update**
+- New notification arrives → badge count increments + subtle bell shake animation.
+- Click bell opens dropdown with latest 5 notifications.
+- "View all" link to `/Account/Settings/Notifications`.
+
+### 19.9 Motion & Animation (UI-UX-M)
+
+**UI-UX-M1 — Subtle Material Design easing**
+- Default duration: 200-300ms.
+- Default easing: `cubic-bezier(0.4, 0, 0.2, 1)` (Material standard).
+- Enter animations: faster (200ms). Exit: snappier (150ms).
+
+**UI-UX-M2 — Animate transform + opacity only**
+- **Forbidden:** Animating `width`, `height`, `top`, `left`, `margin` (causes layout thrash).
+- Use `transform: translate / scale / rotate` + `opacity` for GPU acceleration.
+
+**UI-UX-M3 — prefers-reduced-motion respected**
+- CSS:
+  ```css
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+  ```
+- Disable autoplay carousels, parallax, AOS scroll animations.
+
+**UI-UX-M4 — No animation on critical paths**
+- Booking checkout flow: instant page transitions (no slide/fade between steps).
+- Payment forms: no loading spinners that delay perception.
+
+**UI-UX-M5 — Meaningful animations only**
+- ✅ State change (toggle, expand/collapse, modal open/close)
+- ✅ Focus shift (smooth scroll to error, focus indicator)
+- ✅ Loading feedback (spinner, progress bar, skeleton)
+- ❌ Decorative wiggles, bouncing buttons, parallax for show
+
+**UI-UX-M6 — Page transition: instant**
+- No SPA-style page transitions (MVC pattern).
+- Server-side render with instant page swap.
+- Optional: thin progress bar (NProgress) at top during navigation.
+
+### 19.10 Theme — Light + Dark + System (UI-UX-T)
+
+**UI-UX-T1 — System preference default**
+- Detect `prefers-color-scheme` media query on first visit.
+- Set initial theme accordingly.
+
+**UI-UX-T2 — User toggle in header (sun/moon icon)**
+- Manual toggle overrides system preference.
+- Persist choice to localStorage + cookie (cross-tab + reload consistent).
+
+**UI-UX-T3 — CSS custom properties for theming**
+- All colors via `--bs-primary`, `--bs-body-bg`, `--bs-body-color`, etc.
+- Dark mode: override values on `<html data-bs-theme="dark">`.
+- Bootstrap 5.3+ native dark mode support.
+
+**UI-UX-T4 — Theme switch animation**
+- 250ms cross-fade between themes (no harsh swap).
+- Skip animation if `prefers-reduced-motion: reduce`.
+
+**UI-UX-T5 — No flash of wrong theme (FOWT)**
+- Inline `<script>` at top of `<head>` reads localStorage + sets data-bs-theme BEFORE CSS loads.
+- Prevents 1-frame flash of light mode on dark-preference users.
+
+**UI-UX-T6 — Image adjustments per theme**
+- Hero images may have dark-mode variants (`hero-dark.webp`).
+- Use `<picture>` element with `media="(prefers-color-scheme: dark)"`.
+
+### 19.11 Search & Filtering (UI-UX-S)
+
+**UI-UX-S1 — Hybrid: SSR for SEO, AJAX for refinement**
+- Initial page load: server-side render with query string filters (`/tours?category=hiking&minPrice=20`).
+- Subsequent filter changes: AJAX `fetch` to MVC action returning partial view OR JSON.
+- Update URL via `history.pushState` without full reload.
+- Browser back button restores previous filter state.
+
+**UI-UX-S2 — Text autocomplete (300ms debounce)**
+- Search input shows top 5 suggestions as user types.
+- Suggestions categorized: Tours, Places, Categories.
+- Click suggestion → navigate directly to entity.
+- "View all results for 'X'" link → full search page.
+
+**UI-UX-S3 — Filter UI patterns**
+- Desktop: left sidebar with collapsible accordion sections.
+- Mobile: bottom sheet with all filters + "Apply" sticky button.
+- Active filter chips above results: "Hiking ×" "20-100 JOD ×" "[Clear all]"
+- Filter count badge on filter trigger.
+
+**UI-UX-S4 — Filter persistence: session only**
+- Filters reset on browser close (per user decision).
+- Within same session, browser back/forward restores.
+
+**UI-UX-S5 — No filter results state**
+- "No tours match your filters."
+- "[Clear all filters]" CTA.
+- "Or try popular tours:" with 3 fallback recommendations.
+
+**UI-UX-S6 — Sort options**
+- Default sort: Popularity (Bayesian score from §18 Analytics).
+- Options: Price asc/desc, Rating, Newest, Duration, Distance (if user shared location).
+- Sticky sort dropdown on scroll (mobile + desktop).
+
+### 19.12 Images (UI-UX-IMG)
+
+**UI-UX-IMG1 — Variable quality by context (already specified in §18 UI-PERF-I5)**
+- Hero (tour detail): 85% AVIF/WebP, max 200KB
+- Gallery: 75% AVIF/WebP, max 150KB each
+- Card thumbnails: 60% AVIF/WebP, max 30KB
+- Avatars: 70% AVIF/WebP, max 20KB
+- Save-Data mode: -15% quality across the board
+
+**UI-UX-IMG2 — Gallery: Hero + Thumbnail Strip + GLightbox**
+- Tour/place/business detail pages: 1 large hero image + 4-6 thumbnail strip below.
+- Click any image → GLightbox opens with all gallery images, keyboard arrow navigation.
+- Mobile: swipe gestures in lightbox.
+
+**UI-UX-IMG3 — Skeleton placeholder during load**
+- LQIP (16×16 blurred base64) inline as background-image on `<img>` wrapper.
+- Real image fades in on load (`opacity 0 → 1` over 200ms).
+
+**UI-UX-IMG4 — Lazy-load below-fold**
+- `<img loading="lazy">` for all below-fold.
+- Hero/above-fold images: `loading="eager"` + `<link rel="preload" as="image">`.
+
+**UI-UX-IMG5 — Explicit dimensions**
+- `width` + `height` attributes on every `<img>` to prevent CLS.
+- For unknown aspect: use CSS `aspect-ratio: 16/9; object-fit: cover`.
+
+### 19.13 Map (UI-UX-MAP)
+
+**UI-UX-MAP1 — Lazy-load via IntersectionObserver**
+- Mapbox library + tiles loaded only when map container scrolls into viewport.
+- Saves ~250KB + many tile requests on initial page load.
+- Show static map placeholder image (`<img>` of low-res preview) until interactive map ready.
+
+**UI-UX-MAP2 — Static placeholder image**
+- Server-generates or fetches static Mapbox image API (1 HTTP request, ~30KB).
+- Replaced by interactive map on first scroll/click.
+
+**UI-UX-MAP3 — Single map instance per page**
+- **Forbidden:** Multiple Mapbox containers initialized.
+- Destroy + recreate only on page navigation.
+
+**UI-UX-MAP4 — Tour route on detail page**
+- Polyline connecting all `TourWaypoints` ordered by SortOrder.
+- Meeting point marker: flag icon, distinct color.
+- Waypoint markers: numbered (1, 2, 3...).
+- Linked businesses (via PlaceBusinesses): secondary marker style.
+
+**UI-UX-MAP5 — Clustering on /map and /tours list view**
+- Zoom <13: cluster markers by proximity.
+- Zoom ≥13: show individual pins.
+
+**UI-UX-MAP6 — List fallback if Mapbox fails**
+- If `Mapbox GL JS` script blocked (ad blocker) or tiles fail:
+- Replace map with text list of locations sorted by distance.
+- "Map temporarily unavailable. [Retry]"
+
+### 19.14 Booking & Calendar (UI-UX-CAL)
+
+**UI-UX-CAL1 — Inline calendar with availability heatmap**
+- Tour detail page: inline calendar widget showing next 90 days.
+- Visual heatmap dots per date:
+  - 🟢 Green = available (>50% capacity remaining)
+  - 🟡 Yellow = limited (≤50% remaining)
+  - 🔴 Red = full / unavailable
+  - ⚫ Gray = past or blacked out
+- Click date → reveals time slots for that date.
+
+**UI-UX-CAL2 — Mobile: bottom sheet calendar**
+- Tap date field on mobile → slides up bottom sheet with calendar.
+- "Apply" button sticky at bottom.
+
+**UI-UX-CAL3 — Real-time slot updates via SignalR**
+- Hub group `tour:{tourId}` broadcasts slot capacity changes.
+- Connected users see live decrement when another user books same slot.
+- Visual: smooth count animation, optional brief flash on update.
+
+**UI-UX-CAL4 — Slot lock countdown timer**
+- Once user enters booking flow, 10-min slot lock starts.
+- Visible countdown timer in checkout: "Slot held: 9:32"
+- 1 min remaining: warning toast "Slot expiring soon. Complete payment to confirm."
+- Expired: auto-redirect to slot-picker with error message.
+
+**UI-UX-CAL5 — Multi-step booking wizard**
+- Bootstrap Stepper:
+  1. Date + Participants (autofilled from grid filter)
+  2. Traveler details (autofill from saved travelers)
+  3. Add-ons (optional)
+  4. Promo code + Loyalty points
+  5. Payment
+- Validation per step; can navigate back without losing data.
+
+**UI-UX-CAL6 — Disabled date tooltip**
+- Hover/tap on gray date → tooltip: "No availability" / "Tour blocked out" / "Past date".
+
+**UI-UX-CAL7 — 2-hour minimum lead time**
+- Calendar disables time slots within 2 hours of current time (per guide §4.3).
+- Visual: gray with tooltip "Bookings need 2 hours notice".
+
+**UI-UX-CAL8 — Save abandoned booking**
+- If user closes browser mid-booking, save state to localStorage.
+- On return: "You had a booking in progress for [Tour]. [Continue] [Discard]"
+
+### 19.15 Wishlist (UI-UX-WL)
+
+**UI-UX-WL1 — Heart icon disabled for guests**
+- Guest sees heart icon with `disabled` state + tooltip: "Sign in to save tours".
+- Click → opens sign-in modal with return URL set to current page.
+
+**UI-UX-WL2 — Optimistic toggle**
+- Click heart → fills instantly (no waiting for API).
+- API call in background.
+- Revert + toast error if API fails.
+
+**UI-UX-WL3 — Confirmation toast**
+- "Added to wishlist" (with link to /Account/Wishlist).
+- "Removed from wishlist" with [Undo] action.
+
+**UI-UX-WL4 — Wishlist counter in nav**
+- Logged-in users see badge count on nav heart icon: "Wishlist (12)".
+
+**UI-UX-WL5 — Max 500 enforcement**
+- Client prevents adding when count = 500.
+- Modal: "Wishlist full. Remove an item first. [Manage wishlist]"
+
+### 19.16 Provider Wizard (UI-UX-PROV)
+
+**UI-UX-PROV1 — Multi-step tour creation wizard**
+- 5 steps per §19.7 UI-UX-F4.
+- Validation per step; can navigate back.
+
+**UI-UX-PROV2 — Auto-save every 30s**
+- LocalStorage key: `yallajo:provider:tour-draft:{userId}`.
+- Server sync via `POST /api/v1/drafts/tour` every 2 minutes (TODO endpoint).
+- Indicator: "Saved 12s ago" near step title.
+
+**UI-UX-PROV3 — Draft recovery banner**
+- On reload of `/Provider/Listings/Create`: "You have an unsaved tour draft from 2 hours ago. [Continue] [Discard]"
+
+**UI-UX-PROV4 — Cancel confirmation**
+- "Cancel" button on wizard → modal: "Discard changes? All progress will be lost."
+- Two options: "Keep editing" (primary) / "Discard"
+
+**UI-UX-PROV5 — Sidebar collapsible**
+- Provider/Admin layouts: sidebar can collapse to icon-only state.
+- Saves screen space on smaller laptops.
+- State persists in localStorage.
+
+**UI-UX-PROV6 — Sticky top bar**
+- Notification bell, language switcher, profile dropdown sticky-top on scroll.
+- Plus "Quick add" button (provider) → dropdown: New tour / New discount / New review reply.
+
+### 19.17 Print & Export (UI-UX-PE2)
+
+**UI-UX-PE21 — Print stylesheet for booking confirmation**
+- `@media print` CSS optimized layout: hide nav/footer, show full booking details + QR code for ConfirmationCode.
+- Print button on `/BookingConfirm/{id}` triggers `window.print()`.
+
+**UI-UX-PE22 — PDF download (backend)**
+- "Download PDF" button → `GET /api/v1/invoices/{id}/download` (already exists).
+- Server-rendered PDF using QuestPDF (already integrated per Finance §T3).
+
+**UI-UX-PE23 — Calendar .ics export**
+- "Add to Calendar" button on confirmed booking page.
+- Generates .ics file client-side with: SUMMARY (tour name), DTSTART (slot time), LOCATION (meeting point), DESCRIPTION (details + confirmation code).
+- Works with Apple Calendar / Google Calendar / Outlook.
+
+### 19.18 Tooltips & Help (UI-UX-TIP)
+
+**UI-UX-TIP1 — Mix: helper text + tooltips**
+- Form fields: always-visible helper text below input.
+- Icon-only buttons: Bootstrap tooltip on hover/focus.
+- Complex rules (commission tiers, cancellation policy): info icon → modal explainer.
+
+**UI-UX-TIP2 — Bootstrap tooltips setup**
+- Initialize via `data-bs-toggle="tooltip"`.
+- Delay 500ms before showing on hover (avoid accidental triggers).
+- Mobile: dismiss on tap-outside.
+
+**UI-UX-TIP3 — ARIA-described-by**
+- Tooltips linked via `aria-describedby` for screen readers.
+- Helper text linked via same pattern.
+
+**UI-UX-TIP4 — Help center deep links**
+- Complex topics link to `/help/{slug}` from tooltips: "Learn more →".
+
+### 19.19 Reviews (UI-UX-REV)
+
+**UI-UX-REV1 — Email-triggered modal review submission**
+- Post-tour email: "How was your tour? [Rate now]" → link to `/Account/Bookings/{id}` with `?action=review`.
+- Modal opens on page load when query param present.
+- Star rating + optional text + photos (max 3).
+
+**UI-UX-REV2 — In-page submission for ad-hoc**
+- "Write a review" button on tour detail page for users with completed bookings.
+- Same modal pattern.
+
+**UI-UX-REV3 — Review form fields**
+- Star rating (1-5 in 0.5 increments) — required.
+- Title (max 150 chars) — optional.
+- Content (20-2000 chars) — required.
+- Photos (max 3, max 5MB each) — optional via Dropzone.
+
+**UI-UX-REV4 — 30-day window indicator**
+- "You can review until [date]" reminder text.
+- After 30 days: review button disabled with tooltip "Review window closed".
+
+**UI-UX-REV5 — 48-hour edit window**
+- Submitted reviews show "Edit (12h left)" button counting down.
+- After 48h: edit button replaced with "Posted" with timestamp.
+
+**UI-UX-REV6 — Profanity-flagged review state**
+- If profanity filter triggers → review shows status "Pending moderation. We'll publish it after review."
+- User can edit + resubmit.
+
+### 19.20 Cookie Consent — Deferred to Phase 2 (UI-UX-CC)
+
+**UI-UX-CC1 — Phase 1 stance: no banner**
+- Per user decision, no cookie consent banner in Phase 1.
+- All cookies (auth, preferences) are functional/necessary — no consent legally required in Jordan-only market.
+
+**UI-UX-CC2 — Phase 2: add granular banner when expanding to EU/MENA broader**
+- Bottom banner with Accept/Reject/Customize.
+- Granular categories: Necessary (always on), Functional, Analytics, Marketing.
+- Block GA/Mixpanel scripts until consent given.
+
+### 19.21 Geographic + Currency (UI-UX-GEO)
+
+**UI-UX-GEO1 — Jordan-only Phase 1**
+- Default currency: JOD.
+- Default language: Arabic (with English toggle).
+- All prices stored in JOD; conversion to USD/EUR via Tour.Currency field.
+- Phone format: +962 prefix.
+
+**UI-UX-GEO2 — Currency display rule**
+- Show tour's base currency in catalog (JOD/USD/EUR).
+- User can toggle preferred display currency in `/Account/Settings`.
+- Conversion via daily FX rate cached server-side (not implemented yet — future).
+
+**UI-UX-GEO3 — Date/time format**
+- Default: Gregorian calendar for date pickers.
+- Optional Hijri toggle in `/Account/Settings` (Arabic users).
+- All timestamps stored UTC; display in user's `IANA timezone` (default: `Asia/Amman`).
+
+**UI-UX-GEO4 — Address autocomplete**
+- Future: integrate Mapbox Geocoding API for Jordan addresses.
+- Phase 1: free text field.
+
+### 19.22 Real-Time Updates (UI-UX-RT)
+
+**UI-UX-RT1 — SignalR slot capacity broadcasts**
+- Group: `tour:{tourId}`.
+- Event: `SlotCapacityChanged` payload `{ slotId, remainingCapacity }`.
+- Client updates UI smoothly.
+
+**UI-UX-RT2 — Cross-device booking sync**
+- User books on phone → desktop tab updates booking count badge.
+- Group: `user:{userId}`.
+
+**UI-UX-RT3 — Notification bell live updates**
+- New notification → bell badge increments + subtle animation.
+- Per §19.8 UI-UX-NF7.
+
+**UI-UX-RT4 — Provider booking alerts**
+- New booking for provider's tour → provider dashboard receives SignalR push + toast.
+- Group: `provider:{providerId}`.
+
+**UI-UX-RT5 — Admin moderation queue updates**
+- New flagged review/report → admin dashboard badge updates.
+- Group: `admin`.
+
+### 19.23 Implementation Priorities
+
+UI-UX rules align with the §12 sprint plan but add UX-specific deliverables:
+
+| Sprint | UX deliverables |
+|---|---|
+| UI-0 (Bootstrap) | Theme switching, RTL setup, Bootstrap toast container, base accessibility hooks |
+| UI-1 (Public) | Skeleton loader components, empty state partials, helper text patterns |
+| UI-2 (Auth) | Form validation, password strength meter, social login UI |
+| UI-3 (Catalog) | Filter sidebar/bottom sheet, autocomplete search, sort dropdown, optimistic wishlist heart |
+| UI-4 (Blog) | Reading-progress bar, comment nesting UI |
+| UI-5 (Booking) | Inline calendar heatmap, slot countdown timer, multi-step wizard, real-time slot SignalR |
+| UI-6 (Account) | Toast notifications, modal patterns, print stylesheets, .ics export |
+| UI-7 (Provider onboarding) | Document upload UI, status state-machine visualization |
+| UI-8 (Provider dashboard) | Wizard + auto-save, draft recovery, collapsible sidebar |
+| UI-9 (Provider advanced) | Calendar slot management with bulk recurring, refund policy editor |
+| UI-10 (Admin) | Data tables with virtualization, audit-log filtering, moderation modals |
+| UI-11 (Admin settings) | Category tree drag-drop editor, role/claim management |
+| UI-12 (Notifications) | SignalR bell integration, real-time badge updates |
+| UI-13 (Polish) | AAA mode toggle, color blindness filters, screen reader enrichment |
+
+---
+
+## 20. Next Steps
 
 1. Run `dotnet new mvc -o YallaJo.Web` if project doesn't fully exist yet (it does — extend existing)
 2. Day 1-2: Copy template assets per §15
