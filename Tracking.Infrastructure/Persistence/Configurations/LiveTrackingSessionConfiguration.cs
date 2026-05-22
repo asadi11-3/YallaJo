@@ -16,6 +16,7 @@ public class LiveTrackingSessionConfiguration : IEntityTypeConfiguration<LiveTra
 
         builder.Property(x => x.TourBookingId).IsRequired();
         builder.Property(x => x.TourGuideId).IsRequired();
+        builder.Property(x => x.UserId).IsRequired();
 
         builder.Property(x => x.Status)
             .IsRequired()

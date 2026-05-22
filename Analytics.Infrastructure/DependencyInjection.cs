@@ -9,7 +9,6 @@ using Analytics.Infrastructure.Persistence.Seeding;
 using Analytics.Infrastructure.Queues;
 using Analytics.Infrastructure.Repositories;
 using Analytics.Infrastructure.Services;
-using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -56,6 +55,23 @@ public static class DependencyInjection
         services.AddScoped<IAuditLogRepository, AuditLogRepository>();
         services.AddScoped<IDashboardCacheRepository, DashboardCacheRepository>();
         services.AddScoped<IEntityPopularitySnapshotRepository, EntityPopularitySnapshotRepository>();
+        services.AddScoped<ISuggestionBatchRepository, SuggestionBatchRepository>();
+        services.AddScoped<IRecommendationCacheRepository, RecommendationCacheRepository>();
+        services.AddScoped<IUserPreferenceRepository, UserPreferenceRepository>();
+        services.AddScoped<IEntityAttributeSnapshotRepository, EntityAttributeSnapshotRepository>();
+        services.AddScoped<IBoostPackageRepository, BoostPackageRepository>();
+        services.AddScoped<IEditorialPinRepository, EditorialPinRepository>();
+        services.AddScoped<IUserExcludedEntityRepository, UserExcludedEntityRepository>();
+        services.AddScoped<ISeasonalityRuleRepository, SeasonalityRuleRepository>();
+        services.AddScoped<IHolidayCalendarRepository, HolidayCalendarRepository>();
+        services.AddScoped<ITripArcRepository, TripArcRepository>();
+        services.AddScoped<IExperimentRepository, ExperimentRepository>();
+        services.AddScoped<ISuggestionMetricRepository, SuggestionMetricRepository>();
+        services.AddScoped<ISponsoredClickEventRepository, SponsoredClickEventRepository>();
+        services.AddScoped<IGdprDeletionRequestRepository, GdprDeletionRequestRepository>();
+        services.AddScoped<IExperimentVariantResolver, ExperimentVariantResolver>();
+        services.AddScoped<Analytics.Application.Scoring.SponsoredAuctionService>();
+        services.AddScoped<Analytics.Contracts.Services.IUserPreferenceLookupService, UserPreferenceLookupService>();
         services.AddScoped<IAnalyticsOutboxWriter, AnalyticsOutboxWriter>();
         services.AddScoped<IAuditLogRedactor, AuditLogRedactor>();
         services.AddScoped<IAnalyticsDashboardReader, AnalyticsDashboardReader>();
@@ -68,8 +84,21 @@ public static class DependencyInjection
             if (TimeSpan.TryParse(section[nameof(PopularityScoreCalculationOptions.InitialDelay)], out var initialDelay)) options.InitialDelay = initialDelay;
             if (int.TryParse(section[nameof(PopularityScoreCalculationOptions.BatchSize)], out var batchSize)) options.BatchSize = batchSize;
         });
+        services.Configure<SuggestionBatchRefreshOptions>(options =>
+        {
+            var section = configuration.GetSection(SuggestionBatchRefreshOptions.SectionName);
+            if (int.TryParse(section[nameof(SuggestionBatchRefreshOptions.RefreshIntervalMinutes)], out var refreshIntervalMinutes)) options.RefreshIntervalMinutes = refreshIntervalMinutes;
+            if (int.TryParse(section[nameof(SuggestionBatchRefreshOptions.StartupDelaySeconds)], out var startupDelaySeconds)) options.StartupDelaySeconds = startupDelaySeconds;
+            if (int.TryParse(section[nameof(SuggestionBatchRefreshOptions.MaxBatchesPerCycle)], out var maxBatchesPerCycle)) options.MaxBatchesPerCycle = maxBatchesPerCycle;
+        });
         services.AddHostedService<InteractionIngestDrainService>();
         services.AddHostedService<PopularityScoreCalculationService>();
+        services.AddHostedService<SuggestionBatchRefreshJob>();
+        services.AddHostedService<UserProfileUpdateJob>();
+        services.AddHostedService<TripStageUpdateJob>();
+        services.AddHostedService<GdprCleanupJob>();
+        services.AddHostedService<EmailDigestBackgroundService>();
+        services.AddHostedService<MetricsAggregationJob>();
 
         // Module-specific abstractions (noop stubs)
         services.AddScoped<IClientContextProvider, NoopClientContextProvider>();

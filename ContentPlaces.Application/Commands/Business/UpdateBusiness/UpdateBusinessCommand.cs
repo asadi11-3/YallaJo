@@ -14,4 +14,7 @@ public sealed record UpdateBusinessCommand(
     string? Country = null,
     string? Phone = null,
     string? Email = null,
-    string? Website = null) : ICommand;
+    string? Website = null,
+    bool? IsHalal = null,
+    bool? HasVegetarianOptions = null,
+    bool? HasAlcoholFreeArea = null) : ICommand;

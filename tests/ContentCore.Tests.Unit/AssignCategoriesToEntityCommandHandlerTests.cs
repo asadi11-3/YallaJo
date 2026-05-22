@@ -1,4 +1,5 @@
 using ContentCore.Application.Commands.EntityCategory.AssignCategoriesToEntity;
+using ContentCore.Application.Interfaces;
 using ContentCore.Domain.Entities;
 using ContentCore.Domain.Repositories;
 using FluentAssertions;
@@ -28,6 +29,7 @@ public sealed class AssignCategoriesToEntityCommandHandlerTests
             entityCategoryRepository ?? Substitute.For<IEntityCategoryRepository>(),
             categoryRepository ?? Substitute.For<ICategoryRepository>(),
             unitOfWork ?? OwnershipAuthFixture.NoOpUnitOfWork(),
+            Substitute.For<IContentCoreOutboxWriter>(),
             cache ?? OwnershipAuthFixture.NoOpCache(),
             currentUser ?? OwnershipAuthFixture.NonAdminUser(Guid.NewGuid()),
             ownershipResolver ?? OwnershipAuthFixture.ResolverReturning(

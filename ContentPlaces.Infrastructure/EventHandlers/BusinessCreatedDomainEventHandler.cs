@@ -83,7 +83,8 @@ public sealed class BusinessCreatedDomainEventHandler(
         dbContext.OutboxMessages.Add(OutboxMessage.Create(
             new BusinessCreatedIntegrationEvent(
                 business.Id, business.Name, business.Slug,
-                business.OwnerId, business.PlaceId)));
+                business.OwnerId, business.PlaceId,
+                business.IsHalal, business.HasVegetarianOptions, business.HasAlcoholFreeArea)));
 
         logger.LogInformation(
             "BusinessCreatedDomainEvent: queued outbox for Business {BusinessId}", business.Id);

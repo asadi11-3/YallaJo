@@ -1,4 +1,5 @@
 using Accounts.Domain.Enums;
+using Accounts.Domain.ValueObjects;
 using YallaJo.SharedKernel.Domain.Entities;
 
 namespace Accounts.Domain.Entities;
@@ -18,6 +19,7 @@ public sealed class Profile : AuditableEntity, IAggregateRoot
     public string? Country { get; private set; }
     public string? City { get; private set; }
     public string? AddressLine { get; private set; }
+    public MarketingConsent? MarketingConsent { get; private set; }
 
     public static Profile Create(Guid userId, string firstName, string lastName)
     {
@@ -57,6 +59,12 @@ public sealed class Profile : AuditableEntity, IAggregateRoot
     public void DeleteAvatar()
     {
         AvatarUrl = null;
+        MarkUpdated();
+    }
+
+    public void UpdateMarketingConsent(MarketingConsent consent)
+    {
+        MarketingConsent = consent;
         MarkUpdated();
     }
 

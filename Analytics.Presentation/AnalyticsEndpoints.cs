@@ -1,6 +1,8 @@
 using System.Security.Claims;
 using Analytics.Application;
 using Analytics.Contracts.Authorization;
+using Analytics.Presentation.Endpoints.Preferences;
+using Analytics.Presentation.Endpoints.Recommendations;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -16,6 +18,9 @@ public static class AnalyticsEndpoints
     public static IEndpointRouteBuilder MapAnalyticsEndpoints(this IEndpointRouteBuilder endpoints)
     {
         var group = endpoints.MapGroup("/api/v1").WithTags("Analytics");
+
+        group.MapRecommendationsEndpoints();
+        group.MapPreferencesEndpoints();
 
         group.MapPost("/interactions", async (RecordInteractionRequest request, ISender sender, HttpContext http, CancellationToken ct) =>
         {

@@ -1,3 +1,4 @@
+using Accounts.Contracts.IntegrationEvents;
 using Analytics.Contracts.IntegrationEvents;
 using Auth.Contracts.IntegrationEvents;
 using Booking.Contracts.IntegrationEvents;
@@ -12,6 +13,7 @@ using Finance.Contracts.IntegrationEvents;
 using Messaging.Contracts.IntegrationEvents;
 using Security.Contracts.IntegrationEvents;
 using Social.Contracts.IntegrationEvents;
+using Tracking.Contracts.IntegrationEvents;
 
 namespace YallaJo.SharedKernel.Infrastructure.Abstractions.Integration;
 
@@ -41,6 +43,8 @@ public static class IntegrationEventTypeRegistry
         ["content-core.category.updated.v1"]           = typeof(CategoryUpdatedIntegrationEvent),
         ["content-core.category.deleted.v1"]           = typeof(CategoryDeletedIntegrationEvent),
         ["content-core.category.restored.v1"]          = typeof(CategoryRestoredIntegrationEvent),
+        ["content-core.entity-category.assigned.v1"]   = typeof(EntityCategoryAssignedIntegrationEvent),
+        ["content-core.entity-category.removed.v1"]    = typeof(EntityCategoryRemovedIntegrationEvent),
 
         // ── ContentPlaces — Places (3 events) ──
         ["content-places.place.created.v1"]              = typeof(PlaceCreatedIntegrationEvent),
@@ -49,6 +53,8 @@ public static class IntegrationEventTypeRegistry
 
         // ── ContentPlaces — Businesses (6 events) ──
         ["content-places.business.created.v1"]           = typeof(BusinessCreatedIntegrationEvent),
+        ["content-places.business.updated.v1"]           = typeof(BusinessUpdatedIntegrationEvent),
+        ["content-places.business.deleted.v1"]           = typeof(BusinessDeletedIntegrationEvent),
         ["content-places.business.approved.v1"]          = typeof(BusinessApprovedIntegrationEvent),
         ["content-places.business.rejected.v1"]          = typeof(BusinessRejectedIntegrationEvent),
         ["content-places.business.suspended.v1"]         = typeof(BusinessSuspendedIntegrationEvent),
@@ -146,6 +152,14 @@ public static class IntegrationEventTypeRegistry
         ["analytics.trending.refreshed.v1"]             = typeof(TrendingRefreshedIntegrationEvent),
         
 
+        // ── Accounts — Provider (6 events) ──────────────────────────────────
+        ["accounts.provider.registered.v1"]             = typeof(ProviderRegisteredIntegrationEvent),
+        ["accounts.provider.approved.v1"]               = typeof(ProviderApprovedIntegrationEvent),
+        ["accounts.provider.rejected.v1"]               = typeof(ProviderRejectedIntegrationEvent),
+        ["accounts.provider.suspended.v1"]              = typeof(ProviderSuspendedIntegrationEvent),
+        ["accounts.provider.reinstated.v1"]             = typeof(ProviderReinstatedIntegrationEvent),
+        ["accounts.provider.status-changed.v1"]         = typeof(ProviderStatusChangedIntegrationEvent),
+
         // ── Messaging (6 events) ──────────────────────────────────────────────
         ["messaging.notification.delivered.v1"]         = typeof(NotificationDeliveredIntegrationEvent),
         ["messaging.notification.failed.v1"]            = typeof(NotificationFailedIntegrationEvent),
@@ -153,6 +167,8 @@ public static class IntegrationEventTypeRegistry
         ["messaging.ticket.assigned.v1"]                = typeof(TicketAssignedIntegrationEvent),
         ["messaging.ticket.resolved.v1"]                = typeof(SupportTicketResolvedIntegrationEvent),
         ["messaging.support-sla-breached.v1"]           = typeof(SupportSlaBreachedIntegrationEvent),
+        ["tracking.live-session.started.v1"]            = typeof(LiveTrackingSessionStartedIntegrationEvent),
+        ["tracking.live-session.ended.v1"]              = typeof(LiveTrackingSessionEndedIntegrationEvent),
     };
 
     private static readonly Dictionary<Type, string> TypeToName =

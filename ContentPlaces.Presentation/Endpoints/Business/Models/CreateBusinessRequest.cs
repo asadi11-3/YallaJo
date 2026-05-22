@@ -18,4 +18,7 @@ public sealed record CreateBusinessRequest(
     string? Email = null,
     string? Website = null,
     string? LicenseNumber = null,
-    string? TaxId = null);
+    string? TaxId = null,
+    bool? IsHalal = null,
+    bool? HasVegetarianOptions = null,
+    bool? HasAlcoholFreeArea = null);

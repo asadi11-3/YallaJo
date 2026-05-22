@@ -11,5 +11,7 @@ public enum InteractionType : byte
     BookingCompleted = 6,
     BookingCancelled = 7,
     Share = 8,
-    ReviewSubmitted = 9
+    ReviewSubmitted = 9,
+    Bookmark = 10,
+    NotInterested = 11
 }

@@ -11,4 +11,7 @@ public sealed record UpdateBusinessRequest(
     string? Country = null,
     string? Phone = null,
     string? Email = null,
-    string? Website = null);
+    string? Website = null,
+    bool? IsHalal = null,
+    bool? HasVegetarianOptions = null,
+    bool? HasAlcoholFreeArea = null);

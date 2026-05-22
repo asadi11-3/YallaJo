@@ -92,7 +92,10 @@ internal static class BusinessEndpoints
                 Email: request.Email,
                 Website: request.Website,
                 LicenseNumber: request.LicenseNumber,
-                TaxId: request.TaxId));
+                TaxId: request.TaxId,
+                IsHalal: request.IsHalal,
+                HasVegetarianOptions: request.HasVegetarianOptions,
+                HasAlcoholFreeArea: request.HasAlcoholFreeArea));
             return result.ToApiResult();
         })
         .WithName("CreateBusiness")
@@ -123,7 +126,10 @@ internal static class BusinessEndpoints
                 Country: request.Country,
                 Phone: request.Phone,
                 Email: request.Email,
-                Website: request.Website));
+                Website: request.Website,
+                IsHalal: request.IsHalal,
+                HasVegetarianOptions: request.HasVegetarianOptions,
+                HasAlcoholFreeArea: request.HasAlcoholFreeArea));
             return result.ToApiResult();
         })
         .WithName("UpdateBusiness")

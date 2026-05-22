@@ -1,5 +1,7 @@
 using ContentCore.Application.Authorization;
 using ContentCore.Application.Caching;
+using ContentCore.Application.Interfaces;
+using ContentCore.Contracts.IntegrationEvents;
 using ContentCore.Domain.Enums;
 using ContentCore.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -17,6 +19,7 @@ public sealed class AssignCategoriesToEntityCommandHandler(
     IEntityCategoryRepository entityCategoryRepository,
     ICategoryRepository categoryRepository,
     IContentCoreUnitOfWork unitOfWork,
+    IContentCoreOutboxWriter outboxWriter,
     HybridCache cache,
     ICurrentUser currentUser,
     IEntityOwnershipResolver ownershipResolver,
@@ -119,6 +122,11 @@ public sealed class AssignCategoriesToEntityCommandHandler(
 
                 var entityCategory = ContentCore.Domain.Entities.EntityCategory.Create(entityType, request.EntityId, categoryId);
                 entityCategoryRepository.Add(entityCategory);
+                outboxWriter.Enqueue(new EntityCategoryAssignedIntegrationEvent(
+                    request.EntityType,
+                    request.EntityId,
+                    categoryId,
+                    DateTime.UtcNow));
                 existingIds.Add(categoryId);
             }
 

@@ -7,4 +7,7 @@ public sealed record BusinessCreatedIntegrationEvent(
     string Name,
     string Slug,
     Guid OwnerId,
-    Guid? PlaceId) : IntegrationEventBase;
+    Guid? PlaceId,
+    bool? IsHalal,
+    bool? HasVegetarianOptions,
+    bool? HasAlcoholFreeArea) : IntegrationEventBase;

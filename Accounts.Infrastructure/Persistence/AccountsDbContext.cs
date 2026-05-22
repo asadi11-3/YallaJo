@@ -16,6 +16,8 @@ public sealed class AccountsDbContext : DbContext, IDbContext
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
     public DbSet<Profile> Profiles => Set<Profile>();
     public DbSet<InboxMessage> InboxMessages => Set<InboxMessage>();
+    public DbSet<ProviderApplication> ProviderApplications => Set<ProviderApplication>();
+    public DbSet<ProviderDocument> ProviderDocuments => Set<ProviderDocument>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

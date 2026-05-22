@@ -73,4 +73,10 @@ public static class AppAction
 
     /// <summary>Social: warn user (moderation).</summary>
     public const string Warn     = nameof(Warn);
+
+    /// <summary>Accounts: register as a provider (initial draft creation).</summary>
+    public const string Register = nameof(Register);
+
+    /// <summary>Accounts/Admin: request additional documents from provider applicant.</summary>
+    public const string RequestDocs = nameof(RequestDocs);
 }

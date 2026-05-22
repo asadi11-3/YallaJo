@@ -67,7 +67,10 @@ public sealed class UpdateBusinessCommandHandler(
                 placeId: request.PlaceId,
                 address: request.Address,
                 city: request.City,
-                country: request.Country);
+                country: request.Country,
+                isHalal: request.IsHalal,
+                hasVegetarianOptions: request.HasVegetarianOptions,
+                hasAlcoholFreeArea: request.HasAlcoholFreeArea);
 
             business.UpdateContactInfo(request.Phone, request.Email, request.Website);
 

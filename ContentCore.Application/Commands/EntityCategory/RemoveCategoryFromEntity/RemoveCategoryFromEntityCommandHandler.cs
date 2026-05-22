@@ -1,5 +1,7 @@
 using ContentCore.Application.Authorization;
 using ContentCore.Application.Caching;
+using ContentCore.Application.Interfaces;
+using ContentCore.Contracts.IntegrationEvents;
 using ContentCore.Domain.Enums;
 using ContentCore.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -16,6 +18,7 @@ namespace ContentCore.Application.Commands.EntityCategory.RemoveCategoryFromEnti
 public sealed class RemoveCategoryFromEntityCommandHandler(
     IEntityCategoryRepository entityCategoryRepository,
     IContentCoreUnitOfWork unitOfWork,
+    IContentCoreOutboxWriter outboxWriter,
     HybridCache cache,
     ICurrentUser currentUser,
     IEntityOwnershipResolver ownershipResolver,
@@ -96,6 +99,11 @@ public sealed class RemoveCategoryFromEntityCommandHandler(
                     Outcome.NotFound);
             }
             entityCategoryRepository.Remove(entityCategory);
+            outboxWriter.Enqueue(new EntityCategoryRemovedIntegrationEvent(
+                request.EntityType,
+                request.EntityId,
+                request.CategoryId,
+                DateTime.UtcNow));
 
             try
             {

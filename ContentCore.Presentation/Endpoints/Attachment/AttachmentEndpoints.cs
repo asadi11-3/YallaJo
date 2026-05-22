@@ -137,5 +137,73 @@ internal static class AttachmentEndpoints
         .WithSummary("Set an attachment as the primary image for an entity")
         .WithMetadata(new MustHavePermissionAttribute(ContentCoreFeatures.EntityImage, AppAction.Update))
         .RequireAuthorization();
+
+        // Bulk upload images (up to 20 images, multipart/form-data)
+        // POST /attachments/images — entityType + entityId as query params
+        attachments.MapPost("/images", async (
+            IFormFileCollection files,
+            string entityType,
+            Guid entityId,
+            ICurrentUser currentUser,
+            ISender sender,
+            CancellationToken ct = default) =>
+        {
+            if (currentUser.UserId is null)
+                return Results.Unauthorized();
+
+            if (!Enum.TryParse<EntityType>(entityType, true, out var parsedEntityType))
+                return Results.BadRequest("Invalid entityType.");
+
+            if (files.Count == 0)
+                return Results.BadRequest("At least one file is required.");
+
+            if (files.Count > 20)
+                return Results.BadRequest("A maximum of 20 images can be uploaded at once.");
+
+            var uploadedIds = new List<Guid>(files.Count);
+            var errors = new List<string>();
+
+            for (var i = 0; i < files.Count; i++)
+            {
+                var file = files[i];
+                await using var stream = file.OpenReadStream();
+                var result = await sender.Send(
+                    new UploadAttachmentCommand(
+                        stream,
+                        file.FileName,
+                        file.ContentType,
+                        file.Length,
+                        parsedEntityType,
+                        entityId,
+                        AttachmentType.Image,
+                        currentUser.UserId.Value,
+                        SortOrder: i),
+                    ct);
+
+                if (result.IsSuccess)
+                    uploadedIds.Add(result.Value.Id);
+                else
+                    errors.Add($"{file.FileName}: {result.Error?.Message ?? "Upload failed"}");
+            }
+
+            if (uploadedIds.Count == 0)
+                return Results.UnprocessableEntity(new { errors });
+
+            return Results.Ok(new BulkUploadImagesResult(uploadedIds, errors));
+        })
+        .WithName("BulkUploadImages")
+        .Produces<BulkUploadImagesResult>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status400BadRequest)
+        .ProducesProblem(StatusCodes.Status422UnprocessableEntity)
+        .WithSummary("Bulk upload up to 20 images for an entity")
+        .WithMetadata(new MustHavePermissionAttribute(ContentCoreFeatures.Attachment, AppAction.Create))
+        .RequireAuthorization()
+        .DisableAntiforgery();
     }
 }
+
+// ── Response Model ────────────────────────────────────────────────────────────
+
+public sealed record BulkUploadImagesResult(
+    IReadOnlyList<Guid> UploadedAttachmentIds,
+    IReadOnlyList<string> Errors);

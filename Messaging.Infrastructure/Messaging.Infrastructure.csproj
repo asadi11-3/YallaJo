@@ -18,6 +18,7 @@
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Accounts.Contracts\Accounts.Contracts.csproj" />
     <ProjectReference Include="..\Auth.Contracts\Auth.Contracts.csproj" />
     <ProjectReference Include="..\Booking.Contracts\Booking.Contracts.csproj" />
     <ProjectReference Include="..\ContentPlaces.Contracts\ContentPlaces.Contracts.csproj" />

@@ -1,0 +1,146 @@
+using Accounts.Application.Commands.Provider.AddDocument;
+using Accounts.Application.Commands.Provider.RegisterProvider;
+using Accounts.Application.Commands.Provider.ReplaceDocument;
+using Accounts.Application.Commands.Provider.SubmitApplication;
+using Accounts.Application.Queries.GetMyApplicationStatus;
+using Accounts.Contracts.Authorization;
+using Accounts.Domain.Enums;
+using MediatR;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Routing;
+using YallaJo.SharedKernel.Application.Abstractions.Context;
+using YallaJo.SharedKernel.Application.Authorization;
+using YallaJo.SharedKernel.Presentation;
+using YallaJo.SharedKernel.Presentation.Authorization;
+
+namespace Accounts.Presentation.Endpoints.Provider;
+
+public static class ProviderEndpoints
+{
+    public static IEndpointRouteBuilder MapProviderEndpoints(this IEndpointRouteBuilder endpoints)
+    {
+        var group = endpoints.MapGroup("/api/v1/provider")
+            .WithTags("Provider");
+
+        // GET /api/v1/provider/status — get my application status
+        group.MapGet("/status", async (ICurrentUser currentUser, ISender sender, CancellationToken ct) =>
+        {
+            if (currentUser.UserId is null)
+                return Results.Unauthorized();
+
+            var result = await sender.Send(new GetMyApplicationStatusQuery(currentUser.UserId.Value), ct);
+            return result.ToApiResult();
+        })
+        .WithName("GetMyProviderStatus")
+        .Produces<GetMyApplicationStatusResult>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .WithSummary("Get my provider application status")
+        .WithMetadata(new MustHavePermissionAttribute(AccountsFeatures.ProviderApplication, AppAction.Read))
+        .RequireAuthorization();
+
+        // POST /api/v1/provider/register — register a new provider application
+        group.MapPost("/register", async (RegisterProviderRequest req, ISender sender, CancellationToken ct) =>
+        {
+            var result = await sender.Send(new RegisterProviderCommand(
+                req.Type,
+                req.BusinessName,
+                req.ContactEmail,
+                req.ContactPhone,
+                req.Address,
+                req.Description,
+                req.TypeSpecificDataJson), ct);
+            return result.ToApiResult();
+        })
+        .WithName("RegisterProvider")
+        .Produces<RegisterProviderResult>(StatusCodes.Status201Created)
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status409Conflict)
+        .ProducesProblem(StatusCodes.Status422UnprocessableEntity)
+        .WithSummary("Register as a provider")
+        .WithMetadata(new MustHavePermissionAttribute(AccountsFeatures.ProviderApplication, AppAction.Register))
+        .RequireAuthorization();
+
+        // POST /api/v1/provider/apply — submit provider application
+        group.MapPost("/apply", async (ISender sender, CancellationToken ct) =>
+        {
+            var result = await sender.Send(new SubmitApplicationCommand(), ct);
+            return result.ToApiResult();
+        })
+        .WithName("SubmitProviderApplication")
+        .Produces<SubmitApplicationResult>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status422UnprocessableEntity)
+        .WithSummary("Submit provider application for review")
+        .WithMetadata(new MustHavePermissionAttribute(AccountsFeatures.ProviderApplication, AppAction.Submit))
+        .RequireAuthorization();
+
+        // POST /api/v1/provider/documents — add a document
+        group.MapPost("/documents", async (AddProviderDocumentRequest req, ISender sender, CancellationToken ct) =>
+        {
+            var result = await sender.Send(new AddProviderDocumentCommand(
+                req.DocumentType,
+                req.FileUrl,
+                req.FileName,
+                req.FileSizeBytes,
+                req.ExpiresAt), ct);
+            return result.ToApiResult();
+        })
+        .WithName("AddProviderDocument")
+        .Produces<AddProviderDocumentResult>(StatusCodes.Status201Created)
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status422UnprocessableEntity)
+        .WithSummary("Add a document to provider application")
+        .WithMetadata(new MustHavePermissionAttribute(AccountsFeatures.ProviderApplication, AppAction.Create))
+        .RequireAuthorization();
+
+        // PUT /api/v1/provider/documents/{id} — replace a document
+        group.MapPut("/documents/{id:guid}", async (Guid id, ReplaceProviderDocumentRequest req, ISender sender, CancellationToken ct) =>
+        {
+            var result = await sender.Send(new ReplaceProviderDocumentCommand(
+                id,
+                req.FileUrl,
+                req.FileName,
+                req.FileSizeBytes,
+                req.ExpiresAt), ct);
+            return result.ToApiResult();
+        })
+        .WithName("ReplaceProviderDocument")
+        .Produces<ReplaceProviderDocumentResult>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status422UnprocessableEntity)
+        .WithSummary("Replace a provider document")
+        .WithMetadata(new MustHavePermissionAttribute(AccountsFeatures.ProviderApplication, AppAction.Update))
+        .RequireAuthorization();
+
+        return endpoints;
+    }
+}
+
+// ── Request Models ────────────────────────────────────────────────────────────
+
+public sealed record RegisterProviderRequest(
+    ProviderType Type,
+    string BusinessName,
+    string ContactEmail,
+    string ContactPhone,
+    string Address,
+    string Description,
+    string? TypeSpecificDataJson);
+
+public sealed record AddProviderDocumentRequest(
+    DocumentType DocumentType,
+    string FileUrl,
+    string FileName,
+    long FileSizeBytes,
+    DateTime? ExpiresAt);
+
+public sealed record ReplaceProviderDocumentRequest(
+    string FileUrl,
+    string FileName,
+    long FileSizeBytes,
+    DateTime? ExpiresAt);

@@ -2,7 +2,9 @@ using Accounts.Application.Commands.DeleteAvatar;
 using Accounts.Application.Commands.DeleteProfile;
 using Accounts.Application.Commands.RestoreProfile;
 using Accounts.Application.Commands.UpdateAvatar;
+using Accounts.Application.Commands.UpdateMarketingConsent;
 using Accounts.Application.Commands.UpdateProfile;
+using Accounts.Application.Queries.GetMarketingConsent;
 using Accounts.Application.Queries.GetProfile;
 using Accounts.Contracts.Authorization;
 using Accounts.Presentation.Endpoints.Profile.Models;
@@ -168,6 +170,45 @@ internal static class ProfileEndpoints
         .WithMetadata(new MustHavePermissionAttribute(AccountsFeatures.Profile, AppAction.SoftDelete))
         .RequireAuthorization();
 
+        group.MapPut("/me/marketing-consent", async (
+            MarketingConsentRequest request,
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            var result = await sender.Send(new UpdateMarketingConsentCommand(
+                request.EmailDigest,
+                request.PushNotifications,
+                request.ReEngagementCampaigns), ct);
+            return result.ToApiResult();
+        })
+        .WithName("UpdateMarketingConsent")
+        .Produces<MarketingConsentResult>(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .WithSummary("Update the current user's marketing consent")
+        .WithMetadata(new MustHavePermissionAttribute(AccountsFeatures.Profile, AppAction.Update))
+        .RequireAuthorization();
+
+        group.MapGet("/me/marketing-consent", async (
+            ICurrentUser currentUser,
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            if (!currentUser.IsAuthenticated || currentUser.UserId is null)
+                return Results.Unauthorized();
+
+            var result = await sender.Send(new GetMarketingConsentQuery(currentUser.UserId.Value), ct);
+            return result.ToApiResult();
+        })
+        .WithName("GetMarketingConsent")
+        .Produces<MarketingConsentResult>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .WithSummary("Get the current user's marketing consent")
+        .WithMetadata(new MustHavePermissionAttribute(AccountsFeatures.Profile, AppAction.Read))
+        .RequireAuthorization();
+
         profile.MapPost("/restore", async (ISender sender, CancellationToken ct) =>
         {
             var result = await sender.Send(new RestoreProfileCommand(), ct);
@@ -182,3 +223,8 @@ internal static class ProfileEndpoints
         .RequireAuthorization();
     }
 }
+
+public sealed record MarketingConsentRequest(
+    bool EmailDigest,
+    bool PushNotifications,
+    bool ReEngagementCampaigns);

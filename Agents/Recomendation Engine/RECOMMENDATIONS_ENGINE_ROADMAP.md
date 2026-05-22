@@ -46,15 +46,9 @@ Similarity(a, b):
 
 Anti-cannibalization: when source is a Tour, exclude all Tours by source's `CreatedByUserId` entirely (not just demote).
 
-### V1.5.2 Inventory Awareness — **BLOCKED ON BOOKING TEAM**
+### V1.5.2 Inventory Awareness — **UNBLOCKED — Booking events now ship**
 
-Status: Booking module currently publishes ZERO integration events. `BookingCapacityChangedIntegrationEvent` does NOT exist. Booking team must build:
-- `Booking.Contracts/IntegrationEvents/BookingCapacityChangedIntegrationEvent.cs`
-- Domain event on `AvailabilitySlot` aggregate (raised on every reservation/cancellation)
-- Domain event handler that writes to outbox
-- Registry entry: `booking.capacity-changed.v1`
-
-**Booking team effort**: 12-16 hrs (build full integration event surface — they have outbox infrastructure but zero published events today).
+Status: Booking module now publishes integration events. `AvailabilitySlotCapacityChangedIntegrationEvent` NOW exists and is registered as `booking.availability-slot.capacity-changed.v1`. The original Booking-team blocker is preserved in older audit notes only; no external 12-16h build estimate remains for this item.
 
 When unblocked, scorer reads new snapshot columns:
 ```csharp
@@ -190,7 +184,7 @@ CREATE TABLE analytics.EditorialPins (
 | # | Deliverable | Recs hrs | External hrs |
 |---|---|---|---|
 | V1.5.1 | MMR diversity + anti-cannibalization | 4 | 0 |
-| ~~V1.5.2~~ | Inventory awareness | ~~4~~ blocked-on-Booking | (Booking 12-16) |
+| V1.5.2 | Inventory awareness | 4 | 0 — Booking events now ship |
 | V1.5.3 | Negative-review suppression | 1 | 0 |
 | V1.5.4 | Recency boost | 1 | 0 |
 | ~~V1.5.5~~ | Halal/dietary filter | ~~3~~ blocked-on-ContentPlaces | (ContentPlaces 4) |
@@ -292,18 +286,16 @@ Cross-module: requires `Analytics.Application` to expose `IUserPreferenceLookupS
 
 When `SearchToursQueryHandler` returns 0 hits, response includes `rescue: { items: [...] }` block from `GetRecommendations` (or popular feed for anonymous).
 
-### V2 Booking-Signal Subscriptions — **BLOCKED ON BOOKING + SOCIAL**
+### V2 Booking-Signal Subscriptions — **UNBLOCKED — Events now ship**
 
-When Booking ships `BookingConfirmedIntegrationEvent` (V1.5.2 dependency) and Social ships `FavoriteAddedIntegrationEvent`:
+`BookingConfirmedIntegrationEvent` and `FavoriteAddedIntegrationEvent` both exist now, and Analytics already has handlers wired for booking/social interaction signals:
 
 ```csharp
 public sealed class BookingConfirmedIntegrationEventHandler { /* records UserInteraction(Booking, weight=5.0) */ }
 public sealed class FavoriteAddedIntegrationEventHandler  { /* records UserInteraction(Bookmark, weight=2.5) */ }
 ```
 
-Until then, all interaction signals come via `POST /interactions` API only.
-
-**External team effort**: Social ~4 hrs (FavoriteAdded event), Booking ~3 hrs incremental (assuming Booking did capacity events for V1.5.2).
+Keep `POST /interactions` as the explicit fallback/manual capture API, but event-driven booking/favorite capture is no longer blocked on external contract work.
 
 ### V2 — Combined WBS
 
@@ -646,13 +638,13 @@ When forecast rain probability > 60%: outdoor candidates × 0.5, indoor × 1.5. 
 |---|---|---|
 | V1 EntityAttributeSnapshots | ContentTours/ContentPlaces — `*.Created/Updated/Deleted` integration events | ✅ Already published |
 | V1 Categories bootstrap | ContentCore — `EntityCategories` cross-context read at job startup | ✅ Pragmatic exception (background job, infra layer, read-only) |
-| V1.5.2 Inventory awareness | Booking — `BookingCapacityChangedIntegrationEvent` | ⚠️ Booking has zero events today — needs ~12-16 hrs |
+| V1.5.2 Inventory awareness | Booking — `BookingCapacityChangedIntegrationEvent` | ✅ `AvailabilitySlotCapacityChangedIntegrationEvent` exists |
 | V1.5.5 Halal filter | ContentPlaces — add `IsHalal/HasVegetarianOptions/HasAlcoholFreeArea` columns | ⚠️ Needs ~4 hrs |
 | V1.5.6 Subscription gate | Finance — `ISubscriptionStatusProvider` in `Finance.Contracts` | ⚠️ Needs ~4 hrs |
-| V2 Booking signals | Booking — `BookingConfirmedIntegrationEvent` | ⚠️ Same Booking work as V1.5.2 |
-| V2 Favorite signals | Social — `FavoriteAddedIntegrationEvent` | ⚠️ Social.Contracts is empty — needs ~4 hrs |
+| V2 Booking signals | Booking — `BookingConfirmedIntegrationEvent` | ✅ `BookingConfirmedIntegrationEvent` exists + handler wired |
+| V2 Favorite signals | Social — `FavoriteAddedIntegrationEvent` | ✅ `FavoriteAddedIntegrationEvent` exists + `SocialFavoriteAddedHandler` wired |
 | V2.5.4 Trip-stage | Tracking — read `LiveTrackingSession` snapshot data | ✅ Tracking entities exist; cross-context exception accepted |
-| V3.6 Email digest | Auth or Messaging — `IEmailService` (currently in Auth) | ✅ Working today; cleaner if moved to Messaging |
+| V3.6 Email digest | Messaging — `IEmailSender` | ✅ `Messaging.Contracts/Services/IEmailSender.cs` exists. Use directly. |
 | V3.6 Email digest | Accounts — `MarketingConsent` value object on Profile | ⚠️ Profile has zero consent fields — needs ~4 hrs |
 | V4.1 Push targeting | Messaging — push provider (FCM/APNS) | ⏭ Heavy lift — deferred to V4 |
 
@@ -661,16 +653,16 @@ When forecast rain probability > 60%: outdoor candidates × 0.5, indoor × 1.5. 
 ## Coordination Plan
 
 ### Pre-V1.5 sprint kickoff
-1. **Booking team** commits to building integration event surface (capacity, confirmed, starting-soon). 12-16 hrs over 1-2 weeks.
+1. ~~**Booking team** commits to building integration event surface (capacity, confirmed, starting-soon). 12-16 hrs over 1-2 weeks.~~ Done — Booking events now ship.
 2. **Finance team** commits to `ISubscriptionStatusProvider` contract. 4 hrs.
 3. **ContentPlaces team** commits to halal/dietary columns. 4 hrs.
 
 ### Pre-V2 sprint kickoff
-4. **Social team** commits to `FavoriteAddedIntegrationEvent` + outbox publish. 4 hrs.
+4. ~~**Social team** commits to `FavoriteAddedIntegrationEvent` + outbox publish. 4 hrs.~~ Done — Favorite event now ships and Analytics handler is wired.
 
 ### Pre-V3 sprint kickoff
 5. **Accounts team** commits to `MarketingConsent` on Profile. 4 hrs.
-6. **Auth + Messaging** coordinate move of `IEmailService` to `Messaging.Contracts`. 2 hrs.
+6. ~~**Auth + Messaging** coordinate move of `IEmailService` to `Messaging.Contracts`. 2 hrs.~~ Done — use `Messaging.Contracts/Services/IEmailSender.cs` directly.
 
 ### Pre-V4
 7. **Messaging team** plans push provider integration. ~30 hrs (separate sprint).

@@ -37,6 +37,8 @@ public static class DependencyInjection
         services.AddScoped<IModuleDbInitializer, AccountsDbInitializer>();
         services.AddScoped<IAccountsUnitOfWork, AccountsUnitOfWork>();
         services.AddScoped<IProfileRepository, ProfileRepository>();
+        services.AddScoped<IProviderApplicationRepository, ProviderApplicationRepository>();
+        services.AddScoped<IAccountsOutboxWriter, AccountsOutboxWriter>();
         services.AddScoped<IAccountsInboxStore, AccountsInboxStore>();
 
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));

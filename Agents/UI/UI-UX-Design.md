@@ -8,6 +8,66 @@
 
 ---
 
+## 0. Design Skills to Use When Building These UIs
+
+> **Mandatory:** Before designing any view in this document, load the relevant skill below.
+> These four skills collectively own the design quality bar for YallaJo's frontend.
+> Invoke via the Skill tool: `skill(name="<skill-name>")`.
+
+### 0.1 The four skills
+
+| # | Skill | When to load | Primary value |
+|---|---|---|---|
+| 1 | `ui-ux-pro-max` | **Default for every new view.** Whenever you start a Razor page, dashboard, form, table, modal, or any interactive surface. | UI/UX design intelligence with searchable database — pattern lookup, component recipes, interaction heuristics. |
+| 2 | `impeccable` | When polishing, hardening, or critiquing an existing UI. Use for visual hierarchy, accessibility audits, responsive bugs, theming, motion, micro-interactions, error/empty states, i18n, and design-system extraction. | Frontend craft — turns bland designs bolder, loud designs quieter, and ambitious effects technically extraordinary. |
+| 3 | `design-taste-frontend` | When making *architecture* and *metric-based* design decisions: typography scale, spacing rhythm, contrast ratios, hardware-accelerated CSS, component boundaries, balance between design and engineering. | Senior UI/UX Engineer voice that overrides default LLM design biases with enforced rules. |
+| 4 | `huashu-design` | When you need **high-fidelity HTML/CSS prototypes, interactive demos, slide decks, animations, app prototypes (iOS-style), or design variant exploration**. Also: design-direction consulting (recommends 3 differentiated philosophies from 5 schools × 20 design directions), expert 5-dimension review, MP4/GIF export pipelines, narration-driven long-form animations. | Embodied design specialist — picks the right expert persona per task (animator / prototyper / slide designer / consultant / reviewer). Use when the user is vague or asks for "looks great", "show me variants", "review this design". |
+
+### 0.2 When to combine them
+
+| Situation | Load order |
+|---|---|
+| New page from scratch | `ui-ux-pro-max` → produce structure → `impeccable` to polish → `design-taste-frontend` to enforce metrics |
+| Vague request ("make a nice provider apply page") | `huashu-design` first for direction options → pick one → then `ui-ux-pro-max` + `impeccable` |
+| Hi-fi interactive prototype before Razor | `huashu-design` only (it handles HTML/React+Babel/animation in one go) |
+| Existing view feels "off" | `impeccable` for the critique → `design-taste-frontend` for the metric fix → `ui-ux-pro-max` for the pattern swap |
+| Animation or video deliverable | `huashu-design` (handles 60 fps export + GIF/MP4 + BGM) |
+
+### 0.3 Per-wave skill plan — quick reference
+
+> Each wave's detailed UI spec lives in §4.6 – §4.13. Use this table to pick skills before opening the spec.
+
+| Wave | Primary skill | Polish skill | Why |
+|---|---|---|---|
+| **Wave-1** Foundations (Auth, admin catalog CRUD, Roles, Users) | `ui-ux-pro-max` | `impeccable` | Patterns are well-known (OTP, OAuth row, admin tables); polish matters for first-impression Auth screens. |
+| **Wave-2** Provider Application | `ui-ux-pro-max` + `huashu-design` (state-machine page) | `impeccable` | 6-state machine + cooling/reapply UX needs variant exploration. |
+| **Wave-3** Public Catalog (Tours, Places, Businesses, Guides) | `huashu-design` (tour detail hero) | `design-taste-frontend` | Tour detail is the conversion page; needs taste-level design before any pattern lookup. |
+| **Wave-4** Blog + Tour Enrichment + Admin SEO + Translations | `ui-ux-pro-max` (Blog) + `huashu-design` (article hero variants) | `impeccable` (typography rhythm) | Long-form reading needs strict typography; SEO admin needs density without clutter. |
+| **Wave-5** Booking & Payment Engine | `huashu-design` (booking flow A+ design) | `impeccable` (payment + error states) | Booking is revenue-critical; payment screens unforgiving of friction. |
+| **Wave-6** Discovery, Search, Map, Notifications, Support | `ui-ux-pro-max` (search/notifs) + `huashu-design` (map + analytics dashboards) | `design-taste-frontend` (dashboard density) | High data density needs metric-driven hierarchy; map is hi-fi prototype territory. |
+| **Wave-7** Creator Identity + Blog Authoring | `ui-ux-pro-max` (state machine + admin queue rigor) + `huashu-design` (creator profile hero variants) | `impeccable` (community/identity surfaces) | Identity onboarding mirrors Wave-2 rigor; public creator profiles need brand-level taste; invitation composer needs UX clarity. |
+| **Wave-8** Creator Multi-Type Posts + Tier Promotion + Moderation | `huashu-design` (multi-type compose interfaces) + `ui-ux-pro-max` (admin moderation queue + tier dashboards) | `design-taste-frontend` (reading pages perf + tier-up celebration) | 4 distinct post-type editors each need bespoke design; tier promotion celebration is conversion moment; moderation queue is high-density. |
+
+### 0.4 Wave-2 Provider UI — view-by-view skills
+
+| View | Primary skill | Polish skill |
+|---|---|---|
+| `/Provider/Apply` (multi-step wizard) | `ui-ux-pro-max` | `impeccable` |
+| `/Provider/Status` (state-machine page, 6 states) | `huashu-design` (variant exploration first) | `design-taste-frontend` |
+| `/Provider/Documents` (drag-drop, type checklist, expiry) | `ui-ux-pro-max` | `impeccable` |
+| `/Admin/Providers` (queue + filters + bulk actions) | `ui-ux-pro-max` | `design-taste-frontend` |
+| `/Admin/Providers/{id}` (detail + timeline + cascade preview) | `huashu-design` (hi-fi prototype first) | `impeccable` |
+| Suspension cascade preview modal ("X tours / Y bookings / Z payouts") | `huashu-design` (animation for impact reveal) | `impeccable` |
+
+### 0.5 Anti-patterns these skills exist to prevent
+
+- Default LLM "AI slop": gradient soup, three-card hero, undifferentiated cards, generic shadcn-clone vibes → `design-taste-frontend` overrides.
+- Bland, safe, forgettable UI → `huashu-design` pushes variants.
+- Accessibility/contrast/RTL regressions → `impeccable` audits.
+- Reinventing patterns that exist → `ui-ux-pro-max` database lookup.
+
+---
+
 ## 1. Why MVC + This Template = Natural Fit
 
 The Webestica template is **pure Bootstrap 5 + vanilla JS** (no React/Vue/Angular). Perfect for Razor:
@@ -333,11 +393,14 @@ app.MapControllerRoute("offer-detail",    "offers/{slug}",     defaults: new { c
 
 ### 4.4 Provider area `/Provider/...`
 
+> **Wave-2 backend = DONE.** Provider Application module is fully built (11 endpoints) — see §4.6 for the detailed Wave-2 UI spec.
+
 | URL | Controller.Action | Template | Backend |
 |---|---|---|---|
-| `/Provider/Apply` | Provider.Apply.Index | add-listing-minimal.html | `POST /api/v1/provider/register` + `/apply` (**Wave 2** — backend not built) |
-| `/Provider/Status` | Provider.Status.Index | (state-machine page) | `GET /api/v1/provider/status` |
-| `/Provider/Documents` | Provider.Documents.Index | (multi-upload) | `POST /api/v1/provider/documents` + `PUT .../{id}` |
+| `/Provider/Apply` | Provider.Apply.Index | add-listing-minimal.html | `POST /api/v1/provider/register` + `/apply` ✅ Wave 2 built |
+| `/Provider/Status` | Provider.Status.Index | (state-machine page — see §4.6) | `GET /api/v1/provider/status` ✅ Wave 2 built |
+| `/Provider/Documents` | Provider.Documents.Index | (drag-drop multi-upload — see §4.6) | `POST /api/v1/provider/documents` + `PUT .../{id}` ✅ Wave 2 built |
+| `/Provider/Reapply` (POST) | Provider.Apply.Reapply | (cooling-aware) | `POST /api/v1/provider/apply` after 7-day cooling, max 3 attempts |
 | `/Provider/Dashboard` | Provider.Dashboard.Index | agent-dashboard.html | `GET /api/v1/provider/dashboard` |
 | `/Provider/Listings` | Provider.Listings.Index | agent-listings.html | `GET /api/v1/tours/provider/my-tours` |
 | `/Provider/Listings/Create` | Provider.Listings.Create | add-listing.html | `POST /api/v1/tours` |
@@ -367,13 +430,15 @@ app.MapControllerRoute("offer-detail",    "offers/{slug}",     defaults: new { c
 | URL | Controller.Action | Template | Backend |
 |---|---|---|---|
 | `/Admin/Dashboard` | Admin.Dashboard.Index | admin-dashboard.html | `GET /api/v1/admin/dashboard` + revenue/bookings/users sub-charts |
-| `/Admin/Providers` | Admin.Providers.Index | admin-agent-list.html | `GET /api/v1/admin/providers` (**Wave 2**) |
+| `/Admin/Providers` | Admin.Providers.Index | admin-agent-list.html | `GET /api/v1/admin/providers` ✅ Wave 2 built |
+| `/Admin/Providers?status=...&type=...&page=...` | Admin.Providers.Index | (filter view) | same endpoint — supports `StatusFilter`, `TypeFilter`, `Page`, `PageSize` query params |
 | `/Admin/Providers/Pending` | Admin.Providers.Pending | (filter view) | `GET /api/v1/admin/providers?status=Pending` |
-| `/Admin/Providers/{id}` | Admin.Providers.Detail | admin-agent-detail.html | `GET /api/v1/admin/providers/{id}` |
-| `/Admin/Providers/{id}/Approve` (POST) | Admin.Providers.Approve | — | `POST /api/v1/admin/providers/{id}/approve` |
-| `/Admin/Providers/{id}/Reject` (POST) | Admin.Providers.Reject | — | `POST /api/v1/admin/providers/{id}/reject` |
-| `/Admin/Providers/{id}/RequestDocs` (POST) | Admin.Providers.RequestDocs | — | `POST /api/v1/admin/providers/{id}/request-docs` |
-| `/Admin/Providers/{id}/Suspend` (POST) | Admin.Providers.Suspend | — | `POST /api/v1/admin/providers/{id}/suspend` |
+| `/Admin/Providers/{id}` | Admin.Providers.Detail | admin-agent-detail.html | ⚠️ **Backend gap:** no single-get endpoint exists; client must filter the paginated list, or backend needs `GET /api/v1/admin/providers/{id}` added |
+| `/Admin/Providers/{id}/Approve` (POST) | Admin.Providers.Approve | — | `POST /api/v1/admin/providers/{id}/approve` ✅ |
+| `/Admin/Providers/{id}/Reject` (POST) | Admin.Providers.Reject | — | `POST /api/v1/admin/providers/{id}/reject` (Reason required, triggers 7-day cooling) ✅ |
+| `/Admin/Providers/{id}/RequestDocs` (POST) | Admin.Providers.RequestDocs | — | `POST /api/v1/admin/providers/{id}/request-docs` (Notes + MissingDocumentTypes[]) ✅ |
+| `/Admin/Providers/{id}/Suspend` (POST) | Admin.Providers.Suspend | — | `POST /api/v1/admin/providers/{id}/suspend` (Reason required — cascades to tours/bookings/payouts) ✅ |
+| `/Admin/Providers/{id}/Reinstate` (POST) | Admin.Providers.Reinstate | — | `POST /api/v1/admin/providers/{id}/reinstate` ✅ Wave 2 built — reverses suspension, restores tours |
 | `/Admin/Bookings` | Admin.Bookings.Index | admin-booking-list.html | `GET /api/v1/bookings/admin/all` |
 | `/Admin/Bookings/{id}` | Admin.Bookings.Detail | admin-booking-detail.html | `GET /api/v1/bookings/{id}` |
 | `/Admin/Bookings/{id}/ForceRefund` (POST) | Admin.Bookings.ForceRefund | — | `POST /api/v1/admin/bookings/{id}/force-refund` |
@@ -416,11 +481,811 @@ app.MapControllerRoute("offer-detail",    "offers/{slug}",     defaults: new { c
 | `/Admin/Seo/Redirects` | Admin.Seo.Redirects | — | `GET/POST/DELETE /api/v1/redirects` |
 | `/Admin/Settings` | Admin.Settings.Index | admin-settings.html | platform config |
 
-### 4.6 Utility routes
+### 4.6 Wave-2 Provider Application — detailed UI spec
+
+> **Status:** Backend complete (Dec 2025). 11 endpoints across `/api/v1/provider/*` and `/api/v1/admin/providers/*`.
+> **Recommended skills:** see §0 — start with `ui-ux-pro-max` + `huashu-design` for state-machine page exploration.
+
+#### 4.6.1 Provider Type selector (`/Provider/Apply` — Step 1)
+
+5 provider types with type-specific document requirements (validated server-side; UI must mirror):
+
+| Type | enum | Required document types |
+|---|---|---|
+| TourOperator | `0` | BusinessLicense, TaxRegistration, TourismAuthorityLicense, InsuranceCertificate (4 docs) |
+| IndependentGuide | `1` | GovernmentId, MotaLicense, TaxIdentificationNumber, InsuranceCertificate (4 docs) |
+| HotelResort | `2` | BusinessLicense, ProofOfOwnership, TourismAuthorityLicense, HealthAndSafety, FireSafety (5 docs) |
+| ActivityCenter | `3` | BusinessLicense, RelevantCertification, LiabilityInsurance, HealthAndSafety, FireSafety (5 docs) |
+| Agency | `4` | BusinessLicense, TaxRegistration, TourismAuthorityLicense, InsuranceCertificate, AffiliatedGuidesList (5 docs) |
+
+UI must show a per-type checklist that lights up green as each `DocumentType` is uploaded. Submit button stays disabled until all required types present.
+
+#### 4.6.2 State machine — `/Provider/Status` page variants
+
+6 distinct states, each needs its own banner + actions + visual treatment:
+
+| Status (enum) | Banner | Allowed actions | Color band |
+|---|---|---|---|
+| `Draft` (0) | "Complete your application" | Continue editing → Upload docs → Submit | Neutral grey |
+| `Pending` (1) | "Under review — expect a decision within 7 days" | Read-only; show SLA countdown | Blue |
+| `MoreDocsNeeded` (2) | "Admin requested more documents" + admin Notes | Upload missing types (highlighted in checklist), Re-submit | Amber |
+| `Approved` (3) | "You're a verified provider 🎉" | Go to Provider Dashboard; show doc-expiry warnings if any | Green |
+| `Rejected` (4) | "Rejected — Reason: {RejectionReason}" + cooling countdown | Reapply (disabled until cooling ends); show attempt counter (e.g., "Attempt 2 of 3") | Red |
+| `Suspended` (5) | "Suspended — Reason: {SuspensionReason}" | Read-only; "Contact support" link | Dark red |
+
+**State-machine page must show:**
+- Current status banner (top)
+- Timeline of past status changes (SubmittedAt → ReviewedAt → cooling-ends → reapplied → …)
+- Document grid with per-doc status (uploaded / expired / expiring-soon / replacement-needed)
+- Reapplication counter when in Rejected state — `"Attempt {ReapplicationCount + 1} of 3"`
+- Cooling countdown when in Rejected state — `"You can reapply in {N days, M hours}"` (`CoolingPeriodEndsAt`)
+
+#### 4.6.3 Document upload widget (`/Provider/Documents`)
+
+**Spec:**
+- Drag-drop zone (`Dropzone.js` from template vendor list)
+- File constraints (mirror backend exactly): **PDF / JPG / PNG only**, **10 MB max per file**, **max 10 docs total per application**
+- Per-row metadata: `DocumentType` (dropdown), `FileName`, `FileSize`, `ExpiresAt` (optional)
+- Endpoint: `POST /api/v1/provider/documents` for new, `PUT /api/v1/provider/documents/{id}` to replace
+- **Replacement flow:** clicking "Replace" on an existing row preserves the `DocumentType` and only swaps the file
+- **Duplicate prevention:** backend returns `DuplicateDocumentType` error if same type uploaded twice — UI should disable already-uploaded types in the dropdown
+- **Expiry indicator:**
+  - Green check if `ExpiresAt` > 30 days away
+  - Amber warning if 14–30 days remain
+  - Red error if < 14 days remain (grace period before auto-suspend)
+- **Bulk upload:** for tours later, use `POST /api/v1/attachments/{entityType}/{entityId}/images` (max 20 files per call) — does **not** apply to provider docs (they need typed metadata)
+
+#### 4.6.4 `/Provider/Apply` wizard flow
+
+```
+Step 1: Type selection (radio cards, one of 5)
+   ↓
+Step 2: Business info (BusinessName, ContactEmail, ContactPhone, Address, Description)
+   ↓
+Step 3: Type-specific data (TypeSpecificDataJson) — fields differ per provider type
+   ↓
+Step 4: Upload required docs (checklist from §4.6.1)
+   ↓
+Step 5: Review + Submit (calls POST /api/v1/provider/apply)
+```
+
+`POST /api/v1/provider/register` is called on Step 2 completion to create the `Draft` record. `POST /api/v1/provider/apply` transitions Draft → Pending after all docs present.
+
+#### 4.6.5 `/Admin/Providers` queue view
+
+- **Default filter:** `?status=Pending` (most urgent)
+- **Filter chips:** Pending / MoreDocsNeeded / Approved / Rejected / Suspended (multi-select)
+- **Type filter:** dropdown of 5 provider types
+- **Sort:** by `SubmittedAt` ascending (oldest first — enforces 7-day SLA)
+- **SLA indicator:** rows older than 5 days highlighted amber, older than 7 days red
+- **Pagination:** `Page` + `PageSize` query params (default 1 / 20)
+- **Row CTA:** "Review" → `/Admin/Providers/{id}` detail page
+
+#### 4.6.6 `/Admin/Providers/{id}` detail view
+
+Must display:
+- Provider business card (Type, BusinessName, ContactEmail, Address)
+- Application timeline (Registered → Submitted → Reviewed → Approved/Rejected → cooling/reapplied → …)
+- Reapplication history (each prior attempt with its outcome)
+- `ReapplicationCount` indicator ("This is attempt 2 of 3")
+- Document grid (each doc clickable to view PDF/image inline; admin can mentally approve/reject — backend doesn't store per-doc decisions yet)
+- Action buttons (per current status):
+  - Pending → **Approve** / **Reject (with Reason)** / **Request more docs (with Notes + missing types)**
+  - Approved → **Suspend (with Reason)** — opens cascade preview modal (§4.6.7)
+  - Suspended → **Reinstate** — confirmation modal
+  - Rejected → read-only (cooling period in effect)
+
+#### 4.6.7 Suspension cascade preview modal
+
+When admin clicks **Suspend** on an `Approved` provider, the confirmation modal must show:
+
+```
+⚠ Suspending {BusinessName} will cascade to:
+   • {N} active tours → auto-suspended
+   • {M} active bookings → auto-cancelled (with refund processing)
+   • {K} pending/ready payouts → put on hold
+
+   Reason (required, shown to provider):
+   [_________________________________]
+
+   [ Cancel ]   [ Confirm Suspension ]
+```
+
+Numbers come from a separate GET call (or the suspend endpoint can return a dry-run shape — backend addition needed). This previews the cascading impact of:
+- `ProviderSuspendedSuspendToursHandler` (ContentTours)
+- `ProviderSuspendedCancelBookingsHandler` (Booking)
+- `ProviderSuspendedHoldPayoutsHandler` (Finance)
+
+#### 4.6.8 Reinstate confirmation modal
+
+When admin clicks **Reinstate** on a `Suspended` provider:
+
+```
+✓ Reinstating {BusinessName} will:
+   • Restore {N} tours → back to active state
+   • Release payouts on hold → re-enter payout queue
+   • Notify provider via in-app + email
+
+   Note: previously cancelled bookings are NOT restored.
+
+   [ Cancel ]   [ Confirm Reinstatement ]
+```
+
+#### 4.6.9 Provider notifications (Messaging integration)
+
+5 notification types delivered via `Messaging.Infrastructure` → bell dropdown + email (opt-in):
+
+| Trigger | NotificationType | Channel | Priority |
+|---|---|---|---|
+| `ProviderApprovedIntegrationEvent` | Business | InApp + Email | High |
+| `ProviderRejectedIntegrationEvent` | Business | InApp + Email | High |
+| `ProviderSuspendedIntegrationEvent` | Business | InApp + Email | High |
+| `ProviderReinstatedIntegrationEvent` | Business | InApp + Email | High |
+| `ProviderStatusChangedIntegrationEvent` (NewStatus=MoreDocsNeeded) | Business | InApp + Email | High |
+
+Bell dropdown link clicks navigate to `/Provider/Status`.
+
+#### 4.6.10 Cross-module UI impact
+
+When a provider is suspended/reinstated, **other UIs must surface the cascade**:
+
+- **Customer-facing tour listings** — must hide tours where `SuspendedAt != null` (or show "Currently unavailable")
+- **`/Account/Bookings`** — cancelled bookings show `CancellationSource = Admin, ProviderInitiated = false, ForceMajeureOverride = true` → display "Cancelled by platform — full refund issued"
+- **`/Provider/Earnings`** — payouts with `Status = Hold` need an explicit indicator with reason
+- **`/Provider/Listings`** — suspended tours show with a `Suspended` badge + the reason
+
+#### 4.6.7+ Endpoint coverage matrix
+
+| Wave-2 endpoint | UI route | Status |
+|---|---|---|
+| `GET /api/v1/admin/providers` | `/Admin/Providers` | ✅ mapped |
+| `GET /api/v1/provider/status` | `/Provider/Status` | ✅ mapped |
+| `POST /api/v1/provider/register` | `/Provider/Apply` (Step 2) | ✅ mapped |
+| `POST /api/v1/provider/apply` | `/Provider/Apply` (Step 5) | ✅ mapped |
+| `POST /api/v1/provider/documents` | `/Provider/Documents` upload | ✅ mapped |
+| `PUT /api/v1/provider/documents/{id}` | `/Provider/Documents` replace | ✅ mapped |
+| `POST /admin/providers/{id}/approve` | `/Admin/Providers/{id}/Approve` | ✅ mapped |
+| `POST /admin/providers/{id}/reject` | `/Admin/Providers/{id}/Reject` | ✅ mapped |
+| `POST /admin/providers/{id}/request-docs` | `/Admin/Providers/{id}/RequestDocs` | ✅ mapped |
+| `POST /admin/providers/{id}/suspend` | `/Admin/Providers/{id}/Suspend` + cascade modal | ✅ mapped |
+| `POST /admin/providers/{id}/reinstate` | `/Admin/Providers/{id}/Reinstate` | ✅ mapped |
+| `POST /api/v1/attachments/{entityType}/{entityId}/images` (bulk) | `/Provider/Listings/{id}/Images` (tour images) | ✅ mapped to tour image upload, not provider docs |
+
+**Backend gap to fill:** `GET /api/v1/admin/providers/{id}` (single-get) — needed for `/Admin/Providers/{id}` detail page. Currently the UI must filter the paginated list client-side. Add this in a Wave-2.1 patch.
+
+---
+
+### 4.7 Wave-1 Foundations — detailed UI spec
+
+> **Backend status:** ~95% complete. 7 small backend gaps (OAuth split into 3, role claims listing, user role/status fixes — see `Agents/Waves/Wave-1.md`).
+> **Skills:** `ui-ux-pro-max` (default) · `impeccable` (Auth pages must feel premium first-impression).
+
+#### 4.7.1 Auth screens
+
+| View | Backend | Notes |
+|---|---|---|
+| `/Auth/Login` | `POST /api/v1/auth/sessions` | Email + password + remember-me toggle; OAuth button row at bottom (Apple / Facebook / Google) |
+| `/Auth/Register` | `POST /api/v1/auth/register` | Multi-field form (email, password, name); password-strength meter (8+ chars + upper + lower + digit + special) |
+| `/Auth/VerifyEmail` | `POST /api/v1/auth/verify-email` | 6-digit OTP — 6 input boxes that auto-advance + accept paste-to-fill; resend-link cooldown (5/hour) |
+| `/Auth/VerifyOtp` | `POST /api/v1/auth/verify-otp` | Same 6-box pattern; show 10-min TTL countdown |
+| `/Auth/ForgotPassword` | `POST /api/v1/auth/forgot-password` | Single email field |
+| `/Auth/ResetPassword` | `POST /api/v1/auth/reset-password` | OTP + new password + confirm; strength meter |
+| `/Auth/External/{provider}` | 3 endpoints (`/external/apple` / `/facebook` / `/google`) ⚠️ Wave-1 backend gap | Provider-branded buttons; redirects to provider OAuth then back |
+
+**Critical UX:**
+- OTP screen must show **attempts remaining** (max 5) and **resend cooldown** (5/hour); failed attempts trigger lockout banner.
+- Password meter must reflect backend rules exactly — fail closed on any missing class.
+- "Login from new device" notification (SecurityAlert) surfaces in the bell dropdown post-Wave-6.
+
+#### 4.7.2 Admin catalog CRUD screens
+
+| View | Backend | UI pattern |
+|---|---|---|
+| `/Admin/Categories` | `GET /api/v1/categories` (tree) | Tree view, max 3 levels enforced visually (disable "Add child" at level 3); drag-to-reorder; bilingual edit (AR/EN side-by-side) |
+| `/Admin/Languages` | `GET/POST/PUT/DELETE /api/v1/admin/languages` | Flat list + active toggle |
+| `/Admin/Tags` | `GET/POST/PUT/DELETE /api/v1/admin/tags` | Flat searchable list; usage-count column |
+| `/Admin/Specializations` | `GET/POST/PUT/DELETE /api/v1/admin/specializations` | Same pattern as tags |
+| `/Admin/Roles` | `GET /api/v1/admin/roles` | List with reserved-role badge (Admin, User, Provider, SuperAdmin uneditable); claims viewer modal calls `GET /admin/roles/{id}/claims` (⚠️ Wave-1 backend gap) |
+| `/Admin/Users` | `GET /api/v1/admin/users` | Filter by email (partial), role, status, registration date; status toggle PUT (⚠️ Wave-1 backend gap — currently split into activate/deactivate); pagination max 50 |
+
+**Critical UX:**
+- Reserved roles must be visually distinct (greyed-out delete, lock icon) — can never delete.
+- User status change must show side effects banner: "Deactivating will revoke all sessions for this user."
+- Self-deactivation prevention: hide/disable button when target is current admin.
+
+#### 4.7.3 Public Profile screen
+
+| View | Backend | Notes |
+|---|---|---|
+| `/Account/Profile` | `GET/PUT /api/v1/accounts/profile` + avatar | Already built ✅ — Wave-1 just needs to verify the `/profile` alias mount per PDF1 |
+
+---
+
+### 4.8 Wave-3 Public Catalog — detailed UI spec
+
+> **Backend status:** Tours/Places/Businesses fully built; Tour Guide profile endpoints (5) implemented but tests + runtime smoke pending.
+> **Skills:** `huashu-design` (tour detail hero — primary conversion surface) · `design-taste-frontend` (card hierarchy + gallery rhythm) · `impeccable` (polish + accessibility).
+
+#### 4.8.1 Tour discovery surfaces
+
+| View | Backend | UI focus |
+|---|---|---|
+| `/Tours` | `GET /api/v1/tours/search` (faceted) | List + grid toggle, filter sidebar (category, price range JOD/USD/EUR, language, duration, child-friendly toggle, dates), sort (relevance / price / rating / popularity), pagination |
+| `/Tours/{slug}` | `GET /api/v1/tours/{slug}` | **Hero gallery** (full-bleed, swipeable), pricing tiers card, schedule picker, waypoints map, FAQ accordion, reviews summary, related tours, sticky "Book" CTA |
+| `/Tours/Search?q=...` | `GET /api/v1/tours/search?q=...` | Debounced autocomplete in header, faceted result page, "no results" with suggestions |
+| `/Tours/Featured` | `GET /api/v1/tours/featured` | Editorial layout |
+| `/Tours/Popular` / `/Trending` | `GET /api/v1/popular/tours` / `/trending/tours` | Carousel + grid; trending = delta indicator (↑ vs prev 7d) |
+
+**Critical UX for `/Tours/{slug}`:**
+- Hero gallery must be hi-fi (use `huashu-design` for variant exploration; default templates feel generic).
+- Pricing tiers card must show all enabled tier types (Adult/Child/Infant/Senior/Group/Private) with discounted sale-price strikethrough when active.
+- Child-friendly badge shows MinAge–MaxAge range when present.
+- Meeting point + waypoint map (Mapbox GL, Wave-6 dependency).
+- "Book now" CTA opens Wave-5 booking flow (`/Tours/{slug}/Book`).
+
+#### 4.8.2 Business surfaces
+
+| View | Backend | UI focus |
+|---|---|---|
+| `/Businesses` | `GET /api/v1/businesses/search` | Grid + map toggle, filter by category + place |
+| `/Businesses/{slug}` | `GET /api/v1/businesses/{slug}` | Hero + business hours (7-day grid with split-shift support), related tours, reviews |
+| `/Businesses/Map` | `GET /api/v1/businesses/map` | Mapbox viewport (Wave-6) |
+
+**Critical UX:** Business hours grid must render 24-hour spans (open all day), split shifts (multiple ranges per day), and closed days distinctly.
+
+#### 4.8.3 Tour Guide profiles
+
+| View | Backend | UI focus |
+|---|---|---|
+| `/Guides/{id}` | `GET /api/v1/guides/{id}` ✅ | Public profile: bio, years of experience, HasFirstAid badge, MoTA license, language list with proficiency (Native/Fluent/Conversational/Basic), specializations, tours led, average rating |
+| `/Provider/Guide/Edit` | `PUT /api/v1/guides/{id}` + sub-resources ✅ | Owner-only (UserId match enforced); bio (max 2000), years (0-80), license, language manager (add/remove with proficiency picker — cannot remove last language), specialization manager |
+
+**Critical UX:**
+- Owner check must hide the edit page entirely for non-owners (don't show a disabled state).
+- Language remove button disabled when only one language remains; tooltip "At least one language required."
+- Proficiency picker must validate against backend enum.
+
+#### 4.8.4 Provider listing management
+
+| View | Backend | UI focus |
+|---|---|---|
+| `/Provider/Listings` | `GET /api/v1/tours?providerId=me` | Table: title, status (Draft/Pending/Approved/Suspended), bookings count, avg rating, last updated; per-row CTAs (edit, view, archive) |
+| `/Provider/Listings/{id}/Edit` | Multiple endpoints — multi-tab editor | Tabs: Basic, Schedules, Pricing Tiers, Waypoints, Images, FAQ, Children-Info; per-tab save (don't lose work on tab switch); Wave-4 enrichment endpoints live here |
+| `/Provider/Listings/{id}/Submit` | `POST /api/v1/tours/{id}/submit-for-review` | Pre-submit checklist: ≥1 image, ≥1 schedule, ≥1 pricing tier, description ≥100 chars, meeting point lat/lng set; disabled button until all checks pass |
+
+**Critical UX:**
+- Critical-field edit warning: "Changing BasePrice / Duration / MaxGroupSize / Coordinates will revert this tour to Pending review."
+- Non-critical edits (description, images) save immediately without status revert — surface this distinction.
+- Max 50 active tours per provider — show counter "X / 50 active" on listings page.
+
+---
+
+### 4.9 Wave-4 Blog + Tour Enrichment + Admin SEO — detailed UI spec
+
+> **Backend status:** ✅ 100% complete (42+ endpoints, Sitemap regen BG service running).
+> **Skills:** `ui-ux-pro-max` (Blog list + admin) · `huashu-design` (Blog article hero + typography variant exploration) · `impeccable` (long-form reading polish) · `design-taste-frontend` (article spacing / column width / font-size scale).
+
+#### 4.9.1 Blog public surfaces
+
+| View | Backend | UI focus |
+|---|---|---|
+| `/Blog` | `GET /api/v1/blogs?status=Published` | Featured post hero, recent grid, category filter, search |
+| `/Blog/{slug}` | `GET /api/v1/blogs/{slug}` | Article: large hero image, title, read-time badge (auto-calc: words / 200), author + date, body (rich-text), linked tours (max 10), linked place (max 1), share buttons, comments section |
+| `/Blog/{slug}` (archived) | same | "This article is outdated" banner at top; still indexable for SEO |
+| `/Blog/Tag/{tag}` / `/Blog/Category/{cat}` | filter endpoints | Same grid layout, filtered |
+
+**Critical UX for article page:**
+- Reading-progress bar (sticky top).
+- Sticky TOC (auto-generated from H2/H3) on desktop; collapsed accordion on mobile.
+- Linked tours rendered as inline cards within the article body (not just appended at bottom).
+- View count debounced per user per 30-min window — UI just renders the number from API.
+
+#### 4.9.2 Blog comments
+
+| Feature | Backend | UI pattern |
+|---|---|---|
+| Comment list | `GET /api/v1/blogs/{id}/comments` | Nested max 2 levels; "show N replies" collapse for level-2 |
+| Submit comment | `POST /api/v1/blogs/{id}/comments` | Login wall for anons; profanity filter warns BEFORE submit; 1000-char counter |
+| Reactions | `POST /api/v1/blog-comments/{id}/reactions` | 3 buttons: Like / Helpful / Insightful — one per user (change replaces); count display |
+| Edit / delete | `PUT/DELETE` | Owner only; soft-delete shows "[deleted]" placeholder if parent of replies |
+
+#### 4.9.3 Tour enrichment views (inside `/Tours/{slug}`)
+
+These are panels on the tour detail page powered by Wave-4 endpoints:
+
+| Panel | Backend | UI |
+|---|---|---|
+| Pricing tiers | `GET /api/v1/tours/{id}/pricing-tiers` | Cards per tier type (Adult/Child/Infant/Senior/Group/Private); active discount → strikethrough + sale price |
+| Schedules | `GET /api/v1/tours/{id}/schedules` | Calendar grid (90 days); per-date capacity badge; blackout dates greyed |
+| Waypoints | `GET /api/v1/tours/{id}/waypoints` | Ordered list + map markers (Mapbox in Wave-6) |
+| FAQ | `GET /api/v1/tours/{id}/faqs` (via FAQ-by-entity) | Accordion |
+| Children-info | embedded in tour DTO | Badge: "Family-friendly · ages X–Y" when `IsChildFriendly=true` |
+
+#### 4.9.4 Admin SEO surfaces
+
+| View | Backend | UI focus |
+|---|---|---|
+| `/Admin/Seo/Metadata` | `GET/POST/PUT /api/v1/metadata` | Per-entity editor: title (60-char counter), description (160-char counter), og:title, og:description, og:image picker, canonical URL, hreflang AR↔EN; live SERP preview card |
+| `/Admin/Seo/Redirects` | `GET/POST/DELETE /api/v1/redirects` | List + create (oldUrl, newUrl, 301/302); chain visualization (highlight if A→B→C exists — system auto-flattens to A→C); circular detection warning |
+| `/Admin/Seo/Sitemap` | `GET /api/v1/sitemap.xml` + on-demand regen | Last-gen timestamp; per-EntityType counts; force-regen button |
+
+**Critical UX:** OG image picker must fall back to YallaJo default thumbnail if none selected. Canonical URL must auto-suggest from slug.
+
+#### 4.9.5 Translations admin
+
+| View | Backend | UI |
+|---|---|---|
+| `/Admin/Translations` | `GET /api/v1/translations` (filter by entity type / locale / status) | Table with status: Translated / Pending / Untranslated; approve action |
+| Inline AR/EN editor | per-entity translation endpoints | Side-by-side textareas; auto-translate button (uses external API quota — show remaining quota indicator) |
+
+---
+
+### 4.10 Wave-5 Booking & Payment Engine — detailed UI spec
+
+> **Backend status:** Booking + payments + invoices + payouts + commissions built ✅. **15 endpoints still missing**: Availability Slots (6), Refund Policies (3), Join Requests (3), Provider booking reads (3). Plan UI around these gaps — block the dependent screens until backend ships.
+> **Skills:** `huashu-design` (booking flow needs A+ design — primary revenue path) · `impeccable` (payment + error states unforgiving) · `ui-ux-pro-max` (forms / lists) · `design-taste-frontend` (calendar / availability grid).
+
+#### 4.10.1 Customer booking flow
+
+| Step | View | Backend | Notes |
+|---|---|---|---|
+| 1 | `/Tours/{slug}/Book` — Step A | `GET /api/v1/availability/{tourId}` ⚠️ Wave-5 gap | Date picker shows per-day capacity badges; sold-out dates disabled |
+| 2 | same — Step B | `GET /api/v1/availability/{tourId}/{date}` ⚠️ Wave-5 gap | Time slot picker for selected date |
+| 3 | same — Step C | participant counter per tier (Adult / Child / Infant / Senior); price recalc live | Validation: min 2-hour lead time, total ≤ slot.RemainingCapacity |
+| 4 | `/Bookings/{id}/Pay` | `POST /api/v1/payments/initiate` | Payment gateway redirect or inline card form (no raw card data per PCI); 10-min lock TTL countdown |
+| 5 | `/Bookings/{id}/Confirmation` | webhook → email | Confirmation code `YJ-YYYYMM-XXXX`, add-to-calendar (.ics), share buttons |
+
+**Critical UX:**
+- Refund policy snapshot must be displayed BEFORE payment (full refund hours, partial window, partial percent — shown via tour's refund policy endpoint ⚠️ Wave-5 gap).
+- 10-min lock countdown visible during payment; on expiry, friendly "your slot was released" screen with re-book CTA.
+- Currency selector (JOD primary, USD, EUR) — locks at booking creation.
+- Max 3 concurrent pending unpaid bookings enforced backend — UI must show "you have 3 pending — complete or cancel one before booking again."
+
+#### 4.10.2 Customer bookings management
+
+| View | Backend | UI focus |
+|---|---|---|
+| `/Account/Bookings` | `GET /api/v1/bookings/my` | Tabs: Upcoming / Past / Cancelled; cards with confirmation code, date, status badge |
+| `/Account/Bookings/{id}` | `GET /api/v1/bookings/{id}` | Full detail: tour summary, participants, payment status, refund snapshot, cancellation deadline countdown |
+| `/Account/Bookings/{id}/Cancel` | `POST /api/v1/bookings/{id}/cancel` | Confirmation modal showing **calculated refund amount** using stored snapshot (not current policy); "100% refund if cancelled now" / "Partial 50% / 0% — past partial window" |
+
+**Critical UX:**
+- Cancellation modal must show the exact refund amount BEFORE the user confirms — calculated from `RefundPolicySnapshotJson` on the booking, not from the tour's current policy.
+- Provider-initiated cancellation banner: "Cancelled by provider — full refund issued automatically."
+- Platform-initiated cancellation (force majeure / provider suspended): clear messaging that refund is in progress.
+
+#### 4.10.3 Provider booking management
+
+| View | Backend | UI |
+|---|---|---|
+| `/Provider/Bookings/Pending` | `GET /api/v1/bookings/provider/pending` ⚠️ Wave-5 gap | Non-instant bookings awaiting provider accept; **24h SLA countdown** per row (auto-confirm after); accept / reject CTAs |
+| `/Provider/Bookings/Upcoming` | `GET /api/v1/bookings/provider/upcoming` ⚠️ Wave-5 gap | Confirmed bookings with future tour date |
+| `/Provider/Bookings/History` | `GET /api/v1/bookings/provider/history` ⚠️ Wave-5 gap | Completed + Cancelled (paginated) |
+| `/Provider/Bookings/{id}` | shared | Detail + accept/reject for pending; customer contact info; refund policy snapshot |
+
+#### 4.10.4 Availability management (provider)
+
+| View | Backend | UI |
+|---|---|---|
+| `/Provider/Tours/{id}/Availability` | All 6 slot endpoints ⚠️ Wave-5 gap | Calendar grid (90 days); per-slot capacity / booked / locked; drag-to-edit |
+| Bulk-create modal | `POST /api/v1/availability/slots/bulk` ⚠️ | Pattern: once / daily / weekly / custom; horizon: up to 90 days; return `{created, skipped}` |
+| Slot edit modal | `PUT /api/v1/availability/slots/{id}` ⚠️ | Capacity, price override, blackout toggle; **must block capacity reduction below BookedCount** (UI shows hard minimum) |
+| Slot delete | `DELETE /api/v1/availability/slots/{id}` ⚠️ | Disabled if BookedCount > 0 OR LockedCount > 0 |
+
+#### 4.10.5 Refund policies
+
+| View | Backend | UI |
+|---|---|---|
+| `/Provider/Tours/{id}/RefundPolicy` | `GET/POST/PUT /api/v1/refund-policies` ⚠️ Wave-5 gap | Form: FullRefundHours (e.g., 48), PartialRefundHours (e.g., 24), PartialRefundPercent (50-100); admin enforces ≥50% when 48h+ |
+| Customer display | embedded in tour detail | "Free cancellation up to 48h before / 50% refund 24-48h before / no refund within 24h" |
+
+**Critical UX:** Save banner: "This change applies to NEW bookings only. Existing bookings keep their stored policy snapshot." (per guide §5.4).
+
+#### 4.10.6 Join requests
+
+| View | Backend | UI |
+|---|---|---|
+| `/Tours/{slug}/JoinRequest` | `POST /api/v1/bookings/join-request` ⚠️ Wave-5 gap | Only visible if `Tour.AllowsJoinRequests=true` AND existing confirmed group booking has remaining capacity; participant count selector |
+| `/Provider/JoinRequests` | (filter on bookings) | Pending tab: approve / reject (with reason); auto-charge on approve via payment gateway |
+
+#### 4.10.7 Earnings (provider)
+
+| View | Backend | UI |
+|---|---|---|
+| `/Provider/Earnings` | `GET /api/v1/payouts/my` + `/invoices/my` | Current balance, escrow countdown (7-day after each completed tour), pending payouts, **hold reason if provider suspended** (link to Wave-2 reinstate flow), payout history |
+| `/Provider/Earnings/Bank` | `GET/POST/PUT /api/v1/provider-bank-accounts/my` | Bank verification flow; payouts gated until verified |
+| Payout-on-hold banner | when `Payout.Status=Hold` | Explicit message: "Payouts on hold because your provider account is suspended" with link to `/Provider/Status` |
+
+#### 4.10.8 Admin bookings / payments / refunds / commissions
+
+| View | Backend | UI |
+|---|---|---|
+| `/Admin/Bookings` | `GET /api/v1/bookings/admin/all` | Full table with filters: status, date range, provider, customer |
+| `/Admin/Payments` | `GET /api/v1/payments/admin/all` | Payment status + retry actions |
+| `/Admin/Refunds` | refund endpoints | Approve / deny; force-majeure override (100% refund regardless of policy snapshot) |
+| `/Admin/Commissions` | commission CRUD | Tier rates (Free 15% / Basic 10% / Premium 7% / Enterprise custom); per-provider overrides |
+
+---
+
+### 4.11 Wave-6 Discovery, Search, Map, Notifications, Support — detailed UI spec
+
+> **Backend status:** ✅ 100% complete (80+ endpoints + 11 BG services + SignalR Hub).
+> **Skills:** `ui-ux-pro-max` (notifications, search, reviews) · `huashu-design` (map page + analytics dashboards) · `design-taste-frontend` (analytics density / chart hierarchy) · `impeccable` (SignalR notification bell + toast UX).
+
+#### 4.11.1 Reviews
+
+| Surface | Backend | UI |
+|---|---|---|
+| Reviews block on tour/place/business detail | `GET /api/v1/reviews?entityType=Tour&entityId=...` | Filter: Verified-only / by rating / by recency; per-review: rating (5-star with 0.5 increments), text, up to 3 photos, "Verified" badge if booking-backed, provider reply (threaded) |
+| Submit review modal | `POST /api/v1/reviews` | 30-day window from tour completion (gated); rating slider, 20-2000 char text, photo upload (max 3, 5MB each, JPG/PNG/WebP); profanity filter warning |
+| `/Account/Reviews` | `GET /api/v1/reviews?reviewerUserId=me` | My reviews with **48h edit window indicator** (countdown badge) — disabled after window |
+| Provider reply box | `POST /api/v1/reviews/{id}/replies` | Inline expand on owned tours; profanity filter warning |
+
+**Critical UX:**
+- Min 3 reviews before aggregate rating displays — show "Not yet rated" until threshold.
+- Bayesian-smoothed rating display: tooltip explains the smoothing for full transparency on edge cases.
+- Provider replies do NOT affect aggregate rating — visually subordinate to the original review.
+
+#### 4.11.2 Wishlist
+
+| Surface | Backend | UI |
+|---|---|---|
+| Heart toggle (every card) | `POST /api/v1/wishlist/toggle` | Login wall for anons; optimistic toggle + revert on error |
+| `/Account/Wishlist` | `GET /api/v1/wishlist/my` | Tabs by EntityType: Tour / Place / Business; bulk-delete; "X / 500" counter |
+| Discount-on-wishlist notification | passive | Bell-dropdown item: "Tour {name} now 20% off — only 3/day per user" |
+
+#### 4.11.3 Reports & Moderation
+
+| Surface | Backend | UI |
+|---|---|---|
+| Report button (every UGC) | `POST /api/v1/reports` | Modal with reason selector (spam / inappropriate / harassment / misleading / other); free-text detail; "max 10/day" client-side hint |
+| `/Admin/Moderation` | `GET /api/v1/admin/moderation-queue` | Auto-hidden items (5+ reports) prioritized; per-item: Restore / Permanently delete / Warn user / Ban user; repeat-offender flag (3+ hidden in 90d) |
+
+#### 4.11.4 Analytics dashboards
+
+| View | Backend | UI |
+|---|---|---|
+| `/Admin/Analytics` | interactions / popular / trending endpoints | Charts: top tours by views/bookings/conversions; trending delta arrows |
+| `/Admin/Analytics/Audit` | `GET /api/v1/admin/audit-logs` | Table with filters (action, user, entity type, date range); per-row JSON detail expand |
+| `/Provider/Analytics` | provider analytics endpoints | Own tours only: views, conversions, top tours, revenue trends |
+
+**Critical UX:** Use `design-taste-frontend` to enforce **chart hierarchy** — dashboards drift into "everything-same-size" pattern without strict primary/secondary metric distinction.
+
+#### 4.11.5 Map
+
+| View | Backend | UI |
+|---|---|---|
+| `/Map` | `GET /api/v1/map/viewport` | Mapbox GL JS; default Jordan center (31.95, 35.93) zoom 8; clustering 0–12, individual pins 13+; pin colors by EntityType (Tour / Place / Business); max 5000 pins per viewport load |
+| Tour/Place detail embed | nearby endpoint | Inline mini-map with meeting point + waypoints (Wave-4 enrichment data) |
+
+**Critical UX:**
+- Pin payload is lightweight (id, name, lat/lng, primaryImage, rating, tourCount) — full detail loaded on pin click.
+- Coordinate validation: never render pins outside -90/90, -180/180.
+
+#### 4.11.6 Search
+
+| Surface | Backend | UI |
+|---|---|---|
+| Header search bar | `GET /api/v1/search/autocomplete` | Debounced (250ms), top 5 suggestions |
+| `/Search?q=...` | `GET /api/v1/search?q=...` | Faceted: per-category counts, price range histogram, dates; "no results" with did-you-mean suggestions |
+
+#### 4.11.7 Notifications (SignalR)
+
+| Surface | Backend | UI |
+|---|---|---|
+| Bell icon (header) | `NotificationHub` at `/hubs/notifications` + `GET /api/v1/notifications/unread-count` | SignalR live updates; badge count; dropdown shows last 10 |
+| `/Account/Notifications` | `GET /api/v1/notifications` | Full list with cursor pagination; mark-read; bulk-delete read |
+| `/Account/Notifications/Preferences` | `GET/PUT /api/v1/notifications/preferences` | Matrix: event type × channel (InApp / Email / Push); **critical types locked** (OTP, PaymentCompleted, PaymentFailed, RefundInitiated, RefundCompleted, OtpDelivery, SecurityAlert, LoginFromNewDevice, EmailVerification, PasswordChanged) — show lock icon + tooltip |
+| Toast notifications | SignalR push | For in-page events; auto-dismiss; click → relevant page |
+
+**Critical UX:**
+- SignalR group join: `user:{userId}` always; `provider:{providerId}` for providers; `admin` for admins.
+- Bell badge resets on dropdown open (mark-as-seen ≠ mark-as-read).
+- Email unsubscribe link in every digest — per-event-type granularity.
+
+#### 4.11.8 Support tickets
+
+| View | Backend | UI |
+|---|---|---|
+| `/Support` | `POST /api/v1/support/tickets` + `GET /my` | Create form: category (Booking Issue / Payment Problem / Provider Complaint / Account Help / Bug Report / Other) → auto-assigns priority (Payment=High, Booking=Medium, Other=Low); subject 10-200, message 20-5000; my tickets list |
+| `/Support/{id}` | message endpoints | Thread view; attach files; mark-resolved (customer); close (admin) |
+| `/Admin/Support` | `GET /api/v1/admin/support/tickets` | Queue with priority badges + **SLA timers** (High=4h, Medium=12h, Low=24h); auto-assigned admin badge (round-robin); bulk-reassign |
+
+---
+
+### 4.12 Wave-7 Creator Identity + Blog Authoring — detailed UI spec
+
+> **Backend status:** spec written (`Agents/Waves/Wave-7.md`) — not yet implemented.
+> **Skill plan:** Primary `ui-ux-pro-max` (state machine + admin queue rigor) + `huashu-design` (public creator profile hero); Polish `impeccable` (community feeds, invitation composer).
+> **Hosting:** All routes live inside ContentBlogs module (per locked design decision m2399).
+
+#### 4.12.1 Creator application wizard `/Creators/Apply`
+
+Mirrors Wave-2's provider apply wizard, adapted for individual creators:
+
+1. **Identity** — DisplayName (3-50 chars, live-uniqueness check), Bio (markdown, 50-500 chars, live char counter)
+2. **Niches + Tags** — Niche multi-picker (3-5 from admin-curated active list with badge counts; required); Free-tag chips (0-10, autocomplete from existing Tag entity, type-to-create allowed)
+3. **Languages + Regions** — Languages spoken (1+ from Wave-1 Languages, dropdown with flag icons); Preferred regions (0+ from Wave-3 Places, search-as-you-type)
+4. **Portfolio + Samples** — Portfolio URL list (1-5, drag-reorder, format validation: must be http(s)); Sample work URL list (exactly 3, hint: "blog post, social profile, or video link")
+5. **Social** — At-least-one of {Instagram, TikTok, YouTube, Twitter, Personal Site}; format validation per platform
+6. **Review & Submit** — Read-only preview of all fields + checkbox "I confirm content originality and accept community guidelines"
+
+Each step: progress dots top, Back/Next bottom, Save Draft persists locally + server-side. Total ~3 min on desktop.
+
+#### 4.12.2 Creator status page `/Creators/Status`
+
+State-machine page mirroring Wave-2 `/Provider/Status` but with creator-specific copy. 5 status variants:
+
+| Status | Hero | Body | Actions |
+|---|---|---|---|
+| **Draft** | "Almost there!" + progress bar | Missing-fields checklist | "Continue Application" → wizard step that's incomplete |
+| **Pending** | "Application under review" + SLA banner ("7-day SLA · Day X of 7") | Submitted-fields summary | "Edit" (disabled), "Withdraw application" (confirmation modal) |
+| **MoreInfoNeeded** | "Action required" red banner | Admin's request notes (markdown) | "Provide more info" → wizard returns to relevant step |
+| **Rejected** | "Application not approved" + cooling countdown timer ("Re-apply in X days") | Admin's rejection reason | Re-apply button disabled until cooling expires; "Read guidelines" link |
+| **Approved** | "Welcome, Creator!" celebration + confetti animation | Profile slug + bio preview | "View public profile" → `/Creators/{slug}`, "Edit profile" → `/Creators/Me`, "Write your first article" → `/Creator/Articles/Compose` |
+
+Show **ReapplicationCount: X/3** badge under the hero on Rejected variant. At 3/3, replace re-apply CTA with "Contact support to discuss".
+
+#### 4.12.3 Invitation redeem `/Creators/Redeem-Invitation?token={token}`
+
+Email-token landing page. Validates token server-side, then renders pre-filled wizard with admin's suggested DisplayName + Message banner ("You've been personally invited by [admin name]"). 14-day expiry visible. Token-exchange happens on Submit, not on page load (so reload doesn't burn the token).
+
+In-app variant: bell notification opens `/Creators/Apply?invitationId={id}` directly — same wizard but pre-filled from invitation.
+
+#### 4.12.4 Creator profile editor `/Creators/Me`
+
+Two-column layout. Left: cover image (1600×400 hero, drag-to-upload, IsPrimary checkbox not applicable since 1 only) + avatar (250×250, circular crop). Right: editable fields (DisplayName read-only post-approval, Bio markdown editor with live preview, social handles, niches/tags multi-pickers, languages, regions).
+
+Bottom: read-only stats card showing `ApprovedArticleCount, FollowerCount, TotalViewCount, ReportRate` with badges and tier badge ("Tier 0 — pre-moderated" / "Tier 1 — post-moderated" / "Tier 2 — featured-eligible"). Wave-8 will add tier-up progress indicators here.
+
+#### 4.12.5 Public creator profile `/Creators/{slug}`
+
+Brand-level page. Hero = cover image + circular avatar overlay + DisplayName + tier badge + niche chips + follower count. Sub-nav: Articles / Photos (Wave-8) / Videos (Wave-8) / Itineraries (Wave-8) / About.
+
+Follow button = primary CTA; auto-hides when viewing own profile or when already following (replaced by "Following · Unfollow" pill). About tab shows full bio, languages spoken (flag chips), preferred regions (chip list), social handle links.
+
+Anonymous viewer sees "Follow" button → on click triggers login modal. Authenticated viewer follows immediately + button updates optimistically.
+
+If creator is `IsProvider`: show a small "Verified Provider" badge next to DisplayName with tooltip "This creator also operates listings on YallaJo".
+
+#### 4.12.6 Article composer `/Creator/Articles/Compose` (and `/Edit/{id}`)
+
+Tiptap or SimpleMDE-backed Markdown editor. Two-pane layout:
+- **Left pane:** title input (10-200 chars), excerpt textarea (100-500 chars), Markdown body editor with toolbar (bold/italic/headings/links/lists/quote/code/image-insert), word count + reading time estimate
+- **Right pane:** language picker (defaults to creator's primary), niches selector (1-3), free tags chips, cover image uploader, **tag entities** picker (search Tour/Place/Business from Wave-3 catalog — multi-select), **disclosure** section ("Are you promoting any of your own provider listings? If so, mark sponsored and disclose targets" — IsSponsored toggle + disclosure target list)
+
+Save-draft auto-saves every 30s. "Submit for review" CTA disabled until required fields valid; on submit, modal explains "Admins review within 24-48h; you'll be notified."
+
+#### 4.12.7 Followed-creators feed `/Me/Feed`
+
+Vertical timeline. Each card: creator avatar + DisplayName + tier badge + posted-time, article cover image, title, excerpt, niche chips, reaction count + comment count + read time. Click → article page (existing Wave-4 reading template).
+
+Empty state: "Follow creators to build your feed" with 3 suggested creators (server-curated by niche match — out of scope for Wave-7 v1; fallback: "Browse creators" CTA → `/Creators`).
+
+Infinite scroll, page size 20, cached 2 min.
+
+#### 4.12.8 Admin creators queue `/Admin/Creators`
+
+Standard admin table with filters: Status (Pending / MoreInfoNeeded / Rejected / Approved), Source (PublicApplication / AdminInvitation), EligibleForTier1 (yes/no — Wave-8 flag).
+
+Each row: avatar thumbnail, DisplayName, Source badge (📧 Invited / 🌐 Public), niche chips, submitted-at (relative time), reapplication count badge if > 0, status pill, action buttons (Approve / Reject / Request More Info — open inline modal).
+
+Top-right primary CTA: **"+ Send Invitation"** → opens composer modal (§4.12.10).
+
+#### 4.12.9 Admin creator detail `/Admin/Creators/{id}`
+
+Full review interface:
+- **Top:** application metadata (Source, submitted-at, reviewer attribution, reapplication count, cooling expires-at if rejected)
+- **Identity panel:** DisplayName, Bio (rendered markdown), suggested slug (with override input)
+- **Portfolio panel:** all 5 URLs with favicon + visit-link buttons, sample work URLs separately
+- **Niches + tags:** chip lists
+- **Social handles:** clickable platform icons → external profile
+- **Action footer:**
+  - **Approve** (primary): opens modal with optional slug override + confirmation
+  - **Request More Info** (secondary): textarea for admin notes (50-1000 chars)
+  - **Reject** (danger): rejection reason textarea (50-1000) + warning "User will see 14-day cooling period"
+
+Show "Linked to Provider Application" badge if `IsProvider=true` (from Wave-7 cross-link handler) → click to open `/Admin/Providers/{providerApplicationId}` in new tab.
+
+#### 4.12.10 Invitation composer `/Admin/Creators/Invitations/New` (modal or full page)
+
+Two-toggle composer:
+- **Recipient type:** Email (default) | Existing User
+  - Email: email field + auto-suggestion if matches a known user
+  - Existing User: user search picker (typeahead by email/name)
+- **Suggested DisplayName** (admin pre-fills; recipient can override at redeem time)
+- **Personal Message** (optional, 0-500 chars, markdown supported)
+- **Send button** → server emits `creators.invitation.sent.v1`; for Email kind sends SMTP via Messaging handler; for InApp kind delivers bell notification
+
+After send: show success toast + link to `/Admin/Creators/Invitations` (existing invitations list with Active/Redeemed/Expired/Revoked status pills + Revoke action for Active ones).
+
+#### 4.12.11 Endpoint coverage matrix
+
+| Route | Backend endpoint | Permission |
+|---|---|---|
+| `GET /Creators/Apply` (wizard) | `POST /api/v1/creators/apply` (submit) | `Creator.Application.Submit` |
+| `GET /Creators/Redeem-Invitation` | `POST /api/v1/creators/redeem-invitation` | authenticated + token |
+| `GET /Creators/Status` | `GET /api/v1/creators/status` | `Creator.Application.Read` |
+| `GET /Creators/Me` | `GET /api/v1/creators/me` + `PUT /api/v1/creators/me` | `Creator.Profile.Read` / `Update` |
+| `GET /Creators/{slug}` | `GET /api/v1/creators/{slug}` | anonymous |
+| `POST /Creators/{slug}/Follow` | `POST /api/v1/creators/{slug}/follow` | authenticated |
+| `GET /Creator/Articles/Compose` | `POST /api/v1/creators/me/articles` | `Creator.Article.Create` |
+| `GET /Creator/Articles/Edit/{id}` | `PUT /api/v1/creators/me/articles/{id}` + submit-for-review | `Creator.Article.Update` |
+| `GET /Me/Feed` | `GET /api/v1/me/creator-feed` | authenticated |
+| `GET /Admin/Creators` | `GET /api/v1/admin/creators` | `AdminCreatorQueue.Read` |
+| `GET /Admin/Creators/{id}` | `GET /api/v1/admin/creators/{id}` | `AdminCreatorQueue.Read` |
+| `POST /Admin/Creators/Invitations/New` | `POST /api/v1/admin/creators/invitations` | `AdminCreatorQueue.Invite` |
+| Action buttons (Approve/Reject/RequestMoreInfo/Suspend/Reinstate) | `POST /api/v1/admin/creators/{id}/{action}` | each gated by its respective permission |
+
+#### 4.12.12 Notifications (delivered via Messaging — Wave-7 integration)
+
+5 in-app + email templates:
+- `CreatorApprovedNotificationHandler` — "Welcome, Creator!" + link to `/Creators/Me`
+- `CreatorRejectedNotificationHandler` — reason + cooling countdown
+- `CreatorSuspendedNotificationHandler` — reason + appeal-via-support CTA
+- `CreatorReinstatedNotificationHandler` — "You're back" + link to compose
+- `CreatorInvitationDeliveryHandler` — for Email: SMTP with secure token link; for InApp: bell notification with deep-link to apply page
+
+Bell preferences (Wave-6 notification preferences page) gets two new toggles: "Creator application updates" and "New content from followed creators" (default ON for both for new creators).
+
+---
+
+### 4.13 Wave-8 Creator Multi-Type Posts + Tier Promotion + Moderation — detailed UI spec
+
+> **Backend status:** spec written (`Agents/Waves/Wave-8.md`) — not yet implemented; depends on Wave-7 shipping.
+> **Skill plan:** Primary `huashu-design` (4 type-specific composers need bespoke design) + `ui-ux-pro-max` (admin moderation queue + tier dashboards); Polish `design-taste-frontend` (universal post viewer + tier-up celebration).
+
+#### 4.13.1 Compose hub `/Creator/Compose`
+
+Type-selector page with 4 large cards. Each card: type icon, title, 1-line description, "Estimated time: X min" hint.
+
+- **🎥 Video** → `/Creator/Compose/Video`
+- **📸 Photo Story** → `/Creator/Compose/PhotoStory`
+- **⭐ Long Review** → `/Creator/Compose/LongReview`
+- **🗺️ Itinerary** → `/Creator/Compose/Itinerary`
+
+Tier-0 creator sees soft banner: "Your first posts will be reviewed by an admin within 24-48h. After 5 approved posts you'll graduate to instant publishing."
+
+#### 4.13.2 Video composer `/Creator/Compose/Video`
+
+- Paste video URL → auto-detect provider (YouTube / Vimeo / Hosted) → render embed preview below the input
+- Title + Excerpt (shared with all types)
+- Optional: thumbnail override (upload custom thumb 1280×720), duration auto-extracted from oEmbed
+- Optional: transcript paste (for accessibility + SEO)
+- Captions-available toggle
+- Tag entities (Tour/Place/Business multi-pick) + niches + tags + disclosure section
+- Submit / Save Draft / Preview
+
+Hosted video upload (if `videoProvider = Hosted`): drag-drop with progress bar, max 500MB, MP4/WebM, max 15 min duration — defer to Wave-8.1 if storage isn't ready.
+
+#### 4.13.3 Photo Story composer `/Creator/Compose/PhotoStory`
+
+Drag-drop gallery uploader. 3-30 images. Each tile shows thumbnail + caption input + alt-text input + reorder handle. First image flagged as "Cover". Bulk-upload + per-image edit.
+
+Image specs: ≥1200px on long edge, max 5MB each, JPG/WebP/PNG. Auto-generates EXIF-stripped variants (uses existing Wave-2 bulk-image endpoint POST `/attachments/{entityType}/{entityId}/images`).
+
+#### 4.13.4 Long Review composer `/Creator/Compose/LongReview`
+
+- **Entity picker:** Tour / Place / Business radio → search-as-you-type → confirm selection (shows entity card)
+- **Overall rating:** 5-star half-step picker (1.0–5.0)
+- **Sub-ratings:** value, communication, accuracy, experience (4 sliders 1-5)
+- **Pros + Cons:** two parallel chip lists (5 each, free text 50-150 chars)
+- **Visited on:** date picker (≤ today)
+- **Would recommend:** Y/N toggle
+- **Body:** Markdown editor (same as Wave-7 article)
+
+If creator owns reviewed entity (provider cross-check) → red banner "You're reviewing your own listing — disclosure required" + IsSponsored toggle + DisclosedTargets pre-populated.
+
+#### 4.13.5 Itinerary composer `/Creator/Compose/Itinerary`
+
+Most complex UI. Multi-day builder:
+- **Top:** Duration days (1-30), best seasons multi-select, physical difficulty (Easy/Moderate/Challenging), recommended-for chips
+- **Day blocks:** stacked vertically, drag-to-reorder. Each day: day-number badge, title, activities list
+  - **Activity row:** entity picker (Tour/Place/Business) + custom title + notes textarea + estimated-hours number input + drag handle
+  - "+ Add activity" button per day
+- **Cost estimate** (USD, optional)
+- Disclosure section (auto-triggers if any tagged entity is creator-owned)
+- **Day picker shortcut:** clicking "Add day" duplicates last day's structure with empty fields
+
+Save-draft auto-saves entire JSON tree every 30s.
+
+#### 4.13.6 Universal post viewer `/Posts/{slug}`
+
+Type-aware layout, sharing chrome:
+- **Header:** creator avatar + DisplayName + tier badge + verified-provider badge if applicable
+- **Hero:** type-specific
+  - Video → embed player, max 1280px width
+  - PhotoStory → full-bleed gallery with lightbox + caption strip below each
+  - LongReview → entity card + rating badge + sub-ratings bar chart
+  - Itinerary → expandable day-by-day list, each day cards-in-a-row layout
+- **Body:** Markdown rendered
+- **Disclosure banner:** if IsSponsored, prominent yellow ribbon "This is sponsored / Creator owns reviewed listings"
+- **Tags + niches:** clickable chips
+- **Reactions + comments:** reuse Wave-4 Blog reaction/comment widgets
+- **Related posts:** carousel of 4 same-niche or same-creator posts
+
+#### 4.13.7 Featured posts `/Posts/Featured`
+
+Curated grid (Pinterest-style masonry). Tier 2 creators only. Filter chips by type. Each tile has small "Featured" ribbon badge.
+
+#### 4.13.8 Admin post moderation queue `/Admin/Posts`
+
+Tabular admin view with filters:
+- **Status:** PendingReview (default) / Published / Rejected / Hidden / Removed
+- **Type:** Video / PhotoStory / LongReview / Itinerary
+- **Tier:** filter by creator tier
+- **Has open reports:** Y/N (cross-ref Wave-6 reports)
+
+Each row: thumbnail (type-specific), title, type icon, creator + tier badge, submitted-at, report-count badge (red if ≥3), disclosure flag indicator (🟡 if IsSponsored), bulk-select checkbox.
+
+Bulk actions: Approve all selected / Reject all selected / Remove all selected (each with confirm modal listing affected creators + reasons).
+
+#### 4.13.9 Admin post review `/Admin/Posts/{id}`
+
+Full preview alongside admin action panel:
+- **Left (60%):** rendered post (read-only, type-specific)
+- **Right (40%):** action panel
+  - Creator info card (DisplayName, tier badge, ApprovedPostCount, ReportRate)
+  - Disclosure section: lists DisclosedTargets if any; warning if `_taggedEntityIds ∩ creator's provider entities ≠ ∅ AND !IsSponsored`
+  - Reports list (if any) with reporter user IDs + reasons (from Wave-6)
+  - Action buttons: **Approve** / **Reject (with reason)** / **Remove (with reason — published-only)** / **Feature (Tier-2 only, with optional expiry date)**
+  - Internal notes textarea (admin-only, persisted to audit log)
+
+#### 4.13.10 Tier promotion celebration modal
+
+Triggered when `creators.tier.promoted.v1` arrives over SignalR (existing Wave-6 hub):
+- Confetti animation
+- Tier badge (gold for Tier 2, silver for Tier 1)
+- Headline: "You've been promoted to Tier 1! 🎉" / "Tier 2! ⭐"
+- Body: list of new perks ("No more pre-moderation", "Eligible for featuring", etc.)
+- CTA: "Compose a new post" → `/Creator/Compose`
+- Dismiss button
+
+For admin one-click confirm: `/Admin/Creators/{id}` gets a new "Promote to Tier N" button when `EligibleForTier1=true` (or Tier 2). Confirm modal shows current stats + tier requirements satisfied.
+
+#### 4.13.11 Creator stats dashboard `/Creators/Me/Stats`
+
+Read-only analytics page (foundation for Wave-9 monetization):
+- **Top cards:** ApprovedPostCount, FollowerCount, TotalViewCount, ReportRate (red if > 5%), TrustTier (with eligible-for-next-tier progress bar)
+- **Time-series charts** (last 30/90/180 days):
+  - Views per day
+  - New followers per day
+  - Reactions per day
+- **Per-post table:** title, type, status, published-at, views, reactions, comments — sortable + paginated
+- **Tier progression panel:** "X more approved posts to Tier N · Y% report-rate · need < Z%" with progress bars
+
+#### 4.13.12 Endpoint coverage matrix
+
+| Route | Backend endpoint | Permission |
+|---|---|---|
+| `GET /Creator/Compose/{Video\|PhotoStory\|LongReview\|Itinerary}` | `POST /api/v1/creators/me/posts` | `Creator.Post.Create` |
+| `PUT /Creator/Posts/{id}/Edit` | `PUT /api/v1/creators/me/posts/{id}` | `Creator.Post.Update` |
+| `GET /Posts/{slug}` | `GET /api/v1/posts/{slug}` | anonymous |
+| `GET /Posts/Featured` | `GET /api/v1/posts/featured` | anonymous |
+| `GET /Creators/{slug}/Posts` | (filtered list) | anonymous |
+| `GET /Admin/Posts` | `GET /api/v1/admin/posts` | `AdminPostModeration.Read` |
+| `GET /Admin/Posts/{id}` | `GET /api/v1/admin/posts/{id}` | `AdminPostModeration.Read` |
+| Action buttons (Approve/Reject/Feature/Remove) | `POST /api/v1/admin/posts/{id}/{action}` | each gated |
+| Tier promote/demote | `POST /api/v1/admin/creators/{id}/promote-tier` / demote-tier | `AdminCreatorQueue.PromoteTier` / DemoteTier |
+| `GET /Creators/Me/Stats` | (read-only query, rolled up from BG service) | `Creator.Profile.Read` |
+
+#### 4.13.13 Notifications (Wave-8 additions to Messaging)
+
+- `CreatorPostPublishedNotifyFollowersHandler` — broadcasts to all followers (batch-paged 100/req)
+- `CreatorPostRemovedNotifyCreatorHandler` — "Your post was removed" + admin's reason
+- `CreatorPostFeaturedNotifyCreatorHandler` — celebration
+- `CreatorTierPromotedNotifyHandler` — celebration + SignalR push triggers modal
+- `CreatorTierDemotedNotifyHandler` — concern + guidelines link
+
+Bell preferences additions: "Featured post celebrations", "Tier change alerts", "New post from followed creator" (separate from Wave-7's general creator updates).
+
+---
+
+### 4.14 Utility routes
 - `/sitemap.xml` → reverse-proxy `GET /api/v1/sitemap.xml`
 - `/robots.txt` → static file in wwwroot
 
-**Total MVC routes: ~120**
+**Total MVC routes: ~140**
 
 ---
 
@@ -1071,15 +1936,30 @@ For tour/place/blog detail pages, set ETag based on entity UpdatedAt → CDN/bro
 
 ## 13. Critical Backend Dependencies
 
-UI sprints are blocked on these backend deliverables:
+UI sprints by-wave dependency map (last updated: Wave-7/8 specs added, Dec 2025):
 
-- **UI-2 (Auth):** Wave 1 needs 3 explicit OAuth endpoints (`/auth/external/apple|facebook|google`)
-- **UI-5 (Booking):** Wave 5 needs Availability Slots (6 endpoints) + Refund Policy (3 endpoints)
-- **UI-7 (Provider onboarding):** Wave 2 needs entire Provider Application module (11 endpoints) — **largest gap**
-- **UI-8 (Provider dashboard):** Wave 5 needs 3 provider booking read endpoints (`/bookings/provider/{pending|upcoming|history}`)
-- **UI-9 (Provider advanced):** Wave 5 needs Join Requests (3 endpoints)
+| Wave | Backend status | UI blockers | UI spec section |
+|---|---|---|---|
+| **Wave-1** Foundations | ~95% built | 3 OAuth split endpoints (`/auth/external/apple|facebook|google`), `GET /admin/roles/{id}/claims`, `DELETE /admin/users/{id}/roles/{roleName}` (by name), unified `PUT /admin/users/{id}/status` | §4.7 |
+| **Wave-2** Provider Application | ✅ **RESOLVED** (Dec 2025) | One gap remains: `GET /api/v1/admin/providers/{id}` single-get for admin detail page (Wave-2.1 patch) | §4.6 |
+| **Wave-3** Catalog | ✅ built; Tour Guides 5 endpoints shipped, tests/runtime smoke pending | None blocking UI; verify guide profile endpoints in staging before launching `/Guides/{id}` and `/Provider/Guide/Edit` | §4.8 |
+| **Wave-4** Blog + Enrichment + SEO | ✅ 100% built | None | §4.9 |
+| **Wave-5** Booking & Payment | Partial — 15 endpoints missing | **Availability Slots (6)** blocks `/Tours/{slug}/Book` + `/Provider/Tours/{id}/Availability`. **Refund Policies (3)** blocks `/Provider/Tours/{id}/RefundPolicy` + cancellation modal. **Join Requests (3)** blocks `/Tours/{slug}/JoinRequest` + `/Provider/JoinRequests`. **Provider reads (3)** blocks `/Provider/Bookings/{Pending,Upcoming,History}`. | §4.10 |
+| **Wave-6** Discovery + Notifications + Support | ✅ 100% built (80+ endpoints + 11 BG services + SignalR) | None | §4.11 |
+| **Wave-7** Creator Identity + Blog Authoring | 📋 spec only — `Agents/Waves/Wave-7.md` | **ALL 22 endpoints + 5 cross-module handlers + 1 background service required before any UI**: `/api/v1/creators/{apply,redeem-invitation,status,me,{slug},{slug}/follow}`, `/api/v1/creators/me/{articles,...}`, `/api/v1/me/creator-feed`, `/api/v1/admin/creators/...` | §4.12 |
+| **Wave-8** Creator Multi-Type Posts + Tier Promotion + Moderation | 📋 spec only — `Agents/Waves/Wave-8.md` | Depends on Wave-7 shipping first. **17 endpoints + 2 background services**: `POST /api/v1/creators/me/posts`, full /api/v1/posts public + /api/v1/admin/posts admin queue + promote-tier / demote-tier. | §4.13 |
 
-See `Agents/Waves/Wave-1.md`, `Wave-2.md`, `Wave-5.md` for backend work breakdowns.
+### 13.1 Sprint sequencing
+
+UI work order recommended by backend readiness:
+
+1. **Now unblocked:** Wave-1 (residual), Wave-2 (just shipped), Wave-3, Wave-4, Wave-6.
+2. **Wave-5 partial-build path:** ship booking flow against existing endpoints first; backfill availability / refund policy / join request UI as backend ships the missing 15 endpoints.
+3. **Wave-2.1 patch:** add `GET /api/v1/admin/providers/{id}` so `/Admin/Providers/{id}` doesn't have to filter-the-list client-side.
+4. **Wave-7 implementation gate:** Wave-7 backend (~81h estimated) must ship before any of §4.12 UI work begins. UI design can iterate on mockups in parallel (use `huashu-design` skill for hi-fi prototyping without backend).
+5. **Wave-8 gate:** Wave-7 must be shipped and validated in staging before Wave-8 backend starts. Wave-8 retroactively adds `IsSponsored` + `DisclosedTargets` to Wave-7 `Article` entity — coordinate migration timing.
+
+See `Agents/Waves/Wave-{1..8}.md` for full backend work breakdowns.
 
 ---
 

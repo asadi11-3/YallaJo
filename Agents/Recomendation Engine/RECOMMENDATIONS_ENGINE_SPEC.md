@@ -605,11 +605,11 @@ services.AddHostedService<SuggestionBatchRefreshJob>();
 | 1.2 | `EntityAttributeSnapshot` entity + EF config + migration | 3 |
 | 1.3 | Add `BatchId` + `Position` to `RecommendationCache` (migration + entity update) | 1 |
 | 1.4 | Repository interfaces + EF implementations (4 repos) | 3 |
-| 1.5 | 9 integration event handlers for snapshot population (§3.2) | 6 |
+| 1.5 | Snapshot population handler extension (§3.2) — 18+ Analytics integration handlers already exist; extend them to populate `EntityAttributeSnapshot` instead of building 9 from scratch | 3 |
 | 1.6 | `V1ContentSimilarityScorer` using `Location.DistanceTo()` | 5 |
 | 1.7 | `RefreshSuggestionBatchCommandHandler` + diversity rules | 4 |
 | 1.8 | `SuggestionBatchRefreshJob` (BackgroundService + bootstrap) | 4 |
-| 1.9 | `RecordInteractionCommandHandler` + validator | 2 |
+| 1.9 | `RecordInteractionCommandHandler` + validator already exist — effort is verification only | 0 |
 | 1.10 | `GetRecommendations` (R1) + `GetSimilarTours` (R2) + `GetEntitySuggestions` (R3) handlers | 5 |
 | 1.11 | `AnalyticsPermissionCatalog` + `AnalyticsFeatures` | 1 |
 | 1.12 | 8 endpoints in `Analytics.Presentation` | 3 |
@@ -625,13 +625,13 @@ services.AddHostedService<SuggestionBatchRefreshJob>();
 | Module placement | Inside `Analytics` module — reuses 5 existing entities, matches YallaJo.md Phase 4 | ✅ |
 | Cross-module data access | `EntityAttributeSnapshots` denormalized read model, populated by integration events | ✅ |
 | Location handling | Use `Location` value object + existing `Location.DistanceTo()` Haversine method | ✅ |
-| Booking signals (V1) | Defer — Booking module has no integration events yet. Use `BookingCount` field as popularity proxy. | ✅ |
+| Booking signals (V1) | Booking module ships 12 integration events including `BookingConfirmedIntegrationEvent`/`BookingCompletedIntegrationEvent` — wired into existing handlers. | ✅ |
 | `AppAction.Refresh` + `AppAction.Record` | Added to `YallaJo.SharedKernel.Application/Authorization/AppAction.cs` | ✅ |
 | Subscription gate (V1.5+) | Blocked-on-Finance — needs `ISubscriptionStatusProvider` contract (~4 hrs Finance work) | 🟠 Pending |
 | Halal filter (V1.5+) | Blocked-on-ContentPlaces — needs `IsHalal/HasVegetarianOptions/HasAlcoholFreeArea` columns | 🟠 Pending |
 | Marketing consent (V3+) | Blocked-on-Accounts — needs `MarketingConsent` value object on Profile | 🟠 Pending |
 | Push notifications (V3.7) | Deferred to V4 — Messaging push infra (FCM/APNS) does not exist | ⏭ Deferred |
-| Favorite signals (V2+) | Blocked-on-Social — needs `FavoriteAddedIntegrationEvent` published from Social module | 🟠 Pending |
+| Favorite signals (V2+) | ✅ Social publishes `FavoriteAddedIntegrationEvent`; Analytics already subscribes via `SocialFavoriteAddedHandler`. | ✅ |
 | Category match (V1) | Bootstrap from `ContentCore.EntityCategories` cross-context read at job startup; real-time updates require future ContentCore events | ✅ Pragmatic |
 
 ---

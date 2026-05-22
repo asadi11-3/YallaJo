@@ -71,6 +71,7 @@ public static class DependencyInjection
 
         // ── Cross-module read-only services ──────────────────────────────────
         services.AddScoped<ICommissionLookupService, CommissionLookupService>();
+        services.AddScoped<ISubscriptionStatusProvider, SubscriptionStatusProvider>();
 
         // ── Payment gateway ─────────────────────────────────────────────────
         // PCI-DSS: real gateway implementation must be selected by environment.
