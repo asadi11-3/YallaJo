@@ -5,6 +5,44 @@
 
 ---
 
+## 🔄 STATUS UPDATE — Post-Verification Reality Check (Phase 0 patch)
+
+> **Date**: 2026-05-22
+> **Verified against**: `main` branch live code
+> **Build plan**: `.sisyphus/plans/recommendations-engine-v1-to-v3.md`
+>
+> A second targeted verification pass proved **~70% of cross-module blockers have already shipped**. The original gap claims below are preserved for audit trail but marked with `[✅ RESOLVED]` or `[🟡 PARTIALLY RESOLVED]` inline. The **real remaining gaps** are documented in the build plan.
+
+### Gaps NOW resolved (were Critical/High in original audit):
+
+| Original Gap | Status | Evidence |
+|---|---|---|
+| GAP-2 (Booking ZERO events) | ✅ RESOLVED | `Booking.Contracts/IntegrationEvents/` ships 12 events. `IntegrationEventTypeRegistry` lines 110-121. Analytics already consumes via 4 booking handlers. |
+| GAP-5 (Social.Contracts EMPTY) | ✅ RESOLVED | `Social.Contracts/IntegrationEvents/` ships 5 events incl. `FavoriteAddedIntegrationEvent`. Analytics subscribes via `SocialFavoriteAddedHandler`. |
+| GAP-10 (AppAction.Refresh undefined) | ✅ RESOLVED | `AppAction.cs:27` defines `Refresh`; line 28 defines `Record`. Comments reference recommendations. |
+| WIN-2 (Haversine) | ✅ CONFIRMED | `Location.DistanceTo()` at `SharedKernel.Domain/ValueObjects/Location.cs:24`. |
+| WIN-3 (IEmailService) | ✅ RESOLVED | `Messaging.Contracts/Services/IEmailSender.cs` exists. No move needed from Auth. |
+| Spec §1.5 handlers (build 9) | ✅ RESOLVED | 18+ handlers already in `AnalyticsIntegrationEventHandlers.cs`. |
+| Spec §1.9 RecordInteraction | ✅ RESOLVED | Already in `AnalyticsSprintHandlers.cs:29-72` with hybrid-cache dedup + queue drain. |
+| Popularity scoring | ✅ RESOLVED | `PopularityScoreCalculationService.cs` is a working BackgroundService. |
+
+### Gaps still active:
+
+- **A1**: `RecommendationCache`/`UserPreference`/`UserPreferredCategory` marked `[Obsolete]` — stub-shaped only
+- **A2**: `EntityAttributeSnapshot` does NOT exist
+- **A3**: `SuggestionBatch` aggregate does NOT exist
+- **A4**: No scorer / batch refresh job / read API / endpoints
+- **B1**: `ISubscriptionStatusProvider` not in Finance.Contracts (~4h)
+- **B2**: Business has no halal columns (~4h)
+- **B3**: Profile has no MarketingConsent (~4h)
+- **B4**: ContentCore has no EntityCategoryAssigned/Removed events (~4h)
+- **B5**: Tracking.Contracts/IntegrationEvents/ is empty (~4h)
+- **C1**: No push infra — deferred to V4
+
+### Revised effort: ~176h solo to V3 (was 212h cross-team)
+
+---
+
 ## 🔴 CRITICAL — Architectural Conflicts (require decision before any code)
 
 ### GAP-1 — Module placement contradicts YallaJo.md product spec
@@ -37,6 +75,8 @@ Analytics module already has the entities scaffolded:
 ---
 
 ### GAP-2 — Booking module has ZERO integration events; Q1 answer was wrong
+
+> [✅ RESOLVED] Follow-up verification found this original claim is stale: `Booking.Contracts/IntegrationEvents/` now ships 12 events, `IntegrationEventTypeRegistry` registers `booking.*` events, and Analytics consumes booking signals through existing handlers. Preserved below for audit trail only.
 
 **The roadmap assumes Booking publishes `BookingCapacityChangedIntegrationEvent` and `BookingStartingSoonIntegrationEvent`. Verification: Booking has zero integration events. `Booking.Contracts/` directory contains no source files — only generated assemblies.**
 
@@ -133,6 +173,8 @@ public sealed class Location : ValueObject
 
 ### GAP-5 — Social module has NO `FavoriteAddedIntegrationEvent`; Q7 answer was wrong
 
+> [✅ RESOLVED] Follow-up verification found this original claim is stale: `Social.Contracts/IntegrationEvents/` now ships 5 events including `FavoriteAddedIntegrationEvent`, and Analytics subscribes through `SocialFavoriteAddedHandler`. Preserved below for audit trail only.
+
 **Q7 answered "Yes — Social already publishes this event". Verification: Social.Contracts is EMPTY (no source files). No integration events exist. The `Favorite` entity exists in `Social.Domain/Entities/` but no domain event, no integration event, no outbox publish.**
 
 **Impact**: V2 personalization "Favorite" interaction signal is dead — handler subscribes to nothing. Onboarding quiz also relies on this signal.
@@ -215,6 +257,8 @@ Finance team's task is just exposing a contract. The data model is ready.
 ---
 
 ### GAP-10 — `AppAction.Refresh` does NOT exist
+
+> [✅ RESOLVED] Follow-up verification found this original claim is stale: `YallaJo.SharedKernel.Application/Authorization/AppAction.cs` defines `Refresh` and `Record`; recommendation-related comments are present. Preserved below for audit trail only.
 
 **Roadmap V1 endpoint `POST /api/v1/recommendations/admin/refresh` requires permission `Recommendations.Batch.Refresh`. Verification: `AppAction.Refresh` is not defined. Existing actions: Read, Create, Update, Delete, UpdateSelf, UpdateAny, DeleteAny, SoftDelete, Approve, Reject, Suspend, Reinstate, Replay, ReadOwn, ReadAny, Feature.**
 

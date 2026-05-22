@@ -31,34 +31,47 @@ namespace Analytics.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
-                    b.Property<string>("Action")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
+                    b.Property<byte>("Action")
+                        .HasColumnType("tinyint");
+
+                    b.Property<string>("CorrelationId")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("EntityId")
-                        .HasMaxLength(450)
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<string>("CustomActionName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("EntityId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("EntityType")
                         .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
-                    b.Property<string>("IpAddress")
-                        .HasMaxLength(45)
-                        .HasColumnType("nvarchar(45)");
+                    b.Property<string>("IpAddressHash")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
 
-                    b.Property<string>("NewValues")
+                    b.Property<string>("NewValue")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("OccurredAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("OldValues")
+                    b.Property<string>("OldValue")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("RedactedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("RedactedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("RedactionReason")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("UpdatedAt")
@@ -71,9 +84,16 @@ namespace Analytics.Infrastructure.Migrations
                     b.Property<Guid?>("UserId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("Username")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("OccurredAt");
+
+                    b.HasIndex("RedactedAt")
+                        .HasFilter("[RedactedAt] IS NOT NULL");
 
                     b.HasIndex("UserId");
 
@@ -82,20 +102,220 @@ namespace Analytics.Infrastructure.Migrations
                     b.ToTable("AuditLogs", "analytics");
                 });
 
+            modelBuilder.Entity("Analytics.Domain.Entities.BookingSnapshot", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("BookingId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("CancelledAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreatedAtSnapshot")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("nvarchar(3)");
+
+                    b.Property<Guid>("ProviderId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<decimal>("TotalAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<Guid>("TourId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BookingId")
+                        .IsUnique();
+
+                    b.HasIndex("ProviderId");
+
+                    b.ToTable("BookingSnapshots", "analytics");
+                });
+
+            modelBuilder.Entity("Analytics.Domain.Entities.DashboardCache", b =>
+                {
+                    b.Property<string>("Key")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("RebuiltAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ValueJson")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Key");
+
+                    b.ToTable("DashboardCaches", "analytics");
+                });
+
+            modelBuilder.Entity("Analytics.Domain.Entities.EntityPopularitySnapshot", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("EntityId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte>("EntityType")
+                        .HasColumnType("tinyint");
+
+                    b.Property<decimal>("Score")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<DateTime>("TakenAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EntityType", "EntityId", "TakenAt");
+
+                    b.ToTable("EntityPopularitySnapshots", "analytics");
+                });
+
+            modelBuilder.Entity("Analytics.Domain.Entities.IngestDebounceMarker", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("EntityId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte>("EntityType")
+                        .HasColumnType("tinyint");
+
+                    b.Property<DateTime>("LastFlagged")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EntityType", "EntityId")
+                        .IsUnique();
+
+                    b.ToTable("IngestDebounceMarkers", "analytics");
+                });
+
+            modelBuilder.Entity("Analytics.Domain.Entities.PaymentSnapshot", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<Guid>("BookingId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("CommissionAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("CompletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("nvarchar(3)");
+
+                    b.Property<Guid>("PaymentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ProviderId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PaymentId")
+                        .IsUnique();
+
+                    b.HasIndex("ProviderId");
+
+                    b.ToTable("PaymentSnapshots", "analytics");
+                });
+
             modelBuilder.Entity("Analytics.Domain.Entities.PopularityScore", b =>
                 {
                     b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("BookingCount")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasDefaultValue(0);
+                    b.Property<decimal?>("AverageRatingSnapshot")
+                        .HasPrecision(3, 2)
+                        .HasColumnType("decimal(3,2)");
 
-                    b.Property<int>("BookmarkCount")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasDefaultValue(0);
+                    b.Property<decimal?>("CategoryRankPercentile")
+                        .HasPrecision(5, 4)
+                        .HasColumnType("decimal(5,4)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -106,24 +326,25 @@ namespace Analytics.Infrastructure.Migrations
                     b.Property<Guid>("EntityId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("EntityType")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
+                    b.Property<byte>("EntityType")
+                        .HasColumnType("tinyint");
+
+                    b.Property<int>("InteractionCountSnapshot")
+                        .HasColumnType("int");
 
                     b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsStale")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
 
-                    b.Property<DateTime>("LastCalculatedAt")
+                    b.Property<DateTime?>("LastRecalculatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<decimal>("ReviewScore")
-                        .ValueGeneratedOnAdd()
-                        .HasPrecision(3, 2)
-                        .HasColumnType("decimal(3,2)")
-                        .HasDefaultValue(0m);
+                    b.Property<int>("ReviewCountSnapshot")
+                        .HasColumnType("int");
 
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
@@ -131,29 +352,25 @@ namespace Analytics.Infrastructure.Migrations
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("rowversion");
 
-                    b.Property<int>("ShareCount")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasDefaultValue(0);
+                    b.Property<decimal>("Score")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
 
-                    b.Property<decimal>("TrendingScore")
-                        .ValueGeneratedOnAdd()
-                        .HasPrecision(10, 4)
-                        .HasColumnType("decimal(10,4)")
-                        .HasDefaultValue(0m);
+                    b.Property<int?>("TrendingRank")
+                        .HasColumnType("int");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("ViewCount")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasDefaultValue(0);
-
                     b.HasKey("Id");
 
+                    b.HasIndex("IsStale");
+
                     b.HasIndex("EntityType", "EntityId")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("[IsDeleted] = 0");
+
+                    b.HasIndex("EntityType", "TrendingRank");
 
                     b.ToTable("PopularityScores", "analytics");
                 });
@@ -210,48 +427,50 @@ namespace Analytics.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
+                    b.Property<string>("ClientIpHash")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
-
-                    b.Property<string>("DeviceType")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<int?>("DurationSeconds")
-                        .HasColumnType("int");
 
                     b.Property<Guid>("EntityId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("EntityType")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
+                    b.Property<byte>("EntityType")
+                        .HasColumnType("tinyint");
 
-                    b.Property<int>("InteractionType")
-                        .HasColumnType("int");
+                    b.Property<byte>("InteractionType")
+                        .HasColumnType("tinyint");
 
                     b.Property<DateTime>("OccurredAt")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("SessionId")
-                        .HasMaxLength(100)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(100)");
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<Guid>("UserId")
+                    b.Property<string>("UserAgent")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<Guid?>("UserId")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("OccurredAt");
+                    b.HasIndex("InteractionType");
 
                     b.HasIndex("UserId");
 
                     b.HasIndex("EntityType", "EntityId");
+
+                    b.HasIndex("OccurredAt", "Id")
+                        .IsDescending(true, false)
+                        .HasDatabaseName("IX_UserInteractions_OccurredAt_Id");
 
                     b.ToTable("UserInteractions", "analytics");
                 });
@@ -320,6 +539,20 @@ namespace Analytics.Infrastructure.Migrations
                     b.ToTable("UserPreferredCategories", "analytics");
                 });
 
+            modelBuilder.Entity("YallaJo.SharedKernel.Infrastructure.Inbox.InboxMessage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("ProcessedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("InboxMessages", "analytics");
+                });
+
             modelBuilder.Entity("YallaJo.SharedKernel.Infrastructure.Outbox.OutboxMessage", b =>
                 {
                     b.Property<Guid>("Id")
@@ -367,34 +600,6 @@ namespace Analytics.Infrastructure.Migrations
                         .HasDatabaseName("IX_OutboxMessages_Unprocessed");
 
                     b.ToTable("OutboxMessages", "analytics");
-                });
-
-            modelBuilder.Entity("Analytics.Domain.Entities.UserInteraction", b =>
-                {
-                    b.OwnsOne("YallaJo.SharedKernel.Domain.ValueObjects.Location", "Location", b1 =>
-                        {
-                            b1.Property<long>("UserInteractionId")
-                                .HasColumnType("bigint");
-
-                            b1.Property<decimal>("Latitude")
-                                .HasPrecision(10, 8)
-                                .HasColumnType("decimal(10,8)")
-                                .HasColumnName("Latitude");
-
-                            b1.Property<decimal>("Longitude")
-                                .HasPrecision(11, 8)
-                                .HasColumnType("decimal(11,8)")
-                                .HasColumnName("Longitude");
-
-                            b1.HasKey("UserInteractionId");
-
-                            b1.ToTable("UserInteractions", "analytics");
-
-                            b1.WithOwner()
-                                .HasForeignKey("UserInteractionId");
-                        });
-
-                    b.Navigation("Location");
                 });
 #pragma warning restore 612, 618
         }

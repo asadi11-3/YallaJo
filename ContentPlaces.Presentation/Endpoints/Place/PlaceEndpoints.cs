@@ -160,7 +160,7 @@ internal static class PlaceEndpoints
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status400BadRequest)
         .WithSummary("Soft-delete a place — blocked if active businesses exist")
-        .WithMetadata(new MustHavePermissionAttribute(ContentPlacesFeatures.Place, AppAction.SoftDelete))
+        .WithMetadata(new MustHavePermissionAttribute(ContentPlacesFeatures.Place, AppAction.Delete))
         .RequireAuthorization();
 
         places.MapPatch("/{id:guid}/feature", async (Guid id, ISender sender, CancellationToken ct,

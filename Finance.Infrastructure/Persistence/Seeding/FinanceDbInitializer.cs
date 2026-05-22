@@ -114,9 +114,15 @@ public sealed class FinanceDbInitializer(FinanceDbContext dbContext) : IModuleDb
         var payout = CreateEntity<Payout>();
         SetProperty(payout, nameof(Payout.Id), PayoutId);
         SetProperty(payout, nameof(Payout.RecipientUserId), GuideOne);
-        SetProperty(payout, nameof(Payout.Status), PayoutStatus.Processing);
+        SetProperty(payout, nameof(Payout.ProviderId), GuideOne);
+        SetProperty(payout, nameof(Payout.Status), PayoutStatus.ReadyForPayout);
         SetProperty(payout, nameof(Payout.TotalAmount), new Money(120m, "JOD"));
+        SetProperty(payout, nameof(Payout.GrossAmount), new Money(150m, "JOD"));
+        SetProperty(payout, nameof(Payout.CommissionAmount), new Money(30m, "JOD"));
+        SetProperty(payout, nameof(Payout.NetAmount), new Money(120m, "JOD"));
         SetProperty(payout, nameof(Payout.Currency), "JOD");
+        SetProperty(payout, nameof(Payout.BatchPeriodStart), DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-7)));
+        SetProperty(payout, nameof(Payout.BatchPeriodEnd), DateOnly.FromDateTime(DateTime.UtcNow));
         SetProperty(payout, nameof(Payout.BankAccountInfo), "Jordan Bank - ****3481");
         return payout;
     }
@@ -126,8 +132,8 @@ public sealed class FinanceDbInitializer(FinanceDbContext dbContext) : IModuleDb
         var item = CreateEntity<PayoutItem>();
         SetProperty(item, nameof(PayoutItem.PayoutId), PayoutId);
         SetProperty(item, nameof(PayoutItem.BookingId), SeedBookingIds.BookingOne);
-        SetProperty(item, nameof(PayoutItem.Amount), new Money(150m, "JOD"));
-        SetProperty(item, nameof(PayoutItem.Commission), new Money(30m, "JOD"));
+        SetProperty(item, nameof(PayoutItem.GrossAmount), new Money(150m, "JOD"));
+        SetProperty(item, nameof(PayoutItem.CommissionAmount), new Money(30m, "JOD"));
         SetProperty(item, nameof(PayoutItem.NetAmount), new Money(120m, "JOD"));
         return [item];
     }

@@ -111,6 +111,7 @@ builder.Services.AddFinanceInfrastructure(builder.Configuration);
 
 builder.Services.AddMessagingApplication();
 builder.Services.AddMessagingInfrastructure(builder.Configuration);
+builder.Services.AddSignalR();
 
 builder.Services.AddSocialApplication();
 builder.Services.AddSocialInfrastructure(builder.Configuration);
@@ -126,6 +127,7 @@ builder.Services.AddDataSeeding();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IRequestContext, RequestContext>();
 builder.Services.AddScoped<ICurrentUser, CurrentUser>();
+builder.Services.AddSingleton<ISeoRedirectLookupService, NoopSeoRedirectLookupService>();
 
 // ── Rate Limiting ─────────────────────────────────────────────────────────
 builder.Services.AddYallaJoRateLimiting();

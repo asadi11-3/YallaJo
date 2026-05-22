@@ -116,6 +116,9 @@ public class BusinessConfiguration : IEntityTypeConfiguration<Business>
         builder.Property(x => x.Status).IsRequired().HasConversion<int>();
         builder.Property(x => x.RejectionReason).IsRequired(false).HasMaxLength(1000);
         builder.Property(x => x.SubscriptionTier).IsRequired(false).HasConversion<int?>();
+        builder.Property(x => x.IsHalal).IsRequired(false);
+        builder.Property(x => x.HasVegetarianOptions).IsRequired(false);
+        builder.Property(x => x.HasAlcoholFreeArea).IsRequired(false);
         builder.HasIndex(x => x.Status).HasFilter("[IsDeleted] = 0");
 
         builder.Property(x => x.CreatedAt).IsRequired();

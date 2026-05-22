@@ -8,6 +8,7 @@ using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Authorization;
 using YallaJo.SharedKernel.Presentation;
 using YallaJo.SharedKernel.Presentation.Authorization;
@@ -44,12 +45,14 @@ internal static class BusinessAmenityEndpoints
         amenities.MapPost("/{businessId:guid}/amenities", async (
             Guid businessId,
             AddBusinessAmenityRequest request,
+            ICurrentUser currentUser,
             ISender sender,
             CancellationToken ct) =>
         {
             var result = await sender.Send(
                 new AddBusinessAmenityCommand(
                     businessId,
+                    currentUser.UserId!.Value,
                     request.Name,
                     request.Icon,
                     request.SortOrder), ct);
@@ -70,11 +73,12 @@ internal static class BusinessAmenityEndpoints
         // Remove amenity (owner OR admin-tier role; enforced in handler)
         amenities.MapDelete("/amenities/{amenityId:guid}", async (
             Guid amenityId,
+            ICurrentUser currentUser,
             ISender sender,
             CancellationToken ct) =>
         {
             var result = await sender.Send(
-                new RemoveBusinessAmenityCommand(amenityId), ct);
+                new RemoveBusinessAmenityCommand(amenityId, currentUser.UserId!.Value), ct);
 
             return result.ToApiResult();
         })

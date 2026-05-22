@@ -22,6 +22,8 @@ public class ProviderDocumentConfiguration : IEntityTypeConfiguration<ProviderDo
         builder.Property(x => x.OriginalFileName).IsRequired(false).HasMaxLength(500);
         builder.Property(x => x.ExpiresAt).IsRequired(false);
         builder.Property(x => x.Status).IsRequired().HasConversion<int>();
+        builder.Property(x => x.ExpiringNotificationSentAt).IsRequired(false);
+        builder.Property(x => x.ExpiredNotificationSentAt).IsRequired(false);
         builder.Property(x => x.ReviewedAt).IsRequired(false);
         builder.Property(x => x.ReviewedByUserId).IsRequired(false);
         builder.Property(x => x.RejectionReason).IsRequired(false).HasMaxLength(1000);
@@ -41,5 +43,9 @@ public class ProviderDocumentConfiguration : IEntityTypeConfiguration<ProviderDo
         builder.HasQueryFilter(x => !x.IsDeleted);
         builder.HasIndex(x => new { x.TourGuideId, x.DocumentType });
         builder.HasIndex(x => x.BusinessId).HasFilter("[BusinessId] IS NOT NULL");
+        builder.HasIndex(x => new { x.Status, x.ExpiresAt, x.ExpiringNotificationSentAt })
+            .HasDatabaseName("IX_ProviderDocuments_Status_ExpiresAt_ExpiringNotification");
+        builder.HasIndex(x => new { x.Status, x.ExpiresAt, x.ExpiredNotificationSentAt })
+            .HasDatabaseName("IX_ProviderDocuments_Status_ExpiresAt_ExpiredNotification");
     }
 }

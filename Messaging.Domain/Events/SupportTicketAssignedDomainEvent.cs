@@ -4,4 +4,6 @@ namespace Messaging.Domain.Events;
 
 public sealed record SupportTicketAssignedDomainEvent(
     Guid TicketId,
-    Guid AssignedToUserId) : DomainEventBase;
+    Guid AssignedToUserId,
+    Guid AssignedByUserId,
+    DateTime AssignedAt) : DomainEventBase;

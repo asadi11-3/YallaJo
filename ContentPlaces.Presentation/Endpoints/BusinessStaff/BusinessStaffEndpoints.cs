@@ -8,6 +8,7 @@ using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Authorization;
 using YallaJo.SharedKernel.Presentation;
 using YallaJo.SharedKernel.Presentation.Authorization;
@@ -38,19 +39,21 @@ internal static class BusinessStaffEndpoints
         .ProducesProblem(StatusCodes.Status403Forbidden)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("List business staff members (owner OR admin-tier)")
-        .WithMetadata(new MustHavePermissionAttribute(ContentPlacesFeatures.BusinessStaff, AppAction.Read))
+        .WithMetadata(new MustHavePermissionAttribute(ContentPlacesFeatures.Business, AppAction.Read))
         .RequireAuthorization();
 
         // Add staff member (owner OR admin-tier role; enforced in handler)
         staff.MapPost("/{id:guid}/staff", async (
             Guid id,
             AddBusinessStaffRequest request,
+            ICurrentUser currentUser,
             ISender sender,
             CancellationToken ct) =>
         {
             var result = await sender.Send(
                 new AddBusinessStaffCommand(
                     id,
+                    currentUser.UserId!.Value,
                     request.UserId,
                     request.Role), ct);
 

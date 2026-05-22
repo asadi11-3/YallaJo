@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Analytics.Infrastructure.Persistence.Configurations;
 
-public class UserPreferredCategoryConfiguration : IEntityTypeConfiguration<UserPreferredCategory>
+public sealed class UserPreferredCategoryConfiguration : IEntityTypeConfiguration<UserPreferredCategory>
 {
     public void Configure(EntityTypeBuilder<UserPreferredCategory> builder)
     {
@@ -14,6 +14,7 @@ public class UserPreferredCategoryConfiguration : IEntityTypeConfiguration<UserP
 
         builder.Property(x => x.UserId).IsRequired();
         builder.Property(x => x.CategoryId).IsRequired();
+        builder.Property(x => x.UpdatedAt).IsRequired();
 
         builder.Property(x => x.PreferenceScore)
             .IsRequired()

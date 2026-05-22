@@ -61,6 +61,7 @@ public static class DependencyInjection
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
         services.AddScoped<IOutboxProcessor, OutboxProcessor<ContentCoreDbContext>>();
         services.AddScoped<IOutboxCleaner, OutboxCleaner<ContentCoreDbContext>>();
+        services.AddScoped<IContentCoreOutboxWriter, ContentCoreOutboxWriter>();
 
         // ── Translation Service (decorator pattern) ─────────────────────────────
         // 1. Register the concrete Azure provider as a named/keyed inner service

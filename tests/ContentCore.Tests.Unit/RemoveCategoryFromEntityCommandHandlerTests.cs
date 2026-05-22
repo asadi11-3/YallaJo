@@ -1,4 +1,5 @@
 using ContentCore.Application.Commands.EntityCategory.RemoveCategoryFromEntity;
+using ContentCore.Application.Interfaces;
 using ContentCore.Domain.Entities;
 using ContentCore.Domain.Enums;
 using ContentCore.Domain.Repositories;
@@ -27,6 +28,7 @@ public sealed class RemoveCategoryFromEntityCommandHandlerTests
         return new RemoveCategoryFromEntityCommandHandler(
             entityCategoryRepository ?? Substitute.For<IEntityCategoryRepository>(),
             unitOfWork ?? OwnershipAuthFixture.NoOpUnitOfWork(),
+            Substitute.For<IContentCoreOutboxWriter>(),
             cache ?? OwnershipAuthFixture.NoOpCache(),
             currentUser ?? OwnershipAuthFixture.NonAdminUser(Guid.NewGuid()),
             ownershipResolver ?? OwnershipAuthFixture.ResolverReturning(

@@ -1,9 +1,12 @@
+using Auth.Contracts.Authorization;
 using Auth.Application.Commands.TrustDevice;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using YallaJo.SharedKernel.Application.Authorization;
 using YallaJo.SharedKernel.Presentation;
+using YallaJo.SharedKernel.Presentation.Authorization;
 
 namespace Auth.Presentation.Endpoints.Device;
 
@@ -22,6 +25,7 @@ internal static class DeviceEndpoints
         .ProducesProblem(StatusCodes.Status403Forbidden)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Mark a device as trusted for the current user")
+        .WithMetadata(new MustHavePermissionAttribute(AuthFeatures.Device, AppAction.Update))
         .RequireAuthorization();
     }
 }

@@ -58,6 +58,7 @@ internal static class UserEndpoints
         .Produces(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status401Unauthorized)
         .WithSummary("Returns claims from the current user's JWT")
+        .WithMetadata(new MustHavePermissionAttribute(SecurityFeatures.User, AppAction.Read))
         .RequireAuthorization();
     }
 

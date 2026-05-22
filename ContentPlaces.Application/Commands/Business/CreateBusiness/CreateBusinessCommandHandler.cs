@@ -66,7 +66,10 @@ public sealed class CreateBusinessCommandHandler(
                 email: request.Email,
                 website: request.Website,
                 licenseNumber: request.LicenseNumber,
-                taxId: request.TaxId);
+                taxId: request.TaxId,
+                isHalal: request.IsHalal,
+                hasVegetarianOptions: request.HasVegetarianOptions,
+                hasAlcoholFreeArea: request.HasAlcoholFreeArea);
 
             await businessRepository.AddAsync(business, cancellationToken);
             await businessRepository.AddPlaceBusinessJunctionAsync(request.PlaceId, business.Id, cancellationToken);

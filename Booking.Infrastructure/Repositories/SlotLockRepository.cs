@@ -18,4 +18,11 @@ internal sealed class SlotLockRepository(BookingDbContext context)
         => await context.SlotLocks
             .Where(l => !l.IsReleased && l.ExpiresAt <= now)
             .ToListAsync(ct);
+
+    public async Task<IReadOnlyList<SlotLock>> GetExpiredActiveAsync(DateTime nowUtc, int batchSize, CancellationToken ct = default)
+        => await context.SlotLocks
+            .Where(l => !l.IsReleased && l.ExpiresAt <= nowUtc)
+            .OrderBy(l => l.ExpiresAt)
+            .Take(batchSize)
+            .ToListAsync(ct);
 }

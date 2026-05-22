@@ -52,6 +52,14 @@ public sealed class ProfileConfiguration : IEntityTypeConfiguration<Profile>
             .IsRequired(false)
             .HasMaxLength(300);
 
+        builder.OwnsOne(p => p.MarketingConsent, consent =>
+        {
+            consent.Property(x => x.EmailDigest).HasColumnName("MarketingConsentEmailDigest");
+            consent.Property(x => x.PushNotifications).HasColumnName("MarketingConsentPushNotifications");
+            consent.Property(x => x.ReEngagementCampaigns).HasColumnName("MarketingConsentReEngagementCampaigns");
+            consent.Property(x => x.LastUpdatedUtc).HasColumnName("MarketingConsentLastUpdatedUtc").IsRequired(false);
+        });
+
         // Auditable fields
         builder.Property(p => p.CreatedAt).IsRequired();
         builder.Property(p => p.UpdatedAt).IsRequired(false);

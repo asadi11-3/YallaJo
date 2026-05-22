@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Messaging.Infrastructure.Persistence.Configurations;
 
-public class DeviceTokenConfiguration : IEntityTypeConfiguration<DeviceToken>
+internal sealed class DeviceTokenConfiguration : IEntityTypeConfiguration<DeviceToken>
 {
     public void Configure(EntityTypeBuilder<DeviceToken> builder)
     {
@@ -15,23 +15,20 @@ public class DeviceTokenConfiguration : IEntityTypeConfiguration<DeviceToken>
 
         builder.Property(x => x.UserId).IsRequired();
 
+        builder.Property(x => x.DeviceId)
+            .IsRequired()
+            .IsUnicode(false)
+            .HasMaxLength(200);
+
         builder.Property(x => x.Token)
             .IsRequired()
             .HasMaxLength(500);
 
         builder.Property(x => x.Platform)
             .IsRequired()
-            .HasConversion<int>();
+            .HasConversion<byte>();
 
-        builder.Property(x => x.DeviceName)
-            .IsRequired(false)
-            .HasMaxLength(200);
-
-        builder.Property(x => x.IsActive)
-            .IsRequired()
-            .HasDefaultValue(true);
-
-        builder.Property(x => x.LastUsedAt).IsRequired(false);
+        builder.Property(x => x.LastSeenAt).IsRequired();
 
         builder.Property(x => x.CreatedAt).IsRequired();
         builder.Property(x => x.UpdatedAt).IsRequired(false);
@@ -41,6 +38,11 @@ public class DeviceTokenConfiguration : IEntityTypeConfiguration<DeviceToken>
 
         builder.HasQueryFilter(x => !x.IsDeleted);
 
-        builder.HasIndex(x => new { x.UserId, x.IsActive });
+        // M-R9: UNIQUE (UserId, DeviceId) WHERE NOT deleted
+        builder.HasIndex(x => new { x.UserId, x.DeviceId })
+            .IsUnique()
+            .HasFilter("[IsDeleted] = 0");
+
+        builder.HasIndex(x => x.LastSeenAt); // for stale cleanup
     }
 }

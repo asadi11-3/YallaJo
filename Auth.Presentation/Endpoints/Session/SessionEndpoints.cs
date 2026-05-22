@@ -8,6 +8,7 @@ using Auth.Application.Commands.Logout;
 using Auth.Application.Commands.LogoutAll;
 using Auth.Application.Commands.RevokeSession;
 using Auth.Application.Queries.ListSessions;
+using Auth.Contracts.Authorization;
 using Auth.Presentation.Endpoints.Session.Models;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
@@ -34,6 +35,7 @@ internal static class SessionEndpoints
         .Produces(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status401Unauthorized)
         .WithSummary("Logout — revokes the refresh token and its session")
+        .WithMetadata(new MustHavePermissionAttribute(AuthFeatures.Session, AppAction.Delete))
         .RequireAuthorization();
 
         group.MapPost("/logout-all", async (ISender sender, CancellationToken ct) =>
@@ -45,6 +47,7 @@ internal static class SessionEndpoints
         .Produces(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status401Unauthorized)
         .WithSummary("Logout all sessions — revokes all refresh tokens for the current user")
+        .WithMetadata(new MustHavePermissionAttribute(AuthFeatures.Session, AppAction.Delete))
         .RequireAuthorization();
         group.MapGet("/sessions", async (ICurrentUser currentUser, ISender sender, CancellationToken ct) =>
         {
@@ -76,6 +79,7 @@ internal static class SessionEndpoints
         .Produces<IReadOnlyList<ActiveSessionDto>>(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status401Unauthorized)
         .WithSummary("List all active sessions for the current user")
+        .WithMetadata(new MustHavePermissionAttribute(AuthFeatures.Session, AppAction.Read))
         .RequireAuthorization();
 
         group.MapDelete("/sessions/{sessionId:guid}", async (Guid sessionId, ISender sender, CancellationToken ct) =>
@@ -89,6 +93,7 @@ internal static class SessionEndpoints
         .ProducesProblem(StatusCodes.Status403Forbidden)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Revoke a specific session — user may only revoke their own sessions")
+        .WithMetadata(new MustHavePermissionAttribute(AuthFeatures.Session, AppAction.Delete))
         .RequireAuthorization();
 
         // Admin endpoint — force-revoke all sessions for a user

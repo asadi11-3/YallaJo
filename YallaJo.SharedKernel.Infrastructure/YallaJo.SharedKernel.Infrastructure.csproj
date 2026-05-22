@@ -17,6 +17,7 @@
     <ProjectReference Include="..\YallaJo.SharedKernel.Application\YallaJo.SharedKernel.Application.csproj" />
     <ProjectReference Include="..\YallaJo.SharedKernel.Domain\YallaJo.SharedKernel.Domain.csproj" />
     <!-- Integration event contract references — required by IntegrationEventTypeRegistry -->
+    <ProjectReference Include="..\Accounts.Contracts\Accounts.Contracts.csproj" />
     <ProjectReference Include="..\Analytics.Contracts\Analytics.Contracts.csproj" />
     <ProjectReference Include="..\Auth.Contracts\Auth.Contracts.csproj" />
     <ProjectReference Include="..\Booking.Contracts\Booking.Contracts.csproj" />
@@ -29,5 +30,6 @@
     <ProjectReference Include="..\Messaging.Contracts\Messaging.Contracts.csproj" />
     <ProjectReference Include="..\Social.Contracts\Social.Contracts.csproj" />
     <ProjectReference Include="..\Security.Contracts\Security.Contracts.csproj" />
+    <ProjectReference Include="..\Tracking.Contracts\Tracking.Contracts.csproj" />
   </ItemGroup>
 </Project>

@@ -6,8 +6,6 @@ using ContentPlaces.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
-using Security.Contracts.Authorization;
-using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 using StaffEntity = ContentPlaces.Domain.Entities.BusinessStaff;
@@ -19,7 +17,6 @@ public sealed class AddBusinessStaffCommandHandler(
     IBusinessRepository businessRepository,
     IContentPlacesUnitOfWork unitOfWork,
     IContentPlacesOutboxWriter outbox,
-    ICurrentUser currentUser,
     HybridCache cache,
     ILogger<AddBusinessStaffCommandHandler> logger)
     : ICommandHandler<AddBusinessStaffCommand, BusinessStaffDto>
@@ -28,13 +25,6 @@ public sealed class AddBusinessStaffCommandHandler(
         AddBusinessStaffCommand request,
         CancellationToken cancellationToken)
     {
-        // Authentication
-        if (!currentUser.IsAuthenticated || currentUser.UserId is null)
-        {
-            return Result<BusinessStaffDto>.Failure(
-                Error.Unauthorized("Authentication required"));
-        }
-
         // Business existence
         var business = await businessRepository.GetByIdAsync(
             request.BusinessId,
@@ -48,15 +38,11 @@ public sealed class AddBusinessStaffCommandHandler(
                     "Business not found"));
         }
 
-        // Authorization: owner OR admin-tier role (Admin/SuperAdmin/Owner)
-        var isAdminTier = AppRoles.HighestPrivilegeLevel(currentUser.Roles)
-            >= RolePrivilegeLevel.Admin;
-
-        if (!isAdminTier && business.OwnerId != currentUser.UserId)
+        if (business.OwnerId != request.ActingUserId)
         {
             return Result<BusinessStaffDto>.Failure(
-                Error.Forbidden(
-                    "You are not allowed to modify this business"));
+                new Error("Business.Forbidden", "Not the owner"),
+                Outcome.Forbidden);
         }
 
         // Duplicate check

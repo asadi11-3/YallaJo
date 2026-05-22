@@ -19,4 +19,7 @@ public sealed record CreateBusinessCommand(
     string? Email = null,
     string? Website = null,
     string? LicenseNumber = null,
-    string? TaxId = null) : ICommand<CreateBusinessResult>;
+    string? TaxId = null,
+    bool? IsHalal = null,
+    bool? HasVegetarianOptions = null,
+    bool? HasAlcoholFreeArea = null) : ICommand<CreateBusinessResult>;

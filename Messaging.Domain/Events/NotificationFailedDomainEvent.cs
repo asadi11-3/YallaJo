@@ -7,4 +7,4 @@ public sealed record NotificationFailedDomainEvent(
     Guid NotificationId,
     Guid UserId,
     NotificationChannel Channel,
-    string Error) : DomainEventBase;
+    string FailureReason) : DomainEventBase;

@@ -1,10 +1,11 @@
 namespace Social.Domain.Enums;
 
+/// <summary>Actions an admin can take when resolving a report or moderating content.</summary>
 public enum ModerationAction : byte
 {
-    Approved = 0,
-    Rejected = 1,
-    Edited = 2,
-    Flagged = 3,
-    Removed = 4
+    Dismiss         = 0,
+    RemoveContent   = 1,
+    WarnUser        = 2,
+    BanUser         = 3,
+    RestoreContent  = 4,
 }

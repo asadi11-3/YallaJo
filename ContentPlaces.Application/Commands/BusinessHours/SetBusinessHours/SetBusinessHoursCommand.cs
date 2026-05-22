@@ -11,4 +11,5 @@ public sealed record BusinessHoursEntry(
 
 public sealed record SetBusinessHoursCommand(
     Guid BusinessId,
+    Guid ActingUserId,
     List<BusinessHoursEntry> Hours) : ICommand;

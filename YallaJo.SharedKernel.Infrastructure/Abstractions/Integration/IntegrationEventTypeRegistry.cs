@@ -1,5 +1,7 @@
+using Accounts.Contracts.IntegrationEvents;
 using Analytics.Contracts.IntegrationEvents;
 using Auth.Contracts.IntegrationEvents;
+using Booking.Contracts.IntegrationEvents;
 using ContentBlogs.Contracts.IntegrationEvents;
 using ContentCore.Contracts.IntegrationEvents;
 using ContentPlaces.Contracts.BusinessStaff;
@@ -11,6 +13,7 @@ using Finance.Contracts.IntegrationEvents;
 using Messaging.Contracts.IntegrationEvents;
 using Security.Contracts.IntegrationEvents;
 using Social.Contracts.IntegrationEvents;
+using Tracking.Contracts.IntegrationEvents;
 
 namespace YallaJo.SharedKernel.Infrastructure.Abstractions.Integration;
 
@@ -29,6 +32,7 @@ public static class IntegrationEventTypeRegistry
         // ── Auth (2 events) ──
         ["auth.user.logged-in.v1"]                = typeof(UserLoggedInIntegrationEvent),
         ["auth.session.revoked.v1"]               = typeof(SessionRevokedIntegrationEvent),
+        ["auth.user.registered.v1"]               = typeof(UserRegisteredIntegrationEvent),
 
         // ── ContentCore (8 events) ──
         ["content-core.language.activated.v1"]         = typeof(LanguageActivatedIntegrationEvent),
@@ -39,6 +43,8 @@ public static class IntegrationEventTypeRegistry
         ["content-core.category.updated.v1"]           = typeof(CategoryUpdatedIntegrationEvent),
         ["content-core.category.deleted.v1"]           = typeof(CategoryDeletedIntegrationEvent),
         ["content-core.category.restored.v1"]          = typeof(CategoryRestoredIntegrationEvent),
+        ["content-core.entity-category.assigned.v1"]   = typeof(EntityCategoryAssignedIntegrationEvent),
+        ["content-core.entity-category.removed.v1"]    = typeof(EntityCategoryRemovedIntegrationEvent),
 
         // ── ContentPlaces — Places (3 events) ──
         ["content-places.place.created.v1"]              = typeof(PlaceCreatedIntegrationEvent),
@@ -47,6 +53,8 @@ public static class IntegrationEventTypeRegistry
 
         // ── ContentPlaces — Businesses (6 events) ──
         ["content-places.business.created.v1"]           = typeof(BusinessCreatedIntegrationEvent),
+        ["content-places.business.updated.v1"]           = typeof(BusinessUpdatedIntegrationEvent),
+        ["content-places.business.deleted.v1"]           = typeof(BusinessDeletedIntegrationEvent),
         ["content-places.business.approved.v1"]          = typeof(BusinessApprovedIntegrationEvent),
         ["content-places.business.rejected.v1"]          = typeof(BusinessRejectedIntegrationEvent),
         ["content-places.business.suspended.v1"]         = typeof(BusinessSuspendedIntegrationEvent),
@@ -102,6 +110,65 @@ public static class IntegrationEventTypeRegistry
         ["content-seo.redirect.chain-flattened.v1"]     = typeof(RedirectChainFlattenedIntegrationEvent),
         ["content-seo.metadata.changed.v1"]             = typeof(SeoMetadataChangedIntegrationEvent),
         ["content-seo.weather.budget-exhausted.v1"]     = typeof(WeatherBudgetExhaustedIntegrationEvent),
+
+        // ── Booking (12 events) ──
+        ["booking.tour-booking.created.v1"]             = typeof(TourBookingCreatedIntegrationEvent),
+        ["booking.tour-booking.confirmed.v1"]           = typeof(TourBookingConfirmedIntegrationEvent),
+        ["booking.tour-booking.cancelled.v1"]           = typeof(TourBookingCancelledIntegrationEvent),
+        ["booking.tour-booking.completed.v1"]           = typeof(TourBookingCompletedIntegrationEvent),
+        ["booking.tour-booking.payment-expired.v1"]     = typeof(TourBookingPaymentExpiredIntegrationEvent),
+        ["booking.tour-booking.rejected.v1"]            = typeof(TourBookingRejectedIntegrationEvent),
+        ["booking.join-request.created.v1"]             = typeof(JoinRequestCreatedIntegrationEvent),
+        ["booking.join-request.approved.v1"]            = typeof(JoinRequestApprovedIntegrationEvent),
+        ["booking.join-request.rejected.v1"]            = typeof(JoinRequestRejectedIntegrationEvent),
+        ["booking.slot-lock.created.v1"]                = typeof(SlotLockCreatedIntegrationEvent),
+        ["booking.slot-lock.released.v1"]               = typeof(SlotLockReleasedIntegrationEvent),
+        ["booking.availability-slot.capacity-changed.v1"] = typeof(AvailabilitySlotCapacityChangedIntegrationEvent),
+
+        // ── Finance (13 events) ──
+        ["finance.payment.completed.v1"]                = typeof(PaymentCompletedIntegrationEvent),
+        ["finance.payment.failed.v1"]                   = typeof(PaymentFailedIntegrationEvent),
+        ["finance.refund.initiated.v1"]                 = typeof(RefundInitiatedIntegrationEvent),
+        ["finance.refund.completed.v1"]                 = typeof(RefundCompletedIntegrationEvent),
+        ["finance.refund.failed.v1"]                    = typeof(RefundFailedIntegrationEvent),
+        ["finance.invoice.generated.v1"]                = typeof(InvoiceGeneratedIntegrationEvent),
+        ["finance.payout.scheduled.v1"]                 = typeof(PayoutScheduledIntegrationEvent),
+        ["finance.payout.completed.v1"]                 = typeof(PayoutCompletedIntegrationEvent),
+        ["finance.commission-rule.upserted.v1"]         = typeof(CommissionRuleUpsertedIntegrationEvent),
+        ["finance.commission-rule.deleted.v1"]          = typeof(CommissionRuleDeletedIntegrationEvent),
+        ["finance.dispute.opened.v1"]                   = typeof(DisputeOpenedIntegrationEvent),
+        ["finance.subscription.activated.v1"]           = typeof(SubscriptionActivatedIntegrationEvent),
+        ["finance.subscription.cancelled.v1"]           = typeof(SubscriptionCancelledIntegrationEvent),
+
+        // ── Social (5 events) ──
+        ["social.review.published.v1"]                  = typeof(ReviewPublishedIntegrationEvent),
+        ["social.review.deleted.v1"]                    = typeof(ReviewDeletedIntegrationEvent),
+        ["social.favorite.added.v1"]                    = typeof(FavoriteAddedIntegrationEvent),
+        ["social.report.resolved.v1"]                   = typeof(ReportResolvedIntegrationEvent),
+        ["social.rating.recalculated.v1"]               = typeof(RatingRecalculatedIntegrationEvent),
+        // -- Analytics (3 events) --
+        ["analytics.popularity-scores.recalculated.v1"] = typeof(PopularityScoresRecalculatedIntegrationEvent),
+        ["analytics.audit-log.entry-redacted.v1"]       = typeof(AuditLogEntryRedactedIntegrationEvent),
+        ["analytics.trending.refreshed.v1"]             = typeof(TrendingRefreshedIntegrationEvent),
+        
+
+        // ── Accounts — Provider (6 events) ──────────────────────────────────
+        ["accounts.provider.registered.v1"]             = typeof(ProviderRegisteredIntegrationEvent),
+        ["accounts.provider.approved.v1"]               = typeof(ProviderApprovedIntegrationEvent),
+        ["accounts.provider.rejected.v1"]               = typeof(ProviderRejectedIntegrationEvent),
+        ["accounts.provider.suspended.v1"]              = typeof(ProviderSuspendedIntegrationEvent),
+        ["accounts.provider.reinstated.v1"]             = typeof(ProviderReinstatedIntegrationEvent),
+        ["accounts.provider.status-changed.v1"]         = typeof(ProviderStatusChangedIntegrationEvent),
+
+        // ── Messaging (6 events) ──────────────────────────────────────────────
+        ["messaging.notification.delivered.v1"]         = typeof(NotificationDeliveredIntegrationEvent),
+        ["messaging.notification.failed.v1"]            = typeof(NotificationFailedIntegrationEvent),
+        ["messaging.ticket.created.v1"]                 = typeof(TicketCreatedIntegrationEvent),
+        ["messaging.ticket.assigned.v1"]                = typeof(TicketAssignedIntegrationEvent),
+        ["messaging.ticket.resolved.v1"]                = typeof(SupportTicketResolvedIntegrationEvent),
+        ["messaging.support-sla-breached.v1"]           = typeof(SupportSlaBreachedIntegrationEvent),
+        ["tracking.live-session.started.v1"]            = typeof(LiveTrackingSessionStartedIntegrationEvent),
+        ["tracking.live-session.ended.v1"]              = typeof(LiveTrackingSessionEndedIntegrationEvent),
     };
 
     private static readonly Dictionary<Type, string> TypeToName =
@@ -125,3 +192,4 @@ public static class IntegrationEventTypeRegistry
     /// <summary>All registered types — used by tests to verify completeness.</summary>
     public static IReadOnlyCollection<Type> AllRegisteredTypes => TypeToName.Keys;
 }
+

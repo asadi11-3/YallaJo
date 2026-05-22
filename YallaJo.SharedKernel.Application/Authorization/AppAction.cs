@@ -59,6 +59,9 @@ public static class AppAction
     /// <summary>Finance: issue refund.</summary>
     public const string Refund   = nameof(Refund);
 
+    /// <summary>Social/Moderation: remove content (admin action).</summary>
+    public const string Remove   = nameof(Remove);
+
     /// <summary>Messaging/Finance: resolve ticket or dispute.</summary>
     public const string Resolve  = nameof(Resolve);
 
@@ -70,4 +73,10 @@ public static class AppAction
 
     /// <summary>Social: warn user (moderation).</summary>
     public const string Warn     = nameof(Warn);
+
+    /// <summary>Accounts: register as a provider (initial draft creation).</summary>
+    public const string Register = nameof(Register);
+
+    /// <summary>Accounts/Admin: request additional documents from provider applicant.</summary>
+    public const string RequestDocs = nameof(RequestDocs);
 }

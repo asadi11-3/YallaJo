@@ -6,4 +6,4 @@ public sealed record NotificationFailedIntegrationEvent(
     Guid NotificationId,
     Guid UserId,
     string Channel,
-    string Error) : IntegrationEventBase;
+    string FailureReason) : IntegrationEventBase;

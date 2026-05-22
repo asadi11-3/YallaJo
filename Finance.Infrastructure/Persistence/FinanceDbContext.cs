@@ -1,6 +1,7 @@
 using Finance.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using YallaJo.SharedKernel.Application.Abstractions.Data;
+using YallaJo.SharedKernel.Infrastructure.Inbox;
 using YallaJo.SharedKernel.Infrastructure.Outbox;
 
 namespace Finance.Infrastructure.Persistence;
@@ -29,8 +30,10 @@ public sealed class FinanceDbContext : DbContext, IDbContext
     public DbSet<Discount> Discounts => Set<Discount>();
     public DbSet<DiscountUsage> DiscountUsages => Set<DiscountUsage>();
     public DbSet<ProviderBankAccount> ProviderBankAccounts => Set<ProviderBankAccount>();
-    public DbSet<InvoiceItem> InvoiceItems => Set<InvoiceItem>();
-    public DbSet<InvoiceLineItem> InvoiceLineItems => Set<InvoiceLineItem>();
+    public DbSet<Invoice> Invoices => Set<Invoice>();
+    public DbSet<InvoiceNumberCounter> InvoiceNumberCounters => Set<InvoiceNumberCounter>();
+    public DbSet<PaymentExpectation> PaymentExpectations => Set<PaymentExpectation>();
+    public DbSet<InboxMessage> InboxMessages => Set<InboxMessage>();
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

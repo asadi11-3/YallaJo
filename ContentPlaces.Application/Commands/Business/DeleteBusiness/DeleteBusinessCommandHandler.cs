@@ -1,5 +1,6 @@
 using ContentPlaces.Application.Caching;
 using ContentPlaces.Application.Interfaces;
+using ContentPlaces.Domain.Events.BusinessEvents;
 using ContentPlaces.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
@@ -29,6 +30,7 @@ public sealed class DeleteBusinessCommandHandler(
             }
 
             business.SoftDelete();
+            business.AddDomainEvent(new BusinessDeletedDomainEvent(business.Id));
 
             var saveResult = await SaveAsync(request.Id, cancellationToken);
             if (saveResult is not null)

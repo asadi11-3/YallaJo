@@ -5,6 +5,7 @@ namespace ContentPlaces.Application.Commands.BusinessAmenity.AddBusinessAmenity;
 
 public sealed record AddBusinessAmenityCommand(
     Guid BusinessId,
+    Guid ActingUserId,
     string Name,
     string? Icon,
     int SortOrder)

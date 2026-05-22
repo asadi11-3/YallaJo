@@ -1,6 +1,8 @@
-using Social.Domain.Enums;
-using YallaJo.SharedKernel.Domain.Event;
+﻿using YallaJo.SharedKernel.Domain.Event;
 
 namespace Social.Domain.Events;
 
-public sealed record ReportResolvedDomainEvent(Guid ReportId, Guid ResolvedByUserId, ReportStatus Status, string? ResolutionNotes) : DomainEventBase;
+/// <summary>Raised when an admin closes a report with an action decision.</summary>
+public sealed record ReportResolvedDomainEvent(
+    Guid ReportId, Guid AdminUserId,
+    Social.Domain.Enums.ModerationAction Action, DateTime ResolvedAt) : DomainEventBase;

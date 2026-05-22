@@ -4,9 +4,14 @@ public enum InteractionType : byte
 {
     View = 0,
     Click = 1,
-    Share = 2,
-    Bookmark = 3,
-    Search = 4,
-    Review = 5,
-    Booking = 6
+    Search = 2,
+    AddToFavorite = 3,
+    RemoveFromFavorite = 4,
+    BookingStarted = 5,
+    BookingCompleted = 6,
+    BookingCancelled = 7,
+    Share = 8,
+    ReviewSubmitted = 9,
+    Bookmark = 10,
+    NotInterested = 11
 }

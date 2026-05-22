@@ -1,12 +1,15 @@
 using Auth.Application.Commands.ExternalLogin;
 using Auth.Application.Commands.LinkExternalProvider;
 using Auth.Application.Commands.UnlinkExternalProvider;
+using Auth.Contracts.Authorization;
 using Auth.Presentation.Endpoints.ExternalProvider.Models;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using YallaJo.SharedKernel.Application.Authorization;
 using YallaJo.SharedKernel.Presentation;
+using YallaJo.SharedKernel.Presentation.Authorization;
 
 namespace Auth.Presentation.Endpoints.ExternalProvider;
 
@@ -30,6 +33,7 @@ internal static class ExternalProviderEndpoints
         .ProducesProblem(StatusCodes.Status401Unauthorized)
         .ProducesProblem(StatusCodes.Status409Conflict)
         .WithSummary("Link a verified external OAuth provider account to the current user")
+        .WithMetadata(new MustHavePermissionAttribute(AuthFeatures.ExternalProvider, AppAction.Create))
         .RequireAuthorization()
         .RequireRateLimiting(RateLimitPolicies.LoginPolicy);
 
@@ -73,6 +77,7 @@ internal static class ExternalProviderEndpoints
         .ProducesProblem(StatusCodes.Status403Forbidden)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Deactivate a linked external OAuth provider account")
+        .WithMetadata(new MustHavePermissionAttribute(AuthFeatures.ExternalProvider, AppAction.Delete))
         .RequireAuthorization();
     }
 }

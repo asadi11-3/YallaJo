@@ -1,4 +1,5 @@
 using Accounts.Presentation.Endpoints.Profile;
+using Accounts.Presentation.Endpoints.Provider;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -13,6 +14,18 @@ public static class AccountsEndpoints
             .WithTags("Accounts");
 
         ProfileEndpoints.MapProfileEndpoints(group);
+
+        // Provider application endpoints (user-facing)
+        var providerGroup = endpoints.MapGroup("/api/v1/provider")
+            .WithTags("Provider");
+
+        ProviderEndpoints.MapProviderEndpoints(providerGroup);
+
+        // Admin provider queue endpoints
+        var adminProviderGroup = endpoints.MapGroup("/api/v1/admin/providers")
+            .WithTags("Admin - Providers");
+
+        AdminProviderEndpoints.MapAdminProviderEndpoints(adminProviderGroup);
 
         return endpoints;
     }

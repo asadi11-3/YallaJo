@@ -230,6 +230,110 @@ namespace ContentTours.Infrastructure.Migrations
                     b.ToTable("TourChildFacilities", "content_tours");
                 });
 
+            modelBuilder.Entity("ContentTours.Domain.Entities.TourGuide", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("AverageRating")
+                        .ValueGeneratedOnAdd()
+                        .HasPrecision(3, 2)
+                        .HasColumnType("decimal(3,2)")
+                        .HasDefaultValue(0m);
+
+                    b.Property<string>("Bio")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("HasFirstAid")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("MoTALicenseNumber")
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
+
+                    b.Property<int>("ReviewCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("YearsOfExperience")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IsActive");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("TourGuides", "content_tours");
+                });
+
+            modelBuilder.Entity("ContentTours.Domain.Entities.TourGuideLanguage", b =>
+                {
+                    b.Property<Guid>("TourGuideId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("LanguageId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Proficiency")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
+                    b.HasKey("TourGuideId", "LanguageId");
+
+                    b.ToTable("TourGuideLanguages", "content_tours");
+                });
+
+            modelBuilder.Entity("ContentTours.Domain.Entities.TourGuideSpecialization", b =>
+                {
+                    b.Property<Guid>("TourGuideId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("SpecializationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("TourGuideId", "SpecializationId");
+
+                    b.ToTable("TourGuideSpecializations", "content_tours");
+                });
+
             modelBuilder.Entity("ContentTours.Domain.Entities.TourPackage", b =>
                 {
                     b.Property<Guid>("Id")
@@ -723,6 +827,28 @@ namespace ContentTours.Infrastructure.Migrations
                     b.Navigation("Tour");
                 });
 
+            modelBuilder.Entity("ContentTours.Domain.Entities.TourGuideLanguage", b =>
+                {
+                    b.HasOne("ContentTours.Domain.Entities.TourGuide", "TourGuide")
+                        .WithMany("Languages")
+                        .HasForeignKey("TourGuideId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("TourGuide");
+                });
+
+            modelBuilder.Entity("ContentTours.Domain.Entities.TourGuideSpecialization", b =>
+                {
+                    b.HasOne("ContentTours.Domain.Entities.TourGuide", "TourGuide")
+                        .WithMany("Specializations")
+                        .HasForeignKey("TourGuideId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("TourGuide");
+                });
+
             modelBuilder.Entity("ContentTours.Domain.Entities.TourPackage", b =>
                 {
                     b.OwnsOne("YallaJo.SharedKernel.Domain.ValueObjects.Money", "Price", b1 =>
@@ -917,6 +1043,13 @@ namespace ContentTours.Infrastructure.Migrations
                     b.Navigation("TourTranslations");
 
                     b.Navigation("TourWaypoints");
+                });
+
+            modelBuilder.Entity("ContentTours.Domain.Entities.TourGuide", b =>
+                {
+                    b.Navigation("Languages");
+
+                    b.Navigation("Specializations");
                 });
 
             modelBuilder.Entity("ContentTours.Domain.Entities.TourPackage", b =>

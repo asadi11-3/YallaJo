@@ -4,8 +4,6 @@ using ContentPlaces.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
-using Security.Contracts.Authorization;
-using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
@@ -14,7 +12,6 @@ namespace ContentPlaces.Application.Commands.BusinessAmenity.RemoveBusinessAmeni
 public sealed class RemoveBusinessAmenityCommandHandler(
     IBusinessAmenityRepository amenityRepository,
     IContentPlacesUnitOfWork unitOfWork,
-    ICurrentUser currentUser,
     HybridCache cache,
     ILogger<RemoveBusinessAmenityCommandHandler> logger)
     : ICommandHandler<RemoveBusinessAmenityCommand>
@@ -23,13 +20,6 @@ public sealed class RemoveBusinessAmenityCommandHandler(
         RemoveBusinessAmenityCommand request,
         CancellationToken cancellationToken)
     {
-        // Authentication check
-        if (!currentUser.IsAuthenticated || currentUser.UserId is null)
-        {
-            return Result.Failure(
-                Error.Unauthorized("Authentication required"));
-        }
-
         // Get amenity with Business included
         var amenity = await amenityRepository.GetByIdWithBusinessAsync(
             request.AmenityId,
@@ -43,15 +33,11 @@ public sealed class RemoveBusinessAmenityCommandHandler(
                     "Amenity not found"));
         }
 
-        // Authorization: owner OR admin-tier role (Admin/SuperAdmin/Owner)
-        var isAdminTier = AppRoles.HighestPrivilegeLevel(currentUser.Roles)
-            >= RolePrivilegeLevel.Admin;
-
-        if (!isAdminTier && amenity.Business.OwnerId != currentUser.UserId)
+        if (amenity.Business.OwnerId != request.ActingUserId)
         {
             return Result.Failure(
-                Error.Forbidden(
-                    "You are not allowed to modify this business"));
+                new Error("Business.Forbidden", "Not the owner"),
+                Outcome.Forbidden);
         }
 
         // Remove amenity

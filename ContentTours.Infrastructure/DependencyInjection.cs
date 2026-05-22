@@ -71,6 +71,7 @@ public static class DependencyInjection
         services.AddScoped<ITourScheduleRepository, TourScheduleRepository>();
         services.AddScoped<ITourPricingTierRepository, TourPricingTierRepository>();
         services.AddScoped<ITourPricingTierTranslationRepository, TourPricingTierTranslationRepository>();
+        services.AddScoped<ITourGuideRepository, TourGuideRepository>();
         services.AddScoped<ITourTourGuideRepository, TourTourGuideRepository>();
         services.AddScoped<ITourWaypointRepository, TourWaypointRepository>();
         services.AddScoped<ITourPackageRepository, TourPackageRepository>();

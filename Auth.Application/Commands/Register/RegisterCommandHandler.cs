@@ -1,5 +1,6 @@
 using Accounts.Contracts.Abstractions;
 using Auth.Application.Interfaces;
+using Auth.Contracts.IntegrationEvents;
 using Auth.Domain.Entities;
 using Auth.Domain.Repositories;
 using Microsoft.Extensions.Logging;
@@ -16,6 +17,8 @@ public sealed class RegisterCommandHandler(
     IAuthUnitOfWork          unitOfWork,
     IOtpService              otpService,
     IEmailService            emailService,
+    IAuthOutboxWriter        outboxWriter,
+    TimeProvider             timeProvider,
     ILogger<RegisterCommandHandler> logger)
     : ICommandHandler<RegisterCommand, RegisterResult>
 {
@@ -72,6 +75,16 @@ public sealed class RegisterCommandHandler(
             expiryMinutes:   OtpExpiryMinutes);
 
         await otpRepository.AddAsync(otp, cancellationToken);
+
+        // Emit auth.user.registered.v1 in the same UoW so the outbox row commits atomically.
+        var fullName = $"{request.FirstName} {request.LastName}".Trim();
+        await outboxWriter.WriteAsync(new UserRegisteredIntegrationEvent(
+            UserId: userId,
+            Email: normalizedEmail,
+            FullName: string.IsNullOrWhiteSpace(fullName) ? null : fullName,
+            LanguageCode: "en",
+            RegisteredAt: timeProvider.GetUtcNow().UtcDateTime), cancellationToken);
+
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         try

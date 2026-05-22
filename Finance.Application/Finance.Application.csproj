@@ -16,6 +16,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Finance.Contracts\Finance.Contracts.csproj" />
     <ProjectReference Include="..\Finance.Domain\Finance.Domain.csproj" />
+    <ProjectReference Include="..\Booking.Contracts\Booking.Contracts.csproj" />
     <ProjectReference Include="..\Security.Contracts\Security.Contracts.csproj" />
     <ProjectReference Include="..\YallaJo.SharedKernel.Application\YallaJo.SharedKernel.Application.csproj" />
   </ItemGroup>

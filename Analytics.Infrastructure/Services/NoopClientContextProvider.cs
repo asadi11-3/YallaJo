@@ -4,5 +4,7 @@ namespace Analytics.Infrastructure.Services;
 
 internal sealed class NoopClientContextProvider : IClientContextProvider
 {
-    public ClientContext GetCurrent() => new(null, null, null, null);
+    public string? UserAgent => null;
+    public string? IpAddress => null;
+    public string? CorrelationId => null;
 }

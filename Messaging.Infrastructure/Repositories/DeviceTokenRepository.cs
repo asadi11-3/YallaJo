@@ -9,12 +9,24 @@ namespace Messaging.Infrastructure.Repositories;
 internal sealed class DeviceTokenRepository(MessagingDbContext context)
     : EfRepository<DeviceToken, Guid>(context), IDeviceTokenRepository
 {
-    public Task<IReadOnlyList<DeviceToken>> GetByUserIdAsync(Guid userId, CancellationToken ct = default)
-        => context.DeviceTokens
-            .Where(d => d.UserId == userId && d.IsActive)
-            .ToListAsync(ct)
-            .ContinueWith(t => (IReadOnlyList<DeviceToken>)t.Result, ct);
+    private readonly MessagingDbContext _context = context;
+
+    public async Task<IReadOnlyList<DeviceToken>> GetActiveByUserAsync(Guid userId, CancellationToken ct = default)
+        => await _context.DeviceTokens.AsNoTracking()
+            .Where(d => d.UserId == userId)
+            .OrderByDescending(d => d.LastSeenAt)
+            .ToListAsync(ct);
 
     public Task<DeviceToken?> GetByTokenAsync(string token, CancellationToken ct = default)
-        => context.DeviceTokens.FirstOrDefaultAsync(d => d.Token == token, ct);
+        => _context.DeviceTokens.AsNoTracking().FirstOrDefaultAsync(d => d.Token == token, ct);
+
+    public Task<DeviceToken?> GetByUserAndDeviceIdAsync(Guid userId, string deviceId, CancellationToken ct = default)
+        => _context.DeviceTokens.FirstOrDefaultAsync(d => d.UserId == userId && d.DeviceId == deviceId, ct);
+
+    public async Task<IReadOnlyList<DeviceToken>> GetStaleAsync(DateTime olderThan, int batchSize, CancellationToken ct = default)
+        => await _context.DeviceTokens.AsNoTracking()
+            .Where(d => d.LastSeenAt < olderThan)
+            .OrderBy(d => d.LastSeenAt)
+            .Take(batchSize)
+            .ToListAsync(ct);
 }

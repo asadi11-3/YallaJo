@@ -1,25 +1,37 @@
-using Finance.Domain.Enums;
 using YallaJo.SharedKernel.Domain.Entities;
 using YallaJo.SharedKernel.Domain.ValueObjects;
 
 namespace Finance.Domain.Entities;
 
-public sealed class InvoiceItem : AuditableEntity, IAggregateRoot
+/// <summary>
+/// Line item belonging to an <see cref="Invoice"/>. Stays as a <see cref="BaseEntity"/> per the
+/// Finance sprint pre-work conventions (junction/line entities never raise domain events).
+/// </summary>
+public sealed class InvoiceItem : BaseEntity
 {
-    private readonly List<InvoiceLineItem> _invoiceLineItems = [];
-
     private InvoiceItem() { } // EF Core
 
-    public Guid UserId { get; private set; }
-    public string InvoiceNumber { get; private set; } = string.Empty;
-    public InvoiceStatus Status { get; private set; } = InvoiceStatus.Draft;
-    public Money SubTotal { get; private set; } = default!;
-    public Money TaxAmount { get; private set; } = default!;
-    public Money TotalAmount { get; private set; } = default!;
-    public string Currency { get; private set; } = string.Empty;
-    public DateOnly DueDate { get; private set; }
-    public DateTime? PaidAt { get; private set; }
-    public string? Notes { get; private set; }
+    internal InvoiceItem(
+        Guid invoiceId,
+        string description,
+        int quantity,
+        Money unitPrice,
+        Money subtotal)
+    {
+        InvoiceId = invoiceId;
+        Description = description;
+        Quantity = quantity;
+        UnitPrice = unitPrice;
+        Subtotal = subtotal;
+    }
 
-    public IReadOnlyCollection<InvoiceLineItem> InvoiceLineItems => _invoiceLineItems.AsReadOnly();
+    public Guid InvoiceId { get; private set; }
+
+    public string Description { get; private set; } = string.Empty;
+
+    public int Quantity { get; private set; } = 1;
+
+    public Money UnitPrice { get; private set; } = default!;
+
+    public Money Subtotal { get; private set; } = default!;
 }

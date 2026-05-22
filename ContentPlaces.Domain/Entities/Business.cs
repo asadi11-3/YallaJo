@@ -53,6 +53,9 @@ public sealed class Business : AuditableEntity, IAggregateRoot
     public Guid? ReviewedByUserId { get; private set; }
     public DateTime? ReviewedAt { get; private set; }
     public SubscriptionTier? SubscriptionTier { get; private set; }
+    public bool? IsHalal { get; private set; }
+    public bool? HasVegetarianOptions { get; private set; }
+    public bool? HasAlcoholFreeArea { get; private set; }
 
     public IReadOnlyCollection<BusinessTranslation> BusinessTranslations => _businessTranslations.AsReadOnly();
     public IReadOnlyCollection<BusinessHours> BusinessHours => _businessHours.AsReadOnly();
@@ -76,7 +79,10 @@ public sealed class Business : AuditableEntity, IAggregateRoot
         string? email = null,
         string? website = null,
         string? licenseNumber = null,
-        string? taxId = null)
+        string? taxId = null,
+        bool? isHalal = null,
+        bool? hasVegetarianOptions = null,
+        bool? hasAlcoholFreeArea = null)
     {
         if (string.IsNullOrWhiteSpace(name))
             throw new ArgumentException("Business name is required.", nameof(name));
@@ -108,6 +114,9 @@ public sealed class Business : AuditableEntity, IAggregateRoot
             Website = website?.Trim(),
             LicenseNumber = licenseNumber?.Trim(),
             TaxId = taxId?.Trim(),
+            IsHalal = isHalal,
+            HasVegetarianOptions = hasVegetarianOptions,
+            HasAlcoholFreeArea = hasAlcoholFreeArea,
             Status = BusinessStatus.Pending,
             AverageRating = 0,
             ReviewCount = 0,
@@ -138,7 +147,10 @@ public sealed class Business : AuditableEntity, IAggregateRoot
         Guid? placeId = null,
         string? address = null,
         string? city = null,
-        string? country = null)
+        string? country = null,
+        bool? isHalal = null,
+        bool? hasVegetarianOptions = null,
+        bool? hasAlcoholFreeArea = null)
     {
         if (string.IsNullOrWhiteSpace(name))
             throw new ArgumentException("Business name is required.", nameof(name));
@@ -152,6 +164,9 @@ public sealed class Business : AuditableEntity, IAggregateRoot
         Country = country?.Trim();
         Location = location;
         PlaceId = placeId;
+        IsHalal = isHalal;
+        HasVegetarianOptions = hasVegetarianOptions;
+        HasAlcoholFreeArea = hasAlcoholFreeArea;
 
         MarkUpdated();
 
@@ -216,7 +231,7 @@ public sealed class Business : AuditableEntity, IAggregateRoot
         AddDomainEvent(new BusinessResubmittedDomainEvent(Id));
     }
 
-    public void Suspend(string reason)
+    public void Suspend(string reason, Guid reviewedByUserId)
     {
         if (string.IsNullOrWhiteSpace(reason))
             throw new ArgumentException("Suspension reason is required.", nameof(reason));
@@ -225,17 +240,21 @@ public sealed class Business : AuditableEntity, IAggregateRoot
             throw new InvalidOperationException($"Cannot suspend a business with status {Status}.");
 
         Status = BusinessStatus.Suspended;
+        ReviewedByUserId = reviewedByUserId;
+        ReviewedAt = DateTime.UtcNow;
 
         MarkUpdated();
         AddDomainEvent(new BusinessSuspendedDomainEvent(Id, reason.Trim()));
     }
 
-    public void Reinstate()
+    public void Reinstate(Guid reviewedByUserId)
     {
         if (Status != BusinessStatus.Suspended)
             throw new InvalidOperationException($"Cannot reinstate a business with status {Status}.");
 
         Status = BusinessStatus.Approved;
+        ReviewedByUserId = reviewedByUserId;
+        ReviewedAt = DateTime.UtcNow;
 
         MarkUpdated();
         AddDomainEvent(new BusinessReinstatedDomainEvent(Id));

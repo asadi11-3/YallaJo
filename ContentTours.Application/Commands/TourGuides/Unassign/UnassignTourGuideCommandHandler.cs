@@ -17,6 +17,7 @@ namespace ContentTours.Application.Commands.TourGuides.Unassign;
 public sealed class UnassignTourGuideCommandHandler(
     ITourRepository tourRepo,
     ITourTourGuideRepository guideRepo,
+    ITourGuideRepository guideProfileRepository,
     IContentToursUnitOfWork unitOfWork,
     IContentToursOutboxWriter outbox,
     HybridCache cache,
@@ -118,6 +119,15 @@ public sealed class UnassignTourGuideCommandHandler(
 
             await cache.RemoveByTagAsync(
                 TourGuideCacheKeys.TagForTour(tour.Id), cancellationToken);
+            var guideProfile = await guideProfileRepository
+                .GetByUserIdAsync(request.TourGuideUserId, cancellationToken)
+                .ConfigureAwait(false);
+            if (guideProfile is not null)
+            {
+                await cache.RemoveByTagAsync(
+                    TourGuideCacheKeys.TagForProfile(guideProfile.Id), cancellationToken);
+            }
+
             await cache.RemoveByTagAsync(
                 ContentToursCacheKeys.TagForTour(tour.Id), cancellationToken);
 

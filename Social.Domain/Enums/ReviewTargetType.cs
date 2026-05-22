@@ -1,9 +1,10 @@
 namespace Social.Domain.Enums;
 
+/// <summary>Entities that can receive a user review.</summary>
 public enum ReviewTargetType : byte
 {
-    Place = 0,
-    Tour = 1,
-    TourGuide = 2,
-    Business = 3
+    Tour      = 0,
+    Place     = 1,
+    Business  = 2,
+    TourGuide = 3,
 }

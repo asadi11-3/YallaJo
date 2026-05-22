@@ -2,44 +2,92 @@ using YallaJo.SharedKernel.Application.Authorization;
 
 namespace Finance.Contracts.Authorization;
 
+/// <summary>
+/// Finance module permission surface. Discovered by Security.Infrastructure
+/// at boot via <c>IEnumerable&lt;IPermissionCatalog&gt;</c>.
+/// </summary>
+/// <remarks>
+/// Sprint Finance-T0 → 7 features, 20 permissions.
+/// Group = <c>FinanceOperations</c> for all entries.
+/// </remarks>
 public sealed class FinancePermissionCatalog : IPermissionCatalog
 {
     public string ModuleName => "Finance";
 
     public IReadOnlyList<PermissionDescriptor> Permissions { get; } =
     [
-        // Payment (4)
-        new(FinanceFeatures.Payment, AppAction.ReadOwn, PermissionGroup.FinanceOperations, "View own payments"),
-        new(FinanceFeatures.Payment, AppAction.ReadAny, PermissionGroup.FinanceOperations, "View any payment (admin)"),
-        new(FinanceFeatures.Payment, AppAction.Create, PermissionGroup.FinanceOperations, "Initiate a payment"),
-        new(FinanceFeatures.Payment, AppAction.Refund, PermissionGroup.FinanceOperations, "Refund a payment"),
-        // Payout (3)
-        new(FinanceFeatures.Payout, AppAction.ReadOwn, PermissionGroup.FinanceOperations, "View own payouts"),
-        new(FinanceFeatures.Payout, AppAction.ReadAny, PermissionGroup.FinanceOperations, "View any payout"),
-        new(FinanceFeatures.Payout, AppAction.Trigger, PermissionGroup.FinanceOperations, "Trigger a payout run"),
-        // Invoice (3)
-        new(FinanceFeatures.Invoice, AppAction.ReadOwn, PermissionGroup.FinanceOperations, "View own invoices"),
-        new(FinanceFeatures.Invoice, AppAction.ReadAny, PermissionGroup.FinanceOperations, "View any invoice"),
-        new(FinanceFeatures.Invoice, AppAction.Download, PermissionGroup.FinanceOperations, "Download invoice PDF"),
-        // Subscription (2)
-        new(FinanceFeatures.Subscription, AppAction.ReadOwn, PermissionGroup.FinanceOperations, "View own subscriptions"),
-        new(FinanceFeatures.Subscription, AppAction.Cancel, PermissionGroup.FinanceOperations, "Cancel a subscription"),
-        // Discount (2)
-        new(FinanceFeatures.Discount, AppAction.Create, PermissionGroup.FinanceOperations, "Create a discount code"),
-        new(FinanceFeatures.Discount, AppAction.Update, PermissionGroup.FinanceOperations, "Update a discount code"),
-        // CommissionRule (2)
-        new(FinanceFeatures.CommissionRule, AppAction.Read, PermissionGroup.FinanceOperations, "View commission rules"),
-        new(FinanceFeatures.CommissionRule, AppAction.Update, PermissionGroup.FinanceOperations, "Update commission rule"),
-        // Dispute (2)
-        new(FinanceFeatures.Dispute, AppAction.Read, PermissionGroup.FinanceOperations, "View disputes"),
-        new(FinanceFeatures.Dispute, AppAction.Resolve, PermissionGroup.FinanceOperations, "Resolve a dispute"),
-        // ProviderBankAccount (1)
-        new(FinanceFeatures.ProviderBankAccount, AppAction.UpdateSelf, PermissionGroup.FinanceOperations, "Manage own bank account"),
-        // LoyaltyPoints (1)
-        new(FinanceFeatures.LoyaltyPoints, AppAction.ReadOwn, PermissionGroup.FinanceOperations, "View own loyalty points"),
-        // FinanceAdmin (1)
-        new(FinanceFeatures.FinanceAdmin, AppAction.Export, PermissionGroup.FinanceOperations, "Export finance data"),
-        // FinanceReports (1)
-        new(FinanceFeatures.FinanceReports, AppAction.Read, PermissionGroup.FinanceOperations, "View finance reports"),
+        // ── Payment (2) ──────────────────────────────────────────────────────
+        new(FinanceFeatures.Payment, AppAction.Create,
+            PermissionGroup.FinanceOperations,
+            "Initiate a payment for a booking"),
+        new(FinanceFeatures.Payment, AppAction.Read,
+            PermissionGroup.FinanceOperations,
+            "View payment details (self / provider / admin)"),
+
+        // ── Refund (2) ───────────────────────────────────────────────────────
+        new(FinanceFeatures.Refund, AppAction.Create,
+            PermissionGroup.FinanceOperations,
+            "Issue a refund against a completed payment"),
+        new(FinanceFeatures.Refund, AppAction.Read,
+            PermissionGroup.FinanceOperations,
+            "View refund history"),
+
+        // ── Invoice (2) ──────────────────────────────────────────────────────
+        new(FinanceFeatures.Invoice, AppAction.Read,
+            PermissionGroup.FinanceOperations,
+            "View invoice metadata"),
+        new(FinanceFeatures.Invoice, AppAction.Download,
+            PermissionGroup.FinanceOperations,
+            "Download invoice as PDF"),
+
+        // ── Payout (3) ───────────────────────────────────────────────────────
+        new(FinanceFeatures.Payout, AppAction.Read,
+            PermissionGroup.FinanceOperations,
+            "View payout records"),
+        new(FinanceFeatures.Payout, AppAction.Trigger,
+            PermissionGroup.FinanceOperations,
+            "Trigger admin payout batch run"),
+        new(FinanceFeatures.Payout, AppAction.Approve,
+            PermissionGroup.FinanceOperations,
+            "Approve a large pending payout"),
+
+        // ── CommissionRule (4) ───────────────────────────────────────────────
+        new(FinanceFeatures.CommissionRule, AppAction.Create,
+            PermissionGroup.FinanceOperations,
+            "Create a commission rule"),
+        new(FinanceFeatures.CommissionRule, AppAction.Read,
+            PermissionGroup.FinanceOperations,
+            "View commission rules"),
+        new(FinanceFeatures.CommissionRule, AppAction.Update,
+            PermissionGroup.FinanceOperations,
+            "Update a commission rule"),
+        new(FinanceFeatures.CommissionRule, AppAction.Delete,
+            PermissionGroup.FinanceOperations,
+            "Soft-delete a commission rule"),
+
+        // ── ProviderBankAccount (4) ──────────────────────────────────────────
+        new(FinanceFeatures.ProviderBankAccount, AppAction.Create,
+            PermissionGroup.FinanceOperations,
+            "Register a provider bank account"),
+        new(FinanceFeatures.ProviderBankAccount, AppAction.Update,
+            PermissionGroup.FinanceOperations,
+            "Update provider bank account details"),
+        new(FinanceFeatures.ProviderBankAccount, AppAction.Read,
+            PermissionGroup.FinanceOperations,
+            "View provider bank account"),
+        new(FinanceFeatures.ProviderBankAccount, AppAction.Verify,
+            PermissionGroup.FinanceOperations,
+            "Verify a provider bank account (admin/KYC)"),
+
+        // ── AdminFinanceDashboard (3) ────────────────────────────────────────
+        new(FinanceFeatures.AdminFinanceDashboard, AppAction.Read,
+            PermissionGroup.FinanceOperations,
+            "View admin finance dashboard"),
+        new(FinanceFeatures.AdminFinanceDashboard, AppAction.Export,
+            PermissionGroup.FinanceOperations,
+            "Export finance reports (CSV/Excel)"),
+        new(FinanceFeatures.AdminFinanceDashboard, AppAction.Refresh,
+            PermissionGroup.FinanceOperations,
+            "Refresh admin finance dashboard caches"),
     ];
 }

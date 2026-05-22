@@ -13,33 +13,27 @@ public class CommissionRuleConfiguration : IEntityTypeConfiguration<CommissionRu
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Id).ValueGeneratedNever();
 
-        builder.Property(x => x.Name).IsRequired().HasMaxLength(200);
-        builder.Property(x => x.Description).IsRequired(false).HasMaxLength(1000);
-        builder.Property(x => x.CommissionPercentage).IsRequired().HasPrecision(5, 2);
-        builder.OwnsOne(x => x.MinAmount, money =>
-        {
-            money.Property(m => m.Amount).HasColumnName("MinAmount").HasPrecision(19, 4);
-            money.Property(m => m.Currency).HasColumnName("MinAmountCurrency").HasMaxLength(3).HasDefaultValue("JOD");
-        });
-        builder.OwnsOne(x => x.MaxAmount, money =>
-        {
-            money.Property(m => m.Amount).HasColumnName("MaxAmount").HasPrecision(19, 4);
-            money.Property(m => m.Currency).HasColumnName("MaxAmountCurrency").HasMaxLength(3).HasDefaultValue("JOD");
-        });
-        builder.Property(x => x.EntityType).IsRequired().HasMaxLength(200);
+        builder.Property(x => x.Tier).IsRequired().HasMaxLength(50);
+        builder.Property(x => x.MinMonthlyRevenue).IsRequired().HasPrecision(19, 4);
+        builder.Property(x => x.MaxMonthlyRevenue).IsRequired(false).HasPrecision(19, 4);
+        builder.Property(x => x.Currency).IsRequired().HasMaxLength(3).IsUnicode(false);
+        builder.Property(x => x.Percentage).IsRequired().HasPrecision(5, 2);
         builder.Property(x => x.IsActive).IsRequired().HasDefaultValue(true);
-        builder.Property(x => x.Priority).IsRequired().HasDefaultValue(0);
-        builder.OwnsOne(x => x.ValidityPeriod, dr =>
-        {
-            dr.Property(d => d.Start).HasColumnName("ValidFrom");
-            dr.Property(d => d.End).HasColumnName("ValidTo");
-        });
+        builder.Property(x => x.Notes).IsRequired(false).HasMaxLength(2000);
 
         builder.Property(x => x.CreatedAt).IsRequired();
         builder.Property(x => x.UpdatedAt).IsRequired(false);
         builder.Property(x => x.IsDeleted).IsRequired().HasDefaultValue(false);
         builder.Property(x => x.DeletedAt).IsRequired(false);
         builder.Property(x => x.RowVersion).IsRowVersion();
+
+        // Indexes:
+        //  (Tier, Currency) lookup index
+        //  Unique filtered (Tier, Currency, MinMonthlyRevenue, MaxMonthlyRevenue) where IsDeleted=0
+        builder.HasIndex(x => new { x.Tier, x.Currency });
+        builder.HasIndex(x => new { x.Tier, x.Currency, x.MinMonthlyRevenue, x.MaxMonthlyRevenue })
+            .HasFilter("[IsDeleted] = 0")
+            .IsUnique();
 
         builder.HasQueryFilter(x => !x.IsDeleted);
     }
