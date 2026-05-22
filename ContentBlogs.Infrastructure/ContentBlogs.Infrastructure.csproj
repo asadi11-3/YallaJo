@@ -18,6 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Accounts.Contracts\Accounts.Contracts.csproj" />
     <ProjectReference Include="..\ContentCore.Contracts\ContentCore.Contracts.csproj" />
     <ProjectReference Include="..\ContentBlogs.Application\ContentBlogs.Application.csproj" />
     <ProjectReference Include="..\ContentBlogs.Contracts\ContentBlogs.Contracts.csproj" />
@@ -33,6 +34,10 @@
          Security.Application's AddSecurityApplication() at the host level
          so this module never needs to reference Security.Application. -->
     <ProjectReference Include="..\Security.Contracts\Security.Contracts.csproj" />
+    <!-- Social.Contracts: consume ReportSubmittedIntegrationEvent and ReportResolvedIntegrationEvent
+         so Wave-8 handlers can increment/decrement CreatorProfile.ReportCount when
+         users submit or resolve abuse reports against creator content. -->
+    <ProjectReference Include="..\Social.Contracts\Social.Contracts.csproj" />
     <ProjectReference Include="..\YallaJo.SharedKernel.Infrastructure\YallaJo.SharedKernel.Infrastructure.csproj" />
   </ItemGroup>
 

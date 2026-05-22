@@ -1,5 +1,7 @@
 using ContentBlogs.Domain.Enums;
+using ContentBlogs.Domain.Errors;
 using ContentBlogs.Domain.Events;
+using YallaJo.SharedKernel.Domain.Abstractions.Results;
 using YallaJo.SharedKernel.Domain.Entities;
 
 namespace ContentBlogs.Domain.Entities;
@@ -27,6 +29,28 @@ public sealed class Blog : AuditableEntity, IAggregateRoot
     public string? MetaDescription { get; private set; }
     public DateTime? PublishedAt { get; private set; }
     public Guid? PlaceId { get; private set; }
+
+    /// <summary>
+    /// Non-null when the article was authored by a content creator (Wave 7).
+    /// References <c>CreatorProfile.Id</c> in the Creators sub-domain.
+    /// </summary>
+    public Guid? AuthoredByCreatorId { get; private set; }
+
+    /// <summary>
+    /// The language in which this article was originally written.
+    /// </summary>
+    public Guid LanguageId { get; private set; }
+
+    /// <summary>
+    /// Whether this article is sponsored content (Wave 8 – Disclosure enforcement).
+    /// </summary>
+    public bool IsSponsored { get; private set; }
+
+    /// <summary>
+    /// Transparency disclosures for entities referenced in this article (Wave 8).
+    /// </summary>
+    private readonly List<ValueObjects.DisclosureTarget> _disclosedTargets = [];
+    public IReadOnlyList<ValueObjects.DisclosureTarget> DisclosedTargets => _disclosedTargets.AsReadOnly();
 
     public IReadOnlyCollection<BlogTranslation> BlogTranslations => _blogTranslations.AsReadOnly();
     public IReadOnlyCollection<BlogComment> BlogComments => _blogComments.AsReadOnly();
@@ -72,6 +96,7 @@ public sealed class Blog : AuditableEntity, IAggregateRoot
             ReadTimeMinutes = readTimeMinutes,
             ViewCount = 0,
             IsFeatured = false,
+            LanguageId = sourceLanguageId,
         };
 
         blog.CreatedAt = utcNow;
@@ -86,6 +111,111 @@ public sealed class Blog : AuditableEntity, IAggregateRoot
             CreatedAtUtc: utcNow));
 
         return blog;
+    }
+
+    /// <summary>
+    /// Factory for creator-authored articles. Sets <see cref="AuthoredByCreatorId"/> and
+    /// initial status to <see cref="BlogStatus.Draft"/>. The creator must later call
+    /// <see cref="SubmitForCreatorReview"/> to put it into the admin queue.
+    /// </summary>
+    public static Blog CreateByCreator(
+        string title,
+        string slug,
+        string content,
+        Guid authorId,
+        Guid creatorProfileId,
+        Guid sourceLanguageId,
+        DateTime utcNow,
+        string? summary = null,
+        string? metaTitle = null,
+        string? metaDescription = null,
+        Guid? placeId = null,
+        int? readTimeMinutes = null)
+    {
+        if (creatorProfileId == Guid.Empty)
+            throw new ArgumentException("CreatorProfileId is required.", nameof(creatorProfileId));
+
+        var blog = Create(
+            title, slug, content, authorId, sourceLanguageId, utcNow,
+            summary, metaTitle, metaDescription, placeId, readTimeMinutes);
+
+        blog.AuthoredByCreatorId = creatorProfileId;
+        blog.LanguageId = sourceLanguageId;
+
+        return blog;
+    }
+
+    /// <summary>
+    /// Creator submits the draft article for admin review.
+    /// Transitions: Draft → PendingCreatorReview.
+    /// </summary>
+    public Result SubmitForCreatorReview(DateTime utcNow)
+    {
+        if (IsDeleted)
+            return Result.Failure(BlogErrors.AlreadyDeleted);
+
+        if (Status != BlogStatus.Draft)
+            return Result.Failure(BlogErrors.InvalidTransitionToReview);
+
+        if (AuthoredByCreatorId is null)
+            return Result.Failure(BlogErrors.NotCreatorAuthored);
+
+        Status = BlogStatus.PendingCreatorReview;
+        MarkUpdated();
+
+        AddDomainEvent(new BlogSubmittedForCreatorReviewDomainEvent(
+            BlogId: Id,
+            CreatorProfileId: AuthoredByCreatorId.Value,
+            SubmittedAtUtc: utcNow));
+
+        return Result.Success();
+    }
+
+    /// <summary>
+    /// Admin hides a published article. Hidden articles are not visible to the public but
+    /// the creator can still edit them.
+    /// Transitions: Published → Hidden.
+    /// </summary>
+    public Result Hide(Guid hiddenByAdminId, string reason, DateTime utcNow)
+    {
+        if (IsDeleted)
+            return Result.Failure(BlogErrors.AlreadyDeleted);
+
+        if (Status != BlogStatus.Published)
+            return Result.Failure(BlogErrors.InvalidTransitionToHidden);
+
+        Status = BlogStatus.Hidden;
+        MarkUpdated();
+
+        AddDomainEvent(new BlogHiddenDomainEvent(
+            BlogId: Id,
+            HiddenByAdminId: hiddenByAdminId,
+            Reason: reason,
+            HiddenAtUtc: utcNow));
+
+        return Result.Success();
+    }
+
+    /// <summary>
+    /// Admin unhides a hidden article, returning it to Published.
+    /// Transitions: Hidden → Published.
+    /// </summary>
+    public Result Unhide(DateTime utcNow)
+    {
+        if (IsDeleted)
+            return Result.Failure(BlogErrors.AlreadyDeleted);
+
+        if (Status != BlogStatus.Hidden)
+            return Result.Failure(BlogErrors.InvalidTransitionToPublished);
+
+        Status = BlogStatus.Published;
+        MarkUpdated();
+
+        AddDomainEvent(new BlogUnhiddenDomainEvent(
+            BlogId: Id,
+            UnhiddenAtUtc: utcNow));
+
+        return Result.Success();
     }
 
     public void Update(
@@ -161,10 +291,10 @@ public sealed class Blog : AuditableEntity, IAggregateRoot
     {
         EnsureNotDeleted();
 
-        if (Status != BlogStatus.Draft)
+        if (Status != BlogStatus.Draft && Status != BlogStatus.PendingCreatorReview)
         {
             throw new InvalidOperationException(
-                $"Blog.InvalidTransition: cannot publish a blog with status {Status}. Required: Draft.");
+                $"Blog.InvalidTransition: cannot publish a blog with status {Status}. Required: Draft or PendingCreatorReview.");
         }
 
         Status = BlogStatus.Published;

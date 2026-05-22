@@ -30,78 +30,54 @@ public sealed class AddBusinessAmenityCommandHandlerTests
         var logger = Substitute.For<ILogger<AddBusinessAmenityCommandHandler>>();
 
         var handler = new AddBusinessAmenityCommandHandler(
-            amenityRepo, businessRepo, uow, currentUser, cache, logger);
+            amenityRepo, businessRepo, uow, cache, logger);
 
         return (handler, amenityRepo, businessRepo, uow, currentUser);
     }
 
     [Fact]
-    public async Task ReturnsUnauthorizedWhenNotAuthenticated()
-    {
-        var (handler, _, _, _, currentUser) = BuildSubject();
-        currentUser.IsAuthenticated.Returns(false);
-        currentUser.UserId.Returns((Guid?)null);
-
-        var result = await handler.Handle(
-            new AddBusinessAmenityCommand(Guid.NewGuid(), "WiFi", null, 0),
-            CancellationToken.None);
-
-        result.IsSuccess.Should().BeFalse();
-        result.Errors.Should().ContainSingle(x => x.Code == "Auth.Unauthorized");
-    }
-
-    [Fact]
     public async Task ReturnsNotFoundWhenBusinessMissing()
     {
-        var (handler, _, businessRepo, _, currentUser) = BuildSubject();
-        currentUser.IsAuthenticated.Returns(true);
-        currentUser.UserId.Returns(Guid.NewGuid());
-        currentUser.Roles.Returns(new[] { AppRoles.User });
+        var (handler, _, businessRepo, _, _) = BuildSubject();
         businessRepo
             .GetByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
             .Returns((Business?)null);
 
         var result = await handler.Handle(
-            new AddBusinessAmenityCommand(Guid.NewGuid(), "WiFi", null, 0),
+            new AddBusinessAmenityCommand(Guid.NewGuid(), Guid.NewGuid(), "WiFi", null, 0),
             CancellationToken.None);
 
         result.IsSuccess.Should().BeFalse();
-        result.Errors.Should().ContainSingle(x => x.Code == "NotFound.Business.NotFound");
+        result.Errors.Should().ContainSingle(x => x.Code == "Business.NotFound");
     }
 
     [Fact]
     public async Task ReturnsForbiddenWhenStandardUserIsNotOwner()
     {
-        var (handler, _, businessRepo, _, currentUser) = BuildSubject();
+        var (handler, _, businessRepo, _, _) = BuildSubject();
         var ownerId = Guid.NewGuid();
         var callerId = Guid.NewGuid();
         var business = TestBusinessFactory.CreateBusiness(ownerId);
 
-        currentUser.IsAuthenticated.Returns(true);
-        currentUser.UserId.Returns(callerId);
-        currentUser.Roles.Returns(new[] { AppRoles.User });
         businessRepo
             .GetByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
             .Returns(business);
 
         var result = await handler.Handle(
-            new AddBusinessAmenityCommand(business.Id, "WiFi", null, 0),
+            new AddBusinessAmenityCommand(business.Id, callerId, "WiFi", null, 0),
             CancellationToken.None);
 
         result.IsSuccess.Should().BeFalse();
-        result.Errors.Should().ContainSingle(x => x.Code == "Auth.Forbidden");
+        result.Errors.Should().ContainSingle(x => x.Code == "Business.Forbidden");
     }
 
     [Fact]
     public async Task SucceedsWhenCallerIsOwner()
     {
-        var (handler, amenityRepo, businessRepo, uow, currentUser) = BuildSubject();
+        var (handler, amenityRepo, businessRepo, uow, _) = BuildSubject();
         var ownerId = Guid.NewGuid();
         var business = TestBusinessFactory.CreateBusiness(ownerId);
 
-        currentUser.IsAuthenticated.Returns(true);
-        currentUser.UserId.Returns(ownerId);
-        currentUser.Roles.Returns(new[] { AppRoles.User });
         businessRepo
             .GetByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
             .Returns(business);
@@ -112,40 +88,7 @@ public sealed class AddBusinessAmenityCommandHandlerTests
             .Returns(false);
 
         var result = await handler.Handle(
-            new AddBusinessAmenityCommand(business.Id, "WiFi", null, 0),
-            CancellationToken.None);
-
-        result.IsSuccess.Should().BeTrue();
-        result.Outcome.Should().Be(Outcome.Created);
-        await amenityRepo.Received(1).AddAsync(Arg.Any<BusinessAmenity>(), Arg.Any<CancellationToken>());
-        await uow.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
-    }
-
-    [Theory]
-    [InlineData(AppRoles.Admin)]
-    [InlineData(AppRoles.SuperAdmin)]
-    [InlineData(AppRoles.Owner)]
-    public async Task SucceedsWhenCallerHasAdminTierRole(string role)
-    {
-        var (handler, amenityRepo, businessRepo, uow, currentUser) = BuildSubject();
-        var ownerId = Guid.NewGuid();
-        var callerId = Guid.NewGuid();
-        var business = TestBusinessFactory.CreateBusiness(ownerId);
-
-        currentUser.IsAuthenticated.Returns(true);
-        currentUser.UserId.Returns(callerId);
-        currentUser.Roles.Returns(new[] { role });
-        businessRepo
-            .GetByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
-            .Returns(business);
-        amenityRepo
-            .AnyAsync(
-                Arg.Any<Expression<Func<BusinessAmenity, bool>>>(),
-                Arg.Any<CancellationToken>())
-            .Returns(false);
-
-        var result = await handler.Handle(
-            new AddBusinessAmenityCommand(business.Id, "WiFi", null, 0),
+            new AddBusinessAmenityCommand(business.Id, ownerId, "WiFi", null, 0),
             CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
@@ -155,21 +98,26 @@ public sealed class AddBusinessAmenityCommandHandlerTests
     }
 
     [Fact]
-    public async Task UnauthorizedErrorUsesFactoryCode()
+    public async Task ReturnsDuplicateWhenAmenityExists()
     {
-        // Verifies the handler uses Error.Unauthorized() factory (canonical
-        // "Auth.Unauthorized" code) rather than raw new Error("Auth.Unauthorized", ...)
-        // — confirming Finding 9 cleanup. Both pathways produce the same code,
-        // but only the factory variant is the supported convention.
-        var (handler, _, _, _, currentUser) = BuildSubject();
-        currentUser.IsAuthenticated.Returns(false);
-        currentUser.UserId.Returns((Guid?)null);
+        var (handler, amenityRepo, businessRepo, _, _) = BuildSubject();
+        var ownerId = Guid.NewGuid();
+        var business = TestBusinessFactory.CreateBusiness(ownerId);
+
+        businessRepo
+            .GetByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
+            .Returns(business);
+        amenityRepo
+            .AnyAsync(
+                Arg.Any<Expression<Func<BusinessAmenity, bool>>>(),
+                Arg.Any<CancellationToken>())
+            .Returns(true);
 
         var result = await handler.Handle(
-            new AddBusinessAmenityCommand(Guid.NewGuid(), "WiFi", null, 0),
+            new AddBusinessAmenityCommand(business.Id, ownerId, "WiFi", null, 0),
             CancellationToken.None);
 
-        result.Errors.Should()
-            .ContainSingle(x => x.Code == "Auth.Unauthorized" && x.Message == "Authentication required");
+        result.IsSuccess.Should().BeFalse();
+        result.Errors.Should().ContainSingle(x => x.Code == "BusinessAmenity.Duplicate");
     }
 }

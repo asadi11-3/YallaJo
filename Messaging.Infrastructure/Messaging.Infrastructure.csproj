@@ -26,6 +26,7 @@
     <ProjectReference Include="..\Messaging.Application\Messaging.Application.csproj" />
     <ProjectReference Include="..\Messaging.Contracts\Messaging.Contracts.csproj" />
     <ProjectReference Include="..\Social.Contracts\Social.Contracts.csproj" />
+    <ProjectReference Include="..\ContentBlogs.Contracts\ContentBlogs.Contracts.csproj" />
     <ProjectReference Include="..\Messaging.Domain\Messaging.Domain.csproj" />
     <ProjectReference Include="..\YallaJo.SharedKernel.Infrastructure\YallaJo.SharedKernel.Infrastructure.csproj" />
   </ItemGroup>

@@ -55,6 +55,19 @@ public class BlogConfiguration : IEntityTypeConfiguration<Blog>
 
         builder.Property(x => x.PublishedAt).IsRequired(false);
 
+        // ── Creator-authored article extensions ──────────────────────────
+        builder.Property(x => x.AuthoredByCreatorId).IsRequired(false);
+        builder.Property(x => x.LanguageId).IsRequired();
+
+        builder.Property(x => x.IsSponsored)
+            .IsRequired()
+            .HasDefaultValue(false);
+
+        builder.OwnsMany(x => x.DisclosedTargets, dt =>
+        {
+            dt.ToJson();
+        });
+
         builder.Property(x => x.CreatedAt).IsRequired();
         builder.Property(x => x.UpdatedAt).IsRequired(false);
         builder.Property(x => x.IsDeleted).IsRequired().HasDefaultValue(false);
@@ -74,5 +87,6 @@ public class BlogConfiguration : IEntityTypeConfiguration<Blog>
         builder.HasQueryFilter(x => !x.IsDeleted);
         builder.HasIndex(x => x.Slug).IsUnique();
         builder.HasIndex(x => x.PlaceId).HasFilter("[PlaceId] IS NOT NULL");
+        builder.HasIndex(x => x.AuthoredByCreatorId).HasFilter("[AuthoredByCreatorId] IS NOT NULL");
     }
 }

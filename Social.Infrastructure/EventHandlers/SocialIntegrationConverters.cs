@@ -119,6 +119,31 @@ internal sealed class PublishReportResolvedHandler(
 }
 
 /// <summary>
+/// Converts <see cref="ReportSubmittedDomainEvent"/> into <c>social.report.submitted.v1</c>.
+/// </summary>
+internal sealed class PublishReportSubmittedHandler(
+    ISocialOutboxWriter outbox,
+    ILogger<PublishReportSubmittedHandler> logger)
+    : INotificationHandler<DomainEventNotification<ReportSubmittedDomainEvent>>
+{
+    public async Task Handle(DomainEventNotification<ReportSubmittedDomainEvent> notification, CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(notification);
+        var e = notification.Event;
+
+        var integration = new ReportSubmittedIntegrationEvent(
+            ReportId: e.ReportId,
+            ReporterUserId: e.ReporterUserId,
+            EntityType: e.EntityType.ToString(),
+            EntityId: e.EntityId,
+            Reason: e.Reason.ToString(),
+            SubmittedAt: e.SubmittedAt);
+        await outbox.WriteAsync(integration, ct).ConfigureAwait(false);
+        logger.LogInformation("Enqueued social.report.submitted.v1 for Report {ReportId}", e.ReportId);
+    }
+}
+
+/// <summary>
 /// Converts <see cref="EntityRatingRecalculatedDomainEvent"/> into <c>social.rating.recalculated.v1</c>.
 /// Looks up the EntityRatingCache aggregate to read BayesianScore (not carried on the domain event).
 /// </summary>

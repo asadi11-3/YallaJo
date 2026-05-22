@@ -7,5 +7,6 @@ public enum ReportableEntityType : byte
     Tour     = 1,
     Place    = 2,
     Business = 3,
-    Blog     = 4,
+    Blog        = 4,
+    CreatorPost = 5,
 }

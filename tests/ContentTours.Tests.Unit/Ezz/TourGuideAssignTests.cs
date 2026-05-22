@@ -37,6 +37,7 @@ public sealed class TourGuideAssignTests
     {
         var tourRepo    = Substitute.For<ITourRepository>();
         var guideRepo   = Substitute.For<ITourTourGuideRepository>();
+        var guideProfileRepo = Substitute.For<ITourGuideRepository>();
         var uow         = Substitute.For<IContentToursUnitOfWork>();
         var outbox      = Substitute.For<IContentToursOutboxWriter>();
         var roleChecker = Substitute.For<IUserRoleChecker>();
@@ -49,7 +50,7 @@ public sealed class TourGuideAssignTests
                    .Returns(true);
 
         var handler = new AssignTourGuideCommandHandler(
-            tourRepo, guideRepo, uow, outbox, roleChecker, cache, currentUser, logger);
+            tourRepo, guideRepo, guideProfileRepo, uow, outbox, roleChecker, cache, currentUser, logger);
         return (handler, tourRepo, guideRepo, uow, outbox, roleChecker, currentUser);
     }
 

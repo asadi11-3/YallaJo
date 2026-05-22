@@ -3,6 +3,7 @@ using Analytics.Contracts.IntegrationEvents;
 using Auth.Contracts.IntegrationEvents;
 using Booking.Contracts.IntegrationEvents;
 using ContentBlogs.Contracts.IntegrationEvents;
+using ContentBlogs.Contracts.IntegrationEvents.Creators;
 using ContentCore.Contracts.IntegrationEvents;
 using ContentPlaces.Contracts.BusinessStaff;
 using ContentPlaces.Contracts.IntegrationEvents;
@@ -104,6 +105,27 @@ public static class IntegrationEventTypeRegistry
         ["content-blogs.blog.featured.v1"]      = typeof(BlogFeaturedIntegrationEvent),
         ["content-blogs.blog.unfeatured.v1"]    = typeof(BlogUnfeaturedIntegrationEvent),
 
+        // ── ContentBlogs — Creators (9 events) ──
+        ["creators.application.submitted.v1"]           = typeof(CreatorApplicationSubmittedIntegrationEvent),
+        ["creators.application.approved.v1"]            = typeof(CreatorApplicationApprovedIntegrationEvent),
+        ["creators.application.rejected.v1"]            = typeof(CreatorApplicationRejectedIntegrationEvent),
+        ["creators.application.more-info-requested.v1"] = typeof(CreatorApplicationMoreInfoRequestedIntegrationEvent),
+        ["creators.profile.suspended.v1"]               = typeof(CreatorProfileSuspendedIntegrationEvent),
+        ["creators.profile.reinstated.v1"]              = typeof(CreatorProfileReinstatedIntegrationEvent),
+        ["creators.invitation.sent.v1"]                 = typeof(CreatorInvitationSentIntegrationEvent),
+        ["creators.invitation.redeemed.v1"]             = typeof(CreatorInvitationRedeemedIntegrationEvent),
+        ["creators.follow.added.v1"]                    = typeof(CreatorFollowAddedIntegrationEvent),
+
+        // ── ContentBlogs — Creator Posts & Tiers (8 events) ──
+        ["creators.post.submitted-for-review.v1"]       = typeof(CreatorPostSubmittedForReviewIntegrationEvent),
+        ["creators.post.published.v1"]                   = typeof(CreatorPostPublishedIntegrationEvent),
+        ["creators.post.rejected.v1"]                    = typeof(CreatorPostRejectedIntegrationEvent),
+        ["creators.post.removed.v1"]                     = typeof(CreatorPostRemovedIntegrationEvent),
+        ["creators.post.featured.v1"]                    = typeof(CreatorPostFeaturedIntegrationEvent),
+        ["creators.tier.promoted.v1"]                    = typeof(CreatorTierPromotedIntegrationEvent),
+        ["creators.tier.demoted.v1"]                     = typeof(CreatorTierDemotedIntegrationEvent),
+        ["creators.eligible-for-tier-promotion.v1"]      = typeof(CreatorEligibleForTierPromotionIntegrationEvent),
+
         // ── ContentSeo (4 events) ──
         ["content-seo.faq.changed.v1"]                  = typeof(FaqItemChangedIntegrationEvent),
         ["content-seo.redirect.created.v1"]             = typeof(RedirectCreatedIntegrationEvent),
@@ -140,10 +162,11 @@ public static class IntegrationEventTypeRegistry
         ["finance.subscription.activated.v1"]           = typeof(SubscriptionActivatedIntegrationEvent),
         ["finance.subscription.cancelled.v1"]           = typeof(SubscriptionCancelledIntegrationEvent),
 
-        // ── Social (5 events) ──
+        // ── Social (6 events) ──
         ["social.review.published.v1"]                  = typeof(ReviewPublishedIntegrationEvent),
         ["social.review.deleted.v1"]                    = typeof(ReviewDeletedIntegrationEvent),
         ["social.favorite.added.v1"]                    = typeof(FavoriteAddedIntegrationEvent),
+        ["social.report.submitted.v1"]                  = typeof(ReportSubmittedIntegrationEvent),
         ["social.report.resolved.v1"]                   = typeof(ReportResolvedIntegrationEvent),
         ["social.rating.recalculated.v1"]               = typeof(RatingRecalculatedIntegrationEvent),
         // -- Analytics (3 events) --

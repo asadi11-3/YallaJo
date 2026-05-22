@@ -12,5 +12,13 @@ namespace ContentBlogs.Contracts.Authorization
         public const string BlogComment = nameof(BlogComment);
         public const string BlogReaction = nameof(BlogReaction);
         public const string BlogTourLink = nameof(BlogTourLink);
+
+        // ── Creator (Wave-7) ───────────────────────────────────────────
+        public const string Creator = nameof(Creator);
+        public const string AdminCreatorQueue = nameof(AdminCreatorQueue);
+
+        // ── Creator Posts & Moderation (Wave-8) ────────────────────────
+        public const string CreatorPost = nameof(CreatorPost);
+        public const string AdminPostModeration = nameof(AdminPostModeration);
     }
 }

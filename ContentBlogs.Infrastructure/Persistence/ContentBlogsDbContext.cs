@@ -1,4 +1,5 @@
 using ContentBlogs.Domain.Entities;
+using ContentBlogs.Domain.Entities.Creators;
 using Microsoft.EntityFrameworkCore;
 using YallaJo.SharedKernel.Application.Abstractions.Data;
 using YallaJo.SharedKernel.Infrastructure.Inbox;
@@ -16,6 +17,15 @@ public sealed class ContentBlogsDbContext : DbContext, IDbContext
     public DbSet<BlogComment> BlogComments => Set<BlogComment>();
     public DbSet<BlogCommentReaction> BlogCommentReactions => Set<BlogCommentReaction>();
     public DbSet<BlogView> BlogViews => Set<BlogView>();
+
+    // ── Creator Identity ─────────────────────────────────────────────────
+    public DbSet<CreatorApplication> CreatorApplications => Set<CreatorApplication>();
+    public DbSet<CreatorProfile> CreatorProfiles => Set<CreatorProfile>();
+    public DbSet<CreatorInvitation> CreatorInvitations => Set<CreatorInvitation>();
+    public DbSet<CreatorFollow> CreatorFollows => Set<CreatorFollow>();
+    public DbSet<CreatorNiche> CreatorNiches => Set<CreatorNiche>();
+    public DbSet<CreatorPost> CreatorPosts => Set<CreatorPost>();
+
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
     public DbSet<InboxMessage> InboxMessages => Set<InboxMessage>();
 

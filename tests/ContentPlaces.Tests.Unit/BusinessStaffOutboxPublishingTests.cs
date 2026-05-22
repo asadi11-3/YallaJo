@@ -12,6 +12,7 @@ using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Security.Contracts.Authorization;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
+using YallaJo.SharedKernel.Domain.Abstractions.Results;
 using YallaJo.SharedKernel.Domain.Event;
 using StaffEntity = ContentPlaces.Domain.Entities.BusinessStaff;
 
@@ -32,35 +33,30 @@ public sealed class BusinessStaffOutboxPublishingTests
         IBusinessStaffRepository StaffRepo,
         IBusinessRepository BusinessRepo,
         IContentPlacesUnitOfWork Uow,
-        IContentPlacesOutboxWriter Outbox,
-        ICurrentUser CurrentUser) BuildAddSubject()
+        IContentPlacesOutboxWriter Outbox) BuildAddSubject()
     {
         var staffRepo = Substitute.For<IBusinessStaffRepository>();
         var businessRepo = Substitute.For<IBusinessRepository>();
         var uow = Substitute.For<IContentPlacesUnitOfWork>();
         var outbox = Substitute.For<IContentPlacesOutboxWriter>();
-        var currentUser = Substitute.For<ICurrentUser>();
         var cache = Substitute.For<HybridCache>();
         var logger = Substitute.For<ILogger<AddBusinessStaffCommandHandler>>();
 
         var handler = new AddBusinessStaffCommandHandler(
-            staffRepo, businessRepo, uow, outbox, currentUser, cache, logger);
+            staffRepo, businessRepo, uow, outbox, cache, logger);
 
-        return (handler, staffRepo, businessRepo, uow, outbox, currentUser);
+        return (handler, staffRepo, businessRepo, uow, outbox);
     }
 
     [Fact]
     public async Task AddBusinessStaff_OnSuccess_EnqueuesExactlyOneAddedEventWithCorrectPayload()
     {
-        var (handler, staffRepo, businessRepo, uow, outbox, currentUser) = BuildAddSubject();
+        var (handler, staffRepo, businessRepo, uow, outbox) = BuildAddSubject();
         var ownerId = Guid.NewGuid();
         var business = TestBusinessFactory.CreateBusiness(ownerId);
         var newStaffUserId = Guid.NewGuid();
         const BusinessStaffRole role = BusinessStaffRole.Manager;
 
-        currentUser.IsAuthenticated.Returns(true);
-        currentUser.UserId.Returns(ownerId);
-        currentUser.Roles.Returns(new[] { AppRoles.User });
         businessRepo
             .GetByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
             .Returns(business);
@@ -75,7 +71,7 @@ public sealed class BusinessStaffOutboxPublishingTests
             Arg.Any<CancellationToken>());
 
         var result = await handler.Handle(
-            new AddBusinessStaffCommand(business.Id, newStaffUserId, role),
+            new AddBusinessStaffCommand(business.Id, ownerId, newStaffUserId, role),
             CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
@@ -95,33 +91,15 @@ public sealed class BusinessStaffOutboxPublishingTests
     }
 
     [Fact]
-    public async Task AddBusinessStaff_OnUnauthorized_DoesNotEnqueueOrSave()
-    {
-        var (handler, _, _, uow, outbox, currentUser) = BuildAddSubject();
-        currentUser.IsAuthenticated.Returns(false);
-
-        var result = await handler.Handle(
-            new AddBusinessStaffCommand(Guid.NewGuid(), Guid.NewGuid(), BusinessStaffRole.Staff),
-            CancellationToken.None);
-
-        result.IsSuccess.Should().BeFalse();
-        outbox.DidNotReceive().Enqueue(Arg.Any<IIntegrationEvent>());
-        await uow.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
-    }
-
-    [Fact]
     public async Task AddBusinessStaff_OnNotFound_DoesNotEnqueueOrSave()
     {
-        var (handler, _, businessRepo, uow, outbox, currentUser) = BuildAddSubject();
-        currentUser.IsAuthenticated.Returns(true);
-        currentUser.UserId.Returns(Guid.NewGuid());
-        currentUser.Roles.Returns(new[] { AppRoles.User });
+        var (handler, _, businessRepo, uow, outbox) = BuildAddSubject();
         businessRepo
             .GetByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
             .Returns((Business?)null);
 
         var result = await handler.Handle(
-            new AddBusinessStaffCommand(Guid.NewGuid(), Guid.NewGuid(), BusinessStaffRole.Staff),
+            new AddBusinessStaffCommand(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), BusinessStaffRole.Staff),
             CancellationToken.None);
 
         result.IsSuccess.Should().BeFalse();
@@ -132,20 +110,17 @@ public sealed class BusinessStaffOutboxPublishingTests
     [Fact]
     public async Task AddBusinessStaff_OnForbidden_DoesNotEnqueueOrSave()
     {
-        var (handler, _, businessRepo, uow, outbox, currentUser) = BuildAddSubject();
+        var (handler, _, businessRepo, uow, outbox) = BuildAddSubject();
         var ownerId = Guid.NewGuid();
         var callerId = Guid.NewGuid();
         var business = TestBusinessFactory.CreateBusiness(ownerId);
 
-        currentUser.IsAuthenticated.Returns(true);
-        currentUser.UserId.Returns(callerId);
-        currentUser.Roles.Returns(new[] { AppRoles.User });
         businessRepo
             .GetByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
             .Returns(business);
 
         var result = await handler.Handle(
-            new AddBusinessStaffCommand(business.Id, Guid.NewGuid(), BusinessStaffRole.Staff),
+            new AddBusinessStaffCommand(business.Id, callerId, Guid.NewGuid(), BusinessStaffRole.Staff),
             CancellationToken.None);
 
         result.IsSuccess.Should().BeFalse();
