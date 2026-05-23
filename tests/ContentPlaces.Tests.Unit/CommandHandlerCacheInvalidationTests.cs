@@ -437,30 +437,26 @@ public sealed class CommandHandlerCacheInvalidationTests
         IAccessibilityFeatureRepository FeatureRepo,
         IPlaceRepository PlaceRepo,
         IContentPlacesUnitOfWork Uow,
-        ICurrentUser CurrentUser,
         HybridCache Cache) BuildUpdateAccessibilitySubject()
     {
         var featureRepo = Substitute.For<IAccessibilityFeatureRepository>();
         var placeRepo = Substitute.For<IPlaceRepository>();
         var uow = Substitute.For<IContentPlacesUnitOfWork>();
-        var currentUser = Substitute.For<ICurrentUser>();
         var cache = Substitute.For<HybridCache>();
         var logger = Substitute.For<ILogger<UpdateAccessibilityFeaturesCommandHandler>>();
 
         var handler = new UpdateAccessibilityFeaturesCommandHandler(
-            featureRepo, placeRepo, uow, currentUser, cache, logger);
+            featureRepo, placeRepo, uow, cache, logger);
 
-        return (handler, featureRepo, placeRepo, uow, currentUser, cache);
+        return (handler, featureRepo, placeRepo, uow, cache);
     }
 
     [Fact]
     public async Task UpdateAccessibilityFeatures_OnSuccess_InvalidatesScopedPlaceTagAfterSave()
     {
-        var (handler, featureRepo, placeRepo, uow, currentUser, cache) = BuildUpdateAccessibilitySubject();
+        var (handler, featureRepo, placeRepo, uow, cache) = BuildUpdateAccessibilitySubject();
         var placeId = Guid.NewGuid();
 
-        currentUser.IsAuthenticated.Returns(true);
-        currentUser.UserId.Returns(Guid.NewGuid());
         placeRepo
             .AnyAsync(
                 Arg.Any<Expression<Func<Place, bool>>>(),
@@ -486,27 +482,9 @@ public sealed class CommandHandlerCacheInvalidationTests
     }
 
     [Fact]
-    public async Task UpdateAccessibilityFeatures_OnUnauthorized_DoesNotInvalidateCache()
-    {
-        var (handler, _, _, uow, currentUser, cache) = BuildUpdateAccessibilitySubject();
-        currentUser.IsAuthenticated.Returns(false);
-        currentUser.UserId.Returns((Guid?)null);
-
-        var result = await handler.Handle(
-            new UpdateAccessibilityFeaturesCommand(Guid.NewGuid(), Array.Empty<AccessibilityFeatureItemRequest>()),
-            CancellationToken.None);
-
-        result.IsSuccess.Should().BeFalse();
-        await cache.DidNotReceive().RemoveByTagAsync(Arg.Any<string>(), Arg.Any<CancellationToken>());
-        await uow.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
-    }
-
-    [Fact]
     public async Task UpdateAccessibilityFeatures_OnNotFound_DoesNotInvalidateCache()
     {
-        var (handler, _, placeRepo, uow, currentUser, cache) = BuildUpdateAccessibilitySubject();
-        currentUser.IsAuthenticated.Returns(true);
-        currentUser.UserId.Returns(Guid.NewGuid());
+        var (handler, _, placeRepo, uow, cache) = BuildUpdateAccessibilitySubject();
         placeRepo
             .AnyAsync(
                 Arg.Any<Expression<Func<Place, bool>>>(),

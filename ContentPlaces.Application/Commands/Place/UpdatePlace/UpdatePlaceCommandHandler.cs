@@ -25,13 +25,6 @@ public sealed class UpdatePlaceCommandHandler(
     {
         try
         {
-            if (!currentUser.IsAuthenticated || currentUser.UserId is null)
-            {
-                return Result<UpdatePlaceResult>.Failure(
-                    Error.Unauthorized("Authentication is required."),
-                    Outcome.Unauthorized);
-            }
-
             var place = await placeRepository.GetByIdAsync(request.Id, cancellationToken, asNoTracking: false);
             if (place is null)
             {
@@ -40,11 +33,8 @@ public sealed class UpdatePlaceCommandHandler(
                    Outcome.NotFound);
             }
 
-            // Owner-or-admin-tier authorization (IDOR prevention).
-            // Endpoint already verified Place.Update permission; per-row ownership is enforced here.
-            var isAdminTier = AppRoles.HighestPrivilegeLevel(currentUser.Roles)
-                >= RolePrivilegeLevel.Admin;
-            if (!isAdminTier && place.CreatedByUserId != currentUser.UserId.Value)
+            // Ownership check (IDOR prevention).
+            if (place.CreatedByUserId != currentUser.UserId!.Value)
             {
                 return Result<UpdatePlaceResult>.Failure(
                     Error.Forbidden("You do not have permission to update this place."),
@@ -93,7 +83,7 @@ public sealed class UpdatePlaceCommandHandler(
             }
 
             // Cache invalidation strictly AFTER successful SaveChanges.  Failure
-            // paths above (Unauthorized / NotFound / Forbidden / SlugConflict /
+            // paths above (NotFound / Forbidden / SlugConflict /
             // ConcurrencyConflict) return early and never invalidate.
             await cache.RemoveByTagAsync(ContentPlacesCacheKeys.TagForPlace(place.Id), cancellationToken);
             await cache.RemoveByTagAsync(ContentPlacesCacheKeys.TagPlaces, cancellationToken);

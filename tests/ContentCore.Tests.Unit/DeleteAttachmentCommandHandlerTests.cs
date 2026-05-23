@@ -9,7 +9,6 @@ using FluentAssertions;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
-using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Abstractions.Storage;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
@@ -19,8 +18,7 @@ file static class DeleteAttachmentHandlerBuilder
 {
     internal static DeleteAttachmentCommandHandler Build(
         IAttachmentRepository attachmentRepository,
-        ICurrentUser? currentUser = null,
-        IEntityOwnershipResolver? ownershipResolver = null,
+        IOwnershipGuard? ownershipGuard = null,
         IContentCoreUnitOfWork? unitOfWork = null,
         IFileStorageService? fileStorageService = null,
         HybridCache? cache = null)
@@ -29,8 +27,7 @@ file static class DeleteAttachmentHandlerBuilder
             attachmentRepository,
             fileStorageService ?? Substitute.For<IFileStorageService>(),
             unitOfWork ?? OwnershipAuthFixture.NoOpUnitOfWork(),
-            currentUser ?? OwnershipAuthFixture.NonAdminUser(Guid.NewGuid()),
-            ownershipResolver ?? OwnershipAuthFixture.ResolverReturning(OwnershipAuthFixture.ValidOwner(Guid.NewGuid())),
+            ownershipGuard ?? OwnershipAuthFixture.GuardAllowing(),
             cache ?? OwnershipAuthFixture.NoOpCache(),
             Substitute.For<ILogger<DeleteAttachmentCommandHandler>>());
     }
@@ -42,38 +39,10 @@ file static class DeleteAttachmentHandlerBuilder
 public sealed class DeleteAttachmentCommandHandlerTests
 {
     [Fact]
-    public async Task Handle_ShouldReturnUnauthorized_WhenUserIdIsNull()
+    public async Task Handle_ShouldReturnForbidden_WhenGuardDenies()
     {
-        var repository = Substitute.For<IAttachmentRepository>();
-        var unitOfWork = Substitute.For<IContentCoreUnitOfWork>();
-        var storage = Substitute.For<IFileStorageService>();
-        var cache = Substitute.For<HybridCache>();
-        var resolver = Substitute.For<IEntityOwnershipResolver>();
-        var handler = DeleteAttachmentHandlerBuilder.Build(
-            repository,
-            currentUser: OwnershipAuthFixture.UnauthenticatedUser(),
-            ownershipResolver: resolver,
-            unitOfWork: unitOfWork,
-            fileStorageService: storage,
-            cache: cache);
-
-        var result = await handler.Handle(new DeleteAttachmentCommand(Guid.NewGuid()), CancellationToken.None);
-
-        result.Outcome.Should().Be(Outcome.Unauthorized);
-        await repository.DidNotReceiveWithAnyArgs().GetByIdAsync(default, default, default);
-        await resolver.DidNotReceiveWithAnyArgs().ResolveAsync(default, default, default);
-        await unitOfWork.DidNotReceiveWithAnyArgs().SaveChangesAsync(default);
-        await storage.DidNotReceiveWithAnyArgs().DeleteAsync(default!, default);
-        await cache.DidNotReceiveWithAnyArgs().RemoveByTagAsync((string)default!, default);
-    }
-
-    [Fact]
-    public async Task Handle_ShouldReturnForbidden_WhenUploaderIsNotOwner()
-    {
-        var callerId = Guid.NewGuid();
-        var ownerId = Guid.NewGuid();
         var entityId = Guid.NewGuid();
-        var attachment = DeleteAttachmentHandlerBuilder.BuildAttachment(entityId, callerId);
+        var attachment = DeleteAttachmentHandlerBuilder.BuildAttachment(entityId, Guid.NewGuid());
 
         var repository = Substitute.For<IAttachmentRepository>();
         repository.GetByIdAsync(attachment.Id, Arg.Any<CancellationToken>(), false).Returns(attachment);
@@ -82,8 +51,7 @@ public sealed class DeleteAttachmentCommandHandlerTests
         var cache = Substitute.For<HybridCache>();
         var handler = DeleteAttachmentHandlerBuilder.Build(
             repository,
-            currentUser: OwnershipAuthFixture.NonAdminUser(callerId),
-            ownershipResolver: OwnershipAuthFixture.ResolverReturning(OwnershipAuthFixture.ValidOwner(ownerId)),
+            ownershipGuard: OwnershipAuthFixture.GuardForbidden(),
             unitOfWork: unitOfWork,
             fileStorageService: storage,
             cache: cache);
@@ -98,9 +66,8 @@ public sealed class DeleteAttachmentCommandHandlerTests
     }
 
     [Fact]
-    public async Task Handle_ShouldAllowOwner_WhenCallerOwnsTargetEntity()
+    public async Task Handle_ShouldAllowOwner_WhenGuardAllows()
     {
-        var callerId = Guid.NewGuid();
         var entityId = Guid.NewGuid();
         var attachment = DeleteAttachmentHandlerBuilder.BuildAttachment(entityId, Guid.NewGuid());
 
@@ -113,8 +80,7 @@ public sealed class DeleteAttachmentCommandHandlerTests
         var cache = Substitute.For<HybridCache>();
         var handler = DeleteAttachmentHandlerBuilder.Build(
             repository,
-            currentUser: OwnershipAuthFixture.NonAdminUser(callerId),
-            ownershipResolver: OwnershipAuthFixture.ResolverReturning(OwnershipAuthFixture.ValidOwner(callerId)),
+            ownershipGuard: OwnershipAuthFixture.GuardAllowing(),
             unitOfWork: unitOfWork,
             fileStorageService: storage,
             cache: cache);
@@ -128,9 +94,8 @@ public sealed class DeleteAttachmentCommandHandlerTests
     }
 
     [Fact]
-    public async Task Handle_ShouldSkipResolver_WhenCallerIsAdminTier()
+    public async Task Handle_ShouldSucceed_WhenGuardAllowsAsAdmin()
     {
-        var callerId = Guid.NewGuid();
         var entityId = Guid.NewGuid();
         var attachment = DeleteAttachmentHandlerBuilder.BuildAttachment(entityId, Guid.NewGuid());
 
@@ -141,11 +106,9 @@ public sealed class DeleteAttachmentCommandHandlerTests
         var storage = Substitute.For<IFileStorageService>();
         storage.DeleteAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(true);
         var cache = Substitute.For<HybridCache>();
-        var resolver = Substitute.For<IEntityOwnershipResolver>();
         var handler = DeleteAttachmentHandlerBuilder.Build(
             repository,
-            currentUser: OwnershipAuthFixture.AdminUser(callerId),
-            ownershipResolver: resolver,
+            ownershipGuard: OwnershipAuthFixture.GuardAllowing(isAdminTier: true),
             unitOfWork: unitOfWork,
             fileStorageService: storage,
             cache: cache);
@@ -153,13 +116,11 @@ public sealed class DeleteAttachmentCommandHandlerTests
         var result = await handler.Handle(new DeleteAttachmentCommand(attachment.Id), CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
-        await resolver.DidNotReceiveWithAnyArgs().ResolveAsync(default, default, default);
     }
 
     [Fact]
     public async Task Handle_ShouldMapOwnershipNotFound_AndNotMutate()
     {
-        var callerId = Guid.NewGuid();
         var attachment = DeleteAttachmentHandlerBuilder.BuildAttachment(Guid.NewGuid(), Guid.NewGuid());
 
         var repository = Substitute.For<IAttachmentRepository>();
@@ -169,8 +130,7 @@ public sealed class DeleteAttachmentCommandHandlerTests
         var cache = Substitute.For<HybridCache>();
         var handler = DeleteAttachmentHandlerBuilder.Build(
             repository,
-            currentUser: OwnershipAuthFixture.NonAdminUser(callerId),
-            ownershipResolver: OwnershipAuthFixture.ResolverReturning(OwnershipAuthFixture.NotFound()),
+            ownershipGuard: OwnershipAuthFixture.GuardNotFound(),
             unitOfWork: unitOfWork,
             fileStorageService: storage,
             cache: cache);
@@ -178,7 +138,6 @@ public sealed class DeleteAttachmentCommandHandlerTests
         var result = await handler.Handle(new DeleteAttachmentCommand(attachment.Id), CancellationToken.None);
 
         result.Outcome.Should().Be(Outcome.NotFound);
-        result.Errors.Should().Contain(x => x.Code == "Attachment.TargetNotFound");
         repository.DidNotReceiveWithAnyArgs().Remove(default!);
         await unitOfWork.DidNotReceiveWithAnyArgs().SaveChangesAsync(default);
     }
@@ -198,7 +157,6 @@ public sealed class DeleteAttachmentEventRegressionTests
     [Fact]
     public async Task Handle_ShouldRaiseAttachmentDeletedDomainEvent_WhenOwnerDeletes()
     {
-        var callerId = Guid.NewGuid();
         var entityId = Guid.NewGuid();
         var attachment = DeleteAttachmentHandlerBuilder.BuildAttachment(entityId, Guid.NewGuid());
 
@@ -210,8 +168,7 @@ public sealed class DeleteAttachmentEventRegressionTests
         storage.DeleteAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(true);
         var handler = DeleteAttachmentHandlerBuilder.Build(
             repository,
-            currentUser: OwnershipAuthFixture.NonAdminUser(callerId),
-            ownershipResolver: OwnershipAuthFixture.ResolverReturning(OwnershipAuthFixture.ValidOwner(callerId)),
+            ownershipGuard: OwnershipAuthFixture.GuardAllowing(),
             unitOfWork: unitOfWork,
             fileStorageService: storage);
 
@@ -226,7 +183,6 @@ public sealed class DeleteAttachmentEventRegressionTests
     [Fact]
     public async Task Handle_ShouldRaiseAttachmentDeletedDomainEvent_WhenAdminDeletes()
     {
-        var adminId = Guid.NewGuid();
         var attachment = DeleteAttachmentHandlerBuilder.BuildAttachment(Guid.NewGuid(), Guid.NewGuid());
 
         var repository = Substitute.For<IAttachmentRepository>();
@@ -237,7 +193,7 @@ public sealed class DeleteAttachmentEventRegressionTests
         storage.DeleteAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(true);
         var handler = DeleteAttachmentHandlerBuilder.Build(
             repository,
-            currentUser: OwnershipAuthFixture.AdminUser(adminId),
+            ownershipGuard: OwnershipAuthFixture.GuardAllowing(isAdminTier: true),
             unitOfWork: unitOfWork,
             fileStorageService: storage);
 
@@ -254,7 +210,6 @@ public sealed class DeleteAttachmentEventRegressionTests
     [Fact]
     public async Task Handle_ShouldRaiseDomainEventWithCorrectFields_WhenDeleteSucceeds()
     {
-        var callerId = Guid.NewGuid();
         var entityId = Guid.NewGuid();
         var attachment = DeleteAttachmentHandlerBuilder.BuildAttachment(entityId, Guid.NewGuid());
 
@@ -266,8 +221,7 @@ public sealed class DeleteAttachmentEventRegressionTests
         storage.DeleteAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(true);
         var handler = DeleteAttachmentHandlerBuilder.Build(
             repository,
-            currentUser: OwnershipAuthFixture.NonAdminUser(callerId),
-            ownershipResolver: OwnershipAuthFixture.ResolverReturning(OwnershipAuthFixture.ValidOwner(callerId)),
+            ownershipGuard: OwnershipAuthFixture.GuardAllowing(),
             unitOfWork: unitOfWork,
             fileStorageService: storage);
 
@@ -286,7 +240,6 @@ public sealed class DeleteAttachmentEventRegressionTests
     [Fact]
     public async Task Handle_ShouldEvictEntityAttachmentsTag_WhenDeleteSucceeds()
     {
-        var callerId = Guid.NewGuid();
         var entityId = Guid.NewGuid();
         var attachment = DeleteAttachmentHandlerBuilder.BuildAttachment(entityId, Guid.NewGuid());
 
@@ -299,8 +252,7 @@ public sealed class DeleteAttachmentEventRegressionTests
         var cache = Substitute.For<HybridCache>();
         var handler = DeleteAttachmentHandlerBuilder.Build(
             repository,
-            currentUser: OwnershipAuthFixture.NonAdminUser(callerId),
-            ownershipResolver: OwnershipAuthFixture.ResolverReturning(OwnershipAuthFixture.ValidOwner(callerId)),
+            ownershipGuard: OwnershipAuthFixture.GuardAllowing(),
             unitOfWork: unitOfWork,
             fileStorageService: storage,
             cache: cache);
@@ -316,7 +268,6 @@ public sealed class DeleteAttachmentEventRegressionTests
     [Fact]
     public async Task Handle_ShouldEvictSingleAttachmentTag_WhenDeleteSucceeds()
     {
-        var callerId = Guid.NewGuid();
         var entityId = Guid.NewGuid();
         var attachment = DeleteAttachmentHandlerBuilder.BuildAttachment(entityId, Guid.NewGuid());
 
@@ -329,8 +280,7 @@ public sealed class DeleteAttachmentEventRegressionTests
         var cache = Substitute.For<HybridCache>();
         var handler = DeleteAttachmentHandlerBuilder.Build(
             repository,
-            currentUser: OwnershipAuthFixture.NonAdminUser(callerId),
-            ownershipResolver: OwnershipAuthFixture.ResolverReturning(OwnershipAuthFixture.ValidOwner(callerId)),
+            ownershipGuard: OwnershipAuthFixture.GuardAllowing(),
             unitOfWork: unitOfWork,
             fileStorageService: storage,
             cache: cache);
@@ -347,10 +297,8 @@ public sealed class DeleteAttachmentEventRegressionTests
     [Fact]
     public async Task Handle_ShouldNotRaiseDomainEvent_WhenForbidden()
     {
-        var callerId = Guid.NewGuid();
-        var ownerId = Guid.NewGuid();
         var entityId = Guid.NewGuid();
-        var attachment = DeleteAttachmentHandlerBuilder.BuildAttachment(entityId, callerId);
+        var attachment = DeleteAttachmentHandlerBuilder.BuildAttachment(entityId, Guid.NewGuid());
 
         var repository = Substitute.For<IAttachmentRepository>();
         repository.GetByIdAsync(attachment.Id, Arg.Any<CancellationToken>(), false).Returns(attachment);
@@ -359,8 +307,7 @@ public sealed class DeleteAttachmentEventRegressionTests
         var cache = Substitute.For<HybridCache>();
         var handler = DeleteAttachmentHandlerBuilder.Build(
             repository,
-            currentUser: OwnershipAuthFixture.NonAdminUser(callerId),
-            ownershipResolver: OwnershipAuthFixture.ResolverReturning(OwnershipAuthFixture.ValidOwner(ownerId)),
+            ownershipGuard: OwnershipAuthFixture.GuardForbidden(),
             unitOfWork: unitOfWork,
             fileStorageService: storage,
             cache: cache);
@@ -389,7 +336,6 @@ public sealed class DeleteAttachmentEventRegressionTests
         var cache = Substitute.For<HybridCache>();
         var handler = DeleteAttachmentHandlerBuilder.Build(
             repository,
-            currentUser: OwnershipAuthFixture.NonAdminUser(Guid.NewGuid()),
             unitOfWork: unitOfWork,
             fileStorageService: storage,
             cache: cache);
@@ -407,7 +353,6 @@ public sealed class DeleteAttachmentEventRegressionTests
     [Fact]
     public async Task Handle_ShouldNotRaiseDomainEvent_WhenTargetEntityNotFound()
     {
-        var callerId = Guid.NewGuid();
         var attachment = DeleteAttachmentHandlerBuilder.BuildAttachment(Guid.NewGuid(), Guid.NewGuid());
 
         var repository = Substitute.For<IAttachmentRepository>();
@@ -417,8 +362,7 @@ public sealed class DeleteAttachmentEventRegressionTests
         var cache = Substitute.For<HybridCache>();
         var handler = DeleteAttachmentHandlerBuilder.Build(
             repository,
-            currentUser: OwnershipAuthFixture.NonAdminUser(callerId),
-            ownershipResolver: OwnershipAuthFixture.ResolverReturning(OwnershipAuthFixture.NotFound()),
+            ownershipGuard: OwnershipAuthFixture.GuardNotFound(),
             unitOfWork: unitOfWork,
             fileStorageService: storage,
             cache: cache);
@@ -426,7 +370,6 @@ public sealed class DeleteAttachmentEventRegressionTests
         var result = await handler.Handle(new DeleteAttachmentCommand(attachment.Id), CancellationToken.None);
 
         result.Outcome.Should().Be(Outcome.NotFound);
-        result.Errors.Should().Contain(e => e.Code == "Attachment.TargetNotFound");
         attachment.DomainEvents
             .OfType<AttachmentDeletedDomainEvent>()
             .Should().BeEmpty("MarkForDeletion must NOT be called when the target entity is missing");
@@ -439,7 +382,6 @@ public sealed class DeleteAttachmentEventRegressionTests
     [Fact]
     public async Task Handle_ShouldNotRaiseDomainEvent_WhenTargetEntityIsDeleted()
     {
-        var callerId = Guid.NewGuid();
         var attachment = DeleteAttachmentHandlerBuilder.BuildAttachment(Guid.NewGuid(), Guid.NewGuid());
 
         var repository = Substitute.For<IAttachmentRepository>();
@@ -449,8 +391,7 @@ public sealed class DeleteAttachmentEventRegressionTests
         var cache = Substitute.For<HybridCache>();
         var handler = DeleteAttachmentHandlerBuilder.Build(
             repository,
-            currentUser: OwnershipAuthFixture.NonAdminUser(callerId),
-            ownershipResolver: OwnershipAuthFixture.ResolverReturning(OwnershipAuthFixture.Deleted(callerId)),
+            ownershipGuard: OwnershipAuthFixture.GuardInvalid("Attachment.TargetDeleted", "Target entity is deleted."),
             unitOfWork: unitOfWork,
             fileStorageService: storage,
             cache: cache);

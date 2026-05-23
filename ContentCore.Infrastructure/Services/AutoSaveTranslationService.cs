@@ -2,6 +2,7 @@ using ContentCore.Domain.Entities;
 using ContentCore.Domain.Repositories;
 using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Translation;
+using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
 namespace ContentCore.Infrastructure.Services;
 
@@ -32,7 +33,7 @@ public sealed class AutoSaveTranslationService : ITranslationService
         _logger = logger;
     }
 
-    public async Task<TranslationResult> TranslateAsync(
+    public async Task<Result<TranslationResult>> TranslateAsync(
         string text,
         string fromLanguageCode,
         string toLanguageCode,
@@ -45,24 +46,28 @@ public sealed class AutoSaveTranslationService : ITranslationService
             _logger.LogDebug(
                 "Translation cache hit: '{Text}' {From} → {To}",
                 text[..Math.Min(50, text.Length)], fromLanguageCode, toLanguageCode);
-            return new TranslationResult(
+            return Result<TranslationResult>.Success(new TranslationResult(
                 cached.OriginalText,
                 cached.TranslatedText,
                 cached.FromLanguage,
                 cached.ToLanguage,
-                cached.Confidence);
+                cached.Confidence));
         }
 
         // 2. Call external API
         var result = await _inner.TranslateAsync(text, fromLanguageCode, toLanguageCode, ct);
+        if (result.IsFailure)
+            return result;
+
+        var value = result.Value;
 
         // 3. Persist cache entry immediately (dedup-safe)
         var entry = TranslationCache.Create(
-            result.OriginalText,
-            result.TranslatedText,
-            result.FromLanguage,
-            result.ToLanguage,
-            result.Confidence);
+            value.OriginalText,
+            value.TranslatedText,
+            value.FromLanguage,
+            value.ToLanguage,
+            value.Confidence);
 
         var inserted = await _cacheRepository.TryAddCacheEntryAsync(entry, ct);
         if (!inserted)
@@ -75,7 +80,7 @@ public sealed class AutoSaveTranslationService : ITranslationService
         return result;
     }
 
-    public async Task<IReadOnlyList<TranslationResult>> BatchTranslateAsync(
+    public async Task<Result<IReadOnlyList<TranslationResult>>> BatchTranslateAsync(
         IReadOnlyList<string> texts,
         string fromLanguageCode,
         string toLanguageCode,
@@ -109,8 +114,11 @@ public sealed class AutoSaveTranslationService : ITranslationService
         // 2. Batch-translate uncached texts
         if (uncachedTexts.Count > 0)
         {
-            var apiResults = await _inner.BatchTranslateAsync(uncachedTexts, fromLanguageCode, toLanguageCode, ct);
+            var apiResult = await _inner.BatchTranslateAsync(uncachedTexts, fromLanguageCode, toLanguageCode, ct);
+            if (apiResult.IsFailure)
+                return apiResult;
 
+            var apiResults = apiResult.Value;
             for (var i = 0; i < apiResults.Count; i++)
             {
                 var r = apiResults[i];
@@ -138,7 +146,7 @@ public sealed class AutoSaveTranslationService : ITranslationService
             "Batch translate: {Total} total, {Cached} cached, {Api} API calls",
             texts.Count, texts.Count - uncachedTexts.Count, uncachedTexts.Count);
 
-        return results;
+        return Result<IReadOnlyList<TranslationResult>>.Success(results);
     }
 
     public Task<string> DetectLanguageAsync(string text, CancellationToken ct = default)

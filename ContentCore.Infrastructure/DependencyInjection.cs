@@ -105,6 +105,7 @@ public static class DependencyInjection
         // ITourGuideOwnershipService). ContentCore.Application depends only on
         // those modules' Contracts projects.
         services.AddScoped<IEntityOwnershipResolver, EntityOwnershipResolver>();
+        services.AddScoped<IOwnershipGuard, OwnershipGuard>();
 
         // ── File Storage ─────────────────────────────────────────────────────
         services.AddScoped<IFileStorageService, LocalFileStorageService>();

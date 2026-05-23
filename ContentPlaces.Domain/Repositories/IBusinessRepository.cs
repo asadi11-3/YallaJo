@@ -1,4 +1,5 @@
 using ContentPlaces.Domain.Entities;
+using ContentPlaces.Domain.Queries;
 using YallaJo.SharedKernel.Domain.Abstractions.Data;
 
 namespace ContentPlaces.Domain.Repositories;
@@ -22,4 +23,12 @@ public interface IBusinessRepository : IRepository<Business, Guid>
 
     /// <summary>Deletes all existing BusinessHours for the business and inserts the new set atomically.</summary>
     Task ReplaceBusinessHoursAsync(Guid businessId, IEnumerable<BusinessHours> newHours, CancellationToken ct = default);
+
+    /// <summary>Returns nearby businesses using Haversine formula with bounding-box pre-filter.</summary>
+    Task<IReadOnlyList<NearbyBusinessResult>> GetNearbyAsync(
+        double lat,
+        double lng,
+        double radiusKm,
+        int pageSize,
+        CancellationToken ct = default);
 }

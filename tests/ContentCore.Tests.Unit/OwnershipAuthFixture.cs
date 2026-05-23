@@ -6,6 +6,7 @@ using NSubstitute;
 using Security.Contracts.Authorization;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Authorization;
+using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
 namespace ContentCore.Tests.Unit;
 
@@ -94,4 +95,42 @@ internal static class OwnershipAuthFixture
             .Returns(resolution);
         return resolver;
     }
+
+    // ── Ownership guard helpers ──────────────────────────────────────────────
+
+    /// <summary>Guard that always authorizes (admin-tier or owner).</summary>
+    internal static IOwnershipGuard GuardAllowing(bool isAdminTier = false)
+    {
+        var guard = Substitute.For<IOwnershipGuard>();
+        guard.IsAdminTier.Returns(isAdminTier);
+        guard
+            .AuthorizeAsync(Arg.Any<EntityType>(), Arg.Any<Guid>(), Arg.Any<string>(),
+                Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            .Returns(Result.Success());
+        return guard;
+    }
+
+    /// <summary>Guard that returns a specific failure result.</summary>
+    internal static IOwnershipGuard GuardDenying(Error error, Outcome outcome, bool isAdminTier = false)
+    {
+        var guard = Substitute.For<IOwnershipGuard>();
+        guard.IsAdminTier.Returns(isAdminTier);
+        guard
+            .AuthorizeAsync(Arg.Any<EntityType>(), Arg.Any<Guid>(), Arg.Any<string>(),
+                Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            .Returns(Result.Failure(error, outcome));
+        return guard;
+    }
+
+    /// <summary>Guard that denies with Forbidden outcome.</summary>
+    internal static IOwnershipGuard GuardForbidden(bool isAdminTier = false) =>
+        GuardDenying(Error.Forbidden("You do not have permission to perform this operation."), Outcome.Forbidden, isAdminTier);
+
+    /// <summary>Guard that denies with NotFound outcome.</summary>
+    internal static IOwnershipGuard GuardNotFound() =>
+        GuardDenying(new Error("Ownership.TargetNotFound", "Entity not found."), Outcome.NotFound);
+
+    /// <summary>Guard that denies with Invalid outcome (deleted or unsupported).</summary>
+    internal static IOwnershipGuard GuardInvalid(string code, string message) =>
+        GuardDenying(new Error(code, message), Outcome.Invalid);
 }

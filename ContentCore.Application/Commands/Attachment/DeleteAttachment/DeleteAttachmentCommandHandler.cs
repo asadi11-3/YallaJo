@@ -4,8 +4,6 @@ using ContentCore.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
-using Security.Contracts.Authorization;
-using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Application.Abstractions.Storage;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
@@ -17,8 +15,7 @@ public sealed class DeleteAttachmentCommandHandler(
     IAttachmentRepository attachmentRepository,
     IFileStorageService fileStorageService,
     IContentCoreUnitOfWork unitOfWork,
-    ICurrentUser currentUser,
-    IEntityOwnershipResolver ownershipResolver,
+    IOwnershipGuard ownershipGuard,
     HybridCache cache,
     ILogger<DeleteAttachmentCommandHandler> logger)
     : ICommandHandler<DeleteAttachmentCommand>
@@ -27,9 +24,6 @@ public sealed class DeleteAttachmentCommandHandler(
     {
         try
         {
-            if (currentUser.UserId is null)
-                return Result.Failure(Error.Unauthorized("Authentication is required."), Outcome.Unauthorized);
-
             var attachment = await attachmentRepository.GetByIdAsync(
                 request.AttachmentId, cancellationToken, asNoTracking: false);
 
@@ -40,51 +34,14 @@ public sealed class DeleteAttachmentCommandHandler(
                     Outcome.NotFound);
             }
 
-            // IDOR: only the target-entity owner or an admin-tier role (Admin/SuperAdmin/Owner)
-            // may delete an attachment. Uploader alone is not sufficient — uploading does not
-            // grant control over the surrounding entity (Tour/Place/Business/Blog/Review/TourGuide).
-            var isAdminTier = AppRoles.HighestPrivilegeLevel(currentUser.Roles)
-                >= RolePrivilegeLevel.Admin;
+            // Ownership guard (admin-tier bypass + ownership check)
+            var authResult = await ownershipGuard.AuthorizeAsync(
+                attachment.EntityType, attachment.EntityId, "Attachment",
+                "You do not have permission to delete this attachment.",
+                cancellationToken);
 
-            if (!isAdminTier)
-            {
-                var ownership = await ownershipResolver.ResolveAsync(
-                    attachment.EntityType, attachment.EntityId, cancellationToken);
-
-                if (!ownership.IsSupported)
-                {
-                    return Result.Failure(
-                        new Error(
-                            "Attachment.UnsupportedEntityType",
-                            "This entity type cannot be authorized for attachment operations."),
-                        Outcome.Invalid);
-                }
-
-                if (!ownership.Exists)
-                {
-                    return Result.Failure(
-                        new Error(
-                            "Attachment.TargetNotFound",
-                            $"{attachment.EntityType} '{attachment.EntityId}' was not found."),
-                        Outcome.NotFound);
-                }
-
-                if (ownership.IsDeleted)
-                {
-                    return Result.Failure(
-                        new Error(
-                            "Attachment.TargetDeleted",
-                            $"{attachment.EntityType} '{attachment.EntityId}' is deleted."),
-                        Outcome.Invalid);
-                }
-
-                if (ownership.OwnerUserId != currentUser.UserId.Value)
-                {
-                    return Result.Failure(
-                        Error.Forbidden("You do not have permission to delete this attachment."),
-                        Outcome.Forbidden);
-                }
-            }
+            if (!authResult.IsSuccess)
+                return authResult;
 
             // Capture file URL before removing from DB
             var fileUrl = attachment.Url;

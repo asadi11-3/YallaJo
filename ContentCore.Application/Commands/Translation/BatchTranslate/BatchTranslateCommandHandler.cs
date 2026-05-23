@@ -17,13 +17,16 @@ public sealed class BatchTranslateCommandHandler(
     {
         try
         {
-            var results = await translationService.BatchTranslateAsync(
+            var result = await translationService.BatchTranslateAsync(
                 request.Texts,
                 request.FromLanguageCode,
                 request.ToLanguageCode,
                 cancellationToken);
 
-            var items = results
+            if (result.IsFailure)
+                return Result<BatchTranslateResult>.Fail(result.Outcome, result.Errors.ToArray());
+
+            var items = result.Value
                 .Select(r => new BatchTranslateResultItem(
                     r.OriginalText,
                     r.TranslatedText,
@@ -37,12 +40,6 @@ public sealed class BatchTranslateCommandHandler(
                 items.Count, request.FromLanguageCode, request.ToLanguageCode);
 
             return Result<BatchTranslateResult>.Success(new BatchTranslateResult(items));
-        }
-        catch (HttpRequestException)
-        {
-            return Result<BatchTranslateResult>.Failure(
-                new Error("Translation.ServiceUnavailable", "Translation service is temporarily unavailable."),
-                Outcome.ServerError);
         }
         catch (TaskCanceledException) when (!cancellationToken.IsCancellationRequested)
         {

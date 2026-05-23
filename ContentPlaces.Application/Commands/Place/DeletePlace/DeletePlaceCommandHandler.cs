@@ -23,13 +23,6 @@ public sealed class DeletePlaceCommandHandler(
     {
         try
         {
-            if (!currentUser.IsAuthenticated || currentUser.UserId is null)
-            {
-                return Result.Failure(
-                    Error.Unauthorized("Authentication is required."),
-                    Outcome.Unauthorized);
-            }
-
             var place = await placeRepository.GetByIdAsync(request.PlaceId, cancellationToken, asNoTracking: false);
             if (place is null)
             {
@@ -38,10 +31,8 @@ public sealed class DeletePlaceCommandHandler(
                     Outcome.NotFound);
             }
 
-            // Owner-or-admin-tier authorization (IDOR prevention).
-            var isAdminTier = AppRoles.HighestPrivilegeLevel(currentUser.Roles)
-                >= RolePrivilegeLevel.Admin;
-            if (!isAdminTier && place.CreatedByUserId != currentUser.UserId.Value)
+            // Ownership check (IDOR prevention).
+            if (place.CreatedByUserId != currentUser.UserId!.Value)
             {
                 return Result.Failure(
                     Error.Forbidden("You do not have permission to delete this place."),

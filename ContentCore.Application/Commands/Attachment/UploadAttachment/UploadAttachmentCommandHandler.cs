@@ -5,7 +5,6 @@ using ContentCore.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
-using Security.Contracts.Authorization;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Application.Abstractions.Storage;
@@ -19,7 +18,7 @@ public sealed class UploadAttachmentCommandHandler(
     IAttachmentRepository attachmentRepository,
     IContentCoreUnitOfWork unitOfWork,
     ICurrentUser currentUser,
-    IEntityOwnershipResolver ownershipResolver,
+    IOwnershipGuard ownershipGuard,
     IMediaProcessingQueue mediaProcessingQueue,
     HybridCache cache,
     ILogger<UploadAttachmentCommandHandler> logger)
@@ -50,66 +49,28 @@ public sealed class UploadAttachmentCommandHandler(
     {
         try
         {
-            if (currentUser.UserId is null)
-            {
-                return Result<UploadAttachmentResult>.Failure(
-                    Error.Unauthorized("Authentication is required."),
-                    Outcome.Unauthorized);
-            }
-
             // IDOR / spoofing guard: only the current user (or an admin-tier role: Admin/SuperAdmin/Owner)
             // may upload as UploadedByUserId.
-            var isAdminTier = AppRoles.HighestPrivilegeLevel(currentUser.Roles)
-                >= RolePrivilegeLevel.Admin;
-
-            if (!isAdminTier && request.UploadedByUserId != currentUser.UserId.Value)
+            if (!ownershipGuard.IsAdminTier && request.UploadedByUserId != currentUser.UserId!.Value)
             {
                 return Result<UploadAttachmentResult>.Failure(
                     Error.Forbidden("You cannot upload attachments on behalf of another user."),
                     Outcome.Forbidden);
             }
 
-            // Target-entity ownership probe (skipped for admin-tier callers).
+            // Target-entity ownership probe (admin-tier bypass + ownership check).
             // Runs BEFORE file validation, storage upload, DB write, cache eviction,
             // and media-queue enqueue. A non-admin caller must own the target entity.
-            if (!isAdminTier)
+            var authResult = await ownershipGuard.AuthorizeAsync(
+                request.EntityType, request.EntityId, "Attachment",
+                "You do not have permission to upload attachments to this entity.",
+                cancellationToken);
+
+            if (!authResult.IsSuccess)
             {
-                var ownership = await ownershipResolver.ResolveAsync(
-                    request.EntityType, request.EntityId, cancellationToken);
-
-                if (!ownership.IsSupported)
-                {
-                    return Result<UploadAttachmentResult>.Failure(
-                        new Error(
-                            "Attachment.UnsupportedEntityType",
-                            "This entity type cannot be authorized for attachment operations."),
-                        Outcome.Invalid);
-                }
-
-                if (!ownership.Exists)
-                {
-                    return Result<UploadAttachmentResult>.Failure(
-                        new Error(
-                            "Attachment.TargetNotFound",
-                            $"{request.EntityType} '{request.EntityId}' was not found."),
-                        Outcome.NotFound);
-                }
-
-                if (ownership.IsDeleted)
-                {
-                    return Result<UploadAttachmentResult>.Failure(
-                        new Error(
-                            "Attachment.TargetDeleted",
-                            $"{request.EntityType} '{request.EntityId}' is deleted."),
-                        Outcome.Invalid);
-                }
-
-                if (ownership.OwnerUserId != currentUser.UserId.Value)
-                {
-                    return Result<UploadAttachmentResult>.Failure(
-                        Error.Forbidden("You do not have permission to upload attachments to this entity."),
-                        Outcome.Forbidden);
-                }
+                return Result<UploadAttachmentResult>.Fail(
+                    authResult.Outcome,
+                    authResult.Errors.ToArray());
             }
 
             var detectedFileType = await DetectFileTypeAsync(request.FileStream, cancellationToken);
@@ -152,12 +113,17 @@ public sealed class UploadAttachmentCommandHandler(
             // 1. Upload physical file to storage first.
             // If DB save fails below we will attempt to clean up the orphaned file.
             var folder = request.EntityType.ToString().ToLowerInvariant() + "s";
-            var uploadResult = await fileStorageService.UploadAsync(
+            var uploadResponse = await fileStorageService.UploadAsync(
                 request.FileStream,
                 request.FileName,
                 request.ContentType,
                 folder,
                 cancellationToken);
+
+            if (uploadResponse.IsFailure)
+                return Result<UploadAttachmentResult>.Fail(uploadResponse.Outcome, uploadResponse.Errors.ToArray());
+
+            var uploadResult = uploadResponse.Value;
 
             // 2. Create domain entity with uploaded file metadata
             var attachment = Domain.Entities.Attachment.Create(

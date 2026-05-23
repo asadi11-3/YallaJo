@@ -15,7 +15,6 @@ public sealed class UpdateAccessibilityFeaturesCommandHandler(
     IAccessibilityFeatureRepository featureRepository,
     IPlaceRepository placeRepository,
     IContentPlacesUnitOfWork unitOfWork,
-    ICurrentUser currentUser,
     HybridCache cache,
     ILogger<UpdateAccessibilityFeaturesCommandHandler> logger)
     : ICommandHandler<UpdateAccessibilityFeaturesCommand>
@@ -26,14 +25,6 @@ public sealed class UpdateAccessibilityFeaturesCommandHandler(
         UpdateAccessibilityFeaturesCommand request,
         CancellationToken cancellationToken)
     {
-        // Authentication defence-in-depth (endpoint MustHavePermissionAttribute
-        // handles authorization for AccessibilityFeature:Update).
-        if (!currentUser.IsAuthenticated || currentUser.UserId is null)
-        {
-            return Result.Failure(
-                Error.Unauthorized("Authentication required"));
-        }
-
         // Validate place existence
         var placeExists = await placeRepository.AnyAsync(
             x => x.Id == request.PlaceId,

@@ -7,7 +7,6 @@ using FluentAssertions;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
-using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
 namespace ContentCore.Tests.Unit;
@@ -16,16 +15,14 @@ file static class ReorderAttachmentsHandlerBuilder
 {
     internal static ReorderAttachmentsCommandHandler Build(
         IAttachmentRepository attachmentRepository,
-        ICurrentUser? currentUser = null,
-        IEntityOwnershipResolver? ownershipResolver = null,
+        IOwnershipGuard? ownershipGuard = null,
         IContentCoreUnitOfWork? unitOfWork = null,
         HybridCache? cache = null)
     {
         return new ReorderAttachmentsCommandHandler(
             attachmentRepository,
             unitOfWork ?? OwnershipAuthFixture.NoOpUnitOfWork(),
-            currentUser ?? OwnershipAuthFixture.NonAdminUser(Guid.NewGuid()),
-            ownershipResolver ?? OwnershipAuthFixture.ResolverReturning(OwnershipAuthFixture.ValidOwner(Guid.NewGuid())),
+            ownershipGuard ?? OwnershipAuthFixture.GuardAllowing(),
             cache ?? OwnershipAuthFixture.NoOpCache(),
             Substitute.For<ILogger<ReorderAttachmentsCommandHandler>>());
     }
@@ -37,37 +34,12 @@ file static class ReorderAttachmentsHandlerBuilder
 public sealed class ReorderAttachmentsCommandHandlerTests
 {
     [Fact]
-    public async Task Handle_ShouldReturnUnauthorized_WhenUserIdIsNull()
+    public async Task Handle_ShouldReturnForbidden_WhenGuardDenies()
     {
-        var repository = Substitute.For<IAttachmentRepository>();
-        var unitOfWork = Substitute.For<IContentCoreUnitOfWork>();
-        var cache = Substitute.For<HybridCache>();
-        var resolver = Substitute.For<IEntityOwnershipResolver>();
-        var handler = ReorderAttachmentsHandlerBuilder.Build(
-            repository,
-            currentUser: OwnershipAuthFixture.UnauthenticatedUser(),
-            ownershipResolver: resolver,
-            unitOfWork: unitOfWork,
-            cache: cache);
-
-        var result = await handler.Handle(
-            new ReorderAttachmentsCommand(EntityType.Tour, Guid.NewGuid(), Array.Empty<Guid>()),
-            CancellationToken.None);
-
-        result.Outcome.Should().Be(Outcome.Unauthorized);
-        await repository.DidNotReceiveWithAnyArgs().GetAllAsync(default, default, default, default, default);
-        await resolver.DidNotReceiveWithAnyArgs().ResolveAsync(default, default, default);
-    }
-
-    [Fact]
-    public async Task Handle_ShouldReturnForbidden_WhenUploaderIsNotOwner()
-    {
-        var callerId = Guid.NewGuid();
-        var ownerId = Guid.NewGuid();
         var entityId = Guid.NewGuid();
         var attachments = new List<Attachment>
         {
-            ReorderAttachmentsHandlerBuilder.BuildAttachment(entityId, callerId, 0),
+            ReorderAttachmentsHandlerBuilder.BuildAttachment(entityId, Guid.NewGuid(), 0),
             ReorderAttachmentsHandlerBuilder.BuildAttachment(entityId, Guid.NewGuid(), 1)
         };
         var orderedIds = attachments.Select(x => x.Id).Reverse().ToList();
@@ -79,8 +51,7 @@ public sealed class ReorderAttachmentsCommandHandlerTests
         var cache = Substitute.For<HybridCache>();
         var handler = ReorderAttachmentsHandlerBuilder.Build(
             repository,
-            currentUser: OwnershipAuthFixture.NonAdminUser(callerId),
-            ownershipResolver: OwnershipAuthFixture.ResolverReturning(OwnershipAuthFixture.ValidOwner(ownerId)),
+            ownershipGuard: OwnershipAuthFixture.GuardForbidden(),
             unitOfWork: unitOfWork,
             cache: cache);
 
@@ -94,9 +65,8 @@ public sealed class ReorderAttachmentsCommandHandlerTests
     }
 
     [Fact]
-    public async Task Handle_ShouldAllowOwner_WhenCallerOwnsTargetEntity()
+    public async Task Handle_ShouldAllowOwner_WhenGuardAllows()
     {
-        var callerId = Guid.NewGuid();
         var entityId = Guid.NewGuid();
         var attachments = new List<Attachment>
         {
@@ -112,8 +82,7 @@ public sealed class ReorderAttachmentsCommandHandlerTests
         unitOfWork.SaveChangesAsync(Arg.Any<CancellationToken>()).Returns(1);
         var handler = ReorderAttachmentsHandlerBuilder.Build(
             repository,
-            currentUser: OwnershipAuthFixture.NonAdminUser(callerId),
-            ownershipResolver: OwnershipAuthFixture.ResolverReturning(OwnershipAuthFixture.ValidOwner(callerId)),
+            ownershipGuard: OwnershipAuthFixture.GuardAllowing(),
             unitOfWork: unitOfWork);
 
         var result = await handler.Handle(new ReorderAttachmentsCommand(EntityType.Tour, entityId, orderedIds), CancellationToken.None);
@@ -125,9 +94,8 @@ public sealed class ReorderAttachmentsCommandHandlerTests
     }
 
     [Fact]
-    public async Task Handle_ShouldSkipResolver_WhenCallerIsAdminTier()
+    public async Task Handle_ShouldSucceed_WhenGuardAllowsAsAdmin()
     {
-        var callerId = Guid.NewGuid();
         var entityId = Guid.NewGuid();
         var attachments = new List<Attachment>
         {
@@ -140,23 +108,19 @@ public sealed class ReorderAttachmentsCommandHandlerTests
             .Returns(attachments);
         var unitOfWork = Substitute.For<IContentCoreUnitOfWork>();
         unitOfWork.SaveChangesAsync(Arg.Any<CancellationToken>()).Returns(1);
-        var resolver = Substitute.For<IEntityOwnershipResolver>();
         var handler = ReorderAttachmentsHandlerBuilder.Build(
             repository,
-            currentUser: OwnershipAuthFixture.AdminUser(callerId),
-            ownershipResolver: resolver,
+            ownershipGuard: OwnershipAuthFixture.GuardAllowing(isAdminTier: true),
             unitOfWork: unitOfWork);
 
         var result = await handler.Handle(new ReorderAttachmentsCommand(EntityType.Tour, entityId, orderedIds), CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
-        await resolver.DidNotReceiveWithAnyArgs().ResolveAsync(default, default, default);
     }
 
     [Fact]
     public async Task Handle_ShouldMapDeletedTarget_AndNotMutate()
     {
-        var callerId = Guid.NewGuid();
         var entityId = Guid.NewGuid();
         var attachments = new List<Attachment>
         {
@@ -169,8 +133,7 @@ public sealed class ReorderAttachmentsCommandHandlerTests
         var unitOfWork = Substitute.For<IContentCoreUnitOfWork>();
         var handler = ReorderAttachmentsHandlerBuilder.Build(
             repository,
-            currentUser: OwnershipAuthFixture.NonAdminUser(callerId),
-            ownershipResolver: OwnershipAuthFixture.ResolverReturning(OwnershipAuthFixture.Deleted(callerId)),
+            ownershipGuard: OwnershipAuthFixture.GuardInvalid("Attachment.TargetDeleted", "Target entity is deleted."),
             unitOfWork: unitOfWork);
 
         var result = await handler.Handle(

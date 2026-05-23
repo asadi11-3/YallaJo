@@ -1,3 +1,4 @@
+using ContentCore.Application.Authorization;
 using ContentCore.Application.Commands.EntityTag.AssignTagsToEntity;
 using ContentCore.Domain.Entities;
 using ContentCore.Domain.Enums;
@@ -11,7 +12,7 @@ namespace ContentCore.Tests.Unit;
 
 /// <summary>
 /// Authorization regression tests for <see cref="AssignTagsToEntityCommandHandler"/>.
-/// Verifies admin-tier-or-owner rule added in CONTENTCORE-STD-P1-003 Phase C4.
+/// Verifies admin-tier-or-owner rule via IOwnershipGuard (CONTENTCORE-STD-P1-003 Phase C4).
 /// </summary>
 public sealed class AssignTagsToEntityCommandHandlerTests
 {
@@ -22,44 +23,26 @@ public sealed class AssignTagsToEntityCommandHandlerTests
         ITagRepository? tagRepository = null,
         IContentCoreUnitOfWork? unitOfWork = null,
         Microsoft.Extensions.Caching.Hybrid.HybridCache? cache = null,
-        YallaJo.SharedKernel.Application.Abstractions.Context.ICurrentUser? currentUser = null,
-        ContentCore.Application.Authorization.IEntityOwnershipResolver? ownershipResolver = null)
+        IOwnershipGuard? ownershipGuard = null)
     {
         return new AssignTagsToEntityCommandHandler(
             entityTagRepository ?? Substitute.For<IEntityTagRepository>(),
             tagRepository ?? Substitute.For<ITagRepository>(),
             unitOfWork ?? OwnershipAuthFixture.NoOpUnitOfWork(),
             cache ?? OwnershipAuthFixture.NoOpCache(),
-            currentUser ?? OwnershipAuthFixture.NonAdminUser(Guid.NewGuid()),
-            ownershipResolver ?? OwnershipAuthFixture.ResolverReturning(
-                OwnershipAuthFixture.ValidOwner(Guid.NewGuid())),
+            ownershipGuard ?? OwnershipAuthFixture.GuardAllowing(),
             Substitute.For<ILogger<AssignTagsToEntityCommandHandler>>());
     }
 
     private static AssignTagsToEntityCommand ValidCommand(Guid entityId) =>
         new(OwnershipAuthFixture.ValidEntityTypeString, entityId, [Guid.NewGuid()]);
 
-    // ── Authentication guard ──────────────────────────────────────────────────
-
-    [Fact]
-    public async Task Handle_ShouldReturnUnauthorized_WhenUserIdIsNull()
-    {
-        var handler = BuildHandler(currentUser: OwnershipAuthFixture.UnauthenticatedUser());
-
-        var result = await handler.Handle(
-            ValidCommand(Guid.NewGuid()), CancellationToken.None);
-
-        result.IsSuccess.Should().BeFalse();
-        result.Outcome.Should().Be(Outcome.Unauthorized);
-    }
-
     // ── EntityType parse guard ────────────────────────────────────────────────
 
     [Fact]
     public async Task Handle_ShouldReturnInvalid_WhenEntityTypeIsUnrecognized()
     {
-        var userId = Guid.NewGuid();
-        var handler = BuildHandler(currentUser: OwnershipAuthFixture.NonAdminUser(userId));
+        var handler = BuildHandler();
         var command = new AssignTagsToEntityCommand(
             OwnershipAuthFixture.InvalidEntityTypeString, Guid.NewGuid(), [Guid.NewGuid()]);
 
@@ -72,21 +55,18 @@ public sealed class AssignTagsToEntityCommandHandlerTests
             e.Message == "Invalid entity type.");
     }
 
-    // ── Ownership probe — target not found ────────────────────────────────────
+    // ── Guard denials propagate correctly ─────────────────────────────────────
 
     [Fact]
-    public async Task Handle_ShouldReturnNotFound_WhenTargetEntityDoesNotExist()
+    public async Task Handle_ShouldReturnNotFound_WhenGuardDeniesWithNotFound()
     {
-        var userId = Guid.NewGuid();
-        var resolver = OwnershipAuthFixture.ResolverReturning(OwnershipAuthFixture.NotFound());
         var entityTagRepo = Substitute.For<IEntityTagRepository>();
         var cache = OwnershipAuthFixture.NoOpCache();
 
         var handler = BuildHandler(
             entityTagRepository: entityTagRepo,
             cache: cache,
-            currentUser: OwnershipAuthFixture.NonAdminUser(userId),
-            ownershipResolver: resolver);
+            ownershipGuard: OwnershipAuthFixture.GuardNotFound());
 
         var result = await handler.Handle(ValidCommand(Guid.NewGuid()), CancellationToken.None);
 
@@ -97,22 +77,16 @@ public sealed class AssignTagsToEntityCommandHandlerTests
             .RemoveByTagAsync((string)default!, cancellationToken: default);
     }
 
-    // ── Ownership probe — target deleted ──────────────────────────────────────
-
     [Fact]
-    public async Task Handle_ShouldReturnInvalid_WhenTargetEntityIsDeleted()
+    public async Task Handle_ShouldReturnInvalid_WhenGuardDeniesWithDeleted()
     {
-        var userId = Guid.NewGuid();
-        var resolver = OwnershipAuthFixture.ResolverReturning(
-            OwnershipAuthFixture.Deleted(ownerUserId: userId));
         var entityTagRepo = Substitute.For<IEntityTagRepository>();
         var cache = OwnershipAuthFixture.NoOpCache();
 
         var handler = BuildHandler(
             entityTagRepository: entityTagRepo,
             cache: cache,
-            currentUser: OwnershipAuthFixture.NonAdminUser(userId),
-            ownershipResolver: resolver);
+            ownershipGuard: OwnershipAuthFixture.GuardInvalid("EntityTag.TargetDeleted", "Entity is deleted."));
 
         var result = await handler.Handle(ValidCommand(Guid.NewGuid()), CancellationToken.None);
 
@@ -124,19 +98,14 @@ public sealed class AssignTagsToEntityCommandHandlerTests
             .RemoveByTagAsync((string)default!, cancellationToken: default);
     }
 
-    // ── Ownership probe — unsupported EntityType ──────────────────────────────
-
     [Fact]
-    public async Task Handle_ShouldReturnInvalid_WhenEntityTypeIsUnsupported()
+    public async Task Handle_ShouldReturnInvalid_WhenGuardDeniesWithUnsupported()
     {
-        var userId = Guid.NewGuid();
-        var resolver = OwnershipAuthFixture.ResolverReturning(OwnershipAuthFixture.Unsupported());
         var entityTagRepo = Substitute.For<IEntityTagRepository>();
 
         var handler = BuildHandler(
             entityTagRepository: entityTagRepo,
-            currentUser: OwnershipAuthFixture.NonAdminUser(userId),
-            ownershipResolver: resolver);
+            ownershipGuard: OwnershipAuthFixture.GuardInvalid("EntityTag.UnsupportedEntityType", "Unsupported entity type."));
 
         var result = await handler.Handle(ValidCommand(Guid.NewGuid()), CancellationToken.None);
 
@@ -146,23 +115,16 @@ public sealed class AssignTagsToEntityCommandHandlerTests
         entityTagRepo.DidNotReceiveWithAnyArgs().Add(default!);
     }
 
-    // ── Non-admin, non-owner ──────────────────────────────────────────────────
-
     [Fact]
-    public async Task Handle_ShouldReturnForbidden_WhenCallerIsNotOwnerAndNotAdminTier()
+    public async Task Handle_ShouldReturnForbidden_WhenGuardDenies()
     {
-        var callerId = Guid.NewGuid();
-        var differentOwnerId = Guid.NewGuid();
         var entityTagRepo = Substitute.For<IEntityTagRepository>();
         var cache = OwnershipAuthFixture.NoOpCache();
-        var resolver = OwnershipAuthFixture.ResolverReturning(
-            OwnershipAuthFixture.ValidOwner(differentOwnerId));
 
         var handler = BuildHandler(
             entityTagRepository: entityTagRepo,
             cache: cache,
-            currentUser: OwnershipAuthFixture.NonAdminUser(callerId),
-            ownershipResolver: resolver);
+            ownershipGuard: OwnershipAuthFixture.GuardForbidden());
 
         var result = await handler.Handle(ValidCommand(Guid.NewGuid()), CancellationToken.None);
 
@@ -173,70 +135,45 @@ public sealed class AssignTagsToEntityCommandHandlerTests
             .RemoveByTagAsync((string)default!, cancellationToken: default);
     }
 
-    // ── Non-admin, owner — resolver should be called ─────────────────────────
+    // ── Guard is invoked with correct parameters ─────────────────────────────
 
     [Fact]
-    public async Task Handle_ShouldCallResolver_WhenCallerIsNonAdminTier()
+    public async Task Handle_ShouldCallGuard_WithCorrectEntityTypeAndId()
     {
-        var userId = Guid.NewGuid();
-        var resolver = OwnershipAuthFixture.ResolverReturning(
-            OwnershipAuthFixture.ValidOwner(userId));
+        var guard = OwnershipAuthFixture.GuardAllowing();
         var tagRepo = Substitute.For<ITagRepository>();
         tagRepo.GetAllAsync(filter: null!, ct: default).ReturnsForAnyArgs([]);
 
-        var handler = BuildHandler(
-            tagRepository: tagRepo,
-            currentUser: OwnershipAuthFixture.NonAdminUser(userId),
-            ownershipResolver: resolver);
+        var handler = BuildHandler(tagRepository: tagRepo, ownershipGuard: guard);
+        var entityId = Guid.NewGuid();
 
-        await handler.Handle(ValidCommand(Guid.NewGuid()), CancellationToken.None);
+        await handler.Handle(ValidCommand(entityId), CancellationToken.None);
 
-        await resolver.Received(1)
-            .ResolveAsync(
+        await guard.Received(1)
+            .AuthorizeAsync(
                 OwnershipAuthFixture.ValidEntityType,
-                Arg.Any<Guid>(),
+                entityId,
+                Arg.Any<string>(),
+                Arg.Any<string?>(),
                 Arg.Any<CancellationToken>());
     }
 
-    // ── Admin-tier — resolver must NOT be called ──────────────────────────────
+    // ── Guard success proceeds to operation ───────────────────────────────────
 
     [Fact]
-    public async Task Handle_ShouldNotCallResolver_WhenCallerIsAdminTier()
+    public async Task Handle_ShouldReachTagLookup_WhenGuardAllows()
     {
-        var userId = Guid.NewGuid();
-        var resolver = Substitute.For<ContentCore.Application.Authorization.IEntityOwnershipResolver>();
         var tagRepo = Substitute.For<ITagRepository>();
         tagRepo.GetAllAsync(filter: null!, ct: default).ReturnsForAnyArgs([]);
 
         var handler = BuildHandler(
             tagRepository: tagRepo,
-            currentUser: OwnershipAuthFixture.AdminUser(userId),
-            ownershipResolver: resolver);
-
-        await handler.Handle(ValidCommand(Guid.NewGuid()), CancellationToken.None);
-
-        await resolver.DidNotReceiveWithAnyArgs().ResolveAsync(default, default, default);
-    }
-
-    // ── Admin-tier skips resolver and proceeds to operation ───────────────────
-
-    [Fact]
-    public async Task Handle_ShouldReachTagLookup_WhenAdminTier_EvenIfResolverWouldFail()
-    {
-        var userId = Guid.NewGuid();
-        var resolver = OwnershipAuthFixture.ResolverReturning(OwnershipAuthFixture.NotFound());
-        var tagRepo = Substitute.For<ITagRepository>();
-        tagRepo.GetAllAsync(filter: null!, ct: default).ReturnsForAnyArgs([]);
-
-        var handler = BuildHandler(
-            tagRepository: tagRepo,
-            currentUser: OwnershipAuthFixture.AdminUser(userId),
-            ownershipResolver: resolver);
+            ownershipGuard: OwnershipAuthFixture.GuardAllowing(isAdminTier: true));
 
         var result = await handler.Handle(ValidCommand(Guid.NewGuid()), CancellationToken.None);
 
+        // Handler got past the guard (it reached the Tag.NotFound check)
         result.Outcome.Should().Be(Outcome.NotFound);
         result.Errors.Should().ContainSingle(e => e.Code == "Tag.NotFound");
-        await resolver.DidNotReceiveWithAnyArgs().ResolveAsync(default, default, default);
     }
 }

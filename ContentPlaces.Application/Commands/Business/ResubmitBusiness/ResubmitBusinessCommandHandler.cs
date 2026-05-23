@@ -23,11 +23,6 @@ public sealed class ResubmitBusinessCommandHandler(
     {
         try
         {
-            if (!currentUser.IsAuthenticated || currentUser.UserId is null)
-            {
-                return Result.Failure(Error.Unauthorized("Authentication is required."), Outcome.Unauthorized);
-            }
-
             var business = await businessRepository.GetByIdAsync(request.Id, cancellationToken, asNoTracking: false);
             if (business is null)
             {
@@ -36,18 +31,26 @@ public sealed class ResubmitBusinessCommandHandler(
                     Outcome.NotFound);
             }
 
-            if (business.OwnerId != currentUser.UserId.Value)
+            if (business.OwnerId != currentUser.UserId!.Value)
             {
                 return Result.Failure(
                     Error.Forbidden("Only the business owner can resubmit."),
                     Outcome.Forbidden);
             }
 
-            if (business.Status != BusinessStatus.Rejected)
+            if (business.Status is not BusinessStatus.Rejected and not BusinessStatus.MoreDocsNeeded)
             {
                 return Result.Failure(
                     new Error("Business.InvalidTransition",
                         $"Cannot resubmit a business with status {business.Status}."),
+                    Outcome.Conflict);
+            }
+
+            if (business.ResubmitCount >= 3)
+            {
+                return Result.Failure(
+                    new Error("Business.ResubmitLimitReached",
+                        "Maximum re-application limit (3) has been reached."),
                     Outcome.Conflict);
             }
 

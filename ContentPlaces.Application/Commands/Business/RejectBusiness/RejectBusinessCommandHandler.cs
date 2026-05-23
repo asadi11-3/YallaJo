@@ -29,7 +29,7 @@ public sealed class RejectBusinessCommandHandler(
                     Outcome.NotFound);
             }
 
-            if (business.Status != BusinessStatus.Pending)
+            if (business.Status is not BusinessStatus.Pending and not BusinessStatus.MoreDocsNeeded)
             {
                 return Result.Failure(
                     new Error("Business.InvalidTransition",

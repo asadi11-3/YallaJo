@@ -4,8 +4,6 @@ using ContentCore.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
-using Security.Contracts.Authorization;
-using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 using Outcome = YallaJo.SharedKernel.Domain.Abstractions.Results.Outcome;
@@ -15,8 +13,7 @@ namespace ContentCore.Application.Commands.Attachment.ReorderAttachments;
 public sealed class ReorderAttachmentsCommandHandler(
     IAttachmentRepository attachmentRepository,
     IContentCoreUnitOfWork unitOfWork,
-    ICurrentUser currentUser,
-    IEntityOwnershipResolver ownershipResolver,
+    IOwnershipGuard ownershipGuard,
     HybridCache cache,
     ILogger<ReorderAttachmentsCommandHandler> logger)
     : ICommandHandler<ReorderAttachmentsCommand>
@@ -25,9 +22,6 @@ public sealed class ReorderAttachmentsCommandHandler(
     {
         try
         {
-            if (currentUser.UserId is null)
-                return Result.Failure(Error.Unauthorized("Authentication is required."), Outcome.Unauthorized);
-
             var attachments = await attachmentRepository.GetAllAsync(
                 filter: x => x.EntityType == request.EntityType && x.EntityId == request.EntityId,
                 asNoTracking: false,
@@ -42,52 +36,14 @@ public sealed class ReorderAttachmentsCommandHandler(
                     Outcome.NotFound);
             }
 
-            // IDOR: only the target-entity owner or an admin-tier role (Admin/SuperAdmin/Owner)
-            // may reorder. Reordering mutates the target entity's gallery presentation, so
-            // authorization belongs to that entity's owner — not to anyone who uploaded a single
-            // attachment in the set.
-            var isAdminTier = AppRoles.HighestPrivilegeLevel(currentUser.Roles)
-                >= RolePrivilegeLevel.Admin;
+            // Ownership guard (admin-tier bypass + ownership check)
+            var authResult = await ownershipGuard.AuthorizeAsync(
+                request.EntityType, request.EntityId, "Attachment",
+                "You do not have permission to reorder attachments for this entity.",
+                cancellationToken);
 
-            if (!isAdminTier)
-            {
-                var ownership = await ownershipResolver.ResolveAsync(
-                    request.EntityType, request.EntityId, cancellationToken);
-
-                if (!ownership.IsSupported)
-                {
-                    return Result.Failure(
-                        new Error(
-                            "Attachment.UnsupportedEntityType",
-                            "This entity type cannot be authorized for attachment operations."),
-                        Outcome.Invalid);
-                }
-
-                if (!ownership.Exists)
-                {
-                    return Result.Failure(
-                        new Error(
-                            "Attachment.TargetNotFound",
-                            $"{request.EntityType} '{request.EntityId}' was not found."),
-                        Outcome.NotFound);
-                }
-
-                if (ownership.IsDeleted)
-                {
-                    return Result.Failure(
-                        new Error(
-                            "Attachment.TargetDeleted",
-                            $"{request.EntityType} '{request.EntityId}' is deleted."),
-                        Outcome.Invalid);
-                }
-
-                if (ownership.OwnerUserId != currentUser.UserId.Value)
-                {
-                    return Result.Failure(
-                        Error.Forbidden("You do not have permission to reorder attachments for this entity."),
-                        Outcome.Forbidden);
-                }
-            }
+            if (!authResult.IsSuccess)
+                return authResult;
 
             var attachmentMap = attachments.ToDictionary(a => a.Id);
 

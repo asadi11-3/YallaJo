@@ -1,6 +1,8 @@
 using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
+using YallaJo.SharedKernel.Domain.Abstractions.Results;
+using Outcome = YallaJo.SharedKernel.Domain.Abstractions.Results.Outcome;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -42,17 +44,20 @@ public sealed class AzureTranslateService : ITranslationService
             ?? "https://api.cognitive.microsofttranslator.com";
     }
 
-    public async Task<TranslationResult> TranslateAsync(
+    public async Task<Result<TranslationResult>> TranslateAsync(
         string text,
         string fromLanguageCode,
         string toLanguageCode,
         CancellationToken ct = default)
     {
-        var results = await BatchTranslateAsync([text], fromLanguageCode, toLanguageCode, ct);
-        return results[0];
+        var batchResult = await BatchTranslateAsync([text], fromLanguageCode, toLanguageCode, ct);
+        if (batchResult.IsFailure)
+            return Result<TranslationResult>.Fail(batchResult.Outcome, batchResult.Errors.ToArray());
+
+        return Result<TranslationResult>.Success(batchResult.Value[0]);
     }
 
-    public async Task<IReadOnlyList<TranslationResult>> BatchTranslateAsync(
+    public async Task<Result<IReadOnlyList<TranslationResult>>> BatchTranslateAsync(
         IReadOnlyList<string> texts,
         string fromLanguageCode,
         string toLanguageCode,
@@ -77,12 +82,19 @@ public sealed class AzureTranslateService : ITranslationService
             _logger.LogError(
                 "Azure Translator API error: {StatusCode} — {Body}",
                 response.StatusCode, errorBody);
-            throw new HttpRequestException(
-                $"Azure Translator API returned {(int)response.StatusCode}: {errorBody}");
+            return Result<IReadOnlyList<TranslationResult>>.Failure(
+                new Error("Translation.ServiceError",
+                    $"Azure Translator API returned {(int)response.StatusCode}: {errorBody}"),
+                Outcome.ServerError);
         }
 
-        var azureResults = await response.Content.ReadFromJsonAsync<AzureTranslateResponse[]>(JsonOptions, ct)
-            ?? throw new InvalidOperationException("Azure Translator API returned null response.");
+        var azureResults = await response.Content.ReadFromJsonAsync<AzureTranslateResponse[]>(JsonOptions, ct);
+        if (azureResults is null)
+        {
+            return Result<IReadOnlyList<TranslationResult>>.Failure(
+                new Error("Translation.EmptyResponse", "Azure Translator API returned null response."),
+                Outcome.ServerError);
+        }
 
         var results = new List<TranslationResult>(azureResults.Length);
         for (var i = 0; i < azureResults.Length; i++)
@@ -96,7 +108,7 @@ public sealed class AzureTranslateService : ITranslationService
                 Confidence: azureResults[i].DetectedLanguage?.Score));
         }
 
-        return results;
+        return Result<IReadOnlyList<TranslationResult>>.Success(results);
     }
 
     public async Task<string> DetectLanguageAsync(string text, CancellationToken ct = default)

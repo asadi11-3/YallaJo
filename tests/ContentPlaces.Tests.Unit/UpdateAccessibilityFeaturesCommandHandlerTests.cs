@@ -6,7 +6,6 @@ using FluentAssertions;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
-using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 using FeatureEntity = ContentPlaces.Domain.Entities.AccessibilityFeature;
 
@@ -18,42 +17,24 @@ public sealed class UpdateAccessibilityFeaturesCommandHandlerTests
         UpdateAccessibilityFeaturesCommandHandler Handler,
         IAccessibilityFeatureRepository FeatureRepo,
         IPlaceRepository PlaceRepo,
-        IContentPlacesUnitOfWork Uow,
-        ICurrentUser CurrentUser) BuildSubject()
+        IContentPlacesUnitOfWork Uow) BuildSubject()
     {
         var featureRepo = Substitute.For<IAccessibilityFeatureRepository>();
         var placeRepo = Substitute.For<IPlaceRepository>();
         var uow = Substitute.For<IContentPlacesUnitOfWork>();
-        var currentUser = Substitute.For<ICurrentUser>();
         var cache = Substitute.For<HybridCache>();
         var logger = Substitute.For<ILogger<UpdateAccessibilityFeaturesCommandHandler>>();
 
         var handler = new UpdateAccessibilityFeaturesCommandHandler(
-            featureRepo, placeRepo, uow, currentUser, cache, logger);
+            featureRepo, placeRepo, uow, cache, logger);
 
-        return (handler, featureRepo, placeRepo, uow, currentUser);
-    }
-
-    [Fact]
-    public async Task ReturnsUnauthorizedWhenNotAuthenticated()
-    {
-        var (handler, _, _, _, currentUser) = BuildSubject();
-        currentUser.IsAuthenticated.Returns(false);
-
-        var result = await handler.Handle(
-            new UpdateAccessibilityFeaturesCommand(Guid.NewGuid(), Array.Empty<AccessibilityFeatureItemRequest>()),
-            CancellationToken.None);
-
-        result.IsSuccess.Should().BeFalse();
-        result.Errors.Should().ContainSingle(x => x.Code == "Auth.Unauthorized");
+        return (handler, featureRepo, placeRepo, uow);
     }
 
     [Fact]
     public async Task ReturnsNotFoundWhenPlaceMissing()
     {
-        var (handler, _, placeRepo, _, currentUser) = BuildSubject();
-        currentUser.IsAuthenticated.Returns(true);
-        currentUser.UserId.Returns(Guid.NewGuid());
+        var (handler, _, placeRepo, _) = BuildSubject();
         placeRepo
             .AnyAsync(
                 Arg.Any<Expression<Func<ContentPlaces.Domain.Entities.Place, bool>>>(),
@@ -73,10 +54,7 @@ public sealed class UpdateAccessibilityFeaturesCommandHandlerTests
     {
         // Endpoint enforces MustHavePermissionAttribute(AccessibilityFeature, Update);
         // handler must no longer re-check IsInRole("Admin").
-        var (handler, featureRepo, placeRepo, uow, currentUser) = BuildSubject();
-        currentUser.IsAuthenticated.Returns(true);
-        currentUser.UserId.Returns(Guid.NewGuid());
-        // Roles intentionally NOT set — handler should not consult them.
+        var (handler, featureRepo, placeRepo, uow) = BuildSubject();
         placeRepo
             .AnyAsync(
                 Arg.Any<Expression<Func<ContentPlaces.Domain.Entities.Place, bool>>>(),
@@ -96,7 +74,6 @@ public sealed class UpdateAccessibilityFeaturesCommandHandlerTests
             CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
-        currentUser.DidNotReceive().IsInRole(Arg.Any<string>());
         await uow.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
     }
 }

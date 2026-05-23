@@ -5,8 +5,6 @@ using FluentAssertions;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
-using Security.Contracts.Authorization;
-using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 using PlaceEntity = ContentPlaces.Domain.Entities.Place;
 
@@ -18,69 +16,23 @@ public sealed class FeaturePlaceCommandHandlerTests
         FeaturePlaceCommandHandler Handler,
         IPlaceRepository PlaceRepo,
         IContentPlacesUnitOfWork Uow,
-        ICurrentUser CurrentUser,
         HybridCache Cache) BuildSubject()
     {
         var placeRepo = Substitute.For<IPlaceRepository>();
         var uow = Substitute.For<IContentPlacesUnitOfWork>();
-        var currentUser = Substitute.For<ICurrentUser>();
         var cache = Substitute.For<HybridCache>();
         var logger = Substitute.For<ILogger<FeaturePlaceCommandHandler>>();
 
         var handler = new FeaturePlaceCommandHandler(
-            placeRepo, uow, currentUser, cache, logger);
+            placeRepo, uow, cache, logger);
 
-        return (handler, placeRepo, uow, currentUser, cache);
+        return (handler, placeRepo, uow, cache);
     }
 
     [Fact]
-    public async Task ReturnsUnauthorizedWhenNotAuthenticated()
+    public async Task ReturnsNotFoundWhenPlaceMissing()
     {
-        var (handler, _, uow, currentUser, _) = BuildSubject();
-        currentUser.IsAuthenticated.Returns(false);
-        currentUser.UserId.Returns((Guid?)null);
-
-        var result = await handler.Handle(
-            new FeaturePlaceCommand(Guid.NewGuid(), true),
-            CancellationToken.None);
-
-        result.IsSuccess.Should().BeFalse();
-        result.Outcome.Should().Be(Outcome.Unauthorized);
-        await uow.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
-    }
-
-    [Fact]
-    public async Task ReturnsForbiddenWhenStandardUserIsNotAdminTier()
-    {
-        // Even the place creator cannot feature without admin-tier privileges.
-        var (handler, placeRepo, uow, currentUser, _) = BuildSubject();
-        var ownerId = Guid.NewGuid();
-
-        currentUser.IsAuthenticated.Returns(true);
-        currentUser.UserId.Returns(ownerId);
-        currentUser.Roles.Returns(new[] { AppRoles.User });
-
-        var result = await handler.Handle(
-            new FeaturePlaceCommand(Guid.NewGuid(), true),
-            CancellationToken.None);
-
-        result.IsSuccess.Should().BeFalse();
-        result.Outcome.Should().Be(Outcome.Forbidden);
-        result.Errors.Should().ContainSingle(x => x.Code == "Auth.Forbidden");
-
-        // Authorization happens before repository is consulted.
-        await placeRepo.DidNotReceive().GetByIdAsync(
-            Arg.Any<Guid>(), Arg.Any<CancellationToken>(), Arg.Any<bool>());
-        await uow.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
-    }
-
-    [Fact]
-    public async Task ReturnsNotFoundWhenPlaceMissingForAdminTierCaller()
-    {
-        var (handler, placeRepo, uow, currentUser, _) = BuildSubject();
-        currentUser.IsAuthenticated.Returns(true);
-        currentUser.UserId.Returns(Guid.NewGuid());
-        currentUser.Roles.Returns(new[] { AppRoles.Admin });
+        var (handler, placeRepo, uow, _) = BuildSubject();
         placeRepo
             .GetByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>(), Arg.Any<bool>())
             .Returns((PlaceEntity?)null);
@@ -95,20 +47,13 @@ public sealed class FeaturePlaceCommandHandlerTests
         await uow.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
     }
 
-    [Theory]
-    [InlineData(AppRoles.Admin)]
-    [InlineData(AppRoles.SuperAdmin)]
-    [InlineData(AppRoles.Owner)]
-    public async Task SucceedsWhenCallerHasAdminTierRole(string role)
+    [Fact]
+    public async Task SucceedsAndSetsIsFeaturedTrue()
     {
-        var (handler, placeRepo, uow, currentUser, cache) = BuildSubject();
+        var (handler, placeRepo, uow, cache) = BuildSubject();
         var creatorId = Guid.NewGuid();
-        var callerId = Guid.NewGuid();
         var place = TestPlaceFactory.CreatePlace(creatorId);
 
-        currentUser.IsAuthenticated.Returns(true);
-        currentUser.UserId.Returns(callerId);
-        currentUser.Roles.Returns(new[] { role });
         placeRepo
             .GetByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>(), Arg.Any<bool>())
             .Returns(place);
@@ -127,14 +72,11 @@ public sealed class FeaturePlaceCommandHandlerTests
     [Fact]
     public async Task UnfeatureSetsIsFeaturedFalse()
     {
-        var (handler, placeRepo, uow, currentUser, _) = BuildSubject();
+        var (handler, placeRepo, uow, _) = BuildSubject();
         var creatorId = Guid.NewGuid();
         var place = TestPlaceFactory.CreatePlace(creatorId);
         place.SetFeatured(true);
 
-        currentUser.IsAuthenticated.Returns(true);
-        currentUser.UserId.Returns(Guid.NewGuid());
-        currentUser.Roles.Returns(new[] { AppRoles.Admin });
         placeRepo
             .GetByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>(), Arg.Any<bool>())
             .Returns(place);

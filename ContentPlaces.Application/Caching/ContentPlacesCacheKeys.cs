@@ -105,4 +105,13 @@ public static class ContentPlacesCacheKeys
     /// <summary>Hours for a given business. Varies by caller visibility.</summary>
     public static string BusinessHours(Guid businessId, Guid? userId, bool isAdmin) =>
         $"cp:biz:{businessId}:hours:u:{userId}:a:{isAdmin}";
+
+    // ── Business Search & Nearby ──────────────────────────────────────────
+
+    public static string BusinessSearch(
+        int page, int pageSize, string? query, string? businessType, string? city, string? country) =>
+        $"cp:biz:search:p{page}:s{pageSize}:q:{query}:bt:{businessType}:city:{city}:ctry:{country}";
+
+    public static string NearbyBusinesses(double lat, double lng, double radiusKm, int pageSize)
+        => $"cp:biz:nearby:lat{lat:F4}:lng{lng:F4}:r{radiusKm}:s{pageSize}";
 }

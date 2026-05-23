@@ -52,6 +52,11 @@ public sealed class Business : AuditableEntity, IAggregateRoot
     public string? RejectionReason { get; private set; }
     public Guid? ReviewedByUserId { get; private set; }
     public DateTime? ReviewedAt { get; private set; }
+    public int ResubmitCount { get; private set; }
+    public DateTime? SubmittedAt { get; private set; }
+    public DateTime? ReviewDeadline { get; private set; }
+    public DateTime? DocumentExpiryDate { get; private set; }
+    public DateTime? GracePeriodEnd { get; private set; }
     public SubscriptionTier? SubscriptionTier { get; private set; }
     public bool? IsHalal { get; private set; }
     public bool? HasVegetarianOptions { get; private set; }
@@ -118,6 +123,8 @@ public sealed class Business : AuditableEntity, IAggregateRoot
             HasVegetarianOptions = hasVegetarianOptions,
             HasAlcoholFreeArea = hasAlcoholFreeArea,
             Status = BusinessStatus.Pending,
+            SubmittedAt = DateTime.UtcNow,
+            ReviewDeadline = DateTime.UtcNow.AddDays(7),
             AverageRating = 0,
             ReviewCount = 0,
             IsVerified = false,
@@ -190,7 +197,7 @@ public sealed class Business : AuditableEntity, IAggregateRoot
 
     public void Approve(Guid reviewedByUserId)
     {
-        if (Status != BusinessStatus.Pending)
+        if (Status is not BusinessStatus.Pending and not BusinessStatus.MoreDocsNeeded)
             throw new InvalidOperationException($"Cannot approve a business with status {Status}.");
 
         Status = BusinessStatus.Approved;
@@ -207,7 +214,7 @@ public sealed class Business : AuditableEntity, IAggregateRoot
         if (string.IsNullOrWhiteSpace(reason))
             throw new ArgumentException("Rejection reason is required.", nameof(reason));
 
-        if (Status != BusinessStatus.Pending)
+        if (Status is not BusinessStatus.Pending and not BusinessStatus.MoreDocsNeeded)
             throw new InvalidOperationException($"Cannot reject a business with status {Status}.");
 
         Status = BusinessStatus.Rejected;
@@ -219,13 +226,36 @@ public sealed class Business : AuditableEntity, IAggregateRoot
         AddDomainEvent(new BusinessRejectedDomainEvent(Id, RejectionReason));
     }
 
+    public void RequestMoreDocs(string reason, Guid reviewedByUserId)
+    {
+        if (string.IsNullOrWhiteSpace(reason))
+            throw new ArgumentException("Reason for requesting more documents is required.", nameof(reason));
+
+        if (Status is not BusinessStatus.Pending and not BusinessStatus.MoreDocsNeeded)
+            throw new InvalidOperationException($"Cannot request more docs for a business with status {Status}.");
+
+        Status = BusinessStatus.MoreDocsNeeded;
+        RejectionReason = reason.Trim();
+        ReviewedByUserId = reviewedByUserId;
+        ReviewedAt = DateTime.UtcNow;
+
+        MarkUpdated();
+        AddDomainEvent(new BusinessMoreDocsRequestedDomainEvent(Id, RejectionReason));
+    }
+
     public void Resubmit()
     {
-        if (Status != BusinessStatus.Rejected)
+        if (Status is not BusinessStatus.Rejected and not BusinessStatus.MoreDocsNeeded)
             throw new InvalidOperationException($"Cannot resubmit a business with status {Status}.");
+
+        if (ResubmitCount >= 3)
+            throw new InvalidOperationException("Maximum re-application limit (3) has been reached.");
 
         Status = BusinessStatus.Pending;
         RejectionReason = null;
+        ResubmitCount++;
+        SubmittedAt = DateTime.UtcNow;
+        ReviewDeadline = DateTime.UtcNow.AddDays(7);
 
         MarkUpdated();
         AddDomainEvent(new BusinessResubmittedDomainEvent(Id));
@@ -269,6 +299,13 @@ public sealed class Business : AuditableEntity, IAggregateRoot
     public void SetFeatured(bool isFeatured)
     {
         IsFeatured = isFeatured;
+        MarkUpdated();
+    }
+
+    public void SetDocumentExpiry(DateTime expiryDate)
+    {
+        DocumentExpiryDate = expiryDate;
+        GracePeriodEnd = expiryDate.AddDays(14);
         MarkUpdated();
     }
 

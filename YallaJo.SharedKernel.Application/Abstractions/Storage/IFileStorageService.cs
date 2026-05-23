@@ -1,3 +1,5 @@
+using YallaJo.SharedKernel.Domain.Abstractions.Results;
+
 namespace YallaJo.SharedKernel.Application.Abstractions.Storage;
 
 /// <summary>
@@ -15,7 +17,7 @@ public interface IFileStorageService
     /// <param name="folder">Logical folder/container (e.g. "places", "blogs", "tours").</param>
     /// <param name="ct">Cancellation token.</param>
     /// <returns>The stored file's accessible URL.</returns>
-    Task<FileUploadResult> UploadAsync(
+    Task<Result<FileUploadResult>> UploadAsync(
         Stream stream,
         string fileName,
         string contentType,

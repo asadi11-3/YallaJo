@@ -7,8 +7,6 @@ using ContentCore.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
-using Security.Contracts.Authorization;
-using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 using Outcome = YallaJo.SharedKernel.Domain.Abstractions.Results.Outcome;
@@ -20,8 +18,7 @@ public sealed class RemoveCategoryFromEntityCommandHandler(
     IContentCoreUnitOfWork unitOfWork,
     IContentCoreOutboxWriter outboxWriter,
     HybridCache cache,
-    ICurrentUser currentUser,
-    IEntityOwnershipResolver ownershipResolver,
+    IOwnershipGuard ownershipGuard,
     ILogger<RemoveCategoryFromEntityCommandHandler> logger)
     : ICommandHandler<RemoveCategoryFromEntityCommand>
 {
@@ -29,15 +26,7 @@ public sealed class RemoveCategoryFromEntityCommandHandler(
     {
         try
         {
-            // 1. Authentication
-            if (!currentUser.IsAuthenticated || currentUser.UserId is null)
-            {
-                return Result.Failure(
-                    Error.Unauthorized("Authentication is required."),
-                    Outcome.Unauthorized);
-            }
-
-            // 2. EntityType parse / validation
+            // 1. EntityType parse / validation
             if (!Enum.TryParse<EntityType>(request.EntityType, true, out var entityType))
             {
                 return Result.Failure(
@@ -45,49 +34,14 @@ public sealed class RemoveCategoryFromEntityCommandHandler(
                     Outcome.Invalid);
             }
 
-            // 3. Admin-tier short-circuit
-            var isAdminTier = AppRoles.HighestPrivilegeLevel(currentUser.Roles)
-                >= RolePrivilegeLevel.Admin;
+            // 2. Ownership guard (admin-tier bypass + ownership check)
+            var authResult = await ownershipGuard.AuthorizeAsync(
+                entityType, request.EntityId, "EntityCategory",
+                "You do not have permission to remove categories from this entity.",
+                cancellationToken);
 
-            // 4. Ownership probe (skipped for admin-tier callers)
-            if (!isAdminTier)
-            {
-                var ownership = await ownershipResolver.ResolveAsync(entityType, request.EntityId, cancellationToken);
-
-                if (!ownership.IsSupported)
-                {
-                    return Result.Failure(
-                        new Error(
-                            "EntityCategory.UnsupportedEntityType",
-                            "This entity type cannot be authorized for assignment."),
-                        Outcome.Invalid);
-                }
-
-                if (!ownership.Exists)
-                {
-                    return Result.Failure(
-                        new Error(
-                            "EntityCategory.TargetNotFound",
-                            $"{entityType} '{request.EntityId}' was not found."),
-                        Outcome.NotFound);
-                }
-
-                if (ownership.IsDeleted)
-                {
-                    return Result.Failure(
-                        new Error(
-                            "EntityCategory.TargetDeleted",
-                            $"{entityType} '{request.EntityId}' is deleted."),
-                        Outcome.Invalid);
-                }
-
-                if (ownership.OwnerUserId != currentUser.UserId.Value)
-                {
-                    return Result.Failure(
-                        Error.Forbidden("You do not have permission to remove categories from this entity."),
-                        Outcome.Forbidden);
-                }
-            }
+            if (!authResult.IsSuccess)
+                return authResult;
 
             var entityCategories = await entityCategoryRepository.GetByEntityAsync(entityType, request.EntityId, cancellationToken);
             var entityCategory = entityCategories.FirstOrDefault(ec => ec.CategoryId == request.CategoryId);

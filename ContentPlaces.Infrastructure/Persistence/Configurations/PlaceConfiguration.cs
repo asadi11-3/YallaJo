@@ -131,6 +131,9 @@ public class PlaceConfiguration : IEntityTypeConfiguration<Place>
         builder.HasQueryFilter(x => !x.IsDeleted);
 
         builder.HasIndex(x => x.Slug).IsUnique();
+        builder.HasIndex(x => new { x.Name, x.Country })
+            .IsUnique()
+            .HasFilter("[Country] IS NOT NULL AND [IsDeleted] = 0");
         builder.HasIndex(x => x.IsFeatured);
         builder.HasIndex(x => x.IsVerified);
         builder.HasIndex(x => x.CategoryId);

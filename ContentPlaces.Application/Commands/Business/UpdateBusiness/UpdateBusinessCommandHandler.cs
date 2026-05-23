@@ -24,11 +24,6 @@ public sealed class UpdateBusinessCommandHandler(
     {
         try
         {
-            if (!currentUser.IsAuthenticated || currentUser.UserId is null)
-            {
-                return Result.Failure(Error.Unauthorized("Authentication is required."), Outcome.Unauthorized);
-            }
-
             var business = await businessRepository.GetByIdAsync(request.Id, cancellationToken, asNoTracking: false);
             if (business is null)
             {
@@ -37,11 +32,8 @@ public sealed class UpdateBusinessCommandHandler(
                     Outcome.NotFound);
             }
 
-            // Owner-or-admin-tier check using the privilege ladder so SuperAdmin/Owner
-            // tiers are honored even without the literal "Admin" role.
-            var isAdminTier = AppRoles.HighestPrivilegeLevel(currentUser.Roles)
-                >= RolePrivilegeLevel.Admin;
-            if (!isAdminTier && business.OwnerId != currentUser.UserId.Value)
+            // Ownership check (IDOR prevention).
+            if (business.OwnerId != currentUser.UserId!.Value)
             {
                 return Result.Failure(
                     Error.Forbidden("You do not have permission to update this business."),

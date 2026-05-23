@@ -1,3 +1,5 @@
+using YallaJo.SharedKernel.Domain.Abstractions.Results;
+
 namespace YallaJo.SharedKernel.Application.Abstractions.Translation;
 
 /// <summary>
@@ -9,7 +11,7 @@ public interface ITranslationService
     /// <summary>
     /// Translate a single text from source language to target language.
     /// </summary>
-    Task<TranslationResult> TranslateAsync(
+    Task<Result<TranslationResult>> TranslateAsync(
         string text,
         string fromLanguageCode,
         string toLanguageCode,
@@ -18,7 +20,7 @@ public interface ITranslationService
     /// <summary>
     /// Translate multiple texts in a single API call (batch optimization).
     /// </summary>
-    Task<IReadOnlyList<TranslationResult>> BatchTranslateAsync(
+    Task<Result<IReadOnlyList<TranslationResult>>> BatchTranslateAsync(
         IReadOnlyList<string> texts,
         string fromLanguageCode,
         string toLanguageCode,
