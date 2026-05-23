@@ -8,6 +8,7 @@ using Accounts.Presentation.Endpoints.Profile.Models;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Abstractions.Storage;
@@ -20,15 +21,14 @@ internal static class ProfileEndpoints
     internal static void MapProfileEndpoints(RouteGroupBuilder group)
     {
         MapSelfServiceEndpoints(group);
+        MapProviderEndpoints(group);
     }
 
     // ── Self-service: current user's own profile (/profile) ──────────────────
-
     private static void MapSelfServiceEndpoints(RouteGroupBuilder group)
     {
         var profile = group.MapGroup("/profile");
 
-       
         profile.MapGet("/", async (ICurrentUser currentUser, ISender sender, CancellationToken ct) =>
         {
             if (!currentUser.IsAuthenticated || currentUser.UserId is null)
@@ -135,5 +135,34 @@ internal static class ProfileEndpoints
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Restore the current user's previously soft-deleted profile")
         .RequireAuthorization();
+    }
+
+    // ── Provider Facade: Forwards to Booking Module ──────────────────
+
+    private static void MapProviderEndpoints(RouteGroupBuilder group)
+    {
+        var provider = group.MapGroup("/provider");
+
+        provider.MapPost("/documents", async (
+            [FromForm] Booking.Domain.Enums.DocumentType documentType,
+            [FromForm] IFormFile file,
+            [FromForm] DateTime? expiresAt,
+            ISender sender) =>
+        {
+            // نمرر الطلب لموديول الحجوزات (Booking) 
+            var command = new Booking.Application.Commands.UploadProviderDocument.UploadProviderDocumentCommand(documentType, file, expiresAt);
+            var result = await sender.Send(command);
+
+            return result.IsSuccess
+                ? Results.Created($"/api/v1/booking/provider/documents/{result.Value}", result.Value)
+                : Results.BadRequest(result.Error);
+        })
+        .WithName("UploadProviderDocumentFacade")
+        .Accepts<IFormFile>("multipart/form-data")
+        .Produces(StatusCodes.Status201Created)
+        .ProducesProblem(StatusCodes.Status400BadRequest)
+        .WithSummary("Facade: Upload provider document (forwards to Booking module)")
+        .RequireAuthorization()
+        .DisableAntiforgery();
     }
 }

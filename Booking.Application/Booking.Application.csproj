@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -12,6 +12,11 @@
   <ItemGroup>
     <ProjectReference Include="..\Booking.Contracts\Booking.Contracts.csproj" />
     <ProjectReference Include="..\Booking.Domain\Booking.Domain.csproj" />
+    <ProjectReference Include="..\ContentCore.Contracts\ContentCore.Contracts.csproj" />
+    <ProjectReference Include="..\Security.Contracts\Security.Contracts.csproj" />
     <ProjectReference Include="..\YallaJo.SharedKernel.Application\YallaJo.SharedKernel.Application.csproj" />
   </ItemGroup>
+    <ItemGroup>
+        <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    </ItemGroup>
 </Project>
