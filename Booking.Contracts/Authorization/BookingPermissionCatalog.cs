@@ -38,9 +38,10 @@ public sealed class BookingPermissionCatalog : IPermissionCatalog
         new(BookingFeatures.JoinRequest, AppAction.Approve, PermissionGroup.BookingOperations, "Approve join request"),
         new(BookingFeatures.JoinRequest, AppAction.Reject,  PermissionGroup.BookingOperations, "Reject join request"),
 
-        // ── ProviderDocument (4) ────────────────────────────────────────────
+        // ── ProviderDocument (5) ────────────────────────────────────────────
         new(BookingFeatures.ProviderDocument, AppAction.Read,    PermissionGroup.BookingOperations, "View provider documents"),
         new(BookingFeatures.ProviderDocument, AppAction.Create,  PermissionGroup.BookingOperations, "Upload provider document"),
+        new(BookingFeatures.ProviderDocument, AppAction.Update,  PermissionGroup.BookingOperations, "Update provider document (replace file or expiry)"),
         new(BookingFeatures.ProviderDocument, AppAction.Approve, PermissionGroup.BookingOperations, "Approve provider document"),
         new(BookingFeatures.ProviderDocument, AppAction.Reject,  PermissionGroup.BookingOperations, "Reject provider document"),
 

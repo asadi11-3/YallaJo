@@ -45,5 +45,9 @@ public class AvailabilitySlotConfiguration : IEntityTypeConfiguration<Availabili
         builder.HasQueryFilter(x => !x.IsDeleted);
         builder.HasIndex(x => new { x.TourGuideId, x.Date, x.StartTime, x.EndTime });
         builder.HasIndex(x => x.IsActive);
+
+        builder.HasIndex(x => new { x.TourId, x.Date })
+            .HasFilter("[IsActive] = 1 AND [IsDeleted] = 0")
+            .HasDatabaseName("IX_AvailabilitySlots_TourId_Date_Active");
     }
 }

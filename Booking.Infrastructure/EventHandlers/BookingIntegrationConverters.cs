@@ -125,3 +125,68 @@ internal sealed class PublishAvailabilitySlotCapacityChangedHandler(
             e.SlotId, e.OldCapacity, e.NewCapacity);
     }
 }
+
+internal sealed class PublishProviderDocumentExpiringHandler(
+    IBookingOutboxWriter outbox,
+    ILogger<PublishProviderDocumentExpiringHandler> logger)
+    : INotificationHandler<DomainEventNotification<ProviderDocumentExpiringDomainEvent>>
+{
+    public async Task Handle(DomainEventNotification<ProviderDocumentExpiringDomainEvent> notification, CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(notification);
+        var e = notification.Event;
+        var integration = new ProviderDocumentExpiringIntegrationEvent(
+            DocumentId: e.DocumentId,
+            TourGuideId: e.TourGuideId,
+            BusinessId: e.BusinessId,
+            ExpiresAt: e.ExpiresAt);
+        await outbox.WriteAsync(integration, ct).ConfigureAwait(false);
+        logger.LogInformation(
+            "Enqueued booking.provider-document.expiring.v1 for Document {DocumentId} (expires {ExpiresAt:o})",
+            e.DocumentId,
+            e.ExpiresAt);
+    }
+}
+
+internal sealed class PublishProviderDocumentExpiredHandler(
+    IBookingOutboxWriter outbox,
+    ILogger<PublishProviderDocumentExpiredHandler> logger)
+    : INotificationHandler<DomainEventNotification<ProviderDocumentExpiredDomainEvent>>
+{
+    public async Task Handle(DomainEventNotification<ProviderDocumentExpiredDomainEvent> notification, CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(notification);
+        var e = notification.Event;
+        var integration = new ProviderDocumentExpiredIntegrationEvent(
+            DocumentId: e.DocumentId,
+            TourGuideId: e.TourGuideId,
+            BusinessId: e.BusinessId);
+        await outbox.WriteAsync(integration, ct).ConfigureAwait(false);
+        logger.LogInformation(
+            "Enqueued booking.provider-document.expired.v1 for Document {DocumentId}",
+            e.DocumentId);
+    }
+}
+
+internal sealed class PublishProviderSuspendedDocumentExpiredHandler(
+    IBookingOutboxWriter outbox,
+    ILogger<PublishProviderSuspendedDocumentExpiredHandler> logger)
+    : INotificationHandler<DomainEventNotification<ProviderSuspendedDocumentExpiredDomainEvent>>
+{
+    public async Task Handle(DomainEventNotification<ProviderSuspendedDocumentExpiredDomainEvent> notification, CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(notification);
+        var e = notification.Event;
+        var integration = new ProviderSuspendedDocumentExpiredIntegrationEvent(
+            DocumentId: e.DocumentId,
+            TourGuideId: e.TourGuideId,
+            BusinessId: e.BusinessId,
+            DocumentType: e.DocumentType.ToString(),
+            SuspendedAtUtc: e.SuspendedAtUtc);
+        await outbox.WriteAsync(integration, ct).ConfigureAwait(false);
+        logger.LogInformation(
+            "Enqueued booking.provider.suspended-doc-expired.v1 for Document {DocumentId} (type={Type})",
+            e.DocumentId,
+            e.DocumentType);
+    }
+}

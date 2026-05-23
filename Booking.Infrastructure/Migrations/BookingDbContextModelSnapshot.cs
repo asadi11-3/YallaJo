@@ -107,6 +107,10 @@ namespace Booking.Infrastructure.Migrations
 
                     b.HasIndex("IsActive");
 
+                    b.HasIndex("TourId", "Date")
+                        .HasDatabaseName("IX_AvailabilitySlots_TourId_Date_Active")
+                        .HasFilter("[IsActive] = 1 AND [IsDeleted] = 0");
+
                     b.HasIndex("TourGuideId", "Date", "StartTime", "EndTime");
 
                     b.ToTable("AvailabilitySlots", "booking", t =>
@@ -299,6 +303,9 @@ namespace Booking.Infrastructure.Migrations
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
+                    b.Property<DateTime?>("SuspensionDispatchedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<Guid?>("TourGuideId")
                         .HasColumnType("uniqueidentifier");
 
@@ -310,7 +317,19 @@ namespace Booking.Infrastructure.Migrations
                     b.HasIndex("BusinessId")
                         .HasFilter("[BusinessId] IS NOT NULL");
 
-                    b.HasIndex("TourGuideId", "DocumentType");
+                    b.HasIndex("BusinessId", "DocumentType")
+                        .IsUnique()
+                        .HasDatabaseName("UX_ProviderDocuments_Business_Type_Active")
+                        .HasFilter("[BusinessId] IS NOT NULL AND [Status] <> 2 AND [IsDeleted] = 0");
+
+                    b.HasIndex("TourGuideId", "DocumentType")
+                        .IsUnique()
+                        .HasDatabaseName("UX_ProviderDocuments_TourGuide_Type_Active")
+                        .HasFilter("[TourGuideId] IS NOT NULL AND [Status] <> 2 AND [IsDeleted] = 0");
+
+                    b.HasIndex("Status", "DocumentType", "SuspensionDispatchedAt")
+                        .HasDatabaseName("IX_ProviderDocuments_Suspension_Pending")
+                        .HasFilter("[Status] = 3 AND [SuspensionDispatchedAt] IS NULL");
 
                     b.HasIndex("Status", "ExpiresAt", "ExpiredNotificationSentAt")
                         .HasDatabaseName("IX_ProviderDocuments_Status_ExpiresAt_ExpiredNotification");
@@ -521,6 +540,10 @@ namespace Booking.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("BookingId");
+
+                    b.HasIndex("ExpiresAt")
+                        .HasDatabaseName("IX_SlotLocks_ExpiresAt_Active")
+                        .HasFilter("[IsReleased] = 0");
 
                     b.HasIndex("AvailabilitySlotId", "IsReleased");
 

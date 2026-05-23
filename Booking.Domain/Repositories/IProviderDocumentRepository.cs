@@ -1,4 +1,5 @@
 using Booking.Domain.Entities;
+using Booking.Domain.Enums;
 using YallaJo.SharedKernel.Domain.Abstractions.Data;
 
 namespace Booking.Domain.Repositories;
@@ -25,4 +26,24 @@ public interface IProviderDocumentRepository : IRepository<ProviderDocument, Gui
 
     /// <summary>Lists approved/non-expired documents past their expiry date that have not emitted an expired notification.</summary>
     Task<IReadOnlyList<ProviderDocument>> GetNewlyExpiredAsync(DateTime nowUtc, CancellationToken ct = default);
+
+    Task<IReadOnlyList<ProviderDocument>> GetForTourGuideAsync(Guid tourGuideId, CancellationToken ct = default);
+
+  
+    Task<ProviderDocument?> GetByIdTrackedAsync(Guid id, CancellationToken ct = default);
+
+    Task<ProviderDocument?> GetByIdForTourGuideAsync(Guid id, Guid tourGuideId, CancellationToken ct = default);
+
+    Task<bool> ExistsActiveTypeForTourGuideAsync(
+        Guid tourGuideId,
+        DocumentType type,
+        Guid? excludeId,
+        CancellationToken ct = default);
+
+    Task<Guid?> GetTourGuideIdByUserIdAsync(Guid userId, CancellationToken ct = default);
+
+    Task<IReadOnlyList<ProviderDocument>> GetExpiredCriticalPendingSuspensionAsync(
+        IReadOnlyCollection<DocumentType> criticalTypes,
+        int batchSize,
+        CancellationToken ct = default);
 }

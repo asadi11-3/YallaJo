@@ -1,10 +1,5 @@
 namespace Booking.Application.Interfaces;
 
-/// <summary>
-/// Read-only projection of a Tour required by the booking flow.
-/// Sourced from a Booking-owned snapshot table populated via inbox handlers
-/// listening to content.tours integration events.
-/// </summary>
 public sealed record BookingTourSnapshot(
     Guid TourId,
     Guid ProviderId,
@@ -15,11 +10,9 @@ public sealed record BookingTourSnapshot(
     bool IsApproved,
     bool IsInstantBooking,
     Guid? RefundPolicyId,
-    string? RefundPolicySnapshotJson);
+    string? RefundPolicySnapshotJson,
+    int MaxGroupSize);
 
-/// <summary>
-/// Reads cached tour snapshots needed during booking creation.
-/// </summary>
 public interface IBookingTourSnapshotReader
 {
     Task<BookingTourSnapshot?> GetByIdAsync(Guid tourId, CancellationToken cancellationToken = default);

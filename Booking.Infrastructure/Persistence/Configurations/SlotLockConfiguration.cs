@@ -39,6 +39,9 @@ public class SlotLockConfiguration : IEntityTypeConfiguration<SlotLock>
             .IsUnique()
             .HasFilter("[IsReleased] = 0")
             .HasDatabaseName("UX_SlotLock_User_Slot_Active");
+        builder.HasIndex(x => x.ExpiresAt)
+            .HasFilter("[IsReleased] = 0")
+            .HasDatabaseName("IX_SlotLocks_ExpiresAt_Active");
 
         // Lookup a lock by its back-filled booking id (set in the same transaction
         // immediately after the TourBooking aggregate is created)

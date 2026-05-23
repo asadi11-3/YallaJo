@@ -215,6 +215,18 @@ internal sealed class TourBookingRepository(BookingDbContext context)
             .ToListAsync(ct)
             .ConfigureAwait(false);
 
+    public async Task<IReadOnlyList<TourBooking>> GetExpiredAwaitingPaymentAsync(
+        DateTime nowUtc,
+        int batchSize,
+        CancellationToken ct = default)
+        => await context.TourBookings
+            .Where(b => b.Status == BookingStatus.AwaitingPayment
+                && b.PaymentExpiresAt <= nowUtc)
+            .OrderBy(b => b.PaymentExpiresAt)
+            .Take(batchSize)
+            .ToListAsync(ct)
+            .ConfigureAwait(false);
+
     private IQueryable<TourBooking> BuildAdminBookingsQuery(
         IReadOnlyList<BookingStatus>? statuses,
         DateOnly? fromDate,

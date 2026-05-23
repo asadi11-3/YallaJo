@@ -24,6 +24,7 @@ public class ProviderDocumentConfiguration : IEntityTypeConfiguration<ProviderDo
         builder.Property(x => x.Status).IsRequired().HasConversion<int>();
         builder.Property(x => x.ExpiringNotificationSentAt).IsRequired(false);
         builder.Property(x => x.ExpiredNotificationSentAt).IsRequired(false);
+        builder.Property(x => x.SuspensionDispatchedAt).IsRequired(false);
         builder.Property(x => x.ReviewedAt).IsRequired(false);
         builder.Property(x => x.ReviewedByUserId).IsRequired(false);
         builder.Property(x => x.RejectionReason).IsRequired(false).HasMaxLength(1000);
@@ -41,11 +42,24 @@ public class ProviderDocumentConfiguration : IEntityTypeConfiguration<ProviderDo
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasQueryFilter(x => !x.IsDeleted);
-        builder.HasIndex(x => new { x.TourGuideId, x.DocumentType });
         builder.HasIndex(x => x.BusinessId).HasFilter("[BusinessId] IS NOT NULL");
         builder.HasIndex(x => new { x.Status, x.ExpiresAt, x.ExpiringNotificationSentAt })
             .HasDatabaseName("IX_ProviderDocuments_Status_ExpiresAt_ExpiringNotification");
         builder.HasIndex(x => new { x.Status, x.ExpiresAt, x.ExpiredNotificationSentAt })
             .HasDatabaseName("IX_ProviderDocuments_Status_ExpiresAt_ExpiredNotification");
+
+        builder.HasIndex(x => new { x.TourGuideId, x.DocumentType })
+            .IsUnique()
+            .HasFilter("[TourGuideId] IS NOT NULL AND [Status] <> 2 AND [IsDeleted] = 0")
+            .HasDatabaseName("UX_ProviderDocuments_TourGuide_Type_Active");
+
+        builder.HasIndex(x => new { x.BusinessId, x.DocumentType })
+            .IsUnique()
+            .HasFilter("[BusinessId] IS NOT NULL AND [Status] <> 2 AND [IsDeleted] = 0")
+            .HasDatabaseName("UX_ProviderDocuments_Business_Type_Active");
+
+        builder.HasIndex(x => new { x.Status, x.DocumentType, x.SuspensionDispatchedAt })
+            .HasFilter("[Status] = 3 AND [SuspensionDispatchedAt] IS NULL")
+            .HasDatabaseName("IX_ProviderDocuments_Suspension_Pending");
     }
 }

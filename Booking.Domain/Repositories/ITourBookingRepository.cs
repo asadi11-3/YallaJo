@@ -118,9 +118,13 @@ public interface ITourBookingRepository : IRepository<TourBooking, Guid>
         string? paymentStatus,
         CancellationToken cancellationToken = default);
 
-    /// <summary>Lists provider-confirmation bookings older than the configured auto-accept cutoff.</summary>
     Task<IReadOnlyList<TourBooking>> GetPendingConfirmationOlderThanAsync(
         DateTime cutoffUtc,
+        int batchSize,
+        CancellationToken ct = default);
+
+    Task<IReadOnlyList<TourBooking>> GetExpiredAwaitingPaymentAsync(
+        DateTime nowUtc,
         int batchSize,
         CancellationToken ct = default);
 }

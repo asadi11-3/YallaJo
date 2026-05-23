@@ -45,7 +45,11 @@ public static class HealthCheckExtensions
             .AddCheck<OutboxDeadLetterHealthCheck>(
                 "outbox-dead-letters",
                 failureStatus: HealthStatus.Degraded,
-                tags: ["ready", "outbox", "ops"]);
+                tags: ["ready", "outbox", "ops"])
+            .AddCheck<BookingBgServicesHealthCheck>(
+                "booking-bg",
+                failureStatus: HealthStatus.Unhealthy,
+                tags: ["ready", "booking", "bg"]);
 
         return services;
     }
