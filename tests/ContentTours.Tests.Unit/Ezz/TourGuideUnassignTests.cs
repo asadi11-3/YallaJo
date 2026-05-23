@@ -30,6 +30,7 @@ public sealed class TourGuideUnassignTests
     {
         var tourRepo = Substitute.For<ITourRepository>();
         var guideRepo = Substitute.For<ITourTourGuideRepository>();
+        var guideProfileRepo = Substitute.For<ITourGuideRepository>();
         var uow = Substitute.For<IContentToursUnitOfWork>();
         var outbox = Substitute.For<IContentToursOutboxWriter>();
         var cache = Substitute.For<HybridCache>();
@@ -37,7 +38,7 @@ public sealed class TourGuideUnassignTests
         var logger = Substitute.For<ILogger<UnassignTourGuideCommandHandler>>();
 
         var handler = new UnassignTourGuideCommandHandler(
-            tourRepo, guideRepo, uow, outbox, cache, currentUser, logger);
+            tourRepo, guideRepo, guideProfileRepo, uow, outbox, cache, currentUser, logger);
         return (handler, tourRepo, guideRepo, uow, outbox, currentUser);
     }
 

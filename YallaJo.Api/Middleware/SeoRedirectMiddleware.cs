@@ -9,9 +9,16 @@ public sealed class SeoRedirectMiddleware(
     HybridCache cache,
     ILogger<SeoRedirectMiddleware> logger)
 {
-    public async Task InvokeAsync(HttpContext context, CancellationToken ct = default)
+    public async Task InvokeAsync(HttpContext context)
     {
+        var ct = context.RequestAborted;
         var path = context.Request.Path.Value ?? string.Empty;
+
+        if (context.Request.Path.StartsWithSegments("/swagger"))
+        {
+            await next(context);
+            return;
+        }
 
         if (path.StartsWith("/api/", StringComparison.OrdinalIgnoreCase) ||
             path.StartsWith("/hubs/", StringComparison.OrdinalIgnoreCase))
