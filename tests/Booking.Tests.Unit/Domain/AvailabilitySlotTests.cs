@@ -205,4 +205,77 @@ public sealed class AvailabilitySlotTests
 
         slot.IsActive.Should().BeTrue();
     }
+
+    // ===== TASK 1 additions =====
+
+    [Fact]
+    public void UpdateCapacity_raises_capacity_changed_event_and_updates_max()
+    {
+        var slot = CreateSlot(maxCapacity: 10);
+
+        slot.UpdateCapacity(14);
+
+        slot.MaxCapacity.Should().Be(14);
+        slot.AvailableCount.Should().Be(14);
+        var evt = slot.ShouldContainDomainEvent<AvailabilitySlotCapacityChangedDomainEvent>();
+        evt.OldCapacity.Should().Be(10);
+        evt.NewCapacity.Should().Be(14);
+    }
+
+    [Fact]
+    public void UpdateCapacity_throws_when_below_booked_plus_locked()
+    {
+        var slot = CreateSlot(maxCapacity: 10);
+        slot.Lock(2);
+        slot.ConfirmBooking(1); // locked=1 booked=1 held=2
+
+        var act = () => slot.UpdateCapacity(1);
+
+        act.Should().Throw<BusinessRuleViolationException>();
+    }
+
+    [Fact]
+    public void Book_increases_booked_and_decreases_available()
+    {
+        var slot = CreateSlot(maxCapacity: 6);
+
+        slot.Book(2);
+
+        slot.BookedCount.Should().Be(2);
+        slot.AvailableCount.Should().Be(4);
+    }
+
+    [Fact]
+    public void Cancel_aliases_release_booking()
+    {
+        var slot = CreateSlot(maxCapacity: 6);
+        slot.Book(3);
+
+        slot.Cancel(2);
+
+        slot.BookedCount.Should().Be(1);
+        slot.AvailableCount.Should().Be(5);
+    }
+
+    [Fact]
+    public void RequestDeactivation_throws_when_has_bookings()
+    {
+        var slot = CreateSlot(maxCapacity: 6);
+        slot.Book(1);
+
+        var act = () => slot.RequestDeactivation();
+
+        act.Should().Throw<BusinessRuleViolationException>();
+    }
+
+    [Fact]
+    public void RequestDeactivation_succeeds_when_only_locks_exist()
+    {
+        var slot = CreateSlot(maxCapacity: 6);
+        slot.Lock(1);
+
+        slot.RequestDeactivation();
+
+        slot.IsActive.Should().BeFalse();
+    }
 }

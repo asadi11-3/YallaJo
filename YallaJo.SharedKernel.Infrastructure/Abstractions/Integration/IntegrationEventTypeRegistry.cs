@@ -105,7 +105,7 @@ public static class IntegrationEventTypeRegistry
         ["content-seo.metadata.changed.v1"]             = typeof(SeoMetadataChangedIntegrationEvent),
         ["content-seo.weather.budget-exhausted.v1"]     = typeof(WeatherBudgetExhaustedIntegrationEvent),
 
-        // ── Booking (12 events) ──
+        // ── Booking (15 events) ──
         ["booking.tour-booking.created.v1"]             = typeof(TourBookingCreatedIntegrationEvent),
         ["booking.tour-booking.confirmed.v1"]           = typeof(TourBookingConfirmedIntegrationEvent),
         ["booking.tour-booking.cancelled.v1"]           = typeof(TourBookingCancelledIntegrationEvent),
@@ -118,6 +118,9 @@ public static class IntegrationEventTypeRegistry
         ["booking.slot-lock.created.v1"]                = typeof(SlotLockCreatedIntegrationEvent),
         ["booking.slot-lock.released.v1"]               = typeof(SlotLockReleasedIntegrationEvent),
         ["booking.availability-slot.capacity-changed.v1"] = typeof(AvailabilitySlotCapacityChangedIntegrationEvent),
+        ["booking.provider-document.expiring.v1"]       = typeof(ProviderDocumentExpiringIntegrationEvent),
+        ["booking.provider-document.expired.v1"]        = typeof(ProviderDocumentExpiredIntegrationEvent),
+        ["booking.provider.suspended-doc-expired.v1"]   = typeof(ProviderSuspendedDocumentExpiredIntegrationEvent),
 
         // ── Finance (13 events) ──
         ["finance.payment.completed.v1"]                = typeof(PaymentCompletedIntegrationEvent),

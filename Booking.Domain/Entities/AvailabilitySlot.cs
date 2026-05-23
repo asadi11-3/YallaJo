@@ -188,4 +188,66 @@ public sealed class AvailabilitySlot : AuditableEntity, IAggregateRoot
         IsActive = true;
         MarkUpdated();
     }
+
+    public void Book(int participantCount)
+    {
+        if (participantCount < 1)
+        {
+            throw new BusinessRuleViolationException("ParticipantCount must be at least 1.");
+        }
+
+        if (!IsActive)
+        {
+            throw new BusinessRuleViolationException("Cannot book seats on an inactive slot.");
+        }
+
+        if (AvailableCount < participantCount)
+        {
+            throw new BusinessRuleViolationException(
+                $"Insufficient capacity: requested {participantCount}, available {AvailableCount}.");
+        }
+
+        var previousAvailable = AvailableCount;
+        BookedCount += participantCount;
+        MarkUpdated();
+        AddDomainEvent(new AvailabilitySlotCapacityChangedDomainEvent(Id, previousAvailable, AvailableCount));
+    }
+
+    public void Cancel(int participantCount) => ReleaseBooking(participantCount);
+
+    public void UpdateCapacity(int newMaxCapacity)
+    {
+        if (newMaxCapacity < 1)
+        {
+            throw new BusinessRuleViolationException("MaxCapacity must be at least 1.");
+        }
+
+        var heldCount = BookedCount + LockedCount;
+        if (newMaxCapacity < heldCount)
+        {
+            throw new BusinessRuleViolationException(
+                $"MaxCapacity ({newMaxCapacity}) must be greater than or equal to currently held seats ({heldCount}).");
+        }
+
+        if (newMaxCapacity == MaxCapacity)
+        {
+            return;
+        }
+
+        var previousAvailable = AvailableCount;
+        MaxCapacity = newMaxCapacity;
+        MarkUpdated();
+        AddDomainEvent(new AvailabilitySlotCapacityChangedDomainEvent(Id, previousAvailable, AvailableCount));
+    }
+
+    public void RequestDeactivation()
+    {
+        if (BookedCount > 0)
+        {
+            throw new BusinessRuleViolationException(
+                $"Cannot deactivate a slot with confirmed bookings ({BookedCount}).");
+        }
+
+        Deactivate();
+    }
 }

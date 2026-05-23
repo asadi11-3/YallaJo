@@ -44,7 +44,8 @@ public static class OpenTelemetryExtensions
                     .AddHttpClientInstrumentation()
                     .AddEntityFrameworkCoreInstrumentation()
                     .AddSource("MediatR")    // Custom ActivitySource for MediatR pipeline
-                    .AddSource("YallaJo.Outbox"); // Outbox dispatch spans
+                    .AddSource("YallaJo.Outbox") // Outbox dispatch spans
+                    .AddSource("YallaJo.Booking"); // Booking background service ticks
 
                 if (!string.IsNullOrEmpty(otlpEndpoint))
                 {
@@ -61,7 +62,8 @@ public static class OpenTelemetryExtensions
                 metrics
                     .AddAspNetCoreInstrumentation()
                     .AddHttpClientInstrumentation()
-                    .AddMeter("YallaJo.Outbox"); // Outbox metrics
+                    .AddMeter("YallaJo.Outbox")    // Outbox metrics
+                    .AddMeter("YallaJo.Booking");  // Booking background-service counters
 
                 if (!string.IsNullOrEmpty(otlpEndpoint))
                 {

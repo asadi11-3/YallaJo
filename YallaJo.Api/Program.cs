@@ -104,7 +104,7 @@ builder.Services.AddAnalyticsApplication();
 builder.Services.AddAnalyticsInfrastructure(builder.Configuration);
 
 builder.Services.AddBookingApplication();
-builder.Services.AddBookingInfrastructure(builder.Configuration);
+builder.Services.AddBookingInfrastructure(builder.Configuration, builder.Environment);
 
 builder.Services.AddFinanceApplication();
 builder.Services.AddFinanceInfrastructure(builder.Configuration);
