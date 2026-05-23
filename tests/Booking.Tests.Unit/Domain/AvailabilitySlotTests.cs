@@ -196,6 +196,18 @@ public sealed class AvailabilitySlotTests
     }
 
     [Fact]
+    public void Activate_when_already_active_raises_no_domain_event()
+    {
+        // P2-E: the early-return guard must not emit a spurious event.
+        var slot = CreateSlot();
+        slot.ClearDomainEvents();
+
+        slot.Activate(); // already active → no-op
+
+        slot.DomainEvents.Should().BeEmpty();
+    }
+
+    [Fact]
     public void Activate_after_deactivate_restores_to_active()
     {
         var slot = CreateSlot();
@@ -204,6 +216,25 @@ public sealed class AvailabilitySlotTests
         slot.Activate();
 
         slot.IsActive.Should().BeTrue();
+    }
+
+    [Fact]
+    public void Activate_after_deactivate_raises_capacity_changed_event_with_equal_old_and_new_values()
+    {
+        // P2-E: AvailableCount does not factor in IsActive, so old==new is expected and correct.
+        // The event signals "this slot re-entered visibility" for downstream cache invalidators;
+        // they act on SlotId, not the delta.
+        var slot = CreateSlot(maxCapacity: 8);
+        slot.Book(2);    // BookedCount=2, AvailableCount=6
+        slot.Deactivate();
+        slot.ClearDomainEvents();
+
+        slot.Activate();
+
+        slot.IsActive.Should().BeTrue();
+        var evt = slot.ShouldContainDomainEvent<AvailabilitySlotCapacityChangedDomainEvent>();
+        evt.OldCapacity.Should().Be(6);   // AvailableCount before flip
+        evt.NewCapacity.Should().Be(6);   // AvailableCount after flip (same — IsActive is excluded)
     }
 
     // ===== TASK 1 additions =====

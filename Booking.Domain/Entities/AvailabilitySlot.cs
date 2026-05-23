@@ -185,8 +185,10 @@ public sealed class AvailabilitySlot : AuditableEntity, IAggregateRoot
             return;
         }
 
+        var previousAvailable = AvailableCount;
         IsActive = true;
         MarkUpdated();
+        AddDomainEvent(new AvailabilitySlotCapacityChangedDomainEvent(Id, previousAvailable, AvailableCount));
     }
 
     public void Book(int participantCount)

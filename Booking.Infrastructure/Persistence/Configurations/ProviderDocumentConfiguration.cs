@@ -42,7 +42,6 @@ public class ProviderDocumentConfiguration : IEntityTypeConfiguration<ProviderDo
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasQueryFilter(x => !x.IsDeleted);
-        builder.HasIndex(x => new { x.TourGuideId, x.DocumentType });
         builder.HasIndex(x => x.BusinessId).HasFilter("[BusinessId] IS NOT NULL");
         builder.HasIndex(x => new { x.Status, x.ExpiresAt, x.ExpiringNotificationSentAt })
             .HasDatabaseName("IX_ProviderDocuments_Status_ExpiresAt_ExpiringNotification");
