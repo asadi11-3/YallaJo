@@ -13,4 +13,11 @@ public interface IJoinRequestRepository : IRepository<JoinRequest, Guid>
 
     /// <summary>Lists join requests submitted by a specific user.</summary>
     Task<IReadOnlyList<JoinRequest>> GetByUserIdAsync(Guid userId, CancellationToken ct = default);
+
+    Task<bool> ExistsPendingForUserAndBookingAsync(
+        Guid bookingId,
+        Guid userId,
+        CancellationToken ct = default);
+
+    Task<JoinRequest?> GetByIdTrackedAsync(Guid id, CancellationToken ct = default);
 }

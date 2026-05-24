@@ -13,6 +13,12 @@
   <ItemGroup>
     <ProjectReference Include="..\Booking.Contracts\Booking.Contracts.csproj" />
     <ProjectReference Include="..\Booking.Domain\Booking.Domain.csproj" />
+    <!--
+      Contracts-only cross-module dependency: Booking handlers call
+      ITourOwnershipService for server-trusted tour ownership probes.
+      We MUST NOT reference ContentTours.Application or ContentTours.Infrastructure.
+    -->
+    <ProjectReference Include="..\ContentTours.Contracts\ContentTours.Contracts.csproj" />
     <ProjectReference Include="..\Security.Contracts\Security.Contracts.csproj" />
     <ProjectReference Include="..\YallaJo.SharedKernel.Application\YallaJo.SharedKernel.Application.csproj" />
   </ItemGroup>

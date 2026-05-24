@@ -50,10 +50,12 @@ public static class DependencyInjection
         services.AddScoped<ITourBookingRepository, TourBookingRepository>();
         services.AddScoped<IAvailabilitySlotRepository, AvailabilitySlotRepository>();
         services.AddScoped<IRefundPolicyRepository, RefundPolicyRepository>();
+        services.AddScoped<ICommissionSnapshotRepository, CommissionSnapshotRepository>();
         services.AddScoped<IJoinRequestRepository, JoinRequestRepository>();
         services.AddScoped<IProviderDocumentRepository, ProviderDocumentRepository>();
         services.AddScoped<ISlotLockRepository, SlotLockRepository>();
         services.AddScoped<IBookingOutboxWriter, BookingOutboxWriter>();
+        services.AddScoped<IBookingInboxStore, BookingInboxStore>();
 
         // ── Permission catalog ───────────────────────────────────────────────
         services.AddSingleton<IPermissionCatalog, BookingPermissionCatalog>();
@@ -103,7 +105,23 @@ public static class DependencyInjection
         }
 
         services.AddScoped<IDiscountEvaluator, NoOpDiscountEvaluator>();
-        services.AddScoped<IBookingCommissionLookup, StubBookingCommissionLookup>();
+
+        services.Configure<BookingCommissionDefaultsOptions>(opts =>
+        {
+            var section = configuration.GetSection(BookingCommissionDefaultsOptions.SectionName);
+            var tier = section[nameof(BookingCommissionDefaultsOptions.Tier)];
+            if (!string.IsNullOrWhiteSpace(tier))
+            {
+                opts.Tier = tier;
+            }
+            var currency = section[nameof(BookingCommissionDefaultsOptions.Currency)];
+            if (!string.IsNullOrWhiteSpace(currency))
+            {
+                opts.Currency = currency;
+            }
+            ApplyDecimal(section, nameof(BookingCommissionDefaultsOptions.FallbackRate), value => opts.FallbackRate = value);
+        });
+        services.AddScoped<IBookingCommissionLookup, SnapshotBookingCommissionLookup>();
 
         // ── Background services (TASK 7) ─────────────────────────────────────
         // Singleton liveness tracker consumed by BookingBgServicesHealthCheck (registered in API host).
@@ -167,6 +185,19 @@ public static class DependencyInjection
     private static void ApplyInt(IConfiguration section, string key, Action<int> apply)
     {
         if (int.TryParse(section[key], out var value) && value > 0)
+        {
+            apply(value);
+        }
+    }
+
+    private static void ApplyDecimal(IConfiguration section, string key, Action<decimal> apply)
+    {
+        if (decimal.TryParse(
+                section[key],
+                System.Globalization.NumberStyles.Number,
+                System.Globalization.CultureInfo.InvariantCulture,
+                out var value)
+            && value >= 0m)
         {
             apply(value);
         }

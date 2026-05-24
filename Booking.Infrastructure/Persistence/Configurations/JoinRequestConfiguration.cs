@@ -33,7 +33,14 @@ public class JoinRequestConfiguration : IEntityTypeConfiguration<JoinRequest>
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasQueryFilter(x => !x.IsDeleted);
-        builder.HasIndex(x => new { x.TourBookingId, x.UserId });
+
+        builder.HasIndex(x => x.TourBookingId)
+            .HasDatabaseName("IX_JoinRequests_TourBookingId");
+
         builder.HasIndex(x => x.Status);
+        builder.HasIndex(x => new { x.TourBookingId, x.UserId })
+            .IsUnique()
+            .HasFilter("[Status] = 0 AND [IsDeleted] = 0")
+            .HasDatabaseName("UX_JoinRequests_Pending_TourBookingId_UserId");
     }
 }

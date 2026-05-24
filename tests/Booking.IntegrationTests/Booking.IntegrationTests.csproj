@@ -26,6 +26,8 @@
     <ProjectReference Include="..\..\Booking.Application\Booking.Application.csproj" />
     <ProjectReference Include="..\..\Booking.Contracts\Booking.Contracts.csproj" />
     <ProjectReference Include="..\..\Booking.Infrastructure\Booking.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\ContentTours.Contracts\ContentTours.Contracts.csproj" />
+    <ProjectReference Include="..\..\Finance.Contracts\Finance.Contracts.csproj" />
     <ProjectReference Include="..\YallaJo.Tests.Shared\YallaJo.Tests.Shared.csproj" />
   </ItemGroup>
 
