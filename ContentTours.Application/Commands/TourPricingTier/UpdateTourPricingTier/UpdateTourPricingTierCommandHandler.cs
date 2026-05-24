@@ -36,9 +36,7 @@ public sealed class UpdateTourPricingTierCommandHandler(
                    Outcome.NotFound);
             }
 
-            var isAdminTier = AppRoles.HighestPrivilegeLevel(currentUser.Roles)
-                >= RolePrivilegeLevel.Admin;
-            if (!isAdminTier && tour.CreatedByUserId != currentUser.UserId!.Value)
+            if (tour.CreatedByUserId != currentUser.UserId!.Value)
             {
                 return Result.Failure(
                    new Error("Tour.NotOwner", "You do not have permission to update pricing tiers on this tour."),

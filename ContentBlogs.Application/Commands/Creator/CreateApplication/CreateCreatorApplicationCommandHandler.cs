@@ -28,15 +28,7 @@ public sealed class CreateCreatorApplicationCommandHandler(
     {
         try
         {
-            if (currentUser.UserId is null)
-            {
-                logger.LogWarning("CreateCreatorApplication rejected: current user id missing.");
-                return Result.Failure<CreateCreatorApplicationResult>(
-                    new Error("Auth.UserIdMissing", "Authenticated user id is missing."),
-                    Outcome.Unauthorized);
-            }
-
-            var userId = currentUser.UserId.Value;
+                        var userId = currentUser.UserId!.Value;
 
             // ── Guard: no active application ────────────────────────────────
             if (await applicationRepository

@@ -26,14 +26,7 @@ public sealed class FeatureCreatorPostCommandHandler(
     {
         try
         {
-            if (currentUser.UserId is null)
-            {
-                return Result.Failure(
-                    new Error("Auth.UserIdMissing", "Authenticated user id is missing."),
-                    Outcome.Unauthorized);
-            }
-
-            var post = await postRepository
+                        var post = await postRepository
                 .GetByIdAsync(request.PostId, cancellationToken)
                 .ConfigureAwait(false);
 
@@ -74,7 +67,7 @@ public sealed class FeatureCreatorPostCommandHandler(
             }
 
             var featureResult = post.Feature(
-                currentUser.UserId.Value,
+                currentUser.UserId!.Value,
                 request.FeaturedUntil,
                 DateTime.UtcNow,
                 profile.TrustTier);
@@ -100,7 +93,7 @@ public sealed class FeatureCreatorPostCommandHandler(
 
             logger.LogInformation(
                 "Creator post featured: {PostId} by admin {AdminId}, until={Until}",
-                post.Id, currentUser.UserId.Value, request.FeaturedUntil);
+                post.Id, currentUser.UserId!.Value, request.FeaturedUntil);
 
             return Result.Success();
         }

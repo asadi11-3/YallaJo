@@ -105,6 +105,9 @@ public static class AppAction
     /// <summary>ContentBlogs: admin demotes a creator to a lower trust tier.</summary>
     public const string DemoteTier = nameof(DemoteTier);
 
+    /// <summary>ContentTours: provider archives own tour.</summary>
+    public const string Archive = nameof(Archive);
+
     /// <summary>ContentBlogs: admin hides a creator post for policy violations.</summary>
     public const string HidePost = nameof(HidePost);
 

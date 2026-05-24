@@ -25,6 +25,7 @@ public sealed class ContentToursPermissionCatalog : IPermissionCatalog
         new(ContentToursFeatures.Tour, AppAction.ReadOwn,   PermissionGroup.ContentManagement, "View own tours (provider dashboard)"),
         new(ContentToursFeatures.Tour, AppAction.ReadAny,   PermissionGroup.ContentManagement, "View any tour (admin)"),
         new(ContentToursFeatures.Tour, AppAction.Feature,   PermissionGroup.ContentManagement, "Feature or unfeature a tour (admin curation)"),
+        new(ContentToursFeatures.Tour, AppAction.Archive,   PermissionGroup.ContentManagement, "Archive a tour (provider)"),
 
         new(ContentToursFeatures.Package, AppAction.Read,   PermissionGroup.ContentManagement, "View tour packages"),
         new(ContentToursFeatures.Package, AppAction.Create, PermissionGroup.ContentManagement, "Create a tour package"),

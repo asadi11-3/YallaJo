@@ -20,8 +20,25 @@ public sealed class TrackBlogViewCommandHandler(
     {
         try
         {
+            if (string.IsNullOrWhiteSpace(request.ViewerId))
+            {
+                return Result<BlogViewCountResult>.Failure(
+                    new Error("BlogView.InvalidViewerId", "ViewerId must not be empty."),
+                    Outcome.Invalid);
+            }
 
-            var viewerHash = hashService.Hash(request.ViewerKind, request.ViewerId);
+            byte[] viewerHash;
+            try
+            {
+                viewerHash = hashService.Hash(request.ViewerKind, request.ViewerId);
+            }
+            catch (ArgumentOutOfRangeException ex)
+            {
+                logger.LogError(ex, "BlogViewerHashService.Hash failed for ViewerKind={ViewerKind}.", request.ViewerKind);
+                return Result<BlogViewCountResult>.Failure(
+                    new Error("BlogView.UnsupportedViewerKind", $"Unsupported viewer kind '{request.ViewerKind}'."),
+                    Outcome.Invalid);
+            }
 
             var outcome = await counter.TryCountAsync(
                     request.BlogId,

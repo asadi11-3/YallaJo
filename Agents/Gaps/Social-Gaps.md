@@ -1,5 +1,18 @@
 # Social Module — Audit & Gap Report
 
+> ## 🔶 GAPS PLANNED — Implementation Pending
+>
+> | Gap | Status | Resolution |
+> |-----|--------|-----------|
+> | Gap #1 — No Public Review Listing (HIGH) | 📋 PLANNED | Phase 3 — Add 2 AllowAnonymous GET endpoints + rating summary |
+> | Gap #2 — ICurrentUser Redundant Auth Gates (MEDIUM) | 📋 PLANNED | Phase 1 — Remove from 18 endpoints |
+> | Gap #3 — Zero HybridCache (MEDIUM) | 📋 PLANNED | Phase 2 — Add caching + SocialCacheKeys + tag invalidation |
+> | Gap #4 — Dead Code & Dead Permissions (LOW) | 📋 PLANNED | Phase 4 — Delete AccessibilityReview, wire Warn/Ban endpoints |
+> | Gap #5 — Missing Spec Features (MEDIUM) | 📋 PLANNED | Phase 5 — Discount notifications deferred, validators added, TimeProvider fix |
+>
+> **Additional enhancements**: ReviewHelpfulVote, UserModerationRecord, 3-strike auto-escalation, review photos via ContentCore
+> **Plan**: `Agents/Plans/Social-Workflow.md` (14 decisions locked, 8 phases, ~64-76 new files)
+
 > **Audited**: 2025-01-XX  
 > **Sources of Truth**: `agent-context.md`, `YallaJo.md`, `YallaJo Business Rules & Edge Cases.pdf`, `Endpoints.pdf`  
 > **Overall Score**: 7.0 / 10

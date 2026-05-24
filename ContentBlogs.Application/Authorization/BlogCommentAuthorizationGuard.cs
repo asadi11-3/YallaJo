@@ -21,15 +21,8 @@ public sealed class BlogCommentAuthorizationGuard(
     {
         ArgumentNullException.ThrowIfNull(comment);
 
-        if (!currentUser.IsAuthenticated || currentUser.UserId is null)
-        {
-            return Result.Failure(
-                new Error("BlogComment.Unauthorized", "Authenticated user is required."),
-                Outcome.Unauthorized);
-        }
-
         // ── Owner path ───────────────────────────────────────────────────────
-        if (currentUser.UserId.Value == comment.UserId)
+        if (currentUser.UserId!.Value == comment.UserId)
         {
             var age = utcNow - comment.CreatedAt;
             if (age > OwnerEditWindow)
@@ -63,15 +56,8 @@ public sealed class BlogCommentAuthorizationGuard(
     {
         ArgumentNullException.ThrowIfNull(comment);
 
-        if (!currentUser.IsAuthenticated || currentUser.UserId is null)
-        {
-            return Result.Failure(
-                new Error("BlogComment.Unauthorized", "Authenticated user is required."),
-                Outcome.Unauthorized);
-        }
-
         // Owner: allowed at any time (no time-window per business spec for delete).
-        if (currentUser.UserId.Value == comment.UserId)
+        if (currentUser.UserId!.Value == comment.UserId)
             return Result.Success();
 
         return await authorHierarchyGuard

@@ -23,12 +23,7 @@ public sealed class RejectTourCommandHandler(
     {
         try
         {
-            if (currentUser.UserId is null)
-            {
-                return Result.Failure(
-                    Error.Unauthorized("Authentication is required."),
-                    Outcome.Unauthorized);
-            }
+            
 
             var tour = await tourRepository
                 .GetByIdAsync(request.Id, cancellationToken, asNoTracking: false)
@@ -60,7 +55,7 @@ public sealed class RejectTourCommandHandler(
 
             try
             {
-                tour.Reject(request.Reason, currentUser.UserId.Value);
+                tour.Reject(request.Reason, currentUser.UserId!.Value);
             }
             catch (InvalidOperationException ex)
             {

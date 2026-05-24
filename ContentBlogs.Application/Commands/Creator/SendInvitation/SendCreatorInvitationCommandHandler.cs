@@ -24,14 +24,7 @@ public sealed class SendCreatorInvitationCommandHandler(
     {
         try
         {
-            if (currentUser.UserId is null)
-            {
-                return Result.Failure<SendCreatorInvitationResult>(
-                    new Error("Auth.UserIdMissing", "Authenticated user id is missing."),
-                    Outcome.Unauthorized);
-            }
-
-            var adminId = currentUser.UserId.Value;
+                        var adminId = currentUser.UserId!.Value;
 
             // ── Guard: no duplicate pending invitation ──────────────────────
             if (request.Kind == CreatorInvitationKind.Email && !string.IsNullOrEmpty(request.Email))

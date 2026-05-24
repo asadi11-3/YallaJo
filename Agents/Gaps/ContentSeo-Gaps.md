@@ -1,5 +1,16 @@
 # YallaJo — ContentSeo Module Audit Report
 
+> ## 🔶 GAPS PLANNED — Implementation Pending
+>
+> | Gap | Status | Resolution |
+> |-----|--------|-----------|
+> | Gap 1 — 7 Dead Permissions (MEDIUM) | 📋 PLANNED | Phase 2 — Add 6 endpoints, remove Sitemap.Create |
+> | Gap 2 — MaxHops 10→3 (LOW) | 📋 PLANNED | Phase 3 — Simple constant change |
+> | Gap 3 — NoOp Infrastructure Throw (LOW) | 📋 PLANNED | Phase 1 — Replace with logging |
+> | Gap 4 — Test File (LOW) | 📋 PLANNED | Phase 6 — Test coverage |
+>
+> **Plan**: `Agents/Plans/ContentSeo-Workflow.md` (9 decisions locked, 6 phases, ~24 new files)
+
 > Full audit report generated from code analysis.  
 > Last updated: 2025-07-15  
 > Module status: **Pre-work** in agent-context.md  

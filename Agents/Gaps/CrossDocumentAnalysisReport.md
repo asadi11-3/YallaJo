@@ -1,6 +1,7 @@
 # YallaJo Cross-Document Analysis Report
 
-> **Date**: 2025-07-14
+> **Date**: 2025-07-14 (Updated: 2025-07-15)
+> **Status**: 6/6 Contradictions RESOLVED, 3/4 Crossings RESOLVED, 3/3 Systemics PLANNED
 > **Scope**: Full cross-reference audit of all 4 source-of-truth documents + 9 module gap analyses
 > **Documents Audited**:
 > 1. `agent-context.md` — Architecture rules, gotchas, non-negotiable constraints
@@ -64,7 +65,7 @@ These are cases where two authoritative documents specify **different behavior**
 
 ---
 
-### CONTRADICTION-1: Commission Model
+### CONTRADICTION-1: Commission Model ✅ RESOLVED → Revenue-tier (Finance-Workflow Decision #2)
 
 | Aspect | Business Rules PDF (§5.3) | Endpoints.pdf / YallaJo.md |
 |--------|---------------------------|----------------------------|
@@ -81,7 +82,7 @@ These are cases where two authoritative documents specify **different behavior**
 
 ---
 
-### CONTRADICTION-2: Review Eligibility
+### CONTRADICTION-2: Review Eligibility ✅ RESOLVED → Booking-verified only (Social-Workflow Decision #15)
 
 | Aspect | Business Rules PDF (§6.2) | Endpoints.pdf |
 |--------|---------------------------|---------------|
@@ -96,7 +97,7 @@ These are cases where two authoritative documents specify **different behavior**
 
 ---
 
-### CONTRADICTION-3: Rating Scale
+### CONTRADICTION-3: Rating Scale ✅ RESOLVED → Half-star 0.5 increments (Social-Workflow Decision #16)
 
 | Aspect | Business Rules PDF | Endpoints.pdf |
 |--------|-------------------|---------------|
@@ -111,7 +112,7 @@ These are cases where two authoritative documents specify **different behavior**
 
 ---
 
-### CONTRADICTION-4: Report Auto-Hide Threshold
+### CONTRADICTION-4: Report Auto-Hide Threshold ✅ RESOLVED → 3 reports (Social-Workflow Decision #17)
 
 | Aspect | Business Rules PDF | Endpoints.pdf |
 |--------|-------------------|---------------|
@@ -125,7 +126,7 @@ These are cases where two authoritative documents specify **different behavior**
 
 ---
 
-### CONTRADICTION-5: Provider Type Taxonomy
+### CONTRADICTION-5: Provider Type Taxonomy ✅ RESOLVED → Unified enum with BusinessOwner=5 (Platform-Onboarding-Workflow)
 
 | Business Rules PDF | Endpoints.pdf |
 |-------------------|---------------|
@@ -144,7 +145,7 @@ These are cases where two authoritative documents specify **different behavior**
 
 ---
 
-### CONTRADICTION-6: Default Refund Policy
+### CONTRADICTION-6: Default Refund Policy ✅ RESOLVED → 3-tier per-tour policy (Booking-Workflow)
 
 | Aspect | Business Rules PDF | Endpoints.pdf |
 |--------|-------------------|---------------|
@@ -267,7 +268,7 @@ These are business processes that span multiple modules where the handoff betwee
 
 ---
 
-### CROSSING-2: Provider→Tour→Booking Pipeline — Missing Guards
+### CROSSING-2: Provider→Tour→Booking Pipeline — Missing Guards ✅ RESOLVED (ContentPlaces Gap #3.8 + ContentTours Gap #3.6)
 
 **Pipeline**: Accounts (provider application) → ContentPlaces (create business) → ContentTours (create tour) → Booking
 
@@ -288,7 +289,7 @@ These are business processes that span multiple modules where the handoff betwee
 
 ---
 
-### CROSSING-3: Discount→Wishlist→Notification Pipeline (UNIMPLEMENTED)
+### CROSSING-3: Discount→Wishlist→Notification Pipeline (DEFERRED post-MVP, Social Decision #7)
 
 **Pipeline**: Finance (discount created) → Social (wishlisted tours) → Messaging (push notification)
 
@@ -308,7 +309,7 @@ These are business processes that span multiple modules where the handoff betwee
 
 ---
 
-### CROSSING-4: Provider Suspension Cascade
+### CROSSING-4: Provider Suspension Cascade 🔶 PARTIALLY RESOLVED (Booking + Finance have handlers; ContentTours/Social pending)
 
 **Pipeline**: Accounts/ContentPlaces (suspension) → ContentTours, Finance, Social, Messaging (cascade)
 

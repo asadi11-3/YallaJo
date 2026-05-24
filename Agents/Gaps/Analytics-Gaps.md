@@ -1,5 +1,19 @@
 # YallaJo — Analytics Module Audit Report
 
+> ## 🔶 GAPS PLANNED — Implementation Pending
+>
+> | Gap | Status | Resolution |
+> |-----|--------|-----------|
+> | Gap 1 — CQRS Bypass in Presentation (HIGH) | 📋 PLANNED | Phase 2 — Extract 15 endpoints into proper Command/Query handlers |
+> | Gap 2 — Anonymous POST Endpoints (HIGH) | 📋 PLANNED | Phase 1 — Require auth on 3 POST endpoints |
+> | Gap 3 — Permission Reuse (MEDIUM) | 📋 PLANNED | Phase 3 — 7 new features, 16 new permissions |
+> | Gap 4 — Missing Collaborative Filtering (MEDIUM) | 📋 PLANNED | Phase 4 — CollaborativeScoreMatrix + nightly build service |
+> | Gap 5 — Diversity Rule Spec Mismatch (LOW) | 📋 PLANNED | Phase 5 — Align with spec |
+> | Gap 6 — Audit Trail Security Risk (MEDIUM) | 📋 PLANNED | Phase 6 — Fix identity spoofing |
+> | Gap 7 — Dead Code & Minor Issues (LOW) | 📋 PLANNED | Phase 7 — Cleanup |
+>
+> **Plan**: `Agents/Plans/Analytics-Workflow.md` (14 decisions locked, 8 phases, ~56 new files)
+
 > Full audit report generated from code analysis.  
 > Last updated: 2025-07-15  
 > Module status: **Pre-work done (Phase 4)** in agent-context.md

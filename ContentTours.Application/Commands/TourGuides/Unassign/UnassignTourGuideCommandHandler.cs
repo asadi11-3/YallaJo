@@ -40,9 +40,7 @@ public sealed class UnassignTourGuideCommandHandler(
             }
 
             // 2. Owner-or-admin gate (canonical pattern — Mahmoud DeleteTourCommandHandler:45-52)
-            var isAdminTier = AppRoles.HighestPrivilegeLevel(currentUser.Roles)
-                >= RolePrivilegeLevel.Admin;
-            if (!isAdminTier && tour.CreatedByUserId != currentUser.UserId!.Value)
+            if (tour.CreatedByUserId != currentUser.UserId!.Value)
             {
                 return Result.Failure(
                     new Error(

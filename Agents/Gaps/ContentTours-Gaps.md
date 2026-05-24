@@ -1,5 +1,20 @@
 # ContentTours Module — Audit Report
 
+> ## ✅ ALL 8 GAPS RESOLVED — Code Changes Applied
+>
+> | Gap | Status | Resolution |
+> |-----|--------|-----------|
+> | Gap 1 — ICurrentUser Misuse (HIGH) | ✅ FIXED | Removed auth gates from 22 handlers |
+> | Gap 2 — Validator Spec Alignment (MEDIUM) | ✅ FIXED | MaxGroupSize 500→100, DurationMinutes 43200→2880, BasePrice ≥0→>0 |
+> | Gap 3.1 — Unique Tour Name Per Provider (MEDIUM) | ✅ FIXED | ITourRepository.IsNameTakenByProviderAsync + handler checks |
+> | Gap 3.2 — Max 50 Active Tours (MEDIUM) | ✅ FIXED | Count check in CreateTourCommandHandler |
+> | Gap 3.4 — Archive Endpoint (MEDIUM) | ✅ FIXED | Tour.Archive() + handler + endpoint |
+> | Gap 3.6 — ProviderApplication Guard (HIGH) | ✅ FIXED | IProviderStatusService + handler validation |
+> | Gap 3.7 — Package Max 10 Tours (LOW) | ✅ FIXED | Validator rule in Create + Update package validators |
+> | Gap 4 — Infrastructure Runtime Throw (LOW) | ✅ FIXED | Replaced throw with logging + graceful return |
+>
+> **Build**: 0 errors, 216 warnings (pre-existing style) | **Plan**: `Agents/Plans/TourGuide-Flow.md`
+
 > **Audited**: 2025-07-15  
 > **Module status**: 🟡 In Progress (Tour Core Task-1 complete with 50 tests)  
 > **Overall score**: 7.0 / 10

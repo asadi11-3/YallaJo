@@ -25,14 +25,7 @@ public sealed class RequestMoreInfoCommandHandler(
     {
         try
         {
-            if (currentUser.UserId is null)
-            {
-                return Result.Failure(
-                    new Error("Auth.UserIdMissing", "Authenticated user id is missing."),
-                    Outcome.Unauthorized);
-            }
-
-            var application = await applicationRepository
+                        var application = await applicationRepository
                 .GetByIdAsync(request.ApplicationId, cancellationToken)
                 .ConfigureAwait(false);
 
@@ -43,7 +36,7 @@ public sealed class RequestMoreInfoCommandHandler(
             }
 
             var moreInfoResult = application.RequestMoreInfo(
-                currentUser.UserId.Value, request.AdminNote);
+                currentUser.UserId!.Value, request.AdminNote);
 
             if (moreInfoResult.IsFailure)
             {
@@ -73,7 +66,7 @@ public sealed class RequestMoreInfoCommandHandler(
 
             logger.LogInformation(
                 "CreatorApplication more info requested: {ApplicationId} (AdminId={AdminId})",
-                request.ApplicationId, currentUser.UserId.Value);
+                request.ApplicationId, currentUser.UserId!.Value);
 
             return Result.Success();
         }

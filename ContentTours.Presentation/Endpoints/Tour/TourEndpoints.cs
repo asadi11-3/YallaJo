@@ -1,3 +1,4 @@
+using ContentTours.Application.Commands.Tour.ArchiveTour;
 using ContentTours.Application.Commands.Tour.ApproveTour;
 using ContentTours.Application.Commands.Tour.CreateTour;
 using ContentTours.Application.Commands.Tour.DeleteTour;
@@ -290,5 +291,24 @@ internal static class TourEndpoints
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status409Conflict)
         .WithMetadata(new MustHavePermissionAttribute(ContentToursFeatures.Tour, AppAction.Reinstate));
+
+        // ── POST /api/v1/tours/{id}/archive ───────────────────────────────────
+        group.MapPost("/{id:guid}/archive", async (
+            Guid id,
+            RowVersionRequest request,
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            var result = await sender.Send(new ArchiveTourCommand(id, request.RowVersion), ct);
+            return result.ToApiResult();
+        })
+        .WithName("ArchiveTour")
+        .WithSummary("Provider: archive own tour")
+        .Produces(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status409Conflict)
+        .WithMetadata(new MustHavePermissionAttribute(ContentToursFeatures.Tour, AppAction.Archive));
     }
 }

@@ -25,14 +25,7 @@ public sealed class UpdateCreatorApplicationCommandHandler(
     {
         try
         {
-            if (currentUser.UserId is null)
-            {
-                return Result.Failure(
-                    new Error("Auth.UserIdMissing", "Authenticated user id is missing."),
-                    Outcome.Unauthorized);
-            }
-
-            var application = await applicationRepository
+                        var application = await applicationRepository
                 .GetByIdAsync(request.ApplicationId, cancellationToken)
                 .ConfigureAwait(false);
 
@@ -42,7 +35,7 @@ public sealed class UpdateCreatorApplicationCommandHandler(
                     CreatorApplicationErrors.NotFound, Outcome.NotFound);
             }
 
-            if (application.ApplicantUserId != currentUser.UserId.Value)
+            if (application.ApplicantUserId != currentUser.UserId!.Value)
             {
                 return Result.Failure(
                     new Error("Auth.Forbidden", "You can only update your own application."),

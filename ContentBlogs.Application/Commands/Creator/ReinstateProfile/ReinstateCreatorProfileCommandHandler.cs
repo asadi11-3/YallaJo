@@ -25,14 +25,7 @@ public sealed class ReinstateCreatorProfileCommandHandler(
     {
         try
         {
-            if (currentUser.UserId is null)
-            {
-                return Result.Failure(
-                    new Error("Auth.UserIdMissing", "Authenticated user id is missing."),
-                    Outcome.Unauthorized);
-            }
-
-            var profile = await profileRepository
+                        var profile = await profileRepository
                 .GetByIdAsync(request.ProfileId, cancellationToken)
                 .ConfigureAwait(false);
 
@@ -42,7 +35,7 @@ public sealed class ReinstateCreatorProfileCommandHandler(
                     CreatorProfileErrors.NotFound, Outcome.NotFound);
             }
 
-            var reinstateResult = profile.Reinstate(currentUser.UserId.Value);
+            var reinstateResult = profile.Reinstate(currentUser.UserId!.Value);
             if (reinstateResult.IsFailure)
             {
                 return Result.Failure(reinstateResult.Errors.FirstOrDefault()!, Outcome.UnprocessableEntity);
@@ -71,7 +64,7 @@ public sealed class ReinstateCreatorProfileCommandHandler(
 
             logger.LogInformation(
                 "CreatorProfile reinstated: {ProfileId} (AdminId={AdminId})",
-                profile.Id, currentUser.UserId.Value);
+                profile.Id, currentUser.UserId!.Value);
 
             return Result.Success();
         }

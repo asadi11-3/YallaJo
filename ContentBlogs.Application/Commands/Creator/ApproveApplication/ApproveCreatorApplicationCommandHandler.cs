@@ -28,14 +28,7 @@ public sealed class ApproveCreatorApplicationCommandHandler(
     {
         try
         {
-            if (currentUser.UserId is null)
-            {
-                return Result.Failure<ApproveCreatorApplicationResult>(
-                    new Error("Auth.UserIdMissing", "Authenticated user id is missing."),
-                    Outcome.Unauthorized);
-            }
-
-            var adminId = currentUser.UserId.Value;
+                        var adminId = currentUser.UserId!.Value;
 
             var application = await applicationRepository
                 .GetByIdAsync(request.ApplicationId, cancellationToken)

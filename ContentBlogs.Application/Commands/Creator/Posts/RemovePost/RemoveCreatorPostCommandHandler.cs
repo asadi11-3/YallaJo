@@ -24,14 +24,7 @@ public sealed class RemoveCreatorPostCommandHandler(
     {
         try
         {
-            if (currentUser.UserId is null)
-            {
-                return Result.Failure(
-                    new Error("Auth.UserIdMissing", "Authenticated user id is missing."),
-                    Outcome.Unauthorized);
-            }
-
-            var post = await postRepository
+                        var post = await postRepository
                 .GetByIdAsync(request.PostId, cancellationToken)
                 .ConfigureAwait(false);
 
@@ -66,7 +59,7 @@ public sealed class RemoveCreatorPostCommandHandler(
 
             logger.LogInformation(
                 "Creator post removed: {PostId} by admin {AdminId}",
-                post.Id, currentUser.UserId.Value);
+                post.Id, currentUser.UserId!.Value);
 
             return Result.Success();
         }

@@ -3,7 +3,9 @@ using ContentBlogs.Application.Commands.Creator.Posts.DemoteTier;
 using ContentBlogs.Application.Commands.Creator.Posts.FeaturePost;
 using ContentBlogs.Application.Commands.Creator.Posts.PromoteTier;
 using ContentBlogs.Application.Commands.Creator.Posts.RejectPost;
+using ContentBlogs.Application.Commands.Creator.Posts.HidePost;
 using ContentBlogs.Application.Commands.Creator.Posts.RemovePost;
+using ContentBlogs.Application.Commands.Creator.Posts.UnhidePost;
 using ContentBlogs.Application.Commands.Creator.Posts.UnfeaturePost;
 using ContentBlogs.Application.Queries.Creator.Dtos;
 using ContentBlogs.Application.Queries.Creator.Posts.GetAdminPostQueue;
@@ -144,5 +146,45 @@ internal static class AdminPostEndpoints
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status422UnprocessableEntity)
         .WithMetadata(new MustHavePermissionAttribute(ContentBlogsFeatures.AdminPostModeration, AppAction.Remove));
+
+        // ── POST /api/v1/blogs/admin/creators/posts/{postId}/hide ────────
+        group.MapPost("/{postId:guid}/hide", async (
+            Guid postId,
+            HideCreatorPostRequest request,
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            var cmd = new HideCreatorPostCommand(postId, request.Reason);
+            var result = await sender.Send(cmd, ct);
+            return result.ToApiResult();
+        })
+        .WithName("AdminHideCreatorPost")
+        .WithSummary("Admin — hide a published post (moderation)")
+        .Produces(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status422UnprocessableEntity)
+        .WithMetadata(new MustHavePermissionAttribute(ContentBlogsFeatures.AdminPostModeration, AppAction.HidePost));
+
+        // ── POST /api/v1/blogs/admin/creators/posts/{postId}/unhide ─────
+        group.MapPost("/{postId:guid}/unhide", async (
+            Guid postId,
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            var result = await sender.Send(new UnhideCreatorPostCommand(postId), ct);
+            return result.ToApiResult();
+        })
+        .WithName("AdminUnhideCreatorPost")
+        .WithSummary("Admin — unhide a hidden post (restore to Published)")
+        .Produces(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status422UnprocessableEntity)
+        .WithMetadata(new MustHavePermissionAttribute(ContentBlogsFeatures.AdminPostModeration, AppAction.UnhidePost));
     }
 }
+

@@ -1,5 +1,23 @@
 # ContentPlaces Module — Audit Report
 
+> ## ✅ ALL 11 GAPS RESOLVED — Code Changes Applied
+>
+> | Gap | Status | Resolution |
+> |-----|--------|-----------|
+> | Gap #1 — ICurrentUser Misuse (HIGH) | ✅ FIXED | Removed auth gates from 12 handlers, kept ownership checks only |
+> | Gap #2 — Infrastructure Runtime Throws (MEDIUM) | ✅ FIXED | Replaced 2 throws with graceful degradation + logging |
+> | Gap #3.3 — Missing MoreDocsNeeded Status | ✅ FIXED | Added BusinessStatus.MoreDocsNeeded=4 + RequestMoreDocs() + endpoint |
+> | Gap #3.4 — Re-application Limit | ✅ FIXED | Added ResubmitCount + max 3 guard |
+> | Gap #3.5 — Admin SLA | ✅ FIXED | Added SubmittedAt/ReviewDeadline |
+> | Gap #3.6 — Document Expiry | ✅ FIXED | Added DocumentExpiryDate/GracePeriodEnd + 14-day grace |
+> | Gap #3.7 — LicenseNumber Unique Constraint | ✅ FIXED | Filtered composite unique index |
+> | Gap #3.8 — ProviderApplication Guard | ✅ FIXED | IProviderStatusService + handler validation |
+> | Gap #3.9 — Business Search & Geo-Search | ✅ FIXED | 2 new endpoints with Haversine SQL |
+> | Gap #3.10 — Max Active Businesses Cap | ✅ FIXED | Max 10 in CreateBusinessCommandHandler |
+> | Gap #3.11 — Place Name+Country Unique | ✅ FIXED | Filtered composite unique index |
+>
+> **Build**: 0 errors | **Plan**: `Agents/Plans/ContentPlaces-Workflow.md`
+
 > **Audited**: 2025-01-27  
 > **Module status**: 🟡 In Progress  
 > **Overall score**: 6.0 / 10

@@ -19,15 +19,8 @@ public sealed class GetMyCreatorProfileQueryHandler(
     {
         try
         {
-            if (currentUser.UserId is null)
-            {
-                return Result.Failure<CreatorProfileDto?>(
-                    new Error("Auth.UserIdMissing", "Authenticated user id is missing."),
-                    Outcome.Unauthorized);
-            }
-
             var profile = await profileRepository
-                .GetByUserIdAsync(currentUser.UserId.Value, cancellationToken)
+                .GetByUserIdAsync(currentUser.UserId!.Value, cancellationToken)
                 .ConfigureAwait(false);
 
             if (profile is null)

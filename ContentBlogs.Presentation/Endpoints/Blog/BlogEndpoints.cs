@@ -1,5 +1,7 @@
 using ContentBlogs.Application.Commands.Blog.ArchiveBlog;
 using ContentBlogs.Application.Commands.Blog.CreateBlog;
+using ContentBlogs.Application.Commands.Blog.HideBlog;
+using ContentBlogs.Application.Commands.Blog.UnhideBlog;
 using ContentBlogs.Application.Commands.Blog.DeleteBlog;
 using ContentBlogs.Application.Commands.Blog.MarkBlogAsFeatured;
 using ContentBlogs.Application.Commands.Blog.LinkBlogTours;
@@ -293,6 +295,46 @@ internal static class BlogEndpoints
         })
         .WithName("ArchiveBlog")
         .WithSummary("Archive a Published blog (read-only state)")
+        .Produces(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status409Conflict)
+        .WithMetadata(new MustHavePermissionAttribute(ContentBlogsFeatures.Blog, AppAction.Approve));
+
+        // ── POST /{id}/hide ───────────────────────────────────────────────
+        group.MapPost("/{id:guid}/hide", async (
+            Guid id,
+            HideBlogRequest request,
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            var result = await sender.Send(
+                new HideBlogCommand(id, request.RowVersion, request.Reason), ct);
+            return result.ToApiResult();
+        })
+        .WithName("HideBlog")
+        .WithSummary("Hide a Published blog (admin moderation)")
+        .Produces(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status409Conflict)
+        .WithMetadata(new MustHavePermissionAttribute(ContentBlogsFeatures.Blog, AppAction.Approve));
+
+        // ── POST /{id}/unhide ─────────────────────────────────────────────
+        group.MapPost("/{id:guid}/unhide", async (
+            Guid id,
+            BlogRowVersionRequest request,
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            var result = await sender.Send(
+                new UnhideBlogCommand(id, request.RowVersion), ct);
+            return result.ToApiResult();
+        })
+        .WithName("UnhideBlog")
+        .WithSummary("Unhide a Hidden blog (restore to Published)")
         .Produces(StatusCodes.Status200OK)
         .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status403Forbidden)

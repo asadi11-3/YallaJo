@@ -1,5 +1,16 @@
 # YallaJo — ContentCore Module Audit Report
 
+> ## 🔶 GAPS PLANNED — Implementation Pending
+>
+> | Gap | Status | Resolution |
+> |-----|--------|-----------|
+> | Gap 1 — ICurrentUser Misuse (HIGH) | ✅ ALREADY RESOLVED | Code already uses OwnershipGuard. Zero raw auth gates found. |
+> | Gap 2 — Infrastructure Runtime Throws (MEDIUM) | 📋 PLANNED | Phase 1 in ContentCore-Workflow.md — AzureTranslateService + LocalFileStorageService |
+> | Gap 3 — Missing Language Endpoints (LOW) | 📋 PLANNED | Phase 2 in ContentCore-Workflow.md — DELETE + activate + deactivate |
+>
+> **Additional enhancements planned**: Attachment limits (Phase 3), Self-service tagging (Phase 4), EntityTag events (Phase 5)
+> **Plan**: `Agents/Plans/ContentCore-Workflow.md` (9 decisions locked, 6 phases, ~19 files)
+
 > Full audit report generated from code analysis.  
 > Last updated: 2025-07-15  
 > Module status: **Marked as Complete** in agent-context.md

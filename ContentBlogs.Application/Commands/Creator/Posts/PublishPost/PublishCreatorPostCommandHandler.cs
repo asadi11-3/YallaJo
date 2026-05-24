@@ -26,15 +26,8 @@ public sealed class PublishCreatorPostCommandHandler(
     {
         try
         {
-            if (currentUser.UserId is null)
-            {
-                return Result.Failure(
-                    new Error("Auth.UserIdMissing", "Authenticated user id is missing."),
-                    Outcome.Unauthorized);
-            }
-
-            var profile = await profileRepository
-                .GetByUserIdAsync(currentUser.UserId.Value, cancellationToken)
+                        var profile = await profileRepository
+                .GetByUserIdAsync(currentUser.UserId!.Value, cancellationToken)
                 .ConfigureAwait(false);
 
             if (profile is null)
@@ -66,7 +59,7 @@ public sealed class PublishCreatorPostCommandHandler(
 
             // Disclosure validation — defense-in-depth (spec §6.3)
             var ownedEntityIds = await providerEntitiesClient
-                .GetOwnedEntityIdsAsync(currentUser.UserId.Value, cancellationToken)
+                .GetOwnedEntityIdsAsync(currentUser.UserId!.Value, cancellationToken)
                 .ConfigureAwait(false);
 
             var disclosureResult = post.ValidateDisclosure(ownedEntityIds);

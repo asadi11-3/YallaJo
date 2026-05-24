@@ -11,6 +11,7 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.15" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Accounts.Contracts\Accounts.Contracts.csproj" />
     <ProjectReference Include="..\ContentCore.Contracts\ContentCore.Contracts.csproj" />
     <ProjectReference Include="..\ContentPlaces.Contracts\ContentPlaces.Contracts.csproj" />
     <ProjectReference Include="..\ContentTours.Contracts\ContentTours.Contracts.csproj" />

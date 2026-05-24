@@ -24,14 +24,7 @@ public sealed class DemoteCreatorTierCommandHandler(
     {
         try
         {
-            if (currentUser.UserId is null)
-            {
-                return Result.Failure(
-                    new Error("Auth.UserIdMissing", "Authenticated user id is missing."),
-                    Outcome.Unauthorized);
-            }
-
-            var profile = await profileRepository
+                        var profile = await profileRepository
                 .GetByIdAsync(request.ProfileId, cancellationToken)
                 .ConfigureAwait(false);
 
@@ -60,7 +53,7 @@ public sealed class DemoteCreatorTierCommandHandler(
 
             logger.LogInformation(
                 "Creator tier demoted: {ProfileId} to {TargetTier} by admin {AdminId}. Reason: {Reason}",
-                profile.Id, request.TargetTier, currentUser.UserId.Value, request.Reason);
+                profile.Id, request.TargetTier, currentUser.UserId!.Value, request.Reason);
 
             return Result.Success();
         }

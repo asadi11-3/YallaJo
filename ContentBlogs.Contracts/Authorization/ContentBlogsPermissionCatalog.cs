@@ -25,7 +25,6 @@ namespace ContentBlogs.Contracts.Authorization
         new(ContentBlogsFeatures.BlogComment, AppAction.Create, PermissionGroup.ContentManagement, "Create a blog comment"),
         new(ContentBlogsFeatures.BlogComment, AppAction.Update, PermissionGroup.ContentManagement, "Update a blog comment"),
         new(ContentBlogsFeatures.BlogComment, AppAction.Delete, PermissionGroup.ContentManagement, "Delete a blog comment"),
-        new (ContentBlogsFeatures.BlogComment, AppAction.Manage, PermissionGroup.ContentManagement, "Manage a blog comment"),
 
         // ── BlogReaction ───────────────────────────────────────────────────
       //  new(ContentBlogFeatures.BlogReaction, AppAction.Read,   PermissionGroup.ContentManagement, "View blog reactions"),

@@ -18,15 +18,8 @@ public sealed class IsFollowingCreatorQueryHandler(
     {
         try
         {
-            if (currentUser.UserId is null)
-            {
-                return Result.Failure<bool>(
-                    new Error("Auth.UserIdMissing", "Authenticated user id is missing."),
-                    Outcome.Unauthorized);
-            }
-
             var isFollowing = await followRepository
-                .ExistsAsync(currentUser.UserId.Value, request.CreatorProfileId, cancellationToken)
+                .ExistsAsync(currentUser.UserId!.Value, request.CreatorProfileId, cancellationToken)
                 .ConfigureAwait(false);
 
             return Result<bool>.Success(isFollowing);

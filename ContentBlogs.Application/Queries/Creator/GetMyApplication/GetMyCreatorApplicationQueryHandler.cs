@@ -19,15 +19,8 @@ public sealed class GetMyCreatorApplicationQueryHandler(
     {
         try
         {
-            if (currentUser.UserId is null)
-            {
-                return Result.Failure<CreatorApplicationDto?>(
-                    new Error("Auth.UserIdMissing", "Authenticated user id is missing."),
-                    Outcome.Unauthorized);
-            }
-
             var application = await applicationRepository
-                .GetLatestByUserIdAsync(currentUser.UserId.Value, cancellationToken)
+                .GetLatestByUserIdAsync(currentUser.UserId!.Value, cancellationToken)
                 .ConfigureAwait(false);
 
             if (application is null)

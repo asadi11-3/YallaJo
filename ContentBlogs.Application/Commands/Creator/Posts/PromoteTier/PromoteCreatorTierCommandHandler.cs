@@ -24,14 +24,7 @@ public sealed class PromoteCreatorTierCommandHandler(
     {
         try
         {
-            if (currentUser.UserId is null)
-            {
-                return Result.Failure(
-                    new Error("Auth.UserIdMissing", "Authenticated user id is missing."),
-                    Outcome.Unauthorized);
-            }
-
-            var profile = await profileRepository
+                        var profile = await profileRepository
                 .GetByIdAsync(request.ProfileId, cancellationToken)
                 .ConfigureAwait(false);
 
@@ -41,7 +34,7 @@ public sealed class PromoteCreatorTierCommandHandler(
             }
 
             var promoteResult = profile.Promote(
-                currentUser.UserId.Value,
+                currentUser.UserId!.Value,
                 request.TargetTier,
                 DateTime.UtcNow);
 
@@ -60,7 +53,7 @@ public sealed class PromoteCreatorTierCommandHandler(
 
             logger.LogInformation(
                 "Creator tier promoted: {ProfileId} to {TargetTier} by admin {AdminId}",
-                profile.Id, request.TargetTier, currentUser.UserId.Value);
+                profile.Id, request.TargetTier, currentUser.UserId!.Value);
 
             return Result.Success();
         }

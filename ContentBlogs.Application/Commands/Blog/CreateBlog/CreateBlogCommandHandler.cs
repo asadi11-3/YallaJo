@@ -31,15 +31,7 @@ public sealed class CreateBlogCommandHandler(
     {
         try
         {
-            if (currentUser.UserId is null)
-            {
-                logger.LogWarning("CreateBlog rejected: current user id missing.");
-                return Result.Failure<CreateBlogResult>(
-                    new Error("Auth.UserIdMissing", "Authenticated user id is missing."),
-                    Outcome.Unauthorized);
-            }
-
-            // ── Resolve source language ──────────────────────────────────────
+                        // ── Resolve source language ──────────────────────────────────────
             var sourceLanguageCode = (request.SourceLanguageCode ?? string.Empty)
                 .Trim()
                 .ToLowerInvariant();
@@ -94,7 +86,7 @@ public sealed class CreateBlogCommandHandler(
                 title:            request.Title,
                 slug:             slug,
                 content:          request.Content,
-                authorId:         currentUser.UserId.Value,
+                authorId:         currentUser.UserId!.Value,
                 sourceLanguageId: sourceLanguage.Id,
                 utcNow:           utcNow,
                 summary:          request.Summary,

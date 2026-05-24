@@ -24,13 +24,6 @@ public sealed class RemoveBlogCommentReactionCommandHandler(
     {
         try
         {
-            if (!currentUser.IsAuthenticated || currentUser.UserId is null)
-            {
-                return Result.Failure(
-                    new Error("BlogCommentReaction.Unauthorized", "Authenticated user is required."),
-                    Outcome.Unauthorized);
-            }
-
             var comment = await blogCommentRepository
                 .GetWithReactionsAsync(request.CommentId, cancellationToken)
                 .ConfigureAwait(false);
@@ -43,7 +36,7 @@ public sealed class RemoveBlogCommentReactionCommandHandler(
             }
 
             var utcNow = DateTime.UtcNow;
-            var removed = comment.RemoveReaction(currentUser.UserId.Value, utcNow);
+            var removed = comment.RemoveReaction(currentUser.UserId!.Value, utcNow);
 
             if (removed)
             {
@@ -66,7 +59,7 @@ public sealed class RemoveBlogCommentReactionCommandHandler(
 
                 logger.LogInformation(
                     "BlogCommentReaction removed: CommentId={CommentId}, BlogId={BlogId}, UserId={UserId}",
-                    comment.Id, comment.BlogId, currentUser.UserId.Value);
+                    comment.Id, comment.BlogId, currentUser.UserId!.Value);
             }
 
             // Idempotent: success regardless of whether anything was actually removed.

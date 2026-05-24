@@ -1,5 +1,19 @@
 # Finance Module — Audit Report
 
+> ## 🔶 GAPS PLANNED — Implementation Pending
+>
+> | Gap | Status | Resolution |
+> |-----|--------|-----------|
+> | Gap #1 — Redundant Auth Gates (MEDIUM) | 📋 PLANNED | Phase 1 — Remove from 11 endpoints |
+> | Gap #2 — 6 Bare Entities (HIGH) | 📋 PLANNED | Phases 4-6 — Dispute lifecycle, PaymentMethod, CreditNote. Discount/Loyalty/Subscription DEFERRED post-MVP |
+> | Gap #3 — Missing Endpoints for Permissions (HIGH) | 📋 PLANNED | Phases 2,8,9 — PaymentMethod CRUD, Dashboard, Guide earnings |
+> | Gap #4 — Commission Model Divergence (MEDIUM) | 📋 PLANNED | Decision #2: Keep revenue-tier model (spec updated) |
+> | Gap #5 — Missing Validators (MEDIUM) | 📋 PLANNED | Phase 1 — Add 5 validators |
+> | Gap #6 — SaveChanges in Query (LOW) | 📋 PLANNED | Phase 5 — Extract PDF render to command |
+> | Gap #7 — Zero HybridCache (LOW) | 📋 PLANNED | Phase 7 — Add caching to commission/invoice queries |
+>
+> **Plan**: `Agents/Plans/Finance-Workflow.md` (12 decisions locked, 9 phases, ~100-130 new files)
+
 > Audited: 2025-01-XX | Sources of Truth: `agent-context.md`, `YallaJo.md`, `Endpoints.pdf`, `YallaJo Business Rules & Edge Cases.pdf`
 
 ---

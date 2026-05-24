@@ -1,5 +1,19 @@
 # YallaJo — ContentBlogs Module Audit Report
 
+> ## ✅ ALL 7 GAPS RESOLVED — Code Changes Applied
+>
+> | Gap | Status | Resolution |
+> |-----|--------|-----------|
+> | Gap 1 — ICurrentUser Misuse (HIGH) | ✅ FIXED | Removed auth gates from 35 handlers/guards, kept ownership checks |
+> | Gap 2 — BlogViewerHashService Throws (MEDIUM) | ✅ FIXED | Added upstream validation + try/catch in TrackBlogViewCommandHandler |
+> | Gap 3.1 — HidePost/UnhidePost Missing (MEDIUM) | ✅ FIXED | 4 new files + 2 admin endpoints |
+> | Gap 3.2 — BlogComment.Manage Dead Permission (LOW) | ✅ FIXED | Removed from PermissionCatalog |
+> | Gap 3.3 — Blog Hide/Unhide Dead Code (MEDIUM) | ✅ FIXED | 4 new handlers + 2 endpoints wiring existing domain methods |
+> | Gap 4 — ReactionType Enum Divergence (LOW) | ✅ FIXED | Changed to Like=0, Helpful=1, Insightful=2 per spec |
+> | Gap 5 — Anonymous POST /views (LOW) | ✅ NO CHANGE | Intentional design decision for anonymous view tracking |
+>
+> **Build**: 0 errors | **Plan**: `Agents/Plans/BlogCreatorPost-Merger.md`
+
 > Full audit report generated from code analysis.  
 > Last updated: 2025-07-15  
 > Module status: **Not started (⬜)** in agent-context.md — but implementation is substantially built

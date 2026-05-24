@@ -25,15 +25,7 @@ public sealed class SubmitCreatorApplicationCommandHandler(
     {
         try
         {
-            if (currentUser.UserId is null)
-            {
-                logger.LogWarning("SubmitCreatorApplication rejected: current user id missing.");
-                return Result.Failure(
-                    new Error("Auth.UserIdMissing", "Authenticated user id is missing."),
-                    Outcome.Unauthorized);
-            }
-
-            var application = await applicationRepository
+                        var application = await applicationRepository
                 .GetByIdAsync(request.ApplicationId, cancellationToken)
                 .ConfigureAwait(false);
 
@@ -43,7 +35,7 @@ public sealed class SubmitCreatorApplicationCommandHandler(
                     CreatorApplicationErrors.NotFound, Outcome.NotFound);
             }
 
-            if (application.ApplicantUserId != currentUser.UserId.Value)
+            if (application.ApplicantUserId != currentUser.UserId!.Value)
             {
                 return Result.Failure(
                     new Error("Auth.Forbidden", "You can only submit your own application."),
@@ -79,7 +71,7 @@ public sealed class SubmitCreatorApplicationCommandHandler(
 
             logger.LogInformation(
                 "CreatorApplication submitted: {ApplicationId} (UserId={UserId})",
-                request.ApplicationId, currentUser.UserId.Value);
+                request.ApplicationId, currentUser.UserId!.Value);
 
             return Result.Success();
         }

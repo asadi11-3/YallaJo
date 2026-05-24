@@ -1,5 +1,18 @@
 # Messaging Module — Audit Report
 
+> ## 🔶 GAPS PLANNED — Implementation Pending
+>
+> | Gap | Status | Resolution |
+> |-----|--------|-----------|
+> | Gap #1 — Redundant Auth Gates (MEDIUM) | 📋 PLANNED | Phase 1 — Remove from 21 endpoints |
+> | Gap #2 — DateTime.UtcNow in Domain (MEDIUM) | 📋 PLANNED | Phase 2 — Replace 6 occurrences with TimeProvider |
+> | Gap #3 — Zero FluentValidation (HIGH) | 📋 PLANNED | Phase 3 — Add 14 validators |
+> | Gap #4 — Bare ChatBot Entities (MEDIUM) | 📋 PLANNED | DEFERRED — Shells stay, implement when AI backend ready |
+> | Gap #5 — Zero HybridCache (LOW) | 📋 PLANNED | Phase 4 — Add caching to 8 queries |
+>
+> **Additional enhancements**: SLA monitoring, digest batching, push notifications, 10 TourGuide event handlers
+> **Plan**: `Agents/Plans/Messaging-Workflow.md` (16 decisions locked, 10 phases, ~46 new files)
+
 > **Audit date**: 2025-01-27
 > **Sources of truth**: `agent-context.md`, `YallaJo.md`, `Endpoints.pdf`, `YallaJo Business Rules & Edge Cases.pdf`
 > **Overall score**: **7.0 / 10**

@@ -26,12 +26,7 @@ public sealed class GetMyCreatorPostsQueryHandler(
             var page = Math.Max(1, request.Page);
             var pageSize = Math.Clamp(request.PageSize, 1, MaxPageSize);
 
-            if (currentUser.UserId is null)
-                return Result<PaginatedResult<CreatorPostSummaryDto>>.Failure(
-                    new Error("Auth.UserIdMissing", "Authenticated user id is missing."),
-                    Outcome.Unauthorized);
-
-            var profile = await profileRepository.GetByUserIdAsync(currentUser.UserId.Value, cancellationToken)
+            var profile = await profileRepository.GetByUserIdAsync(currentUser.UserId!.Value, cancellationToken)
                 .ConfigureAwait(false);
 
             if (profile is null)

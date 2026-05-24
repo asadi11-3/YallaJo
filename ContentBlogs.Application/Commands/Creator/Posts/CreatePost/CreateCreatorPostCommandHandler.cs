@@ -28,15 +28,8 @@ public sealed class CreateCreatorPostCommandHandler(
     {
         try
         {
-            if (currentUser.UserId is null)
-            {
-                return Result.Failure<CreateCreatorPostResult>(
-                    new Error("Auth.UserIdMissing", "Authenticated user id is missing."),
-                    Outcome.Unauthorized);
-            }
-
-            var profile = await profileRepository
-                .GetByUserIdAsync(currentUser.UserId.Value, cancellationToken)
+                        var profile = await profileRepository
+                .GetByUserIdAsync(currentUser.UserId!.Value, cancellationToken)
                 .ConfigureAwait(false);
 
             if (profile is null)

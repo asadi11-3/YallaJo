@@ -25,14 +25,7 @@ public sealed class RejectCreatorApplicationCommandHandler(
     {
         try
         {
-            if (currentUser.UserId is null)
-            {
-                return Result.Failure(
-                    new Error("Auth.UserIdMissing", "Authenticated user id is missing."),
-                    Outcome.Unauthorized);
-            }
-
-            var application = await applicationRepository
+                        var application = await applicationRepository
                 .GetByIdAsync(request.ApplicationId, cancellationToken)
                 .ConfigureAwait(false);
 
@@ -42,7 +35,7 @@ public sealed class RejectCreatorApplicationCommandHandler(
                     CreatorApplicationErrors.NotFound, Outcome.NotFound);
             }
 
-            var rejectResult = application.Reject(currentUser.UserId.Value, request.Reason);
+            var rejectResult = application.Reject(currentUser.UserId!.Value, request.Reason);
             if (rejectResult.IsFailure)
             {
                 return Result.Failure(rejectResult.Errors.FirstOrDefault()!, Outcome.UnprocessableEntity);
@@ -71,7 +64,7 @@ public sealed class RejectCreatorApplicationCommandHandler(
 
             logger.LogInformation(
                 "CreatorApplication rejected: {ApplicationId} (AdminId={AdminId})",
-                request.ApplicationId, currentUser.UserId.Value);
+                request.ApplicationId, currentUser.UserId!.Value);
 
             return Result.Success();
         }

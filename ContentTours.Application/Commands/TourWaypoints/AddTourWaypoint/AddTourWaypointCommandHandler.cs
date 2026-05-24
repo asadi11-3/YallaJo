@@ -36,9 +36,7 @@ public sealed class AddTourWaypointCommandHandler(
                     Outcome.NotFound);
             }
 
-            var isAdminTier = AppRoles.HighestPrivilegeLevel(currentUser.Roles)
-                >= RolePrivilegeLevel.Admin;
-            if (!isAdminTier && tour.CreatedByUserId != currentUser.UserId!.Value)
+            if (tour.CreatedByUserId != currentUser.UserId!.Value)
             {
                 return Result<AddTourWaypointResult>.Failure(
                     new Error(

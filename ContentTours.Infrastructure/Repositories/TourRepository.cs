@@ -26,6 +26,17 @@ internal sealed class TourRepository(ContentToursDbContext context)
         return query.AnyAsync(ct);
     }
 
+    public Task<bool> IsNameTakenByProviderAsync(string name, Guid providerUserId, Guid? excludeTourId, CancellationToken ct = default)
+    {
+        var query = context.Tours
+            .Where(t => t.Name == name && t.CreatedByUserId == providerUserId && !t.IsDeleted);
+
+        if (excludeTourId.HasValue)
+            query = query.Where(t => t.Id != excludeTourId.Value);
+
+        return query.AnyAsync(ct);
+    }
+
     public async Task<bool> HasFutureSchedulesAsync(Guid tourId, CancellationToken ct = default)
     {
         var hasActiveSchedule = await context.TourSchedules

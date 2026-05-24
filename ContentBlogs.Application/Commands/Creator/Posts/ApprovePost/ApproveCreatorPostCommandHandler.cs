@@ -28,14 +28,7 @@ public sealed class ApproveCreatorPostCommandHandler(
     {
         try
         {
-            if (currentUser.UserId is null)
-            {
-                return Result.Failure(
-                    new Error("Auth.UserIdMissing", "Authenticated user id is missing."),
-                    Outcome.Unauthorized);
-            }
-
-            var post = await postRepository
+                        var post = await postRepository
                 .GetByIdAsync(request.PostId, cancellationToken)
                 .ConfigureAwait(false);
 
@@ -68,7 +61,7 @@ public sealed class ApproveCreatorPostCommandHandler(
                     Outcome.UnprocessableEntity);
             }
 
-            var approveResult = post.ApproveByAdmin(currentUser.UserId.Value, DateTime.UtcNow);
+            var approveResult = post.ApproveByAdmin(currentUser.UserId!.Value, DateTime.UtcNow);
 
             if (approveResult.IsFailure)
             {
@@ -94,7 +87,7 @@ public sealed class ApproveCreatorPostCommandHandler(
 
             logger.LogInformation(
                 "Creator post approved: {PostId} by admin {AdminId}",
-                post.Id, currentUser.UserId.Value);
+                post.Id, currentUser.UserId!.Value);
 
             return Result.Success();
         }

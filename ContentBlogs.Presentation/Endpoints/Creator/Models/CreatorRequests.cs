@@ -65,6 +65,8 @@ public sealed record RejectCreatorPostRequest(string Reason);
 
 public sealed record RemoveCreatorPostRequest(string Reason);
 
+public sealed record HideCreatorPostRequest(string Reason);
+
 public sealed record FeatureCreatorPostRequest(DateTime? FeaturedUntil);
 
 public sealed record PromoteCreatorTierRequest(ContentBlogs.Domain.Enums.CreatorTrustTier TargetTier);

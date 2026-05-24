@@ -21,14 +21,14 @@ public sealed class CreateTourCommandValidator : AbstractValidator<CreateTourCom
 
         RuleFor(x => x.DurationMinutes)
             .GreaterThan(0)
-            .LessThanOrEqualTo(43200);
+            .LessThanOrEqualTo(2880); // 48 hours max
 
         RuleFor(x => x.MaxGroupSize)
             .GreaterThan(0)
-            .LessThanOrEqualTo(500);
+            .LessThanOrEqualTo(100);
 
         RuleFor(x => x.BasePrice)
-            .GreaterThanOrEqualTo(0m);
+            .GreaterThan(0m);
 
         RuleFor(x => x.Currency)
             .NotEmpty()

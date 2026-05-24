@@ -24,14 +24,7 @@ public sealed class RejectCreatorPostCommandHandler(
     {
         try
         {
-            if (currentUser.UserId is null)
-            {
-                return Result.Failure(
-                    new Error("Auth.UserIdMissing", "Authenticated user id is missing."),
-                    Outcome.Unauthorized);
-            }
-
-            var post = await postRepository
+                        var post = await postRepository
                 .GetByIdAsync(request.PostId, cancellationToken)
                 .ConfigureAwait(false);
 
@@ -41,7 +34,7 @@ public sealed class RejectCreatorPostCommandHandler(
             }
 
             var rejectResult = post.RejectByAdmin(
-                currentUser.UserId.Value, request.Reason, DateTime.UtcNow);
+                currentUser.UserId!.Value, request.Reason, DateTime.UtcNow);
 
             if (rejectResult.IsFailure)
             {
@@ -61,7 +54,7 @@ public sealed class RejectCreatorPostCommandHandler(
 
             logger.LogInformation(
                 "Creator post rejected: {PostId} by admin {AdminId}",
-                post.Id, currentUser.UserId.Value);
+                post.Id, currentUser.UserId!.Value);
 
             return Result.Success();
         }

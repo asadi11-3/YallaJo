@@ -359,6 +359,24 @@ public sealed class Tour : AuditableEntity, IAggregateRoot
             AddDomainEvent(new TourPlaceCountChangedDomainEvent(Id, PlaceId.Value));
     }
 
+    public void Archive()
+    {
+        EnsureNotDeleted();
+        if (Status is not (TourStatus.Approved or TourStatus.Draft or TourStatus.Rejected))
+        {
+            throw new InvalidOperationException(
+                $"Tour.InvalidTransition: cannot archive a tour with status {Status}. Allowed: Draft, Approved, Rejected.");
+        }
+
+        var wasFeatured = IsFeatured;
+        Status = TourStatus.Archived;
+        IsFeatured = false;
+        MarkUpdated();
+
+        if (PlaceId.HasValue)
+            AddDomainEvent(new TourPlaceCountChangedDomainEvent(Id, PlaceId.Value));
+    }
+
     public new void SoftDelete()
     {
         if (IsDeleted) return;

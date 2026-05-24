@@ -25,14 +25,7 @@ public sealed class SuspendCreatorProfileCommandHandler(
     {
         try
         {
-            if (currentUser.UserId is null)
-            {
-                return Result.Failure(
-                    new Error("Auth.UserIdMissing", "Authenticated user id is missing."),
-                    Outcome.Unauthorized);
-            }
-
-            var profile = await profileRepository
+                        var profile = await profileRepository
                 .GetByIdAsync(request.ProfileId, cancellationToken)
                 .ConfigureAwait(false);
 
@@ -42,7 +35,7 @@ public sealed class SuspendCreatorProfileCommandHandler(
                     CreatorProfileErrors.NotFound, Outcome.NotFound);
             }
 
-            var suspendResult = profile.Suspend(currentUser.UserId.Value, request.Reason);
+            var suspendResult = profile.Suspend(currentUser.UserId!.Value, request.Reason);
             if (suspendResult.IsFailure)
             {
                 return Result.Failure(suspendResult.Errors.FirstOrDefault()!, Outcome.UnprocessableEntity);
@@ -71,7 +64,7 @@ public sealed class SuspendCreatorProfileCommandHandler(
 
             logger.LogInformation(
                 "CreatorProfile suspended: {ProfileId} (AdminId={AdminId})",
-                profile.Id, currentUser.UserId.Value);
+                profile.Id, currentUser.UserId!.Value);
 
             return Result.Success();
         }

@@ -23,14 +23,7 @@ public sealed class RedeemCreatorInvitationCommandHandler(
     {
         try
         {
-            if (currentUser.UserId is null)
-            {
-                return Result.Failure(
-                    new Error("Auth.UserIdMissing", "Authenticated user id is missing."),
-                    Outcome.Unauthorized);
-            }
-
-            var userId = currentUser.UserId.Value;
+                        var userId = currentUser.UserId!.Value;
 
             var invitation = await invitationRepository
                 .GetByTokenAsync(request.Token, cancellationToken)
