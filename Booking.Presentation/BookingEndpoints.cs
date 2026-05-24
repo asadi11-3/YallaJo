@@ -1,6 +1,8 @@
 using Booking.Presentation.Endpoints.Admin;
 using Booking.Presentation.Endpoints.AvailabilitySlot;
+using Booking.Presentation.Endpoints.JoinRequest;
 using Booking.Presentation.Endpoints.ProviderDocument;
+using Booking.Presentation.Endpoints.RefundPolicy;
 using Booking.Presentation.Endpoints.TourBooking;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
@@ -17,6 +19,8 @@ public static class BookingEndpoints
         TourBookingEndpoints.MapTourBookingEndpoints(bookingGroup);
         AvailabilitySlotEndpoints.MapAvailabilitySlotEndpoints(bookingGroup);
         ProviderDocumentEndpoints.MapProviderDocumentEndpoints(bookingGroup);
+        RefundPolicyEndpoints.MapRefundPolicyEndpoints(bookingGroup);
+        JoinRequestEndpoints.MapJoinRequestEndpoints(bookingGroup);
 
         var adminBookingGroup = endpoints.MapGroup("/api/v1/admin/bookings");
         AdminBookingEndpoints.MapAdminBookingEndpoints(adminBookingGroup);

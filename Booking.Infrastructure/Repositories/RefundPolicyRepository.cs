@@ -9,9 +9,14 @@ namespace Booking.Infrastructure.Repositories;
 internal sealed class RefundPolicyRepository(BookingDbContext context)
     : EfRepository<RefundPolicy, Guid>(context), IRefundPolicyRepository
 {
-    public Task<RefundPolicy?> GetDefaultAsync(CancellationToken ct = default)
-        => context.RefundPolicies.FirstOrDefaultAsync(p => p.IsDefault && p.IsActive, ct);
+    public Task<RefundPolicy?> GetByTourIdAsync(Guid tourId, CancellationToken ct = default)
+        => context.RefundPolicies
+            .AsNoTracking()
+            .Include(p => p.Tiers)
+            .FirstOrDefaultAsync(p => p.TourId == tourId, ct);
 
-    public async Task<IReadOnlyList<RefundPolicy>> GetAllActiveAsync(CancellationToken ct = default)
-        => await context.RefundPolicies.Where(p => p.IsActive).ToListAsync(ct);
+    public Task<RefundPolicy?> GetByIdTrackedAsync(Guid id, CancellationToken ct = default)
+        => context.RefundPolicies
+            .Include(p => p.Tiers)
+            .FirstOrDefaultAsync(p => p.Id == id, ct);
 }

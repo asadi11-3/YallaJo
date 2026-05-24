@@ -1,41 +1,128 @@
+using Booking.Domain.ValueObjects;
 using YallaJo.SharedKernel.Domain.Entities;
+using YallaJo.SharedKernel.Domain.Exceptions;
 
 namespace Booking.Domain.Entities;
 
-/// <summary>
-/// Refund tier policy attached to tours/providers. The booking captures a JSON snapshot of this
-/// policy at creation time so subsequent edits don't retroactively affect outstanding bookings.
-/// </summary>
 public sealed class RefundPolicy : AuditableEntity, IAggregateRoot
 {
+    public const int MaxTierCount = 10;
+    public static IReadOnlyList<RefundTier> DefaultTiers { get; } =
+        new[]
+        {
+            new RefundTier(24, 100m),
+            new RefundTier(0, 0m),
+        };
+
+    private readonly List<RefundTier> _tiers = new();
+
     private RefundPolicy() { } // EF Core
 
-    public string Name { get; private set; } = string.Empty;
-    public string? Description { get; private set; }
+    public Guid TourId { get; private set; }
 
-    /// <summary>Hours before tour start where a full (100%) refund still applies.</summary>
-    public int FullRefundHours { get; private set; }
+    public IReadOnlyList<RefundTier> Tiers => _tiers.AsReadOnly();
 
-    /// <summary>Hours before tour start where a partial refund (<see cref="PartialRefundPercent"/>) applies.</summary>
-    public int PartialRefundHours { get; private set; }
-
-    /// <summary>Partial refund percent (0-100) used between <see cref="PartialRefundHours"/> and <see cref="FullRefundHours"/>.</summary>
-    public decimal PartialRefundPercent { get; private set; }
-
-    public bool IsDefault { get; private set; }
     public bool IsActive { get; private set; } = true;
 
-    /// <summary>
-    /// Computes the applicable refund percent (0-100) for a USER-initiated cancellation.
-    /// Provider-initiated and force-majeure cancels bypass this and pay 100% directly.
-    /// </summary>
-    /// <param name="timeUntilTour">Time remaining until the tour's slot start.</param>
-    /// <returns>Refund percentage in [0, 100].</returns>
-    public decimal CalculateRefundPercentage(TimeSpan timeUntilTour)
+    public static RefundPolicy Create(Guid tourId, IEnumerable<RefundTier> tiers)
     {
+        if (tourId == Guid.Empty)
+        {
+            throw new BusinessRuleViolationException("TourId is required.");
+        }
+
+        var normalized = NormalizeTiers(tiers);
+        var policy = new RefundPolicy
+        {
+            TourId = tourId,
+            IsActive = true,
+        };
+        policy._tiers.AddRange(normalized);
+        return policy;
+    }
+
+    public void Update(IEnumerable<RefundTier> tiers)
+    {
+        var normalized = NormalizeTiers(tiers);
+        _tiers.Clear();
+        _tiers.AddRange(normalized);
+        MarkUpdated();
+    }
+
+    public void Deactivate()
+    {
+        if (!IsActive)
+        {
+            return;
+        }
+        IsActive = false;
+        MarkUpdated();
+    }
+
+    public decimal CalculateRefundPercentage(TimeSpan timeUntilTour)
+        => CalculateRefundPercentage(_tiers, timeUntilTour);
+
+    public static decimal CalculateRefundPercentage(IEnumerable<RefundTier> tiers, TimeSpan timeUntilTour)
+    {
+        ArgumentNullException.ThrowIfNull(tiers);
+
         var hoursRemaining = timeUntilTour.TotalHours;
-        if (hoursRemaining >= FullRefundHours) return 100m;
-        if (hoursRemaining >= PartialRefundHours) return Math.Clamp(PartialRefundPercent, 0m, 100m);
-        return 0m;
+        var winnerThreshold = int.MinValue;
+        var winnerPct = 0m;
+
+        foreach (var tier in tiers)
+        {
+            if (hoursRemaining >= tier.HoursBeforeTour && tier.HoursBeforeTour > winnerThreshold)
+            {
+                winnerThreshold = tier.HoursBeforeTour;
+                winnerPct = Math.Clamp(tier.RefundPercent, 0m, 100m);
+            }
+        }
+
+        return winnerThreshold == int.MinValue ? 0m : winnerPct;
+    }
+
+    private static List<RefundTier> NormalizeTiers(IEnumerable<RefundTier> tiers)
+    {
+        ArgumentNullException.ThrowIfNull(tiers);
+
+        var list = tiers.ToList();
+        if (list.Count == 0)
+        {
+            throw new BusinessRuleViolationException("RefundPolicy must have at least one tier.");
+        }
+
+        if (list.Count > MaxTierCount)
+        {
+            throw new BusinessRuleViolationException(
+                $"RefundPolicy cannot have more than {MaxTierCount} tiers.");
+        }
+
+        foreach (var tier in list)
+        {
+            if (tier is null)
+            {
+                throw new BusinessRuleViolationException("RefundPolicy tier cannot be null.");
+            }
+            if (tier.HoursBeforeTour < 0)
+            {
+                throw new BusinessRuleViolationException(
+                    "RefundPolicy tier HoursBeforeTour must be >= 0.");
+            }
+            if (tier.RefundPercent < 0m || tier.RefundPercent > 100m)
+            {
+                throw new BusinessRuleViolationException(
+                    "RefundPolicy tier RefundPercent must be between 0 and 100.");
+            }
+        }
+
+        var distinctHours = list.Select(t => t.HoursBeforeTour).Distinct().Count();
+        if (distinctHours != list.Count)
+        {
+            throw new BusinessRuleViolationException(
+                "RefundPolicy tiers must have unique HoursBeforeTour values.");
+        }
+
+        return list.OrderByDescending(t => t.HoursBeforeTour).ToList();
     }
 }

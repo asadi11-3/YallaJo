@@ -16,6 +16,13 @@
     <ProjectReference Include="..\Booking.Application\Booking.Application.csproj" />
     <ProjectReference Include="..\Booking.Contracts\Booking.Contracts.csproj" />
     <ProjectReference Include="..\Booking.Domain\Booking.Domain.csproj" />
+    <!--
+      Contracts-only cross-module dependency: Booking consumes Finance commission
+      integration events (CommissionRuleUpserted / CommissionRuleDeleted) via
+      MediatR notification handlers. We MUST NOT reference Finance.Domain or
+      Finance.Infrastructure.
+    -->
+    <ProjectReference Include="..\Finance.Contracts\Finance.Contracts.csproj" />
     <ProjectReference Include="..\YallaJo.SharedKernel.Infrastructure\YallaJo.SharedKernel.Infrastructure.csproj" />
   </ItemGroup>
 </Project>
