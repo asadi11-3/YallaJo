@@ -114,4 +114,11 @@ public static class ContentPlacesCacheKeys
 
     public static string NearbyBusinesses(double lat, double lng, double radiusKm, int pageSize)
         => $"cp:biz:nearby:lat{lat:F4}:lng{lng:F4}:r{radiusKm}:s{pageSize}";
+
+    // ── My Businesses (owner) ─────────────────────────────────────────────
+
+    public static string MyBusinesses(Guid ownerUserId, int page, int pageSize) =>
+        $"cp:biz:mine:{ownerUserId}:p{page}:s{pageSize}";
+
+    public static string MyBusinessesTag(Guid ownerUserId) => $"cp:biz:mine:{ownerUserId}:tag";
 }

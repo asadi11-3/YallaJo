@@ -106,10 +106,22 @@ namespace ContentPlaces.Infrastructure.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<DateTime?>("DocumentExpiryDate")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("Email")
                         .HasMaxLength(200)
                         .IsUnicode(false)
                         .HasColumnType("varchar(200)");
+
+                    b.Property<DateTime?>("GracePeriodEnd")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool?>("HasAlcoholFreeArea")
+                        .HasColumnType("bit");
+
+                    b.Property<bool?>("HasVegetarianOptions")
+                        .HasColumnType("bit");
 
                     b.Property<bool>("IsDeleted")
                         .ValueGeneratedOnAdd()
@@ -120,6 +132,9 @@ namespace ContentPlaces.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
+
+                    b.Property<bool?>("IsHalal")
+                        .HasColumnType("bit");
 
                     b.Property<bool>("IsVerified")
                         .ValueGeneratedOnAdd()
@@ -155,7 +170,7 @@ namespace ContentPlaces.Infrastructure.Migrations
                         .IsUnicode(false)
                         .HasColumnType("varchar(50)");
 
-                    b.Property<Guid?>("PlaceId")
+                    b.Property<Guid>("PlaceId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("PostalCode")
@@ -167,10 +182,18 @@ namespace ContentPlaces.Infrastructure.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
 
+                    b.Property<int>("ResubmitCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
                     b.Property<int>("ReviewCount")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
                         .HasDefaultValue(0);
+
+                    b.Property<DateTime?>("ReviewDeadline")
+                        .HasColumnType("datetime2");
 
                     b.Property<DateTime?>("ReviewedAt")
                         .HasColumnType("datetime2");
@@ -192,6 +215,9 @@ namespace ContentPlaces.Infrastructure.Migrations
 
                     b.Property<int>("Status")
                         .HasColumnType("int");
+
+                    b.Property<DateTime?>("SubmittedAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<int?>("SubscriptionTier")
                         .HasColumnType("int");
@@ -219,6 +245,14 @@ namespace ContentPlaces.Infrastructure.Migrations
                         .IsUnique();
 
                     b.HasIndex("Status")
+                        .HasFilter("[IsDeleted] = 0");
+
+                    b.HasIndex("LicenseNumber", "BusinessType")
+                        .IsUnique()
+                        .HasFilter("[LicenseNumber] IS NOT NULL AND [IsDeleted] = 0");
+
+                    b.HasIndex("PlaceId", "BusinessType", "OwnerId")
+                        .IsUnique()
                         .HasFilter("[IsDeleted] = 0");
 
                     b.ToTable("Businesses", "content_places");
@@ -536,6 +570,10 @@ namespace ContentPlaces.Infrastructure.Migrations
                         .IsUnique();
 
                     b.HasIndex("TourCount");
+
+                    b.HasIndex("Name", "Country")
+                        .IsUnique()
+                        .HasFilter("[Country] IS NOT NULL AND [IsDeleted] = 0");
 
                     b.ToTable("Places", "content_places");
                 });

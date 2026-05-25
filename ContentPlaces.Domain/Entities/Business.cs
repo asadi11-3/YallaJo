@@ -30,7 +30,7 @@ public sealed class Business : AuditableEntity, IAggregateRoot
     public string Slug { get; private set; } = string.Empty;
     public string? Description { get; private set; }
     public BusinessType BusinessType { get; private set; }
-    public Guid? PlaceId { get; private set; }
+    public Guid PlaceId { get; private set; }
     public Location Location { get; private set; } = default!;
     public string? Address { get; private set; }
     public string? City { get; private set; }
@@ -74,7 +74,7 @@ public sealed class Business : AuditableEntity, IAggregateRoot
         BusinessType businessType,
         Guid ownerId,
         Location location,
-        Guid? placeId = null,
+        Guid placeId,
         string? description = null,
         string? address = null,
         string? city = null,
@@ -151,7 +151,7 @@ public sealed class Business : AuditableEntity, IAggregateRoot
         string name,
         string? description,
         Location location,
-        Guid? placeId = null,
+        Guid placeId,
         string? address = null,
         string? city = null,
         string? country = null,

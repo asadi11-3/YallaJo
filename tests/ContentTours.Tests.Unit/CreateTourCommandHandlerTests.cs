@@ -48,7 +48,7 @@ public sealed class CreateTourCommandHandlerTests
             Currency:                "JOD",
             Latitude:                30.32m,
             Longitude:               35.45m,
-            PlaceId:                 placeId);
+            PlaceId:                 placeId ?? Guid.NewGuid());
 
     [Fact]
     public async Task ReturnsUnauthorizedWhenNotAuthenticated()

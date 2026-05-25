@@ -1,5 +1,7 @@
 using ContentCore.Application.Authorization;
 using ContentCore.Application.Caching;
+using ContentCore.Application.Interfaces;
+using ContentCore.Contracts.IntegrationEvents;
 using ContentCore.Domain.Enums;
 using ContentCore.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -15,6 +17,7 @@ public sealed class AssignTagsToEntityCommandHandler(
     IEntityTagRepository entityTagRepository,
     ITagRepository tagRepository,
     IContentCoreUnitOfWork unitOfWork,
+    IContentCoreOutboxWriter outboxWriter,
     HybridCache cache,
     IOwnershipGuard ownershipGuard,
     ILogger<AssignTagsToEntityCommandHandler> logger)
@@ -73,6 +76,11 @@ public sealed class AssignTagsToEntityCommandHandler(
 
                 var entityTag = ContentCore.Domain.Entities.EntityTag.Create(entityType, request.EntityId, tagId);
                 entityTagRepository.Add(entityTag);
+                outboxWriter.Enqueue(new EntityTagAssignedIntegrationEvent(
+                    request.EntityType,
+                    request.EntityId,
+                    tagId,
+                    DateTime.UtcNow));
                 existingIds.Add(tagId);
             }
 

@@ -75,7 +75,7 @@ public sealed class TriggerPayoutCommandHandler(
                 decimal commissionRate;
                 try
                 {
-                    var lookupResult = await commissionLookup.GetCommissionAsync(p.ReservationId ?? p.BookingId.Value, ct);
+                    var lookupResult = await commissionLookup.GetCommissionAsync(p.BookingId!.Value, ct);
                     commissionRate = lookupResult.Rate;
                 }
                 catch (Exception ex)

@@ -20,7 +20,6 @@ public sealed class Payment : AuditableEntity, IAggregateRoot
     // ── Ownership ──
     public Guid UserId { get; private set; }
     public Guid? BookingId { get; private set; }
-    public Guid? ReservationId { get; private set; }
     public Guid ProviderId { get; private set; }
 
     // ── Amount + currency (F-R1) ──

@@ -17,6 +17,9 @@ namespace ContentBlogs.Contracts.Authorization
         public const string Creator = nameof(Creator);
         public const string AdminCreatorQueue = nameof(AdminCreatorQueue);
 
+        // ── Admin Blog Queue ────────────────────────────────────────────
+        public const string AdminBlogQueue = nameof(AdminBlogQueue);
+
         // ── Creator Posts & Moderation (Wave-8) ────────────────────────
         public const string CreatorPost = nameof(CreatorPost);
         public const string AdminPostModeration = nameof(AdminPostModeration);

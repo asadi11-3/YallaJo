@@ -28,6 +28,10 @@ public sealed record UpdateCreatorProfileRequest(
 
 public sealed record RedeemCreatorInvitationRequest(string Token);
 
+public sealed record UpdateCreatorAvatarRequest(string AvatarUrl);
+
+public sealed record UpdateCreatorCoverImageRequest(string CoverImageUrl);
+
 public sealed record ApproveApplicationRequest(
     string DisplayName,
     string? AvatarUrl);
@@ -44,33 +48,21 @@ public sealed record SendInvitationRequest(
     Guid? InvitedUserId,
     string? PersonalMessage);
 
-// ── Wave 8: Creator Posts ────────────────────────────────────────────
-
-public sealed record CreateCreatorPostRequest(
-    ContentBlogs.Domain.Enums.CreatorPostType PostType,
-    string Title,
-    string Excerpt,
-    Guid LanguageId,
-    string? TypeSpecificDataJson,
-    List<Guid>? NicheIds,
-    List<string>? FreeTags);
-
-public sealed record UpdateCreatorPostRequest(
-    string Title,
-    string Excerpt,
-    string? Body,
-    string? TypeSpecificDataJson);
-
-public sealed record RejectCreatorPostRequest(string Reason);
-
-public sealed record RemoveCreatorPostRequest(string Reason);
-
-public sealed record HideCreatorPostRequest(string Reason);
-
-public sealed record FeatureCreatorPostRequest(DateTime? FeaturedUntil);
+// ── Tier Management ──────────────────────────────────────────────────
 
 public sealed record PromoteCreatorTierRequest(ContentBlogs.Domain.Enums.CreatorTrustTier TargetTier);
 
 public sealed record DemoteCreatorTierRequest(
     ContentBlogs.Domain.Enums.CreatorTrustTier TargetTier,
     string Reason);
+
+// ── Blog-CreatorPost Merger: Admin Profile Management ────────────────
+
+public sealed record AdminUpdateCreatorProfileRequest(
+    string DisplayName,
+    string? Bio,
+    string? AvatarUrl,
+    string? CoverImageUrl,
+    string? Slug);
+
+public sealed record AdminDeleteCreatorProfileRequest(string Reason);

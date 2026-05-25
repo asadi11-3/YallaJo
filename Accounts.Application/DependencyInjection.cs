@@ -32,6 +32,10 @@ public static class DependencyInjection
         // before creating a business.
         services.AddScoped<IProviderStatusService, ProviderStatusService>();
 
+        // Cross-module contract: lets ContentPlaces validate that a provider
+        // is creating a business of the correct type for their provider category.
+        services.AddScoped<IProviderTypeReader, ProviderTypeReader>();
+
         return services;
     }
 }

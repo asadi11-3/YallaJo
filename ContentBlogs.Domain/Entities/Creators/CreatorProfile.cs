@@ -34,6 +34,9 @@ public sealed class CreatorProfile : AuditableEntity, IAggregateRoot
     /// <summary>Profile avatar URL.</summary>
     public string? AvatarUrl { get; private set; }
 
+    /// <summary>Profile cover image URL.</summary>
+    public string? CoverImageUrl { get; private set; }
+
     // ─── Trust & Status ─────────────────────────────────────────────────────
 
     /// <summary>Current trust tier determining publishing privileges.</summary>
@@ -68,10 +71,7 @@ public sealed class CreatorProfile : AuditableEntity, IAggregateRoot
     /// <summary>Number of followers.</summary>
     public int FollowerCount { get; private set; }
 
-    // ─── Wave 8 – Tier Promotion / Posts ────────────────────────────────────
-
-    /// <summary>Total published creator posts (distinct from ArticleCount which tracks Blog articles).</summary>
-    public int PublishedPostCount { get; private set; }
+    // ─── Tier Promotion / Content Stats ─────────────────────────────────────
 
     /// <summary>Total reports across all creator content.</summary>
     public int ReportCount { get; private set; }
@@ -283,11 +283,6 @@ public sealed class CreatorProfile : AuditableEntity, IAggregateRoot
         return Result.Success();
     }
 
-    // ─── Published Post Count (Wave 8) ──────────────────────────────────────
-
-    public void IncrementPublishedPostCount() { PublishedPostCount++; MarkUpdated(); }
-    public void DecrementPublishedPostCount() { if (PublishedPostCount > 0) PublishedPostCount--; MarkUpdated(); }
-
     // ─── Report Stats (updated by rollup service) ───────────────────────────
 
     /// <summary>Set the report metrics (called from background rollup service).</summary>
@@ -295,6 +290,34 @@ public sealed class CreatorProfile : AuditableEntity, IAggregateRoot
     {
         ReportCount = reportCount;
         ReportRate = reportRate;
+        MarkUpdated();
+    }
+
+    // ─── Self-Deactivation ──────────────────────────────────────────────────
+
+    /// <summary>Creator voluntarily deactivates own profile (soft delete). Background job hard-deletes after 60 days.</summary>
+    public Result Deactivate(DateTime utcNow)
+    {
+        if (IsDeleted)
+            return Result.Failure(CreatorProfileErrors.NotFound, Outcome.NotFound);
+
+        SoftDelete();
+        return Result.Success();
+    }
+
+    // ─── Avatar & Cover Image ───────────────────────────────────────────────
+
+    /// <summary>Update avatar URL directly (used for dedicated avatar upload endpoint).</summary>
+    public void UpdateAvatar(string avatarUrl)
+    {
+        AvatarUrl = avatarUrl;
+        MarkUpdated();
+    }
+
+    /// <summary>Update cover image URL directly (used for dedicated cover image upload endpoint).</summary>
+    public void UpdateCoverImage(string coverImageUrl)
+    {
+        CoverImageUrl = coverImageUrl;
         MarkUpdated();
     }
 

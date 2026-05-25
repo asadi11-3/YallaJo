@@ -20,7 +20,7 @@ public sealed record UpdateTourCommand(
     int? MinAge = null,
     decimal? MeetingPointLatitude = null,
     decimal? MeetingPointLongitude = null,
-    Guid? PlaceId = null,
+    Guid PlaceId = default,
     bool IsChildFriendly = false,
     bool IsAccessible = false,
     int? AgeRestriction = null,

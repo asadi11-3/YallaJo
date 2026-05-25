@@ -24,5 +24,21 @@ public sealed class AccountsPermissionCatalog : IPermissionCatalog
         new(AccountsFeatures.AdminProviderQueue, AppAction.RequestDocs, PermissionGroup.ModerationTools, "Request additional documents from applicant"),
         new(AccountsFeatures.AdminProviderQueue, AppAction.Suspend,     PermissionGroup.ModerationTools, "Suspend an approved provider"),
         new(AccountsFeatures.AdminProviderQueue, AppAction.Reinstate,   PermissionGroup.ModerationTools, "Reinstate a suspended provider"),
+
+        // Agency roster permissions (agency managing their guides)
+        new(AccountsFeatures.AgencyRoster, AppAction.Read,    PermissionGroup.ContentManagement, "View agency guide roster"),
+        new(AccountsFeatures.AgencyRoster, AppAction.Create,  PermissionGroup.ContentManagement, "Invite a guide to agency"),
+        new(AccountsFeatures.AgencyRoster, AppAction.Delete,  PermissionGroup.ContentManagement, "Remove a guide from agency"),
+        new(AccountsFeatures.AgencyRoster, AppAction.Approve, PermissionGroup.ContentManagement, "Approve a guide application to agency"),
+        new(AccountsFeatures.AgencyRoster, AppAction.Reject,  PermissionGroup.ContentManagement, "Reject a guide application to agency"),
+
+        // Guide-side agency permissions (guide managing their agency relationship)
+        new(AccountsFeatures.GuideAgency, AppAction.Read,   PermissionGroup.ContentManagement, "View agency invitations and applications"),
+        new(AccountsFeatures.GuideAgency, AppAction.Create, PermissionGroup.ContentManagement, "Apply to join an agency"),
+        new(AccountsFeatures.GuideAgency, AppAction.Update, PermissionGroup.ContentManagement, "Accept or decline agency invitation"),
+        new(AccountsFeatures.GuideAgency, AppAction.Delete, PermissionGroup.ContentManagement, "Leave current agency"),
+
+        // Provider dashboard
+        new(AccountsFeatures.ProviderDashboard, AppAction.Read, PermissionGroup.SystemAccess, "View provider dashboard overview"),
     ];
 }

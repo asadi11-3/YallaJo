@@ -9,6 +9,7 @@ using ContentTours.Presentation.Endpoints.TourWaypoint;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+#pragma warning disable SA1516
 
 namespace ContentTours.Presentation;
 
@@ -43,10 +44,19 @@ public static class ContentToursEndpoints
         //  Task 5 — TourPackage 
         TourPackageEndpoints.MapTourPackageEndpoints(group);
 
+        // Guide applications + open/close-applications (mapped onto tour group)
+        GuideApplicationEndpoints.MapGuideApplicationEndpoints(group);
+
         var guidesGroup = endpoints.MapGroup("/api/v1/guides")
             .WithTags("ContentTours | Guide Profiles");
 
         TourGuideProfileEndpoints.MapTourGuideProfileEndpoints(guidesGroup);
+
+        // Admin guide management (suspend, reinstate)
+        AdminTourGuideEndpoints.MapAdminTourGuideEndpoints(guidesGroup);
+
+        // Tour proposals (independent group at /api/v1/tours/proposals)
+        TourProposalEndpoints.MapTourProposalEndpoints(endpoints);
 
         return endpoints;
     }

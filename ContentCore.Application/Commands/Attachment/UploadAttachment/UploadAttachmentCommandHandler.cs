@@ -1,5 +1,6 @@
 using ContentCore.Application.Authorization;
 using ContentCore.Application.Caching;
+using ContentCore.Application.Limits;
 using ContentCore.Application.Interfaces;
 using ContentCore.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -71,6 +72,19 @@ public sealed class UploadAttachmentCommandHandler(
                 return Result<UploadAttachmentResult>.Fail(
                     authResult.Outcome,
                     authResult.Errors.ToArray());
+            }
+
+            // Attachment count cap: enforce per-entity-type limits before processing the file.
+            var currentCount = await attachmentRepository.CountByEntityAsync(
+                request.EntityType, request.EntityId, cancellationToken);
+
+            if (AttachmentLimits.IsAtLimit(request.EntityType, currentCount))
+            {
+                return Result<UploadAttachmentResult>.Failure(
+                    new Error(
+                        "Attachment.LimitReached",
+                        $"The entity has reached the maximum of {AttachmentLimits.GetMaxCount(request.EntityType)} attachments."),
+                    Outcome.Conflict);
             }
 
             var detectedFileType = await DetectFileTypeAsync(request.FileStream, cancellationToken);

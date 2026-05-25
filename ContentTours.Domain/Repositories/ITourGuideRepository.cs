@@ -10,4 +10,8 @@ public interface ITourGuideRepository : IRepository<TourGuide, Guid>
     Task<TourGuide?> GetByUserIdAsync(Guid userId, CancellationToken ct = default, bool asNoTracking = true);
 
     Task<int> CountAssignedToursAsync(Guid guideUserId, CancellationToken ct = default);
+
+    Task<TourGuide?> GetBySlugAsync(string slug, CancellationToken ct = default, bool asNoTracking = true);
+
+    Task<bool> IsSlugTakenAsync(string slug, Guid? excludeId = null, CancellationToken ct = default);
 }

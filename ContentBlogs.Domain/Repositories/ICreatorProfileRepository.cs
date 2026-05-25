@@ -61,22 +61,6 @@ public interface ICreatorProfileRepository : IRepository<CreatorProfile, Guid>
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Atomically increments the published-post count using a single SQL UPDATE.
-    /// Returns the number of rows affected (0 if profile not found).
-    /// </summary>
-    Task<int> AtomicIncrementPublishedPostCountAsync(
-        Guid profileId,
-        CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Atomically decrements the published-post count using a single SQL UPDATE.
-    /// Prevents negative values. Returns the number of rows affected.
-    /// </summary>
-    Task<int> AtomicDecrementPublishedPostCountAsync(
-        Guid profileId,
-        CancellationToken cancellationToken = default);
-
-    /// <summary>
     /// Atomically increments the report count using a single SQL UPDATE.
     /// Returns the number of rows affected (0 if profile not found).
     /// </summary>
@@ -95,7 +79,7 @@ public interface ICreatorProfileRepository : IRepository<CreatorProfile, Guid>
 
     /// <summary>
     /// Returns Tier-0 creators eligible for promotion to Tier-1.
-    /// Criteria: PublishedPostCount >= 5, ReportRate &lt; 5%, not already flagged EligibleForTier1.
+    /// Criteria: ArticleCount >= 5, ReportRate &lt; 5%, not already flagged EligibleForTier1.
     /// </summary>
     Task<List<CreatorProfile>> GetTier0PromotionCandidatesAsync(
         int batchSize,
@@ -103,7 +87,7 @@ public interface ICreatorProfileRepository : IRepository<CreatorProfile, Guid>
 
     /// <summary>
     /// Returns Tier-1 creators eligible for promotion to Tier-2.
-    /// Criteria: PublishedPostCount >= 25, ReportRate &lt; 2%, TotalReactionCount >= 500, not already flagged EligibleForTier2.
+    /// Criteria: ArticleCount >= 25, ReportRate &lt; 2%, TotalReactionCount >= 500, not already flagged EligibleForTier2.
     /// </summary>
     Task<List<CreatorProfile>> GetTier1PromotionCandidatesAsync(
         int batchSize,

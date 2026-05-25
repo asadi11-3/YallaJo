@@ -47,7 +47,7 @@ public sealed class TourSuggestQueryHandlerTests
             description:             new string('a', 120),
             shortDescription:        null, minAge: null,
             meetingPoint:            new Location(30.32m, 35.45m),
-            placeId:                 null);
+            placeId:                 Guid.NewGuid());
 
         if (status != TourStatus.Draft)
         {

@@ -1,16 +1,22 @@
 using ContentBlogs.Application.Commands.Creator.CreateApplication;
 using ContentBlogs.Application.Commands.Creator.FollowCreator;
 using ContentBlogs.Application.Commands.Creator.RedeemInvitation;
+using ContentBlogs.Application.Commands.Creator.SelfDeactivate;
 using ContentBlogs.Application.Commands.Creator.SubmitApplication;
 using ContentBlogs.Application.Commands.Creator.UnfollowCreator;
 using ContentBlogs.Application.Commands.Creator.UpdateApplication;
+using ContentBlogs.Application.Commands.Creator.UpdateAvatar;
+using ContentBlogs.Application.Commands.Creator.UpdateCoverImage;
 using ContentBlogs.Application.Commands.Creator.UpdateProfile;
+using ContentBlogs.Application.Queries.Blog.GetCreatorBlogs;
+using ContentBlogs.Application.Queries.Blog.GetCreatorBlogsBySlug;
 using ContentBlogs.Application.Queries.Creator.GetCreatorProfileBySlug;
 using ContentBlogs.Application.Queries.Creator.GetMyApplication;
 using ContentBlogs.Application.Queries.Creator.GetMyProfile;
 using ContentBlogs.Application.Queries.Creator.IsFollowingCreator;
 using ContentBlogs.Application.Queries.Creator.ListCreatorFollowers;
 using ContentBlogs.Application.Queries.Creator.ListCreatorNiches;
+using ContentBlogs.Application.Queries.Blog.Dtos;
 using ContentBlogs.Application.Queries.Creator.Dtos;
 using ContentBlogs.Contracts.Authorization;
 using ContentBlogs.Presentation.Endpoints.Creator.Models;
@@ -270,5 +276,77 @@ internal static class CreatorEndpoints
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status422UnprocessableEntity)
         .WithMetadata(new MustHavePermissionAttribute(ContentBlogsFeatures.Creator, AppAction.RedeemInvitation));
+
+        // ── DELETE /api/v1/blogs/creators/profile/mine ───────────────────
+        group.MapDelete("/profile/mine", async (ISender sender, CancellationToken ct) =>
+        {
+            var result = await sender.Send(new SelfDeactivateCreatorProfileCommand(), ct);
+            return result.ToApiResult();
+        })
+        .WithName("SelfDeactivateCreatorProfile")
+        .WithSummary("Creator voluntarily deactivates own profile (soft delete, 60-day hard delete)")
+        .Produces(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .WithMetadata(new MustHavePermissionAttribute(ContentBlogsFeatures.Creator, AppAction.Delete));
+
+        // ── PUT /api/v1/blogs/creators/profile/mine/avatar ───────────────
+        group.MapPut("/profile/mine/avatar", async (
+            UpdateCreatorAvatarRequest request,
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            var result = await sender.Send(new UpdateCreatorAvatarCommand(request.AvatarUrl), ct);
+            return result.ToApiResult();
+        })
+        .WithName("UpdateCreatorAvatar")
+        .WithSummary("Update creator avatar URL")
+        .Produces(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .WithMetadata(new MustHavePermissionAttribute(ContentBlogsFeatures.Creator, AppAction.Update));
+
+        // ── PUT /api/v1/blogs/creators/profile/mine/cover-image ──────────
+        group.MapPut("/profile/mine/cover-image", async (
+            UpdateCreatorCoverImageRequest request,
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            var result = await sender.Send(new UpdateCreatorCoverImageCommand(request.CoverImageUrl), ct);
+            return result.ToApiResult();
+        })
+        .WithName("UpdateCreatorCoverImage")
+        .WithSummary("Update creator cover image URL")
+        .Produces(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .WithMetadata(new MustHavePermissionAttribute(ContentBlogsFeatures.Creator, AppAction.Update));
+
+        // ── GET /api/v1/blogs/creators/profiles/{slug}/blogs ─────────────
+        group.MapGet("/profiles/{slug}/blogs", async (
+            string slug,
+            int? page,
+            int? pageSize,
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            // Caller provides a CreatorProfile slug — we need the profile ID.
+            // GetCreatorBlogsQuery accepts creatorProfileId.
+            // For now we use slug-based query; caller can also use profile id directly.
+            // Phase 4 will provide a GetCreatorProfileBySlugQuery result to get the id first.
+            // Using a separate endpoint that forwards to GetCreatorBlogsQuery via slug lookup
+            // would require an extra repo call. Instead we delegate to query which takes slug.
+            var result = await sender.Send(
+                new GetCreatorBlogsBySlugQuery(slug, page ?? 1, pageSize ?? 20), ct);
+            return result.ToApiResult();
+        })
+        .WithName("GetCreatorBlogsBySlug")
+        .WithSummary("List published blogs by creator slug (public)")
+        .Produces<PaginatedResult<BlogSummaryDto>>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .AllowAnonymous();
     }
 }

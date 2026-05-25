@@ -2,6 +2,7 @@ using Accounts.Application.Commands.Provider.AddDocument;
 using Accounts.Application.Commands.Provider.RegisterProvider;
 using Accounts.Application.Commands.Provider.ReplaceDocument;
 using Accounts.Application.Commands.Provider.SubmitApplication;
+using Accounts.Application.Queries.Dashboard;
 using Accounts.Application.Queries.GetMyApplicationStatus;
 using Accounts.Contracts.Authorization;
 using Accounts.Domain.Enums;
@@ -115,6 +116,48 @@ public static class ProviderEndpoints
         .ProducesProblem(StatusCodes.Status422UnprocessableEntity)
         .WithSummary("Replace a provider document")
         .WithMetadata(new MustHavePermissionAttribute(AccountsFeatures.ProviderApplication, AppAction.Update))
+        .RequireAuthorization();
+
+        // GET /api/v1/provider/dashboard/overview — provider dashboard overview
+        group.MapGet("/dashboard/overview", async (ISender sender, CancellationToken ct) =>
+        {
+            var result = await sender.Send(new GetProviderDashboardOverviewQuery(), ct);
+            return result.ToApiResult();
+        })
+        .WithName("GetProviderDashboardOverview")
+        .Produces<ProviderDashboardOverviewResult>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .WithSummary("Get provider dashboard overview stats")
+        .WithMetadata(new MustHavePermissionAttribute(AccountsFeatures.ProviderDashboard, AppAction.Read))
+        .RequireAuthorization();
+
+        // GET /api/v1/provider/dashboard/pending-actions — pending actions
+        group.MapGet("/dashboard/pending-actions", async (ISender sender, CancellationToken ct) =>
+        {
+            var result = await sender.Send(new GetProviderPendingActionsQuery(), ct);
+            return result.ToApiResult();
+        })
+        .WithName("GetProviderPendingActions")
+        .Produces<IReadOnlyList<ProviderPendingAction>>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .WithSummary("Get actions requiring provider attention")
+        .WithMetadata(new MustHavePermissionAttribute(AccountsFeatures.ProviderDashboard, AppAction.Read))
+        .RequireAuthorization();
+
+        // GET /api/v1/provider/settings — provider settings
+        group.MapGet("/settings", async (ISender sender, CancellationToken ct) =>
+        {
+            var result = await sender.Send(new GetProviderSettingsQuery(), ct);
+            return result.ToApiResult();
+        })
+        .WithName("GetProviderSettings")
+        .Produces<ProviderSettingsResult>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .WithSummary("Get provider settings (business info)")
+        .WithMetadata(new MustHavePermissionAttribute(AccountsFeatures.ProviderApplication, AppAction.Read))
         .RequireAuthorization();
 
         return endpoints;

@@ -137,12 +137,12 @@ public sealed class BlogRestoreCommandHandlerTests
 
         // A: deleted, was Featured in placeId
         var deletedFeatured = NewPublishedBlog("deleted-featured", placeId);
-        deletedFeatured.MarkAsFeatured(DateTime.UtcNow);
+        deletedFeatured.Feature(Guid.Empty, DateTime.UtcNow);
         deletedFeatured.Delete(DateTime.UtcNow.AddMinutes(1));
 
         // B: still live, also Featured in same placeId — occupies the slot
         var liveFeatured = NewPublishedBlog("live-featured", placeId);
-        liveFeatured.MarkAsFeatured(DateTime.UtcNow);
+        liveFeatured.Feature(Guid.Empty, DateTime.UtcNow);
 
         db.Blogs.AddRange(deletedFeatured, liveFeatured);
         await db.SaveChangesAsync();
@@ -253,7 +253,7 @@ public sealed class BlogRestoreCommandHandlerTests
         await using var db = NewDb();
         var placeId = Guid.NewGuid();
         var blog = NewPublishedBlog("cache-restore-featured", placeId);
-        blog.MarkAsFeatured(DateTime.UtcNow);
+        blog.Feature(Guid.Empty, DateTime.UtcNow);
         blog.Delete(DateTime.UtcNow.AddMinutes(1));
         db.Blogs.Add(blog);
         await db.SaveChangesAsync();

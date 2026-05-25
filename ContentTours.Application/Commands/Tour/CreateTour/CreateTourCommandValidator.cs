@@ -57,7 +57,7 @@ public sealed class CreateTourCommandValidator : AbstractValidator<CreateTourCom
 
         RuleFor(x => x.PlaceId)
             .NotEqual(Guid.Empty)
-            .When(x => x.PlaceId.HasValue);
+            .When(x => x.PlaceId != default);
 
         RuleFor(x => x.Description)
             .MaximumLength(4000)

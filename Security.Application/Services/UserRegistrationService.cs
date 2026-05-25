@@ -36,6 +36,13 @@ internal sealed class UserRegistrationService(
         var user = User.Register(normalizedEmail, request.FirstName, request.LastName);
         user.SetInitialPasswordHash(passwordHasher.Hash(request.Password));
 
+        // Assign default Guest role — upgraded to User on email verification
+        var defaultRoles = await roleRepository.GetRolesByNamesAsync(AppRoles.DefaultRoles, cancellationToken);
+        foreach (var defaultRole in defaultRoles)
+        {
+            user.AssignRole(defaultRole);
+        }
+
         await userRepository.AddAsync(user, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
@@ -212,6 +219,14 @@ internal sealed class UserRegistrationService(
         user.VerifyEmail(primaryEmail.Id);
 
         user.SetInitialPasswordHash("EXTERNAL-ONLY:" + Guid.NewGuid().ToString("N"));
+
+        // External (OAuth) users have verified email — assign User role directly
+        var userRoles = await roleRepository.GetRolesByNamesAsync([AppRoles.User], cancellationToken);
+        var userRoleEntity = userRoles.FirstOrDefault();
+        if (userRoleEntity is not null)
+        {
+            user.AssignRole(userRoleEntity);
+        }
 
         await userRepository.AddAsync(user, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);

@@ -3,16 +3,28 @@ namespace ContentBlogs.Domain.Enums;
 public enum BlogStatus : byte
 {
     Draft = 0,
-    Published = 1,
-    Archived = 2,
 
     /// <summary>
-    /// Creator-authored article awaiting admin review before publishing.
+    /// Tier-0 creator-authored article awaiting admin review before publishing.
     /// </summary>
-    PendingCreatorReview = 99,
+    PendingReview = 1,
+
+    Published = 2,
 
     /// <summary>
-    /// Hidden by admin — not visible to public but still editable by the creator.
+    /// Admin rejected the blog (with a reason). Creator can revise and resubmit.
     /// </summary>
-    Hidden = 100,
+    Rejected = 3,
+
+    Archived = 4,
+
+    /// <summary>
+    /// Hidden by admin — not visible to public but still accessible by the creator.
+    /// </summary>
+    Hidden = 5,
+
+    /// <summary>
+    /// Removed by admin (moderation). Permanently unavailable.
+    /// </summary>
+    Removed = 6,
 }

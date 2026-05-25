@@ -31,7 +31,7 @@ public class BusinessConfiguration : IEntityTypeConfiguration<Business>
             .IsRequired()
             .HasConversion<int>();
 
-        builder.Property(x => x.PlaceId).IsRequired(false);
+        builder.Property(x => x.PlaceId).IsRequired();
 
         builder.OwnsOne(e => e.Location, loc =>
         {
@@ -165,5 +165,10 @@ public class BusinessConfiguration : IEntityTypeConfiguration<Business>
         builder.HasIndex(x => new { x.LicenseNumber, x.BusinessType })
             .IsUnique()
             .HasFilter("[LicenseNumber] IS NOT NULL AND [IsDeleted] = 0");
+
+        // One business type per place per provider (prevents duplicate listings)
+        builder.HasIndex(x => new { x.PlaceId, x.BusinessType, x.OwnerId })
+            .IsUnique()
+            .HasFilter("[IsDeleted] = 0");
     }
 }

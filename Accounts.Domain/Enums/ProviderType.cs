@@ -7,4 +7,5 @@ public enum ProviderType : byte
     HotelResort       = 2,
     ActivityCenter    = 3,
     Agency            = 4,
+    BusinessOwner     = 5,
 }

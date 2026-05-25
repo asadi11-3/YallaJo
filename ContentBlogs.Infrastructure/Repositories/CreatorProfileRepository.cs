@@ -96,34 +96,6 @@ public class CreatorProfileRepository(ContentBlogsDbContext context)
     }
 
     /// <inheritdoc />
-    public Task<int> AtomicIncrementPublishedPostCountAsync(
-        Guid profileId,
-        CancellationToken cancellationToken = default)
-    {
-        return context.CreatorProfiles
-            .Where(p => p.Id == profileId)
-            .ExecuteUpdateAsync(
-                s => s.SetProperty(p => p.PublishedPostCount, p => p.PublishedPostCount + 1)
-                      .SetProperty(p => p.UpdatedAt, DateTime.UtcNow),
-                cancellationToken);
-    }
-
-    /// <inheritdoc />
-    public Task<int> AtomicDecrementPublishedPostCountAsync(
-        Guid profileId,
-        CancellationToken cancellationToken = default)
-    {
-        return context.CreatorProfiles
-            .Where(p => p.Id == profileId)
-            .ExecuteUpdateAsync(
-                s => s.SetProperty(
-                          p => p.PublishedPostCount,
-                          p => p.PublishedPostCount > 0 ? p.PublishedPostCount - 1 : 0)
-                      .SetProperty(p => p.UpdatedAt, DateTime.UtcNow),
-                cancellationToken);
-    }
-
-    /// <inheritdoc />
     public Task<int> AtomicIncrementReportCountAsync(
         Guid profileId,
         CancellationToken cancellationToken = default)
@@ -160,7 +132,7 @@ public class CreatorProfileRepository(ContentBlogsDbContext context)
             .Where(p => p.TrustTier == CreatorTrustTier.New
                      && p.Status == CreatorProfileStatus.Active
                      && !p.EligibleForTier1
-                     && p.PublishedPostCount >= 5
+                      && p.ArticleCount >= 5
                      && p.ReportRate < 0.05)
             .OrderBy(p => p.CreatedAt)
             .Take(batchSize)
@@ -177,7 +149,7 @@ public class CreatorProfileRepository(ContentBlogsDbContext context)
             .Where(p => p.TrustTier == CreatorTrustTier.Trusted
                      && p.Status == CreatorProfileStatus.Active
                      && !p.EligibleForTier2
-                     && p.PublishedPostCount >= 25
+                      && p.ArticleCount >= 25
                      && p.ReportRate < 0.02
                      && p.TotalReactionCount >= 500)
             .OrderBy(p => p.CreatedAt)

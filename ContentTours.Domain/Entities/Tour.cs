@@ -15,6 +15,7 @@ public sealed class Tour : AuditableEntity, IAggregateRoot
     private readonly List<TourWaypoint> _tourWaypoints = [];
     private readonly List<TourPricingTier> _tourPricingTiers = [];
     private readonly List<TourChildFacility> _childFacilities = [];
+    private readonly List<GuideTourOffering> _guideOfferings = [];
 
     private Tour()
     {
@@ -42,7 +43,11 @@ public sealed class Tour : AuditableEntity, IAggregateRoot
     public string? MetaTitle { get; private set; }
     public string? MetaDescription { get; private set; }
     public Guid CreatedByUserId { get; private set; }
-    public Guid? PlaceId { get; private set; }
+    public Guid PlaceId { get; private set; }
+    public Guid? ProposedByGuideId { get; private set; }
+    public bool IsExclusive { get; private set; }
+    public TourOwnershipType OwnershipType { get; private set; } = TourOwnershipType.Provider;
+    public bool IsOpenForApplications { get; private set; }
     public bool IsChildFriendly { get; private set; }
     public bool IsAccessible { get; private set; }
     public int? AgeRestriction { get; private set; }
@@ -70,6 +75,7 @@ public sealed class Tour : AuditableEntity, IAggregateRoot
     public IReadOnlyCollection<TourWaypoint> TourWaypoints => _tourWaypoints.AsReadOnly();
     public IReadOnlyCollection<TourPricingTier> TourPricingTiers => _tourPricingTiers.AsReadOnly();
     public IReadOnlyList<TourChildFacility> ChildFacilities => _childFacilities.AsReadOnly();
+    public IReadOnlyCollection<GuideTourOffering> GuideOfferings => _guideOfferings.AsReadOnly();
 
     public static Tour Create(
         string name,
@@ -81,18 +87,21 @@ public sealed class Tour : AuditableEntity, IAggregateRoot
         string currency,
         Location location,
         Guid createdByUserId,
+        Guid placeId,
         string? description = null,
         string? shortDescription = null,
         int? minAge = null,
         Location? meetingPoint = null,
-        Guid? placeId = null,
         bool isChildFriendly = false,
         bool isAccessible = false,
         int? ageRestriction = null,
         bool isInstantBooking = false,
         int cancellationPolicyHours = 24,
         string? metaTitle = null,
-        string? metaDescription = null)
+        string? metaDescription = null,
+        TourOwnershipType ownershipType = TourOwnershipType.Provider,
+        bool isExclusive = false,
+        Guid? proposedByGuideId = null)
     {
         ValidateName(name);
         ValidateSlug(slug);
@@ -132,6 +141,9 @@ public sealed class Tour : AuditableEntity, IAggregateRoot
             CancellationPolicyHours = cancellationPolicyHours,
             MetaTitle = metaTitle?.Trim(),
             MetaDescription = metaDescription?.Trim(),
+            OwnershipType = ownershipType,
+            IsExclusive = isExclusive,
+            ProposedByGuideId = proposedByGuideId,
         };
 
         tour.AddDomainEvent(new TourCreatedDomainEvent(
@@ -161,7 +173,7 @@ public sealed class Tour : AuditableEntity, IAggregateRoot
         string? shortDescription = null,
         int? minAge = null,
         Location? meetingPoint = null,
-        Guid? placeId = null,
+        Guid placeId = default,
         bool isChildFriendly = false,
         bool isAccessible = false,
         int? ageRestriction = null,
@@ -276,8 +288,8 @@ public sealed class Tour : AuditableEntity, IAggregateRoot
             ApprovedByUserId: reviewerId,
             ApprovedAt: ApprovedAt.Value));
 
-        if (PlaceId.HasValue)
-            AddDomainEvent(new TourPlaceCountChangedDomainEvent(Id, PlaceId.Value));
+        if (PlaceId != Guid.Empty)
+                    AddDomainEvent(new TourPlaceCountChangedDomainEvent(Id, PlaceId));
     }
 
     public void Reject(string reason, Guid reviewerId)
@@ -331,8 +343,8 @@ public sealed class Tour : AuditableEntity, IAggregateRoot
             Reason: SuspensionReason,
             SuspendedAt: SuspendedAt.Value));
 
-        if (PlaceId.HasValue)
-            AddDomainEvent(new TourPlaceCountChangedDomainEvent(Id, PlaceId.Value));
+        if (PlaceId != Guid.Empty)
+                    AddDomainEvent(new TourPlaceCountChangedDomainEvent(Id, PlaceId));
     }
 
     public void Reinstate()
@@ -355,8 +367,8 @@ public sealed class Tour : AuditableEntity, IAggregateRoot
             CreatedByUserId: CreatedByUserId,
             ReinstatedAt: ReinstatedAt.Value));
 
-        if (PlaceId.HasValue)
-            AddDomainEvent(new TourPlaceCountChangedDomainEvent(Id, PlaceId.Value));
+        if (PlaceId != Guid.Empty)
+                    AddDomainEvent(new TourPlaceCountChangedDomainEvent(Id, PlaceId));
     }
 
     public void Archive()
@@ -373,8 +385,8 @@ public sealed class Tour : AuditableEntity, IAggregateRoot
         IsFeatured = false;
         MarkUpdated();
 
-        if (PlaceId.HasValue)
-            AddDomainEvent(new TourPlaceCountChangedDomainEvent(Id, PlaceId.Value));
+        if (PlaceId != Guid.Empty)
+                    AddDomainEvent(new TourPlaceCountChangedDomainEvent(Id, PlaceId));
     }
 
     public new void SoftDelete()
@@ -383,8 +395,8 @@ public sealed class Tour : AuditableEntity, IAggregateRoot
 
         base.SoftDelete();
 
-        if (PlaceId.HasValue && Status == TourStatus.Approved)
-            AddDomainEvent(new TourPlaceCountChangedDomainEvent(Id, PlaceId.Value));
+        if (PlaceId != Guid.Empty && Status == TourStatus.Approved)
+            AddDomainEvent(new TourPlaceCountChangedDomainEvent(Id, PlaceId));
     }
 
     public void SetFeatured(bool isFeatured, Guid changedByUserId)
@@ -555,10 +567,10 @@ public sealed class Tour : AuditableEntity, IAggregateRoot
             throw new ArgumentNullException(nameof(location), "Location is required.");
     }
 
-    private static void ValidatePlaceId(Guid? placeId)
+    private static void ValidatePlaceId(Guid placeId)
     {
-        if (placeId.HasValue && placeId.Value == Guid.Empty)
-            throw new ArgumentException("PlaceId cannot be Guid.Empty.", nameof(placeId));
+        if (placeId == Guid.Empty)
+            throw new ArgumentException("PlaceId is required.", nameof(placeId));
     }
 
     private static void ValidateCancellationPolicyHours(int hours)
@@ -581,6 +593,22 @@ public sealed class Tour : AuditableEntity, IAggregateRoot
     {
         if (age.HasValue && (age.Value < 0 || age.Value > 18))
             throw new ArgumentOutOfRangeException(paramName, "Child age must be between 0 and 18.");
+    }
+
+    public void OpenForApplications()
+    {
+        EnsureNotDeleted();
+        if (Status != TourStatus.Approved)
+            throw new InvalidOperationException("Only approved tours can be opened for guide applications.");
+        IsOpenForApplications = true;
+        MarkUpdated();
+    }
+
+    public void CloseForApplications()
+    {
+        EnsureNotDeleted();
+        IsOpenForApplications = false;
+        MarkUpdated();
     }
 
     public void UpdateChildrenInfo(

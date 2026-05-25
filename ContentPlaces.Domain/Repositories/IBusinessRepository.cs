@@ -31,4 +31,11 @@ public interface IBusinessRepository : IRepository<Business, Guid>
         double radiusKm,
         int pageSize,
         CancellationToken ct = default);
+
+    /// <summary>Returns a paginated list of businesses owned by the given user.</summary>
+    Task<IReadOnlyList<Business>> GetByOwnerIdAsync(
+        Guid ownerUserId,
+        int page,
+        int pageSize,
+        CancellationToken ct = default);
 }

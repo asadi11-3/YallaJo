@@ -60,7 +60,7 @@ public static class DependencyInjection
         services.AddScoped<IProviderBankAccountRepository, ProviderBankAccountRepository>();
         services.AddScoped<IPaymentExpectationRepository, PaymentExpectationRepository>();
         services.AddScoped<IDisputeRepository, DisputeRepository>();
-        services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
+        // Deferred post-MVP: ISubscriptionRepository removed
         services.AddScoped<IFinanceOutboxWriter, FinanceOutboxWriter>();
 
         // ── Inbox store ─────────────────────────────────────────────────────

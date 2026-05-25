@@ -14,11 +14,18 @@ namespace ContentBlogs.Contracts.Authorization
         public IReadOnlyList<PermissionDescriptor> Permissions { get; } =
         [
          // ── Blog ────────────────────────────────────────────────────────
-        new(ContentBlogsFeatures.Blog, AppAction.Read,   PermissionGroup.ContentManagement, "View blogs"),
-        new(ContentBlogsFeatures.Blog, AppAction.Create, PermissionGroup.ContentManagement, "Create a blog"),
-        new(ContentBlogsFeatures.Blog, AppAction.Update, PermissionGroup.ContentManagement, "Update a blog"),
-        new(ContentBlogsFeatures.Blog, AppAction.Delete, PermissionGroup.ContentManagement, "Delete a blog"),
-        new(ContentBlogsFeatures.Blog, AppAction.Approve, PermissionGroup.ContentManagement, "Approve a blog"),
+        new(ContentBlogsFeatures.Blog, AppAction.Read,    PermissionGroup.ContentManagement, "View blogs"),
+        new(ContentBlogsFeatures.Blog, AppAction.ReadOwn, PermissionGroup.SystemAccess, "View own blogs (creator)"),
+        new(ContentBlogsFeatures.Blog, AppAction.Create,  PermissionGroup.ContentManagement, "Create a blog"),
+        new(ContentBlogsFeatures.Blog, AppAction.Update,  PermissionGroup.ContentManagement, "Update a blog"),
+        new(ContentBlogsFeatures.Blog, AppAction.Delete,  PermissionGroup.ContentManagement, "Delete a blog"),
+        new(ContentBlogsFeatures.Blog, AppAction.Submit,  PermissionGroup.SystemAccess, "Submit blog for review (creator)"),
+        new(ContentBlogsFeatures.Blog, AppAction.Approve, PermissionGroup.ModerationTools, "Approve a blog (admin)"),
+        new(ContentBlogsFeatures.Blog, AppAction.Reject,  PermissionGroup.ModerationTools, "Reject a blog (admin)"),
+        new(ContentBlogsFeatures.Blog, AppAction.Remove,  PermissionGroup.ModerationTools, "Remove a published blog (admin)"),
+        new(ContentBlogsFeatures.Blog, AppAction.Feature, PermissionGroup.ModerationTools, "Feature a blog (admin)"),
+        new(ContentBlogsFeatures.Blog, AppAction.Unfeature, PermissionGroup.ModerationTools, "Unfeature a blog (admin)"),
+        new(ContentBlogsFeatures.AdminBlogQueue, AppAction.Read, PermissionGroup.ModerationTools, "View blog moderation queue"),
 
         // ── BlogComment ───────────────────────────────────────────────────
         new(ContentBlogsFeatures.BlogComment, AppAction.Read,   PermissionGroup.ContentManagement, "View blog comments"),
@@ -80,6 +87,11 @@ namespace ContentBlogs.Contracts.Authorization
         // ── Admin Tier Management (Wave-8) ─────────────────────────────
         new(ContentBlogsFeatures.AdminCreatorQueue, AppAction.PromoteTier, PermissionGroup.ModerationTools, "Promote creator trust tier"),
         new(ContentBlogsFeatures.AdminCreatorQueue, AppAction.DemoteTier, PermissionGroup.ModerationTools, "Demote creator trust tier"),
+        new(ContentBlogsFeatures.AdminCreatorQueue, AppAction.Update, PermissionGroup.ModerationTools, "Admin — edit creator profile"),
+        new(ContentBlogsFeatures.AdminCreatorQueue, AppAction.Delete, PermissionGroup.ModerationTools, "Admin — soft-delete creator profile"),
+
+        // ── Creator self-management ────────────────────────────────────
+        new(ContentBlogsFeatures.Creator, AppAction.Delete, PermissionGroup.SystemAccess, "Self-deactivate creator account"),
     ];
     }
 

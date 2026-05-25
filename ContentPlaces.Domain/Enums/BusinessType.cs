@@ -8,5 +8,6 @@ public enum BusinessType : byte
     Agency = 3,
     Transport = 4,
     Guide = 5,
-    Other = 6
+    Other = 6,
+    Activity = 7
 }

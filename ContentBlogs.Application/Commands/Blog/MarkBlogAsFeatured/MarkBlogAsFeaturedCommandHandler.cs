@@ -74,13 +74,11 @@ public sealed class MarkBlogAsFeaturedCommandHandler(
                     "Clear its featured status first."), Outcome.Conflict);
             }
 
-            try
+            // TODO: Phase 4 replaces this handler entirely with FeatureBlogCommandHandler
+            var featureResult = blog.Feature(Guid.Empty, DateTime.UtcNow);
+            if (!featureResult.IsSuccess)
             {
-                blog.MarkAsFeatured(DateTime.UtcNow);
-            }
-            catch (InvalidOperationException ex)
-            {
-                return MapDomainGuardFailure(ex);
+                return featureResult;
             }
 
             try

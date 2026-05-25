@@ -1,4 +1,4 @@
-using ContentBlogs.Contracts.IntegrationEvents.Creators;
+using ContentBlogs.Contracts.IntegrationEvents;
 using MediatR;
 using Messaging.Application.Interfaces;
 using Messaging.Domain.Entities;
@@ -11,7 +11,7 @@ using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 namespace Messaging.Infrastructure.EventHandlers;
 
 /// <summary>
-/// Notifies a creator when their post has been rejected by an admin.
+/// Notifies a creator/author when their blog has been rejected by an admin.
 /// InApp: always. Email: opt-in (default off).
 /// </summary>
 public sealed class CreatorPostRejectedNotificationHandler(
@@ -19,56 +19,56 @@ public sealed class CreatorPostRejectedNotificationHandler(
     IMessagingUnitOfWork unitOfWork,
     IMessagingInboxStore inboxStore,
     ILogger<CreatorPostRejectedNotificationHandler> logger)
-    : INotificationHandler<IntegrationEventNotification<CreatorPostRejectedIntegrationEvent>>
+    : INotificationHandler<IntegrationEventNotification<BlogRejectedIntegrationEvent>>
 {
-    private const string Title = "Creator Post Rejected";
+    private const string Title = "Blog Rejected";
 
     public async Task Handle(
-        IntegrationEventNotification<CreatorPostRejectedIntegrationEvent> notification,
+        IntegrationEventNotification<BlogRejectedIntegrationEvent> notification,
         CancellationToken ct)
     {
         if (await inboxStore.HasBeenProcessedAsync(notification.MessageId, ct))
         {
             logger.LogDebug(
-                "Messaging: Message {MessageId} (CreatorPostRejected {PostId}) already processed; skipping.",
-                notification.MessageId, notification.Event.PostId);
+                "Messaging: Message {MessageId} (BlogRejected {BlogId}) already processed; skipping.",
+                notification.MessageId, notification.Event.BlogId);
             return;
         }
 
         var evt = notification.Event;
-        var body = $"Your creator post has been rejected. Reason: {evt.Reason}. You may revise and resubmit.";
+        var body = $"Your blog has been rejected. Reason: {evt.Reason}. You may revise and resubmit.";
 
         // ── InApp — always ──────────────────────────────────────────────────
         dbContext.Notifications.Add(Notification.Create(
-            userId:     evt.CreatorProfileId,
+            userId:     evt.AuthorId,
             type:       NotificationType.Business,
             channel:    NotificationChannel.InApp,
             priority:   NotificationPriority.High,
             title:      Title,
             body:       body,
-            entityType: "CreatorPost",
-            entityId:   evt.PostId));
+            entityType: "Blog",
+            entityId:   evt.BlogId));
 
         // ── Email — opt-in (default off) ────────────────────────────────────
-        if (await IsChannelEnabledAsync(evt.CreatorProfileId, NotificationType.Business, NotificationChannel.Email, false, ct))
+        if (await IsChannelEnabledAsync(evt.AuthorId, NotificationType.Business, NotificationChannel.Email, false, ct))
         {
             dbContext.Notifications.Add(Notification.Create(
-                userId:     evt.CreatorProfileId,
+                userId:     evt.AuthorId,
                 type:       NotificationType.Business,
                 channel:    NotificationChannel.Email,
                 priority:   NotificationPriority.High,
                 title:      Title,
                 body:       body,
-                entityType: "CreatorPost",
-                entityId:   evt.PostId));
+                entityType: "Blog",
+                entityId:   evt.BlogId));
         }
 
         inboxStore.MarkAsProcessed(notification.MessageId);
         await unitOfWork.SaveChangesAsync(ct);
 
         logger.LogInformation(
-            "Messaging: notifications queued for CreatorPostRejected PostId={PostId} Reason={Reason}",
-            evt.PostId, evt.Reason);
+            "Messaging: notifications queued for BlogRejected BlogId={BlogId} Reason={Reason}",
+            evt.BlogId, evt.Reason);
     }
 
     private async Task<bool> IsChannelEnabledAsync(

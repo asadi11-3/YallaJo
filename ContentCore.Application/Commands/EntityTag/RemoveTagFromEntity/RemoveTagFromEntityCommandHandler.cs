@@ -1,5 +1,7 @@
 using ContentCore.Application.Authorization;
 using ContentCore.Application.Caching;
+using ContentCore.Application.Interfaces;
+using ContentCore.Contracts.IntegrationEvents;
 using ContentCore.Domain.Enums;
 using ContentCore.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -14,6 +16,7 @@ namespace ContentCore.Application.Commands.EntityTag.RemoveTagFromEntity;
 public sealed class RemoveTagFromEntityCommandHandler(
     IEntityTagRepository entityTagRepository,
     IContentCoreUnitOfWork unitOfWork,
+    IContentCoreOutboxWriter outboxWriter,
     HybridCache cache,
     IOwnershipGuard ownershipGuard,
     ILogger<RemoveTagFromEntityCommandHandler> logger)
@@ -51,6 +54,11 @@ public sealed class RemoveTagFromEntityCommandHandler(
             }
 
             entityTagRepository.Remove(entityTag);
+            outboxWriter.Enqueue(new EntityTagRemovedIntegrationEvent(
+                request.EntityType,
+                request.EntityId,
+                request.TagId,
+                DateTime.UtcNow));
 
             try
             {

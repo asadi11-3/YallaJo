@@ -16,6 +16,11 @@ internal sealed class AttachmentRepository(ContentCoreDbContext context)
             .Where(x => x.EntityType == entityType && x.EntityId == entityId)
             .ToListAsync(ct);
 
+    public async Task<int> CountByEntityAsync(
+        EntityType entityType, Guid entityId, CancellationToken ct = default)
+        => await _context.Set<Attachment>()
+            .CountAsync(x => x.EntityType == entityType && x.EntityId == entityId, ct);
+
     public void AddEntityImage(EntityImage entityImage)
         => _context.Set<EntityImage>().Add(entityImage);
 

@@ -75,20 +75,20 @@ public sealed class CreateTourCommandHandler(
                     Outcome.Conflict);
             }
 
-            if (request.PlaceId.HasValue)
+            if (request.PlaceId != Guid.Empty)
             {
                 var status = await placeExistenceService
-                    .GetStatusAsync(request.PlaceId.Value, cancellationToken)
+                    .GetStatusAsync(request.PlaceId, cancellationToken)
                     .ConfigureAwait(false);
                 switch (status)
                 {
                     case PlaceExistenceStatus.NotFound:
                         return Result<CreateTourResult>.Failure(
-                            new Error("Tour.PlaceNotFound", $"Place '{request.PlaceId.Value}' does not exist."),
+                            new Error("Tour.PlaceNotFound", $"Place '{request.PlaceId}' does not exist."),
                             Outcome.UnprocessableEntity);
                     case PlaceExistenceStatus.Deleted:
                         return Result<CreateTourResult>.Failure(
-                            new Error("Tour.PlaceDeleted", $"Place '{request.PlaceId.Value}' has been deleted."),
+                            new Error("Tour.PlaceDeleted", $"Place '{request.PlaceId}' has been deleted."),
                             Outcome.UnprocessableEntity);
                 }
             }

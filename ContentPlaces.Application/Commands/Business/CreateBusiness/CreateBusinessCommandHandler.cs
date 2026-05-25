@@ -12,6 +12,10 @@ using YallaJo.SharedKernel.Domain.Abstractions.Results;
 using YallaJo.SharedKernel.Domain.ValueObjects;
 using BusinessEntity = ContentPlaces.Domain.Entities.Business;
 
+// ProviderType → allowed BusinessTypes mapping (enforcement of Decision #2)
+// TourOperator=0 → Agency; IndependentGuide=1 → Guide; HotelResort=2 → Hotel;
+// ActivityCenter=3 → Activity; Agency=4 → Agency; BusinessOwner=5 → Restaurant/Shop/Transport/Other
+
 namespace ContentPlaces.Application.Commands.Business.CreateBusiness;
 
 public sealed class CreateBusinessCommandHandler(
@@ -19,11 +23,23 @@ public sealed class CreateBusinessCommandHandler(
     IContentPlacesUnitOfWork unitOfWork,
     ICurrentUser currentUser,
     IProviderStatusService providerStatusService,
+    IProviderTypeReader providerTypeReader,
     HybridCache cache,
     ILogger<CreateBusinessCommandHandler> logger)
     : ICommandHandler<CreateBusinessCommand, CreateBusinessResult>
 {
     private const int MaxActiveBusinessesPerProvider = 10;
+
+    // Mapping: ProviderTypeValue → allowed BusinessType values
+    private static readonly Dictionary<ProviderTypeValue, HashSet<BusinessType>> AllowedBusinessTypes = new()
+    {
+        [ProviderTypeValue.TourOperator]    = [BusinessType.Agency],
+        [ProviderTypeValue.IndependentGuide] = [BusinessType.Guide],
+        [ProviderTypeValue.HotelResort]     = [BusinessType.Hotel],
+        [ProviderTypeValue.ActivityCenter]  = [BusinessType.Activity],
+        [ProviderTypeValue.Agency]          = [BusinessType.Agency],
+        [ProviderTypeValue.BusinessOwner]   = [BusinessType.Restaurant, BusinessType.Shop, BusinessType.Transport, BusinessType.Other],
+    };
 
     public async Task<Result<CreateBusinessResult>> Handle(
         CreateBusinessCommand request,
@@ -38,6 +54,28 @@ public sealed class CreateBusinessCommandHandler(
                 return Result<CreateBusinessResult>.Failure(
                     new Error("Provider.NotApproved", "You must have an approved provider application before creating a business."),
                     Outcome.Forbidden);
+            }
+
+            // Validate ProviderType → BusinessType mapping
+            var providerType = await providerTypeReader.GetProviderTypeAsync(userId, cancellationToken);
+            if (providerType is null || !AllowedBusinessTypes.TryGetValue(providerType.Value, out var allowedTypes)
+                || !allowedTypes.Contains(request.BusinessType))
+            {
+                return Result<CreateBusinessResult>.Failure(
+                    new Error("Business.TypeNotAllowedForProvider",
+                        $"Your provider type does not allow creating a business of type '{request.BusinessType}'."),
+                    Outcome.Forbidden);
+            }
+
+            // Validate unique (PlaceId, BusinessType, OwnerId)
+            if (await businessRepository.AnyAsync(
+                b => b.PlaceId == request.PlaceId && b.BusinessType == request.BusinessType && b.OwnerId == userId,
+                cancellationToken))
+            {
+                return Result<CreateBusinessResult>.Failure(
+                    new Error("Business.DuplicateListing",
+                        "You already have a business of this type at the specified place."),
+                    Outcome.Conflict);
             }
 
             var activeCount = await businessRepository.CountAsync(

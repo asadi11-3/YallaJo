@@ -118,7 +118,7 @@ public sealed class BlogMarkFeaturedCommandHandlerTests
             CancellationToken.None);
 
         result.Outcome.Should().Be(Outcome.Conflict);
-        result.Errors[0].Code.Should().Be("Blog.InvalidTransition");
+        result.Errors[0].Code.Should().Be("Blog.InvalidTransitionToFeatured");
         var reloaded = await db.Blogs.AsNoTracking().FirstAsync(b => b.Id == blog.Id);
         reloaded.IsFeatured.Should().BeFalse();
     }
@@ -138,7 +138,7 @@ public sealed class BlogMarkFeaturedCommandHandlerTests
             CancellationToken.None);
 
         result.Outcome.Should().Be(Outcome.Conflict);
-        result.Errors[0].Code.Should().Be("Blog.InvalidTransition");
+        result.Errors[0].Code.Should().Be("Blog.InvalidTransitionToFeatured");
     }
 
     [Fact]
@@ -146,7 +146,7 @@ public sealed class BlogMarkFeaturedCommandHandlerTests
     {
         await using var db = NewDb();
         var blog = NewPublishedBlog("already-featured");
-        blog.MarkAsFeatured(DateTime.UtcNow);
+        blog.Feature(Guid.Empty, DateTime.UtcNow);
         db.Blogs.Add(blog);
         await db.SaveChangesAsync();
 
@@ -156,7 +156,7 @@ public sealed class BlogMarkFeaturedCommandHandlerTests
             CancellationToken.None);
 
         result.Outcome.Should().Be(Outcome.Conflict);
-        result.Errors[0].Code.Should().Be("Blog.InvalidTransition");
+        result.Errors[0].Code.Should().Be("Blog.AlreadyFeatured");
     }
 
     [Fact]
@@ -168,7 +168,7 @@ public sealed class BlogMarkFeaturedCommandHandlerTests
         var placeId = Guid.NewGuid();
 
         var alreadyFeatured = NewPublishedBlog("already", placeId);
-        alreadyFeatured.MarkAsFeatured(DateTime.UtcNow);
+        alreadyFeatured.Feature(Guid.Empty, DateTime.UtcNow);
         var candidate = NewPublishedBlog("candidate", placeId);
 
         db.Blogs.AddRange(alreadyFeatured, candidate);
@@ -198,7 +198,7 @@ public sealed class BlogMarkFeaturedCommandHandlerTests
         var placeB = Guid.NewGuid();
 
         var aFeatured = NewPublishedBlog("a-featured", placeA);
-        aFeatured.MarkAsFeatured(DateTime.UtcNow);
+        aFeatured.Feature(Guid.Empty, DateTime.UtcNow);
         var bCandidate = NewPublishedBlog("b-candidate", placeB);
 
         db.Blogs.AddRange(aFeatured, bCandidate);
@@ -296,7 +296,7 @@ public sealed class BlogMarkFeaturedCommandHandlerTests
     {
         await using var db = NewDb();
         var blog = NewPublishedBlog("hierarchy-unfeature");
-        blog.MarkAsFeatured(DateTime.UtcNow);
+        blog.Feature(Guid.Empty, DateTime.UtcNow);
         db.Blogs.Add(blog);
         await db.SaveChangesAsync();
 
@@ -314,7 +314,7 @@ public sealed class BlogMarkFeaturedCommandHandlerTests
     {
         await using var db = NewDb();
         var blog = NewPublishedBlog("noleak-unfeature");
-        blog.MarkAsFeatured(DateTime.UtcNow);
+        blog.Feature(Guid.Empty, DateTime.UtcNow);
         db.Blogs.Add(blog);
         await db.SaveChangesAsync();
         SetRowVersion(blog, [0x10]);
@@ -333,7 +333,7 @@ public sealed class BlogMarkFeaturedCommandHandlerTests
     {
         await using var db = NewDb();
         var blog = NewPublishedBlog("rv-unfeature");
-        blog.MarkAsFeatured(DateTime.UtcNow);
+        blog.Feature(Guid.Empty, DateTime.UtcNow);
         db.Blogs.Add(blog);
         await db.SaveChangesAsync();
         SetRowVersion(blog, [0x11]);
@@ -361,7 +361,7 @@ public sealed class BlogMarkFeaturedCommandHandlerTests
             CancellationToken.None);
 
         result.Outcome.Should().Be(Outcome.Conflict);
-        result.Errors[0].Code.Should().Be("Blog.InvalidTransition");
+        result.Errors[0].Code.Should().Be("Blog.NotFeatured");
     }
 
     [Fact]
@@ -371,7 +371,7 @@ public sealed class BlogMarkFeaturedCommandHandlerTests
         // blog has been Archived after being Featured.
         await using var db = NewDb();
         var blog = NewPublishedBlog("featured-then-archived");
-        blog.MarkAsFeatured(DateTime.UtcNow);
+        blog.Feature(Guid.Empty, DateTime.UtcNow);
         blog.Archive(DateTime.UtcNow.AddMinutes(1));
         db.Blogs.Add(blog);
         await db.SaveChangesAsync();
@@ -393,7 +393,7 @@ public sealed class BlogMarkFeaturedCommandHandlerTests
     {
         await using var db = NewDb();
         var blog = NewPublishedBlog("unfeature-valid");
-        blog.MarkAsFeatured(DateTime.UtcNow);
+        blog.Feature(Guid.Empty, DateTime.UtcNow);
         db.Blogs.Add(blog);
         await db.SaveChangesAsync();
 
@@ -412,7 +412,7 @@ public sealed class BlogMarkFeaturedCommandHandlerTests
     {
         await using var db = NewDb();
         var blog = NewPublishedBlog("cache-unfeature");
-        blog.MarkAsFeatured(DateTime.UtcNow);
+        blog.Feature(Guid.Empty, DateTime.UtcNow);
         db.Blogs.Add(blog);
         await db.SaveChangesAsync();
 

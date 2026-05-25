@@ -46,6 +46,8 @@ public static class IntegrationEventTypeRegistry
         ["content-core.category.restored.v1"]          = typeof(CategoryRestoredIntegrationEvent),
         ["content-core.entity-category.assigned.v1"]   = typeof(EntityCategoryAssignedIntegrationEvent),
         ["content-core.entity-category.removed.v1"]    = typeof(EntityCategoryRemovedIntegrationEvent),
+        ["content-core.entity-tag.assigned.v1"]        = typeof(EntityTagAssignedIntegrationEvent),
+        ["content-core.entity-tag.removed.v1"]         = typeof(EntityTagRemovedIntegrationEvent),
 
         // ── ContentPlaces — Places (3 events) ──
         ["content-places.place.created.v1"]              = typeof(PlaceCreatedIntegrationEvent),
@@ -54,8 +56,10 @@ public static class IntegrationEventTypeRegistry
 
         // ── ContentPlaces — Businesses (6 events) ──
         ["content-places.business.created.v1"]           = typeof(BusinessCreatedIntegrationEvent),
-        ["content-places.business.updated.v1"]           = typeof(BusinessUpdatedIntegrationEvent),
-        ["content-places.business.deleted.v1"]           = typeof(BusinessDeletedIntegrationEvent),
+        ["content-places.business.updated.v1"]           = typeof(BusinessUpdatedIntegrationEvent),
+
+        ["content-places.business.deleted.v1"]           = typeof(BusinessDeletedIntegrationEvent),
+
         ["content-places.business.approved.v1"]          = typeof(BusinessApprovedIntegrationEvent),
         ["content-places.business.rejected.v1"]          = typeof(BusinessRejectedIntegrationEvent),
         ["content-places.business.suspended.v1"]         = typeof(BusinessSuspendedIntegrationEvent),
@@ -102,8 +106,11 @@ public static class IntegrationEventTypeRegistry
         ["content-blogs.blog.archived.v1"]      = typeof(BlogArchivedIntegrationEvent),
         ["content-blogs.blog-tour.linked.v1"]   = typeof(BlogTourLinkedIntegrationEvent),
         ["content-blogs.blog-tour.unlinked.v1"] = typeof(BlogTourUnlinkedIntegrationEvent),
-        ["content-blogs.blog.featured.v1"]      = typeof(BlogFeaturedIntegrationEvent),
-        ["content-blogs.blog.unfeatured.v1"]    = typeof(BlogUnfeaturedIntegrationEvent),
+        ["content-blogs.blog.featured.v1"]           = typeof(BlogFeaturedIntegrationEvent),
+        ["content-blogs.blog.unfeatured.v1"]         = typeof(BlogUnfeaturedIntegrationEvent),
+        ["content-blogs.blog.submitted-for-review.v1"] = typeof(BlogSubmittedForReviewIntegrationEvent),
+        ["content-blogs.blog.rejected.v1"]           = typeof(BlogRejectedIntegrationEvent),
+        ["content-blogs.blog.removed.v1"]            = typeof(BlogRemovedIntegrationEvent),
 
         // ── ContentBlogs — Creators (9 events) ──
         ["creators.application.submitted.v1"]           = typeof(CreatorApplicationSubmittedIntegrationEvent),
@@ -116,12 +123,7 @@ public static class IntegrationEventTypeRegistry
         ["creators.invitation.redeemed.v1"]             = typeof(CreatorInvitationRedeemedIntegrationEvent),
         ["creators.follow.added.v1"]                    = typeof(CreatorFollowAddedIntegrationEvent),
 
-        // ── ContentBlogs — Creator Posts & Tiers (8 events) ──
-        ["creators.post.submitted-for-review.v1"]       = typeof(CreatorPostSubmittedForReviewIntegrationEvent),
-        ["creators.post.published.v1"]                   = typeof(CreatorPostPublishedIntegrationEvent),
-        ["creators.post.rejected.v1"]                    = typeof(CreatorPostRejectedIntegrationEvent),
-        ["creators.post.removed.v1"]                     = typeof(CreatorPostRemovedIntegrationEvent),
-        ["creators.post.featured.v1"]                    = typeof(CreatorPostFeaturedIntegrationEvent),
+        // ── ContentBlogs — Creator Tiers (3 events) — Creator Posts merged into Blog ──
         ["creators.tier.promoted.v1"]                    = typeof(CreatorTierPromotedIntegrationEvent),
         ["creators.tier.demoted.v1"]                     = typeof(CreatorTierDemotedIntegrationEvent),
         ["creators.eligible-for-tier-promotion.v1"]      = typeof(CreatorEligibleForTierPromotionIntegrationEvent),
@@ -159,8 +161,6 @@ public static class IntegrationEventTypeRegistry
         ["finance.commission-rule.upserted.v1"]         = typeof(CommissionRuleUpsertedIntegrationEvent),
         ["finance.commission-rule.deleted.v1"]          = typeof(CommissionRuleDeletedIntegrationEvent),
         ["finance.dispute.opened.v1"]                   = typeof(DisputeOpenedIntegrationEvent),
-        ["finance.subscription.activated.v1"]           = typeof(SubscriptionActivatedIntegrationEvent),
-        ["finance.subscription.cancelled.v1"]           = typeof(SubscriptionCancelledIntegrationEvent),
 
         // ── Social (6 events) ──
         ["social.review.published.v1"]                  = typeof(ReviewPublishedIntegrationEvent),
@@ -182,6 +182,9 @@ public static class IntegrationEventTypeRegistry
         ["accounts.provider.suspended.v1"]              = typeof(ProviderSuspendedIntegrationEvent),
         ["accounts.provider.reinstated.v1"]             = typeof(ProviderReinstatedIntegrationEvent),
         ["accounts.provider.status-changed.v1"]         = typeof(ProviderStatusChangedIntegrationEvent),
+        ["accounts.agency.guide-affiliated.v1"]          = typeof(AgencyGuideAffiliatedIntegrationEvent),
+        ["accounts.agency.affiliation-created.v1"]       = typeof(AgencyAffiliationCreatedIntegrationEvent),
+        ["accounts.agency.affiliation-terminated.v1"]    = typeof(AgencyAffiliationTerminatedIntegrationEvent),
 
         // ── Messaging (6 events) ──────────────────────────────────────────────
         ["messaging.notification.delivered.v1"]         = typeof(NotificationDeliveredIntegrationEvent),

@@ -1,4 +1,4 @@
-using ContentBlogs.Contracts.IntegrationEvents.Creators;
+using ContentBlogs.Contracts.IntegrationEvents;
 using MediatR;
 using Messaging.Application.Interfaces;
 using Messaging.Domain.Entities;
@@ -11,7 +11,7 @@ using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 namespace Messaging.Infrastructure.EventHandlers;
 
 /// <summary>
-/// Notifies a creator when their post has been featured.
+/// Notifies an author when their blog has been featured.
 /// InApp: always. Email: opt-in (default off).
 /// </summary>
 public sealed class CreatorPostFeaturedNotificationHandler(
@@ -19,59 +19,56 @@ public sealed class CreatorPostFeaturedNotificationHandler(
     IMessagingUnitOfWork unitOfWork,
     IMessagingInboxStore inboxStore,
     ILogger<CreatorPostFeaturedNotificationHandler> logger)
-    : INotificationHandler<IntegrationEventNotification<CreatorPostFeaturedIntegrationEvent>>
+    : INotificationHandler<IntegrationEventNotification<BlogFeaturedIntegrationEvent>>
 {
-    private const string Title = "Your Post Has Been Featured!";
+    private const string Title = "Your Blog Has Been Featured!";
 
     public async Task Handle(
-        IntegrationEventNotification<CreatorPostFeaturedIntegrationEvent> notification,
+        IntegrationEventNotification<BlogFeaturedIntegrationEvent> notification,
         CancellationToken ct)
     {
         if (await inboxStore.HasBeenProcessedAsync(notification.MessageId, ct))
         {
             logger.LogDebug(
-                "Messaging: Message {MessageId} (CreatorPostFeatured {PostId}) already processed; skipping.",
-                notification.MessageId, notification.Event.PostId);
+                "Messaging: Message {MessageId} (BlogFeatured {BlogId}) already processed; skipping.",
+                notification.MessageId, notification.Event.BlogId);
             return;
         }
 
         var evt = notification.Event;
-        var untilNote = evt.FeaturedUntilUtc.HasValue
-            ? $" until {evt.FeaturedUntilUtc.Value:yyyy-MM-dd}"
-            : "";
-        var body = $"Congratulations! Your creator post has been featured on YallaJo{untilNote}. It will receive extra visibility across the platform.";
+        var body = $"Congratulations! Your blog has been featured on YallaJo. It will receive extra visibility across the platform.";
 
         // ── InApp — always ──────────────────────────────────────────────────
         dbContext.Notifications.Add(Notification.Create(
-            userId:     evt.CreatorProfileId,
+            userId:     evt.AuthorId,
             type:       NotificationType.Business,
             channel:    NotificationChannel.InApp,
             priority:   NotificationPriority.High,
             title:      Title,
             body:       body,
-            entityType: "CreatorPost",
-            entityId:   evt.PostId));
+            entityType: "Blog",
+            entityId:   evt.BlogId));
 
         // ── Email — opt-in (default off) ────────────────────────────────────
-        if (await IsChannelEnabledAsync(evt.CreatorProfileId, NotificationType.Business, NotificationChannel.Email, false, ct))
+        if (await IsChannelEnabledAsync(evt.AuthorId, NotificationType.Business, NotificationChannel.Email, false, ct))
         {
             dbContext.Notifications.Add(Notification.Create(
-                userId:     evt.CreatorProfileId,
+                userId:     evt.AuthorId,
                 type:       NotificationType.Business,
                 channel:    NotificationChannel.Email,
                 priority:   NotificationPriority.High,
                 title:      Title,
                 body:       body,
-                entityType: "CreatorPost",
-                entityId:   evt.PostId));
+                entityType: "Blog",
+                entityId:   evt.BlogId));
         }
 
         inboxStore.MarkAsProcessed(notification.MessageId);
         await unitOfWork.SaveChangesAsync(ct);
 
         logger.LogInformation(
-            "Messaging: notifications queued for CreatorPostFeatured PostId={PostId}",
-            evt.PostId);
+            "Messaging: notifications queued for BlogFeatured BlogId={BlogId}",
+            evt.BlogId);
     }
 
     private async Task<bool> IsChannelEnabledAsync(

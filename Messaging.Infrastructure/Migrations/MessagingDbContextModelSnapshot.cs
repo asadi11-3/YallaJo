@@ -65,89 +65,6 @@ namespace Messaging.Infrastructure.Migrations
                     b.ToTable("AdminAssignmentRosters", "messaging");
                 });
 
-            modelBuilder.Entity("Messaging.Domain.Entities.ChatBotConversation", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsActive")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(true);
-
-                    b.Property<bool>("IsDeleted")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
-
-                    b.Property<DateTime?>("LastMessageAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .IsRequired()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("rowversion");
-
-                    b.Property<string>("Title")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId", "IsActive");
-
-                    b.ToTable("ChatBotConversations", "messaging");
-                });
-
-            modelBuilder.Entity("Messaging.Domain.Entities.ChatBotMessage", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<decimal?>("Confidence")
-                        .HasPrecision(5, 4)
-                        .HasColumnType("decimal(5,4)");
-
-                    b.Property<Guid>("ConversationId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Intent")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<bool>("IsFromBot")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Message")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ConversationId");
-
-                    b.ToTable("ChatBotMessages", "messaging");
-                });
-
             modelBuilder.Entity("Messaging.Domain.Entities.DeviceToken", b =>
                 {
                     b.Property<Guid>("Id")
@@ -659,17 +576,6 @@ namespace Messaging.Infrastructure.Migrations
                     b.ToTable("OutboxMessages", "messaging");
                 });
 
-            modelBuilder.Entity("Messaging.Domain.Entities.ChatBotMessage", b =>
-                {
-                    b.HasOne("Messaging.Domain.Entities.ChatBotConversation", "ChatBotConversation")
-                        .WithMany("ChatBotMessages")
-                        .HasForeignKey("ConversationId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("ChatBotConversation");
-                });
-
             modelBuilder.Entity("Messaging.Domain.Entities.TicketMessage", b =>
                 {
                     b.HasOne("Messaging.Domain.Entities.SupportTicket", "SupportTicket")
@@ -679,11 +585,6 @@ namespace Messaging.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("SupportTicket");
-                });
-
-            modelBuilder.Entity("Messaging.Domain.Entities.ChatBotConversation", b =>
-                {
-                    b.Navigation("ChatBotMessages");
                 });
 
             modelBuilder.Entity("Messaging.Domain.Entities.SupportTicket", b =>

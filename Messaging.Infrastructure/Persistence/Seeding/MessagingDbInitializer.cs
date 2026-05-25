@@ -18,9 +18,7 @@ public sealed class MessagingDbInitializer(MessagingDbContext dbContext) : IModu
     private static readonly Guid DeviceTokenId   = Guid.Parse("d1d1d1d1-0000-0000-0000-000000000006");
     private static readonly Guid TicketId        = Guid.Parse("d1d1d1d1-0000-0000-0000-000000000007");
     private static readonly Guid TicketMessageId = Guid.Parse("d1d1d1d1-0000-0000-0000-000000000008");
-    private static readonly Guid ConversationId  = Guid.Parse("d1d1d1d1-0000-0000-0000-000000000009");
-    private static readonly Guid UserMessageId   = Guid.Parse("d1d1d1d1-0000-0000-0000-000000000010");
-    private static readonly Guid BotMessageId    = Guid.Parse("d1d1d1d1-0000-0000-0000-000000000011");
+    // Deferred post-MVP: ConversationId, UserMessageId, BotMessageId (ChatBot)
 
     public int Order => 120;
 
@@ -37,17 +35,13 @@ public sealed class MessagingDbInitializer(MessagingDbContext dbContext) : IModu
         var tokens         = CreateDeviceTokens();
         var tickets        = CreateSupportTickets();
         var ticketMessages = CreateTicketMessages();
-        var conversations  = CreateConversations();
-        var chatMessages   = CreateChatMessages();
-
         dbContext.NotificationTemplates.AddRange(templates);
         dbContext.NotificationPreferences.AddRange(preferences);
         dbContext.Notifications.AddRange(notifications);
         dbContext.DeviceTokens.AddRange(tokens);
         dbContext.SupportTickets.AddRange(tickets);
         dbContext.TicketMessages.AddRange(ticketMessages);
-        dbContext.ChatBotConversations.AddRange(conversations);
-        dbContext.ChatBotMessages.AddRange(chatMessages);
+        // Deferred post-MVP: ChatBotConversations, ChatBotMessages
 
         await dbContext.SaveChangesAsync(cancellationToken);
     }
@@ -152,39 +146,6 @@ public sealed class MessagingDbInitializer(MessagingDbContext dbContext) : IModu
         return [message];
     }
 
-    // ── ChatBot (Phase 4 stubs) ───────────────────────────────────────────────
-
-    private static List<ChatBotConversation> CreateConversations()
-    {
-        var conversation = CreateEntity<ChatBotConversation>();
-        SetProperty(conversation, nameof(ChatBotConversation.Id),            ConversationId);
-        SetProperty(conversation, nameof(ChatBotConversation.UserId),        TravelerTwo);
-        SetProperty(conversation, nameof(ChatBotConversation.Title),         "Petra packing checklist");
-        SetProperty(conversation, nameof(ChatBotConversation.IsActive),      true);
-        SetProperty(conversation, nameof(ChatBotConversation.LastMessageAt), DateTime.UtcNow.AddMinutes(-10));
-        return [conversation];
-    }
-
-    private static List<ChatBotMessage> CreateChatMessages()
-    {
-        var user = CreateEntity<ChatBotMessage>();
-        SetProperty(user, nameof(ChatBotMessage.Id), UserMessageId);
-        SetProperty(user, nameof(ChatBotMessage.ConversationId), ConversationId);
-        SetProperty(user, nameof(ChatBotMessage.IsFromBot), false);
-        SetProperty(user, nameof(ChatBotMessage.Message), "What should I bring for a summer Petra tour?");
-        SetProperty<decimal?>(user, nameof(ChatBotMessage.Confidence), null);
-        SetProperty(user, nameof(ChatBotMessage.Intent), "packing_advice");
-
-        var bot = CreateEntity<ChatBotMessage>();
-        SetProperty(bot, nameof(ChatBotMessage.Id), BotMessageId);
-        SetProperty(bot, nameof(ChatBotMessage.ConversationId), ConversationId);
-        SetProperty(bot, nameof(ChatBotMessage.IsFromBot), true);
-        SetProperty(bot, nameof(ChatBotMessage.Message), "Bring water, sunscreen, a hat, and sturdy shoes. Start early to avoid heat.");
-        SetProperty(bot, nameof(ChatBotMessage.Confidence), 0.9625m);
-        SetProperty(bot, nameof(ChatBotMessage.Intent), "packing_advice");
-
-        return [user, bot];
-    }
 
     private static TEntity CreateEntity<TEntity>() where TEntity : class
     {

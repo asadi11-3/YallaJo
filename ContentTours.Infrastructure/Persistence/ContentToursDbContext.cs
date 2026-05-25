@@ -24,6 +24,11 @@ public sealed class ContentToursDbContext : DbContext, IDbContext
     public DbSet<TourPackageTour> TourPackageTours => Set<TourPackageTour>();
     public DbSet<TourPackageInclusion> TourPackageInclusions => Set<TourPackageInclusion>();
     public DbSet<TourChildFacility> TourChildFacilities => Set<TourChildFacility>();
+    public DbSet<GuideTourOffering> GuideTourOfferings => Set<GuideTourOffering>();
+    public DbSet<GuideApplication> GuideApplications => Set<GuideApplication>();
+    public DbSet<TourProposal> TourProposals => Set<TourProposal>();
+    public DbSet<GuideSchedule> GuideSchedules => Set<GuideSchedule>();
+    public DbSet<GuidePricingTier> GuidePricingTiers => Set<GuidePricingTier>();
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
     public DbSet<InboxMessage> InboxMessages => Set<InboxMessage>();
 

@@ -19,6 +19,7 @@ public sealed class ProviderApplication : AuditableEntity, IAggregateRoot
             [ProviderType.HotelResort]      = [DocumentType.BusinessLicense, DocumentType.TaxRegistration, DocumentType.ProofOfOwnership, DocumentType.HealthAndSafety, DocumentType.FireSafety],
             [ProviderType.ActivityCenter]   = [DocumentType.BusinessLicense, DocumentType.TaxRegistration, DocumentType.RelevantCertification, DocumentType.LiabilityInsurance, DocumentType.FireSafety],
             [ProviderType.Agency]           = [DocumentType.BusinessLicense, DocumentType.TaxRegistration, DocumentType.TourismAuthorityLicense, DocumentType.AffiliatedGuidesList, DocumentType.InsuranceCertificate],
+            [ProviderType.BusinessOwner]    = [DocumentType.BusinessLicense, DocumentType.TaxRegistration, DocumentType.HealthAndSafety],
         };
 
     private const int MaxReapplications = 3;

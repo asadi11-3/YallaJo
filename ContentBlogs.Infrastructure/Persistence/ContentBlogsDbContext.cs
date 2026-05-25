@@ -24,7 +24,7 @@ public sealed class ContentBlogsDbContext : DbContext, IDbContext
     public DbSet<CreatorInvitation> CreatorInvitations => Set<CreatorInvitation>();
     public DbSet<CreatorFollow> CreatorFollows => Set<CreatorFollow>();
     public DbSet<CreatorNiche> CreatorNiches => Set<CreatorNiche>();
-    public DbSet<CreatorPost> CreatorPosts => Set<CreatorPost>();
+    // CreatorPost removed — merged into Blog entity (BlogCreatorPost-Merger plan)
 
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
     public DbSet<InboxMessage> InboxMessages => Set<InboxMessage>();

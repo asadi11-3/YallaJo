@@ -17,9 +17,7 @@ public static class ContentBlogsEndpoints
         BlogEndpoints.MapBlogEndpoints(group);
         BlogCommentEndpoints.MapBlogCommentEndpoints(group);
         CreatorEndpoints.MapCreatorEndpoints(group);
-        CreatorPostEndpoints.MapCreatorPostEndpoints(group);
         AdminCreatorEndpoints.MapAdminCreatorEndpoints(group);
-        AdminPostEndpoints.MapAdminPostEndpoints(group);
 
         return endpoints;
     }

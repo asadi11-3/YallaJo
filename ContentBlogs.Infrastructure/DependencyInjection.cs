@@ -55,7 +55,7 @@ public static class DependencyInjection
         services.AddScoped<ICreatorInvitationRepository, CreatorInvitationRepository>();
         services.AddScoped<ICreatorFollowRepository, CreatorFollowRepository>();
         services.AddScoped<ICreatorNicheRepository, CreatorNicheRepository>();
-        services.AddScoped<ICreatorPostRepository, CreatorPostRepository>();
+        // ICreatorPostRepository removed — CreatorPost merged into Blog (BlogCreatorPost-Merger plan)
 
         services.AddSingleton<IPermissionCatalog, ContentBlogsPermissionCatalog>();
 
@@ -85,6 +85,8 @@ public static class DependencyInjection
         services.AddHostedService<CreatorInvitationCleanupService>();
         services.AddHostedService<CreatorTierPromotionService>();
         services.AddHostedService<CreatorStatsRollupService>();
+        services.AddHostedService<BlogCleanupService>();
+        services.AddHostedService<ProfileCleanupService>();
 
         return services;
     }

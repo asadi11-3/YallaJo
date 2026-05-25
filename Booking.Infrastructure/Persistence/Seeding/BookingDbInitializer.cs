@@ -33,16 +33,12 @@ public sealed class BookingDbInitializer(BookingDbContext dbContext) : IModuleDb
         var guideSpecializations = CreateGuideSpecializations();
         var slots = CreateAvailabilitySlots();
         var bookings = CreateTourBookings();
-        var reservations = CreateReservations();
-        var packageBookings = CreatePackageBookings();
-
         dbContext.TourGuides.AddRange(tourGuides);
         dbContext.TourGuideLanguages.AddRange(guideLanguages);
         dbContext.TourGuideSpecializations.AddRange(guideSpecializations);
         dbContext.AvailabilitySlots.AddRange(slots);
         dbContext.TourBookings.AddRange(bookings);
-        dbContext.Reservations.AddRange(reservations);
-        dbContext.PackageBookings.AddRange(packageBookings);
+        // Deferred post-MVP: Reservations, PackageBookings
 
         await dbContext.SaveChangesAsync(cancellationToken);
     }
@@ -190,35 +186,6 @@ public sealed class BookingDbInitializer(BookingDbContext dbContext) : IModuleDb
         return [first, second];
     }
 
-    private static List<Reservation> CreateReservations()
-    {
-        var reservation = CreateEntity<Reservation>();
-        SetProperty(reservation, nameof(Reservation.Id), SeedBookingIds.ReservationOne);
-        SetProperty(reservation, nameof(Reservation.UserId), TravelerTwo);
-        SetProperty(reservation, nameof(Reservation.BusinessId), SeedContentIds.BusinessPetraGuides);
-        SetProperty(reservation, nameof(Reservation.AvailabilitySlotId), SlotTwoId);
-        SetProperty(reservation, nameof(Reservation.ReservationDate), DateOnly.FromDateTime(DateTime.UtcNow.AddDays(5)));
-        SetProperty(reservation, nameof(Reservation.ReservationTime), new TimeOnly(18, 0));
-        SetProperty(reservation, nameof(Reservation.PartySize), 3);
-        SetProperty(reservation, nameof(Reservation.TotalPrice), 60m);
-        SetProperty(reservation, nameof(Reservation.TotalPriceCurrency), "JOD");
-        SetProperty(reservation, nameof(Reservation.Currency), "JOD");
-        SetProperty(reservation, nameof(Reservation.Status), BookingStatus.Confirmed);
-        return [reservation];
-    }
-
-    private static List<PackageBooking> CreatePackageBookings()
-    {
-        var packageBooking = CreateEntity<PackageBooking>();
-        SetProperty(packageBooking, nameof(PackageBooking.UserId), TravelerOne);
-        SetProperty(packageBooking, nameof(PackageBooking.TourPackageId), SeedContentIds.TourPackageEssentials);
-        SetProperty(packageBooking, nameof(PackageBooking.BookingDate), DateOnly.FromDateTime(DateTime.UtcNow.AddDays(10)));
-        SetProperty(packageBooking, nameof(PackageBooking.ParticipantCount), 2);
-        SetProperty(packageBooking, nameof(PackageBooking.TotalPrice), new Money(190m, "JOD"));
-        SetProperty(packageBooking, nameof(PackageBooking.Currency), "JOD");
-        SetProperty(packageBooking, nameof(PackageBooking.Status), BookingStatus.Pending);
-        return [packageBooking];
-    }
 
     private static TEntity CreateEntity<TEntity>() where TEntity : class
     {

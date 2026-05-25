@@ -1,6 +1,9 @@
 using ContentTours.Application.Commands.TourGuides.AddLanguage;
 using ContentTours.Application.Commands.TourGuides.AddSpecialization;
+using ContentTours.Application.Commands.TourGuides.DeactivateGuide;
 using ContentTours.Application.Commands.TourGuides.RemoveLanguage;
+using ContentTours.Application.Commands.TourGuides.UpdateAvatar;
+using ContentTours.Application.Commands.TourGuides.UpdateCoverImage;
 using ContentTours.Application.Commands.TourGuides.UpdateProfile;
 using ContentTours.Application.Queries.TourGuides.Common;
 using ContentTours.Application.Queries.TourGuides.GetById;
@@ -140,6 +143,75 @@ internal static class TourGuideProfileEndpoints
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status409Conflict)
         .WithMetadata(new MustHavePermissionAttribute(ContentToursFeatures.TourGuide, AppAction.Update))
+        .RequireAuthorization();
+
+        // GET /guides/me — guide views own profile
+        group.MapGet("/me", async (
+            ISender sender,
+            ICurrentUser currentUser,
+            CancellationToken ct) =>
+        {
+            var result = await sender.Send(new GetTourGuideByIdQuery(currentUser.UserId!.Value), ct);
+            return result.ToApiResult();
+        })
+        .WithName("GetMyTourGuideProfile")
+        .WithSummary("Get own tour guide profile")
+        .Produces<TourGuideProfileDto>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .WithMetadata(new MustHavePermissionAttribute(ContentToursFeatures.TourGuideProfile, AppAction.Read))
+        .RequireAuthorization();
+
+        // PUT /guides/me/avatar — guide updates own avatar
+        group.MapPut("/me/avatar", async (
+            UpdateGuideAvatarRequest request,
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            var cmd = new UpdateGuideAvatarCommand(request.AvatarUrl);
+            var result = await sender.Send(cmd, ct);
+            return result.ToApiResult();
+        })
+        .WithName("UpdateGuideAvatar")
+        .WithSummary("Update own tour guide avatar")
+        .Produces(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .WithMetadata(new MustHavePermissionAttribute(ContentToursFeatures.TourGuideProfile, AppAction.Update))
+        .RequireAuthorization();
+
+        // PUT /guides/me/cover-image — guide updates own cover image
+        group.MapPut("/me/cover-image", async (
+            UpdateGuideCoverImageRequest request,
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            var cmd = new UpdateGuideCoverImageCommand(request.CoverImageUrl);
+            var result = await sender.Send(cmd, ct);
+            return result.ToApiResult();
+        })
+        .WithName("UpdateGuideCoverImage")
+        .WithSummary("Update own tour guide cover image")
+        .Produces(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .WithMetadata(new MustHavePermissionAttribute(ContentToursFeatures.TourGuideProfile, AppAction.Update))
+        .RequireAuthorization();
+
+        // DELETE /guides/me — guide self-deactivates
+        group.MapDelete("/me", async (
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            var cmd = new DeactivateTourGuideCommand();
+            var result = await sender.Send(cmd, ct);
+            return result.ToApiResult();
+        })
+        .WithName("DeactivateTourGuide")
+        .WithSummary("Self-deactivate own tour guide account")
+        .Produces(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .WithMetadata(new MustHavePermissionAttribute(ContentToursFeatures.TourGuideProfile, AppAction.Delete))
         .RequireAuthorization();
     }
 }

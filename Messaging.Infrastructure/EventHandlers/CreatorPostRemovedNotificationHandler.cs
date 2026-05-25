@@ -1,4 +1,4 @@
-using ContentBlogs.Contracts.IntegrationEvents.Creators;
+using ContentBlogs.Contracts.IntegrationEvents;
 using MediatR;
 using Messaging.Application.Interfaces;
 using Messaging.Domain.Entities;
@@ -11,7 +11,7 @@ using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 namespace Messaging.Infrastructure.EventHandlers;
 
 /// <summary>
-/// Notifies a creator when their post has been removed by an admin.
+/// Notifies a creator/author when their blog has been removed by an admin.
 /// InApp: always. Email: opt-in (default off).
 /// </summary>
 public sealed class CreatorPostRemovedNotificationHandler(
@@ -19,20 +19,20 @@ public sealed class CreatorPostRemovedNotificationHandler(
     IMessagingUnitOfWork unitOfWork,
     IMessagingInboxStore inboxStore,
     ILogger<CreatorPostRemovedNotificationHandler> logger)
-    : INotificationHandler<IntegrationEventNotification<CreatorPostRemovedIntegrationEvent>>
+    : INotificationHandler<IntegrationEventNotification<BlogRemovedIntegrationEvent>>
 {
-    private const string Title = "Creator Post Removed";
-    private const string Body  = "Your creator post has been removed by a moderator. If you believe this was in error, please contact support.";
+    private const string Title = "Blog Removed";
+    private const string Body  = "Your blog has been removed by a moderator. If you believe this was in error, please contact support.";
 
     public async Task Handle(
-        IntegrationEventNotification<CreatorPostRemovedIntegrationEvent> notification,
+        IntegrationEventNotification<BlogRemovedIntegrationEvent> notification,
         CancellationToken ct)
     {
         if (await inboxStore.HasBeenProcessedAsync(notification.MessageId, ct))
         {
             logger.LogDebug(
-                "Messaging: Message {MessageId} (CreatorPostRemoved {PostId}) already processed; skipping.",
-                notification.MessageId, notification.Event.PostId);
+                "Messaging: Message {MessageId} (BlogRemoved {BlogId}) already processed; skipping.",
+                notification.MessageId, notification.Event.BlogId);
             return;
         }
 
@@ -40,35 +40,35 @@ public sealed class CreatorPostRemovedNotificationHandler(
 
         // ── InApp — always ──────────────────────────────────────────────────
         dbContext.Notifications.Add(Notification.Create(
-            userId:     evt.CreatorProfileId,
+            userId:     evt.AuthorId,
             type:       NotificationType.Business,
             channel:    NotificationChannel.InApp,
             priority:   NotificationPriority.High,
             title:      Title,
             body:       Body,
-            entityType: "CreatorPost",
-            entityId:   evt.PostId));
+            entityType: "Blog",
+            entityId:   evt.BlogId));
 
         // ── Email — opt-in (default off) ────────────────────────────────────
-        if (await IsChannelEnabledAsync(evt.CreatorProfileId, NotificationType.Business, NotificationChannel.Email, false, ct))
+        if (await IsChannelEnabledAsync(evt.AuthorId, NotificationType.Business, NotificationChannel.Email, false, ct))
         {
             dbContext.Notifications.Add(Notification.Create(
-                userId:     evt.CreatorProfileId,
+                userId:     evt.AuthorId,
                 type:       NotificationType.Business,
                 channel:    NotificationChannel.Email,
                 priority:   NotificationPriority.High,
                 title:      Title,
                 body:       Body,
-                entityType: "CreatorPost",
-                entityId:   evt.PostId));
+                entityType: "Blog",
+                entityId:   evt.BlogId));
         }
 
         inboxStore.MarkAsProcessed(notification.MessageId);
         await unitOfWork.SaveChangesAsync(ct);
 
         logger.LogInformation(
-            "Messaging: notifications queued for CreatorPostRemoved PostId={PostId}",
-            evt.PostId);
+            "Messaging: notifications queued for BlogRemoved BlogId={BlogId}",
+            evt.BlogId);
     }
 
     private async Task<bool> IsChannelEnabledAsync(

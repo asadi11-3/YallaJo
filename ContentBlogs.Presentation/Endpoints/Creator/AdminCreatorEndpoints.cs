@@ -1,3 +1,5 @@
+using ContentBlogs.Application.Commands.Creator.AdminDelete;
+using ContentBlogs.Application.Commands.Creator.AdminUpdate;
 using ContentBlogs.Application.Commands.Creator.ApproveApplication;
 using ContentBlogs.Application.Commands.Creator.ReinstateProfile;
 using ContentBlogs.Application.Commands.Creator.RejectApplication;
@@ -5,6 +7,7 @@ using ContentBlogs.Application.Commands.Creator.RequestMoreInfo;
 using ContentBlogs.Application.Commands.Creator.SendInvitation;
 using ContentBlogs.Application.Commands.Creator.SuspendProfile;
 using ContentBlogs.Application.Queries.Creator.AdminGetApplication;
+using ContentBlogs.Application.Queries.Creator.AdminGetProfile;
 using ContentBlogs.Application.Queries.Creator.AdminListApplications;
 using ContentBlogs.Application.Queries.Creator.Dtos;
 using ContentBlogs.Contracts.Authorization;
@@ -175,7 +178,7 @@ internal static class AdminCreatorEndpoints
             ISender sender,
             CancellationToken ct) =>
         {
-            var cmd = new Application.Commands.Creator.Posts.PromoteTier.PromoteCreatorTierCommand(
+            var cmd = new Application.Commands.Creator.PromoteTier.PromoteCreatorTierCommand(
                 profileId, request.TargetTier);
             var result = await sender.Send(cmd, ct);
             return result.ToApiResult();
@@ -196,7 +199,7 @@ internal static class AdminCreatorEndpoints
             ISender sender,
             CancellationToken ct) =>
         {
-            var cmd = new Application.Commands.Creator.Posts.DemoteTier.DemoteCreatorTierCommand(
+            var cmd = new Application.Commands.Creator.DemoteTier.DemoteCreatorTierCommand(
                 profileId, request.TargetTier, request.Reason);
             var result = await sender.Send(cmd, ct);
             return result.ToApiResult();
@@ -210,6 +213,63 @@ internal static class AdminCreatorEndpoints
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status422UnprocessableEntity)
         .WithMetadata(new MustHavePermissionAttribute(ContentBlogsFeatures.AdminCreatorQueue, AppAction.DemoteTier));
+
+        // ── GET /api/v1/blogs/admin/creators/profiles/{id} ───────────────
+        group.MapGet("/profiles/{id:guid}", async (
+            Guid id,
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            var result = await sender.Send(new AdminGetCreatorProfileQuery(id), ct);
+            return result.ToApiResult();
+        })
+        .WithName("AdminGetCreatorProfile")
+        .WithSummary("Admin — get full creator profile detail")
+        .Produces<ContentBlogs.Application.Queries.Creator.Dtos.CreatorProfileDto>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .WithMetadata(new MustHavePermissionAttribute(ContentBlogsFeatures.AdminCreatorQueue, AppAction.Read));
+
+        // ── PUT /api/v1/blogs/admin/creators/profiles/{id} ───────────────
+        group.MapPut("/profiles/{id:guid}", async (
+            Guid id,
+            AdminUpdateCreatorProfileRequest request,
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            var cmd = new AdminUpdateCreatorProfileCommand(id, request.DisplayName, request.Bio, request.AvatarUrl, request.CoverImageUrl, request.Slug);
+            var result = await sender.Send(cmd, ct);
+            return result.ToApiResult();
+        })
+        .WithName("AdminUpdateCreatorProfile")
+        .WithSummary("Admin — edit any creator profile fields")
+        .Produces(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .WithMetadata(new MustHavePermissionAttribute(ContentBlogsFeatures.AdminCreatorQueue, AppAction.Update));
+
+        // ── DELETE /api/v1/blogs/admin/creators/profiles/{id} ────────────
+        group.MapDelete("/profiles/{id:guid}", async (
+            Guid id,
+            AdminDeleteCreatorProfileRequest request,
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            var cmd = new AdminDeleteCreatorProfileCommand(id, request.Reason);
+            var result = await sender.Send(cmd, ct);
+            return result.ToApiResult();
+        })
+        .WithName("AdminDeleteCreatorProfile")
+        .WithSummary("Admin — soft-delete a creator profile (60-day hard delete)")
+        .Produces(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .WithMetadata(new MustHavePermissionAttribute(ContentBlogsFeatures.AdminCreatorQueue, AppAction.Delete));
 
         // ── POST /api/v1/blogs/admin/creators/invitations ────────────────
         group.MapPost("/invitations", async (

@@ -55,13 +55,11 @@ public sealed class MarkBlogAsUnfeaturedCommandHandler(
                     Outcome.Conflict);
             }
 
-            try
+            // TODO: Phase 4 replaces this handler entirely with UnfeatureBlogCommandHandler
+            var unfeatureResult = blog.Unfeature(DateTime.UtcNow);
+            if (!unfeatureResult.IsSuccess)
             {
-                blog.MarkAsUnfeatured(DateTime.UtcNow);
-            }
-            catch (InvalidOperationException ex)
-            {
-                return MapDomainGuardFailure(ex);
+                return unfeatureResult;
             }
 
             try

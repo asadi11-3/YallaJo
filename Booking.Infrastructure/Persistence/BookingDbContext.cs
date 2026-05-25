@@ -17,8 +17,7 @@ public sealed class BookingDbContext : DbContext, IDbContext
     public DbSet<TourGuideSpecialization> TourGuideSpecializations => Set<TourGuideSpecialization>();
     public DbSet<AvailabilitySlot> AvailabilitySlots => Set<AvailabilitySlot>();
     public DbSet<TourBooking> TourBookings => Set<TourBooking>();
-    public DbSet<PackageBooking> PackageBookings => Set<PackageBooking>();
-    public DbSet<Reservation> Reservations => Set<Reservation>();
+    // Deferred post-MVP: PackageBooking, Reservation (business reservation future)
     public DbSet<JoinRequest> JoinRequests => Set<JoinRequest>();
     public DbSet<SlotLock> SlotLocks => Set<SlotLock>();
     public DbSet<RefundPolicy> RefundPolicies => Set<RefundPolicy>();

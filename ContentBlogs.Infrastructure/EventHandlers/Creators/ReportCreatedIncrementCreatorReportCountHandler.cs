@@ -10,8 +10,8 @@ using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 namespace ContentBlogs.Infrastructure.EventHandlers.Creators;
 
 /// <summary>
-/// Consumes <c>social.report.submitted.v1</c>. If the reported entity is a <c>CreatorPost</c> or
-/// a <c>Blog</c> authored by a creator, atomically increments <c>CreatorProfile.ReportCount</c>.
+/// Consumes <c>social.report.submitted.v1</c>. If the reported entity is a
+/// <c>Blog</c> authored by a creator, atomically increments <c>CreatorProfile.ReportCount</c>.
 /// </summary>
 public sealed class ReportCreatedIncrementCreatorReportCountHandler(
     ContentBlogsDbContext dbContext,
@@ -21,7 +21,6 @@ public sealed class ReportCreatedIncrementCreatorReportCountHandler(
     ILogger<ReportCreatedIncrementCreatorReportCountHandler> logger)
     : INotificationHandler<IntegrationEventNotification<ReportSubmittedIntegrationEvent>>
 {
-    private const string EntityTypeCreatorPost = "CreatorPost";
     private const string EntityTypeBlog = "Blog";
 
     public async Task Handle(
@@ -38,14 +37,9 @@ public sealed class ReportCreatedIncrementCreatorReportCountHandler(
 
         var evt = notification.Event;
 
-        // Resolve the creator profile ID from the reported entity
+        // Resolve the creator profile ID from the reported entity (Blog only — CreatorPost merged into Blog)
         Guid? creatorProfileId = evt.EntityType switch
         {
-            EntityTypeCreatorPost => await dbContext.CreatorPosts
-                .Where(p => p.Id == evt.EntityId && !p.IsDeleted)
-                .Select(p => (Guid?)p.CreatorProfileId)
-                .FirstOrDefaultAsync(ct),
-
             EntityTypeBlog => await dbContext.Blogs
                 .Where(b => b.Id == evt.EntityId && !b.IsDeleted && b.AuthoredByCreatorId != null)
                 .Select(b => b.AuthoredByCreatorId)

@@ -105,4 +105,19 @@ internal sealed class BusinessRepository(ContentPlacesDbContext context)
 
         return results;
     }
+
+    public async Task<IReadOnlyList<Business>> GetByOwnerIdAsync(
+        Guid ownerUserId,
+        int page,
+        int pageSize,
+        CancellationToken ct = default)
+    {
+        return await context.Set<Business>()
+            .Where(b => b.OwnerId == ownerUserId)
+            .OrderByDescending(b => b.CreatedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .AsNoTracking()
+            .ToListAsync(ct);
+    }
 }

@@ -22,7 +22,6 @@ public sealed class Blog : AuditableEntity, IAggregateRoot
     public string? Summary { get; private set; }
     public Guid AuthorId { get; private set; }
     public BlogStatus Status { get; private set; } = BlogStatus.Draft;
-    public bool IsFeatured { get; private set; }
     public int ViewCount { get; private set; }
     public int? ReadTimeMinutes { get; private set; }
     public string? MetaTitle { get; private set; }
@@ -31,7 +30,7 @@ public sealed class Blog : AuditableEntity, IAggregateRoot
     public Guid? PlaceId { get; private set; }
 
     /// <summary>
-    /// Non-null when the article was authored by a content creator (Wave 7).
+    /// Non-null when the article was authored by a content creator.
     /// References <c>CreatorProfile.Id</c> in the Creators sub-domain.
     /// </summary>
     public Guid? AuthoredByCreatorId { get; private set; }
@@ -42,15 +41,39 @@ public sealed class Blog : AuditableEntity, IAggregateRoot
     public Guid LanguageId { get; private set; }
 
     /// <summary>
-    /// Whether this article is sponsored content (Wave 8 – Disclosure enforcement).
+    /// Whether this article is sponsored content (Disclosure enforcement).
     /// </summary>
     public bool IsSponsored { get; private set; }
 
     /// <summary>
-    /// Transparency disclosures for entities referenced in this article (Wave 8).
+    /// Transparency disclosures for entities referenced in this article.
     /// </summary>
     private readonly List<ValueObjects.DisclosureTarget> _disclosedTargets = [];
     public IReadOnlyList<ValueObjects.DisclosureTarget> DisclosedTargets => _disclosedTargets.AsReadOnly();
+
+    // ── Moderation fields ──────────────────────────────────────────────
+
+    public DateTime? SubmittedAt { get; private set; }
+    public DateTime? ReviewedAt { get; private set; }
+    public Guid? ReviewedByAdminId { get; private set; }
+    public string? RejectionReason { get; private set; }
+
+    // ── Time-bound featuring (replaces IsFeatured bool) ────────────────
+
+    public DateTime? FeaturedAt { get; private set; }
+    public Guid? FeaturedByAdminId { get; private set; }
+    public DateTime? FeaturedUntil { get; private set; }
+
+    /// <summary>
+    /// Computed: featured when FeaturedAt is set and not yet expired.
+    /// </summary>
+    public bool IsFeatured => FeaturedAt.HasValue && (FeaturedUntil == null || FeaturedUntil > DateTime.UtcNow);
+
+    // ── Denormalized counters ─────────────────────────────────────────
+
+    public int ReactionCount { get; private set; }
+    public int CommentCount { get; private set; }
+    public int ReportCount { get; private set; }
 
     public IReadOnlyCollection<BlogTranslation> BlogTranslations => _blogTranslations.AsReadOnly();
     public IReadOnlyCollection<BlogComment> BlogComments => _blogComments.AsReadOnly();
@@ -95,11 +118,13 @@ public sealed class Blog : AuditableEntity, IAggregateRoot
             PlaceId = placeId,
             ReadTimeMinutes = readTimeMinutes,
             ViewCount = 0,
-            IsFeatured = false,
             LanguageId = sourceLanguageId,
         };
 
         blog.CreatedAt = utcNow;
+        blog.ReactionCount = 0;
+        blog.CommentCount = 0;
+        blog.ReportCount = 0;
 
         blog.AddDomainEvent(new BlogCreatedDomainEvent(
             BlogId: blog.Id,
@@ -146,27 +171,175 @@ public sealed class Blog : AuditableEntity, IAggregateRoot
     }
 
     /// <summary>
-    /// Creator submits the draft article for admin review.
-    /// Transitions: Draft → PendingCreatorReview.
+    /// Creator submits the draft (or rejected) article for admin review.
+    /// Transitions: Draft|Rejected → PendingReview.
     /// </summary>
-    public Result SubmitForCreatorReview(DateTime utcNow)
+    public Result SubmitForReview(DateTime utcNow)
     {
         if (IsDeleted)
             return Result.Failure(BlogErrors.AlreadyDeleted);
 
-        if (Status != BlogStatus.Draft)
+        if (Status is not BlogStatus.Draft and not BlogStatus.Rejected)
             return Result.Failure(BlogErrors.InvalidTransitionToReview);
 
         if (AuthoredByCreatorId is null)
             return Result.Failure(BlogErrors.NotCreatorAuthored);
 
-        Status = BlogStatus.PendingCreatorReview;
+        Status = BlogStatus.PendingReview;
+        SubmittedAt = utcNow;
         MarkUpdated();
 
-        AddDomainEvent(new BlogSubmittedForCreatorReviewDomainEvent(
+        AddDomainEvent(new BlogSubmittedForReviewDomainEvent(
             BlogId: Id,
+            Slug: Slug,
             CreatorProfileId: AuthoredByCreatorId.Value,
             SubmittedAtUtc: utcNow));
+
+        return Result.Success();
+    }
+
+    /// <summary>
+    /// Admin approves a pending blog. Publishes it.
+    /// Transitions: PendingReview → Published.
+    /// </summary>
+    public Result Approve(Guid adminId, DateTime utcNow)
+    {
+        if (IsDeleted)
+            return Result.Failure(BlogErrors.AlreadyDeleted);
+
+        if (Status != BlogStatus.PendingReview)
+            return Result.Failure(BlogErrors.InvalidTransitionToApproved);
+
+        Status = BlogStatus.Published;
+        PublishedAt ??= utcNow;
+        ReviewedAt = utcNow;
+        ReviewedByAdminId = adminId;
+        RejectionReason = null;
+        MarkUpdated();
+
+        AddDomainEvent(new BlogApprovedDomainEvent(
+            BlogId: Id,
+            Slug: Slug,
+            ApprovedByAdminId: adminId,
+            AuthoredByCreatorId: AuthoredByCreatorId,
+            ApprovedAtUtc: utcNow));
+
+        AddDomainEvent(new BlogPublishedDomainEvent(
+            BlogId: Id,
+            Slug: Slug,
+            Title: Title,
+            AuthorId: AuthorId,
+            PlaceId: PlaceId,
+            PublishedAtUtc: PublishedAt.Value));
+
+        return Result.Success();
+    }
+
+    /// <summary>
+    /// Admin rejects a pending blog with a reason.
+    /// Transitions: PendingReview → Rejected.
+    /// </summary>
+    public Result Reject(Guid adminId, string reason, DateTime utcNow)
+    {
+        if (IsDeleted)
+            return Result.Failure(BlogErrors.AlreadyDeleted);
+
+        if (Status != BlogStatus.PendingReview)
+            return Result.Failure(BlogErrors.InvalidTransitionToRejected);
+
+        Status = BlogStatus.Rejected;
+        ReviewedAt = utcNow;
+        ReviewedByAdminId = adminId;
+        RejectionReason = reason;
+        MarkUpdated();
+
+        AddDomainEvent(new BlogRejectedDomainEvent(
+            BlogId: Id,
+            Slug: Slug,
+            RejectedByAdminId: adminId,
+            Reason: reason,
+            AuthoredByCreatorId: AuthoredByCreatorId,
+            RejectedAtUtc: utcNow));
+
+        return Result.Success();
+    }
+
+    /// <summary>
+    /// Admin removes a blog for moderation reasons.
+    /// Transitions: any non-deleted → Removed.
+    /// </summary>
+    public Result Remove(Guid adminId, string reason, DateTime utcNow)
+    {
+        if (IsDeleted)
+            return Result.Failure(BlogErrors.AlreadyDeleted);
+
+        if (Status == BlogStatus.Removed)
+            return Result.Failure(BlogErrors.InvalidTransitionToRemoved);
+
+        Status = BlogStatus.Removed;
+        MarkUpdated();
+
+        AddDomainEvent(new BlogRemovedDomainEvent(
+            BlogId: Id,
+            Slug: Slug,
+            RemovedByAdminId: adminId,
+            Reason: reason,
+            RemovedAtUtc: utcNow));
+
+        return Result.Success();
+    }
+
+    /// <summary>
+    /// Admin features a published blog with an optional expiry.
+    /// </summary>
+    public Result Feature(Guid adminId, DateTime utcNow, DateTime? until = null)
+    {
+        if (IsDeleted)
+            return Result.Failure(BlogErrors.AlreadyDeleted);
+
+        if (Status != BlogStatus.Published)
+            return Result.Failure(BlogErrors.InvalidTransitionToFeatured);
+
+        if (IsFeatured)
+            return Result.Failure(BlogErrors.AlreadyFeatured);
+
+        FeaturedAt = utcNow;
+        FeaturedByAdminId = adminId;
+        FeaturedUntil = until;
+        MarkUpdated();
+
+        AddDomainEvent(new BlogFeaturedDomainEvent(
+            BlogId: Id,
+            Slug: Slug,
+            Title: Title,
+            AuthorId: AuthorId,
+            PlaceId: PlaceId,
+            FeaturedAtUtc: utcNow));
+
+        return Result.Success();
+    }
+
+    /// <summary>
+    /// Admin removes the featured status from a blog.
+    /// </summary>
+    public Result Unfeature(DateTime utcNow)
+    {
+        if (IsDeleted)
+            return Result.Failure(BlogErrors.AlreadyDeleted);
+
+        if (!IsFeatured)
+            return Result.Failure(BlogErrors.NotFeatured);
+
+        FeaturedAt = null;
+        FeaturedByAdminId = null;
+        FeaturedUntil = null;
+        MarkUpdated();
+
+        AddDomainEvent(new BlogUnfeaturedDomainEvent(
+            BlogId: Id,
+            Slug: Slug,
+            PlaceId: PlaceId,
+            UnfeaturedAtUtc: utcNow));
 
         return Result.Success();
     }
@@ -287,14 +460,18 @@ public sealed class Blog : AuditableEntity, IAggregateRoot
         }
     }
 
+    /// <summary>
+    /// Admin/Tier-1+ direct publish. Skips PendingReview.
+    /// Valid from: Draft, Rejected.
+    /// </summary>
     public void Publish(DateTime utcNow)
     {
         EnsureNotDeleted();
 
-        if (Status != BlogStatus.Draft && Status != BlogStatus.PendingCreatorReview)
+        if (Status is not BlogStatus.Draft and not BlogStatus.Rejected)
         {
             throw new InvalidOperationException(
-                $"Blog.InvalidTransition: cannot publish a blog with status {Status}. Required: Draft or PendingCreatorReview.");
+                $"Blog.InvalidTransition: cannot publish a blog with status {Status}. Required: Draft or Rejected.");
         }
 
         Status = BlogStatus.Published;
@@ -333,10 +510,10 @@ public sealed class Blog : AuditableEntity, IAggregateRoot
     {
         EnsureNotDeleted();
 
-        if (Status != BlogStatus.Published)
+        if (Status is BlogStatus.Archived or BlogStatus.Removed)
         {
             throw new InvalidOperationException(
-               $"Blog.InvalidTransition: cannot archive a blog with status {Status}. Required: Published.");
+               $"Blog.InvalidTransition: cannot archive a blog with status {Status}.");
         }
 
         Status = BlogStatus.Archived;
@@ -444,53 +621,30 @@ public sealed class Blog : AuditableEntity, IAggregateRoot
             UnlinkedAtUtc: utcNow));
     }
 
-    public void MarkAsFeatured(DateTime utcNow)
-    {
-        EnsureNotDeleted();
+    /// <summary>
+    /// Counter increment: called by event handler on comment creation.
+    /// </summary>
+    public void IncrementCommentCount() => CommentCount++;
 
-        if (Status != BlogStatus.Published)
-        {
-            throw new InvalidOperationException(
-                $"Blog.InvalidTransition: cannot feature a blog with status {Status}. Required: Published.");
-        }
+    /// <summary>
+    /// Counter decrement: called by event handler on comment deletion.
+    /// </summary>
+    public void DecrementCommentCount() => CommentCount = Math.Max(0, CommentCount - 1);
 
-        if (IsFeatured)
-        {
-            throw new InvalidOperationException(
-                "Blog.InvalidTransition: blog is already featured.");
-        }
+    /// <summary>
+    /// Counter increment: called by event handler on reaction.
+    /// </summary>
+    public void IncrementReactionCount() => ReactionCount++;
 
-        IsFeatured = true;
-        UpdatedAt = utcNow;
+    /// <summary>
+    /// Counter decrement: called by event handler on reaction removal.
+    /// </summary>
+    public void DecrementReactionCount() => ReactionCount = Math.Max(0, ReactionCount - 1);
 
-        AddDomainEvent(new BlogFeaturedDomainEvent(
-            BlogId:        Id,
-            Slug:          Slug,
-            Title:         Title,
-            AuthorId:      AuthorId,
-            PlaceId:       PlaceId,
-            FeaturedAtUtc: utcNow));
-    }
-
-    public void MarkAsUnfeatured(DateTime utcNow)
-    {
-        EnsureNotDeleted();
-
-        if (!IsFeatured)
-        {
-            throw new InvalidOperationException(
-                "Blog.InvalidTransition: blog is not currently featured.");
-        }
-
-        IsFeatured = false;
-        UpdatedAt = utcNow;
-
-        AddDomainEvent(new BlogUnfeaturedDomainEvent(
-            BlogId:          Id,
-            Slug:            Slug,
-            PlaceId:         PlaceId,
-            UnfeaturedAtUtc: utcNow));
-    }
+    /// <summary>
+    /// Counter increment: called by event handler on report.
+    /// </summary>
+    public void IncrementReportCount() => ReportCount++;
 
     public void Restore(DateTime utcNow)
     {
@@ -542,11 +696,10 @@ public sealed class Blog : AuditableEntity, IAggregateRoot
 
     private void EnsureMutable()
     {
-        if (Status == BlogStatus.Archived)
+        if (Status is BlogStatus.Archived or BlogStatus.Removed)
         {
             throw new InvalidOperationException(
-               "Blog.ArchivedReadOnly: archived blogs cannot be modified. " +
-               "Allowed statuses: Draft, Published.");
+               $"Blog.ReadOnly: blogs with status {Status} cannot be modified.");
         }
     }
 

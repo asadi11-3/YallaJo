@@ -22,7 +22,6 @@ public sealed class ReportResolvedDecrementCreatorReportCountHandler(
     ILogger<ReportResolvedDecrementCreatorReportCountHandler> logger)
     : INotificationHandler<IntegrationEventNotification<ReportResolvedIntegrationEvent>>
 {
-    private const string EntityTypeCreatorPost = "CreatorPost";
     private const string EntityTypeBlog = "Blog";
     private const string ActionDismiss = "Dismiss";
 
@@ -53,14 +52,9 @@ public sealed class ReportResolvedDecrementCreatorReportCountHandler(
             return;
         }
 
-        // Resolve the creator profile ID from the reported entity
+        // Resolve the creator profile ID from the reported entity (Blog only — CreatorPost merged into Blog)
         Guid? creatorProfileId = evt.EntityType switch
         {
-            EntityTypeCreatorPost => await dbContext.CreatorPosts
-                .Where(p => p.Id == evt.EntityId && !p.IsDeleted)
-                .Select(p => (Guid?)p.CreatorProfileId)
-                .FirstOrDefaultAsync(ct),
-
             EntityTypeBlog => await dbContext.Blogs
                 .Where(b => b.Id == evt.EntityId && !b.IsDeleted && b.AuthoredByCreatorId != null)
                 .Select(b => b.AuthoredByCreatorId)

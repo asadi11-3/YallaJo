@@ -1,5 +1,6 @@
 using ContentCore.Application.Authorization;
 using ContentCore.Application.Commands.EntityTag.AssignTagsToEntity;
+using ContentCore.Application.Interfaces;
 using ContentCore.Domain.Entities;
 using ContentCore.Domain.Enums;
 using ContentCore.Domain.Repositories;
@@ -22,6 +23,7 @@ public sealed class AssignTagsToEntityCommandHandlerTests
         IEntityTagRepository? entityTagRepository = null,
         ITagRepository? tagRepository = null,
         IContentCoreUnitOfWork? unitOfWork = null,
+        IContentCoreOutboxWriter? outboxWriter = null,
         Microsoft.Extensions.Caching.Hybrid.HybridCache? cache = null,
         IOwnershipGuard? ownershipGuard = null)
     {
@@ -29,6 +31,7 @@ public sealed class AssignTagsToEntityCommandHandlerTests
             entityTagRepository ?? Substitute.For<IEntityTagRepository>(),
             tagRepository ?? Substitute.For<ITagRepository>(),
             unitOfWork ?? OwnershipAuthFixture.NoOpUnitOfWork(),
+            outboxWriter ?? Substitute.For<IContentCoreOutboxWriter>(),
             cache ?? OwnershipAuthFixture.NoOpCache(),
             ownershipGuard ?? OwnershipAuthFixture.GuardAllowing(),
             Substitute.For<ILogger<AssignTagsToEntityCommandHandler>>());

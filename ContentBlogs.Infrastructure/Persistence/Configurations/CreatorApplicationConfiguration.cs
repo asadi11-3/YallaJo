@@ -1,6 +1,9 @@
+using System.Text.Json;
 using ContentBlogs.Domain.Entities.Creators;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace ContentBlogs.Infrastructure.Persistence.Configurations;
 
@@ -53,9 +56,19 @@ public class CreatorApplicationConfiguration : IEntityTypeConfiguration<CreatorA
             .IsRequired(false)
             .HasColumnType("nvarchar(max)");
 
+        var socialHandlesConverter = new ValueConverter<Dictionary<string, string>, string>(
+            v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
+            v => JsonSerializer.Deserialize<Dictionary<string, string>>(v, (JsonSerializerOptions?)null) ?? new Dictionary<string, string>());
+
+        var socialHandlesComparer = new ValueComparer<Dictionary<string, string>>(
+            (c1, c2) => JsonSerializer.Serialize(c1, (JsonSerializerOptions?)null) == JsonSerializer.Serialize(c2, (JsonSerializerOptions?)null),
+            c => JsonSerializer.Serialize(c, (JsonSerializerOptions?)null).GetHashCode(),
+            c => JsonSerializer.Deserialize<Dictionary<string, string>>(JsonSerializer.Serialize(c, (JsonSerializerOptions?)null), (JsonSerializerOptions?)null)!);
+
         builder.Property(x => x.SocialHandles)
             .IsRequired(false)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("nvarchar(max)")
+            .HasConversion(socialHandlesConverter, socialHandlesComparer);
 
         builder.Property(x => x.ReviewedByAdminId).IsRequired(false);
         builder.Property(x => x.ReviewedAt).IsRequired(false);

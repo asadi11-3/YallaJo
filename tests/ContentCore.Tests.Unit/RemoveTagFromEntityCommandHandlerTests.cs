@@ -1,5 +1,6 @@
 using ContentCore.Application.Authorization;
 using ContentCore.Application.Commands.EntityTag.RemoveTagFromEntity;
+using ContentCore.Application.Interfaces;
 using ContentCore.Domain.Entities;
 using ContentCore.Domain.Enums;
 using ContentCore.Domain.Repositories;
@@ -21,12 +22,14 @@ public sealed class RemoveTagFromEntityCommandHandlerTests
     private static RemoveTagFromEntityCommandHandler BuildHandler(
         IEntityTagRepository? entityTagRepository = null,
         IContentCoreUnitOfWork? unitOfWork = null,
+        IContentCoreOutboxWriter? outboxWriter = null,
         Microsoft.Extensions.Caching.Hybrid.HybridCache? cache = null,
         IOwnershipGuard? ownershipGuard = null)
     {
         return new RemoveTagFromEntityCommandHandler(
             entityTagRepository ?? Substitute.For<IEntityTagRepository>(),
             unitOfWork ?? OwnershipAuthFixture.NoOpUnitOfWork(),
+            outboxWriter ?? Substitute.For<IContentCoreOutboxWriter>(),
             cache ?? OwnershipAuthFixture.NoOpCache(),
             ownershipGuard ?? OwnershipAuthFixture.GuardAllowing(),
             Substitute.For<ILogger<RemoveTagFromEntityCommandHandler>>());

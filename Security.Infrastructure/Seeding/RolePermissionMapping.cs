@@ -31,6 +31,21 @@ public sealed class RolePermissionMapping
                 _all.Where(p => !IsOwnerOnly(p) && !IsSuperAdminOnly(p))
                     .Select(p => p.Name).ToList(),
 
+            AppRoles.Provider =>
+                _all.Where(p => (p.Group == PermissionGroup.ContentManagement
+                                 && p.Action is AppAction.Read or AppAction.Create
+                                     or AppAction.Update or AppAction.Delete)
+                             || (p.Feature == SecurityFeatures.User && p.Action == AppAction.UpdateSelf)
+                             || p.IsGuestAccessible)
+                    .Select(p => p.Name).ToList(),
+
+            AppRoles.Creator =>
+                _all.Where(p => (p.Group == PermissionGroup.ContentManagement
+                                 && p.Action is AppAction.Read or AppAction.Create)
+                             || (p.Feature == SecurityFeatures.User && p.Action == AppAction.UpdateSelf)
+                             || p.IsGuestAccessible)
+                    .Select(p => p.Name).ToList(),
+
             AppRoles.User =>
                 _all.Where(p => (p.Feature == SecurityFeatures.User && p.Action == AppAction.UpdateSelf)
                              || p.IsGuestAccessible)

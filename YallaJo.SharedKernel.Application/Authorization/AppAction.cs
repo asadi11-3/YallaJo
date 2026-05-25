@@ -113,4 +113,7 @@ public static class AppAction
 
     /// <summary>ContentBlogs: admin unhides a hidden creator post.</summary>
     public const string UnhidePost = nameof(UnhidePost);
+
+    /// <summary>ContentBlogs: admin removes a blog from featured status.</summary>
+    public const string Unfeature = nameof(Unfeature);
 }

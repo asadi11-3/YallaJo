@@ -82,4 +82,12 @@ public static class ContentBlogsCacheKeys
     public static string MyCreatorPosts(Guid profileId) => $"creators:my-posts:{profileId}";
     public static string MyCreatorPostsTag(Guid profileId) => $"creators:my-posts:{profileId}:tag";
     public const string AdminPostsQueueTag = "admin:posts:queue:tag";
+
+    // ── Admin Blog Queue Cache Keys ──────────────────────────────────────
+    public static string AdminBlogQueue(int page, int size) => $"cb:admin:blog:queue:{page}:{size}";
+    public const string AdminBlogQueueTag = "admin:blog:queue:tag";
+
+    // ── My Blogs (author) Cache Keys ─────────────────────────────────────
+    public static string MyBlogs(Guid userId, int page, int size) => $"cb:my:blogs:{userId}:{page}:{size}";
+    public static string MyBlogsTag(Guid userId) => $"my:blogs:{userId}:tag";
 }

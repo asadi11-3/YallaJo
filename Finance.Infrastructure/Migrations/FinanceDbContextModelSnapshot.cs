@@ -458,94 +458,6 @@ namespace Finance.Infrastructure.Migrations
                     b.ToTable("Invoices", "finance");
                 });
 
-            modelBuilder.Entity("Finance.Domain.Entities.LoyaltyPoints", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("AvailablePoints")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasDefaultValue(0);
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsDeleted")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
-
-                    b.Property<int>("LifetimePoints")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasDefaultValue(0);
-
-                    b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .IsRequired()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("rowversion");
-
-                    b.Property<int>("TotalPoints")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasDefaultValue(0);
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId")
-                        .IsUnique();
-
-                    b.ToTable("LoyaltyPoints", "finance");
-                });
-
-            modelBuilder.Entity("Finance.Domain.Entities.LoyaltyTransaction", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<DateTime?>("ExpiresAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<Guid>("LoyaltyPointsId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("Points")
-                        .HasColumnType("int");
-
-                    b.Property<Guid?>("ReferenceId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("TransactionType")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("LoyaltyPointsId");
-
-                    b.ToTable("LoyaltyTransactions", "finance");
-                });
-
             modelBuilder.Entity("Finance.Domain.Entities.Payment", b =>
                 {
                     b.Property<Guid>("Id")
@@ -628,9 +540,6 @@ namespace Finance.Infrastructure.Migrations
 
                     b.Property<DateTime?>("RefundedAt")
                         .HasColumnType("datetime2");
-
-                    b.Property<Guid?>("ReservationId")
-                        .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("RetryCount")
                         .ValueGeneratedOnAdd()
@@ -861,25 +770,6 @@ namespace Finance.Infrastructure.Migrations
                     b.ToTable("PayoutItems", "finance");
                 });
 
-            modelBuilder.Entity("Finance.Domain.Entities.PlanFeature", b =>
-                {
-                    b.Property<Guid>("PlanId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("FeatureId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Value")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.HasKey("PlanId", "FeatureId");
-
-                    b.HasIndex("FeatureId");
-
-                    b.ToTable("PlanFeatures", "finance");
-                });
-
             modelBuilder.Entity("Finance.Domain.Entities.ProviderBankAccount", b =>
                 {
                     b.Property<Guid>("Id")
@@ -953,229 +843,6 @@ namespace Finance.Infrastructure.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("ProviderBankAccounts", "finance");
-                });
-
-            modelBuilder.Entity("Finance.Domain.Entities.Referral", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime?>("CompletedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Currency")
-                        .HasMaxLength(3)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(3)");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsDeleted")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
-
-                    b.Property<string>("ReferralCode")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(50)");
-
-                    b.Property<decimal?>("ReferredRewardAmount")
-                        .HasPrecision(19, 4)
-                        .HasColumnType("decimal(19,4)");
-
-                    b.Property<Guid?>("ReferredUserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("ReferrerUserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<decimal?>("RewardAmount")
-                        .HasPrecision(19, 4)
-                        .HasColumnType("decimal(19,4)");
-
-                    b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .IsRequired()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("rowversion");
-
-                    b.Property<byte>("Status")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("tinyint")
-                        .HasDefaultValue((byte)0);
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ReferralCode")
-                        .IsUnique();
-
-                    b.ToTable("Referrals", "finance");
-                });
-
-            modelBuilder.Entity("Finance.Domain.Entities.Subscription", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime?>("CancelledAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsDeleted")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
-
-                    b.Property<Guid>("PlanId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .IsRequired()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("rowversion");
-
-                    b.Property<int>("Status")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasDefaultValue(0);
-
-                    b.Property<DateTime?>("TrialEndsAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("PlanId");
-
-                    b.ToTable("Subscriptions", "finance");
-                });
-
-            modelBuilder.Entity("Finance.Domain.Entities.SubscriptionFeature", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Code")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(100)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<bool>("IsDeleted")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .IsRequired()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("rowversion");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("SubscriptionFeatures", "finance");
-                });
-
-            modelBuilder.Entity("Finance.Domain.Entities.SubscriptionPlan", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("BillingCycle")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Currency")
-                        .IsRequired()
-                        .HasMaxLength(3)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(3)");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
-
-                    b.Property<bool>("IsActive")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(true);
-
-                    b.Property<bool>("IsDeleted")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .IsRequired()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("rowversion");
-
-                    b.Property<int>("SortOrder")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasDefaultValue(0);
-
-                    b.Property<int>("TrialDays")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasDefaultValue(0);
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("SubscriptionPlans", "finance");
                 });
 
             modelBuilder.Entity("Finance.Infrastructure.Persistence.InvoiceNumberCounter", b =>
@@ -1658,17 +1325,6 @@ namespace Finance.Infrastructure.Migrations
                     b.Navigation("Items");
                 });
 
-            modelBuilder.Entity("Finance.Domain.Entities.LoyaltyTransaction", b =>
-                {
-                    b.HasOne("Finance.Domain.Entities.LoyaltyPoints", "LoyaltyPoints")
-                        .WithMany("Transactions")
-                        .HasForeignKey("LoyaltyPointsId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("LoyaltyPoints");
-                });
-
             modelBuilder.Entity("Finance.Domain.Entities.Payment", b =>
                 {
                     b.OwnsOne("YallaJo.SharedKernel.Domain.ValueObjects.Money", "Amount", b1 =>
@@ -2012,91 +1668,6 @@ namespace Finance.Infrastructure.Migrations
                     b.Navigation("Payout");
                 });
 
-            modelBuilder.Entity("Finance.Domain.Entities.PlanFeature", b =>
-                {
-                    b.HasOne("Finance.Domain.Entities.SubscriptionFeature", "SubscriptionFeature")
-                        .WithMany()
-                        .HasForeignKey("FeatureId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("Finance.Domain.Entities.SubscriptionPlan", "SubscriptionPlan")
-                        .WithMany("PlanFeatures")
-                        .HasForeignKey("PlanId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("SubscriptionFeature");
-
-                    b.Navigation("SubscriptionPlan");
-                });
-
-            modelBuilder.Entity("Finance.Domain.Entities.Subscription", b =>
-                {
-                    b.HasOne("Finance.Domain.Entities.SubscriptionPlan", "SubscriptionPlan")
-                        .WithMany("Subscriptions")
-                        .HasForeignKey("PlanId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.OwnsOne("YallaJo.SharedKernel.Domain.ValueObjects.DateRange", "ActivePeriod", b1 =>
-                        {
-                            b1.Property<Guid>("SubscriptionId")
-                                .HasColumnType("uniqueidentifier");
-
-                            b1.Property<DateTime>("End")
-                                .HasColumnType("datetime2")
-                                .HasColumnName("EndDate");
-
-                            b1.Property<DateTime>("Start")
-                                .HasColumnType("datetime2")
-                                .HasColumnName("StartDate");
-
-                            b1.HasKey("SubscriptionId");
-
-                            b1.ToTable("Subscriptions", "finance");
-
-                            b1.WithOwner()
-                                .HasForeignKey("SubscriptionId");
-                        });
-
-                    b.Navigation("ActivePeriod");
-
-                    b.Navigation("SubscriptionPlan");
-                });
-
-            modelBuilder.Entity("Finance.Domain.Entities.SubscriptionPlan", b =>
-                {
-                    b.OwnsOne("YallaJo.SharedKernel.Domain.ValueObjects.Money", "Price", b1 =>
-                        {
-                            b1.Property<Guid>("SubscriptionPlanId")
-                                .HasColumnType("uniqueidentifier");
-
-                            b1.Property<decimal>("Amount")
-                                .HasPrecision(19, 4)
-                                .HasColumnType("decimal(19,4)")
-                                .HasColumnName("Price");
-
-                            b1.Property<string>("Currency")
-                                .IsRequired()
-                                .ValueGeneratedOnAdd()
-                                .HasMaxLength(3)
-                                .HasColumnType("nvarchar(3)")
-                                .HasDefaultValue("JOD")
-                                .HasColumnName("PriceCurrency");
-
-                            b1.HasKey("SubscriptionPlanId");
-
-                            b1.ToTable("SubscriptionPlans", "finance");
-
-                            b1.WithOwner()
-                                .HasForeignKey("SubscriptionPlanId");
-                        });
-
-                    b.Navigation("Price")
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("Finance.Domain.Entities.Discount", b =>
                 {
                     b.Navigation("DiscountUsages");
@@ -2109,11 +1680,6 @@ namespace Finance.Infrastructure.Migrations
                     b.Navigation("Messages");
                 });
 
-            modelBuilder.Entity("Finance.Domain.Entities.LoyaltyPoints", b =>
-                {
-                    b.Navigation("Transactions");
-                });
-
             modelBuilder.Entity("Finance.Domain.Entities.Payment", b =>
                 {
                     b.Navigation("Disputes");
@@ -2122,13 +1688,6 @@ namespace Finance.Infrastructure.Migrations
             modelBuilder.Entity("Finance.Domain.Entities.Payout", b =>
                 {
                     b.Navigation("PayoutItems");
-                });
-
-            modelBuilder.Entity("Finance.Domain.Entities.SubscriptionPlan", b =>
-                {
-                    b.Navigation("PlanFeatures");
-
-                    b.Navigation("Subscriptions");
                 });
 #pragma warning restore 612, 618
         }
