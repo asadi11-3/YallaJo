@@ -21,4 +21,16 @@ public interface IAvailabilitySlotRepository : IRepository<AvailabilitySlot, Gui
 
     /// <summary>Lists slots owned by a specific tour guide.</summary>
     Task<IReadOnlyList<AvailabilitySlot>> GetByTourGuideIdAsync(Guid tourGuideId, CancellationToken ct = default);
+
+    /// <summary>
+    /// Returns existing slot dates for a given (TourGuideId, TourId) within a date range.
+    /// Used by SlotGenerationService to skip already-generated dates.
+    /// </summary>
+    Task<HashSet<DateOnly>> GetExistingSlotDatesAsync(Guid tourGuideId, Guid tourId, DateOnly fromDate, DateOnly toDate, CancellationToken ct = default);
+
+    /// <summary>
+    /// Returns inactive past slots with zero bookings, suitable for cleanup.
+    /// Used by SlotCleanupService.
+    /// </summary>
+    Task<IReadOnlyList<AvailabilitySlot>> GetInactivePastSlotsAsync(DateOnly before, int batchSize, CancellationToken ct = default);
 }

@@ -43,6 +43,7 @@ public static class DependencyInjection
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
         services.AddScoped<IOutboxProcessor, OutboxProcessor<MessagingDbContext>>();
         services.AddScoped<IOutboxCleaner, OutboxCleaner<MessagingDbContext>>();
+        services.AddSingleton(TimeProvider.System);
 
         // ── Repositories ──
         services.AddScoped<INotificationRepository, NotificationRepository>();
@@ -65,10 +66,19 @@ public static class DependencyInjection
 
         var emailSenderOptions = BindEmailSenderOptions(configuration);
         var cleanupOptions = BindReadNotificationCleanupOptions(configuration);
+        var slaOptions = BindSlaMonitoringOptions(configuration);
+        var digestOptions = BindNotificationDigestOptions(configuration);
         services.AddSingleton(Microsoft.Extensions.Options.Options.Create(emailSenderOptions));
         services.AddSingleton(Microsoft.Extensions.Options.Options.Create(cleanupOptions));
+        services.AddSingleton(Microsoft.Extensions.Options.Options.Create(slaOptions));
+        services.AddSingleton(Microsoft.Extensions.Options.Options.Create(digestOptions));
         services.AddHostedService<EmailNotificationSenderService>();
         services.AddHostedService<ReadNotificationCleanupService>();
+        services.AddHostedService<SlaMonitoringService>();
+        services.AddHostedService<NotificationDigestService>();
+
+        // ── SMS sender (no-op until real provider is configured) ──
+        services.AddScoped<ISmsSender, NoOpSmsSender>();
 
         // ── Permission catalog ──
         services.AddSingleton<IPermissionCatalog, MessagingPermissionCatalog>();
@@ -117,4 +127,28 @@ public static class DependencyInjection
     private static TEnum GetEnum<TEnum>(IConfiguration section, string key, TEnum fallback)
         where TEnum : struct
         => Enum.TryParse<TEnum>(section[key], ignoreCase: true, out var value) ? value : fallback;
+
+    private static SlaMonitoringOptions BindSlaMonitoringOptions(IConfiguration configuration)
+    {
+        var section = configuration.GetSection(SlaMonitoringOptions.SectionName);
+        return new SlaMonitoringOptions
+        {
+            Enabled = GetBool(section, nameof(SlaMonitoringOptions.Enabled), true),
+            Interval = GetTimeSpan(section, nameof(SlaMonitoringOptions.Interval), TimeSpan.FromMinutes(5)),
+            InitialDelay = GetTimeSpan(section, nameof(SlaMonitoringOptions.InitialDelay), TimeSpan.FromMinutes(3)),
+            BatchSize = GetInt(section, nameof(SlaMonitoringOptions.BatchSize), 100),
+        };
+    }
+
+    private static NotificationDigestOptions BindNotificationDigestOptions(IConfiguration configuration)
+    {
+        var section = configuration.GetSection(NotificationDigestOptions.SectionName);
+        return new NotificationDigestOptions
+        {
+            Enabled = GetBool(section, nameof(NotificationDigestOptions.Enabled), false),
+            Interval = GetTimeSpan(section, nameof(NotificationDigestOptions.Interval), TimeSpan.FromHours(1)),
+            InitialDelay = GetTimeSpan(section, nameof(NotificationDigestOptions.InitialDelay), TimeSpan.FromMinutes(10)),
+            BatchSize = GetInt(section, nameof(NotificationDigestOptions.BatchSize), 200),
+        };
+    }
 }

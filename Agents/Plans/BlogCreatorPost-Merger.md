@@ -1,7 +1,8 @@
 # Blog ← CreatorPost Merger Plan
 
-> **Status:** All 18 design decisions LOCKED. Ready for execution.
-> **Wave-8 impact:** Supersedes CreatorPost sections. Add note at top of Wave-8.md.
+> **Status:** ✅ EXECUTED. Merger substantially complete. See `BlogCreatorPost-Merger-Audit-Report.md` for audit score (8.5/10).
+> **Wave-8 impact:** Supersedes CreatorPost sections. CreatorPost entity, enum, handlers fully deleted.
+> **Post-audit cleanup (completed):** Removed duplicate MarkBlogAsFeatured/Unfeatured commands (superseded by Feature/Unfeature), cleared orphaned CreatorPost permissions/cache keys/validation errors, renamed Messaging handlers from CreatorPost* → Blog*.
 
 ## Decision Summary
 
@@ -440,3 +441,20 @@ public enum BlogStatus : byte
 5. **BlogStatus renumbering** — Current: `Draft=0, Published=1, Archived=2, PendingCreatorReview=99, Hidden=100`. New: `Draft=0, PendingReview=1, Published=2, Rejected=3, Archived=4, Hidden=5, Removed=6`. No prod data, but seed data and test data with old values will break.
 6. **IsFeatured removal** — All queries/DTOs referencing `IsFeatured` must switch to computed expression: `FeaturedAt != null && (FeaturedUntil == null || FeaturedUntil > DateTime.UtcNow)`.
 7. **60-day hard delete cascade** — ProfileCleanupService must handle: anonymize blogs (null out AuthoredByCreatorId), delete followers, revoke Creator role. BlogCleanupService must handle: delete comments, reactions, views, translations, blog-tour links.
+
+---
+
+## Implementation Notes (Audit 2025-01-27)
+
+> Added during codebase audit — reflects actual implementation state and post-audit cleanup.
+
+1. **Merger substantially complete**: Blog entity (727L) has all planned properties, methods, and domain events. CreatorPost entity/enum/handlers fully deleted. Migration `20260524233257_MergeCreatorPostIntoBlog` exists.
+2. **BlogStatus enum**: Exact match — Draft=0, PendingReview=1, Published=2, Rejected=3, Archived=4, Hidden=5, Removed=6.
+3. **IsFeatured**: Implemented as computed property: `FeaturedAt.HasValue && (FeaturedUntil == null || FeaturedUntil > DateTime.UtcNow)`.
+4. **Duplicate featuring removed (W4-D)**: `MarkBlogAsFeatured`/`MarkBlogAsUnfeatured` commands + PATCH endpoints deleted. Superseded by `FeatureBlogCommand`/`UnfeatureBlogCommand` (POST feature/unfeature).
+5. **CreatorPost permissions removed (W4-D)**: `ContentBlogsFeatures.CreatorPost` + `AdminPostModeration` constants removed. 12 permission entries removed from `ContentBlogsPermissionCatalog`.
+6. **CreatorPost cache keys removed (W4-D)**: 7 keys removed from `ContentBlogsCacheKeys`.
+7. **TypeValidationErrors.cs deleted (W4-D)**: 67-line file with 20+ CreatorPost error codes — 0 references, safely deleted.
+8. **Messaging handlers renamed (W4-D)**: 5 handlers renamed from `CreatorPost*NotificationHandler` → `Blog*NotificationHandler`. All consume correct `Blog*IntegrationEvent` types.
+9. **Integration events**: 29 total (14 Blog + 15 Creator). No CreatorPost events remain. Registry has "Creator Posts merged into Blog" comment.
+10. **Background services**: 5 exist — BlogCleanupService, ProfileCleanupService, CreatorTierPromotionService, CreatorStatsRollupService, InvitationCleanupService.

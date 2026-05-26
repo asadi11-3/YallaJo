@@ -33,6 +33,7 @@ public sealed class TourGuideConfiguration : IEntityTypeConfiguration<TourGuide>
         builder.Property(guide => guide.ReviewCount).IsRequired().HasDefaultValue(0);
         builder.Property(guide => guide.CompletedTourCount).IsRequired().HasDefaultValue(0);
         builder.Property(guide => guide.ReportCount).IsRequired().HasDefaultValue(0);
+        builder.Property(guide => guide.CommissionRate).IsRequired(false).HasPrecision(5, 4);
 
         // IsActive removed - use Status instead
         builder.Ignore("IsActive");

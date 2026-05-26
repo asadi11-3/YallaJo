@@ -19,29 +19,20 @@ internal sealed class NoOpWeatherProvider(
 {
     private readonly WeatherOptions options = options.Value;
 
-    public bool IsAvailable
-    {
-        get
-        {
-            // Provider is considered unavailable until both a non-"none" provider
-            // name and a non-empty API key are configured. Wave-6 will swap in a
-            // real provider that returns true when ready.
-            var hasProvider = !string.IsNullOrWhiteSpace(this.options.Provider)
-                && !string.Equals(this.options.Provider, "none", StringComparison.OrdinalIgnoreCase);
-            var hasKey = !string.IsNullOrWhiteSpace(this.options.ApiKey);
-            return hasProvider && hasKey;
-        }
-    }
+    public bool IsAvailable => false;
 
     public Task<WeatherSnapshot> FetchAsync(decimal latitude, decimal longitude, CancellationToken ct)
     {
         logger.LogWarning(
-            "NoOpWeatherProvider.FetchAsync called for ({Lat},{Lng}) — provider='{Provider}', hasKey={HasKey}. " +
-            "Real OpenWeatherMap implementation is Wave 6.",
+            "NoOpWeatherProvider.FetchAsync called for ({Lat},{Lng}) — provider='{Provider}', hasKey={HasKey}.",
             latitude,
             longitude,
             this.options.Provider,
             !string.IsNullOrWhiteSpace(this.options.ApiKey));
-        throw new InvalidOperationException("Weather provider is not configured. Real OpenWeatherMap implementation is Wave 6.");
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var daily = Enumerable.Range(0, 7)
+            .Select(offset => new DailyForecast(today.AddDays(offset), 0m, 0m, "Unavailable", string.Empty, 0))
+            .ToList();
+        return Task.FromResult(new WeatherSnapshot(0m, 0m, 0, 0m, 0, "Unavailable", string.Empty, null, daily));
     }
 }

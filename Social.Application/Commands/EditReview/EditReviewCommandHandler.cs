@@ -1,5 +1,7 @@
 using MediatR;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
+using Social.Application.Caching;
 using Social.Application.Interfaces;
 using Social.Domain.Enums;
 using Social.Domain.Repositories;
@@ -10,6 +12,7 @@ namespace Social.Application.Commands.EditReview;
 internal sealed class EditReviewCommandHandler(
     IReviewRepository reviewRepository,
     ISocialUnitOfWork unitOfWork,
+    HybridCache cache,
     TimeProvider timeProvider,
     ILogger<EditReviewCommandHandler> logger)
     : IRequestHandler<EditReviewCommand, Result>
@@ -41,6 +44,9 @@ internal sealed class EditReviewCommandHandler(
         }
 
         await unitOfWork.SaveChangesAsync(ct);
+        await cache.RemoveByTagAsync(SocialCacheKeys.ReviewsTag(review.TargetType, review.TargetId), ct).ConfigureAwait(false);
+        await cache.RemoveByTagAsync(SocialCacheKeys.UserReviewsTag(review.UserId), ct).ConfigureAwait(false);
+        await cache.RemoveByTagAsync(SocialCacheKeys.ReviewTag(command.ReviewId), ct).ConfigureAwait(false);
 
         logger.LogInformation("Review {ReviewId} edited by user {UserId}", command.ReviewId, command.CallerUserId);
         return Result.Success();

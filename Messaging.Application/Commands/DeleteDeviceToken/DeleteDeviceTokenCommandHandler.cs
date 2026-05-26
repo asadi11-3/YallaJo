@@ -1,13 +1,16 @@
 using MediatR;
+using Messaging.Application.Caching;
 using Messaging.Application.Interfaces;
 using Messaging.Domain.Repositories;
+using Microsoft.Extensions.Caching.Hybrid;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
 namespace Messaging.Application.Commands.DeleteDeviceToken;
 
 internal sealed class DeleteDeviceTokenCommandHandler(
     IDeviceTokenRepository deviceTokenRepository,
-    IMessagingUnitOfWork unitOfWork) : IRequestHandler<DeleteDeviceTokenCommand, Result>
+    IMessagingUnitOfWork unitOfWork,
+    HybridCache cache) : IRequestHandler<DeleteDeviceTokenCommand, Result>
 {
     public async Task<Result> Handle(DeleteDeviceTokenCommand request, CancellationToken cancellationToken)
     {
@@ -20,6 +23,7 @@ internal sealed class DeleteDeviceTokenCommandHandler(
 
         token.Delete();
         await unitOfWork.SaveChangesAsync(cancellationToken);
+        await cache.RemoveByTagAsync(MessagingCacheKeys.DeviceTokensTag(token.UserId), cancellationToken).ConfigureAwait(false);
         return Result.Success();
     }
 }

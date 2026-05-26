@@ -6,16 +6,14 @@ namespace ContentSeo.Infrastructure.Weather;
 
 /// <summary>
 /// Configuration bound from the <c>Weather</c> section of appsettings.
-/// The real OpenWeatherMap provider is a Wave-6 deliverable; the Wave-4 sprint
-/// ships a NoOp implementation. This options class scaffolds the contract so
-/// Wave-6 can drop in the real provider without DI / config churn.
+/// WeatherAPI.com configuration. Falls back to NoOp when Provider is "none" or ApiKey is blank.
 /// </summary>
 public sealed class WeatherOptions
 {
     public const string SectionName = "Weather";
 
     /// <summary>
-    /// Upstream weather provider name (e.g. "openweathermap", "none"). When set
+    /// Upstream weather provider name (e.g. "weatherapi", "none"). When set
     /// to "none" or left blank, the NoOp provider is used regardless of other settings.
     /// </summary>
     public string Provider { get; set; } = "none";
@@ -31,7 +29,10 @@ public sealed class WeatherOptions
     /// <summary>
     /// Base URL of the upstream provider's REST API.
     /// </summary>
-    public string BaseUrl { get; set; } = "https://api.openweathermap.org/data/2.5";
+    public string BaseUrl { get; set; } = "https://api.weatherapi.com/v1";
+
+    /// <summary>Forecast horizon requested from WeatherAPI.com. YallaJo requires 7 days.</summary>
+    public int ForecastDays { get; set; } = 7;
 
     /// <summary>
     /// HTTP timeout for upstream calls, in seconds.

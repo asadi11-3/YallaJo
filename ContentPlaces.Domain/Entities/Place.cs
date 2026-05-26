@@ -125,6 +125,7 @@ public sealed class Place : AuditableEntity, IAggregateRoot
         if (string.IsNullOrWhiteSpace(slug))
             throw new ArgumentException("Place slug is required.", nameof(slug));
 
+        var oldSlug     = Slug;
         Name            = name.Trim();
         Slug            = slug.Trim().ToLowerInvariant();
         PlaceType       = placeType;
@@ -141,7 +142,8 @@ public sealed class Place : AuditableEntity, IAggregateRoot
         MetaDescription = metaDescription?.Trim();
         MarkUpdated();
 
-        AddDomainEvent(new PlaceUpdatedDomainEvent(Id, Name, Description, Address));
+        var slugChanged = !string.Equals(oldSlug, Slug, StringComparison.Ordinal);
+        AddDomainEvent(new PlaceUpdatedDomainEvent(Id, Name, Description, Address, Slug, slugChanged ? oldSlug : null));
     }
 
     public void Delete()

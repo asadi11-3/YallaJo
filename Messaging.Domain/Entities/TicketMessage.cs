@@ -6,13 +6,13 @@ public sealed class TicketMessage : BaseEntity
 {
     private TicketMessage() { } // EF Core
 
-    internal TicketMessage(Guid ticketId, Guid authorUserId, string body, bool isInternal)
+    internal TicketMessage(Guid ticketId, Guid authorUserId, string body, bool isInternal, TimeProvider timeProvider)
     {
         TicketId     = ticketId;
         AuthorUserId = authorUserId;
         Body         = body;
         IsInternal   = isInternal;
-        CreatedAt    = DateTime.UtcNow;
+        CreatedAt    = timeProvider.GetUtcNow().UtcDateTime;
     }
 
     public Guid TicketId { get; private set; }

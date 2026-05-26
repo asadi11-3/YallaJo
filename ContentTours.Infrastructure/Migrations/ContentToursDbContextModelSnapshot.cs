@@ -100,6 +100,40 @@ namespace ContentTours.Infrastructure.Migrations
                     b.ToTable("GuideApplications", "content_tours");
                 });
 
+            modelBuilder.Entity("ContentTours.Domain.Entities.GuideAvailabilityBlock", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateOnly>("EndDate")
+                        .HasColumnType("date");
+
+                    b.Property<Guid>("GuideId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Reason")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateOnly>("StartDate")
+                        .HasColumnType("date");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GuideId");
+
+                    b.HasIndex("GuideId", "StartDate", "EndDate");
+
+                    b.ToTable("GuideAvailabilityBlocks", "content_tours");
+                });
+
             modelBuilder.Entity("ContentTours.Domain.Entities.GuidePricingTier", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1132,6 +1166,15 @@ namespace ContentTours.Infrastructure.Migrations
                         .HasDatabaseName("IX_OutboxMessages_Unprocessed");
 
                     b.ToTable("OutboxMessages", "content_tours");
+                });
+
+            modelBuilder.Entity("ContentTours.Domain.Entities.GuideAvailabilityBlock", b =>
+                {
+                    b.HasOne("ContentTours.Domain.Entities.TourGuide", null)
+                        .WithMany()
+                        .HasForeignKey("GuideId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("ContentTours.Domain.Entities.GuidePricingTier", b =>

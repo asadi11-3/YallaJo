@@ -149,9 +149,9 @@ public sealed class AutoSaveTranslationService : ITranslationService
         return Result<IReadOnlyList<TranslationResult>>.Success(results);
     }
 
-    public Task<string> DetectLanguageAsync(string text, CancellationToken ct = default)
+    public Task<Result<string>> DetectLanguageAsync(string text, CancellationToken ct = default)
         => _inner.DetectLanguageAsync(text, ct);
 
-    public Task<IReadOnlyList<SupportedLanguage>> GetSupportedLanguagesAsync(CancellationToken ct = default)
+    public Task<Result<IReadOnlyList<SupportedLanguage>>> GetSupportedLanguagesAsync(CancellationToken ct = default)
         => _inner.GetSupportedLanguagesAsync(ct);
 }

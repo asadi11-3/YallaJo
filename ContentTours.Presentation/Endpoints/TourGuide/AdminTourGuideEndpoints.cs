@@ -1,3 +1,5 @@
+using ContentTours.Application.Commands.TourGuides.AdminDeactivateGuide;
+using ContentTours.Application.Commands.TourGuides.AdminUpdateGuide;
 using ContentTours.Application.Commands.TourGuides.ReinstateGuide;
 using ContentTours.Application.Commands.TourGuides.SuspendGuide;
 using ContentTours.Application.Queries.TourGuides.GetById;
@@ -72,6 +74,49 @@ internal static class AdminTourGuideEndpoints
         .ProducesProblem(StatusCodes.Status403Forbidden)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithMetadata(new MustHavePermissionAttribute(ContentToursFeatures.TourGuideProfile, AppAction.Reinstate))
+        .RequireAuthorization();
+
+        // PUT /guides/admin/{guideId} — admin updates a guide profile
+        admin.MapPut("/", async (
+            Guid guideId,
+            AdminUpdateTourGuideRequest request,
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            var cmd = new AdminUpdateTourGuideCommand(
+                guideId,
+                request.Bio,
+                request.YearsOfExperience,
+                request.HasFirstAid,
+                request.MoTALicenseNumber);
+            var result = await sender.Send(cmd, ct);
+            return result.ToApiResult();
+        })
+        .WithName("AdminUpdateTourGuide")
+        .WithSummary("Admin: Update a tour guide profile")
+        .Produces(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .WithMetadata(new MustHavePermissionAttribute(ContentToursFeatures.TourGuideProfile, AppAction.Update))
+        .RequireAuthorization();
+
+        // DELETE /guides/admin/{guideId} — admin deactivates a guide
+        admin.MapDelete("/", async (
+            Guid guideId,
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            var cmd = new AdminDeactivateTourGuideCommand(guideId);
+            var result = await sender.Send(cmd, ct);
+            return result.ToApiResult();
+        })
+        .WithName("AdminDeactivateTourGuide")
+        .WithSummary("Admin: Deactivate a tour guide")
+        .Produces(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .WithMetadata(new MustHavePermissionAttribute(ContentToursFeatures.TourGuideProfile, AppAction.Delete))
         .RequireAuthorization();
     }
 }

@@ -5,6 +5,12 @@ namespace ContentPlaces.Domain.Entities;
 
 public sealed class AccessibilityFeature : BaseEntity
 {
+    /// <summary>EntityType value for Place-level accessibility features.</summary>
+    public const byte EntityTypePlace = 1;
+
+    /// <summary>EntityType value for Business-level accessibility features.</summary>
+    public const byte EntityTypeBusiness = 2;
+
     private AccessibilityFeature() { } // EF Core
 
     public byte EntityType { get; private set; }

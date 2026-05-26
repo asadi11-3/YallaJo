@@ -1,3 +1,5 @@
+using Accounts.Application.Queries.Agency.GetAgencies;
+using Accounts.Application.Queries.Agency.GetAgencyDetail;
 using Accounts.Application.Queries.Agency.GetAvailableGuides;
 using Accounts.Application.Queries.Agency.GetMyInvitations;
 using Accounts.Contracts.Authorization;
@@ -16,7 +18,30 @@ public static class AgencyPublicEndpoints
 {
     public static void MapAgencyPublicEndpoints(IEndpointRouteBuilder group)
     {
-        // GET /api/v1/agencies/guides/available — list available independent guides not affiliated with any agency
+        // GET /api/v1/agency — list approved agencies accepting guide applications
+        group.MapGet("/", async (int page, int pageSize, ISender sender, CancellationToken ct) =>
+        {
+            var result = await sender.Send(new GetAgenciesQuery(page, pageSize), ct);
+            return result.ToApiResult();
+        })
+        .WithName("GetAgencies")
+        .Produces<GetAgenciesResult>(StatusCodes.Status200OK)
+        .WithSummary("List approved agencies accepting guide applications")
+        .AllowAnonymous();
+
+        // GET /api/v1/agency/{agencyUserId} — public agency detail
+        group.MapGet("/{agencyUserId:guid}", async (Guid agencyUserId, ISender sender, CancellationToken ct) =>
+        {
+            var result = await sender.Send(new GetAgencyDetailQuery(agencyUserId), ct);
+            return result.ToApiResult();
+        })
+        .WithName("GetAgencyDetail")
+        .Produces<AgencyDetailDto>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .WithSummary("Get public detail of a specific agency")
+        .AllowAnonymous();
+
+        // GET /api/v1/agency/guides/available — list available independent guides not affiliated with any agency
         group.MapGet("/guides/available", async (int page, int pageSize, ISender sender, CancellationToken ct) =>
         {
             var result = await sender.Send(new GetAvailableGuidesQuery(page, pageSize), ct);
@@ -28,7 +53,7 @@ public static class AgencyPublicEndpoints
         .WithMetadata(new MustHavePermissionAttribute(AccountsFeatures.AgencyRoster, AppAction.Read))
         .RequireAuthorization();
 
-        // GET /api/v1/agencies/invitations/sent — list invitations sent by my agency
+        // GET /api/v1/agency/invitations/sent — list invitations sent by my agency
         group.MapGet("/invitations/sent", async (ISender sender, CancellationToken ct) =>
         {
             var result = await sender.Send(new GetMyInvitationsQuery("sent"), ct);

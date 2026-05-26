@@ -14,6 +14,8 @@ public static class DependencyInjection
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(assembly));
         services.AddValidatorsFromAssembly(assembly, includeInternalTypes: true);
         services.AddScoped<IRecommendationScoringEngine, V1ContentSimilarityScorer>();
+        services.AddScoped<ICollaborativeScoringEngine, NoOpCollaborativeScoringEngine>();
+        services.AddScoped<IBlendedScoringEngine, NoOpBlendedScoringEngine>();
 
         return services;
     }

@@ -5,12 +5,10 @@ using ContentBlogs.Application.Commands.Blog.FeatureBlog;
 using ContentBlogs.Application.Commands.Blog.HideBlog;
 using ContentBlogs.Application.Commands.Blog.UnhideBlog;
 using ContentBlogs.Application.Commands.Blog.DeleteBlog;
-using ContentBlogs.Application.Commands.Blog.MarkBlogAsFeatured;
 using ContentBlogs.Application.Commands.Blog.LinkBlogTours;
 using ContentBlogs.Application.Commands.Blog.PublishBlog;
 using ContentBlogs.Application.Commands.Blog.RejectBlog;
 using ContentBlogs.Application.Commands.Blog.RemoveBlog;
-using ContentBlogs.Application.Commands.Blog.MarkBlogAsUnfeatured;
 using ContentBlogs.Application.Commands.Blog.RestoreBlog;
 using ContentBlogs.Application.Commands.Blog.SubmitBlogForReview;
 using ContentBlogs.Application.Commands.Blog.TrackBlogView;
@@ -343,43 +341,6 @@ internal static class BlogEndpoints
         })
         .WithName("UnhideBlog")
         .WithSummary("Unhide a Hidden blog (restore to Published)")
-        .Produces(StatusCodes.Status200OK)
-        .ProducesValidationProblem()
-        .ProducesProblem(StatusCodes.Status403Forbidden)
-        .ProducesProblem(StatusCodes.Status404NotFound)
-        .ProducesProblem(StatusCodes.Status409Conflict)
-        .WithMetadata(new MustHavePermissionAttribute(ContentBlogsFeatures.Blog, AppAction.Approve));
-
-        group.MapPatch("/{id:guid}/mark-as-featured", async (
-            Guid id,
-            BlogRowVersionRequest request,
-            ISender sender,
-            CancellationToken ct) =>
-        {
-            var result = await sender.Send(new MarkBlogAsFeaturedCommand(id, request.RowVersion), ct);
-            return result.ToApiResult();
-        })
-        .WithName("MarkBlogAsFeatured")
-        .WithSummary("Mark a Published blog as Featured (admin)")
-        .Produces(StatusCodes.Status200OK)
-        .ProducesValidationProblem()
-        .ProducesProblem(StatusCodes.Status403Forbidden)
-        .ProducesProblem(StatusCodes.Status404NotFound)
-        .ProducesProblem(StatusCodes.Status409Conflict)
-        .WithMetadata(new MustHavePermissionAttribute(ContentBlogsFeatures.Blog, AppAction.Approve));
-
-
-        group.MapPatch("/{id:guid}/mark-as-unfeatured", async (
-            Guid id,
-            BlogRowVersionRequest request,
-            ISender sender,
-            CancellationToken ct) =>
-        {
-            var result = await sender.Send(new MarkBlogAsUnfeaturedCommand(id, request.RowVersion), ct);
-            return result.ToApiResult();
-        })
-        .WithName("MarkBlogAsUnfeatured")
-        .WithSummary("Clear the Featured flag on a blog (admin)")
         .Produces(StatusCodes.Status200OK)
         .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status403Forbidden)

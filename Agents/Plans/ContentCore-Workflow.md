@@ -1,7 +1,7 @@
 # ContentCore Workflow Plan
 
 > **Module**: ContentCore (shared foundation — attachments, categories, tags, specializations, languages, translations)
-> **Status**: Gaps audit complete, plan locked
+> **Status**: Implemented (audited 2025-01-27, score 9.2/10). All 12 fixes applied (W4-A).
 > **Compatible with**: All 11 existing plans (BlogCreatorPost-Merger, Booking-Workflow, ContentPlaces-Workflow, ContentSeo-Workflow, Finance-Workflow, Messaging-Workflow, Analytics-Workflow, Platform-Onboarding-Workflow, Role-System, Social-Workflow, TourGuide-Flow)
 
 ---
@@ -27,10 +27,10 @@
 ### What's Built (COMPLETE)
 - 12 entities: Attachment, Category, CategoryTranslation, EntityCategory, EntityImage, EntityTag, Language, Specialization, SpecializationTranslation, Tag, TagTranslation, TranslationCache
 - 4 enums: AttachmentType (Image/Video/Document/Audio), EntityType (Place=0..TourGuide=5), ImageSize, TranslationStatus
-- 48 endpoints across 8 groups, all correctly secured
+- 52 endpoints across 8 groups, all correctly secured
 - OwnershipGuard pattern centralizes admin bypass + ownership check (CLEAN)
-- 33 validators, 46 handlers, 12 domain event handlers
-- Integration events: 10 (Attachment×2, Category×5, EntityCategory×2, Language×1 — note: `EntityCategoryRemovedIntegrationEvent` exists but no matching `EntityTagAssigned/Removed`)
+- 33 validators, 49 handlers, 12 domain event handlers
+- Integration events: 12 (Attachment×2, Category×4, EntityCategory×2, EntityTag×2, Language×2)
 - HybridCache with tag-based invalidation consistently applied
 - Background jobs: MediaProcessingBackgroundService, MediaProcessingQueue
 - File signature detection (magic bytes) in UploadAttachmentCommandHandler
@@ -39,8 +39,8 @@
 | Gap | Status | Action |
 |-----|--------|--------|
 | Gap 1 — ICurrentUser Misuse | ✅ **ALREADY RESOLVED** | Zero raw auth gates. All 8 handlers use OwnershipGuard. |
-| Gap 2 — Infrastructure Throws | ❌ Pending | 4 runtime throws in AzureTranslateService + LocalFileStorageService |
-| Gap 3 — Missing Language Endpoints | ❌ Pending | DELETE + activate + deactivate endpoints missing |
+| Gap 2 — Infrastructure Throws | ✅ **RESOLVED** | AzureTranslateService methods now return Result<T>. LocalFileStorageService already fixed. |
+| Gap 3 — Missing Language Endpoints | ✅ **RESOLVED** | DELETE + activate + deactivate endpoints implemented with validators |
 
 ---
 
@@ -70,7 +70,7 @@ No new values needed. CreatorProfile uses direct fields for avatar/cover.
 public static class AttachmentLimits
 {
     // Max attachments per EntityType
-    public static int MaxCount(EntityType entityType) => entityType switch
+    public static int GetMaxCount(EntityType entityType) => entityType switch
     {
         EntityType.Place => 30,
         EntityType.Tour => 30,
@@ -82,7 +82,7 @@ public static class AttachmentLimits
     };
 
     // Max file size in bytes per AttachmentType
-    public static long MaxFileSize(AttachmentType type) => type switch
+    public static long GetMaxFileSize(AttachmentType type) => type switch
     {
         AttachmentType.Image => 10 * 1024 * 1024,      // 10 MB
         AttachmentType.Video => 500 * 1024 * 1024,     // 500 MB
@@ -95,7 +95,7 @@ public static class AttachmentLimits
 
 ### Enforcement Point
 - **Count check**: In `UploadAttachmentCommandHandler` — query existing count for (EntityType, EntityId), reject if >= max.
-- **File size check**: In `UploadAttachmentCommandValidator` — `FileSize.LessThanOrEqualTo(AttachmentLimits.MaxFileSize(type))`.
+- **File size check**: In `UploadAttachmentCommandValidator` — `FileSize.LessThanOrEqualTo(AttachmentLimits.GetMaxFileSize(type))`.
 
 ---
 
@@ -125,18 +125,16 @@ Alternative: Keep `MustHavePermission` but ensure Provider/Creator/TourGuide rol
 ```csharp
 // ContentCore.Contracts/IntegrationEvents/
 public sealed record EntityTagAssignedIntegrationEvent(
-    Guid EventId,
-    DateTime OccurredOn,
     string EntityType,     // "Tour", "Blog", etc.
     Guid EntityId,
-    Guid[] TagIds) : IntegrationEventBase(EventId, OccurredOn);
+    Guid TagId,
+    DateTime AssignedAt) : IntegrationEventBase;
 
 public sealed record EntityTagRemovedIntegrationEvent(
-    Guid EventId,
-    DateTime OccurredOn,
     string EntityType,
     Guid EntityId,
-    Guid TagId) : IntegrationEventBase(EventId, OccurredOn);
+    Guid TagId,
+    DateTime RemovedAt) : IntegrationEventBase;
 ```
 
 ### Consumers (in other modules)
@@ -193,9 +191,8 @@ public sealed record EntityTagRemovedIntegrationEvent(
   ```
 - `ContentCore.Application/Commands/Attachment/UploadAttachment/UploadAttachmentCommandValidator.cs` — add file size validation
 
-**Repository addition:**
-- `IAttachmentRepository.CountByEntityAsync(EntityType, Guid entityId, CancellationToken)` → new method
-- `AttachmentRepository` implementation
+**Repository (already exists):**
+- `IAttachmentRepository.CountByEntityAsync(EntityType, Guid entityId, CancellationToken)` — already implemented
 
 ### Phase 4 — Self-Service Tagging/Categorization
 
@@ -218,7 +215,7 @@ No code changes in ContentCore handlers — OwnershipGuard already handles non-a
 
 - Build entire solution
 - Fix any test compilation errors
-- Verify all existing 48 endpoints + 3 new = 51 endpoints work
+- Verify all 52 endpoints work
 - Verify 0 remaining raw auth gates
 
 ---
@@ -262,3 +259,22 @@ No code changes in ContentCore handlers — OwnershipGuard already handles non-a
 | Attachment count query adds DB round-trip to uploads | Single COUNT query is negligible vs file upload I/O |
 | Self-service tag assignment could be abused | OwnershipGuard ensures entity ownership. Tag catalog stays admin-only. Tags must be active. |
 | EntityTag events create outbox volume | Events only on assign/remove (low frequency). Same pattern as EntityCategory events. |
+
+---
+
+## Implementation Notes
+
+> Added during codebase audit — reflects actual implementation details not originally in the plan.
+
+1. **Actual endpoint count**: 52 (not 48) — Language has 7 endpoints (including Activate/Deactivate), Specialization has 7, Tags has 7.
+2. **Actual handler count**: 49 command handlers + 13 query handlers (not 46 total).
+3. **Actual integration event count**: 12 (not 10) — Language: Activated, Deactivated (2 added).
+4. **AttachmentLimits.GetMaxFileSize()**: Added in W4-A to unify validator file sizes with canonical limits (Video=500MB, Document=25MB).
+5. **DetectLanguageAsync / GetSupportedLanguagesAsync**: Both return `Result<T>` (not raw values) — interface + impl + decorator all updated.
+6. **Creator/TourGuide Delete permission**: Added `AppAction.Delete` for EntityTag/EntityCategory in `RolePermissionMapping.cs`.
+7. **Language validators**: `ActivateLanguageCommandValidator`, `DeactivateLanguageCommandValidator`, `DeleteLanguageCommandValidator` added.
+8. **Category.ChangeParent self-parent guard**: `BusinessRuleViolationException` thrown if parentCategoryId == Id.
+9. **TranslationCache text columns**: `HasMaxLength(4000)` added to OriginalText and TranslatedText.
+10. **Category.ParentCategoryId index**: `IX_Categories_ParentCategoryId` added in EF config.
+11. **Attachment.MarkForDeletion**: Idempotency guard added + `IsMarkedForDeletion` property (requires EF migration).
+12. **Tag/Specialization idempotency**: Activate/Deactivate now guard against already-active/inactive state.

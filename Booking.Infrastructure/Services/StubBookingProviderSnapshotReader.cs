@@ -1,4 +1,5 @@
 using Booking.Application.Interfaces;
+using Booking.Domain.Enums;
 
 namespace Booking.Infrastructure.Services;
 

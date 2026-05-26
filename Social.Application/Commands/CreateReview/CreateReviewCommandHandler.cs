@@ -1,5 +1,7 @@
 using MediatR;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
+using Social.Application.Caching;
 using Social.Application.Interfaces;
 using Social.Contracts.Services;
 using Social.Domain.Entities;
@@ -13,6 +15,7 @@ internal sealed class CreateReviewCommandHandler(
     IBookingEligibilitySnapshotRepository eligibilityRepository,
     IProfanityFilter profanityFilter,
     ISocialUnitOfWork unitOfWork,
+    HybridCache cache,
     TimeProvider timeProvider,
     ILogger<CreateReviewCommandHandler> logger)
     : IRequestHandler<CreateReviewCommand, Result<Guid>>
@@ -38,6 +41,13 @@ internal sealed class CreateReviewCommandHandler(
             && snapshot.IsEligibleForVerifiedReview(
                 timeProvider.GetUtcNow().UtcDateTime, windowDays: 30);
 
+        if (!isVerifiedBooking)
+        {
+            return Result.Failure<Guid>(
+                new Error("Review.BookingVerificationRequired", "Only users with a recent completed booking can review this item."),
+                Outcome.Forbidden);
+        }
+
         // S-R4: Profanity check
         bool profanityDetected = profanityFilter.ContainsProfanity(command.Content)
             || (command.Title is not null && profanityFilter.ContainsProfanity(command.Title));
@@ -56,6 +66,8 @@ internal sealed class CreateReviewCommandHandler(
 
         await reviewRepository.AddAsync(review, ct);
         await unitOfWork.SaveChangesAsync(ct);
+        await cache.RemoveByTagAsync(SocialCacheKeys.ReviewsTag(command.TargetType, command.TargetId), ct);
+        await cache.RemoveByTagAsync(SocialCacheKeys.UserReviewsTag(command.UserId), ct);
 
         logger.LogInformation(
             "Review {ReviewId} created for target {TargetType}/{TargetId} by user {UserId}. Status={Status}",

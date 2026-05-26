@@ -28,6 +28,10 @@ public sealed class GuideTourOffering : AuditableEntity
     public Guid? ApplicationId { get; private set; }
     public Guid? AssignedByUserId { get; private set; }
 
+    // Timestamps
+    public DateTime? AssignedAt { get; private set; }
+    public DateTime? SuspendedAt { get; private set; }
+
     // Suspension audit
     public string? SuspensionReason { get; private set; }
     public Guid? SuspendedByAdminId { get; private set; }
@@ -46,7 +50,8 @@ public sealed class GuideTourOffering : AuditableEntity
             Status = GuideOfferingStatus.Active,
             IsProposer = isProposer,
             ApplicationId = applicationId,
-            AssignedByUserId = assignedByUserId
+            AssignedByUserId = assignedByUserId,
+            AssignedAt = DateTime.UtcNow
         };
     }
 
@@ -87,6 +92,7 @@ public sealed class GuideTourOffering : AuditableEntity
         Status = GuideOfferingStatus.Suspended;
         SuspensionReason = reason.Trim();
         SuspendedByAdminId = adminId;
+        SuspendedAt = DateTime.UtcNow;
         MarkUpdated();
         return Result.Success();
     }
@@ -99,6 +105,7 @@ public sealed class GuideTourOffering : AuditableEntity
         Status = GuideOfferingStatus.Active;
         SuspensionReason = null;
         SuspendedByAdminId = null;
+        SuspendedAt = null;
         MarkUpdated();
         return Result.Success();
     }

@@ -1,4 +1,5 @@
 using ContentTours.Domain.Enums;
+using ContentTours.Domain.Events;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 using YallaJo.SharedKernel.Domain.Entities;
 
@@ -65,6 +66,7 @@ public sealed class GuideApplication : AuditableEntity, IAggregateRoot
 
         Status = GuideApplicationStatus.Submitted;
         MarkUpdated();
+        AddDomainEvent(new GuideApplicationSubmittedDomainEvent(Id, TourId, TourGuideId, GuideUserId));
         return Result.Success();
     }
 
@@ -77,6 +79,7 @@ public sealed class GuideApplication : AuditableEntity, IAggregateRoot
         ReviewedByAdminId = adminId;
         ReviewedAt = utcNow;
         MarkUpdated();
+        AddDomainEvent(new GuideApplicationApprovedDomainEvent(Id, TourId, GuideUserId, adminId));
         return Result.Success();
     }
 
@@ -90,6 +93,7 @@ public sealed class GuideApplication : AuditableEntity, IAggregateRoot
         ReviewedAt = utcNow;
         RejectionReason = reason.Trim();
         MarkUpdated();
+        AddDomainEvent(new GuideApplicationRejectedDomainEvent(Id, TourId, GuideUserId, reason.Trim()));
         return Result.Success();
     }
 

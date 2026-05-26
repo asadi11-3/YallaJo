@@ -21,7 +21,6 @@ public sealed class UpdateBusinessAccessibilityFeaturesCommandHandler(
     ILogger<UpdateBusinessAccessibilityFeaturesCommandHandler> logger)
     : ICommandHandler<UpdateBusinessAccessibilityFeaturesCommand>
 {
-    private const byte BusinessEntityType = 2;
 
     public async Task<Result> Handle(
         UpdateBusinessAccessibilityFeaturesCommand request,
@@ -43,7 +42,7 @@ public sealed class UpdateBusinessAccessibilityFeaturesCommandHandler(
 
         // Get existing features for this business
         var existingFeatures = await featureRepository.GetAllAsync(
-            filter: x => x.EntityId == request.BusinessId && x.EntityType == BusinessEntityType,
+            filter: x => x.EntityId == request.BusinessId && x.EntityType == AccessibilityFeatureEntity.EntityTypeBusiness,
             ct: cancellationToken);
 
         // Remove old, create new (deduplicate by FeatureType)
@@ -53,7 +52,7 @@ public sealed class UpdateBusinessAccessibilityFeaturesCommandHandler(
             .GroupBy(x => x.FeatureType)
             .Select(x => x.First())
             .Select(x => AccessibilityFeatureEntity.Create(
-                BusinessEntityType,
+                AccessibilityFeatureEntity.EntityTypeBusiness,
                 request.BusinessId,
                 x.FeatureType,
                 x.Name,

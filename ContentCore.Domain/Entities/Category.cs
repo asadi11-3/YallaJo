@@ -1,6 +1,7 @@
 using ContentCore.Domain.Events;
 using ContentCore.Domain.Enums;
 using YallaJo.SharedKernel.Domain.Entities;
+using YallaJo.SharedKernel.Domain.Exceptions;
 
 namespace ContentCore.Domain.Entities;
 
@@ -150,6 +151,9 @@ public sealed class Category : AuditableEntity, IAggregateRoot
 
     public void ChangeParent(Guid? parentCategoryId)
     {
+        if (parentCategoryId.HasValue && parentCategoryId.Value == Id)
+            throw new BusinessRuleViolationException("A category cannot be its own parent.");
+
         ParentCategoryId = parentCategoryId;
         MarkUpdated();
     }

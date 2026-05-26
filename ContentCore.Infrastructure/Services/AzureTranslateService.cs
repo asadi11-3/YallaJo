@@ -111,7 +111,7 @@ public sealed class AzureTranslateService : ITranslationService
         return Result<IReadOnlyList<TranslationResult>>.Success(results);
     }
 
-    public async Task<string> DetectLanguageAsync(string text, CancellationToken ct = default)
+    public async Task<Result<string>> DetectLanguageAsync(string text, CancellationToken ct = default)
     {
         var route = "/detect?api-version=3.0";
         var body = new[] { new { Text = text } };
@@ -125,31 +125,55 @@ public sealed class AzureTranslateService : ITranslationService
         request.Headers.Add("Ocp-Apim-Subscription-Region", _region);
 
         using var response = await _httpClient.SendAsync(request, ct);
-        response.EnsureSuccessStatusCode();
+
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorBody = await response.Content.ReadAsStringAsync(ct);
+            _logger.LogError(
+                "Azure Translator detect API error: {StatusCode} — {Body}",
+                response.StatusCode, errorBody);
+            return Result<string>.Failure(
+                new Error("Translation.DetectError",
+                    $"Azure Translator detect API returned {(int)response.StatusCode}: {errorBody}"),
+                Outcome.ServerError);
+        }
 
         var results = await response.Content.ReadFromJsonAsync<AzureDetectResponse[]>(JsonOptions, ct);
-        return results?.FirstOrDefault()?.Language ?? "en";
+        return Result<string>.Success(results?.FirstOrDefault()?.Language ?? "en");
     }
 
-    public async Task<IReadOnlyList<SupportedLanguage>> GetSupportedLanguagesAsync(CancellationToken ct = default)
+    public async Task<Result<IReadOnlyList<SupportedLanguage>>> GetSupportedLanguagesAsync(CancellationToken ct = default)
     {
         var route = "/languages?api-version=3.0&scope=translation";
 
         using var request = new HttpRequestMessage(HttpMethod.Get, _endpoint + route);
         using var response = await _httpClient.SendAsync(request, ct);
-        response.EnsureSuccessStatusCode();
+
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorBody = await response.Content.ReadAsStringAsync(ct);
+            _logger.LogError(
+                "Azure Translator languages API error: {StatusCode} — {Body}",
+                response.StatusCode, errorBody);
+            return Result<IReadOnlyList<SupportedLanguage>>.Failure(
+                new Error("Translation.LanguagesError",
+                    $"Azure Translator languages API returned {(int)response.StatusCode}: {errorBody}"),
+                Outcome.ServerError);
+        }
 
         var result = await response.Content.ReadFromJsonAsync<AzureLanguagesResponse>(JsonOptions, ct);
         if (result?.Translation is null)
-            return Array.Empty<SupportedLanguage>();
+            return Result<IReadOnlyList<SupportedLanguage>>.Success(Array.Empty<SupportedLanguage>());
 
-        return result.Translation
+        var languages = result.Translation
             .Select(kvp => new SupportedLanguage(
                 Code: kvp.Key,
                 Name: kvp.Value.Name,
                 NativeName: kvp.Value.NativeName))
             .OrderBy(l => l.Code)
             .ToList();
+
+        return Result<IReadOnlyList<SupportedLanguage>>.Success(languages);
     }
 
     // ── Azure API response DTOs ────────────────────────────────────────────

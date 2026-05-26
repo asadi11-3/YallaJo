@@ -24,6 +24,8 @@ public sealed class GuideTourOfferingConfiguration : IEntityTypeConfiguration<Gu
         builder.Property(x => x.AssignedByUserId).IsRequired(false);
         builder.Property(x => x.SuspensionReason).IsRequired(false).HasMaxLength(1000);
         builder.Property(x => x.SuspendedByAdminId).IsRequired(false);
+        builder.Property(x => x.AssignedAt).IsRequired(false);
+        builder.Property(x => x.SuspendedAt).IsRequired(false);
 
         builder.Property(x => x.CreatedAt).IsRequired();
         builder.Property(x => x.UpdatedAt).IsRequired(false);

@@ -13,6 +13,7 @@ internal sealed class NotificationDispatcher(
     INotificationRepository notificationRepository,
     INotificationPreferenceRepository preferenceRepository,
     INotificationDeliveryAttemptRepository deliveryAttemptRepository,
+    TimeProvider timeProvider,
     ILogger<NotificationDispatcher> logger)
     : INotificationDispatcher
 {
@@ -49,17 +50,17 @@ internal sealed class NotificationDispatcher(
             return;
         }
 
-        var attempt = NotificationDeliveryAttempt.Create(notification.Id, channel, 1);
+        var attempt = NotificationDeliveryAttempt.Create(notification.Id, channel, timeProvider, 1);
         try
         {
             var result = await strategy.DeliverAsync(notification, ct);
-            if (result.Success) attempt.MarkSucceeded(result.ExternalRef);
-            else attempt.MarkFailed(result.FailureReason ?? "Unknown failure");
+            if (result.Success) attempt.MarkSucceeded(timeProvider, result.ExternalRef);
+            else attempt.MarkFailed(timeProvider, result.FailureReason ?? "Unknown failure");
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Channel {Channel} delivery failed for notification {Id}", channel, notification.Id);
-            attempt.MarkFailed(ex.Message);
+            attempt.MarkFailed(timeProvider, ex.Message);
         }
         await deliveryAttemptRepository.AddAsync(attempt, ct);
     }

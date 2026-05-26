@@ -47,6 +47,16 @@ public sealed class TourBooking : AuditableEntity, IAggregateRoot
     /// <summary>JSON snapshot of the refund policy at booking creation time. Used by cancel flow regardless of live policy edits.</summary>
     public string RefundPolicySnapshot { get; private set; } = "{}";
 
+    // === Guide / private tour ===
+    /// <summary>Guide (TourGuide) who owns the AvailabilitySlot. FK into ContentTours.TourGuides.</summary>
+    public Guid GuideId { get; private set; }
+
+    /// <summary>If true, the tourist booked the entire slot exclusively (private tour pricing applies).</summary>
+    public bool IsPrivate { get; private set; }
+
+    /// <summary>Non-null when this booking was created via an approved JoinRequest on another booking.</summary>
+    public Guid? JoinedFromBookingId { get; private set; }
+
     // === Booking mode ===
     /// <summary>If true: AwaitingPayment -> Confirmed on payment. If false: AwaitingPayment -> PendingConfirmation on payment.</summary>
     public bool IsInstantBooking { get; private set; }
@@ -88,6 +98,7 @@ public sealed class TourBooking : AuditableEntity, IAggregateRoot
         Guid userId,
         Guid tourId,
         Guid providerId,
+        Guid guideId,
         Guid availabilitySlotId,
         int participantCount,
         BookingPricing pricing,
@@ -95,11 +106,14 @@ public sealed class TourBooking : AuditableEntity, IAggregateRoot
         string refundPolicySnapshot,
         bool isInstantBooking,
         DateTime paymentExpiresAt,
-        string lineItemsJson)
+        string lineItemsJson,
+        bool isPrivate = false,
+        Guid? joinedFromBookingId = null)
     {
         if (userId == Guid.Empty) throw new BusinessRuleViolationException("UserId must be provided.");
         if (tourId == Guid.Empty) throw new BusinessRuleViolationException("TourId must be provided.");
         if (providerId == Guid.Empty) throw new BusinessRuleViolationException("ProviderId must be provided.");
+        if (guideId == Guid.Empty) throw new BusinessRuleViolationException("GuideId must be provided.");
         if (availabilitySlotId == Guid.Empty) throw new BusinessRuleViolationException("AvailabilitySlotId must be provided.");
         if (participantCount < 1) throw new BusinessRuleViolationException("ParticipantCount must be at least 1.");
         if (pricing.TotalAmount <= 0m) throw new BusinessRuleViolationException("TotalAmount must be positive.");
@@ -113,8 +127,11 @@ public sealed class TourBooking : AuditableEntity, IAggregateRoot
             UserId = userId,
             TourId = tourId,
             ProviderId = providerId,
+            GuideId = guideId,
             AvailabilitySlotId = availabilitySlotId,
             ParticipantCount = participantCount,
+            IsPrivate = isPrivate,
+            JoinedFromBookingId = joinedFromBookingId,
             Subtotal = pricing.Subtotal,
             DiscountAmount = pricing.DiscountAmount,
             LoyaltyAmount = pricing.LoyaltyAmount,
@@ -135,12 +152,14 @@ public sealed class TourBooking : AuditableEntity, IAggregateRoot
             UserId: userId,
             TourId: tourId,
             ProviderId: providerId,
+            GuideId: guideId,
             AvailabilitySlotId: availabilitySlotId,
             ParticipantCount: participantCount,
             TotalAmount: pricing.TotalAmount,
             Currency: pricing.Currency,
             Reference: reference.Value,
-            IsInstantBooking: isInstantBooking));
+            IsInstantBooking: isInstantBooking,
+            IsPrivate: isPrivate));
 
         return booking;
     }

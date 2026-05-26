@@ -1,8 +1,9 @@
 # Booking Workflow — Architecture Plan
 
-> **Status:** All design decisions LOCKED (14 decisions). Ready for execution.
+> **Status:** Implemented (audited 2025-01-27). Core domain + infrastructure complete. Payment flow wired via Finance module. 5 stub services pending replacement.
 > **Scope:** Tour booking workflow compatible with `TourGuide-Flow.md` multi-guide model. Extensible for future business reservations.
 > **Dependencies:** `TourGuide-Flow.md` (must execute Phases 0-5 first — profile alignment + guide offerings).
+> **Audit Score:** 7.2/10 — see `Booking-Audit-Report.md`
 
 ---
 
@@ -409,7 +410,7 @@ Tourist discovers guide (search, recommendation)
 │                                                               │
 │  PROCESS:                                                    │
 │  1. Integration event: GuideSuspendedIntegrationEvent or     │
-│     GuideOfferingSuspendedIntegrationEvent                   │
+│     GuideOfferingSuspendedIntegrationEvent (NOT YET BUILT)   │
 │  2. Booking module event handler:                            │
 │     - Query all future Confirmed bookings for this guide     │
 │     - For each booking:                                      │
@@ -477,7 +478,7 @@ public Guid? JoinedFromBookingId { get; private set; } // NEW — if created via
 // Validate IsPrivate logic
 ```
 
-### JoinRequest — Full Domain Methods (Currently Shell)
+### JoinRequest — Full Domain Methods (IMPLEMENTED — not a shell)
 
 ```csharp
 public sealed class JoinRequest : AuditableEntity
@@ -515,65 +516,60 @@ public sealed class JoinRequest : AuditableEntity
 }
 ```
 
-### GuideDiscount — New Entity
+### GuideDiscount — New Entity (IMPLEMENTED — FK model differs)
+
+> **Audit Note (2025-01-27)**: Actual implementation uses `GuideUserId` + optional `TourId` instead of `GuideTourOfferingId`. This is more flexible — allows guide-level discounts not tied to a specific offering. `MinParticipants` was not implemented. Naming: `MaxUses` → `MaxUsageCount`, `CurrentUses` → `CurrentUsageCount`, `FlatAmount` → `FixedAmount`.
 
 ```csharp
 public sealed class GuideDiscount : AuditableEntity
 {
-    public Guid GuideTourOfferingId { get; private set; }  // FK to GuideTourOffering
+    public Guid GuideUserId { get; private set; }           // ACTUAL: guide-level, not offering-level
+    public Guid? TourId { get; private set; }               // ACTUAL: optional tour scope
     public string Name { get; private set; }                // "Summer Special"
-    public GuideDiscountType Type { get; private set; }     // Percentage / FlatAmount
-    public decimal Value { get; private set; }              // 10 (= 10% or 10 JOD)
-    public DateTime? ValidFrom { get; private set; }
+    public GuideDiscountType DiscountType { get; private set; } // Percentage / FixedAmount
+    public decimal DiscountValue { get; private set; }
+    public string Currency { get; private set; }
+    public DateTime ValidFrom { get; private set; }
     public DateTime? ValidUntil { get; private set; }
-    public int? MinParticipants { get; private set; }       // optional threshold
-    public int MaxUses { get; private set; }                // 0 = unlimited
-    public int CurrentUses { get; private set; }
+    public int? MaxUsageCount { get; private set; }         // null = unlimited
+    public int CurrentUsageCount { get; private set; }
     public bool IsActive { get; private set; }
 
     // Methods:
-    public static GuideDiscount Create(...);
+    public static Result<GuideDiscount> Create(...);
     public Result Update(...);
     public Result Deactivate();
     public Result IncrementUsage();
-    public bool IsValid(DateTime now, int participantCount);
+    public bool IsValidAt(DateTime now);
 }
 
-// GuideDiscountType enum: Percentage = 0, FlatAmount = 1
+// GuideDiscountType enum: Percentage = 0, FixedAmount = 1
 ```
 
 ---
 
 ## New Interfaces
 
-### IPaymentGateway (Booking.Contracts)
+### IPaymentGateway (Finance.Contracts — NOT Booking)
+
+> **Audit Note (2025-01-27)**: IPaymentGateway is owned by `Finance.Contracts.Services`, not `Booking.Contracts`. The Finance module owns the entire payment lifecycle. Booking's role is to create the booking → Finance handles payment → Finance publishes `PaymentCompletedIntegrationEvent` → Booking's `PaymentCompletedHandler` auto-confirms the booking.
 
 ```csharp
+// ACTUAL: Finance.Contracts.Services.IPaymentGateway
 public interface IPaymentGateway
 {
-    Task<PaymentSession> InitiatePaymentAsync(
-        string bookingReference,
-        decimal amount,
-        string currency,
-        string returnUrl,
-        Dictionary<string, string> metadata,
-        CancellationToken ct = default);
-
-    Task<PaymentResult> ProcessWebhookAsync(
-        string payload,
-        string signature,
-        CancellationToken ct = default);
-
-    Task<RefundResult> InitiateRefundAsync(
-        string transactionId,
-        decimal amount,
-        string reason,
-        CancellationToken ct = default);
-
-    Task<PaymentStatusInfo> GetPaymentStatusAsync(
-        string sessionId,
-        CancellationToken ct = default);
+    string GatewayName { get; }
+    Task<InitiateResult> InitiateAsync(InitiateRequest request, CancellationToken ct = default);
+    Task<bool> VerifyWebhookSignatureAsync(string payload, string signature, CancellationToken ct = default);
+    Task<RefundResult> RefundAsync(RefundRequest request, CancellationToken ct = default);
+    Task<PayoutResult> PayoutAsync(PayoutRequest request, CancellationToken ct = default);
 }
+
+// Finance also owns:
+// - InitiatePaymentCommand (Finance.Application)
+// - RefundRetryService (Finance.Infrastructure)
+// - PaymentCompletedIntegrationEvent (Finance.Contracts, registered as finance.payment.completed.v1)
+// - Payment entity with full state machine (Finance.Domain)
 ```
 
 ### IDiscountEvaluator (Replace Stub)
@@ -890,3 +886,27 @@ public record DiscountResult(
 | Cross-module event ordering | Use outbox pattern (already in place). Events processed in order within same aggregate. |
 | Guide doesn't respond to non-instant booking | ProviderAutoAcceptService auto-confirms after 24h. Tourist not blocked. |
 | Discount re-validation at payment time | If discount expired or prices changed between lock and payment, recalculate. If new total > original, honor original (tourist trust). If lower, use lower. |
+
+---
+
+## Implementation Notes (Audit 2025-01-27)
+
+1. **Payment flow is Finance-owned**: `IPaymentGateway` lives in `Finance.Contracts.Services`. `InitiatePaymentCommand` is in `Finance.Application`. `RefundRetryService` is in `Finance.Infrastructure`. Booking creates the booking → Finance handles payment → Finance publishes `PaymentCompletedIntegrationEvent` → Booking's `PaymentCompletedHandler` auto-confirms.
+
+2. **3 stub services replaced (W3-A)**: `IBookingTourSnapshotReader`, `IBookingPricingSnapshotReader`, `IBookingProviderSnapshotReader` now backed by real snapshot tables (TourSnapshots, PricingTierSnapshots, ProviderSnapshots) populated via 5 inbox handlers (TourApproved, TourUpdated, TourSuspended, TourDeleted, TourPricingTierChanged). `IBookingCommissionLookup` and `IDiscountEvaluator` remain as stub/no-op (Finance cross-module + Promotions module not yet built).
+
+3. **Background services**: 9 exist in Booking.Infrastructure (SlotGeneration, SlotLockCleanup, BookingAutoExpire, ProviderAutoAccept, JoinRequestExpiry, BookingAutoComplete, DocumentExpiryCheck, BookingReminderService, SlotCleanupService). `RefundRetryService` is in Finance.
+
+4. **Inbound event handlers added (W3-A)**: `TourSuspendedCancelBookingsHandler`, `TourDeletedCancelBookingsHandler`, `GuideOfferingSuspendedCancelBookingsHandler` all created. `GuideTourOfferingSuspendedIntegrationEvent` added to ContentTours.Contracts and published by `SuspendGuideOfferingCommandHandler`.
+
+5. **GuideDiscount FK model differs**: Actual uses `GuideUserId` + optional `TourId` (guide-level), not `GuideTourOfferingId` (offering-level). No `MinParticipants` condition. Naming: `MaxUses` → `MaxUsageCount`, `FlatAmount` → `FixedAmount`.
+
+6. **Availability slot routes**: Actual routes are flat (`/api/v1/booking/slots`) not nested (`/tours/{tourId}/availability`).
+
+7. **BookingStatus enum**: Contains mixed legacy values (0-6) and new engine values (10-12). `Confirmed` reuses 1, `Completed` reuses 3, `Cancelled` reuses 4.
+
+8. **Duplicate TourGuide**: `Booking.Domain.Entities.TourGuide` (30 lines) still exists with `TourGuideLanguage` and `TourGuideSpecialization`. Has 11 active code references (EF configs, handlers, repos). Removal requires migration + handler rewrites.
+
+9. **Deferred entities**: `PackageBooking` and `Reservation` correctly moved to `_Deferred/` subfolder. `RefundPolicy` and `ProviderDocument` are in active Domain.
+
+10. **Cross-module integration confirmed**: `GuideSuspendedCancelBookingsHandler` and `ProviderSuspendedCancelBookingsHandler` both work. `PaymentCompletedHandler` in Booking.Infrastructure correctly consumes `finance.payment.completed.v1` and auto-confirms bookings.

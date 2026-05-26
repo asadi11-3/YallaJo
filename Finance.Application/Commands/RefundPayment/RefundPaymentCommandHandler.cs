@@ -72,23 +72,15 @@ public sealed class RefundPaymentCommandHandler(
 
         var refundMoney = new Money(request.Amount, request.Currency.ToUpperInvariant());
 
-        Payment refund;
-        try
-        {
-            refund = original.CreateRefund(refundMoney, request.Reason, original.GatewayProvider, timeProvider);
-        }
-        catch (InvalidOperationException ex)
+        var createRefundResult = original.CreateRefund(refundMoney, request.Reason, original.GatewayProvider, timeProvider);
+        if (createRefundResult.IsFailure)
         {
             return Result.Failure<RefundPaymentResult>(
-                new Error("Refund.PaymentNotCompleted", ex.Message),
-                Outcome.Conflict);
+                createRefundResult.Errors.FirstOrDefault() ?? new Error("Refund.Invalid", "Refund could not be created."),
+                createRefundResult.Outcome);
         }
-        catch (ArgumentException ex)
-        {
-            return Result.Failure<RefundPaymentResult>(
-                new Error("Refund.AmountExceedsRefundable", ex.Message),
-                Outcome.Invalid);
-        }
+
+        var refund = createRefundResult.Value!;
 
         await paymentRepository.AddAsync(refund, ct).ConfigureAwait(false);
 
@@ -116,13 +108,30 @@ public sealed class RefundPaymentCommandHandler(
 
         if (gatewayResult.Status == RefundStatus.Completed)
         {
-            refund.StampGatewayRefund(gatewayResult.GatewayRefundId);
-            refund.MarkRefundCompleted(gatewayResult.GatewayRefundId, nowUtc);
-            original.ApplyRefundCompletion(refundMoney, nowUtc);
+            var stampResult = refund.StampGatewayRefund(gatewayResult.GatewayRefundId);
+            if (stampResult.IsFailure)
+            {
+                return Result.Failure<RefundPaymentResult>(stampResult.Errors.First(), stampResult.Outcome);
+            }
+            var refundCompleted = refund.MarkRefundCompleted(gatewayResult.GatewayRefundId, nowUtc);
+            if (refundCompleted.IsFailure)
+            {
+                return Result.Failure<RefundPaymentResult>(refundCompleted.Errors.First(), refundCompleted.Outcome);
+            }
+
+            var applyResult = original.ApplyRefundCompletion(refundMoney, nowUtc);
+            if (applyResult.IsFailure)
+            {
+                return Result.Failure<RefundPaymentResult>(applyResult.Errors.First(), applyResult.Outcome);
+            }
         }
         else if (gatewayResult.Status == RefundStatus.Failed)
         {
-            refund.MarkRefundFailed(gatewayResult.FailureCode ?? "Gateway reported Failed.", nowUtc);
+            var refundFailed = refund.MarkRefundFailed(gatewayResult.FailureCode ?? "Gateway reported Failed.", nowUtc);
+            if (refundFailed.IsFailure)
+            {
+                return Result.Failure<RefundPaymentResult>(refundFailed.Errors.First(), refundFailed.Outcome);
+            }
         }
         // Pending: leave as-is, webhook will finalize.
 

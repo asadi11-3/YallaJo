@@ -19,7 +19,6 @@ public sealed class UpdateAccessibilityFeaturesCommandHandler(
     ILogger<UpdateAccessibilityFeaturesCommandHandler> logger)
     : ICommandHandler<UpdateAccessibilityFeaturesCommand>
 {
-    private const byte PlaceEntityType = 1;
 
     public async Task<Result> Handle(
         UpdateAccessibilityFeaturesCommand request,
@@ -38,7 +37,7 @@ public sealed class UpdateAccessibilityFeaturesCommandHandler(
 
         // Get existing features
         var existingFeatures = await featureRepository.GetAllAsync(
-            filter: x => x.EntityId == request.PlaceId && x.EntityType == PlaceEntityType,
+            filter: x => x.EntityId == request.PlaceId && x.EntityType == AccessibilityFeatureEntity.EntityTypePlace,
             ct: cancellationToken);
 
         // Remove old features
@@ -49,7 +48,7 @@ public sealed class UpdateAccessibilityFeaturesCommandHandler(
             .GroupBy(x => x.FeatureType)
             .Select(x => x.First())
             .Select(x => AccessibilityFeatureEntity.Create(
-                PlaceEntityType,
+                AccessibilityFeatureEntity.EntityTypePlace,
                 request.PlaceId,
                 x.FeatureType,
                 x.Name,

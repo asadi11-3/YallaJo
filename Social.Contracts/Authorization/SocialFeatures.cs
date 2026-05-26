@@ -20,4 +20,7 @@ public static class SocialFeatures
 
     /// <summary>Admin operations on the flagged-content review queue.</summary>
     public const string AdminModerationQueue = nameof(AdminModerationQueue);
+
+    /// <summary>User warning / temporary-ban moderation records.</summary>
+    public const string UserModeration = nameof(UserModeration);
 }

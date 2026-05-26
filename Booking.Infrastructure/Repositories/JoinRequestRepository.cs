@@ -14,4 +14,13 @@ internal sealed class JoinRequestRepository(BookingDbContext context)
 
     public async Task<IReadOnlyList<JoinRequest>> GetByUserIdAsync(Guid userId, CancellationToken ct = default)
         => await context.JoinRequests.Where(j => j.UserId == userId).ToListAsync(ct);
+
+    public async Task<IReadOnlyList<JoinRequest>> GetExpiredPendingAsync(DateTime utcNow, CancellationToken ct = default)
+        => await context.JoinRequests
+            .Where(j => j.Status == Booking.Domain.Enums.JoinRequestStatus.Pending && j.ExpiresAt <= utcNow)
+            .ToListAsync(ct);
+
+    public async Task<bool> HasPendingRequestAsync(Guid tourBookingId, Guid userId, CancellationToken ct = default)
+        => await context.JoinRequests
+            .AnyAsync(j => j.TourBookingId == tourBookingId && j.UserId == userId && j.Status == Booking.Domain.Enums.JoinRequestStatus.Pending, ct);
 }

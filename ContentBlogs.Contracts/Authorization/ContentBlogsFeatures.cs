@@ -20,8 +20,6 @@ namespace ContentBlogs.Contracts.Authorization
         // ── Admin Blog Queue ────────────────────────────────────────────
         public const string AdminBlogQueue = nameof(AdminBlogQueue);
 
-        // ── Creator Posts & Moderation (Wave-8) ────────────────────────
-        public const string CreatorPost = nameof(CreatorPost);
-        public const string AdminPostModeration = nameof(AdminPostModeration);
+        // CreatorPost + AdminPostModeration removed — merged into Blog (Wave-8 → Blog).
     }
 }

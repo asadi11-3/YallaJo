@@ -40,7 +40,7 @@ internal static class BusinessEndpoints
     internal static void MapBusinessEndpoints(RouteGroupBuilder group)
     {
         // ── Businesses ─────────────────────────────────────────────────────────
-        var businesses = group.MapGroup("/places/businesses").WithTags("ContentPlaces | Businesses");
+        var businesses = group.MapGroup("").WithTags("ContentPlaces | Businesses");
         // GET /places/{id}/businesses — list all businesses for a place
         businesses.MapGet("/places/{id:guid}/businesses", async (
             Guid id,
@@ -362,7 +362,7 @@ internal static class BusinessEndpoints
 
         // ── My Businesses ──────────────────────────────────────────────────────
 
-        businesses.MapGet("/mine", async (
+        businesses.MapGet("/places/businesses/mine", async (
             HttpContext http,
             ISender sender,
             int page = 1,
@@ -380,7 +380,7 @@ internal static class BusinessEndpoints
 
         // ── Business Accessibility ─────────────────────────────────────────────
 
-        businesses.MapGet("/{id:guid}/accessibility", async (
+        businesses.MapGet("/places/businesses/{id:guid}/accessibility", async (
             Guid id,
             HttpContext http,
             ISender sender) =>
@@ -394,7 +394,7 @@ internal static class BusinessEndpoints
         .AllowAnonymous()
         .WithSummary("List accessibility features for a business");
 
-        businesses.MapPut("/{id:guid}/accessibility", async (
+        businesses.MapPut("/places/businesses/{id:guid}/accessibility", async (
             Guid id,
             IReadOnlyList<AccessibilityFeatureItemRequest> features,
             ISender sender,

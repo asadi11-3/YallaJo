@@ -15,7 +15,8 @@ public class TranslationCacheConfiguration : IEntityTypeConfiguration<Translatio
         builder.Property(x => x.Id).ValueGeneratedNever();
 
         builder.Property(x => x.OriginalText)
-            .IsRequired();
+            .IsRequired()
+            .HasMaxLength(4000);
 
         builder.Property(x => x.OriginalTextHash)
             .IsRequired()
@@ -23,7 +24,8 @@ public class TranslationCacheConfiguration : IEntityTypeConfiguration<Translatio
             .HasMaxLength(64);
 
         builder.Property(x => x.TranslatedText)
-            .IsRequired();
+            .IsRequired()
+            .HasMaxLength(4000);
 
         builder.Property(x => x.FromLanguage)
             .IsRequired()

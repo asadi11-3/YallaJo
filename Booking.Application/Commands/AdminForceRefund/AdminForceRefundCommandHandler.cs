@@ -27,16 +27,7 @@ public sealed class AdminForceRefundCommandHandler(
     {
         try
         {
-            // Admin permission is gated by MustHavePermissionAttribute(AdminBookingDashboard, Update)
-            // at the endpoint. Still need an authenticated user for audit trail.
-            if (!currentUser.IsAuthenticated || currentUser.UserId is null)
-            {
-                return Result.Failure<AdminForceRefundResult>(
-                    new Error("TourBooking.Unauthorized", "Authentication is required for force refund."),
-                    Outcome.Unauthorized);
-            }
-
-            var adminUserId = currentUser.UserId.Value;
+            var adminUserId = currentUser.UserId!.Value;
 
             var booking = await tourBookingRepository
                 .GetByIdWithDetailsAsync(request.BookingId, cancellationToken)

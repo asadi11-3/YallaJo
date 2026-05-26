@@ -15,6 +15,12 @@ public interface IReviewRepository : IRepository<Review, Guid>
     Task<(IReadOnlyList<Review> Items, Guid? NextCursor)> GetByTargetPageAsync(
         ReviewTargetType targetType, Guid targetId, Guid? afterId, int pageSize, CancellationToken ct = default);
 
+    Task<(IReadOnlyList<Review> Items, int TotalCount)> GetPublicListAsync(
+        ReviewTargetType targetType, Guid targetId, int page, int pageSize, CancellationToken ct = default);
+
+    Task<decimal> GetAverageRatingAsync(
+        ReviewTargetType targetType, Guid targetId, CancellationToken ct = default);
+
     /// <summary>Returns reviews awaiting moderation or flagged (admin, cursor-paginated).</summary>
     Task<(IReadOnlyList<Review> Items, Guid? NextCursor)> GetFlaggedPageAsync(
         Guid? afterId, int pageSize, CancellationToken ct = default);

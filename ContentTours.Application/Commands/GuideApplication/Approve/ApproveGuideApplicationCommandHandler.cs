@@ -3,6 +3,7 @@ using ContentTours.Application.Interfaces;
 using ContentTours.Domain.Entities;
 using ContentTours.Domain.Enums;
 using ContentTours.Domain.Repositories;
+using GuideTourOfferingEntity = ContentTours.Domain.Entities.GuideTourOffering;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
@@ -44,7 +45,7 @@ public sealed class ApproveGuideApplicationCommandHandler(
             var existingOffering = await offeringRepository.GetByTourAndGuideAsync(application.TourId, application.TourGuideId, cancellationToken).ConfigureAwait(false);
             if (existingOffering is null)
             {
-                var offering = GuideTourOffering.Create(
+                var offering = GuideTourOfferingEntity.Create(
                     application.TourId,
                     application.TourGuideId,
                     isProposer: false,

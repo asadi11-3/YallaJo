@@ -1,6 +1,6 @@
 # Role System — Architecture Plan
 
-> **Status:** All design decisions LOCKED. Ready for execution.
+> **Status:** Implemented (audited 2025-01-27, score 9.5/10). All 4 fixes applied. See `Role-System-Audit-Report.md`.
 > **Scope:** Define platform roles, auto-assignment on approval events, role stacking, and privilege hierarchy.
 
 ---
@@ -202,7 +202,7 @@ public sealed class EmailVerifiedUpgradeRoleHandler(...)
 | Event | Module | Properties |
 |---|---|---|
 | `AgencyGuideAffiliatedIntegrationEvent` | Accounts.Contracts | UserId, AgencyId, AffiliationId |
-| `EmailVerifiedIntegrationEvent` | Auth.Contracts (or Identity) | UserId, Email |
+| `EmailVerifiedIntegrationEvent` | Security.Contracts | UserId, EmailId, EmailAddress |
 
 **Already existing:** `ProviderApprovedIntegrationEvent` (Accounts.Contracts), `CreatorApplicationApprovedIntegrationEvent` (ContentBlogs.Contracts)
 
@@ -216,22 +216,22 @@ Roles must exist in the database. Add to role seed:
 
 Existing roles already seeded: Owner, SuperAdmin, Admin, User, TourGuide, Guest.
 
-### 5. Permission Catalog Updates
+### 5. Permission Mapping (Actual Implementation)
 
-Each module's PermissionCatalog assigns permissions to roles:
+> **Note:** Permission mapping uses **broad group+action filtering** in `RolePermissionMapping.cs`, not per-feature granularity. All 13 module `IPermissionCatalog` implementations feed into the runtime seeder.
 
-| Permission | Roles That Get It |
-|---|---|
-| ContentPlaces.Business.Create | Provider |
-| ContentPlaces.Business.Update | Provider |
-| ContentPlaces.ServiceItem.* | Provider |
-| ContentTours.Tour.Create | Provider, TourGuide |
-| ContentTours.TourGuide.* | TourGuide |
-| ContentTours.GuideApplication.* | TourGuide |
-| ContentTours.TourProposal.* | TourGuide |
-| ContentBlogs.Blog.Create | Admin, Creator |
-| ContentBlogs.Blog.SubmitForReview | Creator |
-| Booking.TourBooking.Create | User, Provider, TourGuide, Creator |
+| Role | Mapping Rule | Effect |
+|---|---|---|
+| **Owner** | ALL permissions | Unrestricted |
+| **SuperAdmin** | ALL except `Security.System.Update` | Near-full access |
+| **Admin** | ALL except `Security.System.Update` and `Security.User.DeleteAny` | Management access |
+| **Provider** | ALL `ContentManagement` group with Read/Create/Update/Delete + `User.UpdateSelf` + guest-accessible | All content modules (CRUD) |
+| **Creator** | ALL `ContentManagement` group with Read/Create/Delete + `User.UpdateSelf` + guest-accessible | All content modules (no Update) |
+| **TourGuide** | ALL `ContentManagement` group with Read/Create/Delete + `User.UpdateSelf` + guest-accessible | All content modules (no Update) |
+| **User** | `User.UpdateSelf` + guest-accessible | Profile management only |
+| **Guest** | Guest-accessible only | Minimal read access |
+
+This means Provider/Creator/TourGuide get permissions across ALL ContentManagement features (ContentCore, ContentPlaces, ContentBlogs, ContentTours, ContentSeo) — not selectively per feature. The actual access control is further refined by entity-level status checks (e.g., `IProviderStatusService`).
 
 ---
 
@@ -241,6 +241,10 @@ Each module's PermissionCatalog assigns permissions to roles:
 **New:** `DefaultRoles = { Guest }` — assigned on registration. Upgraded to User on email verification.
 
 **Impact:** Need to verify what `DefaultRoles` is used for in the registration flow and update accordingly.
+
+> **Note:** `RegisterExternalAsync()` (OAuth/social login) assigns User role directly, bypassing the Guest→User lifecycle. Only `RegisterAsync()` (email registration) uses DefaultRoles.
+
+> **Legacy Warning:** `SecurityDbInitializer` is a legacy bootstrap seeder that only seeds 5 roles (Owner, SuperAdmin, Admin, TourGuide, User) with a different claim format. The **current system** uses `SecurityDataSeeder` which is invoked at runtime startup, is idempotent, and seeds all 8 roles from `AppRoles.AllRoles` with claims from `RolePermissionMapping`. Do NOT rely on SecurityDbInitializer for role/permission seeding.
 
 ---
 
@@ -255,9 +259,9 @@ Each module's PermissionCatalog assigns permissions to roles:
 
 ### Phase 2: Integration Events (Low Risk)
 1. Verify `ProviderApprovedIntegrationEvent` includes `ProviderType` field
-2. Verify `CreatorApplicationApprovedIntegrationEvent` includes `UserId`
+2. Verify `CreatorApplicationApprovedIntegrationEvent` includes `ApplicantUserId`
 3. Create `AgencyGuideAffiliatedIntegrationEvent` in Accounts.Contracts (if not exists)
-4. Verify `EmailVerifiedIntegrationEvent` exists (or create in Auth.Contracts)
+4. Verify `EmailVerifiedIntegrationEvent` exists in Security.Contracts
 
 ### Phase 3: Event Handlers (Medium Risk)
 1. Create `ProviderApprovedAssignRoleHandler` in Security.Infrastructure

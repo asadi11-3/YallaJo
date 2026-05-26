@@ -27,4 +27,8 @@ public interface IProviderApplicationRepository : IRepository<ProviderApplicatio
         ProviderApplicationStatus? statusFilter,
         ProviderType? typeFilter,
         CancellationToken ct = default);
+
+    Task<IReadOnlyList<ProviderApplication>> GetApprovedWithExpiringDocumentsAsync(
+        DateTime expiryThreshold,
+        CancellationToken ct = default);
 }

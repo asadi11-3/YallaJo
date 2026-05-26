@@ -27,15 +27,19 @@ public static class AnalyticsEndpoints
             await sender.Send(new RecordInteractionCommand(request.UserId, request.SessionId, request.EntityType, request.EntityId, request.InteractionType, http.Connection.RemoteIpAddress?.ToString(), http.Request.Headers.UserAgent.ToString()), ct);
             return Results.Accepted();
         })
-            .WithName("RecordInteraction").AllowAnonymous();
+            .WithName("RecordInteraction")
+            .WithMetadata(new MustHavePermissionAttribute(AnalyticsFeatures.Interaction, AppAction.Create))
+            .RequireAuthorization();
 
         group.MapGet("/admin/interactions", async ([AsParameters] InteractionListRequest request, ISender sender, CancellationToken ct) =>
             (await sender.Send(new GetAdminInteractionsQuery(request.UserId, request.EntityType, request.EntityId, request.InteractionType, request.From, request.To, request.AfterId, request.PageSize), ct)).ToApiResult())
-            .WithName("GetAdminInteractions").WithMetadata(new MustHavePermissionAttribute(AnalyticsFeatures.Interaction, AppAction.Read));
+            .WithName("GetAdminInteractions").WithMetadata(new MustHavePermissionAttribute(AnalyticsFeatures.Interaction, AppAction.Read))
+            .RequireAuthorization();
 
         group.MapGet("/admin/interactions/user/{userId:guid}", async (Guid userId, long? afterId, int pageSize, ISender sender, CancellationToken ct) =>
             (await sender.Send(new GetUserInteractionsQuery(userId, afterId, pageSize), ct)).ToApiResult())
-            .WithName("GetUserInteractions").WithMetadata(new MustHavePermissionAttribute(AnalyticsFeatures.Interaction, AppAction.Read));
+            .WithName("GetUserInteractions").WithMetadata(new MustHavePermissionAttribute(AnalyticsFeatures.Interaction, AppAction.Read))
+            .RequireAuthorization();
 
         group.MapGet("/popular/tours", async (ISender sender, CancellationToken ct) => (await sender.Send(new GetPopularEntitiesQuery("Tour"), ct)).ToApiResult()).WithName("GetPopularTours").AllowAnonymous();
         group.MapGet("/popular/places", async (ISender sender, CancellationToken ct) => (await sender.Send(new GetPopularEntitiesQuery("Place"), ct)).ToApiResult()).WithName("GetPopularPlaces").AllowAnonymous();
@@ -51,8 +55,12 @@ public static class AnalyticsEndpoints
         group.MapGet("/provider/analytics", async (DateTime? from, DateTime? to, HttpContext http, ISender sender, CancellationToken ct) => (await sender.Send(new GetProviderAnalyticsQuery(GetProviderId(http), from, to), ct)).ToApiResult()).WithName("GetProviderAnalytics").WithMetadata(new MustHavePermissionAttribute(AnalyticsFeatures.ProviderDashboard, AppAction.Read));
         group.MapGet("/provider/my-tours", async (long? afterId, int pageSize, HttpContext http, ISender sender, CancellationToken ct) => (await sender.Send(new GetProviderMyToursQuery(GetProviderId(http), afterId, pageSize), ct)).ToApiResult()).WithName("GetProviderMyTours").WithMetadata(new MustHavePermissionAttribute(AnalyticsFeatures.ProviderDashboard, AppAction.Read));
 
+        group.MapGet("/guide/dashboard", async (DateTime? from, DateTime? to, HttpContext http, ISender sender, CancellationToken ct) => (await sender.Send(new GetProviderDashboardQuery(GetUserId(http)), ct)).ToApiResult()).WithName("GetGuideDashboard").WithMetadata(new MustHavePermissionAttribute(AnalyticsFeatures.GuideDashboard, AppAction.Read));
+        group.MapGet("/guide/analytics", async (DateTime? from, DateTime? to, HttpContext http, ISender sender, CancellationToken ct) => (await sender.Send(new GetProviderAnalyticsQuery(GetUserId(http), from, to), ct)).ToApiResult()).WithName("GetGuideAnalytics").WithMetadata(new MustHavePermissionAttribute(AnalyticsFeatures.GuideDashboard, AppAction.Read));
+        group.MapGet("/guide/my-tours", async (long? afterId, int pageSize, HttpContext http, ISender sender, CancellationToken ct) => (await sender.Send(new GetProviderMyToursQuery(GetUserId(http), afterId, pageSize), ct)).ToApiResult()).WithName("GetGuideMyTours").WithMetadata(new MustHavePermissionAttribute(AnalyticsFeatures.GuideDashboard, AppAction.Read));
+
         group.MapGet("/admin/audit-logs", async ([AsParameters] AuditLogListRequest request, ISender sender, CancellationToken ct) => (await sender.Send(new GetAuditLogsQuery(request.EntityType, request.EntityId, request.UserId, request.Action, request.From, request.To, request.AfterId, request.PageSize), ct)).ToApiResult()).WithName("GetAdminAuditLogs").WithMetadata(new MustHavePermissionAttribute(AnalyticsFeatures.AuditLog, AppAction.Read));
-        group.MapPost("/admin/audit-logs/{id:long}/redact", async (long id, RedactAuditLogRequest request, HttpContext http, ISender sender, CancellationToken ct) => (await sender.Send(new RedactAuditLogCommand(id, request.AdminUserId ?? GetUserId(http), request.Reason), ct)).ToApiResult()).WithName("RedactAuditLog").WithMetadata(new MustHavePermissionAttribute(AnalyticsFeatures.AuditLog, AppAction.Redact));
+        group.MapPost("/admin/audit-logs/{id:long}/redact", async (long id, RedactAuditLogRequest request, HttpContext http, ISender sender, CancellationToken ct) => (await sender.Send(new RedactAuditLogCommand(id, GetUserId(http), request.Reason), ct)).ToApiResult()).WithName("RedactAuditLog").WithMetadata(new MustHavePermissionAttribute(AnalyticsFeatures.AuditLog, AppAction.Redact));
         group.MapGet("/admin/audit-logs/export", async (DateTime from, DateTime to, ISender sender, CancellationToken ct) => (await sender.Send(new ExportAuditLogsQuery(from, to), ct)).ToApiResult()).WithName("ExportAuditLogs").WithMetadata(new MustHavePermissionAttribute(AnalyticsFeatures.AuditLog, AppAction.Export));
 
         return endpoints;
@@ -63,6 +71,6 @@ public static class AnalyticsEndpoints
 }
 
 public sealed record RecordInteractionRequest(Guid? UserId, string? SessionId, string EntityType, Guid EntityId, string InteractionType);
-public sealed record RedactAuditLogRequest(Guid? AdminUserId, string Reason);
+public sealed record RedactAuditLogRequest(string Reason);
 public sealed record InteractionListRequest(Guid? UserId, string? EntityType, Guid? EntityId, string? InteractionType, DateTime? From, DateTime? To, long? AfterId, int PageSize = 50);
 public sealed record AuditLogListRequest(string? EntityType, Guid? EntityId, Guid? UserId, string? Action, DateTime? From, DateTime? To, long? AfterId, int PageSize = 100);

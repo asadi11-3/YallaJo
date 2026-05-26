@@ -1,3 +1,4 @@
+using Accounts.Contracts.IntegrationEvents;
 using Accounts.Domain.Repositories;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -8,7 +9,7 @@ namespace Accounts.Infrastructure.BackgroundServices;
 
 /// <summary>
 /// Checks for provider application documents that are expiring or have expired.
-/// Notifies providers 30 days before expiry.
+/// Notifies providers 30 days before expiry via integration events.
 /// Runs daily.
 /// </summary>
 internal sealed class ProviderDocumentExpiryService(
@@ -53,25 +54,47 @@ internal sealed class ProviderDocumentExpiryService(
     {
         using var scope = scopeFactory.CreateScope();
         var appRepo = scope.ServiceProvider.GetRequiredService<IProviderApplicationRepository>();
+        var outboxWriter = scope.ServiceProvider.GetRequiredService<IAccountsOutboxWriter>();
         var nowUtc = timeProvider.GetUtcNow().UtcDateTime;
         var notifyThreshold = nowUtc.AddDays(_options.NotifyDaysBeforeExpiry);
 
-        // Get all approved providers and check their documents
-        // Documents with ExpiresAt in (now, notifyThreshold] → fire notification
-        // Documents with ExpiresAt < now → log warning (action required)
-        // Note: actual notification delivery is handled by Messaging module via integration events
-        // This service only logs; full notification wiring is in Messaging-Workflow plan
+        var applications = await appRepo.GetApprovedWithExpiringDocumentsAsync(notifyThreshold, ct);
+
         var expiredCount = 0;
         var expiringCount = 0;
 
-        // We use a lightweight check — no bulk update, just log.
-        // Full implementation (with Messaging integration events) is in Messaging-Workflow plan.
-        logger.LogDebug(
-            "ProviderDocumentExpiryService: scanned at {UtcNow}, threshold {Threshold}",
-            nowUtc, notifyThreshold);
+        foreach (var application in applications)
+        {
+            foreach (var doc in application.Documents.Where(d => d.ExpiresAt.HasValue))
+            {
+                if (doc.ExpiresAt!.Value < nowUtc)
+                {
+                    // Already expired — log warning
+                    expiredCount++;
+                    logger.LogWarning(
+                        "Provider {UserId} document {DocType} ({FileName}) expired on {ExpiresAt}",
+                        application.UserId, doc.DocumentType, doc.FileName, doc.ExpiresAt.Value);
+                }
+                else if (doc.ExpiresAt.Value <= notifyThreshold)
+                {
+                    // Expiring soon — publish integration event for Messaging module
+                    expiringCount++;
+                    var daysUntilExpiry = (int)(doc.ExpiresAt.Value - nowUtc).TotalDays;
 
-        // TODO(Messaging-Workflow): publish ProviderDocumentExpiringIntegrationEvent for each
-        // expiring document so Messaging module sends a notification to the provider.
+                    await outboxWriter.WriteAsync(new ProviderDocumentExpiringIntegrationEvent(
+                        ApplicationId: application.Id,
+                        UserId: application.UserId,
+                        DocumentType: doc.DocumentType.ToString(),
+                        DocumentFileName: doc.FileName,
+                        ExpiresAt: doc.ExpiresAt.Value,
+                        DaysUntilExpiry: daysUntilExpiry), ct);
+                }
+            }
+        }
+
+        logger.LogInformation(
+            "ProviderDocumentExpiryService: scanned {AppCount} applications, {ExpiredCount} expired docs, {ExpiringCount} expiring docs published",
+            applications.Count, expiredCount, expiringCount);
     }
 }
 

@@ -24,6 +24,7 @@ public sealed class FinanceDbContext : DbContext, IDbContext
     public DbSet<Discount> Discounts => Set<Discount>();
     public DbSet<DiscountUsage> DiscountUsages => Set<DiscountUsage>();
     public DbSet<ProviderBankAccount> ProviderBankAccounts => Set<ProviderBankAccount>();
+    public DbSet<ProviderPaymentMethod> ProviderPaymentMethods => Set<ProviderPaymentMethod>();
     public DbSet<Invoice> Invoices => Set<Invoice>();
     public DbSet<InvoiceNumberCounter> InvoiceNumberCounters => Set<InvoiceNumberCounter>();
     public DbSet<PaymentExpectation> PaymentExpectations => Set<PaymentExpectation>();

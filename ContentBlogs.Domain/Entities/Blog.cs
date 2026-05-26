@@ -141,7 +141,7 @@ public sealed class Blog : AuditableEntity, IAggregateRoot
     /// <summary>
     /// Factory for creator-authored articles. Sets <see cref="AuthoredByCreatorId"/> and
     /// initial status to <see cref="BlogStatus.Draft"/>. The creator must later call
-    /// <see cref="SubmitForCreatorReview"/> to put it into the admin queue.
+    /// <see cref="SubmitForReview"/> to put it into the admin queue.
     /// </summary>
     public static Blog CreateByCreator(
         string title,

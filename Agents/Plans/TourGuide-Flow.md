@@ -1,7 +1,23 @@
 # Tour Guide Flow — Architecture Plan
 
-> **Status:** All design decisions LOCKED. Ready for execution.
+> **Status:** Implemented (audited 2025-01-27). All design decisions LOCKED.
 > **Scope:** Extends ContentTours module with guide application system, tour proposals, multi-guide scheduling, and private tour variants.
+
+### Implementation Notes (added by audit)
+1. **ApplicationId** on TourGuide is `Guid?` (nullable), not `Guid` as plan specifies — allows guides created via agency affiliation path
+2. **CommissionRate** was missing from TourGuide — added during audit fix (decimal?, precision 5,4)
+3. **TourTourGuide** legacy entity still exists — active references in Assign/Unassign handlers prevent safe deletion. Deferred.
+4. **Property naming differs from plan**: GuideApplication uses `Message` (not `QualificationSummary`), TourProposal uses `Title` (not `Name`), `RequestExclusive` (not `IsExclusive`), `CreatedTourId` (not `ApprovedTourId`)
+5. **GuideTourOffering** timestamps `AssignedAt`/`SuspendedAt` were missing — added during audit fix
+6. **GuideSchedule** missing `MaxGroupSize`, **GuidePricingTier** missing `ParticipantType` from plan specs
+7. **GuideAvailabilityBlock.Create()** changed from throw to Result pattern during audit fix
+8. **Domain events**: 6 events + 6 handlers added for GuideApplication (3) + TourProposal (3) during audit
+9. **Integration event registry**: TourProposalSubmittedIntegrationEvent was missing — created during audit
+10. **GuideOffering CRUD**: Full schedule/pricing/private-tour management endpoints (15 routes) created during audit
+11. **Public/guide endpoints**: ListTourGuides, GetBySlug, MyApplications, GuideTours — created during audit
+12. **Admin endpoints**: AdminUpdateTourGuide, AdminDeactivateTourGuide — created during audit
+13. **11 validators** added for GuideApplication, TourProposal, GuideAvailabilityBlock, Suspend/Reinstate commands
+14. Tour entity property is `Name` not `Title`; user ID property is `CreatedByUserId` not `AuthorId`
 
 ## Decision Summary
 
@@ -1132,3 +1148,22 @@ GuideAvailabilityBlock (BaseEntity)
 | **Total** | **~106-121** | **~44** |
 
 > **Note:** ~35 fewer files vs original estimate. 5 entities (GuideNotification, GuideReviewResponse, GuidePaymentMethod, GuidePayout, GuideEarning) replaced by cross-module integration with Messaging, Social, and Finance modules.
+
+---
+
+## Implementation Notes (Audit 2025-01-27)
+
+> Added during codebase audit — reflects actual implementation details and fixes applied.
+
+1. **Domain events added (W3-C)**: 6 domain events created for GuideApplication (Submitted/Approved/Rejected) and TourProposal (Submitted/Approved/Rejected). All 6 handlers publish corresponding integration events via outbox.
+2. **TourProposalSubmittedIntegrationEvent**: Created in ContentTours.Contracts (was missing). Registry entry: `content-tours.tour-proposal.submitted.v1`.
+3. **CommissionRate**: Added to TourGuide entity as `decimal?` with EF config `HasPrecision(5, 4)`.
+4. **GuideTourOffering timestamps**: `AssignedAt` and `SuspendedAt` added to entity + EF config.
+5. **GuideAvailabilityBlock.Create()**: Changed from throwing to `Result<GuideAvailabilityBlock>` pattern.
+6. **11 validators added**: ApplyForTour, ApproveGuideApplication, RejectGuideApplication, CreateTourProposal, SubmitTourProposal, ApproveTourProposal, RejectTourProposal, CreateGuideAvailabilityBlock, DeleteGuideAvailabilityBlock, SuspendTourGuide, ReinstateTourGuide.
+7. **GuideOffering CRUD**: Full schedule/pricing/private-tour management implemented — 11 commands, 4 queries, 15 endpoints in GuideOfferingEndpoints.cs. GuideScheduleRepository + GuidePricingTierRepository added.
+8. **Public/guide endpoints**: ListTourGuides, GetTourGuideBySlug, GetMyGuideApplications, GetGuideTours — all implemented.
+9. **Admin endpoints**: AdminUpdateTourGuide, AdminDeactivateTourGuide — both implemented.
+10. **TourTourGuide legacy entity**: Still exists (deeply embedded in 3 handlers + 4 test files). Removal deferred — retargeting to GuideTourOffering changes semantics.
+11. **GuideTourOfferingSuspendedIntegrationEvent**: Created in ContentTours.Contracts. Published by SuspendGuideOfferingCommandHandler. Consumed by Booking.Infrastructure to cancel affected bookings.
+12. **Property name differences**: GuideApplication uses `Message` (not QualificationSummary), TourProposal uses `Title` (not Name), `RequestExclusive` (not IsExclusive).

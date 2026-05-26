@@ -23,6 +23,11 @@ public class DisputeConfiguration : IEntityTypeConfiguration<Dispute>
         builder.Property(x => x.ResolvedAt).IsRequired(false);
         builder.Property(x => x.ResolvedByUserId).IsRequired(false);
         builder.Property(x => x.ResolutionNotes).IsRequired(false).HasColumnType("nvarchar(max)");
+        builder.Property(x => x.ReviewedByAdminId).IsRequired(false);
+        builder.Property(x => x.ReviewedAt).IsRequired(false);
+        builder.Property(x => x.EscalatedByAdminId).IsRequired(false);
+        builder.Property(x => x.EscalatedAt).IsRequired(false);
+        builder.Property(x => x.EscalationReason).IsRequired(false).HasMaxLength(1000);
 
         builder.Property(x => x.CreatedAt).IsRequired();
         builder.Property(x => x.UpdatedAt).IsRequired(false);
@@ -35,6 +40,8 @@ public class DisputeConfiguration : IEntityTypeConfiguration<Dispute>
             .HasForeignKey(x => x.PaymentId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        builder.HasIndex(x => x.PaymentId);
+        builder.HasIndex(x => new { x.Status, x.CreatedAt });
         builder.HasQueryFilter(x => !x.IsDeleted);
     }
 }

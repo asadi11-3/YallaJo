@@ -63,6 +63,8 @@ public static class DependencyInjection
         services.AddScoped<ITourSnapshotRepository, TourSnapshotRepository>();
         services.AddScoped<IEntityRatingCacheRepository, EntityRatingCacheRepository>();
         services.AddScoped<ISocialOutboxWriter, SocialOutboxWriter>();
+        services.AddScoped<IReviewHelpfulVoteRepository, ReviewHelpfulVoteRepository>();
+        services.AddScoped<IUserModerationRepository, UserModerationRepository>();
 
         // ── Content moderation ────────────────────────────────────────────────
         // BlocklistProfanityFilter is Singleton: loads word list from DB on first use

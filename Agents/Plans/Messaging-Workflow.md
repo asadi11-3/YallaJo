@@ -1,6 +1,7 @@
 # Messaging Module — Workflow Plan
 
 > **Created**: 2025-07-14
+> **Status**: Partially Implemented (audited 2025-01-27, W2-C fixes applied)
 > **Compatible with**: TourGuide-Flow.md, Booking-Workflow.md, Finance-Workflow.md, Social-Workflow.md, Platform-Onboarding-Workflow.md, Role-System.md, BlogCreatorPost-Merger.md, ContentPlaces-Workflow.md
 > **Source of truth**: agent-context.md, YallaJo Business Rules PDF, YallaJo.md, Endpoints.pdf
 
@@ -539,3 +540,18 @@ public record PushResult(bool Success, string? ErrorCode, bool ShouldRevokeToken
 ### With BlogCreatorPost-Merger.md
 - Creator notification handlers (12 existing) reference CreatorPost → will need update after merger
 - Post-merger: handlers fire for Blog entity where AuthoredByCreatorId IS NOT NULL
+
+---
+
+## Implementation Notes (Audited 2025-01-27)
+
+1. **Validators**: 15 command validators created (W1-A) — all commands now have FluentValidation coverage
+2. **HybridCache**: QueryCachingBehavior globally registered in SharedKernel — all ICacheableQuery implementations automatically cached. Cache invalidation added to 12 command handlers (W1-B)
+3. **ISmsSender**: Interface in Messaging.Contracts.Services, NoOpSmsSender in Infrastructure — logs warning, returns success. Replace with Twilio/Vonage at deployment time
+4. **SlaMonitoringService**: BackgroundService in Infrastructure, 5-min interval, queries GetOverdueSlaTicketsAsync, publishes SupportSlaBreachedIntegrationEvent via outbox. Enabled by default
+5. **NotificationDigestService**: BackgroundService stub registered but DISABLED by default (Enabled=false). Requires Notification entity schema changes (DigestFrequency, IsDigestDispatched, DigestScheduledFor, DigestBatchId columns) before activation
+6. **TourGuide notification types**: GuideOfferingSuspended=50, GuideApplicationSubmitted=51 added (types 40-49 already existed)
+7. **Auth gates**: All 23 REST endpoints + 1 SignalR hub correctly configured — no changes needed
+8. **CQRS**: All command/query handlers use MediatR ISender — no direct repo usage in Presentation layer
+9. **Background services**: 4 total — EmailNotificationSenderService, ReadNotificationCleanupService, SlaMonitoringService (NEW), NotificationDigestService (NEW, disabled)
+10. **Actual counts**: 11 entities, 23 REST endpoints + 1 SignalR hub, 53 integration event handlers, 23 CQRS handlers, 18 permissions across 6 features

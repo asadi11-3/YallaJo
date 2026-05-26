@@ -14,4 +14,7 @@ public interface ITourGuideRepository : IRepository<TourGuide, Guid>
     Task<TourGuide?> GetBySlugAsync(string slug, CancellationToken ct = default, bool asNoTracking = true);
 
     Task<bool> IsSlugTakenAsync(string slug, Guid? excludeId = null, CancellationToken ct = default);
+
+    Task<(IReadOnlyList<TourGuide> Items, int TotalCount)> ListActiveAsync(
+        int page, int pageSize, CancellationToken ct = default);
 }

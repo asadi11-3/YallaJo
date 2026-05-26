@@ -41,7 +41,7 @@ public sealed class RolePermissionMapping
 
             AppRoles.Creator =>
                 _all.Where(p => (p.Group == PermissionGroup.ContentManagement
-                                 && p.Action is AppAction.Read or AppAction.Create)
+                                 && p.Action is AppAction.Read or AppAction.Create or AppAction.Delete)
                              || (p.Feature == SecurityFeatures.User && p.Action == AppAction.UpdateSelf)
                              || p.IsGuestAccessible)
                     .Select(p => p.Name).ToList(),
@@ -52,8 +52,10 @@ public sealed class RolePermissionMapping
                     .Select(p => p.Name).ToList(),
 
             AppRoles.TourGuide =>
-                _all.Where(p => p.Group == PermissionGroup.ContentManagement
-                             && (p.Action == AppAction.Read || p.Action == AppAction.Create))
+                _all.Where(p => (p.Group == PermissionGroup.ContentManagement
+                                 && (p.Action == AppAction.Read || p.Action == AppAction.Create || p.Action == AppAction.Delete))
+                             || (p.Feature == SecurityFeatures.User && p.Action == AppAction.UpdateSelf)
+                             || p.IsGuestAccessible)
                     .Select(p => p.Name).ToList(),
 
             AppRoles.Guest =>

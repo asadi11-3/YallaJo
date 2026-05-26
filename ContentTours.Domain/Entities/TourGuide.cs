@@ -37,6 +37,9 @@ public sealed class TourGuide : AuditableEntity, IAggregateRoot
     // Trust
     public GuideTrustTier TrustTier { get; private set; } = GuideTrustTier.New;
 
+    // Commission
+    public decimal? CommissionRate { get; private set; }
+
     // Status
     public TourGuideStatus Status { get; private set; } = TourGuideStatus.Active;
     public string? SuspensionReason { get; private set; }

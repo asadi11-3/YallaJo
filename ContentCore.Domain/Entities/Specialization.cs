@@ -59,12 +59,18 @@ public sealed class Specialization : AuditableEntity, IAggregateRoot
 
     public void Activate()
     {
+        if (IsActive)
+            return;
+
         IsActive = true;
         MarkUpdated();
     }
 
     public void Deactivate()
     {
+        if (!IsActive)
+            return;
+
         IsActive = false;
         MarkUpdated();
     }

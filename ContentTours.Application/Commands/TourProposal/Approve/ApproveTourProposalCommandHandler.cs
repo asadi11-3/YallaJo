@@ -3,6 +3,7 @@ using ContentTours.Application.Interfaces;
 using ContentTours.Domain.Entities;
 using ContentTours.Domain.Enums;
 using TourEntity = ContentTours.Domain.Entities.Tour;
+using GuideTourOfferingEntity = ContentTours.Domain.Entities.GuideTourOffering;
 using ContentTours.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
@@ -74,7 +75,7 @@ public sealed class ApproveTourProposalCommandHandler(
             }
 
             // Create GuideTourOffering for the proposer
-            var offering = GuideTourOffering.Create(
+            var offering = GuideTourOfferingEntity.Create(
                 tour.Id,
                 proposal.TourGuideId,
                 isProposer: true,

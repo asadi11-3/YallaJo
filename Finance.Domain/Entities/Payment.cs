@@ -1,5 +1,6 @@
 using Finance.Domain.Enums;
 using Finance.Domain.Events;
+using YallaJo.SharedKernel.Domain.Abstractions.Results;
 using YallaJo.SharedKernel.Domain.Entities;
 using YallaJo.SharedKernel.Domain.ValueObjects;
 
@@ -176,20 +177,21 @@ public sealed class Payment : AuditableEntity, IAggregateRoot
     /// Webhook handler: gateway confirmed the charge completed.
     /// Idempotent: a repeat call with the same gateway txn id is a no-op.
     /// </summary>
-    public void MarkCompleted(string gatewayTransactionId, DateTime occurredAtUtc)
+    public Result MarkCompleted(string gatewayTransactionId, DateTime occurredAtUtc)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(gatewayTransactionId);
 
         // F-R3 idempotency: already completed for this gateway txn id → no-op
         if (Status == PaymentStatus.Completed && GatewayTransactionId == gatewayTransactionId)
         {
-            return;
+            return Result.Success();
         }
 
         if (Status != PaymentStatus.Pending && Status != PaymentStatus.Processing)
         {
-            throw new InvalidOperationException(
-                $"Cannot complete payment in status {Status}.");
+            return Result.Failure(
+                new Error("Payment.InvalidState", $"Cannot complete payment in status {Status}."),
+                Outcome.Conflict);
         }
 
         Status = PaymentStatus.Completed;
@@ -206,25 +208,28 @@ public sealed class Payment : AuditableEntity, IAggregateRoot
             Amount: Amount.Amount,
             Currency: Currency,
             GatewayTransactionId: gatewayTransactionId));
+
+        return Result.Success();
     }
 
     /// <summary>
     /// Webhook handler: gateway reported the charge failed.
     /// Idempotent: a repeat call when already Failed is a no-op.
     /// </summary>
-    public void MarkFailed(string reasonCode, string rawReason, DateTime occurredAtUtc)
+    public Result MarkFailed(string reasonCode, string rawReason, DateTime occurredAtUtc)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(reasonCode);
 
         if (Status == PaymentStatus.Failed)
         {
-            return;
+            return Result.Success();
         }
 
         if (Status == PaymentStatus.Completed)
         {
-            throw new InvalidOperationException(
-                "Cannot fail a payment that is already Completed.");
+            return Result.Failure(
+                new Error("Payment.InvalidState", "Cannot fail a payment that is already Completed."),
+                Outcome.Conflict);
         }
 
         Status = PaymentStatus.Failed;
@@ -237,13 +242,15 @@ public sealed class Payment : AuditableEntity, IAggregateRoot
             ReasonCode: reasonCode,
             RawReason: rawReason ?? string.Empty,
             OccurredAt: occurredAtUtc));
+
+        return Result.Success();
     }
 
     /// <summary>
     /// Factory: create a Refund-type sibling Payment that points at this original via OriginalPaymentId.
     /// The refund row carries a negative amount (debit reversal of the platform escrow).
     /// </summary>
-    public Payment CreateRefund(
+    public Result<Payment> CreateRefund(
         Money refundAmount,
         string reason,
         string gatewayProvider,
@@ -258,25 +265,31 @@ public sealed class Payment : AuditableEntity, IAggregateRoot
             && Status != PaymentStatus.Refunded
             && Status != PaymentStatus.PartiallyRefunded)
         {
-            throw new InvalidOperationException(
-                $"Cannot refund a payment in status {Status}.");
+            return Result.Failure<Payment>(
+                new Error("Refund.InvalidState", $"Cannot refund a payment in status {Status}."),
+                Outcome.Conflict);
         }
 
         if (!string.Equals(refundAmount.Currency, Currency, StringComparison.OrdinalIgnoreCase))
         {
-            throw new ArgumentException("Refund currency must match original payment currency.", nameof(refundAmount));
+            return Result.Failure<Payment>(
+                new Error("Refund.CurrencyMismatch", "Refund currency must match original payment currency."),
+                Outcome.Invalid);
         }
 
         if (refundAmount.Amount <= 0m)
         {
-            throw new ArgumentException("Refund amount must be positive.", nameof(refundAmount));
+            return Result.Failure<Payment>(
+                new Error("Refund.AmountInvalid", "Refund amount must be positive."),
+                Outcome.Invalid);
         }
 
         var remaining = Amount.Amount - RefundedTotal.Amount;
         if (refundAmount.Amount > remaining)
         {
-            throw new InvalidOperationException(
-                "Refund amount exceeds refundable balance.");
+            return Result.Failure<Payment>(
+                new Error("Refund.AmountExceedsBalance", "Refund amount exceeds refundable balance."),
+                Outcome.Conflict);
         }
 
         var negativeAmount = new Money(-refundAmount.Amount, refundAmount.Currency);
@@ -307,45 +320,49 @@ public sealed class Payment : AuditableEntity, IAggregateRoot
             Currency: Currency,
             Reason: reason));
 
-        return refund;
+        return Result.Success(refund);
     }
 
     /// <summary>
     /// Stamp gateway-returned refund identifier on a freshly-initiated refund row.
     /// Called after a successful gateway RefundAsync round-trip.
     /// </summary>
-    public void StampGatewayRefund(string gatewayRefundId)
+    public Result StampGatewayRefund(string gatewayRefundId)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(gatewayRefundId);
 
         if (PaymentType != PaymentType.Refund)
         {
-            throw new InvalidOperationException(
-                "StampGatewayRefund only applies to Refund-type payments.");
+            return Result.Failure(
+                new Error("Refund.InvalidType", "StampGatewayRefund only applies to Refund-type payments."),
+                Outcome.Conflict);
         }
 
         GatewayTransactionId = gatewayRefundId;
         TransactionId = gatewayRefundId;
         MarkUpdated();
+
+        return Result.Success();
     }
 
     /// <summary>
     /// Mark a refund row as completed; gateway reported success.
     /// Idempotent.
     /// </summary>
-    public void MarkRefundCompleted(string gatewayRefundId, DateTime occurredAtUtc)
+    public Result MarkRefundCompleted(string gatewayRefundId, DateTime occurredAtUtc)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(gatewayRefundId);
 
         if (PaymentType != PaymentType.Refund)
         {
-            throw new InvalidOperationException(
-                "MarkRefundCompleted only applies to Refund-type payments.");
+            return Result.Failure(
+                new Error("Refund.InvalidType", "MarkRefundCompleted only applies to Refund-type payments."),
+                Outcome.Conflict);
         }
 
         if (Status == PaymentStatus.Completed)
         {
-            return;
+            return Result.Success();
         }
 
         Status = PaymentStatus.Completed;
@@ -362,17 +379,20 @@ public sealed class Payment : AuditableEntity, IAggregateRoot
             Currency: Currency,
             Reason: GatewayResponse ?? string.Empty,
             GatewayRefundId: gatewayRefundId));
+
+        return Result.Success();
     }
 
     /// <summary>
     /// Mark a refund row as failed; bumps RetryCount for T5 RefundRetryService.
     /// </summary>
-    public void MarkRefundFailed(string failureReason, DateTime occurredAtUtc)
+    public Result MarkRefundFailed(string failureReason, DateTime occurredAtUtc)
     {
         if (PaymentType != PaymentType.Refund)
         {
-            throw new InvalidOperationException(
-                "MarkRefundFailed only applies to Refund-type payments.");
+            return Result.Failure(
+                new Error("Refund.InvalidType", "MarkRefundFailed only applies to Refund-type payments."),
+                Outcome.Conflict);
         }
 
         Status = PaymentStatus.Failed;
@@ -389,25 +409,30 @@ public sealed class Payment : AuditableEntity, IAggregateRoot
             Reason: GatewayResponse ?? string.Empty,
             AttemptCount: RetryCount,
             FailureReason: failureReason ?? string.Empty));
+
+        return Result.Success();
     }
 
     /// <summary>
     /// Called on the ORIGINAL payment when a child refund completes.
     /// Accumulates RefundedTotal and transitions Status to PartiallyRefunded / Refunded.
     /// </summary>
-    public void ApplyRefundCompletion(Money refundedAmount, DateTime occurredAtUtc)
+    public Result ApplyRefundCompletion(Money refundedAmount, DateTime occurredAtUtc)
     {
         ArgumentNullException.ThrowIfNull(refundedAmount);
 
         if (PaymentType != PaymentType.Booking)
         {
-            throw new InvalidOperationException(
-                "ApplyRefundCompletion only applies to Booking-type payments.");
+            return Result.Failure(
+                new Error("Payment.InvalidType", "ApplyRefundCompletion only applies to Booking-type payments."),
+                Outcome.Conflict);
         }
 
         if (!string.Equals(refundedAmount.Currency, Currency, StringComparison.OrdinalIgnoreCase))
         {
-            throw new ArgumentException("Refunded currency must match payment currency.", nameof(refundedAmount));
+            return Result.Failure(
+                new Error("Refund.CurrencyMismatch", "Refunded currency must match payment currency."),
+                Outcome.Invalid);
         }
 
         RefundedTotal = new Money(RefundedTotal.Amount + refundedAmount.Amount, Currency);
@@ -419,6 +444,8 @@ public sealed class Payment : AuditableEntity, IAggregateRoot
             : PaymentStatus.PartiallyRefunded;
 
         MarkUpdated();
+
+        return Result.Success();
     }
 
     /// <summary>
@@ -434,12 +461,13 @@ public sealed class Payment : AuditableEntity, IAggregateRoot
     /// <summary>
     /// Called by T5 RefundRetryService when a refund has exceeded MaxRetries.
     /// </summary>
-    public void RaiseRefundFinallyFailed(string failureReason, DateTime occurredAtUtc)
+    public Result RaiseRefundFinallyFailed(string failureReason, DateTime occurredAtUtc)
     {
         if (PaymentType != PaymentType.Refund)
         {
-            throw new InvalidOperationException(
-                "RaiseRefundFinallyFailed only applies to Refund-type payments.");
+            return Result.Failure(
+                new Error("Refund.InvalidType", "RaiseRefundFinallyFailed only applies to Refund-type payments."),
+                Outcome.Conflict);
         }
 
         AddDomainEvent(new RefundFailedDomainEvent(
@@ -451,5 +479,7 @@ public sealed class Payment : AuditableEntity, IAggregateRoot
             Reason: GatewayResponse ?? string.Empty,
             AttemptCount: RetryCount,
             FailureReason: failureReason ?? string.Empty));
+
+        return Result.Success();
     }
 }

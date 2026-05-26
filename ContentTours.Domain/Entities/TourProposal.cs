@@ -1,4 +1,5 @@
 using ContentTours.Domain.Enums;
+using ContentTours.Domain.Events;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 using YallaJo.SharedKernel.Domain.Entities;
 
@@ -97,6 +98,7 @@ public sealed class TourProposal : AuditableEntity, IAggregateRoot
 
         Status = TourProposalStatus.Submitted;
         MarkUpdated();
+        AddDomainEvent(new TourProposalSubmittedDomainEvent(Id, TourGuideId, GuideUserId, Title));
         return Result.Success();
     }
 
@@ -110,6 +112,7 @@ public sealed class TourProposal : AuditableEntity, IAggregateRoot
         ReviewedAt = utcNow;
         CreatedTourId = createdTourId;
         MarkUpdated();
+        AddDomainEvent(new TourProposalApprovedDomainEvent(Id, TourGuideId, GuideUserId, createdTourId, adminId));
         return Result.Success();
     }
 
@@ -123,6 +126,7 @@ public sealed class TourProposal : AuditableEntity, IAggregateRoot
         ReviewedAt = utcNow;
         RejectionReason = reason.Trim();
         MarkUpdated();
+        AddDomainEvent(new TourProposalRejectedDomainEvent(Id, TourGuideId, GuideUserId, reason.Trim()));
         return Result.Success();
     }
 

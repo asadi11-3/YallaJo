@@ -29,12 +29,12 @@ public interface ITranslationService
     /// <summary>
     /// Detect the language of a given text.
     /// </summary>
-    Task<string> DetectLanguageAsync(string text, CancellationToken ct = default);
+    Task<Result<string>> DetectLanguageAsync(string text, CancellationToken ct = default);
 
     /// <summary>
     /// Get all supported language codes from the provider.
     /// </summary>
-    Task<IReadOnlyList<SupportedLanguage>> GetSupportedLanguagesAsync(CancellationToken ct = default);
+    Task<Result<IReadOnlyList<SupportedLanguage>>> GetSupportedLanguagesAsync(CancellationToken ct = default);
 }
 
 public sealed record TranslationResult(

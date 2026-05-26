@@ -111,6 +111,7 @@ public sealed record GetPopularEntitiesQuery(string EntityType, int Count = 20) 
     public TimeSpan? CacheDuration => TimeSpan.FromMinutes(5);
     public IReadOnlyList<string> Tags => [$"popular:{EntityType}"];
 }
+
 public sealed class GetPopularEntitiesQueryHandler(IPopularityScoreRepository repo, ILogger<GetPopularEntitiesQueryHandler> logger) : IQueryHandler<GetPopularEntitiesQuery, IReadOnlyList<PopularEntityDto>>
 {
     public async Task<Result<IReadOnlyList<PopularEntityDto>>> Handle(GetPopularEntitiesQuery request, CancellationToken ct)

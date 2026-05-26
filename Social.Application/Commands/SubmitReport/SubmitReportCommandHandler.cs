@@ -1,5 +1,7 @@
 using MediatR;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
+using Social.Application.Caching;
 using Social.Application.Interfaces;
 using Social.Domain.Entities;
 using Social.Domain.Repositories;
@@ -11,11 +13,12 @@ internal sealed class SubmitReportCommandHandler(
     IReportRepository reportRepository,
     IReviewRepository reviewRepository,
     ISocialUnitOfWork unitOfWork,
+    HybridCache cache,
     TimeProvider timeProvider,
     ILogger<SubmitReportCommandHandler> logger)
     : IRequestHandler<SubmitReportCommand, Result<Guid>>
 {
-    private const int AutoHideThreshold = 5;
+    private const int AutoHideThreshold = 3;
 
     public async Task<Result<Guid>> Handle(SubmitReportCommand request, CancellationToken ct)
     {
@@ -54,7 +57,8 @@ internal sealed class SubmitReportCommandHandler(
                 var review = await reviewRepository.GetByIdAsync(request.EntityId, ct);
                 if (review is not null)
                 {
-                    review.AutoHide(effectiveCount, timeProvider);
+                    review.IncrementReportCount();
+                    review.HideIfReportThresholdReached(timeProvider, AutoHideThreshold);
                     logger.LogInformation(
                         "Review {ReviewId} auto-hidden after {Count} unique reports",
                         request.EntityId, effectiveCount);
@@ -63,6 +67,11 @@ internal sealed class SubmitReportCommandHandler(
         }
 
         await unitOfWork.SaveChangesAsync(ct);
+        await cache.RemoveByTagAsync(SocialCacheKeys.ReportsTag, ct);
+        if (request.EntityType == Social.Domain.Enums.ReportableEntityType.Review)
+        {
+            await cache.RemoveByTagAsync(SocialCacheKeys.ReviewTag(request.EntityId), ct);
+        }
 
         logger.LogInformation(
             "Report {ReportId} submitted by {UserId} against {EntityType}:{EntityId}",

@@ -1,6 +1,6 @@
 # Platform Onboarding Workflow
 
-> All design decisions locked. Source of truth for user journeys from sign-up to active platform participant.
+> **Status**: Implemented (audited 2025-01-27, score 9.0/10). All 8 fixes applied. Source of truth for user journeys from sign-up to active platform participant.
 
 ---
 
@@ -8,10 +8,10 @@
 
 1. [Design Decisions](#design-decisions)
 2. [User Roles & Personas](#user-roles--personas)
-3. [Flow A: Tourist Onboarding](#flow-a-tourist-onboarding)
+ 3. [Flow A: Guest Onboarding](#flow-a-guest-onboarding)
 4. [Flow B: Provider Application](#flow-b-provider-application)
 5. [Flow C: Post-Approval Automation](#flow-c-post-approval-automation)
-6. [Flow D: Tourist → Provider Upgrade](#flow-d-tourist--provider-upgrade)
+ 6. [Flow D: Guest → Provider Upgrade](#flow-d-guest--provider-upgrade)
 7. [Flow E: Agency Guide Roster](#flow-e-agency-guide-roster)
 8. [Flow F: Creator Application](#flow-f-creator-application)
 9. [Provider Dashboard (Unified)](#provider-dashboard-unified)
@@ -34,8 +34,8 @@
 | 5 | Creator vs Provider | Separate application flows. CreatorApplication independent from ProviderApplication |
 | 6 | Agency guide roster | Both directions: agency invites guides OR guides apply to join agency |
 | 7 | Document requirements | Keep hardcoded in entity for MVP. Configurable later if needed |
-| 8 | Tourist onboarding | Simple sign-up → verify email → browse → book. No application needed |
-| 9 | Tourist → Provider | Seamless upgrade. Same account gains provider role after approval |
+| 8 | Guest onboarding | Simple sign-up → verify email → browse → book. No application needed |
+| 9 | Guest → Provider | Seamless upgrade. Same account gains provider role after approval |
 
 ---
 
@@ -43,7 +43,7 @@
 
 ### Role Hierarchy
 ```
-Tourist (default)
+Guest (default) → User (email verified)
   └─ Provider (approved ProviderApplication)
        ├─ TourOperator (creates tours, assigns guides)
        ├─ IndependentGuide (IS a tour guide, creates/runs tours)
@@ -67,7 +67,7 @@ Tourist (default)
 
 ---
 
-## Flow A: Tourist Onboarding
+## Flow A: Guest Onboarding
 
 ```
 User arrives → Register → Verify Email → Browse → Book
@@ -78,7 +78,7 @@ User arrives → Register → Verify Email → Browse → Book
 1. **Register** (`POST /api/v1/auth/register`)
    - Email + Password + DisplayName
    - OR Social login (Google, Apple, Facebook)
-   - Role assigned: `Tourist` (default)
+   - Role assigned: `Guest` (default). Upgraded to `User` on email verification via `EmailVerifiedUpgradeRoleHandler`.
 
 2. **Verify Email** (`POST /api/v1/auth/verify-email`)
    - 6-digit OTP sent to email
@@ -105,11 +105,11 @@ User arrives → Register → Verify Email → Browse → Book
 ## Flow B: Provider Application
 
 ```
-Tourist → "Become a Provider" → Select Type → Fill Details → Upload Docs → Submit → Admin Review → Approved/Rejected
+User → "Become a Provider" → Select Type → Fill Details → Upload Docs → Submit → Admin Review → Approved/Rejected
 ```
 
 ### Pre-conditions
-- User must be a verified tourist (email confirmed)
+- User must be a verified user (email confirmed, has `User` role)
 - User must NOT have an existing active ProviderApplication (one per user)
 - User must NOT already be an approved provider
 
@@ -221,21 +221,21 @@ When `ProviderApprovedIntegrationEvent` fires, multiple consumers act based on `
 
 ---
 
-## Flow D: Tourist → Provider Upgrade
+## Flow D: Guest → Provider Upgrade
 
 ```
-Active Tourist → "Become a Provider" → Standard Flow B → Approval → Same account, new role
+Active User → "Become a Provider" → Standard Flow B → Approval → Same account, new role
 ```
 
 ### Key Points
 - NO new account needed
 - Existing bookings, favorites, reviews preserved
-- Provider role ADDED (not replaced) — user can still book as tourist
+- Provider role ADDED (not replaced) — user can still book as user
 - UI shows "Switch to Provider Dashboard" after approval
 - Seamless — button in profile settings: "Become a Provider"
 
 ### Technical Flow
-1. Tourist clicks "Become a Provider" in app settings
+1. User clicks "Become a Provider" in app settings
 2. Frontend navigates to provider registration form
 3. `POST /api/v1/provider/register` — creates ProviderApplication linked to existing UserId
 4. Standard document upload + submit flow
@@ -258,11 +258,11 @@ Active Tourist → "Become a Provider" → Standard Flow B → Approval → Same
 Agency → Search Guides → Send Invitation → Guide Accepts/Declines → Affiliation Active
 ```
 
-1. **Search Available Guides** (`GET /api/v1/provider/agency/available-guides`)
+1. **Search Available Guides** (`GET /api/v1/agency/guides/available`)
    - Returns IndependentGuides NOT affiliated with another agency
    - Filterable: specialization, language, location, rating
 
-2. **Send Invitation** (`POST /api/v1/provider/agency/invitations`)
+2. **Send Invitation** (`POST /api/v1/agency/guides/invite`)
    - Agency sends to guide's UserId
    - Includes: message, proposed commission split
    - Status: Pending
@@ -271,11 +271,11 @@ Agency → Search Guides → Send Invitation → Guide Accepts/Declines → Affi
    - Notification to guide
 
 3. **Guide Responds**
-   - Accept (`POST /api/v1/guides/agency-invitations/{id}/accept`)
+   - Accept (`POST /api/v1/guides/me/invitations/{id}/accept`)
      - Creates `AgencyAffiliation` record
      - Guide now appears in agency's roster
      - Agency can assign guide to their tours
-   - Decline (`POST /api/v1/guides/agency-invitations/{id}/decline`)
+   - Decline (`POST /api/v1/guides/me/invitations/{id}/decline`)
      - Invitation marked Declined
      - No affiliation created
 
@@ -289,31 +289,32 @@ Guide → Browse Agencies → Apply → Agency Approves/Rejects → Affiliation 
    - Public list of approved agencies accepting guides
    - Shows: name, description, tour count, guide count, commission structure
 
-2. **Apply to Agency** (`POST /api/v1/guides/agency-applications`)
+2. **Apply to Agency** (`POST /api/v1/guides/agencies/{agencyUserId}/apply`)
    - Guide sends application with: message, why they want to join
    - Status: Pending
    - No expiry (agency reviews at their pace)
    - Notification to agency owner
 
 3. **Agency Responds**
-   - Approve (`POST /api/v1/provider/agency/applications/{id}/approve`)
+   - Approve (`POST /api/v1/agency/applications/{id}/approve`)
      - Creates `AgencyAffiliation` record
      - Same as invitation acceptance
-   - Reject (`POST /api/v1/provider/agency/applications/{id}/reject`)
+   - Reject (`POST /api/v1/agency/applications/{id}/reject`)
      - With reason
      - Guide notified
 
 ### Affiliation Management
 
-- **Remove Guide** (`DELETE /api/v1/provider/agency/guides/{guideId}`)
+- **Remove Guide** (`DELETE /api/v1/agency/guides/{guideUserId}`)
   - Agency removes guide from roster
   - Active tour assignments preserved until tour date passes
   - Future assignments cancelled
   - Guide notified
 
-- **Guide Leaves** (`POST /api/v1/guides/leave-agency`)
+- **Guide Leaves** (`DELETE /api/v1/guides/me/agency`)
   - Guide voluntarily leaves agency
   - Same behavior as removal
+  - Note: Uses DELETE method (not POST) since it removes the affiliation
 
 ### Constraints
 - One guide can be affiliated with ONLY ONE agency at a time
@@ -424,7 +425,7 @@ Properties:
   - Status (AgencyAffiliationStatus: Active, Terminated)
   - JoinedAt (DateTime)
   - TerminatedAt (DateTime?)
-  - TerminatedBy (Guid?) — who terminated
+  - TerminatedByUserId (Guid?) — who terminated
   - TerminationReason (string?)
 
 Methods:
@@ -482,26 +483,30 @@ public enum AgencyApplicationStatus { Pending = 0, Approved = 1, Rejected = 2 }
 
 ### Agency Roster Management (8 endpoints)
 
+> Routes are under `/api/v1/agency` (mounted in `AccountsEndpoints.cs` via `AgencyEndpoints` + `AgencyPublicEndpoints`).
+
 | Method | Route | Auth | Handler |
 |---|---|---|---|
-| GET | `/api/v1/provider/agency/guides` | Agency Owner | List affiliated guides |
-| GET | `/api/v1/provider/agency/available-guides` | Agency Owner | Search non-affiliated guides |
-| POST | `/api/v1/provider/agency/invitations` | Agency Owner | Invite guide |
-| GET | `/api/v1/provider/agency/invitations` | Agency Owner | List sent invitations |
-| POST | `/api/v1/provider/agency/applications/{id}/approve` | Agency Owner | Approve guide application |
-| POST | `/api/v1/provider/agency/applications/{id}/reject` | Agency Owner | Reject guide application |
-| GET | `/api/v1/provider/agency/applications` | Agency Owner | List pending guide applications |
-| DELETE | `/api/v1/provider/agency/guides/{guideId}` | Agency Owner | Remove guide from roster |
+| GET | `/api/v1/agency/guides` | Agency Owner | List affiliated guides |
+| GET | `/api/v1/agency/guides/available` | Agency Owner | Search non-affiliated guides |
+| POST | `/api/v1/agency/guides/invite` | Agency Owner | Invite guide |
+| GET | `/api/v1/agency/invitations/sent` | Agency Owner | List sent invitations |
+| POST | `/api/v1/agency/applications/{id}/approve` | Agency Owner | Approve guide application |
+| POST | `/api/v1/agency/applications/{id}/reject` | Agency Owner | Reject guide application |
+| GET | `/api/v1/agency/applications` | Agency Owner | List pending guide applications |
+| DELETE | `/api/v1/agency/guides/{guideUserId}` | Agency Owner | Remove guide from roster |
 
 ### Guide ↔ Agency Endpoints (5 endpoints)
 
+> Routes are under `/api/v1/guides` (mounted in `AccountsEndpoints.cs` via `GuideAgencyEndpoints`).
+
 | Method | Route | Auth | Handler |
 |---|---|---|---|
-| GET | `/api/v1/guides/agency-invitations` | Guide | List received invitations |
-| POST | `/api/v1/guides/agency-invitations/{id}/accept` | Guide | Accept invitation |
-| POST | `/api/v1/guides/agency-invitations/{id}/decline` | Guide | Decline invitation |
-| POST | `/api/v1/guides/agency-applications` | Guide | Apply to agency |
-| POST | `/api/v1/guides/leave-agency` | Guide | Leave current agency |
+| GET | `/api/v1/guides/me/invitations` | Guide | List received invitations |
+| POST | `/api/v1/guides/invitations/{id}/accept` | Guide | Accept invitation |
+| POST | `/api/v1/guides/invitations/{id}/decline` | Guide | Decline invitation |
+| POST | `/api/v1/guides/agencies/{agencyUserId}/apply` | Guide | Apply to agency |
+| DELETE | `/api/v1/guides/me/agency` | Guide | Leave current agency |
 
 ### Agency Public (2 endpoints)
 
@@ -534,11 +539,15 @@ public enum AgencyApplicationStatus { Pending = 0, Approved = 1, Rejected = 2 }
 | `AgencyAffiliationCreatedIntegrationEvent` | Accounts | ContentTours (enable guide assignment for agency tours) |
 | `AgencyAffiliationTerminatedIntegrationEvent` | Accounts | ContentTours (revoke future assignments), Booking (handle active bookings) |
 
+### Generic Status Changed Event
+All provider state transitions (submitted, rejected, more-docs-requested, approved, suspended, reinstated) also publish a `ProviderStatusChangedIntegrationEvent` via `AccountsIntegrationConverters`. This generic event can be consumed by modules that only need to know "something changed" without handling each specific transition.
+
 ### Existing Events (Already Published)
-- `ProviderApplicationSubmittedIntegrationEvent` — admin notification
-- `ProviderRejectedIntegrationEvent` — user notification
-- `ProviderMoreDocsRequestedIntegrationEvent` — user notification
-- `ProviderReinstatedIntegrationEvent` — re-enable downstream
+- `ProviderStatusChangedIntegrationEvent` — generic event for ALL status transitions (can replace dedicated events for simple notification needs)
+- `ProviderRejectedIntegrationEvent` — user notification (dedicated event, also fires alongside generic)
+- `ProviderReinstatedIntegrationEvent` — re-enable downstream (dedicated event, also fires alongside generic)
+
+> **Note**: `ProviderApplicationSubmitted` and `ProviderMoreDocsRequested` do NOT have dedicated integration event contracts. They publish via the generic `ProviderStatusChangedIntegrationEvent` only.
 
 ---
 
@@ -624,6 +633,21 @@ public enum AgencyApplicationStatus { Pending = 0, Approved = 1, Rejected = 2 }
 | Phase 2 (TourGuide auto-creation) | TourGuide-Flow.md Part 2 (profile alignment) |
 | Phase 3-5 (Agency roster) | TourGuide-Flow.md Part 1 (multi-guide model) |
 | Provider Dashboard | Booking-Workflow.md (booking stats) |
+
+---
+
+## Implementation Notes (Post-Audit Additions)
+
+> Added during codebase audit — reflects actual implementation details not originally in the plan.
+
+1. **Role lifecycle**: `Guest` → `User` upgrade happens automatically via `EmailVerifiedUpgradeRoleHandler` when `EmailVerifiedIntegrationEvent` fires from `Security.Contracts` (not Auth.Contracts).
+2. **External registration**: `RegisterExternalAsync()` (social login) assigns `User` role directly, bypassing the `Guest` → `User` lifecycle.
+3. **No "Reinstated" status**: `Reinstate()` transitions to `Approved` (not a separate Reinstated status).
+4. **AgencyInvitation.IsExpired**: Property exists on the entity for in-memory expiry checks (beyond the background service).
+5. **Route group mounting**: `AccountsEndpoints.cs` mounts 5 top-level groups: `/api/v1/accounts`, `/api/v1/provider`, `/api/v1/admin/providers`, `/api/v1/agency`, `/api/v1/guides`.
+6. **Reapplication state transition**: `Reapply()` domain method transitions `Rejected → Draft` with cooling-period and max-reapplication guards. Endpoint: `POST /api/v1/provider/reapply`.
+7. **ProviderDocumentExpiryService**: Notification publishing is intentionally deferred (TODO) to Messaging-Workflow plan.
+8. **CreatorApplicationApprovedIntegrationEvent**: Property is `ApplicantUserId` (not `UserId`), defined in `ContentBlogs.Contracts`.
 
 ---
 

@@ -1,4 +1,5 @@
 using Accounts.Application.Commands.Provider.AddDocument;
+using Accounts.Application.Commands.Provider.ReapplyProvider;
 using Accounts.Application.Commands.Provider.RegisterProvider;
 using Accounts.Application.Commands.Provider.ReplaceDocument;
 using Accounts.Application.Commands.Provider.SubmitApplication;
@@ -143,6 +144,35 @@ public static class ProviderEndpoints
         .ProducesProblem(StatusCodes.Status401Unauthorized)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Get actions requiring provider attention")
+        .WithMetadata(new MustHavePermissionAttribute(AccountsFeatures.ProviderDashboard, AppAction.Read))
+        .RequireAuthorization();
+
+        // POST /api/v1/provider/reapply — reapply after rejection (cooling period must have passed)
+        group.MapPost("/reapply", async (ISender sender, CancellationToken ct) =>
+        {
+            var result = await sender.Send(new ReapplyProviderCommand(), ct);
+            return result.ToApiResult();
+        })
+        .WithName("ReapplyProvider")
+        .Produces<ReapplyProviderResult>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status422UnprocessableEntity)
+        .WithSummary("Reapply after a rejected provider application (cooling period must have passed)")
+        .WithMetadata(new MustHavePermissionAttribute(AccountsFeatures.ProviderApplication, AppAction.Update))
+        .RequireAuthorization();
+
+        // GET /api/v1/provider/dashboard/notifications — recent notifications for the provider
+        group.MapGet("/dashboard/notifications", async (ISender sender, CancellationToken ct) =>
+        {
+            var result = await sender.Send(new GetProviderNotificationsQuery(), ct);
+            return result.ToApiResult();
+        })
+        .WithName("GetProviderNotifications")
+        .Produces<IReadOnlyList<ProviderNotificationDto>>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .WithSummary("Get recent notifications for the provider (document expiry, status changes)")
         .WithMetadata(new MustHavePermissionAttribute(AccountsFeatures.ProviderDashboard, AppAction.Read))
         .RequireAuthorization();
 

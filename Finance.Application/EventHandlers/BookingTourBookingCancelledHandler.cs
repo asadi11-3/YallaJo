@@ -79,18 +79,19 @@ public sealed class BookingTourBookingCancelledHandler(
             ? $"BookingCancellation:{evt.Source}"
             : $"BookingCancellation:{evt.Source}:{evt.Reason}";
 
-        Payment refund;
-        try
+        var createRefundResult = trackedOriginal.CreateRefund(refundMoney, reason, trackedOriginal.GatewayProvider, timeProvider);
+        if (createRefundResult.IsFailure)
         {
-            refund = trackedOriginal.CreateRefund(refundMoney, reason, trackedOriginal.GatewayProvider, timeProvider);
-        }
-        catch (InvalidOperationException ex)
-        {
-            logger.LogWarning(ex, "Finance: cannot create refund for payment {PaymentId}.", trackedOriginal.Id);
+            logger.LogWarning(
+                "Finance: cannot create refund for payment {PaymentId}: {Error}.",
+                trackedOriginal.Id,
+                createRefundResult.Errors.FirstOrDefault()?.Message ?? "Unknown error");
             inboxStore.MarkAsProcessed(notification.MessageId);
             await unitOfWork.SaveChangesAsync(ct).ConfigureAwait(false);
             return;
         }
+
+        var refund = createRefundResult.Value!;
 
         await paymentRepository.AddAsync(refund, ct).ConfigureAwait(false);
 
@@ -119,7 +120,14 @@ public sealed class BookingTourBookingCancelledHandler(
         }
         else if (gatewayResult.Status == RefundStatus.Completed)
         {
-            refund.StampGatewayRefund(gatewayResult.GatewayRefundId);
+            var stampResult = refund.StampGatewayRefund(gatewayResult.GatewayRefundId);
+            if (stampResult.IsFailure)
+            {
+                logger.LogWarning(
+                    "Finance: cannot stamp refund {RefundId}: {Error}.",
+                    refund.Id,
+                    stampResult.Errors.FirstOrDefault()?.Message ?? "Unknown error");
+            }
             refund.MarkRefundCompleted(gatewayResult.GatewayRefundId, nowUtc);
             trackedOriginal.ApplyRefundCompletion(refundMoney, nowUtc);
         }

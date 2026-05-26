@@ -1,7 +1,7 @@
 # ContentPlaces Workflow Plan
 
 > Module: `ContentPlaces` — Geographic places & commercial businesses
-> Status: Plan
+> Status: Implemented (audited 2025-01-27)
 > Dependencies: Accounts (ProviderApplication), ContentCore (Attachments, Tags), Booking (future ServiceItem→Reservation)
 
 ---
@@ -145,8 +145,9 @@ Suspended → Approved (reinstate)
 - `GET/POST /places/businesses/{id}/amenities`, `DELETE /places/businesses/amenities/{id}`
 
 #### C.4 AccessibilityFeature (Polymorphic)
-- **EntityType=0**: Place accessibility (existing)
-- **EntityType=1**: Business accessibility (NEW)
+- **EntityType=1**: Place accessibility (existing)
+- **EntityType=2**: Business accessibility (NEW)
+- Constants: `AccessibilityFeature.EntityTypePlace = 1`, `AccessibilityFeature.EntityTypeBusiness = 2`
 - Same `AccessibilityFeatureType` enum: Wheelchair, Visual, Hearing, Cognitive, Mobility, Other
 - Owner manages via `GET/PUT /places/businesses/{id}/accessibility`
 
@@ -176,10 +177,11 @@ Suspended → Approved (reinstate)
 | Event | Source | Consumer | Action |
 |---|---|---|---|
 | `ProviderApprovedIntegrationEvent` | Accounts | ContentPlaces | Unlocks business creation |
-| `ProviderSuspendedIntegrationEvent` | Accounts | ContentPlaces | Auto-suspend all provider's businesses |
-| `BusinessApprovedDomainEvent` | ContentPlaces | Notifications | Notify provider |
-| `TourPlaceCountChangedDomainEvent` | ContentTours | ContentPlaces | Update Place.TourCount |
-| `ReviewCreatedIntegrationEvent` | Social | ContentPlaces | Update Place/Business ratings |
+| `ProviderSuspendedIntegrationEvent` | Accounts | ContentPlaces | Auto-suspend all provider's businesses (ProviderSuspendedSuspendBusinessesHandler) |
+| `BusinessApprovedDomainEvent` | ContentPlaces | Messaging | Notify provider |
+| `PlaceTourCountUpdatedIntegrationEvent` | ContentTours | ContentPlaces | Update Place.TourCount (PlaceTourCountUpdatedIntegrationEventHandler) |
+| `RatingRecalculatedIntegrationEvent` | Social | ContentPlaces | Update Place/Business ratings (RatingRecalculatedUpdateEntityHandler) |
+| `LanguageActivatedIntegrationEvent` | ContentCore | ContentPlaces | Auto-translate entities (LanguageActivatedIntegrationEventHandler) |
 | (Future) `ServiceItemCreatedEvent` | ContentPlaces | Booking | Enable slot creation |
 
 ---
@@ -276,3 +278,20 @@ Suspended → Approved (reinstate)
 - **Business photos/gallery**: Via ContentCore Attachment system (EntityType.Business)
 - **Opening hours exceptions**: Holiday hours, temporary closures
 - **Business subscription tiers**: Premium listing, featured placement, priority in search
+
+---
+
+## Implementation Notes (from audit 2025-01-27)
+
+1. **Actual module scale**: 254 .cs files (37 Domain, 131 Application, 20 Contracts, 47 Infrastructure, 19 Presentation)
+2. **Entities not listed in plan**: `BusinessTranslation` (exists, used for multi-language business content)
+3. **Extra Business entity properties**: `SubscriptionTier`, `IsHalal`, `HasVegetarianOptions`, `HasAlcoholFreeArea`
+4. **Inbound event handlers (4)**: LanguageActivatedIntegrationEventHandler, PlaceTourCountUpdatedIntegrationEventHandler, ProviderSuspendedSuspendBusinessesHandler, RatingRecalculatedUpdateEntityHandler
+5. **Domain event handlers (11)**: BusinessApproved/Created/Deleted/Reinstated/Rejected/Resubmitted/Suspended/Updated, PlaceCreated/Deleted/Updated
+6. **Cross-module consumers**: ContentSeo (Place Created/Updated/Deleted), ContentBlogs (Place Deleted), Analytics (Place Created/Updated/Deleted), Social (Place Created/Updated/Deleted), Messaging (Business Approved/Rejected/Suspended/Reinstated)
+7. **AccessibilityFeature EntityType values**: Place=1, Business=2 (NOT 0/1 as originally planned). Constants centralized on `AccessibilityFeature.EntityTypePlace` / `EntityTypeBusiness`
+8. **BusinessMoreDocsRequestedDomainEvent**: Handler + `BusinessMoreDocsRequestedIntegrationEvent` added (W4-C). Registry entry: `content-places.business.more-docs-requested.v1`.
+9. **ServiceItem discount fields**: Named `DiscountValidFrom`/`DiscountValidTo` (not `ValidFrom`/`ValidTo`)
+10. **PlaceUpdatedIntegrationEvent**: Now includes `Slug` and `OldSlug` fields (W4-C) for ContentSeo 301 redirect support.
+11. **7 validators added (W4-C)**: ApproveBusiness, DeleteBusiness, ReinstateBusiness, RequestMoreDocs, ResubmitBusiness, RemoveBusinessStaff, UpdateBusinessAccessibilityFeatures.
+12. **BusinessEndpoints route prefix fix (W4-C)**: Changed `group.MapGroup("/places/businesses")` to `group.MapGroup("")` to prevent doubled route paths.

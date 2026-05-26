@@ -3,7 +3,7 @@
 > **Module**: Finance  
 > **Dependencies**: Booking (integration events), Accounts (AgencyAffiliation), ContentTours (tour data)  
 > **Compatible With**: Booking-Workflow.md, TourGuide-Flow.md, Platform-Onboarding-Workflow.md, Role-System.md  
-> **Status**: Plan — Not yet executed
+> **Status**: Partially Implemented (audited 2025-01-27)
 
 ---
 
@@ -29,21 +29,25 @@
 ## Current State (What's Already Built)
 
 ### ✅ Fully Implemented (Keep As-Is)
-- **Payment** (455L, AggregateRoot): Full state machine, gateway integration, escrow tracking
+- **Payment** (485L, AggregateRoot): Full state machine, gateway integration, escrow tracking
 - **PaymentExpectation** (87L): Booking→Finance bridge. Seeded by TourBookingCreatedIntegrationEvent
-- **Payout** (241L, AggregateRoot): Batch creation, approval, hold, completion
-- **Invoice** (170L, AggregateRoot): Auto-generated on payment completion, PDF rendering
+- **Payout** (269L, AggregateRoot): Batch creation, approval, hold, completion
+- **Invoice** (177L, AggregateRoot): Auto-generated on payment completion, PDF rendering
 - **CommissionRule** (118L): Tier-based by monthly revenue. CRUD + lookup
 - **FakePaymentGateway**: Deterministic test gateway (will be replaced by Stripe adapter)
 - **PayoutBatchingService**: Weekly (Sunday midnight UTC)
 - **RefundRetryService**: Every 15min, max 3 retries
 - **Webhook Processing**: HMAC verification, idempotent inbox pattern
 - **Event Handlers**: BookingCreated→PaymentExpectation, BookingCompleted→Escrow, BookingCancelled→Refund, PaymentCompleted→Invoice
-- **Endpoints**: Payment (6), Payout (5), CommissionRule (4), Invoice (2-3) = 21 total
+- **Endpoints**: Payment (6), Payout (5), CommissionRule (4), Invoice (4), Dispute (6), Earnings (3), ProviderPaymentMethod (5) = **33 total**
+
+### ✅ Also Fully Implemented (Discovered in Audit)
+- **Dispute** (124L): Full aggregate root with state machine — Open→UnderReview→Resolved/Escalated/Closed. DisputeEvidence + DisputeMessage child entities exist.
+- **ProviderPaymentMethod** (~60L): Active payout destination model. Coexists with ProviderBankAccount shell.
+- **DisputeEvidence** + **DisputeMessage**: Child entities of Dispute — fully implemented.
 
 ### ❌ Shell Only (Needs Full Implementation)
-- **Dispute** (25L): Properties only → needs full state machine
-- **ProviderBankAccount** (18L): Properties only → REPLACED by unified PaymentMethod
+- **ProviderBankAccount** (19L): Properties only → REPLACED by ProviderPaymentMethod (both coexist; ProviderBankAccount is legacy)
 
 ### ❌ Not Yet Built
 - Unified PaymentMethod entity (bank + mobile wallets)
@@ -101,19 +105,25 @@ public sealed class PaymentMethod : AuditableEntity, IAggregateRoot
 }
 ```
 
-### New: PaymentMethodType Enum
+### Actual: ProviderPaymentMethodType Enum (already exists)
+
+> **NOTE**: The plan called this `PaymentMethodType` on a `PaymentMethod` entity. The actual implementation uses `ProviderPaymentMethodType` on a `ProviderPaymentMethod` entity. The enum values differ from the plan:
 
 ```csharp
-public enum PaymentMethodType
+public enum ProviderPaymentMethodType
 {
-    BankTransfer = 0,
+    BankAccount = 0,   // Plan said BankTransfer
     JoMoPay = 1,
     OrangeMoney = 2,
     ZainCash = 3
 }
 ```
 
-### Modified: Dispute (shell → full state machine)
+### ✅ Dispute — Already Fully Implemented (124 lines)
+
+> **NOTE**: The plan described Dispute as a 25-line shell needing implementation. It is already a full aggregate root with state machine, DisputeEvidence, DisputeMessage, and all planned methods. No changes needed.
+
+### Dispute (reference — already implemented)
 
 ```csharp
 public sealed class Dispute : AuditableEntity, IAggregateRoot
@@ -603,8 +613,24 @@ Domain entities using `throw` instead of Result pattern (violates agent-context.
 ## Notes
 
 1. **Payout Gateway Execution**: Currently `TriggerPayoutCommandHandler` creates batches but does NOT call `gateway.PayoutAsync`. A future Phase (or admin manual action via `ApprovePayoutCommand`) should trigger actual disbursement.
-2. **Stripe Adapter**: FakePaymentGateway → real Stripe implementation is infrastructure work, not domain. IPaymentGateway interface is stable.
+2. **IPaymentGateway** (actual interface in Finance.Contracts): `GatewayName` (property) + `InitiateAsync`, `VerifyWebhookSignatureAsync`, `RefundAsync`, `PayoutAsync`. Plan said `ProcessWebhook, InitiateRefund, GetPaymentStatus` — actual names differ. Interface is stable.
+3. **Stripe Adapter**: FakePaymentGateway → real Stripe implementation is infrastructure work, not domain. IPaymentGateway interface is stable.
 3. **Currency**: Platform operates in JOD, USD, EUR (matches Tour.AllowedCurrencies). Payouts in provider's preferred currency.
 4. **Min Payout Threshold**: 20 JOD (from TourGuide-Flow.md) for guides. 10 JOD (from Business Rules PDF) for tour providers. Configurable per PaymentMethodType.
 5. **Escrow Period**: 7 days from tour completion (EscrowOptions.HoldPeriodDays). Configurable.
 6. **CommissionLookupService**: Falls back to 15%/JOD if no active rule matches. Future: different default rates by ProviderType.
+
+---
+
+## Implementation Notes (Audit 2025-01-27)
+
+1. **Endpoint count**: 33 (not 21). Breakdown: Payment(6), Payout(5), CommissionRule(4), Invoice(4), Dispute(6), Earnings(3), ProviderPaymentMethod(5).
+2. **Dispute entity**: 124 lines, fully implemented aggregate root — NOT a 25-line shell. State machine, DisputeEvidence, DisputeMessage all exist.
+3. **ProviderPaymentMethod**: Active payout destination model (~60L). Coexists with ProviderBankAccount (19L legacy shell). Plan called this `PaymentMethod` — actual name is `ProviderPaymentMethod`.
+4. **ProviderPaymentMethodType enum**: Values are BankAccount=0 (not BankTransfer), JoMoPay=1, OrangeMoney=2, ZainCash=3.
+5. **IPaymentGateway**: Actual methods: `InitiateAsync`, `VerifyWebhookSignatureAsync`, `RefundAsync`, `PayoutAsync` + `GatewayName` property. Plan listed different names.
+6. **Permission catalog**: 8 features, 27 descriptors (not 7 features, 20 descriptors). Features: Payment(2), Refund(2), Invoice(2), Payout(3), CommissionRule(4), ProviderBankAccount(4), ProviderPaymentMethod(5), AdminFinanceDashboard(5).
+7. **Event handlers**: 5 inbound consumers + 10 outbound converters + 1 domain handler = 16 total.
+8. **Background services**: 2 (PayoutBatchingService + RefundRetryService). MonthlyStatementGenerationService and DisputeDeadlineService are NOT yet built.
+9. **CreditNote + GuideEarning**: Not yet built. Require business design decisions before implementation.
+10. **DisputeEvidence + DisputeMessage**: Both exist as child entities of Dispute — fully implemented.

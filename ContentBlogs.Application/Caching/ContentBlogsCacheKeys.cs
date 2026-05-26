@@ -74,14 +74,7 @@ public static class ContentBlogsCacheKeys
     public static string CreatorFollowersTag(Guid profileId) => $"creator:{profileId}:followers";
     public static string CreatorArticlesTag(Guid profileId) => $"creator:{profileId}:articles";
 
-    // ── Creator Post Cache Keys (Wave-8) ────────────────────────────────
-    public static string CreatorPost(string slug) => $"creators:posts:{slug}";
-    public static string CreatorPostTag(string slug) => $"creators:posts:{slug}:tag";
-    public const string CreatorPostsListTag = "creators:posts:list:tag";
-    public const string CreatorPostsFeaturedTag = "creators:posts:featured:tag";
-    public static string MyCreatorPosts(Guid profileId) => $"creators:my-posts:{profileId}";
-    public static string MyCreatorPostsTag(Guid profileId) => $"creators:my-posts:{profileId}:tag";
-    public const string AdminPostsQueueTag = "admin:posts:queue:tag";
+    // CreatorPost cache keys removed — merged into Blog (Wave-8 → Blog).
 
     // ── Admin Blog Queue Cache Keys ──────────────────────────────────────
     public static string AdminBlogQueue(int page, int size) => $"cb:admin:blog:queue:{page}:{size}";

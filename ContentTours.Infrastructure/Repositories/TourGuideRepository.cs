@@ -75,4 +75,23 @@ internal sealed class TourGuideRepository(ContentToursDbContext context)
         if (excludeId.HasValue) query = query.Where(g => g.Id != excludeId.Value);
         return query.AnyAsync(ct);
     }
+
+    public async Task<(IReadOnlyList<TourGuide> Items, int TotalCount)> ListActiveAsync(
+        int page, int pageSize, CancellationToken ct = default)
+    {
+        var query = context.TourGuides
+            .Include(g => g.Languages)
+            .Include(g => g.Specializations)
+            .AsNoTracking()
+            .OrderByDescending(g => g.AverageRating)
+            .ThenByDescending(g => g.CompletedTourCount);
+
+        var totalCount = await query.CountAsync(ct);
+        var items = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(ct);
+
+        return (items, totalCount);
+    }
 }

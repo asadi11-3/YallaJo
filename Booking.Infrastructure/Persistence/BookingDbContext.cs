@@ -21,7 +21,11 @@ public sealed class BookingDbContext : DbContext, IDbContext
     public DbSet<JoinRequest> JoinRequests => Set<JoinRequest>();
     public DbSet<SlotLock> SlotLocks => Set<SlotLock>();
     public DbSet<RefundPolicy> RefundPolicies => Set<RefundPolicy>();
+    public DbSet<GuideDiscount> GuideDiscounts => Set<GuideDiscount>();
     public DbSet<ProviderDocument> ProviderDocuments => Set<ProviderDocument>();
+    public DbSet<TourSnapshot> TourSnapshots => Set<TourSnapshot>();
+    public DbSet<ProviderSnapshot> ProviderSnapshots => Set<ProviderSnapshot>();
+    public DbSet<PricingTierSnapshot> PricingTierSnapshots => Set<PricingTierSnapshot>();
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

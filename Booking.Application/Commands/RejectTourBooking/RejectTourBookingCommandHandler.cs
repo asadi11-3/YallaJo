@@ -26,15 +26,7 @@ public sealed class RejectTourBookingCommandHandler(
     {
         try
         {
-            if (!currentUser.IsAuthenticated || currentUser.UserId is null)
-            {
-                logger.LogWarning("RejectTourBooking rejected: caller not authenticated.");
-                return Result.Failure<RejectTourBookingResult>(
-                    new Error("TourBooking.Unauthorized", "Authentication is required to reject a booking."),
-                    Outcome.Unauthorized);
-            }
-
-            var viewerId = currentUser.UserId.Value;
+            var viewerId = currentUser.UserId!.Value;
 
             var booking = await tourBookingRepository
                 .GetByIdWithDetailsAsync(request.BookingId, cancellationToken)

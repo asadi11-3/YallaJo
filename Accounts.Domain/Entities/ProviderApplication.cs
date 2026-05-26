@@ -171,6 +171,24 @@ public sealed class ProviderApplication : AuditableEntity, IAggregateRoot
         return Result.Success();
     }
 
+    public Result Reapply()
+    {
+        if (Status is not ProviderApplicationStatus.Rejected)
+            return Result.Failure(ProviderApplicationErrors.InvalidStatus);
+
+        if (ReapplicationCount >= MaxReapplications)
+            return Result.Failure(ProviderApplicationErrors.MaxReapplicationsReached);
+
+        if (CoolingPeriodEndsAt.HasValue && DateTime.UtcNow < CoolingPeriodEndsAt.Value)
+            return Result.Failure(ProviderApplicationErrors.CoolingPeriodActive);
+
+        Status          = ProviderApplicationStatus.Draft;
+        RejectionReason = null;
+        MarkUpdated();
+        AddDomainEvent(new ProviderReappliedDomainEvent(Id, UserId, ReapplicationCount, DateTime.UtcNow));
+        return Result.Success();
+    }
+
     // ── Document management ───────────────────────────────────────────────────
     public Result<ProviderDocument> AddDocument(
         DocumentType documentType,

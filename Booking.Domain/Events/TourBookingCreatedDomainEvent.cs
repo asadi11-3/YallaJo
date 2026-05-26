@@ -11,9 +11,11 @@ public sealed record TourBookingCreatedDomainEvent(
     Guid UserId,
     Guid TourId,
     Guid ProviderId,
+    Guid GuideId,
     Guid AvailabilitySlotId,
     int ParticipantCount,
     decimal TotalAmount,
     string Currency,
     string Reference,
-    bool IsInstantBooking) : DomainEventBase;
+    bool IsInstantBooking,
+    bool IsPrivate) : DomainEventBase;

@@ -1,3 +1,4 @@
+using ContentCore.Application.Limits;
 using ContentCore.Domain.Enums;
 using FluentValidation;
 
@@ -5,12 +6,6 @@ namespace ContentCore.Application.Commands.Attachment.UploadAttachment;
 
 public sealed class UploadAttachmentCommandValidator : AbstractValidator<UploadAttachmentCommand>
 {
-    // Per-type maximum file sizes
-    public static readonly long MaxImageBytes    =  10L * 1024 * 1024;  // 10 MB
-    public static readonly long MaxVideoBytes    = 200L * 1024 * 1024;  // 200 MB
-    public static readonly long MaxAudioBytes    =  50L * 1024 * 1024;  // 50 MB
-    public static readonly long MaxDocumentBytes =  20L * 1024 * 1024;  // 20 MB
-
     // SVG is intentionally excluded — it can embed executable JavaScript (XSS vector)
     // and ContentCore has no sanitization pipeline.
     public static readonly HashSet<string> AllowedMimeTypes = new(StringComparer.OrdinalIgnoreCase)
@@ -37,15 +32,6 @@ public sealed class UploadAttachmentCommandValidator : AbstractValidator<UploadA
         ".pdf",
     };
 
-    // Map AttachmentType → per-type max byte limit
-    private static readonly Dictionary<AttachmentType, long> MaxBytesByType = new()
-    {
-        [AttachmentType.Image]    = MaxImageBytes,
-        [AttachmentType.Video]    = MaxVideoBytes,
-        [AttachmentType.Audio]    = MaxAudioBytes,
-        [AttachmentType.Document] = MaxDocumentBytes,
-    };
-
     public UploadAttachmentCommandValidator()
     {
         RuleFor(x => x.FileName)
@@ -68,18 +54,12 @@ public sealed class UploadAttachmentCommandValidator : AbstractValidator<UploadA
             .GreaterThan(0)
             .WithMessage("File must not be empty.");
 
-        // Per-type size validation
+        // Per-type size validation — single source of truth from AttachmentLimits
         RuleFor(x => x)
-            .Must(cmd =>
-            {
-                if (!MaxBytesByType.TryGetValue(cmd.Type, out var maxBytes))
-                    return true; // unknown type — let the enum validator catch it
-                return cmd.FileSize <= maxBytes;
-            })
+            .Must(cmd => cmd.FileSize <= AttachmentLimits.GetMaxFileSize(cmd.Type))
             .WithMessage(cmd =>
             {
-                if (!MaxBytesByType.TryGetValue(cmd.Type, out var maxBytes))
-                    return "File size exceeds the allowed limit.";
+                var maxBytes = AttachmentLimits.GetMaxFileSize(cmd.Type);
                 var mb = maxBytes / (1024 * 1024);
                 return $"File size exceeds the {cmd.Type} limit of {mb} MB.";
             });

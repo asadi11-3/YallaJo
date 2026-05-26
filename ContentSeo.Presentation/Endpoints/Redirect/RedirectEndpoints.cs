@@ -6,6 +6,7 @@ namespace ContentSeo.Presentation.Endpoints.Redirect;
 
 using ContentSeo.Application.Commands.Redirect.CreateRedirect;
 using ContentSeo.Application.Commands.Redirect.DeleteRedirect;
+using ContentSeo.Application.Commands.Redirect.UpdateRedirect;
 using ContentSeo.Application.Queries.Redirect.Common;
 using ContentSeo.Application.Queries.Redirect.ListRedirects;
 using ContentSeo.Contracts.Authorization;
@@ -62,6 +63,26 @@ internal static class RedirectEndpoints
         .ProducesProblem(StatusCodes.Status403Forbidden)
         .ProducesProblem(StatusCodes.Status409Conflict)
         .WithMetadata(new MustHavePermissionAttribute(ContentSeoFeatures.Redirect, AppAction.Create));
+
+        // PUT /api/v1/seo/redirects/{id}
+        group.MapPut("/redirects/{id:guid}", async (
+            Guid id,
+            UpdateRedirectRequest request,
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            var cmd = new UpdateRedirectCommand(id, request.NewUrl, request.StatusCode, request.IsActive);
+            var result = await sender.Send(cmd, ct);
+            return result.ToApiResult();
+        })
+        .WithName("UpdateRedirect")
+        .WithSummary("Update redirect target, status code, or active state.")
+        .Produces(StatusCodes.Status204NoContent)
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status409Conflict)
+        .WithMetadata(new MustHavePermissionAttribute(ContentSeoFeatures.Redirect, AppAction.Update));
 
         // DELETE /api/v1/seo/redirects/{id}
         group.MapDelete("/redirects/{id:guid}", async (

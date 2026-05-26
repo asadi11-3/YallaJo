@@ -78,6 +78,8 @@ public static class DependencyInjection
         services.AddScoped<IGuideApplicationRepository, GuideApplicationRepository>();
         services.AddScoped<ITourProposalRepository, TourProposalRepository>();
         services.AddScoped<IGuideTourOfferingRepository, GuideTourOfferingRepository>();
+        services.AddScoped<IGuideScheduleRepository, GuideScheduleRepository>();
+        services.AddScoped<IGuidePricingTierRepository, GuidePricingTierRepository>();
 
         // ── Outbox writer (Application layer uses this to avoid DbContext dependency) ──
         services.AddScoped<IContentToursOutboxWriter, ContentToursOutboxWriter>();
@@ -87,6 +89,8 @@ public static class DependencyInjection
 
         services.AddScoped<ITourCapacityService, NoOpTourCapacityService>();
         services.AddScoped<ITourExistenceService,TourExistenceService>();
+        services.AddScoped<IGuideScheduleReader, GuideScheduleReader>();
+        services.AddScoped<IGuideAvailabilityBlockRepository, GuideAvailabilityBlockRepository>();
 
         // Phase C cross-module stubs — placeholder bindings until Security and
         // Accounts modules ship their canonical implementations. The real
@@ -106,3 +110,4 @@ public static class DependencyInjection
         return services;
     }
 }
+

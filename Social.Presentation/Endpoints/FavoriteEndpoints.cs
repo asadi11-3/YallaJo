@@ -26,11 +26,8 @@ internal static class FavoriteEndpoints
             ISender sender,
             CancellationToken ct) =>
         {
-            if (!currentUser.IsAuthenticated || currentUser.UserId is null)
-                return Results.Problem(statusCode: StatusCodes.Status401Unauthorized);
-
             var result = await sender.Send(
-                new AddFavoriteCommand(currentUser.UserId.Value, request.EntityType, request.EntityId), ct);
+                new AddFavoriteCommand(currentUser.UserId!.Value, request.EntityType, request.EntityId), ct);
 
             return result.ToApiResult();
         })
@@ -55,16 +52,13 @@ internal static class FavoriteEndpoints
             ISender sender,
             CancellationToken ct) =>
         {
-            if (!currentUser.IsAuthenticated || currentUser.UserId is null)
-                return Results.Problem(statusCode: StatusCodes.Status401Unauthorized);
-
             if (!Enum.TryParse<FavoriteEntityType>(entityType, ignoreCase: true, out var parsedType))
                 return Results.Problem(
                     detail: $"Invalid entity type '{entityType}'. Must be Tour, Place, or Business.",
                     statusCode: StatusCodes.Status400BadRequest);
 
             var result = await sender.Send(
-                new RemoveFavoriteCommand(currentUser.UserId.Value, parsedType, entityId), ct);
+                new RemoveFavoriteCommand(currentUser.UserId!.Value, parsedType, entityId), ct);
 
             // S-R7: DELETE is idempotent — always 204 on success (even if not found)
             if (!result.IsSuccess)
@@ -90,11 +84,8 @@ internal static class FavoriteEndpoints
             ISender sender,
             CancellationToken ct) =>
         {
-            if (!currentUser.IsAuthenticated || currentUser.UserId is null)
-                return Results.Problem(statusCode: StatusCodes.Status401Unauthorized);
-
             var result = await sender.Send(
-                new GetMyFavoritesQuery(currentUser.UserId.Value, afterCursor, pageSize == 0 ? 20 : pageSize), ct);
+                new GetMyFavoritesQuery(currentUser.UserId!.Value, afterCursor, pageSize == 0 ? 20 : pageSize), ct);
 
             return result.ToApiResult();
         })
@@ -115,16 +106,13 @@ internal static class FavoriteEndpoints
             ISender sender,
             CancellationToken ct) =>
         {
-            if (!currentUser.IsAuthenticated || currentUser.UserId is null)
-                return Results.Problem(statusCode: StatusCodes.Status401Unauthorized);
-
             if (!Enum.TryParse<FavoriteEntityType>(entityType, ignoreCase: true, out var parsedType))
                 return Results.Problem(
                     detail: $"Invalid entity type '{entityType}'. Must be Tour, Place, or Business.",
                     statusCode: StatusCodes.Status400BadRequest);
 
             var result = await sender.Send(
-                new CheckFavoriteQuery(currentUser.UserId.Value, parsedType, entityId), ct);
+                new CheckFavoriteQuery(currentUser.UserId!.Value, parsedType, entityId), ct);
 
             if (!result.IsSuccess)
                 return result.ToApiResult();

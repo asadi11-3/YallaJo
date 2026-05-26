@@ -20,7 +20,7 @@ public sealed class ReviewConfiguration : IEntityTypeConfiguration<Review>
         builder.Property(x => x.TargetId).IsRequired();
 
         // Content
-        builder.Property(x => x.Rating).IsRequired().HasPrecision(3, 2);
+        builder.Property(x => x.Rating).IsRequired().HasPrecision(2, 1);
         builder.Property(x => x.Title).IsRequired(false).HasMaxLength(200);
         builder.Property(x => x.Content).IsRequired().HasColumnType("nvarchar(max)");
         builder.Property(x => x.VisitDate).IsRequired(false);
@@ -30,6 +30,7 @@ public sealed class ReviewConfiguration : IEntityTypeConfiguration<Review>
         builder.Property(x => x.IsVerifiedBooking).IsRequired().HasDefaultValue(false);
         builder.Property(x => x.ProfanityFlagged).IsRequired().HasDefaultValue(false);
         builder.Property(x => x.CurrentReportCount).IsRequired().HasDefaultValue(0);
+        builder.Property(x => x.HelpfulVoteCount).IsRequired().HasDefaultValue(0);
         builder.Property(x => x.AutoHiddenAt).IsRequired(false);
         builder.Property(x => x.LastEditedAt).IsRequired(false);
 

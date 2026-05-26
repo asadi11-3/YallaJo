@@ -52,4 +52,15 @@ public interface IPaymentRepository : IRepository<Payment, Guid>
     Task<IReadOnlyList<Payment>> GetEscrowReleaseEligibleAsync(
         DateTime asOfUtc,
         CancellationToken ct = default);
+
+    Task<IReadOnlyList<Payment>> GetCompletedProviderPaymentsAsync(
+        Guid providerId,
+        DateTime? fromUtc,
+        DateTime? toUtc,
+        CancellationToken ct = default);
+
+    Task<IReadOnlyList<Payment>> GetCompletedPaymentsAsync(
+        DateTime? fromUtc,
+        DateTime? toUtc,
+        CancellationToken ct = default);
 }

@@ -65,6 +65,44 @@ internal sealed class ReviewRepository(SocialDbContext context)
         return (items, nextCursor);
     }
 
+    public async Task<(IReadOnlyList<Review> Items, int TotalCount)> GetPublicListAsync(
+        ReviewTargetType targetType, Guid targetId, int page, int pageSize, CancellationToken ct = default)
+    {
+        var pageNumber = Math.Max(page, 1);
+        var size = Math.Clamp(pageSize, 1, 50);
+        var query = context.Reviews
+            .AsNoTracking()
+            .Include(r => r.Replies)
+            .Where(r => r.TargetType == targetType
+                        && r.TargetId == targetId
+                        && r.Status == ReviewStatus.Published);
+
+        var totalCount = await query.CountAsync(ct).ConfigureAwait(false);
+        var items = await query
+            .OrderByDescending(r => r.HelpfulVoteCount)
+            .ThenByDescending(r => r.CreatedAt)
+            .Skip((pageNumber - 1) * size)
+            .Take(size)
+            .ToListAsync(ct)
+            .ConfigureAwait(false);
+
+        return (items, totalCount);
+    }
+
+    public async Task<decimal> GetAverageRatingAsync(
+        ReviewTargetType targetType, Guid targetId, CancellationToken ct = default)
+    {
+        var query = context.Reviews
+            .AsNoTracking()
+            .Where(r => r.TargetType == targetType
+                        && r.TargetId == targetId
+                        && r.Status == ReviewStatus.Published);
+
+        return await query.AnyAsync(ct).ConfigureAwait(false)
+            ? await query.AverageAsync(r => r.Rating, ct).ConfigureAwait(false)
+            : 0m;
+    }
+
     public async Task<(IReadOnlyList<Review> Items, Guid? NextCursor)> GetFlaggedPageAsync(
         Guid? afterId, int pageSize, CancellationToken ct = default)
     {

@@ -26,6 +26,7 @@ public static class AppAction
     public const string Feature    = nameof(Feature);
     public const string Refresh    = nameof(Refresh);   // for batch/cache refresh admin endpoints (e.g. recommendations)
     public const string Record     = nameof(Record);    // for write-only ingestion endpoints (e.g. interaction events)
+    public const string Vote       = nameof(Vote);      // for social helpful votes/reactions
 
     // ── Extended verbs (Wave 5–6 modules) ──────────────────────────────────
 

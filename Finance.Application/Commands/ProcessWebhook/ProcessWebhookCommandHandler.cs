@@ -51,14 +51,22 @@ public sealed class ProcessWebhookCommandHandler(
         switch (request.EventType.ToLowerInvariant())
         {
             case "payment.succeeded":
-                payment.MarkCompleted(request.GatewayPaymentId, request.OccurredAt);
+                var completeResult = payment.MarkCompleted(request.GatewayPaymentId, request.OccurredAt);
+                if (completeResult.IsFailure)
+                {
+                    return Result.Failure<ProcessWebhookResult>(completeResult.Errors.First(), completeResult.Outcome);
+                }
                 break;
 
             case "payment.failed":
-                payment.MarkFailed(
+                var failResult = payment.MarkFailed(
                     reasonCode: request.FailureCode ?? "Gateway.Failed",
                     rawReason: request.FailureMessage ?? "Gateway reported failed.",
                     occurredAtUtc: request.OccurredAt);
+                if (failResult.IsFailure)
+                {
+                    return Result.Failure<ProcessWebhookResult>(failResult.Errors.First(), failResult.Outcome);
+                }
                 break;
 
             case "refund.succeeded":
@@ -69,7 +77,11 @@ public sealed class ProcessWebhookCommandHandler(
                         Outcome.Invalid);
                 }
 
-                payment.MarkRefundCompleted(request.GatewayPaymentId, request.OccurredAt);
+                var refundCompleteResult = payment.MarkRefundCompleted(request.GatewayPaymentId, request.OccurredAt);
+                if (refundCompleteResult.IsFailure)
+                {
+                    return Result.Failure<ProcessWebhookResult>(refundCompleteResult.Errors.First(), refundCompleteResult.Outcome);
+                }
 
                 if (payment.OriginalPaymentId is not null)
                 {
@@ -80,7 +92,11 @@ public sealed class ProcessWebhookCommandHandler(
                     if (original is not null)
                     {
                         var refundMoney = new Money(Math.Abs(payment.Amount.Amount), payment.Currency);
-                        original.ApplyRefundCompletion(refundMoney, request.OccurredAt);
+                        var applyResult = original.ApplyRefundCompletion(refundMoney, request.OccurredAt);
+                        if (applyResult.IsFailure)
+                        {
+                            return Result.Failure<ProcessWebhookResult>(applyResult.Errors.First(), applyResult.Outcome);
+                        }
                     }
                 }
                 break;
@@ -93,9 +109,13 @@ public sealed class ProcessWebhookCommandHandler(
                         Outcome.Invalid);
                 }
 
-                payment.MarkRefundFailed(
+                var refundFailResult = payment.MarkRefundFailed(
                     failureReason: request.FailureMessage ?? request.FailureCode ?? "Gateway reported refund failed.",
                     occurredAtUtc: request.OccurredAt);
+                if (refundFailResult.IsFailure)
+                {
+                    return Result.Failure<ProcessWebhookResult>(refundFailResult.Errors.First(), refundFailResult.Outcome);
+                }
                 break;
 
             default:

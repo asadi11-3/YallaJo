@@ -1,5 +1,6 @@
 using ContentTours.Application.Caching;
 using ContentTours.Application.Interfaces;
+using ContentTours.Contracts;
 using ContentTours.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
@@ -12,6 +13,7 @@ namespace ContentTours.Application.Commands.TourGuides.SuspendGuide;
 
 public sealed class SuspendTourGuideCommandHandler(
     ITourGuideRepository guideRepository,
+    IContentToursOutboxWriter outboxWriter,
     IContentToursUnitOfWork unitOfWork,
     HybridCache cache,
     ICurrentUser currentUser,
@@ -29,11 +31,19 @@ public sealed class SuspendTourGuideCommandHandler(
             }
 
             var adminId = currentUser.UserId!.Value;
-            var suspendResult = guide.Suspend(adminId, request.Reason, DateTime.UtcNow);
+            var utcNow = DateTime.UtcNow;
+            var suspendResult = guide.Suspend(adminId, request.Reason, utcNow);
             if (!suspendResult.IsSuccess)
             {
                 return suspendResult;
             }
+
+            outboxWriter.Enqueue(new TourGuideSuspendedIntegrationEvent(
+                TourGuideId: guide.Id,
+                UserId: guide.UserId,
+                Reason: request.Reason,
+                SuspendedByAdminId: adminId,
+                SuspendedAt: utcNow));
 
             try
             {

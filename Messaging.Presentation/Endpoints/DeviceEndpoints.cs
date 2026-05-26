@@ -25,10 +25,8 @@ internal static class DeviceEndpoints
             ISender sender,
             CancellationToken ct) =>
         {
-            if (!currentUser.IsAuthenticated || currentUser.UserId is null)
-                return Result.Failure<Guid>(new Error("DeviceToken.Unauthorized", "Not authenticated"), Outcome.Unauthorized).ToApiResult();
             var cmd = new RegisterDeviceTokenCommand(
-                currentUser.UserId.Value,
+                currentUser.UserId!.Value,
                 request.DeviceId,
                 request.Platform,
                 request.Token);
@@ -44,9 +42,7 @@ internal static class DeviceEndpoints
             ISender sender,
             CancellationToken ct) =>
         {
-            if (!currentUser.IsAuthenticated || currentUser.UserId is null)
-                return Results.Unauthorized();
-            var result = await sender.Send(new DeleteDeviceTokenCommand(id, currentUser.UserId.Value), ct);
+            var result = await sender.Send(new DeleteDeviceTokenCommand(id, currentUser.UserId!.Value), ct);
             return result.IsSuccess ? Results.NoContent() : result.ToApiResult();
         }).WithName("DeleteDeviceToken").WithTags("Devices")
           .WithMetadata(new MustHavePermissionAttribute(MessagingFeatures.DeviceToken, AppAction.Delete))
@@ -57,9 +53,7 @@ internal static class DeviceEndpoints
             ISender sender,
             CancellationToken ct) =>
         {
-            if (!currentUser.IsAuthenticated || currentUser.UserId is null)
-                return Result.Failure<object>(new Error("DeviceToken.Unauthorized", "Not authenticated"), Outcome.Unauthorized).ToApiResult();
-            var result = await sender.Send(new GetMyDeviceTokensQuery(currentUser.UserId.Value), ct);
+            var result = await sender.Send(new GetMyDeviceTokensQuery(currentUser.UserId!.Value), ct);
             return result.ToApiResult();
         }).WithName("GetMyDeviceTokens").WithTags("Devices")
           .WithMetadata(new MustHavePermissionAttribute(MessagingFeatures.DeviceToken, AppAction.Read))

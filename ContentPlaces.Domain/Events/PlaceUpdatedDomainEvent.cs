@@ -6,4 +6,6 @@ public sealed record PlaceUpdatedDomainEvent(
     Guid PlaceId,
     string Name,
     string? Description,
-    string? Address) : DomainEventBase;
+    string? Address,
+    string Slug,
+    string? OldSlug) : DomainEventBase;

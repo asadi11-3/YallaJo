@@ -47,6 +47,9 @@ public static class ContentToursEndpoints
         // Guide applications + open/close-applications (mapped onto tour group)
         GuideApplicationEndpoints.MapGuideApplicationEndpoints(group);
 
+        // Guide offering management (schedules, pricing tiers, private tours)
+        GuideOfferingEndpoints.MapGuideOfferingEndpoints(group);
+
         var guidesGroup = endpoints.MapGroup("/api/v1/guides")
             .WithTags("ContentTours | Guide Profiles");
 

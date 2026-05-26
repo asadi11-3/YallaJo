@@ -73,4 +73,10 @@ public sealed class WeatherDailyBudget : BaseEntity, IAggregateRoot
     {
         AlertSentAt = utcNow;
     }
+
+    public void Reset(DateTime utcNow)
+    {
+        CallsUsed = 0;
+        AlertSentAt = null;
+    }
 }

@@ -8,17 +8,17 @@ public static class SocialEndpoints
 {
     public static IEndpointRouteBuilder MapSocialEndpoints(this IEndpointRouteBuilder endpoints)
     {
-        var reviewGroup = endpoints.MapGroup("/api/v1/reviews");
+        var reviewGroup = endpoints.MapGroup("/api/v1/social/reviews");
         reviewGroup.MapReviewEndpoints();
         reviewGroup.MapReviewAdminEndpoints();
 
-        endpoints.MapGroup("/api/v1/favorites")
+        endpoints.MapGroup("/api/v1/social/favorites")
             .MapFavoriteEndpoints();
 
-        endpoints.MapGroup("/api/v1/reports")
+        endpoints.MapGroup("/api/v1/social/reports")
             .MapReportEndpoints();
 
-        endpoints.MapGroup("/api/v1/moderation")
+        endpoints.MapGroup("/api/v1/social/moderation")
             .MapModerationEndpoints();
 
         return endpoints;

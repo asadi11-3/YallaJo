@@ -15,6 +15,7 @@ public sealed class SocialDbContext : DbContext, IDbContext
     public DbSet<Favorite> Favorites                             => Set<Favorite>();
     public DbSet<Report> Reports                                 => Set<Report>();
     public DbSet<EntityRatingCache> EntityRatingCaches           => Set<EntityRatingCache>();
+    public DbSet<UserModerationRecord> UserModerationRecords     => Set<UserModerationRecord>();
 
     // ── BaseEntity children (no aggregate root — EF discovers via configurations) ──
     public DbSet<ContentModerationLog> ContentModerationLogs     => Set<ContentModerationLog>();
@@ -23,6 +24,7 @@ public sealed class SocialDbContext : DbContext, IDbContext
     public DbSet<PlaceSnapshot> PlaceSnapshots                   => Set<PlaceSnapshot>();
     public DbSet<BusinessSnapshot> BusinessSnapshots             => Set<BusinessSnapshot>();
     public DbSet<TourSnapshot> TourSnapshots                     => Set<TourSnapshot>();
+    public DbSet<ReviewHelpfulVote> ReviewHelpfulVotes           => Set<ReviewHelpfulVote>();
 
     // ── Infrastructure ─────────────────────────────────────────────────────────
     public DbSet<OutboxMessage> OutboxMessages                   => Set<OutboxMessage>();

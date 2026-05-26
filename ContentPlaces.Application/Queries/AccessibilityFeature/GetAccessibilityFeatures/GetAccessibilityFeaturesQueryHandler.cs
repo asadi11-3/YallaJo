@@ -3,6 +3,7 @@ using ContentPlaces.Domain.Repositories;
 using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
+using AccessibilityFeatureEntity = ContentPlaces.Domain.Entities.AccessibilityFeature;
 
 namespace ContentPlaces.Application.Queries.AccessibilityFeature.GetAccessibilityFeatures;
 
@@ -35,7 +36,7 @@ public sealed class GetAccessibilityFeaturesQueryHandler(
 
         var features = await featureRepository.SelectAsync(
             selector: x => AccessibilityFeatureDto.From(x),
-            filter: x => x.EntityId == request.PlaceId && x.EntityType == 1,
+            filter: x => x.EntityId == request.PlaceId && x.EntityType == AccessibilityFeatureEntity.EntityTypePlace,
             orderBy: q => q.OrderBy(x => x.FeatureType).ThenBy(x => x.Name),
             ct: cancellationToken);
 

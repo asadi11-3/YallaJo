@@ -68,21 +68,7 @@ namespace ContentBlogs.Contracts.Authorization
         new(ContentBlogsFeatures.AdminCreatorQueue, AppAction.Suspend, PermissionGroup.ModerationTools, "Suspend creator profile"),
         new(ContentBlogsFeatures.AdminCreatorQueue, AppAction.Reinstate, PermissionGroup.ModerationTools, "Reinstate suspended creator"),
 
-        // ── Creator Posts self-service (Wave-8) ────────────────────────
-        new(ContentBlogsFeatures.CreatorPost, AppAction.Read, PermissionGroup.SystemAccess, "View own creator posts"),
-        new(ContentBlogsFeatures.CreatorPost, AppAction.Create, PermissionGroup.SystemAccess, "Create a creator post"),
-        new(ContentBlogsFeatures.CreatorPost, AppAction.Update, PermissionGroup.SystemAccess, "Update own creator post"),
-        new(ContentBlogsFeatures.CreatorPost, AppAction.Delete, PermissionGroup.SystemAccess, "Delete own draft/rejected creator post"),
-        new(ContentBlogsFeatures.CreatorPost, AppAction.Submit, PermissionGroup.SystemAccess, "Submit creator post for review / publish directly"),
-
-        // ── Admin Post Moderation (Wave-8) ─────────────────────────────
-        new(ContentBlogsFeatures.AdminPostModeration, AppAction.Read, PermissionGroup.ModerationTools, "View post moderation queue"),
-        new(ContentBlogsFeatures.AdminPostModeration, AppAction.Approve, PermissionGroup.ModerationTools, "Approve submitted creator post"),
-        new(ContentBlogsFeatures.AdminPostModeration, AppAction.Reject, PermissionGroup.ModerationTools, "Reject submitted creator post"),
-        new(ContentBlogsFeatures.AdminPostModeration, AppAction.Feature, PermissionGroup.ModerationTools, "Feature a published creator post"),
-        new(ContentBlogsFeatures.AdminPostModeration, AppAction.Remove, PermissionGroup.ModerationTools, "Remove a published creator post"),
-        new(ContentBlogsFeatures.AdminPostModeration, AppAction.HidePost, PermissionGroup.ModerationTools, "Hide a published creator post"),
-        new(ContentBlogsFeatures.AdminPostModeration, AppAction.UnhidePost, PermissionGroup.ModerationTools, "Unhide a hidden creator post"),
+        // CreatorPost + AdminPostModeration permissions removed — merged into Blog (Wave-8 → Blog).
 
         // ── Admin Tier Management (Wave-8) ─────────────────────────────
         new(ContentBlogsFeatures.AdminCreatorQueue, AppAction.PromoteTier, PermissionGroup.ModerationTools, "Promote creator trust tier"),

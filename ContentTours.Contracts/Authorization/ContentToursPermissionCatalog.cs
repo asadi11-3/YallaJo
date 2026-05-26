@@ -67,9 +67,12 @@ public sealed class ContentToursPermissionCatalog : IPermissionCatalog
         new(ContentToursFeatures.TourProposal, AppAction.Reject,  PermissionGroup.ContentManagement, "Reject a tour proposal (admin)"),
 
         // ── GuideOffering ─────────────────────────────────────────────────────
-        new(ContentToursFeatures.GuideOffering, AppAction.Read,     PermissionGroup.ContentManagement, "View guide offerings for a tour"),
-        new(ContentToursFeatures.GuideOffering, AppAction.Suspend,  PermissionGroup.ContentManagement, "Suspend a guide offering (admin)"),
-        new(ContentToursFeatures.GuideOffering, AppAction.Reinstate,PermissionGroup.ContentManagement, "Reinstate a guide offering (admin)"),
+        new(ContentToursFeatures.GuideOffering, AppAction.Read,      PermissionGroup.ContentManagement, "View guide offerings for a tour"),
+        new(ContentToursFeatures.GuideOffering, AppAction.Create,    PermissionGroup.ContentManagement, "Create guide schedules, pricing tiers, or enable private tours"),
+        new(ContentToursFeatures.GuideOffering, AppAction.Update,    PermissionGroup.ContentManagement, "Update guide schedules or pricing tiers"),
+        new(ContentToursFeatures.GuideOffering, AppAction.Delete,    PermissionGroup.ContentManagement, "Delete guide schedules, pricing tiers, or remove offerings"),
+        new(ContentToursFeatures.GuideOffering, AppAction.Suspend,   PermissionGroup.ContentManagement, "Suspend a guide offering (admin)"),
+        new(ContentToursFeatures.GuideOffering, AppAction.Reinstate, PermissionGroup.ContentManagement, "Reinstate a guide offering (admin)"),
 
         // ── TourGuideProfile (admin management) ──────────────────────────────
         new(ContentToursFeatures.TourGuideProfile, AppAction.Read,     PermissionGroup.ContentManagement, "View tour guide profiles"),

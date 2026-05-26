@@ -63,8 +63,19 @@ public static class DependencyInjection
         // ── Task 4 — External service options ──────────────────────────────
         services.Configure<WeatherOptions>(configuration.GetSection(WeatherOptions.SectionName));
 
-        // ── Task 4 — External services (stubs) + Sitemap renderer ──────────
-        services.AddSingleton<IWeatherProvider, NoOpWeatherProvider>();
+        // ── WeatherAPI.com provider + Sitemap renderer ─────────────────────
+        var weatherSection = configuration.GetSection(WeatherOptions.SectionName);
+        var provider = weatherSection[nameof(WeatherOptions.Provider)];
+        var apiKey = weatherSection[nameof(WeatherOptions.ApiKey)];
+        if (string.Equals(provider, "weatherapi", StringComparison.OrdinalIgnoreCase)
+            && !string.IsNullOrWhiteSpace(apiKey))
+        {
+            services.AddSingleton<IWeatherProvider, WeatherApiComProvider>();
+        }
+        else
+        {
+            services.AddSingleton<IWeatherProvider, NoOpWeatherProvider>();
+        }
         services.AddSingleton<ISearchConsolePinger, NoOpSearchConsolePinger>();
         services.AddScoped<ISitemapRenderer, SitemapRenderer>();
 

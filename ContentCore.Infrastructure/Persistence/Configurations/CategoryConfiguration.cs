@@ -57,5 +57,7 @@ public class CategoryConfiguration : IEntityTypeConfiguration<Category>
 
         builder.HasQueryFilter(x => !x.IsDeleted);
         builder.HasIndex(x => x.Slug).IsUnique();
+        builder.HasIndex(x => x.ParentCategoryId)
+            .HasDatabaseName("IX_Categories_ParentCategoryId");
     }
 }

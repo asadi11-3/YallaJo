@@ -83,7 +83,7 @@ public sealed class PlaceUpdatedDomainEventHandler(
         }
 
         dbContext.OutboxMessages.Add(OutboxMessage.Create(
-            new PlaceUpdatedIntegrationEvent(evt.PlaceId, evt.Name, evt.Description, evt.Address)));
+            new PlaceUpdatedIntegrationEvent(evt.PlaceId, evt.Name, evt.Description, evt.Address, evt.Slug, evt.OldSlug)));
 
         logger.LogInformation(
             "PlaceUpdatedDomainEvent: Updated {Updated}, added {Added} translations for place {PlaceId}.",

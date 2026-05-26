@@ -8,4 +8,5 @@ public enum ModerationAction : byte
     WarnUser        = 2,
     BanUser         = 3,
     RestoreContent  = 4,
+    UnbanUser       = 5,
 }

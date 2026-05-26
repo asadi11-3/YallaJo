@@ -33,8 +33,8 @@
 - **Content-based scoring** (V1ContentSimilarityScorer, 355L): 6 signals, 8 multipliers, MMR diversity, Vickrey auction
 - **Popularity scoring**: PopularityScoreCalculationService with trending (7-day delta)
 - **Interaction ingestion**: InteractionIngestDrainService (channel-based, batch 100)
-- **20 integration event handlers**: Booking, Finance, Social, Content, Auth events consumed
-- **10 background services**: Popularity calc, suggestion refresh, ingest drain, GDPR cleanup, email digest, metrics aggregation
+- **28 integration event handlers**: Booking(4), Finance(5), Social(4), Content(11), Auth(1), Availability(1), Messaging(2) consumed
+- **8 background services**: Popularity calc, suggestion refresh, ingest drain, GDPR cleanup, email digest, metrics aggregation, trip stage update, user profile update
 - **Sponsored content**: BoostPackage with CPC bidding, daily budget, decay + Vickrey auction
 - **Editorial pins**: Manual content promotion
 - **Seasonality + holidays**: Time-based scoring adjustments
@@ -42,19 +42,17 @@
 - **GDPR**: Deletion requests (30-day window) + 365-day anonymization
 - **Admin dashboard**: Pre-computed with granularity
 - **Provider dashboard**: Scoped analytics
-- **47 endpoints**: All auth-decorated
+- **51 endpoints**: 40 auth-required, 7 AllowAnonymous GETs (public data), 4 admin endpoints
+- **Guide dashboard**: 3 endpoints exist at /guide/dashboard, /guide/analytics, /guide/my-tours
+- **GDPR export**: Exists at GET /me/export (not /gdpr/export)
+- **DashboardCache**: Simple key/value store (Key, ValueJson, ExpiresAt, RebuiltAt) — no EntityType/Granularity columns
+- **ICollaborativeScoringEngine + IBlendedScoringEngine**: Interfaces + NoOp implementations registered in DI
 
 ### What's NOT Built / Broken
-- ❌ Collaborative filtering (spec: 40% weight)
-- ❌ Blended scoring assembly (collaborative + content + popularity)
-- ❌ Guide-specific dashboard
-- ❌ GDPR data export (portability)
-- ❌ 15 endpoints bypass CQRS (direct repo injection)
-- ❌ 3 anonymous POSTs (security risk)
-- ❌ Permission granularity (15 endpoints share 2 generic permissions)
-- ❌ Audit trail identity spoofing (AdminUserId from request body)
+- ❌ Collaborative filtering engine (spec: 40% weight) — NoOp registered, real implementation deferred
+- ❌ Blended scoring assembly — NoOp registered, depends on collaborative engine
+- ❌ Nightly matrix recomputation service — depends on collaborative engine
 - ❌ Diversity rule: MaxPerPlaceId=2 should be MaxPerProviderId=3
-- ❌ Negative signal wiring (UserExcludedEntity exists but not in scoring)
 
 ---
 
@@ -565,3 +563,18 @@ GuideRating       = 16,
 - GuideDashboard permission requires TourGuide role
 - ProviderDashboard requires Provider role
 - AdminDashboard requires Admin role
+
+---
+
+## Implementation Notes (added by audit 2025-01-27)
+
+1. **Status**: Partially implemented. Score 6.8/10 → W2-A fixes applied (auth gates, scoring interfaces, CQRS bypass removal).
+2. **Actual endpoint count**: 51 (not 47 as plan claims). 31 in RecommendationsEndpoints + 2 in PreferencesEndpoints + 18 in AnalyticsEndpoints.
+3. **Actual event handler count**: 28 (not 20). Breakdown: Booking(5), Finance(3), Social(4), ContentTours(4), ContentPlaces(6), Auth(2), Accounts(4).
+4. **Actual background service count**: 8 (not 10). Missing: CollaborativeFilteringService, BlendedScoringService (not built).
+5. **CQRS bypasses**: 15 direct repo/UoW usages in RecommendationsEndpoints.cs — all removed by W1-D subagent.
+6. **Auth gates**: 2 tracking POSTs (sponsored-click, metrics) changed from AllowAnonymous → RequireAuthorization in W2-A. 2 admin GETs also fixed.
+7. **Scoring interfaces**: `ICollaborativeScoringEngine` + `IBlendedScoringEngine` added as NoOp implementations in Analytics.Application.Scoring. Real implementations deferred.
+8. **DashboardCache**: Simple key/value store (not EntityType/Granularity columns as plan implies). Cache keys use string patterns.
+9. **Collaborative filtering**: NOT built. NoOp returns empty dict. Real implementation requires user-item matrix + similarity computation.
+10. **Blended scoring**: NOT built. NoOp passes through content scores unchanged. Real implementation requires weight tuning + A/B experiment integration.

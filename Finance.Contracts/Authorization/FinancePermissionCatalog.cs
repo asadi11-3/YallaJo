@@ -7,7 +7,9 @@ namespace Finance.Contracts.Authorization;
 /// at boot via <c>IEnumerable&lt;IPermissionCatalog&gt;</c>.
 /// </summary>
 /// <remarks>
-/// Sprint Finance-T0 → 7 features, 20 permissions.
+/// Sprint Finance-T0 → 8 features, 27 permissions.
+/// Features: Payment(2), Refund(2), Invoice(2), Payout(3), CommissionRule(4),
+/// ProviderBankAccount(4), ProviderPaymentMethod(5), AdminFinanceDashboard(5).
 /// Group = <c>FinanceOperations</c> for all entries.
 /// </remarks>
 public sealed class FinancePermissionCatalog : IPermissionCatalog
@@ -79,6 +81,23 @@ public sealed class FinancePermissionCatalog : IPermissionCatalog
             PermissionGroup.FinanceOperations,
             "Verify a provider bank account (admin/KYC)"),
 
+        // ── ProviderPaymentMethod (5) ────────────────────────────────────────
+        new(FinanceFeatures.ProviderPaymentMethod, AppAction.Create,
+            PermissionGroup.FinanceOperations,
+            "Register a provider payment method"),
+        new(FinanceFeatures.ProviderPaymentMethod, AppAction.Update,
+            PermissionGroup.FinanceOperations,
+            "Update provider payment method details"),
+        new(FinanceFeatures.ProviderPaymentMethod, AppAction.Read,
+            PermissionGroup.FinanceOperations,
+            "View provider payment methods"),
+        new(FinanceFeatures.ProviderPaymentMethod, AppAction.Delete,
+            PermissionGroup.FinanceOperations,
+            "Delete provider payment method"),
+        new(FinanceFeatures.ProviderPaymentMethod, AppAction.Verify,
+            PermissionGroup.FinanceOperations,
+            "Verify a provider payment method (admin/KYC)"),
+
         // ── AdminFinanceDashboard (3) ────────────────────────────────────────
         new(FinanceFeatures.AdminFinanceDashboard, AppAction.Read,
             PermissionGroup.FinanceOperations,
@@ -89,5 +108,11 @@ public sealed class FinancePermissionCatalog : IPermissionCatalog
         new(FinanceFeatures.AdminFinanceDashboard, AppAction.Refresh,
             PermissionGroup.FinanceOperations,
             "Refresh admin finance dashboard caches"),
+        new(FinanceFeatures.AdminFinanceDashboard, AppAction.Update,
+            PermissionGroup.FinanceOperations,
+            "Update admin finance workflow items"),
+        new(FinanceFeatures.AdminFinanceDashboard, AppAction.Approve,
+            PermissionGroup.FinanceOperations,
+            "Approve or resolve admin finance workflow items"),
     ];
 }

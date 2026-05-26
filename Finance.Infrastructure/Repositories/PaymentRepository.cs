@@ -156,4 +156,49 @@ internal sealed class PaymentRepository(FinanceDbContext context)
             .OrderBy(p => p.EscrowReleaseEligibleAt)
             .ToListAsync(ct);
     }
+
+    public async Task<IReadOnlyList<Payment>> GetCompletedProviderPaymentsAsync(
+        Guid providerId,
+        DateTime? fromUtc,
+        DateTime? toUtc,
+        CancellationToken ct = default)
+    {
+        var query = _context.Payments
+            .AsNoTracking()
+            .Where(p => p.ProviderId == providerId && p.PaymentType == PaymentType.Booking && p.Status == PaymentStatus.Completed);
+
+        if (fromUtc is not null)
+        {
+            query = query.Where(p => p.PaidAt >= fromUtc.Value);
+        }
+
+        if (toUtc is not null)
+        {
+            query = query.Where(p => p.PaidAt <= toUtc.Value);
+        }
+
+        return await query.OrderByDescending(p => p.PaidAt).ToListAsync(ct);
+    }
+
+    public async Task<IReadOnlyList<Payment>> GetCompletedPaymentsAsync(
+        DateTime? fromUtc,
+        DateTime? toUtc,
+        CancellationToken ct = default)
+    {
+        var query = _context.Payments
+            .AsNoTracking()
+            .Where(p => p.PaymentType == PaymentType.Booking && p.Status == PaymentStatus.Completed);
+
+        if (fromUtc is not null)
+        {
+            query = query.Where(p => p.PaidAt >= fromUtc.Value);
+        }
+
+        if (toUtc is not null)
+        {
+            query = query.Where(p => p.PaidAt <= toUtc.Value);
+        }
+
+        return await query.OrderByDescending(p => p.PaidAt).ToListAsync(ct);
+    }
 }

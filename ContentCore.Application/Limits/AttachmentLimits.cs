@@ -37,6 +37,20 @@ public static class AttachmentLimits
         => MaxCountByEntity.TryGetValue(entityType, out var max) ? max : int.MaxValue;
 
     /// <summary>
+    /// Returns the maximum file size in bytes for the given attachment type.
+    /// Returns <see cref="long.MaxValue"/> if no limit is configured.
+    /// </summary>
+    public static long GetMaxFileSize(AttachmentType attachmentType) =>
+        attachmentType switch
+        {
+            AttachmentType.Image    => MaxImageBytes,
+            AttachmentType.Video    => MaxVideoBytes,
+            AttachmentType.Document => MaxDocumentBytes,
+            AttachmentType.Audio    => MaxAudioBytes,
+            _                       => long.MaxValue,
+        };
+
+    /// <summary>
     /// Returns <c>true</c> if <paramref name="currentCount"/> is at or above the cap.
     /// </summary>
     public static bool IsAtLimit(EntityType entityType, int currentCount)

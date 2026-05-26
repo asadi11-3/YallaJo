@@ -1,21 +1,34 @@
 using Analytics.Application.Commands.CancelGdprDeletion;
+using Analytics.Application.Commands.CompleteExperiment;
+using Analytics.Application.Commands.CreateBoostPackage;
+using Analytics.Application.Commands.CreateCpcBoostPackage;
+using Analytics.Application.Commands.CreateEditorialPin;
+using Analytics.Application.Commands.CreateExperiment;
+using Analytics.Application.Commands.CreateHolidayCalendar;
+using Analytics.Application.Commands.CreateSeasonalityRule;
+using Analytics.Application.Commands.DeactivateBoostPackage;
+using Analytics.Application.Commands.DeactivateEditorialPin;
+using Analytics.Application.Commands.DeactivateSeasonalityRule;
 using Analytics.Application.Commands.MarkNotInterested;
 using Analytics.Application.Commands.RecordSponsoredClick;
 using Analytics.Application.Commands.RecordSuggestionMetric;
 using Analytics.Application.Commands.RefreshSuggestionBatch;
 using Analytics.Application.Commands.RequestGdprDeletion;
+using Analytics.Application.Commands.SetEntityPhotogenic;
+using Analytics.Application.Commands.StartExperiment;
 using Analytics.Application.Commands.SubmitOnboardingResponses;
-using Analytics.Application.Interfaces;
-using Analytics.Application.Interfaces.Repositories;
 using Analytics.Application.Models;
 using Analytics.Application.Queries.GetEntitySuggestions;
+using Analytics.Application.Queries.GetHolidayCalendarByYear;
 using Analytics.Application.Queries.GetItinerary;
 using Analytics.Application.Queries.GetMetrics;
 using Analytics.Application.Queries.GetRecommendations;
 using Analytics.Application.Queries.GetReengagementSegment;
+using Analytics.Application.Queries.GetSeasonalityRules;
 using Analytics.Application.Queries.GetSimilarEntities;
+using Analytics.Application.Queries.GetSuggestionBatches;
+using Analytics.Application.Queries.GetUserDataExport;
 using Analytics.Contracts.Authorization;
-using Analytics.Domain.Entities;
 using Analytics.Domain.Enums;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
@@ -124,10 +137,10 @@ internal static class RecommendationsEndpoints
         .WithMetadata(new MustHavePermissionAttribute(AnalyticsFeatures.Batch, AppAction.Refresh))
         .RequireAuthorization();
 
-        batches.MapGet("/", async (ISuggestionBatchRepository repository, CancellationToken ct) =>
+        batches.MapGet("/", async (ISender sender, CancellationToken ct) =>
         {
-            var rows = await repository.GetAllAsync(ct);
-            return Results.Ok(rows.Select(MapBatch).ToList());
+            var result = await sender.Send(new GetSuggestionBatchesQuery(), ct);
+            return result.IsSuccess ? Results.Ok(result.Value.Batches) : result.ToApiResult();
         })
         .WithName("ListAnalyticsSuggestionBatches")
         .Produces<IReadOnlyList<SuggestionBatchDto>>(StatusCodes.Status200OK)
@@ -138,12 +151,10 @@ internal static class RecommendationsEndpoints
         // 3.6: Boost package admin endpoints
         var boosts = group.MapGroup("/analytics/admin/boosts").WithTags("Analytics | Boost Packages");
 
-        boosts.MapPost("/", async (CreateBoostPackageRequest request, IBoostPackageRepository boostRepo, IAnalyticsUnitOfWork unitOfWork, CancellationToken ct) =>
+        boosts.MapPost("/", async (CreateBoostPackageRequest request, ISender sender, CancellationToken ct) =>
         {
-            var boost = BoostPackage.Create(request.ProviderId, request.EntityKind, request.EntityId, request.Multiplier, request.StartsAt, request.ExpiresAt);
-            boostRepo.Add(boost);
-            await unitOfWork.SaveChangesAsync(ct);
-            return Results.Ok(new { boost.Id });
+            var result = await sender.Send(new CreateBoostPackageCommand(request.ProviderId, request.EntityKind, request.EntityId, request.Multiplier, request.StartsAt, request.ExpiresAt), ct);
+            return result.IsSuccess ? Results.Ok(new { result.Value.Id }) : result.ToApiResult();
         })
         .WithName("CreateAnalyticsBoostPackage")
         .Produces(StatusCodes.Status200OK)
@@ -152,15 +163,10 @@ internal static class RecommendationsEndpoints
         .WithMetadata(new MustHavePermissionAttribute(AnalyticsFeatures.Batch, AppAction.Refresh))
         .RequireAuthorization();
 
-        boosts.MapDelete("/{boostId:guid}", async (Guid boostId, IBoostPackageRepository boostRepo, IAnalyticsUnitOfWork unitOfWork, CancellationToken ct) =>
+        boosts.MapDelete("/{boostId:guid}", async (Guid boostId, ISender sender, CancellationToken ct) =>
         {
-            var boost = await boostRepo.GetByIdAsync(boostId, ct);
-            if (boost is null)
-                return Results.NotFound();
-            boost.Deactivate();
-            boostRepo.Update(boost);
-            await unitOfWork.SaveChangesAsync(ct);
-            return Results.NoContent();
+            var result = await sender.Send(new DeactivateBoostPackageCommand(boostId), ct);
+            return result.ToApiResult();
         })
         .WithName("DeactivateAnalyticsBoostPackage")
         .Produces(StatusCodes.Status204NoContent)
@@ -172,12 +178,10 @@ internal static class RecommendationsEndpoints
         // 3.7: Editorial pin admin endpoints
         var pins = group.MapGroup("/analytics/admin/pins").WithTags("Analytics | Editorial Pins");
 
-        pins.MapPost("/", async (CreateEditorialPinRequest request, IEditorialPinRepository pinRepo, IAnalyticsUnitOfWork unitOfWork, CancellationToken ct) =>
+        pins.MapPost("/", async (CreateEditorialPinRequest request, ISender sender, CancellationToken ct) =>
         {
-            var pin = EditorialPin.Create(request.EntityKind, request.EntityId, request.Position, request.Context, request.BadgeText, request.ExpiresAt);
-            pinRepo.Add(pin);
-            await unitOfWork.SaveChangesAsync(ct);
-            return Results.Ok(new { pin.Id });
+            var result = await sender.Send(new CreateEditorialPinCommand(request.EntityKind, request.EntityId, request.Position, request.Context, request.BadgeText, request.ExpiresAt), ct);
+            return result.IsSuccess ? Results.Ok(new { result.Value.Id }) : result.ToApiResult();
         })
         .WithName("CreateAnalyticsEditorialPin")
         .Produces(StatusCodes.Status200OK)
@@ -186,15 +190,10 @@ internal static class RecommendationsEndpoints
         .WithMetadata(new MustHavePermissionAttribute(AnalyticsFeatures.Batch, AppAction.Refresh))
         .RequireAuthorization();
 
-        pins.MapDelete("/{pinId:guid}", async (Guid pinId, IEditorialPinRepository pinRepo, IAnalyticsUnitOfWork unitOfWork, CancellationToken ct) =>
+        pins.MapDelete("/{pinId:guid}", async (Guid pinId, ISender sender, CancellationToken ct) =>
         {
-            var pin = await pinRepo.GetByIdAsync(pinId, ct);
-            if (pin is null)
-                return Results.NotFound();
-            pin.Deactivate();
-            pinRepo.Update(pin);
-            await unitOfWork.SaveChangesAsync(ct);
-            return Results.NoContent();
+            var result = await sender.Send(new DeactivateEditorialPinCommand(pinId), ct);
+            return result.ToApiResult();
         })
         .WithName("DeactivateAnalyticsEditorialPin")
         .Produces(StatusCodes.Status204NoContent)
@@ -221,12 +220,10 @@ internal static class RecommendationsEndpoints
         // 5.1: Seasonality rules admin CRUD
         var seasonality = group.MapGroup("/analytics/admin/seasonality").WithTags("Analytics | Seasonality Rules");
 
-        seasonality.MapPost("/", async (CreateSeasonalityRuleRequest request, ISeasonalityRuleRepository repo, IAnalyticsUnitOfWork unitOfWork, CancellationToken ct) =>
+        seasonality.MapPost("/", async (CreateSeasonalityRuleRequest request, ISender sender, CancellationToken ct) =>
         {
-            var rule = SeasonalityRule.Create(request.PlaceId, request.MonthStart, request.MonthEnd, request.Multiplier, request.Description);
-            repo.Add(rule);
-            await unitOfWork.SaveChangesAsync(ct);
-            return Results.Ok(new { rule.Id });
+            var result = await sender.Send(new CreateSeasonalityRuleCommand(request.PlaceId, request.MonthStart, request.MonthEnd, request.Multiplier, request.Description), ct);
+            return result.IsSuccess ? Results.Ok(new { result.Value.Id }) : result.ToApiResult();
         })
         .WithName("CreateAnalyticsSeasonalityRule")
         .Produces(StatusCodes.Status200OK)
@@ -234,10 +231,10 @@ internal static class RecommendationsEndpoints
         .WithMetadata(new MustHavePermissionAttribute(AnalyticsFeatures.Batch, AppAction.Refresh))
         .RequireAuthorization();
 
-        seasonality.MapGet("/", async (ISeasonalityRuleRepository repo, CancellationToken ct) =>
+        seasonality.MapGet("/", async (ISender sender, CancellationToken ct) =>
         {
-            var rules = await repo.GetAllActiveAsync(ct);
-            return Results.Ok(rules.Select(r => new SeasonalityRuleDto(r.Id, r.PlaceId, r.MonthStart, r.MonthEnd, r.Multiplier, r.Description, r.IsActive)));
+            var result = await sender.Send(new GetSeasonalityRulesQuery(), ct);
+            return result.IsSuccess ? Results.Ok(result.Value.Rules) : result.ToApiResult();
         })
         .WithName("ListAnalyticsSeasonalityRules")
         .Produces<IEnumerable<SeasonalityRuleDto>>(StatusCodes.Status200OK)
@@ -245,14 +242,10 @@ internal static class RecommendationsEndpoints
         .WithMetadata(new MustHavePermissionAttribute(AnalyticsFeatures.Batch, AppAction.Read))
         .RequireAuthorization();
 
-        seasonality.MapDelete("/{ruleId:guid}", async (Guid ruleId, ISeasonalityRuleRepository repo, IAnalyticsUnitOfWork unitOfWork, CancellationToken ct) =>
+        seasonality.MapDelete("/{ruleId:guid}", async (Guid ruleId, ISender sender, CancellationToken ct) =>
         {
-            var rule = await repo.GetByIdAsync(ruleId, ct);
-            if (rule is null) return Results.NotFound();
-            rule.Deactivate();
-            repo.Update(rule);
-            await unitOfWork.SaveChangesAsync(ct);
-            return Results.NoContent();
+            var result = await sender.Send(new DeactivateSeasonalityRuleCommand(ruleId), ct);
+            return result.ToApiResult();
         })
         .WithName("DeactivateAnalyticsSeasonalityRule")
         .Produces(StatusCodes.Status204NoContent)
@@ -264,12 +257,10 @@ internal static class RecommendationsEndpoints
         // 5.2: Holiday calendar admin CRUD
         var holidays = group.MapGroup("/analytics/admin/holidays").WithTags("Analytics | Holiday Calendar");
 
-        holidays.MapPost("/", async (CreateHolidayCalendarRequest request, IHolidayCalendarRepository repo, IAnalyticsUnitOfWork unitOfWork, CancellationToken ct) =>
+        holidays.MapPost("/", async (CreateHolidayCalendarRequest request, ISender sender, CancellationToken ct) =>
         {
-            var holiday = HolidayCalendar.Create(request.HolidayName, request.StartDate, request.EndDate, request.Year, request.BoostRulesJson);
-            repo.Add(holiday);
-            await unitOfWork.SaveChangesAsync(ct);
-            return Results.Ok(new { holiday.Id });
+            var result = await sender.Send(new CreateHolidayCalendarCommand(request.HolidayName, request.StartDate, request.EndDate, request.Year, request.BoostRulesJson), ct);
+            return result.IsSuccess ? Results.Ok(new { result.Value.Id }) : result.ToApiResult();
         })
         .WithName("CreateAnalyticsHolidayCalendar")
         .Produces(StatusCodes.Status200OK)
@@ -277,10 +268,10 @@ internal static class RecommendationsEndpoints
         .WithMetadata(new MustHavePermissionAttribute(AnalyticsFeatures.Batch, AppAction.Refresh))
         .RequireAuthorization();
 
-        holidays.MapGet("/{year:int}", async (int year, IHolidayCalendarRepository repo, CancellationToken ct) =>
+        holidays.MapGet("/{year:int}", async (int year, ISender sender, CancellationToken ct) =>
         {
-            var holidays2 = await repo.GetByYearAsync(year, ct);
-            return Results.Ok(holidays2.Select(h => new HolidayCalendarDto(h.Id, h.HolidayName, h.StartDate, h.EndDate, h.Year, h.BoostRulesJson, h.IsActive)));
+            var result = await sender.Send(new GetHolidayCalendarByYearQuery(year), ct);
+            return result.IsSuccess ? Results.Ok(result.Value.Holidays) : result.ToApiResult();
         })
         .WithName("ListAnalyticsHolidayCalendar")
         .Produces<IEnumerable<HolidayCalendarDto>>(StatusCodes.Status200OK)
@@ -291,14 +282,10 @@ internal static class RecommendationsEndpoints
         // 5.5: Photogenic admin endpoint
         var entities = group.MapGroup("/analytics/admin/entities").WithTags("Analytics | Entity Admin");
 
-        entities.MapPut("/{kind}/{entityId:guid}/photogenic", async (EntityType kind, Guid entityId, SetPhotogenicRequest request, IEntityAttributeSnapshotRepository snapshotRepo, IAnalyticsUnitOfWork unitOfWork, CancellationToken ct) =>
+        entities.MapPut("/{kind}/{entityId:guid}/photogenic", async (EntityType kind, Guid entityId, SetPhotogenicRequest request, ISender sender, CancellationToken ct) =>
         {
-            var snapshot = await snapshotRepo.GetByEntityAsync(kind, entityId, ct);
-            if (snapshot is null) return Results.NotFound();
-            snapshot.SetPhotogenic(request.IsPhotogenic);
-            snapshotRepo.Update(snapshot);
-            await unitOfWork.SaveChangesAsync(ct);
-            return Results.NoContent();
+            var result = await sender.Send(new SetEntityPhotogenicCommand(kind, entityId, request.IsPhotogenic), ct);
+            return result.ToApiResult();
         })
         .WithName("SetAnalyticsEntityPhotogenic")
         .Produces(StatusCodes.Status204NoContent)
@@ -310,12 +297,10 @@ internal static class RecommendationsEndpoints
         // ── Phase 6: V3 Marketplace + Ops ──
 
         // 6.1: Sponsored CPC bid creation
-        boosts.MapPost("/cpc", async (CreateCpcBidRequest request, IBoostPackageRepository boostRepo, IAnalyticsUnitOfWork unitOfWork, CancellationToken ct) =>
+        boosts.MapPost("/cpc", async (CreateCpcBidRequest request, ISender sender, CancellationToken ct) =>
         {
-            var bid = BoostPackage.CreateCpc(request.ProviderId, request.EntityKind, request.EntityId, request.BidPerClick, request.DailyBudgetCap, request.StartsAt, request.ExpiresAt);
-            boostRepo.Add(bid);
-            await unitOfWork.SaveChangesAsync(ct);
-            return Results.Ok(new { bid.Id });
+            var result = await sender.Send(new CreateCpcBoostPackageCommand(request.ProviderId, request.EntityKind, request.EntityId, request.BidPerClick, request.DailyBudgetCap, request.StartsAt, request.ExpiresAt), ct);
+            return result.IsSuccess ? Results.Ok(new { result.Value.Id }) : result.ToApiResult();
         })
         .WithName("CreateAnalyticsCpcBid")
         .Produces(StatusCodes.Status200OK)
@@ -335,17 +320,16 @@ internal static class RecommendationsEndpoints
         .WithName("RecordSponsoredClick")
         .Produces(StatusCodes.Status200OK)
         .WithSummary("Record a click on a sponsored placement")
-        .AllowAnonymous();
+        .WithMetadata(new MustHavePermissionAttribute(AnalyticsFeatures.Recommendation, AppAction.Read))
+        .RequireAuthorization();
 
         // 6.2: A/B experiments admin
         var experiments = group.MapGroup("/analytics/admin/experiments").WithTags("Analytics | Experiments");
 
-        experiments.MapPost("/", async (CreateExperimentRequest request, IExperimentRepository repo, IAnalyticsUnitOfWork unitOfWork, CancellationToken ct) =>
+        experiments.MapPost("/", async (CreateExperimentRequest request, ISender sender, CancellationToken ct) =>
         {
-            var experiment = Experiment.Create(request.Name, request.StartsAt, request.ExpiresAt, request.TrafficPercent, request.VariantsJson);
-            repo.Add(experiment);
-            await unitOfWork.SaveChangesAsync(ct);
-            return Results.Ok(new { experiment.Id });
+            var result = await sender.Send(new CreateExperimentCommand(request.Name, request.StartsAt, request.ExpiresAt, request.TrafficPercent, request.VariantsJson), ct);
+            return result.IsSuccess ? Results.Ok(new { result.Value.Id }) : result.ToApiResult();
         })
         .WithName("CreateAnalyticsExperiment")
         .Produces(StatusCodes.Status200OK)
@@ -354,14 +338,10 @@ internal static class RecommendationsEndpoints
         .WithMetadata(new MustHavePermissionAttribute(AnalyticsFeatures.Batch, AppAction.Refresh))
         .RequireAuthorization();
 
-        experiments.MapPut("/{experimentId:guid}/start", async (Guid experimentId, IExperimentRepository repo, IAnalyticsUnitOfWork unitOfWork, CancellationToken ct) =>
+        experiments.MapPut("/{experimentId:guid}/start", async (Guid experimentId, ISender sender, CancellationToken ct) =>
         {
-            var experiment = await repo.GetByIdAsync(experimentId, ct);
-            if (experiment is null) return Results.NotFound();
-            experiment.Start();
-            repo.Update(experiment);
-            await unitOfWork.SaveChangesAsync(ct);
-            return Results.NoContent();
+            var result = await sender.Send(new StartExperimentCommand(experimentId), ct);
+            return result.ToApiResult();
         })
         .WithName("StartAnalyticsExperiment")
         .Produces(StatusCodes.Status204NoContent)
@@ -370,14 +350,10 @@ internal static class RecommendationsEndpoints
         .WithMetadata(new MustHavePermissionAttribute(AnalyticsFeatures.Batch, AppAction.Refresh))
         .RequireAuthorization();
 
-        experiments.MapPut("/{experimentId:guid}/complete", async (Guid experimentId, IExperimentRepository repo, IAnalyticsUnitOfWork unitOfWork, CancellationToken ct) =>
+        experiments.MapPut("/{experimentId:guid}/complete", async (Guid experimentId, ISender sender, CancellationToken ct) =>
         {
-            var experiment = await repo.GetByIdAsync(experimentId, ct);
-            if (experiment is null) return Results.NotFound();
-            experiment.Complete();
-            repo.Update(experiment);
-            await unitOfWork.SaveChangesAsync(ct);
-            return Results.NoContent();
+            var result = await sender.Send(new CompleteExperimentCommand(experimentId), ct);
+            return result.ToApiResult();
         })
         .WithName("CompleteAnalyticsExperiment")
         .Produces(StatusCodes.Status204NoContent)
@@ -398,7 +374,8 @@ internal static class RecommendationsEndpoints
         .Produces(StatusCodes.Status200OK)
         .ProducesValidationProblem()
         .WithSummary("Record an impression/click/booking event on a recommendation")
-        .AllowAnonymous();
+        .WithMetadata(new MustHavePermissionAttribute(AnalyticsFeatures.Recommendation, AppAction.Read))
+        .RequireAuthorization();
 
         // 6.3: Admin metrics endpoint
         var metrics = group.MapGroup("/analytics/admin/metrics").WithTags("Analytics | Metrics");
@@ -433,10 +410,7 @@ internal static class RecommendationsEndpoints
         // 6.7: GDPR delete-my-data
         recommendations.MapDelete("/me", async (ICurrentUser currentUser, ISender sender, CancellationToken ct) =>
         {
-            if (!currentUser.IsAuthenticated || currentUser.UserId is null)
-                return Results.Unauthorized();
-
-            var result = await sender.Send(new RequestGdprDeletionCommand(currentUser.UserId.Value), ct);
+            var result = await sender.Send(new RequestGdprDeletionCommand(currentUser.UserId!.Value), ct);
             return result.ToApiResult();
         })
         .WithName("RequestAnalyticsGdprDeletion")
@@ -449,10 +423,7 @@ internal static class RecommendationsEndpoints
         // 6.7: Cancel GDPR deletion
         recommendations.MapPost("/me/cancel-deletion", async (ICurrentUser currentUser, ISender sender, CancellationToken ct) =>
         {
-            if (!currentUser.IsAuthenticated || currentUser.UserId is null)
-                return Results.Unauthorized();
-
-            var result = await sender.Send(new CancelGdprDeletionCommand(currentUser.UserId.Value), ct);
+            var result = await sender.Send(new CancelGdprDeletionCommand(currentUser.UserId!.Value), ct);
             return result.ToApiResult();
         })
         .WithName("CancelAnalyticsGdprDeletion")
@@ -461,17 +432,26 @@ internal static class RecommendationsEndpoints
         .WithSummary("Cancel a pending GDPR deletion request")
         .WithMetadata(new MustHavePermissionAttribute(AnalyticsFeatures.Preference, AppAction.Update))
         .RequireAuthorization();
+
+        // GDPR data export (portability right)
+        recommendations.MapGet("/me/export", async (ISender sender, CancellationToken ct) =>
+        {
+            var result = await sender.Send(new GetUserDataExportQuery(), ct);
+            return result.ToApiResult();
+        })
+        .WithName("ExportAnalyticsUserData")
+        .Produces<UserDataExportDto>(StatusCodes.Status200OK)
+        .WithSummary("Export all personal analytics data (GDPR portability)")
+        .WithMetadata(new MustHavePermissionAttribute(AnalyticsFeatures.Preference, AppAction.Read))
+        .RequireAuthorization();
     }
 
-    private static SuggestionBatchDto MapBatch(SuggestionBatch batch) =>
-        new(batch.Id, batch.SourceKind, batch.SourceId, batch.Context, batch.AlgorithmVersion, batch.ComputedAt, batch.IsStale, batch.ItemCount);
 }
 
 public sealed record RecommendationsRequest(string? Language = null, int Limit = 20, bool HalalOnly = false, bool ShowAllPrices = false);
 public sealed record SimilarEntitiesRequest(EntityType SourceKind = EntityType.Tour, string? Language = null, int Limit = 10, bool HalalOnly = false);
 public sealed record EntitySuggestionsRequest(SuggestionContext Context = SuggestionContext.BecauseYouViewed, string? Language = null, int Limit = 10, bool HalalOnly = false);
 public sealed record RefreshSuggestionBatchRequest(EntityType SourceKind, Guid SourceId, SuggestionContext Context);
-public sealed record SuggestionBatchDto(Guid Id, EntityType SourceKind, Guid SourceId, SuggestionContext Context, string AlgorithmVersion, DateTime ComputedAt, bool IsStale, int ItemCount);
 public sealed record CreateBoostPackageRequest(Guid ProviderId, EntityType EntityKind, Guid EntityId, decimal Multiplier, DateTime StartsAt, DateTime ExpiresAt);
 public sealed record CreateEditorialPinRequest(EntityType EntityKind, Guid EntityId, int Position, SuggestionContext Context, string? BadgeText = null, DateTime? ExpiresAt = null);
 public sealed record MarkNotInterestedRequest(EntityType EntityKind, Guid EntityId);
@@ -481,9 +461,7 @@ public sealed record EntityRefDto(EntityType Kind, Guid EntityId);
 // Phase 5 DTOs
 public sealed record ItineraryRequest(DateOnly FromDate, DateOnly ToDate, decimal? StartLatitude = null, decimal? StartLongitude = null, string? Interests = null, string? Language = null, bool HalalOnly = false);
 public sealed record CreateSeasonalityRuleRequest(Guid PlaceId, int MonthStart, int MonthEnd, decimal Multiplier, string? Description = null);
-public sealed record SeasonalityRuleDto(Guid Id, Guid PlaceId, int MonthStart, int MonthEnd, decimal Multiplier, string? Description, bool IsActive);
 public sealed record CreateHolidayCalendarRequest(string HolidayName, DateOnly StartDate, DateOnly EndDate, int Year, string? BoostRulesJson = null);
-public sealed record HolidayCalendarDto(Guid Id, string HolidayName, DateOnly StartDate, DateOnly EndDate, int Year, string? BoostRulesJson, bool IsActive);
 public sealed record SetPhotogenicRequest(bool IsPhotogenic);
 
 // Phase 6 DTOs

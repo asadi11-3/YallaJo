@@ -22,7 +22,7 @@ public sealed class CreateRedirectCommandHandler(
     ILogger<CreateRedirectCommandHandler> logger)
     : ICommandHandler<CreateRedirectCommand, CreateRedirectResult>
 {
-    private const int MaxHops = 10;
+    private const int MaxHops = 3;
 
     public async Task<Result<CreateRedirectResult>> Handle(CreateRedirectCommand request, CancellationToken ct)
     {
@@ -94,7 +94,7 @@ public sealed class CreateRedirectCommandHandler(
                     new Error("Redirect.ConcurrencyConflict", "Redirect was modified concurrently."),
                     Outcome.Conflict);
             }
-            catch (DbUpdateException)
+            catch (DbUpdateException ex)
             {
                 if (await IsDuplicateAsync(oldUrl, entity.Id, ct))
                 {
@@ -103,7 +103,10 @@ public sealed class CreateRedirectCommandHandler(
                         Outcome.Conflict);
                 }
 
-                throw;
+                logger.LogError(ex, "Unexpected database error creating redirect {OldUrl}", Sanitize(oldUrl));
+                return Result<CreateRedirectResult>.Failure(
+                    new Error("Redirect.DatabaseError", "Unexpected database error creating redirect."),
+                    Outcome.ServerError);
             }
 
             await cache.RemoveByTagAsync(ContentSeoCacheKeys.TagRedirectsList, ct);

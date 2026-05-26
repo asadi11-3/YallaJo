@@ -13,8 +13,19 @@ internal sealed class DisputeRepository(FinanceDbContext context)
     private readonly FinanceDbContext _context = context;
 
     public async Task<IReadOnlyList<Dispute>> GetByPaymentIdAsync(Guid paymentId, CancellationToken ct = default)
-        => await _context.Disputes.Where(d => d.PaymentId == paymentId).ToListAsync(ct);
+        => await _context.Disputes.AsNoTracking().Where(d => d.PaymentId == paymentId).ToListAsync(ct);
 
     public async Task<IReadOnlyList<Dispute>> GetOpenDisputesAsync(CancellationToken ct = default)
-        => await _context.Disputes.Where(d => d.Status == DisputeStatus.Open).ToListAsync(ct);
+        => await _context.Disputes
+            .AsNoTracking()
+            .Where(d => d.Status == DisputeStatus.Open || d.Status == DisputeStatus.UnderReview || d.Status == DisputeStatus.Escalated)
+            .OrderByDescending(d => d.CreatedAt)
+            .ToListAsync(ct);
+
+    public async Task<IReadOnlyList<Dispute>> GetByUserIdAsync(Guid userId, CancellationToken ct = default)
+        => await _context.Disputes
+            .AsNoTracking()
+            .Where(d => d.UserId == userId)
+            .OrderByDescending(d => d.CreatedAt)
+            .ToListAsync(ct);
 }

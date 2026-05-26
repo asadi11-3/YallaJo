@@ -19,6 +19,7 @@ public sealed record ReviewDto(
     DateTime? LastEditedAt,
     DateTime? AutoHiddenAt,
     DateTime CreatedAt,
+    int HelpfulVoteCount,
     IReadOnlyList<ReviewReplyDto> Replies
 );
 
@@ -34,4 +35,18 @@ public sealed record ReviewReplyDto(
 public sealed record ReviewPageDto(
     IReadOnlyList<ReviewDto> Items,
     string? NextCursor
+);
+
+public sealed record PublicReviewPageDto(
+    IReadOnlyList<ReviewDto> Items,
+    int Page,
+    int PageSize,
+    int TotalCount
+);
+
+public sealed record RatingSummaryDto(
+    string EntityType,
+    Guid EntityId,
+    decimal AverageRating,
+    int ReviewCount
 );

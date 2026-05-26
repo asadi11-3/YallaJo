@@ -3,7 +3,7 @@
 > **Module**: Social  
 > **Dependencies**: Booking (eligibility snapshots), ContentPlaces/Tours (entity snapshots), ContentCore (Attachments), Security (ban enforcement)  
 > **Compatible With**: BlogCreatorPost-Merger.md, Booking-Workflow.md, TourGuide-Flow.md, Finance-Workflow.md, Role-System.md  
-> **Status**: Plan — Not yet executed
+> **Status**: Implemented (audited 2025-01-27, score 7.8/10). W3-B fixes applied. See `Social-Audit-Report.md`.
 
 ---
 
@@ -528,3 +528,12 @@ Add validators for:
 5. **48h edit window**: Already enforced in Review.Edit(). No change needed.
 6. **One review per entity per user**: Already enforced in CreateReviewCommandHandler. No change needed.
 7. **Verified booking window**: 30 days after tour completion. BookingEligibilitySnapshot created by inbound event handler.
+
+---
+
+## Implementation Notes
+
+- **Built in W3-B**: Social routes now live under `/api/v1/social/*`; public approved-review listing is available at `GET /api/v1/social/reviews/{entityType}/{entityId}` while preserving the existing query-string listing. Helpful vote add/remove endpoints and handlers were already present and wired.
+- **Warn/Ban workflow**: Added direct admin endpoints for `POST /api/v1/social/moderation/warn`, `POST /api/v1/social/moderation/ban`, and `DELETE /api/v1/social/moderation/ban/{userId}`. These use the existing `UserModerationRecord` aggregate and `ContentModerationLog` audit trail; unban soft-deletes the active ban record and appends an `UnbanUser` log entry.
+- **Deferred**: Strike escalation, outbound Security integration events, active-ban/history query endpoints, and Security-side global ban enforcement remain post-MVP/follow-up work.
+- **Architecture decisions**: Existing Social aggregates/repositories were reused instead of introducing parallel `UserWarning`/`UserBan` tables. Moderation writes invalidate the `moderation:logs` HybridCache tag after `ISocialUnitOfWork.SaveChangesAsync`.
