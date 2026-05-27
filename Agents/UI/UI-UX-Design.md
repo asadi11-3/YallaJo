@@ -5,6 +5,38 @@
 > **Pattern:** **ASP.NET Core MVC (Razor Views)** — server-rendered, no SPA framework
 > **Existing project:** `YallaJo.Web` already in solution
 > **Backend reference:** `Agents/agent-context.md` (PDF1 endpoints), `Agents/guide.md` (PDF2 rules)
+> **Pattern catalogue:** `Agents/Plans/UI-UX-Pattern-Report.md` — endpoint-derived persona/IA/component patterns (companion doc)
+> **Backend surface (audited 2025-01-27):** **483 HTTP endpoints + 1 SignalR hub** across 13 modules. See §21 for the full coverage matrix.
+
+---
+
+## Backend Surface Snapshot (2025-01-27)
+
+The MVC route plan in this document was originally drafted at ~70 backend endpoints. The current audit shows **483 endpoints + 1 SignalR hub** — many surfaces in this doc need to be re-scoped against the real shape:
+
+| Module | Endpoints | Files | Notes |
+|---|---|---|---|
+| Accounts | 39 | 6 | Provider apply, agency roster, guide-agency, profile |
+| Auth | 26 | 6 | Register/login/OTP/sessions/external/devices |
+| Security | 19 | 4 | Users, roles, role claims, audit logs, account |
+| ContentBlogs | 60 | 4 | Blog CRUD + comments + creators + admin |
+| ContentCore | 44 | 8 | Language / Specialization / Tag / EntityTag / EntityCategory / Category / Translation / Attachment |
+| ContentPlaces | 41 | 6 | Place / Business / ServiceItem / Amenity / Staff / Accessibility |
+| ContentSeo | 23 | 5 | Weather / Sitemap / Metadata / Redirect / FAQ |
+| ContentTours | 75 | 13 | Tour core + Schedule + Pricing + Search + Waypoint + Guide assignment + Package + ChildrenInfo + Applications + Offerings + Profile + Admin + Proposals |
+| Booking | 21 | 5 | Slots / GuideDiscount / JoinRequest / TourBooking / AdminBooking |
+| Finance | 33 | 7 | Commission / Dispute / Earnings / Invoice / Payment / Payout / ProviderPaymentMethod |
+| Analytics | 49 | 3 | Analytics 20 + Recommendations 27 + Preferences 2 |
+| Messaging | 23 + 1 hub | 5 | Notification / Device / SupportTicket / Template + SignalR `/hubs/notifications` |
+| Social | 27 | 4 | Review / Favorite / Report / Moderation |
+| Tracking | 0 | 0 | Background workers only — no HTTP surface |
+| YallaJo.Api root | 3 | — | `/` health + 2 ops outbox endpoints |
+| **Total** | **483 + 1 hub** | — | — |
+
+**Implications for this design doc:**
+- §4 route map covers ~140 MVC routes mapped to ~70 backend endpoints. The remaining ~413 endpoints either belong to admin surfaces already wave-scoped (Waves 1, 6, 7, 8) or to modules not yet covered (Messaging admin, Social moderation, ContentSeo admin, Analytics admin tooling).
+- §13 dependency table tracks per-wave readiness; cross-check against the full inventory in `Agents/Plans/UI-UX-Pattern-Report.md` before each sprint kicks off.
+- `/hubs/notifications` is the **only** SignalR hub — single client connection in `_Layout` partials (no per-module hubs).
 
 ---
 
@@ -3318,3 +3350,109 @@ UI-UX rules align with the §12 sprint plan but add UX-specific deliverables:
 - `Agents/UI/Component-Library.md` — reusable Razor partials documentation
 - `Agents/UI/Style-Guide.md` — design tokens, typography, spacing extracted from template's style.css
 - `Agents/UI/Performance-Runbook.md` — production performance incident response procedures
+
+**Companion files already created:**
+- `Agents/Plans/UI-UX-Pattern-Report.md` — 20-section endpoint-derived UI/UX pattern catalogue (personas, IA, page inventory, component library, state-machine UX, interaction patterns, accessibility, responsive strategy, implementation waves)
+
+---
+
+## 21. Endpoint Coverage Audit (2025-01-27)
+
+This section maps the full 483-endpoint surface to MVC coverage state. Anything not yet mapped in §4 belongs to a "next wave" backlog. **Use this as the sprint planning source of truth** alongside `Agents/Plans/UI-UX-Pattern-Report.md`.
+
+### 21.1 Persona-to-route-prefix matrix
+
+| Persona | Public catalog | Self-service | Console area | Notes |
+|---|---|---|---|---|
+| Guest | `/`, `/tours`, `/places`, `/businesses`, `/blog`, `/guides`, `/agency`, `/search`, `/auth/*` | — | — | Wishlist heart shows sign-in modal |
+| User | + reviews, favorites read | `/Account/*` | — | Wave 6 + UI-6 |
+| Provider | + provider-detail browse | `/Account/*` | `/Provider/*` | Waves 2, 5, 9 |
+| TourGuide | + guide profile public | `/Account/*` + `/guides/me/*` | `/Guide/*` *(new console — not yet routed in §4)* | Routes to add: `/Guide/Dashboard`, `/Guide/Applications`, `/Guide/Proposals`, `/Guide/Offerings`, `/Guide/Availability`, `/Guide/Earnings`, `/Guide/Agency`, `/Guide/Tier` |
+| Creator | + creator profile public | `/Account/*` + `/blogs/creators/me/*` | `/Creator/*` | Wave 7-8 |
+| Admin | + everything | `/Account/*` | `/Admin/*` | Waves 1, 4, 6, 8 |
+
+**Gap:** The Guide console (`/Guide/*`) is implied throughout the doc but never enumerated as a top-level area like `/Provider` or `/Admin`. Add a new §4.x or Wave-2.5 entry for it before Wave-5 work starts. Backend endpoints already exist:
+- `/api/v1/guides/me`, `/me/avatar`, `/me/cover-image`, `/me/applications`, `/me/availability-blocks`, `/me/tier`, `/me/earnings/{summary|by-tour|history}`, `/me/analytics/{overview|booking-trends|popular-tours|peak-days}`
+- `/api/v1/analytics/guide/{dashboard|analytics|my-tours}` (Wave-2A)
+- `/api/v1/finance/guide`, `/finance/guide/summary` (Wave-2B)
+- `/api/v1/tours/proposals/*` (5 routes)
+- `/api/v1/tours/{tourId}/guide-offerings/{guideId}/{schedules|pricing-tiers|private-tour|suspend|reinstate|remove}` (15 routes)
+
+### 21.2 Module-to-wave coverage
+
+| Module | Endpoints | Status | Wave |
+|---|---|---|---|
+| Accounts | 39 | ✅ §4.6 covers Provider Apply + Admin queue; agencies & guide-agency partial | Wave 2 (provider) + 2.5 (agency/guide-agency, propose new) |
+| Auth | 26 | ✅ §4.7 covers all 26 (3 OAuth + role-claims listing remain backend gaps) | Wave 1 |
+| Security | 19 | ⚠️ §4.5 covers users + roles partially; **audit logs page underspecified**, role claims viewer/editor missing | Wave 1 |
+| ContentBlogs | 60 | ⚠️ §4.5 covers blog admin; Wave 7-8 covers creator surfaces; **blog comments admin queue not mapped** | Waves 4, 7, 8 |
+| ContentCore | 44 | ⚠️ §4.5 covers Categories/Tags/Specs/Languages; **Translations workflow, Attachments admin, EntityTag/EntityCategory admin tooling not mapped** | Wave 1, 4 |
+| ContentPlaces | 41 | ⚠️ Business CRUD covered partially; **Service items, amenities, staff, accessibility admin not in §4** | Wave 3 |
+| ContentSeo | 23 | ⚠️ §4.9.4 covers metadata + redirects; **Sitemap admin, FAQ admin, Weather admin not mapped** | Wave 4 |
+| ContentTours | 75 | ⚠️ §4.8 covers core tour CRUD; **GuideOffering 15 routes, Proposal 5 routes, AdminTourGuide 5 routes, GuideApplication review 6 routes not in §4** | Wave 2.5, 3 |
+| Booking | 21 | ⚠️ §4.10 covers customer flow; **Provider booking reads still backend-gap (3); GuideDiscount/JoinRequest admin missing** | Wave 5 |
+| Finance | 33 | ⚠️ §4.5/§4.10 covers payments + invoices + payouts + commissions; **Disputes 6 routes, ProviderPaymentMethod 5 routes, Earnings 3 routes not in §4** | Wave 5 |
+| Analytics | 49 | ⚠️ §4.11 covers admin analytics; **27 Recommendations routes underspecified (boosts, pins, seasonality, holidays, experiments, photogenic, segments, GDPR, sponsored-click, metrics, itinerary, similar)** | Wave 6 |
+| Messaging | 23 + 1 hub | ⚠️ §4.11 covers notifications + support; **Notification templates admin (4 routes) not in §4, device tokens admin not mapped** | Wave 6 |
+| Social | 27 | ⚠️ §4.5/§4.11 covers reviews + reports; **Moderation logs, warn/ban/unban (4 routes) not mapped explicitly** | Wave 6 |
+| Tracking | 0 | ✅ No HTTP surface | — |
+
+### 21.3 Net-new MVC routes to add post-audit
+
+Add these to §4 in the next revision (grouped by area):
+
+**`/Guide/*` area (new — promote from `/Provider/Guide/*`):**
+- `/Guide/Dashboard`, `/Guide/Analytics`, `/Guide/MyTours`
+- `/Guide/Profile/{Edit,Avatar,CoverImage,Languages,Specializations}`
+- `/Guide/Applications` (list of guide's applications to tours) + `/Guide/Applications/{id}/Withdraw`
+- `/Guide/Proposals` + `/Guide/Proposals/{Create,Edit,Submit}` + per-id detail
+- `/Guide/Offerings/{tourId}/{Schedules,PricingTiers,PrivateTour,Suspend,Reinstate}`
+- `/Guide/Availability` (availability-blocks CRUD)
+- `/Guide/Earnings/{Summary,ByTour,History}`
+- `/Guide/Tier`
+- `/Guide/Agency` (invitations, leave-agency)
+
+**`/Admin/*` area additions:**
+- `/Admin/Guides` (list + suspend + reinstate + admin update + admin delete — 5 routes)
+- `/Admin/Tours/Proposals` (review queue + approve/reject)
+- `/Admin/Tours/{id}/GuideApplications` (review queue + approve/reject)
+- `/Admin/Disputes` + `/Admin/Disputes/{id}/{Review,Resolve,Escalate}`
+- `/Admin/Notifications/Templates` (4 routes)
+- `/Admin/Analytics/{Boosts,Pins,Seasonality,Holidays,Experiments,Photogenic,Segments,Metrics}` (admin discovery operations — 12 routes)
+- `/Admin/Translations` (already in §4.9.5 — formalize)
+- `/Admin/Attachments` (delete + reorder admin)
+- `/Admin/Moderation/{Warn,Ban,Unban}` (4 routes)
+- `/Admin/Reports` + `/Admin/Reports/{id}/Resolve` (already partially in §4.5)
+- `/Admin/AuditLogs/{Export,Redact}` (Analytics audit-log endpoints)
+
+**`/Account/*` additions:**
+- `/Account/Disputes` (user's own disputes)
+- `/Account/Devices` (full device token list — currently only in Settings)
+- `/Account/PaymentMethods` (already in §4.3 stub for Phase 3; promote)
+
+**Public additions:**
+- `/agencies` and `/agencies/{id}` (public agency list/detail — already in audit, not in §4)
+- `/recommendations/{similar,for-you,itinerary}` (anonymous discovery surfaces from Analytics)
+- `/popular`, `/trending` (already in §4.2 but only via Home — promote to full pages)
+
+### 21.4 Backend gaps blocking UI (rolled-up)
+
+Carried from §13 + new findings from this audit:
+
+1. **Wave-1 leftovers (auth):** `/auth/external/{apple|facebook|google}` (3), `GET /admin/roles/{id}/claims` (1), unified `PUT /admin/users/{id}/status` (1), `DELETE /admin/users/{id}/roles/{roleName}` by name (1) — 6 endpoints.
+2. **Wave-2.1 patch:** `GET /api/v1/admin/providers/{id}` single-get for detail page.
+3. **Wave-5 partial:** Availability slot reads (6), Refund Policy CRUD (3), Join Request admin (3), Provider booking reads (3) — 15 endpoints.
+4. **Wave-7:** all 22 creator endpoints + 5 cross-module handlers + 1 BG service.
+5. **Wave-8:** all 17 multi-type-post endpoints + 2 BG services.
+6. **New from this audit:** `GET /admin/messaging/templates` admin-only auth gate verification, `POST /admin/social/users/{userId}/warn` notification side-effect verification.
+
+### 21.5 Cross-reference: Pattern Report → this doc
+
+The companion `Agents/Plans/UI-UX-Pattern-Report.md` is **persona/component/pattern oriented**. This doc is **route/controller/wave oriented**. Reading order:
+1. Pattern Report §1-3 (personas + IA + page inventory) → matches this doc §4 (route map).
+2. Pattern Report §4-9 (wizards, consoles, components, state machines, interactions) → matches this doc §19 (UI-UX rules).
+3. Pattern Report §10-13 (empty/loading/error, forms, responsive, a11y) → matches this doc §18 (UI-PERF) + §19 (UI-UX).
+4. Pattern Report §14-18 (notifications, templates, recommendations, earnings) → matches this doc §4.10-4.11 (Wave 5-6 details).
+5. Pattern Report §19-20 (implementation waves + component inventory numbers) → matches this doc §12 (sprint plan) + §15 (migration steps).
+
+When pattern and route docs conflict, **this document is authoritative for the MVC implementation** (it knows about Razor partials, project structure, area routing). The pattern report is authoritative for **product UX decisions** (it knows about the 483-endpoint capability surface).

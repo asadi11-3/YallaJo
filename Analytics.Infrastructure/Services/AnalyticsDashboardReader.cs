@@ -1,5 +1,5 @@
-using Analytics.Application;
 using Analytics.Application.Interfaces;
+using Analytics.Application.Models;
 using Analytics.Domain.Enums;
 using Analytics.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;

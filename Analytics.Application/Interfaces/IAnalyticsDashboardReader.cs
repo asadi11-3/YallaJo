@@ -1,3 +1,5 @@
+using Analytics.Application.Models;
+
 namespace Analytics.Application.Interfaces;
 
 public interface IAnalyticsDashboardReader
