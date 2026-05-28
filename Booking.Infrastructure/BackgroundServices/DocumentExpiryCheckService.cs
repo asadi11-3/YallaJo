@@ -1,5 +1,9 @@
 using Booking.Application.Interfaces;
+using Booking.Domain.Extensions;
 using Booking.Domain.Repositories;
+using Booking.Infrastructure.BackgroundServices.Options;
+using Booking.Infrastructure.Diagnostics;
+using Booking.Infrastructure.Time;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -9,79 +13,196 @@ namespace Booking.Infrastructure.BackgroundServices;
 
 internal sealed class DocumentExpiryCheckService(
     IServiceScopeFactory scopeFactory,
-    IOptions<DocumentExpiryCheckOptions> options,
+    IOptionsMonitor<DocumentExpiryCheckOptions> options,
+    IBookingBackgroundServiceStatusStore statusStore,
     ILogger<DocumentExpiryCheckService> logger,
     TimeProvider timeProvider)
     : BackgroundService
 {
-    private readonly DocumentExpiryCheckOptions _options = options.Value;
+    private static readonly string ServiceName = nameof(DocumentExpiryCheckService);
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        if (!_options.Enabled)
+        var snapshot = options.CurrentValue;
+        if (!snapshot.Enabled)
         {
-            logger.LogInformation("DocumentExpiryCheckService disabled");
+            logger.LogInformation("{Service} disabled via config; skipping execution loop", ServiceName);
             return;
         }
 
-        await Task.Delay(_options.InitialDelay, stoppingToken);
-        using var timer = new PeriodicTimer(_options.PollInterval);
+        logger.LogInformation(
+            "{Service} started; daily target = {Target} UTC",
+            ServiceName,
+            snapshot.TargetUtcTime);
 
-        do
+        try
         {
+            await Task.Delay(snapshot.InitialDelay, stoppingToken).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+        {
+            return;
+        }
+
+        while (!stoppingToken.IsCancellationRequested)
+        {
+            var current = options.CurrentValue;
+            var nextRun = SchedulingHelpers.NextOccurrenceUtc(current.TargetUtcTime, timeProvider);
+            var delay = nextRun - timeProvider.GetUtcNow();
+            if (delay < TimeSpan.Zero)
+            {
+                delay = TimeSpan.Zero;
+            }
+
+            logger.LogDebug(
+                "{Service}: next run at {NextRun:o} (in {Delay})",
+                ServiceName,
+                nextRun,
+                delay);
+
             try
             {
-                await RunOnceAsync(stoppingToken);
+                await Task.Delay(delay, stoppingToken).ConfigureAwait(false);
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
             {
-                throw;
+                return;
             }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "DocumentExpiryCheckService tick failed");
-            }
+
+            await TickAsync(stoppingToken).ConfigureAwait(false);
         }
-        while (await timer.WaitForNextTickAsync(stoppingToken));
     }
 
-    private async Task RunOnceAsync(CancellationToken ct)
+    private async Task TickAsync(CancellationToken ct)
     {
+        var nowUtc = timeProvider.GetUtcNow();
+        statusStore.RecordTickStart(ServiceName, nowUtc);
+        BookingDiagnostics.BgServiceTicks.Add(1, new KeyValuePair<string, object?>("service", ServiceName));
+        using var activity = BookingDiagnostics.ActivitySource.StartActivity(ServiceName);
+
+        try
+        {
+            var processed = await RunOnceAsync(ct).ConfigureAwait(false);
+            statusStore.RecordSuccess(ServiceName, timeProvider.GetUtcNow(), processed);
+            if (processed > 0)
+            {
+                BookingDiagnostics.BgServiceItemsProcessed.Add(
+                    processed,
+                    new KeyValuePair<string, object?>("service", ServiceName));
+            }
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            statusStore.RecordFailure(ServiceName, timeProvider.GetUtcNow(), ex.Message);
+            BookingDiagnostics.BgServiceFailures.Add(
+                1,
+                new KeyValuePair<string, object?>("service", ServiceName),
+                new KeyValuePair<string, object?>("outcome", "failure"));
+            logger.LogError(ex, "{Service} tick failed; will retry on next scheduled occurrence", ServiceName);
+        }
+    }
+
+    internal async Task<int> RunOnceAsync(CancellationToken ct)
+    {
+        var snapshot = options.CurrentValue;
+        var batchSize = snapshot.BatchSize > 0 ? snapshot.BatchSize : 1000;
+        var windowDays = snapshot.ExpiringSoonWindowDays > 0 ? snapshot.ExpiringSoonWindowDays : 30;
+        var nowUtc = timeProvider.GetUtcNow().UtcDateTime;
+        var expiringThresholdUtc = nowUtc.AddDays(windowDays);
+
         using var scope = scopeFactory.CreateScope();
         var documentRepo = scope.ServiceProvider.GetRequiredService<IProviderDocumentRepository>();
         var uow = scope.ServiceProvider.GetRequiredService<IBookingUnitOfWork>();
-        var nowUtc = timeProvider.GetUtcNow().UtcDateTime;
-        var expiringThresholdUtc = nowUtc.AddDays(_options.ExpiringSoonWindowDays);
 
-        var expiredDocuments = await documentRepo.GetNewlyExpiredAsync(nowUtc, ct);
+        var expiredDocuments = await documentRepo
+            .GetNewlyExpiredAsync(nowUtc, ct)
+            .ConfigureAwait(false);
+
+        var expiredCount = 0;
         foreach (var document in expiredDocuments)
         {
+            if (expiredCount >= batchSize)
+            {
+                break;
+            }
+
             document.MarkExpired(nowUtc);
+            expiredCount++;
         }
 
-        var expiringDocuments = await documentRepo.GetExpiringSoonAsync(nowUtc, expiringThresholdUtc, ct);
+        var expiringDocuments = await documentRepo
+            .GetExpiringSoonAsync(nowUtc, expiringThresholdUtc, ct)
+            .ConfigureAwait(false);
+
+        var expiringCount = 0;
         foreach (var document in expiringDocuments)
         {
+            if (expiringCount >= batchSize)
+            {
+                break;
+            }
+
             document.MarkExpiring(nowUtc);
+            expiringCount++;
         }
 
-        var changedCount = expiredDocuments.Count + expiringDocuments.Count;
-        if (changedCount > 0)
+        var criticalPendingSuspension = await documentRepo
+            .GetExpiredCriticalPendingSuspensionAsync(
+                DocumentTypeExtensions.AllCritical,
+                batchSize,
+                ct)
+            .ConfigureAwait(false);
+
+        var suspendedCount = 0;
+        foreach (var document in criticalPendingSuspension)
         {
-            await uow.SaveChangesAsync(ct);
-            logger.LogInformation(
-                "Processed {ExpiredCount} expired and {ExpiringCount} expiring ProviderDocuments",
-                expiredDocuments.Count,
-                expiringDocuments.Count);
-        }
-    }
-}
+            if (suspendedCount >= batchSize)
+            {
+                break;
+            }
 
-public sealed class DocumentExpiryCheckOptions
-{
-    public const string SectionName = "Booking:BackgroundServices:DocumentExpiryCheck";
-    public bool Enabled { get; set; } = true;
-    public TimeSpan InitialDelay { get; set; } = TimeSpan.FromMinutes(5);
-    public TimeSpan PollInterval { get; set; } = TimeSpan.FromHours(24);
-    public int ExpiringSoonWindowDays { get; set; } = 30;
+            document.MarkSuspensionDispatched(nowUtc);
+            suspendedCount++;
+        }
+
+        var totalChanged = expiredCount + expiringCount + suspendedCount;
+        if (totalChanged > 0)
+        {
+            await uow.SaveChangesAsync(ct).ConfigureAwait(false);
+        }
+
+        var saturated = expiredDocuments.Count >= batchSize
+            || expiringDocuments.Count >= batchSize
+            || criticalPendingSuspension.Count >= batchSize;
+
+        if (saturated)
+        {
+            logger.LogWarning(
+                "{Service}: batch saturated (expired={Expired}, expiring={Expiring}, suspended={Suspended}, batchSize={BatchSize}); will resume next tick",
+                ServiceName,
+                expiredDocuments.Count,
+                expiringDocuments.Count,
+                criticalPendingSuspension.Count,
+                batchSize);
+        }
+        else if (totalChanged > 0)
+        {
+            logger.LogInformation(
+                "{Service}: processed {ExpiredCount} expired, {ExpiringCount} expiring, {SuspendedCount} suspended ProviderDocument(s)",
+                ServiceName,
+                expiredCount,
+                expiringCount,
+                suspendedCount);
+        }
+        else
+        {
+            logger.LogDebug("{Service}: no documents required notification", ServiceName);
+        }
+
+        return totalChanged;
+    }
 }

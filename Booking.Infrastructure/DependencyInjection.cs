@@ -3,6 +3,7 @@ using Booking.Contracts.Authorization;
 using Booking.Contracts.Services;
 using Booking.Domain.Repositories;
 using Booking.Infrastructure.BackgroundServices;
+using Booking.Infrastructure.BackgroundServices.Options;
 using Booking.Infrastructure.Persistence;
 using Booking.Infrastructure.Persistence.Seeding;
 using Booking.Infrastructure.Repositories;
@@ -11,6 +12,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
 using YallaJo.SharedKernel.Application.Authorization;
 using YallaJo.SharedKernel.Infrastructure.Data;
 using YallaJo.SharedKernel.Infrastructure.Outbox;
@@ -22,7 +24,8 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddBookingInfrastructure(
         this IServiceCollection services,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        IHostEnvironment? hostEnvironment = null)
     {
         var connectionString = configuration.GetConnectionString("DefaultConnection")
             ?? throw new InvalidOperationException("Connection string 'DefaultConnection' is not configured.");
@@ -66,47 +69,95 @@ public static class DependencyInjection
         // ── Booking-engine services ──────────────────────────────────────────
         services.AddScoped<IBookingReferenceGenerator, BookingReferenceGenerator>();
 
-        // ── Cross-module snapshot readers (real DB-backed implementations) ──────
-        // Snapshots are populated via inbox handlers listening to ContentTours/Accounts events.
+        // ── Cross-module snapshot readers ────────────────────────────────────
+        // Real DB-backed readers are the default. Snapshots are populated via inbox
+        // handlers listening to ContentTours/Accounts events. For Development we can
+        // opt-in to stub readers (XOR-derived fake snapshots) so the app boots even
+        // before inbox handlers have populated data:
+        //   * Booking:UseStubSnapshotReaders=true → stubs (any environment, explicit).
+        //   * Development environment + no flag    → stubs (convenience default).
+        //   * Any other case                       → real DB-backed readers.
         // IDiscountEvaluator remains NoOp until the Promotions module is built.
         // IBookingCommissionLookup remains stub until Finance.CommissionRule is wired cross-module.
-        services.AddScoped<IBookingTourSnapshotReader, BookingTourSnapshotReader>();
-        services.AddScoped<IBookingProviderSnapshotReader, BookingProviderSnapshotReader>();
-        services.AddScoped<IBookingPricingSnapshotReader, BookingPricingSnapshotReader>();
+        var stubsExplicitlyEnabled = string.Equals(
+            configuration["Booking:UseStubSnapshotReaders"],
+            "true",
+            StringComparison.OrdinalIgnoreCase);
+        var stubsExplicitlyDisabled = string.Equals(
+            configuration["Booking:UseStubSnapshotReaders"],
+            "false",
+            StringComparison.OrdinalIgnoreCase);
+        var useStubs = stubsExplicitlyEnabled
+            || (!stubsExplicitlyDisabled
+                && hostEnvironment is not null
+                && hostEnvironment.IsDevelopment());
+
+        if (useStubs)
+        {
+            services.AddScoped<IBookingTourSnapshotReader, StubBookingTourSnapshotReader>();
+            services.AddScoped<IBookingProviderSnapshotReader, StubBookingProviderSnapshotReader>();
+            services.AddScoped<IBookingPricingSnapshotReader, StubBookingPricingSnapshotReader>();
+        }
+        else
+        {
+            services.AddScoped<IBookingTourSnapshotReader, BookingTourSnapshotReader>();
+            services.AddScoped<IBookingProviderSnapshotReader, BookingProviderSnapshotReader>();
+            services.AddScoped<IBookingPricingSnapshotReader, BookingPricingSnapshotReader>();
+        }
+
         services.AddScoped<IDiscountEvaluator, NoOpDiscountEvaluator>();
         services.AddScoped<IBookingCommissionLookup, StubBookingCommissionLookup>();
 
         // ── Background services ──────────────────────────────────────────────
+        // Singleton liveness tracker consumed by BookingBgServicesHealthCheck (registered in API host).
+        services.TryAddSingleton<IBookingBackgroundServiceStatusStore, BookingBackgroundServiceStatusStore>();
+
+        // Master-aligned services with strongly-typed Options classes.
         services.Configure<SlotLockCleanupOptions>(opts =>
         {
             var section = configuration.GetSection(SlotLockCleanupOptions.SectionName);
             ApplyBool(section, nameof(SlotLockCleanupOptions.Enabled), value => opts.Enabled = value);
+            ApplyTimeSpan(section, nameof(SlotLockCleanupOptions.Interval), value => opts.Interval = value);
             ApplyTimeSpan(section, nameof(SlotLockCleanupOptions.InitialDelay), value => opts.InitialDelay = value);
-            ApplyTimeSpan(section, nameof(SlotLockCleanupOptions.PollInterval), value => opts.PollInterval = value);
             ApplyInt(section, nameof(SlotLockCleanupOptions.BatchSize), value => opts.BatchSize = value);
         });
-        services.Configure<DocumentExpiryCheckOptions>(opts =>
+
+        services.Configure<BookingAutoExpireOptions>(opts =>
         {
-            var section = configuration.GetSection(DocumentExpiryCheckOptions.SectionName);
-            ApplyBool(section, nameof(DocumentExpiryCheckOptions.Enabled), value => opts.Enabled = value);
-            ApplyTimeSpan(section, nameof(DocumentExpiryCheckOptions.InitialDelay), value => opts.InitialDelay = value);
-            ApplyTimeSpan(section, nameof(DocumentExpiryCheckOptions.PollInterval), value => opts.PollInterval = value);
-            ApplyInt(section, nameof(DocumentExpiryCheckOptions.ExpiringSoonWindowDays), value => opts.ExpiringSoonWindowDays = value);
+            var section = configuration.GetSection(BookingAutoExpireOptions.SectionName);
+            ApplyBool(section, nameof(BookingAutoExpireOptions.Enabled), value => opts.Enabled = value);
+            ApplyTimeSpan(section, nameof(BookingAutoExpireOptions.Interval), value => opts.Interval = value);
+            ApplyTimeSpan(section, nameof(BookingAutoExpireOptions.InitialDelay), value => opts.InitialDelay = value);
+            ApplyInt(section, nameof(BookingAutoExpireOptions.BatchSize), value => opts.BatchSize = value);
+            ApplyInt(section, nameof(BookingAutoExpireOptions.PaymentWindowMinutes), value => opts.PaymentWindowMinutes = value);
         });
+
         services.Configure<ProviderAutoAcceptOptions>(opts =>
         {
             var section = configuration.GetSection(ProviderAutoAcceptOptions.SectionName);
             ApplyBool(section, nameof(ProviderAutoAcceptOptions.Enabled), value => opts.Enabled = value);
+            ApplyTimeSpan(section, nameof(ProviderAutoAcceptOptions.Interval), value => opts.Interval = value);
             ApplyTimeSpan(section, nameof(ProviderAutoAcceptOptions.InitialDelay), value => opts.InitialDelay = value);
-            ApplyTimeSpan(section, nameof(ProviderAutoAcceptOptions.PollInterval), value => opts.PollInterval = value);
-            ApplyTimeSpan(section, nameof(ProviderAutoAcceptOptions.AutoAcceptAfter), value => opts.AutoAcceptAfter = value);
             ApplyInt(section, nameof(ProviderAutoAcceptOptions.BatchSize), value => opts.BatchSize = value);
+            ApplyDouble(section, nameof(ProviderAutoAcceptOptions.ProviderConfirmationHours), value => opts.ProviderConfirmationHours = value);
         });
-        services.AddHostedService<SlotLockCleanupService>();
-        services.AddHostedService<DocumentExpiryCheckService>();
-        services.AddHostedService<ProviderAutoAcceptService>();
 
-        // ── New background services ───────────────────────────────────────────
+        services.Configure<DocumentExpiryCheckOptions>(opts =>
+        {
+            var section = configuration.GetSection(DocumentExpiryCheckOptions.SectionName);
+            ApplyBool(section, nameof(DocumentExpiryCheckOptions.Enabled), value => opts.Enabled = value);
+            ApplyTimeOnly(section, nameof(DocumentExpiryCheckOptions.TargetUtcTime), value => opts.TargetUtcTime = value);
+            ApplyTimeSpan(section, nameof(DocumentExpiryCheckOptions.InitialDelay), value => opts.InitialDelay = value);
+            ApplyInt(section, nameof(DocumentExpiryCheckOptions.BatchSize), value => opts.BatchSize = value);
+            ApplyInt(section, nameof(DocumentExpiryCheckOptions.ExpiringSoonWindowDays), value => opts.ExpiringSoonWindowDays = value);
+        });
+
+        services.AddHostedService<DocumentExpiryCheckService>();   // stops first
+        services.AddHostedService<ProviderAutoAcceptService>();
+        services.AddHostedService<BookingAutoExpireService>();
+        services.AddHostedService<SlotLockCleanupService>();       // stops last
+
+        // ── Additional background services (workflow expansion) ──────────────
         services.Configure<JoinRequestExpiryOptions>(opts =>
         {
             var section = configuration.GetSection(JoinRequestExpiryOptions.SectionName);
@@ -115,14 +166,8 @@ public static class DependencyInjection
             ApplyTimeSpan(section, nameof(JoinRequestExpiryOptions.PollInterval), value => opts.PollInterval = value);
             ApplyInt(section, nameof(JoinRequestExpiryOptions.BatchSize), value => opts.BatchSize = value);
         });
-        services.Configure<BookingAutoExpireOptions>(opts =>
-        {
-            var section = configuration.GetSection(BookingAutoExpireOptions.SectionName);
-            ApplyBool(section, nameof(BookingAutoExpireOptions.Enabled), value => opts.Enabled = value);
-            ApplyTimeSpan(section, nameof(BookingAutoExpireOptions.InitialDelay), value => opts.InitialDelay = value);
-            ApplyTimeSpan(section, nameof(BookingAutoExpireOptions.PollInterval), value => opts.PollInterval = value);
-            ApplyInt(section, nameof(BookingAutoExpireOptions.BatchSize), value => opts.BatchSize = value);
-        });
+        services.AddHostedService<JoinRequestExpiryService>();
+
         services.Configure<BookingAutoCompleteOptions>(opts =>
         {
             var section = configuration.GetSection(BookingAutoCompleteOptions.SectionName);
@@ -131,8 +176,6 @@ public static class DependencyInjection
             ApplyTimeSpan(section, nameof(BookingAutoCompleteOptions.PollInterval), value => opts.PollInterval = value);
             ApplyInt(section, nameof(BookingAutoCompleteOptions.BatchSize), value => opts.BatchSize = value);
         });
-        services.AddHostedService<JoinRequestExpiryService>();
-        services.AddHostedService<BookingAutoExpireService>();
         services.AddHostedService<BookingAutoCompleteService>();
 
         services.Configure<SlotGenerationOptions>(opts =>
@@ -187,9 +230,30 @@ public static class DependencyInjection
         }
     }
 
+    private static void ApplyDouble(IConfiguration section, string key, Action<double> apply)
+    {
+        if (double.TryParse(
+                section[key],
+                System.Globalization.NumberStyles.Float,
+                System.Globalization.CultureInfo.InvariantCulture,
+                out var value)
+            && value > 0d)
+        {
+            apply(value);
+        }
+    }
+
     private static void ApplyTimeSpan(IConfiguration section, string key, Action<TimeSpan> apply)
     {
         if (TimeSpan.TryParse(section[key], out var value) && value > TimeSpan.Zero)
+        {
+            apply(value);
+        }
+    }
+
+    private static void ApplyTimeOnly(IConfiguration section, string key, Action<TimeOnly> apply)
+    {
+        if (TimeOnly.TryParse(section[key], System.Globalization.CultureInfo.InvariantCulture, out var value))
         {
             apply(value);
         }

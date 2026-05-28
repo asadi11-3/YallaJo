@@ -114,15 +114,6 @@ namespace ContentPlaces.Infrastructure.Migrations
                         .IsUnicode(false)
                         .HasColumnType("varchar(200)");
 
-                    b.Property<DateTime?>("GracePeriodEnd")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool?>("HasAlcoholFreeArea")
-                        .HasColumnType("bit");
-
-                    b.Property<bool?>("HasVegetarianOptions")
-                        .HasColumnType("bit");
-
                     b.Property<bool>("IsDeleted")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")

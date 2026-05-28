@@ -19,11 +19,12 @@ public sealed class RegisterCommandHandlerTests
     private readonly IAuthUnitOfWork          _uow             = Substitute.For<IAuthUnitOfWork>();
     private readonly IOtpService              _otpService      = Substitute.For<IOtpService>();
     private readonly IEmailService            _email           = Substitute.For<IEmailService>();
-    private readonly IAuthOutboxWriter        _outbox          = Substitute.For<IAuthOutboxWriter>();
+    private readonly IAuthOutboxWriter        _outboxWriter    = Substitute.For<IAuthOutboxWriter>();
     private readonly TimeProvider             _timeProvider    = TimeProvider.System;
 
     private RegisterCommandHandler CreateSut() =>
-        new(_userReg, _profileCreation, _otpRepo, _uow, _otpService, _email, _outbox, _timeProvider,
+        new(_userReg, _profileCreation, _otpRepo, _uow, _otpService, _email,
+            _outboxWriter, _timeProvider,
             NullLogger<RegisterCommandHandler>.Instance);
 
     private static RegisterCommand SampleCommand(string email = "new@example.com") =>

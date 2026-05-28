@@ -104,7 +104,7 @@ builder.Services.AddAnalyticsApplication();
 builder.Services.AddAnalyticsInfrastructure(builder.Configuration);
 
 builder.Services.AddBookingApplication();
-builder.Services.AddBookingInfrastructure(builder.Configuration);
+builder.Services.AddBookingInfrastructure(builder.Configuration, builder.Environment);
 
 builder.Services.AddFinanceApplication();
 builder.Services.AddFinanceInfrastructure(builder.Configuration);
@@ -179,10 +179,39 @@ builder.Services.AddAuthorization(opts =>
 builder.Services.AddPermissionAuthorization();
 
 // ── API Documentation ─────────────────────────────────────────────────────
+// Dev-only CORS so Swagger UI can fetch swagger.json AND execute "Try it out"
+// against /api/* without the browser aborting on OPTIONS preflight.
+// Two scoped policies:
+//   • SwaggerDocs   — for /swagger/* (loading the document, OPTIONS preflight).
+//   • LocalDevApi   — for /api/*     (browser "Execute" requests including OPTIONS preflight,
+//                                     Bearer auth, JSON bodies).
+// Both are Development-only and applied scoped (UseWhen) so Production behavior is unchanged.
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("SwaggerDocs", policy => policy
+        .SetIsOriginAllowed(_ => true)
+        .AllowAnyHeader()
+        .AllowAnyMethod());
+
+    options.AddPolicy("LocalDevApi", policy => policy
+        .WithOrigins(
+            "https://localhost:57065",
+            "http://localhost:57065",
+            "https://localhost:57066",
+            "http://localhost:57066")
+        .AllowAnyHeader()
+        .AllowAnyMethod()
+        .AllowCredentials());
+});
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new OpenApiInfo { Title = "YallaJo API", Version = "v1" });
+
+    // Deterministic full-name schema IDs to avoid collisions between modules that share
+    // a short type name (e.g. Accounts.Domain.Enums.DocumentType vs Booking.Domain.Enums.DocumentType).
+    options.CustomSchemaIds(type => type.FullName?.Replace("+", ".") ?? type.Name);
 
     var bearerScheme = new OpenApiSecurityScheme
     {
@@ -247,6 +276,22 @@ app.UseYallaJoSerilogRequestLogging();
 // 3. Dev tooling
 if (app.Environment.IsDevelopment())
 {
+    // Scope CORS to Swagger paths so browser fetch of swagger.json never gets blocked
+    // (covers cross-scheme/cross-port dev scenarios and OPTIONS preflight).
+    app.UseWhen(
+        ctx => ctx.Request.Path.StartsWithSegments("/swagger"),
+        branch => branch.UseCors("SwaggerDocs"));
+
+    // Scope CORS to /api so Swagger UI "Execute" works in the browser:
+    // the browser issues an OPTIONS preflight before requests carrying
+    // Authorization or non-simple JSON. Without CORS, /api/* returns 405
+    // for OPTIONS and the browser aborts with "Failed to fetch".
+    // Must run before UseRateLimiter / UseAuthentication / UseAuthorization
+    // so preflight cannot be 401'd, 403'd, or throttled.
+    app.UseWhen(
+        ctx => ctx.Request.Path.StartsWithSegments("/api"),
+        branch => branch.UseCors("LocalDevApi"));
+
     app.UseSwagger();
     app.UseSwaggerUI(ui =>
         ui.SwaggerEndpoint("/swagger/v1/swagger.json", "YallaJo API v1"));

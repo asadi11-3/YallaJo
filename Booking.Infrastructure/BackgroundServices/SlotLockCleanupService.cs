@@ -1,5 +1,7 @@
 using Booking.Application.Interfaces;
 using Booking.Domain.Repositories;
+using Booking.Infrastructure.BackgroundServices.Options;
+using Booking.Infrastructure.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -9,68 +11,116 @@ namespace Booking.Infrastructure.BackgroundServices;
 
 internal sealed class SlotLockCleanupService(
     IServiceScopeFactory scopeFactory,
-    IOptions<SlotLockCleanupOptions> options,
+    IOptionsMonitor<SlotLockCleanupOptions> options,
+    IBookingBackgroundServiceStatusStore statusStore,
     ILogger<SlotLockCleanupService> logger,
     TimeProvider timeProvider)
     : BackgroundService
 {
-    private readonly SlotLockCleanupOptions _options = options.Value;
+    private static readonly string ServiceName = nameof(SlotLockCleanupService);
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        if (!_options.Enabled)
+        var snapshot = options.CurrentValue;
+        if (!snapshot.Enabled)
         {
-            logger.LogInformation("SlotLockCleanupService disabled");
+            logger.LogInformation("{Service} disabled via config; skipping execution loop", ServiceName);
             return;
         }
 
-        await Task.Delay(_options.InitialDelay, stoppingToken);
-        using var timer = new PeriodicTimer(_options.PollInterval);
+        var interval = snapshot.Interval > TimeSpan.Zero ? snapshot.Interval : TimeSpan.FromMinutes(5);
+        logger.LogInformation("{Service} started with interval {Interval}", ServiceName, interval);
 
+        try
+        {
+            await Task.Delay(snapshot.InitialDelay, stoppingToken).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+        {
+            return;
+        }
+
+        using var timer = new PeriodicTimer(interval);
         do
         {
-            try
-            {
-                await RunOnceAsync(stoppingToken);
-            }
-            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
-            {
-                throw;
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "SlotLockCleanupService tick failed");
-            }
+            await TickAsync(stoppingToken).ConfigureAwait(false);
         }
-        while (await timer.WaitForNextTickAsync(stoppingToken));
+        while (await timer.WaitForNextTickAsync(stoppingToken).ConfigureAwait(false));
     }
 
-    private async Task RunOnceAsync(CancellationToken ct)
+    private async Task TickAsync(CancellationToken ct)
     {
+        var nowUtc = timeProvider.GetUtcNow();
+        statusStore.RecordTickStart(ServiceName, nowUtc);
+        BookingDiagnostics.BgServiceTicks.Add(1, new KeyValuePair<string, object?>("service", ServiceName));
+        using var activity = BookingDiagnostics.ActivitySource.StartActivity(ServiceName);
+
+        try
+        {
+            var processed = await RunOnceAsync(ct).ConfigureAwait(false);
+            statusStore.RecordSuccess(ServiceName, timeProvider.GetUtcNow(), processed);
+            if (processed > 0)
+            {
+                BookingDiagnostics.BgServiceItemsProcessed.Add(
+                    processed,
+                    new KeyValuePair<string, object?>("service", ServiceName));
+            }
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            statusStore.RecordFailure(ServiceName, timeProvider.GetUtcNow(), ex.Message);
+            BookingDiagnostics.BgServiceFailures.Add(
+                1,
+                new KeyValuePair<string, object?>("service", ServiceName),
+                new KeyValuePair<string, object?>("outcome", "failure"));
+            logger.LogError(ex, "{Service} tick failed; will retry next interval", ServiceName);
+        }
+    }
+
+    internal async Task<int> RunOnceAsync(CancellationToken ct)
+    {
+        var snapshot = options.CurrentValue;
+        var batchSize = snapshot.BatchSize > 0 ? snapshot.BatchSize : 500;
+        var nowUtc = timeProvider.GetUtcNow().UtcDateTime;
+
         using var scope = scopeFactory.CreateScope();
         var slotLockRepo = scope.ServiceProvider.GetRequiredService<ISlotLockRepository>();
         var uow = scope.ServiceProvider.GetRequiredService<IBookingUnitOfWork>();
-        var nowUtc = timeProvider.GetUtcNow().UtcDateTime;
 
-        var expiredLocks = await slotLockRepo.GetExpiredActiveAsync(nowUtc, _options.BatchSize, ct);
-        foreach (var slotLock in expiredLocks)
+        var expired = await slotLockRepo.GetExpiredActiveAsync(nowUtc, batchSize, ct).ConfigureAwait(false);
+        if (expired.Count == 0)
+        {
+            logger.LogDebug("{Service}: no expired slot locks", ServiceName);
+            return 0;
+        }
+
+        foreach (var slotLock in expired)
         {
             slotLock.Release();
         }
 
-        if (expiredLocks.Count > 0)
-        {
-            await uow.SaveChangesAsync(ct);
-            logger.LogInformation("Released {Count} expired SlotLocks", expiredLocks.Count);
-        }
-    }
-}
+        await uow.SaveChangesAsync(ct).ConfigureAwait(false);
 
-public sealed class SlotLockCleanupOptions
-{
-    public const string SectionName = "Booking:BackgroundServices:SlotLockCleanup";
-    public bool Enabled { get; set; } = true;
-    public TimeSpan InitialDelay { get; set; } = TimeSpan.FromMinutes(1);
-    public TimeSpan PollInterval { get; set; } = TimeSpan.FromMinutes(2);
-    public int BatchSize { get; set; } = 200;
+        if (expired.Count >= batchSize)
+        {
+            logger.LogWarning(
+                "{Service}: batch saturated ({Count}/{BatchSize}); investigate lock accumulation",
+                ServiceName,
+                expired.Count,
+                batchSize);
+        }
+        else
+        {
+            logger.LogInformation(
+                "{Service}: released {Count} expired SlotLock(s)",
+                ServiceName,
+                expired.Count);
+        }
+
+        return expired.Count;
+    }
 }

@@ -196,6 +196,18 @@ public sealed class AvailabilitySlotTests
     }
 
     [Fact]
+    public void Activate_when_already_active_raises_no_domain_event()
+    {
+        // P2-E: the early-return guard must not emit a spurious event.
+        var slot = CreateSlot();
+        slot.ClearDomainEvents();
+
+        slot.Activate(); // already active → no-op
+
+        slot.DomainEvents.Should().BeEmpty();
+    }
+
+    [Fact]
     public void Activate_after_deactivate_restores_to_active()
     {
         var slot = CreateSlot();
@@ -204,5 +216,97 @@ public sealed class AvailabilitySlotTests
         slot.Activate();
 
         slot.IsActive.Should().BeTrue();
+    }
+
+    [Fact]
+    public void Activate_after_deactivate_raises_capacity_changed_event_with_equal_old_and_new_values()
+    {
+        // P2-E: AvailableCount does not factor in IsActive, so old==new is expected and correct.
+        // The event signals "this slot re-entered visibility" for downstream cache invalidators;
+        // they act on SlotId, not the delta.
+        var slot = CreateSlot(maxCapacity: 8);
+        slot.Book(2);    // BookedCount=2, AvailableCount=6
+        slot.Deactivate();
+        slot.ClearDomainEvents();
+
+        slot.Activate();
+
+        slot.IsActive.Should().BeTrue();
+        var evt = slot.ShouldContainDomainEvent<AvailabilitySlotCapacityChangedDomainEvent>();
+        evt.OldCapacity.Should().Be(6);   // AvailableCount before flip
+        evt.NewCapacity.Should().Be(6);   // AvailableCount after flip (same — IsActive is excluded)
+    }
+
+    // ===== TASK 1 additions =====
+
+    [Fact]
+    public void UpdateCapacity_raises_capacity_changed_event_and_updates_max()
+    {
+        var slot = CreateSlot(maxCapacity: 10);
+
+        slot.UpdateCapacity(14);
+
+        slot.MaxCapacity.Should().Be(14);
+        slot.AvailableCount.Should().Be(14);
+        var evt = slot.ShouldContainDomainEvent<AvailabilitySlotCapacityChangedDomainEvent>();
+        evt.OldCapacity.Should().Be(10);
+        evt.NewCapacity.Should().Be(14);
+    }
+
+    [Fact]
+    public void UpdateCapacity_throws_when_below_booked_plus_locked()
+    {
+        var slot = CreateSlot(maxCapacity: 10);
+        slot.Lock(2);
+        slot.ConfirmBooking(1); // locked=1 booked=1 held=2
+
+        var act = () => slot.UpdateCapacity(1);
+
+        act.Should().Throw<BusinessRuleViolationException>();
+    }
+
+    [Fact]
+    public void Book_increases_booked_and_decreases_available()
+    {
+        var slot = CreateSlot(maxCapacity: 6);
+
+        slot.Book(2);
+
+        slot.BookedCount.Should().Be(2);
+        slot.AvailableCount.Should().Be(4);
+    }
+
+    [Fact]
+    public void Cancel_aliases_release_booking()
+    {
+        var slot = CreateSlot(maxCapacity: 6);
+        slot.Book(3);
+
+        slot.Cancel(2);
+
+        slot.BookedCount.Should().Be(1);
+        slot.AvailableCount.Should().Be(5);
+    }
+
+    [Fact]
+    public void RequestDeactivation_throws_when_has_bookings()
+    {
+        var slot = CreateSlot(maxCapacity: 6);
+        slot.Book(1);
+
+        var act = () => slot.RequestDeactivation();
+
+        act.Should().Throw<BusinessRuleViolationException>();
+    }
+
+    [Fact]
+    public void RequestDeactivation_succeeds_when_only_locks_exist()
+    {
+        var slot = CreateSlot(maxCapacity: 6);
+        slot.Lock(1);
+
+        slot.RequestDeactivation();
+
+        slot.IsActive.Should().BeFalse();
     }
 }
