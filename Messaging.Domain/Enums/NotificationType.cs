@@ -51,6 +51,20 @@ public enum NotificationType : byte
     ProviderRejected            = 35,
     ProviderSuspended           = 36,
     ProviderReinstated          = 37,
+
+    // ── TourGuide (40-49) ────────────────────────────────────────────────────
+    GuideApplicationApproved    = 40,
+    GuideApplicationRejected    = 41,
+    TourProposalApproved        = 42,
+    TourProposalRejected        = 43,
+    NewGuideApplication         = 44,
+    NewJoinRequest              = 45,
+    JoinRequestApproved         = 46,
+    JoinRequestRejected         = 47,
+    AgencyAffiliationCreated    = 48,
+    AgencyAffiliationApproved   = 49,
+    GuideOfferingSuspended      = 50,
+    GuideApplicationSubmitted   = 51,
 }
 
 /// <summary>Extension methods for NotificationType.</summary>

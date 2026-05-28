@@ -87,7 +87,7 @@ public sealed class BlogCommentRepositoryTests
             blog.Id, Guid.NewGuid(), "with-reactions", null,
             BlogStatusEnum.Published, DateTime.UtcNow);
         comment.AddOrReplaceReaction(Guid.NewGuid(), global::ContentBlogs.Domain.Enums.ReactionType.Like, DateTime.UtcNow);
-        comment.AddOrReplaceReaction(Guid.NewGuid(), global::ContentBlogs.Domain.Enums.ReactionType.Love, DateTime.UtcNow);
+        comment.AddOrReplaceReaction(Guid.NewGuid(), global::ContentBlogs.Domain.Enums.ReactionType.Insightful, DateTime.UtcNow);
         db.BlogComments.Add(comment);
         await db.SaveChangesAsync();
 
@@ -200,7 +200,7 @@ public sealed class BlogCommentRepositoryTests
             BlogStatusEnum.Published, DateTime.UtcNow);
         var sameUser = Guid.NewGuid();
         comment.AddOrReplaceReaction(sameUser, global::ContentBlogs.Domain.Enums.ReactionType.Like, DateTime.UtcNow);
-        comment.AddOrReplaceReaction(sameUser, global::ContentBlogs.Domain.Enums.ReactionType.Love, DateTime.UtcNow);
+        comment.AddOrReplaceReaction(sameUser, global::ContentBlogs.Domain.Enums.ReactionType.Insightful, DateTime.UtcNow);
         db.BlogComments.Add(comment);
         await db.SaveChangesAsync();
 

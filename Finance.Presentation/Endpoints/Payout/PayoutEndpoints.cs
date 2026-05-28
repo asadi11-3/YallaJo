@@ -49,13 +49,6 @@ internal static class PayoutEndpoints
             [FromQuery] Guid? cursor = null,
             [FromQuery] int pageSize = 20) =>
         {
-            if (!currentUser.IsAuthenticated || currentUser.UserId is null)
-            {
-                return Result.Failure<PayoutPageDto>(
-                    new Error("Payout.Unauthorized", "Authentication required."),
-                    Outcome.Unauthorized).ToApiResult();
-            }
-
             var providerId = TryParseProviderClaim(currentUser);
             if (providerId is null)
             {
@@ -84,17 +77,10 @@ internal static class PayoutEndpoints
             ISender sender,
             CancellationToken ct) =>
         {
-            if (!currentUser.IsAuthenticated || currentUser.UserId is null)
-            {
-                return Result.Failure<PayoutDto>(
-                    new Error("Payout.Unauthorized", "Authentication required."),
-                    Outcome.Unauthorized).ToApiResult();
-            }
-
             var isAdmin = currentUser.HasPermission("Permission.AdminFinanceDashboard.Read");
             var providerId = TryParseProviderClaim(currentUser);
             var result = await sender.Send(
-                new GetPayoutByIdQuery(id, currentUser.UserId.Value, isAdmin, providerId), ct);
+                new GetPayoutByIdQuery(id, currentUser.UserId!.Value, isAdmin, providerId), ct);
             return result.ToApiResult();
         })
         .WithName("GetPayoutById")
@@ -129,14 +115,7 @@ internal static class PayoutEndpoints
             ISender sender,
             CancellationToken ct) =>
         {
-            if (!currentUser.IsAuthenticated || currentUser.UserId is null)
-            {
-                return Result.Failure<ApprovePayoutResult>(
-                    new Error("Payout.Unauthorized", "Authentication required."),
-                    Outcome.Unauthorized).ToApiResult();
-            }
-
-            var result = await sender.Send(new ApprovePayoutCommand(id, currentUser.UserId.Value), ct);
+            var result = await sender.Send(new ApprovePayoutCommand(id, currentUser.UserId!.Value), ct);
             return result.ToApiResult();
         })
         .WithName("ApprovePayout")

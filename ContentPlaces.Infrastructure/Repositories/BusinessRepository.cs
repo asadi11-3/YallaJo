@@ -1,4 +1,5 @@
 using ContentPlaces.Domain.Entities;
+using ContentPlaces.Domain.Queries;
 using ContentPlaces.Domain.Repositories;
 using ContentPlaces.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -52,5 +53,71 @@ internal sealed class BusinessRepository(ContentPlacesDbContext context)
             .ExecuteDeleteAsync(ct);
 
         await context.Set<BusinessHours>().AddRangeAsync(newHours, ct);
+    }
+
+    public async Task<IReadOnlyList<NearbyBusinessResult>> GetNearbyAsync(
+        double lat,
+        double lng,
+        double radiusKm,
+        int pageSize,
+        CancellationToken ct = default)
+    {
+        // Bounding-box offsets (1° latitude ≈ 111 km; longitude shrinks by cos(lat)).
+        var latOffset = radiusKm / 111.0;
+        var lngOffset = radiusKm / (111.0 * Math.Cos(lat * Math.PI / 180.0));
+        var minLat = lat - latOffset;
+        var maxLat = lat + latOffset;
+        var minLng = lng - lngOffset;
+        var maxLng = lng + lngOffset;
+
+        var results = await context.Database
+            .SqlQuery<NearbyBusinessResult>($"""
+                SELECT Id, Name, Slug, BusinessType, Status,
+                       Latitude, Longitude,
+                       City, Country, AverageRating, ReviewCount, IsVerified, IsFeatured,
+                       DistanceKm
+                FROM (
+                    SELECT
+                        Id, Name, Slug,
+                        BusinessType,
+                        Status,
+                        Latitude, Longitude,
+                        City, Country, AverageRating, ReviewCount, IsVerified, IsFeatured,
+                        6371 * ACOS(
+                            COS(RADIANS({lat})) * COS(RADIANS(Latitude))
+                            * COS(RADIANS(Longitude) - RADIANS({lng}))
+                            + SIN(RADIANS({lat})) * SIN(RADIANS(Latitude))
+                        ) AS DistanceKm
+                    FROM content_places.Businesses
+                    WHERE IsDeleted           = 0
+                      AND Status              = 1
+                      AND Latitude  <> 0.0
+                      AND Longitude <> 0.0
+                      AND Latitude   BETWEEN {minLat} AND {maxLat}
+                      AND Longitude  BETWEEN {minLng} AND {maxLng}
+                ) AS candidate
+                WHERE DistanceKm <= {radiusKm}
+                ORDER BY DistanceKm
+                OFFSET 0 ROWS FETCH NEXT {pageSize} ROWS ONLY
+                """)
+            .AsNoTracking()
+            .ToListAsync(ct);
+
+        return results;
+    }
+
+    public async Task<IReadOnlyList<Business>> GetByOwnerIdAsync(
+        Guid ownerUserId,
+        int page,
+        int pageSize,
+        CancellationToken ct = default)
+    {
+        return await context.Set<Business>()
+            .Where(b => b.OwnerId == ownerUserId)
+            .OrderByDescending(b => b.CreatedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .AsNoTracking()
+            .ToListAsync(ct);
     }
 }

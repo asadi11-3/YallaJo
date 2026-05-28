@@ -160,6 +160,77 @@ public class BlogRepository(ContentBlogsDbContext context)
         };
     }
 
+    public async Task<PaginatedResult<Blog>> GetAdminQueueAsync(
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken = default)
+    {
+        var query = context.Set<Blog>()
+            .AsNoTracking()
+            .Where(b => b.Status == BlogStatus.PendingReview && !b.IsDeleted)
+            .OrderBy(b => b.SubmittedAt);
+
+        var total = await query.CountAsync(cancellationToken).ConfigureAwait(false);
+        var items = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        return new PaginatedResult<Blog>(items, total, page, pageSize);
+    }
+
+    public async Task<PaginatedResult<Blog>> GetByAuthorIdAsync(
+        Guid authorId,
+        int page,
+        int pageSize,
+        BlogStatus? statusFilter,
+        CancellationToken cancellationToken = default)
+    {
+        var query = context.Set<Blog>()
+            .AsNoTracking()
+            .Where(b => b.AuthorId == authorId && !b.IsDeleted);
+
+        if (statusFilter.HasValue)
+        {
+            query = query.Where(b => b.Status == statusFilter.Value);
+        }
+
+        query = query.OrderByDescending(b => b.CreatedAt);
+
+        var total = await query.CountAsync(cancellationToken).ConfigureAwait(false);
+        var items = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        return new PaginatedResult<Blog>(items, total, page, pageSize);
+    }
+
+    public async Task<PaginatedResult<Blog>> GetPublishedByCreatorProfileIdAsync(
+        Guid creatorProfileId,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken = default)
+    {
+        var query = context.Set<Blog>()
+            .AsNoTracking()
+            .Where(b => b.AuthoredByCreatorId == creatorProfileId
+                     && b.Status == BlogStatus.Published
+                     && !b.IsDeleted)
+            .OrderByDescending(b => b.PublishedAt);
+
+        var total = await query.CountAsync(cancellationToken).ConfigureAwait(false);
+        var items = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        return new PaginatedResult<Blog>(items, total, page, pageSize);
+    }
+
     private static string NormalizeSlug(string slug) =>
         (slug ?? string.Empty).Trim().ToLowerInvariant();
 }

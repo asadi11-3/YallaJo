@@ -1,5 +1,6 @@
 using Finance.Domain.Enums;
 using Finance.Domain.Events;
+using YallaJo.SharedKernel.Domain.Abstractions.Results;
 using YallaJo.SharedKernel.Domain.Entities;
 using YallaJo.SharedKernel.Domain.ValueObjects;
 
@@ -100,7 +101,7 @@ public sealed class Payout : AuditableEntity, IAggregateRoot
     /// <summary>
     /// Adds one accounting line (one booking) into this payout. Updates running totals.
     /// </summary>
-    public PayoutItem AddItem(
+    public Result<PayoutItem> AddItem(
         Guid bookingId,
         Money grossAmount,
         Money commissionAmount,
@@ -113,12 +114,16 @@ public sealed class Payout : AuditableEntity, IAggregateRoot
         if (!string.Equals(grossAmount.Currency, Currency, StringComparison.OrdinalIgnoreCase) ||
             !string.Equals(commissionAmount.Currency, Currency, StringComparison.OrdinalIgnoreCase))
         {
-            throw new InvalidOperationException("Item currency must match payout currency.");
+            return Result.Failure<PayoutItem>(
+                new Error("PayoutItem.CurrencyMismatch", "Item currency must match payout currency."),
+                Outcome.Invalid);
         }
 
         if (Status != PayoutStatus.Pending && Status != PayoutStatus.Hold)
         {
-            throw new InvalidOperationException($"Cannot add items to payout in {Status} status.");
+            return Result.Failure<PayoutItem>(
+                new Error("Payout.InvalidState", $"Cannot add items to payout in {Status} status."),
+                Outcome.Conflict);
         }
 
         var netAmount = new Money(grossAmount.Amount - commissionAmount.Amount, Currency);
@@ -132,56 +137,68 @@ public sealed class Payout : AuditableEntity, IAggregateRoot
 
         AddDomainEvent(new PayoutItemAddedDomainEvent(Id, bookingId, grossAmount.Amount, commissionAmount.Amount, netAmount.Amount, Currency));
         MarkUpdated();
-        return item;
+        return Result.Success(item);
     }
 
     /// <summary>Marks payout as held (no verified bank account, open dispute, etc.).</summary>
-    public void PutOnHold(string reason)
+    public Result PutOnHold(string reason)
     {
         if (Status == PayoutStatus.Hold)
         {
-            return;
+            return Result.Success();
         }
 
         if (Status != PayoutStatus.Pending)
         {
-            throw new InvalidOperationException($"Cannot hold payout in {Status} status.");
+            return Result.Failure(
+                new Error("Payout.InvalidState", $"Cannot hold payout in {Status} status."),
+                Outcome.Conflict);
         }
 
         Status = PayoutStatus.Hold;
         FailureReason = reason;
         MarkUpdated();
+
+        return Result.Success();
     }
 
     /// <summary>Auto-approves payout below large threshold (no admin approval needed).</summary>
-    public void MarkReadyForPayout()
+    public Result MarkReadyForPayout()
     {
         if (Status == PayoutStatus.ReadyForPayout)
         {
-            return;
+            return Result.Success();
         }
 
         if (Status != PayoutStatus.Pending)
         {
-            throw new InvalidOperationException($"Cannot mark ready in {Status} status.");
+            return Result.Failure(
+                new Error("Payout.InvalidState", $"Cannot mark ready in {Status} status."),
+                Outcome.Conflict);
         }
 
         Status = PayoutStatus.ReadyForPayout;
         MarkUpdated();
+
+        return Result.Success();
     }
 
     /// <summary>Admin approves a large payout (above large threshold).</summary>
-    public void Approve(Guid approverUserId, TimeProvider timeProvider)
+    public Result Approve(Guid approverUserId, TimeProvider timeProvider)
     {
         ArgumentNullException.ThrowIfNull(timeProvider);
         if (approverUserId == Guid.Empty)
         {
-            throw new ArgumentException("ApproverUserId is required.", nameof(approverUserId));
+            return Result.Failure(
+                new Error("Payout.ApproverRequired", "ApproverUserId is required."),
+                Outcome.Invalid);
         }
 
         if (Status != PayoutStatus.Pending)
         {
-            throw new InvalidOperationException($"Cannot approve payout in {Status} status.");
+            return Result.Failure(
+                new Error("Payout.InvalidState", $"Cannot approve payout in {Status} status."),
+                Outcome.Conflict);
         }
 
         ApprovedByUserId = approverUserId;
@@ -189,24 +206,30 @@ public sealed class Payout : AuditableEntity, IAggregateRoot
         Status = PayoutStatus.ReadyForPayout;
         AddDomainEvent(new PayoutApprovedDomainEvent(Id, approverUserId, ApprovedAt.Value, NetAmount.Amount, Currency, ProviderId));
         MarkUpdated();
+
+        return Result.Success();
     }
 
     /// <summary>Marks payout completed after gateway PayoutAsync succeeded.</summary>
-    public void MarkCompleted(string gatewayPayoutId, DateTime completedAtUtc)
+    public Result MarkCompleted(string gatewayPayoutId, DateTime completedAtUtc)
     {
         if (string.IsNullOrWhiteSpace(gatewayPayoutId))
         {
-            throw new ArgumentException("GatewayPayoutId is required.", nameof(gatewayPayoutId));
+            return Result.Failure(
+                new Error("Payout.GatewayPayoutIdRequired", "GatewayPayoutId is required."),
+                Outcome.Invalid);
         }
 
         if (Status == PayoutStatus.Completed)
         {
-            return; // idempotent
+            return Result.Success(); // idempotent
         }
 
         if (Status != PayoutStatus.ReadyForPayout)
         {
-            throw new InvalidOperationException($"Cannot complete payout in {Status} status.");
+            return Result.Failure(
+                new Error("Payout.InvalidState", $"Cannot complete payout in {Status} status."),
+                Outcome.Conflict);
         }
 
         Status = PayoutStatus.Completed;
@@ -216,20 +239,24 @@ public sealed class Payout : AuditableEntity, IAggregateRoot
         ProcessedAt = completedAtUtc;
         AddDomainEvent(new PayoutCompletedDomainEvent(Id, ProviderId, NetAmount.Amount, Currency, gatewayPayoutId, completedAtUtc));
         MarkUpdated();
+
+        return Result.Success();
     }
 
     /// <summary>Marks payout failed when gateway disbursement errored.</summary>
-    public void MarkFailed(string failureReason, DateTime occurredAtUtc)
+    public Result MarkFailed(string failureReason, DateTime occurredAtUtc)
     {
         if (Status == PayoutStatus.Failed)
         {
-            return; // idempotent
+            return Result.Success(); // idempotent
         }
 
         Status = PayoutStatus.Failed;
         FailureReason = failureReason;
         AddDomainEvent(new PayoutFailedDomainEvent(Id, ProviderId, failureReason, occurredAtUtc));
         MarkUpdated();
+
+        return Result.Success();
     }
 
     /// <summary>

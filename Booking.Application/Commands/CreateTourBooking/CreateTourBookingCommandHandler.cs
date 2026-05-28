@@ -52,16 +52,7 @@ public sealed class CreateTourBookingCommandHandler(
     {
         try
         {
-            // ----- Auth check (RuleERR-004: explicit Outcome.Unauthorized) -----
-            if (!currentUser.IsAuthenticated || currentUser.UserId is null)
-            {
-                logger.LogWarning("CreateTourBooking rejected: unauthenticated caller.");
-                return Result.Failure<CreateTourBookingResult>(
-                    new Error("TourBooking.Unauthorized", "Authentication is required to create a booking."),
-                    Outcome.Unauthorized);
-            }
-
-            var userId = currentUser.UserId.Value;
+            var userId = currentUser.UserId!.Value;
             var participantCount = request.ParticipantBreakdown.Total;
 
             // =================================================================
@@ -311,6 +302,7 @@ public sealed class CreateTourBookingCommandHandler(
                     userId: userId,
                     tourId: request.TourId,
                     providerId: tourSnapshot.ProviderId,
+                    guideId: request.GuideId,
                     availabilitySlotId: slot.Id,
                     participantCount: participantCount,
                     pricing: pricing,
@@ -318,7 +310,8 @@ public sealed class CreateTourBookingCommandHandler(
                     refundPolicySnapshot: refundPolicySnapshot,
                     isInstantBooking: tourSnapshot.IsInstantBooking,
                     paymentExpiresAt: now.Add(PaymentWindow),
-                    lineItemsJson: lineItemsJson);
+                    lineItemsJson: lineItemsJson,
+                    isPrivate: request.IsPrivate);
             }
             catch (BusinessRuleViolationException ex)
             {

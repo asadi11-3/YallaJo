@@ -116,7 +116,7 @@ public sealed class BlogCommentReactionCommandHandlerTests
 
         // Replace with a different type.
         var result = await NewAddHandler(db, userId: userId).Handle(
-            new AddOrReplaceBlogCommentReactionCommand(comment.Id, ReactionType.Love),
+            new AddOrReplaceBlogCommentReactionCommand(comment.Id, ReactionType.Insightful),
             CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
@@ -126,7 +126,7 @@ public sealed class BlogCommentReactionCommandHandlerTests
             .AsNoTracking()
             .FirstAsync(c => c.Id == comment.Id);
         saved.Reactions.Should().ContainSingle("aggregate enforces one reaction per user");
-        saved.Reactions.Single().ReactionType.Should().Be(ReactionType.Love);
+        saved.Reactions.Single().ReactionType.Should().Be(ReactionType.Insightful);
     }
 
     [Fact]

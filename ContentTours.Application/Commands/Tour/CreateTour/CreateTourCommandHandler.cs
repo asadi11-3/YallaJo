@@ -1,4 +1,6 @@
+using Accounts.Contracts.Abstractions;
 using ContentPlaces.Contracts.Places;
+using ContentTours.Domain.Enums;
 using ContentTours.Application.Caching;
 using ContentTours.Application.Common;
 using ContentTours.Application.Interfaces;
@@ -17,23 +19,43 @@ namespace ContentTours.Application.Commands.Tour.CreateTour;
 public sealed class CreateTourCommandHandler(
     ITourRepository tourRepository,
     IPlaceExistenceService placeExistenceService,
+    IProviderStatusService providerStatusService,
     IContentToursUnitOfWork unitOfWork,
     HybridCache cache,
     ICurrentUser currentUser,
     ILogger<CreateTourCommandHandler> logger)
     : ICommandHandler<CreateTourCommand, CreateTourResult>
 {
+    private const int MaxActiveToursPerProvider = 50;
+
     public async Task<Result<CreateTourResult>> Handle(
         CreateTourCommand request,
         CancellationToken cancellationToken)
     {
         try
         {
-            if (currentUser.UserId is null)
+            var userId = currentUser.UserId!.Value;
+
+            if (!await providerStatusService.IsApprovedProviderAsync(userId, cancellationToken)
+                .ConfigureAwait(false))
             {
                 return Result<CreateTourResult>.Failure(
-                    Error.Unauthorized("Authentication is required."),
-                    Outcome.Unauthorized);
+                    new Error("Provider.NotApproved", "Only approved providers can create tours."),
+                    Outcome.Forbidden);
+            }
+
+            var activeTourCount = await tourRepository.CountAsync(
+                t => t.CreatedByUserId == userId
+                    && t.Status != TourStatus.Rejected
+                    && t.Status != TourStatus.Suspended
+                    && t.Status != TourStatus.Archived,
+                cancellationToken).ConfigureAwait(false);
+
+            if (activeTourCount >= MaxActiveToursPerProvider)
+            {
+                return Result<CreateTourResult>.Failure(
+                    new Error("Tour.MaxActiveReached", $"You cannot have more than {MaxActiveToursPerProvider} active tours."),
+                    Outcome.Conflict);
             }
 
             var slug = (request.Slug ?? string.Empty).Trim().ToLowerInvariant();
@@ -45,20 +67,28 @@ public sealed class CreateTourCommandHandler(
                     Outcome.Conflict);
             }
 
-            if (request.PlaceId.HasValue)
+            if (await tourRepository.IsNameTakenByProviderAsync(request.Name, userId, excludeTourId: null, cancellationToken)
+                .ConfigureAwait(false))
+            {
+                return Result<CreateTourResult>.Failure(
+                    new Error("Tour.NameConflict", $"You already have a tour named '{request.Name}'."),
+                    Outcome.Conflict);
+            }
+
+            if (request.PlaceId != Guid.Empty)
             {
                 var status = await placeExistenceService
-                    .GetStatusAsync(request.PlaceId.Value, cancellationToken)
+                    .GetStatusAsync(request.PlaceId, cancellationToken)
                     .ConfigureAwait(false);
                 switch (status)
                 {
                     case PlaceExistenceStatus.NotFound:
                         return Result<CreateTourResult>.Failure(
-                            new Error("Tour.PlaceNotFound", $"Place '{request.PlaceId.Value}' does not exist."),
+                            new Error("Tour.PlaceNotFound", $"Place '{request.PlaceId}' does not exist."),
                             Outcome.UnprocessableEntity);
                     case PlaceExistenceStatus.Deleted:
                         return Result<CreateTourResult>.Failure(
-                            new Error("Tour.PlaceDeleted", $"Place '{request.PlaceId.Value}' has been deleted."),
+                            new Error("Tour.PlaceDeleted", $"Place '{request.PlaceId}' has been deleted."),
                             Outcome.UnprocessableEntity);
                 }
             }
@@ -88,7 +118,7 @@ public sealed class CreateTourCommandHandler(
                 basePriceAmount:         request.BasePrice,
                 currency:                request.Currency,
                 location:                new Location(request.Latitude, request.Longitude),
-                createdByUserId:         currentUser.UserId.Value,
+                createdByUserId:         userId,
                 description:             request.Description,
                 shortDescription:        request.ShortDescription,
                 minAge:                  request.MinAge,

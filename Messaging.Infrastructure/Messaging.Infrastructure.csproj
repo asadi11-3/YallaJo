@@ -21,11 +21,13 @@
     <ProjectReference Include="..\Accounts.Contracts\Accounts.Contracts.csproj" />
     <ProjectReference Include="..\Auth.Contracts\Auth.Contracts.csproj" />
     <ProjectReference Include="..\Booking.Contracts\Booking.Contracts.csproj" />
+    <ProjectReference Include="..\ContentTours.Contracts\ContentTours.Contracts.csproj" />
     <ProjectReference Include="..\ContentPlaces.Contracts\ContentPlaces.Contracts.csproj" />
     <ProjectReference Include="..\Finance.Contracts\Finance.Contracts.csproj" />
     <ProjectReference Include="..\Messaging.Application\Messaging.Application.csproj" />
     <ProjectReference Include="..\Messaging.Contracts\Messaging.Contracts.csproj" />
     <ProjectReference Include="..\Social.Contracts\Social.Contracts.csproj" />
+    <ProjectReference Include="..\ContentBlogs.Contracts\ContentBlogs.Contracts.csproj" />
     <ProjectReference Include="..\Messaging.Domain\Messaging.Domain.csproj" />
     <ProjectReference Include="..\YallaJo.SharedKernel.Infrastructure\YallaJo.SharedKernel.Infrastructure.csproj" />
   </ItemGroup>

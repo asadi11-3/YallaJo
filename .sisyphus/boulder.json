@@ -1,14 +1,20 @@
 {
-  "active_plan": null,
-  "started_at": "2026-05-18T21:37:28.310Z",
+  "active_plan": "C:\\Users\\admin1\\source\\repos\\YallaJo\\.sisyphus\\Master-ExecutionPlan-To10.md",
+  "started_at": "2026-05-25T19:28:32.327Z",
   "session_ids": [
-    "ses_1c3c9d1aeffe7W7MD2C8CSRlZs"
+    "ses_1c3c9d1aeffe7W7MD2C8CSRlZs",
+    "ses_1a18fcbadffe37yqLPI8PTUysZ",
+    "ses_19f4ecc97ffeJYIYXUkcSmYgp2",
+    "ses_19f4df997ffeM2bRdVMFroutmw"
   ],
-  "plan_name": "ContentBlogs-ContentSeo-fix-plan",
+  "plan_name": "Master-ExecutionPlan-To10",
   "agent": "atlas",
   "session_origins": {
-    "ses_1c3c9d1aeffe7W7MD2C8CSRlZs": "direct"
+    "ses_1c3c9d1aeffe7W7MD2C8CSRlZs": "direct",
+    "ses_1a18fcbadffe37yqLPI8PTUysZ": "start-work",
+    "ses_19f4ecc97ffeJYIYXUkcSmYgp2": "appended",
+    "ses_19f4df997ffeM2bRdVMFroutmw": "appended"
   },
   "task_sessions": {},
-  "playwright_testing": true
+  "playwright_testing": false
 }

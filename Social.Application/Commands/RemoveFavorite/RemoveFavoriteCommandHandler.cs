@@ -1,7 +1,9 @@
 using MediatR;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
-using Social.Domain.Repositories;
+using Social.Application.Caching;
 using Social.Application.Interfaces;
+using Social.Domain.Repositories;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
 namespace Social.Application.Commands.RemoveFavorite;
@@ -9,6 +11,7 @@ namespace Social.Application.Commands.RemoveFavorite;
 internal sealed class RemoveFavoriteCommandHandler(
     IFavoriteRepository favoriteRepository,
     ISocialUnitOfWork unitOfWork,
+    HybridCache cache,
     TimeProvider timeProvider,
     ILogger<RemoveFavoriteCommandHandler> logger)
     : IRequestHandler<RemoveFavoriteCommand, Result>
@@ -28,6 +31,7 @@ internal sealed class RemoveFavoriteCommandHandler(
 
         favorite.Remove(timeProvider);
         await unitOfWork.SaveChangesAsync(ct);
+        await cache.RemoveByTagAsync(SocialCacheKeys.FavoritesTag(request.UserId), ct).ConfigureAwait(false);
 
         logger.LogInformation("User {UserId} removed favorite for {EntityType}:{EntityId}",
             request.UserId, request.EntityType, request.EntityId);

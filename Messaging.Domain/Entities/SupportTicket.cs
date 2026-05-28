@@ -119,11 +119,11 @@ public sealed class SupportTicket : AuditableEntity, IAggregateRoot
     }
 
     /// <summary>Adds a message from user or staff. Staff messages may be internal.</summary>
-    public void AddMessage(Guid authorUserId, string body, bool isInternal)
+    public void AddMessage(Guid authorUserId, string body, bool isInternal, TimeProvider timeProvider)
     {
         if (string.IsNullOrWhiteSpace(body)) throw new ArgumentException("Body required.", nameof(body));
 
-        var msg = new TicketMessage(Id, authorUserId, body.Trim(), isInternal);
+        var msg = new TicketMessage(Id, authorUserId, body.Trim(), isInternal, timeProvider);
         _ticketMessages.Add(msg);
 
         if (Status == TicketStatus.AwaitingUser && authorUserId == CreatedByUserId)

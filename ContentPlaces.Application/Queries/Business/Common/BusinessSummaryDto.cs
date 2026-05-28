@@ -15,3 +15,18 @@ public sealed record BusinessSummaryDto(
     bool IsVerified,
     bool IsFeatured,
     string? PrimaryImageUrl);
+
+public sealed record NearbyBusinessSummaryDto(
+    Guid Id,
+    string Name,
+    string Slug,
+    string BusinessType,
+    decimal Latitude,
+    decimal Longitude,
+    string? City,
+    string? Country,
+    decimal AverageRating,
+    int ReviewCount,
+    bool IsVerified,
+    bool IsFeatured,
+    double DistanceKm);

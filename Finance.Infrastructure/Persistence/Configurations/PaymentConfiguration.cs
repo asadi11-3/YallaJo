@@ -15,7 +15,6 @@ public class PaymentConfiguration : IEntityTypeConfiguration<Payment>
 
         builder.Property(x => x.UserId).IsRequired();
         builder.Property(x => x.BookingId).IsRequired(false);
-        builder.Property(x => x.ReservationId).IsRequired(false);
 
         builder.OwnsOne(x => x.Amount, money =>
         {

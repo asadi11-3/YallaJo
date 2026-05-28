@@ -324,14 +324,15 @@ public sealed class BlogTests : DomainTestBase
     // ── Feature / Unfeature ───────────────────────────────────────────────────
 
     [Fact]
-    public void Blog_MarkAsFeatured_FromPublished_SetsIsFeaturedAndRaisesEvent()
+    public void Blog_Feature_FromPublished_SetsIsFeaturedAndRaisesEvent()
     {
         var blog = TestBlogFactory.CreatePublished();
         blog.ClearDomainEvents();
         var now = new DateTime(2026, 6, 1, 12, 0, 0, DateTimeKind.Utc);
 
-        blog.MarkAsFeatured(now);
+        var result = blog.Feature(Guid.Empty, now);
 
+        result.IsSuccess.Should().BeTrue();
         blog.IsFeatured.Should().BeTrue();
         blog.UpdatedAt.Should().Be(now);
 
@@ -342,51 +343,49 @@ public sealed class BlogTests : DomainTestBase
     }
 
     [Fact]
-    public void Blog_MarkAsFeatured_FromDraft_ThrowsInvalidTransition()
+    public void Blog_Feature_FromDraft_ReturnsFailure()
     {
         var blog = TestBlogFactory.CreateDraft();
 
-        var act = () => blog.MarkAsFeatured(DateTime.UtcNow);
+        var result = blog.Feature(Guid.Empty, DateTime.UtcNow);
 
-        act.Should().Throw<InvalidOperationException>()
-            .WithMessage("*InvalidTransition*");
+        result.IsSuccess.Should().BeFalse();
         blog.IsFeatured.Should().BeFalse();
     }
 
     [Fact]
-    public void Blog_MarkAsFeatured_FromArchived_ThrowsInvalidTransition()
+    public void Blog_Feature_FromArchived_ReturnsFailure()
     {
         var blog = TestBlogFactory.CreateArchived();
 
-        var act = () => blog.MarkAsFeatured(DateTime.UtcNow);
+        var result = blog.Feature(Guid.Empty, DateTime.UtcNow);
 
-        act.Should().Throw<InvalidOperationException>()
-            .WithMessage("*InvalidTransition*");
+        result.IsSuccess.Should().BeFalse();
         blog.IsFeatured.Should().BeFalse();
     }
 
     [Fact]
-    public void Blog_MarkAsFeatured_WhenAlreadyFeatured_ThrowsInvalidTransition()
+    public void Blog_Feature_WhenAlreadyFeatured_ReturnsFailure()
     {
         var blog = TestBlogFactory.CreatePublished();
-        blog.MarkAsFeatured(DateTime.UtcNow);
+        blog.Feature(Guid.Empty, DateTime.UtcNow);
 
-        var act = () => blog.MarkAsFeatured(DateTime.UtcNow.AddSeconds(1));
+        var result = blog.Feature(Guid.Empty, DateTime.UtcNow.AddSeconds(1));
 
-        act.Should().Throw<InvalidOperationException>()
-            .WithMessage("*already featured*");
+        result.IsSuccess.Should().BeFalse();
     }
 
     [Fact]
-    public void Blog_MarkAsUnfeatured_FromFeaturedPublished_ClearsIsFeaturedAndRaisesEvent()
+    public void Blog_Unfeature_FromFeaturedPublished_ClearsIsFeaturedAndRaisesEvent()
     {
         var blog = TestBlogFactory.CreatePublished();
-        blog.MarkAsFeatured(DateTime.UtcNow);
+        blog.Feature(Guid.Empty, DateTime.UtcNow);
         blog.ClearDomainEvents();
         var now = new DateTime(2026, 6, 2, 12, 0, 0, DateTimeKind.Utc);
 
-        blog.MarkAsUnfeatured(now);
+        var result = blog.Unfeature(now);
 
+        result.IsSuccess.Should().BeTrue();
         blog.IsFeatured.Should().BeFalse();
         blog.UpdatedAt.Should().Be(now);
 
@@ -396,53 +395,52 @@ public sealed class BlogTests : DomainTestBase
     }
 
     [Fact]
-    public void Blog_MarkAsUnfeatured_FromFeaturedArchived_Succeeds()
+    public void Blog_Unfeature_FromFeaturedArchived_Succeeds()
     {
         // D2: Unfeature is allowed even when the blog is Archived (admins must
         // be able to clear the flag on archived content).
         var blog = TestBlogFactory.CreatePublished();
-        blog.MarkAsFeatured(DateTime.UtcNow);
+        blog.Feature(Guid.Empty, DateTime.UtcNow);
         blog.Archive(DateTime.UtcNow.AddMinutes(1));
         blog.ClearDomainEvents();
 
-        var act = () => blog.MarkAsUnfeatured(DateTime.UtcNow.AddMinutes(2));
+        var result = blog.Unfeature(DateTime.UtcNow.AddMinutes(2));
 
-        act.Should().NotThrow();
+        result.IsSuccess.Should().BeTrue();
         blog.IsFeatured.Should().BeFalse();
         DomainEventAssertions.ShouldContainDomainEvent<BlogUnfeaturedDomainEvent>(blog);
     }
 
     [Fact]
-    public void Blog_MarkAsUnfeatured_WhenNotFeatured_ThrowsInvalidTransition()
+    public void Blog_Unfeature_WhenNotFeatured_ReturnsFailure()
     {
         var blog = TestBlogFactory.CreatePublished();
 
-        var act = () => blog.MarkAsUnfeatured(DateTime.UtcNow);
+        var result = blog.Unfeature(DateTime.UtcNow);
 
-        act.Should().Throw<InvalidOperationException>()
-            .WithMessage("*not currently featured*");
+        result.IsSuccess.Should().BeFalse();
     }
 
     [Fact]
-    public void Blog_MarkAsFeatured_UpdatesUpdatedAt()
+    public void Blog_Feature_UpdatesUpdatedAt()
     {
         var blog = TestBlogFactory.CreatePublished();
         var before = blog.UpdatedAt;
         var now = (before ?? DateTime.UtcNow).AddDays(1);
 
-        blog.MarkAsFeatured(now);
+        blog.Feature(Guid.Empty, now);
 
         blog.UpdatedAt.Should().Be(now);
     }
 
     [Fact]
-    public void Blog_MarkAsUnfeatured_UpdatesUpdatedAt()
+    public void Blog_Unfeature_UpdatesUpdatedAt()
     {
         var blog = TestBlogFactory.CreatePublished();
-        blog.MarkAsFeatured(DateTime.UtcNow);
+        blog.Feature(Guid.Empty, DateTime.UtcNow);
         var now = DateTime.UtcNow.AddDays(1);
 
-        blog.MarkAsUnfeatured(now);
+        blog.Unfeature(now);
 
         blog.UpdatedAt.Should().Be(now);
     }
@@ -540,7 +538,7 @@ public sealed class BlogTests : DomainTestBase
         // collision.  Per-PlaceId uniqueness re-check is the handler's job
         // (plan D2), not the aggregate's.
         var blog = TestBlogFactory.CreatePublished();
-        blog.MarkAsFeatured(DateTime.UtcNow);
+        blog.Feature(Guid.Empty, DateTime.UtcNow);
         blog.Delete(DateTime.UtcNow.AddMinutes(1));
         blog.ClearDomainEvents();
 
@@ -637,12 +635,12 @@ public sealed class BlogTests : DomainTestBase
         {
             case BlogStatus.Published:
                 blog.Publish(new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc));
-                blog.MarkAsFeatured(DateTime.UtcNow);
+                blog.Feature(Guid.Empty, DateTime.UtcNow);
                 expectedPublishedAt = blog.PublishedAt;
                 break;
             case BlogStatus.Archived:
                 blog.Publish(new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc));
-                blog.MarkAsFeatured(DateTime.UtcNow);
+                blog.Feature(Guid.Empty, DateTime.UtcNow);
                 blog.Archive(DateTime.UtcNow.AddMinutes(1));
                 expectedPublishedAt = blog.PublishedAt;
                 break;

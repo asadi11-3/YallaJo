@@ -12,11 +12,6 @@ using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
 namespace ContentPlaces.Tests.Unit;
 
-// BOOKING-P0-FIX-001 #7 reconcile: production AddBusinessStaffCommandHandler at HEAD does
-// not inject ICurrentUser; authorisation flows through command.ActingUserId. Tests that
-// previously asserted Auth.Unauthorized / Auth.Forbidden outcomes are kept compiling but
-// marked Skip until a future ContentPlaces refactor rewrites them. Tests that still match
-// production semantics (NotFound when business missing, Duplicate, Success) remain active.
 public sealed class AddBusinessStaffCommandHandlerTests
 {
     private static (
@@ -38,12 +33,6 @@ public sealed class AddBusinessStaffCommandHandlerTests
         return (handler, staffRepo, businessRepo, uow);
     }
 
-    [Fact(Skip = "Auth.Unauthorized emitted by old handler — out of Booking P0 scope.")]
-    public async Task ReturnsUnauthorizedWhenNotAuthenticated()
-    {
-        await Task.CompletedTask;
-    }
-
     [Fact]
     public async Task ReturnsNotFoundWhenBusinessMissing()
     {
@@ -57,12 +46,27 @@ public sealed class AddBusinessStaffCommandHandlerTests
             CancellationToken.None);
 
         result.IsSuccess.Should().BeFalse();
+        result.Errors.Should().ContainSingle(x => x.Code == "NotFound.Business.NotFound");
     }
 
-    [Fact(Skip = "Auth.Forbidden emitted by old handler — out of Booking P0 scope.")]
-    public async Task ReturnsForbiddenWhenStandardUserIsNotOwner()
+    [Fact]
+    public async Task ReturnsForbiddenWhenActingUserIsNotOwner()
     {
-        await Task.CompletedTask;
+        var (handler, _, businessRepo, _) = BuildSubject();
+        var ownerId = Guid.NewGuid();
+        var callerId = Guid.NewGuid();
+        var business = TestBusinessFactory.CreateBusiness(ownerId);
+
+        businessRepo
+            .GetByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
+            .Returns(business);
+
+        var result = await handler.Handle(
+            new AddBusinessStaffCommand(business.Id, callerId, Guid.NewGuid(), BusinessStaffRole.Staff),
+            CancellationToken.None);
+
+        result.IsSuccess.Should().BeFalse();
+        result.Errors.Should().ContainSingle(x => x.Code == "Business.Forbidden");
     }
 
     [Fact]
@@ -86,10 +90,11 @@ public sealed class AddBusinessStaffCommandHandlerTests
             CancellationToken.None);
 
         result.IsSuccess.Should().BeFalse();
+        result.Errors.Should().ContainSingle(x => x.Code == "BusinessStaff.Duplicate.Conflict");
     }
 
     [Fact]
-    public async Task SucceedsWhenCallerIsOwner()
+    public async Task SucceedsWhenActingUserIsOwner()
     {
         var (handler, staffRepo, businessRepo, uow) = BuildSubject();
         var ownerId = Guid.NewGuid();
@@ -109,17 +114,8 @@ public sealed class AddBusinessStaffCommandHandlerTests
             CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
+        result.Outcome.Should().Be(Outcome.Created);
         await staffRepo.Received(1).AddAsync(Arg.Any<BusinessStaff>(), Arg.Any<CancellationToken>());
         await uow.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
-    }
-
-    [Theory(Skip = "Admin-tier authorisation moved to endpoint metadata — out of Booking P0 scope.")]
-    [InlineData("Admin")]
-    [InlineData("SuperAdmin")]
-    [InlineData("Owner")]
-    public async Task SucceedsWhenCallerHasAdminTierRole(string role)
-    {
-        _ = role;
-        await Task.CompletedTask;
     }
 }

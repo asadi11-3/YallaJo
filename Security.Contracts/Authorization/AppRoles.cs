@@ -32,13 +32,15 @@ namespace Security.Contracts.Authorization
         public const string SuperAdmin = nameof(SuperAdmin);
         public const string Owner = nameof(Owner);
         public const string User = nameof(User);
+        public const string Provider = nameof(Provider);
         public const string TourGuide = nameof(TourGuide);
+        public const string Creator = nameof(Creator);
         public const string Guest = nameof(Guest);
 
         public static IReadOnlyList<string> AllRoles { get; } = new[]
-            { SuperAdmin, Admin, Owner, User, TourGuide, Guest };
+            { SuperAdmin, Admin, Owner, Provider, TourGuide, Creator, User, Guest };
 
-        public static IReadOnlyList<string> DefaultRoles { get; } = new[] { User };
+        public static IReadOnlyList<string> DefaultRoles { get; } = new[] { Guest };
 
         public static IReadOnlyList<string> ProtectedRoles { get; } = new[] { SuperAdmin, Owner };
 
@@ -72,6 +74,8 @@ namespace Security.Contracts.Authorization
 
             if (roleName.Equals(User, StringComparison.OrdinalIgnoreCase)
                 || roleName.Equals(TourGuide, StringComparison.OrdinalIgnoreCase)
+                || roleName.Equals(Provider, StringComparison.OrdinalIgnoreCase)
+                || roleName.Equals(Creator, StringComparison.OrdinalIgnoreCase)
                 || roleName.Equals(Guest, StringComparison.OrdinalIgnoreCase))
             {
                 return RolePrivilegeLevel.Standard;

@@ -1,5 +1,6 @@
 using Booking.Application.Interfaces;
 using Booking.Contracts.Authorization;
+using Booking.Contracts.Services;
 using Booking.Domain.Repositories;
 using Booking.Infrastructure.BackgroundServices;
 using Booking.Infrastructure.BackgroundServices.Options;
@@ -53,6 +54,7 @@ public static class DependencyInjection
         services.AddScoped<IJoinRequestRepository, JoinRequestRepository>();
         services.AddScoped<IProviderDocumentRepository, ProviderDocumentRepository>();
         services.AddScoped<ISlotLockRepository, SlotLockRepository>();
+        services.AddScoped<IGuideDiscountRepository, GuideDiscountRepository>();
         services.AddScoped<IBookingOutboxWriter, BookingOutboxWriter>();
 
         // ── Permission catalog ───────────────────────────────────────────────
@@ -62,32 +64,33 @@ public static class DependencyInjection
         // Owned & implemented here so consumers (ContentCore, etc.) depend only on
         // Booking.Contracts and never on the Booking schema directly.
         services.AddScoped<ITourGuideOwnershipService, TourGuideOwnershipService>();
+        services.AddScoped<IGuideBookingAnalyticsReader, GuideBookingAnalyticsReader>();
 
         // ── Booking-engine services ──────────────────────────────────────────
         services.AddScoped<IBookingReferenceGenerator, BookingReferenceGenerator>();
 
         // ── Cross-module snapshot readers ────────────────────────────────────
-        // TODO: Swap these stubs for the real snapshot readers when:
-        //   * ContentTours ships the booking.TourSnapshots inbox handler
-        //     (replace IBookingTourSnapshotReader + IBookingPricingSnapshotReader)
-        //   * Identity ships the booking.ProviderSnapshots inbox handler
-        //     (replace IBookingProviderSnapshotReader)
-        //   * Promotions module is built
-        //     (replace IDiscountEvaluator)
-        //
-        // The stubs return XOR-derived FAKE snapshots for any non-empty GUID, which is
-        // acceptable for Development but UNSAFE for Production. We pick the wiring based on
-        // the hosting environment + an explicit opt-in flag:
-        //   * Development                             → stubs.
-        //   * Non-Development + AllowStubSnapshotReaders=true → stubs.
-        //   * Anything else (incl. null env)          → throwing impls that fail fast at
-        //                                                first call with a clear error.
-        var allowStubsFlag = string.Equals(
-            configuration["Booking:AllowStubSnapshotReaders"],
+        // Real DB-backed readers are the default. Snapshots are populated via inbox
+        // handlers listening to ContentTours/Accounts events. For Development we can
+        // opt-in to stub readers (XOR-derived fake snapshots) so the app boots even
+        // before inbox handlers have populated data:
+        //   * Booking:UseStubSnapshotReaders=true → stubs (any environment, explicit).
+        //   * Development environment + no flag    → stubs (convenience default).
+        //   * Any other case                       → real DB-backed readers.
+        // IDiscountEvaluator remains NoOp until the Promotions module is built.
+        // IBookingCommissionLookup remains stub until Finance.CommissionRule is wired cross-module.
+        var stubsExplicitlyEnabled = string.Equals(
+            configuration["Booking:UseStubSnapshotReaders"],
             "true",
             StringComparison.OrdinalIgnoreCase);
-        var useStubs = allowStubsFlag
-            || (hostEnvironment is not null && hostEnvironment.IsDevelopment());
+        var stubsExplicitlyDisabled = string.Equals(
+            configuration["Booking:UseStubSnapshotReaders"],
+            "false",
+            StringComparison.OrdinalIgnoreCase);
+        var useStubs = stubsExplicitlyEnabled
+            || (!stubsExplicitlyDisabled
+                && hostEnvironment is not null
+                && hostEnvironment.IsDevelopment());
 
         if (useStubs)
         {
@@ -97,18 +100,19 @@ public static class DependencyInjection
         }
         else
         {
-            services.AddScoped<IBookingTourSnapshotReader, ThrowingBookingTourSnapshotReader>();
-            services.AddScoped<IBookingProviderSnapshotReader, ThrowingBookingProviderSnapshotReader>();
-            services.AddScoped<IBookingPricingSnapshotReader, ThrowingBookingPricingSnapshotReader>();
+            services.AddScoped<IBookingTourSnapshotReader, BookingTourSnapshotReader>();
+            services.AddScoped<IBookingProviderSnapshotReader, BookingProviderSnapshotReader>();
+            services.AddScoped<IBookingPricingSnapshotReader, BookingPricingSnapshotReader>();
         }
 
         services.AddScoped<IDiscountEvaluator, NoOpDiscountEvaluator>();
         services.AddScoped<IBookingCommissionLookup, StubBookingCommissionLookup>();
 
-        // ── Background services (TASK 7) ─────────────────────────────────────
+        // ── Background services ──────────────────────────────────────────────
         // Singleton liveness tracker consumed by BookingBgServicesHealthCheck (registered in API host).
         services.TryAddSingleton<IBookingBackgroundServiceStatusStore, BookingBackgroundServiceStatusStore>();
 
+        // Master-aligned services with strongly-typed Options classes.
         services.Configure<SlotLockCleanupOptions>(opts =>
         {
             var section = configuration.GetSection(SlotLockCleanupOptions.SectionName);
@@ -152,6 +156,60 @@ public static class DependencyInjection
         services.AddHostedService<ProviderAutoAcceptService>();
         services.AddHostedService<BookingAutoExpireService>();
         services.AddHostedService<SlotLockCleanupService>();       // stops last
+
+        // ── Additional background services (workflow expansion) ──────────────
+        services.Configure<JoinRequestExpiryOptions>(opts =>
+        {
+            var section = configuration.GetSection(JoinRequestExpiryOptions.SectionName);
+            ApplyBool(section, nameof(JoinRequestExpiryOptions.Enabled), value => opts.Enabled = value);
+            ApplyTimeSpan(section, nameof(JoinRequestExpiryOptions.InitialDelay), value => opts.InitialDelay = value);
+            ApplyTimeSpan(section, nameof(JoinRequestExpiryOptions.PollInterval), value => opts.PollInterval = value);
+            ApplyInt(section, nameof(JoinRequestExpiryOptions.BatchSize), value => opts.BatchSize = value);
+        });
+        services.AddHostedService<JoinRequestExpiryService>();
+
+        services.Configure<BookingAutoCompleteOptions>(opts =>
+        {
+            var section = configuration.GetSection(BookingAutoCompleteOptions.SectionName);
+            ApplyBool(section, nameof(BookingAutoCompleteOptions.Enabled), value => opts.Enabled = value);
+            ApplyTimeSpan(section, nameof(BookingAutoCompleteOptions.InitialDelay), value => opts.InitialDelay = value);
+            ApplyTimeSpan(section, nameof(BookingAutoCompleteOptions.PollInterval), value => opts.PollInterval = value);
+            ApplyInt(section, nameof(BookingAutoCompleteOptions.BatchSize), value => opts.BatchSize = value);
+        });
+        services.AddHostedService<BookingAutoCompleteService>();
+
+        services.Configure<SlotGenerationOptions>(opts =>
+        {
+            var section = configuration.GetSection(SlotGenerationOptions.SectionName);
+            ApplyBool(section, nameof(SlotGenerationOptions.Enabled), value => opts.Enabled = value);
+            ApplyTimeSpan(section, nameof(SlotGenerationOptions.InitialDelay), value => opts.InitialDelay = value);
+            ApplyTimeSpan(section, nameof(SlotGenerationOptions.PollInterval), value => opts.PollInterval = value);
+            ApplyInt(section, nameof(SlotGenerationOptions.WindowDays), value => opts.WindowDays = value);
+            ApplyInt(section, nameof(SlotGenerationOptions.DefaultMaxCapacity), value => opts.DefaultMaxCapacity = value);
+        });
+        services.AddHostedService<SlotGenerationService>();
+
+        services.Configure<BookingReminderOptions>(opts =>
+        {
+            var section = configuration.GetSection(BookingReminderOptions.SectionName);
+            ApplyBool(section, nameof(BookingReminderOptions.Enabled), value => opts.Enabled = value);
+            ApplyTimeSpan(section, nameof(BookingReminderOptions.InitialDelay), value => opts.InitialDelay = value);
+            ApplyTimeSpan(section, nameof(BookingReminderOptions.PollInterval), value => opts.PollInterval = value);
+            ApplyInt(section, nameof(BookingReminderOptions.ReminderHoursBeforeStart), value => opts.ReminderHoursBeforeStart = value);
+            ApplyInt(section, nameof(BookingReminderOptions.BatchSize), value => opts.BatchSize = value);
+        });
+        services.AddHostedService<BookingReminderService>();
+
+        services.Configure<SlotCleanupOptions>(opts =>
+        {
+            var section = configuration.GetSection(SlotCleanupOptions.SectionName);
+            ApplyBool(section, nameof(SlotCleanupOptions.Enabled), value => opts.Enabled = value);
+            ApplyTimeSpan(section, nameof(SlotCleanupOptions.InitialDelay), value => opts.InitialDelay = value);
+            ApplyTimeSpan(section, nameof(SlotCleanupOptions.PollInterval), value => opts.PollInterval = value);
+            ApplyInt(section, nameof(SlotCleanupOptions.RetentionDays), value => opts.RetentionDays = value);
+            ApplyInt(section, nameof(SlotCleanupOptions.BatchSize), value => opts.BatchSize = value);
+        });
+        services.AddHostedService<SlotCleanupService>();
 
         return services;
     }

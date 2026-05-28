@@ -3,17 +3,21 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Social.Application.Commands.AddReviewReply;
+using Social.Application.Commands.AddHelpfulVote;
 using Social.Application.Commands.ApproveReview;
 using Social.Application.Commands.CreateReview;
 using Social.Application.Commands.DeleteReview;
 using Social.Application.Commands.DeleteReviewReply;
 using Social.Application.Commands.EditReview;
+using Social.Application.Commands.RemoveHelpfulVote;
 using Social.Application.Commands.RemoveReview;
 using Social.Application.Commands.SubmitReport;
 using Social.Application.Commands.UpdateReviewReply;
 using Social.Application.Queries.Dtos;
 using Social.Application.Queries.GetFlaggedReviews;
 using Social.Application.Queries.GetMyReviews;
+using Social.Application.Queries.GetPublicReviews;
+using Social.Application.Queries.GetRatingSummary;
 using Social.Contracts.Authorization;
 using Social.Domain.Enums;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
@@ -34,10 +38,7 @@ internal static class ReviewEndpoints
             ISender sender,
             CancellationToken ct) =>
         {
-            if (!currentUser.IsAuthenticated || currentUser.UserId is null)
-                return Results.Problem(statusCode: StatusCodes.Status401Unauthorized);
-
-            var result = await sender.Send(request.ToCommand(currentUser.UserId.Value), ct);
+            var result = await sender.Send(request.ToCommand(currentUser.UserId!.Value), ct);
             return result.ToApiResult();
         })
         .WithName("CreateReview")
@@ -60,10 +61,7 @@ internal static class ReviewEndpoints
             ISender sender,
             CancellationToken ct) =>
         {
-            if (!currentUser.IsAuthenticated || currentUser.UserId is null)
-                return Results.Problem(statusCode: StatusCodes.Status401Unauthorized);
-
-            var result = await sender.Send(request.ToCommand(id, currentUser.UserId.Value), ct);
+            var result = await sender.Send(request.ToCommand(id, currentUser.UserId!.Value), ct);
             return result.ToApiResult();
         })
         .WithName("EditReview")
@@ -86,11 +84,8 @@ internal static class ReviewEndpoints
             ISender sender,
             CancellationToken ct) =>
         {
-            if (!currentUser.IsAuthenticated || currentUser.UserId is null)
-                return Results.Problem(statusCode: StatusCodes.Status401Unauthorized);
-
             var isAdmin = currentUser.HasPermission($"Permission.{SocialFeatures.AdminModerationQueue}.{AppAction.Remove}");
-            var result = await sender.Send(new DeleteReviewCommand(id, currentUser.UserId.Value, isAdmin), ct);
+            var result = await sender.Send(new DeleteReviewCommand(id, currentUser.UserId!.Value, isAdmin), ct);
             return result.ToApiResult();
         })
         .WithName("DeleteReview")
@@ -111,10 +106,7 @@ internal static class ReviewEndpoints
             ISender sender,
             CancellationToken ct) =>
         {
-            if (!currentUser.IsAuthenticated || currentUser.UserId is null)
-                return Results.Problem(statusCode: StatusCodes.Status401Unauthorized);
-
-            var result = await sender.Send(new AddReviewReplyCommand(id, currentUser.UserId.Value, request.Content), ct);
+            var result = await sender.Send(new AddReviewReplyCommand(id, currentUser.UserId!.Value, request.Content), ct);
             return result.ToApiResult();
         })
         .WithName("AddReviewReply")
@@ -136,11 +128,8 @@ internal static class ReviewEndpoints
             ISender sender,
             CancellationToken ct) =>
         {
-            if (!currentUser.IsAuthenticated || currentUser.UserId is null)
-                return Results.Problem(statusCode: StatusCodes.Status401Unauthorized);
-
             var result = await sender.Send(
-                new UpdateReviewReplyCommand(id, replyId, currentUser.UserId.Value, request.Content), ct);
+                new UpdateReviewReplyCommand(id, replyId, currentUser.UserId!.Value, request.Content), ct);
             return result.ToApiResult();
         })
         .WithName("UpdateReviewReply")
@@ -162,12 +151,9 @@ internal static class ReviewEndpoints
             ISender sender,
             CancellationToken ct) =>
         {
-            if (!currentUser.IsAuthenticated || currentUser.UserId is null)
-                return Results.Problem(statusCode: StatusCodes.Status401Unauthorized);
-
             var isAdmin = currentUser.HasPermission($"Permission.{SocialFeatures.AdminModerationQueue}.{AppAction.Remove}");
             var result = await sender.Send(
-                new DeleteReviewReplyCommand(id, replyId, currentUser.UserId.Value, isAdmin), ct);
+                new DeleteReviewReplyCommand(id, replyId, currentUser.UserId!.Value, isAdmin), ct);
             return result.ToApiResult();
         })
         .WithName("DeleteReviewReply")
@@ -187,11 +173,8 @@ internal static class ReviewEndpoints
             int pageSize,
             CancellationToken ct) =>
         {
-            if (!currentUser.IsAuthenticated || currentUser.UserId is null)
-                return Results.Problem(statusCode: StatusCodes.Status401Unauthorized);
-
             Guid? afterCursor = Guid.TryParse(cursor, out var g) ? g : null;
-            var result = await sender.Send(new GetMyReviewsQuery(currentUser.UserId.Value, afterCursor, pageSize <= 0 ? 20 : pageSize), ct);
+            var result = await sender.Send(new GetMyReviewsQuery(currentUser.UserId!.Value, afterCursor, pageSize <= 0 ? 20 : pageSize), ct);
             return result.ToApiResult();
         })
         .WithName("GetMyReviews")
@@ -200,6 +183,94 @@ internal static class ReviewEndpoints
         .Produces<ReviewPageDto>(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status401Unauthorized)
         .WithMetadata(new MustHavePermissionAttribute(SocialFeatures.Review, AppAction.Read))
+        .RequireAuthorization();
+
+        // GET /api/v1/reviews — Public review list for an entity
+        group.MapGet("/", async (
+            ReviewTargetType entityType,
+            Guid entityId,
+            int page,
+            int pageSize,
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            var result = await sender.Send(new GetPublicReviewsQuery(entityType, entityId, page <= 0 ? 1 : page, pageSize <= 0 ? 20 : pageSize), ct);
+            return result.ToApiResult();
+        })
+        .WithName("GetPublicReviews")
+        .WithSummary("Public: list reviews for an entity")
+        .WithTags("Reviews")
+        .Produces<PublicReviewPageDto>(StatusCodes.Status200OK)
+        .AllowAnonymous();
+
+        // GET /api/v1/social/reviews/{entityType}/{entityId} — Public review list for an entity
+        group.MapGet("/{entityType}/{entityId:guid}", async (
+            ReviewTargetType entityType,
+            Guid entityId,
+            int page,
+            int pageSize,
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            var result = await sender.Send(new GetPublicReviewsQuery(entityType, entityId, page <= 0 ? 1 : page, pageSize <= 0 ? 20 : pageSize), ct);
+            return result.ToApiResult();
+        })
+        .WithName("GetPublicReviewsByEntity")
+        .WithSummary("Public: list approved reviews for an entity")
+        .WithTags("Reviews")
+        .Produces<PublicReviewPageDto>(StatusCodes.Status200OK)
+        .AllowAnonymous();
+
+        // GET /api/v1/reviews/ratings — Public rating summary for an entity
+        group.MapGet("/ratings", async (
+            ReviewTargetType entityType,
+            Guid entityId,
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            var result = await sender.Send(new GetRatingSummaryQuery(entityType, entityId), ct);
+            return result.ToApiResult();
+        })
+        .WithName("GetRatingSummary")
+        .WithSummary("Public: get rating summary for an entity")
+        .WithTags("Reviews")
+        .Produces<RatingSummaryDto>(StatusCodes.Status200OK)
+        .AllowAnonymous();
+
+        // POST /api/v1/reviews/{id}/helpful — Helpful vote
+        group.MapPost("/{id:guid}/helpful", async (
+            Guid id,
+            ICurrentUser currentUser,
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            var result = await sender.Send(new AddHelpfulVoteCommand(id, currentUser.UserId!.Value), ct);
+            return result.ToApiResult();
+        })
+        .WithName("AddReviewHelpfulVote")
+        .WithSummary("Mark a review as helpful")
+        .WithTags("Reviews")
+        .Produces(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status409Conflict)
+        .WithMetadata(new MustHavePermissionAttribute(SocialFeatures.Review, AppAction.Vote))
+        .RequireAuthorization();
+
+        // DELETE /api/v1/reviews/{id}/helpful — Remove helpful vote
+        group.MapDelete("/{id:guid}/helpful", async (
+            Guid id,
+            ICurrentUser currentUser,
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            var result = await sender.Send(new RemoveHelpfulVoteCommand(id, currentUser.UserId!.Value), ct);
+            return result.ToApiResult();
+        })
+        .WithName("RemoveReviewHelpfulVote")
+        .WithSummary("Remove helpful vote from a review")
+        .WithTags("Reviews")
+        .Produces(StatusCodes.Status200OK)
+        .WithMetadata(new MustHavePermissionAttribute(SocialFeatures.Review, AppAction.Vote))
         .RequireAuthorization();
 
         // GET /api/v1/reviews/admin/flagged — Admin: list flagged/awaiting-moderation reviews
@@ -264,12 +335,9 @@ internal static class ReviewAdminEndpoints
             ISender sender,
             CancellationToken ct) =>
         {
-            if (!currentUser.IsAuthenticated || currentUser.UserId is null)
-                return Results.Problem(statusCode: StatusCodes.Status401Unauthorized);
-
             var result = await sender.Send(
                 new SubmitReportCommand(
-                    currentUser.UserId.Value,
+                    currentUser.UserId!.Value,
                     ReportableEntityType.Review,
                     id,
                     request.Reason,
@@ -296,11 +364,8 @@ internal static class ReviewAdminEndpoints
             ISender sender,
             CancellationToken ct) =>
         {
-            if (!currentUser.IsAuthenticated || currentUser.UserId is null)
-                return Results.Problem(statusCode: StatusCodes.Status401Unauthorized);
-
             var result = await sender.Send(
-                new ApproveReviewCommand(currentUser.UserId.Value, id, request?.Notes), ct);
+                new ApproveReviewCommand(currentUser.UserId!.Value, id, request?.Notes), ct);
 
             return result.ToApiResult();
         })
@@ -323,11 +388,8 @@ internal static class ReviewAdminEndpoints
             ISender sender,
             CancellationToken ct) =>
         {
-            if (!currentUser.IsAuthenticated || currentUser.UserId is null)
-                return Results.Problem(statusCode: StatusCodes.Status401Unauthorized);
-
             var result = await sender.Send(
-                new RemoveReviewCommand(currentUser.UserId.Value, id, request?.Notes), ct);
+                new RemoveReviewCommand(currentUser.UserId!.Value, id, request?.Notes), ct);
 
             return result.ToApiResult();
         })

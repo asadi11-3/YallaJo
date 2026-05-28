@@ -35,12 +35,7 @@ public sealed class SubmitTourCommandHandler(
     {
         try
         {
-            if (currentUser.UserId is null)
-            {
-                return Result.Failure(
-                    Error.Unauthorized("Authentication is required."),
-                    Outcome.Unauthorized);
-            }
+            
 
             var tour = await tourRepository
                 .GetByIdAsync(request.Id, cancellationToken, asNoTracking: false)
@@ -52,9 +47,7 @@ public sealed class SubmitTourCommandHandler(
                     Outcome.NotFound);
             }
 
-            var isAdminTier = AppRoles.HighestPrivilegeLevel(currentUser.Roles)
-                >= RolePrivilegeLevel.Admin;
-            if (!isAdminTier && tour.CreatedByUserId != currentUser.UserId.Value)
+            if (tour.CreatedByUserId != currentUser.UserId!.Value)
             {
                 return Result.Failure(
                     new Error("Tour.NotOwner", "You do not have permission to submit this tour."),
@@ -125,23 +118,23 @@ public sealed class SubmitTourCommandHandler(
                     "MeetingPoint coordinates are required to submit."));
             }
 
-            // 8. PlaceId still references a non-deleted Place (only when tour has one).
-            if (tour.PlaceId.HasValue)
+            // 8. PlaceId still references a non-deleted Place (always required now).
+            if (tour.PlaceId != Guid.Empty)
             {
                 var status = await placeExistenceService
-                    .GetStatusAsync(tour.PlaceId.Value, cancellationToken)
+                    .GetStatusAsync(tour.PlaceId, cancellationToken)
                     .ConfigureAwait(false);
                 switch (status)
                 {
                     case PlaceExistenceStatus.NotFound:
                         errors.Add(new Error(
                             "Tour.PlaceNotFound",
-                            $"Linked Place '{tour.PlaceId.Value}' no longer exists."));
+                            $"Linked Place '{tour.PlaceId}' no longer exists."));
                         break;
                     case PlaceExistenceStatus.Deleted:
                         errors.Add(new Error(
                             "Tour.PlaceDeleted",
-                            $"Linked Place '{tour.PlaceId.Value}' has been deleted."));
+                            $"Linked Place '{tour.PlaceId}' has been deleted."));
                         break;
                 }
             }

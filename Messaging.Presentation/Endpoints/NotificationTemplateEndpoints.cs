@@ -30,12 +30,9 @@ internal static class NotificationTemplateEndpoints
 
         group.MapPost("/", async (
             CreateTemplateRequest request,
-            ICurrentUser currentUser,
             ISender sender,
             CancellationToken ct) =>
         {
-            if (!currentUser.IsAuthenticated || currentUser.UserId is null)
-                return Result.Failure<Guid>(new Error("NotificationTemplate.Unauthorized", "Not authenticated"), Outcome.Unauthorized).ToApiResult();
             var cmd = new CreateNotificationTemplateCommand(
                 request.Type,
                 request.Channel,
@@ -52,12 +49,9 @@ internal static class NotificationTemplateEndpoints
         group.MapPut("/{id:guid}", async (
             Guid id,
             UpdateTemplateRequest request,
-            ICurrentUser currentUser,
             ISender sender,
             CancellationToken ct) =>
         {
-            if (!currentUser.IsAuthenticated || currentUser.UserId is null)
-                return Result.Failure(new Error("NotificationTemplate.Unauthorized", "Not authenticated"), Outcome.Unauthorized).ToApiResult();
             var cmd = new UpdateNotificationTemplateCommand(id, request.Title, request.Body, request.HtmlBody);
             var result = await sender.Send(cmd, ct);
             return result.ToApiResult();
@@ -67,12 +61,9 @@ internal static class NotificationTemplateEndpoints
 
         group.MapDelete("/{id:guid}", async (
             Guid id,
-            ICurrentUser currentUser,
             ISender sender,
             CancellationToken ct) =>
         {
-            if (!currentUser.IsAuthenticated || currentUser.UserId is null)
-                return Result.Failure(new Error("NotificationTemplate.Unauthorized", "Not authenticated"), Outcome.Unauthorized).ToApiResult();
             var result = await sender.Send(new DeleteNotificationTemplateCommand(id), ct);
             return result.ToApiResult();
         }).WithName("DeleteNotificationTemplate").WithTags("NotificationTemplates")

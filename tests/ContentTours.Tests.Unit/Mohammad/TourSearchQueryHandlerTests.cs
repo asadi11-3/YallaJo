@@ -48,7 +48,7 @@ public sealed class TourSearchQueryHandlerTests
             shortDescription:        null,
             minAge:                  null,
             meetingPoint:            new Location(30.32m, 35.45m),
-            placeId:                 placeId,
+            placeId:                 placeId ?? Guid.NewGuid(),
             isChildFriendly:         isChildFriendly,
             isAccessible:            isAccessible,
             isInstantBooking:        isInstantBooking);

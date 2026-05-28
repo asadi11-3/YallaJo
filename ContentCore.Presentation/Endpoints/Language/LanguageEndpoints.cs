@@ -1,4 +1,7 @@
+using ContentCore.Application.Commands.Language.ActivateLanguage;
 using ContentCore.Application.Commands.Language.CreateLanguage;
+using ContentCore.Application.Commands.Language.DeactivateLanguage;
+using ContentCore.Application.Commands.Language.DeleteLanguage;
 using ContentCore.Application.Commands.Language.UpdateLanguage;
 using ContentCore.Application.Queries.Language.GetLanguageById;
 using ContentCore.Application.Queries.Language.ListLanguages;
@@ -69,6 +72,42 @@ internal static class LanguageEndpoints
         .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Update language settings")
+        .WithMetadata(new MustHavePermissionAttribute(ContentCoreFeatures.Language, AppAction.Update))
+        .RequireAuthorization();
+
+        languages.MapDelete("/{id:guid}", async (Guid id, ISender sender, CancellationToken ct = default) =>
+        {
+            var result = await sender.Send(new DeleteLanguageCommand(id), ct);
+            return result.ToApiResult();
+        })
+        .WithName("DeleteLanguage")
+        .Produces(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .WithSummary("Soft-delete a language")
+        .WithMetadata(new MustHavePermissionAttribute(ContentCoreFeatures.Language, AppAction.Delete))
+        .RequireAuthorization();
+
+        languages.MapPatch("/{id:guid}/activate", async (Guid id, ISender sender, CancellationToken ct = default) =>
+        {
+            var result = await sender.Send(new ActivateLanguageCommand(id), ct);
+            return result.ToApiResult();
+        })
+        .WithName("ActivateLanguage")
+        .Produces(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .WithSummary("Activate a language — idempotent, no-op if already active")
+        .WithMetadata(new MustHavePermissionAttribute(ContentCoreFeatures.Language, AppAction.Update))
+        .RequireAuthorization();
+
+        languages.MapPatch("/{id:guid}/deactivate", async (Guid id, ISender sender, CancellationToken ct = default) =>
+        {
+            var result = await sender.Send(new DeactivateLanguageCommand(id), ct);
+            return result.ToApiResult();
+        })
+        .WithName("DeactivateLanguage")
+        .Produces(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .WithSummary("Deactivate a language — idempotent, no-op if already inactive")
         .WithMetadata(new MustHavePermissionAttribute(ContentCoreFeatures.Language, AppAction.Update))
         .RequireAuthorization();
     }

@@ -11,4 +11,10 @@ public static class ContentToursFeatures
     public const string TourSchedule      = nameof(TourSchedule);
     public const string TourWaypoint      = nameof(TourWaypoint);
     public const string TourChildrenInfo  = nameof(TourChildrenInfo);
+
+    // ── Guide Application / Tour Proposal / Offering ─────────────────────────
+    public const string GuideApplication  = nameof(GuideApplication);
+    public const string TourProposal      = nameof(TourProposal);
+    public const string GuideOffering     = nameof(GuideOffering);
+    public const string TourGuideProfile  = nameof(TourGuideProfile);
 }

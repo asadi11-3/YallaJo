@@ -37,43 +37,33 @@ public sealed class CommandHandlerCacheInvalidationTests
 {
     // ── AddBusinessStaff ────────────────────────────────────────────────────
 
-    // BOOKING-P0-FIX-001 #7 reconcile: production AddBusinessStaffCommandHandler at HEAD no
-    // longer injects ICurrentUser; authorisation flows through command.ActingUserId. The
-    // CurrentUser slot on the tuple is kept (returning Substitute.For<ICurrentUser>()) so
-    // legacy tests can still configure a "caller" — those that asserted Auth.Unauthorized /
-    // Auth.Forbidden are marked Skip below.
     private static (
         AddBusinessStaffCommandHandler Handler,
         IBusinessStaffRepository StaffRepo,
         IBusinessRepository BusinessRepo,
         IContentPlacesUnitOfWork Uow,
-        ICurrentUser CurrentUser,
         HybridCache Cache) BuildAddStaffSubject()
     {
         var staffRepo = Substitute.For<IBusinessStaffRepository>();
         var businessRepo = Substitute.For<IBusinessRepository>();
         var uow = Substitute.For<IContentPlacesUnitOfWork>();
         var outbox = Substitute.For<IContentPlacesOutboxWriter>();
-        var currentUser = Substitute.For<ICurrentUser>();
         var cache = Substitute.For<HybridCache>();
         var logger = Substitute.For<ILogger<AddBusinessStaffCommandHandler>>();
 
         var handler = new AddBusinessStaffCommandHandler(
             staffRepo, businessRepo, uow, outbox, cache, logger);
 
-        return (handler, staffRepo, businessRepo, uow, currentUser, cache);
+        return (handler, staffRepo, businessRepo, uow, cache);
     }
 
     [Fact]
     public async Task AddBusinessStaff_OnSuccess_InvalidatesScopedBizTagAfterSave()
     {
-        var (handler, staffRepo, businessRepo, uow, currentUser, cache) = BuildAddStaffSubject();
+        var (handler, staffRepo, businessRepo, uow, cache) = BuildAddStaffSubject();
         var ownerId = Guid.NewGuid();
         var business = TestBusinessFactory.CreateBusiness(ownerId);
 
-        currentUser.IsAuthenticated.Returns(true);
-        currentUser.UserId.Returns(ownerId);
-        currentUser.Roles.Returns(new[] { AppRoles.User });
         businessRepo
             .GetByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
             .Returns(business);
@@ -98,16 +88,10 @@ public sealed class CommandHandlerCacheInvalidationTests
         await cache.DidNotReceive().RemoveByTagAsync("businesses", Arg.Any<CancellationToken>());
     }
 
-    [Fact(Skip = "Auth.Unauthorized emitted by old handler — out of Booking P0 scope.")]
-    public async Task AddBusinessStaff_OnUnauthorized_DoesNotInvalidateCache()
-    {
-        await Task.CompletedTask;
-    }
-
     [Fact]
     public async Task AddBusinessStaff_OnNotFound_DoesNotInvalidateCache()
     {
-        var (handler, _, businessRepo, uow, _, cache) = BuildAddStaffSubject();
+        var (handler, _, businessRepo, uow, cache) = BuildAddStaffSubject();
         businessRepo
             .GetByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
             .Returns((Business?)null);
@@ -121,10 +105,25 @@ public sealed class CommandHandlerCacheInvalidationTests
         await uow.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
     }
 
-    [Fact(Skip = "Auth.Forbidden emitted by old handler — out of Booking P0 scope.")]
+    [Fact]
     public async Task AddBusinessStaff_OnForbidden_DoesNotInvalidateCache()
     {
-        await Task.CompletedTask;
+        var (handler, _, businessRepo, uow, cache) = BuildAddStaffSubject();
+        var ownerId = Guid.NewGuid();
+        var callerId = Guid.NewGuid();
+        var business = TestBusinessFactory.CreateBusiness(ownerId);
+
+        businessRepo
+            .GetByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
+            .Returns(business);
+
+        var result = await handler.Handle(
+            new AddBusinessStaffCommand(business.Id, callerId, Guid.NewGuid(), BusinessStaffRole.Staff),
+            CancellationToken.None);
+
+        result.IsSuccess.Should().BeFalse();
+        await cache.DidNotReceive().RemoveByTagAsync(Arg.Any<string>(), Arg.Any<CancellationToken>());
+        await uow.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
     }
 
     // ── RemoveBusinessStaff ─────────────────────────────────────────────────
@@ -255,27 +254,24 @@ public sealed class CommandHandlerCacheInvalidationTests
         IBusinessAmenityRepository AmenityRepo,
         IBusinessRepository BusinessRepo,
         IContentPlacesUnitOfWork Uow,
-        ICurrentUser CurrentUser,
         HybridCache Cache) BuildAddAmenitySubject()
     {
         var amenityRepo = Substitute.For<IBusinessAmenityRepository>();
         var businessRepo = Substitute.For<IBusinessRepository>();
         var uow = Substitute.For<IContentPlacesUnitOfWork>();
-        var currentUser = Substitute.For<ICurrentUser>();
         var cache = Substitute.For<HybridCache>();
         var logger = Substitute.For<ILogger<AddBusinessAmenityCommandHandler>>();
 
-        // BOOKING-P0-FIX-001 #7 reconcile: production handler no longer injects ICurrentUser.
         var handler = new AddBusinessAmenityCommandHandler(
             amenityRepo, businessRepo, uow, cache, logger);
 
-        return (handler, amenityRepo, businessRepo, uow, currentUser, cache);
+        return (handler, amenityRepo, businessRepo, uow, cache);
     }
 
     [Fact]
     public async Task AddBusinessAmenity_OnSuccess_InvalidatesScopedBizTagAfterSave()
     {
-        var (handler, amenityRepo, businessRepo, uow, _, cache) = BuildAddAmenitySubject();
+        var (handler, amenityRepo, businessRepo, uow, cache) = BuildAddAmenitySubject();
         var ownerId = Guid.NewGuid();
         var business = TestBusinessFactory.CreateBusiness(ownerId);
 
@@ -301,16 +297,10 @@ public sealed class CommandHandlerCacheInvalidationTests
         await cache.DidNotReceive().RemoveByTagAsync("businesses", Arg.Any<CancellationToken>());
     }
 
-    [Fact(Skip = "Auth.Unauthorized emitted by old handler — out of Booking P0 scope.")]
-    public async Task AddBusinessAmenity_OnUnauthorized_DoesNotInvalidateCache()
-    {
-        await Task.CompletedTask;
-    }
-
     [Fact]
     public async Task AddBusinessAmenity_OnNotFound_DoesNotInvalidateCache()
     {
-        var (handler, _, businessRepo, uow, _, cache) = BuildAddAmenitySubject();
+        var (handler, _, businessRepo, uow, cache) = BuildAddAmenitySubject();
         businessRepo
             .GetByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
             .Returns((Business?)null);
@@ -324,10 +314,25 @@ public sealed class CommandHandlerCacheInvalidationTests
         await uow.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
     }
 
-    [Fact(Skip = "Auth.Forbidden emitted by old handler — out of Booking P0 scope.")]
+    [Fact]
     public async Task AddBusinessAmenity_OnForbidden_DoesNotInvalidateCache()
     {
-        await Task.CompletedTask;
+        var (handler, _, businessRepo, uow, cache) = BuildAddAmenitySubject();
+        var ownerId = Guid.NewGuid();
+        var callerId = Guid.NewGuid();
+        var business = TestBusinessFactory.CreateBusiness(ownerId);
+
+        businessRepo
+            .GetByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
+            .Returns(business);
+
+        var result = await handler.Handle(
+            new AddBusinessAmenityCommand(business.Id, callerId, "WiFi", null, 0),
+            CancellationToken.None);
+
+        result.IsSuccess.Should().BeFalse();
+        await cache.DidNotReceive().RemoveByTagAsync(Arg.Any<string>(), Arg.Any<CancellationToken>());
+        await uow.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
     }
 
     // ── RemoveBusinessAmenity ───────────────────────────────────────────────
@@ -336,20 +341,17 @@ public sealed class CommandHandlerCacheInvalidationTests
         RemoveBusinessAmenityCommandHandler Handler,
         IBusinessAmenityRepository AmenityRepo,
         IContentPlacesUnitOfWork Uow,
-        ICurrentUser CurrentUser,
         HybridCache Cache) BuildRemoveAmenitySubject()
     {
         var amenityRepo = Substitute.For<IBusinessAmenityRepository>();
         var uow = Substitute.For<IContentPlacesUnitOfWork>();
-        var currentUser = Substitute.For<ICurrentUser>();
         var cache = Substitute.For<HybridCache>();
         var logger = Substitute.For<ILogger<RemoveBusinessAmenityCommandHandler>>();
 
-        // BOOKING-P0-FIX-001 #7 reconcile: production handler no longer injects ICurrentUser.
         var handler = new RemoveBusinessAmenityCommandHandler(
             amenityRepo, uow, cache, logger);
 
-        return (handler, amenityRepo, uow, currentUser, cache);
+        return (handler, amenityRepo, uow, cache);
     }
 
     private static AmenityEntity SeedAmenityForBusiness(Guid ownerId)
@@ -367,13 +369,10 @@ public sealed class CommandHandlerCacheInvalidationTests
     [Fact]
     public async Task RemoveBusinessAmenity_OnSuccess_InvalidatesScopedBizTagAfterSave()
     {
-        var (handler, amenityRepo, uow, currentUser, cache) = BuildRemoveAmenitySubject();
+        var (handler, amenityRepo, uow, cache) = BuildRemoveAmenitySubject();
         var ownerId = Guid.NewGuid();
         var amenity = SeedAmenityForBusiness(ownerId);
 
-        currentUser.IsAuthenticated.Returns(true);
-        currentUser.UserId.Returns(ownerId);
-        currentUser.Roles.Returns(new[] { AppRoles.User });
         amenityRepo
             .GetByIdWithBusinessAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
             .Returns(amenity);
@@ -393,16 +392,10 @@ public sealed class CommandHandlerCacheInvalidationTests
         await cache.DidNotReceive().RemoveByTagAsync("businesses", Arg.Any<CancellationToken>());
     }
 
-    [Fact(Skip = "Auth.Unauthorized emitted by old handler — out of Booking P0 scope.")]
-    public async Task RemoveBusinessAmenity_OnUnauthorized_DoesNotInvalidateCache()
-    {
-        await Task.CompletedTask;
-    }
-
     [Fact]
     public async Task RemoveBusinessAmenity_OnNotFound_DoesNotInvalidateCache()
     {
-        var (handler, amenityRepo, uow, _, cache) = BuildRemoveAmenitySubject();
+        var (handler, amenityRepo, uow, cache) = BuildRemoveAmenitySubject();
         amenityRepo
             .GetByIdWithBusinessAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
             .Returns((AmenityEntity?)null);
@@ -416,10 +409,25 @@ public sealed class CommandHandlerCacheInvalidationTests
         await uow.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
     }
 
-    [Fact(Skip = "Auth.Forbidden emitted by old handler — out of Booking P0 scope.")]
+    [Fact]
     public async Task RemoveBusinessAmenity_OnForbidden_DoesNotInvalidateCache()
     {
-        await Task.CompletedTask;
+        var (handler, amenityRepo, uow, cache) = BuildRemoveAmenitySubject();
+        var ownerId = Guid.NewGuid();
+        var callerId = Guid.NewGuid();
+        var amenity = SeedAmenityForBusiness(ownerId);
+
+        amenityRepo
+            .GetByIdWithBusinessAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
+            .Returns(amenity);
+
+        var result = await handler.Handle(
+            new RemoveBusinessAmenityCommand(amenity.Id, callerId),
+            CancellationToken.None);
+
+        result.IsSuccess.Should().BeFalse();
+        await cache.DidNotReceive().RemoveByTagAsync(Arg.Any<string>(), Arg.Any<CancellationToken>());
+        await uow.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
     }
 
     // ── UpdateAccessibilityFeatures ─────────────────────────────────────────
@@ -429,30 +437,26 @@ public sealed class CommandHandlerCacheInvalidationTests
         IAccessibilityFeatureRepository FeatureRepo,
         IPlaceRepository PlaceRepo,
         IContentPlacesUnitOfWork Uow,
-        ICurrentUser CurrentUser,
         HybridCache Cache) BuildUpdateAccessibilitySubject()
     {
         var featureRepo = Substitute.For<IAccessibilityFeatureRepository>();
         var placeRepo = Substitute.For<IPlaceRepository>();
         var uow = Substitute.For<IContentPlacesUnitOfWork>();
-        var currentUser = Substitute.For<ICurrentUser>();
         var cache = Substitute.For<HybridCache>();
         var logger = Substitute.For<ILogger<UpdateAccessibilityFeaturesCommandHandler>>();
 
         var handler = new UpdateAccessibilityFeaturesCommandHandler(
-            featureRepo, placeRepo, uow, currentUser, cache, logger);
+            featureRepo, placeRepo, uow, cache, logger);
 
-        return (handler, featureRepo, placeRepo, uow, currentUser, cache);
+        return (handler, featureRepo, placeRepo, uow, cache);
     }
 
     [Fact]
     public async Task UpdateAccessibilityFeatures_OnSuccess_InvalidatesScopedPlaceTagAfterSave()
     {
-        var (handler, featureRepo, placeRepo, uow, currentUser, cache) = BuildUpdateAccessibilitySubject();
+        var (handler, featureRepo, placeRepo, uow, cache) = BuildUpdateAccessibilitySubject();
         var placeId = Guid.NewGuid();
 
-        currentUser.IsAuthenticated.Returns(true);
-        currentUser.UserId.Returns(Guid.NewGuid());
         placeRepo
             .AnyAsync(
                 Arg.Any<Expression<Func<Place, bool>>>(),
@@ -478,27 +482,9 @@ public sealed class CommandHandlerCacheInvalidationTests
     }
 
     [Fact]
-    public async Task UpdateAccessibilityFeatures_OnUnauthorized_DoesNotInvalidateCache()
-    {
-        var (handler, _, _, uow, currentUser, cache) = BuildUpdateAccessibilitySubject();
-        currentUser.IsAuthenticated.Returns(false);
-        currentUser.UserId.Returns((Guid?)null);
-
-        var result = await handler.Handle(
-            new UpdateAccessibilityFeaturesCommand(Guid.NewGuid(), Array.Empty<AccessibilityFeatureItemRequest>()),
-            CancellationToken.None);
-
-        result.IsSuccess.Should().BeFalse();
-        await cache.DidNotReceive().RemoveByTagAsync(Arg.Any<string>(), Arg.Any<CancellationToken>());
-        await uow.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
-    }
-
-    [Fact]
     public async Task UpdateAccessibilityFeatures_OnNotFound_DoesNotInvalidateCache()
     {
-        var (handler, _, placeRepo, uow, currentUser, cache) = BuildUpdateAccessibilitySubject();
-        currentUser.IsAuthenticated.Returns(true);
-        currentUser.UserId.Returns(Guid.NewGuid());
+        var (handler, _, placeRepo, uow, cache) = BuildUpdateAccessibilitySubject();
         placeRepo
             .AnyAsync(
                 Arg.Any<Expression<Func<Place, bool>>>(),

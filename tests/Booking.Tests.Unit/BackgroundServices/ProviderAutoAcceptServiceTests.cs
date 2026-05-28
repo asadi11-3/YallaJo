@@ -149,6 +149,7 @@ public sealed class ProviderAutoAcceptServiceTests
             userId: Guid.NewGuid(),
             tourId: Guid.NewGuid(),
             providerId: Guid.NewGuid(),
+            guideId: Guid.NewGuid(),
             availabilitySlotId: Guid.NewGuid(),
             participantCount: 2,
             pricing: pricing,

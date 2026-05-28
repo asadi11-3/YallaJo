@@ -118,13 +118,37 @@ public interface ITourBookingRepository : IRepository<TourBooking, Guid>
         string? paymentStatus,
         CancellationToken cancellationToken = default);
 
+    /// <summary>Lists provider-confirmation bookings older than the configured auto-accept cutoff.</summary>
     Task<IReadOnlyList<TourBooking>> GetPendingConfirmationOlderThanAsync(
         DateTime cutoffUtc,
         int batchSize,
         CancellationToken ct = default);
 
+    /// <summary>
+    /// Returns bookings still in AwaitingPayment whose PaymentExpiresAt has elapsed.
+    /// Used by BookingAutoExpireService.
+    /// </summary>
     Task<IReadOnlyList<TourBooking>> GetExpiredAwaitingPaymentAsync(
         DateTime nowUtc,
+        int batchSize,
+        CancellationToken ct = default);
+
+    /// <summary>
+    /// Returns Confirmed bookings whose AvailabilitySlot end time has passed.
+    /// Used by BookingAutoCompleteService to auto-complete tours after they finish.
+    /// </summary>
+    Task<IReadOnlyList<TourBooking>> GetConfirmedWithPastSlotAsync(
+        DateTime nowUtc,
+        int batchSize,
+        CancellationToken ct = default);
+
+    /// <summary>
+    /// Returns Confirmed bookings whose slot start time falls within [windowStart, windowEnd].
+    /// Used by BookingReminderService to send pre-tour reminders.
+    /// </summary>
+    Task<IReadOnlyList<TourBooking>> GetConfirmedWithUpcomingSlotsAsync(
+        DateTime windowStart,
+        DateTime windowEnd,
         int batchSize,
         CancellationToken ct = default);
 }

@@ -88,11 +88,15 @@ internal static class ProfileEndpoints
             var upload = await fileStorage.UploadAsync(
                 stream, file.FileName, file.ContentType, "avatars", ct);
 
-            var result = await sender.Send(new UpdateAvatarCommand(upload.Url), ct);
+            if (upload.IsFailure)
+                return Results.Problem(statusCode: StatusCodes.Status500InternalServerError,
+                    detail: upload.Errors.FirstOrDefault()?.Message ?? "File upload failed.");
+
+            var result = await sender.Send(new UpdateAvatarCommand(upload.Value.Url), ct);
 
             if (!result.IsSuccess)
             {
-                await fileStorage.DeleteAsync(upload.Url, ct);
+                await fileStorage.DeleteAsync(upload.Value.Url, ct);
             }
 
             return result.ToApiResult();
@@ -124,11 +128,15 @@ internal static class ProfileEndpoints
             var upload = await fileStorage.UploadAsync(
                 stream, file.FileName, file.ContentType, "avatars", ct);
 
-            var result = await sender.Send(new UpdateAvatarCommand(upload.Url), ct);
+            if (upload.IsFailure)
+                return Results.Problem(statusCode: StatusCodes.Status500InternalServerError,
+                    detail: upload.Errors.FirstOrDefault()?.Message ?? "File upload failed.");
+
+            var result = await sender.Send(new UpdateAvatarCommand(upload.Value.Url), ct);
 
             if (!result.IsSuccess)
             {
-                await fileStorage.DeleteAsync(upload.Url, ct);
+                await fileStorage.DeleteAsync(upload.Value.Url, ct);
             }
 
             return result.ToApiResult();

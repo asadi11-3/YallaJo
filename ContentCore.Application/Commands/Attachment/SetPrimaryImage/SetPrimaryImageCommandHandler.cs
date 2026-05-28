@@ -6,8 +6,6 @@ using ContentCore.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
-using Security.Contracts.Authorization;
-using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 using Outcome = YallaJo.SharedKernel.Domain.Abstractions.Results.Outcome;
@@ -17,8 +15,7 @@ namespace ContentCore.Application.Commands.Attachment.SetPrimaryImage;
 public sealed class SetPrimaryImageCommandHandler(
     IAttachmentRepository attachmentRepository,
     IContentCoreUnitOfWork unitOfWork,
-    ICurrentUser currentUser,
-    IEntityOwnershipResolver ownershipResolver,
+    IOwnershipGuard ownershipGuard,
     HybridCache cache,
     ILogger<SetPrimaryImageCommandHandler> logger)
     : ICommandHandler<SetPrimaryImageCommand>
@@ -27,9 +24,6 @@ public sealed class SetPrimaryImageCommandHandler(
     {
         try
         {
-            if (currentUser.UserId is null)
-                return Result.Failure(Error.Unauthorized("Authentication is required."), Outcome.Unauthorized);
-
             // Load for validation only (ownership + entity check) — no mutation on the attachment itself.
             var attachment = await attachmentRepository.GetByIdAsync(
                 request.AttachmentId, cancellationToken, asNoTracking: true);
@@ -50,51 +44,14 @@ public sealed class SetPrimaryImageCommandHandler(
                     Outcome.Invalid);
             }
 
-            // IDOR: only the target-entity owner or an admin-tier role (Admin/SuperAdmin/Owner)
-            // may set the primary image. Setting primary mutates the target entity's public-facing
-            // gallery, so authorization belongs to that entity's owner — not to whoever uploaded.
-            var isAdminTier = AppRoles.HighestPrivilegeLevel(currentUser.Roles)
-                >= RolePrivilegeLevel.Admin;
+            // Ownership guard (admin-tier bypass + ownership check)
+            var authResult = await ownershipGuard.AuthorizeAsync(
+                request.EntityType, request.EntityId, "Attachment",
+                "You do not have permission to set the primary image for this entity.",
+                cancellationToken);
 
-            if (!isAdminTier)
-            {
-                var ownership = await ownershipResolver.ResolveAsync(
-                    request.EntityType, request.EntityId, cancellationToken);
-
-                if (!ownership.IsSupported)
-                {
-                    return Result.Failure(
-                        new Error(
-                            "Attachment.UnsupportedEntityType",
-                            "This entity type cannot be authorized for attachment operations."),
-                        Outcome.Invalid);
-                }
-
-                if (!ownership.Exists)
-                {
-                    return Result.Failure(
-                        new Error(
-                            "Attachment.TargetNotFound",
-                            $"{request.EntityType} '{request.EntityId}' was not found."),
-                        Outcome.NotFound);
-                }
-
-                if (ownership.IsDeleted)
-                {
-                    return Result.Failure(
-                        new Error(
-                            "Attachment.TargetDeleted",
-                            $"{request.EntityType} '{request.EntityId}' is deleted."),
-                        Outcome.Invalid);
-                }
-
-                if (ownership.OwnerUserId != currentUser.UserId.Value)
-                {
-                    return Result.Failure(
-                        Error.Forbidden("You do not have permission to set the primary image for this entity."),
-                        Outcome.Forbidden);
-                }
-            }
+            if (!authResult.IsSuccess)
+                return authResult;
 
             var entityImages = await attachmentRepository.GetEntityImagesAsync(
                 request.EntityType, request.EntityId, cancellationToken);

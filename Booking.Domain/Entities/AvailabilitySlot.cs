@@ -167,6 +167,26 @@ public sealed class AvailabilitySlot : AuditableEntity, IAggregateRoot
         AddDomainEvent(new AvailabilitySlotCapacityChangedDomainEvent(Id, previousAvailable, AvailableCount));
     }
 
+    /// <summary>
+    /// Updates mutable slot details. Cannot reduce MaxCapacity below BookedCount.
+    /// </summary>
+    public void Update(DateOnly date, TimeOnly startTime, TimeOnly endTime, int maxCapacity, decimal? priceOverride, string? priceOverrideCurrency)
+    {
+        if (maxCapacity < BookedCount)
+        {
+            throw new BusinessRuleViolationException(
+                $"Cannot set MaxCapacity to {maxCapacity}; {BookedCount} seats are already booked.");
+        }
+
+        Date = date;
+        StartTime = startTime;
+        EndTime = endTime;
+        MaxCapacity = maxCapacity;
+        PriceOverride = priceOverride;
+        PriceOverrideCurrency = priceOverrideCurrency;
+        MarkUpdated();
+    }
+
     public void Deactivate()
     {
         if (!IsActive)

@@ -112,7 +112,7 @@ public sealed class PlaceDeletedIntegrationEventHandlerTests
         var placeA = Guid.NewGuid();
         var blog = NewPublishedBlog("featured", placeA);
         var publishedAtBefore = blog.PublishedAt;
-        blog.MarkAsFeatured(DateTime.UtcNow.AddMinutes(1));
+        blog.Feature(Guid.Empty, DateTime.UtcNow.AddMinutes(1));
         db.Blogs.Add(blog);
         await db.SaveChangesAsync();
 
@@ -217,7 +217,7 @@ public sealed class PlaceDeletedIntegrationEventHandlerTests
         await using var db = NewDb();
         var placeA = Guid.NewGuid();
         var a1 = NewPublishedBlog("a1", placeA);
-        a1.MarkAsFeatured(DateTime.UtcNow);
+        a1.Feature(Guid.Empty, DateTime.UtcNow);
         var a2 = NewPublishedBlog("a2", placeA);
         db.Blogs.AddRange(a1, a2);
         await db.SaveChangesAsync();

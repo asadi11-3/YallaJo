@@ -27,6 +27,15 @@ public static class DependencyInjection
         // reassignment.
         services.AddScoped<IProfileReassignmentService, ProfileReassignmentService>();
 
+        // Cross-module contract: lets ContentPlaces (and other modules)
+        // verify that a user holds an approved provider application
+        // before creating a business.
+        services.AddScoped<IProviderStatusService, ProviderStatusService>();
+
+        // Cross-module contract: lets ContentPlaces validate that a provider
+        // is creating a business of the correct type for their provider category.
+        services.AddScoped<IProviderTypeReader, ProviderTypeReader>();
+
         return services;
     }
 }

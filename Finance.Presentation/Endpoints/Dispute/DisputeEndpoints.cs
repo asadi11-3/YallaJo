@@ -1,0 +1,85 @@
+using Finance.Application.Disputes;
+using Finance.Contracts.Authorization;
+using Finance.Domain.Enums;
+using MediatR;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Routing;
+using YallaJo.SharedKernel.Application.Abstractions.Context;
+using YallaJo.SharedKernel.Application.Authorization;
+using YallaJo.SharedKernel.Presentation;
+using YallaJo.SharedKernel.Presentation.Authorization;
+
+namespace Finance.Presentation.Endpoints.Dispute;
+
+internal static class DisputeEndpoints
+{
+    internal static void MapDisputeEndpoints(RouteGroupBuilder group)
+    {
+        group.MapGet("/my", async (ICurrentUser currentUser, ISender sender, CancellationToken ct) =>
+        {
+            var result = await sender.Send(new GetMyDisputesQuery(currentUser.UserId!.Value), ct);
+            return result.ToApiResult();
+        })
+        .WithName("GetMyDisputes")
+        .WithTags("Disputes")
+        .WithMetadata(new MustHavePermissionAttribute(FinanceFeatures.Refund, AppAction.Read))
+        .RequireAuthorization();
+
+        group.MapGet("/admin/open", async (ISender sender, CancellationToken ct) =>
+        {
+            var result = await sender.Send(new GetOpenDisputesQuery(), ct);
+            return result.ToApiResult();
+        })
+        .WithName("GetOpenDisputes")
+        .WithTags("Disputes")
+        .WithMetadata(new MustHavePermissionAttribute(FinanceFeatures.AdminFinanceDashboard, AppAction.Read))
+        .RequireAuthorization();
+
+        group.MapPost("/", async (OpenDisputeRequest request, ICurrentUser currentUser, ISender sender, CancellationToken ct) =>
+        {
+            var result = await sender.Send(new OpenDisputeCommand(request.PaymentId, currentUser.UserId!.Value, request.Reason, request.Description), ct);
+            return result.ToApiResult();
+        })
+        .WithName("OpenDispute")
+        .WithTags("Disputes")
+        .WithMetadata(new MustHavePermissionAttribute(FinanceFeatures.Refund, AppAction.Create))
+        .RequireAuthorization();
+
+        group.MapPost("/{id:guid}/review", async (Guid id, ICurrentUser currentUser, ISender sender, CancellationToken ct) =>
+        {
+            var result = await sender.Send(new MarkDisputeUnderReviewCommand(id, currentUser.UserId!.Value), ct);
+            return result.ToApiResult();
+        })
+        .WithName("MarkDisputeUnderReview")
+        .WithTags("Disputes")
+        .WithMetadata(new MustHavePermissionAttribute(FinanceFeatures.AdminFinanceDashboard, AppAction.Update))
+        .RequireAuthorization();
+
+        group.MapPost("/{id:guid}/resolve", async (Guid id, ResolveDisputeRequest request, ICurrentUser currentUser, ISender sender, CancellationToken ct) =>
+        {
+            var result = await sender.Send(new ResolveDisputeCommand(id, currentUser.UserId!.Value, request.Resolution, request.Notes), ct);
+            return result.ToApiResult();
+        })
+        .WithName("ResolveDispute")
+        .WithTags("Disputes")
+        .WithMetadata(new MustHavePermissionAttribute(FinanceFeatures.AdminFinanceDashboard, AppAction.Approve))
+        .RequireAuthorization();
+
+        group.MapPost("/{id:guid}/escalate", async (Guid id, EscalateDisputeRequest request, ICurrentUser currentUser, ISender sender, CancellationToken ct) =>
+        {
+            var result = await sender.Send(new EscalateDisputeCommand(id, currentUser.UserId!.Value, request.Reason), ct);
+            return result.ToApiResult();
+        })
+        .WithName("EscalateDispute")
+        .WithTags("Disputes")
+        .WithMetadata(new MustHavePermissionAttribute(FinanceFeatures.AdminFinanceDashboard, AppAction.Update))
+        .RequireAuthorization();
+    }
+}
+
+public sealed record OpenDisputeRequest(Guid PaymentId, string Reason, string Description);
+
+public sealed record ResolveDisputeRequest(DisputeResolution Resolution, string? Notes);
+
+public sealed record EscalateDisputeRequest(string Reason);

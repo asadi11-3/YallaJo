@@ -35,10 +35,6 @@ public class BlogConfiguration : IEntityTypeConfiguration<Blog>
             .IsRequired()
             .HasConversion<int>();
 
-        builder.Property(x => x.IsFeatured)
-            .IsRequired()
-            .HasDefaultValue(false);
-
         builder.Property(x => x.ViewCount)
             .IsRequired()
             .HasDefaultValue(0);
@@ -54,6 +50,36 @@ public class BlogConfiguration : IEntityTypeConfiguration<Blog>
             .HasMaxLength(500);
 
         builder.Property(x => x.PublishedAt).IsRequired(false);
+
+        // ── Creator-authored article extensions ──────────────────────────
+        builder.Property(x => x.AuthoredByCreatorId).IsRequired(false);
+        builder.Property(x => x.LanguageId).IsRequired();
+
+        builder.Property(x => x.IsSponsored)
+            .IsRequired()
+            .HasDefaultValue(false);
+
+        builder.OwnsMany(x => x.DisclosedTargets, dt =>
+        {
+            dt.ToJson();
+        });
+
+        // ── Moderation fields ──────────────────────────────────────────
+        builder.Property(x => x.SubmittedAt).IsRequired(false);
+        builder.Property(x => x.ReviewedAt).IsRequired(false);
+        builder.Property(x => x.ReviewedByAdminId).IsRequired(false);
+        builder.Property(x => x.RejectionReason).IsRequired(false).HasMaxLength(1000);
+
+        // ── Time-bound featuring (replaces IsFeatured bool) ────────────
+        builder.Property(x => x.FeaturedAt).IsRequired(false);
+        builder.Property(x => x.FeaturedByAdminId).IsRequired(false);
+        builder.Property(x => x.FeaturedUntil).IsRequired(false);
+        builder.Ignore(x => x.IsFeatured);  // computed property — not persisted
+
+        // ── Denormalized counters ─────────────────────────────────────
+        builder.Property(x => x.ReactionCount).IsRequired().HasDefaultValue(0);
+        builder.Property(x => x.CommentCount).IsRequired().HasDefaultValue(0);
+        builder.Property(x => x.ReportCount).IsRequired().HasDefaultValue(0);
 
         builder.Property(x => x.CreatedAt).IsRequired();
         builder.Property(x => x.UpdatedAt).IsRequired(false);
@@ -74,5 +100,6 @@ public class BlogConfiguration : IEntityTypeConfiguration<Blog>
         builder.HasQueryFilter(x => !x.IsDeleted);
         builder.HasIndex(x => x.Slug).IsUnique();
         builder.HasIndex(x => x.PlaceId).HasFilter("[PlaceId] IS NOT NULL");
+        builder.HasIndex(x => x.AuthoredByCreatorId).HasFilter("[AuthoredByCreatorId] IS NOT NULL");
     }
 }

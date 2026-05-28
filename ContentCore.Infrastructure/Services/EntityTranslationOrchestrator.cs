@@ -45,9 +45,18 @@ internal sealed class EntityTranslationOrchestrator(
             }
 
             // Batch-translate all field values in a single API call per language
-            var translated = await translationService.BatchTranslateAsync(
+            var translateResult = await translationService.BatchTranslateAsync(
                 fieldValues, sourceLanguageCode, targetCode, ct);
 
+            if (translateResult.IsFailure)
+            {
+                logger.LogWarning(
+                    "Translation failed for language '{Code}': {Errors} — skipping",
+                    targetCode, string.Join("; ", translateResult.Errors.Select(e => e.Message)));
+                continue;
+            }
+
+            var translated = translateResult.Value;
             var translatedFields = new Dictionary<string, string>(fieldNames.Count, StringComparer.Ordinal);
             for (var i = 0; i < fieldNames.Count; i++)
             {

@@ -22,8 +22,7 @@ public sealed class MessagingDbContext : DbContext, IDbContext
     public DbSet<TicketMessage> TicketMessages => Set<TicketMessage>();
     public DbSet<UserSnapshot> UserSnapshots => Set<UserSnapshot>();
     public DbSet<AdminAssignmentRoster> AdminAssignmentRosters => Set<AdminAssignmentRoster>();
-    public DbSet<ChatBotConversation> ChatBotConversations => Set<ChatBotConversation>();
-    public DbSet<ChatBotMessage> ChatBotMessages => Set<ChatBotMessage>();
+    // Deferred post-MVP: ChatBotConversation, ChatBotMessage
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
     public DbSet<InboxMessage> InboxMessages => Set<InboxMessage>();
 

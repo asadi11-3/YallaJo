@@ -6,4 +6,6 @@ public sealed record PlaceUpdatedIntegrationEvent(
     Guid PlaceId,
     string Name,
     string? Description,
-    string? Address) : IntegrationEventBase;
+    string? Address,
+    string Slug,
+    string? OldSlug) : IntegrationEventBase;

@@ -27,15 +27,12 @@ public sealed class ApprovePayoutCommandHandler(
                 Outcome.NotFound);
         }
 
-        try
-        {
-            payout.Approve(request.ApproverUserId, timeProvider);
-        }
-        catch (InvalidOperationException ex)
+        var approveResult = payout.Approve(request.ApproverUserId, timeProvider);
+        if (approveResult.IsFailure)
         {
             return Result.Failure<ApprovePayoutResult>(
-                new Error("Payout.AlreadyApproved", ex.Message),
-                Outcome.Conflict);
+                approveResult.Errors.FirstOrDefault() ?? new Error("Payout.InvalidState", "Payout could not be approved."),
+                approveResult.Outcome);
         }
 
         // Gateway call
@@ -52,15 +49,23 @@ public sealed class ApprovePayoutCommandHandler(
             switch (payoutResult.Status)
             {
                 case PayoutGatewayStatus.Completed:
-                    payout.MarkCompleted(payoutResult.GatewayPayoutId, timeProvider.GetUtcNow().UtcDateTime);
+                    var completed = payout.MarkCompleted(payoutResult.GatewayPayoutId, timeProvider.GetUtcNow().UtcDateTime);
+                    if (completed.IsFailure)
+                    {
+                        return Result.Failure<ApprovePayoutResult>(completed.Errors.First(), completed.Outcome);
+                    }
                     break;
                 case PayoutGatewayStatus.Pending:
                     // Leave as ReadyForPayout; webhook will finalise (deferred to Phase 3).
                     break;
                 case PayoutGatewayStatus.Failed:
-                    payout.MarkFailed(
+                    var failed = payout.MarkFailed(
                         payoutResult.FailureCode ?? "Gateway.Failed",
                         timeProvider.GetUtcNow().UtcDateTime);
+                    if (failed.IsFailure)
+                    {
+                        return Result.Failure<ApprovePayoutResult>(failed.Errors.First(), failed.Outcome);
+                    }
                     break;
             }
         }

@@ -10,6 +10,7 @@
   <ItemGroup>
     <ProjectReference Include="..\ContentTours.Application\ContentTours.Application.csproj" />
     <ProjectReference Include="..\ContentTours.Contracts\ContentTours.Contracts.csproj" />
+    <ProjectReference Include="..\Finance.Contracts\Finance.Contracts.csproj" />
     <ProjectReference Include="..\YallaJo.SharedKernel.Presentation\YallaJo.SharedKernel.Presentation.csproj" />
   </ItemGroup>
 </Project>

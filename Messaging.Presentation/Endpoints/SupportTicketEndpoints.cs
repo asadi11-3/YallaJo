@@ -30,10 +30,8 @@ internal static class SupportTicketEndpoints
             ISender sender,
             CancellationToken ct) =>
         {
-            if (!currentUser.IsAuthenticated || currentUser.UserId is null)
-                return Result.Failure<Guid>(new Error("SupportTicket.Unauthorized", "Not authenticated"), Outcome.Unauthorized).ToApiResult();
             var cmd = new CreateSupportTicketCommand(
-                currentUser.UserId.Value,
+                currentUser.UserId!.Value,
                 request.Category,
                 request.Subject,
                 request.Body);
@@ -52,10 +50,8 @@ internal static class SupportTicketEndpoints
             ISender sender,
             CancellationToken ct) =>
         {
-            if (!currentUser.IsAuthenticated || currentUser.UserId is null)
-                return Result.Failure<object>(new Error("SupportTicket.Unauthorized", "Not authenticated"), Outcome.Unauthorized).ToApiResult();
             bool isAdmin = currentUser.HasPermission("Permission.AdminSupportQueue.Read");
-            Guid? userId = isAdmin ? null : currentUser.UserId;
+            Guid? userId = isAdmin ? null : currentUser.UserId!.Value;
             var query = new GetSupportTicketsQuery(userId, isAdmin, status, category, cursor, pageSize ?? 20);
             var result = await sender.Send(query, ct);
             return result.ToApiResult();
@@ -69,10 +65,8 @@ internal static class SupportTicketEndpoints
             ISender sender,
             CancellationToken ct) =>
         {
-            if (!currentUser.IsAuthenticated || currentUser.UserId is null)
-                return Result.Failure<object>(new Error("SupportTicket.Unauthorized", "Not authenticated"), Outcome.Unauthorized).ToApiResult();
             bool isAdmin = currentUser.HasPermission("Permission.AdminSupportQueue.Read");
-            var result = await sender.Send(new GetSupportTicketByIdQuery(id, currentUser.UserId.Value, isAdmin), ct);
+            var result = await sender.Send(new GetSupportTicketByIdQuery(id, currentUser.UserId!.Value, isAdmin), ct);
             return result.ToApiResult();
         }).WithName("GetSupportTicketById").WithTags("Support")
           .WithMetadata(new MustHavePermissionAttribute(MessagingFeatures.SupportTicket, AppAction.Read))
@@ -84,10 +78,8 @@ internal static class SupportTicketEndpoints
             ISender sender,
             CancellationToken ct) =>
         {
-            if (!currentUser.IsAuthenticated || currentUser.UserId is null)
-                return Result.Failure(new Error("SupportTicket.Unauthorized", "Not authenticated"), Outcome.Unauthorized).ToApiResult();
             bool isAdmin = currentUser.HasPermission("Permission.AdminSupportQueue.Read");
-            var result = await sender.Send(new CloseSupportTicketCommand(id, currentUser.UserId.Value, isAdmin), ct);
+            var result = await sender.Send(new CloseSupportTicketCommand(id, currentUser.UserId!.Value, isAdmin), ct);
             return result.ToApiResult();
         }).WithName("CloseSupportTicket").WithTags("Support")
           .WithMetadata(new MustHavePermissionAttribute(MessagingFeatures.SupportTicket, AppAction.Close))
@@ -100,10 +92,8 @@ internal static class SupportTicketEndpoints
             ISender sender,
             CancellationToken ct) =>
         {
-            if (!currentUser.IsAuthenticated || currentUser.UserId is null)
-                return Result.Failure(new Error("SupportTicket.Unauthorized", "Not authenticated"), Outcome.Unauthorized).ToApiResult();
             bool isAdmin = currentUser.HasPermission("Permission.AdminSupportQueue.Read");
-            var cmd = new PostTicketMessageCommand(id, currentUser.UserId.Value, request.Body, isAdmin && (request.IsInternal ?? false));
+            var cmd = new PostTicketMessageCommand(id, currentUser.UserId!.Value, request.Body, isAdmin && (request.IsInternal ?? false));
             var result = await sender.Send(cmd, ct);
             return result.ToApiResult();
         }).WithName("PostTicketMessage").WithTags("Support")
@@ -117,9 +107,7 @@ internal static class SupportTicketEndpoints
             ISender sender,
             CancellationToken ct) =>
         {
-            if (!currentUser.IsAuthenticated || currentUser.UserId is null)
-                return Result.Failure(new Error("SupportTicket.Unauthorized", "Not authenticated"), Outcome.Unauthorized).ToApiResult();
-            var cmd = new AssignSupportTicketCommand(id, request.AdminUserId, currentUser.UserId.Value);
+            var cmd = new AssignSupportTicketCommand(id, request.AdminUserId, currentUser.UserId!.Value);
             var result = await sender.Send(cmd, ct);
             return result.ToApiResult();
         }).WithName("AssignSupportTicket").WithTags("Support")
@@ -133,9 +121,7 @@ internal static class SupportTicketEndpoints
             ISender sender,
             CancellationToken ct) =>
         {
-            if (!currentUser.IsAuthenticated || currentUser.UserId is null)
-                return Result.Failure(new Error("SupportTicket.Unauthorized", "Not authenticated"), Outcome.Unauthorized).ToApiResult();
-            var cmd = new ResolveSupportTicketCommand(id, currentUser.UserId.Value, request.Notes);
+            var cmd = new ResolveSupportTicketCommand(id, currentUser.UserId!.Value, request.Notes);
             var result = await sender.Send(cmd, ct);
             return result.ToApiResult();
         }).WithName("ResolveSupportTicket").WithTags("Support")

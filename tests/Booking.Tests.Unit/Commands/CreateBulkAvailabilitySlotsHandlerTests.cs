@@ -2,6 +2,7 @@ using Booking.Application.Caching;
 using Booking.Application.Commands.CreateBulkAvailabilitySlots;
 using Booking.Application.Interfaces;
 using Booking.Domain.Entities;
+using Booking.Domain.Enums;
 using Booking.Domain.Repositories;
 using FluentAssertions;
 using Microsoft.Extensions.Caching.Hybrid;

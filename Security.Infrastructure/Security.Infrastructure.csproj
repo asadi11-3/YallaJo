@@ -23,6 +23,8 @@
     <ProjectReference Include="..\Security.Domain\Security.Domain.csproj" />
     <ProjectReference Include="..\YallaJo.SharedKernel.Infrastructure\YallaJo.SharedKernel.Infrastructure.csproj" />
     <ProjectReference Include="..\Auth.Contracts\Auth.Contracts.csproj" />
+    <ProjectReference Include="..\Accounts.Contracts\Accounts.Contracts.csproj" />
+    <ProjectReference Include="..\ContentBlogs.Contracts\ContentBlogs.Contracts.csproj" />
   </ItemGroup>
 
 </Project>

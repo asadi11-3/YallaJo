@@ -96,10 +96,19 @@ public sealed class LanguageActivatedIntegrationEventHandler(
             normalizedLanguageCode, evt.LanguageId, BatchSize);
 
         // ── 1. Tour translation backfill ──────────────────────────────────────
-        var totalToursTranslated = await ProcessTourBatchesAsync(
+        var tourResult = await ProcessTourBatchesAsync(
             evt.LanguageId,
             targetCodes,
             ct).ConfigureAwait(false);
+
+        if (!tourResult.Completed)
+        {
+            logger.LogWarning(
+                "ContentTours: Tour backfill incomplete for language {LanguageCode}. " +
+                "Inbox will NOT be marked processed so replay can retry.",
+                normalizedLanguageCode);
+            return;
+        }
 
         // ── 2. Pricing-tier translation backfill ──────────────────────────────
         var totalTiersTranslated = await ProcessPricingTierBatchesAsync(
@@ -107,15 +116,13 @@ public sealed class LanguageActivatedIntegrationEventHandler(
             ct).ConfigureAwait(false);
 
         // ── 3. Mark inbox processed AFTER all batches succeed ─────────────────
-        // Final separate SaveChanges; if any batch above threw, the inbox row is
-        // never written, so the next delivery picks up via the same anti-join.
         inboxStore.MarkAsProcessed(notification.MessageId);
         await unitOfWork.SaveChangesAsync(ct).ConfigureAwait(false);
 
         logger.LogInformation(
             "ContentTours: Backfilled language {LanguageCode}: " +
             "translatedTours={ToursTranslated} translatedTiers={TiersTranslated}.",
-            normalizedLanguageCode, totalToursTranslated, totalTiersTranslated);
+            normalizedLanguageCode, tourResult.Count, totalTiersTranslated);
     }
 
     /// <summary>
@@ -123,7 +130,7 @@ public sealed class LanguageActivatedIntegrationEventHandler(
     /// until the anti-join is empty.  Each <c>ToListAsync</c> call materialises at
     /// most <see cref="BatchSize"/> rows — never the entire backlog.
     /// </summary>
-    private async Task<int> ProcessTourBatchesAsync(
+    private async Task<(int Count, bool Completed)> ProcessTourBatchesAsync(
         Guid languageId,
         IReadOnlyList<string> targetCodes,
         CancellationToken ct)
@@ -183,15 +190,14 @@ public sealed class LanguageActivatedIntegrationEventHandler(
                 var translated = translatedSets.FirstOrDefault();
                 if (translated is null)
                 {
-                    // Critical: do NOT silently skip.  If we did, the next
-                    // anti-join iteration would re-select the same tour
-                    // forever (no translation row was added → still missing).
-                    // Fail clearly so the inbox is left unmarked and replay
-                    // can retry once translation service is healthy.
-                    throw new InvalidOperationException(
-                        $"Translation orchestrator returned no translated set for Tour " +
-                        $"{candidate.TourId} (language={targetCodes[0]}). " +
-                        "Aborting backfill so the inbox is not marked processed.");
+                    // Translation service returned nothing.  Stop the batch so
+                    // the inbox is NOT marked processed — the anti-join will
+                    // re-select the same tour on the next delivery/replay.
+                    logger.LogError(
+                        "Translation orchestrator returned no translated set for Tour {TourId} " +
+                        "(language={LanguageCode}). Aborting backfill so the inbox is not marked processed.",
+                        candidate.TourId, targetCodes[0]);
+                    return (totalTranslated, Completed: false);
                 }
 
                 dbContext.TourTranslations.Add(TourTranslation.Create(
@@ -219,7 +225,7 @@ public sealed class LanguageActivatedIntegrationEventHandler(
             }
         }
 
-        return totalTranslated;
+        return (totalTranslated, Completed: true);
     }
 
     /// <summary>

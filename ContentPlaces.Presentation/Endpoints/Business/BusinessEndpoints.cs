@@ -1,16 +1,24 @@
+using ContentPlaces.Application.Commands.AccessibilityFeature.UpdateAccessibilityFeatures;
+using ContentPlaces.Application.Commands.AccessibilityFeature.UpdateBusinessAccessibilityFeatures;
 using ContentPlaces.Application.Commands.Business.ApproveBusiness;
 using ContentPlaces.Application.Commands.Business.CreateBusiness;
 using ContentPlaces.Application.Commands.Business.DeleteBusiness;
 using ContentPlaces.Application.Commands.Business.RejectBusiness;
 using ContentPlaces.Application.Commands.Business.ReinstateBusiness;
+using ContentPlaces.Application.Commands.Business.RequestMoreDocs;
 using ContentPlaces.Application.Commands.Business.ResubmitBusiness;
 using ContentPlaces.Application.Commands.Business.SuspendBusiness;
 using ContentPlaces.Application.Commands.Business.UpdateBusiness;
 using ContentPlaces.Application.Commands.BusinessHours.SetBusinessHours;
+using ContentPlaces.Application.Queries.AccessibilityFeature.Common;
+using ContentPlaces.Application.Queries.AccessibilityFeature.GetBusinessAccessibilityFeatures;
 using ContentPlaces.Application.Queries.Business.Common;
 using ContentPlaces.Application.Queries.Business.GetBusinessById;
+using ContentPlaces.Application.Queries.Business.GetMyBusinesses;
 using ContentPlaces.Application.Queries.Business.GetBusinessHours;
+using ContentPlaces.Application.Queries.Business.GetNearbyBusinesses;
 using ContentPlaces.Application.Queries.Business.ListPlaceBusinesses;
+using ContentPlaces.Application.Queries.Business.SearchBusinesses;
 using ContentPlaces.Contracts.Authorization;
 using ContentPlaces.Presentation.Endpoints.Business.Models;
 using MediatR;
@@ -32,7 +40,7 @@ internal static class BusinessEndpoints
     internal static void MapBusinessEndpoints(RouteGroupBuilder group)
     {
         // ── Businesses ─────────────────────────────────────────────────────────
-        var businesses = group.MapGroup("/places/businesses").WithTags("ContentPlaces | Businesses");
+        var businesses = group.MapGroup("").WithTags("ContentPlaces | Businesses");
         // GET /places/{id}/businesses — list all businesses for a place
         businesses.MapGet("/places/{id:guid}/businesses", async (
             Guid id,
@@ -69,6 +77,46 @@ internal static class BusinessEndpoints
         .Produces<BusinessDetailDto>(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Get a business by Id (public sees Approved only; owner/admin sees all statuses)")
+        .AllowAnonymous();
+
+        // GET /places/businesses/search — search businesses with filters
+        businesses.MapGet("/places/businesses/search", async (
+            HttpContext http,
+            ISender sender,
+            string? query = null,
+            string? businessType = null,
+            string? city = null,
+            string? country = null,
+            int page = 1,
+            int pageSize = 20) =>
+        {
+            var result = await sender.Send(
+                new SearchBusinessesQuery(page, pageSize, query, businessType, city, country),
+                http.RequestAborted);
+            return result.ToApiResult();
+        })
+        .WithName("SearchBusinesses")
+        .Produces<PaginatedResult<BusinessSummaryDto>>(StatusCodes.Status200OK)
+        .WithSummary("Search businesses by name, type, city, or country (public; returns Approved only)")
+        .AllowAnonymous();
+
+        // GET /places/businesses/nearby — find businesses near coordinates
+        businesses.MapGet("/places/businesses/nearby", async (
+            HttpContext http,
+            ISender sender,
+            double lat,
+            double lng,
+            double radiusKm = 10,
+            int pageSize = 10) =>
+        {
+            var result = await sender.Send(
+                new GetNearbyBusinessesQuery(lat, lng, radiusKm, pageSize),
+                http.RequestAborted);
+            return result.ToApiResult();
+        })
+        .WithName("GetNearbyBusinesses")
+        .Produces<IReadOnlyList<NearbyBusinessSummaryDto>>(StatusCodes.Status200OK)
+        .WithSummary("Get nearby businesses using Haversine formula (max 100km radius)")
         .AllowAnonymous();
 
         // POST /places/businesses — create a business
@@ -213,6 +261,25 @@ internal static class BusinessEndpoints
         .WithMetadata(new MustHavePermissionAttribute(ContentPlacesFeatures.Business, AppAction.Reject))
         .RequireAuthorization("Admin");
 
+        // POST /places/businesses/admin/{id}/request-more-docs
+        businesses.MapPost("/places/businesses/admin/{id:guid}/request-more-docs", async (
+            Guid id,
+            RequestMoreDocsRequest request,
+            ICurrentUser currentUser,
+            ISender sender) =>
+        {
+            var result = await sender.Send(new RequestMoreDocsCommand(id, request.Reason, currentUser.UserId!.Value));
+            return result.ToApiResult();
+        })
+        .WithName("RequestMoreDocs")
+        .Produces(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status409Conflict)
+        .WithSummary("Request more documents from a pending business owner (admin only; status must be Pending or MoreDocsNeeded)")
+        .WithMetadata(new MustHavePermissionAttribute(ContentPlacesFeatures.Business, AppAction.RequestDocs))
+        .RequireAuthorization("Admin");
+
         // POST /places/businesses/admin/{id}/suspend
         businesses.MapPost("/places/businesses/admin/{id:guid}/suspend", async (
             Guid id,
@@ -291,6 +358,59 @@ internal static class BusinessEndpoints
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Replace all operating hours for a business (owner or admin only; max 2 entries/day)")
         .WithMetadata(new MustHavePermissionAttribute(ContentPlacesFeatures.BusinessHours, AppAction.Update))
+        .RequireAuthorization();
+
+        // ── My Businesses ──────────────────────────────────────────────────────
+
+        businesses.MapGet("/places/businesses/mine", async (
+            HttpContext http,
+            ISender sender,
+            int page = 1,
+            int pageSize = 20) =>
+        {
+            var result = await sender.Send(new GetMyBusinessesQuery(page, pageSize), http.RequestAborted);
+            return result.ToApiResult();
+        })
+        .WithName("GetMyBusinesses")
+        .Produces<IReadOnlyList<BusinessSummaryDto>>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .WithSummary("List all businesses owned by the authenticated provider")
+        .WithMetadata(new MustHavePermissionAttribute(ContentPlacesFeatures.Business, AppAction.Read))
+        .RequireAuthorization();
+
+        // ── Business Accessibility ─────────────────────────────────────────────
+
+        businesses.MapGet("/places/businesses/{id:guid}/accessibility", async (
+            Guid id,
+            HttpContext http,
+            ISender sender) =>
+        {
+            var result = await sender.Send(new GetBusinessAccessibilityFeaturesQuery(id), http.RequestAborted);
+            return result.ToApiResult();
+        })
+        .WithName("GetBusinessAccessibilityFeatures")
+        .Produces<IReadOnlyList<AccessibilityFeatureDto>>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .AllowAnonymous()
+        .WithSummary("List accessibility features for a business");
+
+        businesses.MapPut("/places/businesses/{id:guid}/accessibility", async (
+            Guid id,
+            IReadOnlyList<AccessibilityFeatureItemRequest> features,
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            var result = await sender.Send(new UpdateBusinessAccessibilityFeaturesCommand(id, features), ct);
+            return result.ToApiResult();
+        })
+        .WithName("UpdateBusinessAccessibilityFeatures")
+        .Produces(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .WithSummary("Replace all accessibility features for a business (owner only)")
+        .WithMetadata(new MustHavePermissionAttribute(ContentPlacesFeatures.AccessibilityFeature, AppAction.Update))
         .RequireAuthorization();
     }
 

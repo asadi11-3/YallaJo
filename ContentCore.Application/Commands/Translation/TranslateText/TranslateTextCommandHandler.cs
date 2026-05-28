@@ -23,24 +23,21 @@ public sealed class TranslateTextCommandHandler(
                 request.ToLanguageCode,
                 cancellationToken);
 
+            if (result.IsFailure)
+                return Result<TranslateTextResult>.Fail(result.Outcome, result.Errors.ToArray());
 
+            var value = result.Value;
             logger.LogInformation(
                 "TranslateText: {From}→{To}, confidence={Confidence}",
-                result.FromLanguage, result.ToLanguage, result.Confidence);
+                value.FromLanguage, value.ToLanguage, value.Confidence);
 
             return Result<TranslateTextResult>.Success(
                 new TranslateTextResult(
-                    result.OriginalText,
-                    result.TranslatedText,
-                    result.FromLanguage,
-                    result.ToLanguage,
-                    result.Confidence));
-        }
-        catch (HttpRequestException)
-        {
-            return Result<TranslateTextResult>.Failure(
-                new Error("Translation.ServiceUnavailable", "Translation service is temporarily unavailable."),
-                Outcome.ServerError);
+                    value.OriginalText,
+                    value.TranslatedText,
+                    value.FromLanguage,
+                    value.ToLanguage,
+                    value.Confidence));
         }
         catch (TaskCanceledException) when (!cancellationToken.IsCancellationRequested)
         {

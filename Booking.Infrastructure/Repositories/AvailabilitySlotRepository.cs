@@ -105,4 +105,30 @@ internal sealed class AvailabilitySlotRepository(BookingDbContext context)
         => CountAsync(
             s => s.TourId == tourId && s.IsActive && s.Date >= fromDate,
             ct);
+
+    public async Task<HashSet<DateOnly>> GetExistingSlotDatesAsync(
+        Guid tourGuideId,
+        Guid tourId,
+        DateOnly fromDate,
+        DateOnly toDate,
+        CancellationToken ct = default)
+    {
+        var dates = await context.AvailabilitySlots
+            .Where(s => s.TourGuideId == tourGuideId && s.TourId == tourId && s.Date >= fromDate && s.Date <= toDate)
+            .Select(s => s.Date)
+            .ToListAsync(ct)
+            .ConfigureAwait(false);
+        return [.. dates];
+    }
+
+    public async Task<IReadOnlyList<AvailabilitySlot>> GetInactivePastSlotsAsync(
+        DateOnly before,
+        int batchSize,
+        CancellationToken ct = default)
+        => await context.AvailabilitySlots
+            .Where(s => s.Date < before && s.BookedCount == 0 && s.LockedCount == 0 && !s.IsActive)
+            .OrderBy(s => s.Date)
+            .Take(batchSize)
+            .ToListAsync(ct)
+            .ConfigureAwait(false);
 }

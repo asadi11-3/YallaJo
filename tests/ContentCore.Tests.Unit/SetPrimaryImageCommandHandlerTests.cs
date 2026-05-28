@@ -7,7 +7,6 @@ using FluentAssertions;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
-using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
 namespace ContentCore.Tests.Unit;
@@ -16,16 +15,14 @@ file static class SetPrimaryImageHandlerBuilder
 {
     internal static SetPrimaryImageCommandHandler Build(
         IAttachmentRepository attachmentRepository,
-        ICurrentUser? currentUser = null,
-        IEntityOwnershipResolver? ownershipResolver = null,
+        IOwnershipGuard? ownershipGuard = null,
         IContentCoreUnitOfWork? unitOfWork = null,
         HybridCache? cache = null)
     {
         return new SetPrimaryImageCommandHandler(
             attachmentRepository,
             unitOfWork ?? OwnershipAuthFixture.NoOpUnitOfWork(),
-            currentUser ?? OwnershipAuthFixture.NonAdminUser(Guid.NewGuid()),
-            ownershipResolver ?? OwnershipAuthFixture.ResolverReturning(OwnershipAuthFixture.ValidOwner(Guid.NewGuid())),
+            ownershipGuard ?? OwnershipAuthFixture.GuardAllowing(),
             cache ?? OwnershipAuthFixture.NoOpCache(),
             Substitute.For<ILogger<SetPrimaryImageCommandHandler>>());
     }
@@ -39,18 +36,16 @@ public sealed class SetPrimaryImageCommandHandlerTests
     [Fact]
     public async Task Handle_ShouldReturnInvalid_WhenAttachmentBelongsToDifferentEntity()
     {
-        var callerId = Guid.NewGuid();
-        var attachment = SetPrimaryImageHandlerBuilder.BuildAttachment(Guid.NewGuid(), callerId);
+        var attachment = SetPrimaryImageHandlerBuilder.BuildAttachment(Guid.NewGuid(), Guid.NewGuid());
         var requestEntityId = Guid.NewGuid();
         var repository = Substitute.For<IAttachmentRepository>();
         repository.GetByIdAsync(attachment.Id, Arg.Any<CancellationToken>(), true).Returns(attachment);
         var unitOfWork = Substitute.For<IContentCoreUnitOfWork>();
         var cache = Substitute.For<HybridCache>();
-        var resolver = Substitute.For<IEntityOwnershipResolver>();
+        var guard = OwnershipAuthFixture.GuardAllowing();
         var handler = SetPrimaryImageHandlerBuilder.Build(
             repository,
-            currentUser: OwnershipAuthFixture.NonAdminUser(callerId),
-            ownershipResolver: resolver,
+            ownershipGuard: guard,
             unitOfWork: unitOfWork,
             cache: cache);
 
@@ -60,30 +55,25 @@ public sealed class SetPrimaryImageCommandHandlerTests
 
         result.Outcome.Should().Be(Outcome.Invalid);
         result.Errors.Should().Contain(x => x.Code == "Attachment.WrongEntity");
-        await resolver.DidNotReceiveWithAnyArgs().ResolveAsync(default, default, default);
+        await guard.DidNotReceiveWithAnyArgs().AuthorizeAsync(default, default, default!, default, default);
         await repository.DidNotReceiveWithAnyArgs().GetEntityImagesAsync(default, default, default);
         await unitOfWork.DidNotReceiveWithAnyArgs().SaveChangesAsync(default);
         await cache.DidNotReceiveWithAnyArgs().RemoveByTagAsync((string)default!, default);
     }
 
     [Fact]
-    public async Task Handle_ShouldReturnForbidden_WhenUploaderIsNotOwner()
+    public async Task Handle_ShouldReturnForbidden_WhenGuardDenies()
     {
-        var callerId = Guid.NewGuid();
-        var ownerId = Guid.NewGuid();
         var entityId = Guid.NewGuid();
-        var attachment = SetPrimaryImageHandlerBuilder.BuildAttachment(entityId, callerId);
+        var attachment = SetPrimaryImageHandlerBuilder.BuildAttachment(entityId, Guid.NewGuid());
 
         var repository = Substitute.For<IAttachmentRepository>();
         repository.GetByIdAsync(attachment.Id, Arg.Any<CancellationToken>(), true).Returns(attachment);
-        repository.GetEntityImagesAsync(EntityType.Tour, entityId, Arg.Any<CancellationToken>())
-            .Returns(new List<EntityImage>());
         var unitOfWork = Substitute.For<IContentCoreUnitOfWork>();
         var cache = Substitute.For<HybridCache>();
         var handler = SetPrimaryImageHandlerBuilder.Build(
             repository,
-            currentUser: OwnershipAuthFixture.NonAdminUser(callerId),
-            ownershipResolver: OwnershipAuthFixture.ResolverReturning(OwnershipAuthFixture.ValidOwner(ownerId)),
+            ownershipGuard: OwnershipAuthFixture.GuardForbidden(),
             unitOfWork: unitOfWork,
             cache: cache);
 
@@ -95,9 +85,8 @@ public sealed class SetPrimaryImageCommandHandlerTests
     }
 
     [Fact]
-    public async Task Handle_ShouldAllowOwner_WhenCallerOwnsTargetEntity()
+    public async Task Handle_ShouldAllowOwner_WhenGuardAllows()
     {
-        var callerId = Guid.NewGuid();
         var entityId = Guid.NewGuid();
         var attachment = SetPrimaryImageHandlerBuilder.BuildAttachment(entityId, Guid.NewGuid());
         var images = new List<EntityImage>();
@@ -109,8 +98,7 @@ public sealed class SetPrimaryImageCommandHandlerTests
         unitOfWork.SaveChangesAsync(Arg.Any<CancellationToken>()).Returns(1);
         var handler = SetPrimaryImageHandlerBuilder.Build(
             repository,
-            currentUser: OwnershipAuthFixture.NonAdminUser(callerId),
-            ownershipResolver: OwnershipAuthFixture.ResolverReturning(OwnershipAuthFixture.ValidOwner(callerId)),
+            ownershipGuard: OwnershipAuthFixture.GuardAllowing(),
             unitOfWork: unitOfWork);
 
         var result = await handler.Handle(new SetPrimaryImageCommand(EntityType.Tour, entityId, attachment.Id), CancellationToken.None);
@@ -121,9 +109,8 @@ public sealed class SetPrimaryImageCommandHandlerTests
     }
 
     [Fact]
-    public async Task Handle_ShouldSkipResolver_WhenCallerIsAdminTier()
+    public async Task Handle_ShouldSucceed_WhenGuardAllowsAsAdmin()
     {
-        var callerId = Guid.NewGuid();
         var entityId = Guid.NewGuid();
         var attachment = SetPrimaryImageHandlerBuilder.BuildAttachment(entityId, Guid.NewGuid());
 
@@ -133,23 +120,19 @@ public sealed class SetPrimaryImageCommandHandlerTests
             .Returns(new List<EntityImage>());
         var unitOfWork = Substitute.For<IContentCoreUnitOfWork>();
         unitOfWork.SaveChangesAsync(Arg.Any<CancellationToken>()).Returns(1);
-        var resolver = Substitute.For<IEntityOwnershipResolver>();
         var handler = SetPrimaryImageHandlerBuilder.Build(
             repository,
-            currentUser: OwnershipAuthFixture.AdminUser(callerId),
-            ownershipResolver: resolver,
+            ownershipGuard: OwnershipAuthFixture.GuardAllowing(isAdminTier: true),
             unitOfWork: unitOfWork);
 
         var result = await handler.Handle(new SetPrimaryImageCommand(EntityType.Tour, entityId, attachment.Id), CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
-        await resolver.DidNotReceiveWithAnyArgs().ResolveAsync(default, default, default);
     }
 
     [Fact]
     public async Task Handle_ShouldMapUnsupportedEntityType_AndNotMutate()
     {
-        var callerId = Guid.NewGuid();
         var entityId = Guid.NewGuid();
         var attachment = SetPrimaryImageHandlerBuilder.BuildAttachment(entityId, Guid.NewGuid());
         var repository = Substitute.For<IAttachmentRepository>();
@@ -157,8 +140,7 @@ public sealed class SetPrimaryImageCommandHandlerTests
         var unitOfWork = Substitute.For<IContentCoreUnitOfWork>();
         var handler = SetPrimaryImageHandlerBuilder.Build(
             repository,
-            currentUser: OwnershipAuthFixture.NonAdminUser(callerId),
-            ownershipResolver: OwnershipAuthFixture.ResolverReturning(OwnershipAuthFixture.Unsupported()),
+            ownershipGuard: OwnershipAuthFixture.GuardInvalid("Attachment.UnsupportedEntityType", "Unsupported entity type."),
             unitOfWork: unitOfWork);
 
         var result = await handler.Handle(new SetPrimaryImageCommand(EntityType.Tour, entityId, attachment.Id), CancellationToken.None);

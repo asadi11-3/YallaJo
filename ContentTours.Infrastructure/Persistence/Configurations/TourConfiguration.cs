@@ -104,10 +104,14 @@ public class TourConfiguration : IEntityTypeConfiguration<Tour>
         builder.Property(x => x.DiscountPercent).HasPrecision(5, 2);
         builder.Property(x => x.SalePrice).HasPrecision(19, 4);
         builder.Property(x => x.SalePriceCurrency).HasMaxLength(3);
-        builder.Property(x => x.PlaceId);
+        builder.Property(x => x.PlaceId).IsRequired();
+        builder.Property(x => x.ProposedByGuideId).IsRequired(false);
+        builder.Property(x => x.IsExclusive).IsRequired().HasDefaultValue(false);
+        builder.Property(x => x.OwnershipType).IsRequired().HasConversion<int>();
+        builder.Property(x => x.IsOpenForApplications).IsRequired().HasDefaultValue(false);
         builder.Property(x => x.IsChildFriendly).IsRequired().HasDefaultValue(false);
         builder.Property(x => x.IsAccessible).IsRequired().HasDefaultValue(false);
-        builder.HasIndex(x => x.PlaceId).HasFilter("[PlaceId] IS NOT NULL");
+        builder.HasIndex(x => x.PlaceId);
         builder.HasIndex(x => x.Name);
 
         builder.HasIndex(x => x.Slug)
@@ -152,6 +156,11 @@ public class TourConfiguration : IEntityTypeConfiguration<Tour>
 
         builder.HasMany(x => x.TourPricingTiers)
             .WithOne(x => x.Tour)
+            .HasForeignKey(x => x.TourId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasMany(x => x.GuideOfferings)
+            .WithOne()
             .HasForeignKey(x => x.TourId)
             .OnDelete(DeleteBehavior.Cascade);
 

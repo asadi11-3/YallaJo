@@ -2,6 +2,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Storage;
 
+using YallaJo.SharedKernel.Domain.Abstractions.Results;
+using Outcome = YallaJo.SharedKernel.Domain.Abstractions.Results.Outcome;
+
 namespace ContentCore.Infrastructure.Services;
 
 /// <summary>
@@ -29,7 +32,7 @@ internal sealed class LocalFileStorageService : IFileStorageService
             ?? "/uploads";
     }
 
-    public async Task<FileUploadResult> UploadAsync(
+    public async Task<Result<FileUploadResult>> UploadAsync(
         Stream stream,
         string fileName,
         string contentType,
@@ -37,10 +40,14 @@ internal sealed class LocalFileStorageService : IFileStorageService
         CancellationToken ct = default)
     {
         if (stream is null || stream.Length == 0)
-            throw new ArgumentException("File stream is empty.", nameof(stream));
+            return Result<FileUploadResult>.Failure(
+                new Error("FileStorage.EmptyStream", "File stream is empty."),
+                Outcome.Invalid);
 
         if (string.IsNullOrWhiteSpace(fileName))
-            throw new ArgumentException("File name is required.", nameof(fileName));
+            return Result<FileUploadResult>.Failure(
+                new Error("FileStorage.MissingFileName", "File name is required."),
+                Outcome.Invalid);
 
         // Generate a unique file name to prevent collisions
         var extension = Path.GetExtension(fileName);
@@ -63,7 +70,7 @@ internal sealed class LocalFileStorageService : IFileStorageService
             "File uploaded: {StorageKey} ({FileSize} bytes)",
             storageKey, fileSize);
 
-        return new FileUploadResult(url, storageKey, fileSize);
+        return Result<FileUploadResult>.Success(new FileUploadResult(url, storageKey, fileSize));
     }
 
     public Task<bool> DeleteAsync(string fileUrl, CancellationToken ct = default)

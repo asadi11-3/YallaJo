@@ -12,3 +12,19 @@ public sealed record NearbyPlaceResult(
     decimal Longitude,
     decimal AverageRating,
     double DistanceKm);
+
+public sealed record NearbyBusinessResult(
+    Guid Id,
+    string Name,
+    string Slug,
+    int BusinessType,
+    int Status,
+    decimal Latitude,
+    decimal Longitude,
+    string? City,
+    string? Country,
+    decimal AverageRating,
+    int ReviewCount,
+    bool IsVerified,
+    bool IsFeatured,
+    double DistanceKm);

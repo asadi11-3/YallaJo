@@ -1,3 +1,5 @@
+using Booking.Domain.Enums;
+
 namespace Booking.Application.Interfaces;
 
 /// <summary>
@@ -10,14 +12,6 @@ public sealed record BookingProviderSnapshot(
     Guid OwnerUserId,
     string DisplayName,
     BookingProviderStatus Status);
-
-public enum BookingProviderStatus
-{
-    Active = 0,
-    Suspended = 1,
-    PendingApproval = 2,
-    Disabled = 3,
-}
 
 /// <summary>
 /// Reads cached provider snapshots needed during booking creation.

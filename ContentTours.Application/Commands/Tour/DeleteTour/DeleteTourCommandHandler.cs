@@ -25,12 +25,7 @@ public sealed class DeleteTourCommandHandler(
     {
         try
         {
-            if (currentUser.UserId is null)
-            {
-                return Result.Failure(
-                    Error.Unauthorized("Authentication is required."),
-                    Outcome.Unauthorized);
-            }
+            
 
             var tour = await tourRepository
                 .GetByIdAsync(request.Id, cancellationToken, asNoTracking: false)
@@ -42,9 +37,7 @@ public sealed class DeleteTourCommandHandler(
                     Outcome.NotFound);
             }
 
-            var isAdminTier = AppRoles.HighestPrivilegeLevel(currentUser.Roles)
-                >= RolePrivilegeLevel.Admin;
-            if (!isAdminTier && tour.CreatedByUserId != currentUser.UserId.Value)
+            if (tour.CreatedByUserId != currentUser.UserId!.Value)
             {
                 return Result.Failure(
                     new Error("Tour.NotOwner", "You do not have permission to delete this tour."),

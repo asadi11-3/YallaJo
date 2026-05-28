@@ -31,14 +31,9 @@ public sealed class DeleteTourPackageCommandHandler(
     {
         try
         {
-            if (currentUser.UserId is null)
-            {
-                return Result.Failure(
-                    new Error("Auth.Unauthorized", "Authentication is required."),
-                    Outcome.Unauthorized);
-            }
+            
 
-            var callerId = currentUser.UserId.Value;
+            var callerId = currentUser.UserId!.Value;
 
             var package = await repository
                 .GetByIdWithDetailsAsync(request.Id, cancellationToken)
@@ -51,9 +46,7 @@ public sealed class DeleteTourPackageCommandHandler(
                     Outcome.NotFound);
             }
 
-            var isAdminTier = AppRoles.HighestPrivilegeLevel(currentUser.Roles)
-                >= RolePrivilegeLevel.Admin;
-            if (!isAdminTier && package.CreatedByUserId != callerId)
+            if (package.CreatedByUserId != callerId)
             {
                 return Result.Failure(
                     new Error(

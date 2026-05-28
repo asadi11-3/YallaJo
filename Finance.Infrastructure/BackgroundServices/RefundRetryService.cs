@@ -87,17 +87,45 @@ public sealed class RefundRetryService(
                 switch (gatewayResult.Status)
                 {
                     case RefundStatus.Completed:
-                        refund.StampGatewayRefund(gatewayResult.GatewayRefundId);
-                        refund.MarkRefundCompleted(gatewayResult.GatewayRefundId, now);
+                        var stampResult = refund.StampGatewayRefund(gatewayResult.GatewayRefundId);
+                        if (stampResult.IsFailure)
+                        {
+                            logger.LogWarning(
+                                "Refund retry stamp failed for payment {PaymentId}: {Error}.",
+                                refund.Id,
+                                stampResult.Errors.FirstOrDefault()?.Message ?? "Unknown error");
+                        }
+                        var completed = refund.MarkRefundCompleted(gatewayResult.GatewayRefundId, now);
+                        if (completed.IsFailure)
+                        {
+                            logger.LogWarning(
+                                "Refund retry completion failed for payment {PaymentId}: {Error}.",
+                                refund.Id,
+                                completed.Errors.FirstOrDefault()?.Message ?? "Unknown error");
+                        }
                         break;
                     case RefundStatus.Pending:
                         // Webhook will finalize
                         break;
                     case RefundStatus.Failed:
-                        refund.MarkRefundFailed(gatewayResult.FailureCode ?? "Gateway.Failed", now);
+                        var failed = refund.MarkRefundFailed(gatewayResult.FailureCode ?? "Gateway.Failed", now);
+                        if (failed.IsFailure)
+                        {
+                            logger.LogWarning(
+                                "Refund retry failure transition failed for payment {PaymentId}: {Error}.",
+                                refund.Id,
+                                failed.Errors.FirstOrDefault()?.Message ?? "Unknown error");
+                        }
                         if (refund.RetryCount >= _options.MaxRetries)
                         {
-                            refund.RaiseRefundFinallyFailed(gatewayResult.FailureCode ?? "Gateway.Failed", now);
+                            var finalFailed = refund.RaiseRefundFinallyFailed(gatewayResult.FailureCode ?? "Gateway.Failed", now);
+                            if (finalFailed.IsFailure)
+                            {
+                                logger.LogWarning(
+                                    "Refund final failure event failed for payment {PaymentId}: {Error}.",
+                                    refund.Id,
+                                    finalFailed.Errors.FirstOrDefault()?.Message ?? "Unknown error");
+                            }
                         }
                         break;
                 }
@@ -105,7 +133,14 @@ public sealed class RefundRetryService(
             catch (Exception ex)
             {
                 logger.LogError(ex, "Refund retry for payment {PaymentId} threw; will retry next sweep.", refund.Id);
-                refund.MarkRefundFailed("Retry.Exception", now);
+                var retryFailed = refund.MarkRefundFailed("Retry.Exception", now);
+                if (retryFailed.IsFailure)
+                {
+                    logger.LogWarning(
+                        "Refund retry exception transition failed for payment {PaymentId}: {Error}.",
+                        refund.Id,
+                        retryFailed.Errors.FirstOrDefault()?.Message ?? "Unknown error");
+                }
             }
         }
 

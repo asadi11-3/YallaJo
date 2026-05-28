@@ -69,4 +69,14 @@ public sealed class ProviderApplicationRepository(AccountsDbContext context)
 
         return await query.CountAsync(ct);
     }
+
+    public async Task<IReadOnlyList<ProviderApplication>> GetApprovedWithExpiringDocumentsAsync(
+        DateTime expiryThreshold,
+        CancellationToken ct = default)
+        => await context.ProviderApplications
+            .Include(a => a.Documents)
+            .Where(a => a.Status == ProviderApplicationStatus.Approved)
+            .Where(a => a.Documents.Any(d => d.ExpiresAt.HasValue && d.ExpiresAt.Value <= expiryThreshold))
+            .AsNoTracking()
+            .ToListAsync(ct);
 }

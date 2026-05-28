@@ -19,6 +19,7 @@ public sealed class ProviderApplication : AuditableEntity, IAggregateRoot
             [ProviderType.HotelResort]      = [DocumentType.BusinessLicense, DocumentType.TaxRegistration, DocumentType.ProofOfOwnership, DocumentType.HealthAndSafety, DocumentType.FireSafety],
             [ProviderType.ActivityCenter]   = [DocumentType.BusinessLicense, DocumentType.TaxRegistration, DocumentType.RelevantCertification, DocumentType.LiabilityInsurance, DocumentType.FireSafety],
             [ProviderType.Agency]           = [DocumentType.BusinessLicense, DocumentType.TaxRegistration, DocumentType.TourismAuthorityLicense, DocumentType.AffiliatedGuidesList, DocumentType.InsuranceCertificate],
+            [ProviderType.BusinessOwner]    = [DocumentType.BusinessLicense, DocumentType.TaxRegistration, DocumentType.HealthAndSafety],
         };
 
     private const int MaxReapplications = 3;
@@ -167,6 +168,24 @@ public sealed class ProviderApplication : AuditableEntity, IAggregateRoot
         SuspensionReason = null;
         MarkUpdated();
         AddDomainEvent(new ProviderReinstatedDomainEvent(Id, UserId, ReviewedAt.Value));
+        return Result.Success();
+    }
+
+    public Result Reapply()
+    {
+        if (Status is not ProviderApplicationStatus.Rejected)
+            return Result.Failure(ProviderApplicationErrors.InvalidStatus);
+
+        if (ReapplicationCount >= MaxReapplications)
+            return Result.Failure(ProviderApplicationErrors.MaxReapplicationsReached);
+
+        if (CoolingPeriodEndsAt.HasValue && DateTime.UtcNow < CoolingPeriodEndsAt.Value)
+            return Result.Failure(ProviderApplicationErrors.CoolingPeriodActive);
+
+        Status          = ProviderApplicationStatus.Draft;
+        RejectionReason = null;
+        MarkUpdated();
+        AddDomainEvent(new ProviderReappliedDomainEvent(Id, UserId, ReapplicationCount, DateTime.UtcNow));
         return Result.Success();
     }
 

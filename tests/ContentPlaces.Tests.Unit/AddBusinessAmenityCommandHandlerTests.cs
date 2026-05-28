@@ -29,33 +29,10 @@ public sealed class AddBusinessAmenityCommandHandlerTests
         var cache = Substitute.For<HybridCache>();
         var logger = Substitute.For<ILogger<AddBusinessAmenityCommandHandler>>();
 
-        // BOOKING-P0-FIX-001 #7 reconcile: production handler does not inject ICurrentUser;
-        // ownership flows through command.ActingUserId. The substitute is kept on the fixture
-        // tuple so the existing tests can configure the caller identity that ends up as
-        // ActingUserId on the command.
         var handler = new AddBusinessAmenityCommandHandler(
             amenityRepo, businessRepo, uow, cache, logger);
 
         return (handler, amenityRepo, businessRepo, uow, currentUser);
-    }
-
-    // NOTE: production handler authorises by comparing command.ActingUserId with
-    // business.OwnerId. The legacy ICurrentUser-driven tests below were retained but
-    // adapted so each call passes a non-empty ActingUserId. Tests asserting
-    // "Auth.Unauthorized" / "Auth.Forbidden" outcomes are SKIPPED — the production
-    // handler no longer emits those error codes and a future ContentPlaces refactor
-    // owns rewriting them. Keeping the file compiling is the BOOKING-P0-FIX-001 ask.
-
-    [Fact(Skip = "Production handler no longer emits Auth.Unauthorized — out of Booking P0 scope.")]
-    public async Task ReturnsUnauthorizedWhenNotAuthenticated()
-    {
-        var (handler, _, _, _, _) = BuildSubject();
-        var result = await handler.Handle(
-            new AddBusinessAmenityCommand(Guid.NewGuid(), Guid.Empty, "WiFi", null, 0),
-            CancellationToken.None);
-
-        result.IsSuccess.Should().BeFalse();
-        await Task.CompletedTask;
     }
 
     [Fact]
@@ -71,9 +48,10 @@ public sealed class AddBusinessAmenityCommandHandlerTests
             CancellationToken.None);
 
         result.IsSuccess.Should().BeFalse();
+        result.Errors.Should().ContainSingle(x => x.Code == "Business.NotFound");
     }
 
-    [Fact(Skip = "Auth.Forbidden code emitted by old handler — out of Booking P0 scope.")]
+    [Fact]
     public async Task ReturnsForbiddenWhenStandardUserIsNotOwner()
     {
         var (handler, _, businessRepo, _, _) = BuildSubject();
@@ -90,7 +68,7 @@ public sealed class AddBusinessAmenityCommandHandlerTests
             CancellationToken.None);
 
         result.IsSuccess.Should().BeFalse();
-        await Task.CompletedTask;
+        result.Errors.Should().ContainSingle(x => x.Code == "Business.Forbidden");
     }
 
     [Fact]
@@ -119,21 +97,27 @@ public sealed class AddBusinessAmenityCommandHandlerTests
         await uow.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
     }
 
-    [Theory(Skip = "Admin-tier role check now lives in the endpoint metadata — out of Booking P0 scope.")]
-    [InlineData(AppRoles.Admin)]
-    [InlineData(AppRoles.SuperAdmin)]
-    [InlineData(AppRoles.Owner)]
-    public async Task SucceedsWhenCallerHasAdminTierRole(string role)
+    [Fact]
+    public async Task ReturnsDuplicateWhenAmenityExists()
     {
-        _ = role;
-        var (handler, _, _, _, _) = BuildSubject();
-        await Task.CompletedTask;
-    }
+        var (handler, amenityRepo, businessRepo, _, _) = BuildSubject();
+        var ownerId = Guid.NewGuid();
+        var business = TestBusinessFactory.CreateBusiness(ownerId);
 
-    [Fact(Skip = "Auth.Unauthorized code emitted by old handler — out of Booking P0 scope.")]
-    public async Task UnauthorizedErrorUsesFactoryCode()
-    {
-        var (handler, _, _, _, _) = BuildSubject();
-        await Task.CompletedTask;
+        businessRepo
+            .GetByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
+            .Returns(business);
+        amenityRepo
+            .AnyAsync(
+                Arg.Any<Expression<Func<BusinessAmenity, bool>>>(),
+                Arg.Any<CancellationToken>())
+            .Returns(true);
+
+        var result = await handler.Handle(
+            new AddBusinessAmenityCommand(business.Id, ownerId, "WiFi", null, 0),
+            CancellationToken.None);
+
+        result.IsSuccess.Should().BeFalse();
+        result.Errors.Should().ContainSingle(x => x.Code == "BusinessAmenity.Duplicate");
     }
 }

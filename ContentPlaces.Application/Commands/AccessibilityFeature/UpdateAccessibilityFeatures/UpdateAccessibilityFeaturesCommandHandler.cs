@@ -15,25 +15,15 @@ public sealed class UpdateAccessibilityFeaturesCommandHandler(
     IAccessibilityFeatureRepository featureRepository,
     IPlaceRepository placeRepository,
     IContentPlacesUnitOfWork unitOfWork,
-    ICurrentUser currentUser,
     HybridCache cache,
     ILogger<UpdateAccessibilityFeaturesCommandHandler> logger)
     : ICommandHandler<UpdateAccessibilityFeaturesCommand>
 {
-    private const byte PlaceEntityType = 1;
 
     public async Task<Result> Handle(
         UpdateAccessibilityFeaturesCommand request,
         CancellationToken cancellationToken)
     {
-        // Authentication defence-in-depth (endpoint MustHavePermissionAttribute
-        // handles authorization for AccessibilityFeature:Update).
-        if (!currentUser.IsAuthenticated || currentUser.UserId is null)
-        {
-            return Result.Failure(
-                Error.Unauthorized("Authentication required"));
-        }
-
         // Validate place existence
         var placeExists = await placeRepository.AnyAsync(
             x => x.Id == request.PlaceId,
@@ -47,7 +37,7 @@ public sealed class UpdateAccessibilityFeaturesCommandHandler(
 
         // Get existing features
         var existingFeatures = await featureRepository.GetAllAsync(
-            filter: x => x.EntityId == request.PlaceId && x.EntityType == PlaceEntityType,
+            filter: x => x.EntityId == request.PlaceId && x.EntityType == AccessibilityFeatureEntity.EntityTypePlace,
             ct: cancellationToken);
 
         // Remove old features
@@ -58,7 +48,7 @@ public sealed class UpdateAccessibilityFeaturesCommandHandler(
             .GroupBy(x => x.FeatureType)
             .Select(x => x.First())
             .Select(x => AccessibilityFeatureEntity.Create(
-                PlaceEntityType,
+                AccessibilityFeatureEntity.EntityTypePlace,
                 request.PlaceId,
                 x.FeatureType,
                 x.Name,

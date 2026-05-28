@@ -36,14 +36,7 @@ public sealed class CancelTourBookingCommandHandler(
     {
         try
         {
-            if (!currentUser.IsAuthenticated || currentUser.UserId is null)
-            {
-                return Result.Failure<CancelTourBookingResult>(
-                    new Error("TourBooking.Unauthorized", "Authentication is required to cancel a booking."),
-                    Outcome.Unauthorized);
-            }
-
-            var viewerId = currentUser.UserId.Value;
+            var viewerId = currentUser.UserId!.Value;
 
             var booking = await tourBookingRepository
                 .GetByIdWithDetailsAsync(request.BookingId, cancellationToken)

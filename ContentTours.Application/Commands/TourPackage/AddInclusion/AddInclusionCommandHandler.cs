@@ -25,14 +25,9 @@ public sealed class AddInclusionCommandHandler(
     {
         try
         {
-            if (currentUser.UserId is null)
-            {
-                return Result.Failure<Guid>(
-                    new Error("Auth.Unauthorized", "Authentication is required."),
-                    Outcome.Unauthorized);
-            }
+            
 
-            var callerId = currentUser.UserId.Value;
+            var callerId = currentUser.UserId!.Value;
 
             var package = await repository
                 .GetByIdWithDetailsAsync(request.PackageId, cancellationToken)
@@ -45,9 +40,7 @@ public sealed class AddInclusionCommandHandler(
                     Outcome.NotFound);
             }
 
-            var isAdminTier = AppRoles.HighestPrivilegeLevel(currentUser.Roles)
-                >= RolePrivilegeLevel.Admin;
-            if (!isAdminTier && package.CreatedByUserId != callerId)
+            if (package.CreatedByUserId != callerId)
             {
                 return Result.Failure<Guid>(
                     new Error(

@@ -3,6 +3,7 @@ using Analytics.Contracts.IntegrationEvents;
 using Auth.Contracts.IntegrationEvents;
 using Booking.Contracts.IntegrationEvents;
 using ContentBlogs.Contracts.IntegrationEvents;
+using ContentBlogs.Contracts.IntegrationEvents.Creators;
 using ContentCore.Contracts.IntegrationEvents;
 using ContentPlaces.Contracts.BusinessStaff;
 using ContentPlaces.Contracts.IntegrationEvents;
@@ -21,7 +22,7 @@ public static class IntegrationEventTypeRegistry
 {
     private static readonly Dictionary<string, Type> NameToType = new(StringComparer.Ordinal)
     {
-        // Security
+        // ── Security (6) ──
         ["security.user.created.v1"] = typeof(UserCreatedIntegrationEvent),
         ["security.user.email-verified.v1"] = typeof(EmailVerifiedIntegrationEvent),
         ["security.user.password-changed.v1"] = typeof(PasswordChangedIntegrationEvent),
@@ -29,12 +30,12 @@ public static class IntegrationEventTypeRegistry
         ["security.user.phone-updated.v1"] = typeof(PhoneNumberUpdatedIntegrationEvent),
         ["security.user.lifecycle-changed.v1"] = typeof(UserLifecycleChangedIntegrationEvent),
 
-        // Auth
+        // ── Auth (3) ──
         ["auth.user.logged-in.v1"] = typeof(UserLoggedInIntegrationEvent),
         ["auth.session.revoked.v1"] = typeof(SessionRevokedIntegrationEvent),
         ["auth.user.registered.v1"] = typeof(UserRegisteredIntegrationEvent),
 
-        // ContentCore
+        // ── ContentCore (12) ──
         ["content-core.language.activated.v1"] = typeof(LanguageActivatedIntegrationEvent),
         ["content-core.language.deactivated.v1"] = typeof(LanguageDeactivatedIntegrationEvent),
         ["content-core.attachment.uploaded.v1"] = typeof(AttachmentUploadedIntegrationEvent),
@@ -45,11 +46,15 @@ public static class IntegrationEventTypeRegistry
         ["content-core.category.restored.v1"] = typeof(CategoryRestoredIntegrationEvent),
         ["content-core.entity-category.assigned.v1"] = typeof(EntityCategoryAssignedIntegrationEvent),
         ["content-core.entity-category.removed.v1"] = typeof(EntityCategoryRemovedIntegrationEvent),
+        ["content-core.entity-tag.assigned.v1"] = typeof(EntityTagAssignedIntegrationEvent),
+        ["content-core.entity-tag.removed.v1"] = typeof(EntityTagRemovedIntegrationEvent),
 
-        // ContentPlaces
+        // ── ContentPlaces — Places (3) ──
         ["content-places.place.created.v1"] = typeof(PlaceCreatedIntegrationEvent),
         ["content-places.place.updated.v1"] = typeof(PlaceUpdatedIntegrationEvent),
         ["content-places.place.deleted.v1"] = typeof(PlaceDeletedIntegrationEvent),
+
+        // ── ContentPlaces — Businesses (8) ──
         ["content-places.business.created.v1"] = typeof(BusinessCreatedIntegrationEvent),
         ["content-places.business.updated.v1"] = typeof(BusinessUpdatedIntegrationEvent),
         ["content-places.business.deleted.v1"] = typeof(BusinessDeletedIntegrationEvent),
@@ -58,12 +63,17 @@ public static class IntegrationEventTypeRegistry
         ["content-places.business.suspended.v1"] = typeof(BusinessSuspendedIntegrationEvent),
         ["content-places.business.reinstated.v1"] = typeof(BusinessReinstatedIntegrationEvent),
         ["content-places.business.resubmitted.v1"] = typeof(BusinessResubmittedIntegrationEvent),
+        ["content-places.business.more-docs-requested.v1"] = typeof(BusinessMoreDocsRequestedIntegrationEvent),
+
+        // ── ContentPlaces — ServiceItems (2) ──
         ["content-places.service-item.created.v1"] = typeof(ServiceItemCreatedIntegrationEvent),
         ["content-places.service-item.deleted.v1"] = typeof(ServiceItemDeletedIntegrationEvent),
+
+        // ── ContentPlaces — BusinessStaff (2) ──
         ["content-places.business-staff.added.v1"] = typeof(BusinessStaffAddedIntegrationEvent),
         ["content-places.business-staff.removed.v1"] = typeof(BusinessStaffRemovedIntegrationEvent),
 
-        // ContentTours
+        // ── ContentTours (14 core + tour-guide + applications + proposals + packages) ──
         ["content-tours.place.tour-count-updated.v1"] = typeof(PlaceTourCountUpdatedIntegrationEvent),
         ["content-tours.schedule.changed.v1"] = typeof(TourScheduleChangedIntegrationEvent),
         ["content-tours.pricing-tier.changed.v1"] = typeof(TourPricingTierChangedIntegrationEvent),
@@ -76,13 +86,32 @@ public static class IntegrationEventTypeRegistry
         ["content-tours.tour.rejected.v1"] = typeof(TourRejectedIntegrationEvent),
         ["content-tours.tour.suspended.v1"] = typeof(TourSuspendedIntegrationEvent),
         ["content-tours.tour.reinstated.v1"] = typeof(TourReinstatedIntegrationEvent),
+
+        // ContentTours — TourGuide assignment / lifecycle
         ["content-tours.tour-guide.assigned.v1"] = typeof(TourGuideAssignedIntegrationEvent),
         ["content-tours.tour-guide.unassigned.v1"] = typeof(TourGuideUnassignedIntegrationEvent),
+        ["content-tours.tour-guide.suspended.v1"] = typeof(TourGuideSuspendedIntegrationEvent),
+        ["content-tours.tour-guide.activated.v1"] = typeof(TourGuideActivatedIntegrationEvent),
+        ["content-tours.tour-guide.deactivated.v1"] = typeof(TourGuideDeactivatedIntegrationEvent),
+        ["content-tours.tour-guide.profile-updated.v1"] = typeof(TourGuideProfileUpdatedIntegrationEvent),
+        ["content-tours.guide-offering.suspended.v1"] = typeof(GuideTourOfferingSuspendedIntegrationEvent),
+
+        // ContentTours — Guide applications
+        ["content-tours.guide-application.created.v1"] = typeof(NewGuideApplicationIntegrationEvent),
+        ["content-tours.guide-application.approved.v1"] = typeof(GuideApplicationApprovedIntegrationEvent),
+        ["content-tours.guide-application.rejected.v1"] = typeof(GuideApplicationRejectedIntegrationEvent),
+
+        // ContentTours — Tour proposals
+        ["content-tours.tour-proposal.submitted.v1"] = typeof(TourProposalSubmittedIntegrationEvent),
+        ["content-tours.tour-proposal.approved.v1"] = typeof(TourProposalApprovedIntegrationEvent),
+        ["content-tours.tour-proposal.rejected.v1"] = typeof(TourProposalRejectedIntegrationEvent),
+
+        // ContentTours — Packages
         ["content-tours.package.created.v1"] = typeof(TourPackageCreatedIntegrationEvent),
         ["content-tours.package.updated.v1"] = typeof(TourPackageUpdatedIntegrationEvent),
         ["content-tours.package.deleted.v1"] = typeof(TourPackageDeletedIntegrationEvent),
 
-        // ContentBlogs
+        // ── ContentBlogs (13) ──
         ["content-blogs.blog.created.v1"] = typeof(BlogCreatedIntegrationEvent),
         ["content-blogs.blog.updated.v1"] = typeof(BlogUpdatedIntegrationEvent),
         ["content-blogs.blog.deleted.v1"] = typeof(BlogDeletedIntegrationEvent),
@@ -94,15 +123,37 @@ public static class IntegrationEventTypeRegistry
         ["content-blogs.blog-tour.unlinked.v1"] = typeof(BlogTourUnlinkedIntegrationEvent),
         ["content-blogs.blog.featured.v1"] = typeof(BlogFeaturedIntegrationEvent),
         ["content-blogs.blog.unfeatured.v1"] = typeof(BlogUnfeaturedIntegrationEvent),
+        ["content-blogs.blog.submitted-for-review.v1"] = typeof(BlogSubmittedForReviewIntegrationEvent),
+        ["content-blogs.blog.rejected.v1"] = typeof(BlogRejectedIntegrationEvent),
+        ["content-blogs.blog.removed.v1"] = typeof(BlogRemovedIntegrationEvent),
 
-        // ContentSeo
+        // ── Creators (12) ──
+        ["creators.application.submitted.v1"] = typeof(CreatorApplicationSubmittedIntegrationEvent),
+        ["creators.application.approved.v1"] = typeof(CreatorApplicationApprovedIntegrationEvent),
+        ["creators.application.rejected.v1"] = typeof(CreatorApplicationRejectedIntegrationEvent),
+        ["creators.application.more-info-requested.v1"] = typeof(CreatorApplicationMoreInfoRequestedIntegrationEvent),
+        ["creators.profile.suspended.v1"] = typeof(CreatorProfileSuspendedIntegrationEvent),
+        ["creators.profile.reinstated.v1"] = typeof(CreatorProfileReinstatedIntegrationEvent),
+        ["creators.profile.activated.v1"] = typeof(CreatorProfileActivatedIntegrationEvent),
+        ["creators.profile.deactivated.v1"] = typeof(CreatorProfileDeactivatedIntegrationEvent),
+        ["creators.profile.updated.v1"] = typeof(CreatorProfileUpdatedIntegrationEvent),
+        ["creators.invitation.sent.v1"] = typeof(CreatorInvitationSentIntegrationEvent),
+        ["creators.invitation.redeemed.v1"] = typeof(CreatorInvitationRedeemedIntegrationEvent),
+        ["creators.follow.added.v1"] = typeof(CreatorFollowAddedIntegrationEvent),
+
+        // ── Creator Tiers (3) ──
+        ["creators.tier.promoted.v1"] = typeof(CreatorTierPromotedIntegrationEvent),
+        ["creators.tier.demoted.v1"] = typeof(CreatorTierDemotedIntegrationEvent),
+        ["creators.eligible-for-tier-promotion.v1"] = typeof(CreatorEligibleForTierPromotionIntegrationEvent),
+
+        // ── ContentSeo (4) ──
         ["content-seo.faq.changed.v1"] = typeof(FaqItemChangedIntegrationEvent),
         ["content-seo.redirect.created.v1"] = typeof(RedirectCreatedIntegrationEvent),
         ["content-seo.redirect.chain-flattened.v1"] = typeof(RedirectChainFlattenedIntegrationEvent),
         ["content-seo.metadata.changed.v1"] = typeof(SeoMetadataChangedIntegrationEvent),
         ["content-seo.weather.budget-exhausted.v1"] = typeof(WeatherBudgetExhaustedIntegrationEvent),
 
-        // Booking
+        // ── Booking (15) ──
         ["booking.tour-booking.created.v1"] = typeof(TourBookingCreatedIntegrationEvent),
         ["booking.tour-booking.confirmed.v1"] = typeof(TourBookingConfirmedIntegrationEvent),
         ["booking.tour-booking.cancelled.v1"] = typeof(TourBookingCancelledIntegrationEvent),
@@ -115,11 +166,14 @@ public static class IntegrationEventTypeRegistry
         ["booking.slot-lock.created.v1"] = typeof(SlotLockCreatedIntegrationEvent),
         ["booking.slot-lock.released.v1"] = typeof(SlotLockReleasedIntegrationEvent),
         ["booking.availability-slot.capacity-changed.v1"] = typeof(AvailabilitySlotCapacityChangedIntegrationEvent),
-        ["booking.provider-document.expiring.v1"] = typeof(ProviderDocumentExpiringIntegrationEvent),
+        ["booking.reminder.v1"] = typeof(BookingReminderIntegrationEvent),
+        // ProviderDocument events live in BOTH Accounts.Contracts and Booking.Contracts;
+        // the booking.* keys refer to Booking's variants, so qualify explicitly.
+        ["booking.provider-document.expiring.v1"] = typeof(Booking.Contracts.IntegrationEvents.ProviderDocumentExpiringIntegrationEvent),
         ["booking.provider-document.expired.v1"] = typeof(ProviderDocumentExpiredIntegrationEvent),
         ["booking.provider.suspended-doc-expired.v1"] = typeof(ProviderSuspendedDocumentExpiredIntegrationEvent),
 
-        // Finance
+        // ── Finance (11) ──
         ["finance.payment.completed.v1"] = typeof(PaymentCompletedIntegrationEvent),
         ["finance.payment.failed.v1"] = typeof(PaymentFailedIntegrationEvent),
         ["finance.refund.initiated.v1"] = typeof(RefundInitiatedIntegrationEvent),
@@ -131,22 +185,22 @@ public static class IntegrationEventTypeRegistry
         ["finance.commission-rule.upserted.v1"] = typeof(CommissionRuleUpsertedIntegrationEvent),
         ["finance.commission-rule.deleted.v1"] = typeof(CommissionRuleDeletedIntegrationEvent),
         ["finance.dispute.opened.v1"] = typeof(DisputeOpenedIntegrationEvent),
-        ["finance.subscription.activated.v1"] = typeof(SubscriptionActivatedIntegrationEvent),
-        ["finance.subscription.cancelled.v1"] = typeof(SubscriptionCancelledIntegrationEvent),
 
-        // Social
+        // ── Social (7) ──
         ["social.review.published.v1"] = typeof(ReviewPublishedIntegrationEvent),
         ["social.review.deleted.v1"] = typeof(ReviewDeletedIntegrationEvent),
         ["social.favorite.added.v1"] = typeof(FavoriteAddedIntegrationEvent),
+        ["social.report.submitted.v1"] = typeof(ReportSubmittedIntegrationEvent),
         ["social.report.resolved.v1"] = typeof(ReportResolvedIntegrationEvent),
         ["social.rating.recalculated.v1"] = typeof(RatingRecalculatedIntegrationEvent),
+        ["social.review-aggregate.updated.v1"] = typeof(ReviewAggregateUpdatedIntegrationEvent),
 
-        // Analytics
+        // ── Analytics (3) ──
         ["analytics.popularity-scores.recalculated.v1"] = typeof(PopularityScoresRecalculatedIntegrationEvent),
         ["analytics.audit-log.entry-redacted.v1"] = typeof(AuditLogEntryRedactedIntegrationEvent),
         ["analytics.trending.refreshed.v1"] = typeof(TrendingRefreshedIntegrationEvent),
 
-        // Accounts
+        // ── Accounts — Provider (6) ──
         ["accounts.provider.registered.v1"] = typeof(ProviderRegisteredIntegrationEvent),
         ["accounts.provider.approved.v1"] = typeof(ProviderApprovedIntegrationEvent),
         ["accounts.provider.rejected.v1"] = typeof(ProviderRejectedIntegrationEvent),
@@ -154,7 +208,12 @@ public static class IntegrationEventTypeRegistry
         ["accounts.provider.reinstated.v1"] = typeof(ProviderReinstatedIntegrationEvent),
         ["accounts.provider.status-changed.v1"] = typeof(ProviderStatusChangedIntegrationEvent),
 
-        // Messaging
+        // ── Accounts — Agency (3) ──
+        ["accounts.agency.guide-affiliated.v1"] = typeof(AgencyGuideAffiliatedIntegrationEvent),
+        ["accounts.agency.affiliation-created.v1"] = typeof(AgencyAffiliationCreatedIntegrationEvent),
+        ["accounts.agency.affiliation-terminated.v1"] = typeof(AgencyAffiliationTerminatedIntegrationEvent),
+
+        // ── Messaging (6) ──
         ["messaging.notification.delivered.v1"] = typeof(NotificationDeliveredIntegrationEvent),
         ["messaging.notification.failed.v1"] = typeof(NotificationFailedIntegrationEvent),
         ["messaging.ticket.created.v1"] = typeof(TicketCreatedIntegrationEvent),
@@ -162,7 +221,7 @@ public static class IntegrationEventTypeRegistry
         ["messaging.ticket.resolved.v1"] = typeof(SupportTicketResolvedIntegrationEvent),
         ["messaging.support-sla-breached.v1"] = typeof(SupportSlaBreachedIntegrationEvent),
 
-        // Tracking
+        // ── Tracking (2) ──
         ["tracking.live-session.started.v1"] = typeof(LiveTrackingSessionStartedIntegrationEvent),
         ["tracking.live-session.ended.v1"] = typeof(LiveTrackingSessionEndedIntegrationEvent),
     };

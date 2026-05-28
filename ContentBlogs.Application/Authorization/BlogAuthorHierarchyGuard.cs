@@ -15,29 +15,19 @@ public sealed class BlogAuthorHierarchyGuard(
         Guid authorId,
         CancellationToken cancellationToken = default)
     {
-        // ── 1. Authenticated? ─────────────────────────────────────────────────
-        if (!currentUser.IsAuthenticated || currentUser.UserId is null)
-        {
-            return Result.Failure(
-                new Error(
-                    "Blog.Unauthorized",
-                    "Authenticated user is required."),
-                Outcome.Unauthorized);
-        }
-
-        // ── 2. Self-management is always allowed ──────────────────────────────
+        // ── 1. Self-management is always allowed ──────────────────────────────
         // The endpoint's MustHavePermissionAttribute has already verified the
         // actor holds the Blog/{Update|Delete|Approve|Read} permission.  An
         // author with that permission may manage their OWN content regardless
         // of their privilege level — including a Standard author editing their
         // own blog (something the user-management hierarchy explicitly forbids,
         // which is why we do NOT delegate to EnsureCanManageUserAsync).
-        if (currentUser.UserId.Value == authorId)
+        if (currentUser.UserId!.Value == authorId)
         {
             return Result.Success();
         }
 
-        // ── 3. Acting level must be strictly above Standard ───────────────────
+        // ── 2. Acting level must be strictly above Standard ───────────────────
         var actingLevel = AppRoles.HighestPrivilegeLevel(currentUser.Roles);
         if (actingLevel <= RolePrivilegeLevel.Standard)
         {
@@ -52,7 +42,7 @@ public sealed class BlogAuthorHierarchyGuard(
                 Outcome.Forbidden);
         }
 
-        // ── 4. Author level must be strictly below acting level ───────────────
+        // ── 3. Author level must be strictly below acting level ───────────────
         var targetLevel = await privilegeLevelReader
             .GetPrivilegeLevelAsync(authorId, cancellationToken)
             .ConfigureAwait(false);

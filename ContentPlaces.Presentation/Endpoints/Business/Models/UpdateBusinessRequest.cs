@@ -2,7 +2,7 @@ namespace ContentPlaces.Presentation.Endpoints.Business.Models;
 
 public sealed record UpdateBusinessRequest(
     string Name,
-    Guid? PlaceId,
+    Guid PlaceId,
     decimal Latitude,
     decimal Longitude,
     string? Description = null,

@@ -2,14 +2,14 @@ using YallaJo.SharedKernel.Application.Authorization;
 
 namespace Social.Contracts.Authorization;
 
-/// <summary>19 Social-module permissions across 6 features.</summary>
+/// <summary>21 Social-module permissions across 7 features.</summary>
 public sealed class SocialPermissionCatalog : IPermissionCatalog
 {
     public string ModuleName => "Social";
 
     public IReadOnlyList<PermissionDescriptor> Permissions { get; } =
     [
-        // ── Review (4) ──────────────────────────────────────────────────────
+        // ── Review (5) ──────────────────────────────────────────────────────
         new(SocialFeatures.Review, AppAction.Create, PermissionGroup.ContentManagement,
             "Submit a new review for a tour, place, or business"),
         new(SocialFeatures.Review, AppAction.Read, PermissionGroup.ContentManagement,
@@ -18,6 +18,8 @@ public sealed class SocialPermissionCatalog : IPermissionCatalog
             "Edit own review within the 48-hour edit window"),
         new(SocialFeatures.Review, AppAction.Delete, PermissionGroup.ContentManagement,
             "Soft-delete own review"),
+        new(SocialFeatures.Review, AppAction.Vote, PermissionGroup.ContentManagement,
+            "Mark a review as helpful"),
 
         // ── ReviewReply (3) ─────────────────────────────────────────────────
         new(SocialFeatures.ReviewReply, AppAction.Create, PermissionGroup.ContentManagement,
@@ -58,5 +60,8 @@ public sealed class SocialPermissionCatalog : IPermissionCatalog
             "Issue a warning to a content author"),
         new(SocialFeatures.AdminModerationQueue, AppAction.Ban, PermissionGroup.ModerationTools,
             "Ban a user from the platform"),
+
+        new(SocialFeatures.UserModeration, AppAction.Create, PermissionGroup.ModerationTools,
+            "Create a user warning or temporary ban record"),
     ];
 }

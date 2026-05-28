@@ -63,6 +63,16 @@ public sealed class SitemapEntry : AuditableEntity, IAggregateRoot
         MarkUpdated();
     }
 
+    public void UpdateHints(decimal? priority, string? changeFrequency)
+    {
+        if (priority is < 0m or > 1m)
+            throw new ArgumentOutOfRangeException(nameof(priority), "Priority must be between 0.0 and 1.0.");
+
+        Priority = priority;
+        ChangeFrequency = string.IsNullOrWhiteSpace(changeFrequency) ? null : changeFrequency.Trim();
+        Touch();
+    }
+
     /// <summary>Changes the public URL and refreshes LastModified. Used on slug rename.</summary>
     public void ChangeUrl(string newUrl)
     {

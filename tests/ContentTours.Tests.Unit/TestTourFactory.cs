@@ -27,7 +27,7 @@ internal static class TestTourFactory
             shortDescription:        null,
             minAge:                  null,
             meetingPoint:            meetingPoint,
-            placeId:                 placeId);
+            placeId:                 placeId ?? Guid.NewGuid());
     }
 
     public static Tour CreatePending(Guid? createdByUserId = null)

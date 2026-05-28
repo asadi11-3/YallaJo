@@ -14,6 +14,7 @@ using Microsoft.Extensions.Options;
 using YallaJo.SharedKernel.Application.Authorization;
 using YallaJo.SharedKernel.Infrastructure.BackgroundJobs;
 using YallaJo.SharedKernel.Infrastructure.Data;
+using ContentBlogs.Infrastructure.BackgroundServices;
 using YallaJo.SharedKernel.Infrastructure.Outbox;
 
 namespace ContentBlogs.Infrastructure;
@@ -48,6 +49,14 @@ public static class DependencyInjection
         services.AddScoped<IBlogCommentRepository,BlogCommentRepository>();
         services.AddScoped<IBlogTourRepository, BlogTourRepository>();
 
+        // ── Creator Identity repositories ────────────────────────────────
+        services.AddScoped<ICreatorApplicationRepository, CreatorApplicationRepository>();
+        services.AddScoped<ICreatorProfileRepository, CreatorProfileRepository>();
+        services.AddScoped<ICreatorInvitationRepository, CreatorInvitationRepository>();
+        services.AddScoped<ICreatorFollowRepository, CreatorFollowRepository>();
+        services.AddScoped<ICreatorNicheRepository, CreatorNicheRepository>();
+        // ICreatorPostRepository removed — CreatorPost merged into Blog (BlogCreatorPost-Merger plan)
+
         services.AddSingleton<IPermissionCatalog, ContentBlogsPermissionCatalog>();
 
         // ── Author-hierarchy authorization (Phase 1 closure) ─────────────────
@@ -64,10 +73,20 @@ public static class DependencyInjection
         // ContentBlogs.Contracts and never on the Blogs schema directly.
         services.AddScoped<IBlogOwnershipService, BlogOwnershipService>();
 
+        // Disclosure validation — stub until Accounts module provides a real implementation
+        services.AddScoped<IProviderEntitiesReadClient, NullProviderEntitiesReadClient>();
+
         services.Configure<ContentBlogsViewerHashOptions>(
             configuration.GetSection(ContentBlogsViewerHashOptions.SectionName));
         services.AddSingleton<IBlogViewerHashService, BlogViewerHashService>();
         services.AddScoped<IBlogViewCounter, BlogViewCounter>();
+
+        // ── Background services ──────────────────────────────────────────────
+        services.AddHostedService<CreatorInvitationCleanupService>();
+        services.AddHostedService<CreatorTierPromotionService>();
+        services.AddHostedService<CreatorStatsRollupService>();
+        services.AddHostedService<BlogCleanupService>();
+        services.AddHostedService<ProfileCleanupService>();
 
         return services;
     }

@@ -35,9 +35,7 @@ public sealed class DeleteTourPricingTierCommandHandler(
                     Outcome.NotFound);
             }
 
-            var isAdminTier = AppRoles.HighestPrivilegeLevel(currentUser.Roles)
-                >= RolePrivilegeLevel.Admin;
-            if (!isAdminTier && tour.CreatedByUserId != currentUser.UserId!.Value)
+            if (tour.CreatedByUserId != currentUser.UserId!.Value)
             {
                 return Result.Failure(
                    new Error("Tour.NotOwner", "You do not have permission to delete pricing tiers on this tour."),

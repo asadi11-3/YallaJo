@@ -10,6 +10,7 @@ using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
+using Accounts.Contracts.Abstractions;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
 namespace ContentTours.Tests.Unit;
@@ -29,8 +30,10 @@ public sealed class CreateTourCommandHandlerTests
         var cache = Substitute.For<HybridCache>();
         var currentUser = Substitute.For<ICurrentUser>();
         var logger = Substitute.For<ILogger<CreateTourCommandHandler>>();
+        var providerStatus = Substitute.For<IProviderStatusService>();
+        providerStatus.IsApprovedProviderAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>()).Returns(true);
 
-        var handler = new CreateTourCommandHandler(repo, place, uow, cache, currentUser, logger);
+        var handler = new CreateTourCommandHandler(repo, place, providerStatus, uow, cache, currentUser, logger);
         return (handler, repo, place, uow, currentUser);
     }
 
@@ -45,7 +48,7 @@ public sealed class CreateTourCommandHandlerTests
             Currency:                "JOD",
             Latitude:                30.32m,
             Longitude:               35.45m,
-            PlaceId:                 placeId);
+            PlaceId:                 placeId ?? Guid.NewGuid());
 
     [Fact]
     public async Task ReturnsUnauthorizedWhenNotAuthenticated()

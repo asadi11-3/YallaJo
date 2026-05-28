@@ -26,16 +26,7 @@ public sealed class ConfirmTourBookingCommandHandler(
     {
         try
         {
-            // Auth gate (the endpoint also enforces MustHavePermission but the handler must verify the user identity exists).
-            if (!currentUser.IsAuthenticated || currentUser.UserId is null)
-            {
-                logger.LogWarning("ConfirmTourBooking rejected: caller not authenticated.");
-                return Result.Failure<ConfirmTourBookingResult>(
-                    new Error("TourBooking.Unauthorized", "Authentication is required to confirm a booking."),
-                    Outcome.Unauthorized);
-            }
-
-            var viewerId = currentUser.UserId.Value;
+            var viewerId = currentUser.UserId!.Value;
 
             // Load the booking.
             var booking = await tourBookingRepository

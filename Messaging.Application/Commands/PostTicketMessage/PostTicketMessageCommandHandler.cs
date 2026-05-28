@@ -1,13 +1,17 @@
 using MediatR;
+using Messaging.Application.Caching;
 using Messaging.Application.Interfaces;
 using Messaging.Domain.Repositories;
+using Microsoft.Extensions.Caching.Hybrid;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
 namespace Messaging.Application.Commands.PostTicketMessage;
 
 internal sealed class PostTicketMessageCommandHandler(
     ISupportTicketRepository ticketRepository,
-    IMessagingUnitOfWork unitOfWork) : IRequestHandler<PostTicketMessageCommand, Result>
+    IMessagingUnitOfWork unitOfWork,
+    HybridCache cache,
+    TimeProvider timeProvider) : IRequestHandler<PostTicketMessageCommand, Result>
 {
     public async Task<Result> Handle(PostTicketMessageCommand request, CancellationToken cancellationToken)
     {
@@ -22,8 +26,12 @@ internal sealed class PostTicketMessageCommandHandler(
         if (string.IsNullOrWhiteSpace(request.Body))
             return Result.Failure(new Error("SupportTicket.MessageRequired", "Message body is required."), Outcome.UnprocessableEntity);
 
-        ticket.AddMessage(request.AuthorUserId, request.Body, request.IsInternal);
+        ticket.AddMessage(request.AuthorUserId, request.Body, request.IsInternal, timeProvider);
         await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        await cache.RemoveByTagAsync(MessagingCacheKeys.SupportTicketTag(request.TicketId), cancellationToken).ConfigureAwait(false);
+        await cache.RemoveByTagAsync(MessagingCacheKeys.TicketMessagesTag(request.TicketId), cancellationToken).ConfigureAwait(false);
+
         return Result.Success();
     }
 }

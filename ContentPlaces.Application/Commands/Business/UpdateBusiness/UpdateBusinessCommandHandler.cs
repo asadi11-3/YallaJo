@@ -24,11 +24,6 @@ public sealed class UpdateBusinessCommandHandler(
     {
         try
         {
-            if (!currentUser.IsAuthenticated || currentUser.UserId is null)
-            {
-                return Result.Failure(Error.Unauthorized("Authentication is required."), Outcome.Unauthorized);
-            }
-
             var business = await businessRepository.GetByIdAsync(request.Id, cancellationToken, asNoTracking: false);
             if (business is null)
             {
@@ -37,11 +32,8 @@ public sealed class UpdateBusinessCommandHandler(
                     Outcome.NotFound);
             }
 
-            // Owner-or-admin-tier check using the privilege ladder so SuperAdmin/Owner
-            // tiers are honored even without the literal "Admin" role.
-            var isAdminTier = AppRoles.HighestPrivilegeLevel(currentUser.Roles)
-                >= RolePrivilegeLevel.Admin;
-            if (!isAdminTier && business.OwnerId != currentUser.UserId.Value)
+            // Ownership check (IDOR prevention).
+            if (business.OwnerId != currentUser.UserId!.Value)
             {
                 return Result.Failure(
                     Error.Forbidden("You do not have permission to update this business."),
@@ -50,9 +42,10 @@ public sealed class UpdateBusinessCommandHandler(
 
             var oldPlaceId = business.PlaceId;
 
-            if (request.PlaceId.HasValue && request.PlaceId != oldPlaceId)
+            // PlaceId is required; validate it exists
+            if (request.PlaceId != oldPlaceId)
             {
-                if (!await businessRepository.PlaceExistsAsync(request.PlaceId.Value, cancellationToken))
+                if (!await businessRepository.PlaceExistsAsync(request.PlaceId, cancellationToken))
                 {
                     return Result.Failure(
                         new Error("Place.NotFound", $"Place '{request.PlaceId}' was not found or has been deleted."),
@@ -76,15 +69,10 @@ public sealed class UpdateBusinessCommandHandler(
 
             if (request.PlaceId != oldPlaceId)
             {
-                if (oldPlaceId.HasValue)
-                {
-                    await businessRepository.RemovePlaceBusinessJunctionAsync(oldPlaceId.Value, business.Id, cancellationToken);
-                }
-
-                if (request.PlaceId.HasValue)
-                {
-                    await businessRepository.AddPlaceBusinessJunctionAsync(request.PlaceId.Value, business.Id, cancellationToken);
-                }
+                // Remove old junction if it existed
+                await businessRepository.RemovePlaceBusinessJunctionAsync(oldPlaceId, business.Id, cancellationToken);
+                // Add new junction
+                await businessRepository.AddPlaceBusinessJunctionAsync(request.PlaceId, business.Id, cancellationToken);
             }
 
             var saveResult = await SaveAsync(request.Id, cancellationToken);

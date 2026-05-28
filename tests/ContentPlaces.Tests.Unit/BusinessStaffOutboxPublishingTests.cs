@@ -12,6 +12,7 @@ using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Security.Contracts.Authorization;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
+using YallaJo.SharedKernel.Domain.Abstractions.Results;
 using YallaJo.SharedKernel.Domain.Event;
 using StaffEntity = ContentPlaces.Domain.Entities.BusinessStaff;
 
@@ -34,8 +35,6 @@ public sealed class BusinessStaffOutboxPublishingTests
         IContentPlacesUnitOfWork Uow,
         IContentPlacesOutboxWriter Outbox) BuildAddSubject()
     {
-        // BOOKING-P0-FIX-001 #7 reconcile: production AddBusinessStaffCommandHandler at HEAD
-        // does not inject ICurrentUser; authorisation flows through command.ActingUserId.
         var staffRepo = Substitute.For<IBusinessStaffRepository>();
         var businessRepo = Substitute.For<IBusinessRepository>();
         var uow = Substitute.For<IContentPlacesUnitOfWork>();
@@ -91,12 +90,6 @@ public sealed class BusinessStaffOutboxPublishingTests
         await uow.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
     }
 
-    [Fact(Skip = "Auth.Unauthorized emitted by old handler — out of Booking P0 scope.")]
-    public async Task AddBusinessStaff_OnUnauthorized_DoesNotEnqueueOrSave()
-    {
-        await Task.CompletedTask;
-    }
-
     [Fact]
     public async Task AddBusinessStaff_OnNotFound_DoesNotEnqueueOrSave()
     {
@@ -114,10 +107,25 @@ public sealed class BusinessStaffOutboxPublishingTests
         await uow.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
     }
 
-    [Fact(Skip = "Auth.Forbidden emitted by old handler — out of Booking P0 scope.")]
+    [Fact]
     public async Task AddBusinessStaff_OnForbidden_DoesNotEnqueueOrSave()
     {
-        await Task.CompletedTask;
+        var (handler, _, businessRepo, uow, outbox) = BuildAddSubject();
+        var ownerId = Guid.NewGuid();
+        var callerId = Guid.NewGuid();
+        var business = TestBusinessFactory.CreateBusiness(ownerId);
+
+        businessRepo
+            .GetByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
+            .Returns(business);
+
+        var result = await handler.Handle(
+            new AddBusinessStaffCommand(business.Id, callerId, Guid.NewGuid(), BusinessStaffRole.Staff),
+            CancellationToken.None);
+
+        result.IsSuccess.Should().BeFalse();
+        outbox.DidNotReceive().Enqueue(Arg.Any<IIntegrationEvent>());
+        await uow.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
     }
 
     // ── RemoveBusinessStaff ──────────────────────────────────────────────────

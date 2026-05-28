@@ -40,6 +40,7 @@ public sealed class NotificationDeliveryAttempt : BaseEntity
     public static NotificationDeliveryAttempt Create(
         Guid notificationId,
         NotificationChannel channel,
+        TimeProvider timeProvider,
         int attemptNumber = 1)
     {
         return new NotificationDeliveryAttempt
@@ -47,24 +48,24 @@ public sealed class NotificationDeliveryAttempt : BaseEntity
             NotificationId = notificationId,
             Channel        = channel,
             AttemptNumber  = attemptNumber,
-            AttemptedAt    = DateTime.UtcNow,
+            AttemptedAt    = timeProvider.GetUtcNow().UtcDateTime,
             Status         = NotificationDeliveryStatus.Pending,
         };
     }
 
     // ── Business Methods ──────────────────────────────────────────────────────
 
-    public void MarkSucceeded(string? externalRef = null)
+    public void MarkSucceeded(TimeProvider timeProvider, string? externalRef = null)
     {
         Status      = NotificationDeliveryStatus.Succeeded;
         ExternalRef = externalRef;
-        CompletedAt = DateTime.UtcNow;
+        CompletedAt = timeProvider.GetUtcNow().UtcDateTime;
     }
 
-    public void MarkFailed(string reason)
+    public void MarkFailed(TimeProvider timeProvider, string reason)
     {
         Status        = NotificationDeliveryStatus.Failed;
         FailureReason = reason;
-        CompletedAt   = DateTime.UtcNow;
+        CompletedAt   = timeProvider.GetUtcNow().UtcDateTime;
     }
 }

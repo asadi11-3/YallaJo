@@ -33,14 +33,9 @@ public sealed class CreateTourPackageCommandHandler(
     {
         try
         {
-            if (currentUser.UserId is null)
-            {
-                return Result.Failure<Guid>(
-                    new Error("Auth.Unauthorized", "Authentication is required."),
-                    Outcome.Unauthorized);
-            }
+            
 
-            var creatorId = currentUser.UserId.Value;
+            var creatorId = currentUser.UserId!.Value;
 
             // ── 1. IncludedTourIds shape: ≥2 distinct, no Empty ────────────────
             var rawIds = request.IncludedTourIds ?? Array.Empty<Guid>();
@@ -106,10 +101,8 @@ public sealed class CreateTourPackageCommandHandler(
                     Outcome.UnprocessableEntity);
             }
 
-            // ── 6. Ownership: every tour owned by caller unless caller is Admin ─
-            var isAdminTier = AppRoles.HighestPrivilegeLevel(currentUser.Roles)
-                >= RolePrivilegeLevel.Admin;
-            if (!isAdminTier && tours.Any(t => t.CreatedByUserId != creatorId))
+            // ── 6. Ownership: every tour must be owned by caller ─
+            if (tours.Any(t => t.CreatedByUserId != creatorId))
             {
                 return Result.Failure<Guid>(
                     new Error(

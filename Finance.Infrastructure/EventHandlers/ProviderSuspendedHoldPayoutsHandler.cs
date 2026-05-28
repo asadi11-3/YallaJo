@@ -56,7 +56,14 @@ public sealed class ProviderSuspendedHoldPayoutsHandler(
         {
             foreach (var payout in activePayouts)
             {
-                payout.PutOnHold(holdReason);
+                var holdResult = payout.PutOnHold(holdReason);
+                if (holdResult.IsFailure)
+                {
+                    logger.LogWarning(
+                        "Finance: Could not put payout {PayoutId} on hold: {Error}.",
+                        payout.Id,
+                        holdResult.Errors.FirstOrDefault()?.Message ?? "Unknown error");
+                }
             }
 
             logger.LogInformation(

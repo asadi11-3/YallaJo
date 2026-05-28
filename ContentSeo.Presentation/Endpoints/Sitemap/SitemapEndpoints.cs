@@ -5,13 +5,19 @@
 namespace ContentSeo.Presentation.Endpoints.Sitemap;
 
 using ContentSeo.Application.Commands.Sitemap.RegenerateSitemap;
+using ContentSeo.Application.Commands.Sitemap.DeleteSitemapEntry;
+using ContentSeo.Application.Commands.Sitemap.UpdateSitemapEntry;
 using ContentSeo.Application.Interfaces;
+using ContentSeo.Application.Queries.Sitemap.Common;
+using ContentSeo.Application.Queries.Sitemap.ListSitemapEntries;
 using ContentSeo.Contracts.Authorization;
+using ContentSeo.Presentation.Endpoints.Sitemap.Models;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using YallaJo.SharedKernel.Application.Authorization;
+using YallaJo.SharedKernel.Domain.Abstractions.Pagination;
 using YallaJo.SharedKernel.Presentation.Authorization;
 using YallaJo.SharedKernel.Presentation;
 
@@ -19,6 +25,60 @@ internal static class SitemapEndpoints
 {
     internal static void MapSitemapEndpoints(RouteGroupBuilder group)
     {
+        // GET /api/v1/seo/sitemap/entries (admin)
+        group.MapGet("/sitemap/entries", async (
+            string? entityType,
+            bool? isActive,
+            int page,
+            int pageSize,
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            var p = page <= 0 ? 1 : page;
+            var ps = pageSize <= 0 ? 50 : pageSize;
+            var result = await sender.Send(new ListSitemapEntriesQuery(entityType, isActive, p, ps), ct);
+            return result.ToApiResult();
+        })
+        .WithName("ListSitemapEntries")
+        .WithSummary("List sitemap entries with optional filters and pagination.")
+        .Produces<PaginatedResult<SitemapEntryDto>>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .WithMetadata(new MustHavePermissionAttribute(ContentSeoFeatures.Sitemap, AppAction.Read));
+
+        // PATCH /api/v1/seo/sitemap/entries/{id}
+        group.MapPatch("/sitemap/entries/{id:guid}", async (
+            Guid id,
+            UpdateSitemapEntryRequest request,
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            var result = await sender.Send(new UpdateSitemapEntryCommand(id, request.Priority, request.ChangeFrequency), ct);
+            return result.ToApiResult();
+        })
+        .WithName("UpdateSitemapEntry")
+        .WithSummary("Override sitemap entry priority or change frequency.")
+        .Produces(StatusCodes.Status204NoContent)
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .WithMetadata(new MustHavePermissionAttribute(ContentSeoFeatures.Sitemap, AppAction.Update));
+
+        // DELETE /api/v1/seo/sitemap/entries/{id}
+        group.MapDelete("/sitemap/entries/{id:guid}", async (
+            Guid id,
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            var result = await sender.Send(new DeleteSitemapEntryCommand(id), ct);
+            return result.ToApiResult();
+        })
+        .WithName("DeleteSitemapEntry")
+        .WithSummary("Delete a sitemap entry.")
+        .Produces(StatusCodes.Status204NoContent)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .WithMetadata(new MustHavePermissionAttribute(ContentSeoFeatures.Sitemap, AppAction.Delete));
+
         // POST /api/v1/seo/sitemap/regenerate (admin)
         group.MapPost("/sitemap/regenerate", async (ISender sender, CancellationToken ct) =>
         {

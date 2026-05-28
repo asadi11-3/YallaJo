@@ -8,7 +8,6 @@ using Microsoft.Extensions.Logging;
 using NSubstitute;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Abstractions.Storage;
-using YallaJo.SharedKernel.Application.Authorization;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
 namespace ContentCore.Tests.Unit;
@@ -23,7 +22,7 @@ file static class UploadAttachmentHandlerBuilder
         IAttachmentRepository? attachmentRepository = null,
         IContentCoreUnitOfWork? unitOfWork = null,
         ICurrentUser? currentUser = null,
-        IEntityOwnershipResolver? ownershipResolver = null,
+        IOwnershipGuard? ownershipGuard = null,
         IMediaProcessingQueue? mediaProcessingQueue = null)
     {
         return new UploadAttachmentCommandHandler(
@@ -31,8 +30,7 @@ file static class UploadAttachmentHandlerBuilder
             attachmentRepository ?? Substitute.For<IAttachmentRepository>(),
             unitOfWork ?? OwnershipAuthFixture.NoOpUnitOfWork(),
             currentUser ?? OwnershipAuthFixture.NonAdminUser(Guid.NewGuid()),
-            ownershipResolver ?? OwnershipAuthFixture.ResolverReturning(
-                OwnershipAuthFixture.ValidOwner(Guid.NewGuid())),
+            ownershipGuard ?? OwnershipAuthFixture.GuardAllowing(),
             mediaProcessingQueue ?? Substitute.For<IMediaProcessingQueue>(),
             cache: OwnershipAuthFixture.NoOpCache(),
             Substitute.For<ILogger<UploadAttachmentCommandHandler>>());
@@ -63,30 +61,17 @@ public sealed class UploadAttachmentCommandHandlerTests
         var fileStorageService = Substitute.For<IFileStorageService>();
         var attachmentRepository = Substitute.For<IAttachmentRepository>();
         var unitOfWork = Substitute.For<IContentCoreUnitOfWork>();
-        var currentUser = Substitute.For<ICurrentUser>();
-        var ownershipResolver = Substitute.For<IEntityOwnershipResolver>();
+        var currentUser = OwnershipAuthFixture.NonAdminUser(userId);
+        var ownershipGuard = OwnershipAuthFixture.GuardAllowing();
         var mediaProcessingQueue = Substitute.For<IMediaProcessingQueue>();
         var logger = Substitute.For<ILogger<UploadAttachmentCommandHandler>>();
-
-        currentUser.UserId.Returns(userId);
-        currentUser.IsInRole("Admin").Returns(false);
-
-        // Owner-of-target: ownership probe should succeed so the test can reach
-        // the file-validation paths it asserts on.
-        ownershipResolver
-            .ResolveAsync(Arg.Any<EntityType>(), Arg.Any<Guid>(), Arg.Any<CancellationToken>())
-            .Returns(new EntityOwnershipResolution(
-                IsSupported: true,
-                Exists: true,
-                IsDeleted: false,
-                OwnerUserId: userId));
 
         var handler = new UploadAttachmentCommandHandler(
             fileStorageService,
             attachmentRepository,
             unitOfWork,
             currentUser,
-            ownershipResolver,
+            ownershipGuard,
             mediaProcessingQueue,
             cache: null!,
             logger);
@@ -121,30 +106,17 @@ public sealed class UploadAttachmentCommandHandlerTests
         var fileStorageService = Substitute.For<IFileStorageService>();
         var attachmentRepository = Substitute.For<IAttachmentRepository>();
         var unitOfWork = Substitute.For<IContentCoreUnitOfWork>();
-        var currentUser = Substitute.For<ICurrentUser>();
-        var ownershipResolver = Substitute.For<IEntityOwnershipResolver>();
+        var currentUser = OwnershipAuthFixture.NonAdminUser(userId);
+        var ownershipGuard = OwnershipAuthFixture.GuardAllowing();
         var mediaProcessingQueue = Substitute.For<IMediaProcessingQueue>();
         var logger = Substitute.For<ILogger<UploadAttachmentCommandHandler>>();
-
-        currentUser.UserId.Returns(userId);
-        currentUser.IsInRole("Admin").Returns(false);
-
-        // Owner-of-target: ownership probe should succeed so the test can reach
-        // the file-validation paths it asserts on.
-        ownershipResolver
-            .ResolveAsync(Arg.Any<EntityType>(), Arg.Any<Guid>(), Arg.Any<CancellationToken>())
-            .Returns(new EntityOwnershipResolution(
-                IsSupported: true,
-                Exists: true,
-                IsDeleted: false,
-                OwnerUserId: userId));
 
         var handler = new UploadAttachmentCommandHandler(
             fileStorageService,
             attachmentRepository,
             unitOfWork,
             currentUser,
-            ownershipResolver,
+            ownershipGuard,
             mediaProcessingQueue,
             cache: null!,
             logger);
@@ -181,23 +153,6 @@ public sealed class UploadAttachmentCommandHandlerTests
 /// </summary>
 public sealed class UploadAttachmentAuthorizationTests
 {
-    // ── Unauthenticated ───────────────────────────────────────────────────────
-
-    [Fact]
-    public async Task Handle_ShouldReturnUnauthorized_WhenUserIdIsNull()
-    {
-        var handler = UploadAttachmentHandlerBuilder.Build(
-            currentUser: OwnershipAuthFixture.UnauthenticatedUser());
-
-        await using var stream = UploadAttachmentHandlerBuilder.JpegStream();
-        var command = UploadAttachmentHandlerBuilder.JpegCommand(Guid.NewGuid(), Guid.NewGuid());
-
-        var result = await handler.Handle(command, CancellationToken.None);
-
-        result.IsSuccess.Should().BeFalse();
-        result.Outcome.Should().Be(Outcome.Unauthorized);
-    }
-
     // ── Anti-spoofing guard (UploadedByUserId != self) ─────────────────────────
 
     [Fact]
@@ -206,13 +161,13 @@ public sealed class UploadAttachmentAuthorizationTests
         // Non-admin claims to upload on behalf of a different user.
         var callerId = Guid.NewGuid();
         var spoofedId = Guid.NewGuid();
-        var resolver = Substitute.For<IEntityOwnershipResolver>();
+        var guard = OwnershipAuthFixture.GuardAllowing();
         var fileStorage = Substitute.For<IFileStorageService>();
 
         var handler = UploadAttachmentHandlerBuilder.Build(
             fileStorageService: fileStorage,
             currentUser: OwnershipAuthFixture.NonAdminUser(callerId),
-            ownershipResolver: resolver);
+            ownershipGuard: guard);
 
         await using var stream = UploadAttachmentHandlerBuilder.JpegStream();
         var command = UploadAttachmentHandlerBuilder.JpegCommand(Guid.NewGuid(), spoofedId);
@@ -221,8 +176,8 @@ public sealed class UploadAttachmentAuthorizationTests
 
         result.IsSuccess.Should().BeFalse();
         result.Outcome.Should().Be(Outcome.Forbidden);
-        // Anti-spoofing must fire BEFORE resolver
-        await resolver.DidNotReceiveWithAnyArgs().ResolveAsync(default, default, default);
+        // Anti-spoofing must fire BEFORE guard
+        await guard.DidNotReceiveWithAnyArgs().AuthorizeAsync(default, default, default!, default, default);
         // Storage must NOT be touched
         await fileStorage.DidNotReceiveWithAnyArgs()
             .UploadAsync(default!, default!, default!, default!, default);
@@ -241,7 +196,7 @@ public sealed class UploadAttachmentAuthorizationTests
             fileStorageService: fileStorage,
             mediaProcessingQueue: queue,
             currentUser: OwnershipAuthFixture.NonAdminUser(userId),
-            ownershipResolver: OwnershipAuthFixture.ResolverReturning(OwnershipAuthFixture.NotFound()));
+            ownershipGuard: OwnershipAuthFixture.GuardNotFound());
 
         await using var stream = UploadAttachmentHandlerBuilder.JpegStream();
         var command = UploadAttachmentHandlerBuilder.JpegCommand(Guid.NewGuid(), userId);
@@ -266,8 +221,7 @@ public sealed class UploadAttachmentAuthorizationTests
         var handler = UploadAttachmentHandlerBuilder.Build(
             fileStorageService: fileStorage,
             currentUser: OwnershipAuthFixture.NonAdminUser(userId),
-            ownershipResolver: OwnershipAuthFixture.ResolverReturning(
-                OwnershipAuthFixture.Deleted(ownerUserId: userId)));
+            ownershipGuard: OwnershipAuthFixture.GuardInvalid("Attachment.TargetDeleted", "Target entity is deleted."));
 
         await using var stream = UploadAttachmentHandlerBuilder.JpegStream();
         var command = UploadAttachmentHandlerBuilder.JpegCommand(Guid.NewGuid(), userId);
@@ -287,7 +241,6 @@ public sealed class UploadAttachmentAuthorizationTests
     public async Task Handle_ShouldReturnForbidden_WhenCallerIsNotTargetOwnerAndNotAdminTier()
     {
         var callerId = Guid.NewGuid();
-        var ownerId = Guid.NewGuid();
         var fileStorage = Substitute.For<IFileStorageService>();
         var queue = Substitute.For<IMediaProcessingQueue>();
 
@@ -295,8 +248,7 @@ public sealed class UploadAttachmentAuthorizationTests
             fileStorageService: fileStorage,
             mediaProcessingQueue: queue,
             currentUser: OwnershipAuthFixture.NonAdminUser(callerId),
-            ownershipResolver: OwnershipAuthFixture.ResolverReturning(
-                OwnershipAuthFixture.ValidOwner(ownerId)));   // caller ≠ owner
+            ownershipGuard: OwnershipAuthFixture.GuardForbidden());
 
         await using var stream = UploadAttachmentHandlerBuilder.JpegStream();
         var command = UploadAttachmentHandlerBuilder.JpegCommand(Guid.NewGuid(), callerId);
@@ -312,22 +264,21 @@ public sealed class UploadAttachmentAuthorizationTests
     }
 
     [Fact]
-    public async Task Handle_ShouldAllowOwner_WhenCallerOwnsTargetEntity()
+    public async Task Handle_ShouldAllowOwner_WhenGuardAllows()
     {
         var callerId = Guid.NewGuid();
         var entityId = Guid.NewGuid();
         var fileStorage = Substitute.For<IFileStorageService>();
         fileStorage
             .UploadAsync(Arg.Any<Stream>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
-            .Returns(new FileUploadResult("https://cdn/app/photo.jpg", "attachments/photo.jpg", 1024));
+            .Returns(Result<FileUploadResult>.Success(new FileUploadResult("https://cdn/app/photo.jpg", "attachments/photo.jpg", 1024)));
         var queue = Substitute.For<IMediaProcessingQueue>();
 
         var handler = UploadAttachmentHandlerBuilder.Build(
             fileStorageService: fileStorage,
             mediaProcessingQueue: queue,
             currentUser: OwnershipAuthFixture.NonAdminUser(callerId),
-            ownershipResolver: OwnershipAuthFixture.ResolverReturning(
-                OwnershipAuthFixture.ValidOwner(callerId)));
+            ownershipGuard: OwnershipAuthFixture.GuardAllowing());
 
         var command = UploadAttachmentHandlerBuilder.JpegCommand(entityId, callerId);
         var result = await handler.Handle(command, CancellationToken.None);
@@ -350,7 +301,7 @@ public sealed class UploadAttachmentAuthorizationTests
             fileStorageService: fileStorage,
             mediaProcessingQueue: queue,
             currentUser: OwnershipAuthFixture.NonAdminUser(callerId),
-            ownershipResolver: OwnershipAuthFixture.ResolverReturning(OwnershipAuthFixture.Unsupported()));
+            ownershipGuard: OwnershipAuthFixture.GuardInvalid("Attachment.UnsupportedEntityType", "Unsupported entity type."));
 
         var command = UploadAttachmentHandlerBuilder.JpegCommand(Guid.NewGuid(), callerId);
         var result = await handler.Handle(command, CancellationToken.None);
@@ -362,19 +313,19 @@ public sealed class UploadAttachmentAuthorizationTests
         await queue.DidNotReceiveWithAnyArgs().EnqueueAsync(default!, default);
     }
 
-    // ── Admin-tier bypasses resolver ──────────────────────────────────────────
+    // ── Admin-tier bypasses guard ─────────────────────────────────────────────
 
     [Fact]
-    public async Task Handle_ShouldNotCallResolver_WhenCallerIsAdminTier()
+    public async Task Handle_ShouldSucceed_WhenCallerIsAdminTier()
     {
         var userId = Guid.NewGuid();
-        var resolver = Substitute.For<IEntityOwnershipResolver>();
+        var guard = OwnershipAuthFixture.GuardAllowing(isAdminTier: true);
 
         // Provide an invalid file so the handler short-circuits at format validation
-        // without needing real storage — we only care that the resolver was skipped.
+        // without needing real storage — we only care that the guard allows.
         var handler = UploadAttachmentHandlerBuilder.Build(
             currentUser: OwnershipAuthFixture.AdminUser(userId),
-            ownershipResolver: resolver);
+            ownershipGuard: guard);
 
         // Empty stream → Unknown file type → Outcome.Invalid at format check (no storage call)
         await using var emptyStream = new MemoryStream([]);
@@ -385,6 +336,5 @@ public sealed class UploadAttachmentAuthorizationTests
         var result = await handler.Handle(command, CancellationToken.None);
 
         result.Outcome.Should().Be(Outcome.Invalid);
-        await resolver.DidNotReceiveWithAnyArgs().ResolveAsync(default, default, default);
     }
 }

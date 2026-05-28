@@ -7,8 +7,10 @@ namespace Booking.Presentation.Endpoints.TourBooking;
 /// </summary>
 public sealed record CreateTourBookingRequest(
     Guid TourId,
+    Guid GuideId,
     Guid AvailabilitySlotId,
     ParticipantBreakdownRequest ParticipantBreakdown,
+    bool IsPrivate,
     string? PromoCode,
     int LoyaltyPointsToRedeem,
     string? SpecialRequests)
@@ -16,8 +18,10 @@ public sealed record CreateTourBookingRequest(
     public CreateTourBookingCommand ToCommand()
         => new(
             TourId: TourId,
+            GuideId: GuideId,
             AvailabilitySlotId: AvailabilitySlotId,
             ParticipantBreakdown: ParticipantBreakdown.ToDomain(),
+            IsPrivate: IsPrivate,
             PromoCode: PromoCode,
             LoyaltyPointsToRedeem: LoyaltyPointsToRedeem,
             SpecialRequests: SpecialRequests);

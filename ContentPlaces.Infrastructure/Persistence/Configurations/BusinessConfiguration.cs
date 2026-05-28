@@ -31,7 +31,7 @@ public class BusinessConfiguration : IEntityTypeConfiguration<Business>
             .IsRequired()
             .HasConversion<int>();
 
-        builder.Property(x => x.PlaceId).IsRequired(false);
+        builder.Property(x => x.PlaceId).IsRequired();
 
         builder.OwnsOne(e => e.Location, loc =>
         {
@@ -115,6 +115,11 @@ public class BusinessConfiguration : IEntityTypeConfiguration<Business>
 
         builder.Property(x => x.Status).IsRequired().HasConversion<int>();
         builder.Property(x => x.RejectionReason).IsRequired(false).HasMaxLength(1000);
+        builder.Property(x => x.ResubmitCount).IsRequired().HasDefaultValue(0);
+        builder.Property(x => x.SubmittedAt).IsRequired(false);
+        builder.Property(x => x.ReviewDeadline).IsRequired(false);
+        builder.Property(x => x.DocumentExpiryDate).IsRequired(false);
+        builder.Property(x => x.GracePeriodEnd).IsRequired(false);
         builder.Property(x => x.SubscriptionTier).IsRequired(false).HasConversion<int?>();
         builder.Property(x => x.IsHalal).IsRequired(false);
         builder.Property(x => x.HasVegetarianOptions).IsRequired(false);
@@ -157,5 +162,13 @@ public class BusinessConfiguration : IEntityTypeConfiguration<Business>
         builder.HasIndex(x => x.Slug).IsUnique();
         builder.HasIndex(x => x.PlaceId);
         builder.HasIndex(x => x.OwnerId);
+        builder.HasIndex(x => new { x.LicenseNumber, x.BusinessType })
+            .IsUnique()
+            .HasFilter("[LicenseNumber] IS NOT NULL AND [IsDeleted] = 0");
+
+        // One business type per place per provider (prevents duplicate listings)
+        builder.HasIndex(x => new { x.PlaceId, x.BusinessType, x.OwnerId })
+            .IsUnique()
+            .HasFilter("[IsDeleted] = 0");
     }
 }

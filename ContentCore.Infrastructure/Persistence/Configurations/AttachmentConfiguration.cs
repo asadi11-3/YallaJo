@@ -60,6 +60,10 @@ public class AttachmentConfiguration : IEntityTypeConfiguration<Attachment>
             .IsRequired(false)
             .HasColumnType("varbinary(max)");
 
+        builder.Property(x => x.IsMarkedForDeletion)
+            .IsRequired()
+            .HasDefaultValue(false);
+
         builder.Property(x => x.UploadedAt).IsRequired();
         builder.Property(x => x.UploadedByUserId).IsRequired();
         builder.Property(x => x.CreatedAt).IsRequired();

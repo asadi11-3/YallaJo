@@ -61,6 +61,40 @@ public sealed class Redirect : AuditableEntity, IAggregateRoot
         AddDomainEvent(new RedirectDeactivatedDomainEvent(Id, OldUrl));
     }
 
+    public void Update(string? newUrl, int? statusCode)
+    {
+        EnsureNotDeleted();
+
+        var changed = false;
+        var originalNewUrl = NewUrl;
+        var originalStatusCode = StatusCode;
+
+        if (!string.IsNullOrWhiteSpace(newUrl) && !string.Equals(NewUrl, newUrl.Trim(), StringComparison.Ordinal))
+        {
+            NewUrl = newUrl.Trim();
+            changed = true;
+        }
+
+        if (statusCode.HasValue && StatusCode != statusCode.Value)
+        {
+            if (!AllowedStatusCodes.Contains(statusCode.Value))
+                throw new ArgumentException(
+                    $"StatusCode must be one of: {string.Join(", ", AllowedStatusCodes)}.",
+                    nameof(statusCode));
+
+            StatusCode = statusCode.Value;
+            changed = true;
+        }
+
+        if (!changed)
+        {
+            return;
+        }
+
+        MarkUpdated();
+        AddDomainEvent(new RedirectUpdatedDomainEvent(Id, OldUrl, originalNewUrl, NewUrl, originalStatusCode, StatusCode));
+    }
+
     /// <summary>
     /// Records a single hit on this redirect. Fire-and-forget — no domain event, no audit stamp.
     /// </summary>

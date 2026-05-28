@@ -68,21 +68,21 @@ public sealed class Notification : AuditableEntity, IAggregateRoot
     // ── Business Methods ──────────────────────────────────────────────────────
 
     /// <summary>Marks notification as sent by the delivery service. Idempotent.</summary>
-    public void MarkSent(string? externalRef = null)
+    public void MarkSent(TimeProvider timeProvider, string? externalRef = null)
     {
         if (SentAt.HasValue) return; // idempotent
-        SentAt = DateTime.UtcNow;
+        SentAt = timeProvider.GetUtcNow().UtcDateTime;
         ExternalRef = externalRef;
         AddDomainEvent(new NotificationDeliveredDomainEvent(Id, UserId, Channel, SentAt.Value));
         MarkUpdated();
     }
 
     /// <summary>Marks notification as read. Idempotent.</summary>
-    public void MarkRead()
+    public void MarkRead(TimeProvider timeProvider)
     {
         if (IsRead) return; // idempotent
         IsRead = true;
-        ReadAt = DateTime.UtcNow;
+        ReadAt = timeProvider.GetUtcNow().UtcDateTime;
         AddDomainEvent(new NotificationReadDomainEvent(Id, UserId, ReadAt.Value));
         MarkUpdated();
     }

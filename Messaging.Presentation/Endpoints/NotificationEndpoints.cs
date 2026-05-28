@@ -1,4 +1,5 @@
 using MediatR;
+using Messaging.Application.Commands.BatchDeleteNotifications;
 using Messaging.Application.Commands.DeleteNotification;
 using Messaging.Application.Commands.MarkAllNotificationsRead;
 using Messaging.Application.Commands.MarkNotificationRead;
@@ -30,10 +31,8 @@ internal static class NotificationEndpoints
             ISender sender,
             CancellationToken ct) =>
         {
-            if (!currentUser.IsAuthenticated || currentUser.UserId is null)
-                return Result.Failure<object>(new Error("Notification.Unauthorized", "Not authenticated"), Outcome.Unauthorized).ToApiResult();
             var query = new GetMyNotificationsQuery(
-                currentUser.UserId.Value,
+                currentUser.UserId!.Value,
                 req.Type,
                 req.IsRead,
                 req.From,
@@ -51,9 +50,7 @@ internal static class NotificationEndpoints
             ISender sender,
             CancellationToken ct) =>
         {
-            if (!currentUser.IsAuthenticated || currentUser.UserId is null)
-                return Result.Failure<int>(new Error("Notification.Unauthorized", "Not authenticated"), Outcome.Unauthorized).ToApiResult();
-            var result = await sender.Send(new GetUnreadCountQuery(currentUser.UserId.Value), ct);
+            var result = await sender.Send(new GetUnreadCountQuery(currentUser.UserId!.Value), ct);
             return result.ToApiResult();
         }).WithName("GetUnreadNotificationCount").WithTags("Notifications")
           .WithMetadata(new MustHavePermissionAttribute(MessagingFeatures.Notification, AppAction.Read))
@@ -64,9 +61,7 @@ internal static class NotificationEndpoints
             ISender sender,
             CancellationToken ct) =>
         {
-            if (!currentUser.IsAuthenticated || currentUser.UserId is null)
-                return Result.Failure<object>(new Error("Notification.Unauthorized", "Not authenticated"), Outcome.Unauthorized).ToApiResult();
-            var result = await sender.Send(new GetMyPreferencesQuery(currentUser.UserId.Value), ct);
+            var result = await sender.Send(new GetMyPreferencesQuery(currentUser.UserId!.Value), ct);
             return result.ToApiResult();
         }).WithName("GetMyNotificationPreferences").WithTags("Notifications")
           .WithMetadata(new MustHavePermissionAttribute(MessagingFeatures.NotificationPreference, AppAction.Read))
@@ -78,9 +73,7 @@ internal static class NotificationEndpoints
             ISender sender,
             CancellationToken ct) =>
         {
-            if (!currentUser.IsAuthenticated || currentUser.UserId is null)
-                return Result.Failure(new Error("Notification.Unauthorized", "Not authenticated"), Outcome.Unauthorized).ToApiResult();
-            var cmd = new UpdatePreferencesCommand(currentUser.UserId.Value, request.Updates);
+            var cmd = new UpdatePreferencesCommand(currentUser.UserId!.Value, request.Updates);
             var result = await sender.Send(cmd, ct);
             return result.ToApiResult();
         }).WithName("UpdateNotificationPreferences").WithTags("Notifications")
@@ -93,9 +86,7 @@ internal static class NotificationEndpoints
             ISender sender,
             CancellationToken ct) =>
         {
-            if (!currentUser.IsAuthenticated || currentUser.UserId is null)
-                return Result.Failure(new Error("Notification.Unauthorized", "Not authenticated"), Outcome.Unauthorized).ToApiResult();
-            var result = await sender.Send(new MarkNotificationReadCommand(id, currentUser.UserId.Value), ct);
+            var result = await sender.Send(new MarkNotificationReadCommand(id, currentUser.UserId!.Value), ct);
             return result.ToApiResult();
         }).WithName("MarkNotificationRead").WithTags("Notifications")
           .WithMetadata(new MustHavePermissionAttribute(MessagingFeatures.Notification, AppAction.Update))
@@ -106,12 +97,22 @@ internal static class NotificationEndpoints
             ISender sender,
             CancellationToken ct) =>
         {
-            if (!currentUser.IsAuthenticated || currentUser.UserId is null)
-                return Result.Failure(new Error("Notification.Unauthorized", "Not authenticated"), Outcome.Unauthorized).ToApiResult();
-            var result = await sender.Send(new MarkAllNotificationsReadCommand(currentUser.UserId.Value), ct);
+            var result = await sender.Send(new MarkAllNotificationsReadCommand(currentUser.UserId!.Value), ct);
             return result.ToApiResult();
         }).WithName("MarkAllNotificationsRead").WithTags("Notifications")
           .WithMetadata(new MustHavePermissionAttribute(MessagingFeatures.Notification, AppAction.Update))
+          .RequireAuthorization();
+
+        group.MapDelete("/batch", async (
+            BatchDeleteNotificationsRequest request,
+            ICurrentUser currentUser,
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            var result = await sender.Send(new BatchDeleteNotificationsCommand(request.Ids, currentUser.UserId!.Value), ct);
+            return result.ToApiResult();
+        }).WithName("BatchDeleteNotifications").WithTags("Notifications")
+          .WithMetadata(new MustHavePermissionAttribute(MessagingFeatures.Notification, AppAction.Delete))
           .RequireAuthorization();
 
         group.MapDelete("/{id:guid}", async (
@@ -120,9 +121,7 @@ internal static class NotificationEndpoints
             ISender sender,
             CancellationToken ct) =>
         {
-            if (!currentUser.IsAuthenticated || currentUser.UserId is null)
-                return Result.Failure(new Error("Notification.Unauthorized", "Not authenticated"), Outcome.Unauthorized).ToApiResult();
-            var result = await sender.Send(new DeleteNotificationCommand(id, currentUser.UserId.Value), ct);
+            var result = await sender.Send(new DeleteNotificationCommand(id, currentUser.UserId!.Value), ct);
             return result.ToApiResult();
         }).WithName("DeleteNotification").WithTags("Notifications")
           .WithMetadata(new MustHavePermissionAttribute(MessagingFeatures.Notification, AppAction.Delete))
@@ -134,9 +133,7 @@ internal static class NotificationEndpoints
             ISender sender,
             CancellationToken ct) =>
         {
-            if (!currentUser.IsAuthenticated || currentUser.UserId is null)
-                return Result.Failure<object>(new Error("Notification.Unauthorized", "Not authenticated"), Outcome.Unauthorized).ToApiResult();
-            var result = await sender.Send(new GetNotificationByIdQuery(id, currentUser.UserId.Value), ct);
+            var result = await sender.Send(new GetNotificationByIdQuery(id, currentUser.UserId!.Value), ct);
             return result.ToApiResult();
         }).WithName("GetNotificationById").WithTags("Notifications")
           .WithMetadata(new MustHavePermissionAttribute(MessagingFeatures.Notification, AppAction.Read))
@@ -155,3 +152,5 @@ internal sealed record GetNotificationsRequest(
     int? PageSize);
 
 internal sealed record UpdatePreferencesRequest(IReadOnlyList<PreferenceUpdate> Updates);
+
+internal sealed record BatchDeleteNotificationsRequest(IReadOnlyList<Guid> Ids);

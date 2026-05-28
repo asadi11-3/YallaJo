@@ -14,4 +14,16 @@ public static class AccountsCacheKeys
     public const string AdminProviderQueue = "accounts:admin:provider-queue";
 
     public const string AdminProviderQueueTag = "accounts:admin:provider-queue:tag";
+
+    // Agency
+    public static string AgencyGuides(Guid agencyUserId) => $"accounts:agency:{agencyUserId}:guides";
+    public static string AgencyGuidesTag(Guid agencyUserId) => $"accounts:agency:{agencyUserId}:guides:tag";
+    public static string AgencyInvitations(Guid userId) => $"accounts:agency:{userId}:invitations";
+    public static string AgencyInvitationsTag(Guid userId) => $"accounts:agency:{userId}:invitations:tag";
+    public static string AgencyApplications(Guid agencyUserId) => $"accounts:agency:{agencyUserId}:applications";
+    public static string AgencyApplicationsTag(Guid agencyUserId) => $"accounts:agency:{agencyUserId}:applications:tag";
+    public const string AvailableGuides = "accounts:agency:available-guides";
+    public const string AvailableGuidesTag = "accounts:agency:available-guides:tag";
+    public const string AgencyList = "accounts:agencies";
+    public const string AgencyListTag = "accounts:agencies:tag";
 }

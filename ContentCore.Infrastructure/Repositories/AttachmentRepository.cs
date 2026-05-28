@@ -13,8 +13,15 @@ internal sealed class AttachmentRepository(ContentCoreDbContext context)
     public async Task<IReadOnlyList<EntityImage>> GetEntityImagesAsync(
         EntityType entityType, Guid entityId, CancellationToken ct = default)
         => await _context.Set<EntityImage>()
+            .AsNoTracking()
             .Where(x => x.EntityType == entityType && x.EntityId == entityId)
+            .OrderBy(x => x.SortOrder)
             .ToListAsync(ct);
+
+    public async Task<int> CountByEntityAsync(
+        EntityType entityType, Guid entityId, CancellationToken ct = default)
+        => await _context.Set<Attachment>()
+            .CountAsync(x => x.EntityType == entityType && x.EntityId == entityId, ct);
 
     public void AddEntityImage(EntityImage entityImage)
         => _context.Set<EntityImage>().Add(entityImage);

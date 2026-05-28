@@ -19,6 +19,7 @@ public sealed class TourBookingTests
     private static readonly Guid ProviderId = Guid.Parse("33333333-3333-3333-3333-333333333333");
     private static readonly Guid SlotId = Guid.Parse("44444444-4444-4444-4444-444444444444");
     private static readonly Guid CompletedBy = Guid.Parse("55555555-5555-5555-5555-555555555555");
+    private static readonly Guid GuideId = Guid.Parse("66666666-6666-6666-6666-666666666666");
 
     private static BookingPricing DefaultPricing(decimal totalAmount = 90m, string currency = "JOD") =>
         new(
@@ -46,6 +47,7 @@ public sealed class TourBookingTests
             userId: UserId,
             tourId: TourId,
             providerId: ProviderId,
+            guideId: GuideId,
             availabilitySlotId: SlotId,
             participantCount: 2,
             pricing: pricing,
@@ -104,6 +106,7 @@ public sealed class TourBookingTests
                 userId: Guid.Empty,
                 tourId: TourId,
                 providerId: ProviderId,
+                guideId: GuideId,
                 availabilitySlotId: SlotId,
                 participantCount: 2,
                 pricing: DefaultPricing(),
@@ -116,6 +119,7 @@ public sealed class TourBookingTests
                 userId: UserId,
                 tourId: TourId,
                 providerId: ProviderId,
+                guideId: GuideId,
                 availabilitySlotId: SlotId,
                 participantCount: 0,
                 pricing: DefaultPricing(),

@@ -1,8 +1,10 @@
 using MediatR;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
+using Social.Application.Caching;
+using Social.Application.Interfaces;
 using Social.Domain.Entities;
 using Social.Domain.Repositories;
-using Social.Application.Interfaces;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
 namespace Social.Application.Commands.AddFavorite;
@@ -10,6 +12,7 @@ namespace Social.Application.Commands.AddFavorite;
 internal sealed class AddFavoriteCommandHandler(
     IFavoriteRepository favoriteRepository,
     ISocialUnitOfWork unitOfWork,
+    HybridCache cache,
     TimeProvider timeProvider,
     ILogger<AddFavoriteCommandHandler> logger)
     : IRequestHandler<AddFavoriteCommand, Result<Guid>>
@@ -43,6 +46,7 @@ internal sealed class AddFavoriteCommandHandler(
         var favorite = Favorite.Add(request.UserId, request.EntityType, request.EntityId, timeProvider);
         await favoriteRepository.AddAsync(favorite, ct);
         await unitOfWork.SaveChangesAsync(ct);
+        await cache.RemoveByTagAsync(SocialCacheKeys.FavoritesTag(request.UserId), ct).ConfigureAwait(false);
 
         logger.LogInformation("User {UserId} added favorite {FavoriteId} for {EntityType}:{EntityId}",
             request.UserId, favorite.Id, request.EntityType, request.EntityId);

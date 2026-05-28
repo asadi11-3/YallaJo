@@ -20,16 +20,11 @@ public sealed class FinanceDbContext : DbContext, IDbContext
     public DbSet<DisputeMessage> DisputeMessages => Set<DisputeMessage>();
     public DbSet<DisputeEvidence> DisputeEvidence => Set<DisputeEvidence>();
     public DbSet<CommissionRule> CommissionRules => Set<CommissionRule>();
-    public DbSet<SubscriptionPlan> SubscriptionPlans => Set<SubscriptionPlan>();
-    public DbSet<SubscriptionFeature> SubscriptionFeatures => Set<SubscriptionFeature>();
-    public DbSet<PlanFeature> PlanFeatures => Set<PlanFeature>();
-    public DbSet<Subscription> Subscriptions => Set<Subscription>();
-    public DbSet<LoyaltyPoints> LoyaltyPoints => Set<LoyaltyPoints>();
-    public DbSet<LoyaltyTransaction> LoyaltyTransactions => Set<LoyaltyTransaction>();
-    public DbSet<Referral> Referrals => Set<Referral>();
+    // Deferred post-MVP: SubscriptionPlan, SubscriptionFeature, PlanFeature, Subscription, LoyaltyPoints, LoyaltyTransaction, Referral
     public DbSet<Discount> Discounts => Set<Discount>();
     public DbSet<DiscountUsage> DiscountUsages => Set<DiscountUsage>();
     public DbSet<ProviderBankAccount> ProviderBankAccounts => Set<ProviderBankAccount>();
+    public DbSet<ProviderPaymentMethod> ProviderPaymentMethods => Set<ProviderPaymentMethod>();
     public DbSet<Invoice> Invoices => Set<Invoice>();
     public DbSet<InvoiceNumberCounter> InvoiceNumberCounters => Set<InvoiceNumberCounter>();
     public DbSet<PaymentExpectation> PaymentExpectations => Set<PaymentExpectation>();

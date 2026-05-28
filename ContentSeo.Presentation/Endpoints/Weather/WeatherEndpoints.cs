@@ -5,6 +5,8 @@
 namespace ContentSeo.Presentation.Endpoints.Weather;
 
 using ContentSeo.Application.Commands.Weather.RefreshWeather;
+using ContentSeo.Application.Commands.Weather.PurgeWeatherCache;
+using ContentSeo.Application.Commands.Weather.ResetWeatherBudget;
 using ContentSeo.Application.Queries.Weather.Common;
 using ContentSeo.Application.Queries.Weather.GetWeather;
 using ContentSeo.Application.Queries.Weather.GetWeatherByLocation;
@@ -82,5 +84,37 @@ internal static class WeatherEndpoints
         .ProducesProblem(StatusCodes.Status403Forbidden)
         .ProducesProblem(StatusCodes.Status500InternalServerError)
         .WithMetadata(new MustHavePermissionAttribute(ContentSeoFeatures.Weather, AppAction.Refresh));
+
+        // DELETE /api/v1/seo/weather/cache/{id}
+        group.MapDelete("/weather/cache/{id:guid}", async (
+            Guid id,
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            var result = await sender.Send(new PurgeWeatherCacheCommand(id), ct);
+            return result.ToApiResult();
+        })
+        .WithName("PurgeWeatherCache")
+        .WithSummary("Delete a weather cache entry.")
+        .Produces(StatusCodes.Status204NoContent)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .WithMetadata(new MustHavePermissionAttribute(ContentSeoFeatures.Weather, AppAction.Delete));
+
+        // PUT /api/v1/seo/weather/budget/reset
+        group.MapPut("/weather/budget/reset", async (
+            DateOnly? date,
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            var result = await sender.Send(new ResetWeatherBudgetCommand(date), ct);
+            return result.ToApiResult();
+        })
+        .WithName("ResetWeatherBudget")
+        .WithSummary("Reset the weather API daily budget counter for a UTC date (defaults to today).")
+        .Produces(StatusCodes.Status204NoContent)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .WithMetadata(new MustHavePermissionAttribute(ContentSeoFeatures.Weather, AppAction.Update));
     }
 }

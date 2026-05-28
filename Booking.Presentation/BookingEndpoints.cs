@@ -1,5 +1,8 @@
 using Booking.Presentation.Endpoints.Admin;
 using Booking.Presentation.Endpoints.AvailabilitySlot;
+using Booking.Presentation.Endpoints.GuideDiscount;
+using Booking.Presentation.Endpoints.JoinRequest;
+using Booking.Presentation.Endpoints.AvailabilitySlot;
 using Booking.Presentation.Endpoints.ProviderDocument;
 using Booking.Presentation.Endpoints.TourBooking;
 using Microsoft.AspNetCore.Builder;
@@ -20,6 +23,15 @@ public static class BookingEndpoints
 
         var adminBookingGroup = endpoints.MapGroup("/api/v1/admin/bookings");
         AdminBookingEndpoints.MapAdminBookingEndpoints(adminBookingGroup);
+
+        var slotsGroup = endpoints.MapGroup("/api/v1/booking/slots");
+        AvailabilitySlotEndpoints.MapAvailabilitySlotEndpoints(slotsGroup);
+
+        var joinRequestsGroup = endpoints.MapGroup("/api/v1/booking/join-requests");
+        JoinRequestEndpoints.MapJoinRequestEndpoints(joinRequestsGroup);
+
+        var guideDiscountsGroup = endpoints.MapGroup("/api/v1/booking/guide-discounts");
+        GuideDiscountEndpoints.MapGuideDiscountEndpoints(guideDiscountsGroup);
 
         return endpoints;
     }

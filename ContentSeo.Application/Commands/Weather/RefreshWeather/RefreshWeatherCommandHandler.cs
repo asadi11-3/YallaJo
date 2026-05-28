@@ -126,5 +126,26 @@ public sealed class RefreshWeatherCommandHandler(
         {
             return Result<RefreshWeatherResult>.Failure(new Error("Request.Cancelled", "Operation was cancelled."), Outcome.Canceled);
         }
+        catch (InvalidOperationException ex)
+        {
+            logger.LogWarning(ex, "Weather provider failed for PlaceId={PlaceId}", request.PlaceId);
+            return Result<RefreshWeatherResult>.Failure(
+                new Error("Weather.UpstreamUnavailable", "Weather provider could not return data."),
+                Outcome.ServerError);
+        }
+        catch (HttpRequestException ex)
+        {
+            logger.LogWarning(ex, "Weather provider HTTP failure for PlaceId={PlaceId}", request.PlaceId);
+            return Result<RefreshWeatherResult>.Failure(
+                new Error("Weather.UpstreamUnavailable", "Weather provider could not return data."),
+                Outcome.ServerError);
+        }
+        catch (TaskCanceledException ex) when (!ct.IsCancellationRequested)
+        {
+            logger.LogWarning(ex, "Weather provider timed out for PlaceId={PlaceId}", request.PlaceId);
+            return Result<RefreshWeatherResult>.Failure(
+                new Error("Weather.UpstreamTimeout", "Weather provider timed out."),
+                Outcome.ServerError);
+        }
     }
 }

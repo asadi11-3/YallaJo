@@ -1,5 +1,7 @@
 using MediatR;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
+using Social.Application.Caching;
 using Social.Application.Interfaces;
 using Social.Domain.Enums;
 using Social.Domain.Repositories;
@@ -10,6 +12,7 @@ namespace Social.Application.Commands.DeleteReview;
 internal sealed class DeleteReviewCommandHandler(
     IReviewRepository reviewRepository,
     ISocialUnitOfWork unitOfWork,
+    HybridCache cache,
     TimeProvider timeProvider,
     ILogger<DeleteReviewCommandHandler> logger)
     : IRequestHandler<DeleteReviewCommand, Result>
@@ -30,6 +33,9 @@ internal sealed class DeleteReviewCommandHandler(
 
         review.Delete(source, timeProvider);
         await unitOfWork.SaveChangesAsync(ct);
+        await cache.RemoveByTagAsync(SocialCacheKeys.ReviewsTag(review.TargetType, review.TargetId), ct).ConfigureAwait(false);
+        await cache.RemoveByTagAsync(SocialCacheKeys.UserReviewsTag(review.UserId), ct).ConfigureAwait(false);
+        await cache.RemoveByTagAsync(SocialCacheKeys.ReviewTag(command.ReviewId), ct).ConfigureAwait(false);
 
         logger.LogInformation("Review {ReviewId} deleted (source={Source}) by {CallerUserId}",
             command.ReviewId, source, command.CallerUserId);

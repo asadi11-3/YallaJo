@@ -227,6 +227,54 @@ internal sealed class TourBookingRepository(BookingDbContext context)
             .ToListAsync(ct)
             .ConfigureAwait(false);
 
+    public async Task<IReadOnlyList<TourBooking>> GetConfirmedWithPastSlotAsync(
+        DateTime nowUtc,
+        int batchSize,
+        CancellationToken ct = default)
+    {
+        var nowDateOnly = DateOnly.FromDateTime(nowUtc);
+        var nowTimeOnly = TimeOnly.FromDateTime(nowUtc);
+
+        return await context.TourBookings
+            .Join(context.AvailabilitySlots,
+                b => b.AvailabilitySlotId,
+                s => s.Id,
+                (b, s) => new { Booking = b, Slot = s })
+            .Where(x => x.Booking.Status == BookingStatus.Confirmed
+                && (x.Slot.Date < nowDateOnly
+                    || (x.Slot.Date == nowDateOnly && x.Slot.EndTime != null && x.Slot.EndTime < nowTimeOnly)))
+            .OrderBy(x => x.Slot.Date)
+            .Take(batchSize)
+            .Select(x => x.Booking)
+            .ToListAsync(ct)
+            .ConfigureAwait(false);
+    }
+
+    public async Task<IReadOnlyList<TourBooking>> GetConfirmedWithUpcomingSlotsAsync(
+        DateTime windowStart,
+        DateTime windowEnd,
+        int batchSize,
+        CancellationToken ct = default)
+    {
+        var startDate = DateOnly.FromDateTime(windowStart);
+        var endDate = DateOnly.FromDateTime(windowEnd);
+
+        return await context.TourBookings
+            .Join(context.AvailabilitySlots,
+                b => b.AvailabilitySlotId,
+                s => s.Id,
+                (b, s) => new { Booking = b, Slot = s })
+            .Where(x => x.Booking.Status == BookingStatus.Confirmed
+                && x.Slot.Date >= startDate
+                && x.Slot.Date <= endDate)
+            .OrderBy(x => x.Slot.Date)
+            .ThenBy(x => x.Slot.StartTime)
+            .Take(batchSize)
+            .Select(x => x.Booking)
+            .ToListAsync(ct)
+            .ConfigureAwait(false);
+    }
+
     private IQueryable<TourBooking> BuildAdminBookingsQuery(
         IReadOnlyList<BookingStatus>? statuses,
         DateOnly? fromDate,

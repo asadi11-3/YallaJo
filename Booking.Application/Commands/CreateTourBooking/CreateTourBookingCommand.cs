@@ -39,8 +39,10 @@ public sealed record ParticipantBreakdown(int Adult, int Child, int Infant, int 
 /// </summary>
 public sealed record CreateTourBookingCommand(
     Guid TourId,
+    Guid GuideId,
     Guid AvailabilitySlotId,
     ParticipantBreakdown ParticipantBreakdown,
+    bool IsPrivate,
     string? PromoCode,
     int LoyaltyPointsToRedeem,
     string? SpecialRequests)

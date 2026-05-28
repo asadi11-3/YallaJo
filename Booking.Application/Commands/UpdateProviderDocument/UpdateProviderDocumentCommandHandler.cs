@@ -178,9 +178,20 @@ public sealed class UpdateProviderDocumentCommandHandler(
                     Outcome.Invalid);
             }
 
-            var uploadResult = await fileStorageService
+            var uploadResponse = await fileStorageService
                 .UploadAsync(uploadStream, request.FileName!, request.ContentType!, StorageFolder, cancellationToken)
                 .ConfigureAwait(false);
+
+            if (uploadResponse.IsFailure)
+            {
+                return Result.Failure<string>(
+                    uploadResponse.Errors.Count > 0
+                        ? uploadResponse.Errors[0]
+                        : new Error("ProviderDocument.UploadFailed", "Failed to upload provider document."),
+                    uploadResponse.Outcome);
+            }
+
+            var uploadResult = uploadResponse.Value!;
 
             var oldUrl = document.DocumentUrl;
             try

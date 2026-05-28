@@ -89,27 +89,45 @@ public sealed class LanguageActivatedIntegrationEventHandler(
             evt.LanguageCode, evt.LanguageId, BatchSize);
 
         // ── 1. Place translation backfill ─────────────────────────────────────
-        var totalPlacesTranslated = await ProcessPlaceBatchesAsync(
+        var placeResult = await ProcessPlaceBatchesAsync(
             evt.LanguageId,
             targetCodes,
             cancellationToken).ConfigureAwait(false);
+
+        if (!placeResult.Completed)
+        {
+            logger.LogWarning(
+                "ContentPlaces: Place backfill aborted for language {LanguageCode} " +
+                "({PlacesTranslated} places translated before failure). " +
+                "Inbox will not be marked processed; retry will pick up remaining.",
+                evt.LanguageCode, placeResult.Count);
+            return;
+        }
 
         // ── 2. Business translation backfill ──────────────────────────────────
-        var totalBusinessesTranslated = await ProcessBusinessBatchesAsync(
+        var businessResult = await ProcessBusinessBatchesAsync(
             evt.LanguageId,
             targetCodes,
             cancellationToken).ConfigureAwait(false);
 
+        if (!businessResult.Completed)
+        {
+            logger.LogWarning(
+                "ContentPlaces: Business backfill aborted for language {LanguageCode} " +
+                "({BusinessesTranslated} businesses translated before failure). " +
+                "Inbox will not be marked processed; retry will pick up remaining.",
+                evt.LanguageCode, businessResult.Count);
+            return;
+        }
+
         // ── 3. Mark inbox processed AFTER all batches succeed ─────────────────
-        // Final separate SaveChanges; if any batch above threw, the inbox row is
-        // never written, so the next delivery picks up via the same anti-join.
         inboxStore.MarkAsProcessed(notification.MessageId);
         await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         logger.LogInformation(
             "ContentPlaces: Backfilled language {LanguageCode}: " +
             "translatedPlaces={PlacesTranslated} translatedBusinesses={BusinessesTranslated}.",
-            evt.LanguageCode, totalPlacesTranslated, totalBusinessesTranslated);
+            evt.LanguageCode, placeResult.Count, businessResult.Count);
     }
 
     /// <summary>
@@ -117,7 +135,12 @@ public sealed class LanguageActivatedIntegrationEventHandler(
     /// until the anti-join is empty.  Each <c>ToListAsync</c> call materialises at
     /// most <see cref="BatchSize"/> rows — never the entire backlog.
     /// </summary>
-    private async Task<int> ProcessPlaceBatchesAsync(
+    /// <summary>
+    /// Repeats: <c>fetch-up-to-N-missing-places → translate → add → SaveChanges</c>
+    /// until the anti-join is empty.  Each <c>ToListAsync</c> call materialises at
+    /// most <see cref="BatchSize"/> rows — never the entire backlog.
+    /// </summary>
+    private async Task<(int Count, bool Completed)> ProcessPlaceBatchesAsync(
         Guid languageId,
         IReadOnlyList<string> targetCodes,
         CancellationToken cancellationToken)
@@ -168,17 +191,16 @@ public sealed class LanguageActivatedIntegrationEventHandler(
 
                 if (translatedSets.Count == 0)
                 {
-                    // Critical: do NOT silently skip.  If we did, the next
-                    // anti-join iteration would re-select the same Place
-                    // forever (no translation row was added → still missing),
-                    // AND the inbox would be marked processed at the end —
-                    // permanently losing the row.  Fail clearly so the inbox
-                    // is left unmarked and replay can retry once the
-                    // translation service is healthy.
-                    throw new InvalidOperationException(
-                        $"Translation orchestrator returned no translated set for Place " +
-                        $"{candidate.PlaceId} (language={targetCodes[0]}). " +
-                        "Aborting backfill so the inbox is not marked processed.");
+                    // Translation service is unhealthy — log and abort this
+                    // batch gracefully.  The inbox row is never written, so
+                    // the next delivery will retry via the same anti-join.
+                    logger.LogError(
+                        "Translation orchestrator returned no translated set for Place " +
+                        "{PlaceId} (language={LanguageCode}). " +
+                        "Aborting place backfill; inbox will not be marked processed.",
+                        candidate.PlaceId, targetCodes[0]);
+
+                    return (totalTranslated, Completed: false);
                 }
 
                 var translated = translatedSets[0];
@@ -207,7 +229,7 @@ public sealed class LanguageActivatedIntegrationEventHandler(
             }
         }
 
-        return totalTranslated;
+        return (totalTranslated, Completed: true);
     }
 
     /// <summary>
@@ -215,7 +237,12 @@ public sealed class LanguageActivatedIntegrationEventHandler(
     /// Business translations.  Identical termination contract and
     /// orchestrator-empty handling as <see cref="ProcessPlaceBatchesAsync"/>.
     /// </summary>
-    private async Task<int> ProcessBusinessBatchesAsync(
+    /// <summary>
+    /// Repeats the same <c>fetch-N → translate → add → SaveChanges</c> loop for
+    /// Business translations.  Identical termination contract and
+    /// orchestrator-empty handling as <see cref="ProcessPlaceBatchesAsync"/>.
+    /// </summary>
+    private async Task<(int Count, bool Completed)> ProcessBusinessBatchesAsync(
         Guid languageId,
         IReadOnlyList<string> targetCodes,
         CancellationToken cancellationToken)
@@ -263,10 +290,16 @@ public sealed class LanguageActivatedIntegrationEventHandler(
 
                 if (translatedSets.Count == 0)
                 {
-                    throw new InvalidOperationException(
-                        $"Translation orchestrator returned no translated set for Business " +
-                        $"{candidate.BusinessId} (language={targetCodes[0]}). " +
-                        "Aborting backfill so the inbox is not marked processed.");
+                    // Translation service is unhealthy — log and abort this
+                    // batch gracefully.  The inbox row is never written, so
+                    // the next delivery will retry via the same anti-join.
+                    logger.LogError(
+                        "Translation orchestrator returned no translated set for Business " +
+                        "{BusinessId} (language={LanguageCode}). " +
+                        "Aborting business backfill; inbox will not be marked processed.",
+                        candidate.BusinessId, targetCodes[0]);
+
+                    return (totalTranslated, Completed: false);
                 }
 
                 var translated = translatedSets[0];
@@ -293,7 +326,7 @@ public sealed class LanguageActivatedIntegrationEventHandler(
             }
         }
 
-        return totalTranslated;
+        return (totalTranslated, Completed: true);
     }
 
     /// <summary>Internal projection shape for the Place anti-join query.</summary>

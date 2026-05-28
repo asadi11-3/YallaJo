@@ -20,6 +20,7 @@
     <ProjectReference Include="..\ContentSeo.Application\ContentSeo.Application.csproj" />
     <ProjectReference Include="..\ContentSeo.Contracts\ContentSeo.Contracts.csproj" />
     <ProjectReference Include="..\ContentSeo.Domain\ContentSeo.Domain.csproj" />
+    <ProjectReference Include="..\Social.Contracts\Social.Contracts.csproj" />
     <ProjectReference Include="..\YallaJo.SharedKernel.Infrastructure\YallaJo.SharedKernel.Infrastructure.csproj" />
   </ItemGroup>
   <ItemGroup>

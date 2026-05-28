@@ -23,6 +23,7 @@ public sealed class Attachment : BaseEntity, IAggregateRoot
     public byte[]? Hmac { get; private set; }
     public DateTime UploadedAt { get; private set; }
     public Guid UploadedByUserId { get; private set; }
+    public bool IsMarkedForDeletion { get; private set; }
 
     // ── Factory Method (the ONLY way to create) ──
     public static Attachment Create(
@@ -107,6 +108,11 @@ public sealed class Attachment : BaseEntity, IAggregateRoot
 
     public void MarkForDeletion()
     {
+        if (IsMarkedForDeletion)
+            return;
+
+        IsMarkedForDeletion = true;
+
         AddDomainEvent(new AttachmentDeletedDomainEvent(
      Id,
      EntityType,

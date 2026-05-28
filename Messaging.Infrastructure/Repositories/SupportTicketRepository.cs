@@ -47,4 +47,16 @@ internal sealed class SupportTicketRepository(MessagingDbContext context)
             .Where(t => t.Status == TicketStatus.Open && t.AssignedToUserId == null)
             .OrderBy(t => t.CreatedAt)
             .FirstOrDefaultAsync(ct);
+
+    public Task<IReadOnlyList<SupportTicket>> GetOverdueSlaTicketsAsync(
+        DateTime threshold, int batchSize, CancellationToken ct = default)
+        => _context.SupportTickets
+            .AsNoTracking()
+            .Where(t => t.SlaBreachAt <= threshold
+                     && t.Status != TicketStatus.Resolved
+                     && t.Status != TicketStatus.Closed)
+            .OrderBy(t => t.SlaBreachAt)
+            .Take(batchSize)
+            .ToListAsync(ct)
+            .ContinueWith(task => (IReadOnlyList<SupportTicket>)task.Result, ct);
 }

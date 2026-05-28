@@ -1,5 +1,7 @@
 using MediatR;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
+using Social.Application.Caching;
 using Social.Application.Interfaces;
 using Social.Domain.Entities;
 using Social.Domain.Enums;
@@ -12,6 +14,7 @@ internal sealed class RemoveReviewCommandHandler(
     IReviewRepository reviewRepository,
     IContentModerationLogRepository moderationLogRepository,
     ISocialUnitOfWork unitOfWork,
+    HybridCache cache,
     TimeProvider timeProvider,
     ILogger<RemoveReviewCommandHandler> logger)
     : IRequestHandler<RemoveReviewCommand, Result>
@@ -45,6 +48,9 @@ internal sealed class RemoveReviewCommandHandler(
 
         await moderationLogRepository.AddAsync(log, ct);
         await unitOfWork.SaveChangesAsync(ct);
+        await cache.RemoveByTagAsync(SocialCacheKeys.ReviewsTag(review.TargetType, review.TargetId), ct).ConfigureAwait(false);
+        await cache.RemoveByTagAsync(SocialCacheKeys.UserReviewsTag(review.UserId), ct).ConfigureAwait(false);
+        await cache.RemoveByTagAsync(SocialCacheKeys.ReviewTag(request.ReviewId), ct).ConfigureAwait(false);
 
         logger.LogInformation("Admin {AdminId} removed review {ReviewId}", request.AdminUserId, request.ReviewId);
         return Result.Success();

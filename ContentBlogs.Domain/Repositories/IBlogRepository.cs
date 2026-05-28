@@ -47,4 +47,25 @@ public interface IBlogRepository : IRepository<Blog, Guid>
         Guid blogId,
         Guid languageId,
         CancellationToken cancellationToken = default);
+
+    /// <summary>Admin moderation queue — returns PendingReview blogs, paginated.</summary>
+    Task<PaginatedResult<Blog>> GetAdminQueueAsync(
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>Returns all non-deleted blogs authored by a specific user (for "My Blogs" view).</summary>
+    Task<PaginatedResult<Blog>> GetByAuthorIdAsync(
+        Guid authorId,
+        int page,
+        int pageSize,
+        BlogStatus? statusFilter,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>Returns Published blogs authored by a specific creator profile (public view).</summary>
+    Task<PaginatedResult<Blog>> GetPublishedByCreatorProfileIdAsync(
+        Guid creatorProfileId,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken = default);
 }

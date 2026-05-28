@@ -35,7 +35,9 @@ public sealed class UpdateTourPackageValidator : AbstractValidator<UpdateTourPac
             .NotNull()
             .WithMessage("IncludedTourIds is required.")
             .Must(ids => ids != null && ids.Where(id => id != Guid.Empty).Distinct().Count() >= 2)
-            .WithMessage("Provide at least 2 distinct, non-empty IncludedTourIds.");
+            .WithMessage("Provide at least 2 distinct, non-empty IncludedTourIds.")
+            .Must(ids => ids == null || ids.Where(id => id != Guid.Empty).Distinct().Count() <= 10)
+            .WithMessage("A package cannot include more than 10 tours.");
 
         RuleFor(x => x.RowVersion)
             .NotNull()

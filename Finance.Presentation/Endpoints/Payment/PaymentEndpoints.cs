@@ -46,15 +46,7 @@ internal static class PaymentEndpoints
                 ISender sender,
                 CancellationToken cancellationToken) =>
             {
-                if (!currentUser.IsAuthenticated || currentUser.UserId is null)
-                {
-                    return Result.Failure<InitiatePaymentResult>(
-                            new Error("Payment.Unauthorized", "Authentication is required."),
-                            Outcome.Unauthorized)
-                        .ToApiResult();
-                }
-
-                var result = await sender.Send(request.ToCommand(currentUser.UserId.Value), cancellationToken);
+                var result = await sender.Send(request.ToCommand(currentUser.UserId!.Value), cancellationToken);
                 return result.ToApiResult();
             })
             .WithName("InitiatePayment")
@@ -165,14 +157,6 @@ internal static class PaymentEndpoints
                 ISender sender,
                 CancellationToken cancellationToken) =>
             {
-                if (!currentUser.IsAuthenticated || currentUser.UserId is null)
-                {
-                    return Result.Failure<RefundPaymentResult>(
-                            new Error("Refund.Unauthorized", "Authentication is required."),
-                            Outcome.Unauthorized)
-                        .ToApiResult();
-                }
-
                 var isAdmin = currentUser.HasPermission(AdminPermissionName);
                 var providerId = TryParseProviderClaim(currentUser);
 
@@ -181,7 +165,7 @@ internal static class PaymentEndpoints
                     Amount: request.Amount,
                     Currency: request.Currency,
                     Reason: request.Reason,
-                    CallerUserId: currentUser.UserId.Value,
+                    CallerUserId: currentUser.UserId!.Value,
                     CallerIsAdmin: isAdmin,
                     CallerProviderId: providerId);
 

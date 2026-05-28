@@ -1,15 +1,18 @@
 using MediatR;
+using Messaging.Application.Caching;
 using Messaging.Application.Interfaces;
 using Messaging.Domain.Entities;
 using Messaging.Domain.Enums;
 using Messaging.Domain.Repositories;
+using Microsoft.Extensions.Caching.Hybrid;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
 namespace Messaging.Application.Commands.UpdatePreferences;
 
 internal sealed class UpdatePreferencesCommandHandler(
     INotificationPreferenceRepository preferenceRepository,
-    IMessagingUnitOfWork unitOfWork) : IRequestHandler<UpdatePreferencesCommand, Result>
+    IMessagingUnitOfWork unitOfWork,
+    HybridCache cache) : IRequestHandler<UpdatePreferencesCommand, Result>
 {
     public async Task<Result> Handle(UpdatePreferencesCommand request, CancellationToken cancellationToken)
     {
@@ -35,6 +38,7 @@ internal sealed class UpdatePreferencesCommandHandler(
         }
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
+        await cache.RemoveByTagAsync(MessagingCacheKeys.NotificationPreferencesTag(request.UserId), cancellationToken).ConfigureAwait(false);
         return Result.Success();
     }
 }

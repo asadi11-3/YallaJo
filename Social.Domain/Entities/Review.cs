@@ -8,11 +8,11 @@ namespace Social.Domain.Entities;
 /// A user-authored review for a tour, place, business, or tour-guide.
 ///
 /// Rules enforced:
-///   S-R1: IsVerifiedBooking derived from BookingEligibilitySnapshot (caller responsibility).
+///   S-R1: BookingVerified derived from BookingEligibilitySnapshot (caller responsibility).
 ///   S-R2: One per (UserId, TargetType, TargetId) WHERE IsDeleted=0 — unique index in DB.
 ///   S-R3: 48-hour edit window; provider replies have no time limit.
 ///   S-R4: Profanity hit -> Status=AwaitingModeration, no ReviewPublishedDomainEvent.
-///   S-R5: 5 unique reports -> AutoHide.
+///   S-R5: 3 unique reports -> AutoHide.
 /// </summary>
 public sealed class Review : AuditableEntity, IAggregateRoot
 {
@@ -34,9 +34,12 @@ public sealed class Review : AuditableEntity, IAggregateRoot
     // ── Status and flags ─────────────────────────────────────────────────────
     public ReviewStatus Status          { get; private set; } = ReviewStatus.Published;
     public bool IsVerifiedBooking       { get; private set; }
+    public bool BookingVerified => IsVerifiedBooking;
     public bool ProfanityFlagged        { get; private set; }
     public DateTime? AutoHiddenAt       { get; private set; }
     public int CurrentReportCount       { get; private set; }
+    public int ReportCount => CurrentReportCount;
+    public int HelpfulVoteCount         { get; private set; }
     public DateTime? LastEditedAt       { get; private set; }
 
     // ── Children ──────────────────────────────────────────────────────────────
@@ -151,6 +154,28 @@ public sealed class Review : AuditableEntity, IAggregateRoot
 
     public void IncrementReportCount() { CurrentReportCount++; MarkUpdated(); }
 
+    public bool HideIfReportThresholdReached(TimeProvider timeProvider, int threshold = 3)
+    {
+        if (CurrentReportCount < threshold)
+            return false;
+
+        AutoHide(CurrentReportCount, timeProvider);
+        return true;
+    }
+
+    public void IncrementHelpfulVotes()
+    {
+        HelpfulVoteCount++;
+        MarkUpdated();
+    }
+
+    public void DecrementHelpfulVotes()
+    {
+        if (HelpfulVoteCount == 0) return;
+        HelpfulVoteCount--;
+        MarkUpdated();
+    }
+
     // ── Reply management ─────────────────────────────────────────────────────
 
     public ReviewReply AddReply(Guid providerUserId, string content, TimeProvider timeProvider)
@@ -180,10 +205,13 @@ public sealed class Review : AuditableEntity, IAggregateRoot
 
     // ── Helpers ──────────────────────────────────────────────────────────────
 
+    public static bool IsHalfStarRating(decimal rating)
+        => rating >= 0.5m && rating <= 5.0m && (rating * 2) % 1 == 0;
+
     private static void ValidateRating(decimal rating)
     {
-        if (rating < 1.0m || rating > 5.0m || (rating * 2) % 1 != 0)
+        if (!IsHalfStarRating(rating))
             throw new ArgumentOutOfRangeException(nameof(rating),
-                $"Rating must be 1.0-5.0 in 0.5 increments, got {rating}.");
+                $"Rating must be 0.5-5.0 in 0.5 increments, got {rating}.");
     }
 }

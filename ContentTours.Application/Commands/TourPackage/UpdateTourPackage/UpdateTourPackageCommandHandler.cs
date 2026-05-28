@@ -31,14 +31,9 @@ public sealed class UpdateTourPackageCommandHandler(
     {
         try
         {
-            if (currentUser.UserId is null)
-            {
-                return Result.Failure(
-                    new Error("Auth.Unauthorized", "Authentication is required."),
-                    Outcome.Unauthorized);
-            }
+            
 
-            var callerId = currentUser.UserId.Value;
+            var callerId = currentUser.UserId!.Value;
 
             var package = await packageRepository
                 .GetByIdWithDetailsAsync(request.Id, cancellationToken)
@@ -52,9 +47,7 @@ public sealed class UpdateTourPackageCommandHandler(
             }
 
             // Owner-or-admin gate (canonical project pattern).
-            var isAdminTier = AppRoles.HighestPrivilegeLevel(currentUser.Roles)
-                >= RolePrivilegeLevel.Admin;
-            if (!isAdminTier && package.CreatedByUserId != callerId)
+            if (package.CreatedByUserId != callerId)
             {
                 return Result.Failure(
                     new Error(
@@ -149,7 +142,7 @@ public sealed class UpdateTourPackageCommandHandler(
                     Outcome.UnprocessableEntity);
             }
 
-            if (!isAdminTier && tours.Any(t => t.CreatedByUserId != callerId))
+            if (tours.Any(t => t.CreatedByUserId != callerId))
             {
                 return Result.Failure(
                     new Error(

@@ -27,13 +27,6 @@ public sealed class CreateBlogCommentCommandHandler(
     {
         try
         {
-            if (!currentUser.IsAuthenticated || currentUser.UserId is null)
-            {
-                return Result<CreateBlogCommentResult>.Failure(
-                    new Error("BlogComment.Unauthorized", "Authenticated user is required."),
-                    Outcome.Unauthorized);
-            }
-
             // ── Blog must exist (and we need its status). Read-only.
             var blog = await blogRepository
                 .GetByIdAsync(request.BlogId, cancellationToken, asNoTracking: true)
@@ -98,7 +91,7 @@ public sealed class CreateBlogCommentCommandHandler(
             {
                 comment = BlogCommentEntity.Create(
                     blogId: request.BlogId,
-                    userId: currentUser.UserId.Value,
+                    userId: currentUser.UserId!.Value,
                     content: request.Content,
                     parent: parent,
                     blogStatus: blog.Status,

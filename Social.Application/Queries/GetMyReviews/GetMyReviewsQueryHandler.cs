@@ -38,6 +38,7 @@ internal sealed class GetMyReviewsQueryHandler(IReviewRepository reviewRepositor
         r.LastEditedAt,
         r.AutoHiddenAt,
         r.CreatedAt,
+        r.HelpfulVoteCount,
         r.Replies
             .Where(rp => !rp.IsDeleted)
             .Select(rp => new ReviewReplyDto(

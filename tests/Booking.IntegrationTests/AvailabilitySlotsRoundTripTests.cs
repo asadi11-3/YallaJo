@@ -5,6 +5,7 @@ using Booking.Application.Interfaces;
 using Booking.Application.Queries.GetAvailabilityForTour;
 using Booking.Application.Queries.GetAvailabilityForTourOnDate;
 using Booking.Domain.Entities;
+using Booking.Domain.Enums;
 using Booking.Domain.Repositories;
 using Booking.Infrastructure.Persistence;
 using FluentAssertions;

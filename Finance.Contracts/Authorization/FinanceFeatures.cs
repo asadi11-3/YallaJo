@@ -24,6 +24,9 @@ public static class FinanceFeatures
     /// <summary>Provider bank account records (KYC + payout destination).</summary>
     public const string ProviderBankAccount   = nameof(ProviderBankAccount);
 
+    /// <summary>Unified provider payout destination methods.</summary>
+    public const string ProviderPaymentMethod = nameof(ProviderPaymentMethod);
+
     /// <summary>Admin finance dashboard: aggregated reports + exports.</summary>
     public const string AdminFinanceDashboard = nameof(AdminFinanceDashboard);
 }

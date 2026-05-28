@@ -358,15 +358,15 @@ public sealed class BlogCommentTests : DomainTestBase
         comment.ClearDomainEvents();
         var now = DateTime.UtcNow.AddMinutes(2);
 
-        comment.AddOrReplaceReaction(userId, ReactionType.Love, now);
+        comment.AddOrReplaceReaction(userId, ReactionType.Insightful, now);
 
         comment.Reactions.Should().ContainSingle(
             "the aggregate enforces one reaction per user per comment");
-        comment.Reactions.Single().ReactionType.Should().Be(ReactionType.Love);
+        comment.Reactions.Single().ReactionType.Should().Be(ReactionType.Insightful);
 
         var evt = DomainEventAssertions.ShouldContainDomainEvent<BlogCommentReactionChangedDomainEvent>(comment);
         evt.OldType.Should().Be(ReactionType.Like);
-        evt.NewType.Should().Be(ReactionType.Love);
+        evt.NewType.Should().Be(ReactionType.Insightful);
         evt.OccurredAtUtc.Should().Be(now);
     }
 
@@ -394,11 +394,11 @@ public sealed class BlogCommentTests : DomainTestBase
         var userB = Guid.NewGuid();
 
         comment.AddOrReplaceReaction(userA, ReactionType.Like, DateTime.UtcNow);
-        comment.AddOrReplaceReaction(userB, ReactionType.Dislike, DateTime.UtcNow);
+        comment.AddOrReplaceReaction(userB, ReactionType.Helpful, DateTime.UtcNow);
 
         comment.Reactions.Should().HaveCount(2);
         comment.Reactions.Single(r => r.UserId == userA).ReactionType.Should().Be(ReactionType.Like);
-        comment.Reactions.Single(r => r.UserId == userB).ReactionType.Should().Be(ReactionType.Dislike);
+        comment.Reactions.Single(r => r.UserId == userB).ReactionType.Should().Be(ReactionType.Helpful);
     }
 
     [Fact]

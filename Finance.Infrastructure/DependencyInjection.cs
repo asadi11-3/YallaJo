@@ -58,9 +58,10 @@ public static class DependencyInjection
         services.AddScoped<IInvoiceRepository, InvoiceRepository>();
         services.AddScoped<ICommissionRuleRepository, CommissionRuleRepository>();
         services.AddScoped<IProviderBankAccountRepository, ProviderBankAccountRepository>();
+        services.AddScoped<IProviderPaymentMethodRepository, ProviderPaymentMethodRepository>();
         services.AddScoped<IPaymentExpectationRepository, PaymentExpectationRepository>();
         services.AddScoped<IDisputeRepository, DisputeRepository>();
-        services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
+        // Deferred post-MVP: ISubscriptionRepository removed
         services.AddScoped<IFinanceOutboxWriter, FinanceOutboxWriter>();
 
         // ── Inbox store ─────────────────────────────────────────────────────
@@ -71,6 +72,7 @@ public static class DependencyInjection
 
         // ── Cross-module read-only services ──────────────────────────────────
         services.AddScoped<ICommissionLookupService, CommissionLookupService>();
+        services.AddScoped<IGuideEarningReader, GuideEarningReader>();
         services.AddScoped<ISubscriptionStatusProvider, SubscriptionStatusProvider>();
 
         // ── Payment gateway ─────────────────────────────────────────────────

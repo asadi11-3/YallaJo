@@ -23,6 +23,7 @@ public sealed class EmailNotificationSenderOptions
 
 internal sealed class EmailNotificationSenderService(
     IServiceScopeFactory scopeFactory,
+    TimeProvider timeProvider,
     IOptions<EmailNotificationSenderOptions> options,
     ILogger<EmailNotificationSenderService> logger)
     : BackgroundService
@@ -55,7 +56,7 @@ internal sealed class EmailNotificationSenderService(
             var userSnapshots = scope.ServiceProvider.GetRequiredService<IUserSnapshotRepository>();
             var emailSender = scope.ServiceProvider.GetRequiredService<IEmailSender>();
 
-            var now = DateTime.UtcNow;
+            var now = timeProvider.GetUtcNow().UtcDateTime;
             var attempts = await dbContext.NotificationDeliveryAttempts
                 .Where(a => a.Channel == NotificationChannel.Email
                     && a.Status == NotificationDeliveryStatus.Pending
@@ -91,7 +92,7 @@ internal sealed class EmailNotificationSenderService(
         var notification = await dbContext.Notifications.FirstOrDefaultAsync(n => n.Id == attempt.NotificationId, ct);
         if (notification is null)
         {
-            attempt.MarkFailed("Notification not found.");
+            attempt.MarkFailed(timeProvider, "Notification not found.");
             await dbContext.SaveChangesAsync(ct);
             return;
         }
@@ -106,8 +107,8 @@ internal sealed class EmailNotificationSenderService(
         var result = await emailSender.SendAsync(new EmailMessage(snapshot.Email, notification.Title, notification.Body), ct);
         if (result.Success)
         {
-            attempt.MarkSucceeded(result.ProviderMessageId);
-            notification.MarkSent(result.ProviderMessageId);
+            attempt.MarkSucceeded(timeProvider, result.ProviderMessageId);
+            notification.MarkSent(timeProvider, result.ProviderMessageId);
             await dbContext.SaveChangesAsync(ct);
             return;
         }
@@ -123,7 +124,7 @@ internal sealed class EmailNotificationSenderService(
         EmailNotificationSenderOptions settings,
         CancellationToken ct)
     {
-        attempt.MarkFailed(reason);
+        attempt.MarkFailed(timeProvider, reason);
 
         if (attempt.AttemptNumber >= settings.MaxRetries)
         {
@@ -139,10 +140,11 @@ internal sealed class EmailNotificationSenderService(
             var nextAttempt = Messaging.Domain.Entities.NotificationDeliveryAttempt.Create(
                 notification.Id,
                 NotificationChannel.Email,
+                timeProvider,
                 attempt.AttemptNumber + 1);
 
             dbContext.NotificationDeliveryAttempts.Add(nextAttempt);
-            dbContext.Entry(nextAttempt).Property(a => a.AttemptedAt).CurrentValue = DateTime.UtcNow.Add(GetBackoff(attempt.AttemptNumber));
+            dbContext.Entry(nextAttempt).Property(a => a.AttemptedAt).CurrentValue = timeProvider.GetUtcNow().UtcDateTime.Add(GetBackoff(attempt.AttemptNumber));
         }
 
         await dbContext.SaveChangesAsync(ct);

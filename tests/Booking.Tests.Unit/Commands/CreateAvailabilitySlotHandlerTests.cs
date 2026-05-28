@@ -1,5 +1,6 @@
 using Booking.Application.Commands.CreateAvailabilitySlot;
 using Booking.Application.Interfaces;
+using Booking.Domain.Enums;
 using Booking.Domain.Repositories;
 using FluentAssertions;
 using Microsoft.Extensions.Caching.Hybrid;

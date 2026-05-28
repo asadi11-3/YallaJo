@@ -1,21 +1,29 @@
+using ContentBlogs.Application.Commands.Blog.ApproveBlog;
 using ContentBlogs.Application.Commands.Blog.ArchiveBlog;
 using ContentBlogs.Application.Commands.Blog.CreateBlog;
+using ContentBlogs.Application.Commands.Blog.FeatureBlog;
+using ContentBlogs.Application.Commands.Blog.HideBlog;
+using ContentBlogs.Application.Commands.Blog.UnhideBlog;
 using ContentBlogs.Application.Commands.Blog.DeleteBlog;
-using ContentBlogs.Application.Commands.Blog.MarkBlogAsFeatured;
 using ContentBlogs.Application.Commands.Blog.LinkBlogTours;
 using ContentBlogs.Application.Commands.Blog.PublishBlog;
-using ContentBlogs.Application.Commands.Blog.MarkBlogAsUnfeatured;
+using ContentBlogs.Application.Commands.Blog.RejectBlog;
+using ContentBlogs.Application.Commands.Blog.RemoveBlog;
 using ContentBlogs.Application.Commands.Blog.RestoreBlog;
+using ContentBlogs.Application.Commands.Blog.SubmitBlogForReview;
 using ContentBlogs.Application.Commands.Blog.TrackBlogView;
+using ContentBlogs.Application.Commands.Blog.UnfeatureBlog;
 using ContentBlogs.Application.Commands.Blog.UnlinkBlogFromTour;
 using ContentBlogs.Application.Commands.Blog.UnpublishBlog;
 using ContentBlogs.Application.Commands.Blog.UpdateBlog;
 using ContentBlogs.Application.Interfaces;
 using ContentBlogs.Application.Queries.Blog.Dtos;
 using ContentBlogs.Application.Queries.Blog.GetAdminBlogById;
+using ContentBlogs.Application.Queries.Blog.GetAdminBlogQueue;
 using ContentBlogs.Application.Queries.Blog.GetBlogById;
 using ContentBlogs.Application.Queries.Blog.GetBlogBySlug;
 using ContentBlogs.Application.Queries.Blog.GetDeletedBlogsAdmin;
+using ContentBlogs.Application.Queries.Blog.GetMyBlogs;
 using ContentBlogs.Application.Queries.Blog.ListBlogs;
 using ContentBlogs.Domain.Entities;
 using ContentBlogs.Domain.Enums;
@@ -300,17 +308,19 @@ internal static class BlogEndpoints
         .ProducesProblem(StatusCodes.Status409Conflict)
         .WithMetadata(new MustHavePermissionAttribute(ContentBlogsFeatures.Blog, AppAction.Approve));
 
-        group.MapPatch("/{id:guid}/mark-as-featured", async (
+        // ── POST /{id}/hide ───────────────────────────────────────────────
+        group.MapPost("/{id:guid}/hide", async (
             Guid id,
-            BlogRowVersionRequest request,
+            HideBlogRequest request,
             ISender sender,
             CancellationToken ct) =>
         {
-            var result = await sender.Send(new MarkBlogAsFeaturedCommand(id, request.RowVersion), ct);
+            var result = await sender.Send(
+                new HideBlogCommand(id, request.RowVersion, request.Reason), ct);
             return result.ToApiResult();
         })
-        .WithName("MarkBlogAsFeatured")
-        .WithSummary("Mark a Published blog as Featured (admin)")
+        .WithName("HideBlog")
+        .WithSummary("Hide a Published blog (admin moderation)")
         .Produces(StatusCodes.Status200OK)
         .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status403Forbidden)
@@ -318,18 +328,19 @@ internal static class BlogEndpoints
         .ProducesProblem(StatusCodes.Status409Conflict)
         .WithMetadata(new MustHavePermissionAttribute(ContentBlogsFeatures.Blog, AppAction.Approve));
 
-
-        group.MapPatch("/{id:guid}/mark-as-unfeatured", async (
+        // ── POST /{id}/unhide ─────────────────────────────────────────────
+        group.MapPost("/{id:guid}/unhide", async (
             Guid id,
             BlogRowVersionRequest request,
             ISender sender,
             CancellationToken ct) =>
         {
-            var result = await sender.Send(new MarkBlogAsUnfeaturedCommand(id, request.RowVersion), ct);
+            var result = await sender.Send(
+                new UnhideBlogCommand(id, request.RowVersion), ct);
             return result.ToApiResult();
         })
-        .WithName("MarkBlogAsUnfeatured")
-        .WithSummary("Clear the Featured flag on a blog (admin)")
+        .WithName("UnhideBlog")
+        .WithSummary("Unhide a Hidden blog (restore to Published)")
         .Produces(StatusCodes.Status200OK)
         .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status403Forbidden)
@@ -409,5 +420,166 @@ internal static class BlogEndpoints
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status409Conflict)
         .WithMetadata(new MustHavePermissionAttribute(ContentBlogsFeatures.BlogTourLink, AppAction.Delete));
+
+        // ── Creator: POST /{id}/submit-for-review ────────────────────────
+        group.MapPost("/{id:guid}/submit-for-review", async (
+            Guid id,
+            BlogRowVersionRequest request,
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            var result = await sender.Send(new SubmitBlogForReviewCommand(id, request.RowVersion), ct);
+            return result.ToApiResult();
+        })
+        .WithName("SubmitBlogForReview")
+        .WithSummary("Creator — submit a Draft blog for admin review")
+        .Produces(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status409Conflict)
+        .WithMetadata(new MustHavePermissionAttribute(ContentBlogsFeatures.Blog, AppAction.Submit));
+
+        // ── Creator: GET /my-blogs ────────────────────────────────────────
+        group.MapGet("/my-blogs", async (
+            int? page,
+            int? pageSize,
+            string? status,
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            var result = await sender.Send(
+                new GetMyBlogsQuery(Page: page ?? 1, PageSize: pageSize ?? 20, StatusFilter: status),
+                ct);
+            return result.ToApiResult();
+        })
+        .WithName("GetMyBlogs")
+        .WithSummary("Creator — list my own blogs with optional status filter")
+        .Produces<PaginatedResult<BlogSummaryDto>>(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .WithMetadata(new MustHavePermissionAttribute(ContentBlogsFeatures.Blog, AppAction.ReadOwn));
+
+        // ── Admin: GET /admin/queue ───────────────────────────────────────
+        group.MapGet("/admin/queue", async (
+            int? page,
+            int? pageSize,
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            var result = await sender.Send(
+                new GetAdminBlogQueueQuery(Page: page ?? 1, PageSize: pageSize ?? 20),
+                ct);
+            return result.ToApiResult();
+        })
+        .WithName("GetAdminBlogQueue")
+        .WithSummary("Admin — view PendingReview blog moderation queue")
+        .Produces<PaginatedResult<BlogSummaryDto>>(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .WithMetadata(new MustHavePermissionAttribute(ContentBlogsFeatures.AdminBlogQueue, AppAction.Read));
+
+        // ── Admin: POST /admin/{id}/approve ──────────────────────────────
+        group.MapPost("/admin/{id:guid}/approve", async (
+            Guid id,
+            BlogRowVersionRequest request,
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            var result = await sender.Send(new ApproveBlogCommand(id, request.RowVersion), ct);
+            return result.ToApiResult();
+        })
+        .WithName("ApproveBlog")
+        .WithSummary("Admin — approve a PendingReview blog (publishes it)")
+        .Produces(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status409Conflict)
+        .WithMetadata(new MustHavePermissionAttribute(ContentBlogsFeatures.Blog, AppAction.Approve));
+
+        // ── Admin: POST /admin/{id}/reject ───────────────────────────────
+        group.MapPost("/admin/{id:guid}/reject", async (
+            Guid id,
+            RejectBlogRequest request,
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            var result = await sender.Send(new RejectBlogCommand(id, request.RowVersion, request.Reason), ct);
+            return result.ToApiResult();
+        })
+        .WithName("RejectBlog")
+        .WithSummary("Admin — reject a PendingReview blog with a reason")
+        .Produces(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status409Conflict)
+        .WithMetadata(new MustHavePermissionAttribute(ContentBlogsFeatures.Blog, AppAction.Reject));
+
+        // ── Admin: POST /admin/{id}/remove ───────────────────────────────
+        group.MapPost("/admin/{id:guid}/remove", async (
+            Guid id,
+            RemoveBlogRequest request,
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            var result = await sender.Send(new RemoveBlogCommand(id, request.RowVersion, request.Reason), ct);
+            return result.ToApiResult();
+        })
+        .WithName("RemoveBlog")
+        .WithSummary("Admin — permanently remove a Published blog for policy violations")
+        .Produces(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status409Conflict)
+        .WithMetadata(new MustHavePermissionAttribute(ContentBlogsFeatures.Blog, AppAction.Remove));
+
+        // ── Admin: POST /{id}/feature ─────────────────────────────────────
+        group.MapPost("/{id:guid}/feature", async (
+            Guid id,
+            FeatureBlogRequest request,
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            var result = await sender.Send(new FeatureBlogCommand(id, request.RowVersion, request.FeaturedUntil), ct);
+            return result.ToApiResult();
+        })
+        .WithName("FeatureBlog")
+        .WithSummary("Admin — feature a Published blog with optional expiry")
+        .Produces(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status409Conflict)
+        .WithMetadata(new MustHavePermissionAttribute(ContentBlogsFeatures.Blog, AppAction.Feature));
+
+        // ── Admin: POST /{id}/unfeature ───────────────────────────────────
+        group.MapPost("/{id:guid}/unfeature", async (
+            Guid id,
+            BlogRowVersionRequest request,
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            var result = await sender.Send(new UnfeatureBlogCommand(id, request.RowVersion), ct);
+            return result.ToApiResult();
+        })
+        .WithName("UnfeatureBlog")
+        .WithSummary("Admin — remove feature status from a blog")
+        .Produces(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status409Conflict)
+        .WithMetadata(new MustHavePermissionAttribute(ContentBlogsFeatures.Blog, AppAction.Unfeature));
     }
 }

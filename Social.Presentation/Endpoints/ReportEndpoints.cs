@@ -25,12 +25,9 @@ internal static class ReportEndpoints
             ISender sender,
             CancellationToken ct) =>
         {
-            if (!currentUser.IsAuthenticated || currentUser.UserId is null)
-                return Results.Problem(statusCode: StatusCodes.Status401Unauthorized);
-
             var result = await sender.Send(
                 new SubmitReportCommand(
-                    currentUser.UserId.Value,
+                    currentUser.UserId!.Value,
                     request.EntityType,
                     request.EntityId,
                     request.Reason,
@@ -54,13 +51,9 @@ internal static class ReportEndpoints
         group.MapGet("/admin", async (
             [Microsoft.AspNetCore.Mvc.FromQuery] Guid? afterCursor,
             [Microsoft.AspNetCore.Mvc.FromQuery] int pageSize,
-            ICurrentUser currentUser,
             ISender sender,
             CancellationToken ct) =>
         {
-            if (!currentUser.IsAuthenticated)
-                return Results.Problem(statusCode: StatusCodes.Status401Unauthorized);
-
             var result = await sender.Send(
                 new GetAdminReportsQuery(afterCursor, pageSize == 0 ? 20 : pageSize), ct);
 
@@ -83,11 +76,8 @@ internal static class ReportEndpoints
             ISender sender,
             CancellationToken ct) =>
         {
-            if (!currentUser.IsAuthenticated || currentUser.UserId is null)
-                return Results.Problem(statusCode: StatusCodes.Status401Unauthorized);
-
             var result = await sender.Send(
-                new ResolveReportCommand(currentUser.UserId.Value, id, request.Action, request.Notes), ct);
+                new ResolveReportCommand(currentUser.UserId!.Value, id, request.Action, request.Notes), ct);
 
             return result.ToApiResult();
         })

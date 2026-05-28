@@ -7,4 +7,10 @@
   <ItemGroup>
     <ProjectReference Include="..\YallaJo.SharedKernel.Domain\YallaJo.SharedKernel.Domain.csproj" />
   </ItemGroup>
+
+  <!-- Deferred post-MVP entity shells: kept on disk for future revival, excluded from build. -->
+  <ItemGroup>
+    <Compile Remove="Entities\_Deferred\**\*.cs" />
+    <None Include="Entities\_Deferred\**\*.cs" />
+  </ItemGroup>
 </Project>

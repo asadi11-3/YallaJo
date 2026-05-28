@@ -17,8 +17,13 @@ public class TourBookingConfiguration : IEntityTypeConfiguration<TourBooking>
         builder.Property(x => x.UserId).IsRequired();
         builder.Property(x => x.TourId).IsRequired();
         builder.Property(x => x.ProviderId).IsRequired();
+        builder.Property(x => x.GuideId).IsRequired();
         builder.Property(x => x.AvailabilitySlotId).IsRequired();
         builder.Property(x => x.ParticipantCount).IsRequired().HasDefaultValue(1);
+
+        // Guide / private tour
+        builder.Property(x => x.IsPrivate).IsRequired().HasDefaultValue(false);
+        builder.Property(x => x.JoinedFromBookingId).IsRequired(false);
 
         // Business reference key
         builder.Property(x => x.Reference)

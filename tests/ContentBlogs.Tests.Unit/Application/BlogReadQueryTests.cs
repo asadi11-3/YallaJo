@@ -667,7 +667,7 @@ public sealed class BlogReadQueryTests
         await using var db = NewDb();
         var featured = NewBlog("featured");
         featured.Publish(DateTime.UtcNow);
-        featured.MarkAsFeatured(DateTime.UtcNow.AddMinutes(1));
+        featured.Feature(Guid.Empty, DateTime.UtcNow.AddMinutes(1));
         var ordinary = NewBlog("ordinary");
         ordinary.Publish(DateTime.UtcNow);
         db.Blogs.AddRange(featured, ordinary);
@@ -689,7 +689,7 @@ public sealed class BlogReadQueryTests
         await using var db = NewDb();
         var featured = NewBlog("featured");
         featured.Publish(DateTime.UtcNow);
-        featured.MarkAsFeatured(DateTime.UtcNow.AddMinutes(1));
+        featured.Feature(Guid.Empty, DateTime.UtcNow.AddMinutes(1));
         var ordinary1 = NewBlog("ordinary-1");
         ordinary1.Publish(DateTime.UtcNow);
         var ordinary2 = NewBlog("ordinary-2");
@@ -712,7 +712,7 @@ public sealed class BlogReadQueryTests
         await using var db = NewDb();
         var featured = NewBlog("featured");
         featured.Publish(DateTime.UtcNow);
-        featured.MarkAsFeatured(DateTime.UtcNow.AddMinutes(1));
+        featured.Feature(Guid.Empty, DateTime.UtcNow.AddMinutes(1));
         var ordinary1 = NewBlog("ordinary-1");
         ordinary1.Publish(DateTime.UtcNow);
         var ordinary2 = NewBlog("ordinary-2");
@@ -735,7 +735,7 @@ public sealed class BlogReadQueryTests
         await using var db = NewDb();
         var featured = NewBlog("featured");
         featured.Publish(DateTime.UtcNow);
-        featured.MarkAsFeatured(DateTime.UtcNow.AddMinutes(1));
+        featured.Feature(Guid.Empty, DateTime.UtcNow.AddMinutes(1));
         var ordinary1 = NewBlog("ordinary-1");
         ordinary1.Publish(DateTime.UtcNow);
         var ordinary2 = NewBlog("ordinary-2");
@@ -761,7 +761,7 @@ public sealed class BlogReadQueryTests
         await using var db = NewDb();
         var oldFeatured = NewBlog("old-featured");
         oldFeatured.Publish(new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc));
-        oldFeatured.MarkAsFeatured(DateTime.UtcNow);
+        oldFeatured.Feature(Guid.Empty, DateTime.UtcNow);
         var recentOrdinary = NewBlog("recent-ordinary");
         recentOrdinary.Publish(new DateTime(2026, 6, 1, 0, 0, 0, DateTimeKind.Utc));
         db.Blogs.AddRange(oldFeatured, recentOrdinary);
@@ -786,7 +786,7 @@ public sealed class BlogReadQueryTests
         await using var db = NewDb();
         var blog = NewBlog("featured-detail");
         blog.Publish(DateTime.UtcNow);
-        blog.MarkAsFeatured(DateTime.UtcNow.AddMinutes(1));
+        blog.Feature(Guid.Empty, DateTime.UtcNow.AddMinutes(1));
         db.Blogs.Add(blog);
         await db.SaveChangesAsync();
 
@@ -804,7 +804,7 @@ public sealed class BlogReadQueryTests
         await using var db = NewDb();
         var blog = NewBlog("admin-featured");
         blog.Publish(DateTime.UtcNow);
-        blog.MarkAsFeatured(DateTime.UtcNow.AddMinutes(1));
+        blog.Feature(Guid.Empty, DateTime.UtcNow.AddMinutes(1));
         db.Blogs.Add(blog);
         await db.SaveChangesAsync();
 
