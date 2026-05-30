@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -18,9 +18,9 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.15" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Messaging.Domain\Messaging.Domain.csproj" />
-    <ProjectReference Include="..\..\Messaging.Application\Messaging.Application.csproj" />
-    <ProjectReference Include="..\..\Messaging.Contracts\Messaging.Contracts.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Messaging\Messaging.Domain\Messaging.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Messaging\Messaging.Application\Messaging.Application.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Messaging\Messaging.Contracts\Messaging.Contracts.csproj" />
     <ProjectReference Include="..\YallaJo.Tests.Shared\YallaJo.Tests.Shared.csproj" />
   </ItemGroup>
 </Project>

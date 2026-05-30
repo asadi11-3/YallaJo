@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
@@ -22,12 +22,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\ContentTours.Domain\ContentTours.Domain.csproj" />
-    <ProjectReference Include="..\..\ContentTours.Application\ContentTours.Application.csproj" />
-    <ProjectReference Include="..\..\ContentTours.Infrastructure\ContentTours.Infrastructure.csproj" />
-    <ProjectReference Include="..\..\ContentTours.Contracts\ContentTours.Contracts.csproj" />
-    <ProjectReference Include="..\..\ContentCore.Contracts\ContentCore.Contracts.csproj" />
-    <ProjectReference Include="..\..\Security.Contracts\Security.Contracts.csproj" />
+    <ProjectReference Include="..\..\src\Modules\ContentTours\ContentTours.Domain\ContentTours.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Modules\ContentTours\ContentTours.Application\ContentTours.Application.csproj" />
+    <ProjectReference Include="..\..\src\Modules\ContentTours\ContentTours.Infrastructure\ContentTours.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\Modules\ContentTours\ContentTours.Contracts\ContentTours.Contracts.csproj" />
+    <ProjectReference Include="..\..\src\Modules\ContentCore\ContentCore.Contracts\ContentCore.Contracts.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Security\Security.Contracts\Security.Contracts.csproj" />
     <ProjectReference Include="..\YallaJo.Tests.Shared\YallaJo.Tests.Shared.csproj" />
   </ItemGroup>
 

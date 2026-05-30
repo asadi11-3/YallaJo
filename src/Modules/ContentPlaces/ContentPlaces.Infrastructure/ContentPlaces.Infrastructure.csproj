@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="MediatR" Version="14.1.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.15" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.15" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.15" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="9.0.15" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Accounts\Accounts.Contracts\Accounts.Contracts.csproj" />
+    <ProjectReference Include="..\..\ContentCore\ContentCore.Contracts\ContentCore.Contracts.csproj" />
+    <ProjectReference Include="..\..\ContentTours\ContentTours.Contracts\ContentTours.Contracts.csproj" />
+    <ProjectReference Include="..\..\Social\Social.Contracts\Social.Contracts.csproj" />
+    <ProjectReference Include="..\ContentPlaces.Application\ContentPlaces.Application.csproj" />
+    <ProjectReference Include="..\ContentPlaces.Contracts\ContentPlaces.Contracts.csproj" />
+    <ProjectReference Include="..\ContentPlaces.Domain\ContentPlaces.Domain.csproj" />
+    <ProjectReference Include="..\..\..\BuildingBlocks\YallaJo.SharedKernel.Infrastructure\YallaJo.SharedKernel.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>

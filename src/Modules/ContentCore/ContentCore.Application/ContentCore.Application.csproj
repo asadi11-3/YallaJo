@@ -1,0 +1,33 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Remove="EventHandlers\**" />
+    <EmbeddedResource Remove="EventHandlers\**" />
+    <None Remove="EventHandlers\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="FluentValidation" Version="12.1.1" />
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
+    <PackageReference Include="MediatR" Version="14.1.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.15" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ContentCore.Contracts\ContentCore.Contracts.csproj" />
+    <ProjectReference Include="..\ContentCore.Domain\ContentCore.Domain.csproj" />
+    <ProjectReference Include="..\..\Security\Security.Contracts\Security.Contracts.csproj" />
+    <ProjectReference Include="..\..\..\BuildingBlocks\YallaJo.SharedKernel.Application\YallaJo.SharedKernel.Application.csproj" />
+    <!-- Cross-module ownership probes (Contracts only â€” never Application/Infrastructure) -->
+    <ProjectReference Include="..\..\ContentPlaces\ContentPlaces.Contracts\ContentPlaces.Contracts.csproj" />
+    <ProjectReference Include="..\..\ContentTours\ContentTours.Contracts\ContentTours.Contracts.csproj" />
+    <ProjectReference Include="..\..\ContentBlogs\ContentBlogs.Contracts\ContentBlogs.Contracts.csproj" />
+    <ProjectReference Include="..\..\Social\Social.Contracts\Social.Contracts.csproj" />
+    <ProjectReference Include="..\..\Booking\Booking.Contracts\Booking.Contracts.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Commands\Category\CreateCategory\CreateCategoryResult.cs" />
+  </ItemGroup>
+</Project>

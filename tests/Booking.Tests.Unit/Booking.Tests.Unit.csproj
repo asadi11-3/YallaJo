@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
@@ -21,10 +21,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Booking.Domain\Booking.Domain.csproj" />
-    <ProjectReference Include="..\..\Booking.Application\Booking.Application.csproj" />
-    <ProjectReference Include="..\..\Booking.Contracts\Booking.Contracts.csproj" />
-    <ProjectReference Include="..\..\Booking.Infrastructure\Booking.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Booking\Booking.Domain\Booking.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Booking\Booking.Application\Booking.Application.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Booking\Booking.Contracts\Booking.Contracts.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Booking\Booking.Infrastructure\Booking.Infrastructure.csproj" />
     <ProjectReference Include="..\YallaJo.Tests.Shared\YallaJo.Tests.Shared.csproj" />
   </ItemGroup>
 

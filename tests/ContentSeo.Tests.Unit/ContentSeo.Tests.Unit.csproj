@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
@@ -26,9 +26,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\ContentSeo.Domain\ContentSeo.Domain.csproj" />
-    <ProjectReference Include="..\..\ContentSeo.Application\ContentSeo.Application.csproj" />
-    <ProjectReference Include="..\..\ContentSeo.Infrastructure\ContentSeo.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\Modules\ContentSeo\ContentSeo.Domain\ContentSeo.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Modules\ContentSeo\ContentSeo.Application\ContentSeo.Application.csproj" />
+    <ProjectReference Include="..\..\src\Modules\ContentSeo\ContentSeo.Infrastructure\ContentSeo.Infrastructure.csproj" />
     <ProjectReference Include="..\YallaJo.Tests.Shared\YallaJo.Tests.Shared.csproj" />
   </ItemGroup>
 

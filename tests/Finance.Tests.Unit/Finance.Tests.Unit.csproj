@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
@@ -17,9 +17,9 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.15" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Finance.Domain\Finance.Domain.csproj" />
-    <ProjectReference Include="..\..\Finance.Application\Finance.Application.csproj" />
-    <ProjectReference Include="..\..\Finance.Contracts\Finance.Contracts.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Finance\Finance.Domain\Finance.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Finance\Finance.Application\Finance.Application.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Finance\Finance.Contracts\Finance.Contracts.csproj" />
     <ProjectReference Include="..\YallaJo.Tests.Shared\YallaJo.Tests.Shared.csproj" />
   </ItemGroup>
 </Project>

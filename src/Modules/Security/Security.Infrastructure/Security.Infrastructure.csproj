@@ -1,0 +1,30 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MediatR" Version="14.1.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.15" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.15" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.15" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="9.0.15" />
+    <PackageReference Include="Microsoft.Extensions.Identity.Core" Version="9.0.15" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.17.0" />
+    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="9.0.15" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Security.Application\Security.Application.csproj" />
+    <ProjectReference Include="..\Security.Contracts\Security.Contracts.csproj" />
+    <ProjectReference Include="..\Security.Domain\Security.Domain.csproj" />
+    <ProjectReference Include="..\..\..\BuildingBlocks\YallaJo.SharedKernel.Infrastructure\YallaJo.SharedKernel.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Auth\Auth.Contracts\Auth.Contracts.csproj" />
+    <ProjectReference Include="..\..\Accounts\Accounts.Contracts\Accounts.Contracts.csproj" />
+    <ProjectReference Include="..\..\ContentBlogs\ContentBlogs.Contracts\ContentBlogs.Contracts.csproj" />
+  </ItemGroup>
+
+</Project>

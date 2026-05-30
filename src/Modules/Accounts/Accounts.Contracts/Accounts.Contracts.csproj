@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <!--
+    Accounts.Contracts is the public API surface of the Accounts module.
+    It contains ONLY integration event DTOs â€” no domain logic, no EF, no MediatR.
+    Any module that needs to react to Accounts events references THIS project, not Accounts.Application.
+  -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\BuildingBlocks\YallaJo.SharedKernel.Application\YallaJo.SharedKernel.Application.csproj" />
+    <ProjectReference Include="..\..\..\BuildingBlocks\YallaJo.SharedKernel.Domain\YallaJo.SharedKernel.Domain.csproj" />
+  </ItemGroup>
+
+</Project>

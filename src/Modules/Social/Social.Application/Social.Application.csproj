@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="FluentValidation" Version="12.1.1" />
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
+    <PackageReference Include="MediatR" Version="14.1.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.15" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Hybrid" Version="9.10.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Booking\Booking.Contracts\Booking.Contracts.csproj" />
+    <ProjectReference Include="..\..\ContentPlaces\ContentPlaces.Contracts\ContentPlaces.Contracts.csproj" />
+    <ProjectReference Include="..\..\ContentTours\ContentTours.Contracts\ContentTours.Contracts.csproj" />
+    <ProjectReference Include="..\..\Security\Security.Contracts\Security.Contracts.csproj" />
+    <ProjectReference Include="..\Social.Contracts\Social.Contracts.csproj" />
+    <ProjectReference Include="..\Social.Domain\Social.Domain.csproj" />
+    <ProjectReference Include="..\..\..\BuildingBlocks\YallaJo.SharedKernel.Application\YallaJo.SharedKernel.Application.csproj" />
+  </ItemGroup>
+</Project>
