@@ -20,8 +20,9 @@ public static class AdminProviderEndpoints
 {
     public static IEndpointRouteBuilder MapAdminProviderEndpoints(this IEndpointRouteBuilder endpoints)
     {
-        var group = endpoints.MapGroup("/api/v1/admin/providers")
-            .WithTags("Admin - Providers");
+        // Caller (AccountsEndpoints) already creates the "/api/v1/admin/providers" group
+        // with tag "Admin - Providers"; do NOT re-prefix here or routes will double-prefix.
+        var group = endpoints;
 
         // GET /api/v1/admin/providers — get provider queue
         group.MapGet("/", async (
@@ -83,7 +84,7 @@ public static class AdminProviderEndpoints
             var result = await sender.Send(new RequestMoreDocsCommand(id, req.MissingDocumentTypes, req.Notes), ct);
             return result.ToApiResult();
         })
-        .WithName("RequestMoreDocs")
+        .WithName("RequestMoreProviderDocs")
         .Produces<RequestMoreDocsResult>(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status401Unauthorized)
         .ProducesProblem(StatusCodes.Status403Forbidden)

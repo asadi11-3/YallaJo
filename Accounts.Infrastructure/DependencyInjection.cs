@@ -38,6 +38,7 @@ public static class DependencyInjection
         services.AddScoped<IUnitOfWork<AccountsDbContext>, UnitOfWork<AccountsDbContext>>();
         services.AddSingleton<IPermissionCatalog, AccountsPermissionCatalog>();
         services.AddScoped<IModuleDbInitializer, AccountsDbInitializer>();
+        services.AddScoped<IModuleDbInitializer, AccountsProviderApplicationSeeder>();
         services.AddScoped<IAccountsUnitOfWork, AccountsUnitOfWork>();
         services.AddScoped<IProfileRepository, ProfileRepository>();
         services.AddScoped<IProviderApplicationRepository, ProviderApplicationRepository>();

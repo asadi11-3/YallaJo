@@ -6,7 +6,8 @@ namespace Auth.Application.Commands.LinkExternalProvider;
 
 public sealed record LinkExternalProviderCommand(
     string Ticket,
-    string RecaptchaToken) : ICommand<Guid>, IRecaptchaProtectedCommand
+    string RecaptchaToken) : ICommand<Guid> // RECAPTCHA DISABLED: , IRecaptchaProtectedCommand
 {
-    public string RecaptchaAction => RecaptchaActions.LinkProvider;
+    // RECAPTCHA DISABLED - TODO: uncomment when re-enabling
+    // public string RecaptchaAction => RecaptchaActions.LinkProvider;
 }

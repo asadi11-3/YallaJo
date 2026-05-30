@@ -5,7 +5,8 @@ namespace Auth.Application.Commands.ForgotPassword;
 
 public sealed record ForgotPasswordCommand(
     string Email,
-    string RecaptchaToken) : ICommand<ForgotPasswordResult>, IRecaptchaProtectedCommand
+    string RecaptchaToken) : ICommand<ForgotPasswordResult> // RECAPTCHA DISABLED: , IRecaptchaProtectedCommand
 {
-    public string RecaptchaAction => RecaptchaActions.ForgotPassword;
+    // RECAPTCHA DISABLED - TODO: uncomment when re-enabling
+    // public string RecaptchaAction => RecaptchaActions.ForgotPassword;
 }

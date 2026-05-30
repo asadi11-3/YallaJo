@@ -45,7 +45,13 @@ public sealed class SecurityDataSeeder(
 
         foreach (var role in roles)
         {
-            var permissions = rolePermissionMapping.GetPermissionsForRole(role.Name);
+            // Dedup defensively: multiple IPermissionCatalog implementations may register
+            // the same permission name (e.g. across overlapping bounded contexts), which
+            // would otherwise produce duplicate RoleClaim inserts within a single batch
+            // and trigger the IX_RoleClaims_RoleId_ClaimType_ClaimValue_Unique violation.
+            var permissions = rolePermissionMapping.GetPermissionsForRole(role.Name)
+                .Distinct(StringComparer.Ordinal)
+                .ToList();
 
             foreach (var permission in permissions)
             {

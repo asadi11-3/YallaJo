@@ -270,6 +270,45 @@ namespace Booking.Infrastructure.Migrations
                     b.ToTable("JoinRequests", "booking");
                 });
 
+            modelBuilder.Entity("Booking.Domain.Entities.PricingTierSnapshot", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<DateTime>("LastUpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("Price")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<byte>("TierType")
+                        .HasColumnType("tinyint");
+
+                    b.Property<Guid>("TourId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TourId", "TierType")
+                        .IsUnique()
+                        .HasDatabaseName("IX_PricingTierSnapshots_TourId_TierType");
+
+                    b.ToTable("PricingTierSnapshots", "booking");
+                });
+
             modelBuilder.Entity("Booking.Domain.Entities.ProviderDocument", b =>
                 {
                     b.Property<Guid>("Id")
@@ -367,6 +406,47 @@ namespace Booking.Infrastructure.Migrations
                         {
                             t.HasCheckConstraint("CK_ProviderDocuments_SingleTarget", "(CASE WHEN [TourGuideId] IS NOT NULL THEN 1 ELSE 0 END + CASE WHEN [BusinessId] IS NOT NULL THEN 1 ELSE 0 END) = 1");
                         });
+                });
+
+            modelBuilder.Entity("Booking.Domain.Entities.ProviderSnapshot", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DisplayName")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<DateTime>("LastUpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("OwnerUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ProviderId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OwnerUserId")
+                        .HasDatabaseName("IX_ProviderSnapshots_OwnerUserId");
+
+                    b.HasIndex("ProviderId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_ProviderSnapshots_ProviderId");
+
+                    b.ToTable("ProviderSnapshots", "booking");
                 });
 
             modelBuilder.Entity("Booking.Domain.Entities.RefundPolicy", b =>
@@ -772,6 +852,75 @@ namespace Booking.Infrastructure.Migrations
                     b.HasKey("TourGuideId", "SpecializationId");
 
                     b.ToTable("TourGuideSpecializations", "booking");
+                });
+
+            modelBuilder.Entity("Booking.Domain.Entities.TourSnapshot", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("BasePrice")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<bool>("IsApproved")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<bool>("IsInstantBooking")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<DateTime>("LastUpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("ProviderId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("RefundPolicyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("RefundPolicySnapshotJson")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<Guid>("TourId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProviderId")
+                        .HasDatabaseName("IX_TourSnapshots_ProviderId");
+
+                    b.HasIndex("TourId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_TourSnapshots_TourId");
+
+                    b.ToTable("TourSnapshots", "booking");
                 });
 
             modelBuilder.Entity("YallaJo.SharedKernel.Infrastructure.Outbox.OutboxMessage", b =>

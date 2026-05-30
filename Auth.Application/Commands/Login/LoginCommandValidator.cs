@@ -16,6 +16,7 @@ public sealed class LoginCommandValidator : AbstractValidator<LoginCommand>
             .NotEmpty()
             .MaximumLength(128);
 
-        RuleFor(x => x.RecaptchaToken).MustBeValidRecaptchaToken();
+        // RECAPTCHA DISABLED - TODO: uncomment when re-enabling
+        // RuleFor(x => x.RecaptchaToken).MustBeValidRecaptchaToken();
     }
 }

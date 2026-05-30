@@ -74,7 +74,7 @@ internal static class GuideApplicationEndpoints
             var result = await sender.Send(cmd, ct);
             return result.ToApiResult();
         })
-        .WithName("ApproveGuideApplication")
+        .WithName("ApproveTourGuideApplication")
         .WithSummary("Approve a guide application for a tour")
         .Produces(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status403Forbidden)
@@ -95,7 +95,7 @@ internal static class GuideApplicationEndpoints
             var result = await sender.Send(cmd, ct);
             return result.ToApiResult();
         })
-        .WithName("RejectGuideApplication")
+        .WithName("RejectTourGuideApplication")
         .WithSummary("Reject a guide application for a tour")
         .Produces(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status403Forbidden)

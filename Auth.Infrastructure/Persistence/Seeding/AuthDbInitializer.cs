@@ -12,33 +12,59 @@ public sealed class AuthDbInitializer(AuthDbContext dbContext) : IModuleDbInitia
 
     public async Task InitializeAsync(CancellationToken cancellationToken = default)
     {
-        if (await dbContext.Sessions.AnyAsync(cancellationToken))
+        // Devices / Sessions / RefreshTokens: idempotent per-user.
+        // Only seed for users that do not yet own any device.
+        var existingDeviceUserIds = await dbContext.Devices
+            .Select(d => d.UserId)
+            .Distinct()
+            .ToListAsync(cancellationToken);
+        var existing = new HashSet<Guid>(existingDeviceUserIds);
+
+        var newProfiles = SeedIdentityProfiles.All
+            .Where(p => !existing.Contains(p.UserId))
+            .ToList();
+
+        var hasChanges = false;
+
+        if (newProfiles.Count > 0)
         {
-            return;
+            var devices = CreateDevices(newProfiles);
+            var sessions = CreateSessions(devices);
+            var refreshTokens = CreateRefreshTokens(sessions);
+
+            dbContext.Devices.AddRange(devices);
+            dbContext.Sessions.AddRange(sessions);
+            dbContext.RefreshTokens.AddRange(refreshTokens);
+            hasChanges = true;
         }
 
-        var devices = CreateDevices();
-        var sessions = CreateSessions(devices);
-        var refreshTokens = CreateRefreshTokens(sessions);
-        var otps = CreateOtps();
-        var providers = CreateExternalProviders();
+        // Otps + ExternalProviders: original one-time bootstrap behaviour preserved.
+        // Only seeded when their tables are empty (first run).
+        if (!await dbContext.Otps.AnyAsync(cancellationToken))
+        {
+            dbContext.Otps.AddRange(CreateOtps());
+            hasChanges = true;
+        }
 
-        dbContext.Devices.AddRange(devices);
-        dbContext.Sessions.AddRange(sessions);
-        dbContext.RefreshTokens.AddRange(refreshTokens);
-        dbContext.Otps.AddRange(otps);
-        dbContext.ExternalProviders.AddRange(providers);
+        if (!await dbContext.ExternalProviders.AnyAsync(cancellationToken))
+        {
+            dbContext.ExternalProviders.AddRange(CreateExternalProviders());
+            hasChanges = true;
+        }
 
-        await dbContext.SaveChangesAsync(cancellationToken);
+        if (hasChanges)
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
     }
 
-    private static List<Device> CreateDevices()
+    private static List<Device> CreateDevices(IReadOnlyList<SeedUserProfile> profiles)
     {
-        return SeedIdentityProfiles.All.Select((profile, index) =>
+        return profiles.Select((profile, index) =>
         {
             var device = Device.Create(
                 profile.UserId,
-                $"{profile.Role.ToLowerInvariant()}-device-{index + 1}",
+                $"{profile.Role.ToLowerInvariant()}-device-{profile.UserId:N}",
                 userAgent: "YallaJoSeedBot/1.0",
                 deviceName: $"{profile.FirstName}'s Device");
 
@@ -59,7 +85,7 @@ public sealed class AuthDbInitializer(AuthDbContext dbContext) : IModuleDbInitia
                 device.UserId,
                 device.Id,
                 DateTime.UtcNow.AddDays(30),
-                $"10.10.0.{index + 10}");
+                $"10.10.0.{(index % 240) + 10}");
 
             if (index % 5 == 0)
             {

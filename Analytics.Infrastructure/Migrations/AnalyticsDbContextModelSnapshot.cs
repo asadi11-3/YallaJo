@@ -615,35 +615,6 @@ namespace Analytics.Infrastructure.Migrations
                     b.ToTable("HolidayCalendar", "analytics");
                 });
 
-            modelBuilder.Entity("Analytics.Domain.Entities.IngestDebounceMarker", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<Guid>("EntityId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<byte>("EntityType")
-                        .HasColumnType("tinyint");
-
-                    b.Property<DateTime>("LastFlagged")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("EntityType", "EntityId")
-                        .IsUnique();
-
-                    b.ToTable("IngestDebounceMarkers", "analytics");
-                });
-
             modelBuilder.Entity("Analytics.Domain.Entities.PaymentSnapshot", b =>
                 {
                     b.Property<Guid>("Id")

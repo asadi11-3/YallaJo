@@ -31,7 +31,7 @@ internal static class EarningsEndpoints
             var result = await sender.Send(new GetGuideEarningsSummaryQuery(currentUser.UserId!.Value, fromUtc, toUtc), ct);
             return result.ToApiResult();
         })
-        .WithName("GetGuideEarningsSummary")
+        .WithName("GetGuideEarningsSummaryWithDateRange")
         .WithTags("Earnings")
         .WithMetadata(new MustHavePermissionAttribute(FinanceFeatures.Payout, AppAction.Read))
         .RequireAuthorization();

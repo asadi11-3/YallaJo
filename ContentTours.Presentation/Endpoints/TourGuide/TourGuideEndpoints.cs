@@ -29,7 +29,7 @@ internal static class TourGuideEndpoints
             var result = await sender.Send(new GetTourGuidesQuery(id), ct);
             return result.ToApiResult();
         })
-        .WithName("ListTourGuides")
+        .WithName("ListGuidesAssignedToTour")
         .WithSummary("List tour guides assigned to a tour (primary first, then by Id)")
         .Produces(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status404NotFound)

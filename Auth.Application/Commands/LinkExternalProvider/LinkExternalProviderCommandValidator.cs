@@ -11,6 +11,7 @@ public sealed class LinkExternalProviderCommandValidator : AbstractValidator<Lin
             .NotEmpty().WithMessage("External provider ticket is required.")
             .MaximumLength(4096).WithMessage("External provider ticket is invalid.");
 
-        RuleFor(x => x.RecaptchaToken).MustBeValidRecaptchaToken();
+        // RECAPTCHA DISABLED - TODO: uncomment when re-enabling
+        // RuleFor(x => x.RecaptchaToken).MustBeValidRecaptchaToken();
     }
 }

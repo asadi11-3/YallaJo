@@ -14,6 +14,8 @@ public sealed class GetTrendingQueryHandler(IPopularityScoreRepository repo, ILo
         var all = new List<PopularEntityDto>();
         foreach (var type in Enum.GetValues<EntityType>()) all.AddRange((await repo.GetTrendingAsync(type, request.Count, ct)).Select(x => new PopularEntityDto(x.EntityId, x.EntityType.ToString(), x.Score, x.TrendingRank, 0)));
         logger.LogDebug("Read {Count} trending entities", all.Count);
-        return all.Count == 0 ? Result.Failure<IReadOnlyList<PopularEntityDto>>(new Error("Trending.WindowNotReady", "Trending window is not ready."), Outcome.ServerError) : Result.Success((IReadOnlyList<PopularEntityDto>)all.OrderBy(x => x.TrendingRank).Take(request.Count).ToList());
+        // F7 fix (Findings-Rolling.md): empty trending window means warming-up, not server error.
+        // Return 200 OK with empty list rather than 500. Clients treat empty list as "no trending yet".
+        return Result.Success((IReadOnlyList<PopularEntityDto>)all.OrderBy(x => x.TrendingRank).Take(request.Count).ToList());
     }
 }

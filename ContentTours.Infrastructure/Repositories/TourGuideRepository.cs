@@ -1,4 +1,5 @@
 using ContentTours.Domain.Entities;
+using ContentTours.Domain.Enums;
 using ContentTours.Domain.Repositories;
 using ContentTours.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -49,15 +50,31 @@ internal sealed class TourGuideRepository(ContentToursDbContext context)
             .Distinct()
             .CountAsync(ct);
 
-    public Task<TourGuide?> GetBySlugAsync(
-        Guid id,
+    /// <summary>
+    /// Loads the TourGuide aggregate by owning user identity, including Languages and
+    /// Specializations. F15 fix backing <c>GetTourGuideByUserIdQueryHandler</c>.
+    /// </summary>
+    public Task<TourGuide?> GetWithDetailsByUserIdAsync(
+        Guid userId,
         CancellationToken ct = default,
         bool asNoTracking = true)
     {
-        var query = context.TourGuides.Where(g => g.Id == id);
-        if (asNoTracking) query = query.AsNoTracking();
+        var query = context.TourGuides
+            .Include(g => g.Languages)
+            .Include(g => g.Specializations)
+            .Where(g => g.UserId == userId);
+
+        if (asNoTracking)
+        {
+            query = query.AsNoTracking();
+        }
+
         return query.SingleOrDefaultAsync(ct);
     }
+
+    // SMELL #2 removed: the misleading GetBySlugAsync(Guid id) overload that actually
+    // filtered by aggregate Id was deleted. Callers that need lookup by id already use
+    // GetWithDetailsAsync(Guid). The remaining overload is the real slug lookup.
 
     public Task<TourGuide?> GetBySlugAsync(
         string slug,
@@ -79,9 +96,12 @@ internal sealed class TourGuideRepository(ContentToursDbContext context)
     public async Task<(IReadOnlyList<TourGuide> Items, int TotalCount)> ListActiveAsync(
         int page, int pageSize, CancellationToken ct = default)
     {
+        // SMELL #1 fix: filter by Status == Active. Previously relied only on the
+        // soft-delete query filter, so Suspended guides could leak into public lists.
         var query = context.TourGuides
             .Include(g => g.Languages)
             .Include(g => g.Specializations)
+            .Where(g => g.Status == TourGuideStatus.Active)
             .AsNoTracking()
             .OrderByDescending(g => g.AverageRating)
             .ThenByDescending(g => g.CompletedTourCount);

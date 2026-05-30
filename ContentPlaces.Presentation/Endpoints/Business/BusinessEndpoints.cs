@@ -41,6 +41,30 @@ internal static class BusinessEndpoints
     {
         // ── Businesses ─────────────────────────────────────────────────────────
         var businesses = group.MapGroup("").WithTags("ContentPlaces | Businesses");
+
+        // GET /places/businesses — global list of approved businesses (public).
+        // F6 fix: prior to this, /places/businesses fell through to /places/{slug}
+        // and returned Place.NotFound. Reuses SearchBusinessesQuery with Query=null
+        // so caching/filters/handler are shared with /places/businesses/search.
+        businesses.MapGet("/places/businesses", async (
+            HttpContext http,
+            ISender sender,
+            string? businessType = null,
+            string? city = null,
+            string? country = null,
+            int page = 1,
+            int pageSize = 20) =>
+        {
+            var result = await sender.Send(
+                new SearchBusinessesQuery(page, pageSize, Query: null, businessType, city, country),
+                http.RequestAborted);
+            return result.ToApiResult();
+        })
+        .WithName("ListBusinesses")
+        .Produces<PaginatedResult<BusinessSummaryDto>>(StatusCodes.Status200OK)
+        .WithSummary("List businesses (public; returns Approved only; optional businessType/city/country filters; max pageSize 50).")
+        .AllowAnonymous();
+
         // GET /places/{id}/businesses — list all businesses for a place
         businesses.MapGet("/places/{id:guid}/businesses", async (
             Guid id,
@@ -271,7 +295,7 @@ internal static class BusinessEndpoints
             var result = await sender.Send(new RequestMoreDocsCommand(id, request.Reason, currentUser.UserId!.Value));
             return result.ToApiResult();
         })
-        .WithName("RequestMoreDocs")
+        .WithName("RequestMoreBusinessDocs")
         .Produces(StatusCodes.Status200OK)
         .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status404NotFound)

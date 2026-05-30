@@ -234,6 +234,9 @@ namespace ContentTours.Infrastructure.Migrations
                     b.Property<Guid?>("ApplicationId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<DateTime?>("AssignedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<Guid?>("AssignedByUserId")
                         .HasColumnType("uniqueidentifier");
 
@@ -274,6 +277,9 @@ namespace ContentTours.Infrastructure.Migrations
 
                     b.Property<int>("Status")
                         .HasColumnType("int");
+
+                    b.Property<DateTime?>("SuspendedAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<Guid?>("SuspendedByAdminId")
                         .HasColumnType("uniqueidentifier");
@@ -546,6 +552,10 @@ namespace ContentTours.Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(2000)
                         .HasColumnType("nvarchar(2000)");
+
+                    b.Property<decimal?>("CommissionRate")
+                        .HasPrecision(5, 4)
+                        .HasColumnType("decimal(5,4)");
 
                     b.Property<int>("CompletedTourCount")
                         .ValueGeneratedOnAdd()

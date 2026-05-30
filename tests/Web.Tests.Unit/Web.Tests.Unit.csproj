@@ -22,8 +22,4 @@
     <Using Include="Xunit" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\YallaJo.Web\YallaJo.Web.csproj" />
-  </ItemGroup>
-
 </Project>

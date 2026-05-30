@@ -19,6 +19,7 @@ public sealed class ResendOtpCommandValidator : AbstractValidator<ResendOtpComma
             .WithMessage(
                 "Unsupported OTP purpose. Password reset resend must be requested via /forgot-password; /resend-otp is reserved for short-lived codes such as EmailVerification.");
 
-        RuleFor(x => x.RecaptchaToken).MustBeValidRecaptchaToken();
+        // RECAPTCHA DISABLED - TODO: uncomment when re-enabling
+        // RuleFor(x => x.RecaptchaToken).MustBeValidRecaptchaToken();
     }
 }

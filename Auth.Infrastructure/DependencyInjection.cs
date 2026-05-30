@@ -86,20 +86,23 @@ public static class DependencyInjection
         services.AddSingleton<IExternalAuthTicketVerifier, ExternalAuthTicketVerifier>();
         services.AddSingleton<IExternalAuthNonceStore, HybridCacheExternalAuthNonceStore>();
 
-        // reCAPTCHA v3 bot protection. Verifier is invoked automatically via
-        // the RecaptchaValidationBehavior pipeline step on any command that
-        // implements IRecaptchaProtectedCommand — there is no way to bypass
-        // the check from an individual handler.
-        services.AddOptions<RecaptchaOptions>()
-            .Bind(configuration.GetSection(RecaptchaOptions.SectionName))
-            .ValidateOnStart();
-        services.AddSingleton<IValidateOptions<RecaptchaOptions>, RecaptchaOptionsValidator>();
-        services.AddHttpClient(GoogleRecaptchaVerifier.HttpClientName, (sp, client) =>
-        {
-            var opts = sp.GetRequiredService<IOptions<RecaptchaOptions>>().Value;
-            client.Timeout = TimeSpan.FromSeconds(opts.TimeoutSeconds);
-        });
-        services.AddSingleton<IRecaptchaVerifier, GoogleRecaptchaVerifier>();
+         // reCAPTCHA v3 bot protection. Verifier is invoked automatically via
+         // the RecaptchaValidationBehavior pipeline step on any command that
+         // implements IRecaptchaProtectedCommand — there is no way to bypass
+         // the check from an individual handler.
+         // RECAPTCHA DISABLED - TODO: uncomment when re-enabling
+         /*
+         services.AddOptions<RecaptchaOptions>()
+             .Bind(configuration.GetSection(RecaptchaOptions.SectionName))
+             .ValidateOnStart();
+         services.AddSingleton<IValidateOptions<RecaptchaOptions>, RecaptchaOptionsValidator>();
+         services.AddHttpClient(GoogleRecaptchaVerifier.HttpClientName, (sp, client) =>
+         {
+             var opts = sp.GetRequiredService<IOptions<RecaptchaOptions>>().Value;
+             client.Timeout = TimeSpan.FromSeconds(opts.TimeoutSeconds);
+         });
+         services.AddSingleton<IRecaptchaVerifier, GoogleRecaptchaVerifier>();
+         */
         services.Configure<GmailOptions>(configuration.GetSection(GmailOptions.SectionName));
         services.AddScoped<IEmailService, GmailEmailService>();
 

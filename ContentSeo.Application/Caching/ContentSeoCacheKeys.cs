@@ -45,6 +45,13 @@ public static class ContentSeoCacheKeys
     public static string FaqList(SeoEntityType entityType, Guid entityId, string? acceptLanguage) =>
         $"faq:{entityType}:{entityId}:lang:{NormalizeLanguage(acceptLanguage)}";
 
+    // ---- Global FAQ list (F12.3) ----
+    /// <summary>Coarse tag for invalidating ALL global FAQ list pages on any FAQ mutation.</summary>
+    public const string TagAllFaqs = "faqs:list";
+
+    public static string AllFaqs(int page, int pageSize, SeoEntityType? entityType, bool activeOnly, string? acceptLanguage) =>
+        $"faqs:all:{page}:{pageSize}:{entityType?.ToString() ?? "any"}:{(activeOnly ? "active" : "any")}:lang:{NormalizeLanguage(acceptLanguage)}";
+
     public static string Sitemap() => "sitemap:rendered";
 
     public static string Weather(Guid placeId) => $"weather:{placeId}";

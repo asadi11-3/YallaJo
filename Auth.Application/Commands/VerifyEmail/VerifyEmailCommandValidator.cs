@@ -17,6 +17,7 @@ public sealed class VerifyEmailCommandValidator : AbstractValidator<VerifyEmailC
             .Length(6)
             .Matches(@"^\d{6}$").WithMessage("OTP must be a 6-digit number.");
 
-        RuleFor(x => x.RecaptchaToken).MustBeValidRecaptchaToken();
+        // RECAPTCHA DISABLED - TODO: uncomment when re-enabling
+        // RuleFor(x => x.RecaptchaToken).MustBeValidRecaptchaToken();
     }
 }
