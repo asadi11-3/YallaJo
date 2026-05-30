@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
@@ -24,16 +24,16 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\ContentPlaces.Domain\ContentPlaces.Domain.csproj" />
-    <ProjectReference Include="..\..\ContentPlaces.Application\ContentPlaces.Application.csproj" />
+    <ProjectReference Include="..\..\src\Modules\ContentPlaces\ContentPlaces.Domain\ContentPlaces.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Modules\ContentPlaces\ContentPlaces.Application\ContentPlaces.Application.csproj" />
     <!-- Added for CONTENTPLACES-FOLLOWUP-LANGACT-001: required to construct
          ContentPlacesDbContext + invoke the handler directly. -->
-    <ProjectReference Include="..\..\ContentPlaces.Infrastructure\ContentPlaces.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\Modules\ContentPlaces\ContentPlaces.Infrastructure\ContentPlaces.Infrastructure.csproj" />
     <!-- Added for CONTENTPLACES-FOLLOWUP-ADMIN-TIER-001: required to invoke
          BusinessEndpoints.ExtractUser directly via InternalsVisibleTo. -->
-    <ProjectReference Include="..\..\ContentPlaces.Presentation\ContentPlaces.Presentation.csproj" />
-    <ProjectReference Include="..\..\ContentCore.Contracts\ContentCore.Contracts.csproj" />
-    <ProjectReference Include="..\..\Security.Contracts\Security.Contracts.csproj" />
+    <ProjectReference Include="..\..\src\Modules\ContentPlaces\ContentPlaces.Presentation\ContentPlaces.Presentation.csproj" />
+    <ProjectReference Include="..\..\src\Modules\ContentCore\ContentCore.Contracts\ContentCore.Contracts.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Security\Security.Contracts\Security.Contracts.csproj" />
     <ProjectReference Include="..\YallaJo.Tests.Shared\YallaJo.Tests.Shared.csproj" />
   </ItemGroup>
 

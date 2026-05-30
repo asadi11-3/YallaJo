@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\BuildingBlocks\YallaJo.SharedKernel.Domain\YallaJo.SharedKernel.Domain.csproj" />
+    <!-- Required by ContentSeoPermissionCatalog for IPermissionCatalog / PermissionDescriptor / AppAction / PermissionGroup -->
+    <ProjectReference Include="..\..\..\BuildingBlocks\YallaJo.SharedKernel.Application\YallaJo.SharedKernel.Application.csproj" />
+    <!-- Integration events expose SeoEntityType (shared with consumers) -->
+    <ProjectReference Include="..\ContentSeo.Domain\ContentSeo.Domain.csproj" />
+  </ItemGroup>
+</Project>

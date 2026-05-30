@@ -1,0 +1,39 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FluentValidation" Version="12.1.1" />
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
+    <PackageReference Include="MediatR" Version="14.1.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.15" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ContentBlogs.Contracts\ContentBlogs.Contracts.csproj" />
+    <ProjectReference Include="..\ContentBlogs.Domain\ContentBlogs.Domain.csproj" />
+    <ProjectReference Include="..\..\ContentCore\ContentCore.Contracts\ContentCore.Contracts.csproj" />
+    <ProjectReference Include="..\..\ContentPlaces\ContentPlaces.Contracts\ContentPlaces.Contracts.csproj" />
+    <!-- ContentTours.Contracts: needed for ITourExistenceService consumed
+         by LinkBlogToursCommandHandler.  Do NOT add ContentTours.Application
+         or ContentTours.Infrastructure â€” the service implementation is
+         registered by AddContentToursInfrastructure() at the host. -->
+    <ProjectReference Include="..\..\ContentTours\ContentTours.Contracts\ContentTours.Contracts.csproj" />
+    <!-- Security.Contracts: needed for RolePrivilegeLevel,
+         AppRoles.HighestPrivilegeLevel, and the read-only
+         IUserPrivilegeLevelReader port consumed by BlogAuthorHierarchyGuard.
+         Do NOT add Security.Application or Security.Domain â€” the reader's
+         implementation is registered by AddSecurityApplication() at the host. -->
+    <ProjectReference Include="..\..\Security\Security.Contracts\Security.Contracts.csproj" />
+    <ProjectReference Include="..\..\..\BuildingBlocks\YallaJo.SharedKernel.Application\YallaJo.SharedKernel.Application.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="ContentBlogs.Tests.Unit" />
+  </ItemGroup>
+
+</Project>

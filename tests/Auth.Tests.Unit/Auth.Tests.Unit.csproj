@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
@@ -22,15 +22,15 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Auth.Application\Auth.Application.csproj" />
-    <ProjectReference Include="..\..\Auth.Domain\Auth.Domain.csproj" />
-    <ProjectReference Include="..\..\Auth.Infrastructure\Auth.Infrastructure.csproj" />
-    <ProjectReference Include="..\..\Security.Contracts\Security.Contracts.csproj" />
-    <ProjectReference Include="..\..\Accounts.Contracts\Accounts.Contracts.csproj" />
-    <ProjectReference Include="..\..\Security.Domain\Security.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Auth\Auth.Application\Auth.Application.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Auth\Auth.Domain\Auth.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Auth\Auth.Infrastructure\Auth.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Security\Security.Contracts\Security.Contracts.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Accounts\Accounts.Contracts\Accounts.Contracts.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Security\Security.Domain\Security.Domain.csproj" />
     <!-- JWT-401 hardening: needed by CurrentUserClaimReadingTests to exercise
          the Api-side ICurrentUser implementation that reads JWT claims. -->
-    <ProjectReference Include="..\..\YallaJo.Api\YallaJo.Api.csproj" />
+    <ProjectReference Include="..\..\src\Hosts\YallaJo.Api\YallaJo.Api.csproj" />
     <ProjectReference Include="..\YallaJo.Tests.Shared\YallaJo.Tests.Shared.csproj" />
   </ItemGroup>
 

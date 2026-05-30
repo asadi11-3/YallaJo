@@ -1,0 +1,35 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="MediatR" Version="14.1.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.15" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="9.0.15" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Hybrid" Version="9.10.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="9.0.15" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.15" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="9.0.15" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\YallaJo.SharedKernel.Application\YallaJo.SharedKernel.Application.csproj" />
+    <ProjectReference Include="..\YallaJo.SharedKernel.Domain\YallaJo.SharedKernel.Domain.csproj" />
+    <!-- Integration event contract references â€” required by IntegrationEventTypeRegistry -->
+    <ProjectReference Include="..\..\Modules\Accounts\Accounts.Contracts\Accounts.Contracts.csproj" />
+    <ProjectReference Include="..\..\Modules\Analytics\Analytics.Contracts\Analytics.Contracts.csproj" />
+    <ProjectReference Include="..\..\Modules\Auth\Auth.Contracts\Auth.Contracts.csproj" />
+    <ProjectReference Include="..\..\Modules\Booking\Booking.Contracts\Booking.Contracts.csproj" />
+    <ProjectReference Include="..\..\Modules\ContentBlogs\ContentBlogs.Contracts\ContentBlogs.Contracts.csproj" />
+    <ProjectReference Include="..\..\Modules\ContentCore\ContentCore.Contracts\ContentCore.Contracts.csproj" />
+    <ProjectReference Include="..\..\Modules\ContentPlaces\ContentPlaces.Contracts\ContentPlaces.Contracts.csproj" />
+    <ProjectReference Include="..\..\Modules\ContentSeo\ContentSeo.Contracts\ContentSeo.Contracts.csproj" />
+    <ProjectReference Include="..\..\Modules\ContentTours\ContentTours.Contracts\ContentTours.Contracts.csproj" />
+    <ProjectReference Include="..\..\Modules\Finance\Finance.Contracts\Finance.Contracts.csproj" />
+    <ProjectReference Include="..\..\Modules\Messaging\Messaging.Contracts\Messaging.Contracts.csproj" />
+    <ProjectReference Include="..\..\Modules\Social\Social.Contracts\Social.Contracts.csproj" />
+    <ProjectReference Include="..\..\Modules\Security\Security.Contracts\Security.Contracts.csproj" />
+    <ProjectReference Include="..\..\Modules\Tracking\Tracking.Contracts\Tracking.Contracts.csproj" />
+  </ItemGroup>
+</Project>
