@@ -9,6 +9,13 @@ public interface ITourGuideRepository : IRepository<TourGuide, Guid>
 
     Task<TourGuide?> GetByUserIdAsync(Guid userId, CancellationToken ct = default, bool asNoTracking = true);
 
+    /// <summary>
+    /// Loads the TourGuide aggregate (including <see cref="TourGuide.Languages"/> and
+    /// <see cref="TourGuide.Specializations"/>) by the owning user's identity.
+    /// Used by GET /api/v1/guides/me (F15 fix).
+    /// </summary>
+    Task<TourGuide?> GetWithDetailsByUserIdAsync(Guid userId, CancellationToken ct = default, bool asNoTracking = true);
+
     Task<int> CountAssignedToursAsync(Guid guideUserId, CancellationToken ct = default);
 
     Task<TourGuide?> GetBySlugAsync(string slug, CancellationToken ct = default, bool asNoTracking = true);

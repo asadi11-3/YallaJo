@@ -6,7 +6,8 @@ namespace YallaJo.SharedKernel.Infrastructure.Data
         string FirstName,
         string LastName,
         string Role,
-        string Password);
+        string Password,
+        string Status = "Active");
 
     public static class SeedIdentityProfiles
     {
@@ -27,7 +28,21 @@ namespace YallaJo.SharedKernel.Infrastructure.Data
             new(Guid.Parse("77777777-7777-7777-7777-777777777777"), "traveler.2@yallajo.local", "Hadi", "Darwish", "User", "P@ssw0rd!"),
             new(Guid.Parse("88888888-8888-8888-8888-888888888888"), "traveler.3@yallajo.local", "Maya", "Khoury", "User", "P@ssw0rd!"),
             new(Guid.Parse("99999999-9999-9999-9999-999999999999"), "traveler.4@yallajo.local", "Jad", "Salem", "User", "P@ssw0rd!"),
-            new(Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"), "traveler.5@yallajo.local", "Sara", "Qattan", "User", "P@ssw0rd!")
+            new(Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"), "traveler.5@yallajo.local", "Sara", "Qattan", "User", "P@ssw0rd!"),
+
+            // ---------------------------------------------------------------
+            // Playwright test scenario users (see Agents/Tests/Playwright-*.md).
+            // Password: TestPass!23 for all entries below.
+            // Status: Active by default; "Suspended" / "Pending" supported.
+            // ---------------------------------------------------------------
+            new(Guid.Parse("b0000000-0000-0000-0000-000000000001"), "admin@yallajo.test",          "Test",      "Admin",   "Admin",     "TestPass!23"),
+            new(Guid.Parse("b0000000-0000-0000-0000-000000000002"), "userA@yallajo.test",          "User",      "Alpha",   "User",      "TestPass!23"),
+            new(Guid.Parse("b0000000-0000-0000-0000-000000000003"), "userB@yallajo.test",          "User",      "Beta",    "User",      "TestPass!23"),
+            new(Guid.Parse("b0000000-0000-0000-0000-000000000004"), "guide-pending@yallajo.test",  "Guide",     "Pending", "TourGuide", "TestPass!23"),
+            new(Guid.Parse("b0000000-0000-0000-0000-000000000005"), "guide-approved@yallajo.test", "Guide",     "Approved","TourGuide", "TestPass!23"),
+            new(Guid.Parse("b0000000-0000-0000-0000-000000000006"), "business@yallajo.test",       "Business",  "Owner",   "TourGuide", "TestPass!23"),
+            new(Guid.Parse("b0000000-0000-0000-0000-000000000007"), "agency@yallajo.test",         "Agency",    "Manager", "TourGuide", "TestPass!23"),
+            new(Guid.Parse("b0000000-0000-0000-0000-000000000008"), "suspended@yallajo.test",      "Suspended", "User",    "User",      "TestPass!23", "Suspended")
         ];
     }
 }

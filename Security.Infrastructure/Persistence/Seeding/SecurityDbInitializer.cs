@@ -23,22 +23,37 @@ public sealed class SecurityDbInitializer(
 
     public async Task InitializeAsync(CancellationToken cancellationToken = default)
     {
-        if (await dbContext.Users.AnyAsync(cancellationToken))
+        // Roles + claims: one-time bootstrap (immutable seed). Skip if already present.
+        if (!await dbContext.Roles.AnyAsync(cancellationToken))
         {
-            return;
+            dbContext.Roles.AddRange(CreateRoles());
+            dbContext.RoleClaims.AddRange(CreateRoleClaims());
         }
 
-        var roles = CreateRoles();
-        var users = CreateUsers();
-        var userRoles = CreateUserRoles(users);
-        var roleClaims = CreateRoleClaims();
+        // Users: idempotent per-user - allows appending new test users to an
+        // already-seeded database without breaking the existing rows.
+        var existingUserIds = await dbContext.Users
+            .Select(u => u.Id)
+            .ToListAsync(cancellationToken);
+        var existingUserIdSet = new HashSet<Guid>(existingUserIds);
 
-        dbContext.Roles.AddRange(roles);
-        dbContext.Users.AddRange(users);
-        dbContext.UserRoles.AddRange(userRoles);
-        dbContext.RoleClaims.AddRange(roleClaims);
+        var newProfiles = SeedIdentityProfiles.All
+            .Where(p => !existingUserIdSet.Contains(p.UserId))
+            .ToList();
 
-        await dbContext.SaveChangesAsync(cancellationToken);
+        if (newProfiles.Count > 0)
+        {
+            var users = CreateUsers(newProfiles);
+            var userRoles = CreateUserRoles(users, newProfiles);
+
+            dbContext.Users.AddRange(users);
+            dbContext.UserRoles.AddRange(userRoles);
+        }
+
+        if (dbContext.ChangeTracker.HasChanges())
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
     }
 
     private static List<Role> CreateRoles()
@@ -60,28 +75,62 @@ public sealed class SecurityDbInitializer(
         }).ToList();
     }
 
-    private List<User> CreateUsers()
+    private List<User> CreateUsers(IReadOnlyList<SeedUserProfile> profiles)
     {
-        return SeedIdentityProfiles.All.Select(profile =>
+        return profiles.Select(profile =>
         {
             var user = User.Register(profile.Email, profile.FirstName, profile.LastName);
             SetProperty(user, nameof(User.Id), profile.UserId);
             user.SetPasswordHash(passwordHasher.Hash(profile.Password));
-            user.Activate();
 
-            var primaryEmail = user.GetPrimaryEmail();
-            primaryEmail?.MarkVerified();
+            ApplyLifecycle(user, profile.Status);
 
             return user;
         }).ToList();
     }
 
-    private static List<UserRole> CreateUserRoles(IEnumerable<User> users)
+    private static void ApplyLifecycle(User user, string status)
     {
+        switch (status?.Trim().ToLowerInvariant())
+        {
+            case "pending":
+                // Provisioned -> PendingActivation. Email stays unverified.
+                user.MarkPendingActivation();
+                break;
+
+            case "suspended":
+                // Provisioned -> Active (verified) -> Suspended.
+                user.Activate();
+                user.GetPrimaryEmail()?.MarkVerified();
+                user.Suspend();
+                break;
+
+            case "active":
+            case null:
+            case "":
+            default:
+                // Provisioned -> Active + verified email.
+                user.Activate();
+                user.GetPrimaryEmail()?.MarkVerified();
+                break;
+        }
+    }
+
+    private static List<UserRole> CreateUserRoles(
+        IEnumerable<User> users,
+        IReadOnlyList<SeedUserProfile> profiles)
+    {
+        var byId = profiles.ToDictionary(p => p.UserId);
         return users.Select(user =>
         {
-            var profile = SeedIdentityProfiles.All.First(p => p.UserId == user.Id);
-            return UserRole.Create(user.Id, RoleIds[profile.Role]);
+            var profile = byId[user.Id];
+            if (!RoleIds.TryGetValue(profile.Role, out var roleId))
+            {
+                throw new InvalidOperationException(
+                    $"Seed user '{profile.Email}' references role '{profile.Role}' which is not seeded. " +
+                    "Add it to SecurityDbInitializer.RoleIds and CreateRoles().");
+            }
+            return UserRole.Create(user.Id, roleId);
         }).ToList();
     }
 

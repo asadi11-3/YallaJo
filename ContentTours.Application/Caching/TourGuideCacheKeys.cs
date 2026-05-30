@@ -8,6 +8,13 @@ public static class TourGuideCacheKeys
     public static string Profile(Guid guideId)
         => $"ct:tour-guide-profile:{guideId}";
 
+    // F15 fix: TourGuide profile resolved by owning user identity (GET /api/v1/guides/me).
+    public static string ProfileByUser(Guid userId)
+        => $"ct:tour-guide-profile:user:{userId}";
+
+    public static string TagForProfileByUser(Guid userId)
+        => $"tour-guide-profile:user:{userId}";
+
     public static string ProfileBySlug(string slug)
         => $"ct:tour-guide-profile:slug:{slug.Trim().ToLowerInvariant()}";
 

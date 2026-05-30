@@ -24,47 +24,50 @@ public sealed class RecaptchaValidationBehavior<TRequest, TResponse>
     }
 
     public async Task<TResponse> Handle(
-        TRequest request,
-        RequestHandlerDelegate<TResponse> next,
-        CancellationToken cancellationToken)
-    {
-        if (request is not IRecaptchaProtectedCommand protectedCmd)
-            return await next().ConfigureAwait(false);
+         TRequest request,
+         RequestHandlerDelegate<TResponse> next,
+         CancellationToken cancellationToken)
+     {
+         // RECAPTCHA VALIDATION DISABLED - TODO: uncomment when re-enabling
+         /*
+         if (request is not IRecaptchaProtectedCommand protectedCmd)
+             return await next().ConfigureAwait(false);
 
-        if (string.IsNullOrWhiteSpace(protectedCmd.RecaptchaToken))
-        {
-            _logger.LogInformation(
-                "reCAPTCHA rejected for {Command}: token missing.",
-                typeof(TRequest).Name);
-            return BuildGenericFailure("Captcha verification failed.");
-        }
+         if (string.IsNullOrWhiteSpace(protectedCmd.RecaptchaToken))
+         {
+             _logger.LogInformation(
+                 "reCAPTCHA rejected for {Command}: token missing.",
+                 typeof(TRequest).Name);
+             return BuildGenericFailure("Captcha verification failed.");
+         }
 
-        if (string.IsNullOrWhiteSpace(protectedCmd.RecaptchaAction))
-        {
-            _logger.LogError(
-                "reCAPTCHA configuration bug for {Command}: expected action is empty.",
-                typeof(TRequest).Name);
-            return BuildGenericFailure("Captcha verification failed.");
-        }
+         if (string.IsNullOrWhiteSpace(protectedCmd.RecaptchaAction))
+         {
+             _logger.LogError(
+                 "reCAPTCHA configuration bug for {Command}: expected action is empty.",
+                 typeof(TRequest).Name);
+             return BuildGenericFailure("Captcha verification failed.");
+         }
 
-        var verification = await _verifier.VerifyAsync(
-            protectedCmd.RecaptchaToken,
-            protectedCmd.RecaptchaAction,
-            _requestContext.IpAddress,
-            cancellationToken).ConfigureAwait(false);
+         var verification = await _verifier.VerifyAsync(
+             protectedCmd.RecaptchaToken,
+             protectedCmd.RecaptchaAction,
+             _requestContext.IpAddress,
+             cancellationToken).ConfigureAwait(false);
 
-        if (verification.IsFailure)
-        {
-            _logger.LogInformation(
-                "reCAPTCHA rejected for {Command}: {Reason}",
-                typeof(TRequest).Name,
-                verification.Errors.FirstOrDefault()?.Message ?? "unknown");
+         if (verification.IsFailure)
+         {
+             _logger.LogInformation(
+                 "reCAPTCHA rejected for {Command}: {Reason}",
+                 typeof(TRequest).Name,
+                 verification.Errors.FirstOrDefault()?.Message ?? "unknown");
 
-            return BuildGenericFailure("Captcha verification failed.");
-        }
+             return BuildGenericFailure("Captcha verification failed.");
+         }
+         */
 
-        return await next().ConfigureAwait(false);
-    }
+         return await next().ConfigureAwait(false);
+     }
 
     private static TResponse BuildGenericFailure(string message)
     {

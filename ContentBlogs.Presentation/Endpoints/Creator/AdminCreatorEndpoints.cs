@@ -16,6 +16,7 @@ using ContentBlogs.Presentation.Endpoints.Creator.Models;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using YallaJo.SharedKernel.Application.Authorization;
 using YallaJo.SharedKernel.Domain.Abstractions.Pagination;
@@ -254,7 +255,7 @@ internal static class AdminCreatorEndpoints
         // ── DELETE /api/v1/blogs/admin/creators/profiles/{id} ────────────
         group.MapDelete("/profiles/{id:guid}", async (
             Guid id,
-            AdminDeleteCreatorProfileRequest request,
+            [FromBody] AdminDeleteCreatorProfileRequest request,
             ISender sender,
             CancellationToken ct) =>
         {

@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Text.Json;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 
@@ -36,6 +37,20 @@ internal sealed class GlobalExceptionHandler(
             OperationCanceledException => (499, "Client Closed Request"),
             UnauthorizedAccessException => (StatusCodes.Status403Forbidden, "Forbidden"),
             TimeoutException => (StatusCodes.Status504GatewayTimeout, "Gateway Timeout"),
+            // BadHttpRequestException covers minimal-API parameter binding failures
+            // (missing required query params, invalid format, body too large, etc).
+            // Without this case, those fall through to 500 — see F5/F13 in
+            // Agents/Tests/Results/Findings-Rolling.md.
+            BadHttpRequestException bre => (bre.StatusCode != 0 ? bre.StatusCode : StatusCodes.Status400BadRequest, "Bad Request"),
+            // Common reflection/type-binding failures that also originate from
+            // malformed client input → 400 rather than 500.
+            FormatException => (StatusCodes.Status400BadRequest, "Bad Request"),
+            ArgumentException => (StatusCodes.Status400BadRequest, "Bad Request"),
+            // Empty/malformed JSON body in POST/PUT endpoints — see F19 in
+            // Agents/Tests/Results/Findings-Rolling.md (POST /booking/tour empty
+            // body was returning 500 instead of 400 because System.Text.Json
+            // throws JsonException which wasn't caught here).
+            JsonException => (StatusCodes.Status400BadRequest, "Bad Request"),
             _ => (StatusCodes.Status500InternalServerError, "Internal Server Error"),
         };
 

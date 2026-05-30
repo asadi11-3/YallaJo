@@ -16,7 +16,8 @@ public static class DependencyInjection
         services.AddMediatR(cfg =>
         {
             cfg.RegisterServicesFromAssembly(assembly);
-            cfg.AddOpenBehavior(typeof(RecaptchaValidationBehavior<,>));
+            // RECAPTCHA DISABLED - TODO: uncomment when re-enabling
+            // cfg.AddOpenBehavior(typeof(RecaptchaValidationBehavior<,>));
         });
 
         services.AddValidatorsFromAssembly(assembly, includeInternalTypes: true);

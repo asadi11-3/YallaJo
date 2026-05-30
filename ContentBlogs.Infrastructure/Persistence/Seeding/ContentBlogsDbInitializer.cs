@@ -51,7 +51,9 @@ public sealed class ContentBlogsDbInitializer(ContentBlogsDbContext dbContext) :
         SetProperty(blog, nameof(Blog.Summary), "A practical route and packing list for Petra day visits.");
         SetProperty(blog, nameof(Blog.AuthorId), AuthorGuide);
         SetProperty(blog, nameof(Blog.Status), BlogStatus.Published);
-        SetProperty(blog, nameof(Blog.IsFeatured), true);
+        // Blog.IsFeatured is a computed property (FeaturedAt.HasValue && unexpired);
+        // setting FeaturedAt is what actually makes IsFeatured evaluate to true.
+        SetProperty(blog, nameof(Blog.FeaturedAt), DateTime.UtcNow.AddDays(-5));
         SetProperty(blog, nameof(Blog.ViewCount), 420);
         SetProperty(blog, nameof(Blog.ReadTimeMinutes), 6);
         SetProperty(blog, nameof(Blog.MetaTitle), "Petra Sunrise Guide | YallaJo");

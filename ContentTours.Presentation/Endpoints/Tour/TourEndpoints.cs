@@ -89,6 +89,27 @@ internal static class TourEndpoints
         .ProducesProblem(StatusCodes.Status404NotFound)
         .AllowAnonymous();
 
+        // ── GET /api/v1/tours/by-slug/{slug} ──────────────────────────────────
+        // F20 2026-05-29: standardize on the `/by-slug/` convention used by
+        // /api/v1/guides/by-slug/{slug} (TourGuideProfileEndpoints.cs:54).
+        // Kept `/slug/` above for backward compatibility.
+        group.MapGet("/by-slug/{slug}", async (
+            string slug,
+            HttpContext http,
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            var acceptLanguage = http.Request.Headers.AcceptLanguage.ToString();
+
+            var result = await sender.Send(new GetTourBySlugQuery(slug, acceptLanguage), ct);
+            return result.ToApiResult();
+        })
+        .WithName("GetTourByCanonicalSlug")
+        .WithSummary("Get public tour details by slug (canonical path)")
+        .Produces<TourDetailDto>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .AllowAnonymous();
+
         // ── POST /api/v1/tours ────────────────────────────────────────────────
         group.MapPost("/", async (
             CreateTourRequest request,

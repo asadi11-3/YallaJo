@@ -8,6 +8,7 @@ using Accounts.Contracts.Authorization;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using YallaJo.SharedKernel.Application.Authorization;
 using YallaJo.SharedKernel.Presentation;
@@ -71,7 +72,7 @@ public static class AgencyEndpoints
             var result = await sender.Send(new ApproveGuideApplicationCommand(id), ct);
             return result.ToApiResult();
         })
-        .WithName("ApproveGuideApplication")
+        .WithName("ApproveAgencyGuideApplication")
         .Produces(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status401Unauthorized)
         .ProducesProblem(StatusCodes.Status404NotFound)
@@ -86,7 +87,7 @@ public static class AgencyEndpoints
             var result = await sender.Send(new RejectGuideApplicationCommand(id, req.Reason), ct);
             return result.ToApiResult();
         })
-        .WithName("RejectGuideApplication")
+        .WithName("RejectAgencyGuideApplication")
         .Produces(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status401Unauthorized)
         .ProducesProblem(StatusCodes.Status404NotFound)
@@ -95,7 +96,7 @@ public static class AgencyEndpoints
         .RequireAuthorization();
 
         // DELETE /api/v1/agency/guides/{guideUserId} — remove guide from agency
-        group.MapDelete("/guides/{guideUserId:guid}", async (Guid guideUserId, RemoveGuideRequest req, ISender sender, CancellationToken ct) =>
+        group.MapDelete("/guides/{guideUserId:guid}", async (Guid guideUserId, [FromBody] RemoveGuideRequest req, ISender sender, CancellationToken ct) =>
         {
             var result = await sender.Send(new RemoveGuideCommand(guideUserId, req.Reason), ct);
             return result.ToApiResult();

@@ -6,7 +6,8 @@ namespace Auth.Application.Commands.ResendOtp;
 public sealed record ResendOtpCommand(
     string Email,
     string Purpose,
-    string RecaptchaToken) : ICommand<ResendOtpResult>, IRecaptchaProtectedCommand
+    string RecaptchaToken) : ICommand<ResendOtpResult> // RECAPTCHA DISABLED: , IRecaptchaProtectedCommand
 {
-    public string RecaptchaAction => RecaptchaActions.ResendOtp;
+    // RECAPTCHA DISABLED - TODO: uncomment when re-enabling
+    // public string RecaptchaAction => RecaptchaActions.ResendOtp;
 }

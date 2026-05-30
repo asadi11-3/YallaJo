@@ -13,6 +13,7 @@ using ContentTours.Application.Queries.TourGuide.Earnings;
 using ContentTours.Application.Queries.TourGuide.GetTierProgress;
 using ContentTours.Application.Queries.TourGuides.Common;
 using ContentTours.Application.Queries.TourGuides.GetById;
+using ContentTours.Application.Queries.TourGuides.GetByUserId;
 using ContentTours.Application.Queries.TourGuides.GetBySlug;
 using ContentTours.Application.Queries.TourGuides.GetGuideTours;
 using ContentTours.Application.Queries.TourGuides.GetMyApplications;
@@ -44,7 +45,7 @@ internal static class TourGuideProfileEndpoints
             var result = await sender.Send(new ListTourGuidesQuery(page, pageSize), ct);
             return result.ToApiResult();
         })
-        .WithName("ListTourGuides")
+        .WithName("ListPublicTourGuides")
         .WithSummary("List active tour guides (public)")
         .Produces<ListTourGuidesResult>(StatusCodes.Status200OK)
         .AllowAnonymous();
@@ -225,7 +226,10 @@ internal static class TourGuideProfileEndpoints
             ICurrentUser currentUser,
             CancellationToken ct) =>
         {
-            var result = await sender.Send(new GetTourGuideByIdQuery(currentUser.UserId!.Value), ct);
+            // F15 fix: was GetTourGuideByIdQuery — that query filters by aggregate Id, but
+    // currentUser.UserId is the OWNING user identity, not the aggregate Id. The
+    // mismatch made every /guides/me call 404 even when the TourGuide row existed.
+    var result = await sender.Send(new GetTourGuideByUserIdQuery(currentUser.UserId!.Value), ct);
             return result.ToApiResult();
         })
         .WithName("GetMyTourGuideProfile")
@@ -319,7 +323,7 @@ internal static class TourGuideProfileEndpoints
         // GET /guides/me/earnings/summary
         group.MapGet("/me/earnings/summary", async (ISender sender, ICurrentUser currentUser, CancellationToken ct) =>
             (await sender.Send(new GetGuideEarningsSummaryQuery(currentUser.UserId!.Value), ct)).ToApiResult())
-            .WithName("GetGuideEarningsSummary")
+            .WithName("GetMyTourGuideEarningsSummary")
             .WithMetadata(new MustHavePermissionAttribute(ContentToursFeatures.TourGuideProfile, AppAction.Read))
             .RequireAuthorization();
 

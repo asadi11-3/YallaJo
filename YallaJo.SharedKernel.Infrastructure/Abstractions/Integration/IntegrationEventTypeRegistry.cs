@@ -30,10 +30,15 @@ public static class IntegrationEventTypeRegistry
         ["security.user.phone-updated.v1"] = typeof(PhoneNumberUpdatedIntegrationEvent),
         ["security.user.lifecycle-changed.v1"] = typeof(UserLifecycleChangedIntegrationEvent),
 
-        // ── Auth (3) ──
+        // ── Auth (4) ──
         ["auth.user.logged-in.v1"] = typeof(UserLoggedInIntegrationEvent),
         ["auth.session.revoked.v1"] = typeof(SessionRevokedIntegrationEvent),
         ["auth.user.registered.v1"] = typeof(UserRegisteredIntegrationEvent),
+        // F48 fix 2026-05-30: PasswordResetTokenIssuedIntegrationEvent was raised by
+        // forgot-password flow but unregistered → OutboxProcessor threw 500 with
+        // 'Integration event type ... not registered in IntegrationEventTypeRegistry'.
+        // Same pattern as F1 (TourGuideRegisteredIntegrationEvent missing).
+        ["auth.password-reset.token-issued.v1"] = typeof(PasswordResetTokenIssuedIntegrationEvent),
 
         // ── ContentCore (12) ──
         ["content-core.language.activated.v1"] = typeof(LanguageActivatedIntegrationEvent),
@@ -88,7 +93,8 @@ public static class IntegrationEventTypeRegistry
         ["content-tours.tour.reinstated.v1"] = typeof(TourReinstatedIntegrationEvent),
 
         // ContentTours — TourGuide assignment / lifecycle
-        ["content-tours.tour-guide.assigned.v1"] = typeof(TourGuideAssignedIntegrationEvent),
+            ["content-tours.tour-guide.registered.v1"] = typeof(TourGuideRegisteredIntegrationEvent),
+            ["content-tours.tour-guide.assigned.v1"] = typeof(TourGuideAssignedIntegrationEvent),
         ["content-tours.tour-guide.unassigned.v1"] = typeof(TourGuideUnassignedIntegrationEvent),
         ["content-tours.tour-guide.suspended.v1"] = typeof(TourGuideSuspendedIntegrationEvent),
         ["content-tours.tour-guide.activated.v1"] = typeof(TourGuideActivatedIntegrationEvent),

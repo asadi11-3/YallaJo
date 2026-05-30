@@ -22,8 +22,9 @@ public static class ProviderEndpoints
 {
     public static IEndpointRouteBuilder MapProviderEndpoints(this IEndpointRouteBuilder endpoints)
     {
-        var group = endpoints.MapGroup("/api/v1/provider")
-            .WithTags("Provider");
+        // Caller (AccountsEndpoints) already creates the "/api/v1/provider" group with
+        // tag "Provider"; do NOT re-prefix here or routes will double-prefix.
+        var group = endpoints;
 
         // GET /api/v1/provider/status — get my application status
         group.MapGet("/status", async (ICurrentUser currentUser, ISender sender, CancellationToken ct) =>

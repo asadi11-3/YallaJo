@@ -12,6 +12,7 @@ public sealed class ForgotPasswordCommandValidator : AbstractValidator<ForgotPas
             .EmailAddress()
             .MaximumLength(320);
 
-        RuleFor(x => x.RecaptchaToken).MustBeValidRecaptchaToken();
+        // RECAPTCHA DISABLED - TODO: uncomment when re-enabling
+        // RuleFor(x => x.RecaptchaToken).MustBeValidRecaptchaToken();
     }
 }

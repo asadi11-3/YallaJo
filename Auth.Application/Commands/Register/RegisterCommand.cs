@@ -8,7 +8,8 @@ public sealed record RegisterCommand(
     string LastName,
     string Email,
     string Password,
-    string RecaptchaToken) : ICommand<RegisterResult>, IRecaptchaProtectedCommand
+    string RecaptchaToken) : ICommand<RegisterResult> // RECAPTCHA DISABLED: , IRecaptchaProtectedCommand
 {
-    public string RecaptchaAction => RecaptchaActions.Register;
+    // RECAPTCHA DISABLED - TODO: uncomment when re-enabling
+    // public string RecaptchaAction => RecaptchaActions.Register;
 }

@@ -9,6 +9,7 @@ using ContentSeo.Application.Commands.FaqItem.DeleteFaqItem;
 using ContentSeo.Application.Commands.FaqItem.ReorderFaqItems;
 using ContentSeo.Application.Commands.FaqItem.UpdateFaqItem;
 using ContentSeo.Application.Queries.FaqItem.Common;
+using ContentSeo.Application.Queries.FaqItem.GetAllFaqItems;
 using ContentSeo.Application.Queries.FaqItem.GetFaqItems;
 using ContentSeo.Contracts.Authorization;
 using ContentSeo.Domain.Enums;
@@ -18,6 +19,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using YallaJo.SharedKernel.Application.Authorization;
+using YallaJo.SharedKernel.Domain.Abstractions.Pagination;
 using YallaJo.SharedKernel.Presentation.Authorization;
 using YallaJo.SharedKernel.Presentation;
 
@@ -25,6 +27,29 @@ internal static class FaqItemEndpoints
 {
     internal static void MapFaqItemEndpoints(RouteGroupBuilder group)
     {
+        // GET /api/v1/seo/faq?page=1&pageSize=50&entityType=Tour&activeOnly=true
+        // Closes F12.3 (previously 405 because only POST/PUT/DELETE matched /faq).
+        group.MapGet("/faq", async (
+            SeoEntityType? entityType,
+            bool? activeOnly,
+            int page,
+            int pageSize,
+            HttpContext http,
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            var p = page <= 0 ? 1 : page;
+            var ps = pageSize <= 0 ? 50 : pageSize;
+            var acceptLanguage = http.Request.Headers.AcceptLanguage.ToString();
+            var query = new GetAllFaqItemsQuery(p, ps, entityType, activeOnly ?? true, acceptLanguage);
+            var result = await sender.Send(query, ct);
+            return result.ToApiResult();
+        })
+        .WithName("GetAllFaqItems")
+        .WithSummary("List FAQ items across all entities (paginated). Active-only by default.")
+        .Produces<PaginatedResult<FaqItemDto>>(StatusCodes.Status200OK)
+        .AllowAnonymous();
+
         // GET /api/v1/seo/faq/{entityType}/{entityId}
         group.MapGet("/faq/{entityType}/{entityId:guid}", async (
             SeoEntityType entityType,

@@ -6,7 +6,8 @@ namespace Auth.Application.Commands.VerifyEmail;
 public sealed record VerifyEmailCommand(
     string Email,
     string OtpCode,
-    string RecaptchaToken) : ICommand<VerifyEmailResult>, IRecaptchaProtectedCommand
+    string RecaptchaToken) : ICommand<VerifyEmailResult> // RECAPTCHA DISABLED: , IRecaptchaProtectedCommand
 {
-    public string RecaptchaAction => RecaptchaActions.VerifyEmail;
+    // RECAPTCHA DISABLED - TODO: uncomment when re-enabling
+    // public string RecaptchaAction => RecaptchaActions.VerifyEmail;
 }

@@ -49,6 +49,11 @@ namespace ContentCore.Infrastructure.Migrations
                     b.Property<byte[]>("Hmac")
                         .HasColumnType("varbinary(max)");
 
+                    b.Property<bool>("IsMarkedForDeletion")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
                     b.Property<byte[]>("Iv")
                         .HasColumnType("varbinary(max)");
 
@@ -157,7 +162,8 @@ namespace ContentCore.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ParentCategoryId");
+                    b.HasIndex("ParentCategoryId")
+                        .HasDatabaseName("IX_Categories_ParentCategoryId");
 
                     b.HasIndex("Slug")
                         .IsUnique();
@@ -575,7 +581,8 @@ namespace ContentCore.Infrastructure.Migrations
 
                     b.Property<string>("OriginalText")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
 
                     b.Property<string>("OriginalTextHash")
                         .IsRequired()
@@ -602,7 +609,8 @@ namespace ContentCore.Infrastructure.Migrations
 
                     b.Property<string>("TranslatedText")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");

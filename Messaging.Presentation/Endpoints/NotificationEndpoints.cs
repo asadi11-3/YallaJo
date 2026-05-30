@@ -12,6 +12,7 @@ using Messaging.Contracts.Authorization;
 using Messaging.Domain.Enums;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Authorization;
@@ -104,7 +105,7 @@ internal static class NotificationEndpoints
           .RequireAuthorization();
 
         group.MapDelete("/batch", async (
-            BatchDeleteNotificationsRequest request,
+            [FromBody] BatchDeleteNotificationsRequest request,
             ICurrentUser currentUser,
             ISender sender,
             CancellationToken ct) =>

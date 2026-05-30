@@ -15,6 +15,13 @@ public sealed class CreateTourBookingCommandValidator : AbstractValidator<Create
         RuleFor(x => x.TourId)
             .NotEmpty().WithMessage("TourId is required.");
 
+        // F21 2026-05-29: GuideId was required by handler but not by validator;
+        // missing/empty GuideId fell through to handler and returned 400 with
+        // misleading code `TourBooking.InvalidState`. Catching here surfaces a
+        // proper FluentValidation 400 with field-level errors per RFC 7807.
+        RuleFor(x => x.GuideId)
+            .NotEmpty().WithMessage("GuideId is required.");
+
         RuleFor(x => x.AvailabilitySlotId)
             .NotEmpty().WithMessage("AvailabilitySlotId is required.");
 
