@@ -40,6 +40,7 @@ public sealed class AnalyticsPermissionCatalog : IPermissionCatalog
         new(AnalyticsFeatures.Photogenic, AppAction.Update, PermissionGroup.AnalyticsAccess, "Update photogenic flags"),
         new(AnalyticsFeatures.Experiment, AppAction.Read, PermissionGroup.AnalyticsAccess, "View experiments"),
         new(AnalyticsFeatures.Experiment, AppAction.Create, PermissionGroup.AnalyticsAccess, "Create experiments"),
+        new(AnalyticsFeatures.Experiment, AppAction.Update, PermissionGroup.AnalyticsAccess, "Start or complete experiments"),
         new(AnalyticsFeatures.Experiment, AppAction.Delete, PermissionGroup.AnalyticsAccess, "Delete experiments"),
         new(AnalyticsFeatures.GuideDashboard, AppAction.Read, PermissionGroup.AnalyticsAccess, "View guide analytics dashboard"),
         new(AnalyticsFeatures.GuideDashboard, AppAction.Export, PermissionGroup.AnalyticsAccess, "Export guide analytics dashboard"),
