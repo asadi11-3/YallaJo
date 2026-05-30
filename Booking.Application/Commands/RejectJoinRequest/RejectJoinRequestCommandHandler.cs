@@ -44,7 +44,14 @@ public sealed class RejectJoinRequestCommandHandler(
                 return Result.Failure(new Error("TourBooking.NotFound", "Parent booking not found."), Outcome.NotFound);
             }
 
-            if (parentBooking.GuideId != responderId && parentBooking.UserId != responderId)
+            // Only the guide/booking owner can reject — Admin+ may override.
+            // P1 (2026-05-30): added admin bypass for consistency with Confirm/Complete/Reject.
+            var isAdmin = currentUser.HasPermission("Booking.AdminBookingDashboard.Update")
+                || currentUser.HasPermission("Booking.AdminBookingDashboard.Read");
+
+            if (!isAdmin
+                && parentBooking.GuideId != responderId
+                && parentBooking.UserId != responderId)
             {
                 return Result.Failure(
                     new Error("JoinRequest.Unauthorized", "Only the guide or booking owner can reject join requests."),

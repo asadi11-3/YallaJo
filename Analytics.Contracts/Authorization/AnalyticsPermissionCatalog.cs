@@ -32,6 +32,10 @@ public sealed class AnalyticsPermissionCatalog : IPermissionCatalog
         new(AnalyticsFeatures.BoostPackage, AppAction.Delete, PermissionGroup.AnalyticsAccess, "Delete boost packages"),
         new(AnalyticsFeatures.EditorialPin, AppAction.Read, PermissionGroup.AnalyticsAccess, "View editorial pins"),
         new(AnalyticsFeatures.EditorialPin, AppAction.Create, PermissionGroup.AnalyticsAccess, "Create editorial pins"),
+        // P1 (2026-05-30): dedicated Delete permission for DeactivateAnalyticsEditorialPin
+        // endpoint, replacing the coarse Batch.Refresh gate. Mirrors BoostPackage.Delete /
+        // SeasonalityRule.Delete. Admin+ only (AnalyticsAccess group).
+        new(AnalyticsFeatures.EditorialPin, AppAction.Delete, PermissionGroup.AnalyticsAccess, "Delete editorial pins"),
         new(AnalyticsFeatures.SeasonalityRule, AppAction.Read, PermissionGroup.AnalyticsAccess, "View seasonality rules"),
         new(AnalyticsFeatures.SeasonalityRule, AppAction.Create, PermissionGroup.AnalyticsAccess, "Create seasonality rules"),
         new(AnalyticsFeatures.SeasonalityRule, AppAction.Delete, PermissionGroup.AnalyticsAccess, "Delete seasonality rules"),
@@ -40,6 +44,8 @@ public sealed class AnalyticsPermissionCatalog : IPermissionCatalog
         new(AnalyticsFeatures.Photogenic, AppAction.Update, PermissionGroup.AnalyticsAccess, "Update photogenic flags"),
         new(AnalyticsFeatures.Experiment, AppAction.Read, PermissionGroup.AnalyticsAccess, "View experiments"),
         new(AnalyticsFeatures.Experiment, AppAction.Create, PermissionGroup.AnalyticsAccess, "Create experiments"),
+        // P1 (2026-05-30): dedicated permission for experiment lifecycle (start/complete),
+        // replacing the coarse Batch.Refresh gate on those endpoints.
         new(AnalyticsFeatures.Experiment, AppAction.Update, PermissionGroup.AnalyticsAccess, "Start or complete experiments"),
         new(AnalyticsFeatures.Experiment, AppAction.Delete, PermissionGroup.AnalyticsAccess, "Delete experiments"),
         new(AnalyticsFeatures.GuideDashboard, AppAction.Read, PermissionGroup.AnalyticsAccess, "View guide analytics dashboard"),

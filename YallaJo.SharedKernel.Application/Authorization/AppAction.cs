@@ -13,6 +13,7 @@ public static class AppAction
     public const string UpdateSelf = nameof(UpdateSelf);
     public const string UpdateAny  = nameof(UpdateAny);
     public const string DeleteAny  = nameof(DeleteAny);
+    public const string DeleteOwn  = nameof(DeleteOwn);
     public const string SoftDelete = nameof(SoftDelete);
     public const string Manage     = nameof(Manage);
     public const string Approve    = nameof(Approve);

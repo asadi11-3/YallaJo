@@ -45,8 +45,14 @@ public sealed class ApproveJoinRequestCommandHandler(
                 return Result.Failure(new Error("TourBooking.NotFound", "Parent booking not found."), Outcome.NotFound);
             }
 
-            // Only the guide who has the booking can approve
-            if (parentBooking.GuideId != responderId && parentBooking.UserId != responderId)
+            // Only the guide/booking owner can approve — Admin+ may override.
+            // P1 (2026-05-30): added admin bypass for consistency with Confirm/Complete/Reject.
+            var isAdmin = currentUser.HasPermission("Booking.AdminBookingDashboard.Update")
+                || currentUser.HasPermission("Booking.AdminBookingDashboard.Read");
+
+            if (!isAdmin
+                && parentBooking.GuideId != responderId
+                && parentBooking.UserId != responderId)
             {
                 return Result.Failure(
                     new Error("JoinRequest.Unauthorized", "Only the guide or booking owner can approve join requests."),

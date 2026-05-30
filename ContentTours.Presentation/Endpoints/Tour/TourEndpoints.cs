@@ -206,12 +206,12 @@ internal static class TourEndpoints
             return result.ToApiResult();
         })
         .WithName("DeleteTour")
-        .WithSummary("Soft-delete a tour")
+        .WithSummary("Soft-delete a tour (owner; Admin+ via override)")
         .Produces(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status403Forbidden)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status409Conflict)
-        .WithMetadata(new MustHavePermissionAttribute(ContentToursFeatures.Tour, AppAction.Delete));
+        .WithMetadata(new MustHavePermissionAttribute(ContentToursFeatures.Tour, AppAction.DeleteOwn));
 
         // ── POST /api/v1/tours/{id}/submit ────────────────────────────────────
         group.MapPost("/{id:guid}/submit", async (

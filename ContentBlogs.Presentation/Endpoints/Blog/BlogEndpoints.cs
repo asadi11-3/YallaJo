@@ -160,7 +160,7 @@ internal static class BlogEndpoints
         .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status401Unauthorized)
         .ProducesProblem(StatusCodes.Status403Forbidden)
-        .WithMetadata(new MustHavePermissionAttribute(ContentBlogsFeatures.Blog, AppAction.Delete));
+        .WithMetadata(new MustHavePermissionAttribute(ContentBlogsFeatures.Blog, AppAction.DeleteAny));
 
         group.MapPost("/", async (
             CreateBlogRequest request,
@@ -229,13 +229,13 @@ internal static class BlogEndpoints
             return result.ToApiResult();
         })
         .WithName("DeleteBlog")
-        .WithSummary("Soft-delete a blog")
+        .WithSummary("Soft-delete a blog (owner; author-hierarchy guard; Admin+ via override)")
         .Produces(StatusCodes.Status200OK)
         .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status403Forbidden)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status409Conflict)
-        .WithMetadata(new MustHavePermissionAttribute(ContentBlogsFeatures.Blog, AppAction.Delete));
+        .WithMetadata(new MustHavePermissionAttribute(ContentBlogsFeatures.Blog, AppAction.DeleteOwn));
 
         group.MapPost("/{id:guid}/restore", async (
             Guid id,
@@ -247,13 +247,13 @@ internal static class BlogEndpoints
             return result.ToApiResult();
         })
         .WithName("RestoreBlog")
-        .WithSummary("Restore a soft-deleted blog")
+        .WithSummary("Restore a soft-deleted blog (owner; author-hierarchy guard; Admin+ via override)")
         .Produces(StatusCodes.Status200OK)
         .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status403Forbidden)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status409Conflict)
-        .WithMetadata(new MustHavePermissionAttribute(ContentBlogsFeatures.Blog, AppAction.Delete));
+        .WithMetadata(new MustHavePermissionAttribute(ContentBlogsFeatures.Blog, AppAction.DeleteOwn));
 
         group.MapPost("/{id:guid}/publish", async (
             Guid id,

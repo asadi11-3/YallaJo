@@ -16,7 +16,9 @@ public sealed class ContentPlacesPermissionCatalog : IPermissionCatalog
         new(ContentPlacesFeatures.Place, AppAction.Read,   PermissionGroup.ContentManagement, "View places"),
         new(ContentPlacesFeatures.Place, AppAction.Create, PermissionGroup.ContentManagement, "Create a place"),
         new(ContentPlacesFeatures.Place, AppAction.Update, PermissionGroup.ContentManagement, "Update place details"),
-        new(ContentPlacesFeatures.Place, AppAction.Delete, PermissionGroup.ContentManagement, "Delete a place"),
+        // P1 DeleteOwn/DeleteAny split (2026-05-30): replaces Place.Delete.
+        new(ContentPlacesFeatures.Place, AppAction.DeleteOwn, PermissionGroup.ContentManagement, "Delete own place"),
+        new(ContentPlacesFeatures.Place, AppAction.DeleteAny, PermissionGroup.ContentManagement, "Delete any place (admin)"),
         new(ContentPlacesFeatures.Place, AppAction.SoftDelete, PermissionGroup.ContentManagement, "Soft-delete a place"),
         new(ContentPlacesFeatures.Place, AppAction.Feature,    PermissionGroup.ContentManagement, "Feature/unfeature a place"),
 

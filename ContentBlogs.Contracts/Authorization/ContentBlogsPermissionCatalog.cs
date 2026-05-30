@@ -18,7 +18,9 @@ namespace ContentBlogs.Contracts.Authorization
         new(ContentBlogsFeatures.Blog, AppAction.ReadOwn, PermissionGroup.SystemAccess, "View own blogs (creator)"),
         new(ContentBlogsFeatures.Blog, AppAction.Create,  PermissionGroup.ContentManagement, "Create a blog"),
         new(ContentBlogsFeatures.Blog, AppAction.Update,  PermissionGroup.ContentManagement, "Update a blog"),
-        new(ContentBlogsFeatures.Blog, AppAction.Delete,  PermissionGroup.ContentManagement, "Delete a blog"),
+        // P1 DeleteOwn/DeleteAny split (2026-05-30): replaces Blog.Delete.
+        new(ContentBlogsFeatures.Blog, AppAction.DeleteOwn, PermissionGroup.ContentManagement, "Delete own blog"),
+        new(ContentBlogsFeatures.Blog, AppAction.DeleteAny, PermissionGroup.ContentManagement, "Delete any blog (admin)"),
         new(ContentBlogsFeatures.Blog, AppAction.Submit,  PermissionGroup.SystemAccess, "Submit blog for review (creator)"),
         new(ContentBlogsFeatures.Blog, AppAction.Approve, PermissionGroup.ModerationTools, "Approve a blog (admin)"),
         new(ContentBlogsFeatures.Blog, AppAction.Reject,  PermissionGroup.ModerationTools, "Reject a blog (admin)"),

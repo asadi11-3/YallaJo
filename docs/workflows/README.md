@@ -26,7 +26,7 @@ Each workflow doc follows the same template:
 | Note over X | Side effect or state transition |
 | Dashed self-arrow | Async dispatch via MediatR |
 
-Module → module hops cross the **Outbox / Inbox boundary** (see [`17-outbox-inbox-eventing.md`](./17-outbox-inbox-eventing.md)).
+Module → module hops cross the **Outbox / Inbox boundary** (see [`17-outbox-inbox-eventing.md`](./17-outbox-inbox-eventing.md) for the *mechanism* and [`../eventing/integration-event-catalog.md`](../eventing/integration-event-catalog.md) for the *who publishes/consumes what*).
 
 ---
 

@@ -32,7 +32,13 @@ public sealed class DeletePlaceCommandHandler(
             }
 
             // Ownership check (IDOR prevention).
-            if (place.CreatedByUserId != currentUser.UserId!.Value)
+            // P1 DeleteOwn/DeleteAny (2026-05-30): owner OR admin-tier may delete.
+            // DeleteOwn is owner-scoped; Admin+ override via Place.DeleteAny / admin role tier.
+            var isAdminTier =
+                AppRoles.HighestPrivilegeLevel(currentUser.Roles) >= RolePrivilegeLevel.Admin
+                || currentUser.HasPermission("Permission.Place.DeleteAny");
+
+            if (!isAdminTier && place.CreatedByUserId != currentUser.UserId!.Value)
             {
                 return Result.Failure(
                     Error.Forbidden("You do not have permission to delete this place."),

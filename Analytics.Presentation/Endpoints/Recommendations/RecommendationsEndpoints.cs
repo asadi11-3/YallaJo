@@ -160,7 +160,7 @@ internal static class RecommendationsEndpoints
         .Produces(StatusCodes.Status200OK)
         .ProducesValidationProblem()
         .WithSummary("Create a boost package for a provider entity")
-        .WithMetadata(new MustHavePermissionAttribute(AnalyticsFeatures.Batch, AppAction.Refresh))
+        .WithMetadata(new MustHavePermissionAttribute(AnalyticsFeatures.BoostPackage, AppAction.Create))
         .RequireAuthorization();
 
         boosts.MapDelete("/{boostId:guid}", async (Guid boostId, ISender sender, CancellationToken ct) =>
@@ -172,7 +172,7 @@ internal static class RecommendationsEndpoints
         .Produces(StatusCodes.Status204NoContent)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Deactivate a boost package")
-        .WithMetadata(new MustHavePermissionAttribute(AnalyticsFeatures.Batch, AppAction.Refresh))
+        .WithMetadata(new MustHavePermissionAttribute(AnalyticsFeatures.BoostPackage, AppAction.Delete))
         .RequireAuthorization();
 
         // 3.7: Editorial pin admin endpoints
@@ -187,7 +187,7 @@ internal static class RecommendationsEndpoints
         .Produces(StatusCodes.Status200OK)
         .ProducesValidationProblem()
         .WithSummary("Create an editorial pin")
-        .WithMetadata(new MustHavePermissionAttribute(AnalyticsFeatures.Batch, AppAction.Refresh))
+        .WithMetadata(new MustHavePermissionAttribute(AnalyticsFeatures.EditorialPin, AppAction.Create))
         .RequireAuthorization();
 
         pins.MapDelete("/{pinId:guid}", async (Guid pinId, ISender sender, CancellationToken ct) =>
@@ -199,7 +199,7 @@ internal static class RecommendationsEndpoints
         .Produces(StatusCodes.Status204NoContent)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Deactivate an editorial pin")
-        .WithMetadata(new MustHavePermissionAttribute(AnalyticsFeatures.Batch, AppAction.Refresh))
+        .WithMetadata(new MustHavePermissionAttribute(AnalyticsFeatures.EditorialPin, AppAction.Delete))
         .RequireAuthorization();
 
         // 5.4: Itinerary planner
@@ -228,7 +228,7 @@ internal static class RecommendationsEndpoints
         .WithName("CreateAnalyticsSeasonalityRule")
         .Produces(StatusCodes.Status200OK)
         .WithSummary("Create a seasonality boost rule")
-        .WithMetadata(new MustHavePermissionAttribute(AnalyticsFeatures.Batch, AppAction.Refresh))
+        .WithMetadata(new MustHavePermissionAttribute(AnalyticsFeatures.SeasonalityRule, AppAction.Create))
         .RequireAuthorization();
 
         seasonality.MapGet("/", async (ISender sender, CancellationToken ct) =>
@@ -251,7 +251,7 @@ internal static class RecommendationsEndpoints
         .Produces(StatusCodes.Status204NoContent)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Deactivate a seasonality rule")
-        .WithMetadata(new MustHavePermissionAttribute(AnalyticsFeatures.Batch, AppAction.Refresh))
+        .WithMetadata(new MustHavePermissionAttribute(AnalyticsFeatures.SeasonalityRule, AppAction.Delete))
         .RequireAuthorization();
 
         // 5.2: Holiday calendar admin CRUD
@@ -265,7 +265,7 @@ internal static class RecommendationsEndpoints
         .WithName("CreateAnalyticsHolidayCalendar")
         .Produces(StatusCodes.Status200OK)
         .WithSummary("Create a holiday calendar entry")
-        .WithMetadata(new MustHavePermissionAttribute(AnalyticsFeatures.Batch, AppAction.Refresh))
+        .WithMetadata(new MustHavePermissionAttribute(AnalyticsFeatures.HolidayCalendar, AppAction.Create))
         .RequireAuthorization();
 
         holidays.MapGet("/{year:int}", async (int year, ISender sender, CancellationToken ct) =>
@@ -291,7 +291,7 @@ internal static class RecommendationsEndpoints
         .Produces(StatusCodes.Status204NoContent)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Set photogenic hotspot flag on an entity")
-        .WithMetadata(new MustHavePermissionAttribute(AnalyticsFeatures.Batch, AppAction.Refresh))
+        .WithMetadata(new MustHavePermissionAttribute(AnalyticsFeatures.Photogenic, AppAction.Update))
         .RequireAuthorization();
 
         // ── Phase 6: V3 Marketplace + Ops ──
@@ -306,7 +306,7 @@ internal static class RecommendationsEndpoints
         .Produces(StatusCodes.Status200OK)
         .ProducesValidationProblem()
         .WithSummary("Create a CPC (cost-per-click) sponsored bid")
-        .WithMetadata(new MustHavePermissionAttribute(AnalyticsFeatures.Batch, AppAction.Refresh))
+        .WithMetadata(new MustHavePermissionAttribute(AnalyticsFeatures.BoostPackage, AppAction.Create))
         .RequireAuthorization();
 
         // 6.1: Record a sponsored click
@@ -335,7 +335,7 @@ internal static class RecommendationsEndpoints
         .Produces(StatusCodes.Status200OK)
         .ProducesValidationProblem()
         .WithSummary("Create an A/B experiment")
-        .WithMetadata(new MustHavePermissionAttribute(AnalyticsFeatures.Batch, AppAction.Refresh))
+        .WithMetadata(new MustHavePermissionAttribute(AnalyticsFeatures.Experiment, AppAction.Create))
         .RequireAuthorization();
 
         experiments.MapPut("/{experimentId:guid}/start", async (Guid experimentId, ISender sender, CancellationToken ct) =>
@@ -347,7 +347,7 @@ internal static class RecommendationsEndpoints
         .Produces(StatusCodes.Status204NoContent)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Start an A/B experiment")
-        .WithMetadata(new MustHavePermissionAttribute(AnalyticsFeatures.Batch, AppAction.Refresh))
+        .WithMetadata(new MustHavePermissionAttribute(AnalyticsFeatures.Experiment, AppAction.Update))
         .RequireAuthorization();
 
         experiments.MapPut("/{experimentId:guid}/complete", async (Guid experimentId, ISender sender, CancellationToken ct) =>
@@ -359,7 +359,7 @@ internal static class RecommendationsEndpoints
         .Produces(StatusCodes.Status204NoContent)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Complete an A/B experiment")
-        .WithMetadata(new MustHavePermissionAttribute(AnalyticsFeatures.Batch, AppAction.Refresh))
+        .WithMetadata(new MustHavePermissionAttribute(AnalyticsFeatures.Experiment, AppAction.Update))
         .RequireAuthorization();
 
         // 6.3: Suggestion metric tracking

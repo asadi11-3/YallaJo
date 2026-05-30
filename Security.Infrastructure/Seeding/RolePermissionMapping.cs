@@ -135,7 +135,10 @@ public sealed class RolePermissionMapping
             "Permission.GuideApplication.Read",
             "Permission.Tour.Create",
             "Permission.Tour.Update",
-            "Permission.Tour.Delete",
+            // P1 DeleteOwn/DeleteAny split (2026-05-30): owner-scoped delete.
+            // Tour.Delete was renamed to Tour.DeleteAny (admin-only); providers
+            // get the owner-scoped variant. Handler enforces ownership.
+            "Permission.Tour.DeleteOwn",
             "Permission.AvailabilitySlot.Create",
             "Permission.AvailabilitySlot.Read",
             "Permission.AvailabilitySlot.Update",
@@ -150,6 +153,31 @@ public sealed class RolePermissionMapping
             "Permission.TourSchedule.Delete",
             "Permission.Payout.Read",
             "Permission.Invoice.Read",
+
+            // P1 Booking provider-side lifecycle (2026-05-30): provider/guide may
+            // confirm/complete/reject OWN bookings and approve/reject join requests
+            // for tours they own. Handlers enforce provider-ownership; Admin+ retain
+            // override via AdminBookingDashboard.{Read,Update}.
+            "Permission.TourBooking.Confirm",
+            "Permission.TourBooking.Complete",
+            "Permission.TourBooking.Reject",
+            "Permission.JoinRequest.Approve",
+            "Permission.JoinRequest.Reject",
+
+            // P1 TourGuideProfile owner-scoped self-deactivation (DeleteOwn split).
+            "Permission.TourGuideProfile.DeleteOwn",
+
+            // P1 AgencyRoster re-scope (2026-05-30): the agency-owning provider may
+            // attempt invite/remove/approve/reject of guides. The "may execute" check
+            // is enforced by the agency-ownership guard in the command handlers — the
+            // permission alone does NOT grant cross-agency access. Moved here OUT of
+            // the generic ContentManagement CRUD sweep so it no longer leaks to every
+            // content role globally.
+            "Permission.AgencyRoster.Read",
+            "Permission.AgencyRoster.Create",
+            "Permission.AgencyRoster.Delete",
+            "Permission.AgencyRoster.Approve",
+            "Permission.AgencyRoster.Reject",
         };
 
     public IReadOnlyList<string> GetPermissionsForRole(string roleName) =>
@@ -166,19 +194,32 @@ public sealed class RolePermissionMapping
                 _all.Where(p => !IsOwnerOnly(p) && !IsSuperAdminOnly(p))
                     .Select(p => p.Name).ToList(),
 
+            // P1 (2026-05-30): Provider is now a real self-service role — it gets
+            // ProviderSelfPermissions AND ConsumerPermissions (decision #4), not just
+            // ContentManagement CRUD. AgencyRoster.* is excluded from the CRUD sweep
+            // (see IsAgencyRoster) so it no longer leaks; instead it is granted only
+            // through ProviderSelfPermissions and gated by the agency-ownership guard.
             AppRoles.Provider =>
                 _all.Where(p => (p.Group == PermissionGroup.ContentManagement
+                                 && !IsAgencyRoster(p)
                                  && p.Action is AppAction.Read or AppAction.Create
                                      or AppAction.Update or AppAction.Delete)
                              || (p.Feature == SecurityFeatures.User && p.Action == AppAction.UpdateSelf)
-                             || p.IsGuestAccessible)
+                             || p.IsGuestAccessible
+                             || ConsumerPermissions.Contains(p.Name)
+                             || ProviderSelfPermissions.Contains(p.Name))
                     .Select(p => p.Name).ToList(),
 
             AppRoles.Creator =>
                 _all.Where(p => (p.Group == PermissionGroup.ContentManagement
+                                 && !IsAgencyRoster(p)
                                  && p.Action is AppAction.Read or AppAction.Create or AppAction.Delete)
                              || (p.Feature == SecurityFeatures.User && p.Action == AppAction.UpdateSelf)
-                             || p.IsGuestAccessible)
+                             || p.IsGuestAccessible
+                             // Owner-scoped blog delete (DeleteOwn split); Blog.Delete
+                             // was renamed to Blog.DeleteAny (admin-only).
+                             || (p.Feature == "Blog" && p.Action == AppAction.DeleteOwn)
+                             || ConsumerPermissions.Contains(p.Name))
                     .Select(p => p.Name).ToList(),
 
             AppRoles.User =>
@@ -189,9 +230,12 @@ public sealed class RolePermissionMapping
 
             AppRoles.TourGuide =>
                 _all.Where(p => (p.Group == PermissionGroup.ContentManagement
+                                 && !IsAgencyRoster(p)
                                  && (p.Action == AppAction.Read || p.Action == AppAction.Create || p.Action == AppAction.Delete))
                              || (p.Feature == SecurityFeatures.User && p.Action == AppAction.UpdateSelf)
                              || p.IsGuestAccessible
+                             // Owner-scoped blog delete (DeleteOwn split).
+                             || (p.Feature == "Blog" && p.Action == AppAction.DeleteOwn)
                              || ConsumerPermissions.Contains(p.Name)
                              || ProviderSelfPermissions.Contains(p.Name))
                     .Select(p => p.Name).ToList(),
@@ -203,9 +247,23 @@ public sealed class RolePermissionMapping
             _ => []
         };
 
+    // Outbox ops are intentionally NOT owner-only — SuperAdmin keeps them (see IsOpsOnly).
     private static bool IsOwnerOnly(PermissionDescriptor p) =>
         p.Feature == SecurityFeatures.System && p.Action == AppAction.Update;
 
+    // P0 (2026-05-30): Outbox ops are restricted from Admin (Owner + SuperAdmin only).
+    // The Admin branch excludes IsSuperAdminOnly, so flagging Outbox here removes it from
+    // Admin while the SuperAdmin branch (excludes only IsOwnerOnly) keeps it.
     private static bool IsSuperAdminOnly(PermissionDescriptor p) =>
-        p.Feature == SecurityFeatures.User && p.Action == AppAction.DeleteAny;
+        (p.Feature == SecurityFeatures.User && p.Action == AppAction.DeleteAny)
+        || IsOpsOnly(p);
+
+    // P0: Operational outbox permissions — Owner + SuperAdmin only.
+    private static bool IsOpsOnly(PermissionDescriptor p) =>
+        p.Feature == SecurityFeatures.Outbox;
+
+    // P1: AgencyRoster permissions are scoped to agency owners + Admin+, NOT the
+    // generic ContentManagement CRUD sweep. Excluded from the business-role sweeps.
+    private static bool IsAgencyRoster(PermissionDescriptor p) =>
+        p.Feature == "AgencyRoster";
 }

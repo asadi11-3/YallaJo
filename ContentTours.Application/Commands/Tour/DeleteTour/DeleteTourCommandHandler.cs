@@ -37,7 +37,14 @@ public sealed class DeleteTourCommandHandler(
                     Outcome.NotFound);
             }
 
-            if (tour.CreatedByUserId != currentUser.UserId!.Value)
+            // P1 DeleteOwn/DeleteAny (2026-05-30): owner OR admin-tier may delete.
+            // DeleteOwn is granted to providers (owner-scoped); Admin+ override via
+            // the Tour.DeleteAny permission or an admin-tier role.
+            var isAdminTier =
+                AppRoles.HighestPrivilegeLevel(currentUser.Roles) >= RolePrivilegeLevel.Admin
+                || currentUser.HasPermission("Permission.Tour.DeleteAny");
+
+            if (!isAdminTier && tour.CreatedByUserId != currentUser.UserId!.Value)
             {
                 return Result.Failure(
                     new Error("Tour.NotOwner", "You do not have permission to delete this tour."),
