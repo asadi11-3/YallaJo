@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
@@ -30,11 +30,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\ContentBlogs.Application\ContentBlogs.Application.csproj" />
-    <ProjectReference Include="..\..\ContentBlogs.Domain\ContentBlogs.Domain.csproj" />
-    <ProjectReference Include="..\..\ContentBlogs.Infrastructure\ContentBlogs.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\Modules\ContentBlogs\ContentBlogs.Application\ContentBlogs.Application.csproj" />
+    <ProjectReference Include="..\..\src\Modules\ContentBlogs\ContentBlogs.Domain\ContentBlogs.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Modules\ContentBlogs\ContentBlogs.Infrastructure\ContentBlogs.Infrastructure.csproj" />
     <!-- For AnonymousViewerProvider cookie tests (CONTENTBLOGS-VIEW-DEBOUNCE-IMPL-001). -->
-    <ProjectReference Include="..\..\ContentBlogs.Presentation\ContentBlogs.Presentation.csproj" />
+    <ProjectReference Include="..\..\src\Modules\ContentBlogs\ContentBlogs.Presentation\ContentBlogs.Presentation.csproj" />
     <ProjectReference Include="..\YallaJo.Tests.Shared\YallaJo.Tests.Shared.csproj" />
   </ItemGroup>
 

@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
@@ -19,9 +19,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\YallaJo.Api\YallaJo.Api.csproj" />
-    <ProjectReference Include="..\..\YallaJo.SharedKernel.Application\YallaJo.SharedKernel.Application.csproj" />
-    <ProjectReference Include="..\..\YallaJo.SharedKernel.Presentation\YallaJo.SharedKernel.Presentation.csproj" />
+    <ProjectReference Include="..\..\src\Hosts\YallaJo.Api\YallaJo.Api.csproj" />
+    <ProjectReference Include="..\..\src\BuildingBlocks\YallaJo.SharedKernel.Application\YallaJo.SharedKernel.Application.csproj" />
+    <ProjectReference Include="..\..\src\BuildingBlocks\YallaJo.SharedKernel.Presentation\YallaJo.SharedKernel.Presentation.csproj" />
     <ProjectReference Include="..\YallaJo.Tests.Shared\YallaJo.Tests.Shared.csproj" />
   </ItemGroup>
 

@@ -23,7 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Accounts.Application\Accounts.Application.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Accounts\Accounts.Application\Accounts.Application.csproj" />
   </ItemGroup>
 
 </Project>

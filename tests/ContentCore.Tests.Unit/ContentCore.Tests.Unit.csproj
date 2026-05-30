@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
@@ -24,7 +24,7 @@
       TranslationBackfillStore batching tests. SQLite cannot translate the
       SQL Server-specific column types in the production EF configurations
       (e.g. nvarchar(max)). InMemory ignores query filters but those aren't
-      under test here — we only need projection + anti-join behaviour.
+      under test here â€” we only need projection + anti-join behaviour.
     -->
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.15" />
   </ItemGroup>
@@ -34,8 +34,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\ContentCore.Domain\ContentCore.Domain.csproj" />
-    <ProjectReference Include="..\..\ContentCore.Application\ContentCore.Application.csproj" />
+    <ProjectReference Include="..\..\src\Modules\ContentCore\ContentCore.Domain\ContentCore.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Modules\ContentCore\ContentCore.Application\ContentCore.Application.csproj" />
     <ProjectReference Include="..\YallaJo.Tests.Shared\YallaJo.Tests.Shared.csproj" />
     <!--
       T5: ContentCore.Infrastructure is referenced so the test exercises the production
@@ -43,7 +43,7 @@
       ApplyConfigurationsFromAssembly). Duplicating EntityTagConfiguration in the test
       project would validate a copy, not the artifact that ships.
     -->
-    <ProjectReference Include="..\..\ContentCore.Infrastructure\ContentCore.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\Modules\ContentCore\ContentCore.Infrastructure\ContentCore.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

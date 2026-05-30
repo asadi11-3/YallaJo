@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
@@ -21,15 +21,15 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Security.Application\Security.Application.csproj" />
-    <ProjectReference Include="..\..\Security.Contracts\Security.Contracts.csproj" />
-    <ProjectReference Include="..\..\Security.Domain\Security.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Security\Security.Application\Security.Application.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Security\Security.Contracts\Security.Contracts.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Security\Security.Domain\Security.Domain.csproj" />
     <!--
       Bug-fix: PasswordHasherTests load Security.Infrastructure.Services.PasswordHasher
       via reflection. The reference is needed so the Infrastructure DLL is copied
       into the test bin and resolvable at runtime.
     -->
-    <ProjectReference Include="..\..\Security.Infrastructure\Security.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Security\Security.Infrastructure\Security.Infrastructure.csproj" />
     <ProjectReference Include="..\YallaJo.Tests.Shared\YallaJo.Tests.Shared.csproj" />
   </ItemGroup>
 

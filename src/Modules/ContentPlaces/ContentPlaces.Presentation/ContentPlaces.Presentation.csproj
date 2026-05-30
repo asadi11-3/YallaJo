@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ContentPlaces.Application\ContentPlaces.Application.csproj" />
+    <ProjectReference Include="..\..\..\BuildingBlocks\YallaJo.SharedKernel.Presentation\YallaJo.SharedKernel.Presentation.csproj" />
+    <ProjectReference Include="..\..\Security\Security.Contracts\Security.Contracts.csproj" />
+    <ProjectReference Include="..\..\..\BuildingBlocks\YallaJo.SharedKernel.Presentation\YallaJo.SharedKernel.Presentation.csproj" />
+  </ItemGroup>
+  <!-- CONTENTPLACES-FOLLOWUP-ADMIN-TIER-001: expose internals to the unit-test
+       project so focused tests can pin BusinessEndpoints.ExtractUser
+       admin-tier behaviour. -->
+  <ItemGroup>
+    <InternalsVisibleTo Include="ContentPlaces.Tests.Unit" />
+  </ItemGroup>
+</Project>
