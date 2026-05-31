@@ -55,9 +55,13 @@ public sealed class CreateTourCommandValidator : AbstractValidator<CreateTourCom
             .WithMessage("MeetingPointLatitude and MeetingPointLongitude must be set together.")
             .WithName("MeetingPoint");
 
+        // F47 fix: previously `.NotEqual(Guid.Empty).When(x => x.PlaceId != default)`
+        // skipped the check precisely when PlaceId was empty, so an empty PlaceId
+        // fell through to the handler and threw a raw ArgumentException (→ 400 "Bad
+        // Request" with no field detail). PlaceId is required, so enforce it here.
         RuleFor(x => x.PlaceId)
-            .NotEqual(Guid.Empty)
-            .When(x => x.PlaceId != default);
+            .NotEmpty()
+            .WithMessage("PlaceId is required.");
 
         RuleFor(x => x.Description)
             .MaximumLength(4000)

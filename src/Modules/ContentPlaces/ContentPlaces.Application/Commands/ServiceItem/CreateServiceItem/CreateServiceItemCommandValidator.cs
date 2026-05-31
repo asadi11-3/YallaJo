@@ -6,6 +6,8 @@ public sealed class CreateServiceItemCommandValidator : AbstractValidator<Create
 {
     public CreateServiceItemCommandValidator()
     {
+        RuleFor(x => x.Category).IsInEnum();
+
         RuleFor(x => x.BusinessId).NotEmpty();
         RuleFor(x => x.Name).NotEmpty().MaximumLength(300);
         RuleFor(x => x.Price).GreaterThanOrEqualTo(0);

@@ -6,6 +6,8 @@ public sealed class CreateBusinessCommandValidator : AbstractValidator<CreateBus
 {
     public CreateBusinessCommandValidator()
     {
+        RuleFor(x => x.BusinessType).IsInEnum();
+
         RuleFor(x => x.Name)
             .NotEmpty()
             .MaximumLength(300);

@@ -34,7 +34,7 @@ public sealed class AgencyInvitation : AuditableEntity, IAggregateRoot
         {
             AgencyUserId = agencyUserId,
             GuideUserId = guideUserId,
-            Message = message.Trim(),
+            Message = message?.Trim() ?? string.Empty,
             ProposedCommissionPercentage = proposedCommissionPercentage,
             Status = AgencyInvitationStatus.Pending,
             ExpiresAt = DateTime.UtcNow.AddDays(ExpiryDays),

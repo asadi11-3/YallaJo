@@ -6,6 +6,8 @@ public sealed class CreateBulkAvailabilitySlotsCommandValidator : AbstractValida
 {
     public CreateBulkAvailabilitySlotsCommandValidator()
     {
+        RuleFor(x => x.Recurrence).IsInEnum();
+
         RuleFor(x => x.TourId)
             .NotEmpty().WithMessage("TourId is required.");
 
