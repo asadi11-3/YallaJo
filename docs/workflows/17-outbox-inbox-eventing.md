@@ -2,6 +2,9 @@
 
 How **integration events** flow between modules. This is the underlying mechanism every other workflow relies on.
 
+> **Looking for the catalog of who publishes / who consumes each event?**
+> → [`../eventing/integration-event-catalog.md`](../eventing/integration-event-catalog.md) (Phase A: Booking, Finance, Identity).
+>
 > ADRs: [`ADR-002`](../../Agents/decisions/ADR-002-cqrs-mediatr.md) · [`ADR-006`](../../Agents/decisions/ADR-006-per-module-uow-delegate.md) · [`ADR-007`](../../Agents/decisions/ADR-007-aggregate-root-gated-dispatch.md) · [`ADR-008`](../../Agents/decisions/ADR-008-integration-event-registry-parity.md)
 
 ---

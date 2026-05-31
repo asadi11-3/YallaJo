@@ -40,5 +40,11 @@ public sealed class SecurityPermissionCatalog : IPermissionCatalog
 
         // ── Audit log ────────────────────────────────────────────────────────
         new(SecurityFeatures.AuditLog, AppAction.Read, PermissionGroup.SystemAccess, "View the admin audit log timeline"),
+
+        // ── Ops: Outbox dead-letter management (Owner + SuperAdmin only) ──────
+        // Enforced by /api/v1/ops/outbox endpoints. Restricted to the top tier
+        // via RolePermissionMapping.IsOpsOnly (Admin must NOT receive these).
+        new(SecurityFeatures.Outbox, AppAction.Read,   PermissionGroup.SystemAccess, "View outbox dead-letter messages"),
+        new(SecurityFeatures.Outbox, AppAction.Replay, PermissionGroup.SystemAccess, "Replay an outbox dead-letter message"),
     ];
 }

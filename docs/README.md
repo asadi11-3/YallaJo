@@ -22,11 +22,12 @@ Stack at a glance: **.NET 8 · Minimal API · EF Core (SQL Server) · MediatR (C
 
 ### 1-day track (productive)
 4. [`workflows/01-user-onboarding.md`](./workflows/01-user-onboarding.md) — registration + cross-module fan-out.
-5. [`workflows/17-outbox-inbox-eventing.md`](./workflows/17-outbox-inbox-eventing.md) — how modules talk.
-6. [`risks/risk-register.md`](./risks/risk-register.md) — what's stubbed, what's risky.
+5. [`workflows/17-outbox-inbox-eventing.md`](./workflows/17-outbox-inbox-eventing.md) — how modules talk (mechanism).
+6. [`eventing/integration-event-catalog.md`](./eventing/integration-event-catalog.md) — **who publishes / who consumes what** (Phase A: Booking, Finance, Identity).
+7. [`risks/risk-register.md`](./risks/risk-register.md) — what's stubbed, what's risky.
 
 ### 1-week track (deep)
-7. Existing references (do not duplicate here):
+8. Existing references (do not duplicate here):
    - [`../AGENTS.md`](../AGENTS.md) — agent operating manual + reading order.
    - [`../Agents/agent-context.md`](../Agents/agent-context.md) — conventions, gotchas, build state.
    - [`../Agents/guide.md`](../Agents/guide.md) — code patterns bible.
@@ -45,7 +46,8 @@ Stack at a glance: **.NET 8 · Minimal API · EF Core (SQL Server) · MediatR (C
 | [`workflows/README.md`](./workflows/README.md) | Workflow index + diagram conventions |
 | [`workflows/01-user-onboarding.md`](./workflows/01-user-onboarding.md) | Registration → OTP → Profile creation |
 | [`workflows/06-booking-lifecycle.md`](./workflows/06-booking-lifecycle.md) | SlotLock → Payment → Confirmation → Completion |
-| [`workflows/17-outbox-inbox-eventing.md`](./workflows/17-outbox-inbox-eventing.md) | Cross-module integration event flow |
+| [`workflows/17-outbox-inbox-eventing.md`](./workflows/17-outbox-inbox-eventing.md) | Outbox/Inbox mechanism (the *how*) |
+| [`eventing/integration-event-catalog.md`](./eventing/integration-event-catalog.md) | Cross-module event catalog — Phase A: Booking · Finance · Identity (the *who & what*) |
 | [`risks/risk-register.md`](./risks/risk-register.md) | Known stubs, gaps, and follow-ups |
 
 > Workflows 02–05, 07–16 are planned but not in this pass. See `workflows/README.md` for the full inventory.

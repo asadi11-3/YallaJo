@@ -16,7 +16,9 @@ public sealed class ContentToursPermissionCatalog : IPermissionCatalog
         new(ContentToursFeatures.Tour, AppAction.Read,      PermissionGroup.ContentManagement, "View tours"),
         new(ContentToursFeatures.Tour, AppAction.Create,    PermissionGroup.ContentManagement, "Create a tour"),
         new(ContentToursFeatures.Tour, AppAction.Update,    PermissionGroup.ContentManagement, "Update tour details"),
-        new(ContentToursFeatures.Tour, AppAction.Delete,    PermissionGroup.ContentManagement, "Delete a tour"),
+        // P1 DeleteOwn/DeleteAny split (2026-05-30): replaces Tour.Delete.
+        new(ContentToursFeatures.Tour, AppAction.DeleteOwn, PermissionGroup.ContentManagement, "Delete own tour"),
+        new(ContentToursFeatures.Tour, AppAction.DeleteAny, PermissionGroup.ContentManagement, "Delete any tour (admin)"),
         new(ContentToursFeatures.Tour, AppAction.Submit,    PermissionGroup.ContentManagement, "Submit a draft tour for review"),
         new(ContentToursFeatures.Tour, AppAction.Approve,   PermissionGroup.ContentManagement, "Approve a submitted tour"),
         new(ContentToursFeatures.Tour, AppAction.Reject,    PermissionGroup.ContentManagement, "Reject a submitted tour"),
@@ -79,6 +81,8 @@ public sealed class ContentToursPermissionCatalog : IPermissionCatalog
         new(ContentToursFeatures.TourGuideProfile, AppAction.Update,   PermissionGroup.ContentManagement, "Update own guide profile (self-service)"),
         new(ContentToursFeatures.TourGuideProfile, AppAction.Suspend,  PermissionGroup.ContentManagement, "Suspend a tour guide (admin)"),
         new(ContentToursFeatures.TourGuideProfile, AppAction.Reinstate,PermissionGroup.ContentManagement, "Reinstate a tour guide (admin)"),
-        new(ContentToursFeatures.TourGuideProfile, AppAction.Delete,   PermissionGroup.ContentManagement, "Self-deactivate guide profile"),
+        // P1 DeleteOwn/DeleteAny split (2026-05-30): replaces TourGuideProfile.Delete.
+        new(ContentToursFeatures.TourGuideProfile, AppAction.DeleteOwn, PermissionGroup.ContentManagement, "Self-deactivate own guide profile"),
+        new(ContentToursFeatures.TourGuideProfile, AppAction.DeleteAny, PermissionGroup.ContentManagement, "Deactivate any guide profile (admin)"),
     ];
 }
