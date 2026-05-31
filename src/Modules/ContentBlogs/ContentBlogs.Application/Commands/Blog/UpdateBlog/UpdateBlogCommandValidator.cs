@@ -16,7 +16,7 @@ public sealed class UpdateBlogCommandValidator : AbstractValidator<UpdateBlogCom
 
         RuleFor(x => x.RowVersion)
             .NotNull()
-            .Must(rv => rv.Length > 0)
+            .Must(rv => rv is { Length: > 0 })
             .WithMessage("RowVersion is required for optimistic concurrency.");
 
         RuleFor(x => x.Title)

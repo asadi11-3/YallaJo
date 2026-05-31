@@ -1,3 +1,4 @@
+using Booking.Domain.Entities;
 using Booking.Domain.Enums;
 using Booking.Domain.Events;
 using Booking.Domain.Repositories;
@@ -37,20 +38,14 @@ internal sealed class RestoreSlotCapacityOnCancelHandler(
         {
             case BookingStatus.AwaitingPayment:
             case BookingStatus.PendingConfirmation:
-                slot.ReleaseLock(e.ParticipantCount);
-                logger.LogInformation(
-                    "Released {Count} locked seat(s) on slot {SlotId} after cancel of booking {BookingId}",
-                    e.ParticipantCount,
-                    slot.Id,
-                    e.BookingId);
+                // F24: release only what is actually locked. The lock may already have been
+                // released (e.g. by the auto-expire background service) before this cancel was
+                // processed; calling ReleaseLock unconditionally throws inside the UoW dispatch
+                // and surfaces as a 500. Clamp to keep the restore idempotent.
+                SlotCapacityRestore.ReleaseLockSafely(slot, e.ParticipantCount, e.BookingId, logger);
                 break;
             case BookingStatus.Confirmed:
-                slot.ReleaseBooking(e.ParticipantCount);
-                logger.LogInformation(
-                    "Released {Count} booked seat(s) on slot {SlotId} after cancel of confirmed booking {BookingId}",
-                    e.ParticipantCount,
-                    slot.Id,
-                    e.BookingId);
+                SlotCapacityRestore.ReleaseBookingSafely(slot, e.ParticipantCount, e.BookingId, logger);
                 break;
             default:
                 logger.LogWarning(
@@ -86,12 +81,8 @@ internal sealed class RestoreSlotCapacityOnRejectHandler(
             return;
         }
 
-        slot.ReleaseLock(e.ParticipantCount);
-        logger.LogInformation(
-            "Released {Count} locked seat(s) on slot {SlotId} after rejection of booking {BookingId}",
-            e.ParticipantCount,
-            slot.Id,
-            e.BookingId);
+        // F24: idempotent restore — clamp to actually-locked seats.
+        SlotCapacityRestore.ReleaseLockSafely(slot, e.ParticipantCount, e.BookingId, logger);
     }
 }
 
@@ -119,12 +110,65 @@ internal sealed class RestoreSlotCapacityOnExpireHandler(
             return;
         }
 
-        slot.ReleaseLock(e.ParticipantCount);
-        logger.LogInformation(
-            "Released {Count} locked seat(s) on slot {SlotId} after payment expiry of booking {BookingId}",
-            e.ParticipantCount,
-            slot.Id,
-            e.BookingId);
+        // F24: idempotent restore — clamp to actually-locked seats.
+        SlotCapacityRestore.ReleaseLockSafely(slot, e.ParticipantCount, e.BookingId, logger);
+    }
+}
+
+/// <summary>
+/// Shared idempotent capacity-restore helpers (F24). Releasing slot capacity must never
+/// throw if the lock/booking was already released by another flow (auto-expire vs. manual
+/// cancel race), because these run inside the originating command's UoW dispatch and any
+/// throw would roll the whole operation into a 500.
+/// </summary>
+internal static class SlotCapacityRestore
+{
+    public static void ReleaseLockSafely(AvailabilitySlot slot, int participantCount, Guid bookingId, ILogger logger)
+    {
+        var toRelease = Math.Min(participantCount, slot.LockedCount);
+        if (toRelease > 0)
+        {
+            slot.ReleaseLock(toRelease);
+            logger.LogInformation(
+                "Released {Count} locked seat(s) on slot {SlotId} for booking {BookingId}",
+                toRelease,
+                slot.Id,
+                bookingId);
+        }
+
+        if (toRelease < participantCount)
+        {
+            logger.LogWarning(
+                "Slot {SlotId}: requested release of {Requested} locked seat(s) for booking {BookingId} but only {Released} were locked; clamped (idempotent restore).",
+                slot.Id,
+                participantCount,
+                bookingId,
+                toRelease);
+        }
+    }
+
+    public static void ReleaseBookingSafely(AvailabilitySlot slot, int participantCount, Guid bookingId, ILogger logger)
+    {
+        var toRelease = Math.Min(participantCount, slot.BookedCount);
+        if (toRelease > 0)
+        {
+            slot.ReleaseBooking(toRelease);
+            logger.LogInformation(
+                "Released {Count} booked seat(s) on slot {SlotId} for confirmed booking {BookingId}",
+                toRelease,
+                slot.Id,
+                bookingId);
+        }
+
+        if (toRelease < participantCount)
+        {
+            logger.LogWarning(
+                "Slot {SlotId}: requested release of {Requested} booked seat(s) for booking {BookingId} but only {Released} were booked; clamped (idempotent restore).",
+                slot.Id,
+                participantCount,
+                bookingId,
+                toRelease);
+        }
     }
 }
 

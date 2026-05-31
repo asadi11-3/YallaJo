@@ -1,5 +1,113 @@
 # YallaJo — Rolling Findings Log
 
+## 🎯 RESOLUTION 2026-05-31 — F127 FIXED: enum out-of-range / undefined-value hardening (.IsInEnum across all modules)
+
+**F127 (MED/SECURITY) — FIXED.** .NET enums are just integers, so an out-of-range integer (e.g. `99`) or numeric string (`"99"`) supplied to an enum-typed input property was silently accepted as `(Enum)99` by deserialization — neither the default binder nor `JsonStringEnumConverter` (F26) guards out-of-range integers; they only reject unparseable strings. This let undefined enum values flow into handlers/domain (data-integrity risk).
+- Fix: added FluentValidation `RuleFor(x => x.EnumProp).IsInEnum()` (nullable props guarded with `.When(x => x.Prop.HasValue)`) to every user-supplied enum property on Command/Query records across all 14 modules. **22 validators created/modified this pass + ~38 already had it = 60 validators total now enforcing `.IsInEnum()`.** Validators are auto-discovered by the global ValidationBehavior; no DI changes.
+- Output format unchanged (string names per F26); only validity is enforced. The full chain is now: bad string → 400 (JsonException via F5/F13); out-of-range int / undefined → 400 Validation.{Field} (IsInEnum); valid name or in-range int → accepted.
+- Verified live (Production env, port 57065): POST /api/v1/social/favorites `{entityType:99}` → 400 Validation.EntityType "'Entity Type' has a range of values which does not include '99'."; POST /api/v1/social/reviews `{targetType:99}` → 400 Validation.TargetType; GET /api/v1/seo/faq?entityType=99 (query-string filter) → 400 Validation.EntityType; entityType:'Banana' → 400; entityType:'Tour' → reaches handler (409 already-exists); GET /api/v1/places → 200 with `placeType:'Historical'` (string output intact). Commands AND query-string enum filters both guarded.
+
+## 🎯 RESOLUTION 2026-05-31 — "fix everything" pass: F114/F26/F47/F24/F40 FIXED, F22 resolved-by-F23, F52/F56/F57/F70 NOT_A_BUG, F78 NOT_BUILT
+
+All targeted code bugs fixed, built (0 errors), and live-verified against the running API (Production env, port 57065). Session FIXED ledger = 39.
+
+**F114 (HIGH) — FIXED.** Missing security/observability response headers.
+- Fix: NEW `src/Hosts/YallaJo.Api/Middleware/SecurityHeadersMiddleware.cs` (uses `Response.OnStarting`), wired in `Program.cs` right after `UseStatusCodePages` so it also covers error responses.
+- Sets: X-Content-Type-Options=nosniff, X-Frame-Options=DENY, X-XSS-Protection=0, Referrer-Policy=strict-origin-when-cross-origin, Permissions-Policy (geolocation/microphone/camera =()), Strict-Transport-Security=max-age=31536000; includeSubDomains (HTTPS only), Content-Security-Policy (relaxed for `/swagger` so the UI renders; strict `default-src 'none'; frame-ancestors 'none'; base-uri 'none'` everywhere else), X-Correlation-ID (Activity.Current.TraceId ?? TraceIdentifier), traceparent (when present).
+- Verified live: GET /api/v1/places → 200 with x-content-type-options=nosniff, x-frame-options=DENY, content-security-policy (strict), x-correlation-id present, strict-transport-security, referrer-policy all present.
+
+**F26 (MED) — FIXED.** Enum body binding rejected string enum names (400 JsonException).
+- Fix: `Program.cs` `ConfigureHttpJsonOptions` → added `options.SerializerOptions.Converters.Add(new JsonStringEnumConverter())`.
+- Verified live: POST /api/v1/social/favorites with STRING enum `{entityType:'Tour', entityId:'FFFFFFFF-...001'}` → 409 Favorite.AlreadyExists (deserialized cleanly, reached handler; previously 400 JsonException).
+- ⚠ SIDE EFFECT: enum **responses** now emit NAMES (e.g. `"Approved"`, `"IndependentGuide"`) instead of integers across all modules. Update any client/test that asserts numeric enum values.
+
+**F47 (MED) — FIXED.** Tour PlaceId raw ArgumentException → 400 "Bad Request" with no field detail.
+- Root cause: `CreateTourCommandValidator` rule `RuleFor(x => x.PlaceId).NotEqual(Guid.Empty).When(x => x.PlaceId != default)` — the `.When` skipped the check exactly when PlaceId was empty, so it fell through to the handler's raw ArgumentException.
+- Fix: replaced with `RuleFor(x => x.PlaceId).NotEmpty().WithMessage("PlaceId is required.")`.
+- Verified live: POST /api/v1/tours with empty PlaceId → 400 Validation.PlaceId.
+
+**F24 (MED) — FIXED.** Slot LockedCount underflow on cancel → 500.
+- Root cause: `Booking.Infrastructure/EventHandlers/SlotCapacityRestoreHandlers.cs` called `slot.ReleaseLock/ReleaseBooking` unconditionally; the domain methods throw BusinessRuleViolationException when LockedCount/BookedCount < participantCount (race: auto-expire releases first, then manual cancel re-releases). The throw inside the domain-event handler (running in the cancel UoW dispatch) bubbled → 500.
+- Fix: NEW `internal static class SlotCapacityRestore` with `ReleaseLockSafely`/`ReleaseBookingSafely` that clamp via `Math.Min(participantCount, slot.LockedCount/BookedCount)` and log a warning when clamped (idempotent restore). All 3 handlers (Cancel/Reject/Expire) now call the safe helpers.
+- Verified live (api15 Production log): `RestoreSlotCapacityOnExpireHandler` logged "...requested release of 1 ... but only 0 were locked; clamped (idempotent restore)" instead of throwing; booking expired cleanly, outbox enqueued payment-expired, Finance idempotent no-op.
+
+**F40 (MED) — FIXED.** Inconsistent pageSize handling (/places strict-400 vs /places/businesses silent-clamp-50).
+- Fix: NEW `src/Modules/ContentPlaces/ContentPlaces.Application/Queries/Business/SearchBusinesses/SearchBusinessesQueryValidator.cs` with `RuleFor(Page).GreaterThanOrEqualTo(1)` + `RuleFor(PageSize).InclusiveBetween(1,50)` (mirrors ListPlaces). Handler `Math.Min` clamp left as harmless fallback.
+- Verified live: GET /api/v1/places/businesses?page=1&pageSize=999 → 400.
+
+**F22 (MED) — RESOLVED-BY-F23 (no code change).** Cancel non-existent booking returned 403 instead of 404.
+- The 403 was the endpoint's `MustHavePermission(TourBooking.Cancel)` gate firing because userA lacked the perm — that perm was added in F23. The handler already returns 404 TourBooking.NotFound for a null booking before any ownership/403 logic.
+- Verified live: userA cancel random GUID → 404 TourBooking.NotFound.
+
+**F52 — NOT_A_BUG (verb).** Change password/phone are **PUT** not POST: PUT /api/v1/security/account/password, PUT /api/v1/security/account/phone (Security.Presentation AccountEndpoints.cs). Test used POST → 405.
+
+**F56 — NOT_A_BUG (path).** Payments group is `/api/v1/payments` with sub-routes POST `/initiate`, POST `/webhook`, POST `/{id}/refund`, GET `/{id}`, GET `/my-payments`, GET `/admin/all`. Test hit POST `/payments` (root) + GET `/payments/me` which don't exist. Correct: POST /payments/initiate, GET /payments/my-payments.
+
+**F57 — NOT_A_BUG (consolidated feature).** No `/provider-bank-accounts` route by design; bank + wallet are unified under ProviderPaymentMethod (Finance.Presentation ProviderPaymentMethodEndpoints.cs: GET/POST `/`, PUT/DELETE `/{id}`, POST `/{id}/verify`). `/provider-payment-methods` returns 200.
+
+**F70 — NOT_A_BUG (verb).** Admin user-mgmt verbs: suspend = **PATCH** /users/{id}/suspend, sessions revoke = **DELETE** /users/{id}/sessions (Auth SessionEndpoints.cs). Test used POST/GET → 405. (No GET-a-user's-sessions endpoint exists; admin can only revoke.)
+
+**F78 — NOT_BUILT.** No admin manual-confirm booking endpoint; only POST /booking/{id}/force-refund exists (AdminBookingEndpoints.cs). Booking confirmation flows through POST /api/v1/payments/webhook (payment gateway). Test env has no gateway, so AwaitingPayment bookings can't be confirmed via API — documented gap, not a code bug.
+
+---
+
+## 🎯 RESOLUTION 2026-05-30 — F126 FIXED + F67 NOT_A_BUG (Agency module)
+
+**F67 — NOT_A_BUG (path correction, same family as F12/F16/F31).**
+- Symptom: GET /agencies/me/roster, GET+POST /agencies/me/invitations all 404.
+- Root cause: WRONG test paths. Real routes live under group prefix `/api/v1/agency` (SINGULAR, no `/me/` segment), in `src/Modules/Accounts/Accounts.Presentation/Endpoints/Agency/AgencyEndpoints.cs`.
+- Real routes (all RequireAuthorization + MustHavePermission AccountsFeatures.AgencyRoster):
+  - GET  /api/v1/agency/guides            (roster, AgencyRoster.Read)
+  - GET  /api/v1/agency/applications      (AgencyRoster.Read)
+  - POST /api/v1/agency/guides/invite     (AgencyRoster.Create, body InviteGuideRequest(GuideUserId, Message?, ProposedCommissionPercentage))
+  - POST /api/v1/agency/applications/{id}/approve  (AgencyRoster.Approve)
+  - POST /api/v1/agency/applications/{id}/reject   (AgencyRoster.Reject, body Reason)
+  - DELETE /api/v1/agency/guides/{guideUserId}     (AgencyRoster.Delete, [FromBody] Reason)
+- Verified live as agency@yallajo.test (...007): GET /api/v1/agency/guides → 200, GET /api/v1/agency/applications → 200.
+
+**F126 (MED) — FIXED.** POST /api/v1/agency/guides/invite with empty `{}` body → 500.
+- Root cause: InviteGuideCommand had NO validator, so empty/invalid input reached the handler; `AgencyInvitation.Create(...)` called `message.Trim()` on a null Message (command Message is `string?`) → unguarded NullReferenceException → 500.
+- Fix (two parts):
+  1. Domain hardening — `Accounts.Domain/Entities/AgencyInvitation.cs`: `Message = message.Trim()` → `Message = message?.Trim() ?? string.Empty` (Message is genuinely optional).
+  2. NEW validator — `Accounts.Application/Commands/Agency/InviteGuide/InviteGuideCommandValidator.cs`: RuleFor(GuideUserId).NotEmpty() + RuleFor(ProposedCommissionPercentage).InclusiveBetween(0,100) + RuleFor(Message).MaximumLength(1000).When(Message is not null). Auto-scanned by global ValidationBehavior.
+- Built Accounts.Application = 0 errors. Verified live (agency@yallajo.test):
+  - empty `{}` body → 400 Validation.GuideUserId (was 500)
+  - valid GuideUserId + null Message → 200 (invitation created; domain null-coalesce works)
+  - ProposedCommissionPercentage=250 → 400 Validation.ProposedCommissionPercentage
+  - GET /api/v1/agency/guides → 200 (regression clean)
+
+## 🎯 RESOLUTION 2026-05-30 — F45 FIXED (Draft tour visible to owner/admin via GET /tours/{id})
+
+**F45 (HIGH) FIXED** — A Draft/non-Approved tour created via `POST /tours` (201) was invisible via `GET /tours/{id}` → 404 `Tour.NotFound` even to the OWNER and to ADMIN; only the `?providerId=` list surfaced it. This broke the whole creator/moderation workflow and blocked fetching a Draft's RowVersion to exercise reject/suspend.
+
+**Root cause:** `GetTourByIdQueryHandler` hard-rejected any tour with `Status != TourStatus.Approved` with no owner/admin bypass.
+
+**Fix (3 files, ContentTours module, build 0 errors, LSP clean):**
+- `Queries/Tour/GetTourById/GetTourByIdQuery.cs` — added `Guid? RequestingUserId = null, bool IsPrivileged = false`; `CacheKey` now uses `isElevated: IsPrivileged || RequestingUserId is not null` so a draft never leaks into the public cache entry.
+- `Queries/Tour/GetTourById/GetTourByIdQueryHandler.cs` — `isOwner = RequestingUserId == tour.CreatedByUserId`; `canViewNonPublic = IsPrivileged || isOwner`; reject only when `tour is null || (Status != Approved && !canViewNonPublic)`.
+- `Presentation/Endpoints/Tour/TourEndpoints.cs` — `GET /{id}` injects `ICurrentUser`, `isPrivileged = IsInRole("Admin"|"SuperAdmin"|"Owner")`, passes `UserId` + `isPrivileged`. Still `.AllowAnonymous()` (anonymous → public path).
+
+**Verified live** (Draft Wadi Rum `019e794e-...`, owner=guide-approved ...005): admin GET → **200** (was 404); owner GET → **200** (was 404); anonymous GET → **404** (still hidden); regression seeded Approved Petra `FFFFFFFF-...001` → still 200 for all. 
+
+Note: `TourDetailDto` does not expose `RowVersion`, so the 409 wrong-state retest of F104/F105/F46 still can't read the token via this GET (minor DTO-exposure gap, separate from F45).
+
+## 🎯 BATCH RESOLUTION 2026-05-30 — RowVersion validator NRE (F104 + F105 + F46) + 8 blog validators hardened
+
+**Root cause (systemic):** 11 command validators used the anti-pattern `RuleFor(x => x.RowVersion).NotNull().Must(rv => rv.Length > 0)`. FluentValidation's default `CascadeMode.Continue` runs the `.Must(...)` lambda **even after `.NotNull()` fails**, so a null `RowVersion` dereferenced `null.Length` → `NullReferenceException` → ValidationBehavior pipeline threw → `GlobalExceptionHandler` returned **500** instead of a clean **400**.
+
+**Why approve worked but reject/suspend/update 500'd:** `ApproveTourCommand` has NO validator (null RowVersion skips straight to the handler whose status-guard returns 409). Reject/Suspend/Update HAVE validators that NRE'd before the handler ran. The handlers themselves were always correct (status-guard → 409 precedes the RowVersion check).
+
+**Connection to F45:** A Draft tour is invisible via GET (F45), so admins couldn't fetch its RowVersion → the test sent reject/suspend with no RowVersion → null → validator NRE.
+
+**The fix (1-line, null-safe, applied to all 11 via `ast_grep_replace`):** `.Must(rv => rv.Length > 0)` → `.Must(rv => rv is { Length: > 0 })`. The C# property-pattern evaluates `false` for null **without dereferencing** → no NRE. Now: null RowVersion → clean 400 "RowVersion is required for optimistic concurrency."; empty `[]` → 400; valid → passes. Both `ContentTours.Application` + `ContentBlogs.Application` rebuilt → **0 errors**; LSP clean.
+
+- **F104 FIXED** — `RejectTourCommandValidator.cs:13`. `POST /tours/admin/{id}/reject` with missing RowVersion now → 400 (was 500 NRE).
+- **F105 FIXED** — `SuspendTourCommandValidator.cs:13`. `POST /tours/admin/{id}/suspend` → 400 (was 500 NRE).
+- **F46 FIXED** — `UpdateTourCommandValidator.cs:14`. `PUT /tours/{id}` full body without RowVersion → 400 (was 500 NRE).
+- **Proactively hardened (same anti-pattern, ContentBlogs.Application):** ArchiveBlog, DeleteBlog, LinkBlogTours, PublishBlog, RestoreBlog, UnlinkBlogFromTour, UnpublishBlog, UpdateBlog command validators — all 8 swapped to the null-safe pattern.
+
+Note: a missing RowVersion now correctly returns 400 (not the 409 the test hoped for) — the optimistic-concurrency token is genuinely required. To exercise the 409 wrong-state path, the caller must send a valid RowVersion, which requires F45 (Draft visibility) to be fixed first so the token can be read via GET.
+
 ## 🎯 BATCH RESOLUTION 2026-05-30 — 6 perm-gates closed via ConsumerPermissions HashSet edit
 
 The following 6 OPEN findings are **✅ FIXED** by a single edit to `RolePermissionMapping.cs` (added 9 strings to `ConsumerPermissions` HashSet). API restarted, JWT re-issued on next login, all auth gates now pass. Each finding's previous "OPEN" status below is superseded by this resolution.

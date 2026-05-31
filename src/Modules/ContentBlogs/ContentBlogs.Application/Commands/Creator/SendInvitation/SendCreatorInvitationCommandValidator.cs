@@ -8,6 +8,8 @@ public sealed class SendCreatorInvitationCommandValidator
 {
     public SendCreatorInvitationCommandValidator()
     {
+        RuleFor(x => x.Kind).IsInEnum();
+
         RuleFor(x => x.Email!)
             .NotEmpty().WithMessage("Email is required for email invitations.")
             .EmailAddress()

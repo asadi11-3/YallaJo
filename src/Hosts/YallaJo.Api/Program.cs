@@ -72,6 +72,14 @@ builder.Services.ConfigureHttpJsonOptions(options =>
     options.SerializerOptions.PropertyNamingPolicy        = JsonNamingPolicy.CamelCase;
     options.SerializerOptions.PropertyNameCaseInsensitive = true;
     options.SerializerOptions.DefaultIgnoreCondition      = JsonIgnoreCondition.WhenWritingNull;
+
+    // F26 fix: accept enum *names* (e.g. "Tour", "IndependentGuide") in request
+    // bodies, not just integers. Without this converter, System.Text.Json rejects
+    // string enum values with a JsonException → 500/400, which broke favorites,
+    // reviews, notification-template and other DTOs that carry enum fields.
+    // JsonStringEnumConverter still accepts integer values on read, so existing
+    // numeric callers keep working; responses now emit readable enum names.
+    options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
 });
 
 // ── Module registrations ──────────────────────────────────────────────────
@@ -269,6 +277,10 @@ using (var scope = app.Services.CreateScope())
 // 1. Global exception handler — must be first so it wraps all downstream errors
 app.UseExceptionHandler();
 app.UseStatusCodePages();
+
+// 1b. Security & observability headers (F114) — applied to every response,
+// including error responses, via OnStarting inside the middleware.
+app.UseMiddleware<SecurityHeadersMiddleware>();
 
 // 2. Serilog request logging — early to capture full request lifecycle
 app.UseYallaJoSerilogRequestLogging();

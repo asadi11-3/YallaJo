@@ -17,6 +17,7 @@ using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Authorization;
 using YallaJo.SharedKernel.Domain.Abstractions.Pagination;
 using YallaJo.SharedKernel.Presentation;
@@ -57,16 +58,26 @@ internal static class TourEndpoints
         group.MapGet("/{id:guid}", async (
             Guid id,
             HttpContext http,
+            ICurrentUser currentUser,
             ISender sender,
             CancellationToken ct) =>
         {
             var acceptLanguage = http.Request.Headers.AcceptLanguage.ToString();
 
-            var result = await sender.Send(new GetTourByIdQuery(id, acceptLanguage), ct);
+            // F45 2026-05-30: pass the caller's identity so the owner or an admin can
+            // read a Draft/non-Approved tour; anonymous callers stay on the public
+            // (Approved-only) path. Endpoint remains AllowAnonymous for public reads.
+            var isPrivileged = currentUser.IsInRole("Admin")
+                || currentUser.IsInRole("SuperAdmin")
+                || currentUser.IsInRole("Owner");
+
+            var result = await sender.Send(
+                new GetTourByIdQuery(id, acceptLanguage, currentUser.UserId, isPrivileged),
+                ct);
             return result.ToApiResult();
         })
         .WithName("GetTourById")
-        .WithSummary("Get public tour details by ID")
+        .WithSummary("Get tour details by ID (owner/admin may view non-public statuses)")
         .Produces<TourDetailDto>(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .AllowAnonymous();

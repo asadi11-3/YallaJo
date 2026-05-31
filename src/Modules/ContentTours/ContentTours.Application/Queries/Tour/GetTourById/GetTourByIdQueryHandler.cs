@@ -28,7 +28,15 @@ public sealed class GetTourByIdQueryHandler(
                 ct:           cancellationToken)
                 .ConfigureAwait(false);
 
-            if (tour is null || tour.Status != TourStatus.Approved)
+            // F45 2026-05-30: the public sees only Approved tours, but the owner
+            // (creator) and admins may read a tour in any status (Draft/Pending/etc.)
+            // so they can preview/manage it. Without this, a freshly created Draft
+            // returned 404 to its own creator and to admins.
+            var isOwner = request.RequestingUserId is { } userId && tour is not null
+                && tour.CreatedByUserId == userId;
+            var canViewNonPublic = request.IsPrivileged || isOwner;
+
+            if (tour is null || (tour.Status != TourStatus.Approved && !canViewNonPublic))
             {
                 return Result<TourDetailDto>.Failure(
                     new Error("Tour.NotFound", $"Tour '{request.Id}' was not found."),
