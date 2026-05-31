@@ -1,3 +1,4 @@
+using System.Net;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using YallaJo.Web.Infrastructure.Authentication.ExternalAuth;
 using YallaJo.Web.Infrastructure.Authentication.SignIn;
@@ -82,11 +83,30 @@ var apiBaseUrl = builder.Configuration["ApiBaseUrl"]
     ?? throw new InvalidOperationException("ApiBaseUrl is not configured.");
 
 // Primary typed client — goes through JwtAuthHandler to attach Bearer tokens.
+//
+// Handler pipeline (outermost → innermost):
+//   JwtAuthHandler → StandardResilience → SocketsHttpHandler (primary) → network
+//
+// • SocketsHttpHandler recycles pooled connections every 2 min so the BFF
+//   picks up API DNS / load-balancer changes without a restart, and requests
+//   negotiate transparent response decompression (gzip/brotli/deflate).
+// • JwtAuthHandler stays OUTERMOST so the Bearer token is attached once, before
+//   any resilience retry re-sends the (already-authorized) request.
+// • AddStandardResilienceHandler adds retry + circuit-breaker + total(30s)/
+//   attempt(10s) timeouts. We intentionally leave HttpClient.Timeout at its
+//   default so it never fights the resilience pipeline's own timeouts.
 builder.Services.AddHttpClient<ApiClient>(client =>
 {
     client.BaseAddress = new Uri(apiBaseUrl);
     client.DefaultRequestHeaders.Add("Accept", "application/json");
-}).AddHttpMessageHandler<JwtAuthHandler>();
+})
+.ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
+{
+    PooledConnectionLifetime = TimeSpan.FromMinutes(2),
+    AutomaticDecompression   = DecompressionMethods.All,
+})
+.AddHttpMessageHandler<JwtAuthHandler>()
+.AddStandardResilienceHandler();
 
 // Anonymous client used by JwtAuthHandler for the /refresh endpoint
 // (must not go through JwtAuthHandler — that would cause infinite recursion).
@@ -241,10 +261,16 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseStaticFiles();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+// ── Static assets (.NET 9) ────────────────────────────────────────────────────
+// MapStaticAssets replaces UseStaticFiles: build-time gzip/brotli precompression,
+// content-based ETags, and fingerprinted immutable (1-year) caching for the
+// files under wwwroot. Assets are still served at their original request paths,
+// so existing ~/css, ~/js, ~/img links keep working.
+app.MapStaticAssets();
 
 // ── MVC routes ────────────────────────────────────────────────────────────────
 app.MapControllerRoute(

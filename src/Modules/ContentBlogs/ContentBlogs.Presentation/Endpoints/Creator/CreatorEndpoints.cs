@@ -36,7 +36,7 @@ internal static class CreatorEndpoints
     internal static void MapCreatorEndpoints(RouteGroupBuilder blogGroup)
     {
         var group = blogGroup.MapGroup("/creators")
-            .WithTags("Creators");
+            .WithTags("ContentBlogs | Creators");
 
         // ── GET /api/v1/blogs/creators/niches ─────────────────────────────
         group.MapGet("/niches", async (ISender sender, CancellationToken ct) =>

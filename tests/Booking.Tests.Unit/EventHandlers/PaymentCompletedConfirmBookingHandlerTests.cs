@@ -2,11 +2,12 @@ using Booking.Domain.Entities;
 using Booking.Domain.Enums;
 using Booking.Domain.Events;
 using Booking.Application.Interfaces;
-using Booking.Domain.Repositories;
 using Booking.Domain.ValueObjects;
 using Booking.Infrastructure.EventHandlers;
+using Booking.Infrastructure.Persistence;
 using Finance.Contracts.IntegrationEvents;
 using FluentAssertions;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
@@ -44,12 +45,12 @@ public sealed class PaymentCompletedConfirmBookingHandlerTests
             paymentExpiresAt: DateTime.UtcNow.AddMinutes(10), lineItemsJson: "[]");
     }
 
-    private static IntegrationEventNotification<PaymentCompletedIntegrationEvent> Notification() =>
+    private static IntegrationEventNotification<PaymentCompletedIntegrationEvent> Notification(Guid bookingId) =>
         new(
             MessageId: Guid.NewGuid(),
             Event: new PaymentCompletedIntegrationEvent(
                 PaymentId: PaymentId,
-                BookingId: BookingId,
+                BookingId: bookingId,
                 UserId: UserId,
                 ProviderId: ProviderId,
                 Amount: 90m,
@@ -58,16 +59,24 @@ public sealed class PaymentCompletedConfirmBookingHandlerTests
                 CompletedAt: DateTime.UtcNow));
 
     private static (PaymentCompletedConfirmBookingHandler handler,
-                   ITourBookingRepository repo,
+                   BookingDbContext db,
                    IBookingUnitOfWork uow) Build(TourBooking? booking)
     {
-        var repo = Substitute.For<ITourBookingRepository>();
-        repo.GetByIdWithDetailsAsync(BookingId, Arg.Any<CancellationToken>()).Returns(booking);
+        var options = new DbContextOptionsBuilder<BookingDbContext>()
+            .UseInMemoryDatabase($"booking-tests-{Guid.NewGuid():N}")
+            .Options;
+        var db = new BookingDbContext(options);
+        if (booking is not null)
+        {
+            db.TourBookings.Add(booking);
+            db.SaveChanges();
+        }
+
         var uow = Substitute.For<IBookingUnitOfWork>();
         var cache = Substitute.For<HybridCache>();
         var handler = new PaymentCompletedConfirmBookingHandler(
-            repo, uow, cache, NullLogger<PaymentCompletedConfirmBookingHandler>.Instance);
-        return (handler, repo, uow);
+            db, uow, cache, NullLogger<PaymentCompletedConfirmBookingHandler>.Instance);
+        return (handler, db, uow);
     }
 
     [Fact]
@@ -76,7 +85,7 @@ public sealed class PaymentCompletedConfirmBookingHandlerTests
         var booking = CreateBooking(instant: true);
         var (handler, _, uow) = Build(booking);
 
-        await handler.Handle(Notification(), CancellationToken.None);
+        await handler.Handle(Notification(booking.Id), CancellationToken.None);
 
         booking.Status.Should().Be(BookingStatus.Confirmed);
         booking.ConfirmationSource.Should().Be(ConfirmationSource.PaymentWebhook);
@@ -93,7 +102,7 @@ public sealed class PaymentCompletedConfirmBookingHandlerTests
         var booking = CreateBooking(instant: false);
         var (handler, _, uow) = Build(booking);
 
-        await handler.Handle(Notification(), CancellationToken.None);
+        await handler.Handle(Notification(booking.Id), CancellationToken.None);
 
         booking.Status.Should().Be(BookingStatus.PendingConfirmation);
         // MoveToPendingConfirmation raises no domain event (no capacity conversion yet).
@@ -107,9 +116,9 @@ public sealed class PaymentCompletedConfirmBookingHandlerTests
         var booking = CreateBooking(instant: true);
         var (handler, _, uow) = Build(booking);
 
-        await handler.Handle(Notification(), CancellationToken.None);   // first → Confirmed
+        await handler.Handle(Notification(booking.Id), CancellationToken.None);   // first → Confirmed
         booking.ClearDomainEvents();
-        await handler.Handle(Notification(), CancellationToken.None);   // duplicate
+        await handler.Handle(Notification(booking.Id), CancellationToken.None);   // duplicate
 
         booking.Status.Should().Be(BookingStatus.Confirmed);
         booking.DomainEvents.OfType<TourBookingConfirmedDomainEvent>().Should().BeEmpty();
@@ -143,7 +152,7 @@ public sealed class PaymentCompletedConfirmBookingHandlerTests
         booking.ClearDomainEvents();
         var (handler, _, uow) = Build(booking);
 
-        await handler.Handle(Notification(), CancellationToken.None);
+        await handler.Handle(Notification(booking.Id), CancellationToken.None);
 
         booking.Status.Should().Be(status);
         await uow.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
@@ -154,7 +163,7 @@ public sealed class PaymentCompletedConfirmBookingHandlerTests
     {
         var (handler, _, uow) = Build(booking: null);
 
-        var act = async () => await handler.Handle(Notification(), CancellationToken.None);
+        var act = async () => await handler.Handle(Notification(BookingId), CancellationToken.None);
 
         await act.Should().ThrowAsync<InvalidOperationException>();
         await uow.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());

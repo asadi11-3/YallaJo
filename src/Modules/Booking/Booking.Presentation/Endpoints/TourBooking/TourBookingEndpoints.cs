@@ -52,7 +52,6 @@ internal static class TourBookingEndpoints
             .WithDescription(
                 "Body is empty. Caller must be the provider of the tour or an admin. " +
                 "Returns 422 TourBooking.NotYetStarted if invoked before the slot's start time.")
-            .WithTags("Booking")
             .Produces<CompleteTourBookingResult>(StatusCodes.Status200OK)
             .ProducesValidationProblem()
             .ProducesProblem(StatusCodes.Status401Unauthorized)
@@ -82,7 +81,6 @@ internal static class TourBookingEndpoints
                 "User cancellations follow the booking's refund-policy snapshot. " +
                 "Provider/admin cancellations ALWAYS produce a 100% refund and require a reason >= 10 chars. " +
                 "Source is auto-detected from the caller's identity and permissions.")
-            .WithTags("Booking")
             .Accepts<CancelTourBookingRequest>("application/json")
             .Produces<CancelTourBookingResult>(StatusCodes.Status200OK)
             .ProducesValidationProblem()
@@ -111,7 +109,6 @@ internal static class TourBookingEndpoints
             .WithDescription(
                 "Reason required (10-500 chars). Caller must be the provider of the tour or admin. " +
                 "Booking transitions to Rejected; downstream consumers handle the refund via outbox.")
-            .WithTags("Booking")
             .Accepts<RejectTourBookingRequest>("application/json")
             .Produces<RejectTourBookingResult>(StatusCodes.Status200OK)
             .ProducesValidationProblem()
@@ -140,7 +137,6 @@ internal static class TourBookingEndpoints
                 "Body is empty. Caller must be the provider of the tour, or an admin. " +
                 "Transitions the booking to Confirmed and raises a TourBookingConfirmedDomainEvent " +
                 "(integration event published via outbox).")
-            .WithTags("Booking")
             .Produces<ConfirmTourBookingResult>(StatusCodes.Status200OK)
             .ProducesValidationProblem()
             .ProducesProblem(StatusCodes.Status401Unauthorized)
@@ -168,7 +164,6 @@ internal static class TourBookingEndpoints
                 "Validates availability, locks slot capacity, calculates pricing, and emits " +
                 "the tour-booking.created.v1 integration event. The booking expires automatically " +
                 "if no payment is received within 10 minutes.")
-            .WithTags("Booking")
             .Accepts<CreateTourBookingRequest>("application/json")
             .Produces<Application.Commands.CreateTourBooking.CreateTourBookingResult>(StatusCodes.Status201Created)
             .ProducesValidationProblem()
@@ -195,11 +190,11 @@ internal static class TourBookingEndpoints
                             Outcome.Unauthorized)
                         .ToApiResult();
                 }
-
+        
                 var viewerId = currentUser.UserId.Value;
                 var isAdmin = currentUser.HasPermission(
                     PermissionPolicyNames.Build(BookingFeatures.AdminBookingDashboard, AppAction.Read));
-
+        
                 var query = new GetTourBookingByIdQuery(id, viewerId, isAdmin);
                 var result = await sender.Send(query, cancellationToken);
                 return result.ToApiResult();
@@ -210,7 +205,6 @@ internal static class TourBookingEndpoints
                 "Returns the full booking projection. The caller must be the booking owner, " +
                 "the provider of the tour, or hold the AdminBookingDashboard.Read permission. " +
                 "Other authenticated callers receive 403 TourBooking.OwnerMismatch.")
-            .WithTags("Booking")
             .Produces<TourBookingDetailDto>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status401Unauthorized)
             .ProducesProblem(StatusCodes.Status403Forbidden)
@@ -240,7 +234,7 @@ internal static class TourBookingEndpoints
                             Outcome.Unauthorized)
                         .ToApiResult();
                 }
-
+        
                 if (!TryParseStatusFilter(status, out var statuses))
                 {
                     return Result.Failure<MyBookingsPage>(
@@ -248,7 +242,7 @@ internal static class TourBookingEndpoints
                             Outcome.Invalid)
                         .ToApiResult();
                 }
-
+        
                 if (!TryParseDate(fromDate, out var parsedFromDate))
                 {
                     return Result.Failure<MyBookingsPage>(
@@ -256,7 +250,7 @@ internal static class TourBookingEndpoints
                             Outcome.Invalid)
                         .ToApiResult();
                 }
-
+        
                 if (!TryParseDate(toDate, out var parsedToDate))
                 {
                     return Result.Failure<MyBookingsPage>(
@@ -264,7 +258,7 @@ internal static class TourBookingEndpoints
                             Outcome.Invalid)
                         .ToApiResult();
                 }
-
+        
                 var query = new GetMyBookingsQuery(
                     currentUser.UserId.Value,
                     statuses,
@@ -274,7 +268,7 @@ internal static class TourBookingEndpoints
                     cursor,
                     pageSize,
                     countTotal);
-
+        
                 var result = await sender.Send(query, cancellationToken);
                 return result.ToApiResult();
             })
@@ -284,7 +278,6 @@ internal static class TourBookingEndpoints
                 "Returns bookings owned by the authenticated user, ordered by CreatedAt DESC. " +
                 "Supports filters by status (comma-separated), slot-date range, and tourId. " +
                 "Pagination via opaque cursor (B-R10). Page size clamps to [1, 50] (default 20).")
-            .WithTags("Booking")
             .Produces<MyBookingsPage>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status401Unauthorized)
@@ -316,7 +309,7 @@ internal static class TourBookingEndpoints
                             Outcome.Invalid)
                         .ToApiResult();
                 }
-
+        
                 if (!TryParseDate(fromDate, out var parsedFromDate))
                 {
                     return Result.Failure<AdminBookingsPage>(
@@ -324,7 +317,7 @@ internal static class TourBookingEndpoints
                             Outcome.Invalid)
                         .ToApiResult();
                 }
-
+        
                 if (!TryParseDate(toDate, out var parsedToDate))
                 {
                     return Result.Failure<AdminBookingsPage>(
@@ -332,7 +325,7 @@ internal static class TourBookingEndpoints
                             Outcome.Invalid)
                         .ToApiResult();
                 }
-
+        
                 var query = new GetAllBookingsQuery(
                     statuses,
                     parsedFromDate,
@@ -344,7 +337,7 @@ internal static class TourBookingEndpoints
                     cursor,
                     pageSize,
                     countTotal);
-
+        
                 var result = await sender.Send(query, cancellationToken);
                 return result.ToApiResult();
             })
@@ -357,7 +350,6 @@ internal static class TourBookingEndpoints
                 "Requires the AdminBookingDashboard.Read permission. " +
                 "paymentStatus is accepted as a hint but is currently a no-op until " +
                 "the Finance cross-module payment projection ships.")
-            .WithTags("Booking")
             .Produces<AdminBookingsPage>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status401Unauthorized)

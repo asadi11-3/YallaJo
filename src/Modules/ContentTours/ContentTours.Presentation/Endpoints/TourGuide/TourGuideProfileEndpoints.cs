@@ -296,6 +296,7 @@ internal static class TourGuideProfileEndpoints
         group.MapGet("/me/availability-blocks", async (ISender sender, ICurrentUser currentUser, CancellationToken ct) =>
             (await sender.Send(new GetMyAvailabilityBlocksQuery(currentUser.UserId!.Value), ct)).ToApiResult())
             .WithName("GetMyAvailabilityBlocks")
+            .WithSummary("List own guide availability blocks")
             .WithMetadata(new MustHavePermissionAttribute(ContentToursFeatures.TourGuideProfile, AppAction.Read))
             .RequireAuthorization();
 
@@ -303,6 +304,7 @@ internal static class TourGuideProfileEndpoints
         group.MapPost("/me/availability-blocks", async (CreateGuideAvailabilityBlockRequest request, ISender sender, CancellationToken ct) =>
             (await sender.Send(request.ToCommand(), ct)).ToApiResult())
             .WithName("CreateAvailabilityBlock")
+            .WithSummary("Create an availability block on own guide profile")
             .WithMetadata(new MustHavePermissionAttribute(ContentToursFeatures.TourGuideProfile, AppAction.Update))
             .RequireAuthorization();
 
@@ -310,6 +312,7 @@ internal static class TourGuideProfileEndpoints
         group.MapDelete("/me/availability-blocks/{id:guid}", async (Guid id, ISender sender, CancellationToken ct) =>
             (await sender.Send(new DeleteGuideAvailabilityBlockCommand(id), ct)).ToApiResult())
             .WithName("DeleteAvailabilityBlock")
+            .WithSummary("Delete an availability block from own guide profile")
             .WithMetadata(new MustHavePermissionAttribute(ContentToursFeatures.TourGuideProfile, AppAction.Update))
             .RequireAuthorization();
 
@@ -317,6 +320,7 @@ internal static class TourGuideProfileEndpoints
         group.MapGet("/me/tier", async (ISender sender, ICurrentUser currentUser, CancellationToken ct) =>
             (await sender.Send(new GetGuideTierProgressQuery(currentUser.UserId!.Value), ct)).ToApiResult())
             .WithName("GetGuideTierProgress")
+            .WithSummary("Get own guide tier progress")
             .WithMetadata(new MustHavePermissionAttribute(ContentToursFeatures.TourGuideProfile, AppAction.Read))
             .RequireAuthorization();
 
@@ -324,6 +328,7 @@ internal static class TourGuideProfileEndpoints
         group.MapGet("/me/earnings/summary", async (ISender sender, ICurrentUser currentUser, CancellationToken ct) =>
             (await sender.Send(new GetGuideEarningsSummaryQuery(currentUser.UserId!.Value), ct)).ToApiResult())
             .WithName("GetMyTourGuideEarningsSummary")
+            .WithSummary("Get own guide earnings summary")
             .WithMetadata(new MustHavePermissionAttribute(ContentToursFeatures.TourGuideProfile, AppAction.Read))
             .RequireAuthorization();
 
@@ -331,6 +336,7 @@ internal static class TourGuideProfileEndpoints
         group.MapGet("/me/earnings/by-tour", async (ISender sender, ICurrentUser currentUser, CancellationToken ct) =>
             (await sender.Send(new GetGuideEarningsByTourQuery(currentUser.UserId!.Value), ct)).ToApiResult())
             .WithName("GetGuideEarningsByTour")
+            .WithSummary("Get own guide earnings broken down by tour")
             .WithMetadata(new MustHavePermissionAttribute(ContentToursFeatures.TourGuideProfile, AppAction.Read))
             .RequireAuthorization();
 
@@ -338,30 +344,35 @@ internal static class TourGuideProfileEndpoints
         group.MapGet("/me/earnings/history", async ([AsParameters] GuideDashboardPageRequest request, ISender sender, ICurrentUser currentUser, CancellationToken ct) =>
             (await sender.Send(new GetGuideEarningsHistoryQuery(currentUser.UserId!.Value, request.Page, request.PageSize), ct)).ToApiResult())
             .WithName("GetGuideEarningsHistory")
+            .WithSummary("List own guide earnings history")
             .WithMetadata(new MustHavePermissionAttribute(ContentToursFeatures.TourGuideProfile, AppAction.Read))
             .RequireAuthorization();
 
         group.MapGet("/me/analytics/overview", async (ISender sender, ICurrentUser currentUser, CancellationToken ct) =>
             (await sender.Send(new GetGuideBookingOverviewQuery(currentUser.UserId!.Value), ct)).ToApiResult())
             .WithName("GetGuideAnalyticsOverview")
+            .WithSummary("Get own guide booking analytics overview")
             .WithMetadata(new MustHavePermissionAttribute(ContentToursFeatures.TourGuideProfile, AppAction.Read))
             .RequireAuthorization();
 
         group.MapGet("/me/analytics/booking-trends", async ([AsParameters] GuideBookingTrendsRequest request, ISender sender, ICurrentUser currentUser, CancellationToken ct) =>
             (await sender.Send(new GetGuideBookingTrendsQuery(currentUser.UserId!.Value, request.Granularity, request.Months), ct)).ToApiResult())
             .WithName("GetGuideBookingTrends")
+            .WithSummary("Get own guide booking trends over time")
             .WithMetadata(new MustHavePermissionAttribute(ContentToursFeatures.TourGuideProfile, AppAction.Read))
             .RequireAuthorization();
 
         group.MapGet("/me/analytics/popular-tours", async ([AsParameters] GuidePopularToursRequest request, ISender sender, ICurrentUser currentUser, CancellationToken ct) =>
             (await sender.Send(new GetGuidePopularToursQuery(currentUser.UserId!.Value, request.Limit), ct)).ToApiResult())
             .WithName("GetGuidePopularTours")
+            .WithSummary("Get own most popular tours")
             .WithMetadata(new MustHavePermissionAttribute(ContentToursFeatures.TourGuideProfile, AppAction.Read))
             .RequireAuthorization();
 
         group.MapGet("/me/analytics/peak-days", async (ISender sender, ICurrentUser currentUser, CancellationToken ct) =>
             (await sender.Send(new GetGuidePeakDaysQuery(currentUser.UserId!.Value), ct)).ToApiResult())
             .WithName("GetGuidePeakDays")
+            .WithSummary("Get own guide peak booking days")
             .WithMetadata(new MustHavePermissionAttribute(ContentToursFeatures.TourGuideProfile, AppAction.Read))
             .RequireAuthorization();
     }

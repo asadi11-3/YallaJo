@@ -8,18 +8,21 @@ using Social.Application.Queries.CheckFavorite;
 using Social.Application.Queries.GetMyFavorites;
 using Social.Contracts.Authorization;
 using Social.Domain.Enums;
+using Social.Presentation.Endpoints.Favorite.Models;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Authorization;
 using YallaJo.SharedKernel.Presentation;
 using YallaJo.SharedKernel.Presentation.Authorization;
 
-namespace Social.Presentation.Endpoints;
+namespace Social.Presentation.Endpoints.Favorite;
 
 internal static class FavoriteEndpoints
 {
-    public static RouteGroupBuilder MapFavoriteEndpoints(this RouteGroupBuilder group)
+    internal static void MapFavoriteEndpoints(RouteGroupBuilder group)
     {
-        // POST /api/v1/favorites
+        group.WithTags("Social | Favorites");
+
+        // POST /api/v1/social/favorites
         group.MapPost("/", async (
             AddFavoriteRequest request,
             ICurrentUser currentUser,
@@ -34,7 +37,6 @@ internal static class FavoriteEndpoints
         .WithName("AddFavorite")
         .WithSummary("Add a favorite")
         .WithDescription("Adds an entity (Tour, Place, or Business) to the calling user's favorites. Max 500 per user.")
-        .WithTags("Favorites")
         .Accepts<AddFavoriteRequest>("application/json")
         .Produces<Guid>(StatusCodes.Status200OK)
         .ProducesValidationProblem()
@@ -44,7 +46,7 @@ internal static class FavoriteEndpoints
         .WithMetadata(new MustHavePermissionAttribute(SocialFeatures.Favorite, AppAction.Create))
         .RequireAuthorization();
 
-        // DELETE /api/v1/favorites/{entityType}/{entityId:guid}
+        // DELETE /api/v1/social/favorites/{entityType}/{entityId:guid}
         group.MapDelete("/{entityType}/{entityId:guid}", async (
             string entityType,
             Guid entityId,
@@ -69,14 +71,13 @@ internal static class FavoriteEndpoints
         .WithName("RemoveFavorite")
         .WithSummary("Remove a favorite")
         .WithDescription("Removes a favorite entry. Idempotent — returns 204 even if the item was not favorited.")
-        .WithTags("Favorites")
         .Produces(StatusCodes.Status204NoContent)
         .ProducesProblem(StatusCodes.Status401Unauthorized)
         .ProducesProblem(StatusCodes.Status400BadRequest)
         .WithMetadata(new MustHavePermissionAttribute(SocialFeatures.Favorite, AppAction.Delete))
         .RequireAuthorization();
 
-        // GET /api/v1/favorites
+        // GET /api/v1/social/favorites
         group.MapGet("/", async (
             [Microsoft.AspNetCore.Mvc.FromQuery] Guid? afterCursor,
             [Microsoft.AspNetCore.Mvc.FromQuery] int pageSize,
@@ -92,13 +93,12 @@ internal static class FavoriteEndpoints
         .WithName("GetMyFavorites")
         .WithSummary("Get my favorites")
         .WithDescription("Returns a cursor-paginated list of the calling user's favorites.")
-        .WithTags("Favorites")
         .Produces(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status401Unauthorized)
         .WithMetadata(new MustHavePermissionAttribute(SocialFeatures.Favorite, AppAction.Read))
         .RequireAuthorization();
 
-        // GET /api/v1/favorites/check/{entityType}/{entityId:guid}
+        // GET /api/v1/social/favorites/check/{entityType}/{entityId:guid}
         group.MapGet("/check/{entityType}/{entityId:guid}", async (
             string entityType,
             Guid entityId,
@@ -122,16 +122,10 @@ internal static class FavoriteEndpoints
         .WithName("CheckFavorite")
         .WithSummary("Check if an entity is favorited")
         .WithDescription("Returns {isFavorited: bool} for a given entity.")
-        .WithTags("Favorites")
         .Produces(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status401Unauthorized)
         .ProducesProblem(StatusCodes.Status400BadRequest)
         .WithMetadata(new MustHavePermissionAttribute(SocialFeatures.Favorite, AppAction.Read))
         .RequireAuthorization();
-
-        return group;
     }
 }
-
-/// <summary>Request body for POST /favorites.</summary>
-internal sealed record AddFavoriteRequest(FavoriteEntityType EntityType, Guid EntityId);

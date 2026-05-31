@@ -14,8 +14,8 @@ public static class ContentBlogsEndpoints
         var group = endpoints.MapGroup("/api/v1/blogs")
             .WithTags("ContentBlogs");
 
-        BlogEndpoints.MapBlogEndpoints(group);
-        BlogCommentEndpoints.MapBlogCommentEndpoints(group);
+        BlogEndpoints.MapBlogEndpoints(group.MapGroup("").WithTags("ContentBlogs | Blogs"));
+        BlogCommentEndpoints.MapBlogCommentEndpoints(group.MapGroup("").WithTags("ContentBlogs | Blog Comments"));
         CreatorEndpoints.MapCreatorEndpoints(group);
         AdminCreatorEndpoints.MapAdminCreatorEndpoints(group);
 

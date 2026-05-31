@@ -22,7 +22,8 @@ internal static class EarningsEndpoints
             return result.ToApiResult();
         })
         .WithName("GetGuideEarnings")
-        .WithTags("Earnings")
+        .WithSummary("List the current guide's earnings.")
+        .WithTags("Finance | Earnings")
         .WithMetadata(new MustHavePermissionAttribute(FinanceFeatures.Payout, AppAction.Read))
         .RequireAuthorization();
 
@@ -32,7 +33,8 @@ internal static class EarningsEndpoints
             return result.ToApiResult();
         })
         .WithName("GetGuideEarningsSummaryWithDateRange")
-        .WithTags("Earnings")
+        .WithSummary("Get the current guide's earnings summary for a date range.")
+        .WithTags("Finance | Earnings")
         .WithMetadata(new MustHavePermissionAttribute(FinanceFeatures.Payout, AppAction.Read))
         .RequireAuthorization();
 
@@ -42,7 +44,8 @@ internal static class EarningsEndpoints
             return result.ToApiResult();
         })
         .WithName("GetAdminFinanceDashboard")
-        .WithTags("Finance Dashboard")
+        .WithSummary("Admin: finance dashboard overview.")
+        .WithTags("Finance | Dashboard")
         .Produces<AdminFinanceDashboardDto>(StatusCodes.Status200OK)
         .WithMetadata(new MustHavePermissionAttribute(FinanceFeatures.AdminFinanceDashboard, AppAction.Read))
         .RequireAuthorization();

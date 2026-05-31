@@ -2,23 +2,24 @@ using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
-using Social.Application.Commands.BanUser;
 using Social.Application.Commands.UnbanUser;
-using Social.Application.Commands.WarnUser;
 using Social.Application.Queries.GetModerationLogs;
 using Social.Contracts.Authorization;
+using Social.Presentation.Endpoints.Moderation.Models;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Authorization;
 using YallaJo.SharedKernel.Presentation;
 using YallaJo.SharedKernel.Presentation.Authorization;
 
-namespace Social.Presentation.Endpoints;
+namespace Social.Presentation.Endpoints.Moderation;
 
 internal static class ModerationEndpoints
 {
-    public static RouteGroupBuilder MapModerationEndpoints(this RouteGroupBuilder group)
+    internal static void MapModerationEndpoints(RouteGroupBuilder group)
     {
-        // GET /api/v1/moderation/logs
+        group.WithTags("Social | Moderation");
+
+        // GET /api/v1/social/moderation/logs
         group.MapGet("/logs", async (
             [Microsoft.AspNetCore.Mvc.FromQuery] Guid? afterCursor,
             [Microsoft.AspNetCore.Mvc.FromQuery] int pageSize,
@@ -33,7 +34,6 @@ internal static class ModerationEndpoints
         .WithName("GetModerationLogs")
         .WithSummary("Admin: content moderation log")
         .WithDescription("Returns a cursor-paginated list of all admin moderation actions (admin-only, immutable audit trail).")
-        .WithTags("Moderation")
         .Produces(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status401Unauthorized)
         .WithMetadata(new MustHavePermissionAttribute(SocialFeatures.ContentModerationLog, AppAction.Read))
@@ -51,7 +51,6 @@ internal static class ModerationEndpoints
         })
         .WithName("WarnSocialUser")
         .WithSummary("Admin: issue a moderation warning to a user")
-        .WithTags("Moderation")
         .Accepts<WarnUserRequest>("application/json")
         .Produces(StatusCodes.Status200OK)
         .ProducesValidationProblem()
@@ -71,7 +70,6 @@ internal static class ModerationEndpoints
         })
         .WithName("BanSocialUser")
         .WithSummary("Admin: issue a moderation ban to a user")
-        .WithTags("Moderation")
         .Accepts<BanUserRequest>("application/json")
         .Produces(StatusCodes.Status200OK)
         .ProducesValidationProblem()
@@ -91,34 +89,10 @@ internal static class ModerationEndpoints
         })
         .WithName("UnbanSocialUser")
         .WithSummary("Admin: lift an active moderation ban for a user")
-        .WithTags("Moderation")
         .Produces(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status401Unauthorized)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithMetadata(new MustHavePermissionAttribute(SocialFeatures.AdminModerationQueue, AppAction.Ban))
         .RequireAuthorization();
-
-        return group;
     }
-}
-
-public sealed record WarnUserRequest(
-    Guid UserId,
-    Social.Domain.Enums.ReportableEntityType EntityType,
-    Guid EntityId,
-    string Reason)
-{
-    public WarnUserCommand ToCommand(Guid adminUserId) =>
-        new(UserId, EntityType, EntityId, Reason, adminUserId);
-}
-
-public sealed record BanUserRequest(
-    Guid UserId,
-    Social.Domain.Enums.ReportableEntityType EntityType,
-    Guid EntityId,
-    string Reason,
-    DateTime? ExpiresAt)
-{
-    public BanUserCommand ToCommand(Guid adminUserId) =>
-        new(UserId, EntityType, EntityId, Reason, ExpiresAt, adminUserId);
 }

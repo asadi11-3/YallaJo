@@ -30,7 +30,7 @@ internal static class AdminCreatorEndpoints
     internal static void MapAdminCreatorEndpoints(RouteGroupBuilder blogGroup)
     {
         var group = blogGroup.MapGroup("/admin/creators")
-            .WithTags("Admin - Creators");
+            .WithTags("ContentBlogs | Admin Creators");
 
         // ── GET /api/v1/blogs/admin/creators/applications ────────────────
         group.MapGet("/applications", async (

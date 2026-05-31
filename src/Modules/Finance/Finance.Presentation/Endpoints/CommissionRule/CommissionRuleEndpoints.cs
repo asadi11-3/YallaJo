@@ -32,8 +32,7 @@ internal static class CommissionRuleEndpoints
             return result.ToApiResult();
         })
         .WithName("GetCommissionRules")
-        .WithSummary("Admin: list commission rules.")
-        .WithTags("CommissionRules")
+        .WithSummary("Admin: list commission rules.").WithTags("Finance | Commission Rules")
         .Produces<IReadOnlyList<CommissionRuleDto>>(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status401Unauthorized)
         .ProducesProblem(StatusCodes.Status403Forbidden)
@@ -50,8 +49,7 @@ internal static class CommissionRuleEndpoints
             return result.ToApiResult();
         })
         .WithName("CreateCommissionRule")
-        .WithSummary("Admin: create a commission rule.")
-        .WithTags("CommissionRules")
+        .WithSummary("Admin: create a commission rule.").WithTags("Finance | Commission Rules")
         .Accepts<CreateCommissionRuleCommand>("application/json")
         .Produces<CommissionRuleDto>(StatusCodes.Status200OK)
         .ProducesValidationProblem()
@@ -73,8 +71,7 @@ internal static class CommissionRuleEndpoints
             return result.ToApiResult();
         })
         .WithName("UpdateCommissionRule")
-        .WithSummary("Admin: update an existing commission rule.")
-        .WithTags("CommissionRules")
+        .WithSummary("Admin: update an existing commission rule.").WithTags("Finance | Commission Rules")
         .Accepts<UpdateCommissionRuleRequest>("application/json")
         .Produces<CommissionRuleDto>(StatusCodes.Status200OK)
         .ProducesValidationProblem()
@@ -96,8 +93,7 @@ internal static class CommissionRuleEndpoints
             return result.ToApiResult();
         })
         .WithName("DeleteCommissionRule")
-        .WithSummary("Admin: soft-delete a commission rule.")
-        .WithTags("CommissionRules")
+        .WithSummary("Admin: soft-delete a commission rule.").WithTags("Finance | Commission Rules")
         .Produces<bool>(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status401Unauthorized)
         .ProducesProblem(StatusCodes.Status403Forbidden)

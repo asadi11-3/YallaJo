@@ -22,7 +22,8 @@ internal static class DisputeEndpoints
             return result.ToApiResult();
         })
         .WithName("GetMyDisputes")
-        .WithTags("Disputes")
+        .WithSummary("List the current user's disputes.")
+        .WithTags("Finance | Disputes")
         .WithMetadata(new MustHavePermissionAttribute(FinanceFeatures.Refund, AppAction.Read))
         .RequireAuthorization();
 
@@ -32,7 +33,8 @@ internal static class DisputeEndpoints
             return result.ToApiResult();
         })
         .WithName("GetOpenDisputes")
-        .WithTags("Disputes")
+        .WithSummary("Admin: list all open disputes.")
+        .WithTags("Finance | Disputes")
         .WithMetadata(new MustHavePermissionAttribute(FinanceFeatures.AdminFinanceDashboard, AppAction.Read))
         .RequireAuthorization();
 
@@ -42,7 +44,8 @@ internal static class DisputeEndpoints
             return result.ToApiResult();
         })
         .WithName("OpenDispute")
-        .WithTags("Disputes")
+        .WithSummary("Open a dispute against a payment.")
+        .WithTags("Finance | Disputes")
         .WithMetadata(new MustHavePermissionAttribute(FinanceFeatures.Refund, AppAction.Create))
         .RequireAuthorization();
 
@@ -52,7 +55,8 @@ internal static class DisputeEndpoints
             return result.ToApiResult();
         })
         .WithName("MarkDisputeUnderReview")
-        .WithTags("Disputes")
+        .WithSummary("Admin: mark a dispute as under review.")
+        .WithTags("Finance | Disputes")
         .WithMetadata(new MustHavePermissionAttribute(FinanceFeatures.AdminFinanceDashboard, AppAction.Update))
         .RequireAuthorization();
 
@@ -62,7 +66,8 @@ internal static class DisputeEndpoints
             return result.ToApiResult();
         })
         .WithName("ResolveDispute")
-        .WithTags("Disputes")
+        .WithSummary("Admin: resolve a dispute.")
+        .WithTags("Finance | Disputes")
         .WithMetadata(new MustHavePermissionAttribute(FinanceFeatures.AdminFinanceDashboard, AppAction.Approve))
         .RequireAuthorization();
 
@@ -72,7 +77,8 @@ internal static class DisputeEndpoints
             return result.ToApiResult();
         })
         .WithName("EscalateDispute")
-        .WithTags("Disputes")
+        .WithSummary("Admin: escalate a dispute.")
+        .WithTags("Finance | Disputes")
         .WithMetadata(new MustHavePermissionAttribute(FinanceFeatures.AdminFinanceDashboard, AppAction.Update))
         .RequireAuthorization();
     }

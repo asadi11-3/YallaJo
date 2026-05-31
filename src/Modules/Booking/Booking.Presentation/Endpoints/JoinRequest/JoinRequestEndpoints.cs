@@ -32,7 +32,6 @@ internal static class JoinRequestEndpoints
             })
             .WithName("GetJoinRequests")
             .WithSummary("List join requests. Filter by booking or own requests.")
-            .WithTags("Booking | JoinRequest")
             .WithMetadata(new MustHavePermissionAttribute(BookingFeatures.JoinRequest, AppAction.ReadOwn))
             .RequireAuthorization();
 
@@ -47,7 +46,6 @@ internal static class JoinRequestEndpoints
             })
             .WithName("SubmitJoinRequest")
             .WithSummary("Submit a join request to join an existing confirmed booking.")
-            .WithTags("Booking | JoinRequest")
             .WithMetadata(new MustHavePermissionAttribute(BookingFeatures.JoinRequest, AppAction.Create))
             .RequireAuthorization();
 
@@ -64,7 +62,6 @@ internal static class JoinRequestEndpoints
             })
             .WithName("ApproveJoinRequest")
             .WithSummary("Guide approves a join request.")
-            .WithTags("Booking | JoinRequest")
             .WithMetadata(new MustHavePermissionAttribute(BookingFeatures.JoinRequest, AppAction.Approve))
             .RequireAuthorization();
 
@@ -81,7 +78,6 @@ internal static class JoinRequestEndpoints
             })
             .WithName("RejectJoinRequest")
             .WithSummary("Guide rejects a join request.")
-            .WithTags("Booking | JoinRequest")
             .WithMetadata(new MustHavePermissionAttribute(BookingFeatures.JoinRequest, AppAction.Reject))
             .RequireAuthorization();
     }

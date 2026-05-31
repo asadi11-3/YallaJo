@@ -36,7 +36,6 @@ internal static class AdminBookingEndpoints
         .WithDescription(
             "Used by support for force-majeure scenarios (e.g. natural disaster, provider permanently unavailable). " +
             "Returns 100% of TotalAmount regardless of any RefundPolicy. Audit-logged.")
-        .WithTags("Booking", "Admin")
         .Accepts<AdminForceRefundRequest>("application/json")
         .Produces<AdminForceRefundResult>(StatusCodes.Status200OK)
         .ProducesValidationProblem()

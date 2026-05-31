@@ -117,6 +117,8 @@ The Webestica template is **pure Bootstrap 5 + vanilla JS** (no React/Vue/Angula
 
 ## 2. Template Inventory (74 pages)
 
+> **Template reality audit:** this section lists template files + their intended YallaJo use. For a page-by-page inventory of what each `.html` file *actually ships with today* (forms, fields, buttons) vs. what its mapped YallaJo route/endpoints require — plus a per-page migration-gap and effort bucket — see **§22 Template Page Reality Audit** (the inverse of the §21 endpoint-coverage audit).
+
 ### 2.1 Public / Marketing (15)
 | Template file | YallaJo use |
 |---|---|
@@ -3353,6 +3355,7 @@ UI-UX rules align with the §12 sprint plan but add UX-specific deliverables:
 
 **Companion files already created:**
 - `Agents/Plans/UI-UX-Pattern-Report.md` — 20-section endpoint-derived UI/UX pattern catalogue (personas, IA, page inventory, component library, state-machine UX, interaction patterns, accessibility, responsive strategy, implementation waves)
+- **§22 (this doc)** — Template Page Reality Audit: per-page interactive-element inventory of the Webestica template (audited hands-on) vs mapped routes, with migration-effort buckets (drop-in / needs-new-components / fully-net-new / backend-blocked).
 
 ---
 
@@ -3456,3 +3459,84 @@ The companion `Agents/Plans/UI-UX-Pattern-Report.md` is **persona/component/patt
 5. Pattern Report §19-20 (implementation waves + component inventory numbers) → matches this doc §12 (sprint plan) + §15 (migration steps).
 
 When pattern and route docs conflict, **this document is authoritative for the MVC implementation** (it knows about Razor partials, project structure, area routing). The pattern report is authoritative for **product UX decisions** (it knows about the 483-endpoint capability surface).
+
+---
+
+## 22. Template Page Reality Audit (2025-01-27)
+
+§21 audits the backend → "which of the 483 endpoints have a route?". **§22 is the inverse: it audits the template → "what does each shipped Webestica `.html` page actually contain today, and what must be built to satisfy its mapped YallaJo route/endpoints?"** Source: hands-on exploration of every interactive element in `C:\…\booking.webestica.com`. Use this to size migration effort per page (see buckets in §22.8). Legend: ✅ ships-ready · ⚠️ needs new components · 🆕 fully net-new (no template basis) · ⛔ blocked on a backend gap (§13/§21.4).
+
+### 22.1 Auth pages → §4.7
+
+| Template page | Ships today | Route | Gap to close |
+|---|---|---|---|
+| `sign-in.html` | email + password + remember, **Login**, Google + Facebook social, links to sign-up/forgot | `/Auth/Login` | ⚠️ Add **Apple** button (Wave-1 OAuth split, ⛔ backend gap §21.4); wire social to `/auth/external/{provider}` |
+| `sign-up.html` | email + password + confirm + keep-signed-in, social, link to sign-in | `/Auth/Register` | ⚠️ No **password-strength meter** (8+ / upper / lower / digit / special per §4.7.1) → build |
+| `forgot-password.html` | email, **Reset Password** | `/Auth/ForgotPassword` | ✅ drop-in |
+| `two-factor-auth.html` | **4** OTP boxes (maxlength 1), Verify, "Click to resend" | `/Auth/VerifyEmail` + `/Auth/VerifyOtp` | ⚠️ Backend OTP is **6-digit** (§4.7.1) → expand to 6 boxes + paste-fill; add **resend cooldown (5/hr)** + **attempts-remaining (max 5)** UX |
+
+### 22.2 Account self-service → §4.3 / §4.11
+
+| Template page | Ships today | Route | Gap to close |
+|---|---|---|---|
+| `account-profile.html` | 3 forms (personal info; update-email; update-password) + avatar upload (`#uploadfile-1`) + completion checklist (Verified Email/Mobile/Basic Info) | `/Account/Profile` (§4.3) | ✅ strong match — bind to `GET/PUT /accounts/profile` + avatar + `PUT /security/account/{password,phone}` |
+| `account-settings.html` | newsletter radios (Daily/2×wk/Weekly/Never) + 7 toggles, 2FA phone + **Send Code**, active-sessions **Sign Out** | `/Account/Settings` + `/Account/Settings/Devices` | ⚠️ Map toggles to backend **preference matrix** (§4.11.7); render **lock icon** on critical types (OTP/Payment/Security/LoginFromNewDevice); wire sessions to `GET /auth/sessions` + revoke |
+| `account-bookings.html` | tabs Upcoming/Canceled/Completed, booking cards, **Manage Booking**, empty-state CTA | `/Account/Bookings` (§4.10.2) | ⚠️ No inline detail and **no cancel-with-refund modal** — §4.10.2 needs refund-amount preview computed from `RefundPolicySnapshotJson` → build cancel modal |
+| `account-wishlist.html` | sort select, **Remove all**, per-item heart + share + View | `/Account/Wishlist` (§4.11.2) | ⚠️ Cards are hotel-shaped → retab by EntityType (Tour/Place/Business) + "X / 500" counter |
+| `account-payment-details.html` | add-card form + 2 saved cards (masked) | `/Account/PaymentMethods` | ⚠️ **Phase 3** (customer saved-cards not in current 483 surface; Finance `ProviderPaymentMethod` is provider-side) |
+| `account-travelers.html` | 2 traveler edit forms + add-traveler modal | `/Account/Travelers` | ⛔ **No backend endpoint** in the 483 surface → confirm a Travelers endpoint or drop the page |
+| `account-delete.html` | confirm checkbox + warning list + Keep/Delete | `/Account/Delete` | ✅ maps to Accounts soft-delete + restore — verify `DELETE /accounts/profile` + `POST /accounts/profile/restore` |
+
+### 22.3 Catalog, tour & booking pages → §4.8 / §4.10 (largest build gaps)
+
+| Template page | Ships today | Route | Gap to close |
+|---|---|---|---|
+| `index-tour.html` | tour search (location/date/type + advanced filters), featured hero, best-packages, recent-search chips | `/` (§4.2) | ✅ bind to `tours/featured` + `popular/tours` + `trending` + `categories` |
+| `tour-grid.html` | search + Advance-Filters toggle + sort + pagination, result cards | `/Tours` (§4.8.1) | ⚠️ Bind filters to ContentTours **search facets** (category / price / language / duration / child-friendly) |
+| **`tour-detail.html`** | gallery + lightbox; Overview/Itinerary/Inclusions/Policy tabs; itinerary accordion; **flat "$280/person"**; wishlist heart; rating + "**(365 reviews)**" *link only*; Book Now + Send Inquiry sidebar; inquiry modal | `/Tours/{slug}` (§4.8.1, §4.9.3, §4.11.1) | ⚠️ **Biggest gap on the site.** Missing: (1) **pricing-tier selector** (Adult/Child/Infant/Senior/Group/Private); (2) **schedule/date picker**; (3) **reviews list + submit modal** (template has only a count); (4) real **waypoint map** (static today → Mapbox, Wave-6); (5) inquiry modal has no backend (route to Support ticket or drop) |
+| `tour-booking.html` | stepper **Tour Review / Traveler Info / Make Payment**; per-traveler fields; card + PayPal; Book-as-Guest card; price summary | `/Tours/{slug}/Book` (§4.10.1) | ⚠️/⛔ **No availability date-picker step and no time-slot step** (§4.10.1 Steps A+B) → insert before Traveler Info; depends on **Availability Slot** reads (⛔ Wave-5 backend gap §21.4) |
+| `booking-confirm.html` | success card (ID, payment, totals, tour date, guests) + Share + Download PDF | `/BookingConfirm/{id}` | ✅ add **.ics add-to-calendar** + confirmation-code format per §4.10.1 |
+| `compare-listing.html` | compare table | `/Tours/Compare` | ✅ drop-in |
+| `offer-detail.html` | promo landing | `/offers/{slug}` | ⚠️ **Phase 3** (Finance discounts) — deferred |
+| `directory-detail.html` | About/Deals/Services tabs (coupon input), hours, gallery, **Google Maps iframe** | `/Places/{slug}` + `/Businesses/{slug}` (§4.8.2) | ⚠️ **No accessibility section** (ContentPlaces exposes accessibility endpoints) → add; Deals/coupon has no backend → verify or drop |
+| `index-directory.html` | keyword + category + location search, geolocation crosshair, place cards; **map is decorative** | `/Places` / `/Businesses` / `/search` | ⚠️ Replace decorative map with real **Mapbox** (Wave-6 §4.11.5) |
+
+### 22.4 Content / blog → §4.9 / §4.12
+
+| Template page | Ships today | Route | Gap to close |
+|---|---|---|---|
+| `blog.html` | category badges, cards, one video card, **Read more** | `/Blog` (§4.9.1) | ✅ bind to `GET /blogs?status=Published` |
+| **`blog-detail.html`** | article, author bio box (**"View Articles" only**), share, popular tags, helpful yes/no poll | `/Blog/{slug}` (§4.9.2, §4.12.5) | ⚠️ Missing: **comment thread + submit form** (nested + reactions, §4.9.2) and **follow/unfollow** on author (creator follow, Wave-7/8 §4.12.5) → build both |
+
+### 22.5 Support / help / contact → §4.11.8
+
+| Template page | Ships today | Route | Gap to close |
+|---|---|---|---|
+| `help-center.html` | help search + categories + FAQ accordion + popular-article slider + **Submit a Ticket** CTA + Contact Us | `/help` (§4.2) | ⚠️ CTA only — no ticket form/list (see 🆕 below) |
+| `help-detail.html` | single article + helpful poll | `/help/{slug}` | ✅ drop-in |
+| `faq.html` | FAQ search + accordion grouped (Booking/Cancellation/Payment) | `/faq` | ✅ bind to ContentSeo FAQ |
+| `contact.html` / `contact-2.html` | contact form (+ map) | maps to Support ticket | ⚠️ Wire form → `POST /support/tickets` (§4.11.8) |
+| *(none — no template page)* | — | `/Account/Notifications` (§4.11.7) | 🆕 **No notifications inbox exists** in the template → build from scratch (bell dropdown exists in `_NotificationBell`, full list page does not) |
+| *(none — no template page)* | — | `/Support` + `/Support/{id}` (§4.11.8) | 🆕 No ticket **list/thread** page → build |
+
+### 22.6 Dashboards → §4.4 / §4.5
+
+| Template page(s) | Ships today | Route | Gap to close |
+|---|---|---|---|
+| `admin-*.html` (9) | hotel-oriented KPIs (Hotels/Rooms/Booked), guest/agent/booking lists, earnings, reviews, settings | `/Admin/*` (§4.5) | ⚠️ Reskin Hotels→Tours, Guests→Users, Agents→Providers; `admin-agent-*` → `/Admin/Providers` (Wave-2 ✅) |
+| `agent-*.html` (7) | provider console: dashboard, listings, bookings, activities, earnings, reviews, settings | `/Provider/*` (§4.4) | ⚠️ Reskin KPIs; bookings table needs 3-tab Pending/Upcoming/History (⛔ provider booking reads, Wave-5 gap) |
+| `add-listing.html` | stepper Basic / Detailed / Price&Policy (location, images, amenities, room options, policy) | `/Provider/Listings/Create` (§4.8.4) | ⚠️ Add multi-tab **Schedules / Pricing-Tiers / Waypoints / Children-Info** editors (§4.8.4) |
+| *(none — `team.html` ≈ profile only)* | — | `/Guide/*` console | 🆕 **No Guide console** in template — confirms §21.1 gap; entire `/Guide/*` area is net-new |
+
+### 22.7 Out-of-scope template pages (multipurpose theme, no YallaJo backend)
+
+`index.html` (hotel home), `index-hotel-chain.html`, `index-resort.html`, `index-flight.html`, `index-cab.html`, and all `hotel-*` / `flight-*` / `cab-*` / `room-detail.html` pages are **not part of YallaJo's tour API**. §2.4 already repurposes `hotel-grid/list/detail/booking` → Businesses; the remainder are unused. `pricing.html` = Phase 3 subscriptions; `coming-soon.html`, `error.html`, `about.html`, `team.html`, `privacy-policy.html`, `terms-of-service.html` = static/deferred.
+
+### 22.8 Migration-effort buckets (derived)
+
+- **✅ Drop-in (rename `.html`→`.cshtml`, add `@model`, bind data):** `sign-in`, `forgot-password`, `two-factor-auth` (expand to 6 boxes), `account-profile`, `account-wishlist` (retabbed), `blog`, `faq`, `help-detail`, `booking-confirm`, `compare-listing`, `tour-grid`, admin/agent shells.
+- **⚠️ Needs net-new components on an existing page:** `tour-detail` (pricing tiers + schedule picker + reviews block/modal + Mapbox), `tour-booking` (availability + slot steps), `blog-detail` (comments + follow), `directory-detail` (accessibility section), `add-listing` (multi-tab enrichment), `account-settings` (locked-preference matrix + sessions), `account-bookings` (cancel-with-refund modal).
+- **🆕 Fully net-new pages (no template basis):** `/Account/Notifications`, `/Support` + `/Support/{id}`, the entire `/Guide/*` console, `/Account/Disputes`, the review-submit modal, the group join-request flow.
+- **⛔ Blocked on backend gaps (see §13 + §21.4):** availability slots (6), refund policy (3), provider booking reads (3), join requests (3), 3 OAuth split endpoints, `GET /admin/providers/{id}`, and all Wave-7/8 creator endpoints.
+
+> **Headline:** `tour-detail.html` is the highest-value, highest-effort migration target (conversion page, 5 missing component groups). After it, `tour-booking.html` is gated on the Wave-5 availability endpoints. Everything in the 🆕 bucket has zero template starting point and should be scoped as fresh design work (use `huashu-design` for hi-fi prototyping per §0).

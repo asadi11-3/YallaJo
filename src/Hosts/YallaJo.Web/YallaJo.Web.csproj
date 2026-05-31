@@ -27,6 +27,9 @@
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.17.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="9.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.Facebook" Version="9.0.0" />
+    <!-- Standard resilience pipeline (retry + circuit breaker + timeouts) for the
+         BFF → API typed client. 9.x line aligns with the net9.0 target framework. -->
+    <PackageReference Include="Microsoft.Extensions.Http.Resilience" Version="9.10.0" />
   </ItemGroup>
 
   <ItemGroup>

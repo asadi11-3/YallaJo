@@ -22,7 +22,8 @@ internal static class ProviderPaymentMethodEndpoints
             return result.ToApiResult();
         })
         .WithName("GetProviderPaymentMethods")
-        .WithTags("Provider Payment Methods")
+        .WithSummary("List the current provider's payment methods.")
+        .WithTags("Finance | Provider Payment Methods")
         .Produces<IReadOnlyList<ProviderPaymentMethodDto>>(StatusCodes.Status200OK)
         .WithMetadata(new MustHavePermissionAttribute(FinanceFeatures.ProviderPaymentMethod, AppAction.Read))
         .RequireAuthorization();
@@ -41,7 +42,8 @@ internal static class ProviderPaymentMethodEndpoints
             return result.ToApiResult();
         })
         .WithName("CreateProviderPaymentMethod")
-        .WithTags("Provider Payment Methods")
+        .WithSummary("Add a payment method for the current provider.")
+        .WithTags("Finance | Provider Payment Methods")
         .Produces<ProviderPaymentMethodDto>(StatusCodes.Status200OK)
         .ProducesValidationProblem()
         .WithMetadata(new MustHavePermissionAttribute(FinanceFeatures.ProviderPaymentMethod, AppAction.Create))
@@ -62,7 +64,8 @@ internal static class ProviderPaymentMethodEndpoints
             return result.ToApiResult();
         })
         .WithName("UpdateProviderPaymentMethod")
-        .WithTags("Provider Payment Methods")
+        .WithSummary("Update one of the current provider's payment methods.")
+        .WithTags("Finance | Provider Payment Methods")
         .Produces<ProviderPaymentMethodDto>(StatusCodes.Status200OK)
         .WithMetadata(new MustHavePermissionAttribute(FinanceFeatures.ProviderPaymentMethod, AppAction.Update))
         .RequireAuthorization();
@@ -73,7 +76,8 @@ internal static class ProviderPaymentMethodEndpoints
             return result.ToApiResult();
         })
         .WithName("DeleteProviderPaymentMethod")
-        .WithTags("Provider Payment Methods")
+        .WithSummary("Delete one of the current provider's payment methods.")
+        .WithTags("Finance | Provider Payment Methods")
         .Produces<bool>(StatusCodes.Status200OK)
         .WithMetadata(new MustHavePermissionAttribute(FinanceFeatures.ProviderPaymentMethod, AppAction.Delete))
         .RequireAuthorization();
@@ -84,7 +88,8 @@ internal static class ProviderPaymentMethodEndpoints
             return result.ToApiResult();
         })
         .WithName("VerifyProviderPaymentMethod")
-        .WithTags("Provider Payment Methods")
+        .WithSummary("Admin: verify a provider payment method.")
+        .WithTags("Finance | Provider Payment Methods")
         .Produces<ProviderPaymentMethodDto>(StatusCodes.Status200OK)
         .WithMetadata(new MustHavePermissionAttribute(FinanceFeatures.ProviderPaymentMethod, AppAction.Verify))
         .RequireAuthorization();

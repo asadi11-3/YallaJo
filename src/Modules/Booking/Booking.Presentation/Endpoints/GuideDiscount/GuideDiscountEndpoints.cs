@@ -29,7 +29,6 @@ internal static class GuideDiscountEndpoints
             })
             .WithName("GetMyGuideDiscounts")
             .WithSummary("Guide lists their own discounts.")
-            .WithTags("Booking | GuideDiscount")
             .WithMetadata(new MustHavePermissionAttribute(BookingFeatures.TourBooking, AppAction.ReadOwn))
             .RequireAuthorization();
 
@@ -44,7 +43,6 @@ internal static class GuideDiscountEndpoints
             })
             .WithName("CreateGuideDiscount")
             .WithSummary("Guide creates a discount for their tour offerings.")
-            .WithTags("Booking | GuideDiscount")
             .WithMetadata(new MustHavePermissionAttribute(BookingFeatures.TourBooking, AppAction.Create))
             .RequireAuthorization();
 
@@ -60,7 +58,6 @@ internal static class GuideDiscountEndpoints
             })
             .WithName("UpdateGuideDiscount")
             .WithSummary("Guide updates an existing discount.")
-            .WithTags("Booking | GuideDiscount")
             .WithMetadata(new MustHavePermissionAttribute(BookingFeatures.TourBooking, AppAction.Update))
             .RequireAuthorization();
 
@@ -75,7 +72,6 @@ internal static class GuideDiscountEndpoints
             })
             .WithName("DeactivateGuideDiscount")
             .WithSummary("Guide deactivates a discount.")
-            .WithTags("Booking | GuideDiscount")
             .WithMetadata(new MustHavePermissionAttribute(BookingFeatures.TourBooking, AppAction.Delete))
             .RequireAuthorization();
     }

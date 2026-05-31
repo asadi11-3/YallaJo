@@ -12,13 +12,12 @@ public static class SecurityEndpoints
 {
     public static IEndpointRouteBuilder MapSecurityEndpoints(this IEndpointRouteBuilder endpoints)
     {
-        var group = endpoints.MapGroup("/api/v1/security")
-            .WithTags("Security");
+        var group = endpoints.MapGroup("/api/v1/security");
 
-        UserEndpoints.MapUserEndpoints(group);
-        AccountEndpoints.MapAccountEndpoints(group);
-        RoleEndpoints.MapRoleEndpoints(group);
-        AuditLogEndpoints.MapAuditLogEndpoints(group);
+        UserEndpoints.MapUserEndpoints(group.MapGroup("").WithTags("Security | Users"));
+        AccountEndpoints.MapAccountEndpoints(group.MapGroup("").WithTags("Security | Accounts"));
+        RoleEndpoints.MapRoleEndpoints(group.MapGroup("").WithTags("Security | Roles"));
+        AuditLogEndpoints.MapAuditLogEndpoints(group.MapGroup("").WithTags("Security | Audit Logs"));
 
         return endpoints;
     }

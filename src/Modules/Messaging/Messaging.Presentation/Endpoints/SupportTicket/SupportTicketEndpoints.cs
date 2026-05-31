@@ -4,26 +4,28 @@ using Messaging.Application.Commands.CloseSupportTicket;
 using Messaging.Application.Commands.CreateSupportTicket;
 using Messaging.Application.Commands.PostTicketMessage;
 using Messaging.Application.Commands.ResolveSupportTicket;
+using Messaging.Application.Queries.Dtos;
 using Messaging.Application.Queries.GetSupportTicketById;
 using Messaging.Application.Queries.GetSupportTickets;
 using Messaging.Contracts.Authorization;
 using Messaging.Domain.Enums;
-
+using Messaging.Presentation.Endpoints.SupportTicket.Models;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Authorization;
-using YallaJo.SharedKernel.Domain.Abstractions.Results;
 using YallaJo.SharedKernel.Presentation;
 using YallaJo.SharedKernel.Presentation.Authorization;
 
-namespace Messaging.Presentation.Endpoints;
+namespace Messaging.Presentation.Endpoints.SupportTicket;
 
 internal static class SupportTicketEndpoints
 {
-    internal static RouteGroupBuilder MapSupportTicketEndpoints(this RouteGroupBuilder group)
+    internal static void MapSupportTicketEndpoints(RouteGroupBuilder group)
     {
+        group.WithTags("Messaging | Support Tickets");
+
         group.MapPost("/tickets", async (
             CreateTicketRequest request,
             ICurrentUser currentUser,
@@ -37,9 +39,13 @@ internal static class SupportTicketEndpoints
                 request.Body);
             var result = await sender.Send(cmd, ct);
             return result.ToApiResult();
-        }).WithName("CreateSupportTicket").WithTags("Support")
-          .WithMetadata(new MustHavePermissionAttribute(MessagingFeatures.SupportTicket, AppAction.Create))
-          .RequireAuthorization();
+        })
+        .WithName("CreateSupportTicket")
+        .Produces<Guid>(StatusCodes.Status201Created)
+        .ProducesValidationProblem()
+        .WithSummary("Create a new support ticket.")
+        .WithMetadata(new MustHavePermissionAttribute(MessagingFeatures.SupportTicket, AppAction.Create))
+        .RequireAuthorization();
 
         group.MapGet("/tickets", async (
             TicketStatus? status,
@@ -55,9 +61,12 @@ internal static class SupportTicketEndpoints
             var query = new GetSupportTicketsQuery(userId, isAdmin, status, category, cursor, pageSize ?? 20);
             var result = await sender.Send(query, ct);
             return result.ToApiResult();
-        }).WithName("GetSupportTickets").WithTags("Support")
-          .WithMetadata(new MustHavePermissionAttribute(MessagingFeatures.SupportTicket, AppAction.Read))
-          .RequireAuthorization();
+        })
+        .WithName("GetSupportTickets")
+        .Produces<SupportTicketPageDto>(StatusCodes.Status200OK)
+        .WithSummary("List support tickets (own tickets, or all when admin).")
+        .WithMetadata(new MustHavePermissionAttribute(MessagingFeatures.SupportTicket, AppAction.Read))
+        .RequireAuthorization();
 
         group.MapGet("/tickets/{id:guid}", async (
             Guid id,
@@ -68,9 +77,13 @@ internal static class SupportTicketEndpoints
             bool isAdmin = currentUser.HasPermission("Permission.AdminSupportQueue.Read");
             var result = await sender.Send(new GetSupportTicketByIdQuery(id, currentUser.UserId!.Value, isAdmin), ct);
             return result.ToApiResult();
-        }).WithName("GetSupportTicketById").WithTags("Support")
-          .WithMetadata(new MustHavePermissionAttribute(MessagingFeatures.SupportTicket, AppAction.Read))
-          .RequireAuthorization();
+        })
+        .WithName("GetSupportTicketById")
+        .Produces<SupportTicketDto>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .WithSummary("Get a support ticket by id.")
+        .WithMetadata(new MustHavePermissionAttribute(MessagingFeatures.SupportTicket, AppAction.Read))
+        .RequireAuthorization();
 
         group.MapPost("/tickets/{id:guid}/close", async (
             Guid id,
@@ -81,9 +94,13 @@ internal static class SupportTicketEndpoints
             bool isAdmin = currentUser.HasPermission("Permission.AdminSupportQueue.Read");
             var result = await sender.Send(new CloseSupportTicketCommand(id, currentUser.UserId!.Value, isAdmin), ct);
             return result.ToApiResult();
-        }).WithName("CloseSupportTicket").WithTags("Support")
-          .WithMetadata(new MustHavePermissionAttribute(MessagingFeatures.SupportTicket, AppAction.Close))
-          .RequireAuthorization();
+        })
+        .WithName("CloseSupportTicket")
+        .Produces(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .WithSummary("Close a support ticket.")
+        .WithMetadata(new MustHavePermissionAttribute(MessagingFeatures.SupportTicket, AppAction.Close))
+        .RequireAuthorization();
 
         group.MapPost("/tickets/{id:guid}/messages", async (
             Guid id,
@@ -96,9 +113,14 @@ internal static class SupportTicketEndpoints
             var cmd = new PostTicketMessageCommand(id, currentUser.UserId!.Value, request.Body, isAdmin && (request.IsInternal ?? false));
             var result = await sender.Send(cmd, ct);
             return result.ToApiResult();
-        }).WithName("PostTicketMessage").WithTags("Support")
-          .WithMetadata(new MustHavePermissionAttribute(MessagingFeatures.SupportTicket, AppAction.Read))
-          .RequireAuthorization();
+        })
+        .WithName("PostTicketMessage")
+        .Produces(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .WithSummary("Post a message to a support ticket.")
+        .WithMetadata(new MustHavePermissionAttribute(MessagingFeatures.SupportTicket, AppAction.Read))
+        .RequireAuthorization();
 
         group.MapPost("/admin/tickets/{id:guid}/assign", async (
             Guid id,
@@ -110,9 +132,14 @@ internal static class SupportTicketEndpoints
             var cmd = new AssignSupportTicketCommand(id, request.AdminUserId, currentUser.UserId!.Value);
             var result = await sender.Send(cmd, ct);
             return result.ToApiResult();
-        }).WithName("AssignSupportTicket").WithTags("Support")
-          .WithMetadata(new MustHavePermissionAttribute(MessagingFeatures.AdminSupportQueue, AppAction.Assign))
-          .RequireAuthorization();
+        })
+        .WithName("AssignSupportTicket")
+        .Produces(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .WithSummary("Assign a support ticket to an admin.")
+        .WithMetadata(new MustHavePermissionAttribute(MessagingFeatures.AdminSupportQueue, AppAction.Assign))
+        .RequireAuthorization();
 
         group.MapPost("/admin/tickets/{id:guid}/resolve", async (
             Guid id,
@@ -124,15 +151,13 @@ internal static class SupportTicketEndpoints
             var cmd = new ResolveSupportTicketCommand(id, currentUser.UserId!.Value, request.Notes);
             var result = await sender.Send(cmd, ct);
             return result.ToApiResult();
-        }).WithName("ResolveSupportTicket").WithTags("Support")
-          .WithMetadata(new MustHavePermissionAttribute(MessagingFeatures.AdminSupportQueue, AppAction.Resolve))
-          .RequireAuthorization();
-
-        return group;
+        })
+        .WithName("ResolveSupportTicket")
+        .Produces(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .WithSummary("Resolve a support ticket.")
+        .WithMetadata(new MustHavePermissionAttribute(MessagingFeatures.AdminSupportQueue, AppAction.Resolve))
+        .RequireAuthorization();
     }
 }
-
-internal sealed record CreateTicketRequest(TicketCategory Category, string Subject, string Body);
-internal sealed record PostMessageRequest(string Body, bool? IsInternal);
-internal sealed record AssignTicketRequest(Guid AdminUserId);
-internal sealed record ResolveTicketRequest(string? Notes);

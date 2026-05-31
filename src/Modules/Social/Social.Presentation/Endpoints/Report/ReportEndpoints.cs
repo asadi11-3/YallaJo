@@ -6,19 +6,21 @@ using Social.Application.Commands.ResolveReport;
 using Social.Application.Commands.SubmitReport;
 using Social.Application.Queries.GetAdminReports;
 using Social.Contracts.Authorization;
-using Social.Domain.Enums;
+using Social.Presentation.Endpoints.Report.Models;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Authorization;
 using YallaJo.SharedKernel.Presentation;
 using YallaJo.SharedKernel.Presentation.Authorization;
 
-namespace Social.Presentation.Endpoints;
+namespace Social.Presentation.Endpoints.Report;
 
 internal static class ReportEndpoints
 {
-    public static RouteGroupBuilder MapReportEndpoints(this RouteGroupBuilder group)
+    internal static void MapReportEndpoints(RouteGroupBuilder group)
     {
-        // POST /api/v1/reports — submit a report
+        group.WithTags("Social | Reports");
+
+        // POST /api/v1/social/reports — submit a report
         group.MapPost("/", async (
             SubmitReportRequest request,
             ICurrentUser currentUser,
@@ -38,7 +40,6 @@ internal static class ReportEndpoints
         .WithName("SubmitReport")
         .WithSummary("Submit a report")
         .WithDescription("Reports an entity (Review, Tour, Place, Business, or Blog) for moderation.")
-        .WithTags("Reports")
         .Accepts<SubmitReportRequest>("application/json")
         .Produces<Guid>(StatusCodes.Status200OK)
         .ProducesValidationProblem()
@@ -47,7 +48,7 @@ internal static class ReportEndpoints
         .WithMetadata(new MustHavePermissionAttribute(SocialFeatures.Report, AppAction.Create))
         .RequireAuthorization();
 
-        // GET /api/v1/reports/admin — admin list
+        // GET /api/v1/social/reports/admin — admin list
         group.MapGet("/admin", async (
             [Microsoft.AspNetCore.Mvc.FromQuery] Guid? afterCursor,
             [Microsoft.AspNetCore.Mvc.FromQuery] int pageSize,
@@ -62,13 +63,12 @@ internal static class ReportEndpoints
         .WithName("GetAdminReports")
         .WithSummary("Admin: list reports")
         .WithDescription("Returns a cursor-paginated list of all submitted reports (admin-only).")
-        .WithTags("Reports")
         .Produces(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status401Unauthorized)
         .WithMetadata(new MustHavePermissionAttribute(SocialFeatures.AdminModerationQueue, AppAction.Read))
         .RequireAuthorization();
 
-        // POST /api/v1/reports/admin/{id}/resolve — admin resolves a report
+        // POST /api/v1/social/reports/admin/{id}/resolve — admin resolves a report
         group.MapPost("/admin/{id:guid}/resolve", async (
             Guid id,
             ResolveReportRequest request,
@@ -84,7 +84,6 @@ internal static class ReportEndpoints
         .WithName("ResolveReport")
         .WithSummary("Admin: resolve a report")
         .WithDescription("Resolves an open report and optionally takes action on the underlying entity.")
-        .WithTags("Reports")
         .Accepts<ResolveReportRequest>("application/json")
         .Produces(StatusCodes.Status200OK)
         .ProducesValidationProblem()
@@ -93,17 +92,5 @@ internal static class ReportEndpoints
         .ProducesProblem(StatusCodes.Status409Conflict)
         .WithMetadata(new MustHavePermissionAttribute(SocialFeatures.AdminModerationQueue, AppAction.Resolve))
         .RequireAuthorization();
-
-        return group;
     }
 }
-
-internal sealed record SubmitReportRequest(
-    ReportableEntityType EntityType,
-    Guid EntityId,
-    ReportReason Reason,
-    string Description);
-
-internal sealed record ResolveReportRequest(
-    ModerationAction Action,
-    string? Notes = null);

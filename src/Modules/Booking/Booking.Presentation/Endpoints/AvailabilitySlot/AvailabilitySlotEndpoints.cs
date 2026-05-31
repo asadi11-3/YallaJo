@@ -40,7 +40,6 @@ internal static class AvailabilitySlotEndpoints
             })
             .WithName("CreateAvailabilitySlot")
             .WithSummary("Create one availability slot for a tour.")
-            .WithTags("Booking")
             .Accepts<CreateAvailabilitySlotRequest>("application/json")
             .Produces<AvailabilitySlotDto>(StatusCodes.Status201Created)
             .ProducesValidationProblem()
@@ -64,7 +63,7 @@ internal static class AvailabilitySlotEndpoints
                 {
                     return parsed.ToApiResult();
                 }
-
+        
                 var result = await sender.Send(parsed.Value!, cancellationToken);
                 return result.IsSuccess
                     ? Results.Ok(result.Value)
@@ -72,7 +71,6 @@ internal static class AvailabilitySlotEndpoints
             })
             .WithName("CreateBulkAvailabilitySlots")
             .WithSummary("Create recurring availability slots for a tour.")
-            .WithTags("Booking")
             .Accepts<CreateBulkAvailabilitySlotsRequest>("application/json")
             .Produces<CreateBulkAvailabilitySlotsResult>(StatusCodes.Status200OK)
             .ProducesValidationProblem()
@@ -98,7 +96,6 @@ internal static class AvailabilitySlotEndpoints
             })
             .WithName("UpdateAvailabilitySlot")
             .WithSummary("Update availability slot capacity.")
-            .WithTags("Booking")
             .Accepts<UpdateAvailabilitySlotRequest>("application/json")
             .Produces<AvailabilitySlotDto>(StatusCodes.Status200OK)
             .ProducesValidationProblem()
@@ -129,7 +126,7 @@ internal static class AvailabilitySlotEndpoints
                 {
                     decoded = [];
                 }
-
+        
                 var result = await sender.Send(new DeleteAvailabilitySlotCommand(id, decoded), cancellationToken);
                 return result.IsSuccess
                     ? Results.NoContent()
@@ -137,7 +134,6 @@ internal static class AvailabilitySlotEndpoints
             })
             .WithName("DeleteAvailabilitySlot")
             .WithSummary("Deactivate an availability slot.")
-            .WithTags("Booking")
             .Produces(StatusCodes.Status204NoContent)
             .ProducesProblem(StatusCodes.Status401Unauthorized)
             .ProducesProblem(StatusCodes.Status403Forbidden)
@@ -164,7 +160,6 @@ internal static class AvailabilitySlotEndpoints
             })
             .WithName("GetAvailabilityForTour")
             .WithSummary("Get cursor-paginated availability grouped by date for a tour.")
-            .WithTags("Booking")
             .Produces<AvailabilityPage>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status404NotFound)
             .AllowAnonymous();
@@ -185,7 +180,6 @@ internal static class AvailabilitySlotEndpoints
             })
             .WithName("GetAvailabilityForTourOnDate")
             .WithSummary("Get availability slots for a tour on a specific date.")
-            .WithTags("Booking")
             .Produces<AvailabilityForDateDto>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status404NotFound)
             .AllowAnonymous();

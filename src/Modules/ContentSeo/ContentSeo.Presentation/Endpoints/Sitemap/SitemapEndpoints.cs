@@ -105,7 +105,6 @@ internal static class SitemapEndpoints
         })
         .WithName("GetSitemap")
         .WithSummary("Public XML sitemap (used by search engines).")
-        .WithTags("ContentSeo")
         .Produces(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status503ServiceUnavailable)
         .AllowAnonymous();
@@ -123,7 +122,6 @@ internal static class SitemapEndpoints
         })
         .WithName("GetSubSitemap")
         .WithSummary("Per-EntityType sub-sitemap (used when total URLs exceed 50,000).")
-        .WithTags("ContentSeo")
         .Produces(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .AllowAnonymous();

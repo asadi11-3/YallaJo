@@ -19,7 +19,7 @@ internal static class ProviderDocumentEndpoints
 {
     internal static void MapProviderDocumentEndpoints(RouteGroupBuilder group)
     {
-        var docs = group.MapGroup("/provider/documents").WithTags("Booking | Provider Documents");
+        var docs = group.MapGroup("/provider/documents");
 
         MapUploadEndpoint(docs);
         MapUpdateEndpoint(docs);

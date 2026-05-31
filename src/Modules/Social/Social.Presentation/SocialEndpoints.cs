@@ -1,6 +1,9 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
-using Social.Presentation.Endpoints;
+using Social.Presentation.Endpoints.Favorite;
+using Social.Presentation.Endpoints.Moderation;
+using Social.Presentation.Endpoints.Report;
+using Social.Presentation.Endpoints.Review;
 
 namespace Social.Presentation;
 
@@ -8,18 +11,18 @@ public static class SocialEndpoints
 {
     public static IEndpointRouteBuilder MapSocialEndpoints(this IEndpointRouteBuilder endpoints)
     {
-        var reviewGroup = endpoints.MapGroup("/api/v1/social/reviews");
-        reviewGroup.MapReviewEndpoints();
-        reviewGroup.MapReviewAdminEndpoints();
+        var reviews = endpoints.MapGroup("/api/v1/social/reviews");
+        ReviewEndpoints.MapReviewEndpoints(reviews);
+        ReviewEndpoints.MapReviewAdminEndpoints(reviews);
 
-        endpoints.MapGroup("/api/v1/social/favorites")
-            .MapFavoriteEndpoints();
+        var favorites = endpoints.MapGroup("/api/v1/social/favorites");
+        FavoriteEndpoints.MapFavoriteEndpoints(favorites);
 
-        endpoints.MapGroup("/api/v1/social/reports")
-            .MapReportEndpoints();
+        var reports = endpoints.MapGroup("/api/v1/social/reports");
+        ReportEndpoints.MapReportEndpoints(reports);
 
-        endpoints.MapGroup("/api/v1/social/moderation")
-            .MapModerationEndpoints();
+        var moderation = endpoints.MapGroup("/api/v1/social/moderation");
+        ModerationEndpoints.MapModerationEndpoints(moderation);
 
         return endpoints;
     }
