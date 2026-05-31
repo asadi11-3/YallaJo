@@ -156,6 +156,10 @@ public sealed class TourBookingTests
         booking.ConfirmationSource.Should().Be(ConfirmationSource.PaymentWebhook);
         var evt = booking.ShouldContainDomainEvent<TourBookingConfirmedDomainEvent>();
         evt.Source.Should().Be(ConfirmationSource.PaymentWebhook);
+        // Phase 1: the confirmed event must carry the slot + participant count so the
+        // capacity handler can convert locked seats to booked seats.
+        evt.AvailabilitySlotId.Should().Be(SlotId);
+        evt.ParticipantCount.Should().Be(2);
     }
 
     [Fact]

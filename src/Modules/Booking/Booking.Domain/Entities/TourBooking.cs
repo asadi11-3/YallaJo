@@ -215,6 +215,8 @@ public sealed class TourBooking : AuditableEntity, IAggregateRoot
             UserId: UserId,
             TourId: TourId,
             ProviderId: ProviderId,
+            AvailabilitySlotId: AvailabilitySlotId,
+            ParticipantCount: ParticipantCount,
             ConfirmedAt: now,
             Source: source));
     }

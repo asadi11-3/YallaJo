@@ -8,5 +8,7 @@ public sealed record TourBookingConfirmedDomainEvent(
     Guid UserId,
     Guid TourId,
     Guid ProviderId,
+    Guid AvailabilitySlotId,
+    int ParticipantCount,
     DateTime ConfirmedAt,
     ConfirmationSource Source) : DomainEventBase;

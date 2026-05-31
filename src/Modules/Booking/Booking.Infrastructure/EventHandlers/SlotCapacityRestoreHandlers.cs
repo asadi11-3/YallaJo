@@ -127,3 +127,42 @@ internal sealed class RestoreSlotCapacityOnExpireHandler(
             e.BookingId);
     }
 }
+
+/// <summary>
+/// Converts locked seats to confirmed booked seats when a booking is confirmed
+/// (instant payment, provider confirm, or auto-accept). Without this, a confirmed
+/// booking keeps its seats in <c>LockedCount</c> and a later cancel of that confirmed
+/// booking would fail (<see cref="Booking.Domain.Entities.AvailabilitySlot.ReleaseBooking"/>
+/// expects <c>BookedCount</c>).
+/// MUST NOT call SaveChanges; the change tracker piggy-backs on the originating command's UoW,
+/// exactly like the Cancel/Reject/Expire capacity handlers above.
+/// </summary>
+internal sealed class RestoreSlotCapacityOnConfirmHandler(
+    IAvailabilitySlotRepository slotRepository,
+    ILogger<RestoreSlotCapacityOnConfirmHandler> logger)
+    : INotificationHandler<DomainEventNotification<TourBookingConfirmedDomainEvent>>
+{
+    public async Task Handle(DomainEventNotification<TourBookingConfirmedDomainEvent> notification, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(notification);
+        var e = notification.Event;
+
+        var slot = await slotRepository.GetByIdWithLockAsync(e.AvailabilitySlotId, cancellationToken).ConfigureAwait(false);
+        if (slot is null)
+        {
+            logger.LogWarning(
+                "Confirm capacity conversion skipped: AvailabilitySlot {SlotId} not found for booking {BookingId}",
+                e.AvailabilitySlotId,
+                e.BookingId);
+            return;
+        }
+
+        slot.ConfirmBooking(e.ParticipantCount);
+        logger.LogInformation(
+            "Converted {Count} locked seat(s) to booked on slot {SlotId} after confirmation of booking {BookingId} (source {Source})",
+            e.ParticipantCount,
+            slot.Id,
+            e.BookingId,
+            e.Source);
+    }
+}

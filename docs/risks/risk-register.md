@@ -21,6 +21,7 @@
 | RISK-013 | Recommended middleware (CORS, Correlation-Id, Response Compression) not in pipeline | API host | Low | Open |
 | RISK-014 | Large set of historical analysis MD files at repo root may drift | Docs / repo hygiene | Low | Open |
 | RISK-015 | Push notifications (FCM/APNs) and AI chatbot LLM planned but not implemented | Messaging | Low | Acknowledged |
+| RISK-016 | Historical pre-fix `Confirmed` bookings may still hold capacity in `LockedCount` | Booking | Medium | Open |
 
 ---
 
@@ -45,9 +46,9 @@
 | **Area** | Finance |
 | **Severity** | Critical (for production) |
 | **Status** | Acknowledged |
-| **Evidence** | `Finance.Infrastructure/Gateways/FakePaymentGateway.cs` implements `IPaymentGateway`. `Finance.Application/Commands/ProcessWebhook/` does not enforce a real signature scheme. |
-| **Impact** | The booking → payment → confirmation flow is end-to-end exercisable but **not actually charging money**. Webhook endpoint accepts gateway-shaped payloads without provider-specific signature verification. |
-| **Recommended follow-up** | Select a payment provider (Stripe / HyperPay / etc.). Implement real `IPaymentGateway`. Implement signed-webhook verification on `POST /finance/payments/webhook`. Ensure PCI scope is understood. |
+| **Evidence** | `Finance.Infrastructure/Gateways/FakePaymentGateway.cs` implements `IPaymentGateway`. **Webhook HMAC-SHA256 signature verification IS enforced**: `Finance.Presentation/Endpoints/Payment/PaymentEndpoints.cs` reads the raw body and calls `IPaymentGateway.VerifyWebhookSignatureAsync` **before** parsing the envelope; `FakePaymentGateway.VerifyWebhookSignatureAsync` validates an `X-Signature: hmac-sha256=<hex>` header with a constant-time compare and rejects missing/unsigned/unconfigured-secret requests. |
+| **Impact** | The booking → payment → confirmation flow is end-to-end exercisable but **not actually charging money** — the gateway is a stub. Signature verification itself is implemented; the residual risk is the absence of a real PSP and that the HMAC secret is a shared, config-bound value. |
+| **Recommended follow-up** | Select a payment provider (Stripe / HyperPay / etc.) and implement a real `IPaymentGateway` (the `VerifyWebhookSignatureAsync` seam already exists). Wire provider-specific signature/secret management. Ensure PCI scope is understood. |
 | **Linked workflow(s)** | [`06-booking-lifecycle.md`](../workflows/06-booking-lifecycle.md) |
 
 ---
@@ -89,8 +90,10 @@
 | **Status** | Acknowledged |
 | **Evidence** | [`../../Agents/event-handler-coverage-report.md`](../../Agents/event-handler-coverage-report.md); ADR-008 parity rules |
 | **Impact** | Some published integration events may have no consumer or vice versa, breaking the ADR-008 parity assumption and silently dropping cross-module effects. |
+| **Resolved (subset)** | The previously-noted **payment → booking-confirmation gap is now closed**: Booking consumes `finance.payment.completed.v1` via `PaymentCompletedConfirmBookingHandler` (instant → Confirm; non-instant → PendingConfirmation). See [`06-booking-lifecycle.md`](../workflows/06-booking-lifecycle.md). |
+| **Remaining gaps** | `finance.dispute-opened.v1` has no consumer; refund completion (`RefundCompleted`) raises no traveler notification; `tracking.live-session.*` events have no consumer. |
 | **Recommended follow-up** | Run the parity report regularly. Add a build-time check that fails CI on missing consumers/producers. |
-| **Linked workflow(s)** | [`17-outbox-inbox-eventing.md`](../workflows/17-outbox-inbox-eventing.md) |
+| **Linked workflow(s)** | [`17-outbox-inbox-eventing.md`](../workflows/17-outbox-inbox-eventing.md), [`06-booking-lifecycle.md`](../workflows/06-booking-lifecycle.md) |
 
 ---
 
@@ -231,3 +234,17 @@
 | **Impact** | Mobile push and AI chat are not delivered. |
 | **Recommended follow-up** | Pick providers and implement, or scope out for MVP. |
 | **Linked workflow(s)** | (planned `10-notifications-fanout.md`) |
+
+---
+
+## RISK-016 — Historical `Confirmed` bookings may still hold `LockedCount` capacity
+
+| | |
+|---|---|
+| **Area** | Booking |
+| **Severity** | Medium |
+| **Status** | Open |
+| **Evidence** | Confirmation-time capacity conversion (`RestoreSlotCapacityOnConfirmHandler` → `AvailabilitySlot.ConfirmBooking`, converting `LockedCount → BookedCount`) was added in the Phase 1 capacity fix. Any booking that reached `Confirmed` **before** that fix never had its seats converted, so on those rows the slot still counts the seats as `LockedCount` rather than `BookedCount`. |
+| **Impact** | Cancelling such a legacy confirmed booking calls `AvailabilitySlot.ReleaseBooking`, which requires `BookedCount >= participantCount` and will throw `BusinessRuleViolationException` ("Cannot release N booked seats; only 0 are booked") — blocking the cancellation/refund capacity restore. Net `AvailableCount` is still correct (locks and bookings both reduce availability), so this is a state-shape inconsistency, not an over-booking. |
+| **Recommended follow-up** | One-off data reconciliation: for active `Confirmed`/`InProgress` bookings, move the corresponding seats from `LockedCount` to `BookedCount` on their slots (idempotent migration/maintenance job). No schema change required. New confirmations are already correct. |
+| **Linked workflow(s)** | [`06-booking-lifecycle.md`](../workflows/06-booking-lifecycle.md) |
