@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Security.Application.Authorization;
 using Security.Application.Caching;
@@ -31,7 +32,17 @@ public sealed class DeactivateRoleCommandHandler(
             return Result.Success(); // idempotent — already deactivated
 
         role.Deactivate();
-        await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        try
+        {
+            await unitOfWork.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Result.Failure(
+                new Error("Role.ConcurrencyConflict", "Role was modified concurrently. Reload and retry."),
+                Outcome.Conflict);
+        }
 
         // Invalidate roles list AND all user caches: GetUserQuery filters by ur.Role.IsActive,
         // so deactivating a role changes which roles appear in cached UserDto.Roles.

@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Security.Application.Interfaces;
 using Security.Domain.Repositories;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
@@ -32,7 +33,17 @@ public sealed class UpdatePrimaryPhoneCommandHandler(
         }
 
         var phone = user.UpdatePrimaryPhone(request.PhoneNumber);
-        await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        try
+        {
+            await unitOfWork.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Result<UpdatePrimaryPhoneResult>.Failure(
+                new Error("User.ConcurrencyConflict", "User was modified concurrently. Reload and retry."),
+                Outcome.Conflict);
+        }
 
         return Result<UpdatePrimaryPhoneResult>.Success(
             new UpdatePrimaryPhoneResult(true, phone.PhoneNumber));

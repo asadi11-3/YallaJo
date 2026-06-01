@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Security.Application.Authorization;
 using Security.Application.Caching;
@@ -40,7 +41,17 @@ public sealed class RemoveRoleCommandHandler(
             return Result.Failure(RoleErrors.NotAssigned, Outcome.NotFound);
 
         userRepository.RemoveUserRole(userRole);
-        await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        try
+        {
+            await unitOfWork.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Result.Failure(
+                new Error("UserRole.ConcurrencyConflict", "Role assignment was modified concurrently. Reload and retry."),
+                Outcome.Conflict);
+        }
 
         await cache.RemoveByTagAsync(SecurityCacheKeys.UserTag(request.UserId), cancellationToken);
         await cache.RemoveByTagAsync(SecurityCacheKeys.UsersTag, cancellationToken);

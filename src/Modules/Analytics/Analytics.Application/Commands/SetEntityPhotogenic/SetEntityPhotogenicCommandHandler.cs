@@ -1,5 +1,6 @@
 using Analytics.Application.Interfaces;
 using Analytics.Application.Interfaces.Repositories;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
@@ -21,7 +22,17 @@ public sealed class SetEntityPhotogenicCommandHandler(
 
         snapshot.SetPhotogenic(request.IsPhotogenic);
         snapshotRepository.Update(snapshot);
-        await unitOfWork.SaveChangesAsync(ct).ConfigureAwait(false);
+
+        try
+        {
+            await unitOfWork.SaveChangesAsync(ct).ConfigureAwait(false);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Result.Failure(
+                new Error("EntityAttributeSnapshot.ConcurrencyConflict", "Entity attribute snapshot was modified concurrently. Please refresh and try again."),
+                Outcome.Conflict);
+        }
 
         await cache.RemoveByTagAsync($"analytics:entity:{request.Kind}:{request.EntityId:N}", ct).ConfigureAwait(false);
         logger.LogInformation("Set analytics photogenic flag for {Kind}/{EntityId} to {IsPhotogenic}", request.Kind, request.EntityId, request.IsPhotogenic);

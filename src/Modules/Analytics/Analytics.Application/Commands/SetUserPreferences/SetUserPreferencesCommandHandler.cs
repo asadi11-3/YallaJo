@@ -2,6 +2,7 @@ using Analytics.Application.Interfaces;
 using Analytics.Application.Interfaces.Repositories;
 using Analytics.Application.Queries.GetUserPreferences;
 using Analytics.Domain.Entities;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
@@ -34,7 +35,17 @@ public sealed class SetUserPreferencesCommandHandler(
             await repository.UpsertPreferredCategoryAsync(UserPreferredCategory.Create(request.UserId, category.CategoryId, category.PreferenceScore), ct).ConfigureAwait(false);
         }
 
-        await unitOfWork.SaveChangesAsync(ct).ConfigureAwait(false);
+        try
+        {
+            await unitOfWork.SaveChangesAsync(ct).ConfigureAwait(false);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Result<UserPreferencesResponse>.Failure(
+                new Error("UserPreference.ConcurrencyConflict", "User preferences were modified concurrently. Please refresh and try again."),
+                Outcome.Conflict);
+        }
+
         await cache.RemoveByTagAsync($"analytics:prefs:{request.UserId:N}", ct).ConfigureAwait(false);
         await cache.RemoveByTagAsync($"analytics:recs:{request.UserId:N}", ct).ConfigureAwait(false);
 
