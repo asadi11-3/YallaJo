@@ -7,8 +7,4 @@ public sealed record UpdateMarketingConsentCommand(
     bool PushNotifications,
     bool ReEngagementCampaigns) : ICommand<MarketingConsentResult>;
 
-public sealed record MarketingConsentResult(
-    bool EmailDigest,
-    bool PushNotifications,
-    bool ReEngagementCampaigns,
-    DateTime? LastUpdatedUtc);
+

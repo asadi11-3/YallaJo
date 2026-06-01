@@ -6,7 +6,6 @@ public static class AccountsCacheKeys
 
     public static string UserProfileTag(Guid userId) => $"accounts:profile:{userId}:tag";
 
-    // Provider Application
     public static string MyApplicationStatus(Guid userId) => $"accounts:provider:status:{userId}";
 
     public static string MyApplicationStatusTag(Guid userId) => $"accounts:provider:status:{userId}:tag";
@@ -15,7 +14,6 @@ public static class AccountsCacheKeys
 
     public const string AdminProviderQueueTag = "accounts:admin:provider-queue:tag";
 
-    // Agency
     public static string AgencyGuides(Guid agencyUserId) => $"accounts:agency:{agencyUserId}:guides";
     public static string AgencyGuidesTag(Guid agencyUserId) => $"accounts:agency:{agencyUserId}:guides:tag";
     public static string AgencyInvitations(Guid userId) => $"accounts:agency:{userId}:invitations";

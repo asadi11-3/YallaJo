@@ -39,8 +39,10 @@ public sealed class AddProviderDocumentCommandHandler(
             request.FileSizeBytes,
             request.ExpiresAt);
 
-        if (addResult.IsFailure)
-            return Result<AddProviderDocumentResult>.Failure(addResult.Error, Outcome.UnprocessableEntity);
+        if (addResult.IsFailure || addResult.Value is null)
+            return Result<AddProviderDocumentResult>.Failure(
+                addResult.Error ?? Error.Failure("ProviderDocument.Add", "Unknown error occurred while adding document."),
+                Outcome.UnprocessableEntity);
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
         await cache.RemoveByTagAsync(AccountsCacheKeys.MyApplicationStatusTag(userId), cancellationToken);

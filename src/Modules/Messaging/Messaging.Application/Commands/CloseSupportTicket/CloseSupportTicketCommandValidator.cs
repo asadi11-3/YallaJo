@@ -8,5 +8,10 @@ internal sealed class CloseSupportTicketCommandValidator : AbstractValidator<Clo
     {
         RuleFor(x => x.TicketId).NotEmpty();
         RuleFor(x => x.CallerUserId).NotEmpty();
+
+        RuleFor(x => x.RowVersion)
+            .NotNull()
+            .Must(rv => rv is { Length: > 0 })
+            .WithMessage("RowVersion is required for optimistic concurrency.");
     }
 }

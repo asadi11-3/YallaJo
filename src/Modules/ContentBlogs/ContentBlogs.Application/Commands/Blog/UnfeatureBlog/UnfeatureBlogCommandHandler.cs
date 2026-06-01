@@ -1,5 +1,5 @@
 using ContentBlogs.Application.Caching;
-using ContentBlogs.Application.Common;
+using YallaJo.SharedKernel.Application.Common;
 using ContentBlogs.Application.Interfaces;
 using ContentBlogs.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;

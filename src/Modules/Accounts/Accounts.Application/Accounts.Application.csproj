@@ -20,4 +20,8 @@
     <ProjectReference Include="..\..\..\BuildingBlocks\YallaJo.SharedKernel.Application\YallaJo.SharedKernel.Application.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Queries\Agency\Comman\" />
+  </ItemGroup>
+
 </Project>

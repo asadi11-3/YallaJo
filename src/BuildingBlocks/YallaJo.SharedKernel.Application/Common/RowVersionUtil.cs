@@ -1,6 +1,6 @@
-namespace ContentBlogs.Application.Common;
+namespace YallaJo.SharedKernel.Application.Common;
 
-internal static class RowVersionUtil
+public static class RowVersionUtil
 {
     public static bool Equal(byte[]? a, byte[]? b)
         => a is not null && b is not null && a.SequenceEqual(b);

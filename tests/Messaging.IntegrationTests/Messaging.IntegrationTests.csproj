@@ -16,6 +16,7 @@
     <PackageReference Include="NSubstitute" Version="5.3.0" />
     <PackageReference Include="FluentAssertions" Version="7.0.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.15" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.15" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\Modules\Messaging\Messaging.Domain\Messaging.Domain.csproj" />

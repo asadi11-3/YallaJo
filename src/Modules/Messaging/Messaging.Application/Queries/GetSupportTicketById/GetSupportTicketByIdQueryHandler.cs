@@ -24,7 +24,9 @@ internal sealed class GetSupportTicketByIdQueryHandler(
             ticket.Id, ticket.CreatedByUserId, ticket.Category.ToString(), ticket.Subject,
             ticket.Priority.ToString(), ticket.Status.ToString(), ticket.SlaBreachAt,
             ticket.AssignedToUserId, ticket.AssignedAt, ticket.ResolvedByUserId, ticket.ResolvedAt,
-            ticket.ResolutionNotes, ticket.ClosedAt, ticket.CreatedAt, messages);
+            ticket.ResolutionNotes, ticket.ClosedAt, ticket.CreatedAt,
+            ticket.RowVersion is null or { Length: 0 } ? string.Empty : Convert.ToBase64String(ticket.RowVersion),
+            messages);
 
         return Result.Success(dto);
     }

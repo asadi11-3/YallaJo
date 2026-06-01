@@ -45,9 +45,16 @@ public sealed class RegisterProviderCommandHandler(
             request.TypeSpecificDataJson);
 
         if (registerResult.IsFailure)
-            return Result<RegisterProviderResult>.Failure(registerResult.Error, Outcome.UnprocessableEntity);
+            return Result<RegisterProviderResult>.Failure(
+                registerResult.Error ?? Error.Failure("ProviderApplication.Register", "Unknown error occurred."),
+                Outcome.UnprocessableEntity);
 
         var application = registerResult.Value;
+        if (application is null)
+            return Result<RegisterProviderResult>.Failure(
+                Error.Failure("ProviderApplication.Register", "Unknown error occurred."),
+                Outcome.UnprocessableEntity);
+
         await providerApplicationRepository.AddAsync(application, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
         await cache.RemoveByTagAsync(AccountsCacheKeys.MyApplicationStatusTag(userId), cancellationToken);

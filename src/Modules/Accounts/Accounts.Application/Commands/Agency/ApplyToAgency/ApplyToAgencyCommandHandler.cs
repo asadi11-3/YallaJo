@@ -25,7 +25,6 @@ public sealed class ApplyToAgencyCommandHandler(
     {
         var guideUserId = currentUser.UserId!.Value;
 
-        // Verify caller is an IndependentGuide
         var guideApplication = await providerApplicationRepository.GetByUserIdAsync(guideUserId, cancellationToken);
         if (guideApplication is null || guideApplication.Type != ProviderType.IndependentGuide)
             return Result<Guid>.Failure(AgencyErrors.NotAGuide, Outcome.Forbidden);

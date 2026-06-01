@@ -4,5 +4,5 @@ namespace Accounts.Application.Commands.Agency.InviteGuide;
 
 public sealed record InviteGuideCommand(
     Guid GuideUserId,
-    string? Message,
+    string Message,
     decimal ProposedCommissionPercentage) : ICommand<Guid>;
