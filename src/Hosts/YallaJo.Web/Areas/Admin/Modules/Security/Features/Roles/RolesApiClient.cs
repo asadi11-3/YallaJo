@@ -7,8 +7,8 @@ namespace YallaJo.Web.Areas.Admin.Modules.Security.Features.Roles;
 
 public sealed class RolesApiClient
 {
-    private readonly ApiClient _api;
-    public RolesApiClient(ApiClient api) => _api = api;
+    private readonly IApiClient _api;
+    public RolesApiClient(IApiClient api) => _api = api;
 
     public Task<ApiResult<List<RoleItemResponse>>> GetRolesAsync(CancellationToken ct = default)
         => _api.GetAsync<List<RoleItemResponse>>("/api/v1/security/roles", ct);

@@ -7,8 +7,8 @@ namespace YallaJo.Web.Areas.Admin.Modules.ContentCore.Features.Languages;
 
 public sealed class LanguagesApiClient
 {
-    private readonly ApiClient _api;
-    public LanguagesApiClient(ApiClient api) => _api = api;
+    private readonly IApiClient _api;
+    public LanguagesApiClient(IApiClient api) => _api = api;
 
     public Task<ApiResult<List<LanguageItemResponse>>> GetLanguagesAsync(
         bool activeOnly, CancellationToken ct = default)

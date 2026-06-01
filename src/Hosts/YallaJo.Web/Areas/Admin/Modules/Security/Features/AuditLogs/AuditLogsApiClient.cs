@@ -15,8 +15,8 @@ namespace YallaJo.Web.Areas.Admin.Modules.Security.Features.AuditLogs;
 /// </summary>
 public sealed class AuditLogsApiClient
 {
-    private readonly ApiClient _api;
-    public AuditLogsApiClient(ApiClient api) => _api = api;
+    private readonly IApiClient _api;
+    public AuditLogsApiClient(IApiClient api) => _api = api;
 
     public Task<ApiResult<AuditLogListResponse>> GetLogsAsync(
         int page,

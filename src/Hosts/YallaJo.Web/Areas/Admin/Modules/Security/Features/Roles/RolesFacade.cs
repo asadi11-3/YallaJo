@@ -31,11 +31,8 @@ public sealed class RolesFacade
         return ApiResult<RoleDetailsVm>.CreateSuccess(RolesMapper.ToDetailsVm(raw.Data));
     }
 
-    public Task<ApiResult> CreateAsync(CreateRoleVm vm, CancellationToken ct = default)
-        => _api.CreateRoleAsync(RolesMapper.ToCreateRequest(vm), ct)
-               .ContinueWith(t => ToVoidResult(t.Result), ct,
-                   TaskContinuationOptions.ExecuteSynchronously,
-                   TaskScheduler.Default);
+    public async Task<ApiResult> CreateAsync(CreateRoleVm vm, CancellationToken ct = default)
+        => ToVoidResult(await _api.CreateRoleAsync(RolesMapper.ToCreateRequest(vm), ct));
     public Task<ApiResult> UpdateAsync(Guid roleId, UpdateRoleVm vm, CancellationToken ct = default)
         => _api.UpdateRoleAsync(roleId, RolesMapper.ToUpdateRequest(vm), ct);
 

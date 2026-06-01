@@ -7,8 +7,8 @@ namespace YallaJo.Web.Areas.Accounts.Features.Profile;
 
 public sealed class ProfileApiClient
 {
-    private readonly ApiClient _api;
-    public ProfileApiClient(ApiClient api) => _api = api;
+    private readonly IApiClient _api;
+    public ProfileApiClient(IApiClient api) => _api = api;
 
     public Task<ApiResult<ProfileResponse>> GetProfileAsync(CancellationToken ct = default)
         => _api.GetAsync<ProfileResponse>("/api/v1/accounts/profile", ct);

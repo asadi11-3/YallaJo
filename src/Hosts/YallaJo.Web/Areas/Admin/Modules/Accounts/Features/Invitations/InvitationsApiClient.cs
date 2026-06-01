@@ -7,8 +7,8 @@ namespace YallaJo.Web.Areas.Admin.Modules.Accounts.Features.Invitations;
 
 public sealed class InvitationsApiClient
 {
-    private readonly ApiClient _api;
-    public InvitationsApiClient(ApiClient api) => _api = api;
+    private readonly IApiClient _api;
+    public InvitationsApiClient(IApiClient api) => _api = api;
 
     public Task<ApiResult<InviteUserResponse>> InviteAsync(
         InviteUserRequest request, CancellationToken ct = default)

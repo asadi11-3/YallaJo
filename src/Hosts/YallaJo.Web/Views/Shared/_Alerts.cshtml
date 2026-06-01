@@ -1,0 +1,34 @@
+@*
+    Shared flash-message banners. Reads the TempData keys written by BaseController
+    (SetSuccess => "Success", SetError => "Error"; "Warning"/"Info" supported too).
+    Included once in _Layout.cshtml so feature views never repeat alert markup.
+    Bootstrap 5 dismissible alerts (matches the CDN bootstrap.bundle in _Layout).
+*@
+@if (TempData["Success"] is string success && !string.IsNullOrWhiteSpace(success))
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @success
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+@if (TempData["Error"] is string error && !string.IsNullOrWhiteSpace(error))
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @error
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+@if (TempData["Warning"] is string warning && !string.IsNullOrWhiteSpace(warning))
+{
+    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+        @warning
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+@if (TempData["Info"] is string info && !string.IsNullOrWhiteSpace(info))
+{
+    <div class="alert alert-info alert-dismissible fade show" role="alert">
+        @info
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}

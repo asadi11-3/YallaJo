@@ -7,8 +7,8 @@ namespace YallaJo.Web.Areas.Admin.Modules.Security.Features.Users;
 
 public sealed class UsersApiClient
 {
-    private readonly ApiClient _api;
-    public UsersApiClient(ApiClient api) => _api = api;
+    private readonly IApiClient _api;
+    public UsersApiClient(IApiClient api) => _api = api;
 
     public Task<ApiResult<UserListResponse>> GetUsersAsync(
         int page, int pageSize, CancellationToken ct = default)

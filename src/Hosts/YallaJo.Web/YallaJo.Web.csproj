@@ -23,7 +23,11 @@
 
   <ItemGroup>
     <PackageReference Include="MediatR" Version="14.1.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="9.0.15" />
+    <!-- Razor runtime compilation is only wired up in Development (see Program.cs),
+         so the package is referenced for Debug builds only. It is obsoleted in
+         .NET 10 and must never ship to production. -->
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="9.0.15"
+                      Condition="'$(Configuration)' == 'Debug'" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.17.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="9.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.Facebook" Version="9.0.0" />
@@ -59,10 +63,8 @@
     <Folder Include="Infrastructure\Api\Handlers\" />
     <Folder Include="Infrastructure\Authentication\Claims\" />
     <Folder Include="Infrastructure\Authentication\Cookie\" />
-    <Folder Include="Infrastructure\Authentication\SignIn\" />
     <Folder Include="Infrastructure\Authentication\Tokens\" />
     <Folder Include="Infrastructure\Constants\" />
-    <Folder Include="Infrastructure\DependencyInjection\" />
     <Folder Include="Infrastructure\Navigation\" />
     <Folder Include="Infrastructure\State\" />
   </ItemGroup>

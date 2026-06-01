@@ -7,8 +7,8 @@ namespace YallaJo.Web.Areas.Auth.Features.AcceptInvite;
 
 public sealed class AcceptInviteApiClient
 {
-    private readonly ApiClient _api;
-    public AcceptInviteApiClient(ApiClient api) => _api = api;
+    private readonly IApiClient _api;
+    public AcceptInviteApiClient(IApiClient api) => _api = api;
 
     public Task<ApiResult<AcceptInviteResponse>> AcceptAsync(
         AcceptInviteRequest request, CancellationToken ct = default)

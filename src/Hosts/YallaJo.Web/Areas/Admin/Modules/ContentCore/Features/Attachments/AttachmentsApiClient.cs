@@ -6,8 +6,8 @@ namespace YallaJo.Web.Areas.Admin.Modules.ContentCore.Features.Attachments;
 
 public sealed class AttachmentsApiClient
 {
-    private readonly ApiClient _api;
-    public AttachmentsApiClient(ApiClient api) => _api = api;
+    private readonly IApiClient _api;
+    public AttachmentsApiClient(IApiClient api) => _api = api;
 
     public Task<ApiResult<List<AttachmentItemResponse>>> GetEntityAttachmentsAsync(
         string entityType, Guid entityId, CancellationToken ct = default)

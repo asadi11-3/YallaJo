@@ -6,8 +6,8 @@ namespace YallaJo.Web.Areas.Accounts.Features.UpdatePhone;
 
 public sealed class UpdatePhoneApiClient
 {
-    private readonly ApiClient _api;
-    public UpdatePhoneApiClient(ApiClient api) => _api = api;
+    private readonly IApiClient _api;
+    public UpdatePhoneApiClient(IApiClient api) => _api = api;
 
     public Task<ApiResult> UpdatePrimaryPhoneAsync(
         UpdatePrimaryPhoneRequest request, CancellationToken ct = default)

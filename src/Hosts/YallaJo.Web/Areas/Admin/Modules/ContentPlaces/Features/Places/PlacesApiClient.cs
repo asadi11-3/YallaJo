@@ -11,8 +11,8 @@ public sealed class PlacesApiClient
 {
     private const string BasePath = "/api/v1/places";
 
-    private readonly ApiClient _api;
-    public PlacesApiClient(ApiClient api) => _api = api;
+    private readonly IApiClient _api;
+    public PlacesApiClient(IApiClient api) => _api = api;
 
     // ── Queries ──────────────────────────────────────────────────────────────
     public Task<ApiResult<PaginatedPlacesResponse>> ListAsync(

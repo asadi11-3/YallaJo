@@ -16,8 +16,8 @@ namespace YallaJo.Web.Areas.Admin.Modules.Security.Features.Users.Lifecycle;
 /// </summary>
 public sealed class LifecycleApiClient
 {
-    private readonly ApiClient _api;
-    public LifecycleApiClient(ApiClient api) => _api = api;
+    private readonly IApiClient _api;
+    public LifecycleApiClient(IApiClient api) => _api = api;
 
     // ── Phase 3B: lifecycle transitions ───────────────────────────────────────
 

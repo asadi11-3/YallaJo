@@ -7,8 +7,8 @@ namespace YallaJo.Web.Areas.Auth.Features.VerifyEmail;
 
 public sealed class VerifyEmailApiClient
 {
-    private readonly ApiClient _api;
-    public VerifyEmailApiClient(ApiClient api) => _api = api;
+    private readonly IApiClient _api;
+    public VerifyEmailApiClient(IApiClient api) => _api = api;
 
     public Task<ApiResult<VerifyEmailResponse>> VerifyEmailAsync(
         VerifyEmailRequest request, CancellationToken ct = default)

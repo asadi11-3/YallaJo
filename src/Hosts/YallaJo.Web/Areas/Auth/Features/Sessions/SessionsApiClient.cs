@@ -6,8 +6,8 @@ namespace YallaJo.Web.Areas.Auth.Features.Sessions;
 
 public sealed class SessionsApiClient
 {
-    private readonly ApiClient _api;
-    public SessionsApiClient(ApiClient api) => _api = api;
+    private readonly IApiClient _api;
+    public SessionsApiClient(IApiClient api) => _api = api;
 
     public Task<ApiResult<List<SessionItemResponse>>> GetSessionsAsync(CancellationToken ct = default)
         => _api.GetAsync<List<SessionItemResponse>>("/api/v1/auth/sessions", ct);

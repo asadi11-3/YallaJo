@@ -7,7 +7,7 @@ using YallaJo.Web.Infrastructure.Api.Contracts;
 
 namespace YallaJo.Web.Services;
 
-public sealed class ApiClient
+public sealed class ApiClient : IApiClient
 {
     /// <summary>
     /// HTTP status used by the BFF when the API itself is unreachable or

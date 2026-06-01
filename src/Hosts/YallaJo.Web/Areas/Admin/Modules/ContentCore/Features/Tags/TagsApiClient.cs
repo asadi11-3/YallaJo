@@ -7,8 +7,8 @@ namespace YallaJo.Web.Areas.Admin.Modules.ContentCore.Features.Tags;
 
 public sealed class TagsApiClient
 {
-    private readonly ApiClient _api;
-    public TagsApiClient(ApiClient api) => _api = api;
+    private readonly IApiClient _api;
+    public TagsApiClient(IApiClient api) => _api = api;
 
     public Task<ApiResult<List<TagItemResponse>>> GetTagsAsync(
         bool activeOnly, CancellationToken ct = default)

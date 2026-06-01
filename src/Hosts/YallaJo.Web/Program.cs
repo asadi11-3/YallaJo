@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using YallaJo.Web.Infrastructure.Authentication.ExternalAuth;
 using YallaJo.Web.Infrastructure.Authentication.SignIn;
 using YallaJo.Web.Infrastructure.Authorization;
+using YallaJo.Web.Infrastructure.DependencyInjection;
 using YallaJo.Web.Infrastructure.Identity;
 using YallaJo.Web.Infrastructure.Mvc;
 using YallaJo.Web.Infrastructure.Security.Recaptcha;
@@ -108,6 +109,12 @@ builder.Services.AddHttpClient<ApiClient>(client =>
 .AddHttpMessageHandler<JwtAuthHandler>()
 .AddStandardResilienceHandler();
 
+// Expose the configured typed client through IApiClient so feature-level
+// API clients depend on a mockable seam (unit-testable) rather than the
+// concrete ApiClient. Resolves the SAME resilience-configured instance —
+// no second HttpClient is created.
+builder.Services.AddScoped<IApiClient>(sp => sp.GetRequiredService<ApiClient>());
+
 // Anonymous client used by JwtAuthHandler for the /refresh endpoint
 // (must not go through JwtAuthHandler — that would cause infinite recursion).
 builder.Services.AddHttpClient("anon", client =>
@@ -129,91 +136,36 @@ builder.Services.AddSingleton<IApiAssetUrlResolver, ApiAssetUrlResolver>();
 // Every permission and role check in the project goes through this interface.
 builder.Services.AddScoped<ICurrentUser, CurrentUser>();
 
-// ── Auth feature services ─────────────────────────────────────────────────────
-builder.Services.AddScoped<LoginApiClient>();
-builder.Services.AddScoped<LoginFacade>();
+// ── Feature services (ApiClients + Facades) ──────────────────────────────────
+// Convention-based registration: every concrete class whose name ends in
+// "ApiClient" or "Facade" is registered as scoped self. This replaces the ~40
+// hand-written AddScoped<XxxApiClient>()/AddScoped<XxxFacade>() pairs.
+// The base ApiClient is excluded (registered via AddHttpClient<ApiClient> above
+// and exposed through IApiClient so it keeps its resilience pipeline + JWT handler).
+builder.Services.AddFeatureServices();
 
-builder.Services.AddScoped<AcceptInviteApiClient>();
-builder.Services.AddScoped<AcceptInviteFacade>();
+// ── Output caching ────────────────────────────────────────────────────────────
+// Server-side output caching (NOT response caching — browsers send
+// Cache-Control: max-age=0 which defeats that). By default output caching does
+// NOT cache authenticated/cookie-setting/non-GET responses, so the ROI here is
+// deliberately narrow: anonymous Auth pages + shared read-only lookup data
+// (Languages/Tags/Categories/Specializations from the ContentCore module).
+// Mutations evict by tag via IOutputCacheStore.EvictByTagAsync("lookups", ct).
+builder.Services.AddOutputCache(options =>
+{
+    // Opt-in only: nothing is cached unless an endpoint/policy says so.
+    options.AddBasePolicy(b => b.NoCache());
 
-builder.Services.AddScoped<RegisterApiClient>();
-builder.Services.AddScoped<RegisterFacade>();
+    // Shared read-only reference data — safe to cache briefly, tagged for eviction.
+    options.AddPolicy("Lookups", b => b
+        .Expire(TimeSpan.FromMinutes(10))
+        .Tag("lookups"));
 
-builder.Services.AddScoped<VerifyEmailApiClient>();
-builder.Services.AddScoped<VerifyEmailFacade>();
-
-builder.Services.AddScoped<ForgotPasswordApiClient>();
-builder.Services.AddScoped<ForgotPasswordFacade>();
-
-builder.Services.AddScoped<ResetPasswordApiClient>();
-builder.Services.AddScoped<ResetPasswordFacade>();
-
-builder.Services.AddScoped<SessionsApiClient>();
-builder.Services.AddScoped<SessionsFacade>();
-
-builder.Services.AddScoped<DevicesApiClient>();
-builder.Services.AddScoped<DevicesFacade>();
-
-builder.Services.AddScoped<ExternalProvidersApiClient>();
-builder.Services.AddScoped<ExternalProvidersFacade>();
-
-builder.Services.AddScoped<LogoutApiClient>();
-builder.Services.AddScoped<LogoutFacade>();
-
-builder.Services.AddScoped<LogoutAllApiClient>();
-builder.Services.AddScoped<LogoutAllFacade>();
-
-// ── Accounts (non-admin, self-service) services ──────────────────────────────
-builder.Services.AddScoped<ChangePasswordApiClient>();
-builder.Services.AddScoped<ChangePasswordFacade>();
-
-builder.Services.AddScoped<UpdatePhoneApiClient>();
-builder.Services.AddScoped<UpdatePhoneFacade>();
-
-builder.Services.AddScoped<ProfileApiClient>();
-builder.Services.AddScoped<ProfileFacade>();
-
-builder.Services.AddScoped<InvitationsApiClient>();
-builder.Services.AddScoped<InvitationsFacade>();
-
-// ── Admin / Security services ─────────────────────────────────────────────────
-builder.Services.AddScoped<UsersApiClient>();
-builder.Services.AddScoped<UsersFacade>();
-
-builder.Services.AddScoped<RolesApiClient>();
-builder.Services.AddScoped<RolesFacade>();
-
-builder.Services.AddScoped<AuditLogsApiClient>();
-builder.Services.AddScoped<AuditLogsFacade>();
-
-// Phase 5B — admin lifecycle wiring (Suspend/Reactivate/Archive/
-// Reset Password/Reassign). Lives in Users/Lifecycle/ to keep the
-// existing UsersController/Facade lean.
-builder.Services.AddScoped<YallaJo.Web.Areas.Admin.Modules.Security.Features.Users.Lifecycle.LifecycleApiClient>();
-builder.Services.AddScoped<YallaJo.Web.Areas.Admin.Modules.Security.Features.Users.Lifecycle.LifecycleFacade>();
-
-// ── Admin / ContentCore services ─────────────────────────────────────────────
-builder.Services.AddScoped<LanguagesApiClient>();
-builder.Services.AddScoped<LanguagesFacade>();
-
-builder.Services.AddScoped<TagsApiClient>();
-builder.Services.AddScoped<TagsFacade>();
-
-builder.Services.AddScoped<SpecializationsApiClient>();
-builder.Services.AddScoped<SpecializationsFacade>();
-
-builder.Services.AddScoped<CategoriesApiClient>();
-builder.Services.AddScoped<CategoriesFacade>();
-
-builder.Services.AddScoped<AttachmentsApiClient>();
-builder.Services.AddScoped<AttachmentsFacade>();
-
-builder.Services.AddScoped<TranslationsApiClient>();
-builder.Services.AddScoped<TranslationsFacade>();
-
-// ── Admin / ContentPlaces services ───────────────────────────────────────────
-builder.Services.AddScoped<PlacesApiClient>();
-builder.Services.AddScoped<PlacesFacade>();
+    // Anonymous public lists — short TTL, varied by paging query.
+    options.AddPolicy("PublicList", b => b
+        .Expire(TimeSpan.FromSeconds(30))
+        .SetVaryByQuery("page", "pageSize"));
+});
 
 // ── MVC + custom Razor view locations ────────────────────────────────────────
 var mvcBuilder  = builder.Services.AddControllersWithViews(options =>
@@ -244,12 +196,16 @@ var mvcBuilder  = builder.Services.AddControllersWithViews(options =>
             new AdminModuleViewLocationExpander(builder.Environment.ContentRootPath));
     });
 
-if(builder.Environment.IsDevelopment())
+#if DEBUG
+// Razor runtime compilation watches the filesystem and recompiles views on
+// change. The package is referenced for Debug builds only (see csproj), so this
+// call is compiled out of Release builds — guarding it with #if DEBUG keeps
+// Release compiling without the (obsoleted-in-.NET-10) package.
+if (builder.Environment.IsDevelopment())
 {
-    // In development, use the default Razor runtime compilation setup which
-    // watches the filesystem for changes and automatically recompiles views.
     mvcBuilder.AddRazorRuntimeCompilation();
 }
+#endif
 
 var app = builder.Build();
 
@@ -265,6 +221,11 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 
+// Output caching must run after routing/auth so policies can vary correctly and
+// authenticated responses are excluded by default. Built-in resource locking
+// prevents cache stampede on concurrent misses.
+app.UseOutputCache();
+
 // ── Static assets (.NET 9) ────────────────────────────────────────────────────
 // MapStaticAssets replaces UseStaticFiles: build-time gzip/brotli precompression,
 // content-based ETags, and fingerprinted immutable (1-year) caching for the
@@ -273,18 +234,25 @@ app.UseAuthorization();
 app.MapStaticAssets();
 
 // ── MVC routes ────────────────────────────────────────────────────────────────
+// .WithStaticAssets() lets the script/link/img tag helpers resolve the
+// fingerprinted (content-hashed, immutable-cached) asset URLs produced by
+// MapStaticAssets() above, so local wwwroot assets get long-term caching
+// automatically when referenced via asp-href/asp-src in views.
 app.MapControllerRoute(
     name:    "areas",
-    pattern: "{area:exists}/{controller=Dashboard}/{action=Index}/{id?}");
+    pattern: "{area:exists}/{controller=Dashboard}/{action=Index}/{id?}")
+   .WithStaticAssets();
 
 // Root landing → Auth/Login (area-aware).
 app.MapControllerRoute(
     name:    "root",
     pattern: string.Empty,
-    defaults: new { area = "Auth", controller = "Login", action = "Index" });
+    defaults: new { area = "Auth", controller = "Login", action = "Index" })
+   .WithStaticAssets();
 
 app.MapControllerRoute(
     name:    "default",
-    pattern: "{area=Auth}/{controller=Login}/{action=Index}/{id?}");
+    pattern: "{area=Auth}/{controller=Login}/{action=Index}/{id?}")
+   .WithStaticAssets();
 
 app.Run();

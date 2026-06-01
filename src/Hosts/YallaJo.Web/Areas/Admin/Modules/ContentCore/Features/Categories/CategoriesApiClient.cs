@@ -7,8 +7,8 @@ namespace YallaJo.Web.Areas.Admin.Modules.ContentCore.Features.Categories;
 
 public sealed class CategoriesApiClient
 {
-    private readonly ApiClient _api;
-    public CategoriesApiClient(ApiClient api) => _api = api;
+    private readonly IApiClient _api;
+    public CategoriesApiClient(IApiClient api) => _api = api;
 
     // Admin list (all categories including inactive) — ?isActive=false
     public Task<ApiResult<List<CategoryItemResponse>>> GetCategoriesAsync(

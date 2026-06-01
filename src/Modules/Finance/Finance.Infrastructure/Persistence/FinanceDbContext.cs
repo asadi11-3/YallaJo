@@ -20,7 +20,14 @@ public sealed class FinanceDbContext : DbContext, IDbContext
     public DbSet<DisputeMessage> DisputeMessages => Set<DisputeMessage>();
     public DbSet<DisputeEvidence> DisputeEvidence => Set<DisputeEvidence>();
     public DbSet<CommissionRule> CommissionRules => Set<CommissionRule>();
-    // Deferred post-MVP: SubscriptionPlan, SubscriptionFeature, PlanFeature, Subscription, LoyaltyPoints, LoyaltyTransaction, Referral
+    // Deferred (post-MVP, not mapped to the database):
+    // public DbSet<SubscriptionPlan> SubscriptionPlans => Set<SubscriptionPlan>();
+    // public DbSet<SubscriptionFeature> SubscriptionFeatures => Set<SubscriptionFeature>();
+    // public DbSet<PlanFeature> PlanFeatures => Set<PlanFeature>();
+    // public DbSet<Subscription> Subscriptions => Set<Subscription>();
+    // public DbSet<LoyaltyPoints> LoyaltyPoints => Set<LoyaltyPoints>();
+    // public DbSet<LoyaltyTransaction> LoyaltyTransactions => Set<LoyaltyTransaction>();
+    // public DbSet<Referral> Referrals => Set<Referral>();
     public DbSet<Discount> Discounts => Set<Discount>();
     public DbSet<DiscountUsage> DiscountUsages => Set<DiscountUsage>();
     public DbSet<ProviderBankAccount> ProviderBankAccounts => Set<ProviderBankAccount>();

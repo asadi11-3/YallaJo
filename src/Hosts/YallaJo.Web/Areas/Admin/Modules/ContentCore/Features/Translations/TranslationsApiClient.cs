@@ -7,8 +7,8 @@ namespace YallaJo.Web.Areas.Admin.Modules.ContentCore.Features.Translations;
 
 public sealed class TranslationsApiClient
 {
-    private readonly ApiClient _api;
-    public TranslationsApiClient(ApiClient api) => _api = api;
+    private readonly IApiClient _api;
+    public TranslationsApiClient(IApiClient api) => _api = api;
 
     public Task<ApiResult<List<EntityTranslationItemResponse>>> GetEntityTranslationsAsync(
         string entityType, Guid entityId, CancellationToken ct = default)

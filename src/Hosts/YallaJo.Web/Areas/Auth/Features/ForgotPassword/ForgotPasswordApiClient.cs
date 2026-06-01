@@ -18,8 +18,8 @@ namespace YallaJo.Web.Areas.Auth.Features.ForgotPassword;
 /// </summary>
 public sealed class ForgotPasswordApiClient
 {
-    private readonly ApiClient _api;
-    public ForgotPasswordApiClient(ApiClient api) => _api = api;
+    private readonly IApiClient _api;
+    public ForgotPasswordApiClient(IApiClient api) => _api = api;
 
     public Task<ApiResult<ForgotPasswordResponse>> ForgotPasswordAsync(
         ForgotPasswordRequest request, CancellationToken ct = default)

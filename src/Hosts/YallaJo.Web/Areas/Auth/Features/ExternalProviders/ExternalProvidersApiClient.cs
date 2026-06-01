@@ -7,8 +7,8 @@ namespace YallaJo.Web.Areas.Auth.Features.ExternalProviders;
 
 public sealed class ExternalProvidersApiClient
 {
-    private readonly ApiClient _api;
-    public ExternalProvidersApiClient(ApiClient api) => _api = api;
+    private readonly IApiClient _api;
+    public ExternalProvidersApiClient(IApiClient api) => _api = api;
 
     public Task<ApiResult<Guid>> LinkAsync(
         LinkExternalProviderRequest request,

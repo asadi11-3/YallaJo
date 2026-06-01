@@ -6,8 +6,8 @@ namespace YallaJo.Web.Areas.Accounts.Features.ChangePassword;
 
 public sealed class ChangePasswordApiClient
 {
-    private readonly ApiClient _api;
-    public ChangePasswordApiClient(ApiClient api) => _api = api;
+    private readonly IApiClient _api;
+    public ChangePasswordApiClient(IApiClient api) => _api = api;
 
     public Task<ApiResult> ChangePasswordAsync(
         ChangePasswordRequest request, CancellationToken ct = default)

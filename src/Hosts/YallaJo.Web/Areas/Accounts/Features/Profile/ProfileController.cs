@@ -1,12 +1,13 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using YallaJo.Web.Areas.Accounts.Features.Profile.ViewModels;
+using YallaJo.Web.Infrastructure.Mvc;
 
 namespace YallaJo.Web.Areas.Accounts.Features.Profile;
 
 [Area("Accounts")]
 [Authorize]
-public sealed class ProfileController : Controller
+public sealed class ProfileController : BaseController
 {
     private readonly ProfileFacade _facade;
     public ProfileController(ProfileFacade facade) => _facade = facade;
@@ -15,7 +16,7 @@ public sealed class ProfileController : Controller
     public async Task<IActionResult> Index(CancellationToken ct)
     {
         var result = await _facade.GetAsync(ct);
-        if (result.RequireSignOut) return RedirectToLogin();
+        if (GuardSignOut(result) is { } signOut) return signOut;
         if (!result.IsSuccess)
         {
             ViewBag.Error = result.Error;
@@ -38,23 +39,17 @@ public sealed class ProfileController : Controller
         }
 
         var result = await _facade.UpdateAsync(vm, ct);
-        if (result.RequireSignOut) return RedirectToLogin();
+        if (GuardSignOut(result) is { } signOut) return signOut;
 
         if (result.IsSuccess)
         {
-            TempData["Success"] = "Profile updated.";
+            SetSuccess("Profile updated.");
             return RedirectToAction(nameof(Index));
         }
 
-        if (result.ValidationErrors is not null)
-        {
-            foreach (var (field, messages) in result.ValidationErrors)
-                foreach (var m in messages)
-                    ModelState.AddModelError(field, m);
-            return await ReloadIndexWithEdit(vm, ct);
-        }
+        if (!ApplyValidationErrors(result))
+            ModelState.AddModelError(string.Empty, result.Error ?? "Could not update profile.");
 
-        ModelState.AddModelError(string.Empty, result.Error ?? "Could not update profile.");
         return await ReloadIndexWithEdit(vm, ct);
     }
 
@@ -64,30 +59,24 @@ public sealed class ProfileController : Controller
     {
         if (!ModelState.IsValid)
         {
-            TempData["Error"] = "Please choose an image file.";
+            SetError("Please choose an image file.");
             return RedirectToAction(nameof(Index));
         }
 
         var result = await _facade.UpdateAvatarAsync(vm, ct);
-        if (result.RequireSignOut) return RedirectToLogin();
+        if (GuardSignOut(result) is { } signOut) return signOut;
 
         if (result.IsSuccess)
         {
-            TempData["Success"] = "Avatar updated.";
+            SetSuccess("Avatar updated.");
             return RedirectToAction(nameof(Index));
         }
 
-        if (result.ValidationErrors is { Count: > 0 })
-        {
-            var firstMessage = result.ValidationErrors.Values
-                .SelectMany(messages => messages)
-                .FirstOrDefault();
+        var firstMessage = result.ValidationErrors?.Values
+            .SelectMany(messages => messages)
+            .FirstOrDefault();
 
-            TempData["Error"] = firstMessage ?? "Could not upload avatar.";
-            return RedirectToAction(nameof(Index));
-        }
-
-        TempData["Error"] = result.Error ?? "Could not upload avatar.";
+        SetError(firstMessage ?? result.Error ?? "Could not upload avatar.");
         return RedirectToAction(nameof(Index));
     }
 
@@ -96,10 +85,9 @@ public sealed class ProfileController : Controller
     public async Task<IActionResult> DeleteAvatar(CancellationToken ct)
     {
         var result = await _facade.DeleteAvatarAsync(ct);
-        if (result.RequireSignOut) return RedirectToLogin();
+        if (GuardSignOut(result) is { } signOut) return signOut;
 
-        TempData[result.IsSuccess ? "Success" : "Error"] =
-            result.IsSuccess ? "Avatar removed." : result.Error ?? "Could not remove avatar.";
+        SetFlash(result, "Avatar removed.", "Could not remove avatar.");
         return RedirectToAction(nameof(Index));
     }
 
@@ -108,15 +96,15 @@ public sealed class ProfileController : Controller
     public async Task<IActionResult> Delete(CancellationToken ct)
     {
         var result = await _facade.DeleteAsync(ct);
-        if (result.RequireSignOut) return RedirectToLogin();
+        if (GuardSignOut(result) is { } signOut) return signOut;
 
         if (result.IsSuccess)
         {
-            TempData["Success"] = "Your profile has been deleted.";
+            SetSuccess("Your profile has been deleted.");
             return RedirectToAction("Index", "Logout", new { area = "Auth" });
         }
 
-        TempData["Error"] = result.Error ?? "Could not delete profile.";
+        SetError(result.Error ?? "Could not delete profile.");
         return RedirectToAction(nameof(Index));
     }
 
@@ -125,7 +113,7 @@ public sealed class ProfileController : Controller
     private async Task<IActionResult> ReloadIndexWithEdit(UpdateProfileVm edit, CancellationToken ct)
     {
         var load = await _facade.GetAsync(ct);
-        if (load.RequireSignOut) return RedirectToLogin();
+        if (GuardSignOut(load) is { } signOut) return signOut;
 
         var vm = load.IsSuccess && load.Data is not null
             ? load.Data
@@ -150,7 +138,4 @@ public sealed class ProfileController : Controller
             UpdateAvatar = new UpdateAvatarVm(),
         });
     }
-
-    private IActionResult RedirectToLogin()
-        => RedirectToAction("Index", "Login", new { area = "Auth" });
 }

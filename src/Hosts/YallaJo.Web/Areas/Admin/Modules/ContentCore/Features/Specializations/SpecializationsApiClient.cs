@@ -7,8 +7,8 @@ namespace YallaJo.Web.Areas.Admin.Modules.ContentCore.Features.Specializations;
 
 public sealed class SpecializationsApiClient
 {
-    private readonly ApiClient _api;
-    public SpecializationsApiClient(ApiClient api) => _api = api;
+    private readonly IApiClient _api;
+    public SpecializationsApiClient(IApiClient api) => _api = api;
 
     public Task<ApiResult<List<SpecializationItemResponse>>> GetSpecializationsAsync(
         bool activeOnly, CancellationToken ct = default)

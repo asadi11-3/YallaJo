@@ -53,22 +53,25 @@ public sealed class UsersFacade
         var rolesTask = _roles.GetRolesAsync(ct);
         await Task.WhenAll(userTask, rolesTask);
 
-        if (userTask.Result.IsUnauthorized || rolesTask.Result.IsUnauthorized)
+        var userResult  = await userTask;
+        var rolesResult = await rolesTask;
+
+        if (userResult.IsUnauthorized || rolesResult.IsUnauthorized)
             return ApiResult<UserDetailsVm>.ForceSignOut();
 
-        if (!userTask.Result.IsSuccess)
+        if (!userResult.IsSuccess)
         {
             return ApiResult<UserDetailsVm>.CreateFailure(
-                userTask.Result.IsNotFound ? "User not found." : userTask.Result.Error ?? "Could not load user.");
+                userResult.IsNotFound ? "User not found." : userResult.Error ?? "Could not load user.");
         }
 
-        if (userTask.Result.Data is null)
+        if (userResult.Data is null)
         {
             return ApiResult<UserDetailsVm>.CreateFailure("Could not load user.");
         }
 
-        var user = userTask.Result.Data;
-        var roles = rolesTask.Result.Data ?? [];
+        var user = userResult.Data;
+        var roles = rolesResult.Data ?? [];
 
         var vm = new UserDetailsVm
         {

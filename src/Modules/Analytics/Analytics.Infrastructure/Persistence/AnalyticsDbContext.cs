@@ -17,7 +17,8 @@ public sealed class AnalyticsDbContext : DbContext, IDbContext
     public DbSet<PopularityScore> PopularityScores => Set<PopularityScore>();
     public DbSet<EntityPopularitySnapshot> EntityPopularitySnapshots => Set<EntityPopularitySnapshot>();
     public DbSet<DashboardCache> DashboardCaches => Set<DashboardCache>();
-    // Deferred: IngestDebounceMarker (use HybridCache for debounce instead)
+    // Deferred (post-MVP, not mapped to the database):
+    // public DbSet<IngestDebounceMarker> IngestDebounceMarkers => Set<IngestDebounceMarker>(); // use HybridCache for debounce instead
     public DbSet<PaymentSnapshot> PaymentSnapshots => Set<PaymentSnapshot>();
     public DbSet<BookingSnapshot> BookingSnapshots => Set<BookingSnapshot>();
     public DbSet<RecommendationCache> RecommendationCaches => Set<RecommendationCache>();
