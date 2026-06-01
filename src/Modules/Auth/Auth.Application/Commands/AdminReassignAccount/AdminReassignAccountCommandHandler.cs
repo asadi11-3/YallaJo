@@ -7,6 +7,7 @@ using Auth.Application.Invitations;
 using Auth.Domain.Entities;
 using Auth.Domain.Events;
 using Auth.Domain.Repositories;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
 using Security.Contracts.Abstractions;
@@ -50,117 +51,127 @@ public sealed class AdminReassignAccountCommandHandler(
         var actorId = currentUser.UserId.Value;
         var normalizedNewEmail = request.NewEmail.Trim().ToLowerInvariant();
 
-        var outcome = await txExecutor.ExecuteAsync<ReassignOutcome>(
-            async innerCt =>
-            {
-                var securityResult = await securityService.ReassignUserByAdminAsync(
-                    request.TargetUserId,
-                    actorId,
-                    normalizedNewEmail,
-                    innerCt);
-
-                if (securityResult.IsFailure)
+        ReassignOutcome outcome;
+        try
+        {
+            outcome = await txExecutor.ExecuteAsync<ReassignOutcome>(
+                async innerCt =>
                 {
-                    return ReassignOutcome.Failed(
-                        securityResult.Outcome,
-                        securityResult.Messages.Count > 0 ? securityResult.Messages[0] : string.Empty,
-                        securityResult.Errors.ToArray());
-                }
+                    var securityResult = await securityService.ReassignUserByAdminAsync(
+                        request.TargetUserId,
+                        actorId,
+                        normalizedNewEmail,
+                        innerCt);
 
-                var completed = securityResult.Value!;
-                await sessionRevocation.RevokeAllForUserAsync(
-                    request.TargetUserId,
-                    SessionRevocationReason.AccountReassigned,
-                    innerCt);
+                    if (securityResult.IsFailure)
+                    {
+                        return ReassignOutcome.Failed(
+                            securityResult.Outcome,
+                            securityResult.Messages.Count > 0 ? securityResult.Messages[0] : string.Empty,
+                            securityResult.Errors.ToArray());
+                    }
 
-                var activeActivationTokens = await activationTokenRepository.GetActiveForUserAsync(
-                    request.TargetUserId, innerCt);
+                    var completed = securityResult.Value!;
+                    await sessionRevocation.RevokeAllForUserAsync(
+                        request.TargetUserId,
+                        SessionRevocationReason.AccountReassigned,
+                        innerCt);
 
-                foreach (var prior in activeActivationTokens)
-                    prior.Supersede();
+                    var activeActivationTokens = await activationTokenRepository.GetActiveForUserAsync(
+                        request.TargetUserId, innerCt);
 
-                var activeResetTokens = await passwordResetTokenRepository.GetActiveForUserAsync(
-                    request.TargetUserId, innerCt);
+                    foreach (var prior in activeActivationTokens)
+                        prior.Supersede();
 
-                foreach (var prior in activeResetTokens)
-                    prior.Supersede();
+                    var activeResetTokens = await passwordResetTokenRepository.GetActiveForUserAsync(
+                        request.TargetUserId, innerCt);
 
-                var activeProviderLinks = await externalProviderRepository.GetAllAsync(
-                    filter: ep => ep.UserId == request.TargetUserId && ep.IsActive,
-                    asNoTracking: false,
-                    ct: innerCt);
+                    foreach (var prior in activeResetTokens)
+                        prior.Supersede();
 
-                foreach (var providerLink in activeProviderLinks)
-                    providerLink.Deactivate();
+                    var activeProviderLinks = await externalProviderRepository.GetAllAsync(
+                        filter: ep => ep.UserId == request.TargetUserId && ep.IsActive,
+                        asNoTracking: false,
+                        ct: innerCt);
 
-                var plainToken = inviteTokenService.Generate();
-                var tokenHash  = inviteTokenService.Hash(plainToken);
-                var link       = inviteLinkBuilder.Build(completed.NewEmail, plainToken);
+                    foreach (var providerLink in activeProviderLinks)
+                        providerLink.Deactivate();
 
-                var activationToken = ActivationToken.Issue(
-                    userId:          request.TargetUserId,
-                    tokenHash:       tokenHash,
-                    deliveryAddress: completed.NewEmail,
-                    expiryMinutes:   InviteConstants.ExpiryMinutes);
+                    var plainToken = inviteTokenService.Generate();
+                    var tokenHash  = inviteTokenService.Hash(plainToken);
+                    var link       = inviteLinkBuilder.Build(completed.NewEmail, plainToken);
 
-                activationToken.AddDomainEvent(new ActivationTokenIssuedEvent(
-                    TokenId:         activationToken.Id,
-                    UserId:          activationToken.UserId,
-                    DeliveryAddress: activationToken.DeliveryAddress,
-                    PlainToken:      plainToken,
-                    ActivationLink:  link,
-                    ExpiresAt:       activationToken.ExpiresAt));
+                    var activationToken = ActivationToken.Issue(
+                        userId:          request.TargetUserId,
+                        tokenHash:       tokenHash,
+                        deliveryAddress: completed.NewEmail,
+                        expiryMinutes:   InviteConstants.ExpiryMinutes);
 
-                await activationTokenRepository.AddAsync(activationToken, innerCt);
+                    activationToken.AddDomainEvent(new ActivationTokenIssuedEvent(
+                        TokenId:         activationToken.Id,
+                        UserId:          activationToken.UserId,
+                        DeliveryAddress: activationToken.DeliveryAddress,
+                        PlainToken:      plainToken,
+                        ActivationLink:  link,
+                        ExpiresAt:       activationToken.ExpiresAt));
 
-                var profileReset = await profileReassignmentService.ResetForReassignmentAsync(
-                    new ProfileReassignmentRequest(
-                        UserId:   request.TargetUserId,
-                        NewEmail: completed.NewEmail),
-                    innerCt);
+                    await activationTokenRepository.AddAsync(activationToken, innerCt);
 
-                if (profileReset.IsFailure)
-                {
-                    return ReassignOutcome.Failed(
-                        profileReset.Outcome,
-                        profileReset.Messages.Count > 0 ? profileReset.Messages[0] : string.Empty,
-                        profileReset.Errors.ToArray());
-                }
+                    var profileReset = await profileReassignmentService.ResetForReassignmentAsync(
+                        new ProfileReassignmentRequest(
+                            UserId:   request.TargetUserId,
+                            NewEmail: completed.NewEmail),
+                        innerCt);
 
-                var profileScrubbed = profileReset.Value!.Scrubbed;
+                    if (profileReset.IsFailure)
+                    {
+                        return ReassignOutcome.Failed(
+                            profileReset.Outcome,
+                            profileReset.Messages.Count > 0 ? profileReset.Messages[0] : string.Empty,
+                            profileReset.Errors.ToArray());
+                    }
 
-                var metadata = BuildReassignMetadata(
-                    oldEmail:              completed.OldEmail,
-                    newEmail:              completed.NewEmail,
-                    lifecycleFrom:         "Active|Suspended|PendingPasswordReset",
-                    lifecycleTo:           completed.Lifecycle.ToString(),
-                    activationsSuperseded: activeActivationTokens.Count,
-                    resetsSuperseded:      activeResetTokens.Count,
-                    providersDeactivated:  activeProviderLinks.Count,
-                    profileScrubbed:       profileScrubbed);
+                    var profileScrubbed = profileReset.Value!.Scrubbed;
 
-                await adminAuditWriter.RecordAsync(
-                    new AdminAuditEntry(
-                        ActorUserId:  actorId,
-                        TargetUserId: request.TargetUserId,
-                        Action:       AuditActions.AdminReassignAccount,
-                        Reason:       request.Reason,
-                        Metadata:     metadata,
-                        IpAddress:    requestContext.IpAddress),
-                    innerCt);
+                    var metadata = BuildReassignMetadata(
+                        oldEmail:              completed.OldEmail,
+                        newEmail:              completed.NewEmail,
+                        lifecycleFrom:         "Active|Suspended|PendingPasswordReset",
+                        lifecycleTo:           completed.Lifecycle.ToString(),
+                        activationsSuperseded: activeActivationTokens.Count,
+                        resetsSuperseded:      activeResetTokens.Count,
+                        providersDeactivated:  activeProviderLinks.Count,
+                        profileScrubbed:       profileScrubbed);
 
-                await unitOfWork.SaveChangesAsync(innerCt);
+                    await adminAuditWriter.RecordAsync(
+                        new AdminAuditEntry(
+                            ActorUserId:  actorId,
+                            TargetUserId: request.TargetUserId,
+                            Action:       AuditActions.AdminReassignAccount,
+                            Reason:       request.Reason,
+                            Metadata:     metadata,
+                            IpAddress:    requestContext.IpAddress),
+                        innerCt);
 
-                return ReassignOutcome.Ok(
-                    activationToken.Id,
-                    activeActivationTokens.Count,
-                    activeResetTokens.Count,
-                    activeProviderLinks.Count,
-                    completed.OldEmail,
-                    completed.NewEmail,
-                    profileScrubbed);
-            },
-            cancellationToken);
+                    await unitOfWork.SaveChangesAsync(innerCt);
+
+                    return ReassignOutcome.Ok(
+                        activationToken.Id,
+                        activeActivationTokens.Count,
+                        activeResetTokens.Count,
+                        activeProviderLinks.Count,
+                        completed.OldEmail,
+                        completed.NewEmail,
+                        profileScrubbed);
+                },
+                cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Result<AdminReassignAccountResult>.Failure(
+                new Error("ActivationToken.ConcurrencyConflict", "Activation state was modified concurrently. Reload and retry."),
+                Outcome.Conflict);
+        }
 
         if (!outcome.Success)
         {

@@ -1,6 +1,7 @@
 using ContentTours.Application.Caching;
 using ContentTours.Application.Interfaces;
 using ContentTours.Domain.Repositories;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
@@ -21,7 +22,17 @@ internal sealed class DisablePrivateTourCommandHandler(
             return Result.Failure(new Error("GuideTourOffering.NotFound", "Guide offering not found."), Outcome.NotFound);
 
         offering.DisablePrivateTour();
-        await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        try
+        {
+            await unitOfWork.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Result.Failure(
+                new Error("GuideTourOffering.ConcurrencyConflict", "Concurrent update detected."),
+                Outcome.Conflict);
+        }
 
         await cache.RemoveByTagAsync(TourGuideCacheKeys.TagForTourOfferings(request.TourId), cancellationToken);
         logger.LogInformation("Disabled private tour for offering TourId={TourId}, GuideId={GuideId}", request.TourId, request.TourGuideId);

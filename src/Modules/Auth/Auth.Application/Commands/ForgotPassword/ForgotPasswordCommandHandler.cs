@@ -2,6 +2,7 @@ using Auth.Application.Interfaces;
 using Auth.Domain.Entities;
 using Auth.Domain.Events;
 using Auth.Domain.Repositories;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Security.Contracts.Abstractions;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
@@ -66,7 +67,17 @@ public sealed class ForgotPasswordCommandHandler(
             Origin:          token.ResetOrigin));
 
         await resetTokenRepository.AddAsync(token, ct);
-        await unitOfWork.SaveChangesAsync(ct);
+
+        try
+        {
+            await unitOfWork.SaveChangesAsync(ct);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Result<ForgotPasswordResult>.Failure(
+                new Error("PasswordResetToken.ConcurrencyConflict", "Password reset state was modified concurrently. Reload and retry."),
+                Outcome.Conflict);
+        }
 
         logger.LogInformation(
             "Auth: PasswordResetToken {TokenId} issued for user {UserId}; email queued on outbox.",

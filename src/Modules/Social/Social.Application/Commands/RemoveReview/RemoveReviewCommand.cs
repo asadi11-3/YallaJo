@@ -7,4 +7,5 @@ namespace Social.Application.Commands.RemoveReview;
 public sealed record RemoveReviewCommand(
     Guid AdminUserId,
     Guid ReviewId,
+    byte[] RowVersion,
     string? Reason = null) : IRequest<Result>;

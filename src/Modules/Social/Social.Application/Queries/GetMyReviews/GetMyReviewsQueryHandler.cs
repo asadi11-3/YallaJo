@@ -39,6 +39,7 @@ internal sealed class GetMyReviewsQueryHandler(IReviewRepository reviewRepositor
         r.AutoHiddenAt,
         r.CreatedAt,
         r.HelpfulVoteCount,
+        r.RowVersion is null or { Length: 0 } ? string.Empty : Convert.ToBase64String(r.RowVersion),
         r.Replies
             .Where(rp => !rp.IsDeleted)
             .Select(rp => new ReviewReplyDto(

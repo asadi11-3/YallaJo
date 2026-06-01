@@ -1,5 +1,6 @@
 using ContentBlogs.Application.Interfaces;
 using ContentBlogs.Domain.Repositories;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
@@ -28,6 +29,12 @@ internal sealed class PromoteCreatorTierCommandHandler(
         {
             await unitOfWork.SaveChangesAsync(cancellationToken);
             await cache.RemoveByTagAsync(Caching.ContentBlogsCacheKeys.CreatorProfileTag(profile.Id), cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Result.Failure(
+                new Error("Creator.ConcurrencyConflict", "Profile was modified concurrently."),
+                Outcome.Conflict);
         }
         catch (OperationCanceledException)
         {

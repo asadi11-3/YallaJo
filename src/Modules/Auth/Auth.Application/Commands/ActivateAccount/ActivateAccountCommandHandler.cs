@@ -4,6 +4,7 @@ using Auth.Application.Interfaces.SessionRevocation;
 using Auth.Domain.Entities;
 using Auth.Domain.Errors;
 using Auth.Domain.Repositories;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Security.Contracts.Abstractions;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
@@ -106,7 +107,16 @@ public sealed class ActivateAccountCommandHandler(
             SessionRevocationReason.AccountActivated,
             cancellationToken);
 
-        await unitOfWork.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await unitOfWork.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Result<ActivateAccountResult>.Failure(
+                new Error("ActivationToken.ConcurrencyConflict", "Activation state was modified concurrently. Reload and retry."),
+                Outcome.Conflict);
+        }
 
         await cache.RemoveByTagAsync(
             AuthCacheKeys.UserSessionsTag(status.UserId), cancellationToken);

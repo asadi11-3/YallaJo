@@ -5,6 +5,7 @@ using Auth.Application.Interfaces.SessionRevocation;
 using Auth.Domain.Entities;
 using Auth.Domain.Events;
 using Auth.Domain.Repositories;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
 using Security.Contracts.Abstractions;
@@ -121,7 +122,16 @@ public sealed class AdminResetPasswordCommandHandler(
             SessionRevocationReason.PasswordResetByAdmin,
             cancellationToken);
 
-        await unitOfWork.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await unitOfWork.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Result<AdminResetPasswordResult>.Failure(
+                new Error("PasswordResetToken.ConcurrencyConflict", "Password reset state was modified concurrently. Reload and retry."),
+                Outcome.Conflict);
+        }
 
         await cache.RemoveByTagAsync(
             AuthCacheKeys.UserSessionsTag(request.TargetUserId), cancellationToken);

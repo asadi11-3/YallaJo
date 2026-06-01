@@ -1,6 +1,7 @@
 using Accounts.Application.Caching;
 using Accounts.Domain.Errors;
 using Accounts.Domain.Repositories;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
@@ -33,7 +34,17 @@ public sealed class RejectGuideApplicationCommandHandler(
 
         application.Reject(request.Reason);
 
-        await unitOfWork.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await unitOfWork.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Result.Failure(
+                new Error("AgencyApplication.ConcurrencyConflict", "The agency application was modified concurrently. Reload and retry."),
+                Outcome.Conflict);
+        }
+
         await cache.RemoveByTagAsync(AccountsCacheKeys.AgencyApplicationsTag(agencyUserId), cancellationToken);
 
         logger.LogInformation("Agency {AgencyUserId} rejected application {ApplicationId}", agencyUserId, request.ApplicationId);

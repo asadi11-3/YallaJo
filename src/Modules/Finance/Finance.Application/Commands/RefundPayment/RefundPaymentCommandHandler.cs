@@ -4,6 +4,7 @@ using Finance.Domain.Enums;
 using Finance.Domain.Repositories;
 using Finance.Application.Interfaces;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 using YallaJo.SharedKernel.Domain.ValueObjects;
@@ -135,7 +136,17 @@ public sealed class RefundPaymentCommandHandler(
         }
         // Pending: leave as-is, webhook will finalize.
 
-        await unitOfWork.SaveChangesAsync(ct).ConfigureAwait(false);
+        try
+        {
+            await unitOfWork.SaveChangesAsync(ct).ConfigureAwait(false);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            logger.LogWarning("RefundPayment concurrency conflict on payment {PaymentId}.", original.Id);
+            return Result.Failure<RefundPaymentResult>(
+                new Error("Payment.ConcurrencyConflict", "The payment was modified concurrently. Reload and retry."),
+                Outcome.Conflict);
+        }
 
         logger.LogInformation(
             "Refund {RefundId} created for payment {PaymentId} amount={Amount} {Currency} status={Status}.",

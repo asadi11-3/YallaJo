@@ -1,5 +1,6 @@
 using Booking.Application.Interfaces;
 using Booking.Domain.Repositories;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
@@ -66,7 +67,16 @@ public sealed class ApproveJoinRequestCommandHandler(
             }
 
             joinRequestRepository.Update(joinRequest);
-            await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            try
+            {
+                await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                return Result.Failure(
+                    new Error("JoinRequest.ConcurrencyConflict", "The join request was modified concurrently. Reload and retry."),
+                    Outcome.Conflict);
+            }
 
             await cache.RemoveByTagAsync($"booking:{parentBooking.Id:D}", cancellationToken).ConfigureAwait(false);
             await cache.RemoveByTagAsync($"join-requests:booking:{joinRequest.TourBookingId:D}", cancellationToken).ConfigureAwait(false);

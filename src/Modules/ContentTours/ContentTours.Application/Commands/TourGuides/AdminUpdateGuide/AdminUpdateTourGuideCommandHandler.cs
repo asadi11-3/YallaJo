@@ -1,6 +1,7 @@
 using ContentTours.Application.Caching;
 using ContentTours.Application.Interfaces;
 using ContentTours.Domain.Repositories;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
@@ -41,7 +42,16 @@ internal sealed class AdminUpdateTourGuideCommandHandler(
             return updateResult;
         }
 
-        await unitOfWork.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await unitOfWork.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Result.Failure(
+                new Error("TourGuide.ConcurrencyConflict", "Concurrent update detected."),
+                Outcome.Conflict);
+        }
 
         await cache.RemoveByTagAsync(TourGuideCacheKeys.TagForProfile(guide.Id), cancellationToken);
         await cache.RemoveByTagAsync(TourGuideCacheKeys.TagAllGuidesList, cancellationToken);

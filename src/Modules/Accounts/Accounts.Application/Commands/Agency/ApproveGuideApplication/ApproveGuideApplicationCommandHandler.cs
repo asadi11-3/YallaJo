@@ -2,6 +2,7 @@ using Accounts.Application.Caching;
 using Accounts.Domain.Entities;
 using Accounts.Domain.Errors;
 using Accounts.Domain.Repositories;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
@@ -42,7 +43,17 @@ public sealed class ApproveGuideApplicationCommandHandler(
         var affiliation = AgencyAffiliation.Create(agencyUserId, application.GuideUserId, 20m);
         agencyAffiliationRepository.Add(affiliation);
 
-        await unitOfWork.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await unitOfWork.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Result.Failure(
+                new Error("AgencyApplication.ConcurrencyConflict", "The agency application was modified concurrently. Reload and retry."),
+                Outcome.Conflict);
+        }
+
         await cache.RemoveByTagAsync(AccountsCacheKeys.AgencyApplicationsTag(agencyUserId), cancellationToken);
         await cache.RemoveByTagAsync(AccountsCacheKeys.AgencyGuidesTag(agencyUserId), cancellationToken);
 

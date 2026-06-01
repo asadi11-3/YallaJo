@@ -6,6 +6,7 @@ using Social.Application.Interfaces;
 using Social.Domain.Entities;
 using Social.Domain.Enums;
 using Social.Domain.Repositories;
+using YallaJo.SharedKernel.Application.Common;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
 namespace Social.Application.Commands.RemoveReview;
@@ -35,6 +36,11 @@ internal sealed class RemoveReviewCommandHandler(
                 new Error("Review.AlreadyDeleted", "This review has already been removed."),
                 Outcome.Conflict);
         }
+
+        if (!RowVersionUtil.Equal(review.RowVersion, request.RowVersion))
+            return Result.Failure(
+                new Error("Review.ConcurrencyConflict", "This review was modified by another user. Please refresh and try again."),
+                Outcome.Conflict);
 
         review.Delete(ReviewDeletionSource.Admin, timeProvider);
 

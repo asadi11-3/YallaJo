@@ -8,6 +8,12 @@ internal sealed class EditReviewCommandValidator : AbstractValidator<EditReviewC
     {
         RuleFor(x => x.ReviewId).NotEmpty();
         RuleFor(x => x.CallerUserId).NotEmpty();
+
+        RuleFor(x => x.RowVersion)
+            .NotNull()
+            .Must(rv => rv is { Length: > 0 })
+            .WithMessage("RowVersion is required for optimistic concurrency.");
+
         RuleFor(x => x.Rating)
             .InclusiveBetween(1.0m, 5.0m)
             .Must(r => (r * 2) % 1 == 0)

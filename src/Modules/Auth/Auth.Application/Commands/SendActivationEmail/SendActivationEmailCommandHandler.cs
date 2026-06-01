@@ -4,6 +4,7 @@ using Auth.Domain.Entities;
 using Auth.Domain.Errors;
 using Auth.Domain.Events;
 using Auth.Domain.Repositories;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Security.Contracts.Abstractions;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
@@ -89,7 +90,16 @@ public sealed class SendActivationEmailCommandHandler(
                 transition.Errors.ToArray());
         }
 
-        await unitOfWork.SaveChangesAsync(ct);
+        try
+        {
+            await unitOfWork.SaveChangesAsync(ct);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Result<SendActivationEmailResult>.Failure(
+                new Error("ActivationToken.ConcurrencyConflict", "Activation token state was modified concurrently. Reload and retry."),
+                Outcome.Conflict);
+        }
 
         logger.LogInformation(
             "Auth: Activation token {TokenId} issued for user {UserId}; email queued on outbox.",

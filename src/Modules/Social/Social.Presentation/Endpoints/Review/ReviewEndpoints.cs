@@ -72,6 +72,7 @@ internal static class ReviewEndpoints
         .ProducesProblem(StatusCodes.Status401Unauthorized)
         .ProducesProblem(StatusCodes.Status403Forbidden)
         .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status409Conflict)
         .ProducesProblem(StatusCodes.Status422UnprocessableEntity)
         .WithMetadata(new MustHavePermissionAttribute(SocialFeatures.Review, AppAction.Update))
         .RequireAuthorization();
@@ -79,20 +80,36 @@ internal static class ReviewEndpoints
         // DELETE /api/v1/social/reviews/{id} — Soft-delete a review
         group.MapDelete("/{id:guid}", async (
             Guid id,
+            DeleteReviewRequest request,
             ICurrentUser currentUser,
             ISender sender,
             CancellationToken ct) =>
         {
             var isAdmin = currentUser.HasPermission($"Permission.{SocialFeatures.AdminModerationQueue}.{AppAction.Remove}");
-            var result = await sender.Send(new DeleteReviewCommand(id, currentUser.UserId!.Value, isAdmin), ct);
+
+            byte[] rowVersion;
+            try
+            {
+                rowVersion = string.IsNullOrWhiteSpace(request.RowVersion)
+                    ? Array.Empty<byte>()
+                    : Convert.FromBase64String(request.RowVersion);
+            }
+            catch (FormatException)
+            {
+                rowVersion = Array.Empty<byte>();
+            }
+
+            var result = await sender.Send(new DeleteReviewCommand(id, currentUser.UserId!.Value, isAdmin, rowVersion), ct);
             return result.ToApiResult();
         })
         .WithName("DeleteReview")
         .WithSummary("Delete a review (author or admin)")
         .Produces(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status401Unauthorized)
         .ProducesProblem(StatusCodes.Status403Forbidden)
         .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status409Conflict)
         .WithMetadata(new MustHavePermissionAttribute(SocialFeatures.Review, AppAction.Delete))
         .RequireAuthorization();
 
@@ -120,22 +137,36 @@ internal static class ReviewEndpoints
         group.MapPut("/{id:guid}/reply/{replyId:guid}", async (
             Guid id,
             Guid replyId,
-            AddReplyRequest request,
+            UpdateReplyRequest request,
             ICurrentUser currentUser,
             ISender sender,
             CancellationToken ct) =>
         {
+            byte[] rowVersion;
+            try
+            {
+                rowVersion = string.IsNullOrWhiteSpace(request.RowVersion)
+                    ? Array.Empty<byte>()
+                    : Convert.FromBase64String(request.RowVersion);
+            }
+            catch (FormatException)
+            {
+                rowVersion = Array.Empty<byte>();
+            }
+
             var result = await sender.Send(
-                new UpdateReviewReplyCommand(id, replyId, currentUser.UserId!.Value, request.Content), ct);
+                new UpdateReviewReplyCommand(id, replyId, currentUser.UserId!.Value, rowVersion, request.Content), ct);
             return result.ToApiResult();
         })
         .WithName("UpdateReviewReply")
         .WithSummary("Update an existing reply (S-R3: no time limit for replies)")
-        .Accepts<AddReplyRequest>("application/json")
+        .Accepts<UpdateReplyRequest>("application/json")
         .Produces(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status401Unauthorized)
         .ProducesProblem(StatusCodes.Status403Forbidden)
         .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status409Conflict)
         .WithMetadata(new MustHavePermissionAttribute(SocialFeatures.ReviewReply, AppAction.Update))
         .RequireAuthorization();
 
@@ -315,13 +346,25 @@ internal static class ReviewEndpoints
         // POST /api/v1/social/reviews/admin/{id}/approve — admin approves a flagged review
         group.MapPost("/admin/{id:guid}/approve", async (
             Guid id,
-            AdminReviewNotesRequest? request,
+            AdminReviewNotesRequest request,
             ICurrentUser currentUser,
             ISender sender,
             CancellationToken ct) =>
         {
+            byte[] rowVersion;
+            try
+            {
+                rowVersion = string.IsNullOrWhiteSpace(request.RowVersion)
+                    ? Array.Empty<byte>()
+                    : Convert.FromBase64String(request.RowVersion);
+            }
+            catch (FormatException)
+            {
+                rowVersion = Array.Empty<byte>();
+            }
+
             var result = await sender.Send(
-                new ApproveReviewCommand(currentUser.UserId!.Value, id, request?.Notes), ct);
+                new ApproveReviewCommand(currentUser.UserId!.Value, id, rowVersion, request.Notes), ct);
 
             return result.ToApiResult();
         })
@@ -329,6 +372,7 @@ internal static class ReviewEndpoints
         .WithSummary("Admin: approve a review")
         .WithDescription("Restores a flagged or auto-hidden review to Published status.")
         .Produces(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status401Unauthorized)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status409Conflict)
@@ -338,13 +382,25 @@ internal static class ReviewEndpoints
         // POST /api/v1/social/reviews/admin/{id}/remove — admin removes a review
         group.MapPost("/admin/{id:guid}/remove", async (
             Guid id,
-            AdminReviewNotesRequest? request,
+            AdminReviewNotesRequest request,
             ICurrentUser currentUser,
             ISender sender,
             CancellationToken ct) =>
         {
+            byte[] rowVersion;
+            try
+            {
+                rowVersion = string.IsNullOrWhiteSpace(request.RowVersion)
+                    ? Array.Empty<byte>()
+                    : Convert.FromBase64String(request.RowVersion);
+            }
+            catch (FormatException)
+            {
+                rowVersion = Array.Empty<byte>();
+            }
+
             var result = await sender.Send(
-                new RemoveReviewCommand(currentUser.UserId!.Value, id, request?.Notes), ct);
+                new RemoveReviewCommand(currentUser.UserId!.Value, id, rowVersion, request.Notes), ct);
 
             return result.ToApiResult();
         })
@@ -352,6 +408,7 @@ internal static class ReviewEndpoints
         .WithSummary("Admin: remove a review")
         .WithDescription("Admin permanently removes (status=RemovedByAdmin) a review and logs the action.")
         .Produces(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status401Unauthorized)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status409Conflict)

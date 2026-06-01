@@ -7,4 +7,5 @@ namespace Social.Application.Commands.ApproveReview;
 public sealed record ApproveReviewCommand(
     Guid AdminUserId,
     Guid ReviewId,
+    byte[] RowVersion,
     string? Notes = null) : IRequest<Result>;

@@ -1,6 +1,7 @@
 using Auth.Application.Caching;
 using Auth.Application.Interfaces;
 using Auth.Domain.Repositories;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
@@ -36,7 +37,16 @@ public sealed class LogoutCommandHandler(
         if (session is not null && !session.IsRevoked)
             session.Revoke();
 
-        await unitOfWork.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await unitOfWork.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Result.Failure(
+                new Error("Session.ConcurrencyConflict", "The session was modified concurrently. Reload and retry."),
+                Outcome.Conflict);
+        }
 
         await cache.RemoveByTagAsync(AuthCacheKeys.UserSessionsTag(refreshToken.UserId), cancellationToken);
 

@@ -5,6 +5,7 @@ using Social.Application.Caching;
 using Social.Application.Interfaces;
 using Social.Domain.Enums;
 using Social.Domain.Repositories;
+using YallaJo.SharedKernel.Application.Common;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
 namespace Social.Application.Commands.EditReview;
@@ -30,6 +31,11 @@ internal sealed class EditReviewCommandHandler(
         // Deleted reviews cannot be edited
         if (review.Status is ReviewStatus.DeletedByUser or ReviewStatus.RemovedByAdmin)
             return Result.Failure(new Error("Review.AlreadyDeleted", "Cannot edit a deleted review."), Outcome.Conflict);
+
+        if (!RowVersionUtil.Equal(review.RowVersion, command.RowVersion))
+            return Result.Failure(
+                new Error("Review.ConcurrencyConflict", "This review was modified by another user. Please refresh and try again."),
+                Outcome.Conflict);
 
         // S-R3: 48-hour edit window enforced inside Review.Edit — catch and translate
         try

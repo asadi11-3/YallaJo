@@ -1,5 +1,6 @@
 using Booking.Application.Interfaces;
 using Booking.Domain.Repositories;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
@@ -48,7 +49,16 @@ public sealed class UpdateGuideDiscountCommandHandler(
             }
 
             guideDiscountRepository.Update(discount);
-            await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            try
+            {
+                await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                return Result.Failure(
+                    new Error("GuideDiscount.ConcurrencyConflict", "The discount was modified concurrently. Reload and retry."),
+                    Outcome.Conflict);
+            }
 
             logger.LogInformation("GuideDiscount {DiscountId} updated by guide {GuideUserId}.", discount.Id, guideUserId);
             return Result.Success();
