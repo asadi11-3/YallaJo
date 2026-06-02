@@ -1,0 +1,153 @@
+@using YallaJo.Web.Infrastructure.Authorization
+@using YallaJo.Web.Areas.Admin.Models.Blogs
+@model EditBlogVm
+@{
+    ViewData["Title"] = "Edit blog";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var isPublished = string.Equals(Model.StatusLabel, "Published", StringComparison.OrdinalIgnoreCase);
+    var isDraft = string.Equals(Model.StatusLabel, "Draft", StringComparison.OrdinalIgnoreCase);
+}
+
+<div class="container mt-4">
+    <a asp-area="Admin" asp-controller="Blogs" asp-action="Index" class="btn btn-sm btn-outline-secondary mb-3">← Back</a>
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0">Edit blog</h2>
+        <div>
+            <span class="badge text-bg-secondary">@Model.StatusLabel</span>
+            @if (Model.IsFeatured) { <span class="badge text-bg-warning">Featured</span> }
+        </div>
+    </div>
+
+    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <form asp-area="Admin" asp-controller="Blogs" asp-action="Edit" asp-route-id="@Model.Id" method="post" class="row g-3">
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="Id" />
+                <input type="hidden" asp-for="RowVersion" />
+
+                <div class="col-md-8">
+                    <label asp-for="Title" class="form-label"></label>
+                    <input asp-for="Title" class="form-control" />
+                    <span asp-validation-for="Title" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-4">
+                    <label asp-for="ReadTimeMinutes" class="form-label"></label>
+                    <input asp-for="ReadTimeMinutes" class="form-control" />
+                    <span asp-validation-for="ReadTimeMinutes" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="Slug" class="form-label"></label>
+                    <input asp-for="Slug" class="form-control" />
+                    <span asp-validation-for="Slug" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="PlaceId" class="form-label"></label>
+                    <input asp-for="PlaceId" class="form-control" />
+                    <span asp-validation-for="PlaceId" class="text-danger"></span>
+                </div>
+
+                <div class="col-12">
+                    <label asp-for="Summary" class="form-label"></label>
+                    <textarea asp-for="Summary" class="form-control" rows="2"></textarea>
+                </div>
+
+                <div class="col-12">
+                    <label asp-for="Content" class="form-label"></label>
+                    <textarea asp-for="Content" class="form-control" rows="12"></textarea>
+                    <span asp-validation-for="Content" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="MetaTitle" class="form-label"></label>
+                    <input asp-for="MetaTitle" class="form-control" />
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="MetaDescription" class="form-label"></label>
+                    <input asp-for="MetaDescription" class="form-control" />
+                </div>
+
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">Save changes</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header"><strong>Status actions</strong></div>
+                <div class="card-body d-grid gap-2">
+                    @if (isDraft)
+                    {
+                        <permission require="@WebPermission.Blog.Approve">
+                            <form asp-area="Admin" asp-controller="Blogs" asp-action="Publish" asp-route-id="@Model.Id" method="post">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-success w-100">Publish</button>
+                            </form>
+                        </permission>
+                    }
+                    @if (isPublished)
+                    {
+                        <permission require="@WebPermission.Blog.Approve">
+                            <form asp-area="Admin" asp-controller="Blogs" asp-action="Unpublish" asp-route-id="@Model.Id" method="post">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-outline-secondary w-100">Unpublish</button>
+                            </form>
+                            <form asp-area="Admin" asp-controller="Blogs" asp-action="Archive" asp-route-id="@Model.Id" method="post">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-outline-secondary w-100">Archive</button>
+                            </form>
+                        </permission>
+                        @if (!Model.IsFeatured)
+                        {
+                            <permission require="@WebPermission.Blog.Feature">
+                                <form asp-area="Admin" asp-controller="Blogs" asp-action="Feature" asp-route-id="@Model.Id" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-outline-warning w-100">Feature</button>
+                                </form>
+                            </permission>
+                        }
+                        else
+                        {
+                            <permission require="@WebPermission.Blog.Unfeature">
+                                <form asp-area="Admin" asp-controller="Blogs" asp-action="Unfeature" asp-route-id="@Model.Id" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-outline-warning w-100">Unfeature</button>
+                                </form>
+                            </permission>
+                        }
+                    }
+
+                    <permission require="@WebPermission.Blog.DeleteOwn">
+                        <form asp-area="Admin" asp-controller="Blogs" asp-action="Delete" asp-route-id="@Model.Id" method="post"
+                              onsubmit="return confirm('Delete this blog?');">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-outline-danger w-100">Delete</button>
+                        </form>
+                    </permission>
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-header"><strong>Info</strong></div>
+                <ul class="list-group list-group-flush small">
+                    <li class="list-group-item d-flex justify-content-between"><span>Views</span><strong>@Model.ViewCount</strong></li>
+                    <li class="list-group-item d-flex justify-content-between"><span>Language</span><strong>@Model.LanguageCode</strong></li>
+                    <li class="list-group-item d-flex justify-content-between"><span>Published</span><strong>@(Model.PublishedAt?.ToString("yyyy-MM-dd") ?? "—")</strong></li>
+                </ul>
+            </div>
+
+            <p class="text-muted small mt-3">Blog images are managed in a separate phase.</p>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,75 @@
+@using YallaJo.Web.Infrastructure.Authorization
+@using YallaJo.Web.Areas.Admin.Models.Blogs
+@model CreateBlogVm
+@{
+    ViewData["Title"] = "New blog";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-4">
+    <a asp-area="Admin" asp-controller="Blogs" asp-action="Index" class="btn btn-sm btn-outline-secondary mb-3">← Back</a>
+    <h2 class="mb-3">New blog</h2>
+
+    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+    <form asp-area="Admin" asp-controller="Blogs" asp-action="Create" method="post" class="row g-3">
+        @Html.AntiForgeryToken()
+
+        <div class="col-md-8">
+            <label asp-for="Title" class="form-label"></label>
+            <input asp-for="Title" class="form-control" />
+            <span asp-validation-for="Title" class="text-danger"></span>
+        </div>
+
+        <div class="col-md-4">
+            <label asp-for="SourceLanguageCode" class="form-label"></label>
+            <input asp-for="SourceLanguageCode" class="form-control" />
+            <span asp-validation-for="SourceLanguageCode" class="text-danger"></span>
+        </div>
+
+        <div class="col-md-6">
+            <label asp-for="Slug" class="form-label"></label>
+            <input asp-for="Slug" class="form-control" placeholder="auto-generated if blank" />
+            <span asp-validation-for="Slug" class="text-danger"></span>
+        </div>
+
+        <div class="col-md-6">
+            <label asp-for="PlaceId" class="form-label"></label>
+            <input asp-for="PlaceId" class="form-control" />
+            <span asp-validation-for="PlaceId" class="text-danger"></span>
+        </div>
+
+        <div class="col-12">
+            <label asp-for="Summary" class="form-label"></label>
+            <textarea asp-for="Summary" class="form-control" rows="2"></textarea>
+            <span asp-validation-for="Summary" class="text-danger"></span>
+        </div>
+
+        <div class="col-12">
+            <label asp-for="Content" class="form-label"></label>
+            <textarea asp-for="Content" class="form-control" rows="10"></textarea>
+            <span asp-validation-for="Content" class="text-danger"></span>
+        </div>
+
+        <div class="col-md-6">
+            <label asp-for="MetaTitle" class="form-label"></label>
+            <input asp-for="MetaTitle" class="form-control" />
+        </div>
+
+        <div class="col-md-6">
+            <label asp-for="MetaDescription" class="form-label"></label>
+            <input asp-for="MetaDescription" class="form-control" />
+        </div>
+
+        <div class="col-12">
+            <button type="submit" class="btn btn-primary">Create draft</button>
+            <a asp-area="Admin" asp-controller="Blogs" asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+        </div>
+    </form>
+
+    <p class="text-muted small mt-3">Blog images are managed in a separate phase and are not part of this form.</p>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

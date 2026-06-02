@@ -130,4 +130,29 @@ public static class WebPermission
         public const string Update = "Permission.Booking.Update";
         public const string Delete = "Permission.Booking.Delete";
     }
+
+    // ── Blog ──────────────────────────────────────────────────────────────────
+    // Mirror the ContentBlogs backend permissions (Permission.Blog.{Action}).
+    public static class Blog
+    {
+        public const string Read      = "Permission.Blog.Read";
+        public const string ReadOwn   = "Permission.Blog.ReadOwn";
+        public const string Create    = "Permission.Blog.Create";
+        public const string Update    = "Permission.Blog.Update";
+        public const string DeleteOwn = "Permission.Blog.DeleteOwn";
+        public const string DeleteAny = "Permission.Blog.DeleteAny";
+        // Approve gates the publish/unpublish/archive transitions on the backend.
+        public const string Approve   = "Permission.Blog.Approve";
+        public const string Reject    = "Permission.Blog.Reject";
+        public const string Remove    = "Permission.Blog.Remove";
+        public const string Feature   = "Permission.Blog.Feature";
+        public const string Unfeature = "Permission.Blog.Unfeature";
+        public const string Submit    = "Permission.Blog.Submit";
+    }
+
+    // ── AdminBlogQueue ────────────────────────────────────────────────────────
+    public static class AdminBlogQueue
+    {
+        public const string Read = "Permission.AdminBlogQueue.Read";
+    }
 }
