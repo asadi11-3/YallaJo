@@ -1,0 +1,153 @@
+@model YallaJo.Web.Areas.Accounts.Models.Profile.ProfileVm
+@{
+    ViewData["Title"] = "My Profile";
+    ViewData["AccountNav"] = "Profile";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var displayName = string.IsNullOrWhiteSpace(Model.DisplayName)
+        ? $"{Model.FirstName} {Model.LastName}".Trim()
+        : Model.DisplayName;
+
+    var sidebar = new YallaJo.Web.Areas.Accounts.Shared.AccountSidebarVm
+    {
+        AvatarUrl = Model.AvatarUrl,
+        DisplayName = displayName,
+        Email = Model.Email
+    };
+
+    // Profile-completion: derive from field presence (the /security/me endpoint
+    // does not expose verified flags, so completion is computed from the data we have).
+    var checks = new (string Label, bool Done)[]
+    {
+        ("Name", !string.IsNullOrWhiteSpace(Model.FirstName) && !string.IsNullOrWhiteSpace(Model.LastName)),
+        ("Email", !string.IsNullOrWhiteSpace(Model.Email)),
+        ("Mobile number", !string.IsNullOrWhiteSpace(Model.PhoneNumber)),
+        ("Date of birth", Model.DateOfBirth is not null),
+        ("Address", !string.IsNullOrWhiteSpace(Model.AddressLine) || !string.IsNullOrWhiteSpace(Model.City) || !string.IsNullOrWhiteSpace(Model.Country)),
+    };
+    var doneCount = checks.Count(c => c.Done);
+    var pct = checks.Length == 0 ? 0 : (int)System.Math.Round(100.0 * doneCount / checks.Length);
+}
+
+<section class="pt-3">
+    <div class="container">
+        <div class="row g-4 g-xl-5">
+            <partial name="_AccountSidebar" model="sidebar" />
+
+            <div class="col-lg-8 col-xl-9">
+                <div class="d-grid d-lg-none mb-3">
+                    <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasSidebar" aria-controls="offcanvasSidebar">
+                        <i class="fas fa-sliders-h me-2"></i>Menu
+                    </button>
+                </div>
+
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                <div class="vstack gap-4">
+                    @* ── Complete Your Profile ──────────────────────────────── *@
+                    <div class="bg-light rounded p-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h5 class="mb-0">Complete Your Profile</h5>
+                            <span class="fw-bold">@pct%</span>
+                        </div>
+                        <div class="progress progress-sm bg-success bg-opacity-10" role="progressbar" aria-valuenow="@pct" aria-valuemin="0" aria-valuemax="100">
+                            <div class="progress-bar bg-success" style="width:@(pct)%"></div>
+                        </div>
+                        <div class="bg-body rounded p-3 mt-3">
+                            <ul class="list-inline hstack flex-wrap gap-3 mb-0">
+                                @foreach (var c in checks)
+                                {
+                                    <li class="list-inline-item mb-0">
+                                        @if (c.Done)
+                                        {
+                                            <i class="bi bi-check-circle-fill text-success me-1"></i>
+                                        }
+                                        else
+                                        {
+                                            <i class="bi bi-plus-circle-fill text-primary me-1"></i>
+                                        }
+                                        @c.Label
+                                    </li>
+                                }
+                            </ul>
+                        </div>
+                    </div>
+
+                    @* ── Personal Information ───────────────────────────────── *@
+                    <div class="card border">
+                        <div class="card-header border-bottom">
+                            <h4 class="card-header-title mb-0">Personal Information</h4>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-4">
+                                <span class="avatar avatar-xl me-3">
+                                    <img class="avatar-img rounded-circle border border-white border-3"
+                                         src="@(string.IsNullOrWhiteSpace(Model.AvatarUrl) ? Url.Content("~/assets/images/avatar/01.jpg") : Model.AvatarUrl)"
+                                         alt="avatar">
+                                </span>
+                                <div>
+                                    <form asp-area="Accounts" asp-controller="Profile" asp-action="UpdateAvatar"
+                                          method="post" enctype="multipart/form-data" class="d-flex align-items-center gap-2 mb-2">
+                                        @Html.AntiForgeryToken()
+                                        <input type="file" name="File" accept="image/*" class="form-control form-control-sm" style="max-width:14rem;" />
+                                        <button type="submit" class="btn btn-sm btn-primary-soft mb-0">Change</button>
+                                    </form>
+                                    @if (!string.IsNullOrWhiteSpace(Model.AvatarUrl))
+                                    {
+                                        <form asp-area="Accounts" asp-controller="Profile" asp-action="DeleteAvatar" method="post">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-sm btn-link text-danger p-0 mb-0"
+                                                    onclick="return confirm('Remove your avatar?');">Remove</button>
+                                        </form>
+                                    }
+                                </div>
+                            </div>
+
+                            <form asp-area="Accounts" asp-controller="Profile" asp-action="Update" method="post">
+                                @Html.AntiForgeryToken()
+                                <partial name="_UpdateProfileForm" model="Model.Update" />
+                            </form>
+                        </div>
+                    </div>
+
+                    @* ── Update password ────────────────────────────────────── *@
+                    <div class="card border">
+                        <div class="card-header border-bottom">
+                            <h4 class="card-header-title mb-0">Update Password</h4>
+                            <p class="mb-0 mt-1 small">Choose a strong password you do not use elsewhere.</p>
+                        </div>
+                        <div class="card-body">
+                            <form asp-area="Accounts" asp-controller="ChangePassword" asp-action="Index" method="post" class="row g-3">
+                                @Html.AntiForgeryToken()
+                                <div class="col-12">
+                                    <label for="CurrentPassword" class="form-label">Current password</label>
+                                    <input type="password" id="CurrentPassword" name="CurrentPassword" class="form-control" autocomplete="current-password" />
+                                </div>
+                                <div class="col-12">
+                                    <label for="psw-input" class="form-label">New password</label>
+                                    <div class="input-group">
+                                        <input type="password" id="psw-input" name="NewPassword" class="form-control fakepassword" autocomplete="new-password" />
+                                        <span class="input-group-text p-0 bg-transparent">
+                                            <i class="fakepasswordicon fas fa-eye-slash cursor-pointer p-2"></i>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <label for="ConfirmNewPassword" class="form-label">Confirm new password</label>
+                                    <input type="password" id="ConfirmNewPassword" name="ConfirmNewPassword" class="form-control" autocomplete="new-password" />
+                                </div>
+                                <div class="col-12 text-end">
+                                    <button type="submit" class="btn btn-primary mb-0">Change Password</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

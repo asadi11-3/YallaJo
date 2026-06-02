@@ -30,7 +30,7 @@ public abstract class BaseController : Controller
     /// was previously a private helper duplicated verbatim in each controller.
     /// </summary>
     protected RedirectToActionResult RedirectToLogin() =>
-        RedirectToAction("Index", "Login", new { area = "Auth" });
+        RedirectToAction("SignIn", "Auth", new { area = "Auth" });
 
     /// <summary>
     /// If the API call required the user to be signed out (401), returns the

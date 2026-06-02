@@ -26,8 +26,7 @@
     <!-- Razor runtime compilation is only wired up in Development (see Program.cs),
          so the package is referenced for Debug builds only. It is obsoleted in
          .NET 10 and must never ship to production. -->
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="9.0.15"
-                      Condition="'$(Configuration)' == 'Debug'" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="9.0.15" Condition="'$(Configuration)' == 'Debug'" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.17.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="9.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.Facebook" Version="9.0.0" />
@@ -48,17 +47,8 @@
     <Folder Include="Areas\Admin\Modules\Security\Features\AuditLogs\Validators\" />
     <Folder Include="Areas\Admin\Modules\Security\Features\Roles\Validators\" />
     <Folder Include="Areas\Admin\Modules\Security\Features\Users\Validators\" />
-    <Folder Include="Areas\Auth\Features\Devices\" />
-
-    <Folder Include="Areas\Auth\Features\ForgotPassword\Validators\" />
-    <Folder Include="Areas\Auth\Features\ForgotPassword\Views\" />
-    <Folder Include="Areas\Auth\Features\ForgotPassword\ViewModels\" />
-    <Folder Include="Areas\Auth\Features\ForgotPassword\Responses\" />
-    <Folder Include="Areas\Auth\Features\ForgotPassword\Requests\" />
-    <Folder Include="Areas\Auth\Features\Login\Views\" />
-    <Folder Include="Areas\Auth\Features\Logout\Responses\" />
-    <Folder Include="Areas\Auth\Features\Sessions\Validators\" />
-    <Folder Include="Areas\Auth\Features\ResetPassword\" />
+    <Folder Include="Areas\Auth\Controller\" />
+    <Folder Include="Areas\Auth\Views\" />
     <Folder Include="Infrastructure\Api\Core\" />
     <Folder Include="Infrastructure\Api\Handlers\" />
     <Folder Include="Infrastructure\Authentication\Claims\" />

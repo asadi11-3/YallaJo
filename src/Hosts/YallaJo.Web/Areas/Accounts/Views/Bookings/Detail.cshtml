@@ -1,0 +1,126 @@
+@model YallaJo.Web.Areas.Accounts.Models.Bookings.BookingDetailVm
+@using YallaJo.Web.Areas.Accounts.Shared
+@{
+    ViewData["Title"] = "Manage Booking";
+    ViewData["AccountNav"] = "Bookings";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var sidebar = ViewBag.Sidebar as AccountSidebarVm ?? new AccountSidebarVm();
+
+    string StatusBadge(string status) => status switch
+    {
+        "Confirmed" => "bg-success bg-opacity-10 text-success",
+        "Completed" => "bg-primary bg-opacity-10 text-primary",
+        "Cancelled" => "bg-danger bg-opacity-10 text-danger",
+        "Rejected" => "bg-danger bg-opacity-10 text-danger",
+        "AwaitingPayment" => "bg-warning bg-opacity-10 text-warning",
+        "PendingConfirmation" => "bg-warning bg-opacity-10 text-warning",
+        _ => "bg-secondary bg-opacity-10 text-secondary",
+    };
+}
+
+<section class="pt-3">
+    <div class="container">
+        <div class="row g-4 g-xl-5">
+            <partial name="_AccountSidebar" model="sidebar" />
+
+            <div class="col-lg-8 col-xl-9">
+                <div class="d-grid d-lg-none mb-3">
+                    <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasSidebar">
+                        <i class="fas fa-sliders-h me-2"></i>Account menu
+                    </button>
+                </div>
+
+                <div class="mb-3">
+                    <a class="btn btn-sm btn-light mb-0" asp-area="Accounts" asp-controller="Bookings" asp-action="Index">
+                        <i class="bi bi-arrow-left me-1"></i>Back to bookings
+                    </a>
+                </div>
+
+                <div class="card border mb-4">
+                    <div class="card-header border-bottom d-flex justify-content-between align-items-center">
+                        <h4 class="card-header-title mb-0">@Model.TourName</h4>
+                        <span class="badge @StatusBadge(Model.Status)">@Model.Status</span>
+                    </div>
+                    <div class="card-body">
+                        @if (!string.IsNullOrEmpty(Model.ImageUrl))
+                        {
+                            <img src="@Model.ImageUrl" class="img-fluid rounded mb-3 w-100 object-fit-cover" style="max-height:240px;" alt="@Model.TourName" />
+                        }
+                        <div class="row g-3 mb-2">
+                            <div class="col-sm-6"><span class="text-muted small d-block">Reference</span><strong>@Model.Reference</strong></div>
+                            <div class="col-sm-6"><span class="text-muted small d-block">Booked on</span><strong>@Model.CreatedAt.ToString("d MMM yyyy")</strong></div>
+                            <div class="col-sm-6"><span class="text-muted small d-block">Guests</span><strong>@Model.ParticipantCount</strong></div>
+                            <div class="col-sm-6"><span class="text-muted small d-block">Instant booking</span><strong>@(Model.IsInstantBooking ? "Yes" : "No")</strong></div>
+                        </div>
+                        @if (!string.IsNullOrWhiteSpace(Model.SpecialRequests))
+                        {
+                            <div class="mt-2">
+                                <span class="text-muted small d-block">Special requests</span>
+                                <p class="mb-0">@Model.SpecialRequests</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <div class="card border mb-4">
+                    <div class="card-header border-bottom"><h5 class="card-header-title mb-0">Price summary</h5></div>
+                    <div class="card-body">
+                        @foreach (var li in Model.LineItems)
+                        {
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>@li.TierType &times; @li.Count</span>
+                                <span>@((li.UnitPrice * li.Count).ToString("0.00")) @Model.Currency</span>
+                            </div>
+                        }
+                        <hr />
+                        <div class="d-flex justify-content-between mb-1"><span>Subtotal</span><span>@Model.Subtotal.ToString("0.00") @Model.Currency</span></div>
+                        @if (Model.DiscountAmount > 0)
+                        {
+                            <div class="d-flex justify-content-between mb-1 text-success"><span>Discount</span><span>-@Model.DiscountAmount.ToString("0.00") @Model.Currency</span></div>
+                        }
+                        @if (Model.LoyaltyAmount > 0)
+                        {
+                            <div class="d-flex justify-content-between mb-1 text-success"><span>Loyalty</span><span>-@Model.LoyaltyAmount.ToString("0.00") @Model.Currency</span></div>
+                        }
+                        <div class="d-flex justify-content-between fw-bold border-top pt-2"><span>Total</span><span>@Model.TotalAmount.ToString("0.00") @Model.Currency</span></div>
+                    </div>
+                </div>
+
+                @if (Model.IsCancellable)
+                {
+                    <div class="card border border-danger">
+                        <div class="card-header border-bottom"><h5 class="card-header-title mb-0 text-danger">Cancel booking</h5></div>
+                        <div class="card-body">
+                            <p class="small text-muted">Cancelling may be subject to the tour's cancellation policy. Any eligible refund is processed automatically.</p>
+                            <form asp-area="Accounts" asp-controller="Bookings" asp-action="Cancel" asp-route-id="@Model.Id" method="post">
+                                @Html.AntiForgeryToken()
+                                <div class="mb-3">
+                                    <label class="form-label" for="reason">Reason (optional)</label>
+                                    <textarea class="form-control" id="reason" name="reason" rows="2" maxlength="500"></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-danger mb-0">Cancel this booking</button>
+                            </form>
+                        </div>
+                    </div>
+                }
+                else if (Model.CancelledAt is not null)
+                {
+                    <div class="card border">
+                        <div class="card-body">
+                            <h6 class="text-danger mb-1">Booking cancelled</h6>
+                            <p class="small text-muted mb-1">Cancelled on @Model.CancelledAt.Value.ToString("d MMM yyyy")</p>
+                            @if (!string.IsNullOrWhiteSpace(Model.CancellationReason))
+                            {
+                                <p class="small mb-1">Reason: @Model.CancellationReason</p>
+                            }
+                            @if (Model.RefundAmount is > 0)
+                            {
+                                <p class="small text-success mb-0">Refund: @Model.RefundAmount.Value.ToString("0.00") @Model.Currency</p>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</section>

@@ -3,15 +3,25 @@
 **Scope:** `src/Hosts/YallaJo.Web` (the Razor MVC **BFF** that consumes `YallaJo.Api`).
 **Audience:** developers adding a new screen/feature to the admin/web UI.
 
-This repo is **not** a default MVC template. It uses a **feature-folder (vertical-slice)**
-layout where every feature is a self-contained folder holding its own controller,
-API client, facade, view models, mappers, DTOs and views. Follow this guide and a new
-feature will "just work" — DI registration and view discovery are automatic.
+This repo is **not** a default MVC template. It keeps the same **four-tier pipeline**
+everywhere — `Controller → Facade → ApiClient → IApiClient` — and **every area uses the
+same physical layout: layered by type.**
 
-> TL;DR of the moving parts per feature:
+| Area | Layout | Folders |
+|---|---|---|
+| **All areas** (Auth, Accounts, Content, Admin) | **Layered (by type)** | `Areas/{Area}/{Controllers,Facades,ApiClients,Models/{Feature},Views/{Controller}}` |
+
+> **Layered-by-type is the universal standard.** Files are grouped by their **role**
+> (Controllers, Facades, ApiClients, Models, Views), never by feature folder. Models stay
+> grouped by feature *inside* `Models/{Feature}/`. Some areas add extra role folders:
+> Admin also has `Validators/` and `Helpers/`; Accounts has `Shared/` (for the
+> `_AccountSidebar` partial); Auth has `Shared/` (for `_RecaptchaField`).
+
+> TL;DR of the moving parts:
 > **`XxxController`** (HTTP + view selection) → **`XxxFacade`** (API result → ViewModel)
 > → **`XxxApiClient`** (endpoint URLs) → base **`IApiClient`** (HTTP + resilience + JWT).
-> ViewModels/Mappers/Requests/Responses are plain folders. Views live under `Views/`.
+> ViewModels/Mappers/Requests/Responses are plain classes grouped under `Models/{Feature}/`.
+> Views live under `Views/{Controller}/`.
 
 ---
 
@@ -41,49 +51,100 @@ Browser ──HTTP──▶ XxxController : BaseController
 
 ## 1. Decide where the feature lives
 
-Pick the folder based on the area. The folder path **is** the namespace.
+Every area uses **one layout: layered by type**. The folder path **is** the namespace.
+Files are grouped by their **role**, not by feature. A new screen drops files into the
+area's shared layer folders:
 
-| Area | Path template | Example |
+| Layer | Folder | Namespace |
 |---|---|---|
-| Auth (anonymous-ish) | `Areas/Auth/Features/{Name}/` | `Areas/Auth/Features/Login/` |
-| Accounts (self-service) | `Areas/Accounts/Features/{Name}/` | `Areas/Accounts/Features/Profile/` |
-| **Admin module** | `Areas/Admin/Modules/{Module}/Features/{Name}/` | `Areas/Admin/Modules/ContentCore/Features/Languages/` |
+| Controllers | `Areas/{Area}/Controllers/` | `YallaJo.Web.Areas.{Area}.Controllers` |
+| Facades | `Areas/{Area}/Facades/` | `YallaJo.Web.Areas.{Area}.Facades` |
+| ApiClients | `Areas/{Area}/ApiClients/` | `YallaJo.Web.Areas.{Area}.ApiClients` |
+| Models (DTOs + VMs + Mappers) | `Areas/{Area}/Models/{Feature}/` | `YallaJo.Web.Areas.{Area}.Models.{Feature}` |
+| Views | `Areas/{Area}/Views/{Controller}/` | (view path) |
 
-> **Admin module views are auto-discovered.** `AdminModuleViewLocationExpander` scans
-> `Areas/Admin/Modules/*` at startup, so a **new module folder needs zero Program.cs changes** —
-> just create `Areas/Admin/Modules/{Module}/Features/{Name}/Views/`.
+`{Area}` is one of `Auth`, `Accounts`, `Content`, `Admin`. Some areas add extra role folders:
 
-We use **`Languages`** (in `Admin/Modules/ContentCore`) as the running example. It is a
-list + create + edit feature — the most common shape.
+| Extra layer | Where | Namespace | Used for |
+|---|---|---|---|
+| `Validators/` | `Areas/Admin/Validators/` | `...Areas.Admin.Validators` | FluentValidation validators |
+| `Helpers/` | `Areas/Admin/Helpers/` | `...Areas.Admin.Helpers` | static view/format helpers (e.g. `AuditMetadataFormatter`) |
+| `Shared/` | `Areas/{Area}/Shared/` | `...Areas.{Area}.Shared` | area-wide partials/VMs (`_RecaptchaField`, `_AccountSidebar`) |
+
+> **Models stay grouped by feature** inside `Models/`. The old per-feature `Requests/`,
+> `Responses/`, `ViewModels/` and `Mappers/` sub-folders are **collapsed into one
+> `Models/{Feature}/` namespace** — e.g. `Models/Login/LoginVm.cs`,
+> `Models/Login/LoginRequest.cs`, `Models/Login/LoginMapper.cs` all declare
+> `namespace YallaJo.Web.Areas.Auth.Models.Login;`. The same applies in every area:
+> `Models/Languages/LanguageListVm.cs` declares
+> `namespace YallaJo.Web.Areas.Admin.Models.Languages;`.
+
+> **Views are discovered automatically.** `Program.cs` registers the area view-location
+> format `~/Areas/{2}/Views/{1}/{0}.cshtml` (additive), so a controller action just needs a
+> matching `Views/{Controller}/{Action}.cshtml` — no Program.cs change per screen. Shared
+> partials live in `Areas/{Area}/Shared/` (resolved by `~/Areas/{2}/Shared/{0}.cshtml`),
+> e.g. `_RecaptchaField.cshtml` (Auth), `_AccountSidebar.cshtml` (Accounts). Per-feature
+> partials live in `Views/{Controller}/Partials/` and are referenced by relative name
+> (e.g. `<partial name="Partials/_MetadataDetails" />`).
+
+> **Cross-tier `using`s are explicit.** Because each tier is its own namespace, a Controller
+> needs `using YallaJo.Web.Areas.{Area}.Facades;` to see its Facade, a Facade needs
+> `using ...Areas.{Area}.ApiClients;`, and any file touching a model needs
+> `using ...Areas.{Area}.Models.{Feature};`. DI is **suffix-based**
+> (`FeatureServiceRegistration` registers every `*ApiClient`/`*Facade` as Scoped regardless
+> of namespace), so moving a class between folders never needs a DI change.
+
+> The sections below use the **`Languages`** feature in the **Admin** area as the running
+> example (it shows the full list + create + edit shape): `Controllers/LanguagesController.cs`,
+> `Facades/LanguagesFacade.cs`, `ApiClients/LanguagesApiClient.cs`, `Models/Languages/*`,
+> `Views/Languages/{Index,Edit}.cshtml`. The same code works in any area — only the
+> `{Area}` namespace segment changes.
 
 ---
 
-## 2. Create the feature folder structure
+## 2. Create the structure
+
+Add files to the area's shared layer folders. The files for one feature are **spread across
+the layer folders** (not gathered in one feature folder). Example — the `Languages` feature
+in the **Admin** area:
 
 ```
-Areas/Admin/Modules/ContentCore/Features/Languages/
-├── LanguagesController.cs          # HTTP endpoints + view selection
-├── LanguagesFacade.cs             # ApiResult<T> → ViewModel translation
-├── LanguagesApiClient.cs          # API endpoint URLs + DTO binding
-├── Mappers/
-│   └── LanguagesMapper.cs         # static VM↔DTO mapping
-├── Requests/                      # outbound DTOs (what we POST/PUT to the API)
-│   ├── CreateLanguageRequest.cs
-│   └── UpdateLanguageRequest.cs
-├── Responses/                     # inbound DTOs (what the API returns)
-│   └── LanguageItemResponse.cs
-├── ViewModels/                    # what the Views bind to
-│   ├── LanguageRowVm.cs
-│   ├── LanguageListVm.cs
-│   ├── CreateLanguageVm.cs
-│   └── UpdateLanguageVm.cs
+Areas/Admin/
+├── Controllers/
+│   └── LanguagesController.cs       # namespace YallaJo.Web.Areas.Admin.Controllers
+├── Facades/
+│   └── LanguagesFacade.cs           # namespace YallaJo.Web.Areas.Admin.Facades
+├── ApiClients/
+│   └── LanguagesApiClient.cs        # namespace YallaJo.Web.Areas.Admin.ApiClients
+├── Models/
+│   └── Languages/                   # namespace YallaJo.Web.Areas.Admin.Models.Languages
+│       ├── LanguageItemResponse.cs  #   (inbound DTO)
+│       ├── CreateLanguageRequest.cs #   (outbound DTO)
+│       ├── UpdateLanguageRequest.cs
+│       ├── LanguageRowVm.cs         #   (list/row VM)
+│       ├── LanguageListVm.cs
+│       ├── CreateLanguageVm.cs      #   (form VM)
+│       ├── UpdateLanguageVm.cs
+│       └── LanguagesMapper.cs       #   (static VM↔DTO mapping)
+├── Validators/                      # (Admin only) namespace ...Areas.Admin.Validators
+│   └── HomeVmValidator.cs
+├── Helpers/                         # (Admin only) namespace ...Areas.Admin.Helpers
+│   └── AuditMetadataFormatter.cs
 └── Views/
-    ├── Index.cshtml
-    └── Edit.cshtml
+    └── Languages/
+        ├── Index.cshtml
+        └── Edit.cshtml
 ```
+
+Every other area follows the identical shape — just swap the `{Area}` segment. For example
+the Accounts `Profile` feature lives in `Areas/Accounts/Controllers/ProfileController.cs`,
+`Areas/Accounts/Facades/ProfileFacade.cs`, `Areas/Accounts/Models/Profile/*`,
+`Areas/Accounts/Views/Profile/*`, with the shared `Areas/Accounts/Shared/_AccountSidebar.cshtml`
+partial. Auth keeps `Areas/Auth/Shared/_RecaptchaField.cshtml`.
 
 > **Naming is a contract.** Classes ending in `ApiClient` or `Facade` are auto-registered
-> in DI (see §9). Stick to the suffixes.
+> in DI (see §9) **by name suffix — regardless of folder or namespace**. That is exactly why
+> moving the areas to the layered layout needed no DI changes. Always keep the suffixes.
 
 ---
 
@@ -94,7 +155,7 @@ Use `init` setters; serialization is camelCase (handled by the base client).
 
 `Responses/LanguageItemResponse.cs`
 ```csharp
-namespace YallaJo.Web.Areas.Admin.Modules.ContentCore.Features.Languages.Responses;
+namespace YallaJo.Web.Areas.Admin.Models.Languages;
 
 public sealed class LanguageItemResponse
 {
@@ -109,7 +170,7 @@ public sealed class LanguageItemResponse
 
 `Requests/CreateLanguageRequest.cs` — request DTOs are concise **positional records**:
 ```csharp
-namespace YallaJo.Web.Areas.Admin.Modules.ContentCore.Features.Languages.Requests;
+namespace YallaJo.Web.Areas.Admin.Models.Languages;
 
 public sealed record CreateLanguageRequest(string Code, string Name, string NativeName, bool IsRtl);
 ```
@@ -128,7 +189,7 @@ ViewModels are what `.cshtml` binds to. **Display/list** VMs use `init`; **form*
 
 `ViewModels/LanguageRowVm.cs` (one row in a table)
 ```csharp
-namespace YallaJo.Web.Areas.Admin.Modules.ContentCore.Features.Languages.ViewModels;
+namespace YallaJo.Web.Areas.Admin.Models.Languages;
 
 public sealed class LanguageRowVm
 {
@@ -142,7 +203,7 @@ public sealed class LanguageRowVm
 
 `ViewModels/LanguageListVm.cs` (the page model — list + inline create form + filter)
 ```csharp
-namespace YallaJo.Web.Areas.Admin.Modules.ContentCore.Features.Languages.ViewModels;
+namespace YallaJo.Web.Areas.Admin.Models.Languages;
 
 public sealed class LanguageListVm
 {
@@ -156,7 +217,7 @@ public sealed class LanguageListVm
 ```csharp
 using System.ComponentModel.DataAnnotations;
 
-namespace YallaJo.Web.Areas.Admin.Modules.ContentCore.Features.Languages.ViewModels;
+namespace YallaJo.Web.Areas.Admin.Models.Languages;
 
 public sealed class CreateLanguageVm
 {
@@ -192,11 +253,11 @@ Keep it dumb and allocation-only — no I/O, no logic.
 
 `Mappers/LanguagesMapper.cs`
 ```csharp
-using YallaJo.Web.Areas.Admin.Modules.ContentCore.Features.Languages.Requests;
-using YallaJo.Web.Areas.Admin.Modules.ContentCore.Features.Languages.Responses;
-using YallaJo.Web.Areas.Admin.Modules.ContentCore.Features.Languages.ViewModels;
+using YallaJo.Web.Areas.Admin.Models.Languages;
+using YallaJo.Web.Areas.Admin.Models.Languages;
+using YallaJo.Web.Areas.Admin.Models.Languages;
 
-namespace YallaJo.Web.Areas.Admin.Modules.ContentCore.Features.Languages.Mappers;
+namespace YallaJo.Web.Areas.Admin.Models.Languages;
 
 public static class LanguagesMapper
 {
@@ -230,12 +291,11 @@ thin one-liner binding an HTTP verb + URL + DTOs. **No mapping, no view models h
 
 `LanguagesApiClient.cs`
 ```csharp
-using YallaJo.Web.Areas.Admin.Modules.ContentCore.Features.Languages.Requests;
-using YallaJo.Web.Areas.Admin.Modules.ContentCore.Features.Languages.Responses;
+using YallaJo.Web.Areas.Admin.Models.Languages;
 using YallaJo.Web.Infrastructure.Api.Contracts;
 using YallaJo.Web.Services;
 
-namespace YallaJo.Web.Areas.Admin.Modules.ContentCore.Features.Languages;
+namespace YallaJo.Web.Areas.Admin.ApiClients;
 
 public sealed class LanguagesApiClient
 {
@@ -274,11 +334,11 @@ translated** (`IsUnauthorized` → `ForceSignOut`, conflict/not-found → friend
 `LanguagesFacade.cs`
 ```csharp
 using Microsoft.AspNetCore.OutputCaching;
-using YallaJo.Web.Areas.Admin.Modules.ContentCore.Features.Languages.Mappers;
-using YallaJo.Web.Areas.Admin.Modules.ContentCore.Features.Languages.ViewModels;
+using YallaJo.Web.Areas.Admin.ApiClients;
+using YallaJo.Web.Areas.Admin.Models.Languages;
 using YallaJo.Web.Infrastructure.Api.Contracts;
 
-namespace YallaJo.Web.Areas.Admin.Modules.ContentCore.Features.Languages;
+namespace YallaJo.Web.Areas.Admin.Facades;
 
 public sealed class LanguagesFacade
 {
@@ -345,11 +405,12 @@ class with `[Area(...)]`, `[Authorize]`, and (admin) a default `[RequirePermissi
 ```csharp
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using YallaJo.Web.Areas.Admin.Modules.ContentCore.Features.Languages.ViewModels;
+using YallaJo.Web.Areas.Admin.Facades;
+using YallaJo.Web.Areas.Admin.Models.Languages;
 using YallaJo.Web.Infrastructure.Authorization;
 using YallaJo.Web.Infrastructure.Mvc;          // BaseController
 
-namespace YallaJo.Web.Areas.Admin.Modules.ContentCore.Features.Languages;
+namespace YallaJo.Web.Areas.Admin.Controllers;
 
 [Area("Admin")]
 [Authorize]
@@ -487,26 +548,142 @@ There is **no manual `AddScoped`**. `Program.cs` calls `builder.Services.AddFeat
 which reflection-scans the assembly and registers every concrete class whose name ends in
 **`ApiClient`** or **`Facade`** as `Scoped`. Just name your classes correctly and they're wired.
 
+> The scan keys on the **class-name suffix only — not the folder or namespace.** That is why
+> every area could move to the layered layout (`Facades/`, `ApiClients/`) without a single DI
+> change. Whether `LanguagesFacade` lives in `Modules/.../Features/Languages/` or `Facades/`, it
+> registers identically.
+
 (The base `ApiClient` / `IApiClient`, `IOutputCacheStore`, etc. are already registered.)
+
+---
+
+## 9.5 Composite views — calling **multiple facades** from one screen
+
+Sometimes a single screen needs data from several API endpoints (e.g. a "Security"
+page showing active **sessions** + trusted **devices** + linked **external providers**).
+**Do not** collapse those features into one god-controller that injects `IApiClient`.
+The pipeline contract still holds — you **compose facades**, you do not bypass the tier.
+
+> **Rule:** A controller may inject **as many `Facade`s as the screen needs**. What stays
+> forbidden is a controller injecting `IApiClient`/`HttpClient` directly. Each facade keeps
+> owning exactly **one** API concern; the *composition* happens above the facade layer.
+
+Pick the pattern that matches *why* you need multiple endpoints:
+
+### Pattern A — Controller composes sibling facades (default)
+Best when the composite screen lives in one feature and isn't reused elsewhere. The owning
+feature's controller injects the other features' facades and assembles one page ViewModel.
+Call `GuardSignOut` after **every** facade call.
+
+```csharp
+// Areas/Auth/Controllers/SecurityController.cs   (layered Auth)
+[Area("Auth")]
+[Authorize]
+public sealed class SecurityController : BaseController
+{
+    private readonly SessionsFacade          _sessions;
+    private readonly ExternalProvidersFacade _providers;
+
+    public SecurityController(SessionsFacade sessions, ExternalProvidersFacade providers)
+    {
+        _sessions  = sessions;
+        _providers = providers;
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Index(CancellationToken ct)
+    {
+        var sessions = await _sessions.GetAsync(ct);
+        if (GuardSignOut(sessions) is { } r1) return r1;
+
+        var providers = await _providers.ListAsync(ct);
+        if (GuardSignOut(providers) is { } r2) return r2;
+
+        var vm = new SecurityPageVm
+        {
+            Sessions  = sessions.Data!,
+            Providers = providers.Data!,
+        };
+        return View(vm);
+    }
+}
+```
+
+Because facades are auto-registered `Scoped` (§9), injecting `SessionsFacade` into another
+controller costs nothing and **reuses** the existing facade — no new wiring, no
+duplicated API calls.
+
+### Pattern B — A dedicated aggregate facade (reused composite)
+When the **same** composite is needed by more than one controller, wrap the composition in
+its own `XxxFacade` that injects the sibling facades and returns one aggregate ViewModel.
+The controller then injects just that single facade and stays thin. The aggregate facade
+follows all normal facade rules (sealed, no `HttpContext`/`TempData`, returns
+`ApiResult<T>`); on the first failing sub-call it returns that failure so the controller's
+single `GuardSignOut` still works.
+
+```csharp
+public sealed class SecurityOverviewFacade
+{
+    private readonly SessionsFacade          _sessions;
+    private readonly ExternalProvidersFacade _providers;
+
+    public SecurityOverviewFacade(SessionsFacade sessions, ExternalProvidersFacade providers)
+    {
+        _sessions  = sessions;
+        _providers = providers;
+    }
+
+    public async Task<ApiResult<SecurityPageVm>> LoadAsync(CancellationToken ct = default)
+    {
+        var sessions = await _sessions.GetAsync(ct);
+        if (!sessions.IsSuccess) return ApiResult<SecurityPageVm>.Fail(sessions.StatusCode, sessions.Error);
+
+        var providers = await _providers.ListAsync(ct);
+        if (!providers.IsSuccess) return ApiResult<SecurityPageVm>.Fail(providers.StatusCode, providers.Error);
+
+        return ApiResult<SecurityPageVm>.Ok(new SecurityPageVm
+        {
+            Sessions  = sessions.Data!,
+            Providers = providers.Data!,
+        });
+    }
+}
+```
+
+### Pattern C — View Component for a reusable widget
+If the "extra endpoint" is really a self-contained widget that appears on **many** pages
+(e.g. a session-count badge in the navbar), build a **ViewComponent** backed by its feature
+facade instead of threading the data through every controller. The component injects the
+facade, renders its own partial, and is dropped into any view with `<vc:...>`.
+
+> **Note on `AuthController`:** the real `AuthController` injects five facades
+> (`LoginFacade`/`RegisterFacade`/`ForgotPasswordFacade`/`ResetPasswordFacade`/`VerifyEmailFacade`)
+> — that is deliberate Pattern A: every one of its routes is part of the **same**
+> unauthenticated entry experience (sign-in / sign-up / forgot / reset / two-factor), so they
+> share one controller and one set of views. Composition is for assembling **related** screens
+> from multiple facades. What stays forbidden is a controller injecting many facades for
+> genuinely *unrelated* responsibilities just to avoid creating a second controller.
 
 ---
 
 ## 10. Step 8 — Views
 
-Views go in the feature's own `Views/` folder. The view-location expanders resolve them:
+Views go under `Views/{Controller}/` in every area. The view-location formats resolve them in
+this order:
 
 ```
-Admin module:  ~/Areas/Admin/Modules/{Module}/Features/{Controller}/Views/{View}.cshtml
-               ~/Areas/Admin/Modules/{Module}/Features/{Controller}/Views/Shared/{View}.cshtml
-Other areas:   ~/Areas/{Area}/Features/{Controller}/Views/{View}.cshtml
-               ~/Areas/{Area}/Features/{Controller}/Views/Shared/{View}.cshtml
-Area-shared:   ~/Areas/{Area}/Shared/{View}.cshtml   (e.g. Areas/Auth/Shared/_RecaptchaField.cshtml)
+Layered:       ~/Areas/{Area}/Views/{Controller}/{View}.cshtml
+               ~/Areas/{Area}/Views/Shared/{View}.cshtml
+Area-shared:   ~/Areas/{Area}/Shared/{View}.cshtml   (e.g. Areas/Auth/Shared/_RecaptchaField.cshtml,
+                                                            Areas/Accounts/Shared/_AccountSidebar.cshtml)
 Global shared: ~/Views/Shared/{View}.cshtml          (_Layout, _Navbar, _Alerts, _ValidationScriptsPartial)
 ```
-These are registered in `Program.cs` (`AddRazorOptions` → `AreaViewLocationFormats`) plus the
-`AdminModuleViewLocationExpander` (which fires only for the `Admin` area and prepends the
-module paths). **A new Admin module folder is picked up automatically at startup — no
-`Program.cs` change needed.**
+These are registered once in `Program.cs` (`AddRazorOptions` → `AreaViewLocationFormats`). The
+generic `~/Areas/{2}/Views/{1}/{0}.cshtml` format is **area-agnostic**, so a new screen in **any**
+area (Auth, Accounts, Content, Admin) at `Areas/{Area}/Views/{Controller}/{Action}.cshtml` is
+picked up at startup with **no per-screen `Program.cs` change**. Per-feature partials live in
+`Views/{Controller}/Partials/` and are referenced by relative name
+(e.g. `<partial name="Partials/_MetadataDetails" />`).
 
 **Conventions every view follows (matching the existing Languages views):**
 - First line is the **strongly-typed model**: `@model ...ViewModels.LanguageListVm`.
@@ -527,7 +704,7 @@ module paths). **A new Admin module folder is picked up automatically at startup
 `Views/Index.cshtml` (list + permission-gated inline create form)
 ```cshtml
 @using YallaJo.Web.Infrastructure.Authorization
-@model YallaJo.Web.Areas.Admin.Modules.ContentCore.Features.Languages.ViewModels.LanguageListVm
+@model YallaJo.Web.Areas.Admin.Models.Languages.LanguageListVm
 @{
     ViewData["Title"] = "Languages";
     Layout = "~/Views/Shared/_Layout.cshtml";
@@ -604,7 +781,7 @@ module paths). **A new Admin module folder is picked up automatically at startup
 
 `Views/Edit.cshtml` (single-record form)
 ```cshtml
-@model YallaJo.Web.Areas.Admin.Modules.ContentCore.Features.Languages.ViewModels.UpdateLanguageVm
+@model YallaJo.Web.Areas.Admin.Models.Languages.UpdateLanguageVm
 @{
     ViewData["Title"] = "Edit Language";
     Layout = "~/Views/Shared/_Layout.cshtml";
@@ -715,7 +892,7 @@ paged Response DTO in its `Responses/` folder, all following the same shape (see
 `UserListResponse`, `AuditLogListResponse`, `PaginatedPlacesResponse`):
 ```csharp
 // Responses/UserListResponse.cs
-namespace YallaJo.Web.Areas.Admin.Modules.Security.Features.Users.Responses;
+namespace YallaJo.Web.Areas.Admin.Models.Users;
 
 public sealed class UserListResponse
 {
@@ -941,16 +1118,19 @@ unobtrusive adapter does the AJAX call to your endpoint as the field blurs.
 
 ## 15. New-feature checklist (copy this into the PR)
 
-- [ ] Folder created under the correct area (`Areas/.../Features/{Name}/`)
-- [ ] `Responses/` + `Requests/` DTOs (init setters, camelCase)
-- [ ] `ViewModels/` (list VMs `init`; form VMs `set` + DataAnnotations)
-- [ ] `Mappers/{Name}Mapper.cs` (static, Response→VM and VM→Request)
+- [ ] Files placed per the layered layout (see §1, same for **every** area — Auth, Accounts, Content, Admin):
+  - `Controllers/{Name}Controller.cs` (`...Areas.{Area}.Controllers`), `Facades/{Name}Facade.cs` (`...Areas.{Area}.Facades`), `ApiClients/{Name}ApiClient.cs` (`...Areas.{Area}.ApiClients`), DTOs/VMs/Mapper under `Models/{Feature}/` (`...Areas.{Area}.Models.{Feature}`), views under `Views/{Controller}/`
+  - Extra role folders where used: `Validators/` (`...Areas.{Area}.Validators`), `Helpers/` (`...Areas.{Area}.Helpers`), `Shared/` for area-shared partials
+- [ ] DTOs: Requests + Responses (init setters, camelCase)
+- [ ] ViewModels (list VMs `init`; form VMs `set` + DataAnnotations)
+- [ ] `{Name}Mapper.cs` (static, Response→VM and VM→Request)
 - [ ] `{Name}ApiClient : ` takes `IApiClient`, one-liners per endpoint, returns `ApiResult`/`ApiResult<T>`
 - [ ] `{Name}Facade` maps results → VMs, handles `IsUnauthorized`/conflict/etc., evicts cache on writes (if cached)
-- [ ] `{Name}Controller : BaseController` with `[Area]` + `[Authorize]` + `[RequirePermission]`
+- [ ] `{Name}Controller : BaseController` with `[Area]` + `[Authorize]` + `[RequirePermission]` (Auth self-service screens use `[AllowAnonymous]`/`[Authorize]` only)
 - [ ] Reads `[HttpGet]`; writes `[HttpPost] + [ValidateAntiForgeryToken]` + stricter `[RequirePermission]`
 - [ ] Every action: `async`, trailing `CancellationToken`, `GuardSignOut`, PRG on success
-- [ ] Views in `Views/` with `@model`, tag helpers, `_ValidationScriptsPartial`; no inline alert markup
+- [ ] Views with `@model` first line, tag helpers, `_ValidationScriptsPartial`; no inline alert markup
+- [ ] Cross-tier `using`s present: controllers `using ...Areas.{Area}.Facades;`, facades `using ...Areas.{Area}.ApiClients;`, plus the relevant `...Models.{Feature}` imports
 - [ ] New permission constants added to `WebPermission` (if new resource)
 - [ ] Nav link added (permission-gated) if needed
 - [ ] **List endpoints paged** via a per-feature list Response (`Items` + `PageNumber`/`PageSize`/`TotalCount`/`HasPreviousPage`/`HasNextPage`); `pageSize` server-fixed **or** `Math.Clamp`ed; pager driven by `HasPrevious`/`HasNext`; filters preserved on page links

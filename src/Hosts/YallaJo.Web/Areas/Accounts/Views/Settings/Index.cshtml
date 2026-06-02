@@ -1,0 +1,206 @@
+@model YallaJo.Web.Areas.Accounts.Models.Settings.SettingsVm
+@using YallaJo.Web.Areas.Accounts.Shared
+@{
+    ViewData["Title"] = "Settings";
+    ViewData["AccountNav"] = "Settings";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var sidebar = ViewBag.Sidebar as AccountSidebarVm ?? new AccountSidebarVm();
+}
+
+<section class="pt-3">
+    <div class="container">
+        <div class="row g-4 g-xl-5">
+            <partial name="_AccountSidebar" model="sidebar" />
+
+            <div class="col-lg-8 col-xl-9">
+                <div class="d-grid d-lg-none mb-3">
+                    <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasSidebar">
+                        <i class="fas fa-sliders-h me-2"></i>Account menu
+                    </button>
+                </div>
+
+                <div class="vstack gap-4">
+
+                    @* ---------- Notification settings ---------- *@
+                    <div class="card border">
+                        <div class="card-header border-bottom">
+                            <h4 class="card-header-title mb-0">Notification settings</h4>
+                            <p class="mb-0 small">Choose how you want to be notified. Security and payment alerts are always on.</p>
+                        </div>
+                        <div class="card-body">
+                            <form asp-area="Accounts" asp-controller="Settings" asp-action="UpdateNotifications" method="post">
+                                @Html.AntiForgeryToken()
+                                <div class="table-responsive">
+                                    <table class="table table-sm align-middle mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th scope="col">Activity</th>
+                                                <th scope="col" class="text-center">Email</th>
+                                                <th scope="col" class="text-center">Push</th>
+                                                <th scope="col" class="text-center">In-app</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var row in Model.NotificationRows)
+                                            {
+                                                <tr>
+                                                    <td>@row.Label</td>
+                                                    <td class="text-center">
+                                                        <div class="form-check form-switch d-inline-block">
+                                                            <input class="form-check-input" type="checkbox" role="switch"
+                                                                   name="pref_@(row.Type)_Email" value="true" @(row.Email ? "checked" : "") />
+                                                        </div>
+                                                    </td>
+                                                    <td class="text-center">
+                                                        <div class="form-check form-switch d-inline-block">
+                                                            <input class="form-check-input" type="checkbox" role="switch"
+                                                                   name="pref_@(row.Type)_Push" value="true" @(row.Push ? "checked" : "") />
+                                                        </div>
+                                                    </td>
+                                                    <td class="text-center">
+                                                        <div class="form-check form-switch d-inline-block">
+                                                            <input class="form-check-input" type="checkbox" role="switch"
+                                                                   name="pref_@(row.Type)_InApp" value="true" @(row.InApp ? "checked" : "") />
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="text-end mt-3">
+                                    <button type="submit" class="btn btn-primary mb-0">Save preferences</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    @* ---------- Marketing / newsletter ---------- *@
+                    <div class="card border">
+                        <div class="card-header border-bottom">
+                            <h4 class="card-header-title mb-0">Marketing &amp; newsletter</h4>
+                            <p class="mb-0 small">Manage promotional communication.</p>
+                        </div>
+                        <div class="card-body">
+                            <form asp-area="Accounts" asp-controller="Settings" asp-action="UpdateMarketing" method="post">
+                                @Html.AntiForgeryToken()
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" role="switch" id="emailDigest"
+                                           name="emailDigest" value="true" @(Model.Marketing.EmailDigest ? "checked" : "") />
+                                    <label class="form-check-label" for="emailDigest">Email digest &amp; newsletter</label>
+                                </div>
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" role="switch" id="pushNotifications"
+                                           name="pushNotifications" value="true" @(Model.Marketing.PushNotifications ? "checked" : "") />
+                                    <label class="form-check-label" for="pushNotifications">Promotional push notifications</label>
+                                </div>
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" role="switch" id="reEngagementCampaigns"
+                                           name="reEngagementCampaigns" value="true" @(Model.Marketing.ReEngagementCampaigns ? "checked" : "") />
+                                    <label class="form-check-label" for="reEngagementCampaigns">Re-engagement campaigns</label>
+                                </div>
+                                <div class="text-end">
+                                    <button type="submit" class="btn btn-primary mb-0">Save</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    @* ---------- Security ---------- *@
+                    <div class="card border">
+                        <div class="card-header border-bottom">
+                            <h4 class="card-header-title mb-0">Security settings</h4>
+                        </div>
+                        <div class="card-body vstack gap-4">
+
+                            @* Phone number *@
+                            <div>
+                                <h6>Phone number</h6>
+                                <form asp-area="Accounts" asp-controller="Settings" asp-action="UpdatePhone" method="post" class="row g-2 align-items-end">
+                                    @Html.AntiForgeryToken()
+                                    <div class="col-sm-8">
+                                        <label class="form-label" for="PhoneNumber">Primary phone</label>
+                                        <input class="form-control" type="tel" id="PhoneNumber" name="PhoneNumber"
+                                               value="@Model.PhoneNumber" placeholder="+1 555 123 4567" autocomplete="tel" />
+                                    </div>
+                                    <div class="col-sm-4 d-grid">
+                                        <button type="submit" class="btn btn-primary mb-0">Update phone</button>
+                                    </div>
+                                </form>
+                            </div>
+
+                            <hr class="my-1" />
+
+                            @* Active sessions *@
+                            <div>
+                                <h6>Active sessions</h6>
+                                @if (Model.Sessions.Count == 0)
+                                {
+                                    <p class="text-body-secondary small mb-0">No other active sessions.</p>
+                                }
+                                else
+                                {
+                                    <div class="table-responsive">
+                                        <table class="table table-sm align-middle">
+                                            <thead>
+                                                <tr>
+                                                    <th scope="col">Device</th>
+                                                    <th scope="col">IP</th>
+                                                    <th scope="col">Started</th>
+                                                    <th scope="col">Expires</th>
+                                                    <th scope="col" class="text-end">Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach (var s in Model.Sessions)
+                                                {
+                                                    <tr>
+                                                        <td>
+                                                            @s.DeviceName
+                                                            @if (s.IsCurrent)
+                                                            {
+                                                                <span class="badge bg-success bg-opacity-10 text-success ms-1">This device</span>
+                                                            }
+                                                        </td>
+                                                        <td class="small">@s.IpAddress</td>
+                                                        <td class="small">@s.CreatedAt.ToString("d MMM yyyy")</td>
+                                                        <td class="small">@s.ExpiresAt.ToString("d MMM yyyy")</td>
+                                                        <td class="text-end">
+                                                            <div class="d-inline-flex gap-1">
+                                                                <form asp-area="Accounts" asp-controller="Settings" asp-action="TrustDevice"
+                                                                      asp-route-deviceId="@s.DeviceId" method="post" class="d-inline">
+                                                                    @Html.AntiForgeryToken()
+                                                                    <button type="submit" class="btn btn-sm btn-outline-secondary mb-0">Trust</button>
+                                                                </form>
+                                                                @if (!s.IsCurrent)
+                                                                {
+                                                                    <form asp-area="Accounts" asp-controller="Settings" asp-action="RevokeSession"
+                                                                          asp-route-sessionId="@s.SessionId" method="post" class="d-inline">
+                                                                        @Html.AntiForgeryToken()
+                                                                        <button type="submit" class="btn btn-sm btn-outline-danger mb-0">Sign out</button>
+                                                                    </form>
+                                                                }
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                }
+                                <form asp-area="Accounts" asp-controller="Settings" asp-action="LogoutAll" method="post" class="mt-2">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-outline-danger mb-0">
+                                        <i class="fas fa-sign-out-alt me-2"></i>Sign out of all devices
+                                    </button>
+                                </form>
+                            </div>
+
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

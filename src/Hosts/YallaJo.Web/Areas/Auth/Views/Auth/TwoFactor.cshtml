@@ -1,0 +1,157 @@
+@model YallaJo.Web.Areas.Auth.Models.VerifyEmail.VerifyEmailVm
+@using YallaJo.Web.Infrastructure.Security.Recaptcha
+@inject IRecaptchaScriptService Recaptcha
+@{
+    ViewData["Title"] = "Verify Email";
+    Layout = "~/Areas/Auth/Views/Shared/_AuthLayout.cshtml";
+}
+
+<section class="vh-xxl-100">
+    <div class="container h-100 d-flex px-0 px-sm-4">
+        <div class="row justify-content-center align-items-center m-auto">
+            <div class="col-12">
+                <div class="shadow bg-mode rounded-3 overflow-hidden">
+                    <div class="row g-0 align-items-center">
+                        <!-- Vector Image -->
+                        <div class="col-lg-6 d-md-flex align-items-center order-2 order-lg-1">
+                            <div class="p-3 p-lg-5">
+                                <img src="~/assets/images/element/forgot-pass.svg" alt="" />
+                            </div>
+                            <!-- Divider -->
+                            <div class="vr opacity-1 d-none d-lg-block"></div>
+                        </div>
+
+                        <!-- Information -->
+                        <div class="col-lg-6 order-1">
+                            <div class="p-4 p-sm-7">
+                                <!-- Logo -->
+                                <a asp-area="Auth" asp-controller="Auth" asp-action="SignIn">
+                                    <img class="mb-4 h-50px" src="~/assets/images/logo-icon.svg" alt="logo" />
+                                </a>
+                                <!-- Title -->
+                                <h1 class="mb-2 h3">Two factor authentication</h1>
+                                <p class="mb-sm-0">
+                                    We have sent a verification code to
+                                    <b>@(string.IsNullOrEmpty(Model.Email) ? "your email" : Model.Email)</b>
+                                </p>
+
+                                <div asp-validation-summary="All" class="text-danger mt-3 mb-0"></div>
+
+                                <!-- Form START -->
+                                <form asp-area="Auth" asp-controller="Auth" asp-action="TwoFactor" method="post" class="mt-sm-4 text-start">
+                                    @Html.AntiForgeryToken()
+
+                                    <input asp-for="Email" type="hidden" />
+
+                                    <!-- Verification code -->
+                                    <p class="mb-1">Enter the code we have sent you:</p>
+                                    <div class="mb-2">
+                                        <input asp-for="OtpCode"
+                                               class="form-control form-control-lg text-center"
+                                               style="letter-spacing:.5em;"
+                                               maxlength="6"
+                                               autocomplete="one-time-code"
+                                               inputmode="numeric"
+                                               placeholder="------"
+                                               autofocus />
+                                        <span asp-validation-for="OtpCode" class="text-danger small"></span>
+                                    </div>
+
+                                    <!-- Resend -->
+                                    <div class="d-sm-flex justify-content-between align-items-center small mb-4">
+                                        <span>Don't get a code?</span>
+                                        <button type="button" id="resendBtn" class="btn btn-sm btn-link p-0 text-decoration-underline mb-0">Click to resend</button>
+                                    </div>
+                                    <div id="resendMsg" class="small mb-3"></div>
+
+                                    <partial name="_RecaptchaField" model="@RecaptchaActions.VerifyEmail" />
+
+                                    <!-- Button -->
+                                    <div><button type="submit" class="btn btn-primary w-100 mb-0">Verify and Proceed</button></div>
+                                </form>
+                                <!-- Form END -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            var recaptchaEnabled = @Json.Serialize(Recaptcha.IsEnabled);
+            var recaptchaSiteKey = @Json.Serialize(Recaptcha.SiteKey);
+            var resendAction = @Json.Serialize(RecaptchaActions.ResendOtp);
+
+            var btn = document.getElementById('resendBtn');
+            var msg = document.getElementById('resendMsg');
+            var emailInput = document.querySelector('[name="Email"]');
+            var tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
+
+            function getToken() {
+                if (!recaptchaEnabled || !recaptchaSiteKey || typeof grecaptcha === 'undefined') {
+                    return Promise.resolve('');
+                }
+                return new Promise(function (resolve) {
+                    grecaptcha.ready(function () {
+                        grecaptcha.execute(recaptchaSiteKey, { action: resendAction })
+                            .then(resolve)
+                            .catch(function () { resolve(''); });
+                    });
+                });
+            }
+
+            function disable(seconds) {
+                btn.disabled = true;
+                var remaining = seconds;
+                var timer = setInterval(function () {
+                    remaining -= 1;
+                    if (remaining <= 0) {
+                        clearInterval(timer);
+                        btn.disabled = false;
+                        btn.textContent = 'Click to resend';
+                    } else {
+                        btn.textContent = 'Resend in ' + remaining + 's';
+                    }
+                }, 1000);
+            }
+
+            btn.addEventListener('click', function () {
+                msg.textContent = '';
+                msg.className = 'small mb-3';
+
+                getToken().then(function (token) {
+                    return fetch('/auth/resend-otp', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'RequestVerificationToken': tokenInput ? tokenInput.value : ''
+                        },
+                        body: JSON.stringify({
+                            email: emailInput ? emailInput.value : '',
+                            recaptchaToken: token
+                        })
+                    });
+                }).then(function (res) {
+                    return res.json().then(function (data) { return { ok: res.ok, data: data }; });
+                }).then(function (result) {
+                    if (result.ok) {
+                        msg.textContent = result.data.message || 'A new code has been sent.';
+                        msg.className = 'small mb-3 text-success';
+                        disable(60);
+                    } else {
+                        msg.textContent = result.data.error || 'Could not resend code.';
+                        msg.className = 'small mb-3 text-danger';
+                    }
+                }).catch(function () {
+                    msg.textContent = 'Could not resend code. Please try again.';
+                    msg.className = 'small mb-3 text-danger';
+                });
+            });
+        })();
+    </script>
+}

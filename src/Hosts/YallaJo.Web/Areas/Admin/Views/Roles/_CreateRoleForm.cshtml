@@ -1,0 +1,16 @@
+@model YallaJo.Web.Areas.Admin.Models.Roles.CreateRoleVm
+
+<form asp-area="Admin" asp-controller="Roles" asp-action="Create" method="post" class="row g-2">
+    @Html.AntiForgeryToken()
+    <div asp-validation-summary="All" class="text-danger"></div>
+    <div class="col-auto">
+        <input asp-for="Name" class="form-control" placeholder="Role name" />
+        <span asp-validation-for="Name" class="text-danger"></span>
+    </div>
+    <div class="col-auto">
+        <input asp-for="Description" class="form-control" placeholder="Description (optional)" />
+    </div>
+    <div class="col-auto">
+        <button type="submit" class="btn btn-primary">Create</button>
+    </div>
+</form>

@@ -1,0 +1,16 @@
+@*
+    Phase 5D — single-source lifecycle status badge. Today it renders
+    a binary Active/Inactive pill driven by Model.IsActive; the
+    optional Model.LifecycleState parameter is accepted but ignored
+    until the backend UserDto exposes granular lifecycle states.
+    Every call site already passes the field, so the future upgrade
+    is a one-helper change.
+*@
+@using YallaJo.Web.Areas.Admin.Helpers
+@model YallaJo.Web.Areas.Admin.Models.Users.LifecycleBadgeVm
+@{
+    var css   = LifecycleBadge.GetCssClass(Model.IsActive, Model.LifecycleState);
+    var label = LifecycleBadge.GetLabel(Model.IsActive, Model.LifecycleState);
+    var aria  = Model.IsActive ? "User is active" : "User is inactive";
+}
+<span class="badge @css" aria-label="@aria">@label</span>

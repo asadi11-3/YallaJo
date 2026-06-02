@@ -1,0 +1,43 @@
+@model YallaJo.Web.Areas.Auth.Models.ExternalProviders.ExternalAuthCompleteVm
+@{
+    ViewData["Title"] = "Completing sign-in…";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="auth-card text-center">
+    <h2>Completing sign-in…</h2>
+    <p class="text-muted">Please wait a moment while we finish signing you in.</p>
+
+    <form id="externalAuthCompleteForm"
+          method="post"
+          asp-area="Auth"
+          asp-controller="ExternalAuth"
+          asp-action="Complete">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="Provider" value="@Model.Provider" />
+        <input type="hidden" name="Ticket" value="@Model.Ticket" />
+        <input type="hidden" name="Mode" value="@Model.Mode" />
+        <input type="hidden" name="ReturnUrl" value="@Model.ReturnUrl" />
+
+        @* Centralized reCAPTCHA field + script — identical wiring to every
+           other auth form, with an action that matches the expected flow. *@
+        <partial name="_RecaptchaField" model="@Model.RecaptchaAction" />
+
+        <noscript>
+            <button type="submit" class="btn btn-primary">Continue</button>
+        </noscript>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        // The centralized _RecaptchaField partial binds to the form submit
+        // event and injects the token before letting the browser send it.
+        // Auto-submit after a short delay so users don't have to click Continue
+        // when JavaScript is enabled.
+        setTimeout(function () {
+            var f = document.getElementById('externalAuthCompleteForm');
+            if (f) f.requestSubmit();
+        }, 50);
+    </script>
+}

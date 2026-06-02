@@ -1,0 +1,156 @@
+@model YallaJo.Web.Areas.Accounts.Models.Wishlist.WishlistVm
+@using YallaJo.Web.Areas.Accounts.Shared
+@{
+    ViewData["Title"] = "My Wishlist";
+    ViewData["AccountNav"] = "Wishlist";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var sidebar = ViewBag.Sidebar as AccountSidebarVm ?? new AccountSidebarVm();
+}
+
+<section class="pt-3">
+    <div class="container">
+        <div class="row g-4 g-xl-5">
+            <partial name="_AccountSidebar" model="sidebar" />
+
+            <div class="col-lg-8 col-xl-9">
+                <div class="d-grid d-lg-none mb-3">
+                    <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasSidebar">
+                        <i class="fas fa-sliders-h me-2"></i>Account menu
+                    </button>
+                </div>
+
+                <div class="card border">
+                    <div class="card-header border-bottom d-flex flex-wrap justify-content-between align-items-center gap-2">
+                        <h4 class="card-header-title mb-0">My Wishlist</h4>
+                        @if (Model.Items.Count > 0)
+                        {
+                            <div class="d-flex align-items-center gap-2">
+                                <select id="wishlistSort" class="form-select form-select-sm border-0 bg-light" style="width:auto;">
+                                    <option value="recent" selected>Recently added</option>
+                                    <option value="title">Title (A–Z)</option>
+                                    <option value="rating">Top rated</option>
+                                    <option value="price">Price (low–high)</option>
+                                </select>
+                                <form asp-area="Accounts" asp-controller="Wishlist" asp-action="RemoveAll" method="post" class="mb-0"
+                                      onsubmit="return confirm('Remove all items from your wishlist?');">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-sm btn-danger-soft mb-0">
+                                        <i class="bi bi-trash me-1"></i>Remove all
+                                    </button>
+                                </form>
+                            </div>
+                        }
+                    </div>
+
+                    <div class="card-body">
+                        @if (Model.Items.Count == 0)
+                        {
+                            <div class="text-center py-5">
+                                <img src="~/assets/images/element/17.svg" class="h-100px mb-3" alt="Empty wishlist" />
+                                <h6 class="mb-1">Your wishlist is empty</h6>
+                                <p class="text-muted mb-0">Save tours, places and guides you love and find them here.</p>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="row g-3" id="wishlistGrid">
+                                @foreach (var item in Model.Items)
+                                {
+                                    var detailUrl = item.EntityType switch
+                                    {
+                                        "Tour" => $"/tours/{item.EntityId}",
+                                        "Place" => $"/places/{item.EntityId}",
+                                        "Business" => $"/places/businesses/{item.EntityId}",
+                                        "TourGuide" => $"/guides/{item.EntityId}",
+                                        "Blog" => $"/blogs/{item.EntityId}",
+                                        _ => "#",
+                                    };
+                                    <div class="col-md-6 wishlist-item"
+                                         data-title="@item.Title"
+                                         data-rating="@(item.Rating?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "0")"
+                                         data-price="@(item.Price?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "0")"
+                                         data-added="@item.AddedAt.ToString("o")">
+                                        <div class="card border h-100">
+                                            <div class="position-relative">
+                                                @if (!string.IsNullOrEmpty(item.ImageUrl))
+                                                {
+                                                    <img src="@item.ImageUrl" class="card-img-top object-fit-cover" style="height:180px;" alt="@item.Title" />
+                                                }
+                                                else
+                                                {
+                                                    <div class="bg-light d-flex align-items-center justify-content-center" style="height:180px;">
+                                                        <i class="bi bi-image display-5 text-secondary"></i>
+                                                    </div>
+                                                }
+                                                <span class="badge bg-dark bg-opacity-75 position-absolute top-0 start-0 m-2">@item.KindLabel</span>
+                                                <form asp-area="Accounts" asp-controller="Wishlist" asp-action="Remove"
+                                                      asp-route-entityType="@item.EntityType" asp-route-entityId="@item.EntityId"
+                                                      method="post" class="position-absolute top-0 end-0 m-2 mb-0">
+                                                    @Html.AntiForgeryToken()
+                                                    <button type="submit" class="btn btn-sm btn-danger rounded-circle"
+                                                            title="Remove from wishlist" aria-label="Remove from wishlist">
+                                                        <i class="bi bi-heart-fill"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                            <div class="card-body">
+                                                <h6 class="mb-1 text-truncate">@item.Title</h6>
+                                                @if (!string.IsNullOrEmpty(item.Subtitle))
+                                                {
+                                                    <p class="small text-muted mb-2"><i class="bi bi-geo-alt me-1"></i>@item.Subtitle</p>
+                                                }
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <div>
+                                                        @if (item.Rating is > 0)
+                                                        {
+                                                            <span class="small"><i class="bi bi-star-fill text-warning me-1"></i>@item.Rating.Value.ToString("0.0")</span>
+                                                        }
+                                                    </div>
+                                                    <div>
+                                                        @if (item.Price is > 0)
+                                                        {
+                                                            <span class="h6 mb-0">@item.Price.Value.ToString("0.00") <small class="text-muted">@item.Currency</small></span>
+                                                        }
+                                                    </div>
+                                                </div>
+                                                <a href="@detailUrl" class="btn btn-sm btn-primary-soft w-100 mt-3 mb-0">View</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        (function () {
+            var sort = document.getElementById('wishlistSort');
+            var grid = document.getElementById('wishlistGrid');
+            if (!sort || !grid) return;
+
+            sort.addEventListener('change', function () {
+                var items = Array.prototype.slice.call(grid.querySelectorAll('.wishlist-item'));
+                var mode = sort.value;
+                items.sort(function (a, b) {
+                    switch (mode) {
+                        case 'title':
+                            return (a.dataset.title || '').localeCompare(b.dataset.title || '');
+                        case 'rating':
+                            return parseFloat(b.dataset.rating || '0') - parseFloat(a.dataset.rating || '0');
+                        case 'price':
+                            return parseFloat(a.dataset.price || '0') - parseFloat(b.dataset.price || '0');
+                        default: // recent
+                            return new Date(b.dataset.added) - new Date(a.dataset.added);
+                    }
+                });
+                items.forEach(function (el) { grid.appendChild(el); });
+            });
+        })();
+    </script>
+}

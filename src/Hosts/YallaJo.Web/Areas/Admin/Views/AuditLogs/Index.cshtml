@@ -1,0 +1,160 @@
+@model YallaJo.Web.Areas.Admin.Models.AuditLogs.AuditLogListVm
+@{
+    ViewData["Title"] = "Audit Timeline";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    // Phase 5A — filter values are reflected back into the inputs and
+    // every pagination link below.
+    string FmtDate(DateTime? d) =>
+        d.HasValue ? d.Value.ToString("yyyy-MM-ddTHH:mm") : string.Empty;
+
+    bool HasAnyFilter =
+        Model.FilterUserId.HasValue
+        || Model.FilterActorUserId.HasValue
+        || !string.IsNullOrWhiteSpace(Model.FilterAction)
+        || Model.FilterFrom.HasValue
+        || Model.FilterTo.HasValue;
+}
+
+<div class="container mt-4">
+    <h2>Audit Timeline</h2>
+
+    @if (ViewBag.Error is string err) { <div class="alert alert-danger">@err</div> }
+
+    @* ── Filter bar ─────────────────────────────────────────────────── *@
+    <form method="get" class="row g-2 mb-3 align-items-end">
+        <div class="col-md-3">
+            <label class="form-label small text-muted mb-0">Subject (User ID)</label>
+            <input type="text" name="userId" class="form-control form-control-sm"
+                   placeholder="GUID"
+                   value="@(Model.FilterUserId?.ToString() ?? string.Empty)" />
+        </div>
+        <div class="col-md-3">
+            <label class="form-label small text-muted mb-0">Actor (Admin ID)</label>
+            <input type="text" name="actorUserId" class="form-control form-control-sm"
+                   placeholder="GUID"
+                   value="@(Model.FilterActorUserId?.ToString() ?? string.Empty)" />
+        </div>
+        <div class="col-md-2">
+            <label class="form-label small text-muted mb-0">Action</label>
+            <input type="text" name="action" class="form-control form-control-sm"
+                   placeholder="ADMIN_…"
+                   value="@(Model.FilterAction ?? string.Empty)" />
+        </div>
+        <div class="col-md-2">
+            <label class="form-label small text-muted mb-0">From (UTC)</label>
+            <input type="datetime-local" name="from" class="form-control form-control-sm"
+                   value="@FmtDate(Model.FilterFrom)" />
+        </div>
+        <div class="col-md-2">
+            <label class="form-label small text-muted mb-0">To (UTC)</label>
+            <input type="datetime-local" name="to" class="form-control form-control-sm"
+                   value="@FmtDate(Model.FilterTo)" />
+        </div>
+        <div class="col-12 d-flex gap-2">
+            <button type="submit" class="btn btn-sm btn-outline-secondary">Filter</button>
+            @if (HasAnyFilter)
+            {
+                <a asp-action="Index" class="btn btn-sm btn-link">Clear filters</a>
+            }
+        </div>
+    </form>
+
+    @* ── Table ──────────────────────────────────────────────────────── *@
+    <table class="table table-sm table-bordered align-middle">
+        <thead class="table-light">
+            <tr>
+                <th style="white-space: nowrap;">Occurred (UTC)</th>
+                <th>Actor</th>
+                <th>Action</th>
+                <th>Target</th>
+                <th>Reason</th>
+                <th>IP</th>
+                <th>Details</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model.Logs.Count == 0)
+            {
+                <tr><td colspan="7" class="text-center text-muted py-4">No audit entries match the current filters.</td></tr>
+            }
+
+            @foreach (var log in Model.Logs)
+            {
+                <tr>
+                    <td class="small text-nowrap">@log.OccurredAt.ToString("u")</td>
+                    <td>
+                        @if (log.ActorUserId.HasValue)
+                        {
+                            <a asp-area="Admin" asp-controller="Users"
+                               asp-action="Details" asp-route-userId="@log.ActorUserId">
+                                @log.ActorUserId.Value.ToString()[..8]…
+                            </a>
+                        }
+                        else
+                        {
+                            <span class="text-muted">—</span>
+                        }
+                    </td>
+                    <td><code class="small">@log.Action</code></td>
+                    <td>
+                        @if (log.UserId.HasValue)
+                        {
+                            <a asp-area="Admin" asp-controller="Users"
+                               asp-action="Details" asp-route-userId="@log.UserId">
+                                @log.UserId.Value.ToString()[..8]…
+                            </a>
+                        }
+                        else
+                        {
+                            <span class="text-muted">—</span>
+                        }
+                    </td>
+                    <td class="small">
+                        @if (string.IsNullOrWhiteSpace(log.Reason))
+                        {
+                            <span class="text-muted">—</span>
+                        }
+                        else
+                        {
+                            @log.Reason
+                        }
+                    </td>
+                    <td class="small text-nowrap">@(log.IpAddress ?? "—")</td>
+                    <td>
+                        <partial name="Partials/_MetadataDetails"
+                                 model="@log.Metadata"
+                                 view-data='new ViewDataDictionary(ViewData) { ["id-suffix"] = log.Id.ToString("N") }' />
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    @* ── Pagination (filters preserved across page changes) ─────────── *@
+    <div class="d-flex gap-2">
+        @if (Model.HasPrevious)
+        {
+            <a asp-action="Index"
+               asp-route-page="@(Model.Page - 1)"
+               asp-route-userId="@Model.FilterUserId"
+               asp-route-actorUserId="@Model.FilterActorUserId"
+               asp-route-action="@Model.FilterAction"
+               asp-route-from="@(Model.FilterFrom?.ToString("o"))"
+               asp-route-to="@(Model.FilterTo?.ToString("o"))"
+               class="btn btn-outline-secondary">← Previous</a>
+        }
+        <span class="align-self-center text-muted">Page @Model.Page — @Model.TotalCount total</span>
+        @if (Model.HasNext)
+        {
+            <a asp-action="Index"
+               asp-route-page="@(Model.Page + 1)"
+               asp-route-userId="@Model.FilterUserId"
+               asp-route-actorUserId="@Model.FilterActorUserId"
+               asp-route-action="@Model.FilterAction"
+               asp-route-from="@(Model.FilterFrom?.ToString("o"))"
+               asp-route-to="@(Model.FilterTo?.ToString("o"))"
+               class="btn btn-outline-secondary">Next →</a>
+        }
+    </div>
+</div>

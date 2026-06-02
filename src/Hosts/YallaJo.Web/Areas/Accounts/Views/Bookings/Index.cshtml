@@ -1,0 +1,109 @@
+@model YallaJo.Web.Areas.Accounts.Models.Bookings.BookingsVm
+@using YallaJo.Web.Areas.Accounts.Shared
+@{
+    ViewData["Title"] = "My Bookings";
+    ViewData["AccountNav"] = "Bookings";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var sidebar = ViewBag.Sidebar as AccountSidebarVm ?? new AccountSidebarVm();
+    var tabs = YallaJo.Web.Areas.Accounts.Facades.BookingsFacade.Tabs;
+
+    string StatusBadge(string status) => status switch
+    {
+        "Confirmed" => "bg-success bg-opacity-10 text-success",
+        "Completed" => "bg-primary bg-opacity-10 text-primary",
+        "Cancelled" => "bg-danger bg-opacity-10 text-danger",
+        "Rejected" => "bg-danger bg-opacity-10 text-danger",
+        "AwaitingPayment" => "bg-warning bg-opacity-10 text-warning",
+        "PendingConfirmation" => "bg-warning bg-opacity-10 text-warning",
+        _ => "bg-secondary bg-opacity-10 text-secondary",
+    };
+}
+
+<section class="pt-3">
+    <div class="container">
+        <div class="row g-4 g-xl-5">
+            <partial name="_AccountSidebar" model="sidebar" />
+
+            <div class="col-lg-8 col-xl-9">
+                <div class="d-grid d-lg-none mb-3">
+                    <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasSidebar">
+                        <i class="fas fa-sliders-h me-2"></i>Account menu
+                    </button>
+                </div>
+
+                <div class="card border">
+                    <div class="card-header border-bottom d-flex justify-content-between align-items-center">
+                        <h4 class="card-header-title mb-0">My Bookings</h4>
+                    </div>
+
+                    <div class="card-body">
+                        <ul class="nav nav-tabs nav-bottom-line mb-4">
+                            @foreach (var tab in tabs)
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link @(Model.ActiveTab == tab ? "active" : "")"
+                                       asp-area="Accounts" asp-controller="Bookings" asp-action="Index" asp-route-tab="@tab">
+                                        @tab
+                                    </a>
+                                </li>
+                            }
+                        </ul>
+
+                        @if (Model.Bookings.Count == 0)
+                        {
+                            <div class="text-center py-5">
+                                <img src="~/assets/images/element/17.svg" class="h-100px mb-3" alt="No bookings" />
+                                <h6 class="mb-1">No @Model.ActiveTab.ToLower() bookings</h6>
+                                <p class="text-muted mb-0">When you book a tour it will show up here.</p>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="vstack gap-3">
+                                @foreach (var b in Model.Bookings)
+                                {
+                                    <div class="card border">
+                                        <div class="row g-0 align-items-center">
+                                            <div class="col-md-3">
+                                                @if (!string.IsNullOrEmpty(b.ImageUrl))
+                                                {
+                                                    <img src="@b.ImageUrl" class="img-fluid rounded-start w-100 h-100 object-fit-cover" style="min-height:120px;" alt="@b.TourName" />
+                                                }
+                                                else
+                                                {
+                                                    <div class="bg-light rounded-start w-100 h-100 d-flex align-items-center justify-content-center" style="min-height:120px;">
+                                                        <i class="bi bi-geo-alt display-6 text-secondary"></i>
+                                                    </div>
+                                                }
+                                            </div>
+                                            <div class="col-md-9">
+                                                <div class="card-body">
+                                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                                        <div>
+                                                            <h6 class="mb-1">@b.TourName</h6>
+                                                            <p class="small text-muted mb-0">Ref: @b.Reference</p>
+                                                        </div>
+                                                        <span class="badge @StatusBadge(b.Status)">@b.Status</span>
+                                                    </div>
+                                                    <div class="d-flex flex-wrap gap-3 small text-muted mb-3">
+                                                        <span><i class="bi bi-people me-1"></i>@b.ParticipantCount guest(s)</span>
+                                                        <span><i class="bi bi-calendar3 me-1"></i>@b.Date.ToString("d MMM yyyy")</span>
+                                                        <span><i class="bi bi-cash me-1"></i>@b.TotalAmount.ToString("0.00") @b.Currency</span>
+                                                    </div>
+                                                    <a class="btn btn-sm btn-primary-soft mb-0"
+                                                       asp-area="Accounts" asp-controller="Bookings" asp-action="Detail" asp-route-id="@b.Id">
+                                                        Manage Booking
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

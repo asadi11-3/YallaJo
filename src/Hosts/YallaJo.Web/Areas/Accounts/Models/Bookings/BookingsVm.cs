@@ -1,0 +1,53 @@
+namespace YallaJo.Web.Areas.Accounts.Models.Bookings;
+
+public sealed class BookingsVm
+{
+    public string ActiveTab { get; init; } = "Upcoming";
+    public IReadOnlyList<BookingCardVm> Bookings { get; init; } = [];
+}
+
+public sealed class BookingCardVm
+{
+    public Guid Id { get; init; }
+    public string Reference { get; init; } = string.Empty;
+    public string Status { get; init; } = string.Empty;
+    public string TourName { get; init; } = "Tour booking";
+    public string? ImageUrl { get; init; }
+    public int ParticipantCount { get; init; }
+    public decimal TotalAmount { get; init; }
+    public string Currency { get; init; } = string.Empty;
+    public DateTime Date { get; init; }
+    public bool IsCancellable { get; init; }
+}
+
+public sealed class BookingDetailVm
+{
+    public Guid Id { get; init; }
+    public string Reference { get; init; } = string.Empty;
+    public string Status { get; init; } = string.Empty;
+    public string TourName { get; init; } = "Tour booking";
+    public string? ImageUrl { get; init; }
+    public int ParticipantCount { get; init; }
+    public bool IsInstantBooking { get; init; }
+    public string? SpecialRequests { get; init; }
+    public DateTime CreatedAt { get; init; }
+
+    public decimal Subtotal { get; init; }
+    public decimal DiscountAmount { get; init; }
+    public decimal LoyaltyAmount { get; init; }
+    public decimal TotalAmount { get; init; }
+    public string Currency { get; init; } = string.Empty;
+    public IReadOnlyList<BookingLineItemVm> LineItems { get; init; } = [];
+
+    public bool IsCancellable { get; init; }
+    public string? CancellationReason { get; init; }
+    public DateTime? CancelledAt { get; init; }
+    public decimal? RefundAmount { get; init; }
+}
+
+public sealed class BookingLineItemVm
+{
+    public string TierType { get; init; } = string.Empty;
+    public int Count { get; init; }
+    public decimal UnitPrice { get; init; }
+}

@@ -1,0 +1,63 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e3]: Booking
+    - button "Toggle color theme" [ref=e5] [cursor=pointer]:
+      - img [ref=e6]
+  - main [ref=e9]:
+    - generic [ref=e10]:
+      - navigation "Progress" [ref=e11]:
+        - generic [ref=e12]:
+          - img [ref=e14]
+          - generic [ref=e16]: Request
+        - generic [ref=e17]:
+          - generic [ref=e18]: "2"
+          - generic [ref=e19]: Verify & reset
+        - generic [ref=e20]:
+          - generic [ref=e21]: "3"
+          - generic [ref=e22]: Done
+      - paragraph [ref=e23]: Account recovery
+      - heading "Set a new password" [level=1] [ref=e24]
+      - paragraph [ref=e25]: We sent a 6-digit code to your email. Enter it below and pick a password you have not used before.
+      - generic [ref=e26]:
+        - generic [ref=e27]:
+          - generic [ref=e28]: Reset code
+          - generic [ref=e29]:
+            - textbox "Digit 1" [ref=e30]
+            - textbox "Digit 2" [ref=e31]
+            - textbox "Digit 3" [ref=e32]
+            - textbox "Digit 4" [ref=e33]
+            - textbox "Digit 5" [ref=e34]
+            - textbox "Digit 6" [ref=e35]
+          - generic [ref=e36]:
+            - generic [ref=e37]:
+              - text: Did not get it?
+              - link "Resend code" [ref=e38] [cursor=pointer]:
+                - /url: "#"
+            - generic [ref=e39]: expires in 9:59
+        - generic [ref=e40]:
+          - generic [ref=e41]: New password
+          - generic [ref=e42]:
+            - textbox "New password" [ref=e43]:
+              - /placeholder: At least 8 characters
+            - button "Show password" [ref=e44] [cursor=pointer]:
+              - img [ref=e45]
+          - paragraph [ref=e53]: Mix upper and lower case, a number and a symbol.
+        - generic [ref=e54]:
+          - generic [ref=e55]: Confirm new password
+          - generic [ref=e56]:
+            - textbox "Confirm new password" [ref=e57]:
+              - /placeholder: Re-enter the password
+            - button "Show password" [ref=e58] [cursor=pointer]:
+              - img [ref=e59]
+          - paragraph
+        - button "Reset password" [ref=e62] [cursor=pointer]
+        - paragraph [ref=e63]:
+          - link "Back to sign in" [ref=e64] [cursor=pointer]:
+            - /url: sign-in.html
+            - img [ref=e65]
+            - text: Back to sign in
+  - contentinfo [ref=e67]:
+    - text: Booking, account recovery. Need help?
+    - link "Contact support" [ref=e68] [cursor=pointer]:
+      - /url: "#"
+    - text: .

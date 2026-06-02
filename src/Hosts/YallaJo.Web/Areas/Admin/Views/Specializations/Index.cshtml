@@ -1,0 +1,78 @@
+@using YallaJo.Web.Infrastructure.Authorization
+@model YallaJo.Web.Areas.Admin.Models.Specializations.SpecializationListVm
+@{
+    ViewData["Title"] = "Specializations";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-4">
+    <h2>Specializations</h2>
+
+    @if (TempData["Success"] is string ok)  { <div class="alert alert-success">@ok</div> }
+    @if (TempData["Error"]   is string err) { <div class="alert alert-danger">@err</div> }
+    @if (ViewBag.Error       is string vbe) { <div class="alert alert-danger">@vbe</div> }
+
+    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+    <permission require="@WebPermission.Specialization.Create">
+        <div class="card mb-4 p-3">
+            <h5>Create Specialization</h5>
+            <form asp-area="Admin" asp-controller="Specializations" asp-action="Create" method="post">
+                @Html.AntiForgeryToken()
+                <div class="row g-2">
+                    <div class="col-md-4">
+                        <label asp-for="Create.Name" class="form-label"></label>
+                        <input asp-for="Create.Name" class="form-control" />
+                        <span asp-validation-for="Create.Name" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="Create.Description" class="form-label"></label>
+                        <input asp-for="Create.Description" class="form-control" />
+                        <span asp-validation-for="Create.Description" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-2">
+                        <label asp-for="Create.Icon" class="form-label"></label>
+                        <input asp-for="Create.Icon" class="form-control" />
+                        <span asp-validation-for="Create.Icon" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary">Create</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </permission>
+
+    <table class="table table-sm table-bordered">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Icon</th>
+                <th>Active</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var s in Model.Specializations)
+            {
+                <tr>
+                    <td>@s.Name</td>
+                    <td>@(s.Description ?? "—")</td>
+                    <td>@(s.Icon ?? "—")</td>
+                    <td>@(s.IsActive ? "✓" : "—")</td>
+                    <td>
+                        <permission require="@WebPermission.Specialization.Update">
+                            <a asp-area="Admin" asp-controller="Specializations" asp-action="Edit" asp-route-id="@s.Id"
+                               class="btn btn-sm btn-outline-secondary">Edit</a>
+                        </permission>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

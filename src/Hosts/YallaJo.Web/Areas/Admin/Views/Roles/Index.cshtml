@@ -1,0 +1,72 @@
+@using YallaJo.Web.Infrastructure.Authorization
+@model YallaJo.Web.Areas.Admin.Models.Roles.RoleListVm
+@{
+    ViewData["Title"] = "Roles";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-4">
+    <h2>Roles</h2>
+
+    @if (TempData["Success"] is string ok)  { <div class="alert alert-success">@ok</div> }
+    @if (TempData["Error"]   is string err) { <div class="alert alert-danger">@err</div> }
+    @if (ViewBag.Error       is string vbe) { <div class="alert alert-danger">@vbe</div> }
+
+    @* ── Create form: visible only to users with Role.Create ──────────────────
+       <permission> TagHelper suppresses the block entirely when the permission is absent.
+       No ViewModel boolean. No @if (Model.CanCreate). *@
+    <permission require="@WebPermission.Role.Create">
+        <div class="card mb-4 p-3">
+            <h5>Create Role</h5>
+            <partial name="_CreateRoleForm" model="Model.Create" />
+        </div>
+    </permission>
+
+    @* ── Roles table: always shown (user passed the Role.Read page-level gate).
+       Actions column + Deactivate button shown only to users with Role.Update. *@
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var r in Model.Roles)
+            {
+                <tr>
+                    <td><strong>@r.Name</strong></td>
+                    <td>@(r.Description ?? "—")</td>
+                    <td>
+                        <span class="badge @(r.IsActive ? "bg-success" : "bg-secondary")">
+                            @(r.IsActive ? "Active" : "Inactive")
+                        </span>
+                    </td>
+                    <td>
+                        <a asp-area="Admin" asp-controller="Roles"
+                           asp-action="Details" asp-route-roleId="@r.Id"
+                           class="btn btn-sm btn-outline-primary">Manage</a>
+                        <permission require="@WebPermission.Role.Update">
+                            @if (r.IsActive)
+                            {
+                                <form asp-area="Admin" asp-controller="Roles"
+                                      asp-action="Deactivate" asp-route-roleId="@r.Id"
+                                      method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-warning btn-sm"
+                                            onclick="return confirm('Deactivate role @r.Name?')">Deactivate</button>
+                                </form>
+                            }
+                        </permission>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

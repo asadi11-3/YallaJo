@@ -27,7 +27,9 @@ public sealed class TourPricingTier : BaseEntity
     public ParticipantType ParticipantType { get; private set; } = ParticipantType.Other;
 
     public Tour Tour { get; private set; } = default!;
-    public IReadOnlyCollection<TourPricingTierTranslation> Translations { get; private set; } = [];
+
+    private readonly List<TourPricingTierTranslation> _translations = [];
+    public IReadOnlyCollection<TourPricingTierTranslation> Translations => _translations.AsReadOnly();
 
     /// <summary>True when this is the required Adult tier (for submit-gate and deletion guard).</summary>
     public bool IsAdult => ParticipantType == ParticipantType.Adult;

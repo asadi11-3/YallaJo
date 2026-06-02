@@ -1,0 +1,80 @@
+@*
+    Minimal chrome-less layout for the public authentication pages
+    (SignIn / SignUp / ForgotPassword / ResetPassword / TwoFactor).
+
+    Shares the same Webestica "Booking" theme assets, fonts, dark-mode switch and
+    vendor/theme scripts as the shared _Layout.cshtml, but deliberately omits the
+    site chrome (top navbar, footer, back-to-top, mobile navbar) so auth screens
+    render as standalone, focused, full-height pages.
+*@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    @* dark mode switch (must run before stylesheets paint to avoid a flash of the wrong theme) *@
+    <script>
+        const storedTheme = localStorage.getItem('theme')
+
+        const getPreferredTheme = () => {
+            if (storedTheme) {
+                return storedTheme
+            }
+            return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+        }
+
+        const setTheme = function (theme) {
+            if (theme === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                document.documentElement.setAttribute('data-bs-theme', 'dark')
+            } else {
+                document.documentElement.setAttribute('data-bs-theme', theme)
+            }
+        }
+
+        setTheme(getPreferredTheme())
+    </script>
+
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>@ViewData["Title"] - YallaJo</title>
+
+    @* favicon *@
+    <link rel="shortcut icon" href="~/assets/images/favicon.ico" />
+
+    @* Google Fonts *@
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+    @* Plugins CSS *@
+    <link rel="stylesheet" type="text/css" href="~/assets/vendor/font-awesome/css/all.min.css" />
+    <link rel="stylesheet" type="text/css" href="~/assets/vendor/bootstrap-icons/bootstrap-icons.css" />
+
+    @* Theme CSS (bundles Bootstrap v5.3.0) *@
+    <link rel="stylesheet" type="text/css" href="~/assets/css/style.css" />
+
+    @* Per-view extra styles *@
+    @await RenderSectionAsync("Styles", required: false)
+
+    @* Import map for fingerprinted JS modules served via MapStaticAssets()/.WithStaticAssets(). *@
+    <ImportMap />
+</head>
+
+<body>
+
+    @* **************** MAIN CONTENT START **************** *@
+    <main>
+        <partial name="_Alerts" />
+        @RenderBody()
+    </main>
+    @* **************** MAIN CONTENT END **************** *@
+
+    @* Bootstrap JS bundle (served locally; fingerprinted + immutable-cached via .WithStaticAssets()). *@
+    <script src="~/assets/vendor/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+
+    @* Theme functions (password eye-toggle, dark-mode switch wiring, etc.) *@
+    <script src="~/assets/js/functions.js"></script>
+
+    @* Per-view extra scripts *@
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

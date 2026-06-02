@@ -1,0 +1,168 @@
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using YallaJo.Web.Areas.Accounts.Facades;
+using YallaJo.Web.Areas.Accounts.Models.Settings;
+using YallaJo.Web.Areas.Accounts.Models.UpdatePhone;
+using YallaJo.Web.Areas.Accounts.Shared;
+using YallaJo.Web.Areas.Auth.Facades;
+using YallaJo.Web.Infrastructure.Mvc;
+
+namespace YallaJo.Web.Areas.Accounts.Controllers;
+
+[Area("Accounts")]
+[Authorize]
+public sealed class SettingsController : BaseController
+{
+    private readonly SettingsFacade _settings;
+    private readonly UpdatePhoneFacade _phone;
+    private readonly SessionsFacade _sessions;
+    private readonly DevicesFacade _devices;
+    private readonly LogoutAllFacade _logoutAll;
+    private readonly ProfileFacade _profile;
+
+    public SettingsController(
+        SettingsFacade settings,
+        UpdatePhoneFacade phone,
+        SessionsFacade sessions,
+        DevicesFacade devices,
+        LogoutAllFacade logoutAll,
+        ProfileFacade profile)
+    {
+        _settings = settings;
+        _phone = phone;
+        _sessions = sessions;
+        _devices = devices;
+        _logoutAll = logoutAll;
+        _profile = profile;
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Index(CancellationToken ct)
+    {
+        ViewData["AccountNav"] = "Settings";
+
+        var rowsResult = await _settings.GetNotificationRowsAsync(ct);
+        if (GuardSignOut(rowsResult) is { } so1) return so1;
+
+        var marketingResult = await _settings.GetMarketingAsync(ct);
+        if (GuardSignOut(marketingResult) is { } so2) return so2;
+
+        var sessionsResult = await _sessions.GetSessionsAsync(ct);
+        if (GuardSignOut(sessionsResult) is { } so3) return so3;
+
+        var profileResult = await _profile.GetAsync(ct);
+        if (GuardSignOut(profileResult) is { } so4) return so4;
+
+        var profile = profileResult.Data;
+        ViewBag.Sidebar = new AccountSidebarVm
+        {
+            AvatarUrl = profile?.AvatarUrl,
+            DisplayName = profile?.DisplayName
+                ?? $"{profile?.FirstName} {profile?.LastName}".Trim(),
+            Email = profile?.Email
+        };
+
+        if (!rowsResult.IsSuccess) SetError(rowsResult.Error);
+
+        var vm = new SettingsVm
+        {
+            NotificationRows = rowsResult.Data ?? [],
+            Marketing = marketingResult.Data ?? new MarketingConsentVm(),
+            PhoneNumber = profile?.PhoneNumber,
+            Sessions = sessionsResult.Data?.Sessions ?? []
+        };
+
+        return View(vm);
+    }
+
+    [HttpPost("accounts/settings/notifications")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> UpdateNotifications(IFormCollection form, CancellationToken ct)
+    {
+        var enabledKeys = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var key in form.Keys)
+        {
+            if (!key.StartsWith("pref_", StringComparison.Ordinal)) continue;
+            // key shape: pref_{Type}_{Channel}
+            var rest = key["pref_".Length..];
+            var lastUnderscore = rest.LastIndexOf('_');
+            if (lastUnderscore <= 0) continue;
+            var type = rest[..lastUnderscore];
+            var channel = rest[(lastUnderscore + 1)..];
+            var value = form[key].ToString();
+            var isOn = value.Contains("true", StringComparison.OrdinalIgnoreCase)
+                || value == "on";
+            if (isOn) enabledKeys.Add($"{type}|{channel}");
+        }
+
+        var result = await _settings.UpdateNotificationsAsync(enabledKeys, ct);
+        if (GuardSignOut(result) is { } so) return so;
+        if (result.IsSuccess) SetSuccess("Notification preferences saved.");
+        else SetError(result.Error);
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost("accounts/settings/marketing")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> UpdateMarketing(
+        bool emailDigest,
+        bool pushNotifications,
+        bool reEngagementCampaigns,
+        CancellationToken ct)
+    {
+        var result = await _settings.UpdateMarketingAsync(
+            emailDigest, pushNotifications, reEngagementCampaigns, ct);
+        if (GuardSignOut(result) is { } so) return so;
+        if (result.IsSuccess) SetSuccess("Marketing preferences saved.");
+        else SetError(result.Error);
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost("accounts/settings/phone")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> UpdatePhone(UpdatePhoneVm vm, CancellationToken ct)
+    {
+        if (!ModelState.IsValid)
+        {
+            SetError("Please enter a valid phone number.");
+            return RedirectToAction(nameof(Index));
+        }
+
+        var result = await _phone.HandleAsync(vm, ct);
+        if (GuardSignOut(result) is { } so) return so;
+        if (result.IsSuccess) SetSuccess("Phone number updated.");
+        else SetError(result.Error);
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost("accounts/settings/sessions/revoke/{sessionId:guid}")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> RevokeSession(Guid sessionId, CancellationToken ct)
+    {
+        var result = await _sessions.RevokeAsync(sessionId, ct);
+        if (GuardSignOut(result) is { } so) return so;
+        if (result.IsSuccess) SetSuccess("Session signed out.");
+        else SetError(result.Error);
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost("accounts/settings/devices/trust/{deviceId:guid}")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> TrustDevice(Guid deviceId, CancellationToken ct)
+    {
+        var result = await _devices.TrustAsync(deviceId, ct);
+        if (GuardSignOut(result) is { } so) return so;
+        if (result.IsSuccess) SetSuccess("Device marked as trusted.");
+        else SetError(result.Error);
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost("accounts/settings/logout-all")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> LogoutAll(CancellationToken ct)
+    {
+        var result = await _logoutAll.HandleAsync(ct);
+        if (!result.IsSuccess) SetError(result.Error);
+        return RedirectToAction("SignIn", "Auth", new { area = "Auth" });
+    }
+}

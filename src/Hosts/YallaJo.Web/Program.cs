@@ -9,42 +9,17 @@ using YallaJo.Web.Infrastructure.Mvc;
 using YallaJo.Web.Infrastructure.Security.Recaptcha;
 using YallaJo.Web.Services;
 
-// ── Auth feature registrations ────────────────────────────────────────────────
-using YallaJo.Web.Areas.Auth.Features.Login;
-using YallaJo.Web.Areas.Auth.Features.AcceptInvite;
-using YallaJo.Web.Areas.Auth.Features.Register;
-using YallaJo.Web.Areas.Auth.Features.VerifyEmail;
-using YallaJo.Web.Areas.Auth.Features.ForgotPassword;
-using YallaJo.Web.Areas.Auth.Features.ResetPassword;
-using YallaJo.Web.Areas.Auth.Features.Sessions;
-using YallaJo.Web.Areas.Auth.Features.Devices;
-using YallaJo.Web.Areas.Auth.Features.ExternalProviders;
-using YallaJo.Web.Areas.Auth.Features.Logout;
-using YallaJo.Web.Areas.Auth.Features.LogoutAll;
+// ── Auth layer registrations (facades + api clients) ─────────────────────────
+using YallaJo.Web.Areas.Auth.Facades;
+using YallaJo.Web.Areas.Auth.ApiClients;
 
-// ── Accounts (non-admin, self-service) feature registrations ─────────────────
-using YallaJo.Web.Areas.Accounts.Features.ChangePassword;
-using YallaJo.Web.Areas.Accounts.Features.UpdatePhone;
-using YallaJo.Web.Areas.Accounts.Features.Profile;
+// ── Accounts (non-admin, self-service) layer registrations ───────────────────
+using YallaJo.Web.Areas.Accounts.Facades;
+using YallaJo.Web.Areas.Accounts.ApiClients;
 
-// ── Admin / Security feature registrations ────────────────────────────────────
-using YallaJo.Web.Areas.Admin.Modules.Security.Features.Users;
-using YallaJo.Web.Areas.Admin.Modules.Security.Features.Roles;
-using YallaJo.Web.Areas.Admin.Modules.Security.Features.AuditLogs;
-
-// ── Admin / Accounts feature registrations ────────────────────────────────────
-using YallaJo.Web.Areas.Admin.Modules.Accounts.Features.Invitations;
-
-// ── Admin / ContentCore feature registrations ────────────────────────────────
-using YallaJo.Web.Areas.Admin.Modules.ContentCore.Features.Languages;
-using YallaJo.Web.Areas.Admin.Modules.ContentCore.Features.Tags;
-using YallaJo.Web.Areas.Admin.Modules.ContentCore.Features.Specializations;
-using YallaJo.Web.Areas.Admin.Modules.ContentCore.Features.Categories;
-using YallaJo.Web.Areas.Admin.Modules.ContentCore.Features.Attachments;
-using YallaJo.Web.Areas.Admin.Modules.ContentCore.Features.Translations;
-
-// ── Admin / ContentPlaces feature registrations ──────────────────────────────
-using YallaJo.Web.Areas.Admin.Modules.ContentPlaces.Features.Places;
+// ── Admin layer registrations (facades + api clients) ────────────────────────
+using YallaJo.Web.Areas.Admin.Facades;
+using YallaJo.Web.Areas.Admin.ApiClients;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -181,6 +156,14 @@ var mvcBuilder  = builder.Services.AddControllersWithViews(options =>
         o.AreaViewLocationFormats.Add("~/Areas/{2}/Features/{1}/Views/{0}.cshtml");
         o.AreaViewLocationFormats.Add("~/Areas/{2}/Features/{1}/Views/Shared/{0}.cshtml");
 
+        // The Auth area follows the classic layer-by-type convention instead of
+        // feature folders:
+        //   Areas/{area}/Views/{controller}/{view}.cshtml
+        // This entry is additive — areas that still use the feature-folder formats
+        // above (Accounts, Content, Admin) are unaffected.
+        o.AreaViewLocationFormats.Add("~/Areas/{2}/Views/{1}/{0}.cshtml");
+        o.AreaViewLocationFormats.Add("~/Areas/{2}/Views/Shared/{0}.cshtml");
+
         // Area-level shared partials live at ~/Areas/{area}/Shared/{view}.cshtml
         // (e.g. Areas/Auth/Shared/_RecaptchaField.cshtml — used by every auth form).
         // Without this entry, <partial name="_RecaptchaField" /> would not resolve
@@ -188,12 +171,6 @@ var mvcBuilder  = builder.Services.AddControllersWithViews(options =>
         // controller's folder.
         o.AreaViewLocationFormats.Add("~/Areas/{2}/Shared/{0}.cshtml");
 
-        // Admin area uses a deeper module-based convention:
-        //   Areas/Admin/Modules/{module}/Features/{controller}/Views/{view}.cshtml
-        // The AdminModuleViewLocationExpander auto-discovers modules by scanning the
-        // filesystem at startup — no manual list to maintain.
-        o.ViewLocationExpanders.Add(
-            new AdminModuleViewLocationExpander(builder.Environment.ContentRootPath));
     });
 
 #if DEBUG

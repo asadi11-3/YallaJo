@@ -1,249 +1,221 @@
 @using YallaJo.Web.Infrastructure.Authorization
 @using YallaJo.Web.Infrastructure.Identity
 @inject ICurrentUser CurrentUser
+@*
+    Themed application header — extracted from _Layout.cshtml and adapted from the
+    Webestica "Booking" Bootstrap 5 theme (Hotel Home / index.html).
 
-@* Rendered only for authenticated users so anonymous auth pages keep their clean look. *@
-@if (CurrentUser.IsAuthenticated)
-{
-    var hasUsersRead           = CurrentUser.HasPermission(WebPermission.User.Read);
-    var hasUsersCreate         = CurrentUser.HasPermission(WebPermission.User.Create);
-    var hasRolesRead           = CurrentUser.HasPermission(WebPermission.Role.Read);
-    var hasSystemRead          = CurrentUser.HasPermission(WebPermission.System.Read);
-    var hasLanguageRead        = CurrentUser.HasPermission(WebPermission.Language.Read);
-    var hasTagRead             = CurrentUser.HasPermission(WebPermission.Tag.Read);
-    var hasSpecializationRead  = CurrentUser.HasPermission(WebPermission.Specialization.Read);
-    var hasCategoryRead        = CurrentUser.HasPermission(WebPermission.Category.Read);
-    var hasAttachmentRead      = CurrentUser.HasPermission(WebPermission.Attachment.Read);
-    var hasTranslationRead     = CurrentUser.HasPermission(WebPermission.TranslationCache.Read);
-    var hasPlaceRead           = CurrentUser.HasPermission(WebPermission.Place.Read);
+    Single source of truth for the sticky top navigation: logo nav, permission-gated
+    admin dropdowns (Security / Accounts / Content), notification dropdown, profile
+    dropdown with dark-mode switch, and the anonymous "Sign In" button.
 
-    var hasSecurityMenu    = hasUsersRead  || hasRolesRead || hasSystemRead;
-    var hasAccountsMenu    = hasUsersCreate;
-    var hasContentCoreMenu = hasLanguageRead || hasTagRead || hasSpecializationRead
-                             || hasCategoryRead || hasAttachmentRead || hasTranslationRead
-                             || hasPlaceRead;
+    The theme's demo dropdown links (static .html files) are rewired to real
+    asp-area/asp-controller/asp-action routes and gated with <permission> tag helpers.
+*@
+@{
+    var displayName = User.Identity?.Name ?? "Account";
+}
 
-    @*
-        ⚠ TEMPORARY — DEV/TEST QUICK NAV
-        ──────────────────────────────────────────────────────────────────
-        Phase 5E manual-testing helper. Renders a flat one-click strip
-        above the main navbar with the most-used IAM admin pages so the
-        full Phase 3 + 4 + 5 lifecycle flow can be smoke-tested without
-        digging through dropdowns. **Remove before production rollout.**
-        Each link is permission-gated using the same `<permission>`
-        tag helpers the main dropdowns use, so no admin can see a link
-        they cannot follow. Routes are existing pages only — nothing
-        new is wired here.
-    *@
-    var hasAnyTestNavLink =
-        CurrentUser.HasPermission(WebPermission.User.Read)
-        || CurrentUser.HasPermission(WebPermission.Role.Read)
-        || CurrentUser.HasPermission(WebPermission.System.Read)
-        || CurrentUser.HasPermission(WebPermission.User.Create);
+<header class="navbar-light header-sticky">
+    @* Logo Nav START *@
+    <nav class="navbar navbar-expand-xl">
+        <div class="container">
+            @* Logo START *@
+            <a class="navbar-brand" asp-area="Accounts" asp-controller="Profile" asp-action="Index">
+                <img class="light-mode-item navbar-brand-item" src="~/assets/images/logo.svg" alt="logo" />
+                <img class="dark-mode-item navbar-brand-item" src="~/assets/images/logo-light.svg" alt="logo" />
+            </a>
+            @* Logo END *@
 
-    @if (hasAnyTestNavLink)
-    {
-        <div class="bg-warning-subtle border-bottom small py-1" id="dev-test-nav"
-             role="navigation" aria-label="Developer quick navigation">
-            <div class="container-fluid d-flex flex-wrap gap-2 align-items-center">
-                <span class="badge bg-warning text-dark" title="Temporary: remove before production">
-                    DEV
+            @* Responsive navbar toggler *@
+            <button class="navbar-toggler ms-auto" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-animation">
+                    <span></span>
+                    <span></span>
+                    <span></span>
                 </span>
-                <span class="text-muted">Quick nav:</span>
-
-                <permission require="@WebPermission.User.Read">
-                    <a class="btn btn-sm btn-link p-0"
-                       asp-area="Admin" asp-controller="Users" asp-action="Index">Users list</a>
-                </permission>
-
-                <permission require="@WebPermission.Role.Read">
-                    <a class="btn btn-sm btn-link p-0"
-                       asp-area="Admin" asp-controller="Roles" asp-action="Index">Roles</a>
-                </permission>
-
-                <permission require="@WebPermission.System.Read">
-                    <a class="btn btn-sm btn-link p-0"
-                       asp-area="Admin" asp-controller="AuditLogs" asp-action="Index">Audit timeline</a>
-                </permission>
-
-                <permission require="@WebPermission.User.Create">
-                    <a class="btn btn-sm btn-link p-0"
-                       asp-area="Admin" asp-controller="Invitations" asp-action="Index">Invite user</a>
-                </permission>
-
-                <permission require="@WebPermission.User.Create">
-                    <a class="btn btn-sm btn-link p-0"
-                       asp-area="Admin" asp-controller="Invitations" asp-action="Resend">Resend invite</a>
-                </permission>
-
-                <span class="text-muted ms-auto small">
-                    Self-service:
-                </span>
-                <a class="btn btn-sm btn-link p-0"
-                   asp-area="Auth" asp-controller="Sessions" asp-action="Index">Sessions</a>
-                <a class="btn btn-sm btn-link p-0"
-                   asp-area="Auth" asp-controller="Devices" asp-action="Index">Devices</a>
-                <a class="btn btn-sm btn-link p-0 text-danger"
-                   asp-area="Auth" asp-controller="Logout" asp-action="Index">Sign out</a>
-            </div>
-        </div>
-    }
-
-    <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom mb-3">
-        <div class="container-fluid">
-            <a class="navbar-brand" asp-area="Accounts" asp-controller="Profile" asp-action="Index">YallaJo</a>
-
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
-                    data-bs-target="#primaryNav" aria-controls="primaryNav"
-                    aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
             </button>
 
-            <div class="collapse navbar-collapse" id="primaryNav">
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            @* Main navbar START *@
+            <div class="navbar-collapse collapse" id="navbarCollapse">
+                @if (CurrentUser.IsAuthenticated)
+                {
+                    var hasSecurityMenu = CurrentUser.HasPermission(WebPermission.User.Read)
+                                          || CurrentUser.HasPermission(WebPermission.Role.Read)
+                                          || CurrentUser.HasPermission(WebPermission.System.Read);
 
-                    @* ── Security admin menu ─────────────────────────────────── *@
-                    @if (hasSecurityMenu)
-                    {
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" role="button"
-                               data-bs-toggle="dropdown" aria-expanded="false">Security</a>
-                            <ul class="dropdown-menu">
-                                <permission require="@WebPermission.User.Read">
-                                    <li>
-                                        <a class="dropdown-item"
-                                           asp-area="Admin" asp-controller="Users" asp-action="Index">Users</a>
-                                    </li>
-                                </permission>
-                                <permission require="@WebPermission.Role.Read">
-                                    <li>
-                                        <a class="dropdown-item"
-                                           asp-area="Admin" asp-controller="Roles" asp-action="Index">Roles</a>
-                                    </li>
-                                </permission>
-                                <permission require="@WebPermission.System.Read">
-                                    <li>
-                                        <a class="dropdown-item"
-                                           asp-area="Admin" asp-controller="AuditLogs" asp-action="Index">Audit Timeline</a>
-                                    </li>
-                                </permission>
-                            </ul>
-                        </li>
-                    }
+                    var hasAccountsMenu = CurrentUser.HasPermission(WebPermission.User.Create);
 
-                    @* ── Accounts admin menu ─────────────────────────────────── *@
-                    @if (hasAccountsMenu)
-                    {
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" role="button"
-                               data-bs-toggle="dropdown" aria-expanded="false">Accounts</a>
-                            <ul class="dropdown-menu">
-                                <permission require="@WebPermission.User.Create">
-                                    <li>
-                                        <a class="dropdown-item"
-                                           asp-area="Admin" asp-controller="Invitations" asp-action="Index">Invite User</a>
-                                    </li>
-                                </permission>
-                                <permission require="@WebPermission.User.Create">
-                                    <li>
-                                        <a class="dropdown-item"
-                                           asp-area="Admin" asp-controller="Invitations" asp-action="Resend">Resend Invite</a>
-                                    </li>
-                                </permission>
-                            </ul>
-                        </li>
-                    }
+                    var hasContentMenu = CurrentUser.HasPermission(WebPermission.Language.Read)
+                                         || CurrentUser.HasPermission(WebPermission.Tag.Read)
+                                         || CurrentUser.HasPermission(WebPermission.Specialization.Read)
+                                         || CurrentUser.HasPermission(WebPermission.Category.Read)
+                                         || CurrentUser.HasPermission(WebPermission.Attachment.Read)
+                                         || CurrentUser.HasPermission(WebPermission.TranslationCache.Read)
+                                         || CurrentUser.HasPermission(WebPermission.Place.Read);
 
-                    @* ── ContentCore admin menu ──────────────────────────────── *@
-                    @if (hasContentCoreMenu)
-                    {
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" role="button"
-                               data-bs-toggle="dropdown" aria-expanded="false">Content</a>
-                            <ul class="dropdown-menu">
-                                <permission require="@WebPermission.Language.Read">
-                                    <li>
-                                        <a class="dropdown-item"
-                                           asp-area="Admin" asp-controller="Languages" asp-action="Index">Languages</a>
-                                    </li>
-                                </permission>
-                                <permission require="@WebPermission.Tag.Read">
-                                    <li>
-                                        <a class="dropdown-item"
-                                           asp-area="Admin" asp-controller="Tags" asp-action="Index">Tags</a>
-                                    </li>
-                                </permission>
-                                <permission require="@WebPermission.Specialization.Read">
-                                    <li>
-                                        <a class="dropdown-item"
-                                           asp-area="Admin" asp-controller="Specializations" asp-action="Index">Specializations</a>
-                                    </li>
-                                </permission>
-                                <permission require="@WebPermission.Category.Read">
-                                    <li>
-                                        <a class="dropdown-item"
-                                           asp-area="Admin" asp-controller="Categories" asp-action="Index">Categories</a>
-                                    </li>
-                                </permission>
-                                <permission require="@WebPermission.Attachment.Read">
-                                    <li>
-                                        <a class="dropdown-item"
-                                           asp-area="Admin" asp-controller="Attachments" asp-action="Index">Attachments</a>
-                                    </li>
-                                </permission>
-                                <permission require="@WebPermission.TranslationCache.Read">
-                                    <li>
-                                        <a class="dropdown-item"
-                                           asp-area="Admin" asp-controller="Translations" asp-action="Index">Translations</a>
-                                    </li>
-                                </permission>
-                                <permission require="@WebPermission.Place.Read">
-                                    <li><hr class="dropdown-divider" /></li>
-                                    <li>
-                                        <a class="dropdown-item"
-                                           asp-area="Admin" asp-controller="Places" asp-action="Index">Places</a>
-                                    </li>
-                                </permission>
-                            </ul>
-                        </li>
-                    }
-                </ul>
+                    <ul class="navbar-nav navbar-nav-scroll me-auto">
 
-                @* ── Account self-service menu (always for authenticated) ─── *@
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button"
-                           data-bs-toggle="dropdown" aria-expanded="false">Account</a>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li>
-                                <a class="dropdown-item"
-                                   asp-area="Accounts" asp-controller="Profile" asp-action="Index">My profile</a>
+                        @* ── Security menu ───────────────────────────────────── *@
+                        @if (hasSecurityMenu)
+                        {
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="securityMenu" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Security</a>
+                                <ul class="dropdown-menu" aria-labelledby="securityMenu">
+                                    <permission require="@WebPermission.User.Read">
+                                        <li><a class="dropdown-item" asp-area="Admin" asp-controller="Users" asp-action="Index">Users</a></li>
+                                    </permission>
+                                    <permission require="@WebPermission.Role.Read">
+                                        <li><a class="dropdown-item" asp-area="Admin" asp-controller="Roles" asp-action="Index">Roles</a></li>
+                                    </permission>
+                                    <permission require="@WebPermission.System.Read">
+                                        <li><a class="dropdown-item" asp-area="Admin" asp-controller="AuditLogs" asp-action="Index">Audit Timeline</a></li>
+                                    </permission>
+                                </ul>
                             </li>
-                            <li>
-                                <a class="dropdown-item"
-                                   asp-area="Accounts" asp-controller="ChangePassword" asp-action="Index">Change password</a>
+                        }
+
+                        @* ── Accounts (admin) menu ───────────────────────────── *@
+                        @if (hasAccountsMenu)
+                        {
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="accountsAdminMenu" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Accounts</a>
+                                <ul class="dropdown-menu" aria-labelledby="accountsAdminMenu">
+                                    <permission require="@WebPermission.User.Create">
+                                        <li><a class="dropdown-item" asp-area="Admin" asp-controller="Invitations" asp-action="Index">Invite User</a></li>
+                                    </permission>
+                                    <permission require="@WebPermission.User.Create">
+                                        <li><a class="dropdown-item" asp-area="Admin" asp-controller="Invitations" asp-action="Resend">Resend Invite</a></li>
+                                    </permission>
+                                </ul>
                             </li>
-                            <li>
-                                <a class="dropdown-item"
-                                   asp-area="Accounts" asp-controller="UpdatePhone" asp-action="Index">Update phone</a>
+                        }
+
+                        @* ── Content menu ────────────────────────────────────── *@
+                        @if (hasContentMenu)
+                        {
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="contentMenu" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Content</a>
+                                <ul class="dropdown-menu" aria-labelledby="contentMenu">
+                                    <permission require="@WebPermission.Language.Read">
+                                        <li><a class="dropdown-item" asp-area="Admin" asp-controller="Languages" asp-action="Index">Languages</a></li>
+                                    </permission>
+                                    <permission require="@WebPermission.Tag.Read">
+                                        <li><a class="dropdown-item" asp-area="Admin" asp-controller="Tags" asp-action="Index">Tags</a></li>
+                                    </permission>
+                                    <permission require="@WebPermission.Specialization.Read">
+                                        <li><a class="dropdown-item" asp-area="Admin" asp-controller="Specializations" asp-action="Index">Specializations</a></li>
+                                    </permission>
+                                    <permission require="@WebPermission.Category.Read">
+                                        <li><a class="dropdown-item" asp-area="Admin" asp-controller="Categories" asp-action="Index">Categories</a></li>
+                                    </permission>
+                                    <permission require="@WebPermission.Attachment.Read">
+                                        <li><a class="dropdown-item" asp-area="Admin" asp-controller="Attachments" asp-action="Index">Attachments</a></li>
+                                    </permission>
+                                    <permission require="@WebPermission.TranslationCache.Read">
+                                        <li><a class="dropdown-item" asp-area="Admin" asp-controller="Translations" asp-action="Index">Translations</a></li>
+                                    </permission>
+                                    <permission require="@WebPermission.Place.Read">
+                                        <li><hr class="dropdown-divider" /></li>
+                                        <li><a class="dropdown-item" asp-area="Admin" asp-controller="Places" asp-action="Index">Places</a></li>
+                                    </permission>
+                                </ul>
                             </li>
+                        }
+                    </ul>
+                }
+            </div>
+            @* Main navbar END *@
+
+            @* Profile START *@
+            <ul class="nav flex-row align-items-center list-unstyled ms-xl-auto">
+                @if (CurrentUser.IsAuthenticated)
+                {
+                    @* Notification dropdown START *@
+                    <li class="nav-item ms-3 dropdown">
+                        <a class="btn btn-light btn-round mb-0" href="#" id="notifDropdown" role="button" data-bs-auto-close="outside" data-bs-display="static" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-bell fa-fw"></i>
+                        </a>
+                        <span class="badge bg-danger rounded-circle notif-badge animation-blink"></span>
+
+                        <div class="dropdown-menu dropdown-animation dropdown-menu-end dropdown-menu-size-md p-0 shadow-lg border-0" aria-labelledby="notifDropdown">
+                            <div class="card bg-transparent">
+                                <div class="card-header bg-transparent d-flex justify-content-between align-items-center border-bottom">
+                                    <h6 class="m-0">Notifications</h6>
+                                </div>
+                                <div class="card-body p-0">
+                                    <ul class="list-group list-group-flush list-unstyled p-2 mb-0">
+                                        <li class="text-center small text-muted py-3">No new notifications</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+                    @* Notification dropdown END *@
+
+                    @* Profile dropdown START *@
+                    <li class="nav-item ms-3 dropdown">
+                        <a class="avatar avatar-sm p-0" href="#" id="profileDropdown" role="button" data-bs-auto-close="outside" data-bs-display="static" data-bs-toggle="dropdown" aria-expanded="false">
+                            <img class="avatar-img rounded-2" src="~/assets/images/avatar/01.jpg" alt="avatar" />
+                        </a>
+
+                        <ul class="dropdown-menu dropdown-animation dropdown-menu-end shadow pt-3" aria-labelledby="profileDropdown">
+                            <li class="px-3 mb-3">
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar me-3">
+                                        <img class="avatar-img rounded-circle shadow" src="~/assets/images/avatar/01.jpg" alt="avatar" />
+                                    </div>
+                                    <div>
+                                        <a class="h6 mt-2 mt-sm-0" href="#">@displayName</a>
+                                    </div>
+                                </div>
+                            </li>
+
                             <li><hr class="dropdown-divider" /></li>
+                            <li><a class="dropdown-item" asp-area="Accounts" asp-controller="Profile" asp-action="Index"><i class="bi bi-person fa-fw me-2"></i>My Profile</a></li>
+                            <li><a class="dropdown-item" asp-area="Accounts" asp-controller="ChangePassword" asp-action="Index"><i class="bi bi-shield-lock fa-fw me-2"></i>Change Password</a></li>
+                            <li><a class="dropdown-item" asp-area="Accounts" asp-controller="UpdatePhone" asp-action="Index"><i class="bi bi-telephone fa-fw me-2"></i>Update Phone</a></li>
+                            <li><a class="dropdown-item" asp-area="Auth" asp-controller="Sessions" asp-action="Index"><i class="bi bi-laptop fa-fw me-2"></i>Sessions</a></li>
+                            <li><a class="dropdown-item" asp-area="Auth" asp-controller="Devices" asp-action="Index"><i class="bi bi-phone fa-fw me-2"></i>Devices</a></li>
                             <li>
-                                <a class="dropdown-item"
-                                   asp-area="Auth" asp-controller="Sessions" asp-action="Index">Sessions</a>
+                                <form asp-area="Auth" asp-controller="Auth" asp-action="Logout" method="post" class="d-grid">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="dropdown-item bg-danger-soft-hover text-danger"><i class="bi bi-power fa-fw me-2"></i>Sign Out</button>
+                                </form>
                             </li>
+
+                            <li><hr class="dropdown-divider" /></li>
+
+                            @* Dark mode options START *@
                             <li>
-                                <a class="dropdown-item"
-                                   asp-area="Auth" asp-controller="Devices" asp-action="Index">Devices</a>
+                                <div class="modeswitch-item theme-icon-active d-flex justify-content-center gap-3 align-items-center p-2 pb-0">
+                                    <span>Mode:</span>
+                                    <button type="button" class="btn btn-light mb-0 p-2 lh-1" data-bs-theme-value="light" title="Light">
+                                        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><use href="#"></use><path d="M8 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6zm0 1a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM8 0a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 0zm0 13a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 13zm8-5a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2a.5.5 0 0 1 .5.5zM3 8a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2A.5.5 0 0 1 3 8zm10.657-5.657a.5.5 0 0 1 0 .707l-1.414 1.415a.5.5 0 1 1-.707-.708l1.414-1.414a.5.5 0 0 1 .707 0zm-9.193 9.193a.5.5 0 0 1 0 .707L3.05 13.657a.5.5 0 0 1-.707-.707l1.414-1.414a.5.5 0 0 1 .707 0zm9.193 2.121a.5.5 0 0 1-.707 0l-1.414-1.414a.5.5 0 0 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .707zM4.464 4.465a.5.5 0 0 1-.707 0L2.343 3.05a.5.5 0 1 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .708z"></path></svg>
+                                    </button>
+                                    <button type="button" class="btn btn-light mb-0 p-2 lh-1" data-bs-theme-value="dark" title="Dark">
+                                        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><use href="#"></use><path d="M6 .278a.768.768 0 0 1 .08.858 7.208 7.208 0 0 0-.878 3.46c0 4.021 3.278 7.277 7.318 7.277.527 0 1.04-.055 1.533-.16a.787.787 0 0 1 .81.316.733.733 0 0 1-.031.893A8.349 8.349 0 0 1 8.344 16C3.734 16 0 12.286 0 7.71 0 4.266 2.114 1.312 5.124.06A.752.752 0 0 1 6 .278z"></path></svg>
+                                    </button>
+                                    <button type="button" class="btn btn-light mb-0 p-2 lh-1" data-bs-theme-value="auto" title="Auto">
+                                        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><use href="#"></use><path d="M8 15A7 7 0 1 0 8 1v14zm0 1A8 8 0 1 1 8 0a8 8 0 0 1 0 16z"></path></svg>
+                                    </button>
+                                </div>
                             </li>
-                            <li>
-                                <a class="dropdown-item"
-                                   asp-area="Auth" asp-controller="Logout" asp-action="Index">Sign out</a>
-                            </li>
+                            @* Dark mode options END *@
                         </ul>
                     </li>
-                </ul>
-            </div>
+                    @* Profile dropdown END *@
+                }
+                else
+                {
+                    <li class="nav-item ms-2">
+                        <a class="btn btn-primary mb-0" asp-area="Auth" asp-controller="Login" asp-action="Index">Sign In</a>
+                    </li>
+                }
+            </ul>
+            @* Profile END *@
         </div>
     </nav>
-}
+    @* Logo Nav END *@
+</header>
+@* Header END *@

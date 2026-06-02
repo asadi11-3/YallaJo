@@ -2,33 +2,28 @@
     Shared flash-message banners. Reads the TempData keys written by BaseController
     (SetSuccess => "Success", SetError => "Error"; "Warning"/"Info" supported too).
     Included once in _Layout.cshtml so feature views never repeat alert markup.
-    Bootstrap 5 dismissible alerts (matches the CDN bootstrap.bundle in _Layout).
+    Styled to match the Webestica "Booking" theme: soft/subtle backgrounds,
+    rounded corners, leading bootstrap-icon, borderless with a subtle shadow.
 *@
-@if (TempData["Success"] is string success && !string.IsNullOrWhiteSpace(success))
-{
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
-        @success
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
+@{
+    // (key, bootstrap variant, bootstrap-icon, aria role)
+    var alerts = new[]
+    {
+        ("Success", "success", "bi-check-circle-fill", "status"),
+        ("Error",   "danger",  "bi-exclamation-octagon-fill", "alert"),
+        ("Warning", "warning", "bi-exclamation-triangle-fill", "alert"),
+        ("Info",    "info",    "bi-info-circle-fill", "status"),
+    };
 }
-@if (TempData["Error"] is string error && !string.IsNullOrWhiteSpace(error))
+@foreach (var (key, variant, icon, role) in alerts)
 {
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        @error
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-}
-@if (TempData["Warning"] is string warning && !string.IsNullOrWhiteSpace(warning))
-{
-    <div class="alert alert-warning alert-dismissible fade show" role="alert">
-        @warning
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-}
-@if (TempData["Info"] is string info && !string.IsNullOrWhiteSpace(info))
-{
-    <div class="alert alert-info alert-dismissible fade show" role="alert">
-        @info
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
+    if (TempData[key] is string message && !string.IsNullOrWhiteSpace(message))
+    {
+        <div class="alert alert-@variant alert-dismissible border-0 rounded-3 shadow-sm fade show d-flex align-items-center"
+             role="@role">
+            <i class="bi @icon fs-5 me-2 flex-shrink-0"></i>
+            <span class="flex-grow-1">@message</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
 }
