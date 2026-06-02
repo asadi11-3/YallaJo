@@ -1,5 +1,5 @@
 using FluentAssertions;
-using YallaJo.Web.Areas.Admin.Modules.Security.Features.AuditLogs;
+using YallaJo.Web.Areas.Admin.ApiClients;
 
 namespace Web.Tests.Unit;
 

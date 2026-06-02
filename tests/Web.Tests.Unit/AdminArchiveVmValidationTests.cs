@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using FluentAssertions;
-using YallaJo.Web.Areas.Admin.Modules.Security.Features.Users.Lifecycle.ViewModels;
+using YallaJo.Web.Areas.Admin.Models.Lifecycle;
 
 namespace Web.Tests.Unit;
 

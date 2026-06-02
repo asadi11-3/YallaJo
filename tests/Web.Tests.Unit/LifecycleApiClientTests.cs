@@ -2,8 +2,8 @@ using System.Net;
 using System.Text.Json;
 using FluentAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
-using YallaJo.Web.Areas.Admin.Modules.Security.Features.Users.Lifecycle;
-using YallaJo.Web.Areas.Admin.Modules.Security.Features.Users.Lifecycle.Requests;
+using YallaJo.Web.Areas.Admin.ApiClients;
+using YallaJo.Web.Areas.Admin.Models.Lifecycle;
 using YallaJo.Web.Services;
 
 namespace Web.Tests.Unit;

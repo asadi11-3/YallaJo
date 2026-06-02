@@ -1,6 +1,6 @@
 using FluentAssertions;
-using YallaJo.Web.Areas.Admin.Modules.Security.Features.AuditLogs.Mappers;
-using YallaJo.Web.Areas.Admin.Modules.Security.Features.AuditLogs.Responses;
+using YallaJo.Web.Areas.Admin.Models.AuditLogs;
+
 
 namespace Web.Tests.Unit;
 

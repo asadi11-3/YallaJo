@@ -1,8 +1,9 @@
 using System.Reflection;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
-using YallaJo.Web.Areas.Accounts.Features.Profile;
-using YallaJo.Web.Areas.Accounts.Features.Profile.ViewModels;
+using YallaJo.Web.Areas.Accounts.Controllers;
+using YallaJo.Web.Areas.Accounts.Models.Profile;
+
 
 namespace Web.Tests.Unit;
 

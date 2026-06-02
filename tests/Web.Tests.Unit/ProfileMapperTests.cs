@@ -1,8 +1,6 @@
 using FluentAssertions;
 using NSubstitute;
-using YallaJo.Web.Areas.Accounts.Features.Profile.Mappers;
-using YallaJo.Web.Areas.Accounts.Features.Profile.Responses;
-using YallaJo.Web.Areas.Accounts.Features.Profile.ViewModels;
+using YallaJo.Web.Areas.Accounts.Models.Profile;
 using YallaJo.Web.Services;
 
 namespace Web.Tests.Unit;

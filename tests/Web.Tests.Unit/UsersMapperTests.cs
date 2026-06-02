@@ -1,6 +1,6 @@
 using FluentAssertions;
-using YallaJo.Web.Areas.Admin.Modules.Security.Features.Users.Mappers;
-using YallaJo.Web.Areas.Admin.Modules.Security.Features.Users.Responses;
+using YallaJo.Web.Areas.Admin.Models.Users;
+
 
 namespace Web.Tests.Unit;
 

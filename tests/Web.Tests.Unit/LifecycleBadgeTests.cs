@@ -1,5 +1,5 @@
 using FluentAssertions;
-using YallaJo.Web.Areas.Admin.Modules.Security.Features.Users.Helpers;
+using YallaJo.Web.Areas.Admin.Helpers;
 
 namespace Web.Tests.Unit;
 
