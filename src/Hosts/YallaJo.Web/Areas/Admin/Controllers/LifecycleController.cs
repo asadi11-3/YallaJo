@@ -2,9 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using YallaJo.Web.Areas.Admin.Models.Lifecycle;
 using YallaJo.Web.Infrastructure.Authorization;
-
 using YallaJo.Web.Areas.Admin.Facades;
-using YallaJo.Web.Areas.Admin.Models.Users;
 namespace YallaJo.Web.Areas.Admin.Controllers;
 
 /// <summary>

@@ -1,0 +1,193 @@
+@model YallaJo.Web.Areas.Content.Models.Blogs.BlogDetailsVm
+@{
+    ViewData["Title"] = Model.Title;
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@* ============================ HERO ============================ *@
+<section class="pt-4 pb-0">
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb breadcrumb-dots mb-2">
+                        <li class="breadcrumb-item">
+                            <a asp-area="Content" asp-controller="Blogs" asp-action="Index">Blog</a>
+                        </li>
+                        <li class="breadcrumb-item active" aria-current="page">@Model.Title</li>
+                    </ol>
+                </nav>
+                <h1 class="fs-2 mb-3">@Model.Title</h1>
+
+                <ul class="list-inline mb-3 small text-body-secondary">
+                    @if (Model.PublishedAt.HasValue)
+                    {
+                        <li class="list-inline-item">
+                            <i class="bi bi-calendar3 me-1"></i>@Model.PublishedAt.Value.ToString("MMMM d, yyyy")
+                        </li>
+                    }
+                    @if (Model.ReadTimeMinutes.HasValue)
+                    {
+                        <li class="list-inline-item">
+                            <i class="bi bi-clock me-1"></i>@Model.ReadTimeMinutes min read
+                        </li>
+                    }
+                    <li class="list-inline-item"><i class="bi bi-eye me-1"></i>@Model.ViewCount views</li>
+                    @if (Model.IsFeatured)
+                    {
+                        <li class="list-inline-item"><span class="badge text-bg-warning">Featured</span></li>
+                    }
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="pt-3">
+    <div class="container">
+        <div class="row g-4">
+            @* ----------------------- ARTICLE ----------------------- *@
+            <div class="col-lg-8">
+                <article class="card shadow">
+                    <img src="@Model.CoverImageUrl" alt="@Model.CoverImageAlt"
+                         class="card-img-top" />
+                    <div class="card-body">
+                        @if (!string.IsNullOrWhiteSpace(Model.Summary))
+                        {
+                            <p class="lead">@Model.Summary</p>
+                        }
+
+                        @* Sanitized blog body (HtmlSanitizer allowlist applied in
+                           ContentHtmlSanitizer via BlogsMapper). Only the pre-sanitized
+                           ContentHtml is ever passed to Html.Raw — never raw API content. *@
+                        <div class="blog-content">
+                            @Html.Raw(Model.ContentHtml)
+                        </div>
+                    </div>
+                </article>
+
+                @* -------- Helpful poll (DISABLED / STATIC) --------
+                   TODO: API gap — there is no blog-helpful endpoint in YallaJo.Api
+                   (neither write POST /blogs/{id}/helpful nor a read aggregate).
+                   The control below is rendered intentionally disabled. Wire it up to
+                   a real Facade → ApiClient → IApiClient call once the backend adds it. *@
+                <div class="card shadow mt-4">
+                    <div class="card-body text-center">
+                        <h5 class="mb-3">Was this article helpful?</h5>
+                        <div class="d-inline-flex gap-2">
+                            <button type="button" class="btn btn-outline-success" disabled
+                                    aria-disabled="true" title="Coming soon">
+                                <i class="bi bi-hand-thumbs-up me-1"></i>Yes
+                            </button>
+                            <button type="button" class="btn btn-outline-danger" disabled
+                                    aria-disabled="true" title="Coming soon">
+                                <i class="bi bi-hand-thumbs-down me-1"></i>No
+                            </button>
+                        </div>
+                        <p class="small text-body-secondary mt-2 mb-0">Feedback voting is coming soon.</p>
+                    </div>
+                </div>
+
+                @* -------- Comments -------- *@
+                <div class="card shadow mt-4">
+                    <div class="card-header border-bottom">
+                        <h5 class="mb-0">Comments (@Model.CommentCount)</h5>
+                    </div>
+                    <div class="card-body">
+                        @if (!Model.HasComments)
+                        {
+                            <p class="text-body-secondary mb-0">No comments yet.</p>
+                        }
+                        else
+                        {
+                            <ul class="list-unstyled mb-0">
+                                @foreach (var comment in Model.Comments.Where(c => !c.IsReply))
+                                {
+                                    <li class="mb-3">
+                                        <div class="d-flex">
+                                            <div class="flex-grow-1 ms-1">
+                                                <p class="mb-1">@comment.Content</p>
+                                                <small class="text-body-secondary">
+                                                    @comment.CreatedAt.ToString("MMM d, yyyy")
+                                                    @if (comment.LikeCount > 0)
+                                                    {
+                                                        <span class="ms-2"><i class="bi bi-heart me-1"></i>@comment.LikeCount</span>
+                                                    }
+                                                </small>
+
+                                                @{
+                                                    var replies = Model.Comments
+                                                        .Where(r => r.ParentCommentId == comment.Id)
+                                                        .ToList();
+                                                }
+                                                @if (replies.Any())
+                                                {
+                                                    <ul class="list-unstyled mt-2 ms-4">
+                                                        @foreach (var reply in replies)
+                                                        {
+                                                            <li class="mb-2">
+                                                                <p class="mb-1">@reply.Content</p>
+                                                                <small class="text-body-secondary">
+                                                                    @reply.CreatedAt.ToString("MMM d, yyyy")
+                                                                </small>
+                                                            </li>
+                                                        }
+                                                    </ul>
+                                                }
+                                            </div>
+                                        </div>
+                                    </li>
+                                }
+                            </ul>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            @* ----------------------- SIDEBAR ----------------------- *@
+            <div class="col-lg-4">
+                @if (Model.HasAuthor)
+                {
+                    var author = Model.Author!;
+                    <div class="card shadow mb-4">
+                        <div class="card-body text-center">
+                            <img src="@author.AuthorImageUrl" alt="@author.AuthorImageAlt"
+                                 class="avatar avatar-xl rounded-circle mb-3" />
+                            <h5 class="mb-1">@author.DisplayName</h5>
+                            @if (!string.IsNullOrWhiteSpace(author.Bio))
+                            {
+                                <p class="small text-body-secondary">@author.Bio</p>
+                            }
+                            <div class="d-flex justify-content-center gap-3 small">
+                                <span><strong>@author.ArticleCount</strong> articles</span>
+                                <span><strong>@author.FollowerCount</strong> followers</span>
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                @if (Model.PopularTags.Any())
+                {
+                    <div class="card shadow mb-4">
+                        <div class="card-header border-bottom">
+                            <h5 class="mb-0">Popular Tags</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex flex-wrap gap-2">
+                                @foreach (var tag in Model.PopularTags)
+                                {
+                                    <span class="badge text-bg-light border">#@tag.Name</span>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                <a asp-area="Content" asp-controller="Blogs" asp-action="Index"
+                   class="btn btn-outline-primary w-100">
+                    <i class="bi bi-arrow-left me-1"></i>Back to all articles
+                </a>
+            </div>
+        </div>
+    </div>
+</section>

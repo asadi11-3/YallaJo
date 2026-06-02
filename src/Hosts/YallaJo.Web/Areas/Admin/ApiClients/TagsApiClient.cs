@@ -1,5 +1,4 @@
 using YallaJo.Web.Areas.Admin.Models.Tags;
-using YallaJo.Web.Areas.Admin.Models.Tags;
 using YallaJo.Web.Infrastructure.Api.Contracts;
 using YallaJo.Web.Services;
 

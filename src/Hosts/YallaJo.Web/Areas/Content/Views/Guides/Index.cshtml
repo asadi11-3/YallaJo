@@ -1,0 +1,124 @@
+@using System.Globalization
+@model YallaJo.Web.Areas.Content.Models.Guides.GuideListVm
+@{
+    ViewData["Title"] = "Tour Guides";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var pager = Model.Pager;
+
+    Dictionary<string, string?> PageRoute(int targetPage) => new()
+    {
+        ["page"]     = targetPage.ToString(CultureInfo.InvariantCulture),
+        ["pageSize"] = pager.PageSize.ToString(CultureInfo.InvariantCulture),
+    };
+}
+
+@* ============================ PAGE HEADER ============================ *@
+<section class="pt-4 pb-0">
+    <div class="container">
+        <div class="row">
+            <div class="col-12 text-center">
+                <h1 class="fs-2 mb-1">Meet Our Tour Guides</h1>
+                <p class="mb-0">Experienced local guides ready to make your trip unforgettable.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="pt-4">
+    <div class="container">
+        @* Specialization filter chips (decorative — full-list anchor) *@
+        @if (Model.Specializations.Any())
+        {
+            <div class="d-flex flex-wrap justify-content-center gap-2 mb-4">
+                @foreach (var spec in Model.Specializations)
+                {
+                    <span class="badge text-bg-light border">
+                        @if (!string.IsNullOrWhiteSpace(spec.Icon))
+                        {
+                            <i class="@spec.Icon me-1"></i>
+                        }
+                        @spec.Name
+                    </span>
+                }
+            </div>
+        }
+
+        @if (!Model.HasGuides)
+        {
+            <div class="alert alert-info text-center" role="alert">
+                No tour guides are available right now. Please check back soon.
+            </div>
+        }
+        else
+        {
+            <div class="row g-4">
+                @foreach (var guide in Model.Guides)
+                {
+                    <div class="col-sm-6 col-lg-4 col-xl-3">
+                        <div class="card shadow h-100 text-center">
+                            <div class="pt-4">
+                                <img src="@guide.GuideImageUrl" alt="@guide.GuideImageAlt"
+                                     class="avatar avatar-xxl rounded-circle mx-auto" loading="lazy" />
+                            </div>
+                            <div class="card-body d-flex flex-column">
+                                <h5 class="card-title mb-1">
+                                    @if (guide.HasSlug)
+                                    {
+                                        <a asp-area="Content" asp-controller="Guides" asp-action="Details"
+                                           asp-route-slug="@guide.Slug" class="stretched-link">@guide.DisplayName</a>
+                                    }
+                                    else
+                                    {
+                                        @guide.DisplayName
+                                    }
+                                </h5>
+
+                                @if (guide.SpecializationNames.Any())
+                                {
+                                    <p class="small text-body-secondary mb-2">
+                                        @string.Join(" · ", guide.SpecializationNames)
+                                    </p>
+                                }
+
+                                @if (!string.IsNullOrWhiteSpace(guide.Bio))
+                                {
+                                    <p class="small text-truncate-2 mb-2">@guide.Bio</p>
+                                }
+
+                                <ul class="list-inline mb-0 small text-body-secondary mt-auto">
+                                    <li class="list-inline-item">
+                                        <i class="bi bi-star-fill text-warning me-1"></i>@guide.AverageRating.ToString("0.0")
+                                    </li>
+                                    <li class="list-inline-item">(@guide.ReviewCount)</li>
+                                    <li class="list-inline-item">
+                                        <i class="bi bi-geo-alt me-1"></i>@guide.TourCount tours
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            @if (pager.TotalPages > 1)
+            {
+                <nav aria-label="Guide pagination" class="mt-4">
+                    <ul class="pagination justify-content-center mb-0">
+                        <li class="page-item @(pager.HasPreviousPage ? "" : "disabled")">
+                            <a class="page-link" asp-area="Content" asp-controller="Guides"
+                               asp-action="Index" asp-all-route-data="PageRoute(pager.PageNumber - 1)">Previous</a>
+                        </li>
+                        <li class="page-item active" aria-current="page">
+                            <span class="page-link">Page @pager.PageNumber of @pager.TotalPages</span>
+                        </li>
+                        <li class="page-item @(pager.HasNextPage ? "" : "disabled")">
+                            <a class="page-link" asp-area="Content" asp-controller="Guides"
+                               asp-action="Index" asp-all-route-data="PageRoute(pager.PageNumber + 1)">Next</a>
+                        </li>
+                    </ul>
+                </nav>
+            }
+        }
+    </div>
+</section>
