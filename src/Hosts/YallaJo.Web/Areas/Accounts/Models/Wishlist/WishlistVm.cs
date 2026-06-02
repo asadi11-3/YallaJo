@@ -27,4 +27,8 @@ public sealed class WishlistItemVm
 
     /// <summary>Friendly label for the entity kind (e.g. "Tour", "Place").</summary>
     public string KindLabel { get; init; } = string.Empty;
+
+    /// <summary>Public detail-page URL for the entity, resolved in the mapper so the
+    /// view binds a ready value instead of building URLs inline.</summary>
+    public string DetailUrl { get; init; } = "#";
 }

@@ -4,6 +4,7 @@ public sealed class BookingsVm
 {
     public string ActiveTab { get; init; } = "Upcoming";
     public IReadOnlyList<BookingCardVm> Bookings { get; init; } = [];
+    public IReadOnlyList<string> Tabs { get; init; } = [];
 }
 
 public sealed class BookingCardVm

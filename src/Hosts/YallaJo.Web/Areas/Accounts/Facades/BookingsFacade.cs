@@ -50,6 +50,7 @@ public sealed class BookingsFacade
         {
             ActiveTab = activeTab,
             Bookings = cards,
+            Tabs = Tabs,
         });
     }
 

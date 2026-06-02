@@ -8,8 +8,7 @@
 <div class="container mt-4">
     <h2>Roles</h2>
 
-    @if (TempData["Success"] is string ok)  { <div class="alert alert-success">@ok</div> }
-    @if (TempData["Error"]   is string err) { <div class="alert alert-danger">@err</div> }
+    @* Success/Error flash banners are rendered globally by the shared _Alerts partial (in _Layout). *@
     @if (ViewBag.Error       is string vbe) { <div class="alert alert-danger">@vbe</div> }
 
     @* ── Create form: visible only to users with Role.Create ──────────────────

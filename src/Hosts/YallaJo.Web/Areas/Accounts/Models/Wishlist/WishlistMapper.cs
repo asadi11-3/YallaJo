@@ -22,6 +22,20 @@ public static class WishlistMapper
         return string.IsNullOrWhiteSpace(joined) ? string.Empty : joined;
     }
 
+    // Public detail-page URL per entity kind. NOTE: these are the exact URLs that
+    // previously lived inline in the wishlist view; preserved verbatim here.
+    // (Route-validity of some of these — e.g. /tours/{id} vs /tours/{slug}, and the
+    // existence of /places and /blogs routes — is a separate, deferred concern.)
+    public static string ResolveDetailUrl(string entityType, Guid entityId) => entityType switch
+    {
+        "Tour" => $"/tours/{entityId}",
+        "Place" => $"/places/{entityId}",
+        "Business" => $"/places/businesses/{entityId}",
+        "TourGuide" => $"/guides/{entityId}",
+        "Blog" => $"/blogs/{entityId}",
+        _ => "#",
+    };
+
     public static WishlistItemVm ToVm(
         string entityType,
         Guid entityId,
@@ -43,5 +57,6 @@ public static class WishlistMapper
         Rating = rating,
         AddedAt = addedAt,
         KindLabel = Humanize(entityType),
+        DetailUrl = ResolveDetailUrl(entityType, entityId),
     };
 }

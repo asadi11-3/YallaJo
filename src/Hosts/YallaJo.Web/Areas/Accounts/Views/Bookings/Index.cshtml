@@ -5,7 +5,7 @@
     ViewData["AccountNav"] = "Bookings";
     Layout = "~/Views/Shared/_Layout.cshtml";
     var sidebar = ViewBag.Sidebar as AccountSidebarVm ?? new AccountSidebarVm();
-    var tabs = YallaJo.Web.Areas.Accounts.Facades.BookingsFacade.Tabs;
+    var tabs = Model.Tabs;
 
     string StatusBadge(string status) => status switch
     {

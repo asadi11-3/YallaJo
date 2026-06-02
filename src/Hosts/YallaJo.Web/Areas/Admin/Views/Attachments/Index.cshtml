@@ -10,8 +10,7 @@
     <h2>Attachments</h2>
     <p class="text-muted">Select an entity to view or manage its attachments.</p>
 
-    @if (TempData["Success"] is string ok)  { <div class="alert alert-success">@ok</div> }
-    @if (TempData["Error"]   is string err) { <div class="alert alert-danger">@err</div> }
+    @* Success/Error flash banners are rendered globally by the shared _Alerts partial (in _Layout). *@
     @if (ViewBag.Error       is string vbe) { <div class="alert alert-danger">@vbe</div> }
 
     @* ── Filter: choose entity ─────────────────────────────────────────── *@

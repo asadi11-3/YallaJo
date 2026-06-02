@@ -9,8 +9,7 @@
     <h2>Role: @Model.Name</h2>
     <a asp-area="Admin" asp-controller="Roles" asp-action="Index" class="btn btn-sm btn-outline-secondary mb-3">← Back</a>
 
-    @if (TempData["Success"] is string ok)  { <div class="alert alert-success">@ok</div> }
-    @if (TempData["Error"]   is string err) { <div class="alert alert-danger">@err</div> }
+    @* Success/Error flash banners are rendered globally by the shared _Alerts partial (in _Layout). *@
 
     <dl class="row">
         <dt class="col-sm-3">Status</dt>

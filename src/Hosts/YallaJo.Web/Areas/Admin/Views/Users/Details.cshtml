@@ -11,25 +11,8 @@
     <h2>User: @Model.Email</h2>
     <a asp-area="Admin" asp-controller="Users" asp-action="Index" class="btn btn-sm btn-outline-secondary mb-3">← Back</a>
 
-    @*
-        Phase 5E — TempData alerts upgraded to Bootstrap dismissible
-        alerts with role="alert" for screen-reader announcement and
-        admin convenience on long error messages.
-    *@
-    @if (TempData["Success"] is string ok)
-    {
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            @ok
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    }
-    @if (TempData["Error"] is string err)
-    {
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            @err
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    }
+    @* Success/Error flash banners are rendered globally by the shared _Alerts partial
+       (in _Layout), which is itself dismissible with role="alert". *@
 
     <dl class="row">
         <dt class="col-sm-3">Status</dt>

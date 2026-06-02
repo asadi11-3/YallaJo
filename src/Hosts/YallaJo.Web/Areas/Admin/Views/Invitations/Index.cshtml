@@ -11,8 +11,7 @@
         Creates a pending identity and profile, then emails the user an invite link. The account becomes active only after the invitee sets their password through the invite link.
     </p>
 
-    @if (TempData["Success"] is string ok) { <div class="alert alert-success">@ok</div> }
-    @if (TempData["Error"] is string err) { <div class="alert alert-danger">@err</div> }
+    @* Success/Error flash banners are rendered globally by the shared _Alerts partial (in _Layout). *@
 
     <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
