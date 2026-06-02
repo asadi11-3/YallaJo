@@ -1,0 +1,133 @@
+@model YallaJo.Web.Areas.Public.Models.Help.HelpVm
+@{
+    ViewData["Title"] = "Help Center";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<section class="pt-3 pt-lg-5">
+    <div class="container">
+        <!-- Hero / search -->
+        <div class="card bg-primary text-center overflow-hidden p-4 p-sm-5 mb-4 mb-lg-5">
+            <div class="card-body position-relative">
+                <h1 class="text-white mb-3">How can we help you?</h1>
+                <p class="text-white text-opacity-75 mb-4">Search our help center or browse the frequently asked questions below.</p>
+                <div class="row justify-content-center">
+                    <div class="col-lg-8 col-xl-6">
+                        <div class="input-group">
+                            <input id="faqSearch" type="search" class="form-control form-control-lg border-0"
+                                   placeholder="Search the help center..." autocomplete="off" aria-label="Search help">
+                            <span class="input-group-text bg-white border-0"><i class="bi bi-search"></i></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4 g-lg-5">
+            <!-- FAQ list -->
+            <div class="col-lg-8">
+                <h2 class="mb-4">Frequently asked questions</h2>
+
+                @if (Model.HasFaqs)
+                {
+                    <div class="accordion accordion-icon accordion-bg-light" id="helpAccordion">
+                        @foreach (var faq in Model.Faqs)
+                        {
+                            var collapseId = $"c-{faq.Id:N}";
+                            var headingId = $"h-{faq.Id:N}";
+                            <div class="accordion-item mb-3 js-faq-item"
+                                 data-faq="@(((faq.Question ?? "") + " " + (faq.Answer ?? "")).ToLowerInvariant())">
+                                <h6 class="accordion-header" id="@headingId">
+                                    <button class="accordion-button collapsed" type="button"
+                                            data-bs-toggle="collapse" data-bs-target="#@collapseId"
+                                            aria-expanded="false" aria-controls="@collapseId">
+                                        @faq.Question
+                                    </button>
+                                </h6>
+                                <div id="@collapseId" class="accordion-collapse collapse"
+                                     aria-labelledby="@headingId" data-bs-parent="#helpAccordion">
+                                    <div class="accordion-body">
+                                        <p class="mb-3" style="white-space: pre-line;">@faq.Answer</p>
+                                        <a class="btn btn-sm btn-primary-soft mb-0"
+                                           asp-area="Public" asp-controller="Help" asp-action="Detail" asp-route-id="@faq.Id">
+                                            Read full article
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                    <div id="faqNoResults" class="text-center py-4 d-none">
+                        <p class="text-muted mb-0">No articles match your search. Try a different keyword.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-5">
+                        <img src="~/assets/images/element/17.svg" class="h-100px mb-3" alt="No articles">
+                        <h5 class="mb-1">No help articles yet</h5>
+                        <p class="text-muted mb-0">Our help center is being put together. Please check back soon.</p>
+                    </div>
+                }
+            </div>
+
+            <!-- Side actions -->
+            <aside class="col-lg-4">
+                <div class="card border h-100">
+                    <div class="card-body vstack gap-4">
+                        <div>
+                            <div class="d-flex align-items-center mb-2">
+                                <span class="display-6 text-primary me-3"><i class="bi bi-headset"></i></span>
+                                <div>
+                                    <h5 class="mb-0">Still need help?</h5>
+                                    <p class="small mb-0 text-muted">Reach our support team directly.</p>
+                                </div>
+                            </div>
+                            <a class="btn btn-primary w-100 mb-0"
+                               asp-area="Public" asp-controller="Contact" asp-action="Index">
+                                Contact us
+                            </a>
+                        </div>
+                        <hr class="my-0">
+                        <div>
+                            <div class="d-flex align-items-center mb-2">
+                                <span class="display-6 text-primary me-3"><i class="bi bi-ticket-detailed"></i></span>
+                                <div>
+                                    <h5 class="mb-0">Submit a ticket</h5>
+                                    <p class="small mb-0 text-muted">Open a support request and track it.</p>
+                                </div>
+                            </div>
+                            <a class="btn btn-primary-soft w-100 mb-0"
+                               asp-area="Public" asp-controller="Contact" asp-action="Index">
+                                Submit a ticket
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        (function () {
+            var input = document.getElementById('faqSearch');
+            if (!input) return;
+            var items = Array.prototype.slice.call(document.querySelectorAll('.js-faq-item'));
+            var noResults = document.getElementById('faqNoResults');
+
+            input.addEventListener('input', function () {
+                var q = (input.value || '').trim().toLowerCase();
+                var visible = 0;
+                items.forEach(function (el) {
+                    var hay = el.getAttribute('data-faq') || '';
+                    var match = q === '' || hay.indexOf(q) !== -1;
+                    el.classList.toggle('d-none', !match);
+                    if (match) visible++;
+                });
+                if (noResults) noResults.classList.toggle('d-none', visible !== 0);
+            });
+        })();
+    </script>
+}

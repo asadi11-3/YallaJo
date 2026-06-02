@@ -1,0 +1,82 @@
+@model YallaJo.Web.Areas.Public.Models.Home.HomeTourCardVm
+@{
+    var isAuthed = ViewData["isAuthed"] as bool? ?? false;
+    string Money(decimal amount, string currency) =>
+        string.IsNullOrWhiteSpace(currency) ? amount.ToString("N0") : $"{amount:N0} {currency}";
+}
+
+<div class="col-sm-6 col-xl-3">
+    <div class="card border h-100 card-hover-shadow">
+        <div class="position-relative">
+            @if (!string.IsNullOrWhiteSpace(Model.ImageUrl))
+            {
+                <img src="@Model.ImageUrl" class="card-img-top" alt="@Model.Name"
+                     style="height:200px;object-fit:cover;" />
+            }
+            else
+            {
+                <div class="bg-light d-flex align-items-center justify-content-center"
+                     style="height:200px;">
+                    <i class="bi bi-image fs-1 text-body-secondary"></i>
+                </div>
+            }
+
+            <div class="position-absolute top-0 start-0 p-2 d-flex gap-1">
+                @if (Model.HasDiscount)
+                {
+                    <span class="badge text-bg-danger">@Model.DiscountPercent% off</span>
+                }
+                @if (Model.IsFeatured)
+                {
+                    <span class="badge text-bg-dark">Featured</span>
+                }
+            </div>
+
+            <div class="position-absolute top-0 end-0 p-2">
+                @if (isAuthed)
+                {
+                    <button type="button"
+                            class="btn btn-sm btn-light rounded-circle js-favorite"
+                            data-entity-type="Tour" data-entity-id="@Model.Id"
+                            title="Save to wishlist">
+                        <i class="bi bi-heart"></i>
+                    </button>
+                }
+                else
+                {
+                    <button type="button"
+                            class="btn btn-sm btn-light rounded-circle" disabled
+                            data-bs-toggle="tooltip" title="Log in to save">
+                        <i class="bi bi-heart"></i>
+                    </button>
+                }
+            </div>
+        </div>
+
+        <div class="card-body d-flex flex-column">
+            <h6 class="card-title mb-1">
+                <a asp-area="Public" asp-controller="Tours" asp-action="Detail" asp-route-slug="@Model.Slug"
+                   class="stretched-link text-reset">@Model.Name</a>
+            </h6>
+
+            <div class="small text-warning mb-2">
+                <span class="text-body">@Model.AverageRating.ToString("0.0")</span>
+                <i class="bi bi-star-fill"></i>
+                <span class="text-body-secondary">(@Model.ReviewCount)</span>
+            </div>
+
+            <div class="mt-auto">
+                @if (Model.HasDiscount)
+                {
+                    <span class="h6 mb-0 text-success">@Money(Model.EffectivePrice, Model.Currency)</span>
+                    <span class="text-body-secondary text-decoration-line-through small ms-1">@Money(Model.BasePrice, Model.Currency)</span>
+                }
+                else
+                {
+                    <span class="h6 mb-0">@Money(Model.EffectivePrice, Model.Currency)</span>
+                }
+                <span class="text-body-secondary small">/ person</span>
+            </div>
+        </div>
+    </div>
+</div>

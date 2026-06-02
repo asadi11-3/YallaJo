@@ -1,0 +1,241 @@
+@model YallaJo.Web.Areas.Public.Models.Booking.TourBookingVm
+@{
+    ViewData["Title"] = $"Book {Model.TourName}";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var isAuthed = User.Identity?.IsAuthenticated == true;
+    string Money(decimal amount, string? currency) =>
+        string.IsNullOrWhiteSpace(currency) ? amount.ToString("N0") : $"{amount:N0} {currency}";
+    var slotsByDate = Model.Slots
+        .OrderBy(s => s.Date)
+        .ThenBy(s => s.StartTime)
+        .GroupBy(s => s.Date)
+        .ToList();
+}
+
+<section class="pt-3 pt-lg-5">
+    <div class="container">
+        @Html.AntiForgeryToken()
+
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb breadcrumb-dots mb-0">
+                <li class="breadcrumb-item"><a asp-area="Public" asp-controller="Tours" asp-action="Index">Tours</a></li>
+                @if (!string.IsNullOrWhiteSpace(Model.TourSlug))
+                {
+                    <li class="breadcrumb-item"><a asp-area="Public" asp-controller="Tours" asp-action="Detail" asp-route-slug="@Model.TourSlug">@Model.TourName</a></li>
+                }
+                <li class="breadcrumb-item active" aria-current="page">Book</li>
+            </ol>
+        </nav>
+
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger d-none-empty"></div>
+
+        <form method="post" asp-area="Public" asp-controller="Booking" asp-action="Book" asp-route-tourId="@Model.TourId">
+            <input type="hidden" name="Form.TourId" value="@Model.TourId" />
+
+            <div class="row g-4 g-lg-5">
+                <div class="col-lg-8">
+                    <!-- Tour review -->
+                    <div class="card border mb-4">
+                        <div class="card-header border-bottom">
+                            <h5 class="card-header-title mb-0">Tour review</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3 align-items-center">
+                                <div class="col-sm-4">
+                                    @if (!string.IsNullOrWhiteSpace(Model.ImageUrl))
+                                    {
+                                        <img src="@Model.ImageUrl" class="rounded w-100" style="height:120px;object-fit:cover;" alt="@Model.TourName" />
+                                    }
+                                    else
+                                    {
+                                        <div class="bg-light rounded d-flex align-items-center justify-content-center" style="height:120px;">
+                                            <i class="bi bi-image fs-2 text-secondary"></i>
+                                        </div>
+                                    }
+                                </div>
+                                <div class="col-sm-8">
+                                    <h6 class="mb-1">@Model.TourName</h6>
+                                    <ul class="nav nav-divider small mb-2">
+                                        <li class="nav-item"><i class="bi bi-clock-history me-1"></i>@Model.DurationLabel</li>
+                                        @if (!string.IsNullOrWhiteSpace(Model.Difficulty))
+                                        {
+                                            <li class="nav-item">@Model.Difficulty</li>
+                                        }
+                                        @if (Model.MaxGroupSize is > 0)
+                                        {
+                                            <li class="nav-item">Up to @Model.MaxGroupSize people</li>
+                                        }
+                                    </ul>
+                                    @if (Model.ReviewCount > 0)
+                                    {
+                                        <span class="small"><i class="bi bi-star-fill text-warning me-1"></i>@Model.AverageRating.ToString("0.0") (@Model.ReviewCount reviews)</span>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Choose date & time -->
+                    <div class="card border mb-4">
+                        <div class="card-header border-bottom">
+                            <h5 class="card-header-title mb-0">Choose date &amp; time</h5>
+                        </div>
+                        <div class="card-body">
+                            @if (Model.HasSlots)
+                            {
+                                <div class="vstack gap-3">
+                                    @foreach (var group in slotsByDate)
+                                    {
+                                        <div>
+                                            <h6 class="small text-uppercase text-secondary mb-2">@group.Key.ToString("ddd, dd MMM yyyy")</h6>
+                                            <div class="d-flex flex-wrap gap-2">
+                                                @foreach (var slot in group)
+                                                {
+                                                    var slotLabel = (slot.StartTime ?? "") + (string.IsNullOrWhiteSpace(slot.EndTime) ? "" : " - " + slot.EndTime);
+                                                    <input type="radio" class="btn-check" name="Form.AvailabilitySlotId" id="slot-@slot.Id" value="@slot.Id" autocomplete="off" checked="@(Model.Form.AvailabilitySlotId == slot.Id)" required />
+                                                    <label class="btn btn-sm btn-outline-primary" for="slot-@slot.Id">
+                                                        @(string.IsNullOrWhiteSpace(slotLabel) ? "Available" : slotLabel)
+                                                        <span class="d-block small text-body-secondary">@slot.AvailableCount left</span>
+                                                    </label>
+                                                }
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                                <span asp-validation-for="Form.AvailabilitySlotId" class="text-danger small d-block mt-2"></span>
+                            }
+                            else
+                            {
+                                <div class="text-center py-4">
+                                    <img src="~/assets/images/element/17.svg" class="h-100px mb-3" alt="No availability" />
+                                    <p class="mb-0 text-secondary">No upcoming availability for this tour right now. Please check back soon.</p>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Travelers -->
+                    <div class="card border mb-4">
+                        <div class="card-header border-bottom">
+                            <h5 class="card-header-title mb-0">Travelers</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-sm-6 col-lg-3">
+                                    <label asp-for="Form.Adults" class="form-label">Adults</label>
+                                    <input asp-for="Form.Adults" type="number" min="1" max="50" class="form-control" />
+                                    <span asp-validation-for="Form.Adults" class="text-danger small"></span>
+                                </div>
+                                <div class="col-sm-6 col-lg-3">
+                                    <label asp-for="Form.Children" class="form-label">Children</label>
+                                    <input asp-for="Form.Children" type="number" min="0" max="50" class="form-control" />
+                                </div>
+                                <div class="col-sm-6 col-lg-3">
+                                    <label asp-for="Form.Infants" class="form-label">Infants</label>
+                                    <input asp-for="Form.Infants" type="number" min="0" max="50" class="form-control" />
+                                </div>
+                                <div class="col-sm-6 col-lg-3">
+                                    <label asp-for="Form.Seniors" class="form-label">Seniors</label>
+                                    <input asp-for="Form.Seniors" type="number" min="0" max="50" class="form-control" />
+                                </div>
+                            </div>
+
+                            <div class="form-check form-switch mt-3">
+                                <input asp-for="Form.IsPrivate" class="form-check-input" />
+                                <label asp-for="Form.IsPrivate" class="form-check-label">Make this a private tour</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Extras -->
+                    <div class="card border mb-4">
+                        <div class="card-header border-bottom">
+                            <h5 class="card-header-title mb-0">Additional details</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label asp-for="Form.PromoCode" class="form-label">Promo code <span class="text-secondary small">(optional)</span></label>
+                                <input asp-for="Form.PromoCode" class="form-control" placeholder="Enter a promo code" />
+                            </div>
+                            <div>
+                                <label asp-for="Form.SpecialRequests" class="form-label">Special requests <span class="text-secondary small">(optional)</span></label>
+                                <textarea asp-for="Form.SpecialRequests" class="form-control" rows="3" placeholder="Dietary needs, accessibility, pickup notes..."></textarea>
+                                <span asp-validation-for="Form.SpecialRequests" class="text-danger small"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sidebar -->
+                <aside class="col-lg-4">
+                    <div class="card border mb-4">
+                        <div class="card-header border-bottom">
+                            <h5 class="card-header-title mb-0">Price summary</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span>From</span>
+                                <span class="h5 mb-0 text-success">@Money(Model.EffectivePrice, Model.Currency)</span>
+                            </div>
+                            @if (Model.HasDiscount)
+                            {
+                                <div class="d-flex justify-content-between small text-secondary mb-2">
+                                    <span>Was</span>
+                                    <span class="text-decoration-line-through">@Money(Model.BasePrice, Model.Currency)</span>
+                                </div>
+                            }
+                            <p class="small text-secondary mb-0">Per person. The final total is calculated at confirmation based on your travelers and any promo code.</p>
+                        </div>
+                    </div>
+
+                    @if (isAuthed)
+                    {
+                        <div class="d-grid mb-3">
+                            <button type="submit" class="btn btn-lg btn-primary mb-0" @(Model.HasSlots ? "" : "disabled")>Confirm &amp; pay</button>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="card border bg-light mb-3">
+                            <div class="card-body">
+                                <h6 class="mb-2">Sign in to book</h6>
+                                <p class="small text-secondary mb-3">Create your booking and pay securely once you are signed in.</p>
+                                <div class="d-grid gap-2">
+                                    <a class="btn btn-primary mb-0" asp-area="Auth" asp-controller="Auth" asp-action="SignIn"
+                                       asp-route-returnUrl="@Url.Action("Book", "Booking", new { area = "Public", tourId = Model.TourId })">Sign in to continue</a>
+                                    <form method="post" action="/auth/external/challenge" class="d-grid">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="provider" value="Google" />
+                                        <input type="hidden" name="returnUrl" value="@Url.Action("Book", "Booking", new { area = "Public", tourId = Model.TourId })" />
+                                        <button type="submit" class="btn btn-light mb-0"><i class="fab fa-fw fa-google text-google-icon me-2"></i>Book as guest with Google</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    <div class="card border bg-light">
+                        <div class="card-body">
+                            <h6 class="mb-2">Good to know</h6>
+                            <ul class="list-group list-group-borderless small mb-0">
+                                @if (Model.IsInstantBooking)
+                                {
+                                    <li class="list-group-item px-0 py-1"><i class="bi bi-lightning-charge-fill text-warning me-2"></i>Instant confirmation</li>
+                                }
+                                @if (Model.CancellationPolicyHours is > 0)
+                                {
+                                    <li class="list-group-item px-0 py-1"><i class="bi bi-arrow-counterclockwise text-success me-2"></i>Free cancellation up to @Model.CancellationPolicyHours h before</li>
+                                }
+                                <li class="list-group-item px-0 py-1"><i class="bi bi-shield-check text-primary me-2"></i>Secure checkout</li>
+                            </ul>
+                        </div>
+                    </div>
+                </aside>
+            </div>
+        </form>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

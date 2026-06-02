@@ -1,0 +1,296 @@
+@model YallaJo.Web.Areas.Public.Models.Tours.TourGridVm
+@{
+    ViewData["Title"] = "Explore Tours";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    string Currency(decimal amount, string currency) =>
+        string.IsNullOrWhiteSpace(currency) ? amount.ToString("N0") : $"{amount:N0} {currency}";
+
+    var rangeStart = Model.TotalCount == 0 ? 0 : ((Model.PageNumber - 1) * Model.PageSize) + 1;
+    var rangeEnd = Math.Min(Model.PageNumber * Model.PageSize, Model.TotalCount);
+}
+
+<!-- ======================= Page banner START -->
+<section class="pt-3">
+    <div class="container">
+        <div class="row">
+            <div class="col-12 text-center">
+                <h1 class="h2 mb-2">Explore Tours</h1>
+                <p class="mb-0">Discover handpicked experiences and book your next adventure.</p>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- ======================= Page banner END -->
+
+<!-- ======================= Tour grid START -->
+<section class="pt-4">
+    <div class="container">
+
+        <!-- Filter bar START -->
+        <div class="row g-3 align-items-center justify-content-between mb-4">
+            <div class="col-12 col-xl-5">
+                <h5 class="mb-0">
+                    Showing @rangeStart-@rangeEnd of @Model.TotalCount result@(Model.TotalCount == 1 ? "" : "s")
+                </h5>
+            </div>
+
+            <!-- Client-side text search over the loaded cards -->
+            <div class="col-sm-6 col-xl-4">
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0"><i class="bi bi-search"></i></span>
+                    <input type="text" id="tourSearchInput" class="form-control border-start-0"
+                           placeholder="Filter tours on this page...">
+                </div>
+            </div>
+
+            <!-- Server-side sort -->
+            <div class="col-sm-6 col-xl-3">
+                <form method="get" asp-area="Public" asp-controller="Tours" asp-action="Index" id="sortForm">
+                    @if (!string.IsNullOrWhiteSpace(Model.Query))
+                    {
+                        <input type="hidden" name="q" value="@Model.Query" />
+                    }
+                    <select name="sort" class="form-select" onchange="document.getElementById('sortForm').submit();" aria-label="Sort tours">
+                        <option value="popularity_desc" selected="@(Model.Sort == "popularity_desc")">Most popular</option>
+                        <option value="newest" selected="@(Model.Sort == "newest")">Newest</option>
+                        <option value="rating_desc" selected="@(Model.Sort == "rating_desc")">Top rated</option>
+                        <option value="price_asc" selected="@(Model.Sort == "price_asc")">Price: low to high</option>
+                        <option value="price_desc" selected="@(Model.Sort == "price_desc")">Price: high to low</option>
+                    </select>
+                </form>
+            </div>
+        </div>
+        <!-- Filter bar END -->
+
+        @if (Model.Categories.Count > 0)
+        {
+            <!-- Client-side category chips -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <ul class="list-inline mb-0" id="categoryChips">
+                        <li class="list-inline-item mb-2">
+                            <button type="button" class="btn btn-sm btn-primary js-category-chip active" data-category="">All</button>
+                        </li>
+                        @foreach (var cat in Model.Categories)
+                        {
+                            <li class="list-inline-item mb-2">
+                                <button type="button" class="btn btn-sm btn-light js-category-chip" data-category="@cat.Slug">@cat.Name</button>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        }
+
+        @if (!Model.HasResults)
+        {
+            <!-- Empty state -->
+            <div class="row">
+                <div class="col-12 text-center py-5">
+                    <img src="~/assets/images/element/17.svg" class="h-100px mb-3" alt="No tours">
+                    <h5 class="mb-1">No tours found</h5>
+                    <p class="mb-0">Try a different sort or check back soon.</p>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="row g-4" id="tourGrid">
+                @foreach (var tour in Model.Tours)
+                {
+                    <!-- Card item START -->
+                    <div class="col-md-6 col-xl-4 js-tour-card" data-title="@tour.Name.ToLowerInvariant()">
+                        <div class="card card-hover-shadow pb-0 h-100">
+                            <!-- Image + overlay -->
+                            <div class="position-relative">
+                                @if (!string.IsNullOrWhiteSpace(tour.ImageUrl))
+                                {
+                                    <img src="@tour.ImageUrl" class="card-img-top" alt="@tour.Name" style="height:220px;object-fit:cover;">
+                                }
+                                else
+                                {
+                                    <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height:220px;">
+                                        <i class="bi bi-image text-secondary display-5"></i>
+                                    </div>
+                                }
+                                <div class="card-img-overlay d-flex flex-column p-3 z-index-1">
+                                    <div>
+                                        @if (tour.HasDiscount)
+                                        {
+                                            <span class="badge text-bg-danger">@tour.DiscountPercent% Off</span>
+                                        }
+                                        @if (tour.IsFeatured)
+                                        {
+                                            <span class="badge text-bg-dark">Featured</span>
+                                        }
+                                    </div>
+                                </div>
+                                <!-- Wishlist heart (auth-gated) -->
+                                <div class="position-absolute top-0 end-0 p-3 z-index-1">
+                                    @if (User.Identity?.IsAuthenticated == true)
+                                    {
+                                        <button type="button"
+                                                class="btn btn-sm btn-white rounded-circle js-favorite"
+                                                data-entity-type="Tour" data-entity-id="@tour.Id"
+                                                title="Save to wishlist" aria-label="Save to wishlist">
+                                            <i class="bi bi-heart"></i>
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <button type="button"
+                                                class="btn btn-sm btn-white rounded-circle"
+                                                disabled
+                                                data-bs-toggle="tooltip" title="Log in to save">
+                                            <i class="bi bi-heart"></i>
+                                        </button>
+                                    }
+                                </div>
+                            </div>
+
+                            <!-- Card body -->
+                            <div class="card-body px-3">
+                                <h5 class="card-title mb-1">
+                                    <a asp-area="Public" asp-controller="Tours" asp-action="Detail" asp-route-slug="@tour.Slug" class="stretched-link">@tour.Name</a>
+                                </h5>
+                                <ul class="nav nav-divider mb-0 small">
+                                    <li class="nav-item">
+                                        <i class="bi bi-star-fill text-warning me-1"></i>@tour.AverageRating.ToString("0.0")
+                                        <span class="text-body">(@tour.ReviewCount)</span>
+                                    </li>
+                                    @if (tour.BookingCount > 0)
+                                    {
+                                        <li class="nav-item">@tour.BookingCount booked</li>
+                                    }
+                                </ul>
+                            </div>
+
+                            <!-- Card footer -->
+                            <div class="card-footer pt-0">
+                                <div class="d-sm-flex justify-content-sm-between align-items-center flex-wrap">
+                                    <div class="hstack gap-2">
+                                        <h5 class="fw-normal text-success mb-0">@Currency(tour.EffectivePrice, tour.Currency)</h5>
+                                        <small>/per person</small>
+                                        @if (tour.HasDiscount)
+                                        {
+                                            <span class="text-decoration-line-through small">@Currency(tour.BasePrice, tour.Currency)</span>
+                                        }
+                                    </div>
+                                    <div class="mt-2 mt-sm-0">
+                                        <a asp-area="Public" asp-controller="Tours" asp-action="Detail" asp-route-slug="@tour.Slug" class="btn btn-sm btn-primary mb-0">View Details</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Card item END -->
+                }
+            </div>
+
+            <!-- No client-filter matches notice -->
+            <div class="row d-none" id="noFilterMatch">
+                <div class="col-12 text-center py-5">
+                    <h6 class="mb-0">No tours on this page match your filter.</h6>
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            @if (Model.TotalPages > 1)
+            {
+                <div class="row">
+                    <div class="col-12">
+                        <nav class="mt-4 d-flex justify-content-center" aria-label="Tours pagination">
+                            <ul class="pagination pagination-primary-soft d-inline-block d-md-flex rounded mb-0">
+                                <li class="page-item mb-0 @(Model.HasPreviousPage ? "" : "disabled")">
+                                    <a class="page-link"
+                                       asp-area="Public" asp-controller="Tours" asp-action="Index"
+                                       asp-route-page="@(Model.PageNumber - 1)" asp-route-sort="@Model.Sort" asp-route-q="@Model.Query"
+                                       tabindex="-1"><i class="fa-solid fa-angle-left"></i></a>
+                                </li>
+                                @for (var p = 1; p <= Model.TotalPages; p++)
+                                {
+                                    <li class="page-item mb-0 @(p == Model.PageNumber ? "active" : "")">
+                                        <a class="page-link"
+                                           asp-area="Public" asp-controller="Tours" asp-action="Index"
+                                           asp-route-page="@p" asp-route-sort="@Model.Sort" asp-route-q="@Model.Query">@p</a>
+                                    </li>
+                                }
+                                <li class="page-item mb-0 @(Model.HasNextPage ? "" : "disabled")">
+                                    <a class="page-link"
+                                       asp-area="Public" asp-controller="Tours" asp-action="Index"
+                                       asp-route-page="@(Model.PageNumber + 1)" asp-route-sort="@Model.Sort" asp-route-q="@Model.Query"><i class="fa-solid fa-angle-right"></i></a>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</section>
+<!-- ======================= Tour grid END -->
+
+@section Scripts {
+    <script>
+        (function () {
+            // Enable Bootstrap tooltips (used by the disabled guest wishlist button).
+            var tooltipTriggers = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            tooltipTriggers.forEach(function (el) {
+                if (window.bootstrap && bootstrap.Tooltip) new bootstrap.Tooltip(el);
+            });
+
+            // Client-side text filter over the loaded cards.
+            var searchInput = document.getElementById('tourSearchInput');
+            var cards = [].slice.call(document.querySelectorAll('.js-tour-card'));
+            var noMatch = document.getElementById('noFilterMatch');
+
+            function applyFilter() {
+                var term = (searchInput && searchInput.value ? searchInput.value : '').trim().toLowerCase();
+                var visible = 0;
+                cards.forEach(function (card) {
+                    var title = card.getAttribute('data-title') || '';
+                    var show = term === '' || title.indexOf(term) !== -1;
+                    card.classList.toggle('d-none', !show);
+                    if (show) visible++;
+                });
+                if (noMatch) noMatch.classList.toggle('d-none', visible !== 0 || cards.length === 0);
+            }
+            if (searchInput) searchInput.addEventListener('input', applyFilter);
+
+            // Category chips are a client-side affordance: the /tours list endpoint has no
+            // category filter, so chips just highlight; selecting one routes to a filtered
+            // search would require the search endpoint. For now they only toggle active state.
+            var chips = [].slice.call(document.querySelectorAll('.js-category-chip'));
+            chips.forEach(function (chip) {
+                chip.addEventListener('click', function () {
+                    chips.forEach(function (c) { c.classList.remove('active', 'btn-primary'); c.classList.add('btn-light'); });
+                    chip.classList.add('active', 'btn-primary');
+                    chip.classList.remove('btn-light');
+                });
+            });
+
+            // Wishlist favorite (authenticated users only).
+            var favButtons = [].slice.call(document.querySelectorAll('.js-favorite'));
+            var tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
+            favButtons.forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    var icon = btn.querySelector('i');
+                    var body = {
+                        entityType: btn.getAttribute('data-entity-type'),
+                        entityId: btn.getAttribute('data-entity-id')
+                    };
+                    var headers = { 'Content-Type': 'application/json' };
+                    if (tokenInput) headers['RequestVerificationToken'] = tokenInput.value;
+                    fetch('/api/v1/social/favorites', {
+                        method: 'POST',
+                        headers: headers,
+                        body: JSON.stringify(body)
+                    }).then(function (res) {
+                        if (res.ok && icon) { icon.classList.remove('bi-heart'); icon.classList.add('bi-heart-fill', 'text-danger'); }
+                    }).catch(function () { /* ignore */ });
+                });
+            });
+        })();
+    </script>
+}

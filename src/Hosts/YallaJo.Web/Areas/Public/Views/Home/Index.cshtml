@@ -1,0 +1,182 @@
+@model YallaJo.Web.Areas.Public.Models.Home.HomeVm
+@{
+    ViewData["Title"] = "Explore Tours & Experiences";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var isAuthed = User.Identity?.IsAuthenticated == true;
+
+    string Money(decimal amount, string currency) =>
+        string.IsNullOrWhiteSpace(currency) ? amount.ToString("N0") : $"{amount:N0} {currency}";
+}
+
+@Html.AntiForgeryToken()
+
+@functions {
+    private static string Stars(decimal rating)
+    {
+        var full = (int)Math.Floor(rating);
+        var sb = new System.Text.StringBuilder();
+        for (var i = 1; i <= 5; i++)
+            sb.Append(i <= full ? "<i class=\"bi bi-star-fill\"></i>" : "<i class=\"bi bi-star\"></i>");
+        return sb.ToString();
+    }
+}
+
+@* ─────────────────────────── Hero banner ─────────────────────────── *@
+<section class="pt-3 pt-md-4">
+    <div class="container">
+        <div class="rounded-3 p-4 p-sm-5 position-relative overflow-hidden"
+             style="background-image:url('@Url.Content("~/assets/images/bg/02.jpg")');background-size:cover;background-position:center;">
+            <div class="position-absolute top-0 start-0 w-100 h-100 bg-dark opacity-50"></div>
+            <div class="position-relative text-white" style="max-width:640px;">
+                <h1 class="text-white display-6 fw-bold mb-2">Life is an adventure, explore it</h1>
+                <p class="lead text-white opacity-75 mb-4">
+                    Discover hand-picked tours, guided experiences and unforgettable places.
+                </p>
+
+                <form asp-area="Public" asp-controller="Tours" asp-action="Index" method="get"
+                      class="bg-mode shadow rounded-3 p-3">
+                    <div class="row g-2 align-items-center">
+                        <div class="col-12 col-md">
+                            <label class="visually-hidden" for="heroSearch">Search tours</label>
+                            <input id="heroSearch" name="q" type="text" class="form-control border-0"
+                                   placeholder="Search tours, destinations, activities…" />
+                        </div>
+                        <div class="col-12 col-md-auto d-grid">
+                            <button type="submit" class="btn btn-dark mb-0">
+                                <i class="bi bi-search me-1"></i> Explore Tours
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+
+@* ─────────────────────────── Featured tours ─────────────────────────── *@
+@if (Model.HasFeatured)
+{
+    <section class="pt-5">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-end mb-4">
+                <div>
+                    <h2 class="mb-0">Featured tours</h2>
+                    <p class="mb-0 text-body-secondary">Our best, hand-picked experiences.</p>
+                </div>
+                <a asp-area="Public" asp-controller="Tours" asp-action="Index"
+                   class="btn btn-sm btn-primary-soft mb-0">View all</a>
+            </div>
+
+            <div class="row g-4">
+                @foreach (var tour in Model.FeaturedTours)
+                {
+                    <partial name="_HomeTourCard" model="tour" view-data="@(new ViewDataDictionary(ViewData) { { "isAuthed", isAuthed } })" />
+                }
+            </div>
+        </div>
+    </section>
+}
+
+@* ─────────────────────────── Popular tours ─────────────────────────── *@
+@if (Model.HasPopular)
+{
+    <section class="pt-5">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-end mb-4">
+                <div>
+                    <h2 class="mb-0">Popular right now</h2>
+                    <p class="mb-0 text-body-secondary">Travellers love these the most.</p>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                @foreach (var tour in Model.PopularTours)
+                {
+                    <partial name="_HomeTourCard" model="tour" view-data="@(new ViewDataDictionary(ViewData) { { "isAuthed", isAuthed } })" />
+                }
+            </div>
+        </div>
+    </section>
+}
+
+@* ─────────────────────────── Top categories ─────────────────────────── *@
+@if (Model.HasCategories)
+{
+    <section class="pt-5 pb-5">
+        <div class="container">
+            <div class="mb-4">
+                <h2 class="mb-0">Browse by category</h2>
+                <p class="mb-0 text-body-secondary">Find the kind of experience you’re after.</p>
+            </div>
+
+            <div class="row g-3 g-xl-4">
+                @foreach (var cat in Model.Categories)
+                {
+                    <div class="col-6 col-md-4 col-xl-3">
+                        <a asp-area="Public" asp-controller="Tours" asp-action="Index" asp-route-q="@cat.Name"
+                           class="card card-body border h-100 text-center text-reset text-decoration-none card-hover-shadow">
+                            <div class="mb-2">
+                                @if (!string.IsNullOrWhiteSpace(cat.Icon))
+                                {
+                                    <i class="bi @cat.Icon fs-3 text-primary"></i>
+                                }
+                                else
+                                {
+                                    <i class="bi bi-compass fs-3 text-primary"></i>
+                                }
+                            </div>
+                            <h6 class="mb-0">@cat.Name</h6>
+                        </a>
+                    </div>
+                }
+            </div>
+        </div>
+    </section>
+}
+
+@if (!Model.HasFeatured && !Model.HasPopular && !Model.HasCategories)
+{
+    <section class="py-6">
+        <div class="container text-center">
+            <img src="~/assets/images/element/17.svg" alt="" class="h-150px mb-3" />
+            <h4>Nothing to show yet</h4>
+            <p class="text-body-secondary mb-3">Check back soon for new tours and experiences.</p>
+            <a asp-area="Public" asp-controller="Tours" asp-action="Index" class="btn btn-primary">Browse all tours</a>
+        </div>
+    </section>
+}
+
+@section Scripts {
+    <script>
+        (function () {
+            // Tooltips (for the guest "Log in to save" hints).
+            document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) {
+                new bootstrap.Tooltip(el);
+            });
+
+            // Wishlist (authenticated users only — guest buttons are disabled).
+            var tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
+            document.querySelectorAll('.js-favorite').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    var entityType = btn.dataset.entityType;
+                    var entityId = btn.dataset.entityId;
+                    if (!entityId) return;
+                    btn.disabled = true;
+                    fetch('/api/v1/social/favorites', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'RequestVerificationToken': tokenInput ? tokenInput.value : ''
+                        },
+                        body: JSON.stringify({ entityType: entityType, entityId: entityId })
+                    }).then(function (res) {
+                        if (res.ok) {
+                            var icon = btn.querySelector('i');
+                            if (icon) { icon.classList.remove('bi-heart'); icon.classList.add('bi-heart-fill', 'text-danger'); }
+                        }
+                    }).finally(function () { btn.disabled = false; });
+                });
+            });
+        })();
+    </script>
+}

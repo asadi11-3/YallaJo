@@ -1,0 +1,334 @@
+@model YallaJo.Web.Areas.Public.Models.Directory.BusinessDetailVm
+@{
+    ViewData["Title"] = Model.Name;
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var isAuthed = User.Identity?.IsAuthenticated == true;
+
+    string Money(decimal amount, string? currency) =>
+        string.IsNullOrWhiteSpace(currency) ? amount.ToString("N0") : $"{amount:N0} {currency}";
+}
+
+@functions {
+    static string TypeIcon(string? type) => (type ?? string.Empty).ToLowerInvariant() switch
+    {
+        "restaurant" => "bi bi-cup-hot",
+        "hotel" => "bi bi-building",
+        "shop" => "bi bi-shop",
+        "agency" => "bi bi-briefcase",
+        "transport" => "bi bi-truck",
+        "guide" => "bi bi-person-badge",
+        "activity" => "bi bi-bicycle",
+        _ => "bi bi-geo-alt",
+    };
+}
+
+@Html.AntiForgeryToken()
+
+<!-- Banner -->
+<section class="pt-4 pb-0">
+    <div class="container">
+        <a asp-area="Public" asp-controller="Directory" asp-action="Index" class="btn btn-sm btn-light mb-3">
+            <i class="bi bi-arrow-left me-1"></i>Back to directory
+        </a>
+
+        <div class="d-sm-flex justify-content-between align-items-start">
+            <div>
+                <div class="mb-2">
+                    @if (!string.IsNullOrWhiteSpace(Model.BusinessType))
+                    {
+                        <span class="badge text-bg-dark me-1"><i class="@TypeIcon(Model.BusinessType) fa-fw me-1"></i>@Model.BusinessType</span>
+                    }
+                    @if (Model.IsVerified)
+                    {
+                        <span class="badge text-bg-success me-1"><i class="bi bi-patch-check-fill me-1"></i>Verified</span>
+                    }
+                    @if (Model.IsFeatured)
+                    {
+                        <span class="badge text-bg-warning">Featured</span>
+                    }
+                </div>
+                <h1 class="h3 mb-1">@Model.Name</h1>
+                <ul class="nav nav-divider align-items-center text-muted small">
+                    @if (!string.IsNullOrWhiteSpace(Model.Location))
+                    {
+                        <li class="nav-item"><i class="bi bi-geo-alt-fill me-1"></i>@Model.Location</li>
+                    }
+                    <li class="nav-item">
+                        <i class="bi bi-star-fill text-warning me-1"></i>@Model.AverageRating.ToString("0.0")
+                        <span class="text-muted">(@Model.ReviewCount reviews)</span>
+                    </li>
+                </ul>
+            </div>
+            <div class="mt-3 mt-sm-0">
+                @if (isAuthed)
+                {
+                    <button type="button" class="btn btn-sm btn-light js-favorite" data-entity-type="Business" data-entity-id="@Model.Id">
+                        <i class="bi bi-heart"></i> Save
+                    </button>
+                }
+                else
+                {
+                    <button type="button" class="btn btn-sm btn-light" disabled data-bs-toggle="tooltip" title="Log in to save">
+                        <i class="bi bi-heart"></i> Save
+                    </button>
+                }
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Gallery -->
+<section class="pt-3 pb-0">
+    <div class="container">
+        @if (Model.ImageUrls.Any())
+        {
+            <div class="row g-2">
+                <div class="col-lg-8">
+                    <a href="@Model.ImageUrls[0]" class="glightbox" data-gallery="business-gallery">
+                        <img src="@Model.ImageUrls[0]" class="rounded-3 w-100" style="height:380px;object-fit:cover;" alt="@Model.Name">
+                    </a>
+                </div>
+                <div class="col-lg-4">
+                    <div class="row g-2">
+                        @foreach (var img in Model.ImageUrls.Skip(1).Take(4))
+                        {
+                            <div class="col-6">
+                                <a href="@img" class="glightbox" data-gallery="business-gallery">
+                                    <img src="@img" class="rounded-3 w-100" style="height:185px;object-fit:cover;" alt="@Model.Name">
+                                </a>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="rounded-3 bg-light d-flex align-items-center justify-content-center" style="height:320px;">
+                <i class="@TypeIcon(Model.BusinessType) display-3 text-secondary"></i>
+            </div>
+        }
+    </div>
+</section>
+
+<!-- Content -->
+<section class="pt-4">
+    <div class="container">
+        <div class="row g-4 g-xl-5">
+            <div class="col-xl-8">
+                <!-- Overview -->
+                <div class="card border mb-4">
+                    <div class="card-header border-bottom">
+                        <h4 class="card-header-title mb-0">Overview</h4>
+                    </div>
+                    <div class="card-body">
+                        @if (!string.IsNullOrWhiteSpace(Model.Description))
+                        {
+                            <p class="mb-0" style="white-space:pre-line;">@Model.Description</p>
+                        }
+                        else
+                        {
+                            <p class="text-muted mb-0">No description available for this place yet.</p>
+                        }
+                    </div>
+                </div>
+
+                <!-- Amenities -->
+                @if (Model.Amenities.Any())
+                {
+                    <div class="card border mb-4">
+                        <div class="card-header border-bottom">
+                            <h4 class="card-header-title mb-0">Amenities</h4>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                @foreach (var a in Model.Amenities)
+                                {
+                                    <div class="col-sm-6 col-lg-4">
+                                        <span class="d-inline-flex align-items-center">
+                                            <i class="@(string.IsNullOrWhiteSpace(a.Icon) ? "bi bi-check-circle-fill text-success" : a.Icon) me-2"></i>
+                                            @a.Name
+                                        </span>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                <!-- Services -->
+                @if (Model.Services.Any())
+                {
+                    <div class="card border mb-4">
+                        <div class="card-header border-bottom">
+                            <h4 class="card-header-title mb-0">Services</h4>
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-group list-group-borderless mb-0">
+                                @foreach (var s in Model.Services)
+                                {
+                                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                        <span>
+                                            <span class="fw-semibold">@s.Name</span>
+                                            @if (s.DurationMinutes is > 0)
+                                            {
+                                                <small class="text-muted ms-2"><i class="bi bi-clock me-1"></i>@s.DurationMinutes min</small>
+                                            }
+                                        </span>
+                                        <span class="text-success fw-semibold">@Money(s.Price, s.Currency)</span>
+                                    </li>
+                                }
+                            </ul>
+                        </div>
+                    </div>
+                }
+
+                <!-- Accessibility -->
+                @if (Model.AccessibilityFeatures.Any())
+                {
+                    <div class="card border mb-4">
+                        <div class="card-header border-bottom">
+                            <h4 class="card-header-title mb-0">Accessibility</h4>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                @foreach (var f in Model.AccessibilityFeatures)
+                                {
+                                    <div class="col-sm-6">
+                                        <span class="d-inline-flex align-items-center">
+                                            <i class="bi @(f.IsAvailable ? "bi-check-circle-fill text-success" : "bi-x-circle text-muted") me-2"></i>
+                                            <span>
+                                                @f.Name
+                                                @if (!string.IsNullOrWhiteSpace(f.Description))
+                                                {
+                                                    <small class="d-block text-muted">@f.Description</small>
+                                                }
+                                            </span>
+                                        </span>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- Sidebar -->
+            <aside class="col-xl-4">
+                <div class="card border mb-4">
+                    <div class="card-header border-bottom">
+                        <h5 class="card-header-title mb-0">Contact &amp; info</h5>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-group list-group-borderless mb-0">
+                            @if (!string.IsNullOrWhiteSpace(Model.Address))
+                            {
+                                <li class="list-group-item d-flex px-0"><i class="bi bi-geo-alt-fill text-primary me-2"></i><span>@Model.Address</span></li>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(Model.Phone))
+                            {
+                                <li class="list-group-item d-flex px-0"><i class="bi bi-telephone-fill text-primary me-2"></i><a class="text-reset" href="tel:@Model.Phone">@Model.Phone</a></li>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(Model.Email))
+                            {
+                                <li class="list-group-item d-flex px-0"><i class="bi bi-envelope-fill text-primary me-2"></i><a class="text-reset" href="mailto:@Model.Email">@Model.Email</a></li>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(Model.Website))
+                            {
+                                <li class="list-group-item d-flex px-0"><i class="bi bi-globe text-primary me-2"></i><a class="text-reset" href="@Model.Website" target="_blank" rel="noopener">Visit website</a></li>
+                            }
+                        </ul>
+                    </div>
+                </div>
+
+                @if (Model.Hours.Any())
+                {
+                    <div class="card border mb-4">
+                        <div class="card-header border-bottom">
+                            <h5 class="card-header-title mb-0">Opening hours</h5>
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-group list-group-borderless mb-0">
+                                @foreach (var h in Model.Hours)
+                                {
+                                    <li class="list-group-item d-flex justify-content-between px-0">
+                                        <span class="fw-semibold">@h.DayOfWeek</span>
+                                        @if (h.IsClosed)
+                                        {
+                                            <span class="text-danger">Closed</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">@h.OpenTime - @h.CloseTime</span>
+                                        }
+                                    </li>
+                                }
+                            </ul>
+                        </div>
+                    </div>
+                }
+
+                <div class="card border bg-light">
+                    <div class="card-body">
+                        <h6 class="mb-2">Want to save this place?</h6>
+                        @if (isAuthed)
+                        {
+                            <button type="button" class="btn btn-outline-primary w-100 js-favorite" data-entity-type="Business" data-entity-id="@Model.Id">
+                                <i class="bi bi-heart me-1"></i>Add to wishlist
+                            </button>
+                        }
+                        else
+                        {
+                            <a asp-area="Auth" asp-controller="Auth" asp-action="SignIn" class="btn btn-outline-primary w-100">
+                                <i class="bi bi-box-arrow-in-right me-1"></i>Sign in to save
+                            </a>
+                        }
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        (function () {
+            document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) { new bootstrap.Tooltip(el); });
+
+            if (window.GLightbox) { GLightbox({ selector: '.glightbox' }); }
+
+            var tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
+            document.querySelectorAll('.js-favorite').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    fetch('/api/v1/social/favorites', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'RequestVerificationToken': tokenInput ? tokenInput.value : ''
+                        },
+                        body: JSON.stringify({ entityType: btn.dataset.entityType, entityId: btn.dataset.entityId })
+                    }).then(function (res) {
+                        if (res.ok) {
+                            var icon = btn.querySelector('i');
+                            if (icon) { icon.classList.remove('bi-heart'); icon.classList.add('bi-heart-fill', 'text-danger'); }
+                        }
+                    }).catch(function () { });
+                });
+            });
+
+            @if (isAuthed)
+            {
+                <text>
+                fetch('/api/v1/interactions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': tokenInput ? tokenInput.value : ''
+                    },
+                    body: JSON.stringify({ entityType: 'Business', entityId: '@Model.Id', interactionType: 'View' })
+                }).catch(function () { });
+                </text>
+            }
+        })();
+    </script>
+}

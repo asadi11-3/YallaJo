@@ -1,0 +1,257 @@
+using YallaJo.Web.Areas.Public.ApiClients;
+using YallaJo.Web.Areas.Public.Models.Tours;
+using YallaJo.Web.Infrastructure.Api.Contracts;
+using YallaJo.Web.Services;
+
+namespace YallaJo.Web.Areas.Public.Facades;
+
+public sealed class ToursFacade
+{
+    private readonly ToursApiClient _api;
+    private readonly IApiAssetUrlResolver _assetResolver;
+
+    // Sort tokens accepted by GET /api/v1/tours.
+    private static readonly HashSet<string> AllowedSorts =
+        new(StringComparer.OrdinalIgnoreCase)
+        { "price_asc", "price_desc", "rating_desc", "popularity_desc", "newest" };
+
+    public ToursFacade(ToursApiClient api, IApiAssetUrlResolver assetResolver)
+    {
+        _api = api;
+        _assetResolver = assetResolver;
+    }
+
+    public static string NormalizeSort(string? sort)
+        => sort is not null && AllowedSorts.Contains(sort) ? sort.ToLowerInvariant() : "popularity_desc";
+
+    public async Task<ApiResult<TourGridVm>> GetGridAsync(
+        int page, string? sort, string? query, CancellationToken ct = default)
+    {
+        const int pageSize = 12;
+        var pageNumber = page < 1 ? 1 : page;
+        var normalizedSort = NormalizeSort(sort);
+
+        var toursTask = _api.GetToursAsync(pageNumber, pageSize, normalizedSort, ct);
+        var categoriesTask = _api.GetCategoriesAsync(ct);
+        await Task.WhenAll(toursTask, categoriesTask);
+
+        var toursResult = toursTask.Result;
+        if (!toursResult.IsSuccess || toursResult.Data is null)
+            return ApiResult<TourGridVm>.Fail(toursResult.StatusCode, toursResult.Error ?? "Could not load tours.");
+
+        var page0 = toursResult.Data;
+
+        // Hydrate each tour's cover image from ContentCore attachments (tolerate per-item failure).
+        var cards = await Task.WhenAll(page0.Items.Select(t => BuildCardAsync(t, ct)));
+
+        var categories = categoriesTask.Result is { IsSuccess: true, Data: { } cats }
+            ? cats.Select(TourGridMapper.ToFilterVm).ToList()
+            : new List<CategoryFilterVm>();
+
+        return ApiResult<TourGridVm>.Ok(new TourGridVm
+        {
+            Tours = cards,
+            Categories = categories,
+            PageNumber = page0.PageNumber,
+            PageSize = page0.PageSize,
+            TotalCount = page0.TotalCount,
+            TotalPages = page0.TotalPages,
+            HasPreviousPage = page0.HasPreviousPage,
+            HasNextPage = page0.HasNextPage,
+            Query = query,
+            Sort = normalizedSort,
+        });
+    }
+
+    public async Task<ApiResult<TourDetailVm>> GetDetailAsync(string slug, CancellationToken ct = default)
+    {
+        var detailResult = await _api.GetTourBySlugAsync(slug, ct);
+        if (!detailResult.IsSuccess || detailResult.Data is null)
+            return ApiResult<TourDetailVm>.Fail(detailResult.StatusCode, detailResult.Error ?? "Tour not found.");
+
+        var d = detailResult.Data;
+
+        var schedulesTask = SafeListAsync(() => _api.GetSchedulesAsync(d.Id, ct));
+        var pricingTask = SafeListAsync(() => _api.GetPricingAsync(d.Id, ct));
+        var waypointsTask = SafeListAsync(() => _api.GetWaypointsAsync(d.Id, ct));
+        var guidesTask = SafeListAsync(() => _api.GetGuidesAsync(d.Id, ct));
+        var imagesTask = BuildImageUrlsAsync(d.Id, ct);
+        var ratingTask = SafeRatingAsync(d.Id, ct);
+        var reviewsTask = SafeReviewsAsync(d.Id, ct);
+
+        await Task.WhenAll(schedulesTask, pricingTask, waypointsTask, guidesTask, imagesTask, ratingTask, reviewsTask);
+
+        var rating = ratingTask.Result;
+        var avgRating = rating?.AverageRating ?? d.AverageRating;
+        var reviewCount = rating?.ReviewCount ?? d.ReviewCount;
+
+        var vm = new TourDetailVm
+        {
+            Id = d.Id,
+            Name = d.Name,
+            Slug = d.Slug,
+            Description = d.Description,
+            ShortDescription = d.ShortDescription,
+            Difficulty = d.Difficulty,
+            DurationMinutes = d.DurationMinutes,
+            MaxGroupSize = d.MaxGroupSize,
+            MinAge = d.MinAge,
+            BasePrice = d.BasePrice,
+            SalePrice = d.SalePrice,
+            Currency = d.Currency,
+            AverageRating = avgRating,
+            ReviewCount = reviewCount,
+            BookingCount = d.BookingCount,
+            IsFeatured = d.IsFeatured,
+            IsInstantBooking = d.IsInstantBooking,
+            IsChildFriendly = d.IsChildFriendly,
+            IsAccessible = d.IsAccessible,
+            CancellationPolicyHours = d.CancellationPolicyHours,
+            ImageUrls = imagesTask.Result,
+            Waypoints = waypointsTask.Result
+                .OrderBy(w => w.SortOrder)
+                .Select(w => new TourWaypointVm
+                {
+                    Name = w.Name,
+                    Description = w.Description,
+                    SortOrder = w.SortOrder,
+                    DurationMinutes = w.DurationMinutes,
+                    WaypointType = w.WaypointType,
+                })
+                .ToList(),
+            Schedules = schedulesTask.Result
+                .Select(s => new TourScheduleVm
+                {
+                    DayOfWeek = s.DayOfWeek,
+                    StartTime = s.StartTime,
+                    EndTime = s.EndTime,
+                })
+                .ToList(),
+            PricingTiers = pricingTask.Result
+                .Select(p => new TourPricingTierVm
+                {
+                    Name = p.Name,
+                    Description = p.Description,
+                    Price = p.Price,
+                    Currency = p.Currency,
+                    ParticipantType = p.ParticipantType,
+                    MinParticipants = p.MinParticipants,
+                    MaxParticipants = p.MaxParticipants,
+                })
+                .ToList(),
+            Guides = guidesTask.Result
+                .OrderByDescending(g => g.IsPrimary)
+                .Select(g => new TourGuideVm
+                {
+                    DisplayName = g.DisplayName,
+                    AvatarUrl = _assetResolver.Resolve(g.AvatarUrl),
+                    IsPrimary = g.IsPrimary,
+                })
+                .ToList(),
+            Reviews = reviewsTask.Result
+                .Select(r => new TourReviewVm
+                {
+                    Rating = r.Rating,
+                    Title = r.Title,
+                    Content = r.Content,
+                    CreatedAt = r.CreatedAt,
+                    IsVerifiedBooking = r.IsVerifiedBooking,
+                    HelpfulVoteCount = r.HelpfulVoteCount,
+                })
+                .ToList(),
+        };
+
+        return ApiResult<TourDetailVm>.Ok(vm);
+    }
+
+    private async Task<List<string>> BuildImageUrlsAsync(Guid tourId, CancellationToken ct)
+    {
+        try
+        {
+            var attach = await _api.GetAttachmentsAsync(tourId, ct);
+            if (attach is { IsSuccess: true, Data: { Count: > 0 } images })
+            {
+                return images
+                    .OrderBy(a => a.SortOrder)
+                    .Select(a => _assetResolver.Resolve(a.ThumbnailUrl ?? a.Url))
+                    .Where(u => !string.IsNullOrWhiteSpace(u))
+                    .Select(u => u!)
+                    .ToList();
+            }
+        }
+        catch
+        {
+            // tolerate hydration failure
+        }
+
+        return new List<string>();
+    }
+
+    private static async Task<List<T>> SafeListAsync<T>(Func<Task<ApiResult<List<T>>>> call)
+    {
+        try
+        {
+            var result = await call();
+            if (result is { IsSuccess: true, Data: { } data })
+                return data;
+        }
+        catch
+        {
+            // tolerate per-call failure
+        }
+
+        return new List<T>();
+    }
+
+    private async Task<RatingSummaryResponse?> SafeRatingAsync(Guid id, CancellationToken ct)
+    {
+        try
+        {
+            var result = await _api.GetRatingSummaryAsync(id, ct);
+            if (result is { IsSuccess: true, Data: { } data })
+                return data;
+        }
+        catch
+        {
+            // tolerate failure
+        }
+
+        return null;
+    }
+
+    private async Task<List<ReviewResponse>> SafeReviewsAsync(Guid id, CancellationToken ct)
+    {
+        try
+        {
+            var result = await _api.GetReviewsAsync(id, 1, 10, ct);
+            if (result is { IsSuccess: true, Data: { } data })
+                return data.Items.ToList();
+        }
+        catch
+        {
+            // tolerate failure
+        }
+
+        return new List<ReviewResponse>();
+    }
+
+    private async Task<TourCardVm> BuildCardAsync(TourSummaryResponse tour, CancellationToken ct)
+    {
+        string? imageUrl = null;
+        try
+        {
+            var attach = await _api.GetAttachmentsAsync(tour.Id, ct);
+            if (attach is { IsSuccess: true, Data: { Count: > 0 } images })
+            {
+                var primary = images.OrderBy(a => a.SortOrder).First();
+                imageUrl = _assetResolver.Resolve(primary.ThumbnailUrl ?? primary.Url);
+            }
+        }
+        catch
+        {
+            // tolerate hydration failure; card renders with a placeholder image
+        }
+
+        return TourGridMapper.ToCardVm(tour, imageUrl);
+    }
+}

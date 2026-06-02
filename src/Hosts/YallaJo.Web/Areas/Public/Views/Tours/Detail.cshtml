@@ -1,0 +1,561 @@
+@model YallaJo.Web.Areas.Public.Models.Tours.TourDetailVm
+@{
+    ViewData["Title"] = Model.Name;
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var isAuthed = User.Identity?.IsAuthenticated == true;
+
+    string Currency(decimal amount, string currency) =>
+        string.IsNullOrWhiteSpace(currency) ? amount.ToString("N0") : $"{amount:N0} {currency}";
+
+    var showItinerary = Model.Waypoints.Count > 0;
+    var showPricing = Model.PricingTiers.Count > 0 || Model.Schedules.Count > 0;
+}
+
+@Html.AntiForgeryToken()
+
+<!-- ======================= Tour detail banner START -->
+<section class="pt-4">
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <nav aria-label="breadcrumb" class="mb-2">
+                    <ol class="breadcrumb breadcrumb-dots mb-0">
+                        <li class="breadcrumb-item"><a asp-area="Public" asp-controller="Tours" asp-action="Index">Tours</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">@Model.Name</li>
+                    </ol>
+                </nav>
+
+                <div class="d-sm-flex justify-content-sm-between align-items-start">
+                    <div>
+                        <h1 class="fs-2 mb-2">@Model.Name</h1>
+                        <ul class="nav nav-divider align-items-center small mb-0">
+                            <li class="nav-item"><i class="bi bi-clock-history me-1"></i>@Model.DurationLabel</li>
+                            @if (!string.IsNullOrWhiteSpace(Model.Difficulty))
+                            {
+                                <li class="nav-item"><span class="badge text-bg-light">@Model.Difficulty</span></li>
+                            }
+                            @if (Model.MaxGroupSize is > 0)
+                            {
+                                <li class="nav-item"><i class="bi bi-people me-1"></i>Up to @Model.MaxGroupSize people</li>
+                            }
+                            <li class="nav-item">
+                                <i class="bi bi-star-fill text-warning me-1"></i>@Model.AverageRating.ToString("0.0")
+                                <span class="text-body">(@Model.ReviewCount review@(Model.ReviewCount == 1 ? "" : "s"))</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="mt-3 mt-sm-0">
+                        @if (isAuthed)
+                        {
+                            <button type="button" class="btn btn-sm btn-light js-favorite"
+                                    data-entity-type="Tour" data-entity-id="@Model.Id"
+                                    title="Save to wishlist">
+                                <i class="bi bi-heart me-1"></i>Save
+                            </button>
+                        }
+                        else
+                        {
+                            <button type="button" class="btn btn-sm btn-light" disabled
+                                    data-bs-toggle="tooltip" title="Log in to save">
+                                <i class="bi bi-heart me-1"></i>Save
+                            </button>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- ======================= Tour detail banner END -->
+
+<!-- ======================= Gallery START -->
+<section class="pt-3">
+    <div class="container">
+        <div class="row g-2">
+            @if (Model.ImageUrls.Count > 0)
+            {
+                <div class="col-lg-8">
+                    <a href="@Model.ImageUrls[0]" class="glightbox" data-gallery="tour-gallery">
+                        <img src="@Model.ImageUrls[0]" class="rounded-3 w-100" alt="@Model.Name"
+                             style="height:420px;object-fit:cover;">
+                    </a>
+                </div>
+                <div class="col-lg-4">
+                    <div class="row g-2">
+                        @foreach (var img in Model.ImageUrls.Skip(1).Take(4))
+                        {
+                            <div class="col-6">
+                                <a href="@img" class="glightbox" data-gallery="tour-gallery">
+                                    <img src="@img" class="rounded-3 w-100" alt="@Model.Name"
+                                         style="height:204px;object-fit:cover;">
+                                </a>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="col-12">
+                    <div class="rounded-3 bg-light d-flex align-items-center justify-content-center" style="height:420px;">
+                        <i class="bi bi-image text-secondary display-3"></i>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</section>
+<!-- ======================= Gallery END -->
+
+<!-- ======================= Detail body START -->
+<section class="pt-4">
+    <div class="container">
+        <div class="row g-4 g-xl-5">
+
+            <!-- Main column -->
+            <div class="col-xl-8">
+
+                <!-- Pills tabs -->
+                <ul class="nav nav-pills nav-pills-bg-soft nav-responsive justify-content-center mb-4" id="tour-pills-tab" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="pills-overview-tab" data-bs-toggle="pill"
+                                data-bs-target="#pane-overview" type="button" role="tab" aria-selected="true">Overview</button>
+                    </li>
+                    @if (showItinerary)
+                    {
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="pills-itinerary-tab" data-bs-toggle="pill"
+                                    data-bs-target="#pane-itinerary" type="button" role="tab">Itinerary</button>
+                        </li>
+                    }
+                    @if (showPricing)
+                    {
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="pills-pricing-tab" data-bs-toggle="pill"
+                                    data-bs-target="#pane-pricing" type="button" role="tab">Pricing &amp; Schedule</button>
+                        </li>
+                    }
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="pills-reviews-tab" data-bs-toggle="pill"
+                                data-bs-target="#pane-reviews" type="button" role="tab">Reviews</button>
+                    </li>
+                </ul>
+
+                <div class="tab-content">
+
+                    <!-- Overview -->
+                    <div class="tab-pane fade show active" id="pane-overview" role="tabpanel">
+                        <div class="card border">
+                            <div class="card-header border-bottom">
+                                <h4 class="card-header-title">Tour overview</h4>
+                            </div>
+                            <div class="card-body">
+                                @if (!string.IsNullOrWhiteSpace(Model.ShortDescription))
+                                {
+                                    <p class="lead">@Model.ShortDescription</p>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(Model.Description))
+                                {
+                                    <p style="white-space:pre-line">@Model.Description</p>
+                                }
+                                else if (string.IsNullOrWhiteSpace(Model.ShortDescription))
+                                {
+                                    <p class="text-body mb-0">No description has been provided for this tour yet.</p>
+                                }
+
+                                <h6 class="mt-4 mb-2">Tour information</h6>
+                                <ul class="list-group list-group-borderless mb-0">
+                                    <li class="list-group-item d-flex justify-content-between px-0">
+                                        <span class="h6 fw-light mb-0"><i class="bi bi-clock-history me-2"></i>Duration</span>
+                                        <span>@Model.DurationLabel</span>
+                                    </li>
+                                    @if (!string.IsNullOrWhiteSpace(Model.Difficulty))
+                                    {
+                                        <li class="list-group-item d-flex justify-content-between px-0">
+                                            <span class="h6 fw-light mb-0"><i class="bi bi-graph-up-arrow me-2"></i>Difficulty</span>
+                                            <span>@Model.Difficulty</span>
+                                        </li>
+                                    }
+                                    @if (Model.MaxGroupSize is > 0)
+                                    {
+                                        <li class="list-group-item d-flex justify-content-between px-0">
+                                            <span class="h6 fw-light mb-0"><i class="bi bi-people me-2"></i>Group size</span>
+                                            <span>Up to @Model.MaxGroupSize</span>
+                                        </li>
+                                    }
+                                    @if (Model.MinAge is > 0)
+                                    {
+                                        <li class="list-group-item d-flex justify-content-between px-0">
+                                            <span class="h6 fw-light mb-0"><i class="bi bi-person-badge me-2"></i>Minimum age</span>
+                                            <span>@Model.MinAge years</span>
+                                        </li>
+                                    }
+                                    @if (Model.IsChildFriendly)
+                                    {
+                                        <li class="list-group-item d-flex justify-content-between px-0">
+                                            <span class="h6 fw-light mb-0"><i class="bi bi-emoji-smile me-2"></i>Child friendly</span>
+                                            <span class="text-success">Yes</span>
+                                        </li>
+                                    }
+                                    @if (Model.IsAccessible)
+                                    {
+                                        <li class="list-group-item d-flex justify-content-between px-0">
+                                            <span class="h6 fw-light mb-0"><i class="bi bi-universal-access me-2"></i>Wheelchair accessible</span>
+                                            <span class="text-success">Yes</span>
+                                        </li>
+                                    }
+                                    @if (Model.IsInstantBooking)
+                                    {
+                                        <li class="list-group-item d-flex justify-content-between px-0">
+                                            <span class="h6 fw-light mb-0"><i class="bi bi-lightning-charge me-2"></i>Instant booking</span>
+                                            <span class="text-success">Available</span>
+                                        </li>
+                                    }
+                                    @if (Model.CancellationPolicyHours is > 0)
+                                    {
+                                        <li class="list-group-item d-flex justify-content-between px-0">
+                                            <span class="h6 fw-light mb-0"><i class="bi bi-arrow-counterclockwise me-2"></i>Free cancellation</span>
+                                            <span>Up to @Model.CancellationPolicyHours h before</span>
+                                        </li>
+                                    }
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Itinerary -->
+                    @if (showItinerary)
+                    {
+                        <div class="tab-pane fade" id="pane-itinerary" role="tabpanel">
+                            <div class="card border">
+                                <div class="card-header border-bottom">
+                                    <h4 class="card-header-title">Itinerary</h4>
+                                </div>
+                                <div class="card-body">
+                                    <div class="accordion accordion-icon accordion-bg-light" id="itineraryAccordion">
+                                        @{ var wi = 0; }
+                                        @foreach (var wp in Model.Waypoints)
+                                        {
+                                            wi++;
+                                            var collapseId = $"itinerary-collapse-{wi}";
+                                            var headingId = $"itinerary-heading-{wi}";
+                                            <div class="accordion-item mb-3">
+                                                <h6 class="accordion-header" id="@headingId">
+                                                    <button class="accordion-button @(wi == 1 ? "" : "collapsed") rounded"
+                                                            type="button" data-bs-toggle="collapse"
+                                                            data-bs-target="#@collapseId" aria-expanded="@(wi == 1 ? "true" : "false")"
+                                                            aria-controls="@collapseId">
+                                                        <span class="me-2">@wi.</span>@wp.Name
+                                                        @if (!string.IsNullOrWhiteSpace(wp.WaypointType))
+                                                        {
+                                                            <span class="badge text-bg-light ms-2">@wp.WaypointType</span>
+                                                        }
+                                                    </button>
+                                                </h6>
+                                                <div id="@collapseId" class="accordion-collapse collapse @(wi == 1 ? "show" : "")"
+                                                     aria-labelledby="@headingId" data-bs-parent="#itineraryAccordion">
+                                                    <div class="accordion-body">
+                                                        @if (wp.DurationMinutes is > 0)
+                                                        {
+                                                            <p class="small mb-2"><i class="bi bi-clock me-1"></i>@wp.DurationMinutes min</p>
+                                                        }
+                                                        <p class="mb-0">@(string.IsNullOrWhiteSpace(wp.Description) ? "—" : wp.Description)</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Pricing & schedule -->
+                    @if (showPricing)
+                    {
+                        <div class="tab-pane fade" id="pane-pricing" role="tabpanel">
+                            <div class="card border">
+                                <div class="card-header border-bottom">
+                                    <h4 class="card-header-title">Pricing &amp; schedule</h4>
+                                </div>
+                                <div class="card-body">
+                                    @if (Model.PricingTiers.Count > 0)
+                                    {
+                                        <h6 class="mb-3">Pricing options</h6>
+                                        <div class="table-responsive">
+                                            <table class="table table-borderless align-middle mb-0">
+                                                <thead class="table-light">
+                                                    <tr>
+                                                        <th scope="col">Option</th>
+                                                        <th scope="col">Participants</th>
+                                                        <th scope="col" class="text-end">Price</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach (var t in Model.PricingTiers)
+                                                    {
+                                                        <tr>
+                                                            <td>
+                                                                <span class="fw-bold">@t.Name</span>
+                                                                @if (!string.IsNullOrWhiteSpace(t.ParticipantType))
+                                                                {
+                                                                    <span class="badge text-bg-light ms-1">@t.ParticipantType</span>
+                                                                }
+                                                                @if (!string.IsNullOrWhiteSpace(t.Description))
+                                                                {
+                                                                    <div class="small text-body">@t.Description</div>
+                                                                }
+                                                            </td>
+                                                            <td>
+                                                                @if (t.MinParticipants is { } mn && t.MaxParticipants is { } mx)
+                                                                {
+                                                                    <text>@mn–@mx</text>
+                                                                }
+                                                                else if (t.MinParticipants is { } mn2)
+                                                                {
+                                                                    <text>@mn2+</text>
+                                                                }
+                                                                else
+                                                                {
+                                                                    <text>—</text>
+                                                                }
+                                                            </td>
+                                                            <td class="text-end fw-bold text-success">@Currency(t.Price, t.Currency)</td>
+                                                        </tr>
+                                                    }
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    }
+
+                                    @if (Model.Schedules.Count > 0)
+                                    {
+                                        <h6 class="mb-3 @(Model.PricingTiers.Count > 0 ? "mt-4" : "")">Weekly schedule</h6>
+                                        <ul class="list-group list-group-borderless mb-0">
+                                            @foreach (var s in Model.Schedules)
+                                            {
+                                                <li class="list-group-item d-flex justify-content-between px-0">
+                                                    <span class="h6 fw-light mb-0"><i class="bi bi-calendar-week me-2"></i>@s.DayOfWeek</span>
+                                                    <span>
+                                                        @if (!string.IsNullOrWhiteSpace(s.StartTime))
+                                                        {
+                                                            <text>@s.StartTime@(string.IsNullOrWhiteSpace(s.EndTime) ? "" : " – " + s.EndTime)</text>
+                                                        }
+                                                        else
+                                                        {
+                                                            <text>Flexible</text>
+                                                        }
+                                                    </span>
+                                                </li>
+                                            }
+                                        </ul>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Reviews -->
+                    <div class="tab-pane fade" id="pane-reviews" role="tabpanel">
+                        <div class="card border">
+                            <div class="card-header border-bottom d-sm-flex justify-content-between align-items-center">
+                                <h4 class="card-header-title mb-0">Guest reviews</h4>
+                                <div class="mt-2 mt-sm-0">
+                                    <span class="h5 mb-0"><i class="bi bi-star-fill text-warning me-1"></i>@Model.AverageRating.ToString("0.0")</span>
+                                    <span class="small text-body">(@Model.ReviewCount review@(Model.ReviewCount == 1 ? "" : "s"))</span>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                @if (Model.Reviews.Count == 0)
+                                {
+                                    <p class="text-body mb-0">No reviews yet. Be the first to share your experience.</p>
+                                }
+                                else
+                                {
+                                    foreach (var r in Model.Reviews)
+                                    {
+                                        <div class="border-bottom pb-3 mb-3">
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <div>
+                                                    @for (var i = 1; i <= 5; i++)
+                                                    {
+                                                        <i class="bi @(i <= r.Rating ? "bi-star-fill" : "bi-star") text-warning small"></i>
+                                                    }
+                                                    @if (!string.IsNullOrWhiteSpace(r.Title))
+                                                    {
+                                                        <span class="fw-bold ms-2">@r.Title</span>
+                                                    }
+                                                </div>
+                                                <small class="text-body">@r.CreatedAt.ToString("d MMM yyyy")</small>
+                                            </div>
+                                            @if (r.IsVerifiedBooking)
+                                            {
+                                                <span class="badge text-bg-success bg-opacity-10 text-success small mb-2"><i class="bi bi-patch-check me-1"></i>Verified booking</span>
+                                            }
+                                            @if (!string.IsNullOrWhiteSpace(r.Content))
+                                            {
+                                                <p class="mb-1">@r.Content</p>
+                                            }
+                                            @if (r.HelpfulVoteCount > 0)
+                                            {
+                                                <small class="text-body"><i class="bi bi-hand-thumbs-up me-1"></i>@r.HelpfulVoteCount found this helpful</small>
+                                            }
+                                        </div>
+                                    }
+                                }
+
+                                @if (Model.Guides.Count > 0)
+                                {
+                                    <h6 class="mt-2 mb-3">Your guides</h6>
+                                    <div class="row g-3">
+                                        @foreach (var g in Model.Guides)
+                                        {
+                                            <div class="col-sm-6">
+                                                <div class="d-flex align-items-center">
+                                                    @if (!string.IsNullOrWhiteSpace(g.AvatarUrl))
+                                                    {
+                                                        <img src="@g.AvatarUrl" class="avatar avatar-md rounded-circle me-2" alt="@g.DisplayName"
+                                                             style="width:48px;height:48px;object-fit:cover;">
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="avatar avatar-md me-2 d-inline-flex align-items-center justify-content-center bg-light rounded-circle" style="width:48px;height:48px;">
+                                                            <i class="bi bi-person text-secondary"></i>
+                                                        </span>
+                                                    }
+                                                    <div>
+                                                        <h6 class="mb-0">@g.DisplayName</h6>
+                                                        @if (g.IsPrimary)
+                                                        {
+                                                            <small class="text-primary">Lead guide</small>
+                                                        }
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <aside class="col-xl-4">
+                <div class="row g-4">
+                    <!-- Book now -->
+                    <div class="col-12">
+                        <div class="card card-body border">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <div class="hstack gap-2 align-items-end">
+                                    <h3 class="mb-0 text-success">@Currency(Model.EffectivePrice, Model.Currency)</h3>
+                                    <small class="mb-1">/ person</small>
+                                </div>
+                                @if (Model.HasDiscount)
+                                {
+                                    <span class="badge text-bg-danger">@Model.DiscountPercent% off</span>
+                                }
+                            </div>
+                            @if (Model.HasDiscount)
+                            {
+                                <p class="small mb-2"><span class="text-decoration-line-through">@Currency(Model.BasePrice, Model.Currency)</span></p>
+                            }
+                            <div class="d-flex align-items-center mb-3 small">
+                                <i class="bi bi-star-fill text-warning me-1"></i>@Model.AverageRating.ToString("0.0")
+                                <span class="text-body ms-1">(@Model.ReviewCount)</span>
+                            </div>
+
+                            <div class="d-grid gap-2">
+                                @if (isAuthed)
+                                {
+                                    <a asp-area="Accounts" asp-controller="Bookings" asp-action="Index" class="btn btn-primary mb-0">Book Now</a>
+                                    <button type="button" class="btn btn-outline-primary mb-0 js-favorite"
+                                            data-entity-type="Tour" data-entity-id="@Model.Id">
+                                        <i class="bi bi-heart me-1"></i>Save to wishlist
+                                    </button>
+                                }
+                                else
+                                {
+                                    <a asp-area="Auth" asp-controller="Auth" asp-action="SignIn" class="btn btn-primary mb-0">Sign in to book</a>
+                                    <button type="button" class="btn btn-outline-primary mb-0" disabled
+                                            data-bs-toggle="tooltip" title="Log in to save">
+                                        <i class="bi bi-heart me-1"></i>Save to wishlist
+                                    </button>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Need help -->
+                    <div class="col-12">
+                        <div class="card card-body bg-light border">
+                            <h5 class="mb-3">Need help?</h5>
+                            <ul class="list-group list-group-borderless mb-0">
+                                <li class="list-group-item bg-transparent px-0 py-1"><i class="bi bi-headset me-2"></i>Our travel experts are here for you.</li>
+                                <li class="list-group-item bg-transparent px-0 py-1"><i class="bi bi-clock me-2"></i>Sat – Thu, 9:00 – 18:00</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+        </div>
+    </div>
+</section>
+<!-- ======================= Detail body END -->
+
+@section Scripts {
+    <script>
+        (function () {
+            // Bootstrap tooltips (disabled guest wishlist buttons).
+            var tooltipTriggers = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            tooltipTriggers.forEach(function (el) {
+                if (window.bootstrap && bootstrap.Tooltip) new bootstrap.Tooltip(el);
+            });
+
+            // GLightbox gallery (glightbox is loaded by the layout).
+            if (window.GLightbox) { GLightbox({ selector: '.glightbox' }); }
+
+            // Wishlist favorite (authenticated users only).
+            var favButtons = [].slice.call(document.querySelectorAll('.js-favorite'));
+            var tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
+            favButtons.forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    var icon = btn.querySelector('i');
+                    var headers = { 'Content-Type': 'application/json' };
+                    if (tokenInput) headers['RequestVerificationToken'] = tokenInput.value;
+                    fetch('/api/v1/social/favorites', {
+                        method: 'POST',
+                        headers: headers,
+                        body: JSON.stringify({
+                            entityType: btn.getAttribute('data-entity-type'),
+                            entityId: btn.getAttribute('data-entity-id')
+                        })
+                    }).then(function (res) {
+                        if (res.ok && icon) { icon.classList.remove('bi-heart'); icon.classList.add('bi-heart-fill', 'text-danger'); }
+                    }).catch(function () { /* ignore */ });
+                });
+            });
+
+@if (isAuthed)
+{
+    <text>
+            // View telemetry (authenticated only; endpoint requires auth).
+            (function () {
+                var headers = { 'Content-Type': 'application/json' };
+                if (tokenInput) headers['RequestVerificationToken'] = tokenInput.value;
+                fetch('/api/v1/interactions', {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify({ entityType: 'Tour', entityId: '@Model.Id', interactionType: 'View' })
+                }).catch(function () { /* ignore */ });
+            })();
+    </text>
+}
+        })();
+    </script>
+}

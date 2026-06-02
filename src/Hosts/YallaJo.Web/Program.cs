@@ -224,7 +224,7 @@ app.MapControllerRoute(
 // AuthController uses [Route("auth")] + [HttpGet("sign-in")], so it cannot be
 // reached through a conventional MapControllerRoute default (attribute-routed
 // actions are unreachable from conventional routing). Redirect instead.
-app.MapGet("/", () => Results.Redirect("/auth/sign-in"))
+app.MapGet("/", () => Results.Redirect("/explore"))
    .AllowAnonymous()
    .ExcludeFromDescription();
 

@@ -1,0 +1,228 @@
+@model YallaJo.Web.Areas.Public.Models.Directory.DirectoryVm
+@{
+    ViewData["Title"] = "Explore the Directory";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var isAuthed = User.Identity?.IsAuthenticated == true;
+    var firstResult = Model.TotalCount == 0 ? 0 : ((Model.PageNumber - 1) * Model.PageSize) + 1;
+    var lastResult = Math.Min(Model.PageNumber * Model.PageSize, Model.TotalCount);
+}
+
+@functions {
+    static string TypeIcon(string? type) => (type ?? string.Empty).ToLowerInvariant() switch
+    {
+        "restaurant" => "bi-egg-fried",
+        "hotel" => "bi-building",
+        "shop" => "bi-bag",
+        "agency" => "bi-briefcase",
+        "transport" => "bi-bus-front",
+        "guide" => "bi-person-badge",
+        "activity" => "bi-compass",
+        _ => "bi-shop"
+    };
+}
+
+@Html.AntiForgeryToken()
+
+<!-- Banner -->
+<section class="position-relative py-6 py-lg-7" style="background-image:url('@Url.Content("~/assets/images/bg/20.jpg")'); background-position:center; background-size:cover;">
+    <div class="bg-overlay bg-dark opacity-7"></div>
+    <div class="container position-relative">
+        <div class="row">
+            <div class="col-xl-9 mx-auto text-center">
+                <h6 class="text-white fw-normal mb-3">Discover &amp; connect with great places</h6>
+                <h1 class="display-5 text-white mb-4">Explore the Directory</h1>
+                <form class="row g-2 justify-content-center" asp-area="Public" asp-controller="Directory" asp-action="Index" method="get">
+                    <div class="col-lg-5">
+                        <input class="form-control form-control-lg" type="text" name="q" value="@Model.Query" placeholder="What are you looking for?" />
+                    </div>
+                    <div class="col-lg-3">
+                        <select class="form-select form-select-lg" name="businessType">
+                            <option value="">All categories</option>
+                            @foreach (var t in Model.BusinessTypes)
+                            {
+                                if (string.Equals(t.Value, Model.SelectedBusinessType, StringComparison.OrdinalIgnoreCase))
+                                {
+                                    <option value="@t.Value" selected>@t.Label</option>
+                                }
+                                else
+                                {
+                                    <option value="@t.Value">@t.Label</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="col-lg-2">
+                        <input class="form-control form-control-lg" type="text" name="city" value="@Model.City" placeholder="City" />
+                    </div>
+                    <div class="col-lg-2 d-grid">
+                        <button class="btn btn-lg btn-primary mb-0" type="submit">Search</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Category quick filters -->
+<section class="pt-4 pb-0">
+    <div class="container">
+        <div class="d-flex flex-wrap gap-2 justify-content-center">
+            <a asp-area="Public" asp-controller="Directory" asp-action="Index" asp-route-q="@Model.Query" asp-route-city="@Model.City"
+               class="btn btn-sm @(string.IsNullOrEmpty(Model.SelectedBusinessType) ? "btn-primary" : "btn-primary-soft")">All</a>
+            @foreach (var t in Model.BusinessTypes)
+            {
+                var active = string.Equals(t.Value, Model.SelectedBusinessType, StringComparison.OrdinalIgnoreCase);
+                <a asp-area="Public" asp-controller="Directory" asp-action="Index" asp-route-q="@Model.Query" asp-route-city="@Model.City" asp-route-businessType="@t.Value"
+                   class="btn btn-sm @(active ? "btn-primary" : "btn-primary-soft")">
+                    <i class="bi @TypeIcon(t.Value) me-1"></i>@t.Label
+                </a>
+            }
+        </div>
+    </div>
+</section>
+
+<!-- Listing -->
+<section class="pt-4">
+    <div class="container">
+        <div class="d-sm-flex justify-content-between align-items-center mb-4">
+            <h5 class="mb-2 mb-sm-0">
+                @if (Model.HasResults)
+                {
+                    <text>Showing @firstResult&ndash;@lastResult of @Model.TotalCount places</text>
+                }
+                else
+                {
+                    <text>No places found</text>
+                }
+            </h5>
+        </div>
+
+        @if (!Model.HasResults)
+        {
+            <div class="text-center py-5">
+                <img src="@Url.Content("~/assets/images/element/17.svg")" class="h-100px mb-3" alt="No results" />
+                <h5 class="mb-1">Nothing matched your search</h5>
+                <p class="mb-0">Try a different category, city, or search term.</p>
+            </div>
+        }
+        else
+        {
+            <div class="row g-4">
+                @foreach (var biz in Model.Businesses)
+                {
+                    <div class="col-sm-6 col-lg-4 col-xl-3">
+                        <div class="card shadow h-100">
+                            <div class="position-relative">
+                                @if (!string.IsNullOrEmpty(biz.ImageUrl))
+                                {
+                                    <img src="@biz.ImageUrl" class="card-img-top" style="height:200px;object-fit:cover;" alt="@biz.Name" />
+                                }
+                                else
+                                {
+                                    <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height:200px;">
+                                        <i class="bi @TypeIcon(biz.BusinessType) display-5 text-secondary"></i>
+                                    </div>
+                                }
+                                <div class="card-img-overlay p-3 z-index-1">
+                                    @if (!string.IsNullOrEmpty(biz.BusinessType))
+                                    {
+                                        <div class="badge text-bg-dark"><i class="bi @TypeIcon(biz.BusinessType) me-1"></i>@biz.BusinessType</div>
+                                    }
+                                    @if (biz.IsVerified)
+                                    {
+                                        <div class="badge text-bg-success">Verified</div>
+                                    }
+                                </div>
+                                <div class="position-absolute top-0 end-0 p-3 z-index-2">
+                                    @if (isAuthed)
+                                    {
+                                        <button type="button" class="btn btn-sm btn-light rounded-circle js-favorite" data-entity-type="Business" data-entity-id="@biz.Id" title="Save">
+                                            <i class="bi bi-heart"></i>
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <button type="button" class="btn btn-sm btn-light rounded-circle" disabled data-bs-toggle="tooltip" title="Log in to save">
+                                            <i class="bi bi-heart"></i>
+                                        </button>
+                                    }
+                                </div>
+                            </div>
+
+                            <div class="card-body">
+                                @if (biz.IsFeatured)
+                                {
+                                    <div class="badge bg-danger bg-opacity-10 text-danger mb-2">Featured</div>
+                                }
+                                <h5 class="card-title mb-2">
+                                    <a asp-area="Public" asp-controller="Directory" asp-action="Detail" asp-route-id="@biz.Id">@biz.Name</a>
+                                </h5>
+                                <ul class="list-group list-group-borderless mb-0">
+                                    @if (!string.IsNullOrEmpty(biz.Location))
+                                    {
+                                        <li class="list-group-item small pb-0">
+                                            <i class="bi bi-pin-map-fill fa-fw me-1"></i>@biz.Location
+                                        </li>
+                                    }
+                                    <li class="list-group-item small pb-0">
+                                        <i class="bi bi-star-fill fa-fw text-warning me-1"></i>@biz.AverageRating.ToString("0.0") <span class="text-body-secondary">(@biz.ReviewCount reviews)</span>
+                                    </li>
+                                </ul>
+                            </div>
+
+                            <div class="card-footer border-top">
+                                <a asp-area="Public" asp-controller="Directory" asp-action="Detail" asp-route-id="@biz.Id" class="btn btn-link p-0 mb-0">
+                                    View detail<i class="bi bi-arrow-right ms-1"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            @if (Model.TotalPages > 1)
+            {
+                <nav class="mt-5" aria-label="Directory pages">
+                    <ul class="pagination pagination-primary-soft justify-content-center mb-0">
+                        <li class="page-item @(Model.HasPreviousPage ? "" : "disabled")">
+                            <a class="page-link" asp-area="Public" asp-controller="Directory" asp-action="Index"
+                               asp-route-q="@Model.Query" asp-route-businessType="@Model.SelectedBusinessType" asp-route-city="@Model.City" asp-route-page="@(Model.PageNumber - 1)">Prev</a>
+                        </li>
+                        <li class="page-item disabled"><span class="page-link">Page @Model.PageNumber of @Model.TotalPages</span></li>
+                        <li class="page-item @(Model.HasNextPage ? "" : "disabled")">
+                            <a class="page-link" asp-area="Public" asp-controller="Directory" asp-action="Index"
+                               asp-route-q="@Model.Query" asp-route-businessType="@Model.SelectedBusinessType" asp-route-city="@Model.City" asp-route-page="@(Model.PageNumber + 1)">Next</a>
+                        </li>
+                    </ul>
+                </nav>
+            }
+        }
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        (function () {
+            document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) { new bootstrap.Tooltip(el); });
+
+            var tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
+            document.querySelectorAll('.js-favorite').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    fetch('/api/v1/social/favorites', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'RequestVerificationToken': tokenInput ? tokenInput.value : ''
+                        },
+                        body: JSON.stringify({ entityType: btn.dataset.entityType, entityId: btn.dataset.entityId })
+                    }).then(function (res) {
+                        if (res.ok) {
+                            var icon = btn.querySelector('i');
+                            if (icon) { icon.classList.remove('bi-heart'); icon.classList.add('bi-heart-fill', 'text-danger'); }
+                        }
+                    }).catch(function () { });
+                });
+            });
+        })();
+    </script>
+}
