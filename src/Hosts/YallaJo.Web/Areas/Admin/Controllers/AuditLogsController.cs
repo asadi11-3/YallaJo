@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using YallaJo.Web.Areas.Admin.Models.AuditLogs;
 using YallaJo.Web.Infrastructure.Authorization;
+using YallaJo.Web.Infrastructure.Mvc;
 
 using YallaJo.Web.Areas.Admin.Facades;
 namespace YallaJo.Web.Areas.Admin.Controllers;
@@ -9,19 +10,11 @@ namespace YallaJo.Web.Areas.Admin.Controllers;
 [Area("Admin")]
 [Authorize]
 [RequirePermission(WebPermission.System.Read)]
-public sealed class AuditLogsController : Controller
+public sealed class AuditLogsController : BaseController
 {
     private readonly AuditLogsFacade _facade;
     public AuditLogsController(AuditLogsFacade facade) => _facade = facade;
 
-    /// <summary>
-    /// Phase 5A — paginated admin audit timeline. Filters
-    /// (<paramref name="userId"/>, <paramref name="actorUserId"/>,
-    /// <paramref name="action"/>, <paramref name="from"/>,
-    /// <paramref name="to"/>) are all optional; legacy callers passing
-    /// only <paramref name="page"/> / <paramref name="userId"/> behave
-    /// exactly as before.
-    /// </summary>
     [HttpGet]
     public async Task<IActionResult> Index(
         int page = 1,
@@ -42,8 +35,7 @@ public sealed class AuditLogsController : Controller
             to: to,
             ct: ct);
 
-        if (result.RequireSignOut)
-            return RedirectToAction("SignIn", "Auth", new { area = "Auth" });
+        if (GuardSignOut(result) is { } signOut) return signOut;
 
         if (!result.IsSuccess)
         {

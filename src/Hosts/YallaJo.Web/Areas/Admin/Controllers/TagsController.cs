@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using YallaJo.Web.Areas.Admin.Models.Tags;
 using YallaJo.Web.Infrastructure.Authorization;
+using YallaJo.Web.Infrastructure.Mvc;
 
 using YallaJo.Web.Areas.Admin.Facades;
 namespace YallaJo.Web.Areas.Admin.Controllers;
@@ -9,7 +10,7 @@ namespace YallaJo.Web.Areas.Admin.Controllers;
 [Area("Admin")]
 [Authorize]
 [RequirePermission(WebPermission.Tag.Read)]
-public sealed class TagsController : Controller
+public sealed class TagsController : BaseController
 {
     private readonly TagsFacade _facade;
     public TagsController(TagsFacade facade) => _facade = facade;
@@ -18,7 +19,7 @@ public sealed class TagsController : Controller
     public async Task<IActionResult> Index(bool activeOnly = false, CancellationToken ct = default)
     {
         var result = await _facade.GetTagsAsync(activeOnly, ct);
-        if (result.RequireSignOut) return RedirectToLogin();
+        if (GuardSignOut(result) is { } signOut) return signOut;
         if (!result.IsSuccess)
         {
             ViewBag.Error = result.Error;
@@ -35,11 +36,11 @@ public sealed class TagsController : Controller
         if (!ModelState.IsValid) return await ReloadIndex(vm, ct);
 
         var result = await _facade.CreateAsync(vm, ct);
-        if (result.RequireSignOut) return RedirectToLogin();
+        if (GuardSignOut(result) is { } signOut) return signOut;
 
         if (result.IsSuccess)
         {
-            TempData["Success"] = "Tag created.";
+            SetSuccess("Tag created.");
             return RedirectToAction(nameof(Index));
         }
 
@@ -60,16 +61,16 @@ public sealed class TagsController : Controller
     public async Task<IActionResult> Edit(Guid id, CancellationToken ct)
     {
         var list = await _facade.GetTagsAsync(activeOnly: false, ct);
-        if (list.RequireSignOut) return RedirectToLogin();
+        if (GuardSignOut(list) is { } signOut) return signOut;
         if (!list.IsSuccess || list.Data is null)
         {
-            TempData["Error"] = list.Error ?? "Could not load tags.";
+            SetError(list.Error ?? "Could not load tags.");
             return RedirectToAction(nameof(Index));
         }
         var row = list.Data.Tags.FirstOrDefault(t => t.Id == id);
         if (row is null)
         {
-            TempData["Error"] = "Tag not found.";
+            SetError("Tag not found.");
             return RedirectToAction(nameof(Index));
         }
         return View(new UpdateTagVm { Id = row.Id, Name = row.Name, Slug = row.Slug });
@@ -84,11 +85,11 @@ public sealed class TagsController : Controller
         if (!ModelState.IsValid) return View(vm);
 
         var result = await _facade.UpdateAsync(vm, ct);
-        if (result.RequireSignOut) return RedirectToLogin();
+        if (GuardSignOut(result) is { } signOut) return signOut;
 
         if (result.IsSuccess)
         {
-            TempData["Success"] = "Tag updated.";
+            SetSuccess("Tag updated.");
             return RedirectToAction(nameof(Index));
         }
 
@@ -110,10 +111,9 @@ public sealed class TagsController : Controller
     public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
     {
         var result = await _facade.DeleteAsync(id, ct);
-        if (result.RequireSignOut) return RedirectToLogin();
+        if (GuardSignOut(result) is { } signOut) return signOut;
 
-        TempData[result.IsSuccess ? "Success" : "Error"] =
-            result.IsSuccess ? "Tag deleted." : result.Error ?? "Could not delete tag.";
+        SetFlash(result, "Tag deleted.", "Could not delete tag.");
         return RedirectToAction(nameof(Index));
     }
 
@@ -125,7 +125,4 @@ public sealed class TagsController : Controller
             : new TagListVm { Create = create };
         return View(nameof(Index), vm);
     }
-
-    private IActionResult RedirectToLogin()
-        => RedirectToAction("SignIn", "Auth", new { area = "Auth" });
 }
