@@ -18,10 +18,6 @@ public sealed class ToursApiClient
     public Task<ApiResult<List<CategoryResponse>>> GetCategoriesAsync(CancellationToken ct = default)
         => _api.GetAsync<List<CategoryResponse>>("/api/v1/content-core/categories", ct);
 
-    public Task<ApiResult<List<TourAttachmentResponse>>> GetAttachmentsAsync(Guid tourId, CancellationToken ct = default)
-        => _api.GetAsync<List<TourAttachmentResponse>>(
-            $"/api/v1/content-core/attachments?entityType=Tour&entityId={tourId}", ct);
-
     public Task<ApiResult<TourDetailResponse>> GetTourBySlugAsync(string slug, CancellationToken ct = default)
         => _api.GetAsync<TourDetailResponse>($"/api/v1/tours/slug/{Uri.EscapeDataString(slug)}", ct);
 

@@ -1,4 +1,5 @@
 using YallaJo.Web.Areas.Public.ApiClients;
+using YallaJo.Web.Areas.Public.Helpers;
 using YallaJo.Web.Areas.Public.Models.Tours;
 using YallaJo.Web.Infrastructure.Api.Contracts;
 using YallaJo.Web.Services;
@@ -35,16 +36,22 @@ public sealed class ToursFacade
         var categoriesTask = _api.GetCategoriesAsync(ct);
         await Task.WhenAll(toursTask, categoriesTask);
 
-        var toursResult = toursTask.Result;
+        var toursResult = await toursTask;
+        var categoriesResult = await categoriesTask;
+
         if (!toursResult.IsSuccess || toursResult.Data is null)
             return ApiResult<TourGridVm>.Fail(toursResult.StatusCode, toursResult.Error ?? "Could not load tours.");
 
         var page0 = toursResult.Data;
 
-        // Hydrate each tour's cover image from ContentCore attachments (tolerate per-item failure).
-        var cards = await Task.WhenAll(page0.Items.Select(t => BuildCardAsync(t, ct)));
+        // Tour summaries expose no public image field and the attachment endpoint is
+        // not anonymous-accessible, so cards use a deterministic theme placeholder
+        // (temporary public image API gap — see PublicImagePlaceholder).
+        var cards = page0.Items
+            .Select(t => TourGridMapper.ToCardVm(t, PublicImagePlaceholder.ResolveTourImage(t.Id)))
+            .ToList();
 
-        var categories = categoriesTask.Result is { IsSuccess: true, Data: { } cats }
+        var categories = categoriesResult is { IsSuccess: true, Data: { } cats }
             ? cats.Select(TourGridMapper.ToFilterVm).ToList()
             : new List<CategoryFilterVm>();
 
@@ -75,11 +82,15 @@ public sealed class ToursFacade
         var pricingTask = SafeListAsync(() => _api.GetPricingAsync(d.Id, ct));
         var waypointsTask = SafeListAsync(() => _api.GetWaypointsAsync(d.Id, ct));
         var guidesTask = SafeListAsync(() => _api.GetGuidesAsync(d.Id, ct));
-        var imagesTask = BuildImageUrlsAsync(d.Id, ct);
         var ratingTask = SafeRatingAsync(d.Id, ct);
         var reviewsTask = SafeReviewsAsync(d.Id, ct);
 
-        await Task.WhenAll(schedulesTask, pricingTask, waypointsTask, guidesTask, imagesTask, ratingTask, reviewsTask);
+        await Task.WhenAll(schedulesTask, pricingTask, waypointsTask, guidesTask, ratingTask, reviewsTask);
+
+        // Tour detail exposes no public image gallery field and the attachment
+        // endpoint is not anonymous-accessible, so use a single deterministic
+        // placeholder (temporary public image API gap — see PublicImagePlaceholder).
+        var imageUrls = new List<string> { PublicImagePlaceholder.ResolveTourImage(d.Id) };
 
         var rating = ratingTask.Result;
         var avgRating = rating?.AverageRating ?? d.AverageRating;
@@ -107,7 +118,7 @@ public sealed class ToursFacade
             IsChildFriendly = d.IsChildFriendly,
             IsAccessible = d.IsAccessible,
             CancellationPolicyHours = d.CancellationPolicyHours,
-            ImageUrls = imagesTask.Result,
+            ImageUrls = imageUrls,
             Waypoints = waypointsTask.Result
                 .OrderBy(w => w.SortOrder)
                 .Select(w => new TourWaypointVm
@@ -164,29 +175,6 @@ public sealed class ToursFacade
         return ApiResult<TourDetailVm>.Ok(vm);
     }
 
-    private async Task<List<string>> BuildImageUrlsAsync(Guid tourId, CancellationToken ct)
-    {
-        try
-        {
-            var attach = await _api.GetAttachmentsAsync(tourId, ct);
-            if (attach is { IsSuccess: true, Data: { Count: > 0 } images })
-            {
-                return images
-                    .OrderBy(a => a.SortOrder)
-                    .Select(a => _assetResolver.Resolve(a.ThumbnailUrl ?? a.Url))
-                    .Where(u => !string.IsNullOrWhiteSpace(u))
-                    .Select(u => u!)
-                    .ToList();
-            }
-        }
-        catch
-        {
-            // tolerate hydration failure
-        }
-
-        return new List<string>();
-    }
-
     private static async Task<List<T>> SafeListAsync<T>(Func<Task<ApiResult<List<T>>>> call)
     {
         try
@@ -233,25 +221,5 @@ public sealed class ToursFacade
         }
 
         return new List<ReviewResponse>();
-    }
-
-    private async Task<TourCardVm> BuildCardAsync(TourSummaryResponse tour, CancellationToken ct)
-    {
-        string? imageUrl = null;
-        try
-        {
-            var attach = await _api.GetAttachmentsAsync(tour.Id, ct);
-            if (attach is { IsSuccess: true, Data: { Count: > 0 } images })
-            {
-                var primary = images.OrderBy(a => a.SortOrder).First();
-                imageUrl = _assetResolver.Resolve(primary.ThumbnailUrl ?? primary.Url);
-            }
-        }
-        catch
-        {
-            // tolerate hydration failure; card renders with a placeholder image
-        }
-
-        return TourGridMapper.ToCardVm(tour, imageUrl);
     }
 }

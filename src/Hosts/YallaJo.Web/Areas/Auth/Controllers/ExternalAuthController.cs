@@ -131,7 +131,7 @@ public sealed class ExternalAuthController : Controller
         {
             if (User.Identity?.IsAuthenticated != true)
             {
-                TempData["LinkMessage"] = "Please sign in first, then link your account.";
+                TempData["Error"] = "Please sign in first, then link your account.";
                 return RedirectToAction("SignIn", "Auth", new { area = "Auth" });
             }
 
@@ -184,15 +184,16 @@ public sealed class ExternalAuthController : Controller
         {
             if (User.Identity?.IsAuthenticated != true)
             {
-                TempData["LinkMessage"] = "Please sign in first, then link your account.";
+                TempData["Error"] = "Please sign in first, then link your account.";
                 return RedirectToAction("SignIn", "Auth", new { area = "Auth" });
             }
 
             var linkResult = await _facade.LinkAsync(ticket, recaptchaToken ?? string.Empty, ct);
 
-            TempData["ProviderMessage"] = linkResult.IsSuccess
-                ? $"{provider} account linked successfully."
-                : linkResult.Error ?? "Could not link provider.";
+            if (linkResult.IsSuccess)
+                TempData["Success"] = $"{provider} account linked successfully.";
+            else
+                TempData["Error"] = linkResult.Error ?? "Could not link provider.";
 
             if (linkResult.RequireSignOut)
                 return RedirectToAction("SignIn", "Auth", new { area = "Auth" });

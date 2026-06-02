@@ -1,3 +1,4 @@
+using AngleSharp.Css.Dom;
 using Ganss.Xss;
 
 namespace YallaJo.Web.Areas.Content.Helpers;
@@ -15,10 +16,6 @@ namespace YallaJo.Web.Areas.Content.Helpers;
 /// </summary>
 public static class ContentHtmlSanitizer
 {
-    // HtmlSanitizer is safe to reuse across threads once configured; sanitizing is
-    // a pure read of the configured allowlists. Build one configured instance.
-    private static readonly HtmlSanitizer Sanitizer = CreateSanitizer();
-
     private static readonly string[] AllowedTags =
     {
         // Block + inline text formatting
@@ -46,42 +43,28 @@ public static class ContentHtmlSanitizer
 
     private static readonly string[] AllowedSchemes = { "http", "https", "mailto" };
 
-    /// <summary>
-    /// Returns a sanitized copy of <paramref name="html"/> safe for
-    /// <c>Html.Raw</c>. Null/whitespace input yields <see cref="string.Empty"/>.
-    /// </summary>
+    private static readonly HtmlSanitizer Sanitizer = CreateSanitizer();
     public static string Sanitize(string? html)
         => string.IsNullOrWhiteSpace(html) ? string.Empty : Sanitizer.Sanitize(html);
 
     private static HtmlSanitizer CreateSanitizer()
     {
-        // Default ctor seeds a sane baseline; we then narrow every allowlist to a
-        // strict, explicit set so nothing is permitted unless listed here.
-        var sanitizer = new HtmlSanitizer();
+        var options = new HtmlSanitizerOptions
+        {
+            AllowedTags          = new HashSet<string>(AllowedTags, StringComparer.OrdinalIgnoreCase),
+            AllowedAttributes    = new HashSet<string>(AllowedAttributes, StringComparer.OrdinalIgnoreCase),
+            AllowedSchemes       = new HashSet<string>(AllowedSchemes, StringComparer.OrdinalIgnoreCase),
+            AllowedCssProperties = new HashSet<string>(StringComparer.OrdinalIgnoreCase),
+            AllowedCssClasses    = new HashSet<string>(StringComparer.OrdinalIgnoreCase),
+            AllowedAtRules       = new HashSet<CssRuleType>(),
+            UriAttributes        = new HashSet<string>(new[] { "href", "src" }, StringComparer.OrdinalIgnoreCase),
+        };
 
-        sanitizer.AllowedTags.Clear();
-        foreach (var tag in AllowedTags)
-            sanitizer.AllowedTags.Add(tag);
+        var sanitizer = new HtmlSanitizer(options)
+        {
 
-        sanitizer.AllowedAttributes.Clear();
-        foreach (var attr in AllowedAttributes)
-            sanitizer.AllowedAttributes.Add(attr);
-
-        // Strip all inline CSS and CSS classes-by-allowlist — no styles needed for
-        // article body text and they are a common bypass surface.
-        sanitizer.AllowedCssProperties.Clear();
-        sanitizer.AllowedClasses.Clear();
-        sanitizer.AllowedAtRules.Clear();
-
-        // Only safe link/media protocols. Dropping the rest removes javascript:,
-        // data:, vbscript:, etc.
-        sanitizer.AllowedSchemes.Clear();
-        foreach (var scheme in AllowedSchemes)
-            sanitizer.AllowedSchemes.Add(scheme);
-
-        // Never keep data-* attributes or event handlers (onclick is already excluded
-        // by the attribute allowlist; this is defense in depth).
-        sanitizer.AllowDataAttributes = false;
+            AllowDataAttributes = false,
+        };
 
         return sanitizer;
     }

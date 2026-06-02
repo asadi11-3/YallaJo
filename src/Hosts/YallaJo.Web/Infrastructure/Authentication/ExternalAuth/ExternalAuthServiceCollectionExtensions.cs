@@ -55,7 +55,7 @@ public static class ExternalAuthServiceCollectionExtensions
             o.SlidingExpiration = false;
             // The intermediate cookie has no UI — if it ever expires, the user
             // is bounced back to login cleanly.
-            o.LoginPath = "/auth/login";
+            o.LoginPath = "/auth/sign-in";
         });
 
         // ── Google ───────────────────────────────────────────────────────────────

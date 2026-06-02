@@ -20,9 +20,6 @@ public sealed class DirectoryApiClient
         return _api.GetAsync<PaginatedBusinessesResponse>($"/api/v1/places/businesses/search{qs}", ct);
     }
 
-    public Task<ApiResult<List<DirectoryAttachmentResponse>>> GetAttachmentsAsync(Guid businessId, CancellationToken ct = default)
-        => _api.GetAsync<List<DirectoryAttachmentResponse>>($"/api/v1/content-core/attachments?entityType=Business&entityId={businessId}", ct);
-
     public Task<ApiResult<BusinessDetailResponse>> GetBusinessAsync(Guid id, CancellationToken ct = default)
         => _api.GetAsync<BusinessDetailResponse>($"/api/v1/places/businesses/{id}", ct);
 

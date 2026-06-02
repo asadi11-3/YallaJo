@@ -1,4 +1,5 @@
 using YallaJo.Web.Areas.Public.ApiClients;
+using YallaJo.Web.Areas.Public.Helpers;
 using YallaJo.Web.Areas.Public.Models.Booking;
 using YallaJo.Web.Areas.Public.Models.Tours;
 using YallaJo.Web.Infrastructure.Api.Contracts;
@@ -138,22 +139,10 @@ public sealed class BookingFacade
         return ApiResult<BookingConfirmVm>.Ok(vm);
     }
 
-    private async Task<string?> ResolveCoverAsync(Guid tourId, CancellationToken ct)
-    {
-        try
-        {
-            var attachments = await _api.GetAttachmentsAsync(tourId, ct);
-            if (attachments is { IsSuccess: true, Data: { Count: > 0 } images })
-            {
-                var primary = images.OrderBy(a => a.SortOrder).First();
-                return _assetResolver.Resolve(primary.ThumbnailUrl ?? primary.Url);
-            }
-        }
-        catch
-        {
-            // tolerate failure
-        }
-
-        return null;
-    }
+    // The tour cover exposes no public image field and the attachment endpoint is
+    // not anonymous-accessible (the Book GET page is anonymous), so use a
+    // deterministic theme placeholder (temporary public image API gap — see
+    // PublicImagePlaceholder).
+    private static Task<string?> ResolveCoverAsync(Guid tourId, CancellationToken ct)
+        => Task.FromResult<string?>(PublicImagePlaceholder.ResolveTourImage(tourId));
 }
