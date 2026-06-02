@@ -1,0 +1,65 @@
+@model YallaJo.Web.Areas.Content.Models.Faqs.FaqListVm
+@{
+    ViewData["Title"] = "FAQ";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<section class="pt-4 pb-0">
+    <div class="container">
+        <div class="row">
+            <div class="col-12 text-center">
+                <h1 class="fs-2 mb-1">Frequently Asked Questions</h1>
+                <p class="mb-0">Answers to the questions our travellers ask most.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="pt-4">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-9">
+                @if (!Model.HasFaqs)
+                {
+                    <div class="alert alert-info text-center" role="alert">
+                        No FAQs are available right now. Please check back soon.
+                    </div>
+                }
+                else
+                {
+                    @foreach (var group in Model.Groups)
+                    {
+                        var groupId = $"faq-group-{group.Key}";
+                        <div class="mb-4">
+                            <h5 class="mb-3">@group.DisplayName</h5>
+                            <div class="accordion accordion-flush" id="@groupId">
+                                @foreach (var item in group.Items)
+                                {
+                                    var headingId = $"heading-{item.Id}";
+                                    var collapseId = $"collapse-{item.Id}";
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header" id="@headingId">
+                                            <button class="accordion-button collapsed" type="button"
+                                                    data-bs-toggle="collapse"
+                                                    data-bs-target="#@collapseId"
+                                                    aria-expanded="false"
+                                                    aria-controls="@collapseId">
+                                                @item.Question
+                                            </button>
+                                        </h2>
+                                        <div id="@collapseId" class="accordion-collapse collapse"
+                                             aria-labelledby="@headingId" data-bs-parent="#@groupId">
+                                            <div class="accordion-body">
+                                                @item.Answer
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+</section>

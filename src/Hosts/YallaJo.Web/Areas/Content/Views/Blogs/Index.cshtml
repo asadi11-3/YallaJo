@@ -1,0 +1,179 @@
+@using System.Globalization
+@model YallaJo.Web.Areas.Content.Models.Blogs.BlogListVm
+@{
+    ViewData["Title"] = "Blog";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var pager = Model.Pager;
+
+    Dictionary<string, string?> PageRoute(int targetPage) => new()
+    {
+        ["page"]       = targetPage.ToString(CultureInfo.InvariantCulture),
+        ["pageSize"]   = pager.PageSize.ToString(CultureInfo.InvariantCulture),
+        ["search"]     = pager.Search,
+        ["isFeatured"] = pager.IsFeatured?.ToString().ToLowerInvariant(),
+    };
+}
+
+@* ============================ PAGE HEADER ============================ *@
+<section class="pt-4 pb-0">
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <h1 class="fs-2 mb-1">Travel Blog</h1>
+                <p class="mb-0">Tips, guides and stories from the YallaJo community.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="pt-4">
+    <div class="container">
+        <div class="row g-4">
+            @* ----------------------- MAIN COLUMN ----------------------- *@
+            <div class="col-lg-8">
+                @* Search / filter bar *@
+                <form asp-area="Content" asp-controller="Blogs" asp-action="Index" method="get"
+                      class="row g-2 mb-4">
+                    <div class="col-sm-7">
+                        <input type="search" name="search" value="@pager.Search"
+                               class="form-control" placeholder="Search articles…" />
+                    </div>
+                    <div class="col-sm-3">
+                        <select name="isFeatured" class="form-select">
+                            <option value="">All articles</option>
+                            <option value="true" selected="@(pager.IsFeatured == true)">Featured only</option>
+                        </select>
+                    </div>
+                    <div class="col-sm-2 d-grid">
+                        <button type="submit" class="btn btn-primary mb-0">Search</button>
+                    </div>
+                </form>
+
+                @if (!Model.HasBlogs)
+                {
+                    <div class="alert alert-info" role="alert">
+                        No articles found. Please check back soon.
+                    </div>
+                }
+                else
+                {
+                    <div class="row g-4">
+                        @foreach (var blog in Model.Blogs)
+                        {
+                            <div class="col-md-6">
+                                <div class="card shadow h-100">
+                                    <div class="position-relative">
+                                        <a asp-area="Content" asp-controller="Blogs" asp-action="Details"
+                                           asp-route-slug="@blog.Slug">
+                                            <img src="@blog.ImageUrl" alt="@blog.ImageAlt"
+                                                 class="card-img-top" loading="lazy" />
+                                        </a>
+                                        @if (blog.IsFeatured)
+                                        {
+                                            <div class="position-absolute top-0 start-0 m-3">
+                                                <span class="badge text-bg-warning">Featured</span>
+                                            </div>
+                                        }
+                                    </div>
+                                    <div class="card-body pb-0 d-flex flex-column">
+                                        <h5 class="card-title">
+                                            <a asp-area="Content" asp-controller="Blogs" asp-action="Details"
+                                               asp-route-slug="@blog.Slug" class="stretched-link">@blog.Title</a>
+                                        </h5>
+                                        @if (!string.IsNullOrWhiteSpace(blog.Summary))
+                                        {
+                                            <p class="text-truncate-2">@blog.Summary</p>
+                                        }
+                                    </div>
+                                    <div class="card-footer pt-0 border-0 bg-transparent">
+                                        <ul class="list-inline mb-0 small text-body-secondary">
+                                            @if (blog.PublishedAt.HasValue)
+                                            {
+                                                <li class="list-inline-item">
+                                                    <i class="bi bi-calendar3 me-1"></i>@blog.PublishedAt.Value.ToString("MMM d, yyyy")
+                                                </li>
+                                            }
+                                            @if (blog.ReadTimeMinutes.HasValue)
+                                            {
+                                                <li class="list-inline-item">
+                                                    <i class="bi bi-clock me-1"></i>@blog.ReadTimeMinutes min read
+                                                </li>
+                                            }
+                                            <li class="list-inline-item">
+                                                <i class="bi bi-eye me-1"></i>@blog.ViewCount
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+
+                    @* Pagination *@
+                    @if (pager.TotalPages > 1)
+                    {
+                        <nav aria-label="Blog pagination" class="mt-4">
+                            <ul class="pagination justify-content-center mb-0">
+                                <li class="page-item @(pager.HasPreviousPage ? "" : "disabled")">
+                                    <a class="page-link" asp-area="Content" asp-controller="Blogs"
+                                       asp-action="Index" asp-all-route-data="PageRoute(pager.PageNumber - 1)">Previous</a>
+                                </li>
+                                <li class="page-item active" aria-current="page">
+                                    <span class="page-link">Page @pager.PageNumber of @pager.TotalPages</span>
+                                </li>
+                                <li class="page-item @(pager.HasNextPage ? "" : "disabled")">
+                                    <a class="page-link" asp-area="Content" asp-controller="Blogs"
+                                       asp-action="Index" asp-all-route-data="PageRoute(pager.PageNumber + 1)">Next</a>
+                                </li>
+                            </ul>
+                        </nav>
+                    }
+                }
+            </div>
+
+            @* ----------------------- SIDEBAR ----------------------- *@
+            <div class="col-lg-4">
+                @if (Model.Categories.Any())
+                {
+                    <div class="card shadow mb-4">
+                        <div class="card-header border-bottom">
+                            <h5 class="mb-0">Categories</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex flex-wrap gap-2">
+                                @foreach (var cat in Model.Categories)
+                                {
+                                    <span class="badge text-bg-light border">
+                                        @if (!string.IsNullOrWhiteSpace(cat.Icon))
+                                        {
+                                            <i class="@cat.Icon me-1"></i>
+                                        }
+                                        @cat.Name
+                                    </span>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                @if (Model.Niches.Any())
+                {
+                    <div class="card shadow mb-4">
+                        <div class="card-header border-bottom">
+                            <h5 class="mb-0">Creator Niches</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex flex-wrap gap-2">
+                                @foreach (var niche in Model.Niches)
+                                {
+                                    <span class="badge text-bg-primary">@niche.Name</span>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</section>

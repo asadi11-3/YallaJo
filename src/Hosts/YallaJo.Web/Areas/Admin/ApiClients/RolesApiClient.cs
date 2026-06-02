@@ -1,5 +1,4 @@
 using YallaJo.Web.Areas.Admin.Models.Roles;
-using YallaJo.Web.Areas.Admin.Models.Roles;
 using YallaJo.Web.Infrastructure.Api.Contracts;
 using YallaJo.Web.Services;
 

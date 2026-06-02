@@ -1,0 +1,138 @@
+@model YallaJo.Web.Areas.Content.Models.Guides.GuideDetailsVm
+@{
+    ViewData["Title"] = Model.DisplayName;
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<section class="pt-4">
+    <div class="container">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb breadcrumb-dots mb-3">
+                <li class="breadcrumb-item">
+                    <a asp-area="Content" asp-controller="Guides" asp-action="Index">Tour Guides</a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">@Model.DisplayName</li>
+            </ol>
+        </nav>
+
+        <div class="row g-4">
+            @* ----------------------- PROFILE CARD ----------------------- *@
+            <div class="col-lg-4">
+                <div class="card shadow text-center">
+                    <div class="pt-4">
+                        <img src="@Model.GuideImageUrl" alt="@Model.GuideImageAlt"
+                             class="avatar avatar-xxl rounded-circle mx-auto" />
+                    </div>
+                    <div class="card-body">
+                        <h4 class="mb-1">@Model.DisplayName</h4>
+                        <ul class="list-inline mb-3 small text-body-secondary">
+                            <li class="list-inline-item">
+                                <i class="bi bi-star-fill text-warning me-1"></i>@Model.AverageRating.ToString("0.0")
+                            </li>
+                            <li class="list-inline-item">(@Model.ReviewCount reviews)</li>
+                        </ul>
+
+                        <ul class="list-group list-group-flush text-start small">
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Experience</span>
+                                <strong>@Model.YearsOfExperience yrs</strong>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Tours</span>
+                                <strong>@Model.TourCount</strong>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>First aid certified</span>
+                                <strong>@(Model.HasFirstAid ? "Yes" : "No")</strong>
+                            </li>
+                            @if (Model.HasLicense)
+                            {
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>MoTA license</span>
+                                    <strong>@Model.MoTALicenseNumber</strong>
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            @* ----------------------- MAIN ----------------------- *@
+            <div class="col-lg-8">
+                <div class="card shadow mb-4">
+                    <div class="card-header border-bottom">
+                        <h5 class="mb-0">About</h5>
+                    </div>
+                    <div class="card-body">
+                        @if (!string.IsNullOrWhiteSpace(Model.Bio))
+                        {
+                            <p class="mb-0">@Model.Bio</p>
+                        }
+                        else
+                        {
+                            <p class="text-body-secondary mb-0">This guide hasn't added a bio yet.</p>
+                        }
+                    </div>
+                </div>
+
+                @if (Model.HasSpecializations)
+                {
+                    <div class="card shadow mb-4">
+                        <div class="card-header border-bottom">
+                            <h5 class="mb-0">Specializations</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex flex-wrap gap-2">
+                                @foreach (var spec in Model.Specializations)
+                                {
+                                    <span class="badge text-bg-primary">
+                                        @if (!string.IsNullOrWhiteSpace(spec.Icon))
+                                        {
+                                            <i class="@spec.Icon me-1"></i>
+                                        }
+                                        @spec.Name
+                                    </span>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                <div class="card shadow">
+                    <div class="card-header border-bottom">
+                        <h5 class="mb-0">Tours by @Model.DisplayName</h5>
+                    </div>
+                    <div class="card-body">
+                        @if (!Model.HasTours)
+                        {
+                            <p class="text-body-secondary mb-0">No tours assigned yet.</p>
+                        }
+                        else
+                        {
+                            <ul class="list-group list-group-flush">
+                                @foreach (var tour in Model.Tours)
+                                {
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span>@tour.Title</span>
+                                        <span>
+                                            @if (tour.OffersPrivateTour)
+                                            {
+                                                <span class="badge text-bg-info me-1">Private</span>
+                                            }
+                                            <span class="badge text-bg-light border">@tour.OfferingStatus</span>
+                                        </span>
+                                    </li>
+                                }
+                            </ul>
+                        }
+                    </div>
+                </div>
+
+                <a asp-area="Content" asp-controller="Guides" asp-action="Index"
+                   class="btn btn-outline-primary w-100 mt-4">
+                    <i class="bi bi-arrow-left me-1"></i>Back to all guides
+                </a>
+            </div>
+        </div>
+    </div>
+</section>

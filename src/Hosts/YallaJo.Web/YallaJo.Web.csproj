@@ -33,6 +33,11 @@
     <!-- Standard resilience pipeline (retry + circuit breaker + timeouts) for the
          BFF → API typed client. 9.x line aligns with the net9.0 target framework. -->
     <PackageReference Include="Microsoft.Extensions.Http.Resilience" Version="9.10.0" />
+    <!-- HTML sanitization for creator-authored blog content. YallaJo.Api stores blog
+         Content verbatim (no server-side sanitization), so the BFF must sanitize it
+         before rendering with Html.Raw to prevent stored XSS. Used only in the
+         Content area's blog mapper (see ContentHtmlSanitizer). -->
+    <PackageReference Include="HtmlSanitizer" Version="9.0.892" />
   </ItemGroup>
 
   <ItemGroup>

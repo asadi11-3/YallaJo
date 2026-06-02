@@ -1,5 +1,4 @@
 using YallaJo.Web.Areas.Admin.Models.Specializations;
-using YallaJo.Web.Areas.Admin.Models.Specializations;
 using YallaJo.Web.Infrastructure.Api.Contracts;
 using YallaJo.Web.Services;
 
