@@ -1,4 +1,5 @@
 using ContentBlogs.Application.Queries.Blog.Dtos;
+using ContentBlogs.Domain.Enums;
 using ContentBlogs.Domain.Errors;
 using ContentBlogs.Domain.Repositories;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
@@ -20,7 +21,7 @@ public sealed class GetCreatorBlogsBySlugQueryHandler(
             .GetBySlugAsync(request.CreatorSlug, cancellationToken)
             .ConfigureAwait(false);
 
-        if (profile is null)
+        if (profile is null || profile.Status != CreatorProfileStatus.Active)
             return Result<PaginatedResult<BlogSummaryDto>>.Failure(
                 CreatorProfileErrors.NotFound, Outcome.NotFound);
 

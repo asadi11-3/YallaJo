@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Social.Application.Commands.AddReviewReply;
 using Social.Application.Commands.AddHelpfulVote;
@@ -80,9 +81,9 @@ internal static class ReviewEndpoints
         // DELETE /api/v1/social/reviews/{id} — Soft-delete a review
         group.MapDelete("/{id:guid}", async (
             Guid id,
-            DeleteReviewRequest request,
+            [FromBody] DeleteReviewRequest request,
             ICurrentUser currentUser,
-            ISender sender,
+            [FromServices] ISender sender,
             CancellationToken ct) =>
         {
             var isAdmin = currentUser.HasPermission($"Permission.{SocialFeatures.AdminModerationQueue}.{AppAction.Remove}");
@@ -102,6 +103,7 @@ internal static class ReviewEndpoints
             var result = await sender.Send(new DeleteReviewCommand(id, currentUser.UserId!.Value, isAdmin, rowVersion), ct);
             return result.ToApiResult();
         })
+        .Accepts<DeleteReviewRequest>("application/json")
         .WithName("DeleteReview")
         .WithSummary("Delete a review (author or admin)")
         .Produces(StatusCodes.Status200OK)

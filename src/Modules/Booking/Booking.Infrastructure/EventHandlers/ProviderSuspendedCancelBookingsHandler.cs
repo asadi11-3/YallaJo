@@ -7,6 +7,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
+using YallaJo.SharedKernel.Domain.Exceptions;
 
 namespace Booking.Infrastructure.EventHandlers;
 
@@ -15,8 +16,11 @@ namespace Booking.Infrastructure.EventHandlers;
 ///
 /// <para>
 /// The Booking module has no InboxStore, so this handler is not idempotent at the
-/// message-ID level. Duplicate delivery is mitigated by the domain guard in
-/// <c>TourBooking.Cancel</c> — already-cancelled bookings throw and are skipped.
+/// message-ID level. Duplicate delivery (or a concurrent terminal-state transition
+/// between the query and the <c>Cancel</c> call) is mitigated by the domain guard in
+/// <c>TourBooking.Cancel</c>, which throws <see cref="BusinessRuleViolationException"/>
+/// for already-terminal bookings; those are caught, logged, and skipped so the rest of
+/// the batch still commits.
 /// </para>
 ///
 /// <para>
@@ -77,9 +81,11 @@ public sealed class ProviderSuspendedCancelBookingsHandler(
                 {
                     booking.Cancel(cancellationCtx, refundPercentage: 100m);
                 }
-                catch (InvalidOperationException ex)
+                catch (BusinessRuleViolationException ex)
                 {
-                    // Domain guard: booking is already in a terminal state.
+                    // Domain guard: booking became terminal between the query and Cancel()
+                    // (duplicate delivery or a concurrent transition). Skip it and keep
+                    // processing the batch so the handler does not poison outbox retries.
                     logger.LogWarning(
                         "Booking: skipping cancel for Booking {BookingId} (already terminal): {Message}",
                         booking.Id, ex.Message);

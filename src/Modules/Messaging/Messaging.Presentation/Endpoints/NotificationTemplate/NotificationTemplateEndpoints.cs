@@ -7,6 +7,7 @@ using Messaging.Contracts.Authorization;
 using Messaging.Presentation.Endpoints.NotificationTemplate.Models;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using YallaJo.SharedKernel.Application.Authorization;
 using YallaJo.SharedKernel.Presentation;
@@ -86,8 +87,8 @@ internal static class NotificationTemplateEndpoints
 
         group.MapDelete("/{id:guid}", async (
             Guid id,
-            DeleteTemplateRequest request,
-            ISender sender,
+            [FromBody] DeleteTemplateRequest request,
+            [FromServices] ISender sender,
             CancellationToken ct) =>
         {
             byte[] rowVersion;
@@ -105,6 +106,7 @@ internal static class NotificationTemplateEndpoints
             var result = await sender.Send(new DeleteNotificationTemplateCommand(id, rowVersion), ct);
             return result.ToApiResult();
         })
+        .Accepts<DeleteTemplateRequest>("application/json")
         .WithName("DeleteNotificationTemplate")
         .Produces(StatusCodes.Status200OK)
         .ProducesValidationProblem()

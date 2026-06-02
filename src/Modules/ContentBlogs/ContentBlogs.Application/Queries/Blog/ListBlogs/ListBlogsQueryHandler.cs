@@ -40,6 +40,9 @@ public sealed class ListBlogsQueryHandler(
                 ? null
                 : request.Search.Trim().ToLowerInvariant();
 
+            var now = DateTime.UtcNow;
+            var featuredFilter = request.IsFeatured;
+
             var paged = await blogRepository
                 .SelectPaginatedAsync(
                     pageNumber: page,
@@ -64,11 +67,16 @@ public sealed class ListBlogsQueryHandler(
                         blog.ReadTimeMinutes,
                         blog.PlaceId,
                         resolvedLanguageCode,
-                        blog.IsFeatured),
+                        blog.FeaturedAt != null
+                            && (blog.FeaturedUntil == null || blog.FeaturedUntil > now)),
                     filter: blog => blog.Status == BlogStatus.Published
                         && (request.PlaceId == null || blog.PlaceId == request.PlaceId)
-                        && (request.IsFeatured == null
-                            || blog.IsFeatured == request.IsFeatured.Value)
+                        && (featuredFilter == null
+                            || (featuredFilter == true
+                                ? (blog.FeaturedAt != null
+                                    && (blog.FeaturedUntil == null || blog.FeaturedUntil > now))
+                                : !(blog.FeaturedAt != null
+                                    && (blog.FeaturedUntil == null || blog.FeaturedUntil > now))))
                         && (search == null
                             || blog.Slug.Contains(search)
                             || blog.Title.Contains(search)

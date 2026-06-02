@@ -220,16 +220,12 @@ app.MapControllerRoute(
     pattern: "{area:exists}/{controller=Dashboard}/{action=Index}/{id?}")
    .WithStaticAssets();
 
-// Root landing → Auth/Login (area-aware).
-app.MapControllerRoute(
-    name:    "root",
-    pattern: string.Empty,
-    defaults: new { area = "Auth", controller = "Login", action = "Index" })
-   .WithStaticAssets();
-
-app.MapControllerRoute(
-    name:    "default",
-    pattern: "{area=Auth}/{controller=Login}/{action=Index}/{id?}")
-   .WithStaticAssets();
+// Root landing → AuthController.SignIn (attribute-routed at /auth/sign-in).
+// AuthController uses [Route("auth")] + [HttpGet("sign-in")], so it cannot be
+// reached through a conventional MapControllerRoute default (attribute-routed
+// actions are unreachable from conventional routing). Redirect instead.
+app.MapGet("/", () => Results.Redirect("/auth/sign-in"))
+   .AllowAnonymous()
+   .ExcludeFromDescription();
 
 app.Run();

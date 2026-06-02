@@ -1,4 +1,5 @@
 using ContentBlogs.Application.Queries.Creator.Dtos;
+using ContentBlogs.Domain.Enums;
 using ContentBlogs.Domain.Errors;
 using ContentBlogs.Domain.Repositories;
 using Microsoft.Extensions.Logging;
@@ -22,7 +23,7 @@ public sealed class GetCreatorProfileBySlugQueryHandler(
                 .GetBySlugAsync(request.Slug, cancellationToken)
                 .ConfigureAwait(false);
 
-            if (profile is null)
+            if (profile is null || profile.Status != CreatorProfileStatus.Active)
             {
                 return Result.Failure<CreatorProfileDto>(
                     CreatorProfileErrors.NotFound, Outcome.NotFound);

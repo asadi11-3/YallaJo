@@ -40,8 +40,11 @@ public class BlogRepository(ContentBlogsDbContext context)
         Guid? excludeBlogId,
         CancellationToken cancellationToken = default)
     {
+        var now = DateTime.UtcNow;
+
         return FirstOrDefaultAsync(
-            blog => blog.IsFeatured
+            blog => blog.FeaturedAt != null
+                 && (blog.FeaturedUntil == null || blog.FeaturedUntil > now)
                  && blog.PlaceId == placeId
                  && (excludeBlogId == null || blog.Id != excludeBlogId.Value),
             ct: cancellationToken);

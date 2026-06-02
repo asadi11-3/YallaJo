@@ -7,6 +7,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
+using YallaJo.SharedKernel.Domain.Exceptions;
 
 namespace Booking.Infrastructure.EventHandlers;
 
@@ -64,8 +65,11 @@ public sealed class GuideSuspendedCancelBookingsHandler(
                 {
                     booking.Cancel(cancellationCtx, refundPercentage: 100m);
                 }
-                catch (InvalidOperationException ex)
+                catch (BusinessRuleViolationException ex)
                 {
+                    // Domain guard: booking became terminal between the query and Cancel()
+                    // (duplicate delivery or a concurrent transition). Skip it and keep
+                    // processing the batch so the handler does not poison outbox retries.
                     logger.LogWarning(
                         "Booking: skipping cancel for Booking {BookingId} (already terminal): {Message}",
                         booking.Id, ex.Message);
