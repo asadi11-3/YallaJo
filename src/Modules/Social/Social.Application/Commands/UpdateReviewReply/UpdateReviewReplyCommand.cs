@@ -7,5 +7,6 @@ public sealed record UpdateReviewReplyCommand(
     Guid ReviewId,
     Guid ReplyId,
     Guid CallerUserId,
+    byte[] RowVersion,
     string Content
 ) : IRequest<Result>;

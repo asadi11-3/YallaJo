@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Security.Application.Interfaces;
 using Security.Domain.Repositories;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
@@ -40,7 +41,17 @@ public sealed class ChangePasswordCommandHandler(
         }
 
         user.SetPasswordHash(passwordHasher.Hash(request.NewPassword));
-        await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        try
+        {
+            await unitOfWork.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Result<ChangePasswordResult>.Failure(
+                new Error("User.ConcurrencyConflict", "User was modified concurrently. Reload and retry."),
+                Outcome.Conflict);
+        }
 
         return Result<ChangePasswordResult>.Success(new ChangePasswordResult(true));
     }

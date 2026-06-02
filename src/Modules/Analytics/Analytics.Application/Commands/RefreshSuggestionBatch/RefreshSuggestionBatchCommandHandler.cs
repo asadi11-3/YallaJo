@@ -4,6 +4,7 @@ using Analytics.Application.Interfaces.Repositories;
 using Analytics.Application.Scoring;
 using Analytics.Domain.Entities;
 using Analytics.Domain.Enums;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
@@ -73,7 +74,17 @@ public sealed class RefreshSuggestionBatchCommandHandler(
             expiresAt: expiresAt)).ToList();
 
         await cacheRepository.AddRangeAsync(rows, ct).ConfigureAwait(false);
-        await unitOfWork.SaveChangesAsync(ct).ConfigureAwait(false);
+
+        try
+        {
+            await unitOfWork.SaveChangesAsync(ct).ConfigureAwait(false);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Result.Failure(
+                new Error("SuggestionBatch.ConcurrencyConflict", "Suggestion batch was modified concurrently. Please refresh and try again."),
+                Outcome.Conflict);
+        }
 
         await cache.RemoveByTagAsync($"analytics:recs:{request.SourceKind}:{request.SourceId:N}", ct).ConfigureAwait(false);
         logger.LogInformation("Refreshed {Count} analytics recommendations for {SourceKind}/{SourceId} context {Context}", scored.Count, request.SourceKind, request.SourceId, request.Context);

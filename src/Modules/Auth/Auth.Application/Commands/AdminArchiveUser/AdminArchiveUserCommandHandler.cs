@@ -2,6 +2,7 @@ using Auth.Application.Caching;
 using Auth.Application.Errors;
 using Auth.Application.Interfaces.SessionRevocation;
 using Auth.Domain.Repositories;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
 using Security.Contracts.Abstractions;
@@ -44,7 +45,16 @@ public sealed class AdminArchiveUserCommandHandler(
             SessionRevocationReason.AccountArchived,
             cancellationToken);
 
-        await unitOfWork.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await unitOfWork.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Result.Failure(
+                new Error("Session.ConcurrencyConflict", "One or more sessions were modified concurrently. Reload and retry."),
+                Outcome.Conflict);
+        }
 
         await cache.RemoveByTagAsync(
             AuthCacheKeys.UserSessionsTag(request.UserId), cancellationToken);

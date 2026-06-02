@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Security.Application.Authorization;
 using Security.Application.Caching;
@@ -31,7 +32,17 @@ public sealed class ActivateUserCommandHandler(
             return Result.Success(); // idempotent — already active
 
         user.Activate();
-        await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        try
+        {
+            await unitOfWork.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Result.Failure(
+                new Error("User.ConcurrencyConflict", "User was modified concurrently. Reload and retry."),
+                Outcome.Conflict);
+        }
 
         await cache.RemoveByTagAsync(SecurityCacheKeys.UserTag(request.UserId), cancellationToken);
         await cache.RemoveByTagAsync(SecurityCacheKeys.UsersTag, cancellationToken);

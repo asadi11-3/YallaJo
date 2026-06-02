@@ -22,6 +22,7 @@ public sealed record SupportTicketDto(
     string? ResolutionNotes,
     DateTime? ClosedAt,
     DateTime CreatedAt,
+    string RowVersion,
     IReadOnlyList<TicketMessageDto>? Messages = null);
 
 public sealed record SupportTicketPageDto(

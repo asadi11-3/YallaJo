@@ -20,6 +20,7 @@ public sealed record ReviewDto(
     DateTime? AutoHiddenAt,
     DateTime CreatedAt,
     int HelpfulVoteCount,
+    string RowVersion,
     IReadOnlyList<ReviewReplyDto> Replies
 );
 

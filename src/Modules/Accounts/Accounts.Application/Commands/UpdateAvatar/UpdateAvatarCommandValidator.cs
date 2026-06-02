@@ -20,7 +20,6 @@ public sealed class UpdateAvatarCommandValidator : AbstractValidator<UpdateAvata
             return false;
         }
 
-        // Local file storage returns rooted relative URLs (e.g. /uploads/avatars/...).
         if (url.StartsWith("/", StringComparison.Ordinal))
         {
             return true;

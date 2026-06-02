@@ -1,6 +1,7 @@
 using Accounts.Application.Caching;
 using Accounts.Domain.Errors;
 using Accounts.Domain.Repositories;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
@@ -36,7 +37,17 @@ public sealed class SubmitApplicationCommandHandler(
         if (submitResult.IsFailure)
             return Result<SubmitApplicationResult>.Failure(submitResult.Errors.FirstOrDefault()!, Outcome.UnprocessableEntity);
 
-        await unitOfWork.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await unitOfWork.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Result<SubmitApplicationResult>.Failure(
+                new Error("ProviderApplication.ConcurrencyConflict", "The provider application was modified concurrently. Reload and retry."),
+                Outcome.Conflict);
+        }
+
         await cache.RemoveByTagAsync(AccountsCacheKeys.MyApplicationStatusTag(userId), cancellationToken);
         await cache.RemoveByTagAsync(AccountsCacheKeys.AdminProviderQueueTag, cancellationToken);
 

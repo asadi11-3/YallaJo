@@ -1,6 +1,7 @@
 using Auth.Application.Interfaces;
 using Auth.Domain.Entities;
 using Auth.Domain.Repositories;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Security.Contracts.Abstractions;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
@@ -69,7 +70,17 @@ public sealed class ResendOtpCommandHandler(
             deliveryAddress: normalizedEmail);
 
         await otpRepository.AddAsync(otp, cancellationToken);
-        await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        try
+        {
+            await unitOfWork.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Result<ResendOtpResult>.Failure(
+                new Error("Otp.ConcurrencyConflict", "OTP state was modified concurrently. Reload and retry."),
+                Outcome.Conflict);
+        }
 
         const string subject = "YallaJo — Verify Your Email";
 

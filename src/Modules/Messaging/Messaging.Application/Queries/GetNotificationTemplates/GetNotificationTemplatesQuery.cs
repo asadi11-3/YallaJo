@@ -15,7 +15,8 @@ public sealed record NotificationTemplateDto(
     string Body,
     string? HtmlBody,
     DateTime CreatedAt,
-    DateTime? UpdatedAt);
+    DateTime? UpdatedAt,
+    string RowVersion);
 
 public sealed record GetNotificationTemplatesQuery : IRequest<Result<IReadOnlyList<NotificationTemplateDto>>>, ICacheableQuery
 {

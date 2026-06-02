@@ -6,5 +6,6 @@ namespace Social.Application.Commands.DeleteReview;
 public sealed record DeleteReviewCommand(
     Guid ReviewId,
     Guid CallerUserId,
-    bool IsAdmin
+    bool IsAdmin,
+    byte[] RowVersion
 ) : IRequest<Result>;

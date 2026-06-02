@@ -1,5 +1,6 @@
 using Auth.Application.Interfaces;
 using Auth.Domain.Repositories;
+using Microsoft.EntityFrameworkCore;
 using Security.Contracts.Abstractions;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
@@ -54,7 +55,16 @@ public sealed class RefreshTokenCommandHandler(
             if (compromisedSession is not null && !compromisedSession.IsRevoked)
                 compromisedSession.Revoke();
 
-            await unitOfWork.SaveChangesAsync(cancellationToken);
+            try
+            {
+                await unitOfWork.SaveChangesAsync(cancellationToken);
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                return Result<RefreshTokenResult>.Failure(
+                    Error.Unauthorized("Invalid or expired refresh token."),
+                    Outcome.Unauthorized);
+            }
 
             return Result<RefreshTokenResult>.Failure(
                 Error.Unauthorized(
@@ -117,7 +127,16 @@ public sealed class RefreshTokenCommandHandler(
         device?.RecordSeen();
         activeSession.MarkUpdated();
 
-        await unitOfWork.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await unitOfWork.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Result<RefreshTokenResult>.Failure(
+                Error.Unauthorized("Invalid or expired refresh token."),
+                Outcome.Unauthorized);
+        }
 
         var accessToken = tokenService.GenerateAccessToken(new TokenData(
             UserId:           userData.UserId,

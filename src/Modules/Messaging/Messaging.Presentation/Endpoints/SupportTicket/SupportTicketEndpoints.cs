@@ -87,17 +87,33 @@ internal static class SupportTicketEndpoints
 
         group.MapPost("/tickets/{id:guid}/close", async (
             Guid id,
+            CloseTicketRequest request,
             ICurrentUser currentUser,
             ISender sender,
             CancellationToken ct) =>
         {
             bool isAdmin = currentUser.HasPermission("Permission.AdminSupportQueue.Read");
-            var result = await sender.Send(new CloseSupportTicketCommand(id, currentUser.UserId!.Value, isAdmin), ct);
+
+            byte[] rowVersion;
+            try
+            {
+                rowVersion = string.IsNullOrWhiteSpace(request.RowVersion)
+                    ? Array.Empty<byte>()
+                    : Convert.FromBase64String(request.RowVersion);
+            }
+            catch (FormatException)
+            {
+                rowVersion = Array.Empty<byte>();
+            }
+
+            var result = await sender.Send(new CloseSupportTicketCommand(id, currentUser.UserId!.Value, isAdmin, rowVersion), ct);
             return result.ToApiResult();
         })
         .WithName("CloseSupportTicket")
         .Produces(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status409Conflict)
         .WithSummary("Close a support ticket.")
         .WithMetadata(new MustHavePermissionAttribute(MessagingFeatures.SupportTicket, AppAction.Close))
         .RequireAuthorization();
@@ -148,7 +164,19 @@ internal static class SupportTicketEndpoints
             ISender sender,
             CancellationToken ct) =>
         {
-            var cmd = new ResolveSupportTicketCommand(id, currentUser.UserId!.Value, request.Notes);
+            byte[] rowVersion;
+            try
+            {
+                rowVersion = string.IsNullOrWhiteSpace(request.RowVersion)
+                    ? Array.Empty<byte>()
+                    : Convert.FromBase64String(request.RowVersion);
+            }
+            catch (FormatException)
+            {
+                rowVersion = Array.Empty<byte>();
+            }
+
+            var cmd = new ResolveSupportTicketCommand(id, currentUser.UserId!.Value, request.Notes, rowVersion);
             var result = await sender.Send(cmd, ct);
             return result.ToApiResult();
         })
@@ -156,6 +184,7 @@ internal static class SupportTicketEndpoints
         .Produces(StatusCodes.Status200OK)
         .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status409Conflict)
         .WithSummary("Resolve a support ticket.")
         .WithMetadata(new MustHavePermissionAttribute(MessagingFeatures.AdminSupportQueue, AppAction.Resolve))
         .RequireAuthorization();

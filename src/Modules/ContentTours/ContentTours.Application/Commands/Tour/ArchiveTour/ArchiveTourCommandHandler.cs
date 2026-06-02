@@ -1,5 +1,5 @@
 using ContentTours.Application.Caching;
-using ContentTours.Application.Common;
+using YallaJo.SharedKernel.Application.Common;
 using ContentTours.Application.Interfaces;
 using ContentTours.Domain.Enums;
 using ContentTours.Domain.Repositories;

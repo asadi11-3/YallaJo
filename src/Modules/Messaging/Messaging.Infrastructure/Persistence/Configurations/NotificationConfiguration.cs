@@ -57,6 +57,8 @@ public class NotificationConfiguration : IEntityTypeConfiguration<Notification>
         builder.Property(x => x.CreatedAt).IsRequired();
         builder.Property(x => x.UpdatedAt).IsRequired(false);
 
+        builder.HasQueryFilter(x => !x.IsDeleted);
+
         builder.HasIndex(x => new { x.UserId, x.IsRead, x.CreatedAt })
             .IsDescending(false, false, true);
     }

@@ -20,7 +20,6 @@ public sealed class UserCreatedIntegrationEventHandler(
         IntegrationEventNotification<UserCreatedIntegrationEvent> notification,
         CancellationToken ct)
     {
-        // Inbox check — idempotency guard: skip if already processed (retry/duplicate)
         if (await inboxStore.HasBeenProcessedAsync(notification.MessageId, ct))
         {
             logger.LogWarning(
@@ -46,7 +45,6 @@ public sealed class UserCreatedIntegrationEventHandler(
 
         await profileRepository.AddAsync(profile, ct);
 
-        // Record in inbox and persist atomically with the profile
         inboxStore.MarkAsProcessed(notification.MessageId);
         await unitOfWork.SaveChangesAsync(ct);
 

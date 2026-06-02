@@ -1,6 +1,7 @@
 using Accounts.Application.Caching;
 using Accounts.Domain.Errors;
 using Accounts.Domain.Repositories;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
@@ -30,7 +31,17 @@ public sealed class RemoveGuideCommandHandler(
 
         affiliation.Terminate(agencyUserId, request.Reason);
 
-        await unitOfWork.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await unitOfWork.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Result.Failure(
+                new Error("AgencyAffiliation.ConcurrencyConflict", "The agency affiliation was modified concurrently. Reload and retry."),
+                Outcome.Conflict);
+        }
+
         await cache.RemoveByTagAsync(AccountsCacheKeys.AgencyGuidesTag(agencyUserId), cancellationToken);
 
         logger.LogInformation("Agency {AgencyUserId} removed guide {GuideUserId}", agencyUserId, request.GuideUserId);

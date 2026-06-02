@@ -2,6 +2,7 @@ using ContentTours.Application.Caching;
 using ContentTours.Application.Interfaces;
 using ContentTours.Contracts;
 using ContentTours.Domain.Repositories;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
@@ -45,7 +46,16 @@ internal sealed class SuspendGuideOfferingCommandHandler(
             SuspendedByAdminId: currentUser.UserId!.Value,
             SuspendedAt:       DateTime.UtcNow));
 
-        await unitOfWork.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await unitOfWork.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Result.Failure(
+                new Error("GuideTourOffering.ConcurrencyConflict", "Concurrent update detected."),
+                Outcome.Conflict);
+        }
 
         await cache.RemoveByTagAsync(TourGuideCacheKeys.TagForTourOfferings(request.TourId), cancellationToken);
         logger.LogInformation("Suspended offering TourId={TourId}, GuideId={GuideId}", request.TourId, request.TourGuideId);

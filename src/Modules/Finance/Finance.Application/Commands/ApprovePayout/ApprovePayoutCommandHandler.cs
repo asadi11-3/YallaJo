@@ -2,6 +2,7 @@ using Finance.Application.Interfaces;
 using Finance.Contracts.Services;
 using Finance.Domain.Repositories;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
@@ -75,7 +76,17 @@ public sealed class ApprovePayoutCommandHandler(
             payout.MarkFailed("Gateway.Exception", timeProvider.GetUtcNow().UtcDateTime);
         }
 
-        await unitOfWork.SaveChangesAsync(ct);
+        try
+        {
+            await unitOfWork.SaveChangesAsync(ct);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            logger.LogWarning("ApprovePayout concurrency conflict on payout {PayoutId}.", payout.Id);
+            return Result.Failure<ApprovePayoutResult>(
+                new Error("Payout.ConcurrencyConflict", "The payout was modified concurrently. Reload and retry."),
+                Outcome.Conflict);
+        }
 
         return Result.Success(new ApprovePayoutResult(payout.Id, payout.Status.ToString(), payout.GatewayPayoutId));
     }

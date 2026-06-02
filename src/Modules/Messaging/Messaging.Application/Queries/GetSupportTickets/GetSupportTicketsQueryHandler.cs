@@ -22,7 +22,8 @@ internal sealed class GetSupportTicketsQueryHandler(
         var dtos = result.Items.Select(t => new SupportTicketDto(
             t.Id, t.CreatedByUserId, t.Category.ToString(), t.Subject, t.Priority.ToString(), t.Status.ToString(),
             t.SlaBreachAt, t.AssignedToUserId, t.AssignedAt, t.ResolvedByUserId, t.ResolvedAt,
-            t.ResolutionNotes, t.ClosedAt, t.CreatedAt)).ToList();
+            t.ResolutionNotes, t.ClosedAt, t.CreatedAt,
+            t.RowVersion is null or { Length: 0 } ? string.Empty : Convert.ToBase64String(t.RowVersion))).ToList();
 
         return Result.Success(new SupportTicketPageDto(dtos, result.NextCursor));
     }

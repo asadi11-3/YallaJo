@@ -1,5 +1,6 @@
 using Booking.Application.Interfaces;
 using Booking.Domain.Repositories;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
@@ -38,7 +39,16 @@ public sealed class DeactivateAvailabilitySlotCommandHandler(
 
             slot.Deactivate();
             slotRepository.Update(slot);
-            await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            try
+            {
+                await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                return Result.Failure(
+                    new Error("AvailabilitySlot.StaleRowVersion", "Slot was modified by another caller. Reload and retry."),
+                    Outcome.Conflict);
+            }
 
             if (slot.TourId.HasValue)
             {

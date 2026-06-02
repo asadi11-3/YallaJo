@@ -10,6 +10,10 @@ namespace Messaging.Infrastructure.Repositories;
 internal sealed class NotificationRepository(MessagingDbContext context)
     : EfRepository<Notification, Guid>(context), INotificationRepository
 {
+    // All queries below go through _context.Notifications, which has a global
+    // HasQueryFilter(x => !x.IsDeleted). Soft-deleted notifications are therefore
+    // automatically excluded from user lists, unread counts, mark-all-read,
+    // cleanup and pending-dispatch. Do NOT add IgnoreQueryFilters() here.
     private readonly MessagingDbContext _context = context;
 
     public async Task<(IReadOnlyList<Notification> Items, Guid? NextCursor)> GetByUserPagedAsync(

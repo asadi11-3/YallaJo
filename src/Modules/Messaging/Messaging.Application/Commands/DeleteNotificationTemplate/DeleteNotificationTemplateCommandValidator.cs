@@ -7,5 +7,10 @@ internal sealed class DeleteNotificationTemplateCommandValidator : AbstractValid
     public DeleteNotificationTemplateCommandValidator()
     {
         RuleFor(x => x.Id).NotEmpty();
+
+        RuleFor(x => x.RowVersion)
+            .NotNull()
+            .Must(rv => rv is { Length: > 0 })
+            .WithMessage("RowVersion is required for optimistic concurrency.");
     }
 }

@@ -3,6 +3,7 @@ using Auth.Application.Interfaces;
 using Auth.Domain.Entities;
 using Auth.Domain.Errors;
 using Auth.Domain.Repositories;
+using Microsoft.EntityFrameworkCore;
 using Security.Contracts.Abstractions;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
@@ -84,46 +85,56 @@ public sealed class VerifyEmailCommandHandler(
 
         otp.MarkUsed();
 
-        var outcome = await txExecutor.ExecuteAsync<VerificationOutcome>(
-            async innerCt =>
-            {
-                var device = Device.Create(
-                    userId:      userId.Value,
-                    deviceToken: Guid.CreateVersion7().ToString(),
-                    userAgent:   requestContext.UserAgent,
-                    deviceName:  requestContext.DeviceName);
-                await deviceRepository.AddAsync(device, innerCt);
+        VerificationOutcome outcome;
+        try
+        {
+            outcome = await txExecutor.ExecuteAsync<VerificationOutcome>(
+                async innerCt =>
+                {
+                    var device = Device.Create(
+                        userId:      userId.Value,
+                        deviceToken: Guid.CreateVersion7().ToString(),
+                        userAgent:   requestContext.UserAgent,
+                        deviceName:  requestContext.DeviceName);
+                    await deviceRepository.AddAsync(device, innerCt);
 
-                var session = Session.Create(
-                    userId:    userId.Value,
-                    deviceId:  device.Id,
-                    expiresAt: DateTime.UtcNow.AddDays(SessionDays),
-                    ipAddress: requestContext.IpAddress);
-                await sessionRepository.AddAsync(session, innerCt);
+                    var session = Session.Create(
+                        userId:    userId.Value,
+                        deviceId:  device.Id,
+                        expiresAt: DateTime.UtcNow.AddDays(SessionDays),
+                        ipAddress: requestContext.IpAddress);
+                    await sessionRepository.AddAsync(session, innerCt);
 
-                var plainRefreshToken     = tokenService.GenerateRefreshToken();
-                var refreshTokenHash      = tokenService.HashRefreshToken(plainRefreshToken);
-                var refreshTokenExpiresAt = DateTime.UtcNow.AddDays(RefreshTokenDays);
+                    var plainRefreshToken     = tokenService.GenerateRefreshToken();
+                    var refreshTokenHash      = tokenService.HashRefreshToken(plainRefreshToken);
+                    var refreshTokenExpiresAt = DateTime.UtcNow.AddDays(RefreshTokenDays);
 
-                var refreshToken = RefreshTokenEntity.Create(
-                    userId:    userId.Value,
-                    sessionId: session.Id,
-                    tokenHash: refreshTokenHash,
-                    expiresAt: refreshTokenExpiresAt);
-                await refreshTokenRepository.AddAsync(refreshToken, innerCt);
+                    var refreshToken = RefreshTokenEntity.Create(
+                        userId:    userId.Value,
+                        sessionId: session.Id,
+                        tokenHash: refreshTokenHash,
+                        expiresAt: refreshTokenExpiresAt);
+                    await refreshTokenRepository.AddAsync(refreshToken, innerCt);
 
-                await unitOfWork.SaveChangesAsync(innerCt);
+                    await unitOfWork.SaveChangesAsync(innerCt);
 
-                var verified = await securityService.MarkEmailVerifiedAsync(
-                    userId.Value, normalizedEmail, innerCt);
+                    var verified = await securityService.MarkEmailVerifiedAsync(
+                        userId.Value, normalizedEmail, innerCt);
 
-                return new VerificationOutcome(
-                    Verified:              verified,
-                    SessionId:             session.Id,
-                    PlainRefreshToken:     plainRefreshToken,
-                    RefreshTokenExpiresAt: refreshTokenExpiresAt);
-            },
-            cancellationToken);
+                    return new VerificationOutcome(
+                        Verified:              verified,
+                        SessionId:             session.Id,
+                        PlainRefreshToken:     plainRefreshToken,
+                        RefreshTokenExpiresAt: refreshTokenExpiresAt);
+                },
+                cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Result<VerifyEmailResult>.Failure(
+                new Error("Otp.ConcurrencyConflict", "Verification state was modified concurrently. Reload and retry."),
+                Outcome.Conflict);
+        }
 
         if (!outcome.Verified)
         {

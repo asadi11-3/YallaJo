@@ -3,6 +3,7 @@ using Finance.Domain.Entities;
 using Finance.Domain.Enums;
 using Finance.Domain.Repositories;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
@@ -115,7 +116,17 @@ public sealed class UpdateProviderPaymentMethodCommandHandler(
             method.SetAsDefault();
         }
 
-        await unitOfWork.SaveChangesAsync(ct);
+        try
+        {
+            await unitOfWork.SaveChangesAsync(ct);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Result.Failure<ProviderPaymentMethodDto>(
+                new Error("ProviderPaymentMethod.ConcurrencyConflict", "The payment method was modified concurrently. Reload and retry."),
+                Outcome.Conflict);
+        }
+
         logger.LogInformation("Updated provider payment method {MethodId}.", method.Id);
         return Result.Success(ProviderPaymentMethodMapper.ToDto(method));
     }
@@ -141,7 +152,18 @@ public sealed class DeleteProviderPaymentMethodCommandHandler(
         }
 
         method.SoftDelete();
-        await unitOfWork.SaveChangesAsync(ct);
+
+        try
+        {
+            await unitOfWork.SaveChangesAsync(ct);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Result.Failure<bool>(
+                new Error("ProviderPaymentMethod.ConcurrencyConflict", "The payment method was modified concurrently. Reload and retry."),
+                Outcome.Conflict);
+        }
+
         logger.LogInformation("Deleted provider payment method {MethodId}.", method.Id);
         return Result.Success(true);
     }
@@ -171,7 +193,17 @@ public sealed class VerifyProviderPaymentMethodCommandHandler(
             return Result.Failure<ProviderPaymentMethodDto>(result.Errors[0], result.Outcome);
         }
 
-        await unitOfWork.SaveChangesAsync(ct);
+        try
+        {
+            await unitOfWork.SaveChangesAsync(ct);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Result.Failure<ProviderPaymentMethodDto>(
+                new Error("ProviderPaymentMethod.ConcurrencyConflict", "The payment method was modified concurrently. Reload and retry."),
+                Outcome.Conflict);
+        }
+
         logger.LogInformation("Verification changed for provider payment method {MethodId}.", method.Id);
         return Result.Success(ProviderPaymentMethodMapper.ToDto(method));
     }

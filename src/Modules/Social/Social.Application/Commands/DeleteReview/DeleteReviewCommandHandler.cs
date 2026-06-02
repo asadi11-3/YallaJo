@@ -5,6 +5,7 @@ using Social.Application.Caching;
 using Social.Application.Interfaces;
 using Social.Domain.Enums;
 using Social.Domain.Repositories;
+using YallaJo.SharedKernel.Application.Common;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
 namespace Social.Application.Commands.DeleteReview;
@@ -26,6 +27,11 @@ internal sealed class DeleteReviewCommandHandler(
         // Only the author or an admin may delete
         if (review.UserId != command.CallerUserId && !command.IsAdmin)
             return Result.Failure(new Error("Review.Forbidden", "You can only delete your own reviews."), Outcome.Forbidden);
+
+        if (!RowVersionUtil.Equal(review.RowVersion, command.RowVersion))
+            return Result.Failure(
+                new Error("Review.ConcurrencyConflict", "This review was modified by another user. Please refresh and try again."),
+                Outcome.Conflict);
 
         var source = command.IsAdmin
             ? ReviewDeletionSource.Admin

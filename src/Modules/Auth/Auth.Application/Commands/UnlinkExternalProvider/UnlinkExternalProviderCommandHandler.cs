@@ -1,4 +1,5 @@
 using Auth.Domain.Repositories;
+using Microsoft.EntityFrameworkCore;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
@@ -30,7 +31,16 @@ public sealed class UnlinkExternalProviderCommandHandler(
         if (externalProvider.IsActive)
             externalProvider.Deactivate();
 
-        await unitOfWork.SaveChangesAsync(ct);
+        try
+        {
+            await unitOfWork.SaveChangesAsync(ct);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Result.Failure(
+                new Error("ExternalProvider.ConcurrencyConflict", "The external provider link was modified concurrently. Reload and retry."),
+                Outcome.Conflict);
+        }
 
         return Result.Success();
     }

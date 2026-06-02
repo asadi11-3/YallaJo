@@ -59,7 +59,19 @@ internal static class NotificationTemplateEndpoints
             ISender sender,
             CancellationToken ct) =>
         {
-            var cmd = new UpdateNotificationTemplateCommand(id, request.Title, request.Body, request.HtmlBody);
+            byte[] rowVersion;
+            try
+            {
+                rowVersion = string.IsNullOrWhiteSpace(request.RowVersion)
+                    ? Array.Empty<byte>()
+                    : Convert.FromBase64String(request.RowVersion);
+            }
+            catch (FormatException)
+            {
+                rowVersion = Array.Empty<byte>();
+            }
+
+            var cmd = new UpdateNotificationTemplateCommand(id, rowVersion, request.Title, request.Body, request.HtmlBody);
             var result = await sender.Send(cmd, ct);
             return result.ToApiResult();
         })
@@ -67,21 +79,37 @@ internal static class NotificationTemplateEndpoints
         .Produces(StatusCodes.Status200OK)
         .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status409Conflict)
         .WithSummary("Update a notification template.")
         .WithMetadata(new MustHavePermissionAttribute(MessagingFeatures.NotificationTemplate, AppAction.Update))
         .RequireAuthorization();
 
         group.MapDelete("/{id:guid}", async (
             Guid id,
+            DeleteTemplateRequest request,
             ISender sender,
             CancellationToken ct) =>
         {
-            var result = await sender.Send(new DeleteNotificationTemplateCommand(id), ct);
+            byte[] rowVersion;
+            try
+            {
+                rowVersion = string.IsNullOrWhiteSpace(request.RowVersion)
+                    ? Array.Empty<byte>()
+                    : Convert.FromBase64String(request.RowVersion);
+            }
+            catch (FormatException)
+            {
+                rowVersion = Array.Empty<byte>();
+            }
+
+            var result = await sender.Send(new DeleteNotificationTemplateCommand(id, rowVersion), ct);
             return result.ToApiResult();
         })
         .WithName("DeleteNotificationTemplate")
         .Produces(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status409Conflict)
         .WithSummary("Delete a notification template.")
         .WithMetadata(new MustHavePermissionAttribute(MessagingFeatures.NotificationTemplate, AppAction.Delete))
         .RequireAuthorization();

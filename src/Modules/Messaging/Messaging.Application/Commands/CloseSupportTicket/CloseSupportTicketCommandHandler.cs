@@ -4,6 +4,7 @@ using Messaging.Application.Interfaces;
 using Messaging.Domain.Enums;
 using Messaging.Domain.Repositories;
 using Microsoft.Extensions.Caching.Hybrid;
+using YallaJo.SharedKernel.Application.Common;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
 namespace Messaging.Application.Commands.CloseSupportTicket;
@@ -25,6 +26,11 @@ internal sealed class CloseSupportTicketCommandHandler(
 
         if (ticket.Status == TicketStatus.Closed)
             return Result.Failure(new Error("SupportTicket.AlreadyClosed", "Ticket is already closed."), Outcome.Conflict);
+
+        if (!RowVersionUtil.Equal(ticket.RowVersion, request.RowVersion))
+            return Result.Failure(
+                new Error("SupportTicket.ConcurrencyConflict", "This ticket was modified by another user. Please refresh and try again."),
+                Outcome.Conflict);
 
         ticket.Close(timeProvider);
         await unitOfWork.SaveChangesAsync(cancellationToken);

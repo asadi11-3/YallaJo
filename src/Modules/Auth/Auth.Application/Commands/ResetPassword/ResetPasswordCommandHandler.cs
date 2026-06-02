@@ -5,6 +5,7 @@ using Auth.Application.Interfaces.SessionRevocation;
 using Auth.Domain.Entities;
 using Auth.Domain.Errors;
 using Auth.Domain.Repositories;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Security.Contracts.Abstractions;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
@@ -72,24 +73,34 @@ public sealed class ResetPasswordCommandHandler(
                 Outcome.Invalid);
         }
 
-        var executed = await txExecutor.ExecuteAsync(
-            async innerCt =>
-            {
-                var reset = await securityService.ReplacePasswordBySelfAsync(
-                    userId.Value, request.NewPassword, innerCt);
-                if (!reset) return false;
+        bool executed;
+        try
+        {
+            executed = await txExecutor.ExecuteAsync(
+                async innerCt =>
+                {
+                    var reset = await securityService.ReplacePasswordBySelfAsync(
+                        userId.Value, request.NewPassword, innerCt);
+                    if (!reset) return false;
 
-                await sessionRevocation.RevokeAllForUserAsync(
-                    userId.Value,
-                    SessionRevocationReason.PasswordReplacedBySelf,
-                    innerCt);
+                    await sessionRevocation.RevokeAllForUserAsync(
+                        userId.Value,
+                        SessionRevocationReason.PasswordReplacedBySelf,
+                        innerCt);
 
-                token.Consume();
+                    token.Consume();
 
-                await unitOfWork.SaveChangesAsync(innerCt);
-                return true;
-            },
-            cancellationToken);
+                    await unitOfWork.SaveChangesAsync(innerCt);
+                    return true;
+                },
+                cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Result<ResetPasswordResult>.Failure(
+                new Error("PasswordResetToken.ConcurrencyConflict", "Password reset state was modified concurrently. Reload and retry."),
+                Outcome.Conflict);
+        }
 
         if (!executed)
         {

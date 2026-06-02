@@ -1,6 +1,7 @@
 using Accounts.Application.Caching;
 using Accounts.Domain.Errors;
 using Accounts.Domain.Repositories;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
@@ -41,7 +42,18 @@ public sealed class UpdateAvatarCommandHandler(
         }
 
         profile.UpdateAvatar(request.AvatarUrl);
-        await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        try
+        {
+            await unitOfWork.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Result<UpdateAvatarResult>.Failure(
+                new Error("Profile.ConcurrencyConflict", "The profile was modified concurrently. Reload and retry."),
+                Outcome.Conflict);
+        }
+
         await cache.RemoveByTagAsync(AccountsCacheKeys.UserProfileTag(userId), cancellationToken);
 
         return Result<UpdateAvatarResult>.Success(new UpdateAvatarResult(profile.AvatarUrl!));

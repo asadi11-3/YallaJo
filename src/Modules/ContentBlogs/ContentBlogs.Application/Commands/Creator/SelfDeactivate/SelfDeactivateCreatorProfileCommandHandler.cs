@@ -2,6 +2,7 @@ using ContentBlogs.Application.Caching;
 using ContentBlogs.Application.Interfaces;
 using ContentBlogs.Domain.Errors;
 using ContentBlogs.Domain.Repositories;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
@@ -36,7 +37,16 @@ public sealed class SelfDeactivateCreatorProfileCommandHandler(
                 return result;
 
             profileRepository.Update(profile);
-            await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            try
+            {
+                await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                return Result.Failure(
+                    new Error("Creator.ConcurrencyConflict", "Profile was modified concurrently."),
+                    Outcome.Conflict);
+            }
 
             await cache.RemoveByTagAsync(
                 ContentBlogsCacheKeys.CreatorProfileTag(profile.Id), cancellationToken)

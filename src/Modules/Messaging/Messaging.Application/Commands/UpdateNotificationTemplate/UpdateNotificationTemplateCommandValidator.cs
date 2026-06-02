@@ -7,6 +7,12 @@ internal sealed class UpdateNotificationTemplateCommandValidator : AbstractValid
     public UpdateNotificationTemplateCommandValidator()
     {
         RuleFor(x => x.Id).NotEmpty();
+
+        RuleFor(x => x.RowVersion)
+            .NotNull()
+            .Must(rv => rv is { Length: > 0 })
+            .WithMessage("RowVersion is required for optimistic concurrency.");
+
         RuleFor(x => x.Title).NotEmpty().MaximumLength(200);
         RuleFor(x => x.Body).NotEmpty().MaximumLength(4000);
         RuleFor(x => x.HtmlBody)

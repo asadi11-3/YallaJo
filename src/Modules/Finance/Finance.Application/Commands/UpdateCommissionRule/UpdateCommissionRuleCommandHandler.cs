@@ -3,6 +3,7 @@ using Finance.Application.Queries.Dtos;
 using Finance.Application.Queries.GetCommissionRules;
 using Finance.Domain.Repositories;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
 namespace Finance.Application.Commands.UpdateCommissionRule;
@@ -45,7 +46,17 @@ public sealed class UpdateCommissionRuleCommandHandler(
                 Outcome.Invalid);
         }
 
-        await unitOfWork.SaveChangesAsync(ct);
+        try
+        {
+            await unitOfWork.SaveChangesAsync(ct);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Result.Failure<CommissionRuleDto>(
+                new Error("CommissionRule.ConcurrencyConflict", "The commission rule was modified concurrently. Reload and retry."),
+                Outcome.Conflict);
+        }
+
         return Result.Success(GetCommissionRulesQueryHandler.MapToDto(rule));
     }
 }

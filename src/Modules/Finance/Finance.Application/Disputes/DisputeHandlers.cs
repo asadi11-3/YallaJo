@@ -3,6 +3,7 @@ using Finance.Domain.Entities;
 using Finance.Domain.Enums;
 using Finance.Domain.Repositories;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
@@ -75,7 +76,17 @@ public sealed class MarkDisputeUnderReviewCommandHandler(
             return Result.Failure<DisputeDto>(result.Errors[0], result.Outcome);
         }
 
-        await unitOfWork.SaveChangesAsync(ct);
+        try
+        {
+            await unitOfWork.SaveChangesAsync(ct);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Result.Failure<DisputeDto>(
+                new Error("Dispute.ConcurrencyConflict", "The dispute was modified concurrently. Reload and retry."),
+                Outcome.Conflict);
+        }
+
         logger.LogInformation("Dispute {DisputeId} marked under review.", dispute.Id);
         return Result.Success(DisputeMapper.ToDto(dispute));
     }
@@ -102,7 +113,17 @@ public sealed class ResolveDisputeCommandHandler(
             return Result.Failure<DisputeDto>(result.Errors[0], result.Outcome);
         }
 
-        await unitOfWork.SaveChangesAsync(ct);
+        try
+        {
+            await unitOfWork.SaveChangesAsync(ct);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Result.Failure<DisputeDto>(
+                new Error("Dispute.ConcurrencyConflict", "The dispute was modified concurrently. Reload and retry."),
+                Outcome.Conflict);
+        }
+
         logger.LogInformation("Dispute {DisputeId} resolved as {Resolution}.", dispute.Id, dispute.Resolution);
         return Result.Success(DisputeMapper.ToDto(dispute));
     }
@@ -129,7 +150,17 @@ public sealed class EscalateDisputeCommandHandler(
             return Result.Failure<DisputeDto>(result.Errors[0], result.Outcome);
         }
 
-        await unitOfWork.SaveChangesAsync(ct);
+        try
+        {
+            await unitOfWork.SaveChangesAsync(ct);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Result.Failure<DisputeDto>(
+                new Error("Dispute.ConcurrencyConflict", "The dispute was modified concurrently. Reload and retry."),
+                Outcome.Conflict);
+        }
+
         logger.LogInformation("Dispute {DisputeId} escalated.", dispute.Id);
         return Result.Success(DisputeMapper.ToDto(dispute));
     }
