@@ -2,6 +2,8 @@
 @{
     ViewData["Title"] = Model.Title;
     Layout = "~/Views/Shared/_Layout.cshtml";
+    var isAuthed = User.Identity?.IsAuthenticated == true;
+    var commentReturnUrl = Url.Action(nameof(YallaJo.Web.Areas.Content.Controllers.BlogsController.Details), "Blogs", new { area = "Content", slug = Model.Slug });
 }
 
 @* ============================ HERO ============================ *@
@@ -94,6 +96,25 @@
                         <h5 class="mb-0">Comments (@Model.CommentCount)</h5>
                     </div>
                     <div class="card-body">
+                        @if (isAuthed)
+                        {
+                            <form class="mb-4" asp-area="Content" asp-controller="Blogs" asp-action="AddComment" asp-route-slug="@Model.Slug" method="post">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="blogId" value="@Model.Id" />
+                                <textarea name="content" class="form-control mb-2" rows="3" placeholder="Write a comment..." required></textarea>
+                                <div class="text-end">
+                                    <button type="submit" class="btn btn-sm btn-primary">Post comment</button>
+                                </div>
+                            </form>
+                        }
+                        else
+                        {
+                            <div class="alert alert-light border d-flex justify-content-between align-items-center mb-4">
+                                <span class="small mb-0">Sign in to join the conversation.</span>
+                                <a class="btn btn-sm btn-primary-soft" asp-area="Auth" asp-controller="Auth" asp-action="SignIn" asp-route-returnUrl="@commentReturnUrl">Sign in</a>
+                            </div>
+                        }
+
                         @if (!Model.HasComments)
                         {
                             <p class="text-body-secondary mb-0">No comments yet.</p>
@@ -114,6 +135,28 @@
                                                         <span class="ms-2"><i class="bi bi-heart me-1"></i>@comment.LikeCount</span>
                                                     }
                                                 </small>
+
+                                                @if (isAuthed)
+                                                {
+                                                    <div class="d-flex gap-2 mt-1">
+                                                        <form asp-area="Content" asp-controller="Blogs" asp-action="LikeComment" asp-route-slug="@Model.Slug" asp-route-commentId="@comment.Id" method="post">
+                                                            @Html.AntiForgeryToken()
+                                                            <button type="submit" class="btn btn-sm btn-link p-0 text-decoration-none"><i class="bi bi-heart me-1"></i>Like</button>
+                                                        </form>
+                                                        <button type="button" class="btn btn-sm btn-link p-0 text-decoration-none" data-bs-toggle="collapse" data-bs-target="#reply-@comment.Id"><i class="bi bi-reply me-1"></i>Reply</button>
+                                                    </div>
+                                                    <div class="collapse mt-2" id="reply-@comment.Id">
+                                                        <form asp-area="Content" asp-controller="Blogs" asp-action="AddComment" asp-route-slug="@Model.Slug" method="post">
+                                                            @Html.AntiForgeryToken()
+                                                            <input type="hidden" name="blogId" value="@Model.Id" />
+                                                            <input type="hidden" name="parentCommentId" value="@comment.Id" />
+                                                            <textarea name="content" class="form-control form-control-sm mb-2" rows="2" placeholder="Write a reply..." required></textarea>
+                                                            <div class="text-end">
+                                                                <button type="submit" class="btn btn-sm btn-primary-soft">Reply</button>
+                                                            </div>
+                                                        </form>
+                                                    </div>
+                                                }
 
                                                 @{
                                                     var replies = Model.Comments

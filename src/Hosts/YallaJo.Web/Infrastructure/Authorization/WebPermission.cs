@@ -130,4 +130,157 @@ public static class WebPermission
         public const string Update = "Permission.Booking.Update";
         public const string Delete = "Permission.Booking.Delete";
     }
+
+    // ── Tour (provider listings) ──────────────────────────────────────────────
+    public static class Tour
+    {
+        public const string Create    = "Permission.Tour.Create";
+        public const string Update    = "Permission.Tour.Update";
+        public const string ReadOwn   = "Permission.Tour.ReadOwn";
+        public const string DeleteOwn = "Permission.Tour.DeleteOwn";
+        public const string Submit    = "Permission.Tour.Submit";
+        public const string Archive   = "Permission.Tour.Archive";
+    }
+
+    // ── TourSchedule ──────────────────────────────────────────────────────────
+    public static class TourSchedule
+    {
+        public const string Read   = "Permission.TourSchedule.Read";
+        public const string Create = "Permission.TourSchedule.Create";
+        public const string Update = "Permission.TourSchedule.Update";
+        public const string Delete = "Permission.TourSchedule.Delete";
+    }
+
+    // ── TourPricingTier ───────────────────────────────────────────────────────
+    public static class TourPricingTier
+    {
+        public const string Read   = "Permission.TourPricingTier.Read";
+        public const string Create = "Permission.TourPricingTier.Create";
+        public const string Update = "Permission.TourPricingTier.Update";
+        public const string Delete = "Permission.TourPricingTier.Delete";
+    }
+
+    // ── TourWaypoint ──────────────────────────────────────────────────────────
+    public static class TourWaypoint
+    {
+        public const string Create = "Permission.TourWaypoint.Create";
+        public const string Update = "Permission.TourWaypoint.Update";
+        public const string Delete = "Permission.TourWaypoint.Delete";
+    }
+
+    // ── TourChildrenInfo ──────────────────────────────────────────────────────
+    public static class TourChildrenInfo
+    {
+        public const string Update = "Permission.TourChildrenInfo.Update";
+    }
+
+    // ── Package (tour packages) ───────────────────────────────────────────────
+    public static class Package
+    {
+        public const string Create = "Permission.Package.Create";
+        public const string Update = "Permission.Package.Update";
+        public const string Delete = "Permission.Package.Delete";
+    }
+
+    // ── TourGuide (assign guides to a tour) ───────────────────────────────────
+    public static class TourGuide
+    {
+        public const string Update = "Permission.TourGuide.Update";
+    }
+
+    // ── TourGuideProfile (guide self profile) ─────────────────────────────────
+    public static class TourGuideProfile
+    {
+        public const string Read      = "Permission.TourGuideProfile.Read";
+        public const string DeleteOwn = "Permission.TourGuideProfile.DeleteOwn";
+    }
+
+    // ── TourBooking (provider-side booking lifecycle) ─────────────────────────
+    public static class TourBooking
+    {
+        public const string ReadOwn  = "Permission.TourBooking.ReadOwn";
+        public const string Create   = "Permission.TourBooking.Create";
+        public const string Cancel   = "Permission.TourBooking.Cancel";
+        public const string Confirm  = "Permission.TourBooking.Confirm";
+        public const string Complete = "Permission.TourBooking.Complete";
+        public const string Reject   = "Permission.TourBooking.Reject";
+    }
+
+    // ── JoinRequest (group-booking join queue) ────────────────────────────────
+    public static class JoinRequest
+    {
+        public const string ReadOwn = "Permission.JoinRequest.ReadOwn";
+        public const string Create  = "Permission.JoinRequest.Create";
+        public const string Approve = "Permission.JoinRequest.Approve";
+        public const string Reject  = "Permission.JoinRequest.Reject";
+    }
+
+    // ── Payout (provider earnings/payouts) ────────────────────────────────────
+    public static class Payout
+    {
+        public const string Read = "Permission.Payout.Read";
+    }
+
+    // ── Refund (provider disputes) ────────────────────────────────────────────
+    public static class Refund
+    {
+        public const string Read   = "Permission.Refund.Read";
+        public const string Create = "Permission.Refund.Create";
+    }
+
+    // ── ProviderDashboard ─────────────────────────────────────────────────────
+    public static class ProviderDashboard
+    {
+        public const string Read = "Permission.ProviderDashboard.Read";
+    }
+
+    // ── GuideDashboard ────────────────────────────────────────────────────────
+    public static class GuideDashboard
+    {
+        public const string Read = "Permission.GuideDashboard.Read";
+    }
+
+    // ── Review (provider responses) ───────────────────────────────────────────
+    public static class Review
+    {
+        public const string Read   = "Permission.Review.Read";
+        public const string Create = "Permission.Review.Create";
+    }
+
+    // ── ReviewReply (provider responds to a review) ───────────────────────────
+    public static class ReviewReply
+    {
+        public const string Create = "Permission.ReviewReply.Create";
+    }
+
+    // ── Creator (blog creator identity + follow) ──────────────────────────────
+    public static class Creator
+    {
+        public const string Read     = "Permission.Creator.Read";
+        public const string Submit   = "Permission.Creator.Submit";
+        public const string Follow   = "Permission.Creator.Follow";
+        public const string Unfollow = "Permission.Creator.Unfollow";
+    }
+
+    // ── Blog (creator posts) ──────────────────────────────────────────────────
+    public static class Blog
+    {
+        public const string Create    = "Permission.Blog.Create";
+        public const string Update    = "Permission.Blog.Update";
+        public const string DeleteOwn = "Permission.Blog.DeleteOwn";
+    }
+
+    // ── BlogComment ───────────────────────────────────────────────────────────
+    public static class BlogComment
+    {
+        public const string Read   = "Permission.BlogComment.Read";
+        public const string Create = "Permission.BlogComment.Create";
+    }
+
+    // ── BlogReaction (comment reactions) ──────────────────────────────────────
+    public static class BlogReaction
+    {
+        public const string Create = "Permission.BlogReaction.Create";
+        public const string Delete = "Permission.BlogReaction.Delete";
+    }
 }

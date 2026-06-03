@@ -1,0 +1,155 @@
+@model YallaJo.Web.Areas.Provider.Models.Dashboard.DashboardVm
+@using YallaJo.Web.Areas.Provider.Shared
+@{
+    ViewData["Title"] = "Provider Dashboard";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var sidebar = ViewBag.Sidebar as ProviderSidebarVm ?? new ProviderSidebarVm();
+
+    string Money(decimal amount, string? currency) =>
+        string.IsNullOrWhiteSpace(currency) ? amount.ToString("N0") : $"{amount:N0} {currency}";
+}
+
+<partial name="_ProviderSidebar" model="sidebar" />
+
+<section class="pt-0">
+    <div class="container vstack gap-4">
+        <div class="d-sm-flex justify-content-between align-items-center">
+            <h1 class="fs-4 mb-0"><i class="bi bi-house-door me-2"></i>Dashboard</h1>
+            <a asp-area="Provider" asp-controller="Listings" asp-action="Create" class="btn btn-sm btn-primary mt-2 mt-sm-0">
+                <i class="bi bi-plus-lg me-1"></i>Add New Listing
+            </a>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-sm-6 col-xl-3">
+                <div class="card card-body border h-100">
+                    <div class="d-flex align-items-center">
+                        <div class="icon-xl bg-success bg-opacity-10 rounded-3 text-success">
+                            <i class="bi bi-journals fs-5"></i>
+                        </div>
+                        <div class="ms-3">
+                            <h4 class="mb-0">@Model.TotalListings</h4>
+                            <span class="small text-body-secondary">Total Listings</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-xl-3">
+                <div class="card card-body border h-100">
+                    <div class="d-flex align-items-center">
+                        <div class="icon-xl bg-info bg-opacity-10 rounded-3 text-info">
+                            <i class="bi bi-graph-up-arrow fs-5"></i>
+                        </div>
+                        <div class="ms-3">
+                            <h4 class="mb-0">@Money(Model.NetEarnings, Model.EarningsCurrency)</h4>
+                            <span class="small text-body-secondary">Net Earnings</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-xl-3">
+                <div class="card card-body border h-100">
+                    <div class="d-flex align-items-center">
+                        <div class="icon-xl bg-warning bg-opacity-10 rounded-3 text-warning">
+                            <i class="bi bi-bookmark-heart fs-5"></i>
+                        </div>
+                        <div class="ms-3">
+                            <h4 class="mb-0">@Model.PaymentCount</h4>
+                            <span class="small text-body-secondary">Paid Bookings</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-xl-3">
+                <div class="card card-body border h-100">
+                    <div class="d-flex align-items-center">
+                        <div class="icon-xl bg-primary bg-opacity-10 rounded-3 text-primary">
+                            <i class="bi bi-people fs-5"></i>
+                        </div>
+                        <div class="ms-3">
+                            <h4 class="mb-0">@Model.PendingJoinRequests</h4>
+                            <span class="small text-body-secondary">Pending Join Requests</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @if (Model.HasActivity)
+        {
+            <div class="row g-4">
+                <div class="col-lg-6">
+                    <div class="card border h-100">
+                        <div class="card-header border-bottom d-flex justify-content-between align-items-center">
+                            <h5 class="card-header-title mb-0">Recent Listings</h5>
+                            <a asp-area="Provider" asp-controller="Listings" asp-action="Index" class="btn btn-sm btn-primary-soft">View all</a>
+                        </div>
+                        <div class="card-body">
+                            @if (Model.RecentListings.Count == 0)
+                            {
+                                <p class="text-body-secondary small mb-0">No listings yet.</p>
+                            }
+                            else
+                            {
+                                <ul class="list-group list-group-borderless">
+                                    @foreach (var listing in Model.RecentListings)
+                                    {
+                                        <li class="list-group-item px-0 d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <h6 class="mb-0">@listing.Name</h6>
+                                                <span class="small text-body-secondary">@Money(listing.BasePrice, listing.Currency) · @listing.CreatedAt.ToString("d MMM yyyy")</span>
+                                            </div>
+                                            <span class="badge text-bg-light">@(listing.Status ?? "Draft")</span>
+                                        </li>
+                                    }
+                                </ul>
+                            }
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="card border h-100">
+                        <div class="card-header border-bottom d-flex justify-content-between align-items-center">
+                            <h5 class="card-header-title mb-0">Recent Join Requests</h5>
+                            <a asp-area="Provider" asp-controller="Bookings" asp-action="Index" class="btn btn-sm btn-primary-soft">View all</a>
+                        </div>
+                        <div class="card-body">
+                            @if (Model.RecentJoinRequests.Count == 0)
+                            {
+                                <p class="text-body-secondary small mb-0">No join requests yet.</p>
+                            }
+                            else
+                            {
+                                <ul class="list-group list-group-borderless">
+                                    @foreach (var jr in Model.RecentJoinRequests)
+                                    {
+                                        <li class="list-group-item px-0 d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <h6 class="mb-0">@jr.ParticipantCount participant(s)</h6>
+                                                <span class="small text-body-secondary">@jr.CreatedAt.ToString("d MMM yyyy")@(string.IsNullOrWhiteSpace(jr.Message) ? "" : " · " + jr.Message)</span>
+                                            </div>
+                                            <span class="badge @(jr.IsPending ? "text-bg-warning" : "text-bg-light")">@jr.Status</span>
+                                        </li>
+                                    }
+                                </ul>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="card border">
+                <div class="card-body text-center py-5">
+                    <img src="~/assets/images/element/17.svg" class="h-100px mb-3" alt="">
+                    <h5>Your provider workspace is ready</h5>
+                    <p class="text-body-secondary mb-3">Create your first tour listing to start receiving bookings.</p>
+                    <a asp-area="Provider" asp-controller="Listings" asp-action="Create" class="btn btn-primary">
+                        <i class="bi bi-plus-lg me-1"></i>Add New Listing
+                    </a>
+                </div>
+            </div>
+        }
+    </div>
+</section>

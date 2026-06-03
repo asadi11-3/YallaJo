@@ -1,0 +1,65 @@
+@using YallaJo.Web.Areas.Guide.Shared
+@model GuideSidebarVm
+@{
+    var active = ViewData["GuideNav"] as string ?? "Dashboard";
+    string Nav(string key) => active == key ? "nav-link active" : "nav-link";
+    var avatar = string.IsNullOrWhiteSpace(Model.AvatarUrl) ? Url.Content("~/assets/images/avatar/01.jpg") : Model.AvatarUrl;
+}
+
+<section class="pt-4">
+    <div class="container">
+        <div class="card rounded-3 border p-3 pb-2">
+            <div class="d-sm-flex align-items-center">
+                <div class="avatar avatar-xl">
+                    <img class="avatar-img rounded-circle border border-2 border-white" src="@avatar" alt="Avatar">
+                </div>
+                <div class="ms-sm-3 mt-2 mt-sm-0">
+                    <h5 class="mb-0">@(string.IsNullOrWhiteSpace(Model.DisplayName) ? "Guide" : Model.DisplayName)</h5>
+                    @if (!string.IsNullOrWhiteSpace(Model.Email))
+                    {
+                        <span class="text-body small">@Model.Email</span>
+                    }
+                </div>
+                <span class="badge text-bg-info ms-sm-auto mt-2 mt-sm-0"><i class="bi bi-person-badge me-1"></i>Guide</span>
+            </div>
+
+            <button class="btn btn-primary w-100 d-block d-xl-none mt-3" type="button"
+                    data-bs-toggle="offcanvas" data-bs-target="#guideDashboardMenu">
+                <i class="bi bi-list"></i> Guide menu
+            </button>
+
+            <div class="offcanvas-xl offcanvas-end mt-xl-3" tabindex="-1" id="guideDashboardMenu">
+                <div class="offcanvas-header">
+                    <h5 class="offcanvas-title">Guide menu</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#guideDashboardMenu"></button>
+                </div>
+                <div class="offcanvas-body p-0">
+                    <div class="navbar navbar-expand-xl w-100">
+                        <ul class="nav nav-pills nav-pills-primary-soft flex-column flex-xl-row w-100">
+                            <li class="nav-item">
+                                <a class="@Nav("Dashboard")" asp-area="Guide" asp-controller="Dashboard" asp-action="Index"><i class="bi bi-house-door fa-fw me-1"></i>Dashboard</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="@Nav("MyTours")" asp-area="Guide" asp-controller="MyTours" asp-action="Index"><i class="bi bi-signpost-2 fa-fw me-1"></i>My Tours</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="@Nav("Schedule")" asp-area="Guide" asp-controller="Schedule" asp-action="Index"><i class="bi bi-calendar-week fa-fw me-1"></i>Schedule</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="@Nav("Profile")" asp-area="Guide" asp-controller="Profile" asp-action="Index"><i class="bi bi-person-badge fa-fw me-1"></i>Profile</a>
+                            </li>
+                            <li class="nav-item ms-xl-auto">
+                                <form asp-area="Auth" asp-controller="Auth" asp-action="Logout" method="post" class="d-grid">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="nav-link text-start text-danger bg-danger-soft-hover border-0 bg-transparent w-100">
+                                        <i class="fas fa-sign-out-alt fa-fw me-1"></i>Sign Out
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

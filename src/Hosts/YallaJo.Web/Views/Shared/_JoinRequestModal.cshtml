@@ -1,0 +1,54 @@
+@model YallaJo.Web.Areas.Public.Models.Tours.TourDetailVm
+
+<div class="modal fade" id="joinRequestModal" tabindex="-1" aria-labelledby="joinRequestModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="joinRequestModalLabel">Request to join a group</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" asp-area="Public" asp-controller="Tours" asp-action="RequestJoin" asp-route-slug="@Model.Slug">
+                @Html.AntiForgeryToken()
+                <div class="modal-body">
+                    <p class="small text-muted">Enter the booking ID the organizer shared with you, then pick the date and how many people are joining.</p>
+
+                    <div class="mb-3">
+                        <label class="form-label" for="join-booking-id">Booking ID you were given</label>
+                        <input type="text" class="form-control" id="join-booking-id" name="tourBookingId" required placeholder="e.g. 3f9a..." />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label" for="join-slot">Date &amp; time</label>
+                        @if (Model.HasJoinSlots)
+                        {
+                            <select class="form-select" id="join-slot" name="availabilitySlotId" required>
+                                @foreach (var slot in Model.JoinSlots)
+                                {
+                                    <option value="@slot.SlotId">@slot.Label</option>
+                                }
+                            </select>
+                        }
+                        else
+                        {
+                            <div class="alert alert-warning mb-0">No upcoming availability is published for this tour.</div>
+                        }
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label" for="join-participants">Participants</label>
+                        <input type="number" class="form-control" id="join-participants" name="participantCount" min="1" value="1" required />
+                    </div>
+
+                    <div class="mb-0">
+                        <label class="form-label" for="join-message">Message to the organizer (optional)</label>
+                        <textarea class="form-control" id="join-message" name="message" rows="2"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary" @(Model.HasJoinSlots ? "" : "disabled")>Send request</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

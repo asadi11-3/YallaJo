@@ -1,0 +1,114 @@
+@model YallaJo.Web.Areas.Guide.Models.GuideProfileVm
+@using YallaJo.Web.Areas.Guide.Shared
+@{
+    ViewData["Title"] = "Guide Profile";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var sidebar = ViewBag.Sidebar as GuideSidebarVm ?? new GuideSidebarVm();
+    var avatar = string.IsNullOrWhiteSpace(Model.AvatarUrl) ? Url.Content("~/assets/images/avatar/01.jpg") : Model.AvatarUrl;
+}
+
+<partial name="_GuideSidebar" model="sidebar" />
+
+<section class="pt-0">
+    <div class="container vstack gap-4">
+        <h1 class="fs-4 mb-0"><i class="bi bi-person-badge me-2"></i>My Profile</h1>
+
+        @if (!Model.IsGuide)
+        {
+            <div class="card card-body border text-center py-5">
+                <img src="~/assets/images/element/17.svg" class="h-100px mb-3" alt="" />
+                <h5>You are not a registered guide yet</h5>
+                <p class="mb-0 text-secondary">Once your guide application is approved, your profile will appear here.</p>
+            </div>
+        }
+        else
+        {
+            <div class="card border">
+                <div class="card-body">
+                    <div class="d-sm-flex align-items-center">
+                        <div class="avatar avatar-xl">
+                            <img class="avatar-img rounded-circle border border-white border-3" src="@avatar" alt="" />
+                        </div>
+                        <div class="ms-sm-3 mt-2 mt-sm-0">
+                            <h5 class="mb-1">@(string.IsNullOrWhiteSpace(Model.DisplayName) ? "Guide" : Model.DisplayName)</h5>
+                            <div class="hstack gap-3 small">
+                                <span><i class="bi bi-star-fill text-warning me-1"></i>@Model.AverageRating.ToString("0.0") (@Model.ReviewCount)</span>
+                                <span><i class="bi bi-signpost-2 me-1"></i>@Model.TourCount tours</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    @if (Model.Languages.Count > 0 || Model.Specializations.Count > 0)
+                    {
+                        <hr />
+                        @if (Model.Languages.Count > 0)
+                        {
+                            <div class="mb-2">
+                                <span class="small text-secondary me-2">Languages:</span>
+                                @foreach (var lang in Model.Languages)
+                                {
+                                    <span class="badge text-bg-light me-1">@lang</span>
+                                }
+                            </div>
+                        }
+                        @if (Model.Specializations.Count > 0)
+                        {
+                            <div>
+                                <span class="small text-secondary me-2">Specializations:</span>
+                                @foreach (var spec in Model.Specializations)
+                                {
+                                    <span class="badge text-bg-primary me-1">@spec</span>
+                                }
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+
+            <div class="card border">
+                <div class="card-header border-bottom">
+                    <h5 class="card-header-title">Edit profile</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" asp-area="Guide" asp-controller="Profile" asp-action="Update">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="guideId" value="@Model.GuideId" />
+                        <div asp-validation-summary="ModelOnly" class="text-danger small mb-3"></div>
+
+                        <div class="mb-3">
+                            <label asp-for="Edit.Bio" class="form-label"></label>
+                            <textarea asp-for="Edit.Bio" class="form-control" rows="4" placeholder="Tell travellers about yourself"></textarea>
+                            <span asp-validation-for="Edit.Bio" class="text-danger small"></span>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label asp-for="Edit.YearsOfExperience" class="form-label"></label>
+                                <input asp-for="Edit.YearsOfExperience" type="number" min="0" max="80" class="form-control" />
+                                <span asp-validation-for="Edit.YearsOfExperience" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Edit.MoTALicenseNumber" class="form-label"></label>
+                                <input asp-for="Edit.MoTALicenseNumber" class="form-control" />
+                                <span asp-validation-for="Edit.MoTALicenseNumber" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="form-check form-switch mt-3">
+                            <input asp-for="Edit.HasFirstAid" class="form-check-input" role="switch" />
+                            <label asp-for="Edit.HasFirstAid" class="form-check-label"></label>
+                        </div>
+
+                        <div class="text-end mt-4">
+                            <button type="submit" class="btn btn-primary mb-0">Save changes</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        }
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

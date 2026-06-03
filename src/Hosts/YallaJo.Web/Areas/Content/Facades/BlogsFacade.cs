@@ -125,4 +125,187 @@ public sealed class BlogsFacade
 
         return ApiResult<BlogAuthorVm>.Ok(BlogsMapper.ToAuthorVm(result.Data, _assetResolver));
     }
+
+    // ---------------------------------------------------------------------
+    // Comment + reaction writes (sub-feature A)
+    // ---------------------------------------------------------------------
+
+    public Task<ApiResult> PostCommentAsync(
+        Guid blogId, string content, Guid? parentCommentId, CancellationToken ct = default)
+        => NormalizeAsync(
+            () => _blogs.PostCommentAsync(blogId, new CreateBlogCommentRequestBody(content.Trim(), parentCommentId), ct),
+            "Could not post your comment.");
+
+    public Task<ApiResult> LikeCommentAsync(Guid commentId, CancellationToken ct = default)
+        => NormalizeAsync(
+            () => _blogs.AddReactionAsync(commentId, new BlogReactionRequestBody("Like"), ct),
+            "Could not record your reaction.");
+
+    public Task<ApiResult> UnlikeCommentAsync(Guid commentId, CancellationToken ct = default)
+        => NormalizeAsync(() => _blogs.RemoveReactionAsync(commentId, ct), "Could not remove your reaction.");
+
+    // ---------------------------------------------------------------------
+    // Creator profile + follow (sub-feature B)
+    // ---------------------------------------------------------------------
+
+    public async Task<ApiResult<CreatorProfileVm>> GetCreatorProfileAsync(
+        string slug, CancellationToken ct = default)
+    {
+        var profileResult = await _blogs.GetCreatorProfileBySlugAsync(slug, ct);
+
+        if (profileResult.IsUnauthorized) return ApiResult<CreatorProfileVm>.ForceSignOut();
+        if (profileResult.IsNotFound) return ApiResult<CreatorProfileVm>.Fail(404, "Creator not found.");
+        if (!profileResult.IsSuccess || profileResult.Data is null)
+            return ApiResult<CreatorProfileVm>.Fail(
+                profileResult.StatusCode, profileResult.Error ?? "Could not load the creator profile.");
+
+        var profile = profileResult.Data;
+
+        var blogs = new List<BlogCardVm>();
+        try
+        {
+            var blogsResult = await _blogs.GetCreatorBlogsAsync(slug, 1, 12, ct);
+            if (blogsResult is { IsSuccess: true, Data: { } bd })
+                blogs = bd.Items.Select(BlogsMapper.ToCardVm).ToList();
+        }
+        catch
+        {
+            // tolerate: show the profile even if their blog list fails to load
+        }
+
+        var vm = new CreatorProfileVm
+        {
+            Slug           = profile.Slug,
+            DisplayName    = profile.DisplayName,
+            Bio            = profile.Bio,
+            AvatarUrl      = _assetResolver.Resolve(profile.AvatarUrl) ?? "/assets/images/avatar/01.jpg",
+            ArticleCount   = profile.ArticleCount,
+            FollowerCount  = profile.FollowerCount,
+            TotalViewCount = profile.TotalViewCount,
+            FollowTargetId = profile.Id,
+            Blogs          = blogs,
+        };
+
+        return ApiResult<CreatorProfileVm>.Ok(vm);
+    }
+
+    public Task<ApiResult> FollowAsync(Guid profileId, CancellationToken ct = default)
+        => NormalizeAsync(() => _blogs.FollowAsync(profileId, ct), "Could not follow this creator.");
+
+    public Task<ApiResult> UnfollowAsync(Guid profileId, CancellationToken ct = default)
+        => NormalizeAsync(() => _blogs.UnfollowAsync(profileId, ct), "Could not unfollow this creator.");
+
+    // ---------------------------------------------------------------------
+    // Composer: create / edit / my-blogs / submit (sub-feature C)
+    // ---------------------------------------------------------------------
+
+    public async Task<ApiResult<CreateBlogResultResponse>> CreateBlogAsync(
+        CreateBlogVm form, CancellationToken ct = default)
+    {
+        var body = new CreateBlogRequestBody(
+            form.Title.Trim(),
+            form.Content,
+            string.IsNullOrWhiteSpace(form.SourceLanguageCode) ? "en" : form.SourceLanguageCode.Trim(),
+            string.IsNullOrWhiteSpace(form.Slug) ? null : form.Slug.Trim(),
+            string.IsNullOrWhiteSpace(form.Summary) ? null : form.Summary.Trim(),
+            string.IsNullOrWhiteSpace(form.MetaTitle) ? null : form.MetaTitle.Trim(),
+            string.IsNullOrWhiteSpace(form.MetaDescription) ? null : form.MetaDescription.Trim());
+
+        var result = await _blogs.CreateBlogAsync(body, ct);
+
+        if (result.IsUnauthorized) return ApiResult<CreateBlogResultResponse>.ForceSignOut();
+        if (result is { IsSuccess: true, Data: { } d }) return ApiResult<CreateBlogResultResponse>.Ok(d, result.StatusCode);
+        if (result.IsValidationError && result.ValidationErrors is not null)
+            return ApiResult<CreateBlogResultResponse>.ValidationFail(result.StatusCode, result.ValidationErrors);
+        return ApiResult<CreateBlogResultResponse>.Fail(result.StatusCode, result.Error ?? "Could not create your article.");
+    }
+
+    public async Task<ApiResult<EditBlogVm>> GetEditBlogAsync(Guid id, CancellationToken ct = default)
+    {
+        var result = await _blogs.GetAdminBlogAsync(id, ct);
+
+        if (result.IsUnauthorized) return ApiResult<EditBlogVm>.ForceSignOut();
+        if (result.IsNotFound) return ApiResult<EditBlogVm>.Fail(404, "Article not found.");
+        if (!result.IsSuccess || result.Data is null)
+            return ApiResult<EditBlogVm>.Fail(result.StatusCode, result.Error ?? "Could not load the article.");
+
+        var b = result.Data;
+        var vm = new EditBlogVm
+        {
+            Id                 = b.Id,
+            RowVersion         = b.RowVersion ?? string.Empty,
+            Title              = b.Title,
+            Slug               = b.Slug,
+            Content            = b.Content,
+            SourceLanguageCode = string.IsNullOrWhiteSpace(b.LanguageCode) ? "en" : b.LanguageCode,
+            Summary            = b.Summary,
+            MetaTitle          = b.MetaTitle,
+            MetaDescription    = b.MetaDescription,
+            Status             = b.Status,
+        };
+
+        return ApiResult<EditBlogVm>.Ok(vm);
+    }
+
+    public Task<ApiResult> UpdateBlogAsync(Guid id, EditBlogVm form, CancellationToken ct = default)
+        => NormalizeAsync(
+            () => _blogs.UpdateBlogAsync(id, new UpdateBlogRequestBody(
+                form.RowVersion,
+                form.Title.Trim(),
+                string.IsNullOrWhiteSpace(form.Slug) ? form.Title.Trim() : form.Slug.Trim(),
+                form.Content,
+                string.IsNullOrWhiteSpace(form.Summary) ? null : form.Summary.Trim(),
+                string.IsNullOrWhiteSpace(form.MetaTitle) ? null : form.MetaTitle.Trim(),
+                string.IsNullOrWhiteSpace(form.MetaDescription) ? null : form.MetaDescription.Trim(),
+                null,
+                null), ct),
+            "Could not update your article.");
+
+    public async Task<ApiResult<MyBlogsVm>> GetMyBlogsAsync(CancellationToken ct = default)
+    {
+        var result = await _blogs.ListMyBlogsAsync(ct);
+
+        if (result.IsUnauthorized) return ApiResult<MyBlogsVm>.ForceSignOut();
+        if (!result.IsSuccess || result.Data is null)
+            return ApiResult<MyBlogsVm>.Fail(result.StatusCode, result.Error ?? "Could not load your articles.");
+
+        var rows = result.Data
+            .Select(b => new MyBlogRowVm
+            {
+                Id          = b.Id,
+                Slug        = b.Slug,
+                Title       = b.Title,
+                Status      = b.Status,
+                PublishedAt = b.PublishedAt,
+                ViewCount   = b.ViewCount,
+            })
+            .OrderByDescending(r => r.PublishedAt ?? DateTime.MinValue)
+            .ToList();
+
+        return ApiResult<MyBlogsVm>.Ok(new MyBlogsVm { Blogs = rows });
+    }
+
+    public Task<ApiResult> SubmitForReviewAsync(Guid id, CancellationToken ct = default)
+        => NormalizeAsync(() => _blogs.SubmitForReviewAsync(id, ct), "Could not submit your article for review.");
+
+    // ---------------------------------------------------------------------
+
+    private static async Task<ApiResult> NormalizeAsync(Func<Task<ApiResult>> call, string fallback)
+    {
+        ApiResult result;
+        try
+        {
+            result = await call();
+        }
+        catch
+        {
+            return ApiResult.Fail(500, fallback);
+        }
+
+        if (result.IsUnauthorized) return ApiResult.ForceSignOut();
+        if (result.IsSuccess) return ApiResult.Ok(result.StatusCode);
+        if (result.IsValidationError && result.ValidationErrors is not null)
+            return ApiResult.ValidationFail(result.StatusCode, result.ValidationErrors);
+        return ApiResult.Fail(result.StatusCode, result.Error ?? fallback);
+    }
 }

@@ -1,0 +1,241 @@
+@model YallaJo.Web.Areas.Provider.Models.Tours.ManageTourVm
+@using YallaJo.Web.Areas.Provider.Models.Tours
+@using YallaJo.Web.Areas.Provider.Shared
+@{
+    ViewData["Title"] = $"Manage {Model.Name}";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var sidebar = ViewBag.Sidebar as ProviderSidebarVm ?? new ProviderSidebarVm();
+
+    string Money(decimal amount, string? currency) =>
+        string.IsNullOrWhiteSpace(currency) ? amount.ToString("N0") : $"{amount:N0} {currency}";
+}
+
+<partial name="_ProviderSidebar" model="sidebar" />
+
+<section class="pt-0">
+    <div class="container vstack gap-4">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <div>
+                <h1 class="fs-4 mb-1">@Model.Name</h1>
+                <div class="small text-secondary">
+                    <span class="badge text-bg-secondary me-2">@(Model.Status ?? "Draft")</span>
+                    @Model.Slug · @Money(Model.BasePrice, Model.Currency) · @Model.BookingCount bookings · @Model.ReviewCount reviews
+                </div>
+            </div>
+            <div class="d-flex gap-2">
+                <a asp-area="Public" asp-controller="Tours" asp-action="Detail" asp-route-slug="@Model.Slug" target="_blank" class="btn btn-sm btn-secondary-soft">
+                    <i class="bi bi-box-arrow-up-right me-1"></i>Preview
+                </a>
+                <a asp-area="Provider" asp-controller="Listings" asp-action="Index" class="btn btn-sm btn-primary-soft">
+                    <i class="bi bi-arrow-left me-1"></i>Listings
+                </a>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <!-- Schedules -->
+            <div class="col-lg-6">
+                <div class="card border h-100">
+                    <div class="card-header border-bottom"><h5 class="card-header-title mb-0">Schedules</h5></div>
+                    <div class="card-body">
+                        @if (Model.Schedules.Count == 0)
+                        {
+                            <p class="text-secondary small mb-3">No schedules yet.</p>
+                        }
+                        else
+                        {
+                            <ul class="list-group list-group-borderless mb-3">
+                                @foreach (var s in Model.Schedules)
+                                {
+                                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                        <span>@s.DayName · @s.StartTime.ToString("HH:mm")@(s.EndTime is { } e ? $"–{e:HH\\:mm}" : "")</span>
+                                        <form method="post" asp-area="Provider" asp-controller="Tour" asp-action="DeleteSchedule" asp-route-id="@Model.TourId" asp-route-scheduleId="@s.Id" onsubmit="return confirm('Remove this schedule?');">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-sm btn-danger-soft"><i class="bi bi-trash"></i></button>
+                                        </form>
+                                    </li>
+                                }
+                            </ul>
+                        }
+                        <form method="post" asp-area="Provider" asp-controller="Tour" asp-action="AddSchedule" asp-route-id="@Model.TourId" class="row g-2">
+                            @Html.AntiForgeryToken()
+                            <div class="col-12">
+                                <label asp-for="NewSchedule.DayOfWeek" class="form-label small">Day</label>
+                                <select asp-for="NewSchedule.DayOfWeek" class="form-select form-select-sm">
+                                    @foreach (var (val, name) in ManageTourVm.DayOptions)
+                                    {
+                                        <option value="@val">@name</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-6">
+                                <label asp-for="NewSchedule.StartTime" class="form-label small">Start</label>
+                                <input asp-for="NewSchedule.StartTime" type="time" class="form-control form-control-sm" />
+                            </div>
+                            <div class="col-6">
+                                <label asp-for="NewSchedule.EndTime" class="form-label small">End (optional)</label>
+                                <input asp-for="NewSchedule.EndTime" type="time" class="form-control form-control-sm" />
+                            </div>
+                            <div class="col-12 text-end">
+                                <button type="submit" class="btn btn-sm btn-primary"><i class="bi bi-plus-lg me-1"></i>Add schedule</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pricing -->
+            <div class="col-lg-6">
+                <div class="card border h-100">
+                    <div class="card-header border-bottom"><h5 class="card-header-title mb-0">Pricing tiers</h5></div>
+                    <div class="card-body">
+                        @if (Model.PricingTiers.Count == 0)
+                        {
+                            <p class="text-secondary small mb-3">No pricing tiers yet.</p>
+                        }
+                        else
+                        {
+                            <ul class="list-group list-group-borderless mb-3">
+                                @foreach (var p in Model.PricingTiers)
+                                {
+                                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                        <span>@p.Name <span class="text-secondary small">(@p.ParticipantType)</span> · @Money(p.Price, p.Currency)</span>
+                                        <form method="post" asp-area="Provider" asp-controller="Tour" asp-action="DeletePricing" asp-route-id="@Model.TourId" asp-route-tierId="@p.Id" onsubmit="return confirm('Remove this tier?');">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-sm btn-danger-soft"><i class="bi bi-trash"></i></button>
+                                        </form>
+                                    </li>
+                                }
+                            </ul>
+                        }
+                        <form method="post" asp-area="Provider" asp-controller="Tour" asp-action="AddPricing" asp-route-id="@Model.TourId" class="row g-2">
+                            @Html.AntiForgeryToken()
+                            <div class="col-7">
+                                <label asp-for="NewPricing.Name" class="form-label small">Name</label>
+                                <input asp-for="NewPricing.Name" class="form-control form-control-sm" placeholder="Adult" />
+                            </div>
+                            <div class="col-5">
+                                <label asp-for="NewPricing.ParticipantType" class="form-label small">Type</label>
+                                <select asp-for="NewPricing.ParticipantType" class="form-select form-select-sm">
+                                    @foreach (var t in ManageTourVm.ParticipantTypeOptions)
+                                    {
+                                        <option value="@t">@t</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-4">
+                                <label asp-for="NewPricing.Price" class="form-label small">Price</label>
+                                <input asp-for="NewPricing.Price" type="number" step="0.01" class="form-control form-control-sm" />
+                            </div>
+                            <div class="col-4">
+                                <label asp-for="NewPricing.Currency" class="form-label small">Currency</label>
+                                <input asp-for="NewPricing.Currency" class="form-control form-control-sm text-uppercase" maxlength="3" />
+                            </div>
+                            <div class="col-2">
+                                <label asp-for="NewPricing.MinParticipants" class="form-label small">Min</label>
+                                <input asp-for="NewPricing.MinParticipants" type="number" class="form-control form-control-sm" />
+                            </div>
+                            <div class="col-2">
+                                <label asp-for="NewPricing.MaxParticipants" class="form-label small">Max</label>
+                                <input asp-for="NewPricing.MaxParticipants" type="number" class="form-control form-control-sm" />
+                            </div>
+                            <div class="col-12 text-end">
+                                <button type="submit" class="btn btn-sm btn-primary"><i class="bi bi-plus-lg me-1"></i>Add tier</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Waypoints -->
+            <div class="col-lg-6">
+                <div class="card border h-100">
+                    <div class="card-header border-bottom"><h5 class="card-header-title mb-0">Itinerary stops</h5></div>
+                    <div class="card-body">
+                        @if (Model.Waypoints.Count == 0)
+                        {
+                            <p class="text-secondary small mb-3">No stops yet.</p>
+                        }
+                        else
+                        {
+                            <ul class="list-group list-group-borderless mb-3">
+                                @foreach (var w in Model.Waypoints)
+                                {
+                                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                        <span>@(w.SortOrder + 1). @w.Name <span class="text-secondary small">(@w.WaypointType)</span></span>
+                                        <form method="post" asp-area="Provider" asp-controller="Tour" asp-action="DeleteWaypoint" asp-route-id="@Model.TourId" asp-route-waypointId="@w.Id" onsubmit="return confirm('Remove this stop?');">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-sm btn-danger-soft"><i class="bi bi-trash"></i></button>
+                                        </form>
+                                    </li>
+                                }
+                            </ul>
+                        }
+                        <form method="post" asp-area="Provider" asp-controller="Tour" asp-action="AddWaypoint" asp-route-id="@Model.TourId" class="row g-2">
+                            @Html.AntiForgeryToken()
+                            <div class="col-7">
+                                <label asp-for="NewWaypoint.Name" class="form-label small">Name</label>
+                                <input asp-for="NewWaypoint.Name" class="form-control form-control-sm" />
+                            </div>
+                            <div class="col-5">
+                                <label asp-for="NewWaypoint.WaypointType" class="form-label small">Type</label>
+                                <select asp-for="NewWaypoint.WaypointType" class="form-select form-select-sm">
+                                    @foreach (var t in ManageTourVm.WaypointTypeOptions)
+                                    {
+                                        <option value="@t">@t</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-4">
+                                <label asp-for="NewWaypoint.Latitude" class="form-label small">Lat</label>
+                                <input asp-for="NewWaypoint.Latitude" type="number" step="any" class="form-control form-control-sm" />
+                            </div>
+                            <div class="col-4">
+                                <label asp-for="NewWaypoint.Longitude" class="form-label small">Lng</label>
+                                <input asp-for="NewWaypoint.Longitude" type="number" step="any" class="form-control form-control-sm" />
+                            </div>
+                            <div class="col-4">
+                                <label asp-for="NewWaypoint.DurationMinutes" class="form-label small">Mins</label>
+                                <input asp-for="NewWaypoint.DurationMinutes" type="number" class="form-control form-control-sm" />
+                            </div>
+                            <div class="col-12 text-end">
+                                <button type="submit" class="btn btn-sm btn-primary"><i class="bi bi-plus-lg me-1"></i>Add stop</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Children info -->
+            <div class="col-lg-6">
+                <div class="card border h-100">
+                    <div class="card-header border-bottom"><h5 class="card-header-title mb-0">Children information</h5></div>
+                    <div class="card-body">
+                        <form method="post" asp-area="Provider" asp-controller="Tour" asp-action="UpdateChildrenInfo" asp-route-id="@Model.TourId" class="row g-3">
+                            @Html.AntiForgeryToken()
+                            <div class="col-12 form-check ms-2">
+                                <input asp-for="ChildrenInfo.AllowsChildren" class="form-check-input" />
+                                <label asp-for="ChildrenInfo.AllowsChildren" class="form-check-label"></label>
+                            </div>
+                            <div class="col-6">
+                                <label asp-for="ChildrenInfo.MinChildAge" class="form-label small"></label>
+                                <input asp-for="ChildrenInfo.MinChildAge" type="number" class="form-control form-control-sm" />
+                            </div>
+                            <div class="col-6">
+                                <label asp-for="ChildrenInfo.MaxChildAge" class="form-label small"></label>
+                                <input asp-for="ChildrenInfo.MaxChildAge" type="number" class="form-control form-control-sm" />
+                            </div>
+                            <div class="col-12">
+                                <label asp-for="ChildrenInfo.ChildFacilities" class="form-label small"></label>
+                                <input asp-for="ChildrenInfo.ChildFacilities" class="form-control form-control-sm" placeholder="Stroller access, high chairs" />
+                            </div>
+                            <div class="col-12 text-end">
+                                <button type="submit" class="btn btn-sm btn-primary"><i class="bi bi-check-lg me-1"></i>Save</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

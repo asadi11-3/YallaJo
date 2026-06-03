@@ -59,4 +59,45 @@ public sealed class BlogsController : BaseController
 
         return View(result.Data);
     }
+
+    [HttpPost("content/blogs/{slug}/comments")]
+    [Authorize]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> AddComment(
+        string slug,
+        Guid blogId,
+        string? content,
+        Guid? parentCommentId,
+        CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(content))
+        {
+            SetError("Please write something before posting.");
+            return RedirectToAction(nameof(Details), new { slug });
+        }
+
+        var result = await _facade.PostCommentAsync(blogId, content, parentCommentId, ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+
+        if (result.IsSuccess)
+            SetSuccess(parentCommentId is null ? "Comment posted." : "Reply posted.");
+        else
+            SetError(result.Error);
+
+        return RedirectToAction(nameof(Details), new { slug });
+    }
+
+    [HttpPost("content/blogs/{slug}/comments/{commentId:guid}/like")]
+    [Authorize]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> LikeComment(string slug, Guid commentId, CancellationToken ct = default)
+    {
+        var result = await _facade.LikeCommentAsync(commentId, ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+
+        if (!result.IsSuccess)
+            SetError(result.Error);
+
+        return RedirectToAction(nameof(Details), new { slug });
+    }
 }

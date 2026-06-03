@@ -1,0 +1,204 @@
+@using YallaJo.Web.Areas.Provider.Models.Earnings
+@using YallaJo.Web.Areas.Provider.Shared
+@model EarningsVm
+@{
+    ViewData["Title"] = "Earnings";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var sidebar = ViewBag.Sidebar as ProviderSidebarVm ?? new ProviderSidebarVm();
+
+    string Money(decimal amount, string? currency) =>
+        string.IsNullOrWhiteSpace(currency) ? amount.ToString("N2") : $"{amount:N2} {currency}";
+
+    string StatusBadge(string? status) => (status ?? string.Empty).ToLowerInvariant() switch
+    {
+        "completed" or "paid" => "text-bg-success",
+        "pending" or "processing" or "scheduled" => "text-bg-warning",
+        "failed" or "rejected" => "text-bg-danger",
+        "resolved" => "text-bg-success",
+        "open" or "underreview" or "under_review" => "text-bg-warning",
+        _ => "text-bg-secondary"
+    };
+}
+
+<partial name="_ProviderSidebar" model="sidebar" />
+
+<section class="pt-0">
+    <div class="container vstack gap-4">
+
+        <h1 class="fs-4 mb-0"><i class="bi bi-graph-up-arrow me-1"></i>Earnings</h1>
+
+        <div class="row g-4">
+            <div class="col-sm-6 col-xl-4">
+                <div class="card card-body border">
+                    <div class="d-flex align-items-center">
+                        <div class="icon-xl bg-success bg-opacity-10 rounded-3 text-success">
+                            <i class="bi bi-cash-stack fs-5"></i>
+                        </div>
+                        <div class="ms-3">
+                            <h4 class="mb-0">@Money(Model.GrossTotal, Model.Currency)</h4>
+                            <span class="small">Gross total</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-xl-4">
+                <div class="card card-body border">
+                    <div class="d-flex align-items-center">
+                        <div class="icon-xl bg-info bg-opacity-10 rounded-3 text-info">
+                            <i class="bi bi-wallet2 fs-5"></i>
+                        </div>
+                        <div class="ms-3">
+                            <h4 class="mb-0">@Money(Model.NetEstimateTotal, Model.Currency)</h4>
+                            <span class="small">Net estimate</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-xl-4">
+                <div class="card card-body border">
+                    <div class="d-flex align-items-center">
+                        <div class="icon-xl bg-warning bg-opacity-10 rounded-3 text-warning">
+                            <i class="bi bi-receipt fs-5"></i>
+                        </div>
+                        <div class="ms-3">
+                            <h4 class="mb-0">@Model.PaymentCount</h4>
+                            <span class="small">Paid bookings</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card border">
+            <div class="card-header border-bottom">
+                <h5 class="card-header-title mb-0">Recent earnings</h5>
+            </div>
+            <div class="card-body">
+                @if (!Model.HasEarnings)
+                {
+                    <div class="text-center py-4">
+                        <img src="~/assets/images/element/17.svg" class="h-80px mb-3" alt="" />
+                        <p class="mb-0">No earnings recorded yet.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Booking</th>
+                                    <th class="text-end">Gross</th>
+                                    <th class="text-end">Net estimate</th>
+                                    <th>Paid</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var e in Model.Earnings)
+                                {
+                                    <tr>
+                                        <td><span class="text-body-secondary small">#@e.BookingId.ToString("N").Substring(0, 8)</span></td>
+                                        <td class="text-end">@Money(e.GrossAmount, e.Currency)</td>
+                                        <td class="text-end text-success">@Money(e.NetEstimate, e.Currency)</td>
+                                        <td>@(e.PaidAt?.ToString("d MMM yyyy") ?? "—")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="card border">
+            <div class="card-header border-bottom">
+                <h5 class="card-header-title mb-0">Payouts</h5>
+            </div>
+            <div class="card-body">
+                @if (!Model.HasPayouts)
+                {
+                    <div class="text-center py-4">
+                        <img src="~/assets/images/element/17.svg" class="h-80px mb-3" alt="" />
+                        <p class="mb-0">No payouts have been issued yet.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Period</th>
+                                    <th class="text-end">Gross</th>
+                                    <th class="text-end">Commission</th>
+                                    <th class="text-end">Net</th>
+                                    <th class="text-center">Items</th>
+                                    <th>Status</th>
+                                    <th>Created</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var p in Model.Payouts)
+                                {
+                                    <tr>
+                                        <td>@p.BatchPeriodStart.ToString("d MMM") &ndash; @p.BatchPeriodEnd.ToString("d MMM yyyy")</td>
+                                        <td class="text-end">@Money(p.GrossAmount, p.Currency)</td>
+                                        <td class="text-end text-danger">@Money(p.CommissionAmount, p.Currency)</td>
+                                        <td class="text-end text-success">@Money(p.NetAmount, p.Currency)</td>
+                                        <td class="text-center">@p.ItemCount</td>
+                                        <td><span class="badge @StatusBadge(p.Status)">@(p.Status ?? "—")</span></td>
+                                        <td>@p.CreatedAt.ToString("d MMM yyyy")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="card border">
+            <div class="card-header border-bottom">
+                <h5 class="card-header-title mb-0">Disputes</h5>
+            </div>
+            <div class="card-body">
+                @if (!Model.HasDisputes)
+                {
+                    <div class="text-center py-4">
+                        <img src="~/assets/images/element/17.svg" class="h-80px mb-3" alt="" />
+                        <p class="mb-0">No disputes raised against your payments.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Reason</th>
+                                    <th>Description</th>
+                                    <th>Status</th>
+                                    <th>Created</th>
+                                    <th>Resolved</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var d in Model.Disputes)
+                                {
+                                    <tr>
+                                        <td>@d.Reason</td>
+                                        <td class="text-body-secondary small">@d.Description</td>
+                                        <td><span class="badge @StatusBadge(d.Status)">@(d.Status ?? "—")</span></td>
+                                        <td>@d.CreatedAt.ToString("d MMM yyyy")</td>
+                                        <td>@(d.ResolvedAt?.ToString("d MMM yyyy") ?? "—")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+
+    </div>
+</section>
