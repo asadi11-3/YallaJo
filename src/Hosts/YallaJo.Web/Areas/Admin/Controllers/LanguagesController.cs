@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using YallaJo.Web.Areas.Admin.Models.Languages;
 using YallaJo.Web.Infrastructure.Authorization;
+using YallaJo.Web.Infrastructure.Mvc;
 
 using YallaJo.Web.Areas.Admin.Facades;
 namespace YallaJo.Web.Areas.Admin.Controllers;
@@ -9,7 +10,7 @@ namespace YallaJo.Web.Areas.Admin.Controllers;
 [Area("Admin")]
 [Authorize]
 [RequirePermission(WebPermission.Language.Read)]
-public sealed class LanguagesController : Controller
+public sealed class LanguagesController : BaseController
 {
     private readonly LanguagesFacade _facade;
     public LanguagesController(LanguagesFacade facade) => _facade = facade;
@@ -18,7 +19,7 @@ public sealed class LanguagesController : Controller
     public async Task<IActionResult> Index(bool activeOnly = false, CancellationToken ct = default)
     {
         var result = await _facade.GetLanguagesAsync(activeOnly, ct);
-        if (result.RequireSignOut) return RedirectToLogin();
+        if (GuardSignOut(result) is { } signOut) return signOut;
         if (!result.IsSuccess)
         {
             ViewBag.Error = result.Error;
@@ -35,11 +36,11 @@ public sealed class LanguagesController : Controller
         if (!ModelState.IsValid) return await ReloadIndex(vm, ct);
 
         var result = await _facade.CreateAsync(vm, ct);
-        if (result.RequireSignOut) return RedirectToLogin();
+        if (GuardSignOut(result) is { } signOut) return signOut;
 
         if (result.IsSuccess)
         {
-            TempData["Success"] = "Language created.";
+            SetSuccess("Language created.");
             return RedirectToAction(nameof(Index));
         }
 
@@ -60,17 +61,17 @@ public sealed class LanguagesController : Controller
     public async Task<IActionResult> Edit(Guid id, CancellationToken ct)
     {
         var list = await _facade.GetLanguagesAsync(activeOnly: false, ct);
-        if (list.RequireSignOut) return RedirectToLogin();
+        if (GuardSignOut(list) is { } signOut) return signOut;
         if (!list.IsSuccess || list.Data is null)
         {
-            TempData["Error"] = list.Error ?? "Could not load languages.";
+            SetError(list.Error ?? "Could not load languages.");
             return RedirectToAction(nameof(Index));
         }
 
         var row = list.Data.Languages.FirstOrDefault(l => l.Id == id);
         if (row is null)
         {
-            TempData["Error"] = "Language not found.";
+            SetError("Language not found.");
             return RedirectToAction(nameof(Index));
         }
 
@@ -93,11 +94,11 @@ public sealed class LanguagesController : Controller
         if (!ModelState.IsValid) return View(vm);
 
         var result = await _facade.UpdateAsync(vm, ct);
-        if (result.RequireSignOut) return RedirectToLogin();
+        if (GuardSignOut(result) is { } signOut) return signOut;
 
         if (result.IsSuccess)
         {
-            TempData["Success"] = "Language updated.";
+            SetSuccess("Language updated.");
             return RedirectToAction(nameof(Index));
         }
 
@@ -113,7 +114,6 @@ public sealed class LanguagesController : Controller
         return View(vm);
     }
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
 
     private async Task<IActionResult> ReloadIndex(CreateLanguageVm create, CancellationToken ct)
     {
@@ -123,7 +123,4 @@ public sealed class LanguagesController : Controller
             : new LanguageListVm { Create = create };
         return View(nameof(Index), vm);
     }
-
-    private IActionResult RedirectToLogin()
-        => RedirectToAction("SignIn", "Auth", new { area = "Auth" });
 }

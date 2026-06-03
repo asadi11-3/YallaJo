@@ -50,6 +50,7 @@ public sealed class BookingsFacade
         {
             ActiveTab = activeTab,
             Bookings = cards,
+            Tabs = Tabs,
         });
     }
 
@@ -69,10 +70,13 @@ public sealed class BookingsFacade
             var attachTask = _api.GetAttachmentsAsync("Tour", tourId, ct);
             await Task.WhenAll(tourTask, attachTask);
 
-            if (tourTask.Result is { IsSuccess: true, Data: { } tour } && !string.IsNullOrWhiteSpace(tour.Name))
+            var tourResult = await tourTask;
+            var attachResult = await attachTask;
+
+            if (tourResult is { IsSuccess: true, Data: { } tour } && !string.IsNullOrWhiteSpace(tour.Name))
                 name = tour.Name;
 
-            if (attachTask.Result is { IsSuccess: true, Data: { Count: > 0 } images })
+            if (attachResult is { IsSuccess: true, Data: { Count: > 0 } images })
             {
                 var primary = images.OrderBy(a => a.SortOrder).First();
                 imageUrl = _assetResolver.Resolve(primary.ThumbnailUrl ?? primary.Url);

@@ -56,15 +56,6 @@
                             <div class="row g-3" id="wishlistGrid">
                                 @foreach (var item in Model.Items)
                                 {
-                                    var detailUrl = item.EntityType switch
-                                    {
-                                        "Tour" => $"/tours/{item.EntityId}",
-                                        "Place" => $"/places/{item.EntityId}",
-                                        "Business" => $"/places/businesses/{item.EntityId}",
-                                        "TourGuide" => $"/guides/{item.EntityId}",
-                                        "Blog" => $"/blogs/{item.EntityId}",
-                                        _ => "#",
-                                    };
                                     <div class="col-md-6 wishlist-item"
                                          data-title="@item.Title"
                                          data-rating="@(item.Rating?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "0")"
@@ -113,7 +104,7 @@
                                                         }
                                                     </div>
                                                 </div>
-                                                <a href="@detailUrl" class="btn btn-sm btn-primary-soft w-100 mt-3 mb-0">View</a>
+                                                <a href="@item.DetailUrl" class="btn btn-sm btn-primary-soft w-100 mt-3 mb-0">View</a>
                                             </div>
                                         </div>
                                     </div>

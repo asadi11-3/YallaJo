@@ -39,4 +39,20 @@ public sealed class BlogTranslation : BaseEntity
             Summary = summary?.Trim()
         };
     }
+
+    /// <summary>
+    /// Updates the localized text of an existing translation. The blog and language
+    /// associations are immutable (a translation is uniquely keyed by BlogId + LanguageId).
+    /// </summary>
+    public void Update(string title, string content, string? summary = null)
+    {
+        if (string.IsNullOrWhiteSpace(title))
+            throw new ArgumentException("Translation title is required.", nameof(title));
+        if (string.IsNullOrWhiteSpace(content))
+            throw new ArgumentException("Translation content is required.", nameof(content));
+
+        Title = title.Trim();
+        Content = content.Trim();
+        Summary = summary?.Trim();
+    }
 }

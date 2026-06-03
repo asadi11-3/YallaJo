@@ -17,9 +17,6 @@ public sealed class BookingApiClient
     public Task<ApiResult<AvailabilityPageResponse>> GetAvailabilityAsync(Guid tourId, CancellationToken ct = default)
         => _api.GetAsync<AvailabilityPageResponse>($"/api/v1/booking/availability/{tourId}?pageSize=20", ct);
 
-    public Task<ApiResult<List<TourAttachmentResponse>>> GetAttachmentsAsync(Guid tourId, CancellationToken ct = default)
-        => _api.GetAsync<List<TourAttachmentResponse>>($"/api/v1/content-core/attachments?entityType=Tour&entityId={tourId}", ct);
-
     public Task<ApiResult<CreateTourBookingResponse>> CreateBookingAsync(CreateTourBookingRequest request, CancellationToken ct = default)
         => _api.PostAsync<CreateTourBookingResponse>("/api/v1/booking/tour", request, ct);
 

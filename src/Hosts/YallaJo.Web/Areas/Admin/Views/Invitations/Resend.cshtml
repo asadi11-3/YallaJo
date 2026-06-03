@@ -11,7 +11,7 @@
         Issues a fresh invite token for a pending account and emails a new link. Disabled for accounts that have already completed onboarding.
     </p>
 
-    @if (TempData["Success"] is string ok) { <div class="alert alert-success">@ok</div> }
+    @* Success/Error flash banners are rendered globally by the shared _Alerts partial (in _Layout). *@
 
     <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 

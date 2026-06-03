@@ -147,8 +147,13 @@
 }
 
 @section Scripts {
+    @* Endpoint URL is surfaced as a data-* attribute (server-generated) instead of
+       being hardcoded as a literal inside the script below. *@
+    <span id="interactionConfig" hidden data-favorites-url="/api/v1/social/favorites"></span>
     <script>
         (function () {
+            var cfg = document.getElementById('interactionConfig');
+            var favoritesUrl = cfg ? cfg.dataset.favoritesUrl : '';
             // Tooltips (for the guest "Log in to save" hints).
             document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) {
                 new bootstrap.Tooltip(el);
@@ -162,7 +167,7 @@
                     var entityId = btn.dataset.entityId;
                     if (!entityId) return;
                     btn.disabled = true;
-                    fetch('/api/v1/social/favorites', {
+                    fetch(favoritesUrl, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',

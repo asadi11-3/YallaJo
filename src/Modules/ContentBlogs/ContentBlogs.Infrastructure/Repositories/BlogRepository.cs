@@ -142,6 +142,40 @@ public class BlogRepository(ContentBlogsDbContext context)
             .AnyAsync(t => t.BlogId == blogId && t.LanguageId == languageId, cancellationToken);
     }
 
+    public async Task<IReadOnlyList<BlogTranslation>> GetTranslationsAsync(
+        Guid blogId,
+        CancellationToken cancellationToken = default)
+    {
+        return await context.BlogTranslations
+            .AsNoTracking()
+            .Where(t => t.BlogId == blogId)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    public async Task<BlogTranslation?> GetTranslationAsync(
+        Guid blogId,
+        Guid languageId,
+        bool asNoTracking = true,
+        CancellationToken cancellationToken = default)
+    {
+        var query = context.BlogTranslations.AsQueryable();
+        if (asNoTracking)
+            query = query.AsNoTracking();
+
+        return await query
+            .FirstOrDefaultAsync(
+                t => t.BlogId == blogId && t.LanguageId == languageId, cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    public async Task AddTranslationAsync(
+        BlogTranslation translation,
+        CancellationToken cancellationToken = default)
+    {
+        await context.BlogTranslations.AddAsync(translation, cancellationToken).ConfigureAwait(false);
+    }
+
     private static IQueryable<Blog> ApplyDeletedSort(
         IQueryable<Blog> query,
         string sortBy,

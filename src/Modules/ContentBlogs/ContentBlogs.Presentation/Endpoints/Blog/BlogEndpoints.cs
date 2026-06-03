@@ -16,8 +16,12 @@ using ContentBlogs.Application.Commands.Blog.UnfeatureBlog;
 using ContentBlogs.Application.Commands.Blog.UnlinkBlogFromTour;
 using ContentBlogs.Application.Commands.Blog.UnpublishBlog;
 using ContentBlogs.Application.Commands.Blog.UpdateBlog;
+using ContentBlogs.Application.Commands.Blog.UpsertBlogTranslation;
 using ContentBlogs.Application.Interfaces;
 using ContentBlogs.Application.Queries.Blog.Dtos;
+using ContentBlogs.Application.Queries.BlogTranslation.Dtos;
+using ContentBlogs.Application.Queries.BlogTranslation.GetBlogTranslations;
+using ContentBlogs.Application.Queries.BlogTranslation.GetBlogTranslationByLanguage;
 using ContentBlogs.Application.Queries.Blog.GetAdminBlogById;
 using ContentBlogs.Application.Queries.Blog.GetAdminBlogQueue;
 using ContentBlogs.Application.Queries.Blog.GetBlogById;
@@ -130,6 +134,65 @@ internal static class BlogEndpoints
         .ProducesProblem(StatusCodes.Status403Forbidden)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithMetadata(new MustHavePermissionAttribute(ContentBlogsFeatures.Blog, AppAction.Read));
+
+        // ── Blog translations (admin) ────────────────────────────────────────
+        group.MapGet("/admin/{id:guid}/translations", async (
+            Guid id,
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            var result = await sender.Send(new GetBlogTranslationsQuery(id), ct);
+            return result.ToApiResult();
+        })
+        .WithName("GetBlogTranslations")
+        .WithSummary("Admin — list translations for a blog")
+        .Produces<IReadOnlyList<BlogTranslationAdminDto>>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .WithMetadata(new MustHavePermissionAttribute(ContentBlogsFeatures.Blog, AppAction.Update));
+
+        group.MapGet("/admin/{id:guid}/translations/{languageCode}", async (
+            Guid id,
+            string languageCode,
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            var result = await sender.Send(new GetBlogTranslationByLanguageQuery(id, languageCode), ct);
+            return result.ToApiResult();
+        })
+        .WithName("GetBlogTranslationByLanguage")
+        .WithSummary("Admin — get a blog translation by language code")
+        .Produces<BlogTranslationAdminDto>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .WithMetadata(new MustHavePermissionAttribute(ContentBlogsFeatures.Blog, AppAction.Update));
+
+        group.MapPut("/admin/{id:guid}/translations/{languageCode}", async (
+            Guid id,
+            string languageCode,
+            UpsertBlogTranslationRequest request,
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            var result = await sender.Send(
+                new UpsertBlogTranslationCommand(
+                    BlogId:       id,
+                    LanguageCode: languageCode,
+                    Title:        request.Title,
+                    Content:      request.Content,
+                    Summary:      request.Summary), ct);
+            return result.ToApiResult();
+        })
+        .WithName("UpsertBlogTranslation")
+        .WithSummary("Admin — create or update a blog translation for a language")
+        .Produces(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .WithMetadata(new MustHavePermissionAttribute(ContentBlogsFeatures.Blog, AppAction.Update));
 
         group.MapGet("/admin/deleted", async (
             int? pageNumber,

@@ -1,4 +1,5 @@
 using YallaJo.Web.Areas.Public.ApiClients;
+using YallaJo.Web.Areas.Public.Helpers;
 using YallaJo.Web.Areas.Public.Models.Home;
 using YallaJo.Web.Infrastructure.Api.Contracts;
 using YallaJo.Web.Services;
@@ -154,20 +155,9 @@ public sealed class HomeFacade
         }
     }
 
-    private async Task<string?> ResolveCoverAsync(Guid tourId, CancellationToken ct)
-    {
-        try
-        {
-            var result = await _api.GetAttachmentsAsync(tourId, ct);
-            if (result is not { IsSuccess: true, Data: { Count: > 0 } images })
-                return null;
-
-            var primary = images.OrderBy(a => a.SortOrder).First();
-            return _assetResolver.Resolve(primary.ThumbnailUrl ?? primary.Url);
-        }
-        catch
-        {
-            return null;
-        }
-    }
+    // Featured/popular tour cards expose no public image field and the attachment
+    // endpoint is not anonymous-accessible, so cards use a deterministic theme
+    // placeholder (temporary public image API gap — see PublicImagePlaceholder).
+    private static Task<string?> ResolveCoverAsync(Guid tourId, CancellationToken ct)
+        => Task.FromResult<string?>(PublicImagePlaceholder.ResolveTourImage(tourId));
 }

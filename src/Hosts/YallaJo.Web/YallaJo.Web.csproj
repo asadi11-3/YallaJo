@@ -53,7 +53,6 @@
     <Folder Include="Areas\Admin\Modules\Security\Features\Roles\Validators\" />
     <Folder Include="Areas\Admin\Modules\Security\Features\Users\Validators\" />
     <Folder Include="Areas\Auth\Controller\" />
-    <Folder Include="Areas\Auth\Views\" />
     <Folder Include="Infrastructure\Api\Core\" />
     <Folder Include="Infrastructure\Api\Handlers\" />
     <Folder Include="Infrastructure\Authentication\Claims\" />

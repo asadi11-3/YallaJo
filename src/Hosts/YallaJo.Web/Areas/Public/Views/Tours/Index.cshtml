@@ -232,8 +232,14 @@
 <!-- ======================= Tour grid END -->
 
 @section Scripts {
+    @* Endpoint URL is surfaced as a data-* attribute (server-generated) instead of
+       being hardcoded as a literal inside the script below. *@
+    <span id="interactionConfig" hidden data-favorites-url="/api/v1/social/favorites"></span>
     <script>
         (function () {
+            var cfg = document.getElementById('interactionConfig');
+            var favoritesUrl = cfg ? cfg.dataset.favoritesUrl : '';
+
             // Enable Bootstrap tooltips (used by the disabled guest wishlist button).
             var tooltipTriggers = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
             tooltipTriggers.forEach(function (el) {
@@ -282,7 +288,7 @@
                     };
                     var headers = { 'Content-Type': 'application/json' };
                     if (tokenInput) headers['RequestVerificationToken'] = tokenInput.value;
-                    fetch('/api/v1/social/favorites', {
+                    fetch(favoritesUrl, {
                         method: 'POST',
                         headers: headers,
                         body: JSON.stringify(body)

@@ -28,9 +28,9 @@ var authBuilder = builder.Services
     .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
-        options.LoginPath        = "/auth/login";
-        options.LogoutPath       = "/auth/logout";
-        options.AccessDeniedPath = "/auth/login";
+        options.LoginPath        = "/auth/sign-in";
+        options.LogoutPath       = "/auth/sign-out";
+        options.AccessDeniedPath = "/auth/sign-in";
         options.ExpireTimeSpan   = TimeSpan.FromHours(8);
         options.SlidingExpiration = true;
         options.Cookie.HttpOnly   = true;
@@ -38,6 +38,22 @@ var authBuilder = builder.Services
         options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
         options.Cookie.Name       = "YallaJo.Web";
     });
+
+// ── Server-side ticket store (Phase 2) ───────────────────────────────────────
+// The full authentication ticket (incl. the JWT access token + refresh token) is
+// stored server-side in IMemoryCache; the browser cookie carries only a small
+// opaque session key. This keeps the admin cookie to a single chunk and well under
+// Kestrel's request-header limit. The store is attached to the MAIN application
+// cookie only, via IPostConfigureOptions, so external-auth/correlation cookies are
+// unaffected.
+// NOTE: IMemoryCache is single-instance; sessions are lost on app restart. For
+// multi-instance/load-balanced hosting, swap MemoryCacheTicketStore for an
+// IDistributedCache (e.g. Redis) implementation.
+builder.Services.AddMemoryCache();
+builder.Services.AddSingleton<YallaJo.Web.Infrastructure.Authentication.Ticket.MemoryCacheTicketStore>();
+builder.Services.AddSingleton<
+    Microsoft.Extensions.Options.IPostConfigureOptions<CookieAuthenticationOptions>,
+    YallaJo.Web.Infrastructure.Authentication.Ticket.ConfigureCookieTicketStore>();
 
 // External-provider infrastructure: intermediate cookie + Google/Facebook
 // handlers (registered only when configured) + signed-ticket builder.

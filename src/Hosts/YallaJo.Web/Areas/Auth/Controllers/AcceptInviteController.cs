@@ -39,7 +39,7 @@ public sealed class AcceptInviteController : Controller
 
         if (result.IsSuccess)
         {
-            TempData["SuccessMessage"] =
+            TempData["Success"] =
                 "Your account is active. Please sign in with your email and new password.";
             return RedirectToAction("SignIn", "Auth", new { area = "Auth" });
         }
@@ -51,7 +51,7 @@ public sealed class AcceptInviteController : Controller
 
         if (result.IsAlreadyCompleted)
         {
-            TempData["SuccessMessage"] = result.Error;
+            TempData["Success"] = result.Error;
             return RedirectToAction("SignIn", "Auth", new { area = "Auth" });
         }
 

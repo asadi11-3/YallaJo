@@ -41,6 +41,9 @@ public static class DependencyInjection
         services.AddScoped<IContentBlogsUnitOfWork, ContentBlogsUnitOfWork>();
         services.AddScoped<IContentBlogsInboxStore, ContentBlogsInboxStore>();
         services.AddScoped<IModuleDbInitializer, ContentBlogsDbInitializer>();
+        // DEV-ONLY: Admin Blog UI test data (per-slug idempotent; gated by the seeding
+        // pipeline's Development/Seeding:Enabled check). Runs after ContentBlogsDbInitializer.
+        services.AddScoped<IModuleDbInitializer, BlogTestDataDbInitializer>();
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
         services.AddScoped<IOutboxProcessor, OutboxProcessor<ContentBlogsDbContext>>();
         services.AddScoped<IOutboxCleaner, OutboxCleaner<ContentBlogsDbContext>>();

@@ -531,8 +531,17 @@
 }
 
 @section Scripts {
+    @* Endpoint URLs are surfaced as data-* attributes (server-generated) instead of
+       being hardcoded as literals inside the script below. *@
+    <span id="interactionConfig" hidden
+          data-favorites-url="/api/v1/social/favorites"
+          data-interactions-url="/api/v1/interactions"></span>
     <script>
         (function () {
+            var cfg = document.getElementById('interactionConfig');
+            var favoritesUrl = cfg ? cfg.dataset.favoritesUrl : '';
+            var interactionsUrl = cfg ? cfg.dataset.interactionsUrl : '';
+
             // Bootstrap tooltips (disabled guest wishlist buttons).
             var tooltipTriggers = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
             tooltipTriggers.forEach(function (el) {
@@ -550,7 +559,7 @@
                     var icon = btn.querySelector('i');
                     var headers = { 'Content-Type': 'application/json' };
                     if (tokenInput) headers['RequestVerificationToken'] = tokenInput.value;
-                    fetch('/api/v1/social/favorites', {
+                    fetch(favoritesUrl, {
                         method: 'POST',
                         headers: headers,
                         body: JSON.stringify({
@@ -570,7 +579,7 @@
             (function () {
                 var headers = { 'Content-Type': 'application/json' };
                 if (tokenInput) headers['RequestVerificationToken'] = tokenInput.value;
-                fetch('/api/v1/interactions', {
+                fetch(interactionsUrl, {
                     method: 'POST',
                     headers: headers,
                     body: JSON.stringify({ entityType: 'Tour', entityId: '@Model.Id', interactionType: 'View' })

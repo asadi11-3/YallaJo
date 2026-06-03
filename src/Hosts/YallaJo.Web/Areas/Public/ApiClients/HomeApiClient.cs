@@ -26,8 +26,4 @@ public sealed class HomeApiClient
 
     public Task<ApiResult<TourDetailResponse>> GetTourByIdAsync(Guid id, CancellationToken ct = default) =>
         _api.GetAsync<TourDetailResponse>($"/api/v1/tours/{id}", ct);
-
-    public Task<ApiResult<List<HomeAttachmentResponse>>> GetAttachmentsAsync(Guid tourId, CancellationToken ct = default) =>
-        _api.GetAsync<List<HomeAttachmentResponse>>(
-            $"/api/v1/content-core/attachments?entityType=Tour&entityId={tourId}", ct);
 }

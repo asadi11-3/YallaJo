@@ -1,0 +1,164 @@
+@using YallaJo.Web.Infrastructure.Authorization
+@using YallaJo.Web.Areas.Admin.Models.Blogs
+@model BlogListVm
+@{
+    ViewData["Title"] = "Blogs";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    string TabUrl(BlogAdminTab tab) => Url.Action("Index", "Blogs", new { area = "Admin", tab })!;
+    string PageUrl(int p) => Url.Action("Index", "Blogs",
+        new { area = "Admin", tab = Model.Tab, page = p, search = Model.Search, isFeatured = Model.IsFeatured })!;
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0">Blogs</h2>
+        <permission require="@WebPermission.Blog.Create">
+            <a asp-area="Admin" asp-controller="Blogs" asp-action="Create" class="btn btn-primary">New blog</a>
+        </permission>
+    </div>
+
+    @* Success/Error flash banners are rendered globally by the shared _Alerts partial (in _Layout). *@
+    @if (ViewBag.Error is string vbe) { <div class="alert alert-danger">@vbe</div> }
+
+    @* Admin tabs — each is backed by a different existing endpoint. *@
+    <ul class="nav nav-tabs mb-3">
+        <li class="nav-item">
+            <a class="nav-link @(Model.Tab == BlogAdminTab.Published ? "active" : "")" href="@TabUrl(BlogAdminTab.Published)">Published</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link @(Model.Tab == BlogAdminTab.Queue ? "active" : "")" href="@TabUrl(BlogAdminTab.Queue)">Review queue</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link @(Model.Tab == BlogAdminTab.Deleted ? "active" : "")" href="@TabUrl(BlogAdminTab.Deleted)">Deleted</a>
+        </li>
+    </ul>
+
+    @if (Model.Tab != BlogAdminTab.Queue)
+    {
+        <form asp-area="Admin" asp-controller="Blogs" asp-action="Index" method="get" class="row g-2 mb-3">
+            <input type="hidden" name="tab" value="@Model.Tab" />
+            <div class="col-sm-6">
+                <input type="search" name="search" value="@Model.Search" class="form-control" placeholder="Search title / slug…" />
+            </div>
+            <div class="col-sm-2 d-grid">
+                <button type="submit" class="btn btn-outline-secondary">Search</button>
+            </div>
+        </form>
+    }
+
+    @if (!Model.HasItems)
+    {
+        <div class="alert alert-info">No blogs found in this view.</div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Slug</th>
+                        <th>Status</th>
+                        <th class="text-end">Views</th>
+                        <th>@(Model.IsDeletedTab ? "Deleted" : "Published")</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var blog in Model.Items)
+                    {
+                        <tr>
+                            <td>
+                                @blog.Title
+                                @if (blog.IsFeatured) { <span class="badge text-bg-warning ms-1">Featured</span> }
+                            </td>
+                            <td><code>@blog.Slug</code></td>
+                            <td><span class="badge text-bg-secondary">@blog.StatusLabel</span></td>
+                            <td class="text-end">@blog.ViewCount</td>
+                            <td>
+                                @if (Model.IsDeletedTab)
+                                {
+                                    @(blog.DeletedAt?.ToString("yyyy-MM-dd") ?? "—")
+                                }
+                                else
+                                {
+                                    @(blog.PublishedAt?.ToString("yyyy-MM-dd") ?? "—")
+                                }
+                            </td>
+                            <td class="text-end">
+                                @if (Model.IsDeletedTab)
+                                {
+                                    <permission require="@WebPermission.Blog.DeleteOwn">
+                                        <form asp-area="Admin" asp-controller="Blogs" asp-action="Restore"
+                                              asp-route-id="@blog.Id" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-sm btn-outline-success">Restore</button>
+                                        </form>
+                                    </permission>
+                                }
+                                else if (Model.Tab == BlogAdminTab.Queue)
+                                {
+                                    @* Moderation queue — Approve / Reject (Reject needs an inline reason). *@
+                                    <div class="d-flex justify-content-end align-items-start gap-2">
+                                        <permission require="@WebPermission.Blog.Approve">
+                                            <form asp-area="Admin" asp-controller="Blogs" asp-action="Approve"
+                                                  asp-route-id="@blog.Id" method="post" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="btn btn-sm btn-outline-success">Approve</button>
+                                            </form>
+                                        </permission>
+                                        <permission require="@WebPermission.Blog.Reject">
+                                            <form asp-area="Admin" asp-controller="Blogs" asp-action="Reject"
+                                                  asp-route-id="@blog.Id" method="post" class="d-flex gap-1">
+                                                @Html.AntiForgeryToken()
+                                                <input type="text" name="reason" class="form-control form-control-sm"
+                                                       placeholder="Rejection reason" required style="max-width: 200px;" />
+                                                <button type="submit" class="btn btn-sm btn-outline-danger">Reject</button>
+                                            </form>
+                                        </permission>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <permission require="@WebPermission.Blog.Update">
+                                        <a asp-area="Admin" asp-controller="Blogs" asp-action="Edit"
+                                           asp-route-id="@blog.Id" class="btn btn-sm btn-outline-primary">Edit</a>
+                                    </permission>
+                                    <permission require="@WebPermission.Blog.DeleteOwn">
+                                        <form asp-area="Admin" asp-controller="Blogs" asp-action="Delete"
+                                              asp-route-id="@blog.Id" method="post" class="d-inline"
+                                              onsubmit="return confirm('Delete this blog?');">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                                        </form>
+                                    </permission>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @if (Model.TotalPages > 1)
+        {
+            <nav aria-label="Blog pagination">
+                <ul class="pagination justify-content-center mb-0">
+                    <li class="page-item @(Model.HasPreviousPage ? "" : "disabled")">
+                        <a class="page-link" href="@PageUrl(Model.PageNumber - 1)">Previous</a>
+                    </li>
+                    <li class="page-item active"><span class="page-link">Page @Model.PageNumber of @Model.TotalPages</span></li>
+                    <li class="page-item @(Model.HasNextPage ? "" : "disabled")">
+                        <a class="page-link" href="@PageUrl(Model.PageNumber + 1)">Next</a>
+                    </li>
+                </ul>
+            </nav>
+        }
+    }
+
+    <p class="text-muted small mt-3 mb-0">
+        Note: the Published tab lists published blogs only (no admin "list-all" endpoint exists yet).
+        Draft / Rejected / Hidden blogs are reachable by direct edit link. Blog images are managed in a separate phase.
+    </p>
+</div>

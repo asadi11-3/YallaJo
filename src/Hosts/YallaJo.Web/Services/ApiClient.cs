@@ -148,6 +148,16 @@ public sealed class ApiClient : IApiClient
     public Task<ApiResult> DeleteAsync(string path, CancellationToken ct = default) =>
         SendNoBodyAsync(path, () => _http.DeleteAsync(path, ct), ct);
 
+    public Task<ApiResult> DeleteAsync(string path, object? body, CancellationToken ct = default) =>
+        SendNoBodyAsync(path, async () =>
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Delete, path)
+            {
+                Content = ToJson(body),
+            };
+            return await _http.SendAsync(request, ct);
+        }, ct);
+
     private async Task<ApiResult<T>> SendWithBodyAsync<T>(
         string path,
         Func<Task<HttpResponseMessage>> send,

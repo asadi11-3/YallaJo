@@ -60,7 +60,7 @@
                                     <!-- Resend -->
                                     <div class="d-sm-flex justify-content-between align-items-center small mb-4">
                                         <span>Don't get a code?</span>
-                                        <button type="button" id="resendBtn" class="btn btn-sm btn-link p-0 text-decoration-underline mb-0">Click to resend</button>
+                                        <button type="button" id="resendBtn" class="btn btn-sm btn-link p-0 text-decoration-underline mb-0" data-resend-url="@Url.Action("ResendOtp", "Auth", new { area = "Auth" })">Click to resend</button>
                                     </div>
                                     <div id="resendMsg" class="small mb-3"></div>
 
@@ -125,7 +125,7 @@
                 msg.className = 'small mb-3';
 
                 getToken().then(function (token) {
-                    return fetch('/auth/resend-otp', {
+                    return fetch(btn.dataset.resendUrl, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',

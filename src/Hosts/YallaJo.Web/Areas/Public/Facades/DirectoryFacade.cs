@@ -1,4 +1,5 @@
 using YallaJo.Web.Areas.Public.ApiClients;
+using YallaJo.Web.Areas.Public.Helpers;
 using YallaJo.Web.Areas.Public.Models.Directory;
 using YallaJo.Web.Infrastructure.Api.Contracts;
 using YallaJo.Web.Services;
@@ -51,7 +52,7 @@ public sealed class DirectoryFacade
             return ApiResult<DirectoryVm>.Fail(result.StatusCode, result.Error ?? "Could not load the directory.");
 
         var data = result.Data;
-        var cards = await Task.WhenAll(data.Items.Select(b => BuildCardAsync(b, ct)));
+        var cards = data.Items.Select(BuildCard).ToList();
 
         var vm = new DirectoryVm
         {
@@ -78,13 +79,17 @@ public sealed class DirectoryFacade
 
         var d = detailResult.Data;
 
-        var imagesTask = BuildImageUrlsAsync(id, ct);
         var hoursTask = SafeListAsync(() => _api.GetHoursAsync(id, ct));
         var amenitiesTask = SafeListAsync(() => _api.GetAmenitiesAsync(id, ct));
         var servicesTask = SafeListAsync(() => _api.GetServicesAsync(id, ct));
         var accessibilityTask = SafeListAsync(() => _api.GetAccessibilityAsync(id, ct));
 
-        await Task.WhenAll(imagesTask, hoursTask, amenitiesTask, servicesTask, accessibilityTask);
+        await Task.WhenAll(hoursTask, amenitiesTask, servicesTask, accessibilityTask);
+
+        // Business detail exposes no public gallery field and the attachment endpoint
+        // is not anonymous-accessible, so use a single deterministic placeholder
+        // (temporary public image API gap — see PublicImagePlaceholder).
+        var imageUrls = new List<string> { PublicImagePlaceholder.ResolveBusinessImage(id) };
 
         // Prefer dedicated hours endpoint, fall back to the embedded list.
         var hours = hoursTask.Result.Count > 0 ? hoursTask.Result : d.BusinessHours;
@@ -108,7 +113,7 @@ public sealed class DirectoryFacade
             ReviewCount = d.ReviewCount,
             IsVerified = d.IsVerified,
             IsFeatured = d.IsFeatured,
-            ImageUrls = imagesTask.Result,
+            ImageUrls = imageUrls,
             Hours = hours.Select(h => new BusinessHoursVm
             {
                 DayOfWeek = h.DayOfWeek,
@@ -142,29 +147,6 @@ public sealed class DirectoryFacade
         return ApiResult<BusinessDetailVm>.Ok(vm);
     }
 
-    private async Task<List<string>> BuildImageUrlsAsync(Guid businessId, CancellationToken ct)
-    {
-        try
-        {
-            var attach = await _api.GetAttachmentsAsync(businessId, ct);
-            if (attach is { IsSuccess: true, Data: { Count: > 0 } images })
-            {
-                return images
-                    .OrderBy(a => a.SortOrder)
-                    .Select(a => _assetResolver.Resolve(a.ThumbnailUrl ?? a.Url))
-                    .Where(u => !string.IsNullOrWhiteSpace(u))
-                    .Select(u => u!)
-                    .ToList();
-            }
-        }
-        catch
-        {
-            // tolerate hydration failure
-        }
-
-        return [];
-    }
-
     private static async Task<List<T>> SafeListAsync<T>(Func<Task<ApiResult<List<T>>>> call)
     {
         try
@@ -181,29 +163,14 @@ public sealed class DirectoryFacade
         return [];
     }
 
-    private async Task<BusinessCardVm> BuildCardAsync(BusinessSummaryResponse b, CancellationToken ct)
+    private BusinessCardVm BuildCard(BusinessSummaryResponse b)
     {
-        string? imageUrl = null;
-        if (!string.IsNullOrWhiteSpace(b.PrimaryImageUrl))
-        {
-            imageUrl = _assetResolver.Resolve(b.PrimaryImageUrl);
-        }
-        else
-        {
-            try
-            {
-                var attach = await _api.GetAttachmentsAsync(b.Id, ct);
-                if (attach is { IsSuccess: true, Data: { Count: > 0 } images })
-                {
-                    var primary = images.OrderBy(a => a.SortOrder).First();
-                    imageUrl = _assetResolver.Resolve(primary.ThumbnailUrl ?? primary.Url);
-                }
-            }
-            catch
-            {
-                imageUrl = null;
-            }
-        }
+        // Prefer the real public image field; otherwise fall back to a deterministic
+        // theme placeholder. Anonymous pages must NOT call the protected attachment
+        // endpoint (temporary public image API gap — see PublicImagePlaceholder).
+        var imageUrl = !string.IsNullOrWhiteSpace(b.PrimaryImageUrl)
+            ? _assetResolver.Resolve(b.PrimaryImageUrl)
+            : PublicImagePlaceholder.ResolveBusinessImage(b.Id);
 
         return new BusinessCardVm
         {

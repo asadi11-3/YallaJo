@@ -45,4 +45,11 @@ public interface IApiClient
         CancellationToken ct = default);
 
     Task<ApiResult> DeleteAsync(string path, CancellationToken ct = default);
+
+    /// <summary>
+    /// DELETE with a JSON request body. Required by endpoints that take a body on
+    /// delete (e.g. Blog delete/unlink, which carry an optimistic-concurrency
+    /// <c>RowVersion</c> in <c>BlogRowVersionRequest</c>).
+    /// </summary>
+    Task<ApiResult> DeleteAsync(string path, object? body, CancellationToken ct = default);
 }
