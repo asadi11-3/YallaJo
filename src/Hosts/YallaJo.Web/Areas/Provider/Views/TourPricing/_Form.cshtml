@@ -1,0 +1,65 @@
+@model YallaJo.Web.Areas.Provider.Models.TourPricing.TourPricingFormVm
+
+<div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+<div class="row g-3">
+    <div class="col-md-8">
+        <label asp-for="Name" class="form-label"></label>
+        <input asp-for="Name" class="form-control" placeholder="e.g. Adult" />
+        <span asp-validation-for="Name" class="text-danger small"></span>
+    </div>
+
+    <div class="col-md-4">
+        <label asp-for="ParticipantType" class="form-label"></label>
+        <select asp-for="ParticipantType" class="form-select">
+            @foreach (var pt in Model.ParticipantTypeOptions)
+            {
+                <option value="@pt">@pt</option>
+            }
+        </select>
+        <span asp-validation-for="ParticipantType" class="text-danger small"></span>
+    </div>
+
+    <div class="col-md-4">
+        <label asp-for="Price" class="form-label"></label>
+        <input asp-for="Price" type="number" step="0.01" min="0" class="form-control" />
+        <span asp-validation-for="Price" class="text-danger small"></span>
+    </div>
+
+    <div class="col-md-4">
+        <label asp-for="Currency" class="form-label"></label>
+        @* Locked to the tour currency (backend requires a match). A readonly input still
+           posts its value, so no separate hidden field is needed. *@
+        <input asp-for="Currency" class="form-control" readonly />
+        <div class="form-text">Matches the listing currency.</div>
+    </div>
+
+    <div class="col-md-2">
+        <label asp-for="MinParticipants" class="form-label"></label>
+        <input asp-for="MinParticipants" type="number" min="1" class="form-control" />
+        <span asp-validation-for="MinParticipants" class="text-danger small"></span>
+    </div>
+
+    <div class="col-md-2">
+        <label asp-for="MaxParticipants" class="form-label"></label>
+        <input asp-for="MaxParticipants" type="number" min="1" class="form-control" />
+        <span asp-validation-for="MaxParticipants" class="text-danger small"></span>
+    </div>
+
+    <div class="col-md-12">
+        <label asp-for="Description" class="form-label"></label>
+        <textarea asp-for="Description" class="form-control" rows="2"></textarea>
+        <span asp-validation-for="Description" class="text-danger small"></span>
+    </div>
+
+    @if (Model.IsEdit)
+    {
+        <div class="col-md-12">
+            <div class="form-check">
+                <input asp-for="IsActive" class="form-check-input" />
+                <label asp-for="IsActive" class="form-check-label"></label>
+            </div>
+            <div class="form-text">A listing must keep at least one active Adult tier to be submitted.</div>
+        </div>
+    }
+</div>

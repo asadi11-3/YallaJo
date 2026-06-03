@@ -89,6 +89,8 @@ public sealed class SuspendTourCommandHandler(
                 .ConfigureAwait(false);
             await cache.RemoveByTagAsync(ContentToursCacheKeys.TagToursSearch, cancellationToken)
                 .ConfigureAwait(false);
+            await cache.RemoveByTagAsync(ContentToursCacheKeys.TagForMyTours(tour.CreatedByUserId), cancellationToken)
+                .ConfigureAwait(false);
             if (wasFeatured)
             {
                 await cache.RemoveByTagAsync(ContentToursCacheKeys.TagToursFeatured, cancellationToken)

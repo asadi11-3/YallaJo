@@ -1,0 +1,74 @@
+@using YallaJo.Web.Areas.Provider.Models
+@model ProviderApplyVm
+@{
+    ViewData["Title"] = "Become a provider";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-4">
+    <a asp-area="Provider" asp-controller="Provider" asp-action="Status"
+       class="btn btn-sm btn-outline-secondary mb-3">← My application</a>
+
+    <h2 class="mb-1">Become a provider</h2>
+    <p class="text-muted mb-3">Tell us about your business. You can submit your application for review on the next step.</p>
+
+    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+    <form asp-area="Provider" asp-controller="Provider" asp-action="Apply" method="post" class="row g-3">
+        @Html.AntiForgeryToken()
+
+        <div class="col-md-6">
+            <label asp-for="Type" class="form-label"></label>
+            <select asp-for="Type" class="form-select">
+                <option value="">— choose —</option>
+                @foreach (var opt in Model.TypeOptions)
+                {
+                    <option value="@opt.Value">@opt.Label</option>
+                }
+            </select>
+            <span asp-validation-for="Type" class="text-danger"></span>
+        </div>
+
+        <div class="col-md-6">
+            <label asp-for="BusinessName" class="form-label"></label>
+            <input asp-for="BusinessName" class="form-control" />
+            <span asp-validation-for="BusinessName" class="text-danger"></span>
+        </div>
+
+        <div class="col-md-6">
+            <label asp-for="ContactEmail" class="form-label"></label>
+            <input asp-for="ContactEmail" class="form-control" />
+            <span asp-validation-for="ContactEmail" class="text-danger"></span>
+        </div>
+
+        <div class="col-md-6">
+            <label asp-for="ContactPhone" class="form-label"></label>
+            <input asp-for="ContactPhone" class="form-control" />
+            <span asp-validation-for="ContactPhone" class="text-danger"></span>
+        </div>
+
+        <div class="col-12">
+            <label asp-for="Address" class="form-label"></label>
+            <input asp-for="Address" class="form-control" />
+            <span asp-validation-for="Address" class="text-danger"></span>
+        </div>
+
+        <div class="col-12">
+            <label asp-for="Description" class="form-label"></label>
+            <textarea asp-for="Description" class="form-control" rows="4"></textarea>
+            <span asp-validation-for="Description" class="text-danger"></span>
+        </div>
+
+        <div class="col-12">
+            <button type="submit" class="btn btn-primary">Start application</button>
+            <a asp-area="Provider" asp-controller="Provider" asp-action="Status"
+               class="btn btn-outline-secondary">Cancel</a>
+        </div>
+    </form>
+
+    <p class="text-muted small mt-3">Document upload will be available in a later update.</p>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

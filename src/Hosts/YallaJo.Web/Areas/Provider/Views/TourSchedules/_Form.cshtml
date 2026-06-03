@@ -1,0 +1,40 @@
+@model YallaJo.Web.Areas.Provider.Models.TourSchedules.TourScheduleFormVm
+
+<div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+<div class="row g-3">
+    <div class="col-md-4">
+        <label asp-for="DayOfWeek" class="form-label"></label>
+        <select asp-for="DayOfWeek" class="form-select">
+            @foreach (var (value, label) in YallaJo.Web.Areas.Provider.Models.TourSchedules.TourScheduleFormVm.DayOptions)
+            {
+                <option value="@value">@label</option>
+            }
+        </select>
+        <span asp-validation-for="DayOfWeek" class="text-danger small"></span>
+    </div>
+
+    <div class="col-md-4">
+        <label asp-for="StartTime" class="form-label"></label>
+        <input asp-for="StartTime" type="time" class="form-control" />
+        <span asp-validation-for="StartTime" class="text-danger small"></span>
+    </div>
+
+    <div class="col-md-4">
+        <label asp-for="EndTime" class="form-label"></label>
+        <input asp-for="EndTime" type="time" class="form-control" />
+        <span asp-validation-for="EndTime" class="text-danger small"></span>
+        <div class="form-text">Optional. If set, must be after the start time.</div>
+    </div>
+
+    @if (Model.IsEdit)
+    {
+        <div class="col-md-12">
+            <div class="form-check">
+                <input asp-for="IsActive" class="form-check-input" />
+                <label asp-for="IsActive" class="form-check-label"></label>
+            </div>
+            <div class="form-text">A listing must keep at least one active schedule to be submitted.</div>
+        </div>
+    }
+</div>

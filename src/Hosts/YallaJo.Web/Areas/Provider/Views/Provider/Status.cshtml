@@ -1,0 +1,183 @@
+@using YallaJo.Web.Areas.Provider.Models
+@using YallaJo.Web.Infrastructure.Authorization
+@model ProviderStatusVm
+@{
+    ViewData["Title"] = "My provider application";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-4">
+    <h2 class="mb-3">My provider application</h2>
+
+    @* Success/Error flash banners are rendered globally by the shared _Alerts partial. *@
+
+    @if (!Model.HasApplication)
+    {
+        <div class="card">
+            <div class="card-body text-center">
+                <p class="mb-3">You haven't applied to become a provider yet.</p>
+                <a asp-area="Provider" asp-controller="Provider" asp-action="Apply"
+                   class="btn btn-primary">Become a provider</a>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="card mb-3">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div>
+                        <h5 class="mb-1">@Model.BusinessName</h5>
+                        <span class="text-muted">@Model.TypeLabel</span>
+                    </div>
+                    <span class="badge text-bg-secondary">@Model.Status</span>
+                </div>
+
+                @if (string.Equals(Model.Status, "Approved", StringComparison.OrdinalIgnoreCase))
+                {
+                    <div class="mb-3">
+                        <a asp-area="Provider" asp-controller="Dashboard" asp-action="Index"
+                           class="btn btn-primary btn-sm">Go to Provider Dashboard</a>
+                    </div>
+                }
+
+                <ul class="list-group list-group-flush small">
+                    <li class="list-group-item d-flex justify-content-between px-0">
+                        <span>Submitted</span><strong>@(Model.SubmittedAt?.ToString("yyyy-MM-dd") ?? "—")</strong>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between px-0">
+                        <span>Reviewed</span><strong>@(Model.ReviewedAt?.ToString("yyyy-MM-dd") ?? "—")</strong>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between px-0">
+                        <span>Reapplications</span><strong>@Model.ReapplicationCount</strong>
+                    </li>
+                </ul>
+
+                @if (!string.IsNullOrWhiteSpace(Model.RejectionReason))
+                {
+                    <div class="alert alert-danger mt-3 mb-0">
+                        <strong>Rejection reason:</strong> @Model.RejectionReason
+                    </div>
+                }
+                @if (!string.IsNullOrWhiteSpace(Model.SuspensionReason))
+                {
+                    <div class="alert alert-warning mt-3 mb-0">
+                        <strong>Suspension reason:</strong> @Model.SuspensionReason
+                    </div>
+                }
+                @if (Model.CoolingPeriodEndsAt.HasValue)
+                {
+                    <div class="alert alert-info mt-3 mb-0">
+                        You may reapply after @Model.CoolingPeriodEndsAt.Value.ToString("yyyy-MM-dd").
+                    </div>
+                }
+
+                @* Reapply is offered only for a Rejected application once the cooling
+                   period has passed and the reapplication limit has not been reached. *@
+                @if (Model.CanReapply)
+                {
+                    <permission require="@WebPermission.ProviderApplication.Update">
+                        <form asp-area="Provider" asp-controller="Provider" asp-action="Reapply"
+                              method="post" class="mt-3">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-primary">Reapply</button>
+                            <div class="form-text">
+                                Reapplying reopens your application as a draft so you can update it and submit again
+                                (@Model.ReapplyAttemptsRemaining of @Model.ReapplyMaxAttempts attempts remaining).
+                            </div>
+                        </form>
+                    </permission>
+                }
+                else if (Model.HasApplication
+                         && string.Equals(Model.Status, "Rejected", StringComparison.OrdinalIgnoreCase)
+                         && Model.ReapplyLimitReached)
+                {
+                    <div class="alert alert-secondary mt-3 mb-0">
+                        You have reached the maximum number of reapplications (@Model.ReapplyMaxAttempts).
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header"><strong>Documents</strong></div>
+            <div class="card-body">
+                @if (!Model.HasDocuments)
+                {
+                    <p class="small text-muted mb-0">No documents attached yet.</p>
+                }
+                else
+                {
+                    <ul class="list-group list-group-flush small mb-0">
+                        @foreach (var doc in Model.Documents)
+                        {
+                            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                <span>
+                                    <i class="bi bi-file-earmark-text me-1"></i>
+                                    <strong>@doc.DocumentTypeLabel</strong> — @doc.FileName
+                                </span>
+                                <span class="text-muted">
+                                    @(doc.ExpiresAt.HasValue ? $"expires {doc.ExpiresAt.Value:yyyy-MM-dd}" : "")
+                                </span>
+                            </li>
+                        }
+                    </ul>
+                }
+
+                @if (Model.CanUploadDocuments)
+                {
+                    <permission require="@WebPermission.ProviderApplication.Create">
+                        <hr />
+                        <h6 class="mb-2">Upload a document</h6>
+                        <p class="small text-muted mb-2">
+                            Accepted formats: PDF, JPG or PNG, up to 10&nbsp;MB. Upload all required
+                            documents for your provider type, then submit your application for review.
+                        </p>
+                        @* Inputs post to the top-level ProviderDocumentUploadVm bound by the
+                           UploadDocument action, so plain name attributes are used here. *@
+                        <form asp-area="Provider" asp-controller="Provider" asp-action="UploadDocument"
+                              method="post" enctype="multipart/form-data" class="row g-2 align-items-end">
+                            @Html.AntiForgeryToken()
+
+                            <div class="col-md-4">
+                                <label for="DocumentType" class="form-label">Document type</label>
+                                <select id="DocumentType" name="DocumentType" class="form-select">
+                                    <option value="">— choose —</option>
+                                    @foreach (var opt in Model.UploadForm.DocumentTypeOptions)
+                                    {
+                                        <option value="@opt.Value">@opt.Label</option>
+                                    }
+                                </select>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label for="File" class="form-label">File</label>
+                                <input id="File" name="File" type="file" class="form-control"
+                                       accept="@ProviderDocumentUploadVm.AcceptAttribute" />
+                            </div>
+
+                            <div class="col-md-2">
+                                <label for="ExpiresAt" class="form-label">Expires at</label>
+                                <input id="ExpiresAt" name="ExpiresAt" type="date" class="form-control" />
+                            </div>
+
+                            <div class="col-md-2 d-grid">
+                                <button type="submit" class="btn btn-outline-primary">Upload</button>
+                            </div>
+                        </form>
+                    </permission>
+                }
+            </div>
+        </div>
+
+        @if (Model.CanSubmit)
+        {
+            <permission require="@WebPermission.ProviderApplication.Submit">
+                <form asp-area="Provider" asp-controller="Provider" asp-action="Submit" method="post">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-success">Submit for review</button>
+                </form>
+            </permission>
+        }
+    }
+</div>

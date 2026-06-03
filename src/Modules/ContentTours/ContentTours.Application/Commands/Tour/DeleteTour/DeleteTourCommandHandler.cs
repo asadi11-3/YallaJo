@@ -101,6 +101,8 @@ public sealed class DeleteTourCommandHandler(
                 .ConfigureAwait(false);
             await cache.RemoveByTagAsync(ContentToursCacheKeys.TagToursSearch, cancellationToken)
                 .ConfigureAwait(false);
+            await cache.RemoveByTagAsync(ContentToursCacheKeys.TagForMyTours(capturedCreatedBy), cancellationToken)
+                .ConfigureAwait(false);
             if (tour.IsFeatured)
             {
                 await cache.RemoveByTagAsync(ContentToursCacheKeys.TagToursFeatured, cancellationToken)

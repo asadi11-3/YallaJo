@@ -151,6 +151,8 @@ public sealed class CreateTourCommandHandler(
                 .ConfigureAwait(false);
             await cache.RemoveByTagAsync(ContentToursCacheKeys.TagToursSearch, cancellationToken)
                 .ConfigureAwait(false);
+            await cache.RemoveByTagAsync(ContentToursCacheKeys.TagForMyTours(userId), cancellationToken)
+                .ConfigureAwait(false);
 
             logger.LogInformation(
                 "Tour created: {TourId} (Slug={Slug}, CreatedBy={UserId})",

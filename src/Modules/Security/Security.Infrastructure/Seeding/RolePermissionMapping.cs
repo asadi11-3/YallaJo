@@ -91,6 +91,8 @@ public sealed class RolePermissionMapping
             // and /register requires AccountsFeatures.ProviderApplication+AppAction.Register
             "Permission.ProviderApplication.Submit",
             "Permission.ProviderApplication.Register",
+            "Permission.ProviderApplication.Create",
+            "Permission.ProviderApplication.Update",
 
             // F53 2026-05-30: User couldn't soft-delete own profile via DELETE /accounts/profile → 403 (GDPR)
             "Permission.Profile.Delete",
@@ -139,6 +141,9 @@ public sealed class RolePermissionMapping
             // Tour.Delete was renamed to Tour.DeleteAny (admin-only); providers
             // get the owner-scoped variant. Handler enforces ownership.
             "Permission.Tour.DeleteOwn",
+            "Permission.Tour.ReadOwn",
+            "Permission.Tour.Submit",
+            "Permission.Tour.Archive",
             "Permission.AvailabilitySlot.Create",
             "Permission.AvailabilitySlot.Read",
             "Permission.AvailabilitySlot.Update",

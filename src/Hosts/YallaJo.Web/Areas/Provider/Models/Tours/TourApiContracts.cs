@@ -32,28 +32,6 @@ public sealed class CreateTourResultResponse
     public string Slug { get; init; } = string.Empty;
 }
 
-// ---- Tour header (read) ----
-public sealed class TourDetailResponse
-{
-    public Guid Id { get; init; }
-    public string Name { get; init; } = string.Empty;
-    public string Slug { get; init; } = string.Empty;
-    public string? Description { get; init; }
-    public string? ShortDescription { get; init; }
-    public string? Difficulty { get; init; }
-    public int DurationMinutes { get; init; }
-    public int MaxGroupSize { get; init; }
-    public decimal BasePrice { get; init; }
-    public string Currency { get; init; } = string.Empty;
-    public string? Status { get; init; }
-    public decimal AverageRating { get; init; }
-    public int ReviewCount { get; init; }
-    public int BookingCount { get; init; }
-    public bool IsChildFriendly { get; init; }
-    public bool IsAccessible { get; init; }
-    public bool IsInstantBooking { get; init; }
-}
-
 // ---- Schedules ----
 public sealed record CreateTourScheduleRequest(
     string Pattern,

@@ -88,6 +88,8 @@ public sealed class RejectTourCommandHandler(
                 .ConfigureAwait(false);
             await cache.RemoveByTagAsync(ContentToursCacheKeys.TagToursList, cancellationToken)
                 .ConfigureAwait(false);
+            await cache.RemoveByTagAsync(ContentToursCacheKeys.TagForMyTours(tour.CreatedByUserId), cancellationToken)
+                .ConfigureAwait(false);
 
             logger.LogInformation(
                 "Tour rejected: {TourId} (CreatedBy={CreatedByUserId}, By={UserId})",

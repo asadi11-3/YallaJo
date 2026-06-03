@@ -1,0 +1,187 @@
+@using YallaJo.Web.Infrastructure.Authorization
+@using YallaJo.Web.Areas.Admin.Models.Providers
+@model ProviderQueueVm
+@{
+    ViewData["Title"] = "Provider applications";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    string PageUrl(int p) => Url.Action("Index", "Providers",
+        new { area = "Admin", status = Model.Status, type = Model.Type, page = p })!;
+}
+
+<div class="container mt-4">
+    <h2 class="mb-3">Provider applications</h2>
+
+    @* Success/Error flash banners are rendered globally by the shared _Alerts partial (in _Layout). *@
+
+    @* Filters — status + provider type. *@
+    <form asp-area="Admin" asp-controller="Providers" asp-action="Index" method="get" class="row g-2 mb-3">
+        <div class="col-sm-4">
+            <select name="status" class="form-select" aria-label="Filter by status">
+                <option value="">All statuses</option>
+                @foreach (var opt in Model.StatusOptions)
+                {
+                    <option value="@opt.Value" selected="@(string.Equals(opt.Value, Model.Status, StringComparison.OrdinalIgnoreCase))">@opt.Label</option>
+                }
+            </select>
+        </div>
+        <div class="col-sm-4">
+            <select name="type" class="form-select" aria-label="Filter by provider type">
+                <option value="">All types</option>
+                @foreach (var opt in Model.TypeOptions)
+                {
+                    <option value="@opt.Value" selected="@(string.Equals(opt.Value, Model.Type, StringComparison.OrdinalIgnoreCase))">@opt.Label</option>
+                }
+            </select>
+        </div>
+        <div class="col-sm-2 d-grid">
+            <button type="submit" class="btn btn-outline-secondary">Filter</button>
+        </div>
+        <div class="col-sm-2 d-grid">
+            <a asp-area="Admin" asp-controller="Providers" asp-action="Index" class="btn btn-outline-light border">Reset</a>
+        </div>
+    </form>
+
+    @if (!Model.HasItems)
+    {
+        <div class="alert alert-info">No provider applications found for this view.</div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Business</th>
+                        <th>Type</th>
+                        <th>Contact</th>
+                        <th>Status</th>
+                        <th class="text-end">Docs</th>
+                        <th>Submitted</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var row in Model.Items)
+                    {
+                        <tr>
+                            <td>
+                                <a asp-area="Admin" asp-controller="Providers" asp-action="Details"
+                                   asp-route-id="@row.ApplicationId" class="fw-semibold text-decoration-none">@row.BusinessName</a>
+                                @if (row.ReapplicationCount > 0)
+                                {
+                                    <span class="badge text-bg-light ms-1" title="Reapplications">↻ @row.ReapplicationCount</span>
+                                }
+                            </td>
+                            <td>@row.TypeLabel</td>
+                            <td><span class="text-muted small">@row.ContactEmail</span></td>
+                            <td><span class="badge @row.StatusBadgeClass">@row.StatusLabel</span></td>
+                            <td class="text-end">@row.DocumentCount</td>
+                            <td>@(row.SubmittedAt?.ToString("yyyy-MM-dd") ?? "—")</td>
+                            <td class="text-end">
+                                <div class="d-flex flex-column align-items-end gap-2">
+                                    <a asp-area="Admin" asp-controller="Providers" asp-action="Details"
+                                       asp-route-id="@row.ApplicationId" class="btn btn-sm btn-outline-secondary">Details</a>
+                                @if (row.HasAnyAction)
+                                {
+                                    <div class="d-flex flex-column align-items-end gap-2">
+                                        @if (row.CanApprove)
+                                        {
+                                            <permission require="@WebPermission.AdminProviderQueue.Approve">
+                                                <form asp-area="Admin" asp-controller="Providers" asp-action="Approve"
+                                                      asp-route-id="@row.ApplicationId" method="post" class="d-inline">
+                                                    @Html.AntiForgeryToken()
+                                                    <button type="submit" class="btn btn-sm btn-outline-success">Approve</button>
+                                                </form>
+                                            </permission>
+                                        }
+
+                                        @if (row.CanReject)
+                                        {
+                                            <permission require="@WebPermission.AdminProviderQueue.Reject">
+                                                <form asp-area="Admin" asp-controller="Providers" asp-action="Reject"
+                                                      asp-route-id="@row.ApplicationId" method="post" class="d-flex gap-1">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="text" name="reason" class="form-control form-control-sm"
+                                                           placeholder="Rejection reason" required style="max-width: 200px;" />
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger">Reject</button>
+                                                </form>
+                                            </permission>
+                                        }
+
+                                        @if (row.CanRequestDocs)
+                                        {
+                                            <permission require="@WebPermission.AdminProviderQueue.RequestDocs">
+                                                <details>
+                                                    <summary class="btn btn-sm btn-outline-info">Request docs</summary>
+                                                    <form asp-area="Admin" asp-controller="Providers" asp-action="RequestDocuments"
+                                                          asp-route-id="@row.ApplicationId" method="post" class="text-start mt-2 p-2 border rounded">
+                                                        @Html.AntiForgeryToken()
+                                                        <label class="form-label small mb-1">Missing documents</label>
+                                                        <select name="missingDocumentTypes" class="form-select form-select-sm mb-2" multiple size="5" required>
+                                                            @foreach (var doc in Model.DocumentTypeOptions)
+                                                            {
+                                                                <option value="@doc.Value">@doc.Label</option>
+                                                            }
+                                                        </select>
+                                                        <textarea name="notes" class="form-control form-control-sm mb-2" rows="2"
+                                                                  placeholder="Notes for the provider" required></textarea>
+                                                        <button type="submit" class="btn btn-sm btn-info">Send request</button>
+                                                    </form>
+                                                </details>
+                                            </permission>
+                                        }
+
+                                        @if (row.CanSuspend)
+                                        {
+                                            <permission require="@WebPermission.AdminProviderQueue.Suspend">
+                                                <form asp-area="Admin" asp-controller="Providers" asp-action="Suspend"
+                                                      asp-route-id="@row.ApplicationId" method="post" class="d-flex gap-1">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="text" name="reason" class="form-control form-control-sm"
+                                                           placeholder="Suspension reason" required style="max-width: 200px;" />
+                                                    <button type="submit" class="btn btn-sm btn-outline-warning">Suspend</button>
+                                                </form>
+                                            </permission>
+                                        }
+
+                                        @if (row.CanReinstate)
+                                        {
+                                            <permission require="@WebPermission.AdminProviderQueue.Reinstate">
+                                                <form asp-area="Admin" asp-controller="Providers" asp-action="Reinstate"
+                                                      asp-route-id="@row.ApplicationId" method="post" class="d-inline">
+                                                    @Html.AntiForgeryToken()
+                                                    <button type="submit" class="btn btn-sm btn-outline-success">Reinstate</button>
+                                                </form>
+                                            </permission>
+                                        }
+                                    </div>
+                                }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @if (Model.TotalPages > 1)
+        {
+            <nav aria-label="Provider queue pagination">
+                <ul class="pagination justify-content-center mb-0">
+                    <li class="page-item @(Model.HasPreviousPage ? "" : "disabled")">
+                        <a class="page-link" href="@PageUrl(Model.Page - 1)">Previous</a>
+                    </li>
+                    <li class="page-item active"><span class="page-link">Page @Model.Page of @Model.TotalPages</span></li>
+                    <li class="page-item @(Model.HasNextPage ? "" : "disabled")">
+                        <a class="page-link" href="@PageUrl(Model.Page + 1)">Next</a>
+                    </li>
+                </ul>
+            </nav>
+        }
+    }
+
+    <p class="text-muted small mt-3 mb-0">
+        Open <strong>Details</strong> to review a full application, its documents, and to take moderation actions.
+    </p>
+</div>

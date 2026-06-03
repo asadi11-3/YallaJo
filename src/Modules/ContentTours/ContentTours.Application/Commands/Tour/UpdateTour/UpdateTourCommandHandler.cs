@@ -161,6 +161,8 @@ public sealed class UpdateTourCommandHandler(
                 .ConfigureAwait(false);
             await cache.RemoveByTagAsync(ContentToursCacheKeys.TagToursSearch, cancellationToken)
                 .ConfigureAwait(false);
+            await cache.RemoveByTagAsync(ContentToursCacheKeys.TagForMyTours(tour.CreatedByUserId), cancellationToken)
+                .ConfigureAwait(false);
 
             // P1-005: invalidate slug-keyed cache entries (GetTourBySlugQuery) for both
             // the old and the new slug so a slug change cannot serve stale rows.  When

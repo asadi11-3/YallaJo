@@ -308,4 +308,28 @@ public static class WebPermission
         public const string Create = "Permission.BlogTourLink.Create";
         public const string Delete = "Permission.BlogTourLink.Delete";
     }
+
+    // ── ProviderApplication (self-service provider onboarding) ─────────────────
+    // Mirror the Accounts backend permissions (Permission.ProviderApplication.{Action}).
+    public static class ProviderApplication
+    {
+        public const string Read     = "Permission.ProviderApplication.Read";
+        public const string Register = "Permission.ProviderApplication.Register";
+        public const string Create   = "Permission.ProviderApplication.Create";
+        public const string Submit   = "Permission.ProviderApplication.Submit";
+        // Update powers applicant self-service reapply (POST /provider/reapply) and
+        // document-replace. Backend catalog gap was fixed; the permission is now grantable.
+        public const string Update   = "Permission.ProviderApplication.Update";
+    }
+
+    // ── AdminProviderQueue (admin provider application review) ─────────────────
+    public static class AdminProviderQueue
+    {
+        public const string Read      = "Permission.AdminProviderQueue.Read";
+        public const string Approve   = "Permission.AdminProviderQueue.Approve";
+        public const string Reject    = "Permission.AdminProviderQueue.Reject";
+        public const string RequestDocs = "Permission.AdminProviderQueue.RequestDocs";
+        public const string Suspend   = "Permission.AdminProviderQueue.Suspend";
+        public const string Reinstate = "Permission.AdminProviderQueue.Reinstate";
+    }
 }

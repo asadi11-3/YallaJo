@@ -39,9 +39,13 @@ public sealed record TourDetailDto(
     Guid? PlaceId,
     DateTime CreatedAt,
     DateTime? UpdatedAt,
-    IReadOnlyList<TourTranslationDto> Translations)
+    IReadOnlyList<TourTranslationDto> Translations,
+    byte[]? RowVersion = null)
 {
-    public static TourDetailDto From(TourEntity tour, Guid? preferredLanguageId = null)
+    public static TourDetailDto From(
+        TourEntity tour,
+        Guid? preferredLanguageId = null,
+        bool includeRowVersion = false)
     {
         var translation = preferredLanguageId.HasValue
             ? tour.TourTranslations.FirstOrDefault(t => t.LanguageId == preferredLanguageId.Value)
@@ -85,6 +89,7 @@ public sealed record TourDetailDto(
         UpdatedAt:                tour.UpdatedAt,
         Translations:             tour.TourTranslations
             .Select(t => new TourTranslationDto(t.LanguageId, t.Name, t.Description, t.ShortDescription, t.MeetingPoint))
-            .ToList());
+            .ToList(),
+        RowVersion:               includeRowVersion ? tour.RowVersion : null);
     }
 }
