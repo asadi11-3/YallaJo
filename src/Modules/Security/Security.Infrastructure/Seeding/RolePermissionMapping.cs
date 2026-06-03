@@ -141,6 +141,9 @@ public sealed class RolePermissionMapping
             // Tour.Delete was renamed to Tour.DeleteAny (admin-only); providers
             // get the owner-scoped variant. Handler enforces ownership.
             "Permission.Tour.DeleteOwn",
+            "Permission.Tour.ReadOwn",
+            "Permission.Tour.Submit",
+            "Permission.Tour.Archive",
             "Permission.AvailabilitySlot.Create",
             "Permission.AvailabilitySlot.Read",
             "Permission.AvailabilitySlot.Update",

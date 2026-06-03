@@ -194,6 +194,8 @@ public sealed class SubmitTourCommandHandler(
                 .ConfigureAwait(false);
             await cache.RemoveByTagAsync(ContentToursCacheKeys.TagToursList, cancellationToken)
                 .ConfigureAwait(false);
+            await cache.RemoveByTagAsync(ContentToursCacheKeys.TagForMyTours(tour.CreatedByUserId), cancellationToken)
+                .ConfigureAwait(false);
 
             logger.LogInformation(
                 "Tour submitted: {TourId} (CreatedBy={CreatedByUserId}, By={UserId})",

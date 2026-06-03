@@ -80,6 +80,8 @@ public sealed class ArchiveTourCommandHandler(
                 .ConfigureAwait(false);
             await cache.RemoveByTagAsync(ContentToursCacheKeys.TagToursSearch, cancellationToken)
                 .ConfigureAwait(false);
+            await cache.RemoveByTagAsync(ContentToursCacheKeys.TagForMyTours(tour.CreatedByUserId), cancellationToken)
+                .ConfigureAwait(false);
 
             logger.LogInformation(
                 "Tour archived: {TourId} (CreatedBy={CreatedByUserId}, By={UserId})",

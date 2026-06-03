@@ -185,6 +185,18 @@ public static class WebPermission
         public const string Read = "Permission.ProviderDashboard.Read";
     }
 
+    // ── Tour (provider tour/listing management) ────────────────────────────────
+    // Mirrors Permission.Tour.{Action}. ReadOwn/Submit/Archive are granted to approved
+    // Provider/TourGuide roles (PT-0); Create/Update via the ContentManagement sweep.
+    public static class Tour
+    {
+        public const string ReadOwn = "Permission.Tour.ReadOwn";
+        public const string Create  = "Permission.Tour.Create";
+        public const string Update  = "Permission.Tour.Update";
+        public const string Submit  = "Permission.Tour.Submit";
+        public const string Archive = "Permission.Tour.Archive";
+    }
+
     // ── AdminProviderQueue (admin provider application review) ─────────────────
     public static class AdminProviderQueue
     {

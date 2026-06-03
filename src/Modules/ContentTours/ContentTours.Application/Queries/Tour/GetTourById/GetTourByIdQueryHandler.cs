@@ -47,7 +47,8 @@ public sealed class GetTourByIdQueryHandler(
                 .ResolveAsync(request.AcceptLanguage, activeLanguageProvider, cancellationToken)
                 .ConfigureAwait(false);
 
-            return Result<TourDetailDto>.Success(TourDetailDto.From(tour, preferredLanguageId));
+            return Result<TourDetailDto>.Success(
+                TourDetailDto.From(tour, preferredLanguageId, includeRowVersion: canViewNonPublic));
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
