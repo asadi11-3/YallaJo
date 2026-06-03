@@ -1,0 +1,60 @@
+@using YallaJo.Web.Infrastructure.Authorization
+@using YallaJo.Web.Areas.Admin.Models.BlogTranslations
+@model BlogTranslationEditVm
+@{
+    ViewData["Title"] = "Edit translation";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-4">
+    <a asp-area="Admin" asp-controller="BlogTranslations" asp-action="Index" asp-route-id="@Model.BlogId"
+       class="btn btn-sm btn-outline-secondary mb-3">← Back to translations</a>
+
+    <h2 class="mb-3">
+        @(Model.IsNew ? "Add" : "Edit") translation
+        <span class="badge text-bg-secondary text-uppercase">@Model.LanguageCode</span>
+    </h2>
+
+    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+    <form asp-area="Admin" asp-controller="BlogTranslations" asp-action="Save"
+          asp-route-id="@Model.BlogId" asp-route-languageCode="@Model.LanguageCode" method="post" class="row g-3">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="BlogId" />
+        <input type="hidden" asp-for="LanguageCode" />
+
+        <div class="col-12">
+            <label class="form-label">Language</label>
+            <input class="form-control" value="@Model.LanguageCode" readonly />
+        </div>
+
+        <div class="col-12">
+            <label asp-for="Title" class="form-label"></label>
+            <input asp-for="Title" class="form-control" />
+            <span asp-validation-for="Title" class="text-danger"></span>
+        </div>
+
+        <div class="col-12">
+            <label asp-for="Content" class="form-label"></label>
+            <textarea asp-for="Content" class="form-control" rows="10"></textarea>
+            <span asp-validation-for="Content" class="text-danger"></span>
+            <div class="form-text">At least 150 characters (excluding HTML).</div>
+        </div>
+
+        <div class="col-12">
+            <label asp-for="Summary" class="form-label"></label>
+            <textarea asp-for="Summary" class="form-control" rows="2"></textarea>
+            <span asp-validation-for="Summary" class="text-danger"></span>
+        </div>
+
+        <div class="col-12">
+            <button type="submit" class="btn btn-primary">Save translation</button>
+            <a asp-area="Admin" asp-controller="BlogTranslations" asp-action="Index" asp-route-id="@Model.BlogId"
+               class="btn btn-outline-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

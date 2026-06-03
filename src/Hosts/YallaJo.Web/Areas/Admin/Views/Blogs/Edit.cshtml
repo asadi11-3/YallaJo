@@ -208,6 +208,18 @@
                 </div>
             </permission>
 
+            <permission require="@WebPermission.Blog.Update">
+                <div class="card mt-3">
+                    <div class="card-header"><strong>Translations</strong></div>
+                    <div class="card-body">
+                        <p class="small text-muted mb-2">An Arabic translation is required before publishing.</p>
+                        <a asp-area="Admin" asp-controller="BlogTranslations" asp-action="Index"
+                           asp-route-id="@Model.Id"
+                           class="btn btn-outline-secondary w-100">Manage translations</a>
+                    </div>
+                </div>
+            </permission>
+
             <div class="card mt-3">
                 <div class="card-header"><strong>Linked tours</strong></div>
                 <div class="card-body">
