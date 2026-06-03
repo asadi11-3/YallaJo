@@ -1,12 +1,19 @@
 using System.Security.Claims;
 using YallaJo.Web.Infrastructure.Authentication.Claims;
+using YallaJo.Web.Infrastructure.Authentication.SignIn;
 
 namespace YallaJo.Web.Infrastructure.Identity;
 
 /// <summary>
 /// Scoped implementation of <see cref="ICurrentUser"/>.
-/// Reads claims lazily from the current <see cref="ClaimsPrincipal"/> and caches them
-/// for the lifetime of the request so repeated HasPermission / IsInRole calls are O(1).
+/// <para>
+/// Role and Permission claims are NOT stored in the authentication cookie (that
+/// duplication previously bloated the admin cookie past Kestrel's 32 KB header
+/// limit → HTTP 431). Instead they are derived on demand from the
+/// <c>access_token</c> JWT embedded in the cookie and cached for the lifetime of
+/// the request, so repeated HasPermission / IsInRole calls remain O(1) and the JWT
+/// is parsed at most once per request.
+/// </para>
 /// </summary>
 internal sealed class CurrentUser : ICurrentUser
 {
@@ -45,17 +52,38 @@ internal sealed class CurrentUser : ICurrentUser
     private ClaimsPrincipal? Principal =>
         _principal ??= _accessor.HttpContext?.User;
 
-    private HashSet<string> Permissions =>
-        _permissions ??= Principal?
-            .FindAll(AppClaimTypes.Permission)
-            .Select(c => c.Value)
-            .ToHashSet(StringComparer.OrdinalIgnoreCase)
-        ?? [];
+    // Role + Permission claims live inside the access_token JWT (not as standalone
+    // cookie claims). Parse the JWT once per request and split into the two sets.
+    private void EnsureClaimsLoaded()
+    {
+        if (_permissions is not null && _roles is not null) return;
 
-    private HashSet<string> Roles =>
-        _roles ??= Principal?
-            .FindAll(AppClaimTypes.Role)
-            .Select(c => c.Value)
-            .ToHashSet(StringComparer.OrdinalIgnoreCase)
-        ?? [];
+        var permissions = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var roles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        var accessToken = Principal?.FindFirstValue(AppClaimTypes.AccessToken);
+        if (!string.IsNullOrWhiteSpace(accessToken))
+        {
+            foreach (var claim in WebSignInService.ExtractUserClaimsFromJwt(accessToken))
+            {
+                if (claim.Type == AppClaimTypes.Permission)
+                    permissions.Add(claim.Value);
+                else if (claim.Type == AppClaimTypes.Role)
+                    roles.Add(claim.Value);
+            }
+        }
+
+        _permissions = permissions;
+        _roles = roles;
+    }
+
+    private HashSet<string> Permissions
+    {
+        get { EnsureClaimsLoaded(); return _permissions!; }
+    }
+
+    private HashSet<string> Roles
+    {
+        get { EnsureClaimsLoaded(); return _roles!; }
+    }
 }
