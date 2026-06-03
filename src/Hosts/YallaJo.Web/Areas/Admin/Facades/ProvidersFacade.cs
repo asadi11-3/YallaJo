@@ -29,6 +29,19 @@ public sealed class ProvidersFacade
         return ApiResult<ProviderQueueVm>.Ok(ProvidersMapper.ToQueueVm(result.Data, status, type));
     }
 
+    public async Task<ApiResult<ProviderDetailsVm>> GetDetailsAsync(Guid id, CancellationToken ct = default)
+    {
+        var result = await _api.GetByIdAsync(id, ct);
+
+        if (result.IsUnauthorized) return ApiResult<ProviderDetailsVm>.ForceSignOut();
+        if (result.IsNotFound) return ApiResult<ProviderDetailsVm>.Fail(404, "Provider application not found.");
+        if (!result.IsSuccess || result.Data is null)
+            return ApiResult<ProviderDetailsVm>.Fail(
+                result.StatusCode, result.Error ?? "Could not load the provider application.");
+
+        return ApiResult<ProviderDetailsVm>.Ok(ProvidersMapper.ToDetailsVm(result.Data));
+    }
+
     public Task<ApiResult> ApproveAsync(Guid id, CancellationToken ct = default)
         => Normalize(_api.ApproveAsync(id, ct), "Could not approve the application.");
 

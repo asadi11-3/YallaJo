@@ -103,6 +103,49 @@ public static class ProvidersMapper
         CanReinstate   = Eq(i.Status, "Suspended"),
     };
 
+    // ── Details mapping ────────────────────────────────────────────────────────────
+
+    public static ProviderDetailsVm ToDetailsVm(AdminProviderApplicationDetailsResponse r) => new()
+    {
+        ApplicationId        = r.ApplicationId,
+        UserId               = r.UserId,
+        TypeLabel            = Humanize(r.Type),
+        BusinessName         = r.BusinessName,
+        ContactEmail         = r.ContactEmail,
+        ContactPhone         = r.ContactPhone,
+        Address              = r.Address,
+        Description          = r.Description,
+        Status               = r.Status,
+        StatusLabel          = Humanize(r.Status),
+        StatusBadgeClass     = BadgeClass(r.Status),
+        SubmittedAt          = r.SubmittedAt,
+        ReviewedAt           = r.ReviewedAt,
+        ReviewedByUserId     = r.ReviewedByUserId,
+        RejectionReason      = r.RejectionReason,
+        SuspensionReason     = r.SuspensionReason,
+        ReapplicationCount   = r.ReapplicationCount,
+        CoolingPeriodEndsAt  = r.CoolingPeriodEndsAt,
+        MissingDocumentTypes = r.MissingDocumentTypes.Select(Humanize).ToList(),
+        Documents            = r.Documents.Select(ToDocumentVm).ToList(),
+        DocumentTypeOptions  = DocumentTypeOptions(),
+        CanApprove           = IsReviewable(r.Status),
+        CanReject            = IsReviewable(r.Status),
+        CanRequestDocs       = IsReviewable(r.Status),
+        CanSuspend           = Eq(r.Status, "Approved"),
+        CanReinstate         = Eq(r.Status, "Suspended"),
+    };
+
+    private static ProviderDocumentVm ToDocumentVm(AdminProviderDocumentResponse d) => new()
+    {
+        DocumentId        = d.DocumentId,
+        DocumentTypeLabel = Humanize(d.DocumentType),
+        FileName          = d.FileName,
+        FileUrl           = d.FileUrl,
+        FileSizeBytes     = d.FileSizeBytes,
+        UploadedAt        = d.UploadedAt,
+        ExpiresAt         = d.ExpiresAt,
+    };
+
     private static bool IsReviewable(string status) =>
         Eq(status, "Pending") || Eq(status, "MoreDocsNeeded");
 

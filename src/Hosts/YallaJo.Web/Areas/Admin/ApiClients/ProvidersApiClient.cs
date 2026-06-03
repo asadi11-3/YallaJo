@@ -34,6 +34,11 @@ public sealed class ProvidersApiClient
         return _api.GetAsync<ProviderQueueResponse>(url, ct);
     }
 
+    // GET /api/v1/admin/providers/{id}
+    public Task<ApiResult<AdminProviderApplicationDetailsResponse>> GetByIdAsync(
+        Guid id, CancellationToken ct = default)
+        => _api.GetAsync<AdminProviderApplicationDetailsResponse>($"{Base}/{id}", ct);
+
     // POST /api/v1/admin/providers/{id}/approve
     public Task<ApiResult> ApproveAsync(Guid id, CancellationToken ct = default)
         => _api.PostAsync($"{Base}/{id}/approve", body: null, ct);
