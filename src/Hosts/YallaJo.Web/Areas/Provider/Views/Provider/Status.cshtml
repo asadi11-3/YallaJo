@@ -1,0 +1,101 @@
+@using YallaJo.Web.Areas.Provider.Models
+@using YallaJo.Web.Infrastructure.Authorization
+@model ProviderStatusVm
+@{
+    ViewData["Title"] = "My provider application";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-4">
+    <h2 class="mb-3">My provider application</h2>
+
+    @* Success/Error flash banners are rendered globally by the shared _Alerts partial. *@
+
+    @if (!Model.HasApplication)
+    {
+        <div class="card">
+            <div class="card-body text-center">
+                <p class="mb-3">You haven't applied to become a provider yet.</p>
+                <a asp-area="Provider" asp-controller="Provider" asp-action="Apply"
+                   class="btn btn-primary">Become a provider</a>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="card mb-3">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div>
+                        <h5 class="mb-1">@Model.BusinessName</h5>
+                        <span class="text-muted">@Model.TypeLabel</span>
+                    </div>
+                    <span class="badge text-bg-secondary">@Model.Status</span>
+                </div>
+
+                <ul class="list-group list-group-flush small">
+                    <li class="list-group-item d-flex justify-content-between px-0">
+                        <span>Submitted</span><strong>@(Model.SubmittedAt?.ToString("yyyy-MM-dd") ?? "—")</strong>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between px-0">
+                        <span>Reviewed</span><strong>@(Model.ReviewedAt?.ToString("yyyy-MM-dd") ?? "—")</strong>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between px-0">
+                        <span>Reapplications</span><strong>@Model.ReapplicationCount</strong>
+                    </li>
+                </ul>
+
+                @if (!string.IsNullOrWhiteSpace(Model.RejectionReason))
+                {
+                    <div class="alert alert-danger mt-3 mb-0">
+                        <strong>Rejection reason:</strong> @Model.RejectionReason
+                    </div>
+                }
+                @if (!string.IsNullOrWhiteSpace(Model.SuspensionReason))
+                {
+                    <div class="alert alert-warning mt-3 mb-0">
+                        <strong>Suspension reason:</strong> @Model.SuspensionReason
+                    </div>
+                }
+                @if (Model.CoolingPeriodEndsAt.HasValue)
+                {
+                    <div class="alert alert-info mt-3 mb-0">
+                        You may reapply after @Model.CoolingPeriodEndsAt.Value.ToString("yyyy-MM-dd").
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header"><strong>Documents</strong></div>
+            <div class="card-body">
+                @if (!Model.HasDocuments)
+                {
+                    <p class="small text-muted mb-0">No documents attached. Document upload will be available in a later update.</p>
+                }
+                else
+                {
+                    <ul class="list-group list-group-flush small">
+                        @foreach (var doc in Model.Documents)
+                        {
+                            <li class="list-group-item d-flex justify-content-between px-0">
+                                <span>@doc.DocumentTypeLabel — @doc.FileName</span>
+                                <span class="text-muted">@(doc.ExpiresAt?.ToString("yyyy-MM-dd") ?? "")</span>
+                            </li>
+                        }
+                    </ul>
+                }
+            </div>
+        </div>
+
+        @if (Model.CanSubmit)
+        {
+            <permission require="@WebPermission.ProviderApplication.Submit">
+                <form asp-area="Provider" asp-controller="Provider" asp-action="Submit" method="post">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-success">Submit for review</button>
+                </form>
+            </permission>
+        }
+    }
+</div>

@@ -1,0 +1,92 @@
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using YallaJo.Web.Areas.Provider.Facades;
+using YallaJo.Web.Areas.Provider.Models;
+using YallaJo.Web.Infrastructure.Authorization;
+using YallaJo.Web.Infrastructure.Mvc;
+
+namespace YallaJo.Web.Areas.Provider.Controllers;
+
+[Area("Provider")]
+[Authorize]
+public sealed class ProviderController : BaseController
+{
+    private readonly ProviderFacade _facade;
+
+    public ProviderController(ProviderFacade facade) => _facade = facade;
+
+    // GET /provider/status
+    [HttpGet("provider/status")]
+    [RequirePermission(WebPermission.ProviderApplication.Read)]
+    public async Task<IActionResult> Status(CancellationToken ct)
+    {
+        var result = await _facade.GetStatusAsync(ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+
+        if (!result.IsSuccess || result.Data is null)
+        {
+            SetError(result.Error);
+            return View(new ProviderStatusVm { HasApplication = false });
+        }
+
+        return View(result.Data);
+    }
+
+    // GET /provider/apply
+    [HttpGet("provider/apply")]
+    [RequirePermission(WebPermission.ProviderApplication.Register)]
+    public IActionResult Apply()
+        => View(new ProviderApplyVm { TypeOptions = ProviderMapper.TypeOptions() });
+
+    // POST /provider/apply
+    [HttpPost("provider/apply")]
+    [ValidateAntiForgeryToken]
+    [RequirePermission(WebPermission.ProviderApplication.Register)]
+    public async Task<IActionResult> Apply(ProviderApplyVm vm, CancellationToken ct)
+    {
+        vm = RehydrateOptions(vm);
+        if (!ModelState.IsValid) return View(vm);
+
+        var result = await _facade.RegisterAsync(vm, ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+
+        if (result.IsSuccess)
+        {
+            SetSuccess("Provider application started. Submit it for review when you're ready.");
+            return RedirectToAction(nameof(Status));
+        }
+
+        if (ApplyValidationErrors(result)) return View(vm);
+
+        ModelState.AddModelError(string.Empty, result.Error ?? "Could not start your provider application.");
+        return View(vm);
+    }
+
+    // POST /provider/submit
+    [HttpPost("provider/submit")]
+    [ValidateAntiForgeryToken]
+    [RequirePermission(WebPermission.ProviderApplication.Submit)]
+    public async Task<IActionResult> Submit(CancellationToken ct)
+    {
+        var result = await _facade.SubmitAsync(ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+
+        SetFlash(result, "Application submitted for review.", "Could not submit your application.");
+        return RedirectToAction(nameof(Status));
+    }
+
+    private static ProviderApplyVm RehydrateOptions(ProviderApplyVm vm)
+    {
+        // Type options are not posted back; re-supply them so the form re-renders correctly.
+        return new ProviderApplyVm
+        {
+            Type         = vm.Type,
+            BusinessName = vm.BusinessName,
+            ContactEmail = vm.ContactEmail,
+            ContactPhone = vm.ContactPhone,
+            Address      = vm.Address,
+            Description  = vm.Description,
+            TypeOptions  = ProviderMapper.TypeOptions(),
+        };
+    }
+}
