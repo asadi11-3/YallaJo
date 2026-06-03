@@ -29,6 +29,8 @@
                class="btn btn-outline-secondary">Manage images</a>
             <a asp-area="Provider" asp-controller="TourPricing" asp-action="Index" asp-route-id="@Model.TourId"
                class="btn btn-outline-secondary">Manage pricing</a>
+            <a asp-area="Provider" asp-controller="TourSchedules" asp-action="Index" asp-route-id="@Model.TourId"
+               class="btn btn-outline-secondary">Manage schedules</a>
         </div>
     </form>
 
@@ -57,8 +59,9 @@
             }
         </div>
         <p class="text-muted small mt-2 mb-0">
-            Submitting requires the listing to be complete (description ≥ 100 characters, meeting point, at least
-            one image, pricing tier, and schedule). Image, pricing, and schedule management are coming in a later update.
+            Submitting requires the listing to be complete: description ≥ 100 characters, a meeting point, and at least
+            one image, one active Adult pricing tier, and one active schedule. Use <strong>Manage images</strong>,
+            <strong>Manage pricing</strong>, and <strong>Manage schedules</strong> above to add them.
         </p>
     }
 </div>

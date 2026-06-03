@@ -1,0 +1,98 @@
+@using YallaJo.Web.Infrastructure.Authorization
+@using YallaJo.Web.Areas.Provider.Models.TourSchedules
+@model TourSchedulesIndexVm
+@{
+    ViewData["Title"] = "Schedules";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h2 class="mb-1">Schedules</h2>
+            <span class="text-muted">@Model.TourName</span>
+            @if (!string.IsNullOrWhiteSpace(Model.TourStatusLabel))
+            {
+                <span class="text-muted">· @Model.TourStatusLabel</span>
+            }
+        </div>
+        <div class="d-flex gap-2">
+            <a asp-area="Provider" asp-controller="Tours" asp-action="Edit" asp-route-id="@Model.TourId"
+               class="btn btn-sm btn-outline-secondary">← Back to listing</a>
+            <permission require="@WebPermission.TourSchedule.Create">
+                <a asp-area="Provider" asp-controller="TourSchedules" asp-action="Create" asp-route-id="@Model.TourId"
+                   class="btn btn-primary btn-sm">Add schedule</a>
+            </permission>
+        </div>
+    </div>
+
+    @* Success/Error flash banners are rendered globally by the shared _Alerts partial. *@
+
+    @if (!Model.HasActiveSchedule)
+    {
+        <div class="alert alert-info">
+            A listing needs at least one <strong>active schedule</strong> before it can be submitted for review.
+            <permission require="@WebPermission.TourSchedule.Create">
+                <a asp-area="Provider" asp-controller="TourSchedules" asp-action="Create" asp-route-id="@Model.TourId"
+                   class="alert-link">Add a schedule</a>.
+            </permission>
+        </div>
+    }
+
+    @if (!Model.HasSchedules)
+    {
+        <div class="alert alert-secondary">No schedules yet.</div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Day</th>
+                        <th>Time</th>
+                        <th>Status</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var s in Model.Schedules)
+                    {
+                        <tr>
+                            <td>@s.DayLabel</td>
+                            <td>@s.TimeRangeLabel</td>
+                            <td>
+                                @if (s.IsActive)
+                                {
+                                    <span class="badge text-bg-success">Active</span>
+                                }
+                                else
+                                {
+                                    <span class="badge text-bg-secondary">Inactive</span>
+                                }
+                            </td>
+                            <td class="text-end">
+                                <div class="d-flex justify-content-end gap-2">
+                                    <permission require="@WebPermission.TourSchedule.Update">
+                                        <a asp-area="Provider" asp-controller="TourSchedules" asp-action="Edit"
+                                           asp-route-id="@Model.TourId" asp-route-scheduleId="@s.Id"
+                                           class="btn btn-sm btn-outline-secondary">Edit</a>
+                                    </permission>
+                                    <permission require="@WebPermission.TourSchedule.Delete">
+                                        <form asp-area="Provider" asp-controller="TourSchedules" asp-action="Delete"
+                                              asp-route-id="@Model.TourId" asp-route-scheduleId="@s.Id"
+                                              method="post" class="d-inline"
+                                              onsubmit="return confirm('Delete this schedule?');">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                                        </form>
+                                    </permission>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

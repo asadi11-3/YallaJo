@@ -207,6 +207,16 @@ public static class WebPermission
         public const string Delete = "Permission.TourPricingTier.Delete";
     }
 
+    // ── TourSchedule (provider tour schedule management) ───────────────────────
+    // Mirrors Permission.TourSchedule.{Action}. Granted to approved Provider/TourGuide
+    // roles via ProviderSelfPermissions + the ContentManagement sweep.
+    public static class TourSchedule
+    {
+        public const string Create = "Permission.TourSchedule.Create";
+        public const string Update = "Permission.TourSchedule.Update";
+        public const string Delete = "Permission.TourSchedule.Delete";
+    }
+
     // ── AdminProviderQueue (admin provider application review) ─────────────────
     public static class AdminProviderQueue
     {

@@ -42,7 +42,7 @@ public sealed class UpdateTourScheduleCommandHandler(
                     Outcome.Forbidden);
             }
 
-            var schedule = await scheduleRepo.GetByIdAsync(request.ScheduleId, cancellationToken);
+            var schedule = await scheduleRepo.GetByIdAsync(request.ScheduleId, cancellationToken, asNoTracking: false);
             if (schedule is null || schedule.TourId != request.TourId)
             {
                 return Result.Failure(
