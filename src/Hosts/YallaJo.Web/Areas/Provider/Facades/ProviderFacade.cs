@@ -61,6 +61,24 @@ public sealed class ProviderFacade
         return ApiResult.Fail(result.StatusCode, result.Error ?? "Could not submit your application.");
     }
 
+    public async Task<ApiResult> ReapplyAsync(CancellationToken ct = default)
+    {
+        var result = await _api.ReapplyAsync(ct);
+
+        if (result.IsSuccess) return ApiResult.Ok();
+        if (result.IsUnauthorized) return ApiResult.ForceSignOut();
+        if (result.IsNotFound) return ApiResult.Fail(404, "No provider application was found to reapply.");
+
+        // Business-rule failures arrive as 422/400 (invalid status, cooling period still
+        // active, or reapplication limit reached). Surface the API message when present.
+        if (result.IsValidationError)
+            return ApiResult.Fail(
+                result.StatusCode,
+                result.Error ?? "You cannot reapply right now. Reapply is only available after a rejection once the cooling period has passed.");
+
+        return ApiResult.Fail(result.StatusCode, result.Error ?? "Could not reapply for your provider application.");
+    }
+
     public async Task<ApiResult<AddProviderDocumentResponse>> UploadDocumentAsync(
         ProviderDocumentUploadVm vm, CancellationToken ct = default)
     {

@@ -28,6 +28,10 @@ public sealed class ProviderApiClient
     public Task<ApiResult> SubmitAsync(CancellationToken ct = default)
         => _api.PostAsync("/api/v1/provider/apply", body: null, ct);
 
+    // POST /api/v1/provider/reapply  (reapply after rejection; no body)
+    public Task<ApiResult> ReapplyAsync(CancellationToken ct = default)
+        => _api.PostAsync("/api/v1/provider/reapply", body: null, ct);
+
     // POST /api/v1/provider/documents/upload  (multipart: file + documentType + expiresAt?)
     public Task<ApiResult<AddProviderDocumentResponse>> UploadDocumentAsync(
         Stream fileStream,

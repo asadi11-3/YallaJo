@@ -31,6 +31,33 @@ public sealed class ProviderStatusVm
     public bool CanUploadDocuments => CanSubmit;
 
     public ProviderDocumentUploadVm UploadForm { get; init; } = new();
+
+    /// <summary>Maximum reapplications allowed by the backend (Accounts domain: MaxReapplications).</summary>
+    public const int MaxReapplications = 3;
+
+    /// <summary>True while a rejected application's cooling period is still active.</summary>
+    public bool CoolingPeriodActive =>
+        CoolingPeriodEndsAt.HasValue && DateTime.UtcNow < CoolingPeriodEndsAt.Value;
+
+    /// <summary>True when the rejected applicant has used up all reapplication attempts.</summary>
+    public bool ReapplyLimitReached => ReapplicationCount >= MaxReapplications;
+
+    /// <summary>Total reapplication attempts allowed (instance accessor for views).</summary>
+    public int ReapplyMaxAttempts => MaxReapplications;
+
+    /// <summary>How many reapplication attempts remain (never negative).</summary>
+    public int ReapplyAttemptsRemaining => Math.Max(0, MaxReapplications - ReapplicationCount);
+
+    /// <summary>
+    /// Reapply is allowed only from the Rejected state, once the cooling period has
+    /// passed and the reapplication limit has not been reached (mirrors the backend
+    /// <c>ProviderApplication.Reapply()</c> rule).
+    /// </summary>
+    public bool CanReapply =>
+        HasApplication &&
+        string.Equals(Status, "Rejected", StringComparison.OrdinalIgnoreCase) &&
+        !CoolingPeriodActive &&
+        !ReapplyLimitReached;
 }
 
 /// <summary>A read-only document row on the status page.</summary>

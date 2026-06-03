@@ -75,6 +75,21 @@ public sealed class ProviderController : BaseController
         return RedirectToAction(nameof(Status));
     }
 
+    // POST /provider/reapply  (reapply after rejection, then PRG back to status)
+    [HttpPost("provider/reapply")]
+    [ValidateAntiForgeryToken]
+    [RequirePermission(WebPermission.ProviderApplication.Update)]
+    public async Task<IActionResult> Reapply(CancellationToken ct)
+    {
+        var result = await _facade.ReapplyAsync(ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+
+        SetFlash(result,
+            "Your application has been reopened as a draft. Update it and submit again when ready.",
+            "Could not reapply for your provider application.");
+        return RedirectToAction(nameof(Status));
+    }
+
     // POST /provider/documents/upload  (multipart file upload, then PRG back to status)
     [HttpPost("provider/documents/upload")]
     [ValidateAntiForgeryToken]

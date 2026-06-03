@@ -166,14 +166,23 @@ public static class WebPermission
 
     // ── ProviderApplication (self-service provider onboarding) ─────────────────
     // Mirror the Accounts backend permissions (Permission.ProviderApplication.{Action}).
-    // NOTE: Update is intentionally absent — it is missing from the backend catalog,
-    // so /reapply and document-replace are unreachable and not wired in this batch.
     public static class ProviderApplication
     {
         public const string Read     = "Permission.ProviderApplication.Read";
         public const string Register = "Permission.ProviderApplication.Register";
         public const string Create   = "Permission.ProviderApplication.Create";
         public const string Submit   = "Permission.ProviderApplication.Submit";
+        // Update powers applicant self-service reapply (POST /provider/reapply) and
+        // document-replace. Backend catalog gap was fixed; the permission is now grantable.
+        public const string Update   = "Permission.ProviderApplication.Update";
+    }
+
+    // ── ProviderDashboard (approved-provider dashboard) ────────────────────────
+    // Mirrors Permission.ProviderDashboard.Read. Granted only to approved provider
+    // roles (Provider / TourGuide) — NOT to pending applicants (User role).
+    public static class ProviderDashboard
+    {
+        public const string Read = "Permission.ProviderDashboard.Read";
     }
 
     // ── AdminProviderQueue (admin provider application review) ─────────────────

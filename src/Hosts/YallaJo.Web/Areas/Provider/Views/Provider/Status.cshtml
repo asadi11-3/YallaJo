@@ -33,6 +33,14 @@
                     <span class="badge text-bg-secondary">@Model.Status</span>
                 </div>
 
+                @if (string.Equals(Model.Status, "Approved", StringComparison.OrdinalIgnoreCase))
+                {
+                    <div class="mb-3">
+                        <a asp-area="Provider" asp-controller="Dashboard" asp-action="Index"
+                           class="btn btn-primary btn-sm">Go to Provider Dashboard</a>
+                    </div>
+                }
+
                 <ul class="list-group list-group-flush small">
                     <li class="list-group-item d-flex justify-content-between px-0">
                         <span>Submitted</span><strong>@(Model.SubmittedAt?.ToString("yyyy-MM-dd") ?? "—")</strong>
@@ -61,6 +69,31 @@
                 {
                     <div class="alert alert-info mt-3 mb-0">
                         You may reapply after @Model.CoolingPeriodEndsAt.Value.ToString("yyyy-MM-dd").
+                    </div>
+                }
+
+                @* Reapply is offered only for a Rejected application once the cooling
+                   period has passed and the reapplication limit has not been reached. *@
+                @if (Model.CanReapply)
+                {
+                    <permission require="@WebPermission.ProviderApplication.Update">
+                        <form asp-area="Provider" asp-controller="Provider" asp-action="Reapply"
+                              method="post" class="mt-3">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-primary">Reapply</button>
+                            <div class="form-text">
+                                Reapplying reopens your application as a draft so you can update it and submit again
+                                (@Model.ReapplyAttemptsRemaining of @Model.ReapplyMaxAttempts attempts remaining).
+                            </div>
+                        </form>
+                    </permission>
+                }
+                else if (Model.HasApplication
+                         && string.Equals(Model.Status, "Rejected", StringComparison.OrdinalIgnoreCase)
+                         && Model.ReapplyLimitReached)
+                {
+                    <div class="alert alert-secondary mt-3 mb-0">
+                        You have reached the maximum number of reapplications (@Model.ReapplyMaxAttempts).
                     </div>
                 }
             </div>
