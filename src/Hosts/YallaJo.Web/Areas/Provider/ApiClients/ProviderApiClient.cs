@@ -27,4 +27,25 @@ public sealed class ProviderApiClient
     // POST /api/v1/provider/apply  (submit the application for review)
     public Task<ApiResult> SubmitAsync(CancellationToken ct = default)
         => _api.PostAsync("/api/v1/provider/apply", body: null, ct);
+
+    // POST /api/v1/provider/documents/upload  (multipart: file + documentType + expiresAt?)
+    public Task<ApiResult<AddProviderDocumentResponse>> UploadDocumentAsync(
+        Stream fileStream,
+        string fileName,
+        string contentType,
+        string documentType,
+        DateTime? expiresAt,
+        CancellationToken ct = default)
+    {
+        var fields = new Dictionary<string, string> { ["documentType"] = documentType };
+        if (expiresAt.HasValue)
+            fields["expiresAt"] = expiresAt.Value.ToString("O");
+
+        return _api.PostFileAsync<AddProviderDocumentResponse>(
+            "/api/v1/provider/documents/upload",
+            fileStream, fileName, contentType,
+            formFields: fields,
+            formFieldName: "file",
+            ct: ct);
+    }
 }

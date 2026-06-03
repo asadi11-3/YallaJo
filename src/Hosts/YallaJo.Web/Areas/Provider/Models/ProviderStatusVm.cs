@@ -27,6 +27,10 @@ public sealed class ProviderStatusVm
         HasApplication &&
         (string.Equals(Status, "Draft", StringComparison.OrdinalIgnoreCase) ||
          string.Equals(Status, "MoreDocsNeeded", StringComparison.OrdinalIgnoreCase));
+
+    public bool CanUploadDocuments => CanSubmit;
+
+    public ProviderDocumentUploadVm UploadForm { get; init; } = new();
 }
 
 /// <summary>A read-only document row on the status page.</summary>

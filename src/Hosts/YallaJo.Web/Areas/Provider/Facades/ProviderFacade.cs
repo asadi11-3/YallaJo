@@ -60,4 +60,38 @@ public sealed class ProviderFacade
 
         return ApiResult.Fail(result.StatusCode, result.Error ?? "Could not submit your application.");
     }
+
+    public async Task<ApiResult<AddProviderDocumentResponse>> UploadDocumentAsync(
+        ProviderDocumentUploadVm vm, CancellationToken ct = default)
+    {
+        // Defensive: the controller's ModelState already enforces these, but guard
+        // before touching the stream so the facade never NREs.
+        if (vm.File is null || vm.File.Length == 0)
+            return ApiResult<AddProviderDocumentResponse>.Fail(400, "Please choose a file to upload.");
+        if (string.IsNullOrWhiteSpace(vm.DocumentType))
+            return ApiResult<AddProviderDocumentResponse>.Fail(400, "Please choose a document type.");
+
+        await using var stream = vm.File.OpenReadStream();
+
+        var result = await _api.UploadDocumentAsync(
+            stream,
+            vm.File.FileName,
+            vm.File.ContentType,
+            vm.DocumentType.Trim(),
+            vm.ExpiresAt,
+            ct);
+
+        if (result.IsUnauthorized) return ApiResult<AddProviderDocumentResponse>.ForceSignOut();
+        if (result.IsValidationError)
+            return ApiResult<AddProviderDocumentResponse>.ValidationFail(result.StatusCode, result.ValidationErrors!);
+        if (result.IsNotFound)
+            return ApiResult<AddProviderDocumentResponse>.Fail(404, "No provider application was found to attach the document to.");
+        if (result.IsConflict)
+            return ApiResult<AddProviderDocumentResponse>.Fail(409, "A document of this type has already been uploaded.");
+        if (!result.IsSuccess || result.Data is null)
+            return ApiResult<AddProviderDocumentResponse>.Fail(
+                result.StatusCode, result.Error ?? "Could not upload the document.");
+
+        return ApiResult<AddProviderDocumentResponse>.Ok(result.Data);
+    }
 }

@@ -71,19 +71,68 @@
             <div class="card-body">
                 @if (!Model.HasDocuments)
                 {
-                    <p class="small text-muted mb-0">No documents attached. Document upload will be available in a later update.</p>
+                    <p class="small text-muted mb-0">No documents attached yet.</p>
                 }
                 else
                 {
-                    <ul class="list-group list-group-flush small">
+                    <ul class="list-group list-group-flush small mb-0">
                         @foreach (var doc in Model.Documents)
                         {
-                            <li class="list-group-item d-flex justify-content-between px-0">
-                                <span>@doc.DocumentTypeLabel — @doc.FileName</span>
-                                <span class="text-muted">@(doc.ExpiresAt?.ToString("yyyy-MM-dd") ?? "")</span>
+                            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                <span>
+                                    <i class="bi bi-file-earmark-text me-1"></i>
+                                    <strong>@doc.DocumentTypeLabel</strong> — @doc.FileName
+                                </span>
+                                <span class="text-muted">
+                                    @(doc.ExpiresAt.HasValue ? $"expires {doc.ExpiresAt.Value:yyyy-MM-dd}" : "")
+                                </span>
                             </li>
                         }
                     </ul>
+                }
+
+                @if (Model.CanUploadDocuments)
+                {
+                    <permission require="@WebPermission.ProviderApplication.Create">
+                        <hr />
+                        <h6 class="mb-2">Upload a document</h6>
+                        <p class="small text-muted mb-2">
+                            Accepted formats: PDF, JPG or PNG, up to 10&nbsp;MB. Upload all required
+                            documents for your provider type, then submit your application for review.
+                        </p>
+                        @* Inputs post to the top-level ProviderDocumentUploadVm bound by the
+                           UploadDocument action, so plain name attributes are used here. *@
+                        <form asp-area="Provider" asp-controller="Provider" asp-action="UploadDocument"
+                              method="post" enctype="multipart/form-data" class="row g-2 align-items-end">
+                            @Html.AntiForgeryToken()
+
+                            <div class="col-md-4">
+                                <label for="DocumentType" class="form-label">Document type</label>
+                                <select id="DocumentType" name="DocumentType" class="form-select">
+                                    <option value="">— choose —</option>
+                                    @foreach (var opt in Model.UploadForm.DocumentTypeOptions)
+                                    {
+                                        <option value="@opt.Value">@opt.Label</option>
+                                    }
+                                </select>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label for="File" class="form-label">File</label>
+                                <input id="File" name="File" type="file" class="form-control"
+                                       accept="@ProviderDocumentUploadVm.AcceptAttribute" />
+                            </div>
+
+                            <div class="col-md-2">
+                                <label for="ExpiresAt" class="form-label">Expires at</label>
+                                <input id="ExpiresAt" name="ExpiresAt" type="date" class="form-control" />
+                            </div>
+
+                            <div class="col-md-2 d-grid">
+                                <button type="submit" class="btn btn-outline-primary">Upload</button>
+                            </div>
+                        </form>
+                    </permission>
                 }
             </div>
         </div>

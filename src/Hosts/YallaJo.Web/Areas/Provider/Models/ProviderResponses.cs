@@ -34,3 +34,11 @@ public sealed class RegisterProviderResponse
 {
     public Guid ApplicationId { get; init; }
 }
+
+/// <summary>Mirrors <c>AddProviderDocumentResult</c> from <c>POST /api/v1/provider/documents/upload</c>.</summary>
+public sealed class AddProviderDocumentResponse
+{
+    public Guid DocumentId { get; init; }
+    public string DocumentType { get; init; } = string.Empty;
+    public string FileUrl { get; init; } = string.Empty;
+}

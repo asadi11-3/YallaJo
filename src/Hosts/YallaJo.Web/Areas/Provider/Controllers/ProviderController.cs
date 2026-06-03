@@ -75,6 +75,35 @@ public sealed class ProviderController : BaseController
         return RedirectToAction(nameof(Status));
     }
 
+    // POST /provider/documents/upload  (multipart file upload, then PRG back to status)
+    [HttpPost("provider/documents/upload")]
+    [ValidateAntiForgeryToken]
+    [RequirePermission(WebPermission.ProviderApplication.Create)]
+    public async Task<IActionResult> UploadDocument(ProviderDocumentUploadVm vm, CancellationToken ct)
+    {
+        if (!ModelState.IsValid)
+        {
+            // Surface the first model error as a flash; the status page re-renders the form.
+            var firstError = ModelState.Values
+                .SelectMany(v => v.Errors)
+                .Select(e => e.ErrorMessage)
+                .FirstOrDefault(m => !string.IsNullOrWhiteSpace(m));
+            SetError(firstError ?? "Please correct the document upload form and try again.");
+            return RedirectToAction(nameof(Status));
+        }
+
+        var result = await _facade.UploadDocumentAsync(vm, ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+
+        if (result.IsValidationError)
+            SetError(result.ValidationErrors!.SelectMany(kvp => kvp.Value).FirstOrDefault()
+                     ?? "The uploaded document was rejected. Check the file type and size.");
+        else
+            SetFlash(result, "Document uploaded.", "Could not upload the document.");
+
+        return RedirectToAction(nameof(Status));
+    }
+
     private static ProviderApplyVm RehydrateOptions(ProviderApplyVm vm)
     {
         // Type options are not posted back; re-supply them so the form re-renders correctly.
