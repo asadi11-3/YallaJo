@@ -142,6 +142,13 @@ public sealed class BlogsFacade
     public Task<ApiResult> UnfeatureAsync(Guid id, CancellationToken ct = default)
         => WithRowVersion(id, rv => _api.UnfeatureAsync(id, new BlogRowVersionRequest(rv), ct), "Could not unfeature the blog.", ct);
 
+
+    public Task<ApiResult> ApproveAsync(Guid id, CancellationToken ct = default)
+        => WithRowVersion(id, rv => _api.ApproveAsync(id, new BlogRowVersionRequest(rv), ct), "Could not approve the blog.", ct);
+
+    public Task<ApiResult> RejectAsync(Guid id, string reason, CancellationToken ct = default)
+        => WithRowVersion(id, rv => _api.RejectAsync(id, new RejectBlogRequest(rv, reason), ct), "Could not reject the blog.", ct);
+
     // ── Helpers ──────────────────────────────────────────────────────────────────
 
     /// <summary>

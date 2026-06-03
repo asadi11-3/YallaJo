@@ -6,6 +6,7 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
     var isPublished = string.Equals(Model.StatusLabel, "Published", StringComparison.OrdinalIgnoreCase);
     var isDraft = string.Equals(Model.StatusLabel, "Draft", StringComparison.OrdinalIgnoreCase);
+    var isPendingReview = string.Equals(Model.StatusLabel, "PendingReview", StringComparison.OrdinalIgnoreCase);
 }
 
 <div class="container mt-4">
@@ -83,6 +84,24 @@
             <div class="card">
                 <div class="card-header"><strong>Status actions</strong></div>
                 <div class="card-body d-grid gap-2">
+                    @if (isPendingReview)
+                    {
+                        <permission require="@WebPermission.Blog.Approve">
+                            <form asp-area="Admin" asp-controller="Blogs" asp-action="Approve" asp-route-id="@Model.Id" method="post">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="fromEdit" value="true" />
+                                <button type="submit" class="btn btn-success w-100">Approve &amp; publish</button>
+                            </form>
+                        </permission>
+                        <permission require="@WebPermission.Blog.Reject">
+                            <form asp-area="Admin" asp-controller="Blogs" asp-action="Reject" asp-route-id="@Model.Id" method="post">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="fromEdit" value="true" />
+                                <textarea name="reason" class="form-control mb-2" rows="2" placeholder="Rejection reason" required></textarea>
+                                <button type="submit" class="btn btn-outline-danger w-100">Reject</button>
+                            </form>
+                        </permission>
+                    }
                     @if (isDraft)
                     {
                         <permission require="@WebPermission.Blog.Approve">

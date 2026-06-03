@@ -201,4 +201,45 @@ public sealed class BlogsController : BaseController
         SetFlash(result, "Blog unfeatured.", "Could not unfeature the blog.");
         return RedirectToAction(nameof(Edit), new { id });
     }
+
+    // ── Moderation (Phase 2A) ───────────────────────────────────────────────────────
+
+    // POST /admin/blogs/{id}/approve
+    [HttpPost("admin/blogs/{id:guid}/approve")]
+    [ValidateAntiForgeryToken]
+    [RequirePermission(WebPermission.Blog.Approve)]
+    public async Task<IActionResult> Approve(Guid id, bool fromEdit = false, CancellationToken ct = default)
+    {
+        var result = await _facade.ApproveAsync(id, ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+
+        SetFlash(result, "Blog approved and published.", "Could not approve the blog.");
+        return ModerationRedirect(id, fromEdit);
+    }
+
+    // POST /admin/blogs/{id}/reject
+    [HttpPost("admin/blogs/{id:guid}/reject")]
+    [ValidateAntiForgeryToken]
+    [RequirePermission(WebPermission.Blog.Reject)]
+    public async Task<IActionResult> Reject(Guid id, string? reason, bool fromEdit = false, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(reason))
+        {
+            SetError("A reason is required.");
+            return ModerationRedirect(id, fromEdit);
+        }
+
+        var result = await _facade.RejectAsync(id, reason.Trim(), ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+
+        SetFlash(result, "Blog rejected.", "Could not reject the blog.");
+        return ModerationRedirect(id, fromEdit);
+    }
+
+    // Approve/Reject can be triggered from the Queue list or the Edit page;
+    // redirect back to wherever the action was invoked.
+    private IActionResult ModerationRedirect(Guid id, bool fromEdit) =>
+        fromEdit
+            ? RedirectToAction(nameof(Edit), new { id })
+            : RedirectToAction(nameof(Index), new { tab = BlogAdminTab.Queue });
 }

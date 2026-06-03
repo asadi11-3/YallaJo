@@ -85,4 +85,13 @@ public sealed class BlogsApiClient
 
     public Task<ApiResult> UnfeatureAsync(Guid id, BlogRowVersionRequest request, CancellationToken ct = default)
         => _api.PostAsync($"/api/v1/blogs/{id}/unfeature", request, ct);
+
+
+    // POST /api/v1/blogs/admin/{id}/approve  (PendingReview → Published)
+    public Task<ApiResult> ApproveAsync(Guid id, BlogRowVersionRequest request, CancellationToken ct = default)
+        => _api.PostAsync($"/api/v1/blogs/admin/{id}/approve", request, ct);
+
+    // POST /api/v1/blogs/admin/{id}/reject  (PendingReview → Rejected, with reason)
+    public Task<ApiResult> RejectAsync(Guid id, RejectBlogRequest request, CancellationToken ct = default)
+        => _api.PostAsync($"/api/v1/blogs/admin/{id}/reject", request, ct);
 }
