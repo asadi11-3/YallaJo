@@ -48,6 +48,23 @@ public interface IBlogRepository : IRepository<Blog, Guid>
         Guid languageId,
         CancellationToken cancellationToken = default);
 
+    /// <summary>Returns all translations for a blog.</summary>
+    Task<IReadOnlyList<BlogTranslation>> GetTranslationsAsync(
+        Guid blogId,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>Returns a single translation for a blog + language, or null.</summary>
+    Task<BlogTranslation?> GetTranslationAsync(
+        Guid blogId,
+        Guid languageId,
+        bool asNoTracking = true,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>Adds a new translation row (used by the translation upsert when none exists).</summary>
+    Task AddTranslationAsync(
+        BlogTranslation translation,
+        CancellationToken cancellationToken = default);
+
     /// <summary>Admin moderation queue — returns PendingReview blogs, paginated.</summary>
     Task<PaginatedResult<Blog>> GetAdminQueueAsync(
         int page,
