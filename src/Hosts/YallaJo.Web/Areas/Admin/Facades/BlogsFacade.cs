@@ -149,6 +149,17 @@ public sealed class BlogsFacade
     public Task<ApiResult> RejectAsync(Guid id, string reason, CancellationToken ct = default)
         => WithRowVersion(id, rv => _api.RejectAsync(id, new RejectBlogRequest(rv, reason), ct), "Could not reject the blog.", ct);
 
+    // ── Moderation (Phase 2B) ─────────────────────────────────────────────────────
+
+    public Task<ApiResult> HideAsync(Guid id, string reason, CancellationToken ct = default)
+        => WithRowVersion(id, rv => _api.HideAsync(id, new HideBlogRequest(rv, reason), ct), "Could not hide the blog.", ct);
+
+    public Task<ApiResult> UnhideAsync(Guid id, CancellationToken ct = default)
+        => WithRowVersion(id, rv => _api.UnhideAsync(id, new BlogRowVersionRequest(rv), ct), "Could not unhide the blog.", ct);
+
+    public Task<ApiResult> RemoveAsync(Guid id, string reason, CancellationToken ct = default)
+        => WithRowVersion(id, rv => _api.RemoveAsync(id, new RemoveBlogRequest(rv, reason), ct), "Could not remove the blog.", ct);
+
     // ── Helpers ──────────────────────────────────────────────────────────────────
 
     /// <summary>

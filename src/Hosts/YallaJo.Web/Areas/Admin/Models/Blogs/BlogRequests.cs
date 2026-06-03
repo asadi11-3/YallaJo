@@ -31,3 +31,9 @@ public sealed record FeatureBlogRequest(byte[] RowVersion, DateTime? FeaturedUnt
 
 /// <summary>Mirrors the API <c>RejectBlogRequest</c> for <c>POST /api/v1/blogs/admin/{id}/reject</c>.</summary>
 public sealed record RejectBlogRequest(byte[] RowVersion, string Reason);
+
+/// <summary>Mirrors the API <c>HideBlogRequest</c> for <c>POST /api/v1/blogs/{id}/hide</c>.</summary>
+public sealed record HideBlogRequest(byte[] RowVersion, string Reason);
+
+/// <summary>Mirrors the API <c>RemoveBlogRequest</c> for <c>POST /api/v1/blogs/admin/{id}/remove</c>.</summary>
+public sealed record RemoveBlogRequest(byte[] RowVersion, string Reason);

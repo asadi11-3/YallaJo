@@ -242,4 +242,57 @@ public sealed class BlogsController : BaseController
         fromEdit
             ? RedirectToAction(nameof(Edit), new { id })
             : RedirectToAction(nameof(Index), new { tab = BlogAdminTab.Queue });
+
+    // ── Moderation (Phase 2B) — Edit-page only, always redirect back to Edit ────────
+
+    // POST /admin/blogs/{id}/hide
+    [HttpPost("admin/blogs/{id:guid}/hide")]
+    [ValidateAntiForgeryToken]
+    [RequirePermission(WebPermission.Blog.Approve)]
+    public async Task<IActionResult> Hide(Guid id, string? reason, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(reason))
+        {
+            SetError("A reason is required.");
+            return RedirectToAction(nameof(Edit), new { id });
+        }
+
+        var result = await _facade.HideAsync(id, reason.Trim(), ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+
+        SetFlash(result, "Blog hidden.", "Could not hide the blog.");
+        return RedirectToAction(nameof(Edit), new { id });
+    }
+
+    // POST /admin/blogs/{id}/unhide
+    [HttpPost("admin/blogs/{id:guid}/unhide")]
+    [ValidateAntiForgeryToken]
+    [RequirePermission(WebPermission.Blog.Approve)]
+    public async Task<IActionResult> Unhide(Guid id, CancellationToken ct)
+    {
+        var result = await _facade.UnhideAsync(id, ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+
+        SetFlash(result, "Blog unhidden (back to Published).", "Could not unhide the blog.");
+        return RedirectToAction(nameof(Edit), new { id });
+    }
+
+    // POST /admin/blogs/{id}/remove
+    [HttpPost("admin/blogs/{id:guid}/remove")]
+    [ValidateAntiForgeryToken]
+    [RequirePermission(WebPermission.Blog.Remove)]
+    public async Task<IActionResult> Remove(Guid id, string? reason, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(reason))
+        {
+            SetError("A reason is required.");
+            return RedirectToAction(nameof(Edit), new { id });
+        }
+
+        var result = await _facade.RemoveAsync(id, reason.Trim(), ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+
+        SetFlash(result, "Blog removed.", "Could not remove the blog.");
+        return RedirectToAction(nameof(Edit), new { id });
+    }
 }

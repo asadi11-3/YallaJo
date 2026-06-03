@@ -7,6 +7,8 @@
     var isPublished = string.Equals(Model.StatusLabel, "Published", StringComparison.OrdinalIgnoreCase);
     var isDraft = string.Equals(Model.StatusLabel, "Draft", StringComparison.OrdinalIgnoreCase);
     var isPendingReview = string.Equals(Model.StatusLabel, "PendingReview", StringComparison.OrdinalIgnoreCase);
+    var isHidden = string.Equals(Model.StatusLabel, "Hidden", StringComparison.OrdinalIgnoreCase);
+    var isRemoved = string.Equals(Model.StatusLabel, "Removed", StringComparison.OrdinalIgnoreCase);
 }
 
 <div class="container mt-4">
@@ -141,6 +143,24 @@
                                 </form>
                             </permission>
                         }
+
+                        <permission require="@WebPermission.Blog.Approve">
+                            <form asp-area="Admin" asp-controller="Blogs" asp-action="Hide" asp-route-id="@Model.Id" method="post">
+                                @Html.AntiForgeryToken()
+                                <textarea name="reason" class="form-control mb-2" rows="2" placeholder="Reason for hiding" required></textarea>
+                                <button type="submit" class="btn btn-outline-secondary w-100">Hide</button>
+                            </form>
+                        </permission>
+                    }
+
+                    @if (isHidden)
+                    {
+                        <permission require="@WebPermission.Blog.Approve">
+                            <form asp-area="Admin" asp-controller="Blogs" asp-action="Unhide" asp-route-id="@Model.Id" method="post">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-success w-100">Unhide (publish)</button>
+                            </form>
+                        </permission>
                     }
 
                     <permission require="@WebPermission.Blog.DeleteOwn">
@@ -150,6 +170,20 @@
                             <button type="submit" class="btn btn-outline-danger w-100">Delete</button>
                         </form>
                     </permission>
+
+                    @if (!isRemoved)
+                    {
+                        <permission require="@WebPermission.Blog.Remove">
+                            <hr />
+                            <div class="text-danger small fw-bold">Danger zone</div>
+                            <form asp-area="Admin" asp-controller="Blogs" asp-action="Remove" asp-route-id="@Model.Id" method="post"
+                                  onsubmit="return confirm('Permanently remove this blog? This cannot be undone.');">
+                                @Html.AntiForgeryToken()
+                                <textarea name="reason" class="form-control mb-2" rows="2" placeholder="Reason for removal" required></textarea>
+                                <button type="submit" class="btn btn-danger w-100">Remove (moderation)</button>
+                            </form>
+                        </permission>
+                    }
                 </div>
             </div>
 

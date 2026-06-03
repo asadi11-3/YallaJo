@@ -94,4 +94,17 @@ public sealed class BlogsApiClient
     // POST /api/v1/blogs/admin/{id}/reject  (PendingReview → Rejected, with reason)
     public Task<ApiResult> RejectAsync(Guid id, RejectBlogRequest request, CancellationToken ct = default)
         => _api.PostAsync($"/api/v1/blogs/admin/{id}/reject", request, ct);
+
+
+    // POST /api/v1/blogs/{id}/hide  (Published → Hidden, with reason)
+    public Task<ApiResult> HideAsync(Guid id, HideBlogRequest request, CancellationToken ct = default)
+        => _api.PostAsync($"/api/v1/blogs/{id}/hide", request, ct);
+
+    // POST /api/v1/blogs/{id}/unhide  (Hidden → Published)
+    public Task<ApiResult> UnhideAsync(Guid id, BlogRowVersionRequest request, CancellationToken ct = default)
+        => _api.PostAsync($"/api/v1/blogs/{id}/unhide", request, ct);
+
+    // POST /api/v1/blogs/admin/{id}/remove  (any non-deleted → Removed, with reason)
+    public Task<ApiResult> RemoveAsync(Guid id, RemoveBlogRequest request, CancellationToken ct = default)
+        => _api.PostAsync($"/api/v1/blogs/admin/{id}/remove", request, ct);
 }
