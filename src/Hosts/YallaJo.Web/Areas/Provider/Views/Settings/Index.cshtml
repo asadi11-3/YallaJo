@@ -1,0 +1,45 @@
+@using YallaJo.Web.Areas.Provider.Models.Settings
+@model ProviderSettingsVm
+@{
+    ViewData["Title"] = "Provider settings";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0">Provider settings</h2>
+        <a asp-area="Provider" asp-controller="Dashboard" asp-action="Index"
+           class="btn btn-sm btn-outline-secondary">← Back to dashboard</a>
+    </div>
+
+    @* Success/Error flash banners are rendered globally by the shared _Alerts partial. *@
+
+    <div class="card mb-3">
+        <div class="card-header"><strong>Business profile</strong></div>
+        <div class="card-body">
+            <dl class="row mb-0">
+                <dt class="col-sm-4">Business name</dt>
+                <dd class="col-sm-8">@Model.BusinessName</dd>
+
+                <dt class="col-sm-4">Provider type</dt>
+                <dd class="col-sm-8">@Model.ProviderTypeLabel</dd>
+
+                <dt class="col-sm-4">Contact email</dt>
+                <dd class="col-sm-8">@Model.ContactEmail</dd>
+
+                <dt class="col-sm-4">Contact phone</dt>
+                <dd class="col-sm-8">@Model.ContactPhone</dd>
+
+                <dt class="col-sm-4">Address</dt>
+                <dd class="col-sm-8">@Model.Address</dd>
+
+                <dt class="col-sm-4">Description</dt>
+                <dd class="col-sm-8" style="white-space: pre-wrap;">@Model.Description</dd>
+            </dl>
+        </div>
+    </div>
+
+    <p class="text-muted small mb-0">
+        These details are read-only here. To change them, please contact support.
+    </p>
+</div>
