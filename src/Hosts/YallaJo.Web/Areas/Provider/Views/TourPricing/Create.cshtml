@@ -1,0 +1,35 @@
+@using YallaJo.Web.Areas.Provider.Models.TourPricing
+@model TourPricingFormVm
+@{
+    ViewData["Title"] = "Add pricing tier";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0">Add pricing tier</h2>
+        <a asp-area="Provider" asp-controller="TourPricing" asp-action="Index" asp-route-id="@Model.TourId"
+           class="btn btn-sm btn-outline-secondary">← Back to pricing</a>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(Model.TourName))
+    {
+        <p class="text-muted">Listing: <strong>@Model.TourName</strong></p>
+    }
+    <p class="text-muted">New tiers are created as <strong>Active</strong>. Add an <strong>Adult</strong> tier to satisfy the submit requirement.</p>
+
+    <form asp-area="Provider" asp-controller="TourPricing" asp-action="Create" asp-route-id="@Model.TourId" method="post">
+        @Html.AntiForgeryToken()
+        <partial name="_Form" model="Model" />
+
+        <div class="mt-4 d-flex gap-2">
+            <button type="submit" class="btn btn-primary">Create tier</button>
+            <a asp-area="Provider" asp-controller="TourPricing" asp-action="Index" asp-route-id="@Model.TourId"
+               class="btn btn-outline-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

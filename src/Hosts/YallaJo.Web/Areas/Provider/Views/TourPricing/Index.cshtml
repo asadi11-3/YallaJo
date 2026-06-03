@@ -1,0 +1,108 @@
+@using YallaJo.Web.Infrastructure.Authorization
+@using YallaJo.Web.Areas.Provider.Models.TourPricing
+@model TourPricingIndexVm
+@{
+    ViewData["Title"] = "Pricing";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h2 class="mb-1">Pricing</h2>
+            <span class="text-muted">@Model.TourName</span>
+            @if (!string.IsNullOrWhiteSpace(Model.TourStatusLabel))
+            {
+                <span class="text-muted">· @Model.TourStatusLabel</span>
+            }
+        </div>
+        <div class="d-flex gap-2">
+            <a asp-area="Provider" asp-controller="Tours" asp-action="Edit" asp-route-id="@Model.TourId"
+               class="btn btn-sm btn-outline-secondary">← Back to listing</a>
+            <permission require="@WebPermission.TourPricingTier.Create">
+                <a asp-area="Provider" asp-controller="TourPricing" asp-action="Create" asp-route-id="@Model.TourId"
+                   class="btn btn-primary btn-sm">Add pricing tier</a>
+            </permission>
+        </div>
+    </div>
+
+    @* Success/Error flash banners are rendered globally by the shared _Alerts partial. *@
+
+    @if (!Model.HasActiveAdultTier)
+    {
+        <div class="alert alert-info">
+            A listing needs at least one <strong>active Adult</strong> pricing tier before it can be submitted for review.
+            <permission require="@WebPermission.TourPricingTier.Create">
+                <a asp-area="Provider" asp-controller="TourPricing" asp-action="Create" asp-route-id="@Model.TourId"
+                   class="alert-link">Add an Adult pricing tier</a>.
+            </permission>
+        </div>
+    }
+
+    @if (!Model.HasTiers)
+    {
+        <div class="alert alert-secondary">No pricing tiers yet.</div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Type</th>
+                        <th class="text-end">Price</th>
+                        <th>Participants</th>
+                        <th>Status</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var tier in Model.Tiers)
+                    {
+                        <tr>
+                            <td>@tier.Name</td>
+                            <td>
+                                @tier.ParticipantTypeLabel
+                                @if (tier.IsAdult)
+                                {
+                                    <span class="badge text-bg-light ms-1">Adult</span>
+                                }
+                            </td>
+                            <td class="text-end">@tier.Price.ToString("0.##") @tier.Currency</td>
+                            <td>@tier.ParticipantsLabel</td>
+                            <td>
+                                @if (tier.IsActive)
+                                {
+                                    <span class="badge text-bg-success">Active</span>
+                                }
+                                else
+                                {
+                                    <span class="badge text-bg-secondary">Inactive</span>
+                                }
+                            </td>
+                            <td class="text-end">
+                                <div class="d-flex justify-content-end gap-2">
+                                    <permission require="@WebPermission.TourPricingTier.Update">
+                                        <a asp-area="Provider" asp-controller="TourPricing" asp-action="Edit"
+                                           asp-route-id="@Model.TourId" asp-route-tierId="@tier.Id"
+                                           class="btn btn-sm btn-outline-secondary">Edit</a>
+                                    </permission>
+                                    <permission require="@WebPermission.TourPricingTier.Delete">
+                                        <form asp-area="Provider" asp-controller="TourPricing" asp-action="Delete"
+                                              asp-route-id="@Model.TourId" asp-route-tierId="@tier.Id"
+                                              method="post" class="d-inline"
+                                              onsubmit="return confirm('Delete this pricing tier?');">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                                        </form>
+                                    </permission>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

@@ -197,6 +197,16 @@ public static class WebPermission
         public const string Archive = "Permission.Tour.Archive";
     }
 
+    // ── TourPricingTier (provider tour pricing management) ─────────────────────
+    // Mirrors Permission.TourPricingTier.{Action}. Granted to approved Provider/TourGuide
+    // roles via ProviderSelfPermissions + the ContentManagement sweep.
+    public static class TourPricingTier
+    {
+        public const string Create = "Permission.TourPricingTier.Create";
+        public const string Update = "Permission.TourPricingTier.Update";
+        public const string Delete = "Permission.TourPricingTier.Delete";
+    }
+
     // ── AdminProviderQueue (admin provider application review) ─────────────────
     public static class AdminProviderQueue
     {

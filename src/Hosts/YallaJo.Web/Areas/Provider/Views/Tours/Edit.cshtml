@@ -27,6 +27,8 @@
             <a asp-area="Provider" asp-controller="Tours" asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
             <a asp-area="Provider" asp-controller="TourImages" asp-action="Index" asp-route-id="@Model.TourId"
                class="btn btn-outline-secondary">Manage images</a>
+            <a asp-area="Provider" asp-controller="TourPricing" asp-action="Index" asp-route-id="@Model.TourId"
+               class="btn btn-outline-secondary">Manage pricing</a>
         </div>
     </form>
 
