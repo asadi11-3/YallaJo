@@ -3,6 +3,7 @@ using Accounts.Application.Commands.Admin.RejectProvider;
 using Accounts.Application.Commands.Admin.ReinstateProvider;
 using Accounts.Application.Commands.Admin.RequestMoreDocs;
 using Accounts.Application.Commands.Admin.SuspendProvider;
+using Accounts.Application.Queries.GetAdminProviderApplicationById;
 using Accounts.Application.Queries.GetAdminProviderQueue;
 using Accounts.Contracts.Authorization;
 using Accounts.Domain.Enums;
@@ -43,6 +44,21 @@ public static class AdminProviderEndpoints
         .ProducesProblem(StatusCodes.Status401Unauthorized)
         .ProducesProblem(StatusCodes.Status403Forbidden)
         .WithSummary("Get the provider application queue (admin)")
+        .WithMetadata(new MustHavePermissionAttribute(AccountsFeatures.AdminProviderQueue, AppAction.Read))
+        .RequireAuthorization();
+
+        // GET /api/v1/admin/providers/{id} — get a single provider application (admin detail)
+        group.MapGet("/{id:guid}", async (Guid id, ISender sender, CancellationToken ct) =>
+        {
+            var result = await sender.Send(new GetAdminProviderApplicationByIdQuery(id), ct);
+            return result.ToApiResult();
+        })
+        .WithName("GetAdminProviderApplicationById")
+        .Produces<AdminProviderApplicationDetailsResult>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .WithSummary("Get a provider application with documents and review details (admin)")
         .WithMetadata(new MustHavePermissionAttribute(AccountsFeatures.AdminProviderQueue, AppAction.Read))
         .RequireAuthorization();
 
@@ -130,7 +146,6 @@ public static class AdminProviderEndpoints
     }
 }
 
-// ── Request Models ────────────────────────────────────────────────────────────
 
 public sealed record RejectProviderRequest(string Reason);
 

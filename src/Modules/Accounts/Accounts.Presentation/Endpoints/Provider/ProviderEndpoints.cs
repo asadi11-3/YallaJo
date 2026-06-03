@@ -10,6 +10,7 @@ using Accounts.Domain.Enums;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Authorization;
@@ -99,6 +100,39 @@ public static class ProviderEndpoints
         .WithSummary("Add a document to provider application")
         .WithMetadata(new MustHavePermissionAttribute(AccountsFeatures.ProviderApplication, AppAction.Create))
         .RequireAuthorization();
+
+        // POST /api/v1/provider/documents/upload — upload a document file (multipart)
+        group.MapPost("/documents/upload", async (
+            [FromForm] UploadProviderDocumentRequest req, ISender sender, CancellationToken ct) =>
+        {
+            var command = req.TryBuildCommand(out var leasedStream);
+            try
+            {
+                if (command is null)
+                    return Results.ValidationProblem(new Dictionary<string, string[]>
+                    {
+                        ["file"] = ["A file is required."],
+                    });
+
+                var result = await sender.Send(command, ct);
+                return result.ToApiResult();
+            }
+            finally
+            {
+                leasedStream?.Dispose();
+            }
+        })
+        .WithName("UploadProviderApplicationDocument")
+        .Accepts<UploadProviderDocumentRequest>("multipart/form-data")
+        .Produces<AddProviderDocumentResult>(StatusCodes.Status201Created)
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status422UnprocessableEntity)
+        .WithSummary("Upload a document file to the provider application")
+        .WithMetadata(new MustHavePermissionAttribute(AccountsFeatures.ProviderApplication, AppAction.Create))
+        .RequireAuthorization()
+        .DisableAntiforgery();
 
         // PUT /api/v1/provider/documents/{id} — replace a document
         group.MapPut("/documents/{id:guid}", async (Guid id, ReplaceProviderDocumentRequest req, ISender sender, CancellationToken ct) =>

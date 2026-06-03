@@ -17,6 +17,7 @@ public sealed class AccountsPermissionCatalog : IPermissionCatalog
         new(AccountsFeatures.ProviderApplication, AppAction.Create,     PermissionGroup.SystemAccess, "Create provider application"),
         new(AccountsFeatures.ProviderApplication, AppAction.Register,   PermissionGroup.SystemAccess, "Register as a provider (initial draft)"),
         new(AccountsFeatures.ProviderApplication, AppAction.Submit,     PermissionGroup.SystemAccess, "Submit provider application for review"),
+        new(AccountsFeatures.ProviderApplication, AppAction.Update,     PermissionGroup.SystemAccess, "Update provider application (reapply / replace document)"),
 
         new(AccountsFeatures.AdminProviderQueue, AppAction.Read,        PermissionGroup.ModerationTools, "View provider application queue"),
         new(AccountsFeatures.AdminProviderQueue, AppAction.Approve,     PermissionGroup.ModerationTools, "Approve provider application"),
