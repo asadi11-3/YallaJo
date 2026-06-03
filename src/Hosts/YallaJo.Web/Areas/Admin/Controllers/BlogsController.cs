@@ -295,4 +295,38 @@ public sealed class BlogsController : BaseController
         SetFlash(result, "Blog removed.", "Could not remove the blog.");
         return RedirectToAction(nameof(Edit), new { id });
     }
+
+    // ── Tour linking (Phase 4) — Edit-page only ─────────────────────────────────────
+
+    // POST /admin/blogs/{id}/tours
+    [HttpPost("admin/blogs/{id:guid}/tours")]
+    [ValidateAntiForgeryToken]
+    [RequirePermission(WebPermission.BlogTourLink.Create)]
+    public async Task<IActionResult> LinkTour(Guid id, Guid tourId, CancellationToken ct)
+    {
+        if (tourId == Guid.Empty)
+        {
+            SetError("Please select a tour to link.");
+            return RedirectToAction(nameof(Edit), new { id });
+        }
+
+        var result = await _facade.LinkTourAsync(id, tourId, ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+
+        SetFlash(result, "Tour linked.", "Could not link the tour.");
+        return RedirectToAction(nameof(Edit), new { id });
+    }
+
+    // POST /admin/blogs/{id}/tours/{tourId}/unlink
+    [HttpPost("admin/blogs/{id:guid}/tours/{tourId:guid}/unlink")]
+    [ValidateAntiForgeryToken]
+    [RequirePermission(WebPermission.BlogTourLink.Delete)]
+    public async Task<IActionResult> UnlinkTour(Guid id, Guid tourId, CancellationToken ct)
+    {
+        var result = await _facade.UnlinkTourAsync(id, tourId, ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+
+        SetFlash(result, "Tour unlinked.", "Could not unlink the tour.");
+        return RedirectToAction(nameof(Edit), new { id });
+    }
 }

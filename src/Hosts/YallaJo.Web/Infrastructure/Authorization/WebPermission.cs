@@ -155,4 +155,12 @@ public static class WebPermission
     {
         public const string Read = "Permission.AdminBlogQueue.Read";
     }
+
+    // ── BlogTourLink ──────────────────────────────────────────────────────────
+    // Mirror the ContentBlogs backend permissions (Permission.BlogTourLink.{Action}).
+    public static class BlogTourLink
+    {
+        public const string Create = "Permission.BlogTourLink.Create";
+        public const string Delete = "Permission.BlogTourLink.Delete";
+    }
 }

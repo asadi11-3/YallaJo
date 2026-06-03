@@ -107,4 +107,22 @@ public sealed class BlogsApiClient
     // POST /api/v1/blogs/admin/{id}/remove  (any non-deleted → Removed, with reason)
     public Task<ApiResult> RemoveAsync(Guid id, RemoveBlogRequest request, CancellationToken ct = default)
         => _api.PostAsync($"/api/v1/blogs/admin/{id}/remove", request, ct);
+
+    // ── Tour linking (Phase 4) ────────────────────────────────────────────────────
+
+    // GET /api/v1/blogs/{id}  (public detail — used to read currently linked tours)
+    public Task<ApiResult<BlogDetailResponse>> GetBlogByIdAsync(Guid id, CancellationToken ct = default)
+        => _api.GetAsync<BlogDetailResponse>($"/api/v1/blogs/{id}", ct);
+
+    // GET /api/v1/tours  (published tours, for the link dropdown lookup)
+    public Task<ApiResult<TourLookupPageResponse>> ListToursAsync(int page, int pageSize, CancellationToken ct = default)
+        => _api.GetAsync<TourLookupPageResponse>($"/api/v1/tours?page={page}&pageSize={pageSize}", ct);
+
+    // POST /api/v1/blogs/{id}/tours  (append link(s); body carries RowVersion)
+    public Task<ApiResult> LinkToursAsync(Guid id, BlogLinkToursRequest request, CancellationToken ct = default)
+        => _api.PostAsync($"/api/v1/blogs/{id}/tours", request, ct);
+
+    // DELETE /api/v1/blogs/{id}/tours/{tourId}  (body carries RowVersion)
+    public Task<ApiResult> UnlinkTourAsync(Guid id, Guid tourId, BlogRowVersionRequest request, CancellationToken ct = default)
+        => _api.DeleteAsync($"/api/v1/blogs/{id}/tours/{tourId}", request, ct);
 }

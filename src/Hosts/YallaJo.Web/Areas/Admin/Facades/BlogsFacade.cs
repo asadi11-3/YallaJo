@@ -93,6 +93,9 @@ public sealed class BlogsFacade
         IsFeatured      = isFeatured,
     };
 
+    // The /api/v1/tours endpoint caps pageSize at 50 (validator InclusiveBetween(1,50)).
+    private const int TourLookupPageSize = 50;
+
     // ── Edit load ─────────────────────────────────────────────────────────────────
     public async Task<ApiResult<EditBlogVm>> GetForEditAsync(Guid id, CancellationToken ct = default)
     {
@@ -102,8 +105,56 @@ public sealed class BlogsFacade
         if (!result.IsSuccess || result.Data is null)
             return ApiResult<EditBlogVm>.Fail(result.StatusCode, result.Error ?? "Could not load the blog.");
 
-        return ApiResult<EditBlogVm>.Ok(BlogsMapper.ToEditVm(result.Data));
+        // Tour-linking data is supplementary — load in parallel and tolerate failure
+        // (the admin detail DTO carries no tours, so linked tours come from the public
+        // blog detail, and titles are resolved from the published-tour lookup).
+        var detailTask = _api.GetBlogByIdAsync(id, ct);
+        var toursTask = _api.ListToursAsync(1, TourLookupPageSize, ct);
+        await Task.WhenAll(detailTask, toursTask);
+
+        var detail = await detailTask;
+        var tours = await toursTask;
+
+        var tourNames = tours is { IsSuccess: true, Data: { } td }
+            ? td.Items.ToDictionary(t => t.Id, t => t.Name)
+            : new Dictionary<Guid, string>();
+
+        var linkedTourIds = detail is { IsSuccess: true, Data: { } dd }
+            ? dd.LinkedTours.OrderBy(t => t.SortOrder).Select(t => t.TourId).ToList()
+            : [];
+
+        var linkedTours = linkedTourIds
+            .Select(tid => new LinkedTourVm
+            {
+                TourId = tid,
+                DisplayName = tourNames.TryGetValue(tid, out var name) ? name : tid.ToString(),
+            })
+            .ToList();
+
+        // Offer only published tours that aren't already linked.
+        var availableTours = (tours is { IsSuccess: true, Data: { } ad } ? ad.Items : [])
+            .Where(t => !linkedTourIds.Contains(t.Id))
+            .Select(t => new TourOptionVm { TourId = t.Id, Name = t.Name })
+            .ToList();
+
+        return ApiResult<EditBlogVm>.Ok(
+            BlogsMapper.ToEditVm(result.Data, linkedTours, availableTours));
     }
+
+    // ── Tour linking (Phase 4) ──────────────────────────────────────────────────────
+    public Task<ApiResult> LinkTourAsync(Guid id, Guid tourId, CancellationToken ct = default)
+        => WithRowVersion(
+            id,
+            rv => _api.LinkToursAsync(id, new BlogLinkToursRequest(rv, [new BlogLinkTourItem(tourId)]), ct),
+            "Could not link the tour.",
+            ct);
+
+    public Task<ApiResult> UnlinkTourAsync(Guid id, Guid tourId, CancellationToken ct = default)
+        => WithRowVersion(
+            id,
+            rv => _api.UnlinkTourAsync(id, tourId, new BlogRowVersionRequest(rv), ct),
+            "Could not unlink the tour.",
+            ct);
 
     // ── Create / Update / Delete ──────────────────────────────────────────────────
     public async Task<ApiResult<CreateBlogResponse>> CreateAsync(CreateBlogVm vm, CancellationToken ct = default)

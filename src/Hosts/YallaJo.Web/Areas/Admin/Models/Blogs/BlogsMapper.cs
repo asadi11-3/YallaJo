@@ -28,7 +28,13 @@ public static class BlogsMapper
     };
 
     // ── Edit form ────────────────────────────────────────────────────────────────
-    public static EditBlogVm ToEditVm(AdminBlogDetailResponse r) => new()
+    public static EditBlogVm ToEditVm(AdminBlogDetailResponse r) =>
+        ToEditVm(r, [], []);
+
+    public static EditBlogVm ToEditVm(
+        AdminBlogDetailResponse r,
+        IReadOnlyList<LinkedTourVm> linkedTours,
+        IReadOnlyList<TourOptionVm> availableTours) => new()
     {
         Id              = r.Id,
         RowVersion      = EncodeRowVersion(r.RowVersion),
@@ -45,6 +51,8 @@ public static class BlogsMapper
         PublishedAt     = r.PublishedAt,
         ViewCount       = r.ViewCount,
         LanguageCode    = r.LanguageCode,
+        LinkedTours     = linkedTours,
+        AvailableTours  = availableTours,
     };
 
     // ── Requests ─────────────────────────────────────────────────────────────────

@@ -196,7 +196,66 @@
                 </ul>
             </div>
 
-            <p class="text-muted small mt-3">Blog images are managed in a separate phase.</p>
+            <permission require="@WebPermission.Attachment.Read">
+                <div class="card mt-3">
+                    <div class="card-header"><strong>Images / attachments</strong></div>
+                    <div class="card-body">
+                        <p class="small text-muted mb-2">Blog images are managed through the shared attachments page.</p>
+                        <a asp-area="Admin" asp-controller="Attachments" asp-action="Index"
+                           asp-route-entityType="Blog" asp-route-entityId="@Model.Id"
+                           class="btn btn-outline-secondary w-100">Manage images / attachments</a>
+                    </div>
+                </div>
+            </permission>
+
+            <div class="card mt-3">
+                <div class="card-header"><strong>Linked tours</strong></div>
+                <div class="card-body">
+                    @if (Model.LinkedTours.Count == 0)
+                    {
+                        <p class="small text-muted mb-2">No tours linked.</p>
+                    }
+                    else
+                    {
+                        <ul class="list-group list-group-flush small mb-2">
+                            @foreach (var tour in Model.LinkedTours)
+                            {
+                                <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                    <span>@tour.DisplayName</span>
+                                    <permission require="@WebPermission.BlogTourLink.Delete">
+                                        <form asp-area="Admin" asp-controller="Blogs" asp-action="UnlinkTour"
+                                              asp-route-id="@Model.Id" asp-route-tourId="@tour.TourId" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">Unlink</button>
+                                        </form>
+                                    </permission>
+                                </li>
+                            }
+                        </ul>
+                    }
+
+                    <permission require="@WebPermission.BlogTourLink.Create">
+                        @if (Model.AvailableTours.Count > 0)
+                        {
+                            <form asp-area="Admin" asp-controller="Blogs" asp-action="LinkTour"
+                                  asp-route-id="@Model.Id" method="post" class="d-flex gap-1">
+                                @Html.AntiForgeryToken()
+                                <select name="tourId" class="form-select form-select-sm">
+                                    @foreach (var opt in Model.AvailableTours)
+                                    {
+                                        <option value="@opt.TourId">@opt.Name</option>
+                                    }
+                                </select>
+                                <button type="submit" class="btn btn-sm btn-outline-primary">Link</button>
+                            </form>
+                        }
+                        else
+                        {
+                            <p class="small text-muted mb-0">No more published tours available to link.</p>
+                        }
+                    </permission>
+                </div>
+            </div>
         </div>
     </div>
 </div>

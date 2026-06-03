@@ -41,4 +41,22 @@ public sealed class EditBlogVm
     public DateTime? PublishedAt { get; init; }
     public int ViewCount { get; init; }
     public string LanguageCode { get; init; } = string.Empty;
+
+    // ── Tour linking (Phase 4) ───────────────────────────────────────────────────
+    public IReadOnlyList<LinkedTourVm> LinkedTours { get; init; } = [];
+    public IReadOnlyList<TourOptionVm> AvailableTours { get; init; } = [];
+}
+
+/// <summary>A tour currently linked to the blog (title resolved from the lookup; falls back to id).</summary>
+public sealed class LinkedTourVm
+{
+    public Guid TourId { get; init; }
+    public string DisplayName { get; init; } = string.Empty;
+}
+
+/// <summary>A selectable published tour for the link dropdown.</summary>
+public sealed class TourOptionVm
+{
+    public Guid TourId { get; init; }
+    public string Name { get; init; } = string.Empty;
 }

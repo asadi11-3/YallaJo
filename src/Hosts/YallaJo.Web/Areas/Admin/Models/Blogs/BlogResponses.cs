@@ -56,3 +56,35 @@ public sealed class CreateBlogResponse
     public Guid BlogId { get; init; }
     public string Slug { get; init; } = string.Empty;
 }
+
+/// <summary>
+/// Subset of the public <c>BlogDetailDto</c> from <c>GET /api/v1/blogs/{id}</c>, used
+/// only to read the blog's currently linked tours (the admin detail DTO has none).
+/// </summary>
+public sealed class BlogDetailResponse
+{
+    public Guid Id { get; init; }
+    public List<BlogTourLinkResponse> LinkedTours { get; init; } = [];
+}
+
+/// <summary>Mirrors <c>BlogTourSummaryDto</c> (linked tour reference — id + sort order only).</summary>
+public sealed class BlogTourLinkResponse
+{
+    public Guid TourId { get; init; }
+    public int SortOrder { get; init; }
+}
+
+/// <summary>Mirrors the public <c>TourSummaryDto</c> item from <c>GET /api/v1/tours</c> (lookup).</summary>
+public sealed class TourLookupResponse
+{
+    public Guid Id { get; init; }
+    public string Name { get; init; } = string.Empty;
+    public string Slug { get; init; } = string.Empty;
+}
+
+/// <summary>Mirrors the API <c>PaginatedResult&lt;TourSummaryDto&gt;</c> for the tour lookup.</summary>
+public sealed class TourLookupPageResponse
+{
+    public List<TourLookupResponse> Items { get; init; } = [];
+    public int TotalCount { get; init; }
+}

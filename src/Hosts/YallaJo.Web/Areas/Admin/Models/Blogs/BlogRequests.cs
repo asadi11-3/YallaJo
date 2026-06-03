@@ -37,3 +37,9 @@ public sealed record HideBlogRequest(byte[] RowVersion, string Reason);
 
 /// <summary>Mirrors the API <c>RemoveBlogRequest</c> for <c>POST /api/v1/blogs/admin/{id}/remove</c>.</summary>
 public sealed record RemoveBlogRequest(byte[] RowVersion, string Reason);
+
+/// <summary>Mirrors the API <c>BlogLinkToursRequest</c> for <c>POST /api/v1/blogs/{id}/tours</c>.</summary>
+public sealed record BlogLinkToursRequest(byte[] RowVersion, IReadOnlyCollection<BlogLinkTourItem> Tours);
+
+/// <summary>Mirrors the API <c>BlogLinkTourItem</c>.</summary>
+public sealed record BlogLinkTourItem(Guid TourId, int? SortOrder = null);
