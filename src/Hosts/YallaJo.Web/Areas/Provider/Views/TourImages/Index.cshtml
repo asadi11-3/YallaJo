@@ -1,0 +1,88 @@
+@using YallaJo.Web.Infrastructure.Authorization
+@using YallaJo.Web.Areas.Provider.Models.TourImages
+@model TourImagesVm
+@{
+    ViewData["Title"] = "Listing images";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0">Listing images</h2>
+        <a asp-area="Provider" asp-controller="Tours" asp-action="Edit" asp-route-id="@Model.TourId"
+           class="btn btn-sm btn-outline-secondary">← Back to listing</a>
+    </div>
+
+    @* Success/Error flash banners are rendered globally by the shared _Alerts partial. *@
+
+    <permission require="@WebPermission.Attachment.Create">
+        <div class="card mb-4">
+            <div class="card-header"><strong>Upload an image</strong></div>
+            <div class="card-body">
+                <form asp-area="Provider" asp-controller="TourImages" asp-action="Upload"
+                      asp-route-id="@Model.TourId" method="post" enctype="multipart/form-data"
+                      class="row g-2 align-items-end">
+                    @Html.AntiForgeryToken()
+                    <div class="col-md-8">
+                        <label for="File" class="form-label">Image file</label>
+                        <input id="File" name="File" type="file" class="form-control"
+                               accept="@TourImageUploadVm.AcceptAttribute" />
+                    </div>
+                    <div class="col-md-4 d-grid">
+                        <button type="submit" class="btn btn-primary">Upload image</button>
+                    </div>
+                </form>
+                <div class="form-text mt-2">
+                    Accepted formats: JPG or PNG. The server validates the file type and signature.
+                </div>
+            </div>
+        </div>
+    </permission>
+
+    <div class="card">
+        <div class="card-header"><strong>Images</strong></div>
+        <div class="card-body">
+            @if (!Model.HasImages)
+            {
+                <p class="small text-muted mb-0">No images uploaded yet. Upload at least one image before submitting your listing for review.</p>
+            }
+            else
+            {
+                <div class="row g-3">
+                    @foreach (var img in Model.Images)
+                    {
+                        <div class="col-sm-6 col-md-4 col-lg-3">
+                            <div class="card h-100">
+                                <img src="@img.Url" class="card-img-top" alt="Listing image"
+                                     style="height: 160px; object-fit: cover;" />
+                                <div class="card-body p-2">
+                                    <div class="small text-truncate" title="@img.FileName">@(img.FileName ?? "image")</div>
+                                    <div class="small text-muted">
+                                        @img.UploadedAt.ToString("yyyy-MM-dd")
+                                        @if (!string.IsNullOrEmpty(img.FileSizeLabel))
+                                        {
+                                            <span>· @img.FileSizeLabel</span>
+                                        }
+                                    </div>
+                                </div>
+                                <div class="card-footer p-2 d-flex justify-content-between align-items-center">
+                                    <a href="@img.Url" target="_blank" rel="noopener noreferrer"
+                                       class="btn btn-sm btn-outline-secondary">Open</a>
+                                    <permission require="@WebPermission.Attachment.Delete">
+                                        <form asp-area="Provider" asp-controller="TourImages" asp-action="Delete"
+                                              asp-route-id="@Model.TourId" asp-route-attachmentId="@img.Id"
+                                              method="post" class="d-inline"
+                                              onsubmit="return confirm('Delete this image?');">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                                        </form>
+                                    </permission>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>
