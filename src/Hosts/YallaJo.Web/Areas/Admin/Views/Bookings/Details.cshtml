@@ -1,0 +1,106 @@
+@using YallaJo.Web.Areas.Admin.Models.Bookings
+@model AdminBookingDetailsVm
+@{
+    ViewData["Title"] = "Booking details";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    string Money(decimal amount) => $"{amount.ToString("0.##")} {Model.Currency}";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h2 class="mb-1">Booking <code>@Model.Reference</code></h2>
+            <span class="badge @Model.StatusBadgeClass">@Model.Status</span>
+        </div>
+        <a asp-area="Admin" asp-controller="Bookings" asp-action="Index" class="btn btn-sm btn-outline-secondary">Back to bookings</a>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <div class="card border mb-3">
+                <div class="card-header"><strong>Overview</strong></div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4">Tour</dt>
+                        <dd class="col-sm-8">@Model.TourName <span class="text-muted small d-block"><code>@Model.TourId</code></span></dd>
+
+                        <dt class="col-sm-4">Provider ID</dt>
+                        <dd class="col-sm-8"><code>@Model.ProviderId</code></dd>
+
+                        <dt class="col-sm-4">Traveler</dt>
+                        <dd class="col-sm-8">@Model.TravelerHandle</dd>
+
+                        <dt class="col-sm-4">Availability slot ID</dt>
+                        <dd class="col-sm-8"><code>@Model.AvailabilitySlotId</code></dd>
+
+                        <dt class="col-sm-4">Guests</dt>
+                        <dd class="col-sm-8">@Model.ParticipantCount</dd>
+
+                        <dt class="col-sm-4">Instant booking</dt>
+                        <dd class="col-sm-8">@(Model.IsInstantBooking ? "Yes" : "No")</dd>
+
+                        <dt class="col-sm-4">Special requests</dt>
+                        <dd class="col-sm-8">@(string.IsNullOrWhiteSpace(Model.SpecialRequests) ? "—" : Model.SpecialRequests)</dd>
+
+                        <dt class="col-sm-4">Created</dt>
+                        <dd class="col-sm-8">@Model.CreatedAt.ToString("yyyy-MM-dd HH:mm")</dd>
+
+                        <dt class="col-sm-4">Payment expires</dt>
+                        <dd class="col-sm-8">@(Model.PaymentExpiresAt is { } p ? p.ToString("yyyy-MM-dd HH:mm") : "—")</dd>
+
+                        <dt class="col-sm-4">Last updated</dt>
+                        <dd class="col-sm-8">@(Model.UpdatedAt is { } u ? u.ToString("yyyy-MM-dd HH:mm") : "—")</dd>
+                    </dl>
+                </div>
+            </div>
+
+            @if (Model.IsCancelled)
+            {
+                <div class="card border">
+                    <div class="card-header"><strong>Cancellation</strong></div>
+                    <div class="card-body">
+                        <dl class="row mb-0">
+                            <dt class="col-sm-4">Cancelled at</dt>
+                            <dd class="col-sm-8">@(Model.CancelledAt?.ToString("yyyy-MM-dd HH:mm") ?? "—")</dd>
+                            <dt class="col-sm-4">Reason</dt>
+                            <dd class="col-sm-8">@(string.IsNullOrWhiteSpace(Model.CancellationReason) ? "—" : Model.CancellationReason)</dd>
+                            <dt class="col-sm-4">Refund</dt>
+                            <dd class="col-sm-8">@(Model.RefundAmount is { } r ? Money(r) : "—")</dd>
+                        </dl>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="col-lg-5">
+            <div class="card border">
+                <div class="card-header"><strong>Pricing</strong></div>
+                <div class="card-body">
+                    @if (Model.LineItems.Count > 0)
+                    {
+                        <table class="table table-sm mb-3">
+                            <thead><tr><th>Tier</th><th class="text-end">Qty</th><th class="text-end">Unit</th></tr></thead>
+                            <tbody>
+                                @foreach (var li in Model.LineItems)
+                                {
+                                    <tr>
+                                        <td>@li.TierType</td>
+                                        <td class="text-end">@li.Count</td>
+                                        <td class="text-end">@li.UnitPrice.ToString("0.##") @li.Currency</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                    <div class="d-flex justify-content-between"><span>Subtotal</span><span>@Money(Model.Subtotal)</span></div>
+                    @if (Model.DiscountAmount > 0)
+                    {
+                        <div class="d-flex justify-content-between text-success"><span>Discount</span><span>-@Money(Model.DiscountAmount)</span></div>
+                    }
+                    <hr class="my-2" />
+                    <div class="d-flex justify-content-between fw-bold"><span>Total</span><span>@Money(Model.TotalAmount)</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

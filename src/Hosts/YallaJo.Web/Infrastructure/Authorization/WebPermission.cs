@@ -153,6 +153,14 @@ public static class WebPermission
         public const string Cancel   = "Permission.TourBooking.Cancel";
     }
 
+    // ── AdminBookingDashboard (Permission.AdminBookingDashboard.*) ─────────────────
+    // Backs the admin cross-provider booking dashboard (AB-1). Granted to
+    // Admin/SuperAdmin/Owner via the catalog-driven role sweep.
+    public static class AdminBookingDashboard
+    {
+        public const string Read = "Permission.AdminBookingDashboard.Read";
+    }
+
     // ── Blog ──────────────────────────────────────────────────────────────────
     // Mirror the ContentBlogs backend permissions (Permission.Blog.{Action}).
     public static class Blog

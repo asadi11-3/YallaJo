@@ -56,7 +56,8 @@
 
                     var hasModerationMenu = CurrentUser.HasPermission(WebPermission.Tour.ReadAny)
                                             || CurrentUser.HasPermission(WebPermission.AdminProviderQueue.Read)
-                                            || CurrentUser.HasPermission(WebPermission.Blog.Read);
+                                            || CurrentUser.HasPermission(WebPermission.Blog.Read)
+                                            || CurrentUser.HasPermission(WebPermission.AdminBookingDashboard.Read);
 
                     var hasProviderMenu = CurrentUser.HasPermission(WebPermission.ProviderDashboard.Read)
                                           || CurrentUser.HasPermission(WebPermission.ProviderApplication.Read)
@@ -145,6 +146,9 @@
                                     </permission>
                                     <permission require="@WebPermission.Blog.Read">
                                         <li><a class="dropdown-item" asp-area="Admin" asp-controller="Blogs" asp-action="Index">Blogs</a></li>
+                                    </permission>
+                                    <permission require="@WebPermission.AdminBookingDashboard.Read">
+                                        <li><a class="dropdown-item" asp-area="Admin" asp-controller="Bookings" asp-action="Index">Bookings</a></li>
                                     </permission>
                                 </ul>
                             </li>

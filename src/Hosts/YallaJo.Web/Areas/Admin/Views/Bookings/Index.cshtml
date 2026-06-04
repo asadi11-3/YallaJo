@@ -1,0 +1,129 @@
+@using YallaJo.Web.Areas.Admin.Models.Bookings
+@model AdminBookingsIndexVm
+@{
+    ViewData["Title"] = "Bookings";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    string NextPageUrl() => Url.Action("Index", "Bookings", new
+    {
+        area = "Admin",
+        status = Model.Filters.Status,
+        fromDate = Model.Filters.FromDate,
+        toDate = Model.Filters.ToDate,
+        providerId = Model.Filters.ProviderId,
+        tourId = Model.Filters.TourId,
+        userId = Model.Filters.UserId,
+        cursor = Model.NextCursor,
+    })!;
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0">Bookings</h2>
+        @if (Model.TotalCount is { } total)
+        {
+            <span class="text-muted small">@total total</span>
+        }
+    </div>
+
+    @if (ViewBag.Error is string vbe) { <div class="alert alert-danger">@vbe</div> }
+
+    <form asp-area="Admin" asp-controller="Bookings" asp-action="Index" method="get" class="row g-2 mb-3">
+        <div class="col-sm-3">
+            <label class="form-label small mb-1">Status</label>
+            <select name="status" class="form-select">
+                <option value="">All statuses</option>
+                @foreach (var s in AdminBookingFiltersVm.StatusOptions)
+                {
+                    if (string.Equals(s, Model.Filters.Status, StringComparison.OrdinalIgnoreCase))
+                    {
+                        <option value="@s" selected>@s</option>
+                    }
+                    else
+                    {
+                        <option value="@s">@s</option>
+                    }
+                }
+            </select>
+        </div>
+        <div class="col-sm-2">
+            <label class="form-label small mb-1">From</label>
+            <input type="date" name="fromDate" value="@Model.Filters.FromDate" class="form-control" />
+        </div>
+        <div class="col-sm-2">
+            <label class="form-label small mb-1">To</label>
+            <input type="date" name="toDate" value="@Model.Filters.ToDate" class="form-control" />
+        </div>
+        <div class="col-sm-2">
+            <label class="form-label small mb-1">Provider ID</label>
+            <input type="text" name="providerId" value="@Model.Filters.ProviderId" class="form-control" placeholder="GUID" />
+        </div>
+        <div class="col-sm-2">
+            <label class="form-label small mb-1">Tour ID</label>
+            <input type="text" name="tourId" value="@Model.Filters.TourId" class="form-control" placeholder="GUID" />
+        </div>
+        <div class="col-sm-2">
+            <label class="form-label small mb-1">Traveler (user) ID</label>
+            <input type="text" name="userId" value="@Model.Filters.UserId" class="form-control" placeholder="GUID" />
+        </div>
+        <div class="col-sm-2 d-flex align-items-end gap-2">
+            <button type="submit" class="btn btn-outline-secondary">Filter</button>
+            <a asp-area="Admin" asp-controller="Bookings" asp-action="Index" class="btn btn-link">Reset</a>
+        </div>
+    </form>
+
+    @if (!Model.HasItems)
+    {
+        <div class="alert alert-info">No bookings found in this view.</div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Reference</th>
+                        <th>Tour</th>
+                        <th>Provider</th>
+                        <th>Traveler</th>
+                        <th class="text-end">Guests</th>
+                        <th class="text-end">Total</th>
+                        <th>Status</th>
+                        <th>Created</th>
+                        <th class="text-end">Refund</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var b in Model.Items)
+                    {
+                        <tr>
+                            <td><code>@b.Reference</code></td>
+                            <td>@b.TourName</td>
+                            <td><span class="text-muted small">@b.ProviderId.ToString("N").Substring(0, 8)</span></td>
+                            <td><span class="text-muted small">@b.TravelerHandle</span></td>
+                            <td class="text-end">@b.ParticipantCount</td>
+                            <td class="text-end">@b.TotalAmount.ToString("0.##") @b.Currency</td>
+                            <td><span class="badge @b.StatusBadgeClass">@b.Status</span></td>
+                            <td>@b.CreatedAt.ToString("yyyy-MM-dd")</td>
+                            <td class="text-end">@(b.RefundAmount is { } r ? $"{r.ToString("0.##")} {b.Currency}" : "—")</td>
+                            <td class="text-end">
+                                <a asp-area="Admin" asp-controller="Bookings" asp-action="Details"
+                                   asp-route-id="@b.Id" class="btn btn-sm btn-outline-primary">Details</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @if (Model.HasNextPage)
+        {
+            <nav aria-label="Bookings pagination">
+                <ul class="pagination justify-content-center mb-0">
+                    <li class="page-item"><a class="page-link" href="@NextPageUrl()">Next →</a></li>
+                </ul>
+            </nav>
+        }
+    }
+</div>
