@@ -1,0 +1,145 @@
+@using YallaJo.Web.Areas.Admin.Models.Support
+@using YallaJo.Web.Infrastructure.Authorization
+@model SupportTicketDetailVm
+@{
+    ViewData["Title"] = "Support ticket";
+    ViewData["AdminNav"] = "Support";
+    var canAct = !Model.IsClosed;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-1">@Model.Subject</h1>
+        <p class="text-body-secondary mb-0 font-data">@Model.Id.ToString("D")</p>
+    </div>
+    <a asp-area="Admin" asp-controller="Support" asp-action="Index" class="btn btn-outline-secondary">Back to list</a>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header"><span class="fw-semibold">Conversation</span></div>
+            <div class="card-body">
+                @if (Model.Messages.Count == 0)
+                {
+                    <p class="text-body-secondary mb-0">No messages yet.</p>
+                }
+                else
+                {
+                    @foreach (var m in Model.Messages)
+                    {
+                        <div class="border rounded p-3 mb-3 @(m.IsInternal ? "bg-warning bg-opacity-10" : "")">
+                            <div class="d-flex justify-content-between small text-body-secondary mb-1">
+                                <span class="font-data">@m.AuthorUserId.ToString("D")[..8]</span>
+                                <span class="font-data">@m.CreatedAt.ToString("g")</span>
+                            </div>
+                            @if (m.IsInternal)
+                            {
+                                <span class="badge bg-warning bg-opacity-10 text-warning mb-2">Internal note</span>
+                            }
+                            <div>@m.Body</div>
+                        </div>
+                    }
+                }
+            </div>
+            @if (canAct)
+            {
+                <div class="card-footer">
+                    <form method="post" asp-area="Admin" asp-controller="Support" asp-action="Reply" asp-route-id="@Model.Id">
+                        @Html.AntiForgeryToken()
+                        <div class="mb-2">
+                            <label class="form-label" for="body">Reply</label>
+                            <textarea class="form-control" id="body" name="body" rows="3" required></textarea>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="isInternal" name="isInternal" value="true" />
+                            <label class="form-check-label" for="isInternal">Internal note (not visible to the user)</label>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Post reply</button>
+                    </form>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header"><span class="fw-semibold">Details</span></div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-5">Status</dt>
+                    <dd class="col-7"><span class="badge bg-@SupportMapper.StatusColor(Model.Status) bg-opacity-10 text-@SupportMapper.StatusColor(Model.Status)">@Model.Status</span></dd>
+                    <dt class="col-5">Category</dt>
+                    <dd class="col-7">@Model.Category</dd>
+                    <dt class="col-5">Priority</dt>
+                    <dd class="col-7">@Model.Priority</dd>
+                    <dt class="col-5">Created by</dt>
+                    <dd class="col-7 font-data">@Model.CreatedByUserId.ToString("D")[..8]</dd>
+                    <dt class="col-5">SLA breach</dt>
+                    <dd class="col-7 font-data">@Model.SlaBreachAt.ToString("g")</dd>
+                    <dt class="col-5">Assigned to</dt>
+                    <dd class="col-7 font-data">@(Model.AssignedToUserId?.ToString("D")[..8] ?? "Unassigned")</dd>
+                    <dt class="col-5">Created</dt>
+                    <dd class="col-7 font-data">@Model.CreatedAt.ToString("g")</dd>
+                    @if (Model.ResolutionNotes is not null)
+                    {
+                        <dt class="col-5">Resolution</dt>
+                        <dd class="col-7">@Model.ResolutionNotes</dd>
+                    }
+                </dl>
+            </div>
+        </div>
+
+        @if (canAct)
+        {
+            <div class="card shadow-sm">
+                <div class="card-header"><span class="fw-semibold">Actions</span></div>
+                <div class="card-body d-grid gap-2">
+                    <permission require="@WebPermission.AdminSupportQueue.Assign">
+                        <form method="post" asp-area="Admin" asp-controller="Support" asp-action="Assign" asp-route-id="@Model.Id" class="d-flex gap-2">
+                            @Html.AntiForgeryToken()
+                            <input type="text" class="form-control font-data" name="adminUserId" placeholder="Admin user id" required />
+                            <button type="submit" class="btn btn-outline-primary">Assign</button>
+                        </form>
+                    </permission>
+                    <permission require="@WebPermission.AdminSupportQueue.Resolve">
+                        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#resolveModal">Resolve</button>
+                    </permission>
+                    <permission require="@WebPermission.SupportTicket.Close">
+                        <form method="post" asp-area="Admin" asp-controller="Support" asp-action="Close" asp-route-id="@Model.Id">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="rowVersion" value="@Model.RowVersion" />
+                            <button type="submit" class="btn btn-outline-secondary w-100">Close ticket</button>
+                        </form>
+                    </permission>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@if (canAct)
+{
+    <permission require="@WebPermission.AdminSupportQueue.Resolve">
+        <div class="modal fade" id="resolveModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <form method="post" asp-area="Admin" asp-controller="Support" asp-action="Resolve" asp-route-id="@Model.Id" class="modal-content">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="rowVersion" value="@Model.RowVersion" />
+                    <div class="modal-header">
+                        <h5 class="modal-title">Resolve ticket</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <label class="form-label" for="notes">Resolution notes</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="3"></textarea>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-success">Resolve</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </permission>
+}

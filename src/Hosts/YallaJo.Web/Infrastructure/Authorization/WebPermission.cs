@@ -53,6 +53,14 @@ public static class WebPermission
         public const string Update = "Permission.System.Update";
     }
 
+    // ── Outbox (ops: outbox dead-letter management) ─────────────────────────────
+    // Mirror the SharedKernel ops permissions (Permission.Outbox.{Action}).
+    public static class Outbox
+    {
+        public const string Read   = "Permission.Outbox.Read";
+        public const string Replay = "Permission.Outbox.Replay";
+    }
+
     // ── Category ─────────────────────────────────────────────────────────────
     public static class Category
     {
@@ -140,6 +148,12 @@ public static class WebPermission
         public const string DeleteOwn = "Permission.Tour.DeleteOwn";
         public const string Submit    = "Permission.Tour.Submit";
         public const string Archive   = "Permission.Tour.Archive";
+
+        // Admin moderation
+        public const string Approve   = "Permission.Tour.Approve";
+        public const string Reject    = "Permission.Tour.Reject";
+        public const string Suspend   = "Permission.Tour.Suspend";
+        public const string Reinstate = "Permission.Tour.Reinstate";
     }
 
     // ── TourSchedule ──────────────────────────────────────────────────────────
@@ -188,11 +202,15 @@ public static class WebPermission
         public const string Update = "Permission.TourGuide.Update";
     }
 
-    // ── TourGuideProfile (guide self profile) ─────────────────────────────────
+    // ── TourGuideProfile (guide self profile + admin moderation) ──────────────
     public static class TourGuideProfile
     {
         public const string Read      = "Permission.TourGuideProfile.Read";
         public const string DeleteOwn = "Permission.TourGuideProfile.DeleteOwn";
+        public const string Suspend   = "Permission.TourGuideProfile.Suspend";
+        public const string Reinstate = "Permission.TourGuideProfile.Reinstate";
+        public const string Update    = "Permission.TourGuideProfile.Update";
+        public const string DeleteAny = "Permission.TourGuideProfile.DeleteAny";
     }
 
     // ── TourBooking (provider-side booking lifecycle) ─────────────────────────
@@ -215,10 +233,12 @@ public static class WebPermission
         public const string Reject  = "Permission.JoinRequest.Reject";
     }
 
-    // ── Payout (provider earnings/payouts) ────────────────────────────────────
+    // ── Payout (provider earnings/payouts + admin batch moderation) ───────────
     public static class Payout
     {
-        public const string Read = "Permission.Payout.Read";
+        public const string Read    = "Permission.Payout.Read";
+        public const string Trigger = "Permission.Payout.Trigger";
+        public const string Approve = "Permission.Payout.Approve";
     }
 
     // ── Refund (provider disputes) ────────────────────────────────────────────
@@ -331,5 +351,156 @@ public static class WebPermission
         public const string RequestDocs = "Permission.AdminProviderQueue.RequestDocs";
         public const string Suspend   = "Permission.AdminProviderQueue.Suspend";
         public const string Reinstate = "Permission.AdminProviderQueue.Reinstate";
+    }
+
+    // ── AdminDashboard (admin analytics dashboards) ────────────────────────────
+    // Mirror the Analytics backend permissions (Permission.AdminDashboard.{Action}).
+    public static class AdminDashboard
+    {
+        public const string Read = "Permission.AdminDashboard.Read";
+    }
+
+    // ── Interaction (user interaction analytics) ───────────────────────────────
+    public static class Interaction
+    {
+        public const string Read = "Permission.Interaction.Read";
+    }
+
+    // ── AdminFinanceDashboard (admin finance/earnings dashboards) ──────────────
+    // Mirror the Finance backend permission (Permission.AdminFinanceDashboard.Read).
+    public static class AdminFinanceDashboard
+    {
+        public const string Read    = "Permission.AdminFinanceDashboard.Read";
+        public const string Update  = "Permission.AdminFinanceDashboard.Update";
+        public const string Approve = "Permission.AdminFinanceDashboard.Approve";
+    }
+
+    // ── CommissionRule (admin commission-rule CRUD) ─────────────────────────────
+    // Mirror the Finance backend permissions (Permission.CommissionRule.{Action}).
+    public static class CommissionRule
+    {
+        public const string Read   = "Permission.CommissionRule.Read";
+        public const string Create = "Permission.CommissionRule.Create";
+        public const string Update = "Permission.CommissionRule.Update";
+        public const string Delete = "Permission.CommissionRule.Delete";
+    }
+
+    // ── NotificationTemplate (admin notification-template CRUD) ─────────────────
+    // Mirror the Messaging backend permissions (Permission.NotificationTemplate.{Action}).
+    public static class NotificationTemplate
+    {
+        public const string Read   = "Permission.NotificationTemplate.Read";
+        public const string Create = "Permission.NotificationTemplate.Create";
+        public const string Update = "Permission.NotificationTemplate.Update";
+        public const string Delete = "Permission.NotificationTemplate.Delete";
+    }
+
+    // ── AdminBookingDashboard (admin booking overrides / force-refund) ──────────
+    // Mirror the Booking backend permissions (Permission.AdminBookingDashboard.{Action}).
+    public static class AdminBookingDashboard
+    {
+        public const string Read   = "Permission.AdminBookingDashboard.Read";
+        public const string Update = "Permission.AdminBookingDashboard.Update";
+    }
+
+    // ── AdminModerationQueue (social reports / flagged reviews / user moderation) ──
+    // Mirror the Social backend permissions (Permission.AdminModerationQueue.{Action}).
+    public static class AdminModerationQueue
+    {
+        public const string Read     = "Permission.AdminModerationQueue.Read";
+        public const string Resolve  = "Permission.AdminModerationQueue.Resolve";
+        public const string Warn     = "Permission.AdminModerationQueue.Warn";
+        public const string Ban      = "Permission.AdminModerationQueue.Ban";
+        public const string Approve  = "Permission.AdminModerationQueue.Approve";
+        public const string Remove   = "Permission.AdminModerationQueue.Remove";
+    }
+
+    // ── ContentModerationLog (read-only moderation action audit trail) ──────────
+    // Mirror the Social backend permission (Permission.ContentModerationLog.Read).
+    public static class ContentModerationLog
+    {
+        public const string Read = "Permission.ContentModerationLog.Read";
+    }
+
+    // ── SupportTicket (support ticket read / close) ─────────────────────────────
+    // Mirror the Messaging backend permissions (Permission.SupportTicket.{Action}).
+    public static class SupportTicket
+    {
+        public const string Read  = "Permission.SupportTicket.Read";
+        public const string Close = "Permission.SupportTicket.Close";
+    }
+
+    // ── AdminSupportQueue (support ticket assign / resolve) ─────────────────────
+    // Mirror the Messaging backend permissions (Permission.AdminSupportQueue.{Action}).
+    public static class AdminSupportQueue
+    {
+        public const string Assign  = "Permission.AdminSupportQueue.Assign";
+        public const string Resolve = "Permission.AdminSupportQueue.Resolve";
+    }
+
+    // ── AdminCreatorQueue (content-creator application moderation) ──────────────
+    // Mirror the ContentBlogs backend permissions (Permission.AdminCreatorQueue.{Action}).
+    public static class AdminCreatorQueue
+    {
+        public const string Read            = "Permission.AdminCreatorQueue.Read";
+        public const string Invite          = "Permission.AdminCreatorQueue.Invite";
+        public const string Approve         = "Permission.AdminCreatorQueue.Approve";
+        public const string Reject          = "Permission.AdminCreatorQueue.Reject";
+        public const string RequestMoreInfo = "Permission.AdminCreatorQueue.RequestMoreInfo";
+        public const string Suspend         = "Permission.AdminCreatorQueue.Suspend";
+        public const string Reinstate       = "Permission.AdminCreatorQueue.Reinstate";
+        public const string PromoteTier     = "Permission.AdminCreatorQueue.PromoteTier";
+        public const string DemoteTier      = "Permission.AdminCreatorQueue.DemoteTier";
+        public const string Update          = "Permission.AdminCreatorQueue.Update";
+        public const string Delete          = "Permission.AdminCreatorQueue.Delete";
+    }
+
+    // ── GuideApplication (tour-guide application moderation) ───────────────────
+    // Mirror the ContentTours backend permissions (Permission.GuideApplication.{Action}).
+    public static class GuideApplication
+    {
+        public const string Read    = "Permission.GuideApplication.Read";
+        public const string Approve = "Permission.GuideApplication.Approve";
+        public const string Reject  = "Permission.GuideApplication.Reject";
+    }
+
+    // ── Business (place-business approval moderation) ───────────────────────────
+    // Mirror the ContentPlaces backend permissions (Permission.Business.{Action}).
+    public static class Business
+    {
+        public const string Read        = "Permission.Business.Read";
+        public const string Approve     = "Permission.Business.Approve";
+        public const string Reject      = "Permission.Business.Reject";
+        public const string RequestDocs = "Permission.Business.RequestDocs";
+        public const string Suspend     = "Permission.Business.Suspend";
+        public const string Reinstate   = "Permission.Business.Reinstate";
+        public const string Delete      = "Permission.Business.Delete";
+    }
+
+    // ── AuditLog (admin audit trail) ───────────────────────────────────────────
+    public static class AuditLog
+    {
+        public const string Read   = "Permission.AuditLog.Read";
+        public const string Redact = "Permission.AuditLog.Redact";
+        public const string Export = "Permission.AuditLog.Export";
+    }
+
+    // ── Recommendations engine (Analytics admin) ──────────────────────────────
+    public static class Batch
+    {
+        public const string Read    = "Permission.Batch.Read";
+        public const string Refresh = "Permission.Batch.Refresh";
+    }
+
+    public static class BoostPackage
+    {
+        public const string Create = "Permission.BoostPackage.Create";
+        public const string Delete = "Permission.BoostPackage.Delete";
+    }
+
+    public static class EditorialPin
+    {
+        public const string Create = "Permission.EditorialPin.Create";
+        public const string Delete = "Permission.EditorialPin.Delete";
     }
 }

@@ -1,0 +1,103 @@
+@using YallaJo.Web.Areas.Admin.Models.NotificationTemplates
+@using YallaJo.Web.Infrastructure.Authorization
+@model NotificationTemplateEditVm
+@{
+    ViewData["Title"] = Model.IsNew ? "New notification template" : "Edit notification template";
+    ViewData["AdminNav"] = "NotificationTemplates";
+
+    var channels = new[] { "InApp", "Push", "Email", "Sms" };
+    var types = new[]
+    {
+        "WelcomeEmail", "EmailVerification", "PasswordResetRequested", "PasswordChanged", "ProfileUpdated",
+        "AccountDeactivated", "AccountReactivated", "BookingConfirmed", "BookingCancelled", "BookingCompleted",
+        "BookingReminderUpcoming", "ProviderBookingReceived", "ProviderBookingCancelled", "PaymentCompleted",
+        "PaymentFailed", "RefundInitiated", "RefundCompleted", "PayoutScheduled", "PayoutCompleted", "PayoutFailed",
+        "ReviewPosted", "ReviewReplied", "ReviewAutoHidden", "ReportResolved", "SupportTicketCreated",
+        "SupportTicketResolved", "OtpDelivery", "SecurityAlert", "LoginFromNewDevice", "TwoFactorEnabled",
+        "Business", "ProviderApproved", "ProviderRejected", "ProviderSuspended", "ProviderReinstated",
+        "GuideApplicationApproved", "GuideApplicationRejected", "TourProposalApproved", "TourProposalRejected",
+        "NewGuideApplication", "NewJoinRequest", "JoinRequestApproved", "JoinRequestRejected",
+        "AgencyAffiliationCreated", "AgencyAffiliationApproved", "GuideOfferingSuspended", "GuideApplicationSubmitted"
+    };
+
+    var formAction = Model.IsNew ? "Create" : "Update";
+}
+
+<div class="mb-4">
+    <h1 class="h3 mb-1">@ViewData["Title"]</h1>
+    <p class="text-body-secondary mb-0">
+        @(Model.IsNew ? "Define a new messaging template." : "Update the subject and body for this template.")
+    </p>
+</div>
+
+<div class="card card-body shadow">
+    <form method="post" asp-area="Admin" asp-controller="NotificationTemplates" asp-action="@formAction" asp-route-id="@(Model.IsNew ? null : Model.Id?.ToString())">
+        @Html.AntiForgeryToken()
+
+        @if (Model.IsNew)
+        {
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                    <label class="form-label" for="Type">Type</label>
+                    <select class="form-select" id="Type" name="Type" required>
+                        <option value="">Select a type</option>
+                        @foreach (var type in types)
+                        {
+                            <option value="@type" selected="@(type == Model.Type)">@type</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label" for="Channel">Channel</label>
+                    <select class="form-select" id="Channel" name="Channel" required>
+                        <option value="">Select a channel</option>
+                        @foreach (var channel in channels)
+                        {
+                            <option value="@channel" selected="@(channel == Model.Channel)">@channel</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label" for="LanguageCode">Language</label>
+                    <input class="form-control" id="LanguageCode" name="LanguageCode" value="@Model.LanguageCode" required />
+                </div>
+            </div>
+        }
+        else
+        {
+            <input type="hidden" name="RowVersion" value="@Model.RowVersion" />
+            <dl class="row mb-3">
+                <dt class="col-sm-3">Type</dt>
+                <dd class="col-sm-9">@Model.Type</dd>
+                <dt class="col-sm-3">Channel</dt>
+                <dd class="col-sm-9">@Model.Channel</dd>
+                <dt class="col-sm-3">Language</dt>
+                <dd class="col-sm-9 font-data">@Model.LanguageCode</dd>
+            </dl>
+        }
+
+        <div class="mb-3">
+            <label class="form-label" for="Title">Title</label>
+            <input class="form-control" id="Title" name="Title" value="@Model.Title" required />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label" for="Body">Body</label>
+            <textarea class="form-control" id="Body" name="Body" rows="8" required>@Model.Body</textarea>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label" for="HtmlBody">HTML body <span class="text-body-secondary">(optional)</span></label>
+            <textarea class="form-control" id="HtmlBody" name="HtmlBody" rows="10">@Model.HtmlBody</textarea>
+        </div>
+
+        <div class="d-flex gap-2">
+            <permission require="@(Model.IsNew ? WebPermission.NotificationTemplate.Create : WebPermission.NotificationTemplate.Update)">
+                <button type="submit" class="btn btn-primary">
+                    @(Model.IsNew ? "Create template" : "Save changes")
+                </button>
+            </permission>
+            <a class="btn btn-light" asp-area="Admin" asp-controller="NotificationTemplates" asp-action="Index">Cancel</a>
+        </div>
+    </form>
+</div>

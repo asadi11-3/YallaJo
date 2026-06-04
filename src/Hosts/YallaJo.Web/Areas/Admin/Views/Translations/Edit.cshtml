@@ -1,7 +1,7 @@
 @model YallaJo.Web.Areas.Admin.Models.Translations.UpdateTranslationVm
 @{
     ViewData["Title"] = "Edit Translation";
-    Layout = "~/Views/Shared/_Layout.cshtml";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
     var original   = (ViewBag.Original as string) ?? string.Empty;
     var entityType = ViewBag.EntityType?.ToString() ?? string.Empty;
     var entityId   = ViewBag.EntityId?.ToString() ?? string.Empty;

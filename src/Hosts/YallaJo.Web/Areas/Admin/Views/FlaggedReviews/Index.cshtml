@@ -1,0 +1,105 @@
+@using YallaJo.Web.Areas.Admin.Models.FlaggedReviews
+@using YallaJo.Web.Infrastructure.Authorization
+@model FlaggedReviewsVm
+@{
+    ViewData["Title"] = "Flagged reviews";
+    ViewData["AdminNav"] = "FlaggedReviews";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-1">Flagged reviews</h1>
+        <p class="text-secondary mb-0">Reviews flagged for moderation review.</p>
+    </div>
+</div>
+
+@if (Model.Reviews.Count == 0)
+{
+    <div class="card card-body shadow text-center py-5">
+        <img src="~/assets/images/element/17.svg" class="h-80px mb-3 mx-auto" alt="" />
+        <p class="text-secondary mb-0">No flagged reviews to display.</p>
+    </div>
+}
+else
+{
+    <div class="card shadow">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Review</th>
+                        <th>Rating</th>
+                        <th>Reports</th>
+                        <th>Status</th>
+                        <th>Created</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var r in Model.Reviews)
+                    {
+                        <tr>
+                            <td>
+                                <div class="fw-semibold">@(string.IsNullOrWhiteSpace(r.Title) ? "(no title)" : r.Title)</div>
+                                <div class="text-secondary small">@r.Content</div>
+                                @if (r.ProfanityFlagged)
+                                {
+                                    <span class="badge bg-danger bg-opacity-10 text-danger">Profanity flagged</span>
+                                }
+                            </td>
+                            <td class="font-data">@r.Rating.ToString("0.0")</td>
+                            <td class="font-data">@r.CurrentReportCount</td>
+                            <td><span class="badge bg-@FlaggedReviewsMapper.StatusColor(r.Status) bg-opacity-10 text-@FlaggedReviewsMapper.StatusColor(r.Status)">@r.Status</span></td>
+                            <td class="font-data">@r.CreatedAt.ToString("g")</td>
+                            <td class="text-end">
+                                <permission require="@WebPermission.AdminModerationQueue.Approve">
+                                    <form asp-action="Approve" asp-route-id="@r.Id" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="rowVersion" value="@r.RowVersion" />
+                                        <button type="submit" class="btn btn-sm btn-success-soft">Approve</button>
+                                    </form>
+                                </permission>
+                                <permission require="@WebPermission.AdminModerationQueue.Remove">
+                                    <button type="button" class="btn btn-sm btn-danger-soft" data-bs-toggle="modal" data-bs-target="#removeModal-@r.Id">Remove</button>
+                                </permission>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(Model.NextCursor))
+    {
+        <div class="mt-3 text-center">
+            <a class="btn btn-outline-secondary" asp-action="Index" asp-route-afterCursor="@Model.NextCursor">Load more</a>
+        </div>
+    }
+
+    <permission require="@WebPermission.AdminModerationQueue.Remove">
+        @foreach (var r in Model.Reviews)
+        {
+            <div class="modal fade" id="removeModal-@r.Id" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog">
+                    <form asp-action="Remove" asp-route-id="@r.Id" method="post" class="modal-content">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="rowVersion" value="@r.RowVersion" />
+                        <div class="modal-header">
+                            <h5 class="modal-title">Remove review</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <label class="form-label">Notes</label>
+                            <textarea name="notes" class="form-control" rows="3"></textarea>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-danger">Remove review</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        }
+    </permission>
+}

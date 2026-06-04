@@ -1,0 +1,82 @@
+@using YallaJo.Web.Areas.Admin.Models.Outbox
+@using YallaJo.Web.Infrastructure.Authorization
+@model OutboxVm
+@{
+    ViewData["Title"] = "Outbox dead-letters";
+    ViewData["AdminNav"] = "Outbox";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-1">Outbox dead-letters</h1>
+        <p class="text-muted mb-0">Messages that exhausted their retries across all modules. Replay clones a message with fresh retry state.</p>
+    </div>
+    @if (Model.TotalCount > 0)
+    {
+        <span class="badge bg-danger bg-opacity-10 text-danger font-data">@Model.TotalCount dead</span>
+    }
+</div>
+
+<form method="get" asp-controller="Outbox" asp-action="Index" class="card card-body shadow mb-4">
+    <div class="row g-2 align-items-end">
+        <div class="col-md-4">
+            <label class="form-label">Module</label>
+            <input name="Module" value="@Model.ModuleFilter" class="form-control" placeholder="All modules" />
+        </div>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-primary">Apply</button>
+            <a asp-controller="Outbox" asp-action="Index" class="btn btn-outline-secondary">Reset</a>
+        </div>
+    </div>
+</form>
+
+<div class="card shadow">
+    @if (Model.DeadLetters.Count == 0)
+    {
+        <div class="card-body text-center py-5">
+            <img src="~/assets/images/element/17.svg" class="h-80px mb-3" alt="" />
+            <p class="text-muted mb-0">No dead-lettered outbox messages.</p>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Message</th>
+                        <th>Module</th>
+                        <th>Type</th>
+                        <th>Occurred</th>
+                        <th>Retries</th>
+                        <th>Last error</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var d in Model.DeadLetters)
+                    {
+                        <tr>
+                            <td class="font-data">@d.Id.ToString("D").Substring(0, 8)</td>
+                            <td>@d.Module</td>
+                            <td>@d.Type</td>
+                            <td class="font-data">@d.OccurredOnUtc.ToString("g")</td>
+                            <td class="font-data">@d.RetryCount</td>
+                            <td class="text-truncate" style="max-width: 280px;">@(string.IsNullOrWhiteSpace(d.LastError) ? "—" : d.LastError)</td>
+                            <td class="text-end">
+                                <permission require="@WebPermission.Outbox.Replay">
+                                    <form method="post" asp-action="Replay" asp-route-module="@d.Module" asp-route-id="@d.Id" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-arrow-repeat me-1"></i>Replay
+                                        </button>
+                                    </form>
+                                </permission>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

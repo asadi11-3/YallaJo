@@ -3,7 +3,7 @@
 @model ProviderQueueVm
 @{
     ViewData["Title"] = "Provider applications";
-    Layout = "~/Views/Shared/_Layout.cshtml";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
 
     string PageUrl(int p) => Url.Action("Index", "Providers",
         new { area = "Admin", status = Model.Status, type = Model.Type, page = p })!;

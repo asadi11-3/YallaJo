@@ -1,0 +1,307 @@
+@inject ICurrentUser CurrentUser
+@*
+    Admin console layout — adapted from the Webestica "Booking" Bootstrap 5 admin theme (admin-dashboard.html).
+
+    Left sidebar shell + top bar, used by ALL Admin-area pages (set via Areas/Admin/Views/_ViewStart.cshtml).
+    The permission-gated sidebar menu lives in the _AdminSidebar.cshtml partial (single source of truth).
+
+    Deliberate host changes vs. the static theme:
+      1. All "assets/..." paths are rewritten to "~/assets/..." so the tag helpers emit fingerprinted,
+         immutable-cached URLs via MapStaticAssets()/.WithStaticAssets().
+      2. The theme's demo links are rewired to real asp-area/asp-controller/asp-action routes.
+
+    NOTE: assets/css/style.css already bundles Bootstrap v5.3.0, so no separate Bootstrap CSS link is loaded.
+*@
+@{
+    var displayName = User.Identity?.Name ?? "Account";
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    @* dark mode switch (must run before stylesheets paint to avoid a flash of the wrong theme) *@
+    <script>
+        const storedTheme = localStorage.getItem('theme')
+
+        const getPreferredTheme = () => {
+            if (storedTheme) {
+                return storedTheme
+            }
+            return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+        }
+
+        const setTheme = function (theme) {
+            if (theme === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                document.documentElement.setAttribute('data-bs-theme', 'dark')
+            } else {
+                document.documentElement.setAttribute('data-bs-theme', theme)
+            }
+        }
+
+        setTheme(getPreferredTheme())
+
+        window.addEventListener('DOMContentLoaded', () => {
+            var el = document.querySelector('.theme-icon-active');
+            if (el != undefined) {
+                const showActiveTheme = theme => {
+                    document.querySelectorAll('[data-bs-theme-value]').forEach(element => {
+                        element.classList.remove('active')
+                    })
+
+                    const btnToActive = document.querySelector(`[data-bs-theme-value="${theme}"]`)
+                    if (btnToActive) {
+                        const svgOfActiveBtn = btnToActive.querySelector('svg use').getAttribute('href')
+
+                        btnToActive.classList.add('active')
+                        document.querySelector('.theme-icon-active use').setAttribute('href', svgOfActiveBtn)
+                    }
+                }
+
+                window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+                    if (storedTheme !== 'light' || storedTheme !== 'dark') {
+                        setTheme(getPreferredTheme())
+                    }
+                })
+
+                showActiveTheme(getPreferredTheme())
+
+                document.querySelectorAll('[data-bs-theme-value]')
+                    .forEach(toggle => {
+                        toggle.addEventListener('click', () => {
+                            const theme = toggle.getAttribute('data-bs-theme-value')
+                            localStorage.setItem('theme', theme)
+                            setTheme(theme)
+                            showActiveTheme(theme)
+                        })
+                    })
+            }
+        })
+    </script>
+
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>@ViewData["Title"] - YallaJo Admin</title>
+
+    @* favicon *@
+    <link rel="shortcut icon" href="~/assets/images/favicon.ico" />
+
+    @* Google Fonts *@
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+    @* Plugins CSS *@
+    <link rel="stylesheet" type="text/css" href="~/assets/vendor/font-awesome/css/all.min.css" />
+    <link rel="stylesheet" type="text/css" href="~/assets/vendor/bootstrap-icons/bootstrap-icons.css" />
+    <link rel="stylesheet" type="text/css" href="~/assets/vendor/overlay-scrollbar/css/overlayscrollbars.min.css" />
+    <link rel="stylesheet" type="text/css" href="~/assets/vendor/apexcharts/css/apexcharts.css" />
+    <link rel="stylesheet" type="text/css" href="~/assets/vendor/flatpickr/css/flatpickr.min.css" />
+
+    @* Theme CSS (bundles Bootstrap v5.3.0) *@
+    <link rel="stylesheet" type="text/css" href="~/assets/css/style.css" />
+
+    @* Per-view extra styles *@
+    @await RenderSectionAsync("Styles", required: false)
+
+    @* Import map for fingerprinted JS modules served via MapStaticAssets()/.WithStaticAssets(). *@
+    <ImportMap />
+</head>
+
+<body>
+    <main>
+        @* **************** Sidebar START **************** *@
+        <nav class="navbar sidebar navbar-expand-xl navbar-light">
+            @* Logo START *@
+            <div class="d-flex align-items-center">
+                <a class="navbar-brand" asp-area="Admin" asp-controller="Home" asp-action="Index">
+                    <img class="light-mode-item navbar-brand-item" src="~/assets/images/logo.svg" alt="logo" />
+                    <img class="dark-mode-item navbar-brand-item" src="~/assets/images/logo-light.svg" alt="logo" />
+                </a>
+            </div>
+            @* Logo END *@
+
+            @* Responsive offcanvas body START *@
+            <div class="offcanvas offcanvas-start flex-row custom-scrollbar h-100" data-bs-backdrop="true" tabindex="-1" id="offcanvasSidebar">
+                <div class="offcanvas-body sidebar-content d-flex flex-column pt-4">
+                    @* Sidebar menu (single source of truth) *@
+                    <partial name="_AdminSidebar" />
+
+                    @* Sidebar footer START *@
+                    <div class="d-flex align-items-center justify-content-between text-primary-hover mt-auto p-3">
+                        <form asp-area="Auth" asp-controller="Auth" asp-action="Logout" method="post" class="mb-0">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-link p-0 text-body" title="Sign Out">
+                                <i class="bi bi-power fa-fw me-1"></i>Sign Out
+                            </button>
+                        </form>
+                        <permission require="@WebPermission.System.Update">
+                            <a class="h5 mb-0 text-body" asp-area="Admin" asp-controller="Home" asp-action="Index" title="Settings"><i class="bi bi-gear fa-fw"></i></a>
+                        </permission>
+                    </div>
+                    @* Sidebar footer END *@
+                </div>
+            </div>
+            @* Responsive offcanvas body END *@
+        </nav>
+        @* **************** Sidebar END **************** *@
+
+        @* **************** Page content START **************** *@
+        <div class="page-content">
+
+            @* Top bar START *@
+            <nav class="navbar top-bar navbar-light border-bottom py-0 py-xl-3">
+                <div class="container-fluid p-0">
+                    <div class="d-flex align-items-center w-100">
+
+                        @* Logo START (mobile only) *@
+                        <div class="d-flex align-items-center d-xl-none">
+                            <a class="navbar-brand" asp-area="Admin" asp-controller="Home" asp-action="Index">
+                                <img class="navbar-brand-item h-40px" src="~/assets/images/logo-icon.svg" alt="logo" />
+                            </a>
+                        </div>
+                        @* Logo END *@
+
+                        @* Sidebar toggler *@
+                        <div class="navbar-expand-xl sidebar-offcanvas-menu">
+                            <button class="navbar-toggler me-auto p-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasSidebar" aria-controls="offcanvasSidebar" aria-label="Toggle navigation">
+                                <i class="bi bi-list text-primary fa-fw"></i>
+                            </button>
+                        </div>
+
+                        @* Search START *@
+                        <div class="navbar-collapse collapse">
+                            <form class="position-relative ms-3 d-none d-md-block">
+                                <input class="form-control bg-light pe-5" type="search" placeholder="Search" aria-label="Search" />
+                                <button class="btn bg-transparent px-2 py-0 position-absolute top-50 end-0 translate-middle-y" type="submit"><i class="bi bi-search fs-5"></i></button>
+                            </form>
+                        </div>
+                        @* Search END *@
+
+                        @* Profile START *@
+                        <ul class="nav flex-row align-items-center list-unstyled ms-xl-auto">
+
+                            @* Dark mode dropdown START *@
+                            <li class="nav-item ms-3 dropdown">
+                                <button class="btn btn-light btn-round mb-0" type="button" id="bd-theme" data-bs-toggle="dropdown" aria-expanded="false" data-bs-display="static">
+                                    <svg width="16" height="16" class="theme-icon-active"><use href="#"></use></svg>
+                                </button>
+                                <ul class="dropdown-menu min-w-auto dropdown-menu-end shadow" aria-labelledby="bd-theme">
+                                    <li class="mb-1">
+                                        <button type="button" class="dropdown-item d-flex align-items-center" data-bs-theme-value="light">
+                                            <svg width="16" height="16" class="me-2 opacity-50"><use href="#"></use><path d="M8 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6zm0 1a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"></path></svg>
+                                            Light
+                                        </button>
+                                    </li>
+                                    <li class="mb-1">
+                                        <button type="button" class="dropdown-item d-flex align-items-center" data-bs-theme-value="dark">
+                                            <svg width="16" height="16" class="me-2 opacity-50"><use href="#"></use><path d="M6 .278a.768.768 0 0 1 .08.858 7.208 7.208 0 0 0-.878 3.46c0 4.021 3.278 7.277 7.318 7.277.527 0 1.04-.055 1.533-.16a.787.787 0 0 1 .81.316.733.733 0 0 1-.031.893A8.349 8.349 0 0 1 8.344 16C3.734 16 0 12.286 0 7.71 0 4.266 2.114 1.312 5.124.06A.752.752 0 0 1 6 .278z"></path></svg>
+                                            Dark
+                                        </button>
+                                    </li>
+                                    <li>
+                                        <button type="button" class="dropdown-item d-flex align-items-center" data-bs-theme-value="auto">
+                                            <svg width="16" height="16" class="me-2 opacity-50"><use href="#"></use><path d="M8 15A7 7 0 1 0 8 1v14zm0 1A8 8 0 1 1 8 0a8 8 0 0 1 0 16z"></path></svg>
+                                            Auto
+                                        </button>
+                                    </li>
+                                </ul>
+                            </li>
+                            @* Dark mode dropdown END *@
+
+                            @if (CurrentUser.IsAuthenticated)
+                            {
+                                @* Notification dropdown START *@
+                                <li class="nav-item ms-3 dropdown">
+                                    <a class="btn btn-light btn-round mb-0" href="#" id="notifDropdown" role="button" data-bs-auto-close="outside" data-bs-display="static" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="bi bi-bell fa-fw"></i>
+                                    </a>
+                                    <span class="badge bg-danger rounded-circle notif-badge animation-blink"></span>
+
+                                    <div class="dropdown-menu dropdown-animation dropdown-menu-end dropdown-menu-size-md p-0 shadow-lg border-0" aria-labelledby="notifDropdown">
+                                        <div class="card bg-transparent">
+                                            <div class="card-header bg-transparent d-flex justify-content-between align-items-center border-bottom">
+                                                <h6 class="m-0">Notifications</h6>
+                                            </div>
+                                            <div class="card-body p-0">
+                                                <ul class="list-group list-group-flush list-unstyled p-2 mb-0">
+                                                    <li class="text-center small text-muted py-3">No new notifications</li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </li>
+                                @* Notification dropdown END *@
+
+                                @* Profile dropdown START *@
+                                <li class="nav-item ms-3 dropdown">
+                                    <a class="avatar avatar-sm p-0" href="#" id="profileDropdown" role="button" data-bs-auto-close="outside" data-bs-display="static" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <img class="avatar-img rounded-2" src="~/assets/images/avatar/01.jpg" alt="avatar" />
+                                    </a>
+
+                                    <ul class="dropdown-menu dropdown-animation dropdown-menu-end shadow pt-3" aria-labelledby="profileDropdown">
+                                        <li class="px-3 mb-3">
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar me-3">
+                                                    <img class="avatar-img rounded-circle shadow" src="~/assets/images/avatar/01.jpg" alt="avatar" />
+                                                </div>
+                                                <div>
+                                                    <a class="h6 mt-2 mt-sm-0" href="#">@displayName</a>
+                                                </div>
+                                            </div>
+                                        </li>
+
+                                        <li><hr class="dropdown-divider" /></li>
+                                        <li><a class="dropdown-item" asp-area="Accounts" asp-controller="Profile" asp-action="Index"><i class="bi bi-person fa-fw me-2"></i>My Profile</a></li>
+                                        <li><a class="dropdown-item" asp-area="Accounts" asp-controller="ChangePassword" asp-action="Index"><i class="bi bi-shield-lock fa-fw me-2"></i>Change Password</a></li>
+                                        <li><a class="dropdown-item" asp-area="Auth" asp-controller="Sessions" asp-action="Index"><i class="bi bi-laptop fa-fw me-2"></i>Sessions</a></li>
+                                        <li>
+                                            <form asp-area="Auth" asp-controller="Auth" asp-action="Logout" method="post" class="d-grid">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="dropdown-item bg-danger-soft-hover text-danger"><i class="bi bi-power fa-fw me-2"></i>Sign Out</button>
+                                            </form>
+                                        </li>
+                                    </ul>
+                                </li>
+                                @* Profile dropdown END *@
+                            }
+                            else
+                            {
+                                <li class="nav-item ms-3">
+                                    <a class="btn btn-primary mb-0" asp-area="Auth" asp-controller="Auth" asp-action="SignIn">Sign In</a>
+                                </li>
+                            }
+                        </ul>
+                        @* Profile END *@
+                    </div>
+                </div>
+            </nav>
+            @* Top bar END *@
+
+            @* Page main content START *@
+            <div class="page-content-wrapper p-xxl-4">
+                <partial name="_Alerts" />
+                @RenderBody()
+            </div>
+            @* Page main content END *@
+        </div>
+        @* **************** Page content END **************** *@
+    </main>
+
+    @* Back to top *@
+    <div class="back-top"></div>
+
+    @* Bootstrap JS bundle (served locally; fingerprinted + immutable-cached via .WithStaticAssets()). *@
+    <script src="~/assets/vendor/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+
+    @* Vendor plugins *@
+    <script src="~/assets/vendor/overlay-scrollbar/js/overlayscrollbars.min.js"></script>
+    <script src="~/assets/vendor/apexcharts/js/apexcharts.min.js"></script>
+    <script src="~/assets/vendor/flatpickr/js/flatpickr.min.js"></script>
+
+    @* Theme functions *@
+    <script src="~/assets/js/functions.js"></script>
+
+    @* Per-view extra scripts *@
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

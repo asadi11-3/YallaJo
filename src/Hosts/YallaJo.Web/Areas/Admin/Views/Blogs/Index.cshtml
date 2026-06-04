@@ -3,7 +3,7 @@
 @model BlogListVm
 @{
     ViewData["Title"] = "Blogs";
-    Layout = "~/Views/Shared/_Layout.cshtml";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
 
     string TabUrl(BlogAdminTab tab) => Url.Action("Index", "Blogs", new { area = "Admin", tab })!;
     string PageUrl(int p) => Url.Action("Index", "Blogs",

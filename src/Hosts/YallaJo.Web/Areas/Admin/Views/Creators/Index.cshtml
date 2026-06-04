@@ -1,0 +1,319 @@
+@using YallaJo.Web.Areas.Admin.Models.Creators
+@using YallaJo.Web.Infrastructure.Authorization
+@model CreatorsVm
+@{
+    ViewData["Title"] = "Creator approvals";
+    ViewData["AdminNav"] = "Creators";
+    var statuses = new[] { "Draft", "Pending", "Approved", "Rejected", "MoreInfoNeeded" };
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h4 mb-1">Creator approvals</h1>
+        <p class="text-secondary mb-0">Review, approve, and moderate content-creator applications.</p>
+    </div>
+</div>
+
+<div class="card card-body shadow mb-4">
+    <form method="get" asp-area="Admin" asp-controller="Creators" asp-action="Index" class="row g-3 align-items-end">
+        <div class="col-sm-4 col-lg-3">
+            <label for="status" class="form-label">Status</label>
+            <select id="status" name="status" class="form-select">
+                <option value="">All statuses</option>
+                @foreach (var s in statuses)
+                {
+                    if (string.Equals(Model.StatusFilter, s, StringComparison.OrdinalIgnoreCase))
+                    {
+                        <option value="@s" selected>@s</option>
+                    }
+                    else
+                    {
+                        <option value="@s">@s</option>
+                    }
+                }
+            </select>
+        </div>
+        <div class="col-sm-5 col-lg-4">
+            <label for="id" class="form-label">Look up application by ID</label>
+            <input id="id" name="id" class="form-control font-data" value="@(Model.LookupId?.ToString("D"))" placeholder="application GUID" />
+        </div>
+        <div class="col-sm-3 col-lg-2">
+            <button type="submit" class="btn btn-primary w-100">Apply</button>
+        </div>
+        <div class="col-sm-12 col-lg-3">
+            <a asp-area="Admin" asp-controller="Creators" asp-action="Index" class="btn btn-outline-secondary w-100">Reset</a>
+        </div>
+    </form>
+</div>
+
+@if (Model.Detail is { } detail)
+{
+    var color = CreatorsMapper.StatusColor(detail.Status);
+    var canModerate = true;
+    <div class="card card-body shadow mb-4">
+        <div class="d-flex justify-content-between align-items-start mb-3">
+            <div>
+                <h2 class="h5 mb-1">Application detail</h2>
+                <span class="badge bg-@color bg-opacity-10 text-@color">@detail.Status</span>
+            </div>
+            <span class="text-secondary small font-data">@detail.Id.ToString("D")</span>
+        </div>
+
+        <dl class="row mb-0">
+            <dt class="col-sm-3">Applicant</dt>
+            <dd class="col-sm-9 font-data">@detail.ApplicantUserId.ToString("D")</dd>
+
+            <dt class="col-sm-3">Source</dt>
+            <dd class="col-sm-9">@detail.Source</dd>
+
+            <dt class="col-sm-3">Submitted</dt>
+            <dd class="col-sm-9 font-data">@detail.CreatedAt.ToString("g")</dd>
+
+            <dt class="col-sm-3">Reapplications</dt>
+            <dd class="col-sm-9 font-data">@detail.ReapplicationCount</dd>
+
+            @if (detail.ReviewedAt is { } reviewed)
+            {
+                <dt class="col-sm-3">Reviewed</dt>
+                <dd class="col-sm-9 font-data">@reviewed.ToString("g")</dd>
+            }
+
+            @if (!string.IsNullOrWhiteSpace(detail.Bio))
+            {
+                <dt class="col-sm-3">Bio</dt>
+                <dd class="col-sm-9">@detail.Bio</dd>
+            }
+
+            @if (detail.PortfolioUrls.Count > 0)
+            {
+                <dt class="col-sm-3">Portfolio</dt>
+                <dd class="col-sm-9">
+                    @foreach (var url in detail.PortfolioUrls)
+                    {
+                        <a href="@url" target="_blank" rel="noopener noreferrer" class="d-block">@url</a>
+                    }
+                </dd>
+            }
+
+            @if (detail.SampleWorkUrls.Count > 0)
+            {
+                <dt class="col-sm-3">Sample work</dt>
+                <dd class="col-sm-9">
+                    @foreach (var url in detail.SampleWorkUrls)
+                    {
+                        <a href="@url" target="_blank" rel="noopener noreferrer" class="d-block">@url</a>
+                    }
+                </dd>
+            }
+
+            @if (detail.FreeTags.Count > 0)
+            {
+                <dt class="col-sm-3">Tags</dt>
+                <dd class="col-sm-9">
+                    @foreach (var tag in detail.FreeTags)
+                    {
+                        <span class="badge bg-secondary bg-opacity-10 text-secondary me-1">@tag</span>
+                    }
+                </dd>
+            }
+
+            @if (detail.SocialHandles.Count > 0)
+            {
+                <dt class="col-sm-3">Social</dt>
+                <dd class="col-sm-9">
+                    @foreach (var pair in detail.SocialHandles)
+                    {
+                        <div><span class="fw-semibold">@pair.Key:</span> @pair.Value</div>
+                    }
+                </dd>
+            }
+
+            @if (!string.IsNullOrWhiteSpace(detail.AdminNote))
+            {
+                <dt class="col-sm-3">Admin note</dt>
+                <dd class="col-sm-9">@detail.AdminNote</dd>
+            }
+        </dl>
+
+        <hr />
+
+        <div class="d-flex flex-wrap gap-2">
+            <permission require="@WebPermission.AdminCreatorQueue.Approve">
+                <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#approveModal">Approve</button>
+            </permission>
+            <permission require="@WebPermission.AdminCreatorQueue.Reject">
+                <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#rejectModal">Reject</button>
+            </permission>
+            <permission require="@WebPermission.AdminCreatorQueue.RequestMoreInfo">
+                <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#moreInfoModal">Request more info</button>
+            </permission>
+            <permission require="@WebPermission.AdminCreatorQueue.Suspend">
+                <button type="button" class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#suspendModal">Suspend profile</button>
+            </permission>
+            <permission require="@WebPermission.AdminCreatorQueue.Reinstate">
+                <form method="post" asp-area="Admin" asp-controller="Creators" asp-action="Reinstate" asp-route-id="@detail.Id" class="d-inline">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-outline-success">Reinstate profile</button>
+                </form>
+            </permission>
+        </div>
+    </div>
+
+    <permission require="@WebPermission.AdminCreatorQueue.Approve">
+        <div class="modal fade" id="approveModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <form method="post" asp-area="Admin" asp-controller="Creators" asp-action="Approve" asp-route-id="@detail.Id" class="modal-content">
+                    @Html.AntiForgeryToken()
+                    <div class="modal-header">
+                        <h5 class="modal-title">Approve creator</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="displayName" class="form-label">Display name</label>
+                            <input id="displayName" name="displayName" class="form-control" required maxlength="100" />
+                        </div>
+                        <div class="mb-0">
+                            <label for="avatarUrl" class="form-label">Avatar URL (optional)</label>
+                            <input id="avatarUrl" name="avatarUrl" class="form-control" type="url" />
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-success">Approve</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </permission>
+
+    <permission require="@WebPermission.AdminCreatorQueue.Reject">
+        <div class="modal fade" id="rejectModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <form method="post" asp-area="Admin" asp-controller="Creators" asp-action="Reject" asp-route-id="@detail.Id" class="modal-content">
+                    @Html.AntiForgeryToken()
+                    <div class="modal-header">
+                        <h5 class="modal-title">Reject application</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <label for="rejectReason" class="form-label">Reason</label>
+                        <textarea id="rejectReason" name="reason" class="form-control" rows="3" required></textarea>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-danger">Reject</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </permission>
+
+    <permission require="@WebPermission.AdminCreatorQueue.RequestMoreInfo">
+        <div class="modal fade" id="moreInfoModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <form method="post" asp-area="Admin" asp-controller="Creators" asp-action="RequestMoreInfo" asp-route-id="@detail.Id" class="modal-content">
+                    @Html.AntiForgeryToken()
+                    <div class="modal-header">
+                        <h5 class="modal-title">Request more information</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <label for="adminNote" class="form-label">Note to applicant</label>
+                        <textarea id="adminNote" name="adminNote" class="form-control" rows="3" required></textarea>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-info">Send request</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </permission>
+
+    <permission require="@WebPermission.AdminCreatorQueue.Suspend">
+        <div class="modal fade" id="suspendModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <form method="post" asp-area="Admin" asp-controller="Creators" asp-action="Suspend" asp-route-id="@detail.Id" class="modal-content">
+                    @Html.AntiForgeryToken()
+                    <div class="modal-header">
+                        <h5 class="modal-title">Suspend creator profile</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <label for="suspendReason" class="form-label">Reason</label>
+                        <textarea id="suspendReason" name="reason" class="form-control" rows="3" required></textarea>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-warning">Suspend</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </permission>
+}
+
+<div class="card card-body shadow">
+    <h2 class="h5 mb-3">Applications</h2>
+    @if (Model.Applications.Count == 0)
+    {
+        <div class="text-center py-5">
+            <img src="~/assets/images/element/17.svg" alt="" class="h-80px mb-3" />
+            <p class="text-secondary mb-0">No creator applications to display.</p>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                    <tr>
+                        <th scope="col">Application</th>
+                        <th scope="col">Applicant</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">Source</th>
+                        <th scope="col">Reapplications</th>
+                        <th scope="col">Submitted</th>
+                        <th scope="col" class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var row in Model.Applications)
+                    {
+                        var rowColor = CreatorsMapper.StatusColor(row.Status);
+                        <tr>
+                            <td class="font-data text-truncate" style="max-width: 12rem;">@row.Id.ToString("D")</td>
+                            <td class="font-data text-truncate" style="max-width: 12rem;">@row.ApplicantUserId.ToString("D")</td>
+                            <td><span class="badge bg-@rowColor bg-opacity-10 text-@rowColor">@row.Status</span></td>
+                            <td>@row.Source</td>
+                            <td class="font-data">@row.ReapplicationCount</td>
+                            <td class="font-data">@row.CreatedAt.ToString("g")</td>
+                            <td class="text-end">
+                                <a asp-area="Admin" asp-controller="Creators" asp-action="Index"
+                                   asp-route-id="@row.Id" asp-route-status="@Model.StatusFilter"
+                                   class="btn btn-sm btn-outline-primary">Review</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mt-3">
+            <span class="text-secondary small font-data">Page @Model.PageNumber of @Model.TotalPages (@Model.TotalCount total)</span>
+            <div class="btn-group">
+                @if (Model.HasPreviousPage)
+                {
+                    <a class="btn btn-outline-secondary btn-sm" asp-area="Admin" asp-controller="Creators" asp-action="Index"
+                       asp-route-page="@(Model.PageNumber - 1)" asp-route-status="@Model.StatusFilter">Previous</a>
+                }
+                @if (Model.HasNextPage)
+                {
+                    <a class="btn btn-outline-secondary btn-sm" asp-area="Admin" asp-controller="Creators" asp-action="Index"
+                       asp-route-page="@(Model.PageNumber + 1)" asp-route-status="@Model.StatusFilter">Next</a>
+                }
+            </div>
+        </div>
+    }
+</div>

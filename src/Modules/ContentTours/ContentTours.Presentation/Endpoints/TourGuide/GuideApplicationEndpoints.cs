@@ -1,7 +1,9 @@
 using ContentTours.Application.Commands.GuideApplication.Apply;
 using ContentTours.Application.Commands.GuideApplication.Approve;
 using ContentTours.Application.Commands.GuideApplication.Reject;
+using ContentTours.Application.Queries.TourGuides.ListApplications;
 using ContentTours.Contracts.Authorization;
+using ContentTours.Domain.Enums;
 using ContentTours.Presentation.Endpoints.TourGuide.Models;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
@@ -24,15 +26,24 @@ internal static class GuideApplicationEndpoints
         // GET /{tourId}/applications — admin/provider views all applications for their tour
         apps.MapGet("/", async (
             Guid tourId,
+            GuideApplicationStatus? status,
+            int? page,
+            int? pageSize,
             ISender sender,
             CancellationToken ct) =>
         {
-            // Simple placeholder — full query handler will be added in Phase 1d query work
-            return Results.Ok(Array.Empty<object>());
+            var query = new ListGuideApplicationsQuery(
+                tourId,
+                status,
+                page ?? 1,
+                pageSize ?? 20);
+            var result = await sender.Send(query, ct);
+            return result.ToApiResult();
         })
         .WithName("ListGuideApplications")
         .WithSummary("List all guide applications for a tour")
-        .Produces(StatusCodes.Status200OK)
+        .Produces<ListGuideApplicationsResult>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
         .WithMetadata(new MustHavePermissionAttribute(ContentToursFeatures.GuideApplication, AppAction.Read))
         .RequireAuthorization();
 

@@ -3,7 +3,7 @@
 @model EditBlogVm
 @{
     ViewData["Title"] = "Edit blog";
-    Layout = "~/Views/Shared/_Layout.cshtml";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
     var isPublished = string.Equals(Model.StatusLabel, "Published", StringComparison.OrdinalIgnoreCase);
     var isDraft = string.Equals(Model.StatusLabel, "Draft", StringComparison.OrdinalIgnoreCase);
     var isPendingReview = string.Equals(Model.StatusLabel, "PendingReview", StringComparison.OrdinalIgnoreCase);

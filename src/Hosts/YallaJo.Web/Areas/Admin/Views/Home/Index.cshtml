@@ -1,0 +1,230 @@
+@model YallaJo.Web.Areas.Admin.Models.Home.DashboardVm
+@{
+    ViewData["Title"] = "Dashboard";
+    ViewData["AdminNav"] = "Dashboard";
+}
+@functions {
+    static string Money(decimal amount, string? currency)
+        => string.IsNullOrWhiteSpace(currency) ? amount.ToString("N0") : $"{amount:N0} {currency}";
+}
+
+<div class="d-sm-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0">Dashboard</h1>
+</div>
+
+@{
+    var revenueValue = Model.TotalRevenue > 0 ? Model.TotalRevenue : Model.Revenue;
+    var bookingsValue = Model.TotalBookings > 0 ? Model.TotalBookings : Model.Bookings;
+    var usersValue = Model.TotalUsers > 0 ? Model.TotalUsers : Model.Users;
+}
+
+<!-- KPI tiles -->
+<div class="row g-4 mb-4">
+    <div class="col-md-6 col-xxl-3">
+        <div class="card card-body shadow p-4 h-100">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="fw-light mb-1">Revenue</h6>
+                    <h3 class="font-data mb-0">@Money(revenueValue, null)</h3>
+                </div>
+                <div class="icon-lg rounded-circle bg-success bg-opacity-10 text-success">
+                    <i class="fa-solid fa-sack-dollar fa-fw"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xxl-3">
+        <div class="card card-body shadow p-4 h-100">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="fw-light mb-1">Bookings</h6>
+                    <h3 class="font-data mb-0">@bookingsValue.ToString("N0")</h3>
+                </div>
+                <div class="icon-lg rounded-circle bg-primary bg-opacity-10 text-primary">
+                    <i class="fa-solid fa-ticket fa-fw"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xxl-3">
+        <div class="card card-body shadow p-4 h-100">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="fw-light mb-1">Users</h6>
+                    <h3 class="font-data mb-0">@usersValue.ToString("N0")</h3>
+                </div>
+                <div class="icon-lg rounded-circle bg-info bg-opacity-10 text-info">
+                    <i class="fa-solid fa-users fa-fw"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xxl-3">
+        <div class="card card-body shadow p-4 h-100">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="fw-light mb-1">Alerts</h6>
+                    <h3 class="font-data mb-0">@Model.Alerts.ToString("N0")</h3>
+                </div>
+                <div class="icon-lg rounded-circle bg-warning bg-opacity-10 text-warning">
+                    <i class="fa-solid fa-triangle-exclamation fa-fw"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts -->
+<div class="row g-4 mb-4">
+    <div class="col-xxl-8">
+        <div class="card shadow h-100">
+            <div class="card-header border-bottom">
+                <h5 class="card-header-title mb-0">Revenue trend</h5>
+            </div>
+            <div class="card-body">
+                @if (Model.HasRevenueSeries)
+                {
+                    <div id="ChartRevenue"></div>
+                }
+                else
+                {
+                    <div class="text-center py-5">
+                        <img src="~/assets/images/element/17.svg" alt="" class="h-80px mb-3" />
+                        <p class="mb-0 text-secondary">No revenue data for this period.</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="col-xxl-4">
+        <div class="card shadow h-100">
+            <div class="card-header border-bottom">
+                <h5 class="card-header-title mb-0">Bookings breakdown</h5>
+            </div>
+            <div class="card-body">
+                @if (Model.TotalBookings > 0)
+                {
+                    <div id="ChartBookings"></div>
+                }
+                else
+                {
+                    <div class="text-center py-5">
+                        <img src="~/assets/images/element/17.svg" alt="" class="h-80px mb-3" />
+                        <p class="mb-0 text-secondary">No bookings yet.</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-xxl-6">
+        <div class="card shadow h-100">
+            <div class="card-header border-bottom">
+                <h5 class="card-header-title mb-0">Users</h5>
+            </div>
+            <div class="card-body">
+                @if (Model.TotalUsers > 0)
+                {
+                    <div id="ChartUsers"></div>
+                }
+                else
+                {
+                    <div class="text-center py-5">
+                        <img src="~/assets/images/element/17.svg" alt="" class="h-80px mb-3" />
+                        <p class="mb-0 text-secondary">No user data.</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent interactions -->
+    <div class="col-xxl-6">
+        <div class="card shadow h-100">
+            <div class="card-header border-bottom">
+                <h5 class="card-header-title mb-0">Recent activity</h5>
+            </div>
+            <div class="card-body">
+                @if (Model.HasInteractions)
+                {
+                    <ul class="list-group list-group-borderless">
+                        @foreach (var i in Model.RecentInteractions)
+                        {
+                            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                <div>
+                                    <span class="fw-semibold">@i.InteractionType</span>
+                                    <span class="text-secondary small ms-1">@i.EntityType</span>
+                                </div>
+                                <span class="font-data small text-secondary">@i.OccurredAt.ToString("g")</span>
+                            </li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <div class="text-center py-5">
+                        <img src="~/assets/images/element/17.svg" alt="" class="h-80px mb-3" />
+                        <p class="mb-0 text-secondary">No recent activity.</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            var revenueData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.RevenueSeries.Select(p => new { x = p.Date, y = p.Revenue })));
+            var bookingsData = [@Model.CompletedBookings, @Model.CancelledBookings, @Model.OtherBookings];
+            var usersData = [@Model.TotalUsers, @Model.NewUsers];
+
+            var ink = getComputedStyle(document.body).getPropertyValue('--bs-body-color') || '#212529';
+            var grid = 'rgba(120,120,120,.15)';
+
+            function exists(id) { return document.getElementById(id) !== null; }
+
+            if (exists('ChartRevenue') && revenueData.length) {
+                new ApexCharts(document.getElementById('ChartRevenue'), {
+                    chart: { type: 'area', height: 300, toolbar: { show: false }, fontFamily: 'inherit' },
+                    series: [{ name: 'Revenue', data: revenueData }],
+                    colors: ['#5143d9'],
+                    dataLabels: { enabled: false },
+                    stroke: { curve: 'smooth', width: 2 },
+                    fill: { type: 'gradient', gradient: { opacityFrom: 0.25, opacityTo: 0.02 } },
+                    xaxis: { type: 'datetime', labels: { style: { colors: ink } } },
+                    yaxis: { labels: { style: { colors: ink } } },
+                    grid: { borderColor: grid },
+                    tooltip: { x: { format: 'dd MMM yyyy' } }
+                }).render();
+            }
+
+            if (exists('ChartBookings') && bookingsData.some(function (v) { return v > 0; })) {
+                new ApexCharts(document.getElementById('ChartBookings'), {
+                    chart: { type: 'donut', height: 300, fontFamily: 'inherit' },
+                    series: bookingsData,
+                    labels: ['Completed', 'Cancelled', 'Other'],
+                    colors: ['#0cbc87', '#d6293e', '#4f9ef8'],
+                    legend: { position: 'bottom', labels: { colors: ink } },
+                    dataLabels: { enabled: true }
+                }).render();
+            }
+
+            if (exists('ChartUsers') && usersData.some(function (v) { return v > 0; })) {
+                new ApexCharts(document.getElementById('ChartUsers'), {
+                    chart: { type: 'bar', height: 300, toolbar: { show: false }, fontFamily: 'inherit' },
+                    series: [{ name: 'Users', data: usersData }],
+                    colors: ['#4f9ef8'],
+                    plotOptions: { bar: { columnWidth: '45%', borderRadius: 4, distributed: true } },
+                    legend: { show: false },
+                    dataLabels: { enabled: false },
+                    xaxis: { categories: ['Total users', 'New users'], labels: { style: { colors: ink } } },
+                    yaxis: { labels: { style: { colors: ink } } },
+                    grid: { borderColor: grid }
+                }).render();
+            }
+        })();
+    </script>
+}

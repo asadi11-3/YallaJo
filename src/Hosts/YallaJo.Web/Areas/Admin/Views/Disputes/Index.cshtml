@@ -1,0 +1,178 @@
+@using YallaJo.Web.Areas.Admin.Models.Disputes
+@using YallaJo.Web.Infrastructure.Authorization
+@model DisputesVm
+@{
+    ViewData["Title"] = "Disputes";
+    ViewData["AdminNav"] = "Disputes";
+    var statuses = new[] { "Open", "UnderReview", "Resolved", "Escalated", "Closed" };
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-1">Disputes</h1>
+        <p class="text-secondary mb-0">Review and resolve open payment disputes.</p>
+    </div>
+</div>
+
+<form method="get" asp-area="Admin" asp-controller="Disputes" asp-action="Index" class="card card-body shadow-sm mb-4">
+    <div class="row g-2 align-items-end">
+        <div class="col-sm-4">
+            <label class="form-label small fw-semibold" for="status">Status</label>
+            <select class="form-select" id="status" name="status">
+                <option value="">All</option>
+                @foreach (var s in statuses)
+                {
+                    <option value="@s" selected="@(string.Equals(Model.StatusFilter, s, StringComparison.OrdinalIgnoreCase))">@s</option>
+                }
+            </select>
+        </div>
+        <div class="col-sm-auto">
+            <button type="submit" class="btn btn-primary">Apply</button>
+            <a asp-area="Admin" asp-controller="Disputes" asp-action="Index" class="btn btn-outline-secondary">Reset</a>
+        </div>
+    </div>
+</form>
+
+@if (Model.Disputes.Count == 0)
+{
+    <div class="text-center py-5">
+        <img src="~/assets/images/element/17.svg" alt="" class="h-80px mb-3" />
+        <p class="text-secondary mb-0">No disputes to display.</p>
+    </div>
+}
+else
+{
+    <div class="card shadow-sm">
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Dispute</th>
+                        <th>Reason</th>
+                        <th>Status</th>
+                        <th>Resolution</th>
+                        <th>Created</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var d in Model.Disputes)
+                    {
+                        <tr>
+                            <td>
+                                <div class="font-data text-truncate" style="max-width: 130px;">@d.Id</div>
+                                <div class="small text-secondary font-data">Payment @d.PaymentId.ToString("D")[..8]</div>
+                            </td>
+                            <td>
+                                <div>@d.Reason</div>
+                                <div class="small text-secondary text-truncate" style="max-width: 240px;">@d.Description</div>
+                            </td>
+                            <td><span class="badge bg-@DisputesMapper.StatusColor(d.Status) bg-opacity-10 text-@DisputesMapper.StatusColor(d.Status)">@d.Status</span></td>
+                            <td>
+                                @if (d.Resolution is not null)
+                                {
+                                    <div>@d.Resolution</div>
+                                    @if (!string.IsNullOrWhiteSpace(d.ResolutionNotes))
+                                    {
+                                        <div class="small text-secondary text-truncate" style="max-width: 200px;">@d.ResolutionNotes</div>
+                                    }
+                                }
+                                else
+                                {
+                                    <span class="text-secondary">&mdash;</span>
+                                }
+                            </td>
+                            <td class="font-data">@d.CreatedAt.ToString("g")</td>
+                            <td class="text-end">
+                                @if (d.CanReview)
+                                {
+                                    <permission require="@WebPermission.AdminFinanceDashboard.Update">
+                                        <form method="post" asp-area="Admin" asp-controller="Disputes" asp-action="Review" asp-route-id="@d.Id" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-sm btn-outline-info">Review</button>
+                                        </form>
+                                    </permission>
+                                }
+                                @if (d.CanEscalate)
+                                {
+                                    <permission require="@WebPermission.AdminFinanceDashboard.Update">
+                                        <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#escalateModal-@d.Id">Escalate</button>
+                                    </permission>
+                                }
+                                @if (d.CanResolve)
+                                {
+                                    <permission require="@WebPermission.AdminFinanceDashboard.Approve">
+                                        <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#resolveModal-@d.Id">Resolve</button>
+                                    </permission>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    @foreach (var d in Model.Disputes)
+    {
+        @if (d.CanResolve)
+        {
+            <permission require="@WebPermission.AdminFinanceDashboard.Approve">
+                <div class="modal fade" id="resolveModal-@d.Id" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <form method="post" asp-area="Admin" asp-controller="Disputes" asp-action="Resolve" asp-route-id="@d.Id" class="modal-content">
+                            @Html.AntiForgeryToken()
+                            <div class="modal-header">
+                                <h5 class="modal-title">Resolve dispute</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <label class="form-label" for="resolution-@d.Id">Resolution</label>
+                                    <select class="form-select" id="resolution-@d.Id" name="resolution" required>
+                                        <option value="RefundFull">Refund full</option>
+                                        <option value="RefundPartial">Refund partial</option>
+                                        <option value="NoRefund">No refund</option>
+                                        <option value="Compromise">Compromise</option>
+                                    </select>
+                                </div>
+                                <div class="mb-2">
+                                    <label class="form-label" for="notes-@d.Id">Notes (optional)</label>
+                                    <textarea class="form-control" id="notes-@d.Id" name="notes" rows="3"></textarea>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" class="btn btn-success">Resolve</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </permission>
+        }
+        @if (d.CanEscalate)
+        {
+            <permission require="@WebPermission.AdminFinanceDashboard.Update">
+                <div class="modal fade" id="escalateModal-@d.Id" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <form method="post" asp-area="Admin" asp-controller="Disputes" asp-action="Escalate" asp-route-id="@d.Id" class="modal-content">
+                            @Html.AntiForgeryToken()
+                            <div class="modal-header">
+                                <h5 class="modal-title">Escalate dispute</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <label class="form-label" for="reason-@d.Id">Reason</label>
+                                <textarea class="form-control" id="reason-@d.Id" name="reason" rows="3" required></textarea>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" class="btn btn-danger">Escalate</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </permission>
+        }
+    }
+}

@@ -1,0 +1,104 @@
+@using YallaJo.Web.Areas.Admin.Models.Support
+@model SupportListVm
+@{
+    ViewData["Title"] = "Support";
+    ViewData["AdminNav"] = "Support";
+    var statuses = new[] { "Open", "Assigned", "InProgress", "AwaitingUser", "Resolved", "Closed" };
+    var categories = new[]
+    {
+        "PaymentProblem", "BookingIssue", "ProviderComplaint", "AccountHelp", "BugReport",
+        "Other", "PayoutIssue", "CommissionDispute", "GuideScheduleIssue", "TourApprovalHelp", "DocumentVerification"
+    };
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-1">Support</h1>
+        <p class="text-body-secondary mb-0">Support ticket queue.</p>
+    </div>
+</div>
+
+<form method="get" asp-area="Admin" asp-controller="Support" asp-action="Index" class="card card-body shadow-sm mb-4">
+    <div class="row g-3 align-items-end">
+        <div class="col-sm-4">
+            <label class="form-label" for="status">Status</label>
+            <select class="form-select" id="status" name="status">
+                <option value="">All statuses</option>
+                @foreach (var s in statuses)
+                {
+                    <option value="@s" selected="@(string.Equals(Model.StatusFilter, s, StringComparison.OrdinalIgnoreCase))">@s</option>
+                }
+            </select>
+        </div>
+        <div class="col-sm-4">
+            <label class="form-label" for="category">Category</label>
+            <select class="form-select" id="category" name="category">
+                <option value="">All categories</option>
+                @foreach (var c in categories)
+                {
+                    <option value="@c" selected="@(string.Equals(Model.CategoryFilter, c, StringComparison.OrdinalIgnoreCase))">@c</option>
+                }
+            </select>
+        </div>
+        <div class="col-sm-4">
+            <button type="submit" class="btn btn-primary">Apply</button>
+            <a asp-area="Admin" asp-controller="Support" asp-action="Index" class="btn btn-outline-secondary">Reset</a>
+        </div>
+    </div>
+</form>
+
+@if (Model.Tickets.Count == 0)
+{
+    <div class="card card-body shadow-sm text-center py-5">
+        <img src="~/assets/images/element/17.svg" alt="" class="mx-auto mb-3" style="height: 80px;" />
+        <p class="text-body-secondary mb-0">No support tickets to display.</p>
+    </div>
+}
+else
+{
+    <div class="card shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th scope="col">Ticket</th>
+                        <th scope="col">Category</th>
+                        <th scope="col">Priority</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">SLA breach</th>
+                        <th scope="col">Created</th>
+                        <th scope="col" class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var t in Model.Tickets)
+                    {
+                        <tr>
+                            <td>
+                                <div class="fw-semibold">@t.Subject</div>
+                                <div class="small text-body-secondary font-data">@t.Id.ToString("D")[..8] &middot; @t.CreatedByUserId.ToString("D")[..8]</div>
+                            </td>
+                            <td>@t.Category</td>
+                            <td>@t.Priority</td>
+                            <td><span class="badge bg-@SupportMapper.StatusColor(t.Status) bg-opacity-10 text-@SupportMapper.StatusColor(t.Status)">@t.Status</span></td>
+                            <td class="font-data">@t.SlaBreachAt.ToString("g")</td>
+                            <td class="font-data">@t.CreatedAt.ToString("g")</td>
+                            <td class="text-end">
+                                <a asp-area="Admin" asp-controller="Support" asp-action="Details" asp-route-id="@t.Id" class="btn btn-sm btn-outline-primary">View</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    @if (Model.NextCursor is { } next && next != Guid.Empty)
+    {
+        <div class="mt-3 text-center">
+            <a asp-area="Admin" asp-controller="Support" asp-action="Index"
+               asp-route-status="@Model.StatusFilter" asp-route-category="@Model.CategoryFilter" asp-route-cursor="@next"
+               class="btn btn-outline-secondary">Load more</a>
+        </div>
+    }
+}
