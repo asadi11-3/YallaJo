@@ -44,7 +44,8 @@ public sealed class BookingFacade
                         Date = group.Date,
                         StartTime = slot.StartTime,
                         EndTime = slot.EndTime,
-                        AvailableCount = slot.AvailableCount
+                        AvailableCount = slot.AvailableCount,
+                        TourGuideId = slot.TourGuideId
                     });
                 }
             }
@@ -73,11 +74,22 @@ public sealed class BookingFacade
         return ApiResult<TourBookingVm>.Ok(vm);
     }
 
-    public Task<ApiResult<CreateTourBookingResponse>> CreateAsync(TourBookingFormVm form, CancellationToken ct = default)
+    public async Task<ApiResult<CreateTourBookingResponse>> CreateAsync(
+        TourBookingFormVm form, CancellationToken ct = default)
     {
+        // Resolve the guide server-side from the chosen slot (never trust the posted
+        // GuideId alone). Booking requires a non-empty GuideId; if the slot can't be
+        // resolved or carries no guide, surface a friendly message instead of a raw 400.
+        var guideId = await ResolveSlotGuideAsync(form.TourId, form.AvailabilitySlotId, form.GuideId, ct);
+        if (guideId is null || guideId == Guid.Empty)
+        {
+            return ApiResult<CreateTourBookingResponse>.Fail(
+                400, "This tour has no guide available for the selected time. Please pick another slot.");
+        }
+
         var request = new CreateTourBookingRequest(
             form.TourId,
-            null,
+            guideId,
             form.AvailabilitySlotId,
             new ParticipantBreakdownRequest(form.Adults, form.Children, form.Infants, form.Seniors),
             form.IsPrivate,
@@ -85,7 +97,53 @@ public sealed class BookingFacade
             0,
             string.IsNullOrWhiteSpace(form.SpecialRequests) ? null : form.SpecialRequests.Trim());
 
-        return _api.CreateBookingAsync(request, ct);
+        var result = await _api.CreateBookingAsync(request, ct);
+        if (result.IsSuccess)
+            return result;
+
+        // Map common booking failures to friendly, actionable messages.
+        var friendly = result.StatusCode switch
+        {
+            401 => null, // let the controller's GuardSignOut handle re-auth
+            404 => "This tour or time slot is no longer available. Please choose another.",
+            409 => result.Error ?? "That time slot was just taken or changed. Please pick another and try again.",
+            400 or 422 => result.Error ?? "Some booking details are invalid. Please review and try again.",
+            _ => result.Error ?? "We could not create your booking. Please try again.",
+        };
+
+        return result.StatusCode == 401
+            ? ApiResult<CreateTourBookingResponse>.ForceSignOut()
+            : ApiResult<CreateTourBookingResponse>.Fail(result.StatusCode, friendly);
+    }
+
+    /// <summary>
+    /// Re-reads the tour's availability and returns the guide assigned to the chosen
+    /// slot. Falls back to the posted guide only if it matches a real slot guide.
+    /// </summary>
+    private async Task<Guid?> ResolveSlotGuideAsync(
+        Guid tourId, Guid slotId, Guid postedGuideId, CancellationToken ct)
+    {
+        try
+        {
+            var availability = await _api.GetAvailabilityAsync(tourId, ct);
+            if (availability is { IsSuccess: true, Data.Items: { } groups })
+            {
+                foreach (var group in groups)
+                {
+                    foreach (var slot in group.Slots)
+                    {
+                        if (slot.Id == slotId)
+                            return slot.TourGuideId == Guid.Empty ? null : slot.TourGuideId;
+                    }
+                }
+            }
+        }
+        catch
+        {
+            // tolerate availability fetch failure — fall through to posted value
+        }
+
+        return postedGuideId == Guid.Empty ? null : postedGuideId;
     }
 
     public async Task<ApiResult<BookingConfirmVm>> GetConfirmAsync(Guid id, CancellationToken ct = default)

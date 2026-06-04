@@ -135,4 +135,5 @@ public sealed class AvailabilitySlotResponse
     public string? StartTime { get; init; }
     public string? EndTime { get; init; }
     public int AvailableCount { get; init; }
+    public Guid TourGuideId { get; init; }
 }
