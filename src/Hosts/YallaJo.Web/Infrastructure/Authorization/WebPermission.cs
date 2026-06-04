@@ -225,6 +225,17 @@ public static class WebPermission
         public const string Delete = "Permission.TourSchedule.Delete";
     }
 
+    // ── AvailabilitySlot (provider bookable-slot management — AV-1) ─────────────
+    // Mirrors Permission.AvailabilitySlot.{Action}. Granted to approved
+    // Provider/TourGuide roles via ProviderSelfPermissions.
+    public static class AvailabilitySlot
+    {
+        public const string Read   = "Permission.AvailabilitySlot.Read";
+        public const string Create = "Permission.AvailabilitySlot.Create";
+        public const string Update = "Permission.AvailabilitySlot.Update";
+        public const string Delete = "Permission.AvailabilitySlot.Delete";
+    }
+
     // ── AdminProviderQueue (admin provider application review) ─────────────────
     public static class AdminProviderQueue
     {

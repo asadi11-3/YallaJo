@@ -19,10 +19,25 @@ public sealed class BookingDbInitializer(BookingDbContext dbContext) : IModuleDb
     // Provider IDs (placeholders; real values flow in from Content team's provider snapshot once shipped).
     private static readonly Guid ProviderPetraId = Guid.Parse("abababab-5555-5555-5555-555555555555");
 
+    // Owner of the seeded Petra provider/tour for Development testing. This is the REAL
+    // seeded login account guide-approved@yallajo.test (an approved TourGuide), so that
+    // the owner-scoped availability flow can be exercised with the real (non-stub)
+    // snapshot readers without weakening ownership checks. (GuideOne above is a legacy
+    // placeholder user id that is NOT a loginnable account.)
+    private static readonly Guid ProviderPetraOwnerUserId =
+        Guid.Parse("b0000000-0000-0000-0000-000000000005");
+
     public int Order => 90;
 
     public async Task InitializeAsync(CancellationToken cancellationToken = default)
     {
+        // Snapshot rows are seeded independently of the guide/slot/booking guard below,
+        // so they are also backfilled on databases seeded before this block existed.
+        // They let the REAL (non-stub) Booking snapshot readers resolve tour→provider→owner
+        // for the seeded Petra tour, enabling the owner-scoped availability flow in Dev
+        // without weakening ownership checks.
+        await SeedSnapshotsAsync(cancellationToken).ConfigureAwait(false);
+
         if (await dbContext.TourGuides.AnyAsync(cancellationToken))
         {
             return;
@@ -41,6 +56,67 @@ public sealed class BookingDbInitializer(BookingDbContext dbContext) : IModuleDb
         // Deferred post-MVP: Reservations, PackageBookings
 
         await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    private async Task SeedSnapshotsAsync(CancellationToken cancellationToken)
+    {
+        var changed = false;
+
+        var provider = await dbContext.ProviderSnapshots
+            .FirstOrDefaultAsync(p => p.ProviderId == ProviderPetraId, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (provider is null)
+        {
+            dbContext.ProviderSnapshots.Add(ProviderSnapshot.Create(
+                providerId: ProviderPetraId,
+                ownerUserId: ProviderPetraOwnerUserId,
+                displayName: "Petra Tours (seed)",
+                status: BookingProviderStatus.Active));
+            changed = true;
+        }
+        else if (provider.OwnerUserId != ProviderPetraOwnerUserId)
+        {
+            // Correct a previously-seeded placeholder owner to the real test account.
+            SetProperty(provider, nameof(ProviderSnapshot.OwnerUserId), ProviderPetraOwnerUserId);
+            changed = true;
+        }
+
+        var tourExists = await dbContext.TourSnapshots
+            .AnyAsync(t => t.TourId == SeedContentIds.TourPetraExplorer, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (!tourExists)
+        {
+            dbContext.TourSnapshots.Add(TourSnapshot.Create(
+                tourId: SeedContentIds.TourPetraExplorer,
+                providerId: ProviderPetraId,
+                title: "Petra Full-Day Explorer",
+                currency: "JOD",
+                basePrice: 75m,
+                isActive: true,
+                isApproved: true,
+                isInstantBooking: true));
+            changed = true;
+        }
+
+        // Ensure the real Petra owner account has an active Booking TourGuide registry
+        // row (seed-time equivalent of GuideActivatedProvisionHandler) so it can own and
+        // create availability slots for its tour in Development.
+        var ownerGuideExists = await dbContext.TourGuides
+            .AnyAsync(g => g.UserId == ProviderPetraOwnerUserId, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (!ownerGuideExists)
+        {
+            dbContext.TourGuides.Add(TourGuide.Create(ProviderPetraOwnerUserId));
+            changed = true;
+        }
+
+        if (changed)
+        {
+            await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        }
     }
 
     private static List<TourGuide> CreateTourGuides()

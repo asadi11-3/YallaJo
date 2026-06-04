@@ -1,0 +1,35 @@
+@using YallaJo.Web.Areas.Provider.Models.TourAvailability
+@model AvailabilitySlotFormVm
+@{
+    ViewData["Title"] = "Edit availability slot";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0">Edit availability slot</h2>
+        <a asp-area="Provider" asp-controller="TourAvailability" asp-action="Index" asp-route-id="@Model.TourId"
+           class="btn btn-sm btn-outline-secondary">← Back to availability</a>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(Model.TourName))
+    {
+        <p class="text-muted">Listing: <strong>@Model.TourName</strong></p>
+    }
+
+    <form asp-area="Provider" asp-controller="TourAvailability" asp-action="Edit"
+          asp-route-id="@Model.TourId" asp-route-slotId="@Model.SlotId" method="post">
+        @Html.AntiForgeryToken()
+        <partial name="_Form" model="Model" />
+
+        <div class="mt-4 d-flex gap-2">
+            <button type="submit" class="btn btn-primary">Save slot</button>
+            <a asp-area="Provider" asp-controller="TourAvailability" asp-action="Index" asp-route-id="@Model.TourId"
+               class="btn btn-outline-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
