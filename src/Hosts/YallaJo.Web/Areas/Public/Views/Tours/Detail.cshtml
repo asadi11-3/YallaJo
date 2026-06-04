@@ -470,9 +470,10 @@
                             </div>
 
                             <div class="d-grid gap-2">
+                                <a asp-area="Public" asp-controller="Booking" asp-action="Book"
+                                   asp-route-tourId="@Model.Id" class="btn btn-primary mb-0">Book Now</a>
                                 @if (isAuthed)
                                 {
-                                    <a asp-area="Accounts" asp-controller="Bookings" asp-action="Index" class="btn btn-primary mb-0">Book Now</a>
                                     <button type="button" class="btn btn-outline-primary mb-0 js-favorite"
                                             data-entity-type="Tour" data-entity-id="@Model.Id">
                                         <i class="bi bi-heart me-1"></i>Save to wishlist
@@ -480,7 +481,6 @@
                                 }
                                 else
                                 {
-                                    <a asp-area="Auth" asp-controller="Auth" asp-action="SignIn" class="btn btn-primary mb-0">Sign in to book</a>
                                     <button type="button" class="btn btn-outline-primary mb-0" disabled
                                             data-bs-toggle="tooltip" title="Log in to save">
                                         <i class="bi bi-heart me-1"></i>Save to wishlist

@@ -31,6 +31,7 @@
 
         <form method="post" asp-area="Public" asp-controller="Booking" asp-action="Book" asp-route-tourId="@Model.TourId">
             <input type="hidden" name="Form.TourId" value="@Model.TourId" />
+            <input type="hidden" name="Form.GuideId" id="bookingGuideId" value="@Model.Form.GuideId" />
 
             <div class="row g-4 g-lg-5">
                 <div class="col-lg-8">
@@ -81,7 +82,7 @@
                             <h5 class="card-header-title mb-0">Choose date &amp; time</h5>
                         </div>
                         <div class="card-body">
-                            @if (Model.HasSlots)
+                            @if (Model.HasSlots && Model.HasGuide)
                             {
                                 <div class="vstack gap-3">
                                     @foreach (var group in slotsByDate)
@@ -92,7 +93,9 @@
                                                 @foreach (var slot in group)
                                                 {
                                                     var slotLabel = (slot.StartTime ?? "") + (string.IsNullOrWhiteSpace(slot.EndTime) ? "" : " - " + slot.EndTime);
-                                                    <input type="radio" class="btn-check" name="Form.AvailabilitySlotId" id="slot-@slot.Id" value="@slot.Id" autocomplete="off" checked="@(Model.Form.AvailabilitySlotId == slot.Id)" required />
+                                                    <input type="radio" class="btn-check js-slot" name="Form.AvailabilitySlotId" id="slot-@slot.Id" value="@slot.Id"
+                                                           data-guide="@slot.TourGuideId" data-available="@slot.AvailableCount"
+                                                           autocomplete="off" checked="@(Model.Form.AvailabilitySlotId == slot.Id)" required />
                                                     <label class="btn btn-sm btn-outline-primary" for="slot-@slot.Id">
                                                         @(string.IsNullOrWhiteSpace(slotLabel) ? "Available" : slotLabel)
                                                         <span class="d-block small text-body-secondary">@slot.AvailableCount left</span>
@@ -103,6 +106,12 @@
                                     }
                                 </div>
                                 <span asp-validation-for="Form.AvailabilitySlotId" class="text-danger small d-block mt-2"></span>
+                            }
+                            else if (Model.HasSlots)
+                            {
+                                <div class="alert alert-warning mb-0">
+                                    <i class="bi bi-person-x me-2"></i>This tour has upcoming dates but no guide is assigned yet, so it can't be booked right now. Please check back soon.
+                                </div>
                             }
                             else
                             {
@@ -123,22 +132,28 @@
                             <div class="row g-3">
                                 <div class="col-sm-6 col-lg-3">
                                     <label asp-for="Form.Adults" class="form-label">Adults</label>
-                                    <input asp-for="Form.Adults" type="number" min="1" max="50" class="form-control" />
+                                    <input asp-for="Form.Adults" type="number" min="1" max="50" class="form-control js-participant" />
                                     <span asp-validation-for="Form.Adults" class="text-danger small"></span>
                                 </div>
                                 <div class="col-sm-6 col-lg-3">
                                     <label asp-for="Form.Children" class="form-label">Children</label>
-                                    <input asp-for="Form.Children" type="number" min="0" max="50" class="form-control" />
+                                    <input asp-for="Form.Children" type="number" min="0" max="50" class="form-control js-participant" />
                                 </div>
                                 <div class="col-sm-6 col-lg-3">
                                     <label asp-for="Form.Infants" class="form-label">Infants</label>
-                                    <input asp-for="Form.Infants" type="number" min="0" max="50" class="form-control" />
+                                    <input asp-for="Form.Infants" type="number" min="0" max="50" class="form-control js-participant" />
                                 </div>
                                 <div class="col-sm-6 col-lg-3">
                                     <label asp-for="Form.Seniors" class="form-label">Seniors</label>
-                                    <input asp-for="Form.Seniors" type="number" min="0" max="50" class="form-control" />
+                                    <input asp-for="Form.Seniors" type="number" min="0" max="50" class="form-control js-participant" />
                                 </div>
                             </div>
+                            @if (Model.HasSlots && Model.HasGuide)
+                            {
+                                <p class="small text-secondary mt-2 mb-0">
+                                    <i class="bi bi-info-circle me-1"></i><span id="seatsHint">Up to @Model.MaxAvailableCount seat(s) available for the selected date.</span>
+                                </p>
+                            }
 
                             <div class="form-check form-switch mt-3">
                                 <input asp-for="Form.IsPrivate" class="form-check-input" />
@@ -184,14 +199,21 @@
                                     <span class="text-decoration-line-through">@Money(Model.BasePrice, Model.Currency)</span>
                                 </div>
                             }
-                            <p class="small text-secondary mb-0">Per person. The final total is calculated at confirmation based on your travelers and any promo code.</p>
+                            <hr class="my-2" />
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="small">Estimated total <span class="text-secondary">(<span id="estCount">1</span> traveler<span id="estPlural"></span>)</span></span>
+                                <span class="h6 mb-0" id="estTotal"
+                                      data-unit="@Model.EffectivePrice.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                                      data-currency="@Model.Currency">@Money(Model.EstimatedTotal, Model.Currency)</span>
+                            </div>
+                            <p class="small text-secondary mb-0">Estimate only. The final total is calculated by us at confirmation based on your travelers, per-tier pricing, and any promo code.</p>
                         </div>
                     </div>
 
                     @if (isAuthed)
                     {
                         <div class="d-grid mb-3">
-                            <button type="submit" class="btn btn-lg btn-primary mb-0" @(Model.HasSlots ? "" : "disabled")>Confirm &amp; pay</button>
+                            <button type="submit" class="btn btn-lg btn-primary mb-0" @((Model.HasSlots && Model.HasGuide) ? "" : "disabled")>Continue</button>
                         </div>
                     }
                     else
@@ -238,4 +260,58 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            var guideInput = document.getElementById('bookingGuideId');
+            var estTotal = document.getElementById('estTotal');
+            var estCount = document.getElementById('estCount');
+            var estPlural = document.getElementById('estPlural');
+            var seatsHint = document.getElementById('seatsHint');
+            var participantInputs = Array.prototype.slice.call(document.querySelectorAll('.js-participant'));
+            var slots = Array.prototype.slice.call(document.querySelectorAll('.js-slot'));
+
+            var unit = estTotal ? parseFloat(estTotal.getAttribute('data-unit')) || 0 : 0;
+            var currency = estTotal ? (estTotal.getAttribute('data-currency') || '') : '';
+
+            function selectedSlot() {
+                return slots.find(function (s) { return s.checked; }) || null;
+            }
+
+            function totalParticipants() {
+                return participantInputs.reduce(function (sum, el) {
+                    var v = parseInt(el.value, 10);
+                    return sum + (isNaN(v) || v < 0 ? 0 : v);
+                }, 0);
+            }
+
+            function format(amount) {
+                var rounded = Math.round(amount).toLocaleString();
+                return currency ? (rounded + ' ' + currency) : rounded;
+            }
+
+            function syncGuide() {
+                var slot = selectedSlot();
+                if (slot && guideInput) {
+                    guideInput.value = slot.getAttribute('data-guide') || '';
+                }
+                if (slot && seatsHint) {
+                    var avail = slot.getAttribute('data-available');
+                    if (avail) { seatsHint.textContent = 'Up to ' + avail + ' seat(s) available for the selected date.'; }
+                }
+            }
+
+            function recalc() {
+                var count = Math.max(1, totalParticipants());
+                if (estCount) { estCount.textContent = count; }
+                if (estPlural) { estPlural.textContent = count === 1 ? '' : 's'; }
+                if (estTotal) { estTotal.textContent = format(unit * count); }
+            }
+
+            slots.forEach(function (s) { s.addEventListener('change', function () { syncGuide(); recalc(); }); });
+            participantInputs.forEach(function (el) { el.addEventListener('input', recalc); });
+
+            syncGuide();
+            recalc();
+        })();
+    </script>
 }

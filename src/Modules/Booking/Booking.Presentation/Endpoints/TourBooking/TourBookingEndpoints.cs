@@ -5,6 +5,7 @@ using Booking.Application.Commands.ConfirmTourBooking;
 using Booking.Application.Commands.RejectTourBooking;
 using Booking.Application.Queries.GetAllBookings;
 using Booking.Application.Queries.GetMyBookings;
+using Booking.Application.Queries.GetProviderBookings;
 using Booking.Application.Queries.GetTourBookingById;
 using Booking.Contracts.Authorization;
 using Booking.Domain.Enums;
@@ -30,6 +31,7 @@ internal static class TourBookingEndpoints
         MapCreateTourBookingEndpoint(group);
         MapGetTourBookingByIdEndpoint(group);
         MapGetMyBookingsEndpoint(group);
+        MapGetProviderBookingsEndpoint(group);
         MapGetAllBookingsEndpoint(group);
         MapConfirmTourBookingEndpoint(group);
         MapRejectTourBookingEndpoint(group);
@@ -279,6 +281,80 @@ internal static class TourBookingEndpoints
                 "Supports filters by status (comma-separated), slot-date range, and tourId. " +
                 "Pagination via opaque cursor (B-R10). Page size clamps to [1, 50] (default 20).")
             .Produces<MyBookingsPage>(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status403Forbidden)
+            .WithMetadata(new MustHavePermissionAttribute(BookingFeatures.TourBooking, AppAction.ReadOwn))
+            .RequireAuthorization();
+    }
+
+    private static void MapGetProviderBookingsEndpoint(RouteGroupBuilder group)
+    {
+        group.MapGet("/provider/bookings", async (
+                ICurrentUser currentUser,
+                ISender sender,
+                CancellationToken cancellationToken,
+                string? status = null,
+                string? fromDate = null,
+                string? toDate = null,
+                Guid? tourId = null,
+                string? cursor = null,
+                int pageSize = GetProviderBookingsQuery.DefaultPageSize,
+                bool countTotal = false) =>
+            {
+                if (!currentUser.IsAuthenticated || currentUser.UserId is null)
+                {
+                    return Result.Failure<ProviderBookingsPage>(
+                            new Error("TourBooking.Unauthorized", "Authentication is required."),
+                            Outcome.Unauthorized)
+                        .ToApiResult();
+                }
+
+                if (!TryParseStatusFilter(status, out var statuses))
+                {
+                    return Result.Failure<ProviderBookingsPage>(
+                            new Error("TourBooking.InvalidStatusFilter", "One or more status values are invalid."),
+                            Outcome.Invalid)
+                        .ToApiResult();
+                }
+
+                if (!TryParseDate(fromDate, out var parsedFromDate))
+                {
+                    return Result.Failure<ProviderBookingsPage>(
+                            new Error("TourBooking.InvalidDateRange", "fromDate must be in YYYY-MM-DD format."),
+                            Outcome.Invalid)
+                        .ToApiResult();
+                }
+
+                if (!TryParseDate(toDate, out var parsedToDate))
+                {
+                    return Result.Failure<ProviderBookingsPage>(
+                            new Error("TourBooking.InvalidDateRange", "toDate must be in YYYY-MM-DD format."),
+                            Outcome.Invalid)
+                        .ToApiResult();
+                }
+
+                var query = new GetProviderBookingsQuery(
+                    currentUser.UserId.Value,
+                    statuses,
+                    parsedFromDate,
+                    parsedToDate,
+                    tourId,
+                    cursor,
+                    pageSize,
+                    countTotal);
+
+                var result = await sender.Send(query, cancellationToken);
+                return result.ToApiResult();
+            })
+            .WithName("GetProviderBookings")
+            .WithSummary("Provider: list bookings for tours owned by the caller's provider (cursor paginated).")
+            .WithDescription(
+                "Owner-scoped. Resolves the caller's provider via ProviderSnapshot.OwnerUserId and returns " +
+                "ONLY bookings for that provider (empty page if the caller owns no provider). " +
+                "Supports status (comma-separated), slot-date range, and tourId filters. " +
+                "Each row includes the slot date/time. Requires TourBooking.ReadOwn.")
+            .Produces<ProviderBookingsPage>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status401Unauthorized)
             .ProducesProblem(StatusCodes.Status403Forbidden)

@@ -57,6 +57,15 @@ public sealed class TourPricingTierResponse
     public bool IsActive { get; init; }
 }
 
+/// <summary>Mirrors the API TourImageDto from GET /api/v1/tours/{id}/images (public-safe).</summary>
+public sealed class TourImageResponse
+{
+    public string Url { get; init; } = string.Empty;
+    public string? ThumbnailUrl { get; init; }
+    public int SortOrder { get; init; }
+    public bool IsPrimary { get; init; }
+}
+
 public sealed class TourWaypointResponse
 {
     public Guid Id { get; init; }
@@ -126,4 +135,5 @@ public sealed class AvailabilitySlotResponse
     public string? StartTime { get; init; }
     public string? EndTime { get; init; }
     public int AvailableCount { get; init; }
+    public Guid TourGuideId { get; init; }
 }

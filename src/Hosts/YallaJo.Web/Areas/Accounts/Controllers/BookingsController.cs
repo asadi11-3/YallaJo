@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using YallaJo.Web.Areas.Accounts.Facades;
 using YallaJo.Web.Areas.Accounts.Models.Bookings;
 using YallaJo.Web.Areas.Accounts.Shared;
+using YallaJo.Web.Infrastructure.Authorization;
 using YallaJo.Web.Infrastructure.Mvc;
 
 namespace YallaJo.Web.Areas.Accounts.Controllers;
@@ -13,11 +14,13 @@ public sealed class BookingsController : BaseController
 {
     private readonly BookingsFacade _bookings;
     private readonly ProfileFacade _profile;
+    private readonly PaymentsFacade _payments;
 
-    public BookingsController(BookingsFacade bookings, ProfileFacade profile)
+    public BookingsController(BookingsFacade bookings, ProfileFacade profile, PaymentsFacade payments)
     {
         _bookings = bookings;
         _profile = profile;
+        _payments = payments;
     }
 
     [HttpGet("accounts/bookings")]
@@ -67,6 +70,26 @@ public sealed class BookingsController : BaseController
             SetSuccess("Booking cancelled.");
         else
             SetError(result.Error);
+
+        return RedirectToAction(nameof(Detail), new { id });
+    }
+
+    [HttpPost("accounts/bookings/{id:guid}/pay")]
+    [ValidateAntiForgeryToken]
+    [RequirePermission(WebPermission.Payment.Create)]
+    public async Task<IActionResult> Pay(Guid id, CancellationToken ct)
+    {
+        // Absolute return URL on this host (the gateway/initiate requires an absolute URI).
+        var returnUrl = Url.Action(nameof(Detail), "Bookings", new { area = "Accounts", id }, Request.Scheme)
+            ?? $"{Request.Scheme}://{Request.Host}/accounts/bookings/{id}";
+
+        var result = await _payments.PayAsync(id, returnUrl, ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+
+        if (result.IsSuccess)
+            SetSuccess("Payment received. Your booking is being confirmed — this may take a few moments.");
+        else
+            SetError(result.Error ?? "Could not process payment.");
 
         return RedirectToAction(nameof(Detail), new { id });
     }

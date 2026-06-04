@@ -11,6 +11,28 @@ public sealed class TourGuide : AuditableEntity, IAggregateRoot
 
     private TourGuide() { } // EF Core
 
+    /// <summary>
+    /// Provisions a minimal active Booking-side guide registry row for a user.
+    /// Used when a guide/provider is activated upstream so that the user can own
+    /// availability slots. Profile fields are filled later by other flows.
+    /// </summary>
+    public static TourGuide Create(Guid userId, bool isActive = true)
+    {
+        if (userId == Guid.Empty)
+        {
+            throw new ArgumentException("UserId is required.", nameof(userId));
+        }
+
+        return new TourGuide
+        {
+            UserId = userId,
+            IsActive = isActive,
+        };
+    }
+
+    /// <summary>Reactivates a previously deactivated guide registry row (idempotent).</summary>
+    public void Activate() => IsActive = true;
+
     public Guid UserId { get; private set; }
     public string? Bio { get; private set; }
     public int YearsOfExperience { get; private set; }

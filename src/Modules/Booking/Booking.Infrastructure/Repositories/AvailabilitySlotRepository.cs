@@ -19,6 +19,19 @@ internal sealed class AvailabilitySlotRepository(BookingDbContext context)
     public async Task<IReadOnlyList<AvailabilitySlot>> GetByTourIdAsync(Guid tourId, CancellationToken ct = default)
         => await context.AvailabilitySlots.Where(s => s.TourId == tourId).ToListAsync(ct);
 
+    public async Task<IReadOnlyList<AvailabilitySlot>> GetByIdsAsync(IReadOnlyCollection<Guid> ids, CancellationToken ct = default)
+    {
+        if (ids is null || ids.Count == 0)
+        {
+            return [];
+        }
+
+        return await context.AvailabilitySlots
+            .AsNoTracking()
+            .Where(s => ids.Contains(s.Id))
+            .ToListAsync(ct);
+    }
+
     public async Task<IReadOnlyList<AvailabilitySlot>> GetByTourGuideIdAsync(Guid tourGuideId, CancellationToken ct = default)
         => await context.AvailabilitySlots.Where(s => s.TourGuideId == tourGuideId).ToListAsync(ct);
 

@@ -12,31 +12,64 @@ namespace YallaJo.Web.Areas.Admin.Controllers;
 [RequirePermission(WebPermission.AdminBookingDashboard.Read)]
 public sealed class BookingsController : BaseController
 {
-    private readonly BookingsFacade _facade;
+    private const int DefaultPageSize = 20;
 
-    public BookingsController(BookingsFacade facade) => _facade = facade;
+    private readonly AdminBookingsFacade _facade;
 
-    [HttpGet]
-    public async Task<IActionResult> Index([FromQuery] BookingsFilterRequest request, CancellationToken ct)
+    public BookingsController(AdminBookingsFacade facade) => _facade = facade;
+
+    // ── GET /admin/bookings ─────────────────────────────────────────────────────────
+    [HttpGet("admin/bookings")]
+    public async Task<IActionResult> Index(
+        string? status = null,
+        string? fromDate = null,
+        string? toDate = null,
+        string? providerId = null,
+        string? tourId = null,
+        string? userId = null,
+        string? cursor = null,
+        CancellationToken ct = default)
     {
-        ViewData["AdminNav"] = "Bookings";
-
-        var result = await _facade.GetIndexAsync(request, ct);
-
-        if (GuardSignOut(result) is { } signOut)
+        var filters = new AdminBookingFiltersVm
         {
-            return signOut;
-        }
+            Status = status,
+            FromDate = fromDate,
+            ToDate = toDate,
+            ProviderId = providerId,
+            TourId = tourId,
+            UserId = userId,
+        };
+
+        var result = await _facade.GetListAsync(filters, cursor, DefaultPageSize, ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
 
         if (!result.IsSuccess || result.Data is null)
         {
-            SetError(result.Error);
-            return View(new BookingsVm());
+            ViewBag.Error = result.Error;
+            return View(new AdminBookingsIndexVm { Filters = filters });
         }
 
         return View(result.Data);
     }
 
+    // ── GET /admin/bookings/{id} ──────────────────────────────────────────────────────
+    [HttpGet("admin/bookings/{id:guid}")]
+    public async Task<IActionResult> Details(Guid id, CancellationToken ct)
+    {
+        var result = await _facade.GetDetailsAsync(id, ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+
+        if (result.IsNotFound) return NotFound();
+        if (!result.IsSuccess || result.Data is null)
+        {
+            SetError(result.Error);
+            return RedirectToAction(nameof(Index));
+        }
+
+        return View(result.Data);
+    }
+
+    // ── POST /admin/bookings/{id}/force-refund ────────────────────────────────────────
     [HttpPost("admin/bookings/{id:guid}/force-refund")]
     [ValidateAntiForgeryToken]
     [RequirePermission(WebPermission.AdminBookingDashboard.Update)]
@@ -49,11 +82,7 @@ public sealed class BookingsController : BaseController
         }
 
         var result = await _facade.ForceRefundAsync(id, reason.Trim(), ct);
-
-        if (GuardSignOut(result) is { } signOut)
-        {
-            return signOut;
-        }
+        if (GuardSignOut(result) is { } signOut) return signOut;
 
         SetFlash(result, "Booking force-refunded.", "Could not force-refund the booking.");
         return RedirectToAction(nameof(Index));

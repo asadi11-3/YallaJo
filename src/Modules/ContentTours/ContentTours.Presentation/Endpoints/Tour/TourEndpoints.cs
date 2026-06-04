@@ -10,6 +10,8 @@ using ContentTours.Application.Commands.Tour.UpdateTour;
 using ContentTours.Application.Queries.Tour.Common;
 using ContentTours.Application.Queries.Tour.GetTourById;
 using ContentTours.Application.Queries.Tour.GetTourBySlug;
+using ContentTours.Application.Queries.Tour.GetTourImages;
+using ContentTours.Application.Queries.Tour.ListAdminTours;
 using ContentTours.Application.Queries.Tour.ListTours;
 using ContentTours.Contracts.Authorization;
 using ContentTours.Presentation.Endpoints.Tour.Models;
@@ -120,6 +122,51 @@ internal static class TourEndpoints
         .Produces<TourDetailDto>(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .AllowAnonymous();
+
+        // ── GET /api/v1/tours/{id}/images ─────────────────────────────────────
+        // Public image gallery for an APPROVED tour. Non-approved or missing tours
+        // return 404 (no status/existence leakage). Returns only public-safe URLs;
+        // files are already served from /uploads by static files. ContentTours owns
+        // the Approved-only gate; ContentCore supplies the public image URLs.
+        group.MapGet("/{id:guid}/images", async (
+            Guid id,
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            var result = await sender.Send(new GetTourImagesQuery(id), ct);
+            return result.ToApiResult();
+        })
+        .WithName("GetTourImages")
+        .WithSummary("Get public image gallery for an approved tour")
+        .Produces<IReadOnlyList<TourImageDto>>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .AllowAnonymous();
+
+        // ── GET /api/v1/tours/admin ───────────────────────────────────────────
+        // Admin moderation queue: lists tours across ALL providers, optionally
+        // filtered by status. Plain read over the existing Tours table — no new
+        // table, no migration. Gated by Tour.ReadAny.
+        group.MapGet("/admin", async (
+            string? status,
+            int? page,
+            int? pageSize,
+            string? sort,
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            var result = await sender.Send(
+                new ListAdminToursQuery(page ?? 1, pageSize ?? 20, status, sort),
+                ct);
+
+            return result.ToApiResult();
+        })
+        .WithName("ListAdminTours")
+        .WithSummary("Admin: list tours across all providers with optional status filter")
+        .Produces<PaginatedResult<AdminTourSummaryDto>>(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .WithMetadata(new MustHavePermissionAttribute(ContentToursFeatures.Tour, AppAction.ReadAny));
 
         // ── POST /api/v1/tours ────────────────────────────────────────────────
         group.MapPost("/", async (

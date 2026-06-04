@@ -19,6 +19,9 @@ public interface IAvailabilitySlotRepository : IRepository<AvailabilitySlot, Gui
     /// <summary>Lists slots for a specific tour (no filtering, used by housekeeping paths).</summary>
     Task<IReadOnlyList<AvailabilitySlot>> GetByTourIdAsync(Guid tourId, CancellationToken ct = default);
 
+    /// <summary>Bulk-loads slots by id (read-only) — used to hydrate booking list rows with slot date/time.</summary>
+    Task<IReadOnlyList<AvailabilitySlot>> GetByIdsAsync(IReadOnlyCollection<Guid> ids, CancellationToken ct = default);
+
     /// <summary>Lists slots owned by a specific tour guide.</summary>
     Task<IReadOnlyList<AvailabilitySlot>> GetByTourGuideIdAsync(Guid tourGuideId, CancellationToken ct = default);
 

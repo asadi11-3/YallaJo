@@ -92,5 +92,6 @@ public sealed class GetAvailabilityForTourQueryHandler(
             Id: slot.Id,
             StartTime: slot.StartTime,
             EndTime: slot.EndTime,
-            AvailableCount: slot.AvailableCount);
+            AvailableCount: slot.AvailableCount,
+            TourGuideId: slot.TourGuideId);
 }

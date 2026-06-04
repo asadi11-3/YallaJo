@@ -1,0 +1,93 @@
+@using YallaJo.Web.Infrastructure.Authorization
+@using YallaJo.Web.Areas.Provider.Models.TourAvailability
+@model TourAvailabilityIndexVm
+@{
+    ViewData["Title"] = "Availability";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h2 class="mb-1">Availability</h2>
+            <span class="text-muted">@Model.TourName</span>
+            @if (!string.IsNullOrWhiteSpace(Model.TourStatusLabel))
+            {
+                <span class="text-muted">· @Model.TourStatusLabel</span>
+            }
+        </div>
+        <div class="d-flex gap-2">
+            <a asp-area="Provider" asp-controller="Tours" asp-action="Edit" asp-route-id="@Model.TourId"
+               class="btn btn-sm btn-outline-secondary">← Back to listing</a>
+            <permission require="@WebPermission.AvailabilitySlot.Create">
+                <a asp-area="Provider" asp-controller="TourAvailability" asp-action="Create" asp-route-id="@Model.TourId"
+                   class="btn btn-primary btn-sm">Add slot</a>
+            </permission>
+        </div>
+    </div>
+
+    <div class="alert alert-info">
+        Availability slots are the specific dates &amp; times travelers can book. The guide is assigned automatically for this version.
+    </div>
+
+    @if (!Model.HasSlots)
+    {
+        <div class="alert alert-secondary">No availability slots yet. Add one so travelers can book this tour.</div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th class="text-end">Capacity</th>
+                        <th class="text-end">Available</th>
+                        <th>Status</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var s in Model.Slots)
+                    {
+                        <tr>
+                            <td>@s.DateLabel</td>
+                            <td>@s.StartTime – @s.EndTime</td>
+                            <td class="text-end">@s.MaxCapacity</td>
+                            <td class="text-end">@s.AvailableCount</td>
+                            <td>
+                                @if (s.IsActive)
+                                {
+                                    <span class="badge text-bg-success">Active</span>
+                                }
+                                else
+                                {
+                                    <span class="badge text-bg-secondary">Inactive</span>
+                                }
+                            </td>
+                            <td class="text-end">
+                                <div class="d-flex justify-content-end gap-2">
+                                    <permission require="@WebPermission.AvailabilitySlot.Update">
+                                        <a asp-area="Provider" asp-controller="TourAvailability" asp-action="Edit"
+                                           asp-route-id="@Model.TourId" asp-route-slotId="@s.Id"
+                                           class="btn btn-sm btn-outline-secondary">Edit</a>
+                                    </permission>
+                                    <permission require="@WebPermission.AvailabilitySlot.Delete">
+                                        <form asp-area="Provider" asp-controller="TourAvailability" asp-action="Delete"
+                                              asp-route-id="@Model.TourId" asp-route-slotId="@s.Id"
+                                              method="post" class="d-inline"
+                                              onsubmit="return confirm('Remove this slot?');">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">Remove</button>
+                                        </form>
+                                    </permission>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

@@ -1,0 +1,101 @@
+@using YallaJo.Web.Infrastructure.Authorization
+@using YallaJo.Web.Areas.Admin.Models.Tours
+@model AdminToursIndexVm
+@{
+    ViewData["Title"] = "Tour moderation";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    string PageUrl(int p) => Url.Action("Index", "Tours",
+        new { area = "Admin", status = Model.Status, page = p })!;
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0">Tour moderation</h2>
+    </div>
+
+    @* Success/Error flash banners are rendered globally by the shared _Alerts partial (in _Layout). *@
+    @if (ViewBag.Error is string vbe) { <div class="alert alert-danger">@vbe</div> }
+
+    <form asp-area="Admin" asp-controller="Tours" asp-action="Index" method="get" class="row g-2 mb-3">
+        <div class="col-sm-4">
+            <select name="status" class="form-select" onchange="this.form.submit()">
+                <option value="">All statuses</option>
+                @foreach (var s in AdminToursIndexVm.StatusFilters)
+                {
+                    if (string.Equals(s, Model.Status, StringComparison.OrdinalIgnoreCase))
+                    {
+                        <option value="@s" selected>@s</option>
+                    }
+                    else
+                    {
+                        <option value="@s">@s</option>
+                    }
+                }
+            </select>
+        </div>
+        <div class="col-sm-2 d-grid">
+            <button type="submit" class="btn btn-outline-secondary">Filter</button>
+        </div>
+    </form>
+
+    @if (!Model.HasItems)
+    {
+        <div class="alert alert-info">No tours found in this view.</div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Status</th>
+                        <th class="text-end">Base price</th>
+                        <th>Submitted</th>
+                        <th>Created</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var tour in Model.Items)
+                    {
+                        <tr>
+                            <td>
+                                @tour.Name
+                                <div class="text-muted small"><code>@tour.Slug</code></div>
+                            </td>
+                            <td><span class="badge @tour.StatusBadgeClass">@tour.Status</span></td>
+                            <td class="text-end">@tour.BasePrice.ToString("0.##") @tour.Currency</td>
+                            <td>@(tour.SubmittedAt?.ToString("yyyy-MM-dd HH:mm") ?? "—")</td>
+                            <td>@tour.CreatedAt.ToString("yyyy-MM-dd")</td>
+                            <td class="text-end">
+                                <a asp-area="Admin" asp-controller="Tours" asp-action="Details"
+                                   asp-route-id="@tour.Id" class="btn btn-sm btn-outline-primary">Details</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @if (Model.TotalPages > 1)
+        {
+            <nav aria-label="Tour pagination">
+                <ul class="pagination justify-content-center mb-0">
+                    <li class="page-item @(Model.HasPreviousPage ? "" : "disabled")">
+                        <a class="page-link" href="@PageUrl(Model.PageNumber - 1)">Previous</a>
+                    </li>
+                    <li class="page-item active"><span class="page-link">Page @Model.PageNumber of @Model.TotalPages</span></li>
+                    <li class="page-item @(Model.HasNextPage ? "" : "disabled")">
+                        <a class="page-link" href="@PageUrl(Model.PageNumber + 1)">Next</a>
+                    </li>
+                </ul>
+            </nav>
+        }
+    }
+
+    <p class="text-muted small mt-3 mb-0">
+        Moderation actions (Approve / Reject / Suspend / Reinstate) are performed on the tour Details page.
+    </p>
+</div>

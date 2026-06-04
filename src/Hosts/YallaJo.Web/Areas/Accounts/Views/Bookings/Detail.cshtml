@@ -86,6 +86,20 @@
                     </div>
                 </div>
 
+                @if (string.Equals(Model.Status, "AwaitingPayment", StringComparison.OrdinalIgnoreCase))
+                {
+                    <div class="card border border-primary mb-3">
+                        <div class="card-header border-bottom"><h5 class="card-header-title mb-0 text-primary">Complete payment</h5></div>
+                        <div class="card-body">
+                            <p class="small text-muted">Your booking is awaiting payment. Pay now to confirm it.</p>
+                            <form asp-area="Accounts" asp-controller="Bookings" asp-action="Pay" asp-route-id="@Model.Id" method="post">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-primary mb-0">Pay now</button>
+                            </form>
+                        </div>
+                    </div>
+                }
+
                 @if (Model.IsCancellable)
                 {
                     <div class="card border border-danger">

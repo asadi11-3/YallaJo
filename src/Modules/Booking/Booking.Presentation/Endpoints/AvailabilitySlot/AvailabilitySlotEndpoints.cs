@@ -5,6 +5,7 @@ using Booking.Application.Commands.DeleteAvailabilitySlot;
 using Booking.Application.Commands.UpdateAvailabilitySlot;
 using Booking.Application.Queries.GetAvailabilityForTour;
 using Booking.Application.Queries.GetAvailabilityForTourOnDate;
+using Booking.Application.Queries.GetManageAvailabilityForTour;
 using Booking.Contracts.Authorization;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
@@ -26,6 +27,32 @@ internal static class AvailabilitySlotEndpoints
         MapDeleteEndpoint(group);
         MapGetByTourEndpoint(group);
         MapGetByTourOnDateEndpoint(group);
+        MapGetManageByTourEndpoint(group);
+    }
+
+    private static void MapGetManageByTourEndpoint(RouteGroupBuilder group)
+    {
+        // Owner-scoped management list: all slots (active + inactive) for a tour the
+        // caller provider owns, including RowVersion for edit/delete. Ownership is
+        // enforced inside the query handler (provider owner or admin).
+        group.MapGet("/availability/{tourId:guid}/manage", async (
+                Guid tourId,
+                ISender sender,
+                CancellationToken cancellationToken) =>
+            {
+                var result = await sender.Send(
+                    new GetManageAvailabilityForTourQuery(tourId),
+                    cancellationToken);
+                return result.ToApiResult();
+            })
+            .WithName("GetManageAvailabilityForTour")
+            .WithSummary("Owner: list all availability slots (incl. inactive) for a tour, with RowVersion.")
+            .Produces<IReadOnlyList<ManageAvailabilitySlotDto>>(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status403Forbidden)
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .WithMetadata(new MustHavePermissionAttribute(BookingFeatures.AvailabilitySlot, AppAction.Read))
+            .RequireAuthorization();
     }
 
     private static void MapCreateEndpoint(RouteGroupBuilder group)

@@ -27,6 +27,10 @@ public sealed class ToursApiClient
     public Task<ApiResult<List<TourPricingTierResponse>>> GetPricingAsync(Guid id, CancellationToken ct = default)
         => _api.GetAsync<List<TourPricingTierResponse>>($"/api/v1/tours/{id}/pricing?activeOnly=true", ct);
 
+    // GET /api/v1/tours/{id}/images — public gallery for approved tours (404 otherwise).
+    public Task<ApiResult<List<TourImageResponse>>> GetImagesAsync(Guid id, CancellationToken ct = default)
+        => _api.GetAsync<List<TourImageResponse>>($"/api/v1/tours/{id}/images", ct);
+
     public Task<ApiResult<List<TourWaypointResponse>>> GetWaypointsAsync(Guid id, CancellationToken ct = default)
         => _api.GetAsync<List<TourWaypointResponse>>($"/api/v1/tours/{id}/waypoints", ct);
 

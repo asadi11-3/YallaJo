@@ -33,7 +33,7 @@ public sealed class GetAvailabilityForTourOnDateQueryHandler(
 
             var dto = new AvailabilityForDateDto(
                 Slots: slots
-                    .Select(s => new AvailabilitySlotListItemDto(s.Id, s.StartTime, s.EndTime, s.AvailableCount))
+                    .Select(s => new AvailabilitySlotListItemDto(s.Id, s.StartTime, s.EndTime, s.AvailableCount, s.TourGuideId))
                     .ToList());
 
             logger.LogInformation(

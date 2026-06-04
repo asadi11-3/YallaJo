@@ -139,39 +139,22 @@ public static class WebPermission
         public const string Delete = "Permission.Booking.Delete";
     }
 
-    // ── Tour (provider listings) ──────────────────────────────────────────────
-    public static class Tour
+    // ── Payment (Finance — Permission.Payment.*) ──────────────────────────────────
+    // Granted to the User/traveler role (PAY-0) so travelers can initiate + read
+    // payments for their own bookings.
+    public static class Payment
     {
-        public const string Create    = "Permission.Tour.Create";
-        public const string Update    = "Permission.Tour.Update";
-        public const string ReadOwn   = "Permission.Tour.ReadOwn";
-        public const string DeleteOwn = "Permission.Tour.DeleteOwn";
-        public const string Submit    = "Permission.Tour.Submit";
-        public const string Archive   = "Permission.Tour.Archive";
-
-        // Admin moderation
-        public const string Approve   = "Permission.Tour.Approve";
-        public const string Reject    = "Permission.Tour.Reject";
-        public const string Suspend   = "Permission.Tour.Suspend";
-        public const string Reinstate = "Permission.Tour.Reinstate";
+        public const string Create = "Permission.Payment.Create";
+        public const string Read   = "Permission.Payment.Read";
     }
 
-    // ── TourSchedule ──────────────────────────────────────────────────────────
-    public static class TourSchedule
+    // ── AdminBookingDashboard (Permission.AdminBookingDashboard.*) ─────────────────
+    // Backs the admin cross-provider booking dashboard (AB-1). Granted to
+    // Admin/SuperAdmin/Owner via the catalog-driven role sweep.
+    public static class AdminBookingDashboard
     {
-        public const string Read   = "Permission.TourSchedule.Read";
-        public const string Create = "Permission.TourSchedule.Create";
-        public const string Update = "Permission.TourSchedule.Update";
-        public const string Delete = "Permission.TourSchedule.Delete";
-    }
-
-    // ── TourPricingTier ───────────────────────────────────────────────────────
-    public static class TourPricingTier
-    {
-        public const string Read   = "Permission.TourPricingTier.Read";
-        public const string Create = "Permission.TourPricingTier.Create";
-        public const string Update = "Permission.TourPricingTier.Update";
-        public const string Delete = "Permission.TourPricingTier.Delete";
+        public const string Read   = "Permission.AdminBookingDashboard.Read";
+        public const string Update = "Permission.AdminBookingDashboard.Update";
     }
 
     // ── TourWaypoint ──────────────────────────────────────────────────────────
@@ -213,7 +196,10 @@ public static class WebPermission
         public const string DeleteAny = "Permission.TourGuideProfile.DeleteAny";
     }
 
-    // ── TourBooking (provider-side booking lifecycle) ─────────────────────────
+    // ── TourBooking (real backend booking permissions — Permission.TourBooking.*) ──
+    // Granted to approved Provider/TourGuide roles (Confirm/Reject/Complete via
+    // ProviderSelfPermissions; ReadOwn/Cancel via the consumer set). Used for the
+    // provider booking-management screens (PB-1/PB-2).
     public static class TourBooking
     {
         public const string ReadOwn  = "Permission.TourBooking.ReadOwn";
@@ -246,12 +232,6 @@ public static class WebPermission
     {
         public const string Read   = "Permission.Refund.Read";
         public const string Create = "Permission.Refund.Create";
-    }
-
-    // ── ProviderDashboard ─────────────────────────────────────────────────────
-    public static class ProviderDashboard
-    {
-        public const string Read = "Permission.ProviderDashboard.Read";
     }
 
     // ── GuideDashboard ────────────────────────────────────────────────────────
@@ -342,6 +322,68 @@ public static class WebPermission
         public const string Update   = "Permission.ProviderApplication.Update";
     }
 
+    // ── ProviderDashboard (approved-provider dashboard) ────────────────────────
+    // Mirrors Permission.ProviderDashboard.Read. Granted only to approved provider
+    // roles (Provider / TourGuide) — NOT to pending applicants (User role).
+    public static class ProviderDashboard
+    {
+        public const string Read = "Permission.ProviderDashboard.Read";
+    }
+
+    // ── Tour (provider tour/listing management) ────────────────────────────────
+    // Mirrors Permission.Tour.{Action}. ReadOwn/Submit/Archive are granted to approved
+    // Provider/TourGuide roles (PT-0); Create/Update via the ContentManagement sweep.
+    public static class Tour
+    {
+        public const string ReadOwn   = "Permission.Tour.ReadOwn";
+        public const string Create    = "Permission.Tour.Create";
+        public const string Update    = "Permission.Tour.Update";
+        public const string DeleteOwn = "Permission.Tour.DeleteOwn";
+        public const string Submit    = "Permission.Tour.Submit";
+        public const string Archive   = "Permission.Tour.Archive";
+
+        // ── Admin moderation (AM-1) — mirrors Permission.Tour.{Action}. Granted to
+        // Admin/SuperAdmin/Owner via the ContentManagement permission sweep. ──────
+        public const string ReadAny   = "Permission.Tour.ReadAny";
+        public const string Approve   = "Permission.Tour.Approve";
+        public const string Reject    = "Permission.Tour.Reject";
+        public const string Suspend   = "Permission.Tour.Suspend";
+        public const string Reinstate = "Permission.Tour.Reinstate";
+    }
+
+    // ── TourPricingTier (provider tour pricing management) ─────────────────────
+    // Mirrors Permission.TourPricingTier.{Action}. Granted to approved Provider/TourGuide
+    // roles via ProviderSelfPermissions + the ContentManagement sweep.
+    public static class TourPricingTier
+    {
+        public const string Read   = "Permission.TourPricingTier.Read";
+        public const string Create = "Permission.TourPricingTier.Create";
+        public const string Update = "Permission.TourPricingTier.Update";
+        public const string Delete = "Permission.TourPricingTier.Delete";
+    }
+
+    // ── TourSchedule (provider tour schedule management) ───────────────────────
+    // Mirrors Permission.TourSchedule.{Action}. Granted to approved Provider/TourGuide
+    // roles via ProviderSelfPermissions + the ContentManagement sweep.
+    public static class TourSchedule
+    {
+        public const string Read   = "Permission.TourSchedule.Read";
+        public const string Create = "Permission.TourSchedule.Create";
+        public const string Update = "Permission.TourSchedule.Update";
+        public const string Delete = "Permission.TourSchedule.Delete";
+    }
+
+    // ── AvailabilitySlot (provider bookable-slot management — AV-1) ─────────────
+    // Mirrors Permission.AvailabilitySlot.{Action}. Granted to approved
+    // Provider/TourGuide roles via ProviderSelfPermissions.
+    public static class AvailabilitySlot
+    {
+        public const string Read   = "Permission.AvailabilitySlot.Read";
+        public const string Create = "Permission.AvailabilitySlot.Create";
+        public const string Update = "Permission.AvailabilitySlot.Update";
+        public const string Delete = "Permission.AvailabilitySlot.Delete";
+    }
+
     // ── AdminProviderQueue (admin provider application review) ─────────────────
     public static class AdminProviderQueue
     {
@@ -393,14 +435,6 @@ public static class WebPermission
         public const string Create = "Permission.NotificationTemplate.Create";
         public const string Update = "Permission.NotificationTemplate.Update";
         public const string Delete = "Permission.NotificationTemplate.Delete";
-    }
-
-    // ── AdminBookingDashboard (admin booking overrides / force-refund) ──────────
-    // Mirror the Booking backend permissions (Permission.AdminBookingDashboard.{Action}).
-    public static class AdminBookingDashboard
-    {
-        public const string Read   = "Permission.AdminBookingDashboard.Read";
-        public const string Update = "Permission.AdminBookingDashboard.Update";
     }
 
     // ── AdminModerationQueue (social reports / flagged reviews / user moderation) ──
