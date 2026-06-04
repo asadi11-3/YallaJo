@@ -82,15 +82,24 @@ public sealed class ToursFacade
         var pricingTask = SafeListAsync(() => _api.GetPricingAsync(d.Id, ct));
         var waypointsTask = SafeListAsync(() => _api.GetWaypointsAsync(d.Id, ct));
         var guidesTask = SafeListAsync(() => _api.GetGuidesAsync(d.Id, ct));
+        var imagesTask = SafeListAsync(() => _api.GetImagesAsync(d.Id, ct));
         var ratingTask = SafeRatingAsync(d.Id, ct);
         var reviewsTask = SafeReviewsAsync(d.Id, ct);
 
-        await Task.WhenAll(schedulesTask, pricingTask, waypointsTask, guidesTask, ratingTask, reviewsTask);
+        await Task.WhenAll(schedulesTask, pricingTask, waypointsTask, guidesTask, imagesTask, ratingTask, reviewsTask);
 
-        // Tour detail exposes no public image gallery field and the attachment
-        // endpoint is not anonymous-accessible, so use a single deterministic
-        // placeholder (temporary public image API gap — see PublicImagePlaceholder).
-        var imageUrls = new List<string> { PublicImagePlaceholder.ResolveTourImage(d.Id) };
+        // Real uploaded images come from the anonymous GET /api/v1/tours/{id}/images
+        // endpoint (approved-only, primary-first). Relative /uploads URLs are resolved
+        // to absolute via the asset resolver. Fall back to a deterministic placeholder
+        // when the approved tour has no images (or the fetch failed gracefully).
+        var imageUrls = imagesTask.Result
+            .Select(i => _assetResolver.Resolve(i.Url))
+            .Where(u => !string.IsNullOrWhiteSpace(u))
+            .Select(u => u!)
+            .ToList();
+
+        if (imageUrls.Count == 0)
+            imageUrls = new List<string> { PublicImagePlaceholder.ResolveTourImage(d.Id) };
 
         var rating = ratingTask.Result;
         var avgRating = rating?.AverageRating ?? d.AverageRating;

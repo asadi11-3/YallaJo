@@ -10,6 +10,7 @@ using ContentTours.Application.Commands.Tour.UpdateTour;
 using ContentTours.Application.Queries.Tour.Common;
 using ContentTours.Application.Queries.Tour.GetTourById;
 using ContentTours.Application.Queries.Tour.GetTourBySlug;
+using ContentTours.Application.Queries.Tour.GetTourImages;
 using ContentTours.Application.Queries.Tour.ListAdminTours;
 using ContentTours.Application.Queries.Tour.ListTours;
 using ContentTours.Contracts.Authorization;
@@ -119,6 +120,25 @@ internal static class TourEndpoints
         .WithName("GetTourByCanonicalSlug")
         .WithSummary("Get public tour details by slug (canonical path)")
         .Produces<TourDetailDto>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .AllowAnonymous();
+
+        // ── GET /api/v1/tours/{id}/images ─────────────────────────────────────
+        // Public image gallery for an APPROVED tour. Non-approved or missing tours
+        // return 404 (no status/existence leakage). Returns only public-safe URLs;
+        // files are already served from /uploads by static files. ContentTours owns
+        // the Approved-only gate; ContentCore supplies the public image URLs.
+        group.MapGet("/{id:guid}/images", async (
+            Guid id,
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            var result = await sender.Send(new GetTourImagesQuery(id), ct);
+            return result.ToApiResult();
+        })
+        .WithName("GetTourImages")
+        .WithSummary("Get public image gallery for an approved tour")
+        .Produces<IReadOnlyList<TourImageDto>>(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .AllowAnonymous();
 
