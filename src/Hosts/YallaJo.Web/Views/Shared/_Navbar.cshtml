@@ -54,6 +54,14 @@
                                          || CurrentUser.HasPermission(WebPermission.TranslationCache.Read)
                                          || CurrentUser.HasPermission(WebPermission.Place.Read);
 
+                    var hasModerationMenu = CurrentUser.HasPermission(WebPermission.Tour.ReadAny)
+                                            || CurrentUser.HasPermission(WebPermission.AdminProviderQueue.Read)
+                                            || CurrentUser.HasPermission(WebPermission.Blog.Read);
+
+                    var hasProviderMenu = CurrentUser.HasPermission(WebPermission.ProviderDashboard.Read)
+                                          || CurrentUser.HasPermission(WebPermission.ProviderApplication.Read)
+                                          || CurrentUser.HasPermission(WebPermission.Tour.ReadOwn);
+
                     <ul class="navbar-nav navbar-nav-scroll me-auto">
 
                         @* ── Security menu ───────────────────────────────────── *@
@@ -118,6 +126,47 @@
                                     <permission require="@WebPermission.Place.Read">
                                         <li><hr class="dropdown-divider" /></li>
                                         <li><a class="dropdown-item" asp-area="Admin" asp-controller="Places" asp-action="Index">Places</a></li>
+                                    </permission>
+                                </ul>
+                            </li>
+                        }
+
+                        @* ── Moderation (admin) menu ─────────────────────────── *@
+                        @if (hasModerationMenu)
+                        {
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="moderationMenu" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Moderation</a>
+                                <ul class="dropdown-menu" aria-labelledby="moderationMenu">
+                                    <permission require="@WebPermission.Tour.ReadAny">
+                                        <li><a class="dropdown-item" asp-area="Admin" asp-controller="Tours" asp-action="Index">Tour Moderation</a></li>
+                                    </permission>
+                                    <permission require="@WebPermission.AdminProviderQueue.Read">
+                                        <li><a class="dropdown-item" asp-area="Admin" asp-controller="Providers" asp-action="Index">Provider Queue</a></li>
+                                    </permission>
+                                    <permission require="@WebPermission.Blog.Read">
+                                        <li><a class="dropdown-item" asp-area="Admin" asp-controller="Blogs" asp-action="Index">Blogs</a></li>
+                                    </permission>
+                                </ul>
+                            </li>
+                        }
+
+                        @* ── Provider menu ───────────────────────────────────── *@
+                        @if (hasProviderMenu)
+                        {
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="providerMenu" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Provider</a>
+                                <ul class="dropdown-menu" aria-labelledby="providerMenu">
+                                    <permission require="@WebPermission.ProviderDashboard.Read">
+                                        <li><a class="dropdown-item" asp-area="Provider" asp-controller="Dashboard" asp-action="Index">Dashboard</a></li>
+                                    </permission>
+                                    <permission require="@WebPermission.ProviderApplication.Read">
+                                        <li><a class="dropdown-item" asp-area="Provider" asp-controller="Provider" asp-action="Status">Status</a></li>
+                                    </permission>
+                                    <permission require="@WebPermission.ProviderDashboard.Read">
+                                        <li><a class="dropdown-item" asp-area="Provider" asp-controller="Settings" asp-action="Index">Settings</a></li>
+                                    </permission>
+                                    <permission require="@WebPermission.Tour.ReadOwn">
+                                        <li><a class="dropdown-item" asp-area="Provider" asp-controller="Tours" asp-action="Index">My Listings</a></li>
                                     </permission>
                                 </ul>
                             </li>

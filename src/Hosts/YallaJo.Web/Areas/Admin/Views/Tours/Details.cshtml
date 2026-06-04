@@ -1,0 +1,164 @@
+@using YallaJo.Web.Infrastructure.Authorization
+@using YallaJo.Web.Areas.Admin.Models.Tours
+@model AdminTourDetailsVm
+@{
+    ViewData["Title"] = "Tour details";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    string Duration(int minutes) => $"{minutes / 60}h {minutes % 60}m";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h2 class="mb-1">@Model.Name</h2>
+            <span class="badge @Model.StatusBadgeClass">@Model.Status</span>
+            <code class="ms-2">@Model.Slug</code>
+        </div>
+        <a asp-area="Admin" asp-controller="Tours" asp-action="Index" class="btn btn-outline-secondary">Back to queue</a>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="card mb-3">
+                <div class="card-header"><strong>Overview</strong></div>
+                <div class="card-body">
+                    @if (!string.IsNullOrWhiteSpace(Model.ShortDescription))
+                    {
+                        <p class="fst-italic">@Model.ShortDescription</p>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(Model.Description))
+                    {
+                        <p style="white-space: pre-wrap;">@Model.Description</p>
+                    }
+                    else
+                    {
+                        <p class="text-muted mb-0">No description provided.</p>
+                    }
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header"><strong>Details</strong></div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4">Difficulty</dt>
+                        <dd class="col-sm-8">@Model.Difficulty</dd>
+
+                        <dt class="col-sm-4">Duration</dt>
+                        <dd class="col-sm-8">@Duration(Model.DurationMinutes)</dd>
+
+                        <dt class="col-sm-4">Max group size</dt>
+                        <dd class="col-sm-8">@Model.MaxGroupSize</dd>
+
+                        <dt class="col-sm-4">Min age</dt>
+                        <dd class="col-sm-8">@(Model.MinAge?.ToString() ?? "—")</dd>
+
+                        <dt class="col-sm-4">Base price</dt>
+                        <dd class="col-sm-8">@Model.BasePrice.ToString("0.##") @Model.Currency</dd>
+
+                        <dt class="col-sm-4">Location</dt>
+                        <dd class="col-sm-8">@Model.Latitude, @Model.Longitude</dd>
+
+                        <dt class="col-sm-4">Meeting point</dt>
+                        <dd class="col-sm-8">
+                            @if (Model.MeetingPointLatitude.HasValue && Model.MeetingPointLongitude.HasValue)
+                            {
+                                @($"{Model.MeetingPointLatitude}, {Model.MeetingPointLongitude}")
+                            }
+                            else
+                            {
+                                <span>—</span>
+                            }
+                        </dd>
+
+                        <dt class="col-sm-4">Instant booking</dt>
+                        <dd class="col-sm-8">@(Model.IsInstantBooking ? "Yes" : "No")</dd>
+
+                        <dt class="col-sm-4">Cancellation policy</dt>
+                        <dd class="col-sm-8">@Model.CancellationPolicyHours h</dd>
+
+                        <dt class="col-sm-4">Child friendly</dt>
+                        <dd class="col-sm-8">@(Model.IsChildFriendly ? "Yes" : "No")</dd>
+
+                        <dt class="col-sm-4">Accessible</dt>
+                        <dd class="col-sm-8">@(Model.IsAccessible ? "Yes" : "No")</dd>
+
+                        <dt class="col-sm-4">Created</dt>
+                        <dd class="col-sm-8">@Model.CreatedAt.ToString("yyyy-MM-dd HH:mm")</dd>
+
+                        <dt class="col-sm-4">Last updated</dt>
+                        <dd class="col-sm-8">@(Model.UpdatedAt?.ToString("yyyy-MM-dd HH:mm") ?? "—")</dd>
+
+                        <dt class="col-sm-4">Place ID</dt>
+                        <dd class="col-sm-8"><code>@(Model.PlaceId?.ToString() ?? "—")</code></dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header"><strong>Moderation</strong></div>
+                <div class="card-body d-grid gap-3">
+                    @if (!Model.HasRowVersion)
+                    {
+                        <div class="alert alert-warning mb-0">
+                            Moderation actions are unavailable because the tour's concurrency data was not returned.
+                        </div>
+                    }
+                    else if (!Model.HasAnyAction)
+                    {
+                        <p class="text-muted mb-0">No moderation actions are available for a tour in <strong>@Model.Status</strong> status.</p>
+                    }
+
+                    @if (Model.CanApprove)
+                    {
+                        <permission require="@WebPermission.Tour.Approve">
+                            <form asp-area="Admin" asp-controller="Tours" asp-action="Approve" asp-route-id="@Model.Id" method="post">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-success w-100">Approve</button>
+                            </form>
+                        </permission>
+                    }
+
+                    @if (Model.CanReject)
+                    {
+                        <permission require="@WebPermission.Tour.Reject">
+                            <form asp-area="Admin" asp-controller="Tours" asp-action="Reject" asp-route-id="@Model.Id" method="post">
+                                @Html.AntiForgeryToken()
+                                <label class="form-label small mb-1">Rejection reason</label>
+                                <textarea name="reason" class="form-control mb-2" rows="2" maxlength="1000"
+                                          placeholder="Reason for rejection" required></textarea>
+                                <button type="submit" class="btn btn-outline-danger w-100">Reject</button>
+                            </form>
+                        </permission>
+                    }
+
+                    @if (Model.CanSuspend)
+                    {
+                        <permission require="@WebPermission.Tour.Suspend">
+                            <form asp-area="Admin" asp-controller="Tours" asp-action="Suspend" asp-route-id="@Model.Id" method="post">
+                                @Html.AntiForgeryToken()
+                                <label class="form-label small mb-1">Suspension reason</label>
+                                <textarea name="reason" class="form-control mb-2" rows="2" maxlength="1000"
+                                          placeholder="Reason for suspension" required></textarea>
+                                <button type="submit" class="btn btn-outline-warning w-100">Suspend</button>
+                            </form>
+                        </permission>
+                    }
+
+                    @if (Model.CanReinstate)
+                    {
+                        <permission require="@WebPermission.Tour.Reinstate">
+                            <form asp-area="Admin" asp-controller="Tours" asp-action="Reinstate" asp-route-id="@Model.Id" method="post">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-success w-100">Reinstate</button>
+                            </form>
+                        </permission>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

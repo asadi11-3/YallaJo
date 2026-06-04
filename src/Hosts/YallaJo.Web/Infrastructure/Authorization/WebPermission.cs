@@ -195,6 +195,14 @@ public static class WebPermission
         public const string Update  = "Permission.Tour.Update";
         public const string Submit  = "Permission.Tour.Submit";
         public const string Archive = "Permission.Tour.Archive";
+
+        // ── Admin moderation (AM-1) — mirrors Permission.Tour.{Action}. Granted to
+        // Admin/SuperAdmin/Owner via the ContentManagement permission sweep. ──────
+        public const string ReadAny   = "Permission.Tour.ReadAny";
+        public const string Approve   = "Permission.Tour.Approve";
+        public const string Reject    = "Permission.Tour.Reject";
+        public const string Suspend   = "Permission.Tour.Suspend";
+        public const string Reinstate = "Permission.Tour.Reinstate";
     }
 
     // ── TourPricingTier (provider tour pricing management) ─────────────────────
