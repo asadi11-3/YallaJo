@@ -131,6 +131,15 @@ public static class WebPermission
         public const string Delete = "Permission.Booking.Delete";
     }
 
+    // ── Payment (Finance — Permission.Payment.*) ──────────────────────────────────
+    // Granted to the User/traveler role (PAY-0) so travelers can initiate + read
+    // payments for their own bookings.
+    public static class Payment
+    {
+        public const string Create = "Permission.Payment.Create";
+        public const string Read   = "Permission.Payment.Read";
+    }
+
     // ── TourBooking (real backend booking permissions — Permission.TourBooking.*) ──
     // Granted to approved Provider/TourGuide roles (Confirm/Reject/Complete via
     // ProviderSelfPermissions; ReadOwn/Cancel via the consumer set). Used for the

@@ -1,6 +1,7 @@
 using Finance.Application.Commands.InitiatePayment;
 using Finance.Application.Commands.ProcessWebhook;
 using Finance.Application.Commands.RefundPayment;
+using Finance.Application.Commands.SimulatePaymentSuccess;
 using Finance.Application.Queries.Dtos;
 using Finance.Application.Queries.GetAdminPayments;
 using Finance.Application.Queries.GetMyPayments;
@@ -13,6 +14,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.Hosting;
 using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Authorization;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
@@ -36,6 +38,46 @@ internal static class PaymentEndpoints
         MapGetByIdEndpoint(group);
         MapMyPaymentsEndpoint(group);
         MapAdminAllEndpoint(group);
+        MapSimulateSuccessEndpoint(group);
+    }
+
+    private static void MapSimulateSuccessEndpoint(RouteGroupBuilder group)
+    {
+        group.MapPost("/{bookingId:guid}/simulate-success", async (
+                Guid bookingId,
+                IHostEnvironment hostEnvironment,
+                ICurrentUser currentUser,
+                ISender sender,
+                CancellationToken cancellationToken) =>
+            {
+                if (!hostEnvironment.IsDevelopment())
+                {
+                    return Results.NotFound();
+                }
+
+                if (!currentUser.IsAuthenticated || currentUser.UserId is null)
+                {
+                    return Result.Failure<SimulatePaymentSuccessResult>(
+                            new Error("Payment.Unauthorized", "Authentication is required."),
+                            Outcome.Unauthorized)
+                        .ToApiResult();
+                }
+
+                var result = await sender.Send(
+                    new SimulatePaymentSuccessCommand(bookingId, currentUser.UserId.Value),
+                    cancellationToken);
+                return result.ToApiResult();
+            })
+            .WithName("SimulatePaymentSuccess")
+            .WithSummary("DEV ONLY: complete the fake payment for a booking (no gateway webhook).")
+            .WithTags("Finance | Payments")
+            .Produces<SimulatePaymentSuccessResult>(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status403Forbidden)
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status409Conflict)
+            .WithMetadata(new MustHavePermissionAttribute(FinanceFeatures.Payment, AppAction.Create))
+            .RequireAuthorization();
     }
 
     private static void MapInitiatePaymentEndpoint(RouteGroupBuilder group)

@@ -111,7 +111,10 @@
                 {
                     <div class="alert alert-info d-flex justify-content-between align-items-center flex-wrap gap-2">
                         <span><i class="bi bi-hourglass-split me-2"></i>Your booking is awaiting payment@(Model.PaymentExpiresAt is { } p ? $" (expires {p:dd MMM yyyy HH:mm})" : "").</span>
-                        <a class="btn btn-sm btn-primary mb-0" asp-area="Accounts" asp-controller="Bookings" asp-action="Index">Complete payment</a>
+                        <form asp-area="Accounts" asp-controller="Bookings" asp-action="Pay" asp-route-id="@Model.Id" method="post" class="mb-0">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-sm btn-primary mb-0">Pay now</button>
+                        </form>
                     </div>
                 }
 

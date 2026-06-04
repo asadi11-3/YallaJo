@@ -79,6 +79,11 @@ public sealed class RolePermissionMapping
             "Permission.Recommendation.Read",
             "Permission.Refund.Read",
             "Permission.Refund.Create",
+            // PAY-0 2026-06-04: User must initiate + read payments for their own bookings
+            // (POST /payments/initiate requires Payment.Create; GET /payments/{id} & /my-payments
+            // require Payment.Read). Without these, the traveler payment flow 403s.
+            "Permission.Payment.Create",
+            "Permission.Payment.Read",
 
             // F30 2026-05-30: User couldn't read own reviews via /social/reviews/my-reviews → 403
             "Permission.Review.Read",

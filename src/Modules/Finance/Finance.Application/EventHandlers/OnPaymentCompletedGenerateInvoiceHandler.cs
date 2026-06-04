@@ -45,7 +45,7 @@ public sealed class OnPaymentCompletedGenerateInvoiceHandler(
             return;
         }
 
-        var payment = await _paymentRepository.GetByIdAsync(evt.PaymentId, cancellationToken);
+        var payment = await _paymentRepository.GetByIdAsync(evt.PaymentId, cancellationToken, asNoTracking: false);
         if (payment is null)
         {
             _logger.LogWarning("PaymentCompletedDomainEvent received but payment {PaymentId} not found.", evt.PaymentId);
