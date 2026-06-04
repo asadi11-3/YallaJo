@@ -1,79 +1,233 @@
 @using YallaJo.Web.Areas.Provider.Models.Bookings
-@model ProviderBookingsIndexVm
+@using YallaJo.Web.Areas.Provider.Shared
+@model BookingsVm
 @{
     ViewData["Title"] = "Bookings";
     Layout = "~/Views/Shared/_Layout.cshtml";
+    var sidebar = ViewBag.Sidebar as ProviderSidebarVm ?? new ProviderSidebarVm();
+
+    string JoinBadge(string status) => status?.ToLowerInvariant() switch
+    {
+        "pending" => "badge text-bg-warning",
+        "approved" => "badge text-bg-success",
+        "rejected" or "declined" => "badge text-bg-danger",
+        "expired" => "badge text-bg-secondary",
+        _ => "badge text-bg-light",
+    };
+
+    string BookingBadge(string status) => status?.ToLowerInvariant() switch
+    {
+        "confirmed" or "completed" => "badge text-bg-success",
+        "pendingconfirmation" or "awaitingpayment" => "badge text-bg-warning",
+        "cancelled" or "rejected" => "badge text-bg-danger",
+        _ => "badge text-bg-light",
+    };
+
+    string Money(decimal amount, string? currency) =>
+        string.IsNullOrWhiteSpace(currency) ? amount.ToString("N0") : $"{amount:N0} {currency}";
 }
 
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2 class="mb-0">Bookings</h2>
-    </div>
+<partial name="_ProviderSidebar" model="sidebar" />
 
-    @if (ViewBag.Error is string vbe) { <div class="alert alert-danger">@vbe</div> }
+<section class="pt-0">
+    <div class="container vstack gap-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <h1 class="fs-4 mb-0"><i class="bi bi-bookmark-heart me-2"></i>Bookings</h1>
+            @if (Model.PendingCount > 0)
+            {
+                <span class="badge text-bg-warning">@Model.PendingCount pending join request@(Model.PendingCount == 1 ? "" : "s")</span>
+            }
+        </div>
 
-    <form asp-area="Provider" asp-controller="Bookings" asp-action="Index" method="get" class="row g-2 mb-3">
-        <div class="col-sm-4">
-            <select name="status" class="form-select" onchange="this.form.submit()">
-                <option value="">All statuses</option>
-                @foreach (var s in ProviderBookingsIndexVm.StatusFilters)
+        @* ---- Join requests queue ---- *@
+        <div class="card border">
+            <div class="card-header border-bottom">
+                <h5 class="card-header-title mb-0">Join requests</h5>
+                <small class="text-muted">Travellers asking to join group bookings.</small>
+            </div>
+            <div class="card-body">
+                @if (!Model.HasJoinRequests)
                 {
-                    if (string.Equals(s, Model.Status, StringComparison.OrdinalIgnoreCase))
+                    <div class="text-center py-4">
+                        <img src="~/assets/images/element/17.svg" class="h-100px mb-3" alt="No join requests" />
+                        <h6 class="mb-1">No join requests yet</h6>
+                        <p class="text-muted mb-0">Requests to join your group tours will appear here.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Status</th>
+                                    <th>Guests</th>
+                                    <th>Message</th>
+                                    <th>Requested</th>
+                                    <th class="text-end">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var jr in Model.JoinRequests)
+                                {
+                                    <tr>
+                                        <td><span class="@JoinBadge(jr.Status)">@jr.Status</span></td>
+                                        <td>@jr.ParticipantCount</td>
+                                        <td class="text-truncate" style="max-width:260px;">
+                                            @(string.IsNullOrWhiteSpace(jr.Message) ? "—" : jr.Message)
+                                            @if (!string.IsNullOrWhiteSpace(jr.ResponseMessage))
+                                            {
+                                                <div class="small text-muted">Reply: @jr.ResponseMessage</div>
+                                            }
+                                        </td>
+                                        <td class="small">@jr.CreatedAt.ToString("d MMM yyyy")</td>
+                                        <td class="text-end">
+                                            @if (jr.IsPending)
+                                            {
+                                                <div class="d-inline-flex gap-2">
+                                                    <form asp-action="ApproveJoin" asp-route-id="@jr.Id" method="post" class="d-inline">
+                                                        @Html.AntiForgeryToken()
+                                                        <button type="submit" class="btn btn-sm btn-success-soft">
+                                                            <i class="bi bi-check-lg me-1"></i>Approve
+                                                        </button>
+                                                    </form>
+                                                    <form asp-action="RejectJoin" asp-route-id="@jr.Id" method="post" class="d-inline"
+                                                          onsubmit="return confirm('Decline this join request?');">
+                                                        @Html.AntiForgeryToken()
+                                                        <button type="submit" class="btn btn-sm btn-danger-soft">
+                                                            <i class="bi bi-x-lg me-1"></i>Decline
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted small">Resolved</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+
+        @* ---- Booking lookup ---- *@
+        <div class="card border">
+            <div class="card-header border-bottom">
+                <h5 class="card-header-title mb-0">Look up a booking</h5>
+                <small class="text-muted">Paste a booking id to review and confirm or reject it.</small>
+            </div>
+            <div class="card-body">
+                <form asp-action="Lookup" method="post" class="row g-2 align-items-end mb-0">
+                    @Html.AntiForgeryToken()
+                    <div class="col-sm-8 col-md-9">
+                        <label class="form-label" for="lookupId">Booking id</label>
+                        <input type="text" class="form-control" id="lookupId" name="lookupId"
+                               value="@(Model.LookupId?.ToString())" placeholder="00000000-0000-0000-0000-000000000000" />
+                    </div>
+                    <div class="col-sm-4 col-md-3 d-grid">
+                        <button type="submit" class="btn btn-primary"><i class="bi bi-search me-1"></i>Look up</button>
+                    </div>
+                </form>
+
+                @if (!string.IsNullOrWhiteSpace(Model.LookupError))
+                {
+                    <div class="alert alert-warning mt-3 mb-0">@Model.LookupError</div>
+                }
+
+                @if (Model.LookupResult is { } b)
+                {
+                    <hr class="my-4" />
+                    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+                        <div>
+                            <h5 class="mb-1">Booking @b.Reference</h5>
+                            <span class="@BookingBadge(b.Status)">@b.Status</span>
+                            <span class="text-muted small ms-2">@b.ParticipantCount guest@(b.ParticipantCount == 1 ? "" : "s") · @b.CreatedAt.ToString("d MMM yyyy")</span>
+                        </div>
+                    </div>
+
+                    @if (b.LineItems.Count > 0)
                     {
-                        <option value="@s" selected>@s</option>
+                        <div class="table-responsive mt-3">
+                            <table class="table table-sm align-middle mb-2">
+                                <thead class="table-light">
+                                    <tr><th>Tier</th><th class="text-center">Qty</th><th class="text-end">Unit</th><th class="text-end">Total</th></tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var li in b.LineItems)
+                                    {
+                                        <tr>
+                                            <td>@(li.TierType ?? "—")</td>
+                                            <td class="text-center">@li.Count</td>
+                                            <td class="text-end">@Money(li.UnitPrice, b.Currency)</td>
+                                            <td class="text-end">@Money(li.LineTotal, b.Currency)</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
                     }
-                    else
+
+                    <ul class="list-group list-group-borderless small mb-3">
+                        <li class="list-group-item d-flex justify-content-between px-0"><span>Subtotal</span><span>@Money(b.Subtotal, b.Currency)</span></li>
+                        @if (b.DiscountAmount > 0)
+                        {
+                            <li class="list-group-item d-flex justify-content-between px-0 text-success"><span>Discount</span><span>-@Money(b.DiscountAmount, b.Currency)</span></li>
+                        }
+                        @if (b.LoyaltyAmount > 0)
+                        {
+                            <li class="list-group-item d-flex justify-content-between px-0 text-success"><span>Loyalty</span><span>-@Money(b.LoyaltyAmount, b.Currency)</span></li>
+                        }
+                        <li class="list-group-item d-flex justify-content-between px-0 fw-bold border-top"><span>Total</span><span>@Money(b.TotalAmount, b.Currency)</span></li>
+                    </ul>
+
+                    @if (!string.IsNullOrWhiteSpace(b.SpecialRequests))
                     {
-                        <option value="@s">@s</option>
+                        <p class="small"><span class="fw-semibold">Special requests:</span> @b.SpecialRequests</p>
+                    }
+
+                    @if (!string.IsNullOrWhiteSpace(b.RejectionReason))
+                    {
+                        <div class="alert alert-danger mb-0">Rejected: @b.RejectionReason</div>
+                    }
+                    else if (b.CancelledAt is not null)
+                    {
+                        <div class="alert alert-secondary mb-0">Cancelled on @b.CancelledAt.Value.ToString("d MMM yyyy")@(string.IsNullOrWhiteSpace(b.CancelledReason) ? "" : $" — {b.CancelledReason}")</div>
+                    }
+                    else if (b.IsConfirmable || b.IsRejectable)
+                    {
+                        <div class="d-flex flex-wrap gap-2">
+                            @if (b.IsConfirmable)
+                            {
+                                <form asp-action="ConfirmBooking" asp-route-id="@b.Id" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-success"><i class="bi bi-check-lg me-1"></i>Confirm booking</button>
+                                </form>
+                            }
+                            @if (b.IsRejectable)
+                            {
+                                <button type="button" class="btn btn-outline-danger" data-bs-toggle="collapse" data-bs-target="#rejectPanel">
+                                    <i class="bi bi-x-lg me-1"></i>Reject booking
+                                </button>
+                            }
+                        </div>
+                        @if (b.IsRejectable)
+                        {
+                            <div class="collapse mt-3" id="rejectPanel">
+                                <form asp-action="RejectBooking" asp-route-id="@b.Id" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <label class="form-label" for="reason">Reason for rejection</label>
+                                    <textarea class="form-control mb-2" id="reason" name="reason" rows="2" required></textarea>
+                                    <button type="submit" class="btn btn-danger btn-sm">Submit rejection</button>
+                                </form>
+                            </div>
+                        }
                     }
                 }
-            </select>
+            </div>
         </div>
-        <div class="col-sm-2 d-grid">
-            <button type="submit" class="btn btn-outline-secondary">Filter</button>
-        </div>
-    </form>
-
-    @if (!Model.HasItems)
-    {
-        <div class="alert alert-secondary">No bookings found in this view.</div>
-    }
-    else
-    {
-        <div class="table-responsive">
-            <table class="table table-hover align-middle">
-                <thead>
-                    <tr>
-                        <th>Reference</th>
-                        <th>Tour</th>
-                        <th>When</th>
-                        <th class="text-end">Guests</th>
-                        <th class="text-end">Total</th>
-                        <th>Status</th>
-                        <th class="text-end">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var b in Model.Items)
-                    {
-                        <tr>
-                            <td>
-                                <code>@b.Reference</code>
-                                <div class="text-muted small">@b.TravelerHandle</div>
-                            </td>
-                            <td>@b.TourName</td>
-                            <td>@b.SlotLabel</td>
-                            <td class="text-end">@b.ParticipantCount</td>
-                            <td class="text-end">@b.TotalAmount.ToString("0.##") @b.Currency</td>
-                            <td><span class="badge @b.StatusBadgeClass">@b.Status</span></td>
-                            <td class="text-end">
-                                <a asp-area="Provider" asp-controller="Bookings" asp-action="Details"
-                                   asp-route-id="@b.Id" class="btn btn-sm btn-outline-primary">Details</a>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
-    }
-</div>
+    </div>
+</section>

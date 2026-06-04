@@ -38,6 +38,8 @@ public sealed class TourDetailResponse
     public int? MinAge { get; init; }
     public decimal BasePrice { get; init; }
     public string Currency { get; init; } = string.Empty;
+    public int ReviewCount { get; init; }
+    public int BookingCount { get; init; }
     public decimal Latitude { get; init; }
     public decimal Longitude { get; init; }
     public decimal? MeetingPointLatitude { get; init; }

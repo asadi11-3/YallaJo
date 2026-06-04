@@ -1,0 +1,109 @@
+@model YallaJo.Web.Areas.Guide.Models.GuideMyToursVm
+@using YallaJo.Web.Areas.Guide.Shared
+@{
+    ViewData["Title"] = "My Tours";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var sidebar = ViewBag.Sidebar as GuideSidebarVm ?? new GuideSidebarVm();
+
+    string StatusBadge(string? status) => (status ?? "").ToLowerInvariant() switch
+    {
+        "active" or "approved" or "published" => "text-bg-success",
+        "pending" or "proposed" => "text-bg-warning",
+        "rejected" or "declined" => "text-bg-danger",
+        "withdrawn" or "inactive" => "text-bg-secondary",
+        _ => "text-bg-light",
+    };
+}
+
+<partial name="_GuideSidebar" model="sidebar" />
+
+<section class="pt-0">
+    <div class="container vstack gap-4">
+        <div class="d-flex align-items-center justify-content-between">
+            <h1 class="fs-4 mb-0"><i class="bi bi-signpost-2 me-2"></i>My Tours</h1>
+            @if (Model.HasTours)
+            {
+                <span class="text-secondary small">@Model.TotalCount tour(s) assigned</span>
+            }
+        </div>
+
+        @if (!Model.IsGuide)
+        {
+            <div class="card border">
+                <div class="card-body text-center py-5">
+                    <img src="~/assets/images/element/17.svg" class="h-100px mb-3" alt="" />
+                    <h5 class="mb-1">You are not a registered guide yet</h5>
+                    <p class="text-secondary mb-0">Once you join a provider as a guide, your assigned tours will appear here.</p>
+                </div>
+            </div>
+        }
+        else if (!Model.HasTours)
+        {
+            <div class="card border">
+                <div class="card-body text-center py-5">
+                    <img src="~/assets/images/element/17.svg" class="h-100px mb-3" alt="" />
+                    <h5 class="mb-1">No tours assigned</h5>
+                    <p class="text-secondary mb-0">You have not been assigned to any tours yet.</p>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="card border">
+                <div class="card-header border-bottom">
+                    <h5 class="card-header-title mb-0">Assigned tours</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th scope="col">Tour</th>
+                                    <th scope="col">Offering status</th>
+                                    <th scope="col">Role</th>
+                                    <th scope="col">Assigned</th>
+                                    <th scope="col" class="text-end">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var row in Model.Tours)
+                                {
+                                    <tr>
+                                        <td>
+                                            <span class="fw-semibold d-block">@row.Title</span>
+                                            @if (row.OffersPrivateTour)
+                                            {
+                                                <span class="badge text-bg-info mt-1">Private tour</span>
+                                            }
+                                        </td>
+                                        <td><span class="badge @StatusBadge(row.OfferingStatus)">@(row.OfferingStatus ?? "—")</span></td>
+                                        <td>
+                                            @if (row.IsProposer)
+                                            {
+                                                <span class="badge text-bg-primary">Proposer</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge text-bg-light">Assigned</span>
+                                            }
+                                        </td>
+                                        <td class="small text-secondary">@(row.AssignedAt?.ToString("d MMM yyyy") ?? "—")</td>
+                                        <td class="text-end">
+                                            @if (!string.IsNullOrWhiteSpace(row.Slug))
+                                            {
+                                                <a class="btn btn-sm btn-primary-soft" target="_blank"
+                                                   asp-area="Public" asp-controller="Tours" asp-action="Detail" asp-route-slug="@row.Slug">
+                                                    <i class="bi bi-box-arrow-up-right me-1"></i>Preview
+                                                </a>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</section>

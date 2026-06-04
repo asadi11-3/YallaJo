@@ -487,6 +487,23 @@
                                     </button>
                                 }
                             </div>
+
+                            <hr class="my-3">
+                            <p class="small text-body mb-2">Joining a friend's group booking?</p>
+                            @if (isAuthed)
+                            {
+                                <button type="button" class="btn btn-outline-primary w-100" data-bs-toggle="modal" data-bs-target="#joinRequestModal">
+                                    <i class="bi bi-people me-2"></i>Request to join a group
+                                </button>
+                            }
+                            else
+                            {
+                                <a class="btn btn-outline-primary w-100"
+                                   asp-area="Auth" asp-controller="Auth" asp-action="SignIn"
+                                   asp-route-returnUrl="@Url.Action("Detail", "Tours", new { area = "Public", slug = Model.Slug })">
+                                    <i class="bi bi-people me-2"></i>Sign in to request to join
+                                </a>
+                            }
                         </div>
                     </div>
 
@@ -507,6 +524,11 @@
     </div>
 </section>
 <!-- ======================= Detail body END -->
+
+@if (isAuthed)
+{
+    <partial name="_JoinRequestModal" model="Model" />
+}
 
 @section Scripts {
     @* Endpoint URLs are surfaced as data-* attributes (server-generated) instead of

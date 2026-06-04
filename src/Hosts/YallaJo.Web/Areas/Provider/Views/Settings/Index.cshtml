@@ -1,45 +1,145 @@
-@using YallaJo.Web.Areas.Provider.Models.Settings
-@model ProviderSettingsVm
+@model YallaJo.Web.Areas.Provider.Models.Settings.ProviderSettingsVm
+@using YallaJo.Web.Areas.Accounts.Models.Profile
+@using YallaJo.Web.Areas.Provider.Shared
 @{
-    ViewData["Title"] = "Provider settings";
+    ViewData["Title"] = "Provider Settings";
     Layout = "~/Views/Shared/_Layout.cshtml";
+    var sidebar = ViewBag.Sidebar as ProviderSidebarVm ?? new ProviderSidebarVm();
+    var avatar = string.IsNullOrWhiteSpace(Model.AvatarUrl) ? Url.Content("~/assets/images/avatar/01.jpg") : Model.AvatarUrl;
 }
 
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2 class="mb-0">Provider settings</h2>
-        <a asp-area="Provider" asp-controller="Dashboard" asp-action="Index"
-           class="btn btn-sm btn-outline-secondary">← Back to dashboard</a>
-    </div>
+<partial name="_ProviderSidebar" model="sidebar" />
 
-    @* Success/Error flash banners are rendered globally by the shared _Alerts partial. *@
+<section class="pt-0">
+    <div class="container vstack gap-4">
 
-    <div class="card mb-3">
-        <div class="card-header"><strong>Business profile</strong></div>
-        <div class="card-body">
-            <dl class="row mb-0">
-                <dt class="col-sm-4">Business name</dt>
-                <dd class="col-sm-8">@Model.BusinessName</dd>
-
-                <dt class="col-sm-4">Provider type</dt>
-                <dd class="col-sm-8">@Model.ProviderTypeLabel</dd>
-
-                <dt class="col-sm-4">Contact email</dt>
-                <dd class="col-sm-8">@Model.ContactEmail</dd>
-
-                <dt class="col-sm-4">Contact phone</dt>
-                <dd class="col-sm-8">@Model.ContactPhone</dd>
-
-                <dt class="col-sm-4">Address</dt>
-                <dd class="col-sm-8">@Model.Address</dd>
-
-                <dt class="col-sm-4">Description</dt>
-                <dd class="col-sm-8" style="white-space: pre-wrap;">@Model.Description</dd>
-            </dl>
+        <div class="d-flex align-items-center">
+            <div class="avatar avatar-lg me-3">
+                <img class="avatar-img rounded-circle border border-2 border-white" src="@avatar" alt="Avatar">
+            </div>
+            <div>
+                <h1 class="fs-4 mb-0"><i class="bi bi-gear me-1"></i>Settings</h1>
+                <p class="mb-0 small text-secondary">@Model.DisplayName @(string.IsNullOrWhiteSpace(Model.Email) ? "" : "· " + Model.Email)</p>
+            </div>
         </div>
-    </div>
 
-    <p class="text-muted small mb-0">
-        These details are read-only here. To change them, please contact support.
-    </p>
-</div>
+        <div class="row g-4">
+            <!-- Profile -->
+            <div class="col-12">
+                <div class="card border">
+                    <div class="card-header border-bottom">
+                        <h5 class="card-header-title mb-0"><i class="bi bi-person me-1"></i>Personal information</h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="post" asp-area="Provider" asp-controller="Settings" asp-action="UpdateProfile" class="row g-3">
+                            @Html.AntiForgeryToken()
+                            <div class="col-md-6">
+                                <label asp-for="Profile.FirstName" class="form-label"></label>
+                                <input asp-for="Profile.FirstName" class="form-control">
+                                <span asp-validation-for="Profile.FirstName" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Profile.LastName" class="form-label"></label>
+                                <input asp-for="Profile.LastName" class="form-control">
+                                <span asp-validation-for="Profile.LastName" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Email</label>
+                                <input class="form-control" value="@Model.Email" readonly disabled>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Profile.DateOfBirth" class="form-label"></label>
+                                <input asp-for="Profile.DateOfBirth" type="date" class="form-control">
+                                <span asp-validation-for="Profile.DateOfBirth" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Profile.Gender" class="form-label"></label>
+                                <select asp-for="Profile.Gender" asp-items="Html.GetEnumSelectList<GenderOption>()" class="form-select">
+                                    <option value="">Prefer not to say</option>
+                                </select>
+                                <span asp-validation-for="Profile.Gender" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Profile.Country" class="form-label"></label>
+                                <input asp-for="Profile.Country" class="form-control">
+                                <span asp-validation-for="Profile.Country" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Profile.City" class="form-label"></label>
+                                <input asp-for="Profile.City" class="form-control">
+                                <span asp-validation-for="Profile.City" class="text-danger small"></span>
+                            </div>
+                            <div class="col-12">
+                                <label asp-for="Profile.AddressLine" class="form-label"></label>
+                                <input asp-for="Profile.AddressLine" class="form-control">
+                                <span asp-validation-for="Profile.AddressLine" class="text-danger small"></span>
+                            </div>
+                            <div class="col-12 text-end">
+                                <button type="submit" class="btn btn-primary mb-0">Save changes</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Phone -->
+            <div class="col-md-6">
+                <div class="card border h-100">
+                    <div class="card-header border-bottom">
+                        <h5 class="card-header-title mb-0"><i class="bi bi-telephone me-1"></i>Phone number</h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="post" asp-area="Provider" asp-controller="Settings" asp-action="UpdatePhone" class="vstack gap-3">
+                            @Html.AntiForgeryToken()
+                            <div>
+                                <label asp-for="Phone.PhoneNumber" class="form-label"></label>
+                                <input asp-for="Phone.PhoneNumber" type="tel" class="form-control" placeholder="+1 555 123 4567">
+                                <span asp-validation-for="Phone.PhoneNumber" class="text-danger small"></span>
+                            </div>
+                            <div class="text-end">
+                                <button type="submit" class="btn btn-primary-soft mb-0">Update phone</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Password -->
+            <div class="col-md-6">
+                <div class="card border h-100">
+                    <div class="card-header border-bottom">
+                        <h5 class="card-header-title mb-0"><i class="bi bi-shield-lock me-1"></i>Change password</h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="post" asp-area="Provider" asp-controller="Settings" asp-action="ChangePassword" class="vstack gap-3">
+                            @Html.AntiForgeryToken()
+                            <div>
+                                <label asp-for="Password.CurrentPassword" class="form-label"></label>
+                                <input asp-for="Password.CurrentPassword" type="password" class="form-control" autocomplete="current-password">
+                                <span asp-validation-for="Password.CurrentPassword" class="text-danger small"></span>
+                            </div>
+                            <div>
+                                <label asp-for="Password.NewPassword" class="form-label"></label>
+                                <input asp-for="Password.NewPassword" type="password" class="form-control" autocomplete="new-password">
+                                <span asp-validation-for="Password.NewPassword" class="text-danger small"></span>
+                            </div>
+                            <div>
+                                <label asp-for="Password.ConfirmNewPassword" class="form-label"></label>
+                                <input asp-for="Password.ConfirmNewPassword" type="password" class="form-control" autocomplete="new-password">
+                                <span asp-validation-for="Password.ConfirmNewPassword" class="text-danger small"></span>
+                            </div>
+                            <div class="text-end">
+                                <button type="submit" class="btn btn-primary-soft mb-0">Change password</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -85,8 +85,9 @@ public sealed class ToursFacade
         var imagesTask = SafeListAsync(() => _api.GetImagesAsync(d.Id, ct));
         var ratingTask = SafeRatingAsync(d.Id, ct);
         var reviewsTask = SafeReviewsAsync(d.Id, ct);
+        var joinSlotsTask = SafeJoinSlotsAsync(d.Id, ct);
 
-        await Task.WhenAll(schedulesTask, pricingTask, waypointsTask, guidesTask, imagesTask, ratingTask, reviewsTask);
+        await Task.WhenAll(schedulesTask, pricingTask, waypointsTask, guidesTask, imagesTask, ratingTask, reviewsTask, joinSlotsTask);
 
         // Real uploaded images come from the anonymous GET /api/v1/tours/{id}/images
         // endpoint (approved-only, primary-first). Relative /uploads URLs are resolved
@@ -179,9 +180,57 @@ public sealed class ToursFacade
                     HelpfulVoteCount = r.HelpfulVoteCount,
                 })
                 .ToList(),
+            JoinSlots = joinSlotsTask.Result,
         };
 
         return ApiResult<TourDetailVm>.Ok(vm);
+    }
+
+    public async Task<ApiResult> SubmitJoinRequestAsync(SubmitJoinRequestBody body, CancellationToken ct = default)
+    {
+        ApiResult result;
+        try
+        {
+            result = await _api.SubmitJoinRequestAsync(body, ct);
+        }
+        catch
+        {
+            return ApiResult.Fail(500, "Could not send your request. Please try again.");
+        }
+
+        if (result.IsUnauthorized)
+            return ApiResult.ForceSignOut();
+        if (result.IsSuccess)
+            return ApiResult.Ok(result.StatusCode);
+        if (result.IsValidationError && result.ValidationErrors is not null)
+            return ApiResult.ValidationFail(result.StatusCode, result.ValidationErrors);
+
+        // Conflict surfaces the API message verbatim (e.g. "Only N spots remain.", booking not joinable, already requested).
+        return ApiResult.Fail(result.StatusCode, result.Error ?? "Could not send your request.");
+    }
+
+    private async Task<List<JoinSlotVm>> SafeJoinSlotsAsync(Guid tourId, CancellationToken ct)
+    {
+        try
+        {
+            var result = await _api.GetAvailabilityAsync(tourId, ct);
+            if (result is { IsSuccess: true, Data: { } page })
+            {
+                return page.Items
+                    .SelectMany(g => g.Slots.Select(s => new JoinSlotVm
+                    {
+                        SlotId = s.Id,
+                        Label = $"{g.Date:ddd, d MMM yyyy} {s.StartTime}-{s.EndTime} ({s.AvailableCount} left)",
+                    }))
+                    .ToList();
+            }
+        }
+        catch
+        {
+            // tolerate availability hydration failure
+        }
+
+        return new List<JoinSlotVm>();
     }
 
     private static async Task<List<T>> SafeListAsync<T>(Func<Task<ApiResult<List<T>>>> call)

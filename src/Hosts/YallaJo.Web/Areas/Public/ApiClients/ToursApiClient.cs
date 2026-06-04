@@ -42,4 +42,10 @@ public sealed class ToursApiClient
 
     public Task<ApiResult<RatingSummaryResponse>> GetRatingSummaryAsync(Guid id, CancellationToken ct = default)
         => _api.GetAsync<RatingSummaryResponse>($"/api/v1/social/reviews/ratings?entityType=Tour&entityId={id}", ct);
+
+    public Task<ApiResult<AvailabilityPageResponse>> GetAvailabilityAsync(Guid tourId, CancellationToken ct = default)
+        => _api.GetAsync<AvailabilityPageResponse>($"/api/v1/booking/availability/{tourId}?pageSize=20", ct);
+
+    public Task<ApiResult> SubmitJoinRequestAsync(SubmitJoinRequestBody body, CancellationToken ct = default)
+        => _api.PostAsync("/api/v1/booking/join-requests", body, ct);
 }

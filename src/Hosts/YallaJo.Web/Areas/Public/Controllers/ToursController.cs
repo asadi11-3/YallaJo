@@ -44,4 +44,23 @@ public sealed class ToursController : BaseController
 
         return View(result.Data);
     }
+
+    [HttpPost("tours/{slug}/join")]
+    [Authorize]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> RequestJoin(string slug, Guid tourBookingId, Guid availabilitySlotId, int participantCount, string? message, CancellationToken ct = default)
+    {
+        var result = await _tours.SubmitJoinRequestAsync(
+            new SubmitJoinRequestBody(tourBookingId, availabilitySlotId, participantCount, message), ct);
+
+        if (GuardSignOut(result) is { } signOut)
+            return signOut;
+
+        if (result.IsSuccess)
+            SetSuccess("Your request to join has been sent.");
+        else
+            SetError(result.Error);
+
+        return RedirectToAction(nameof(Detail), new { slug });
+    }
 }

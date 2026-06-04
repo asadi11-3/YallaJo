@@ -1,0 +1,80 @@
+@model YallaJo.Web.Areas.Content.Models.Blogs.CreateBlogVm
+@{
+    ViewData["Title"] = "Write an article";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<section class="pt-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-9">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h3 class="mb-0">Write an article</h3>
+                    <a class="btn btn-sm btn-light" asp-area="Content" asp-controller="Creators" asp-action="MyBlogs">
+                        <i class="bi bi-journals me-1"></i>My articles
+                    </a>
+                </div>
+
+                <div class="card border">
+                    <div class="card-body">
+                        <form asp-area="Content" asp-controller="Creators" asp-action="Write" method="post">
+                            @Html.AntiForgeryToken()
+                            <div asp-validation-summary="ModelOnly" class="text-danger small mb-3"></div>
+
+                            <div class="mb-3">
+                                <label asp-for="Title" class="form-label"></label>
+                                <input asp-for="Title" class="form-control" placeholder="A clear, descriptive title">
+                                <span asp-validation-for="Title" class="text-danger small"></span>
+                            </div>
+
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-8">
+                                    <label asp-for="Slug" class="form-label"></label>
+                                    <input asp-for="Slug" class="form-control" placeholder="leave blank to auto-generate">
+                                    <span asp-validation-for="Slug" class="text-danger small"></span>
+                                </div>
+                                <div class="col-md-4">
+                                    <label asp-for="SourceLanguageCode" class="form-label"></label>
+                                    <input asp-for="SourceLanguageCode" class="form-control" placeholder="en">
+                                    <span asp-validation-for="SourceLanguageCode" class="text-danger small"></span>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="Summary" class="form-label"></label>
+                                <textarea asp-for="Summary" class="form-control" rows="2" placeholder="A short summary shown in listings"></textarea>
+                                <span asp-validation-for="Summary" class="text-danger small"></span>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="Content" class="form-label">Article content</label>
+                                <textarea asp-for="Content" class="form-control" rows="12" placeholder="Write your article (HTML allowed)"></textarea>
+                                <span asp-validation-for="Content" class="text-danger small"></span>
+                            </div>
+
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-6">
+                                    <label asp-for="MetaTitle" class="form-label"></label>
+                                    <input asp-for="MetaTitle" class="form-control">
+                                </div>
+                                <div class="col-md-6">
+                                    <label asp-for="MetaDescription" class="form-label"></label>
+                                    <input asp-for="MetaDescription" class="form-control">
+                                </div>
+                            </div>
+
+                            <div class="d-flex justify-content-end gap-2">
+                                <a class="btn btn-light" asp-area="Content" asp-controller="Creators" asp-action="MyBlogs">Cancel</a>
+                                <button type="submit" class="btn btn-primary">Create draft</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -2,8 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using YallaJo.Web.Areas.Provider.Facades;
 using YallaJo.Web.Areas.Provider.Models.Bookings;
-using YallaJo.Web.Infrastructure.Authorization;
-using YallaJo.Web.Infrastructure.Identity;
+using YallaJo.Web.Areas.Provider.Shared;
 using YallaJo.Web.Infrastructure.Mvc;
 
 namespace YallaJo.Web.Areas.Provider.Controllers;
@@ -12,145 +11,116 @@ namespace YallaJo.Web.Areas.Provider.Controllers;
 [Authorize]
 public sealed class BookingsController : BaseController
 {
-    private const string DefaultStatus = "PendingConfirmation";
+    private readonly BookingsFacade _bookings;
 
-    private readonly ProviderBookingsFacade _facade;
-    private readonly ICurrentUser _currentUser;
+    public BookingsController(BookingsFacade bookings) => _bookings = bookings;
 
-    public BookingsController(ProviderBookingsFacade facade, ICurrentUser currentUser)
-    {
-        _facade = facade;
-        _currentUser = currentUser;
-    }
-
-    // ── GET /provider/bookings ────────────────────────────────────────────────────
     [HttpGet("provider/bookings")]
-    public async Task<IActionResult> Index(string? status = null, CancellationToken ct = default)
+    public async Task<IActionResult> Index(Guid? lookupId, CancellationToken ct = default)
     {
-        if (!_currentUser.HasPermission(WebPermission.TourBooking.ReadOwn))
-            return RedirectToStatus();
+        SetSidebar();
+        var result = await _bookings.GetAsync(lookupId, ct);
+        if (GuardSignOut(result) is { } signOut)
+            return signOut;
 
-        var result = await _facade.GetListAsync(status, ct);
-        return result.Outcome switch
+        if (!result.IsSuccess || result.Data is null)
         {
-            ProviderBookingOutcome.Ok => View(result.Data),
-            ProviderBookingOutcome.ForceSignOut => RedirectToLogin(),
-            ProviderBookingOutcome.Forbidden => Denied(result.Error),
-            _ => Failed(result.Error),
-        };
+            SetError(result.Error);
+            return View(new BookingsVm());
+        }
+
+        return View(result.Data);
     }
 
-    // ── GET /provider/bookings/{id} ───────────────────────────────────────────────
-    [HttpGet("provider/bookings/{id:guid}")]
-    public async Task<IActionResult> Details(Guid id, CancellationToken ct)
+    [HttpPost("provider/bookings/lookup")]
+    [ValidateAntiForgeryToken]
+    public IActionResult Lookup(Guid? lookupId)
     {
-        if (!_currentUser.HasPermission(WebPermission.TourBooking.ReadOwn))
-            return RedirectToStatus();
-
-        var result = await _facade.GetDetailsAsync(id, ct);
-        return result.Outcome switch
+        if (lookupId is null || lookupId == Guid.Empty)
         {
-            ProviderBookingOutcome.Ok => View(result.Data),
-            ProviderBookingOutcome.ForceSignOut => RedirectToLogin(),
-            ProviderBookingOutcome.Forbidden => Denied(result.Error),
-            ProviderBookingOutcome.NotFound => NotFoundRedirect(result.Error),
-            _ => NotFoundRedirect(result.Error),
-        };
+            SetError("Please enter a valid booking id.");
+            return RedirectToAction(nameof(Index));
+        }
+
+        return RedirectToAction(nameof(Index), new { lookupId });
     }
 
-    // ── POST /provider/bookings/{id}/confirm ──────────────────────────────────────
+    [HttpPost("provider/bookings/join-requests/{id:guid}/approve")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ApproveJoin(Guid id, string? responseMessage, CancellationToken ct = default)
+    {
+        var result = await _bookings.ApproveJoinAsync(id, responseMessage, ct);
+        if (GuardSignOut(result) is { } signOut)
+            return signOut;
+
+        if (result.IsSuccess)
+            SetSuccess("Join request approved.");
+        else
+            SetError(result.Error);
+
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost("provider/bookings/join-requests/{id:guid}/reject")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> RejectJoin(Guid id, string? responseMessage, CancellationToken ct = default)
+    {
+        var result = await _bookings.RejectJoinAsync(id, responseMessage, ct);
+        if (GuardSignOut(result) is { } signOut)
+            return signOut;
+
+        if (result.IsSuccess)
+            SetSuccess("Join request declined.");
+        else
+            SetError(result.Error);
+
+        return RedirectToAction(nameof(Index));
+    }
+
     [HttpPost("provider/bookings/{id:guid}/confirm")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Confirm(Guid id, CancellationToken ct)
+    public async Task<IActionResult> ConfirmBooking(Guid id, CancellationToken ct = default)
     {
-        if (!_currentUser.HasPermission(WebPermission.TourBooking.Confirm))
-            return RedirectToStatus();
+        var result = await _bookings.ConfirmBookingAsync(id, ct);
+        if (GuardSignOut(result) is { } signOut)
+            return signOut;
 
-        var result = await _facade.ConfirmAsync(id, ct);
-        if (result.Outcome == ProviderBookingOutcome.ForceSignOut) return RedirectToLogin();
-
-        if (result.Outcome == ProviderBookingOutcome.Ok)
+        if (result.IsSuccess)
             SetSuccess("Booking confirmed.");
         else
-            SetError(result.Error ?? "Could not confirm the booking.");
+            SetError(result.Error);
 
-        return RedirectToAction(nameof(Details), new { id });
+        return RedirectToAction(nameof(Index), new { lookupId = id });
     }
 
-    // ── POST /provider/bookings/{id}/cancel ───────────────────────────────────────
-    [HttpPost("provider/bookings/{id:guid}/cancel")]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Cancel(Guid id, ProviderBookingCancelVm vm, CancellationToken ct)
-    {
-        if (!_currentUser.HasPermission(WebPermission.TourBooking.Cancel))
-            return RedirectToStatus();
-
-        // Guard the reason before the API call (provider cancel requires reason >= 10).
-        var reason = vm.Reason?.Trim() ?? string.Empty;
-        if (reason.Length < 10)
-        {
-            SetError("A cancellation reason of at least 10 characters is required.");
-            return RedirectToAction(nameof(Details), new { id });
-        }
-
-        var result = await _facade.CancelAsync(id, reason, ct);
-        if (result.Outcome == ProviderBookingOutcome.ForceSignOut) return RedirectToLogin();
-
-        if (result.Outcome == ProviderBookingOutcome.Ok)
-            SetSuccess("Booking cancelled. A full refund will be processed.");
-        else
-            SetError(result.Error ?? "Could not cancel the booking.");
-
-        return RedirectToAction(nameof(Details), new { id });
-    }
-
-    // ── POST /provider/bookings/{id}/reject ───────────────────────────────────────
     [HttpPost("provider/bookings/{id:guid}/reject")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Reject(Guid id, ProviderBookingRejectVm vm, CancellationToken ct)
+    public async Task<IActionResult> RejectBooking(Guid id, string? reason, CancellationToken ct = default)
     {
-        if (!_currentUser.HasPermission(WebPermission.TourBooking.Reject))
-            return RedirectToStatus();
-
-        // Guard the reason before the API call (backend requires reason 10-500 chars).
-        var reason = vm.Reason?.Trim() ?? string.Empty;
-        if (reason.Length < 10)
+        if (string.IsNullOrWhiteSpace(reason))
         {
-            SetError("A rejection reason of at least 10 characters is required.");
-            return RedirectToAction(nameof(Details), new { id });
+            SetError("Please provide a reason for rejecting the booking.");
+            return RedirectToAction(nameof(Index), new { lookupId = id });
         }
 
-        var result = await _facade.RejectAsync(id, reason, ct);
-        if (result.Outcome == ProviderBookingOutcome.ForceSignOut) return RedirectToLogin();
+        var result = await _bookings.RejectBookingAsync(id, reason, ct);
+        if (GuardSignOut(result) is { } signOut)
+            return signOut;
 
-        if (result.Outcome == ProviderBookingOutcome.Ok)
-            SetSuccess("Booking rejected. The traveler will be refunded in full.");
+        if (result.IsSuccess)
+            SetSuccess("Booking rejected.");
         else
-            SetError(result.Error ?? "Could not reject the booking.");
+            SetError(result.Error);
 
-        return RedirectToAction(nameof(Details), new { id });
+        return RedirectToAction(nameof(Index), new { lookupId = id });
     }
 
-    // ── Helpers ───────────────────────────────────────────────────────────────────
-
-    private IActionResult Denied(string? message)
+    private void SetSidebar()
     {
-        SetError(message ?? "You don't have access to this booking.");
-        return RedirectToAction(nameof(Index));
+        ViewData["ProviderNav"] = "Bookings";
+        ViewBag.Sidebar = new ProviderSidebarVm
+        {
+            DisplayName = User.Identity?.Name ?? "Provider",
+        };
     }
-
-    private IActionResult NotFoundRedirect(string? message)
-    {
-        SetError(message ?? "Booking not found.");
-        return RedirectToAction(nameof(Index));
-    }
-
-    private IActionResult Failed(string? message)
-    {
-        ViewBag.Error = message;
-        return View(nameof(Index), new ProviderBookingsIndexVm());
-    }
-
-    private IActionResult RedirectToStatus() =>
-        RedirectToAction("Status", "Provider", new { area = "Provider" });
 }

@@ -1,8 +1,11 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using YallaJo.Web.Areas.Provider.Facades;
-using YallaJo.Web.Infrastructure.Authorization;
-using YallaJo.Web.Infrastructure.Identity;
+using YallaJo.Web.Areas.Accounts.Facades;
+using YallaJo.Web.Areas.Accounts.Models.ChangePassword;
+using YallaJo.Web.Areas.Accounts.Models.Profile;
+using YallaJo.Web.Areas.Accounts.Models.UpdatePhone;
+using YallaJo.Web.Areas.Provider.Models.Settings;
+using YallaJo.Web.Areas.Provider.Shared;
 using YallaJo.Web.Infrastructure.Mvc;
 
 namespace YallaJo.Web.Areas.Provider.Controllers;
@@ -11,44 +14,133 @@ namespace YallaJo.Web.Areas.Provider.Controllers;
 [Authorize]
 public sealed class SettingsController : BaseController
 {
-    private readonly ProviderSettingsFacade _facade;
-    private readonly ICurrentUser _currentUser;
+    private readonly ProfileFacade _profile;
+    private readonly ChangePasswordFacade _password;
+    private readonly UpdatePhoneFacade _phone;
 
-    public SettingsController(ProviderSettingsFacade facade, ICurrentUser currentUser)
+    public SettingsController(ProfileFacade profile, ChangePasswordFacade password, UpdatePhoneFacade phone)
     {
-        _facade = facade;
-        _currentUser = currentUser;
+        _profile = profile;
+        _password = password;
+        _phone = phone;
     }
 
-    // GET /provider/settings
     [HttpGet("provider/settings")]
-    public async Task<IActionResult> Index(CancellationToken ct)
+    public async Task<IActionResult> Index(CancellationToken ct = default)
     {
-        // Approved-provider marker; pending applicants (User role) don't carry it and
-        // are routed to the lifecycle status page instead of a hard 403.
-        if (!_currentUser.HasPermission(WebPermission.ProviderDashboard.Read))
-            return RedirectToStatus();
+        SetSidebar();
 
-        var result = await _facade.GetSettingsAsync(ct);
+        var result = await _profile.GetAsync(ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
 
-        return result.Outcome switch
+        if (!result.IsSuccess || result.Data is null)
         {
-            ProviderSettingsOutcome.Ok => View(result.Settings),
-            ProviderSettingsOutcome.ForceSignOut => RedirectToLogin(),
-            ProviderSettingsOutcome.NoApplication => RedirectToApply(),
-            _ => Error(result.Error),
-        };
+            SetError(result.Error);
+            return View(new ProviderSettingsVm());
+        }
+
+        return View(BuildVm(result.Data));
     }
 
-    private IActionResult Error(string? message)
+    [HttpPost("provider/settings/profile")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> UpdateProfile(UpdateProfileVm form, CancellationToken ct = default)
     {
-        SetError(message ?? "Could not load your provider settings.");
-        return RedirectToStatus();
+        SetSidebar();
+
+        if (!ModelState.IsValid)
+            return await ReloadAsync(profile: form, ct: ct);
+
+        var result = await _profile.UpdateAsync(form, ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+
+        if (!result.IsSuccess)
+        {
+            if (!ApplyValidationErrors(result)) SetError(result.Error);
+            return await ReloadAsync(profile: form, ct: ct);
+        }
+
+        SetSuccess("Your profile has been updated.");
+        return RedirectToAction(nameof(Index));
     }
 
-    private IActionResult RedirectToStatus() =>
-        RedirectToAction("Status", "Provider", new { area = "Provider" });
+    [HttpPost("provider/settings/password")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ChangePassword(ChangePasswordVm form, CancellationToken ct = default)
+    {
+        SetSidebar();
 
-    private IActionResult RedirectToApply() =>
-        RedirectToAction("Apply", "Provider", new { area = "Provider" });
+        if (!ModelState.IsValid)
+            return await ReloadAsync(password: form, ct: ct);
+
+        var result = await _password.HandleAsync(form, ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+
+        if (!result.IsSuccess)
+        {
+            if (!ApplyValidationErrors(result)) SetError(result.Error);
+            return await ReloadAsync(password: form, ct: ct);
+        }
+
+        SetSuccess("Your password has been changed.");
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost("provider/settings/phone")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> UpdatePhone(UpdatePhoneVm form, CancellationToken ct = default)
+    {
+        SetSidebar();
+
+        if (!ModelState.IsValid)
+            return await ReloadAsync(phone: form, ct: ct);
+
+        var result = await _phone.HandleAsync(form, ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+
+        if (!result.IsSuccess)
+        {
+            if (!ApplyValidationErrors(result)) SetError(result.Error);
+            return await ReloadAsync(phone: form, ct: ct);
+        }
+
+        SetSuccess("Your phone number has been updated.");
+        return RedirectToAction(nameof(Index));
+    }
+
+    private async Task<IActionResult> ReloadAsync(
+        UpdateProfileVm? profile = null,
+        ChangePasswordVm? password = null,
+        UpdatePhoneVm? phone = null,
+        CancellationToken ct = default)
+    {
+        var result = await _profile.GetAsync(ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+
+        var vm = result.IsSuccess && result.Data is not null
+            ? BuildVm(result.Data)
+            : new ProviderSettingsVm();
+
+        if (profile is not null) vm.Profile = profile;
+        if (password is not null) vm.Password = password;
+        if (phone is not null) vm.Phone = phone;
+
+        return View(nameof(Index), vm);
+    }
+
+    private static ProviderSettingsVm BuildVm(ProfileVm p) => new()
+    {
+        Email = p.Email,
+        DisplayName = string.IsNullOrWhiteSpace(p.DisplayName) ? $"{p.FirstName} {p.LastName}".Trim() : p.DisplayName,
+        AvatarUrl = p.AvatarUrl,
+        PhoneNumber = p.PhoneNumber,
+        Profile = p.Update,
+        Phone = new UpdatePhoneVm { PhoneNumber = p.PhoneNumber ?? string.Empty },
+    };
+
+    private void SetSidebar()
+    {
+        ViewData["ProviderNav"] = "Settings";
+        ViewBag.Sidebar = new ProviderSidebarVm { DisplayName = User.Identity?.Name ?? "Provider" };
+    }
 }

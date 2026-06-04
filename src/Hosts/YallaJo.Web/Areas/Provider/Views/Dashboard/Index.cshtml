@@ -1,137 +1,155 @@
-@using YallaJo.Web.Areas.Provider.Models.Dashboard
-@model ProviderDashboardVm
+@model YallaJo.Web.Areas.Provider.Models.Dashboard.DashboardVm
+@using YallaJo.Web.Areas.Provider.Shared
 @{
-    ViewData["Title"] = "Provider dashboard";
+    ViewData["Title"] = "Provider Dashboard";
     Layout = "~/Views/Shared/_Layout.cshtml";
+    var sidebar = ViewBag.Sidebar as ProviderSidebarVm ?? new ProviderSidebarVm();
+
+    string Money(decimal amount, string? currency) =>
+        string.IsNullOrWhiteSpace(currency) ? amount.ToString("N0") : $"{amount:N0} {currency}";
 }
 
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <div>
-            <h2 class="mb-1">@Model.BusinessName</h2>
-            <span class="text-muted">@Model.ProviderTypeLabel</span>
+<partial name="_ProviderSidebar" model="sidebar" />
+
+<section class="pt-0">
+    <div class="container vstack gap-4">
+        <div class="d-sm-flex justify-content-between align-items-center">
+            <h1 class="fs-4 mb-0"><i class="bi bi-house-door me-2"></i>Dashboard</h1>
+            <a asp-area="Provider" asp-controller="Listings" asp-action="Create" class="btn btn-sm btn-primary mt-2 mt-sm-0">
+                <i class="bi bi-plus-lg me-1"></i>Add New Listing
+            </a>
         </div>
-        <span class="badge @Model.StatusBadgeClass fs-6">@Model.StatusLabel</span>
-    </div>
 
-    @* Success/Error flash banners are rendered globally by the shared _Alerts partial. *@
-
-    @if (Model.IsSuspended)
-    {
-        <div class="alert alert-warning">
-            Your provider account is currently <strong>suspended</strong>. Operational actions are unavailable.
-            Please contact support if you believe this is a mistake.
-        </div>
-    }
-
-    <div class="row g-3">
-        <div class="col-lg-7">
-            @* ── Overview card ─────────────────────────────────────────────── *@
-            <div class="card mb-3">
-                <div class="card-header"><strong>Overview</strong></div>
-                <div class="card-body">
-                    <div class="row text-center g-2">
-                        <div class="col-6 col-md-3">
-                            <div class="border rounded p-2">
-                                <div class="fs-4 fw-semibold">@Model.TotalDocuments</div>
-                                <div class="small text-muted">Documents</div>
-                            </div>
+        <div class="row g-4">
+            <div class="col-sm-6 col-xl-3">
+                <div class="card card-body border h-100">
+                    <div class="d-flex align-items-center">
+                        <div class="icon-xl bg-success bg-opacity-10 rounded-3 text-success">
+                            <i class="bi bi-journals fs-5"></i>
                         </div>
-                        <div class="col-6 col-md-3">
-                            <div class="border rounded p-2">
-                                <div class="fs-4 fw-semibold @(Model.ExpiredDocuments > 0 ? "text-danger" : "")">@Model.ExpiredDocuments</div>
-                                <div class="small text-muted">Expired</div>
-                            </div>
-                        </div>
-                        <div class="col-6 col-md-3">
-                            <div class="border rounded p-2">
-                                <div class="fs-4 fw-semibold @(Model.ExpiringIn30DaysDocuments > 0 ? "text-warning" : "")">@Model.ExpiringIn30DaysDocuments</div>
-                                <div class="small text-muted">Expiring &le; 30d</div>
-                            </div>
-                        </div>
-                        <div class="col-6 col-md-3">
-                            <div class="border rounded p-2">
-                                <div class="fs-4 fw-semibold">@Model.PendingActionsCount</div>
-                                <div class="small text-muted">Pending actions</div>
-                            </div>
+                        <div class="ms-3">
+                            <h4 class="mb-0">@Model.TotalListings</h4>
+                            <span class="small text-body-secondary">Total Listings</span>
                         </div>
                     </div>
                 </div>
             </div>
-
-            @* ── Pending actions ──────────────────────────────────────────── *@
-            <div class="card mb-3">
-                <div class="card-header"><strong>Pending actions</strong></div>
-                <div class="card-body">
-                    @if (!Model.HasPendingActions)
-                    {
-                        <p class="small text-muted mb-0">You're all caught up — no actions need your attention.</p>
-                    }
-                    else
-                    {
-                        <ul class="list-group list-group-flush mb-0">
-                            @foreach (var action in Model.PendingActions)
-                            {
-                                <li class="list-group-item px-0">
-                                    <div class="d-flex justify-content-between align-items-start">
-                                        <div>
-                                            <span class="badge @action.BadgeClass me-1">@action.TypeLabel</span>
-                                            <span>@action.Description</span>
-                                        </div>
-                                        @if (action.Deadline.HasValue)
-                                        {
-                                            <span class="text-muted small text-nowrap ms-2">due @action.Deadline.Value.ToString("yyyy-MM-dd")</span>
-                                        }
-                                    </div>
-                                </li>
-                            }
-                        </ul>
-                    }
+            <div class="col-sm-6 col-xl-3">
+                <div class="card card-body border h-100">
+                    <div class="d-flex align-items-center">
+                        <div class="icon-xl bg-info bg-opacity-10 rounded-3 text-info">
+                            <i class="bi bi-graph-up-arrow fs-5"></i>
+                        </div>
+                        <div class="ms-3">
+                            <h4 class="mb-0">@Money(Model.NetEarnings, Model.EarningsCurrency)</h4>
+                            <span class="small text-body-secondary">Net Earnings</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-xl-3">
+                <div class="card card-body border h-100">
+                    <div class="d-flex align-items-center">
+                        <div class="icon-xl bg-warning bg-opacity-10 rounded-3 text-warning">
+                            <i class="bi bi-bookmark-heart fs-5"></i>
+                        </div>
+                        <div class="ms-3">
+                            <h4 class="mb-0">@Model.PaymentCount</h4>
+                            <span class="small text-body-secondary">Paid Bookings</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-xl-3">
+                <div class="card card-body border h-100">
+                    <div class="d-flex align-items-center">
+                        <div class="icon-xl bg-primary bg-opacity-10 rounded-3 text-primary">
+                            <i class="bi bi-people fs-5"></i>
+                        </div>
+                        <div class="ms-3">
+                            <h4 class="mb-0">@Model.PendingJoinRequests</h4>
+                            <span class="small text-body-secondary">Pending Join Requests</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="col-lg-5">
-            @* ── Notifications preview ────────────────────────────────────── *@
-            <div class="card mb-3">
-                <div class="card-header"><strong>Recent notifications</strong></div>
-                <div class="card-body">
-                    @if (!Model.HasNotifications)
-                    {
-                        <p class="small text-muted mb-0">No recent notifications.</p>
-                    }
-                    else
-                    {
-                        <ul class="list-group list-group-flush mb-0">
-                            @foreach (var n in Model.Notifications)
+        @if (Model.HasActivity)
+        {
+            <div class="row g-4">
+                <div class="col-lg-6">
+                    <div class="card border h-100">
+                        <div class="card-header border-bottom d-flex justify-content-between align-items-center">
+                            <h5 class="card-header-title mb-0">Recent Listings</h5>
+                            <a asp-area="Provider" asp-controller="Listings" asp-action="Index" class="btn btn-sm btn-primary-soft">View all</a>
+                        </div>
+                        <div class="card-body">
+                            @if (Model.RecentListings.Count == 0)
                             {
-                                <li class="list-group-item px-0">
-                                    <div class="d-flex justify-content-between">
-                                        <strong class="@(n.IsRead ? "text-muted" : "")">@n.Title</strong>
-                                        <span class="text-muted small text-nowrap ms-2">@n.OccurredAt.ToString("yyyy-MM-dd")</span>
-                                    </div>
-                                    <div class="small text-muted">@n.Description</div>
-                                </li>
+                                <p class="text-body-secondary small mb-0">No listings yet.</p>
                             }
-                        </ul>
-                    }
+                            else
+                            {
+                                <ul class="list-group list-group-borderless">
+                                    @foreach (var listing in Model.RecentListings)
+                                    {
+                                        <li class="list-group-item px-0 d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <h6 class="mb-0">@listing.Name</h6>
+                                                <span class="small text-body-secondary">@Money(listing.BasePrice, listing.Currency) · @listing.CreatedAt.ToString("d MMM yyyy")</span>
+                                            </div>
+                                            <span class="badge text-bg-light">@(listing.Status ?? "Draft")</span>
+                                        </li>
+                                    }
+                                </ul>
+                            }
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="card border h-100">
+                        <div class="card-header border-bottom d-flex justify-content-between align-items-center">
+                            <h5 class="card-header-title mb-0">Recent Join Requests</h5>
+                            <a asp-area="Provider" asp-controller="Bookings" asp-action="Index" class="btn btn-sm btn-primary-soft">View all</a>
+                        </div>
+                        <div class="card-body">
+                            @if (Model.RecentJoinRequests.Count == 0)
+                            {
+                                <p class="text-body-secondary small mb-0">No join requests yet.</p>
+                            }
+                            else
+                            {
+                                <ul class="list-group list-group-borderless">
+                                    @foreach (var jr in Model.RecentJoinRequests)
+                                    {
+                                        <li class="list-group-item px-0 d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <h6 class="mb-0">@jr.ParticipantCount participant(s)</h6>
+                                                <span class="small text-body-secondary">@jr.CreatedAt.ToString("d MMM yyyy")@(string.IsNullOrWhiteSpace(jr.Message) ? "" : " · " + jr.Message)</span>
+                                            </div>
+                                            <span class="badge @(jr.IsPending ? "text-bg-warning" : "text-bg-light")">@jr.Status</span>
+                                        </li>
+                                    }
+                                </ul>
+                            }
+                        </div>
+                    </div>
                 </div>
             </div>
-
-            @* ── Quick links (real, existing pages only) ──────────────────── *@
-            <div class="card mb-3">
-                <div class="card-header"><strong>Quick links</strong></div>
-                <div class="card-body d-grid gap-2">
-                    <a asp-area="Provider" asp-controller="Tours" asp-action="Index"
-                       class="btn btn-outline-secondary">My listings</a>
-                    <a asp-area="Provider" asp-controller="Bookings" asp-action="Index"
-                       class="btn btn-outline-secondary">Bookings</a>
-                    <a asp-area="Provider" asp-controller="Provider" asp-action="Status"
-                       class="btn btn-outline-secondary">Application &amp; documents</a>
-                    <a asp-area="Provider" asp-controller="Settings" asp-action="Index"
-                       class="btn btn-outline-secondary">Business settings</a>
+        }
+        else
+        {
+            <div class="card border">
+                <div class="card-body text-center py-5">
+                    <img src="~/assets/images/element/17.svg" class="h-100px mb-3" alt="">
+                    <h5>Your provider workspace is ready</h5>
+                    <p class="text-body-secondary mb-3">Create your first tour listing to start receiving bookings.</p>
+                    <a asp-area="Provider" asp-controller="Listings" asp-action="Create" class="btn btn-primary">
+                        <i class="bi bi-plus-lg me-1"></i>Add New Listing
+                    </a>
                 </div>
             </div>
-        </div>
+        }
     </div>
-</div>
+</section>

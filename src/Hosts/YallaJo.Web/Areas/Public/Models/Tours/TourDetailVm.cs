@@ -29,6 +29,9 @@ public sealed class TourDetailVm
     public IReadOnlyList<TourPricingTierVm> PricingTiers { get; init; } = [];
     public IReadOnlyList<TourGuideVm> Guides { get; init; } = [];
     public IReadOnlyList<TourReviewVm> Reviews { get; init; } = [];
+    public IReadOnlyList<JoinSlotVm> JoinSlots { get; init; } = [];
+
+    public bool HasJoinSlots => JoinSlots.Count > 0;
 
     public decimal EffectivePrice => SalePrice ?? BasePrice;
     public bool HasDiscount => SalePrice is { } s && s < BasePrice;
@@ -90,3 +93,11 @@ public sealed class TourReviewVm
     public bool IsVerifiedBooking { get; init; }
     public int HelpfulVoteCount { get; init; }
 }
+
+public sealed class JoinSlotVm
+{
+    public Guid SlotId { get; init; }
+    public string Label { get; init; } = string.Empty;
+}
+
+public sealed record SubmitJoinRequestBody(Guid TourBookingId, Guid AvailabilitySlotId, int ParticipantCount, string? Message);
