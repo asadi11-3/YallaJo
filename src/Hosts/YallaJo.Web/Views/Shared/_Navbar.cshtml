@@ -168,6 +168,9 @@
                                     <permission require="@WebPermission.Tour.ReadOwn">
                                         <li><a class="dropdown-item" asp-area="Provider" asp-controller="Tours" asp-action="Index">My Listings</a></li>
                                     </permission>
+                                    <permission require="@WebPermission.TourBooking.ReadOwn">
+                                        <li><a class="dropdown-item" asp-area="Provider" asp-controller="Bookings" asp-action="Index">Bookings</a></li>
+                                    </permission>
                                 </ul>
                             </li>
                         }

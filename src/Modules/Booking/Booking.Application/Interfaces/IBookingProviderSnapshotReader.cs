@@ -19,4 +19,11 @@ public sealed record BookingProviderSnapshot(
 public interface IBookingProviderSnapshotReader
 {
     Task<BookingProviderSnapshot?> GetByIdAsync(Guid providerId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Resolves the provider snapshot owned by the given user (reverse of
+    /// <see cref="BookingProviderSnapshot.OwnerUserId"/>). Returns <c>null</c> when the
+    /// user owns no provider. Used to scope provider-facing booking queries to the caller.
+    /// </summary>
+    Task<BookingProviderSnapshot?> GetByOwnerUserIdAsync(Guid ownerUserId, CancellationToken cancellationToken = default);
 }

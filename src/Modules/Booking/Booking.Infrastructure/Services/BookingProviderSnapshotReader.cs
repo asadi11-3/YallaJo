@@ -33,4 +33,25 @@ internal sealed class BookingProviderSnapshotReader(BookingDbContext dbContext)
             DisplayName: snapshot.DisplayName,
             Status: snapshot.Status);
     }
+
+    public async Task<BookingProviderSnapshot?> GetByOwnerUserIdAsync(
+        Guid ownerUserId,
+        CancellationToken cancellationToken = default)
+    {
+        var snapshot = await dbContext.ProviderSnapshots
+            .AsNoTracking()
+            .FirstOrDefaultAsync(s => s.OwnerUserId == ownerUserId, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (snapshot is null)
+        {
+            return null;
+        }
+
+        return new BookingProviderSnapshot(
+            ProviderId: snapshot.ProviderId,
+            OwnerUserId: snapshot.OwnerUserId,
+            DisplayName: snapshot.DisplayName,
+            Status: snapshot.Status);
+    }
 }

@@ -21,6 +21,9 @@ internal sealed class ThrowingBookingProviderSnapshotReader : IBookingProviderSn
 {
     public Task<BookingProviderSnapshot?> GetByIdAsync(Guid providerId, CancellationToken cancellationToken = default)
         => throw new InvalidOperationException(ThrowingBookingSnapshotReaders.FailureMessage);
+
+    public Task<BookingProviderSnapshot?> GetByOwnerUserIdAsync(Guid ownerUserId, CancellationToken cancellationToken = default)
+        => throw new InvalidOperationException(ThrowingBookingSnapshotReaders.FailureMessage);
 }
 
 internal sealed class ThrowingBookingPricingSnapshotReader : IBookingPricingSnapshotReader

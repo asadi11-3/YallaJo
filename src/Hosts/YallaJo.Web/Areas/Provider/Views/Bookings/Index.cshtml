@@ -1,0 +1,79 @@
+@using YallaJo.Web.Areas.Provider.Models.Bookings
+@model ProviderBookingsIndexVm
+@{
+    ViewData["Title"] = "Bookings";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0">Bookings</h2>
+    </div>
+
+    @if (ViewBag.Error is string vbe) { <div class="alert alert-danger">@vbe</div> }
+
+    <form asp-area="Provider" asp-controller="Bookings" asp-action="Index" method="get" class="row g-2 mb-3">
+        <div class="col-sm-4">
+            <select name="status" class="form-select" onchange="this.form.submit()">
+                <option value="">All statuses</option>
+                @foreach (var s in ProviderBookingsIndexVm.StatusFilters)
+                {
+                    if (string.Equals(s, Model.Status, StringComparison.OrdinalIgnoreCase))
+                    {
+                        <option value="@s" selected>@s</option>
+                    }
+                    else
+                    {
+                        <option value="@s">@s</option>
+                    }
+                }
+            </select>
+        </div>
+        <div class="col-sm-2 d-grid">
+            <button type="submit" class="btn btn-outline-secondary">Filter</button>
+        </div>
+    </form>
+
+    @if (!Model.HasItems)
+    {
+        <div class="alert alert-secondary">No bookings found in this view.</div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Reference</th>
+                        <th>Tour</th>
+                        <th>When</th>
+                        <th class="text-end">Guests</th>
+                        <th class="text-end">Total</th>
+                        <th>Status</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var b in Model.Items)
+                    {
+                        <tr>
+                            <td>
+                                <code>@b.Reference</code>
+                                <div class="text-muted small">@b.TravelerHandle</div>
+                            </td>
+                            <td>@b.TourName</td>
+                            <td>@b.SlotLabel</td>
+                            <td class="text-end">@b.ParticipantCount</td>
+                            <td class="text-end">@b.TotalAmount.ToString("0.##") @b.Currency</td>
+                            <td><span class="badge @b.StatusBadgeClass">@b.Status</span></td>
+                            <td class="text-end">
+                                <a asp-area="Provider" asp-controller="Bookings" asp-action="Details"
+                                   asp-route-id="@b.Id" class="btn btn-sm btn-outline-primary">Details</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

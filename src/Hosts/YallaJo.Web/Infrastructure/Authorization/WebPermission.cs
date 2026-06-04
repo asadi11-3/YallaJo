@@ -131,6 +131,19 @@ public static class WebPermission
         public const string Delete = "Permission.Booking.Delete";
     }
 
+    // ── TourBooking (real backend booking permissions — Permission.TourBooking.*) ──
+    // Granted to approved Provider/TourGuide roles (Confirm/Reject/Complete via
+    // ProviderSelfPermissions; ReadOwn/Cancel via the consumer set). Used for the
+    // provider booking-management screens (PB-1/PB-2).
+    public static class TourBooking
+    {
+        public const string ReadOwn  = "Permission.TourBooking.ReadOwn";
+        public const string Confirm  = "Permission.TourBooking.Confirm";
+        public const string Reject   = "Permission.TourBooking.Reject";
+        public const string Complete = "Permission.TourBooking.Complete";
+        public const string Cancel   = "Permission.TourBooking.Cancel";
+    }
+
     // ── Blog ──────────────────────────────────────────────────────────────────
     // Mirror the ContentBlogs backend permissions (Permission.Blog.{Action}).
     public static class Blog
