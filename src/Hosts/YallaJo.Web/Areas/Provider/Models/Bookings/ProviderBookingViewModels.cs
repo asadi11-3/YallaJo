@@ -56,8 +56,9 @@ public sealed class ProviderBookingDetailsVm
     //   Confirm ← AwaitingPayment | PendingConfirmation
     //   Cancel  ← AwaitingPayment | PendingConfirmation | Confirmed
     public bool CanConfirm => Status is "AwaitingPayment" or "PendingConfirmation";
+    public bool CanReject  => Status is "PendingConfirmation";
     public bool CanCancel  => Status is "AwaitingPayment" or "PendingConfirmation" or "Confirmed";
-    public bool HasAnyAction => CanConfirm || CanCancel;
+    public bool HasAnyAction => CanConfirm || CanReject || CanCancel;
 }
 
 public sealed class ProviderBookingLineVm
@@ -77,5 +78,17 @@ public sealed class ProviderBookingCancelVm
     [MinLength(10, ErrorMessage = "Please provide a reason of at least 10 characters.")]
     [MaxLength(500)]
     [Display(Name = "Cancellation reason")]
+    public string Reason { get; set; } = string.Empty;
+}
+
+/// <summary>Bound from the reject form on the details page (PendingConfirmation only).</summary>
+public sealed class ProviderBookingRejectVm
+{
+    public Guid Id { get; set; }
+
+    [Required(ErrorMessage = "A rejection reason is required.")]
+    [MinLength(10, ErrorMessage = "Please provide a reason of at least 10 characters.")]
+    [MaxLength(500)]
+    [Display(Name = "Rejection reason")]
     public string Reason { get; set; } = string.Empty;
 }

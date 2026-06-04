@@ -27,6 +27,15 @@ public sealed class BookingDbInitializer(BookingDbContext dbContext) : IModuleDb
     private static readonly Guid ProviderPetraOwnerUserId =
         Guid.Parse("b0000000-0000-0000-0000-000000000005");
 
+    // ── Non-instant test tour (PBL-0) ───────────────────────────────────────────
+    // A real, approved, NON-instant tour ("SchFix" / slug schfix-233646) made bookable
+    // by the same real owner so PendingConfirmation (and therefore provider Reject) is
+    // reachable end-to-end in Development. Owned by the same guide-approved account.
+    private static readonly Guid NonInstantTourId =
+        Guid.Parse("019E8F33-F31F-701F-A8BE-BC2AA1E60CD2");
+    private static readonly Guid ProviderNonInstantId =
+        Guid.Parse("abababab-6666-6666-6666-666666666666");
+
     public int Order => 90;
 
     public async Task InitializeAsync(CancellationToken cancellationToken = default)
@@ -110,6 +119,53 @@ public sealed class BookingDbInitializer(BookingDbContext dbContext) : IModuleDb
         if (!ownerGuideExists)
         {
             dbContext.TourGuides.Add(TourGuide.Create(ProviderPetraOwnerUserId));
+            changed = true;
+        }
+
+        // ── PBL-0: non-instant tour owned by the same real account ──────────────────
+        // Makes the approved NON-instant tour bookable by guide-approved so a paid booking
+        // moves to PendingConfirmation, enabling the provider Reject action to be tested.
+        var nonInstantProvider = await dbContext.ProviderSnapshots
+            .FirstOrDefaultAsync(p => p.ProviderId == ProviderNonInstantId, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (nonInstantProvider is null)
+        {
+            dbContext.ProviderSnapshots.Add(ProviderSnapshot.Create(
+                providerId: ProviderNonInstantId,
+                ownerUserId: ProviderPetraOwnerUserId,
+                displayName: "SchFix Tours (seed)",
+                status: BookingProviderStatus.Active));
+            changed = true;
+        }
+        else if (nonInstantProvider.OwnerUserId != ProviderPetraOwnerUserId)
+        {
+            SetProperty(nonInstantProvider, nameof(ProviderSnapshot.OwnerUserId), ProviderPetraOwnerUserId);
+            changed = true;
+        }
+
+        var nonInstantTour = await dbContext.TourSnapshots
+            .FirstOrDefaultAsync(t => t.TourId == NonInstantTourId, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (nonInstantTour is null)
+        {
+            dbContext.TourSnapshots.Add(TourSnapshot.Create(
+                tourId: NonInstantTourId,
+                providerId: ProviderNonInstantId,
+                title: "SchFix Tour",
+                currency: "JOD",
+                basePrice: 40m,
+                isActive: true,
+                isApproved: true,
+                isInstantBooking: false));
+            changed = true;
+        }
+        else if (nonInstantTour.ProviderId != ProviderNonInstantId)
+        {
+            // Re-point a previously event-seeded snapshot (placeholder provider) to the
+            // seeded real-owner provider so booking ownership resolves to guide-approved.
+            SetProperty(nonInstantTour, nameof(TourSnapshot.ProviderId), ProviderNonInstantId);
             changed = true;
         }
 

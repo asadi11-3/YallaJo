@@ -82,3 +82,5 @@ public sealed class ProviderTourLookupResponse
 // ── Requests (to API) ──────────────────────────────────────────────────────────
 
 public sealed record CancelBookingApiRequest(string Reason);
+
+public sealed record RejectBookingApiRequest(string Reason);

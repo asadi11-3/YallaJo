@@ -70,6 +70,9 @@ public sealed class ProviderBookingsFacade
     public async Task<ProviderBookingActionResult> CancelAsync(Guid id, string reason, CancellationToken ct = default)
         => Normalize(await _api.CancelAsync(id, reason, ct), "Could not cancel the booking.");
 
+    public async Task<ProviderBookingActionResult> RejectAsync(Guid id, string reason, CancellationToken ct = default)
+        => Normalize(await _api.RejectAsync(id, reason, ct), "Could not reject the booking.");
+
     // ── Helpers ───────────────────────────────────────────────────────────────────
 
     private async Task<IReadOnlyDictionary<Guid, string>> HydrateTourNamesAsync(

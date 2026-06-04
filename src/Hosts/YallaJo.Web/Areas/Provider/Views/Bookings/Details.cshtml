@@ -101,6 +101,19 @@
                         </permission>
                     }
 
+                    @if (Model.CanReject)
+                    {
+                        <permission require="@WebPermission.TourBooking.Reject">
+                            <form asp-area="Provider" asp-controller="Bookings" asp-action="Reject" asp-route-id="@Model.Id" method="post">
+                                @Html.AntiForgeryToken()
+                                <label class="form-label small mb-1">Rejection reason</label>
+                                <textarea name="Reason" class="form-control mb-2" rows="2" minlength="10" maxlength="500"
+                                          placeholder="Reason (min 10 characters). Rejecting refunds the traveler in full." required></textarea>
+                                <button type="submit" class="btn btn-outline-danger w-100">Reject booking</button>
+                            </form>
+                        </permission>
+                    }
+
                     @if (Model.CanCancel)
                     {
                         <permission require="@WebPermission.TourBooking.Cancel">

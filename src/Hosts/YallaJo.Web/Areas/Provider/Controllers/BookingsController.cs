@@ -104,6 +104,33 @@ public sealed class BookingsController : BaseController
         return RedirectToAction(nameof(Details), new { id });
     }
 
+    // ── POST /provider/bookings/{id}/reject ───────────────────────────────────────
+    [HttpPost("provider/bookings/{id:guid}/reject")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Reject(Guid id, ProviderBookingRejectVm vm, CancellationToken ct)
+    {
+        if (!_currentUser.HasPermission(WebPermission.TourBooking.Reject))
+            return RedirectToStatus();
+
+        // Guard the reason before the API call (backend requires reason 10-500 chars).
+        var reason = vm.Reason?.Trim() ?? string.Empty;
+        if (reason.Length < 10)
+        {
+            SetError("A rejection reason of at least 10 characters is required.");
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
+        var result = await _facade.RejectAsync(id, reason, ct);
+        if (result.Outcome == ProviderBookingOutcome.ForceSignOut) return RedirectToLogin();
+
+        if (result.Outcome == ProviderBookingOutcome.Ok)
+            SetSuccess("Booking rejected. The traveler will be refunded in full.");
+        else
+            SetError(result.Error ?? "Could not reject the booking.");
+
+        return RedirectToAction(nameof(Details), new { id });
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────────────
 
     private IActionResult Denied(string? message)
