@@ -13,11 +13,16 @@ namespace YallaJo.Web.Areas.Provider.Controllers;
 public sealed class ToursController : BaseController
 {
     private readonly ProviderToursFacade _facade;
+    private readonly ProviderPlacesFacade _placesFacade;
     private readonly ICurrentUser _currentUser;
 
-    public ToursController(ProviderToursFacade facade, ICurrentUser currentUser)
+    public ToursController(
+        ProviderToursFacade facade,
+        ProviderPlacesFacade placesFacade,
+        ICurrentUser currentUser)
     {
         _facade = facade;
+        _placesFacade = placesFacade;
         _currentUser = currentUser;
     }
 
@@ -40,12 +45,16 @@ public sealed class ToursController : BaseController
 
     // ── GET /provider/tours/create ────────────────────────────────────────────────
     [HttpGet("provider/tours/create")]
-    public IActionResult Create()
+    public async Task<IActionResult> Create(CancellationToken ct)
     {
         if (!_currentUser.HasPermission(WebPermission.Tour.Create))
             return RedirectToStatus();
 
-        return View(new ProviderTourFormVm());
+        var vm = new ProviderTourFormVm();
+        if (await PopulatePlaceOptionsAsync(vm, ct) is { } signOut)
+            return signOut;
+
+        return View(vm);
     }
 
     // ── POST /provider/tours/create ───────────────────────────────────────────────
@@ -57,7 +66,10 @@ public sealed class ToursController : BaseController
             return RedirectToStatus();
 
         if (!ModelState.IsValid)
+        {
+            if (await PopulatePlaceOptionsAsync(vm, ct) is { } signOut) return signOut;
             return View(vm);
+        }
 
         var result = await _facade.CreateAsync(vm, ct);
         switch (result.Outcome)
@@ -72,6 +84,7 @@ public sealed class ToursController : BaseController
                 return RedirectToStatus();
             default:
                 ApplyFacadeValidation(result.ValidationErrors, result.Error);
+                if (await PopulatePlaceOptionsAsync(vm, ct) is { } so) return so;
                 return View(vm);
         }
     }
@@ -84,13 +97,18 @@ public sealed class ToursController : BaseController
             return RedirectToStatus();
 
         var result = await _facade.GetEditAsync(id, ct);
-        return result.Outcome switch
+        switch (result.Outcome)
         {
-            ProviderTourOutcome.Ok => View(result.Form),
-            ProviderTourOutcome.ForceSignOut => RedirectToLogin(),
-            ProviderTourOutcome.Forbidden => RedirectToStatus(),
-            _ => NotFoundRedirect(result.Error),
-        };
+            case ProviderTourOutcome.Ok:
+                if (await PopulatePlaceOptionsAsync(result.Form!, ct) is { } signOut) return signOut;
+                return View(result.Form);
+            case ProviderTourOutcome.ForceSignOut:
+                return RedirectToLogin();
+            case ProviderTourOutcome.Forbidden:
+                return RedirectToStatus();
+            default:
+                return NotFoundRedirect(result.Error);
+        }
     }
 
     // ── POST /provider/tours/{id}/edit ────────────────────────────────────────────
@@ -103,7 +121,10 @@ public sealed class ToursController : BaseController
 
         vm.TourId = id;
         if (!ModelState.IsValid)
+        {
+            if (await PopulatePlaceOptionsAsync(vm, ct) is { } signOut) return signOut;
             return View(vm);
+        }
 
         var result = await _facade.UpdateAsync(id, vm, ct);
         switch (result.Outcome)
@@ -124,6 +145,7 @@ public sealed class ToursController : BaseController
                 return RedirectToAction(nameof(Edit), new { id });
             default:
                 ApplyFacadeValidation(result.ValidationErrors, result.Error);
+                if (await PopulatePlaceOptionsAsync(vm, ct) is { } so) return so;
                 return View(vm);
         }
     }
@@ -167,6 +189,17 @@ public sealed class ToursController : BaseController
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────────
+
+    private async Task<IActionResult?> PopulatePlaceOptionsAsync(ProviderTourFormVm vm, CancellationToken ct)
+    {
+        var result = await _placesFacade.GetPlaceOptionsAsync(ct);
+        if (result.ForceSignOut)
+            return RedirectToLogin();
+
+        vm.PlaceOptions = result.Options;
+        vm.PlaceOptionsLoadError = result.LoadFailed ? result.Error : null;
+        return null;
+    }
 
     // Applies API validation errors to ModelState where field keys are safe (create/update
     // field keys mirror the VM property names); otherwise surfaces a general error.

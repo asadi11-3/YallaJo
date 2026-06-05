@@ -81,8 +81,29 @@
 
     <div class="col-md-12">
         <label asp-for="PlaceId" class="form-label"></label>
-        <input asp-for="PlaceId" class="form-control" placeholder="00000000-0000-0000-0000-000000000000" />
+        <select asp-for="PlaceId" class="form-select">
+            <option value="">— Select a place —</option>
+            @foreach (var place in Model.PlaceOptions)
+            {
+                if (Model.PlaceId == place.Id)
+                {
+                    <option value="@place.Id" selected>@place.DisplayLabel</option>
+                }
+                else
+                {
+                    <option value="@place.Id">@place.DisplayLabel</option>
+                }
+            }
+        </select>
         <span asp-validation-for="PlaceId" class="text-danger small"></span>
+        @if (!string.IsNullOrWhiteSpace(Model.PlaceOptionsLoadError))
+        {
+            <div class="form-text text-danger">@Model.PlaceOptionsLoadError</div>
+        }
+        else if (Model.PlaceOptions.Count == 0)
+        {
+            <div class="form-text">No places are available yet. An administrator must add a place before it can be linked to a listing.</div>
+        }
     </div>
 
     <div class="col-md-12">
