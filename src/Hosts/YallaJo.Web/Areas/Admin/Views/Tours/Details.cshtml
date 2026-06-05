@@ -90,8 +90,8 @@
                         <dt class="col-sm-4">Last updated</dt>
                         <dd class="col-sm-8">@(Model.UpdatedAt?.ToString("yyyy-MM-dd HH:mm") ?? "—")</dd>
 
-                        <dt class="col-sm-4">Place ID</dt>
-                        <dd class="col-sm-8"><code>@(Model.PlaceId?.ToString() ?? "—")</code></dd>
+                        <dt class="col-sm-4">Place</dt>
+                        <dd class="col-sm-8">@Model.PlaceDisplay</dd>
                     </dl>
                 </div>
             </div>

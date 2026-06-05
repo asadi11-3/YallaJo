@@ -48,8 +48,8 @@ public sealed class ProviderTourFormVm
     [MaxLength(4000, ErrorMessage = "Description must not exceed 4000 characters.")]
     public string? Description { get; set; }
 
-    [Required(ErrorMessage = "Place is required.")]
-    [Display(Name = "Place ID")]
+    [Required(ErrorMessage = "Please select a place.")]
+    [Display(Name = "Place")]
     public Guid? PlaceId { get; set; }
 
     [Display(Name = "Child friendly")]
@@ -81,4 +81,10 @@ public sealed class ProviderTourFormVm
     public bool CanArchive => ProviderToursMapper.CanArchive(Status ?? string.Empty);
 
     public IReadOnlyList<string> DifficultyOptions { get; } = ["Easy", "Moderate", "Hard", "Expert"];
+
+    // Place picker (view-context only; not posted). Populated by the controller
+    // from the places lookup. When loading fails, this stays empty and
+    // PlaceOptionsLoadError carries a friendly message so the form stays usable.
+    public IReadOnlyList<PlaceOptionVm> PlaceOptions { get; set; } = [];
+    public string? PlaceOptionsLoadError { get; set; }
 }

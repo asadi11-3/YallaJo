@@ -7,8 +7,13 @@ namespace YallaJo.Web.Areas.Admin.Facades;
 public sealed class AdminToursFacade
 {
     private readonly AdminToursApiClient _api;
+    private readonly PlacesApiClient _placesApi;
 
-    public AdminToursFacade(AdminToursApiClient api) => _api = api;
+    public AdminToursFacade(AdminToursApiClient api, PlacesApiClient placesApi)
+    {
+        _api = api;
+        _placesApi = placesApi;
+    }
 
     public async Task<ApiResult<AdminToursIndexVm>> GetListAsync(
         string? status, int page, int pageSize, string? sort, CancellationToken ct = default)
@@ -31,7 +36,37 @@ public sealed class AdminToursFacade
         if (!result.IsSuccess || result.Data is null)
             return ApiResult<AdminTourDetailsVm>.Fail(result.StatusCode, result.Error ?? "Could not load the tour.");
 
-        return ApiResult<AdminTourDetailsVm>.Ok(AdminToursMapper.ToDetailsVm(result.Data));
+        var vm = AdminToursMapper.ToDetailsVm(result.Data);
+        await HydratePlaceAsync(vm, ct);
+        return ApiResult<AdminTourDetailsVm>.Ok(vm);
+    }
+
+    private async Task HydratePlaceAsync(AdminTourDetailsVm vm, CancellationToken ct)
+    {
+        if (vm.PlaceId is not { } placeId) return;
+
+        try
+        {
+            var place = await _placesApi.GetByIdAsync(placeId, ct);
+            if (place is { IsSuccess: true, Data: { } p })
+            {
+                vm.PlaceName = p.Name;
+                vm.PlaceCity = p.City;
+                vm.PlaceCountry = p.Country;
+            }
+            else
+            {
+                vm.PlaceLookupFailed = true;
+            }
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch
+        {
+            vm.PlaceLookupFailed = true;
+        }
     }
 
     public Task<ApiResult> ApproveAsync(Guid id, CancellationToken ct = default)

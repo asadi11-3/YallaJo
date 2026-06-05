@@ -9,6 +9,7 @@ namespace YallaJo.Web.Areas.Public.Facades;
 public sealed class ToursFacade
 {
     private readonly ToursApiClient _api;
+    private readonly PlacesApiClient _placesApi;
     private readonly IApiAssetUrlResolver _assetResolver;
 
     // Sort tokens accepted by GET /api/v1/tours.
@@ -16,9 +17,10 @@ public sealed class ToursFacade
         new(StringComparer.OrdinalIgnoreCase)
         { "price_asc", "price_desc", "rating_desc", "popularity_desc", "newest" };
 
-    public ToursFacade(ToursApiClient api, IApiAssetUrlResolver assetResolver)
+    public ToursFacade(ToursApiClient api, PlacesApiClient placesApi, IApiAssetUrlResolver assetResolver)
     {
         _api = api;
+        _placesApi = placesApi;
         _assetResolver = assetResolver;
     }
 
@@ -26,15 +28,18 @@ public sealed class ToursFacade
         => sort is not null && AllowedSorts.Contains(sort) ? sort.ToLowerInvariant() : "popularity_desc";
 
     public async Task<ApiResult<TourGridVm>> GetGridAsync(
-        int page, string? sort, string? query, CancellationToken ct = default)
+        int page, string? sort, string? query, Guid? placeId = null, CancellationToken ct = default)
     {
         const int pageSize = 12;
         var pageNumber = page < 1 ? 1 : page;
         var normalizedSort = NormalizeSort(sort);
 
-        var toursTask = _api.GetToursAsync(pageNumber, pageSize, normalizedSort, ct);
+        var toursTask = _api.GetToursAsync(pageNumber, pageSize, normalizedSort, placeId, ct);
         var categoriesTask = _api.GetCategoriesAsync(ct);
-        await Task.WhenAll(toursTask, categoriesTask);
+        // CP-3c: when a place filter is active, resolve its name for the heading
+        // label. Tolerant — a failed/missing place just yields the generic label.
+        var placeNameTask = SafePlaceNameAsync(placeId, ct);
+        await Task.WhenAll(toursTask, categoriesTask, placeNameTask);
 
         var toursResult = await toursTask;
         var categoriesResult = await categoriesTask;
@@ -67,6 +72,8 @@ public sealed class ToursFacade
             HasNextPage = page0.HasNextPage,
             Query = query,
             Sort = normalizedSort,
+            PlaceId = placeId,
+            PlaceFilterName = placeNameTask.Result,
         });
     }
 
@@ -86,8 +93,9 @@ public sealed class ToursFacade
         var ratingTask = SafeRatingAsync(d.Id, ct);
         var reviewsTask = SafeReviewsAsync(d.Id, ct);
         var joinSlotsTask = SafeJoinSlotsAsync(d.Id, ct);
+        var placeTask = SafePlaceAsync(d.PlaceId, ct);
 
-        await Task.WhenAll(schedulesTask, pricingTask, waypointsTask, guidesTask, imagesTask, ratingTask, reviewsTask, joinSlotsTask);
+        await Task.WhenAll(schedulesTask, pricingTask, waypointsTask, guidesTask, imagesTask, ratingTask, reviewsTask, joinSlotsTask, placeTask);
 
         // Real uploaded images come from the anonymous GET /api/v1/tours/{id}/images
         // endpoint (approved-only, primary-first). Relative /uploads URLs are resolved
@@ -128,6 +136,7 @@ public sealed class ToursFacade
             IsChildFriendly = d.IsChildFriendly,
             IsAccessible = d.IsAccessible,
             CancellationPolicyHours = d.CancellationPolicyHours,
+            PlaceId = d.PlaceId,
             ImageUrls = imageUrls,
             Waypoints = waypointsTask.Result
                 .OrderBy(w => w.SortOrder)
@@ -183,6 +192,20 @@ public sealed class ToursFacade
             JoinSlots = joinSlotsTask.Result,
         };
 
+        if (d.PlaceId is not null)
+        {
+            if (placeTask.Result is { } place)
+            {
+                vm.PlaceName = place.Name;
+                vm.PlaceCity = place.City;
+                vm.PlaceCountry = place.Country;
+            }
+            else
+            {
+                vm.PlaceLookupFailed = true;
+            }
+        }
+
         return ApiResult<TourDetailVm>.Ok(vm);
     }
 
@@ -231,6 +254,36 @@ public sealed class ToursFacade
         }
 
         return new List<JoinSlotVm>();
+    }
+
+    private async Task<PlaceLookupResponse?> SafePlaceAsync(Guid? placeId, CancellationToken ct)
+    {
+        if (placeId is not { } id) return null;
+
+        try
+        {
+            var result = await _placesApi.GetByIdAsync(id, ct);
+            if (result is { IsSuccess: true, Data: { } data })
+                return data;
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch
+        {
+            // tolerate place hydration failure
+        }
+
+        return null;
+    }
+
+    // CP-3c: resolve only the place name for the /tours filter heading. Reuses
+    // the tolerant SafePlaceAsync (returns null on missing/deleted/failed lookup).
+    private async Task<string?> SafePlaceNameAsync(Guid? placeId, CancellationToken ct)
+    {
+        var place = await SafePlaceAsync(placeId, ct);
+        return string.IsNullOrWhiteSpace(place?.Name) ? null : place!.Name;
     }
 
     private static async Task<List<T>> SafeListAsync<T>(Func<Task<ApiResult<List<T>>>> call)

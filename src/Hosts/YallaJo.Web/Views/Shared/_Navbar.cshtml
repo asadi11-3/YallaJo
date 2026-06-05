@@ -38,6 +38,14 @@
 
             @* Main navbar START *@
             <div class="navbar-collapse collapse" id="navbarCollapse">
+                @* Public browse link — visible to everyone (CP-3a). Kept minimal:
+                   a single "Places" entry, no redesign of the wider navbar. *@
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" asp-area="Public" asp-controller="Places" asp-action="Index">Places</a>
+                    </li>
+                </ul>
+
                 @if (CurrentUser.IsAuthenticated)
                 {
                     var hasSecurityMenu = CurrentUser.HasPermission(WebPermission.User.Read)

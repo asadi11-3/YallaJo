@@ -112,9 +112,13 @@ public static class DependencyInjection
         services.AddScoped<IOutboxProcessor, OutboxProcessor<AuthDbContext>>();
         services.AddScoped<IOutboxCleaner, OutboxCleaner<AuthDbContext>>();
 
-        // Phase 2C-4 — retention policy for disposable Auth state.
+        // Retention policy for disposable Auth state.
         // AuthCleanupService (BackgroundService) runs the loop; the
         // worker does the actual work and is unit-testable in isolation.
+        // SC-2: the hosted service is always registered, but its loop
+        // is gated at runtime on Auth:Retention:Enabled so cleanup runs
+        // from a single host only (API host enables; Web/test hosts
+        // disable) without needing a redeploy to toggle.
         services.Configure<AuthRetentionOptions>(
             configuration.GetSection(AuthRetentionOptions.SectionName));
         services.AddScoped<IRetentionDeleteAdapter, EfExecuteDeleteAdapter>();

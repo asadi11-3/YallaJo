@@ -6,6 +6,7 @@ using ContentPlaces.Application.Commands.Place.VerifyPlace;
 using ContentPlaces.Application.Queries.Place.Common;
 using ContentPlaces.Application.Queries.Place.GetPlaceById;
 using ContentPlaces.Application.Queries.Place.GetPlaceBySlug;
+using ContentPlaces.Application.Queries.Place.GetPlaceImages;
 using ContentPlaces.Application.Queries.Place.ListPlaces;
 using ContentPlaces.Presentation.Endpoints.Place.Models;
 using MediatR;
@@ -70,6 +71,17 @@ internal static class PlaceEndpoints
         .Produces<PlaceDetailDto>(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Get full place details by slug")
+        .AllowAnonymous();
+
+        places.MapGet("/{id:guid}/images", async (Guid id, ISender sender, CancellationToken ct) =>
+        {
+            var result = await sender.Send(new GetPlaceImagesQuery(id), ct);
+            return result.ToApiResult();
+        })
+        .WithName("GetPlaceImages")
+        .Produces<IReadOnlyList<PlaceImageDto>>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .WithSummary("Get public images for a place (approved/public-safe; 404 for missing/deleted place)")
         .AllowAnonymous();
 
         places.MapGet("/nearby", async (

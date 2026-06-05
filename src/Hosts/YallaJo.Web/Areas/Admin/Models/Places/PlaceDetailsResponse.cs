@@ -7,7 +7,10 @@ public sealed class PlaceDetailsResponse
     public Guid              Id                     { get; init; }
     public string            Name                   { get; init; } = string.Empty;
     public string            Slug                   { get; init; } = string.Empty;
-    public PlaceTypeOption   PlaceType              { get; init; }
+    // Received as the API's string enum name (e.g. "Historical"); see
+    // PlaceSummaryResponse.PlaceType for the rationale. Parsed back into the
+    // PlaceTypeOption enum by PlacesMapper.ToEditVm for the edit-form dropdown.
+    public string            PlaceType              { get; init; } = string.Empty;
     public decimal           Latitude               { get; init; }
     public decimal           Longitude              { get; init; }
     public string?           Description            { get; init; }

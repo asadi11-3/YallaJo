@@ -62,7 +62,7 @@
                             </form>
                         </permission>
 
-                        <permission require="@WebPermission.Place.SoftDelete">
+                        <permission require="@WebPermission.Place.DeleteOwn">
                             <form asp-area="Admin" asp-controller="Places" asp-action="Delete"
                                   asp-route-id="@p.Id" method="post" class="d-inline">
                                 @Html.AntiForgeryToken()

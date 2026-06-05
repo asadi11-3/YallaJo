@@ -5,7 +5,7 @@ public sealed class PlaceRowVm
     public Guid             Id            { get; init; }
     public string           Name          { get; init; } = string.Empty;
     public string           Slug          { get; init; } = string.Empty;
-    public PlaceTypeOption  PlaceType     { get; init; }
+    public string           PlaceType     { get; init; } = string.Empty;
     public string?          City          { get; init; }
     public string?          Country       { get; init; }
     public decimal          AverageRating { get; init; }

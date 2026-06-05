@@ -23,6 +23,19 @@ public sealed class TourDetailVm
     public bool IsAccessible { get; init; }
     public int? CancellationPolicyHours { get; init; }
 
+    public Guid? PlaceId { get; init; }
+    public string? PlaceName { get; set; }
+    public string? PlaceCity { get; set; }
+    public string? PlaceCountry { get; set; }
+    public bool PlaceLookupFailed { get; set; }
+
+    public string? PlaceDisplay =>
+        PlaceId is not { } id
+            ? null
+            : PlaceLookupFailed || string.IsNullOrWhiteSpace(PlaceName)
+                ? Infrastructure.Api.PlaceDisplayFormatter.UnresolvedLabel(id)
+                : Infrastructure.Api.PlaceDisplayFormatter.Format(PlaceName, PlaceCity, PlaceCountry);
+
     public IReadOnlyList<string> ImageUrls { get; init; } = [];
     public IReadOnlyList<TourWaypointVm> Waypoints { get; init; } = [];
     public IReadOnlyList<TourScheduleVm> Schedules { get; init; } = [];

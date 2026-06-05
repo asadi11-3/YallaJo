@@ -1,0 +1,230 @@
+@model YallaJo.Web.Areas.Public.Models.Places.PlaceDetailVm
+@{
+    ViewData["Title"] = string.IsNullOrWhiteSpace(Model.MetaTitle) ? Model.Name : Model.MetaTitle;
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<!-- ======================= Place detail banner START -->
+<section class="pt-4">
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <nav aria-label="breadcrumb" class="mb-2">
+                    <ol class="breadcrumb breadcrumb-dots mb-0">
+                        <li class="breadcrumb-item"><a asp-area="Public" asp-controller="Places" asp-action="Index">Places</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">@Model.Name</li>
+                    </ol>
+                </nav>
+
+                <div class="d-sm-flex justify-content-sm-between align-items-start">
+                    <div>
+                        <h1 class="fs-2 mb-2">@Model.Name</h1>
+                        <ul class="nav nav-divider align-items-center small mb-0">
+                            @if (!string.IsNullOrWhiteSpace(Model.PlaceType))
+                            {
+                                <li class="nav-item"><span class="badge text-bg-light">@Model.PlaceType</span></li>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(Model.LocationLabel))
+                            {
+                                <li class="nav-item"><i class="bi bi-geo-alt me-1"></i>@Model.LocationLabel</li>
+                            }
+                            <li class="nav-item">
+                                <i class="bi bi-star-fill text-warning me-1"></i>@Model.AverageRating.ToString("0.0")
+                                <span class="text-body">(@Model.ReviewCount review@(Model.ReviewCount == 1 ? "" : "s"))</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="mt-3 mt-sm-0">
+                        @if (Model.IsFeatured)
+                        {
+                            <span class="badge text-bg-dark">Featured</span>
+                        }
+                        @if (Model.IsVerified)
+                        {
+                            <span class="badge text-bg-success"><i class="bi bi-patch-check-fill me-1"></i>Verified</span>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- ======================= Place detail banner END -->
+
+<!-- ======================= Place detail body START -->
+<section class="pt-4 pb-5">
+    <div class="container">
+        <div class="row g-4">
+            <!-- Main column -->
+            <div class="col-lg-8">
+                <div class="card shadow mb-4">
+                    <img src="@Model.HeroImageUrl" class="card-img-top" alt="@Model.Name" style="height:360px;object-fit:cover;">
+                </div>
+
+                @if (Model.GalleryImageUrls.Count > 0)
+                {
+                    <div class="row g-2 mb-4">
+                        @foreach (var img in Model.GalleryImageUrls)
+                        {
+                            <div class="col-4 col-md-3">
+                                <img src="@img" class="img-fluid rounded" alt="@Model.Name" style="height:90px;width:100%;object-fit:cover;">
+                            </div>
+                        }
+                    </div>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(Model.Description))
+                {
+                    <div class="card shadow">
+                        <div class="card-header border-bottom"><h5 class="mb-0">About</h5></div>
+                        <div class="card-body">
+                            <p class="mb-0">@Model.Description</p>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- Sidebar -->
+            <div class="col-lg-4">
+                <div class="card shadow mb-4">
+                    <div class="card-header border-bottom"><h5 class="mb-0">Location</h5></div>
+                    <div class="card-body">
+                        <ul class="list-group list-group-borderless">
+                            @if (!string.IsNullOrWhiteSpace(Model.Address))
+                            {
+                                <li class="list-group-item d-flex">
+                                    <i class="bi bi-pin-map-fill text-primary me-2"></i>
+                                    <span>@Model.Address</span>
+                                </li>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(Model.LocationLabel))
+                            {
+                                <li class="list-group-item d-flex">
+                                    <i class="bi bi-geo-alt text-primary me-2"></i>
+                                    <span>@Model.LocationLabel@(string.IsNullOrWhiteSpace(Model.PostalCode) ? "" : $" {Model.PostalCode}")</span>
+                                </li>
+                            }
+                            <li class="list-group-item d-flex">
+                                <i class="bi bi-compass text-primary me-2"></i>
+                                <span class="text-body">@Model.Latitude.ToString("0.0000"), @Model.Longitude.ToString("0.0000")</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                @if (Model.HasContact)
+                {
+                    <div class="card shadow mb-4">
+                        <div class="card-header border-bottom"><h5 class="mb-0">Contact</h5></div>
+                        <div class="card-body">
+                            <ul class="list-group list-group-borderless">
+                                @if (!string.IsNullOrWhiteSpace(Model.Phone))
+                                {
+                                    <li class="list-group-item d-flex">
+                                        <i class="bi bi-telephone text-primary me-2"></i>
+                                        <span>@Model.Phone</span>
+                                    </li>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(Model.Email))
+                                {
+                                    <li class="list-group-item d-flex">
+                                        <i class="bi bi-envelope text-primary me-2"></i>
+                                        <span>@Model.Email</span>
+                                    </li>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(Model.Website))
+                                {
+                                    <li class="list-group-item d-flex">
+                                        <i class="bi bi-globe text-primary me-2"></i>
+                                        <a href="@Model.Website" target="_blank" rel="noopener noreferrer">@Model.Website</a>
+                                    </li>
+                                }
+                            </ul>
+                        </div>
+                    </div>
+                }
+
+                @if (Model.HasAccessibility)
+                {
+                    <div class="card shadow">
+                        <div class="card-header border-bottom"><h5 class="mb-0">Accessibility</h5></div>
+                        <div class="card-body">
+                            <ul class="list-group list-group-borderless mb-0">
+                                @if (Model.IsWheelchairAccessible)
+                                {
+                                    <li class="list-group-item"><i class="bi bi-check-circle-fill text-success me-2"></i>Wheelchair accessible</li>
+                                }
+                                @if (Model.HasAudioGuide)
+                                {
+                                    <li class="list-group-item"><i class="bi bi-check-circle-fill text-success me-2"></i>Audio guide</li>
+                                }
+                                @if (Model.HasBrailleSignage)
+                                {
+                                    <li class="list-group-item"><i class="bi bi-check-circle-fill text-success me-2"></i>Braille signage</li>
+                                }
+                            </ul>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</section>
+<!-- ======================= Place detail body END -->
+
+<!-- ======================= Related tours START -->
+<section class="pb-5">
+    <div class="container">
+        <div class="d-sm-flex justify-content-sm-between align-items-center mb-3">
+            <h4 class="mb-0">Tours in @Model.Name</h4>
+            @if (Model.HasRelatedTours)
+            {
+                <a asp-area="Public" asp-controller="Tours" asp-action="Index" asp-route-placeId="@Model.PlaceId" class="btn btn-sm btn-outline-primary mb-0">
+                    View all tours in this place
+                </a>
+            }
+        </div>
+
+        @if (!Model.HasRelatedTours)
+        {
+            <p class="text-body mb-0">No tours are currently available for this place.</p>
+        }
+        else
+        {
+            <div class="row g-4">
+                @foreach (var tour in Model.RelatedTours)
+                {
+                    <div class="col-md-6 col-xl-3">
+                        <div class="card card-hover-shadow pb-0 h-100">
+                            <div class="position-relative">
+                                <img src="@tour.ImageUrl" class="card-img-top" alt="@tour.Name" style="height:180px;object-fit:cover;">
+                                @if (tour.IsFeatured)
+                                {
+                                    <div class="card-img-overlay d-flex flex-column p-3 z-index-1">
+                                        <div><span class="badge text-bg-dark">Featured</span></div>
+                                    </div>
+                                }
+                            </div>
+                            <div class="card-body px-3">
+                                <h6 class="card-title mb-1">
+                                    <a asp-area="Public" asp-controller="Tours" asp-action="Detail" asp-route-slug="@tour.Slug" class="stretched-link">@tour.Name</a>
+                                </h6>
+                                <ul class="nav nav-divider mb-0 small">
+                                    <li class="nav-item">
+                                        <i class="bi bi-star-fill text-warning me-1"></i>@tour.AverageRating.ToString("0.0")
+                                        <span class="text-body">(@tour.ReviewCount)</span>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="card-footer pt-0">
+                                <span class="fw-normal text-success">@(tour.Currency is { Length: > 0 } ? $"{tour.EffectivePrice:N0} {tour.Currency}" : tour.EffectivePrice.ToString("N0"))</span>
+                                <small>/per person</small>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</section>
+<!-- ======================= Related tours END -->

@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using YallaJo.Web.Areas.Admin.Models.Places;
 using YallaJo.Web.Infrastructure.Authorization;
+using YallaJo.Web.Infrastructure.Mvc;
 
 using YallaJo.Web.Areas.Admin.Facades;
 namespace YallaJo.Web.Areas.Admin.Controllers;
@@ -9,7 +10,7 @@ namespace YallaJo.Web.Areas.Admin.Controllers;
 [Area("Admin")]
 [Authorize]
 [RequirePermission(WebPermission.Place.Read)]
-public sealed class PlacesController : Controller
+public sealed class PlacesController : BaseController
 {
     private const int MinPageSize = 1;
     private const int MaxPageSize = 50;
@@ -31,10 +32,14 @@ public sealed class PlacesController : Controller
         pageSize = Math.Clamp(pageSize, MinPageSize, MaxPageSize);
 
         var result = await _facade.GetPlacesAsync(page, pageSize, filter, ct);
-        if (result.RequireSignOut) return RedirectToLogin();
+        if (GuardSignOut(result) is { } signOut) return signOut;
 
         if (!result.IsSuccess)
         {
+            // Same-page (non-redirect) failure: keep ViewBag.Error so the
+            // message renders against this very response. Matches the
+            // established Admin/Tours Index convention (SetError targets the
+            // post-redirect flash, which this branch does not perform).
             ViewBag.Error = result.Error;
             return View(new PlaceListVm
             {
@@ -52,11 +57,11 @@ public sealed class PlacesController : Controller
     public async Task<IActionResult> Details(Guid id, CancellationToken ct)
     {
         var result = await _facade.GetDetailsAsync(id, ct);
-        if (result.RequireSignOut) return RedirectToLogin();
+        if (GuardSignOut(result) is { } signOut) return signOut;
 
         if (!result.IsSuccess || result.Data is null)
         {
-            TempData["Error"] = result.Error ?? "Place not found.";
+            SetError(result.Error ?? "Place not found.");
             return RedirectToAction(nameof(Index));
         }
 
@@ -76,21 +81,16 @@ public sealed class PlacesController : Controller
         if (!ModelState.IsValid) return View(vm);
 
         var result = await _facade.CreateAsync(vm, ct);
-        if (result.RequireSignOut) return RedirectToLogin();
+        if (GuardSignOut(result) is { } signOut) return signOut;
 
         if (result.IsSuccess)
         {
-            TempData["Success"] = "Place created.";
+            SetSuccess("Place created.");
             return RedirectToAction(nameof(Index));
         }
 
-        if (result.ValidationErrors is not null)
-        {
-            foreach (var (field, messages) in result.ValidationErrors)
-                foreach (var m in messages)
-                    ModelState.AddModelError(field, m);
+        if (ApplyValidationErrors(result))
             return View(vm);
-        }
 
         ModelState.AddModelError(string.Empty, result.Error ?? "Could not create place.");
         return View(vm);
@@ -102,11 +102,11 @@ public sealed class PlacesController : Controller
     public async Task<IActionResult> Edit(Guid id, CancellationToken ct)
     {
         var result = await _facade.GetForEditAsync(id, ct);
-        if (result.RequireSignOut) return RedirectToLogin();
+        if (GuardSignOut(result) is { } signOut) return signOut;
 
         if (!result.IsSuccess || result.Data is null)
         {
-            TempData["Error"] = result.Error ?? "Place not found.";
+            SetError(result.Error ?? "Place not found.");
             return RedirectToAction(nameof(Index));
         }
 
@@ -122,37 +122,32 @@ public sealed class PlacesController : Controller
         if (!ModelState.IsValid) return View(vm);
 
         var result = await _facade.UpdateAsync(vm, ct);
-        if (result.RequireSignOut) return RedirectToLogin();
+        if (GuardSignOut(result) is { } signOut) return signOut;
 
         if (result.IsSuccess)
         {
-            TempData["Success"] = "Place updated.";
+            SetSuccess("Place updated.");
             return RedirectToAction(nameof(Index));
         }
 
-        if (result.ValidationErrors is not null)
-        {
-            foreach (var (field, messages) in result.ValidationErrors)
-                foreach (var m in messages)
-                    ModelState.AddModelError(field, m);
+        if (ApplyValidationErrors(result))
             return View(vm);
-        }
 
         ModelState.AddModelError(string.Empty, result.Error ?? "Could not update place.");
         return View(vm);
     }
 
-    // ── Delete (API enforces Permission.Place.SoftDelete) ────────────────────
+    // ── Delete (API enforces Permission.Place.DeleteOwn; admins satisfy it via
+    //    the handler's admin-tier / Place.DeleteAny override) ──────────────────
     [HttpPost("admin/places/{id:guid}/delete")]
     [ValidateAntiForgeryToken]
-    [RequirePermission(WebPermission.Place.SoftDelete)]
+    [RequirePermission(WebPermission.Place.DeleteOwn)]
     public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
     {
         var result = await _facade.DeleteAsync(id, ct);
-        if (result.RequireSignOut) return RedirectToLogin();
+        if (GuardSignOut(result) is { } signOut) return signOut;
 
-        TempData[result.IsSuccess ? "Success" : "Error"] =
-            result.IsSuccess ? "Place deleted." : result.Error ?? "Could not delete place.";
+        SetFlash(result, "Place deleted.", "Could not delete place.");
         return RedirectToAction(nameof(Index));
     }
 
@@ -163,12 +158,12 @@ public sealed class PlacesController : Controller
     public async Task<IActionResult> Feature(Guid id, bool featured, CancellationToken ct)
     {
         var result = await _facade.FeatureAsync(id, featured, ct);
-        if (result.RequireSignOut) return RedirectToLogin();
+        if (GuardSignOut(result) is { } signOut) return signOut;
 
-        TempData[result.IsSuccess ? "Success" : "Error"] =
-            result.IsSuccess
-                ? (featured ? "Place featured." : "Place unfeatured.")
-                : result.Error ?? "Failed.";
+        if (result.IsSuccess)
+            SetSuccess(featured ? "Place featured." : "Place unfeatured.");
+        else
+            SetError(result.Error ?? "Failed.");
         return RedirectToAction(nameof(Index));
     }
 
@@ -179,15 +174,12 @@ public sealed class PlacesController : Controller
     public async Task<IActionResult> Verify(Guid id, bool verified, CancellationToken ct)
     {
         var result = await _facade.VerifyAsync(id, verified, ct);
-        if (result.RequireSignOut) return RedirectToLogin();
+        if (GuardSignOut(result) is { } signOut) return signOut;
 
-        TempData[result.IsSuccess ? "Success" : "Error"] =
-            result.IsSuccess
-                ? (verified ? "Place verified." : "Place unverified.")
-                : result.Error ?? "Failed.";
+        if (result.IsSuccess)
+            SetSuccess(verified ? "Place verified." : "Place unverified.");
+        else
+            SetError(result.Error ?? "Failed.");
         return RedirectToAction(nameof(Index));
     }
-
-    private IActionResult RedirectToLogin()
-        => RedirectToAction("SignIn", "Auth", new { area = "Auth" });
 }

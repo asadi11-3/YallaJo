@@ -62,6 +62,18 @@ public sealed class AdminTourDetailsVm
     public DateTime CreatedAt { get; init; }
     public DateTime? UpdatedAt { get; init; }
 
+    public string? PlaceName { get; set; }
+    public string? PlaceCity { get; set; }
+    public string? PlaceCountry { get; set; }
+    public bool PlaceLookupFailed { get; set; }
+
+    public string PlaceDisplay =>
+        PlaceId is not { } id
+            ? Infrastructure.Api.PlaceDisplayFormatter.NotSpecified
+            : PlaceLookupFailed || string.IsNullOrWhiteSpace(PlaceName)
+                ? Infrastructure.Api.PlaceDisplayFormatter.UnresolvedLabel(id)
+                : Infrastructure.Api.PlaceDisplayFormatter.Format(PlaceName, PlaceCity, PlaceCountry);
+
     public bool HasRowVersion { get; init; }
 
     public bool CanApprove   => HasRowVersion && Status == "Pending";

@@ -11,6 +11,10 @@ public static class PublicImagePlaceholder
     /// <summary>Stable per-id placeholder for a business cover/card.</summary>
     public static string ResolveBusinessImage(Guid id) => ResolveGalleryImage(id);
 
+    /// <summary>Stable per-id placeholder for a place cover/card (CP-3a; real
+    /// place images deferred to CP-4).</summary>
+    public static string ResolvePlaceImage(Guid id) => ResolveGalleryImage(id);
+
     private static string ResolveGalleryImage(Guid id)
     {
         var index = (PositiveHash(id) % GalleryImageCount) + 1;
