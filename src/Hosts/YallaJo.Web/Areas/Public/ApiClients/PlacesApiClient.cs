@@ -43,4 +43,7 @@ public sealed class PlacesApiClient
 
     public Task<ApiResult<PlaceDetailResponse>> GetBySlugAsync(string slug, CancellationToken ct = default)
         => _api.GetAsync<PlaceDetailResponse>($"{Base}/{Uri.EscapeDataString(slug)}", ct);
+
+    public Task<ApiResult<List<PlaceImageResponse>>> GetImagesAsync(Guid id, CancellationToken ct = default)
+        => _api.GetAsync<List<PlaceImageResponse>>($"{Base}/{id}/images", ct);
 }

@@ -58,8 +58,20 @@
             <!-- Main column -->
             <div class="col-lg-8">
                 <div class="card shadow mb-4">
-                    <img src="@Model.ImageUrl" class="card-img-top" alt="@Model.Name" style="height:360px;object-fit:cover;">
+                    <img src="@Model.HeroImageUrl" class="card-img-top" alt="@Model.Name" style="height:360px;object-fit:cover;">
                 </div>
+
+                @if (Model.GalleryImageUrls.Count > 0)
+                {
+                    <div class="row g-2 mb-4">
+                        @foreach (var img in Model.GalleryImageUrls)
+                        {
+                            <div class="col-4 col-md-3">
+                                <img src="@img" class="img-fluid rounded" alt="@Model.Name" style="height:90px;width:100%;object-fit:cover;">
+                            </div>
+                        }
+                    </div>
+                }
 
                 @if (!string.IsNullOrWhiteSpace(Model.Description))
                 {

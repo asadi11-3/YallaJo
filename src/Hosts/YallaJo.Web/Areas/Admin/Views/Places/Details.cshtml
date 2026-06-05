@@ -14,6 +14,13 @@
         <div class="d-flex gap-2">
             <a asp-area="Admin" asp-controller="Places" asp-action="Index"
                class="btn btn-outline-secondary">Back to list</a>
+            @* CP-4b: deep-link to the generic Admin Attachments manager scoped to
+               this place (upload/delete/set-primary already supported there). *@
+            <permission require="@WebPermission.Attachment.Read">
+                <a asp-area="Admin" asp-controller="Attachments" asp-action="Index"
+                   asp-route-entityType="Place" asp-route-entityId="@Model.Id"
+                   class="btn btn-outline-primary"><i class="bi bi-images me-1"></i>Manage images</a>
+            </permission>
             <permission require="@WebPermission.Place.Update">
                 <a asp-area="Admin" asp-controller="Places" asp-action="Edit"
                    asp-route-id="@Model.Id" class="btn btn-primary">Edit</a>

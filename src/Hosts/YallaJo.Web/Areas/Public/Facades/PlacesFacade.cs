@@ -3,6 +3,7 @@ using YallaJo.Web.Areas.Public.Helpers;
 using YallaJo.Web.Areas.Public.Models.Places;
 using YallaJo.Web.Areas.Public.Models.Tours;
 using YallaJo.Web.Infrastructure.Api.Contracts;
+using YallaJo.Web.Services;
 
 namespace YallaJo.Web.Areas.Public.Facades;
 
@@ -15,11 +16,16 @@ public sealed class PlacesFacade
 
     private readonly PlacesApiClient _api;
     private readonly ToursApiClient _toursApi;
+    private readonly IApiAssetUrlResolver _assetResolver;
 
-    public PlacesFacade(PlacesApiClient api, ToursApiClient toursApi)
+    public PlacesFacade(
+        PlacesApiClient api,
+        ToursApiClient toursApi,
+        IApiAssetUrlResolver assetResolver)
     {
         _api = api;
         _toursApi = toursApi;
+        _assetResolver = assetResolver;
     }
 
     public async Task<ApiResult<PlacesGridVm>> GetGridAsync(
@@ -110,7 +116,36 @@ public sealed class PlacesFacade
         // breaks the place detail page.
         vm.RelatedTours = await GetRelatedToursAsync(d.Id, ct);
 
+        // CP-4: real uploaded place images (tolerant; empty → placeholder used).
+        vm.ImageUrls = await GetImageUrlsAsync(d.Id, ct);
+
         return ApiResult<PlaceDetailVm>.Ok(vm);
+    }
+
+    private async Task<IReadOnlyList<string>> GetImageUrlsAsync(Guid placeId, CancellationToken ct)
+    {
+        try
+        {
+            var result = await _api.GetImagesAsync(placeId, ct);
+            if (result is { IsSuccess: true, Data: { } images })
+            {
+                return images
+                    .Select(i => _assetResolver.Resolve(i.Url))
+                    .Where(u => !string.IsNullOrWhiteSpace(u))
+                    .Select(u => u!)
+                    .ToList();
+            }
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch
+        {
+            // tolerate image hydration failure
+        }
+
+        return [];
     }
 
     /// <summary>

@@ -82,6 +82,18 @@ public sealed class PlaceDetailVm
     public IReadOnlyList<TourCardVm> RelatedTours { get; set; } = [];
     public bool HasRelatedTours => RelatedTours.Count > 0;
 
+    // CP-4: real uploaded place images (absolute URLs, primary-first). Set by the
+    // facade; tolerant of a failed fetch (stays empty → placeholder used).
+    public IReadOnlyList<string> ImageUrls { get; set; } = [];
+    public bool HasImages => ImageUrls.Count > 0;
+
+    /// <summary>Cover image: first uploaded image, else the placeholder.</summary>
+    public string HeroImageUrl => ImageUrls.Count > 0 ? ImageUrls[0] : (ImageUrl ?? string.Empty);
+
+    /// <summary>Remaining images for the thumbnail strip (excludes the hero).</summary>
+    public IReadOnlyList<string> GalleryImageUrls =>
+        ImageUrls.Count > 1 ? ImageUrls.Skip(1).ToList() : [];
+
     public string? LocationLabel => PlaceCardVm.FormatLocation(City, Country);
     public bool HasContact => !string.IsNullOrWhiteSpace(Phone)
                               || !string.IsNullOrWhiteSpace(Email)
