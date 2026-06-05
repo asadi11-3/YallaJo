@@ -1,0 +1,163 @@
+@using YallaJo.Web.Areas.Business.Shared
+@using YallaJo.Web.Infrastructure.Authorization
+@model YallaJo.Web.Areas.Business.Models.Services.ServicesVm
+@{
+    ViewData["Title"] = "Services";
+    ViewData["BusinessNav"] = "Services";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var sidebar = ViewBag.Sidebar as BusinessSidebarVm ?? new BusinessSidebarVm();
+    string Money(decimal amount, string? currency) =>
+        string.IsNullOrWhiteSpace(currency) ? amount.ToString("N2") : $"{amount:N2} {currency}";
+}
+
+<partial name="_BusinessSidebar" model="sidebar" />
+
+<section class="pt-0">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-lg-8 col-xl-9">
+                @if (TempData["Success"] is string ok)
+                {
+                    <div class="alert alert-success">@ok</div>
+                }
+                @if (TempData["Error"] is string err)
+                {
+                    <div class="alert alert-danger">@err</div>
+                }
+
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h1 class="h3 mb-1"><i class="bi bi-list-check me-2"></i>Services</h1>
+                        <p class="text-muted mb-0">@Model.BusinessName</p>
+                    </div>
+                    <a class="btn btn-sm btn-outline-secondary" asp-area="Business" asp-controller="MyBusinesses" asp-action="Manage" asp-route-id="@Model.BusinessId">
+                        <i class="bi bi-arrow-left me-1"></i>Back to business
+                    </a>
+                </div>
+
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                <div class="row g-4">
+                    <permission require="@WebPermission.ServiceItem.Create">
+                        <div class="col-lg-5">
+                            <div class="card border">
+                                <div class="card-header border-bottom">
+                                    <h5 class="card-header-title mb-0">Add a service</h5>
+                                </div>
+                                <div class="card-body">
+                                    <form asp-action="Add" asp-route-id="@Model.BusinessId" method="post">
+                                        @Html.AntiForgeryToken()
+                                        <div class="mb-3">
+                                            <label asp-for="Form.Name" class="form-label"></label>
+                                            <input asp-for="Form.Name" class="form-control" />
+                                            <span asp-validation-for="Form.Name" class="text-danger small"></span>
+                                        </div>
+                                        <div class="row g-2">
+                                            <div class="col-7 mb-3">
+                                                <label asp-for="Form.Price" class="form-label"></label>
+                                                <input asp-for="Form.Price" type="number" step="0.01" class="form-control" />
+                                                <span asp-validation-for="Form.Price" class="text-danger small"></span>
+                                            </div>
+                                            <div class="col-5 mb-3">
+                                                <label asp-for="Form.Currency" class="form-label"></label>
+                                                <input asp-for="Form.Currency" class="form-control" />
+                                                <span asp-validation-for="Form.Currency" class="text-danger small"></span>
+                                            </div>
+                                        </div>
+                                        <div class="row g-2">
+                                            <div class="col-6 mb-3">
+                                                <label asp-for="Form.DurationMinutes" class="form-label"></label>
+                                                <input asp-for="Form.DurationMinutes" type="number" class="form-control" />
+                                                <span asp-validation-for="Form.DurationMinutes" class="text-danger small"></span>
+                                            </div>
+                                            <div class="col-6 mb-3">
+                                                <label asp-for="Form.MaxCapacity" class="form-label"></label>
+                                                <input asp-for="Form.MaxCapacity" type="number" class="form-control" />
+                                                <span asp-validation-for="Form.MaxCapacity" class="text-danger small"></span>
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label asp-for="Form.Category" class="form-label"></label>
+                                            <select asp-for="Form.Category" asp-items="Html.GetEnumSelectList<YallaJo.Web.Areas.Business.Models.Services.ServiceCategory>()" class="form-select"></select>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label asp-for="Form.Description" class="form-label"></label>
+                                            <textarea asp-for="Form.Description" rows="2" class="form-control"></textarea>
+                                            <span asp-validation-for="Form.Description" class="text-danger small"></span>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label asp-for="Form.SortOrder" class="form-label"></label>
+                                            <input asp-for="Form.SortOrder" type="number" class="form-control" />
+                                            <span asp-validation-for="Form.SortOrder" class="text-danger small"></span>
+                                        </div>
+                                        <button type="submit" class="btn btn-primary-soft">
+                                            <i class="bi bi-plus-lg me-1"></i>Add service
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </permission>
+
+                    <div class="col-lg-7">
+                        <div class="card border">
+                            <div class="card-header border-bottom d-flex justify-content-between align-items-center">
+                                <h5 class="card-header-title mb-0">Current services</h5>
+                                <span class="badge bg-primary bg-opacity-10 text-primary">@Model.Services.Count</span>
+                            </div>
+                            <div class="card-body">
+                                @if (!Model.HasServices)
+                                {
+                                    <div class="text-center text-body-secondary py-4">
+                                        <i class="bi bi-list-check fs-1 d-block mb-2"></i>
+                                        No services added yet.
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="table-responsive">
+                                        <table class="table table-hover align-middle mb-0">
+                                            <thead>
+                                                <tr>
+                                                    <th>Service</th>
+                                                    <th>Price</th>
+                                                    <th>Duration</th>
+                                                    <th class="text-end">Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach (var s in Model.Services)
+                                                {
+                                                    <tr>
+                                                        <td class="fw-semibold">@s.Name</td>
+                                                        <td>@Money(s.Price, s.Currency)</td>
+                                                        <td>@s.DurationMinutes min</td>
+                                                        <td class="text-end">
+                                                            <permission require="@WebPermission.ServiceItem.SoftDelete">
+                                                                <form asp-action="Remove" asp-route-id="@Model.BusinessId" asp-route-serviceId="@s.Id" method="post"
+                                                                      onsubmit="return confirm('Remove this service?');">
+                                                                    @Html.AntiForgeryToken()
+                                                                    <button type="submit" class="btn btn-sm btn-danger-soft">
+                                                                        <i class="bi bi-trash"></i>
+                                                                    </button>
+                                                                </form>
+                                                            </permission>
+                                                        </td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

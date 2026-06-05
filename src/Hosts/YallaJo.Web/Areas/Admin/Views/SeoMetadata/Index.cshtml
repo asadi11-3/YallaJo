@@ -1,0 +1,127 @@
+@using YallaJo.Web.Areas.Admin.Models.SeoMetadata
+@using YallaJo.Web.Infrastructure.Authorization
+@model SeoMetadataVm
+@{
+    ViewData["Title"] = "SEO Metadata";
+    ViewData["AdminNav"] = "SeoMetadata";
+    var changeFreqs = new[] { "always", "hourly", "daily", "weekly", "monthly", "yearly", "never" };
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-1">SEO Metadata</h1>
+        <p class="text-muted mb-0">Look up and edit per-entity SEO metadata (title, description, Open Graph, sitemap).</p>
+    </div>
+</div>
+
+@if (ViewBag.Error is string vbe)
+{
+    <div class="alert alert-danger">@vbe</div>
+}
+<div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+<div class="card shadow mb-4">
+    <div class="card-body">
+        <h5 class="card-title mb-3">Look up an entity</h5>
+        <form asp-area="Admin" asp-controller="SeoMetadata" asp-action="Index" method="get" class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label asp-for="EntityType" class="form-label"></label>
+                <select asp-for="EntityType" asp-items="Html.GetEnumSelectList<SeoEntityType>()" class="form-select"></select>
+            </div>
+            <div class="col-md-5">
+                <label asp-for="EntityId" class="form-label"></label>
+                <input asp-for="EntityId" class="form-control" placeholder="00000000-0000-0000-0000-000000000000" />
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-primary-soft w-100">Load</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@if (Model.HasQueried)
+{
+    <permission require="@WebPermission.SeoMetadata.Create">
+        <div class="card shadow">
+            <div class="card-body">
+                <h5 class="card-title mb-3">@(Model.Exists ? "Edit SEO metadata" : "Create SEO metadata")</h5>
+                @if (Model.Exists && Model.Metadata is { } meta)
+                {
+                    <p class="text-muted small mb-3">
+                        Created @meta.CreatedAt.ToString("g")@(meta.UpdatedAt.HasValue ? $" · Updated {meta.UpdatedAt.Value:g}" : string.Empty)
+                    </p>
+                }
+                <form asp-area="Admin" asp-controller="SeoMetadata" asp-action="Save" method="post" class="row g-3">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" asp-for="Form.EntityType" />
+                    <input type="hidden" asp-for="Form.EntityId" />
+
+                    <div class="col-md-6">
+                        <label asp-for="Form.MetaTitle" class="form-label"></label>
+                        <input asp-for="Form.MetaTitle" class="form-control" />
+                        <span asp-validation-for="Form.MetaTitle" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="Form.CanonicalUrl" class="form-label"></label>
+                        <input asp-for="Form.CanonicalUrl" class="form-control" />
+                        <span asp-validation-for="Form.CanonicalUrl" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-12">
+                        <label asp-for="Form.MetaDescription" class="form-label"></label>
+                        <textarea asp-for="Form.MetaDescription" class="form-control" rows="2"></textarea>
+                        <span asp-validation-for="Form.MetaDescription" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="Form.OgTitle" class="form-label"></label>
+                        <input asp-for="Form.OgTitle" class="form-control" />
+                        <span asp-validation-for="Form.OgTitle" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="Form.OgImageUrl" class="form-label"></label>
+                        <input asp-for="Form.OgImageUrl" class="form-control" />
+                        <span asp-validation-for="Form.OgImageUrl" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-12">
+                        <label asp-for="Form.OgDescription" class="form-label"></label>
+                        <textarea asp-for="Form.OgDescription" class="form-control" rows="2"></textarea>
+                        <span asp-validation-for="Form.OgDescription" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label asp-for="Form.SitemapPriority" class="form-label"></label>
+                        <input asp-for="Form.SitemapPriority" type="number" step="0.1" min="0" max="1" class="form-control" />
+                        <span asp-validation-for="Form.SitemapPriority" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="Form.SitemapChangeFrequency" class="form-label"></label>
+                        <select asp-for="Form.SitemapChangeFrequency" class="form-select">
+                            <option value="">(none)</option>
+                            @foreach (var f in changeFreqs)
+                            {
+                                <option value="@f">@f</option>
+                            }
+                        </select>
+                        <span asp-validation-for="Form.SitemapChangeFrequency" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-12">
+                        <label asp-for="Form.SchemaMarkup" class="form-label"></label>
+                        <textarea asp-for="Form.SchemaMarkup" class="form-control font-monospace" rows="4" placeholder="JSON-LD"></textarea>
+                        <span asp-validation-for="Form.SchemaMarkup" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-primary-soft">Save metadata</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </permission>
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -19,6 +19,10 @@ public sealed class ProviderApiClient
     public Task<ApiResult<ProviderStatusResponse>> GetStatusAsync(CancellationToken ct = default)
         => _api.GetAsync<ProviderStatusResponse>("/api/v1/provider/status", ct);
 
+    // GET /api/v1/provider/settings  (business info)
+    public Task<ApiResult<ProviderSettingsResponse>> GetSettingsAsync(CancellationToken ct = default)
+        => _api.GetAsync<ProviderSettingsResponse>("/api/v1/provider/settings", ct);
+
     // POST /api/v1/provider/register
     public Task<ApiResult<RegisterProviderResponse>> RegisterAsync(
         RegisterProviderRequest request, CancellationToken ct = default)
@@ -52,4 +56,10 @@ public sealed class ProviderApiClient
             formFieldName: "file",
             ct: ct);
     }
+
+    // PUT /api/v1/provider/documents/{id}  (replace an existing document's stored reference)
+    public Task<ApiResult<ReplaceProviderDocumentResponse>> ReplaceDocumentAsync(
+        Guid documentId, ReplaceProviderDocumentRequest request, CancellationToken ct = default)
+        => _api.PutAsync<ReplaceProviderDocumentResponse>(
+            $"/api/v1/provider/documents/{documentId}", request, ct);
 }

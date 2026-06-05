@@ -15,12 +15,18 @@ public sealed class DashboardFacade
         var toursTask = SafeToursAsync(ct);
         var earningsTask = SafeEarningsAsync(ct);
         var joinTask = SafeJoinRequestsAsync(ct);
+        var overviewTask = SafeOverviewAsync(ct);
+        var pendingActionsTask = SafePendingActionsAsync(ct);
+        var notificationsTask = SafeNotificationsAsync(ct);
 
-        await Task.WhenAll(toursTask, earningsTask, joinTask);
+        await Task.WhenAll(toursTask, earningsTask, joinTask, overviewTask, pendingActionsTask, notificationsTask);
 
         var tours = toursTask.Result;
         var earnings = earningsTask.Result;
         var joins = joinTask.Result;
+        var overview = overviewTask.Result;
+        var pendingActions = pendingActionsTask.Result;
+        var notifications = notificationsTask.Result;
 
         var recentListings = tours.Items
             .OrderByDescending(t => t.CreatedAt)
@@ -52,6 +58,40 @@ public sealed class DashboardFacade
 
         var pending = joins.Count(j => string.Equals(j.Status, "Pending", StringComparison.OrdinalIgnoreCase));
 
+        var overviewVm = overview is null
+            ? null
+            : new ProviderOverviewVm
+            {
+                BusinessName = overview.BusinessName,
+                IsApproved = overview.IsApproved,
+                TotalDocuments = overview.TotalDocuments,
+                ExpiredDocuments = overview.ExpiredDocuments,
+                ExpiringIn30DaysDocuments = overview.ExpiringIn30DaysDocuments,
+                PendingActionsCount = overview.PendingActionsCount,
+                ReviewDeadline = overview.ReviewDeadline,
+            };
+
+        var pendingActionVms = pendingActions
+            .Select(a => new PendingActionVm
+            {
+                ActionType = a.ActionType,
+                Description = a.Description,
+                Deadline = a.Deadline,
+            })
+            .ToList();
+
+        var notificationVms = notifications
+            .OrderByDescending(n => n.OccurredAt)
+            .Take(5)
+            .Select(n => new DashboardNotificationVm
+            {
+                Title = n.Title,
+                Description = n.Description,
+                OccurredAt = n.OccurredAt,
+                IsRead = n.IsRead,
+            })
+            .ToList();
+
         var vm = new DashboardVm
         {
             TotalListings = tours.Total,
@@ -61,9 +101,51 @@ public sealed class DashboardFacade
             PendingJoinRequests = pending,
             RecentListings = recentListings,
             RecentJoinRequests = recentJoinRequests,
+            Overview = overviewVm,
+            PendingActions = pendingActionVms,
+            Notifications = notificationVms,
         };
 
         return ApiResult<DashboardVm>.Ok(vm);
+    }
+
+    private async Task<ProviderDashboardOverviewResponse?> SafeOverviewAsync(CancellationToken ct)
+    {
+        try
+        {
+            var result = await _api.GetOverviewAsync(ct);
+            return result is { IsSuccess: true, Data: not null } ? result.Data : null;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private async Task<List<ProviderPendingActionResponse>> SafePendingActionsAsync(CancellationToken ct)
+    {
+        try
+        {
+            var result = await _api.GetPendingActionsAsync(ct);
+            return result is { IsSuccess: true, Data: not null } ? result.Data : [];
+        }
+        catch
+        {
+            return [];
+        }
+    }
+
+    private async Task<List<ProviderNotificationResponse>> SafeNotificationsAsync(CancellationToken ct)
+    {
+        try
+        {
+            var result = await _api.GetNotificationsAsync(ct);
+            return result is { IsSuccess: true, Data: not null } ? result.Data : [];
+        }
+        catch
+        {
+            return [];
+        }
     }
 
     private async Task<ListMyToursResponse> SafeToursAsync(CancellationToken ct)

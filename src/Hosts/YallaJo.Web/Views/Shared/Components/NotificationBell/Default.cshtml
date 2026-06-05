@@ -1,0 +1,73 @@
+@model YallaJo.Web.Features.Notifications.NotificationBellVm
+@{
+    string TimeAgo(DateTime utc)
+    {
+        var span = DateTime.UtcNow - utc;
+        if (span.TotalMinutes < 1) return "just now";
+        if (span.TotalMinutes < 60) return $"{(int)span.TotalMinutes}m ago";
+        if (span.TotalHours < 24) return $"{(int)span.TotalHours}h ago";
+        if (span.TotalDays < 7) return $"{(int)span.TotalDays}d ago";
+        return utc.ToString("dd MMM yyyy");
+    }
+}
+
+@* Notification dropdown START *@
+<li class="nav-item ms-3 dropdown">
+    <a class="btn btn-light btn-round mb-0" href="#" id="notifDropdown" role="button" data-bs-auto-close="outside" data-bs-display="static" data-bs-toggle="dropdown" aria-expanded="false">
+        <i class="bi bi-bell fa-fw"></i>
+    </a>
+    @if (Model.HasUnread)
+    {
+        <span class="badge bg-danger rounded-circle notif-badge animation-blink">@(Model.UnreadCount > 99 ? "99+" : Model.UnreadCount.ToString())</span>
+    }
+
+    <div class="dropdown-menu dropdown-animation dropdown-menu-end dropdown-menu-size-md p-0 shadow-lg border-0" aria-labelledby="notifDropdown">
+        <div class="card bg-transparent">
+            <div class="card-header bg-transparent d-flex justify-content-between align-items-center border-bottom">
+                <h6 class="m-0">Notifications @if (Model.HasUnread) { <span class="badge bg-danger bg-opacity-10 text-danger ms-1">@Model.UnreadCount new</span> }</h6>
+                @if (Model.HasUnread)
+                {
+                    <form asp-area="" asp-controller="Notifications" asp-action="MarkAllRead" method="post" class="m-0">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-link btn-sm p-0 text-decoration-none">Mark all read</button>
+                    </form>
+                }
+            </div>
+            <div class="card-body p-0">
+                <ul class="list-group list-group-flush list-unstyled p-2 mb-0">
+                    @if (!Model.HasRecent)
+                    {
+                        <li class="text-center small text-muted py-3">No new notifications</li>
+                    }
+                    else
+                    {
+                        @foreach (var n in Model.Recent)
+                        {
+                            <li class="list-group-item rounded mb-1 @(n.IsRead ? "" : "bg-primary bg-opacity-10")">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div class="me-2">
+                                        <h6 class="mb-1 small @(n.IsRead ? "text-body" : "fw-bold")">@n.Title</h6>
+                                        @if (!string.IsNullOrWhiteSpace(n.Body))
+                                        {
+                                            <p class="mb-1 small text-body-secondary">@n.Body</p>
+                                        }
+                                        <span class="small text-muted">@TimeAgo(n.CreatedAt)</span>
+                                    </div>
+                                    @if (!n.IsRead)
+                                    {
+                                        <form asp-area="" asp-controller="Notifications" asp-action="MarkRead" method="post" class="m-0">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@n.Id" />
+                                            <button type="submit" class="btn btn-sm btn-link p-0 text-decoration-none" title="Mark as read"><i class="bi bi-check2"></i></button>
+                                        </form>
+                                    }
+                                </div>
+                            </li>
+                        }
+                    }
+                </ul>
+            </div>
+        </div>
+    </div>
+</li>
+@* Notification dropdown END *@

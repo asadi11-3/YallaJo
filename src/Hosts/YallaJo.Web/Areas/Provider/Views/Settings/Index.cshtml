@@ -24,6 +24,46 @@
         </div>
 
         <div class="row g-4">
+            @if (Model.Business is { } biz)
+            {
+                <!-- Business information (read-only) -->
+                <div class="col-12">
+                    <div class="card border">
+                        <div class="card-header border-bottom d-flex justify-content-between align-items-center">
+                            <h5 class="card-header-title mb-0"><i class="bi bi-building me-1"></i>Business information</h5>
+                            <span class="badge text-bg-light">@biz.ProviderType</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label small text-secondary mb-0">Business name</label>
+                                    <p class="mb-0 fw-semibold">@biz.BusinessName</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small text-secondary mb-0">Contact email</label>
+                                    <p class="mb-0">@biz.ContactEmail</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small text-secondary mb-0">Contact phone</label>
+                                    <p class="mb-0">@biz.ContactPhone</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small text-secondary mb-0">Address</label>
+                                    <p class="mb-0">@biz.Address</p>
+                                </div>
+                                @if (!string.IsNullOrWhiteSpace(biz.Description))
+                                {
+                                    <div class="col-12">
+                                        <label class="form-label small text-secondary mb-0">Description</label>
+                                        <p class="mb-0">@biz.Description</p>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+
             <!-- Profile -->
             <div class="col-12">
                 <div class="card border">

@@ -119,6 +119,34 @@ public sealed class ProviderController : BaseController
         return RedirectToAction(nameof(Status));
     }
 
+    // PUT semantics via POST  (replace an existing document's stored reference, then PRG back to status)
+    [HttpPost("provider/documents/replace")]
+    [ValidateAntiForgeryToken]
+    [RequirePermission(WebPermission.ProviderApplication.Update)]
+    public async Task<IActionResult> ReplaceDocument(ReplaceProviderDocumentVm vm, CancellationToken ct)
+    {
+        if (!ModelState.IsValid)
+        {
+            var firstError = ModelState.Values
+                .SelectMany(v => v.Errors)
+                .Select(e => e.ErrorMessage)
+                .FirstOrDefault(m => !string.IsNullOrWhiteSpace(m));
+            SetError(firstError ?? "Please correct the replace-document form and try again.");
+            return RedirectToAction(nameof(Status));
+        }
+
+        var result = await _facade.ReplaceDocumentAsync(vm, ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+
+        if (result.IsValidationError)
+            SetError(result.ValidationErrors!.SelectMany(kvp => kvp.Value).FirstOrDefault()
+                     ?? "The replacement document was rejected.");
+        else
+            SetFlash(result, "Document replaced.", "Could not replace the document.");
+
+        return RedirectToAction(nameof(Status));
+    }
+
     private static ProviderApplyVm RehydrateOptions(ProviderApplyVm vm)
     {
         // Type options are not posted back; re-supply them so the form re-renders correctly.

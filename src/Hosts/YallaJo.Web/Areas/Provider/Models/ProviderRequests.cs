@@ -12,3 +12,14 @@ public sealed record RegisterProviderRequest(
     string Address,
     string Description,
     string? TypeSpecificDataJson = null);
+
+/// <summary>
+/// Mirrors the API <c>ReplaceProviderDocumentRequest</c> for
+/// <c>PUT /api/v1/provider/documents/{id}</c>. Sends the new file metadata
+/// (the file bytes are uploaded separately; this swaps the stored reference).
+/// </summary>
+public sealed record ReplaceProviderDocumentRequest(
+    string FileUrl,
+    string FileName,
+    long FileSizeBytes,
+    DateTime? ExpiresAt);

@@ -69,8 +69,10 @@ public static class ProviderMapper
 
     private static ProviderDocumentVm ToDocumentVm(ProviderDocumentResponse d) => new()
     {
+        DocumentId        = d.DocumentId,
         DocumentTypeLabel = Humanize(d.DocumentType),
         FileName          = d.FileName,
+        FileUrl           = d.FileUrl,
         ExpiresAt         = d.ExpiresAt,
     };
 

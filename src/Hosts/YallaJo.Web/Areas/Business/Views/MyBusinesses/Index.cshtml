@@ -1,0 +1,76 @@
+@using YallaJo.Web.Areas.Business.Models.MyBusinesses
+@using YallaJo.Web.Areas.Business.Shared
+@model MyBusinessesVm
+@{
+    ViewData["Title"] = "My Businesses";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var sidebar = ViewBag.Sidebar as BusinessSidebarVm ?? new BusinessSidebarVm();
+}
+
+<partial name="_BusinessSidebar" model="sidebar" />
+
+<section class="pt-0">
+    <div class="container vstack gap-4">
+        <div class="row">
+            <div class="col-12">
+                <h1 class="h3 mb-1"><i class="bi bi-shop me-2"></i>My Businesses</h1>
+                <p class="text-body-secondary mb-0">Manage the businesses you own, edit their profiles, and resubmit rejected listings.</p>
+            </div>
+        </div>
+
+        @if (TempData["Success"] is string ok) { <div class="alert alert-success">@ok</div> }
+        @if (TempData["Error"] is string err) { <div class="alert alert-danger">@err</div> }
+
+        @if (!Model.HasBusinesses)
+        {
+            <div class="card card-body border text-center py-5">
+                <i class="bi bi-shop fs-1 d-block mb-2 text-body-secondary"></i>
+                <h6 class="mb-1">No businesses yet</h6>
+                <p class="text-body-secondary mb-0">You do not own any businesses on the platform.</p>
+            </div>
+        }
+        else
+        {
+            <div class="card border">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Business</th>
+                                <th>Type</th>
+                                <th>Status</th>
+                                <th>Location</th>
+                                <th class="text-end">Rating</th>
+                                <th class="text-end">Manage</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var b in Model.Businesses)
+                            {
+                                <tr>
+                                    <td>
+                                        <span class="fw-semibold">@b.Name</span>
+                                        @if (b.IsVerified)
+                                        {
+                                            <i class="bi bi-patch-check-fill text-primary ms-1" title="Verified"></i>
+                                        }
+                                        <div class="small text-body-secondary">@b.Slug</div>
+                                    </td>
+                                    <td>@b.BusinessType</td>
+                                    <td><span class="badge bg-@MyBusinessesMapper.StatusColor(b.Status)-soft text-@MyBusinessesMapper.StatusColor(b.Status)">@b.Status</span></td>
+                                    <td>@(string.Join(", ", new[] { b.City, b.Country }.Where(x => !string.IsNullOrWhiteSpace(x))))</td>
+                                    <td class="text-end">@b.AverageRating.ToString("0.0") <span class="text-body-secondary small">(@b.ReviewCount)</span></td>
+                                    <td class="text-end">
+                                        <a class="btn btn-sm btn-primary-soft" asp-area="Business" asp-controller="MyBusinesses" asp-action="Manage" asp-route-id="@b.Id">
+                                            <i class="bi bi-pencil-square me-1"></i>Manage
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        }
+    </div>
+</section>

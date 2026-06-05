@@ -21,4 +21,7 @@ public sealed class DashboardApiClient
 
     public Task<ApiResult<List<GuideAvailabilityBlockResponse>>> GetAvailabilityBlocksAsync(CancellationToken ct = default)
         => _api.GetAsync<List<GuideAvailabilityBlockResponse>>("/api/v1/guides/me/availability-blocks", ct);
+
+    public Task<ApiResult<GuideTierProgressResponse>> GetTierProgressAsync(CancellationToken ct = default)
+        => _api.GetAsync<GuideTierProgressResponse>("/api/v1/guides/me/tier", ct);
 }

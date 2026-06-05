@@ -1,0 +1,135 @@
+@using YallaJo.Web.Areas.Admin.Models.SeoWeather
+@using YallaJo.Web.Infrastructure.Authorization
+@model SeoWeatherVm
+@{
+    ViewData["Title"] = "SEO Weather";
+    ViewData["AdminNav"] = "SeoWeather";
+
+    string Num(decimal? v, string suffix = "") => v.HasValue ? $"{v.Value.ToString("0.##")}{suffix}" : "—";
+    string Int(int? v, string suffix = "") => v.HasValue ? $"{v.Value}{suffix}" : "—";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-1">SEO Weather</h1>
+        <p class="text-muted mb-0">Inspect cached weather snapshots, force a refresh, purge cache entries, and reset the daily API budget.</p>
+    </div>
+</div>
+
+@if (ViewBag.Error is string vbe)
+{
+    <div class="alert alert-danger">@vbe</div>
+}
+<div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+<div class="card shadow mb-4">
+    <div class="card-body">
+        <h5 class="card-title mb-3">Look up a place</h5>
+        <form asp-area="Admin" asp-controller="SeoWeather" asp-action="Index" method="get" class="row g-2 align-items-end">
+            <div class="col-md-8">
+                <label class="form-label" for="PlaceId">Place id</label>
+                <input class="form-control" type="text" id="PlaceId" name="PlaceId" value="@(Model.PlaceId?.ToString())" placeholder="00000000-0000-0000-0000-000000000000" />
+            </div>
+            <div class="col-md-4">
+                <button type="submit" class="btn btn-primary-soft w-100">Load</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@if (Model.HasQueried)
+{
+    @if (Model.Exists && Model.Weather is { } w)
+    {
+        <div class="card shadow mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Current snapshot</h5>
+                @if (w.IsStale)
+                {
+                    <span class="badge bg-warning bg-opacity-10 text-warning">@(w.StaleHumanLabel ?? "Stale")</span>
+                }
+                else
+                {
+                    <span class="badge bg-success bg-opacity-10 text-success">Fresh</span>
+                }
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-sm-6 col-lg-3"><div class="small text-muted">Condition</div><div class="fw-semibold">@(string.IsNullOrWhiteSpace(w.Condition) ? "—" : w.Condition)</div></div>
+                    <div class="col-sm-6 col-lg-3"><div class="small text-muted">Temperature</div><div class="fw-semibold">@Num(w.Temperature, "°")</div></div>
+                    <div class="col-sm-6 col-lg-3"><div class="small text-muted">Feels like</div><div class="fw-semibold">@Num(w.FeelsLike, "°")</div></div>
+                    <div class="col-sm-6 col-lg-3"><div class="small text-muted">Humidity</div><div class="fw-semibold">@Int(w.Humidity, "%")</div></div>
+                    <div class="col-sm-6 col-lg-3"><div class="small text-muted">Wind speed</div><div class="fw-semibold">@Num(w.WindSpeed)</div></div>
+                    <div class="col-sm-6 col-lg-3"><div class="small text-muted">Wind direction</div><div class="fw-semibold">@Int(w.WindDirection, "°")</div></div>
+                    <div class="col-sm-6 col-lg-3"><div class="small text-muted">UV index</div><div class="fw-semibold">@Num(w.UvIndex)</div></div>
+                    <div class="col-sm-6 col-lg-3"><div class="small text-muted">Fetched</div><div class="fw-semibold">@w.FetchedAt.ToString("g")</div></div>
+                    <div class="col-sm-6 col-lg-3"><div class="small text-muted">Expires</div><div class="fw-semibold">@w.ExpiresAt.ToString("g")</div></div>
+                </div>
+
+                <permission require="@WebPermission.Weather.Delete">
+                    <form asp-area="Admin" asp-controller="SeoWeather" asp-action="Purge" method="post" class="mt-3" onsubmit="return confirm('Purge the cached weather entry for this place?');">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="placeId" value="@Model.PlaceId" />
+                        <button type="submit" class="btn btn-sm btn-danger-soft"><i class="bi bi-trash me-1"></i>Purge cache entry</button>
+                    </form>
+                </permission>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="card card-body shadow text-center py-5 mb-4">
+            <img src="~/assets/images/element/17.svg" class="h-80px mb-3 mx-auto" alt="" />
+            <h5 class="mb-1">No cached weather for this place</h5>
+            <p class="text-muted mb-0">Use the refresh form below to fetch a fresh snapshot.</p>
+        </div>
+    }
+
+    <permission require="@WebPermission.Weather.Refresh">
+        <div class="card shadow mb-4">
+            <div class="card-body">
+                <h5 class="card-title mb-3">Force refresh</h5>
+                <form asp-area="Admin" asp-controller="SeoWeather" asp-action="Refresh" method="post" class="row g-3">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" asp-for="RefreshForm.PlaceId" value="@(Model.PlaceId ?? Guid.Empty)" />
+                    <div class="col-md-4">
+                        <label class="form-label" asp-for="RefreshForm.Latitude"></label>
+                        <input class="form-control" asp-for="RefreshForm.Latitude" type="number" step="any" />
+                        <span asp-validation-for="RefreshForm.Latitude" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label" asp-for="RefreshForm.Longitude"></label>
+                        <input class="form-control" asp-for="RefreshForm.Longitude" type="number" step="any" />
+                        <span asp-validation-for="RefreshForm.Longitude" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary-soft w-100"><i class="bi bi-arrow-clockwise me-1"></i>Refresh now</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </permission>
+}
+
+<permission require="@WebPermission.Weather.Update">
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <h5 class="card-title mb-1">Reset daily API budget</h5>
+            <p class="text-muted small mb-3">Clears the weather API daily budget counter for a UTC date (defaults to today).</p>
+            <form asp-area="Admin" asp-controller="SeoWeather" asp-action="ResetBudget" method="post" class="row g-3 align-items-end" onsubmit="return confirm('Reset the weather API budget counter?');">
+                @Html.AntiForgeryToken()
+                <div class="col-md-4">
+                    <label class="form-label" asp-for="BudgetForm.Date"></label>
+                    <input class="form-control" asp-for="BudgetForm.Date" type="date" />
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" class="btn btn-outline-secondary w-100"><i class="bi bi-arrow-counterclockwise me-1"></i>Reset budget</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</permission>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

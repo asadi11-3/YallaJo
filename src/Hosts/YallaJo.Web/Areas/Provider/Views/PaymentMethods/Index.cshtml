@@ -1,0 +1,171 @@
+@using YallaJo.Web.Areas.Provider.Models.PaymentMethods
+@using YallaJo.Web.Areas.Provider.Shared
+@using YallaJo.Web.Infrastructure.Authorization
+@model PaymentMethodsVm
+@{
+    ViewData["Title"] = "Payment Methods";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var sidebar = ViewBag.Sidebar as ProviderSidebarVm ?? new ProviderSidebarVm();
+
+    string TypeLabel(ProviderPaymentMethodType t) => t switch
+    {
+        ProviderPaymentMethodType.BankAccount => "Bank account",
+        ProviderPaymentMethodType.JoMoPay => "JoMoPay",
+        ProviderPaymentMethodType.OrangeMoney => "Orange Money",
+        ProviderPaymentMethodType.ZainCash => "ZainCash",
+        _ => t.ToString()
+    };
+}
+
+<partial name="_ProviderSidebar" model="sidebar" />
+
+<section class="pt-0">
+    <div class="container vstack gap-4">
+
+        <h1 class="fs-4 mb-0"><i class="bi bi-credit-card-2-back me-1"></i>Payment Methods</h1>
+
+        @if (TempData["Success"] is string okMsg)
+        {
+            <div class="alert alert-success mb-0">@okMsg</div>
+        }
+        @if (TempData["Error"] is string errMsg)
+        {
+            <div class="alert alert-danger mb-0">@errMsg</div>
+        }
+
+        <div class="row g-4">
+            <div class="col-lg-5">
+                <permission require="@WebPermission.ProviderPaymentMethod.Create">
+                    <div class="card border h-100">
+                        <div class="card-header border-bottom">
+                            <h5 class="card-header-title mb-0">Add a payment method</h5>
+                        </div>
+                        <div class="card-body">
+                            <form asp-area="Provider" asp-controller="PaymentMethods" asp-action="Create" method="post" class="vstack gap-3">
+                                @Html.AntiForgeryToken()
+                                <div asp-validation-summary="ModelOnly" class="text-danger small"></div>
+
+                                <div>
+                                    <label asp-for="Form.PaymentMethodType" class="form-label"></label>
+                                    <select asp-for="Form.PaymentMethodType"
+                                            asp-items="Html.GetEnumSelectList<ProviderPaymentMethodType>()"
+                                            class="form-select"></select>
+                                    <span asp-validation-for="Form.PaymentMethodType" class="text-danger small"></span>
+                                </div>
+
+                                <div>
+                                    <label asp-for="Form.DisplayName" class="form-label"></label>
+                                    <input asp-for="Form.DisplayName" class="form-control" placeholder="e.g. Main bank account" />
+                                    <span asp-validation-for="Form.DisplayName" class="text-danger small"></span>
+                                </div>
+
+                                <div>
+                                    <label asp-for="Form.AccountIdentifier" class="form-label"></label>
+                                    <input asp-for="Form.AccountIdentifier" class="form-control" />
+                                    <span asp-validation-for="Form.AccountIdentifier" class="text-danger small"></span>
+                                </div>
+
+                                <div>
+                                    <label asp-for="Form.BankName" class="form-label"></label>
+                                    <input asp-for="Form.BankName" class="form-control" />
+                                    <span asp-validation-for="Form.BankName" class="text-danger small"></span>
+                                </div>
+
+                                <div class="form-check">
+                                    <input asp-for="Form.IsDefault" class="form-check-input" />
+                                    <label asp-for="Form.IsDefault" class="form-check-label"></label>
+                                </div>
+
+                                <div class="d-grid">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="bi bi-plus-lg me-1"></i>Add payment method
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </permission>
+            </div>
+
+            <div class="col-lg-7">
+                <div class="card border h-100">
+                    <div class="card-header border-bottom d-flex align-items-center justify-content-between">
+                        <h5 class="card-header-title mb-0">My payment methods</h5>
+                        <span class="badge text-bg-light">@Model.Methods.Count</span>
+                    </div>
+                    <div class="card-body">
+                        @if (!Model.HasMethods)
+                        {
+                            <div class="text-center text-body-secondary py-4">
+                                <i class="bi bi-credit-card-2-back fs-1 d-block mb-2"></i>
+                                No payment methods yet. Add one to receive payouts.
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Name</th>
+                                            <th>Type</th>
+                                            <th>Account</th>
+                                            <th>Status</th>
+                                            <th class="text-end">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var m in Model.Methods)
+                                        {
+                                            <tr>
+                                                <td>
+                                                    @m.DisplayName
+                                                    @if (m.IsDefault)
+                                                    {
+                                                        <span class="badge text-bg-primary ms-1">Default</span>
+                                                    }
+                                                    @if (!string.IsNullOrWhiteSpace(m.BankName))
+                                                    {
+                                                        <div class="small text-body-secondary">@m.BankName</div>
+                                                    }
+                                                </td>
+                                                <td>@TypeLabel(m.PaymentMethodType)</td>
+                                                <td><span class="font-monospace small">@m.AccountIdentifier</span></td>
+                                                <td>
+                                                    @if (m.IsVerified)
+                                                    {
+                                                        <span class="badge text-bg-success">Verified</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="badge text-bg-secondary">Unverified</span>
+                                                    }
+                                                </td>
+                                                <td class="text-end">
+                                                    <permission require="@WebPermission.ProviderPaymentMethod.Delete">
+                                                        <form asp-area="Provider" asp-controller="PaymentMethods" asp-action="Delete"
+                                                              asp-route-id="@m.Id" method="post" class="d-inline"
+                                                              onsubmit="return confirm('Delete this payment method?');">
+                                                            @Html.AntiForgeryToken()
+                                                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                                <i class="bi bi-trash"></i>
+                                                            </button>
+                                                        </form>
+                                                    </permission>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

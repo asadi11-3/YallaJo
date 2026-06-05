@@ -47,3 +47,38 @@ public sealed class JoinRequestResponse
     public Guid? ResultingBookingId { get; init; }
     public DateTime CreatedAt { get; init; }
 }
+
+// GET /api/v1/provider/dashboard/overview
+public sealed class ProviderDashboardOverviewResponse
+{
+    public Guid ApplicationId { get; init; }
+    public int ProviderType { get; init; }
+    public int Status { get; init; }
+    public string BusinessName { get; init; } = string.Empty;
+    public int TotalDocuments { get; init; }
+    public int ExpiredDocuments { get; init; }
+    public int ExpiringIn30DaysDocuments { get; init; }
+    public int PendingActionsCount { get; init; }
+    public DateTime? ReviewDeadline { get; init; }
+    public bool IsApproved { get; init; }
+}
+
+// GET /api/v1/provider/dashboard/pending-actions
+public sealed class ProviderPendingActionResponse
+{
+    public string ActionType { get; init; } = string.Empty;
+    public string Description { get; init; } = string.Empty;
+    public string? EntityId { get; init; }
+    public DateTime? Deadline { get; init; }
+}
+
+// GET /api/v1/provider/dashboard/notifications
+public sealed class ProviderNotificationResponse
+{
+    public string NotificationType { get; init; } = string.Empty;
+    public string Title { get; init; } = string.Empty;
+    public string Description { get; init; } = string.Empty;
+    public string? EntityId { get; init; }
+    public DateTime OccurredAt { get; init; }
+    public bool IsRead { get; init; }
+}

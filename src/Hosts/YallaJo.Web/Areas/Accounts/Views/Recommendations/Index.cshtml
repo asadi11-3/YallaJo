@@ -1,0 +1,196 @@
+@model YallaJo.Web.Areas.Accounts.Models.Recommendations.RecommendationsVm
+@using YallaJo.Web.Areas.Accounts.Models.Recommendations
+@using YallaJo.Web.Areas.Accounts.Shared
+@{
+    ViewData["Title"] = "For You";
+    ViewData["AccountNav"] = "Recommendations";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var sidebar = ViewBag.Sidebar as AccountSidebarVm ?? new AccountSidebarVm();
+
+    string Money(decimal? amount, string? currency)
+    {
+        if (amount is null) return "—";
+        return string.IsNullOrWhiteSpace(currency)
+            ? amount.Value.ToString("N2")
+            : $"{amount.Value:N2} {currency}";
+    }
+
+    string Stars(decimal rating)
+    {
+        var full = (int)Math.Round(rating, MidpointRounding.AwayFromZero);
+        return string.Concat(Enumerable.Range(1, 5).Select(i =>
+            i <= full
+                ? "<i class=\"bi bi-star-fill text-warning\"></i>"
+                : "<i class=\"bi bi-star text-warning\"></i>"));
+    }
+}
+
+<section class="pt-3">
+    <div class="container">
+        <div class="row g-4 g-xl-5">
+            <partial name="_AccountSidebar" model="sidebar" />
+
+            <div class="col-lg-8 col-xl-9">
+                <div class="d-grid d-lg-none mb-3">
+                    <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasSidebar">
+                        <i class="fas fa-sliders-h me-2"></i>Account menu
+                    </button>
+                </div>
+
+                @if (TempData["Success"] is string success)
+                {
+                    <div class="alert alert-success" role="alert">@success</div>
+                }
+                @if (TempData["Error"] is string error)
+                {
+                    <div class="alert alert-danger" role="alert">@error</div>
+                }
+
+                <div class="card border mb-4">
+                    <div class="card-header border-bottom d-flex justify-content-between align-items-center">
+                        <h4 class="card-header-title mb-0">Recommended for you</h4>
+                        @if (Model.IsPersonalized)
+                        {
+                            <span class="badge bg-success bg-opacity-10 text-success">Personalized</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary bg-opacity-10 text-secondary">Popular picks</span>
+                        }
+                    </div>
+                    <div class="card-body">
+                        @if (!Model.HasRecommendations)
+                        {
+                            <div class="text-center py-5">
+                                <i class="bi bi-stars display-5 text-body-secondary d-block mb-2"></i>
+                                <h6 class="mb-1">No recommendations yet</h6>
+                                <p class="text-body-secondary mb-0">Browse and book a few experiences and we'll tailor suggestions for you.</p>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="row g-4">
+                                @foreach (var item in Model.Recommendations)
+                                {
+                                    <div class="col-md-6">
+                                        <div class="card card-body border h-100">
+                                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                                <span class="badge bg-primary bg-opacity-10 text-primary">@item.KindLabel</span>
+                                                <div class="hstack gap-1">
+                                                    @if (item.IsPinned)
+                                                    {
+                                                        <span class="badge bg-warning bg-opacity-10 text-warning" title="Editor's Choice"><i class="bi bi-bookmark-star"></i></span>
+                                                    }
+                                                    @if (item.IsBoosted)
+                                                    {
+                                                        <span class="badge bg-info bg-opacity-10 text-info" title="Promoted">Promoted</span>
+                                                    }
+                                                    @if (item.IsFeatured)
+                                                    {
+                                                        <span class="badge bg-secondary bg-opacity-10 text-secondary" title="Featured">Featured</span>
+                                                    }
+                                                </div>
+                                            </div>
+
+                                            <h6 class="mb-1">
+                                                @if (item.DetailUrl is { } url)
+                                                {
+                                                    <a class="text-reset" href="@url">@item.Name</a>
+                                                }
+                                                else
+                                                {
+                                                    @item.Name
+                                                }
+                                            </h6>
+
+                                            <div class="small text-body-secondary mb-2">
+                                                @Html.Raw(Stars(item.AverageRating))
+                                                <span class="ms-2">@item.BookingCount bookings</span>
+                                            </div>
+
+                                            @if (!string.IsNullOrWhiteSpace(item.BadgeText))
+                                            {
+                                                <div class="mb-2"><span class="badge bg-danger bg-opacity-10 text-danger">@item.BadgeText</span></div>
+                                            }
+
+                                            @if (item.Signals.Count > 0)
+                                            {
+                                                <div class="d-flex flex-wrap gap-1 mb-3">
+                                                    @foreach (var signal in item.Signals)
+                                                    {
+                                                        <span class="badge rounded-pill bg-light text-dark border" title="@signal.Description">@signal.Title</span>
+                                                    }
+                                                </div>
+                                            }
+
+                                            <div class="mt-auto d-flex justify-content-between align-items-center">
+                                                <span class="fw-bold">@Money(item.BasePrice, item.Currency)</span>
+                                                <form asp-area="Accounts" asp-controller="Recommendations" asp-action="NotInterested" method="post" class="m-0">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="kind" value="@((byte)item.Kind)" />
+                                                    <input type="hidden" name="entityId" value="@item.Id" />
+                                                    <button type="submit" class="btn btn-sm btn-outline-secondary" title="Not interested">
+                                                        <i class="bi bi-x-lg"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <div class="card border">
+                    <div class="card-header border-bottom">
+                        <h4 class="card-header-title mb-0">Personalization preferences</h4>
+                    </div>
+                    <div class="card-body">
+                        <form asp-area="Accounts" asp-controller="Recommendations" asp-action="UpdatePreferences" method="post">
+                            @Html.AntiForgeryToken()
+                            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label asp-for="Preferences.BudgetTier" class="form-label"></label>
+                                    <select asp-for="Preferences.BudgetTier" class="form-select">
+                                        <option value="">No preference</option>
+                                        @foreach (var option in PreferencesFormVm.BudgetOptions)
+                                        {
+                                            <option value="@option">@option</option>
+                                        }
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label asp-for="Preferences.CurrentTripStage" class="form-label"></label>
+                                    <select asp-for="Preferences.CurrentTripStage" class="form-select">
+                                        <option value="">Not set</option>
+                                        @foreach (var stage in PreferencesFormVm.TripStageOptions)
+                                        {
+                                            <option value="@stage">@PreferencesFormVm.TripStageLabel(stage)</option>
+                                        }
+                                    </select>
+                                </div>
+                                <div class="col-12">
+                                    <div class="form-check">
+                                        <input asp-for="Preferences.IsFamilyTraveler" class="form-check-input" />
+                                        <label asp-for="Preferences.IsFamilyTraveler" class="form-check-label"></label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mt-4">
+                                <button type="submit" class="btn btn-primary">Save preferences</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

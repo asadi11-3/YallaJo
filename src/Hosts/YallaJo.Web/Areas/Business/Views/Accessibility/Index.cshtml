@@ -1,0 +1,92 @@
+@using YallaJo.Web.Areas.Business.Shared
+@using YallaJo.Web.Infrastructure.Authorization
+@model YallaJo.Web.Areas.Business.Models.Accessibility.AccessibilityVm
+@{
+    ViewData["Title"] = "Accessibility";
+    ViewData["BusinessNav"] = "Accessibility";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var sidebar = ViewBag.Sidebar as BusinessSidebarVm ?? new BusinessSidebarVm();
+}
+
+<partial name="_BusinessSidebar" model="sidebar" />
+
+<section class="pt-0">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-lg-8 col-xl-9">
+                @if (TempData["Success"] is string ok)
+                {
+                    <div class="alert alert-success">@ok</div>
+                }
+                @if (TempData["Error"] is string err)
+                {
+                    <div class="alert alert-danger">@err</div>
+                }
+
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h1 class="h3 mb-1">Accessibility</h1>
+                        <p class="text-body-secondary mb-0">@Model.BusinessName</p>
+                    </div>
+                    <a class="btn btn-sm btn-outline-secondary" asp-area="Business" asp-controller="MyBusinesses" asp-action="Manage" asp-route-id="@Model.BusinessId">
+                        <i class="bi bi-arrow-left me-1"></i>Back to business
+                    </a>
+                </div>
+
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                <div class="card border">
+                    <div class="card-header border-bottom">
+                        <h5 class="card-header-title mb-0">Accessibility features</h5>
+                        <small class="text-body-secondary">Mark which features your venue offers. Saving replaces the full set.</small>
+                    </div>
+                    <div class="card-body">
+                        <form asp-area="Business" asp-controller="Accessibility" asp-action="Save" asp-route-id="@Model.BusinessId" method="post">
+                            @Html.AntiForgeryToken()
+                            <div class="vstack gap-3">
+                                @for (var i = 0; i < Model.Features.Count; i++)
+                                {
+                                    <div class="card card-body border">
+                                        <input type="hidden" asp-for="Features[i].FeatureType" />
+                                        <input type="hidden" asp-for="Features[i].FeatureLabel" />
+                                        <div class="row g-3 align-items-start">
+                                            <div class="col-md-4">
+                                                <label class="form-label fw-semibold">@Model.Features[i].FeatureLabel</label>
+                                                <div class="form-check form-switch">
+                                                    <input class="form-check-input" type="checkbox" asp-for="Features[i].IsAvailable" />
+                                                    <label class="form-check-label" asp-for="Features[i].IsAvailable">Available</label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label" asp-for="Features[i].Name"></label>
+                                                <input class="form-control" asp-for="Features[i].Name" />
+                                                <span class="text-danger small" asp-validation-for="Features[i].Name"></span>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label" asp-for="Features[i].Description"></label>
+                                                <input class="form-control" asp-for="Features[i].Description" />
+                                                <span class="text-danger small" asp-validation-for="Features[i].Description"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+
+                            <permission require="@WebPermission.AccessibilityFeature.Update">
+                                <div class="mt-4">
+                                    <button type="submit" class="btn btn-primary-soft">
+                                        <i class="bi bi-save me-1"></i>Save accessibility
+                                    </button>
+                                </div>
+                            </permission>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

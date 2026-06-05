@@ -112,4 +112,23 @@ public sealed class ProviderFacade
 
         return ApiResult<AddProviderDocumentResponse>.Ok(result.Data);
     }
+
+    public async Task<ApiResult> ReplaceDocumentAsync(
+        ReplaceProviderDocumentVm vm, CancellationToken ct = default)
+    {
+        var request = new ReplaceProviderDocumentRequest(
+            FileUrl:       vm.FileUrl.Trim(),
+            FileName:      vm.FileName.Trim(),
+            FileSizeBytes: vm.FileSizeBytes,
+            ExpiresAt:     vm.ExpiresAt);
+
+        var result = await _api.ReplaceDocumentAsync(vm.DocumentId, request, ct);
+
+        if (result.IsSuccess) return ApiResult.Ok();
+        if (result.IsUnauthorized) return ApiResult.ForceSignOut();
+        if (result.IsValidationError) return ApiResult.Invalid(result.ValidationErrors!);
+        if (result.IsNotFound) return ApiResult.Fail(404, "The document to replace was not found.");
+
+        return ApiResult.Fail(result.StatusCode, result.Error ?? "Could not replace the document.");
+    }
 }

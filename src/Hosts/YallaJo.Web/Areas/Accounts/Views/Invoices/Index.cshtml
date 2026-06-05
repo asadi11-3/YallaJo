@@ -1,0 +1,111 @@
+@model YallaJo.Web.Areas.Accounts.Models.Invoices.InvoicesVm
+@using YallaJo.Web.Areas.Accounts.Shared
+@using YallaJo.Web.Infrastructure.Authorization
+@{
+    ViewData["Title"] = "My Invoices";
+    ViewData["AccountNav"] = "Invoices";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var sidebar = ViewBag.Sidebar as AccountSidebarVm ?? new AccountSidebarVm();
+
+    string Money(decimal amount, string? currency) =>
+        string.IsNullOrWhiteSpace(currency) ? amount.ToString("N2") : $"{amount:N2} {currency}";
+
+    string StatusBadge(string status) => status?.ToLowerInvariant() switch
+    {
+        "paid" or "issued" or "settled" => "success",
+        "pending" or "draft" => "warning",
+        "void" or "cancelled" or "refunded" => "danger",
+        _ => "secondary",
+    };
+}
+
+<section class="pt-3">
+    <div class="container">
+        <div class="row g-4 g-xl-5">
+            <partial name="_AccountSidebar" model="sidebar" />
+
+            <div class="col-lg-8 col-xl-9">
+                <button class="btn btn-primary-soft d-lg-none mb-3" type="button"
+                        data-bs-toggle="offcanvas" data-bs-target="#offcanvasSidebar">
+                    <i class="bi bi-list me-1"></i>Account menu
+                </button>
+
+                <div class="card border">
+                    <div class="card-header border-bottom d-flex justify-content-between align-items-center">
+                        <h4 class="card-header-title mb-0">My Invoices</h4>
+                        @if (Model.HasInvoices)
+                        {
+                            <span class="badge bg-primary bg-opacity-10 text-primary">@Model.Invoices.Count</span>
+                        }
+                    </div>
+                    <div class="card-body">
+                        @if (!Model.HasInvoices)
+                        {
+                            <div class="text-center py-5">
+                                <i class="bi bi-receipt display-5 text-body-secondary d-block mb-2"></i>
+                                <h6 class="mb-1">No invoices yet</h6>
+                                <p class="text-body-secondary mb-0">
+                                    Invoices appear here after your paid bookings are confirmed.
+                                </p>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Invoice #</th>
+                                            <th>Seller</th>
+                                            <th>Issued</th>
+                                            <th>Status</th>
+                                            <th class="text-end">Total</th>
+                                            <th class="text-end">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var inv in Model.Invoices)
+                                        {
+                                            <tr>
+                                                <td>
+                                                    <span class="fw-semibold">@inv.InvoiceNumber</span>
+                                                    <div class="small text-body-secondary">
+                                                        @inv.ItemCount item@(inv.ItemCount == 1 ? "" : "s")
+                                                    </div>
+                                                </td>
+                                                <td>@inv.SellerName</td>
+                                                <td>@inv.IssuedAt.ToString("dd MMM yyyy")</td>
+                                                <td>
+                                                    <span class="badge bg-@StatusBadge(inv.Status) bg-opacity-10 text-@StatusBadge(inv.Status)">
+                                                        @inv.Status
+                                                    </span>
+                                                </td>
+                                                <td class="text-end fw-semibold">@Money(inv.AmountTotal, inv.Currency)</td>
+                                                <td class="text-end">
+                                                    @if (inv.PdfAvailable)
+                                                    {
+                                                        <permission require="@WebPermission.Invoice.Download">
+                                                            <a class="btn btn-sm btn-primary-soft"
+                                                               asp-area="Accounts" asp-controller="Invoices"
+                                                               asp-action="Download" asp-route-id="@inv.Id">
+                                                                <i class="bi bi-download me-1"></i>PDF
+                                                            </a>
+                                                        </permission>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="text-body-secondary small">—</span>
+                                                    }
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

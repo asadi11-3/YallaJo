@@ -18,4 +18,13 @@ public sealed class DashboardApiClient
 
     public Task<ApiResult<List<JoinRequestResponse>>> GetJoinRequestsAsync(CancellationToken ct = default)
         => _api.GetAsync<List<JoinRequestResponse>>("/api/v1/booking/join-requests?myRequestsOnly=false", ct);
+
+    public Task<ApiResult<ProviderDashboardOverviewResponse>> GetOverviewAsync(CancellationToken ct = default)
+        => _api.GetAsync<ProviderDashboardOverviewResponse>("/api/v1/provider/dashboard/overview", ct);
+
+    public Task<ApiResult<List<ProviderPendingActionResponse>>> GetPendingActionsAsync(CancellationToken ct = default)
+        => _api.GetAsync<List<ProviderPendingActionResponse>>("/api/v1/provider/dashboard/pending-actions", ct);
+
+    public Task<ApiResult<List<ProviderNotificationResponse>>> GetNotificationsAsync(CancellationToken ct = default)
+        => _api.GetAsync<List<ProviderNotificationResponse>>("/api/v1/provider/dashboard/notifications", ct);
 }

@@ -8,7 +8,7 @@ namespace YallaJo.Web.Areas.Admin.ApiClients;
 
 public sealed class FlaggedReviewsApiClient
 {
-    private const string Base = "/api/v1/reviews";
+    private const string Base = "/api/v1/social/reviews";
     private readonly IApiClient _api;
 
     public FlaggedReviewsApiClient(IApiClient api) => _api = api;

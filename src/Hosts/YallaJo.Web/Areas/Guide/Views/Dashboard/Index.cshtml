@@ -5,6 +5,7 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
     var sidebar = ViewBag.Sidebar as GuideSidebarVm ?? new GuideSidebarVm();
     string Money(decimal a, string? c) => string.IsNullOrWhiteSpace(c) ? a.ToString("N0") : $"{a:N0} {c}";
+    string Pct(decimal v) => (v * 100m).ToString("0.#") + "%";
 }
 
 <partial name="_GuideSidebar" model="sidebar" />
@@ -65,6 +66,70 @@
                 </div>
             </div>
         </div>
+
+        @if (Model.TierProgress is { } tier)
+        {
+            <div class="card card-body border">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-award-fill text-warning fs-4"></i>
+                        <h6 class="mb-0">Tier Progress</h6>
+                        <span class="badge bg-primary-soft text-primary">@tier.CurrentTier</span>
+                    </div>
+                    <div class="text-body-secondary small">
+                        Commission rate: <span class="fw-semibold text-body">@Pct(tier.CurrentCommissionRate)</span>
+                        @if (tier.HasNextTier)
+                        {
+                            <span class="ms-2">Next tier: <span class="fw-semibold text-body">@tier.NextTier</span></span>
+                        }
+                    </div>
+                </div>
+
+                @if (!tier.HasNextTier)
+                {
+                    <p class="text-success mb-3"><i class="bi bi-check-circle-fill me-1"></i>You've reached the highest tier.</p>
+                }
+
+                <div class="row g-4">
+                    <div class="col-md-6 col-xl-3">
+                        <div class="d-flex justify-content-between small mb-1">
+                            <span class="text-body-secondary">Completed Tours</span>
+                            <span class="fw-semibold">@tier.CompletedTours / @tier.CompletedToursRequired</span>
+                        </div>
+                        <div class="progress" style="height: 6px;" role="progressbar" aria-valuenow="@tier.ToursPercent" aria-valuemin="0" aria-valuemax="100">
+                            <div class="progress-bar bg-primary" style="width: @(tier.ToursPercent)%"></div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-xl-3">
+                        <div class="d-flex justify-content-between small mb-1">
+                            <span class="text-body-secondary">Average Rating</span>
+                            <span class="fw-semibold">@tier.AverageRating.ToString("0.0") / @tier.AverageRatingRequired.ToString("0.0")</span>
+                        </div>
+                        <div class="progress" style="height: 6px;" role="progressbar" aria-valuenow="@tier.RatingPercent" aria-valuemin="0" aria-valuemax="100">
+                            <div class="progress-bar bg-warning" style="width: @(tier.RatingPercent)%"></div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-xl-3">
+                        <div class="d-flex justify-content-between small mb-1">
+                            <span class="text-body-secondary">Active Months</span>
+                            <span class="fw-semibold">@tier.ActiveMonths / @tier.ActiveMonthsRequired</span>
+                        </div>
+                        <div class="progress" style="height: 6px;" role="progressbar" aria-valuenow="@tier.ActiveMonthsPercent" aria-valuemin="0" aria-valuemax="100">
+                            <div class="progress-bar bg-info" style="width: @(tier.ActiveMonthsPercent)%"></div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-xl-3">
+                        <div class="d-flex justify-content-between small mb-1">
+                            <span class="text-body-secondary">Report Rate</span>
+                            <span class="fw-semibold @(tier.ReportRateOk ? "text-success" : "text-danger")">@Pct(tier.ReportRate) / @Pct(tier.MaxReportRateAllowed)</span>
+                        </div>
+                        <div class="progress" style="height: 6px;" role="progressbar" aria-valuenow="@tier.ReportRatePercent" aria-valuemin="0" aria-valuemax="100">
+                            <div class="progress-bar @(tier.ReportRateOk ? "bg-success" : "bg-danger")" style="width: @(tier.ReportRatePercent)%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
 
         <div class="row g-4">
             <div class="col-xl-4">

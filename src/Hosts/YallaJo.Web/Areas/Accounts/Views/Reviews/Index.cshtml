@@ -1,0 +1,189 @@
+@model YallaJo.Web.Areas.Accounts.Models.Reviews.ReviewsVm
+@using YallaJo.Web.Areas.Accounts.Shared
+@{
+    ViewData["Title"] = "My Reviews";
+    ViewData["AccountNav"] = "Reviews";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var sidebar = ViewBag.Sidebar as AccountSidebarVm ?? new AccountSidebarVm();
+
+    string Stars(decimal rating)
+    {
+        var full = (int)Math.Round(rating, MidpointRounding.AwayFromZero);
+        return string.Concat(Enumerable.Range(1, 5).Select(i =>
+            i <= full
+                ? "<i class=\"bi bi-star-fill text-warning\"></i>"
+                : "<i class=\"bi bi-star text-warning\"></i>"));
+    }
+
+    (string Css, string Text) StatusBadge(string status) => status switch
+    {
+        "Published" => ("success", "Published"),
+        "AwaitingModeration" => ("warning", "Awaiting moderation"),
+        "AutoHidden" => ("danger", "Hidden"),
+        "RemovedByAdmin" => ("danger", "Removed"),
+        _ => ("secondary", status),
+    };
+}
+
+<section class="pt-3">
+    <div class="container">
+        <div class="row g-4 g-xl-5">
+            <partial name="_AccountSidebar" model="sidebar" />
+
+            <div class="col-lg-8 col-xl-9">
+                <div class="d-grid d-lg-none mb-3">
+                    <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasSidebar">
+                        <i class="fas fa-sliders-h me-2"></i>Account menu
+                    </button>
+                </div>
+
+                <div class="card border">
+                    <div class="card-header border-bottom">
+                        <h4 class="card-header-title mb-0">My Reviews</h4>
+                    </div>
+
+                    <div class="card-body">
+                        @if (!Model.HasReviews)
+                        {
+                            <div class="text-center py-5">
+                                <i class="bi bi-star display-5 text-secondary d-block mb-3"></i>
+                                <h6 class="mb-1">You haven't written any reviews yet</h6>
+                                <p class="text-muted mb-0">Once you complete a tour or visit a place, you can share your experience here.</p>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="vstack gap-3">
+                                @foreach (var r in Model.Reviews)
+                                {
+                                    var badge = StatusBadge(r.Status);
+                                    <div class="card border">
+                                        <div class="card-body">
+                                            <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-2">
+                                                <div>
+                                                    <span>@Html.Raw(Stars(r.Rating))</span>
+                                                    @if (!string.IsNullOrWhiteSpace(r.Title))
+                                                    {
+                                                        <span class="fw-bold ms-2">@r.Title</span>
+                                                    }
+                                                </div>
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <span class="badge bg-@badge.Css bg-opacity-10 text-@badge.Css">@badge.Text</span>
+                                                    @if (r.IsVerifiedBooking)
+                                                    {
+                                                        <span class="badge bg-info bg-opacity-10 text-info"><i class="bi bi-patch-check me-1"></i>Verified</span>
+                                                    }
+                                                </div>
+                                            </div>
+
+                                            <p class="mb-2">@r.Content</p>
+
+                                            <div class="d-flex flex-wrap align-items-center gap-3 small text-muted">
+                                                @if (r.TargetUrl is not null)
+                                                {
+                                                    <a href="@r.TargetUrl" class="text-reset"><i class="bi bi-box-arrow-up-right me-1"></i>@r.TargetLabel</a>
+                                                }
+                                                else
+                                                {
+                                                    <span><i class="bi bi-tag me-1"></i>@r.TargetLabel</span>
+                                                }
+                                                <span><i class="bi bi-calendar3 me-1"></i>@r.CreatedAt.ToString("dd MMM yyyy")</span>
+                                                @if (r.LastEditedAt is { } edited)
+                                                {
+                                                    <span><i class="bi bi-pencil me-1"></i>Edited @edited.ToString("dd MMM yyyy")</span>
+                                                }
+                                                @if (r.VisitDate is { } visit)
+                                                {
+                                                    <span><i class="bi bi-geo-alt me-1"></i>Visited @visit.ToString("dd MMM yyyy")</span>
+                                                }
+                                                <span><i class="bi bi-hand-thumbs-up me-1"></i>@r.HelpfulVoteCount helpful</span>
+                                            </div>
+
+                                            @if (r.Replies.Count > 0)
+                                            {
+                                                <div class="border-start border-3 ps-3 mt-3">
+                                                    @foreach (var reply in r.Replies)
+                                                    {
+                                                        <div class="mb-2">
+                                                            <div class="small fw-semibold mb-1"><i class="bi bi-reply me-1"></i>Provider response</div>
+                                                            <p class="small mb-1">@reply.Content</p>
+                                                            <span class="small text-muted">@reply.CreatedAt.ToString("dd MMM yyyy")</span>
+                                                        </div>
+                                                    }
+                                                </div>
+                                            }
+
+                                            @if (r.CanEdit)
+                                            {
+                                                <div class="mt-3 d-flex gap-2">
+                                                    <button class="btn btn-sm btn-primary-soft mb-0" type="button"
+                                                            data-bs-toggle="collapse" data-bs-target="#edit-@r.Id.ToString("N")">
+                                                        <i class="bi bi-pencil me-1"></i>Edit
+                                                    </button>
+                                                    <form asp-area="Accounts" asp-controller="Reviews" asp-action="Delete"
+                                                          asp-route-id="@r.Id" method="post" class="mb-0"
+                                                          onsubmit="return confirm('Delete this review? This cannot be undone.');">
+                                                        @Html.AntiForgeryToken()
+                                                        <input type="hidden" name="rowVersion" value="@r.RowVersion" />
+                                                        <button type="submit" class="btn btn-sm btn-danger-soft mb-0">
+                                                            <i class="bi bi-trash me-1"></i>Delete
+                                                        </button>
+                                                    </form>
+                                                </div>
+
+                                                <div class="collapse mt-3" id="edit-@r.Id.ToString("N")">
+                                                    <form asp-area="Accounts" asp-controller="Reviews" asp-action="Edit" method="post" class="border-top pt-3">
+                                                        @Html.AntiForgeryToken()
+                                                        <input type="hidden" name="Id" value="@r.Id" />
+                                                        <input type="hidden" name="RowVersion" value="@r.RowVersion" />
+
+                                                        <div class="row g-3">
+                                                            <div class="col-md-4">
+                                                                <label class="form-label">Rating</label>
+                                                                <select name="Rating" class="form-select">
+                                                                    @for (var n = 5; n >= 1; n--)
+                                                                    {
+                                                                        if ((int)Math.Round(r.Rating) == n)
+                                                                        {
+                                                                            <option value="@n" selected>@n star@(n == 1 ? "" : "s")</option>
+                                                                        }
+                                                                        else
+                                                                        {
+                                                                            <option value="@n">@n star@(n == 1 ? "" : "s")</option>
+                                                                        }
+                                                                    }
+                                                                </select>
+                                                            </div>
+                                                            <div class="col-md-8">
+                                                                <label class="form-label">Title</label>
+                                                                <input type="text" name="Title" class="form-control" maxlength="150" value="@r.Title" />
+                                                            </div>
+                                                            <div class="col-12">
+                                                                <label class="form-label">Your review</label>
+                                                                <textarea name="Content" class="form-control" rows="3" maxlength="4000" required>@r.Content</textarea>
+                                                            </div>
+                                                            <div class="col-md-4">
+                                                                <label class="form-label">Visit date</label>
+                                                                <input type="date" name="VisitDate" class="form-control"
+                                                                       value="@(r.VisitDate?.ToString("yyyy-MM-dd"))" />
+                                                            </div>
+                                                        </div>
+                                                        <div class="mt-3">
+                                                            <button type="submit" class="btn btn-sm btn-primary mb-0">Save changes</button>
+                                                            <button type="button" class="btn btn-sm btn-link mb-0"
+                                                                    data-bs-toggle="collapse" data-bs-target="#edit-@r.Id.ToString("N")">Cancel</button>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

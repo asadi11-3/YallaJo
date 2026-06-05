@@ -1,6 +1,6 @@
-namespace YallaJo.Web.Areas.Admin.Models.EntityCategories
-{
-    public class EntityCategoriesRequest
-    {
-    }
-}
+namespace YallaJo.Web.Areas.Admin.Models.EntityCategories;
+
+public sealed record AssignCategoriesToEntityRequest(
+    string EntityType,
+    Guid EntityId,
+    IReadOnlyList<Guid> CategoryIds);

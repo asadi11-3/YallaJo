@@ -1,0 +1,91 @@
+@using YallaJo.Web.Areas.Business.Shared
+@using YallaJo.Web.Infrastructure.Authorization
+@model BusinessSidebarVm
+@{
+    var active = ViewData["BusinessNav"] as string ?? "MyBusinesses";
+    string Nav(string key) => active == key ? "nav-link active" : "nav-link";
+    var bizId = Model.BusinessId;
+    var hasBiz = Model.HasBusiness;
+}
+
+<div class="col-lg-4 col-xl-3">
+    <div class="offcanvas-lg offcanvas-end" tabindex="-1" id="businessSidebar">
+        <div class="offcanvas-header bg-light">
+            <h5 class="offcanvas-title">Business menu</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#businessSidebar"></button>
+        </div>
+        <div class="offcanvas-body p-3 p-lg-0 d-block">
+            <div class="card bg-light w-100">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center mb-3">
+                        @if (!string.IsNullOrWhiteSpace(Model.AvatarUrl))
+                        {
+                            <img src="@Model.AvatarUrl" class="avatar-img rounded-circle" width="48" height="48" alt="avatar" />
+                        }
+                        else
+                        {
+                            <div class="icon-md bg-primary-soft text-primary rounded-circle d-flex align-items-center justify-content-center" style="width:48px;height:48px;">
+                                <i class="bi bi-shop"></i>
+                            </div>
+                        }
+                        <div class="ms-2">
+                            <h6 class="mb-0">@Model.DisplayName</h6>
+                            <span class="badge bg-primary-soft text-primary">Business</span>
+                        </div>
+                    </div>
+
+                    <ul class="navbar-nav nav nav-pills nav-pills-primary-soft flex-column">
+                        <li class="nav-item">
+                            <a class="@Nav("MyBusinesses")" asp-area="Business" asp-controller="MyBusinesses" asp-action="Index">
+                                <i class="bi bi-shop fa-fw me-2"></i>My Businesses
+                            </a>
+                        </li>
+
+                        @if (hasBiz)
+                        {
+                            <li class="nav-item">
+                                <a class="@Nav("Manage")" asp-area="Business" asp-controller="MyBusinesses" asp-action="Manage" asp-route-id="@bizId">
+                                    <i class="bi bi-pencil-square fa-fw me-2"></i>Business profile
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="@Nav("Hours")" asp-area="Business" asp-controller="Hours" asp-action="Index" asp-route-id="@bizId">
+                                    <i class="bi bi-clock fa-fw me-2"></i>Opening hours
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="@Nav("Amenities")" asp-area="Business" asp-controller="Amenities" asp-action="Index" asp-route-id="@bizId">
+                                    <i class="bi bi-stars fa-fw me-2"></i>Amenities
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="@Nav("Services")" asp-area="Business" asp-controller="Services" asp-action="Index" asp-route-id="@bizId">
+                                    <i class="bi bi-list-check fa-fw me-2"></i>Services
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="@Nav("Staff")" asp-area="Business" asp-controller="Staff" asp-action="Index" asp-route-id="@bizId">
+                                    <i class="bi bi-people fa-fw me-2"></i>Staff
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="@Nav("Accessibility")" asp-area="Business" asp-controller="Accessibility" asp-action="Index" asp-route-id="@bizId">
+                                    <i class="bi bi-universal-access fa-fw me-2"></i>Accessibility
+                                </a>
+                            </li>
+                        }
+
+                        <li class="nav-item mt-2 border-top pt-2">
+                            <form asp-area="Auth" asp-controller="Auth" asp-action="Logout" method="post">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="nav-link border-0 bg-transparent text-danger w-100 text-start">
+                                    <i class="bi bi-box-arrow-right fa-fw me-2"></i>Sign Out
+                                </button>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

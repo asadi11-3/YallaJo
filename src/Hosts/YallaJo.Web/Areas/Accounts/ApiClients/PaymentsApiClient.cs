@@ -1,4 +1,6 @@
+using Microsoft.AspNetCore.WebUtilities;
 using YallaJo.Web.Areas.Accounts.Models.Bookings;
+using YallaJo.Web.Areas.Accounts.Models.Payments;
 using YallaJo.Web.Infrastructure.Api.Contracts;
 using YallaJo.Web.Services;
 
@@ -24,4 +26,18 @@ public sealed class PaymentsApiClient
     // POST /api/v1/payments/{bookingId}/simulate-success (Development-only on the API)
     public Task<ApiResult<SimulatePaymentResponse>> SimulateSuccessAsync(Guid bookingId, CancellationToken ct = default)
         => _api.PostAsync<SimulatePaymentResponse>($"{Base}/{bookingId}/simulate-success", null, ct);
+
+    // GET /api/v1/payments/my-payments?cursor&pageSize
+    public Task<ApiResult<PaymentPageResponse>> GetMyPaymentsAsync(
+        Guid? cursor = null, int pageSize = 20, CancellationToken ct = default)
+    {
+        var query = new Dictionary<string, string?> { ["pageSize"] = pageSize.ToString() };
+        if (cursor is { } c)
+        {
+            query["cursor"] = c.ToString();
+        }
+
+        var url = QueryHelpers.AddQueryString($"{Base}/my-payments", query);
+        return _api.GetAsync<PaymentPageResponse>(url, ct);
+    }
 }

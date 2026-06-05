@@ -1,0 +1,212 @@
+@using YallaJo.Web.Areas.Admin.Models.SeoFaq
+@using YallaJo.Web.Infrastructure.Authorization
+@model SeoFaqVm
+@{
+    ViewData["Title"] = "SEO FAQ";
+    ViewData["AdminNav"] = "SeoFaq";
+    var entityTypes = Html.GetEnumSelectList<SeoEntityType>();
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-1">SEO FAQ</h1>
+        <p class="text-muted mb-0">Manage frequently-asked questions attached to tours, places, businesses and more.</p>
+    </div>
+    <permission require="@WebPermission.FaqItem.Create">
+        <button type="button" class="btn btn-primary-soft" data-bs-toggle="modal" data-bs-target="#createFaqModal">
+            <i class="bi bi-plus-lg me-1"></i>Add FAQ
+        </button>
+    </permission>
+</div>
+
+@if (ViewBag.Error is string vbe)
+{
+    <div class="alert alert-danger">@vbe</div>
+}
+<div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+<div class="card shadow mb-4">
+    <div class="card-body">
+        <form asp-area="Admin" asp-controller="SeoFaq" asp-action="Index" method="get" class="row g-2 align-items-end">
+            <div class="col-sm-4">
+                <label class="form-label small">Entity type</label>
+                <select name="EntityType" class="form-select" asp-items="entityTypes">
+                    <option value="">All</option>
+                </select>
+            </div>
+            <div class="col-sm-3">
+                <label class="form-label small">Active only</label>
+                <select name="ActiveOnly" class="form-select">
+                    <option value="">All</option>
+                    <option value="true" selected="@(Model.ActiveOnlyFilter == true)">Active</option>
+                    <option value="false" selected="@(Model.ActiveOnlyFilter == false)">Inactive</option>
+                </select>
+            </div>
+            <div class="col-sm-2">
+                <button type="submit" class="btn btn-outline-secondary w-100">Apply</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@if (!Model.HasItems)
+{
+    <div class="card card-body shadow text-center py-5">
+        <img src="~/assets/images/element/17.svg" class="h-80px mb-3 mx-auto" alt="" />
+        <h6 class="mb-1">No FAQ items found</h6>
+        <p class="text-muted mb-0">Add an FAQ item or adjust the filter above.</p>
+    </div>
+}
+else
+{
+    <div class="card shadow">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Question</th>
+                        <th>Entity</th>
+                        <th>Order</th>
+                        <th>Active</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.Items)
+                    {
+                        <tr>
+                            <td>
+                                <div class="fw-semibold">@item.Question</div>
+                                <div class="small text-muted text-truncate" style="max-width:480px;">@item.Answer</div>
+                            </td>
+                            <td>
+                                <span class="badge bg-primary bg-opacity-10 text-primary">@item.EntityType</span>
+                                <div class="small text-muted font-monospace">@item.EntityId.ToString("D")[..8]</div>
+                            </td>
+                            <td>@item.SortOrder</td>
+                            <td>
+                                @if (item.IsActive)
+                                {
+                                    <span class="badge bg-success bg-opacity-10 text-success">Active</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary bg-opacity-10 text-secondary">Inactive</span>
+                                }
+                            </td>
+                            <td class="text-end">
+                                <permission require="@WebPermission.FaqItem.Update">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#editFaq-@item.Id">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                </permission>
+                                <permission require="@WebPermission.FaqItem.Delete">
+                                    <form asp-area="Admin" asp-controller="SeoFaq" asp-action="Delete" method="post" class="d-inline" onsubmit="return confirm('Delete this FAQ item?');">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@item.Id" />
+                                        <button type="submit" class="btn btn-sm btn-danger-soft"><i class="bi bi-trash"></i></button>
+                                    </form>
+                                </permission>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    @if (Model.TotalPages > 1)
+    {
+        <nav class="mt-3">
+            <ul class="pagination justify-content-center mb-0">
+                <li class="page-item @(Model.HasPrevious ? string.Empty : "disabled")">
+                    <a class="page-link" asp-action="Index" asp-route-page="@(Model.Page - 1)" asp-route-entityType="@Model.EntityTypeFilter" asp-route-activeOnly="@Model.ActiveOnlyFilter">Previous</a>
+                </li>
+                <li class="page-item disabled"><span class="page-link">Page @Model.Page of @Model.TotalPages</span></li>
+                <li class="page-item @(Model.HasNext ? string.Empty : "disabled")">
+                    <a class="page-link" asp-action="Index" asp-route-page="@(Model.Page + 1)" asp-route-entityType="@Model.EntityTypeFilter" asp-route-activeOnly="@Model.ActiveOnlyFilter">Next</a>
+                </li>
+            </ul>
+        </nav>
+    }
+
+    @foreach (var item in Model.Items)
+    {
+        <permission require="@WebPermission.FaqItem.Update">
+            <div class="modal fade" id="editFaq-@item.Id" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <form asp-area="Admin" asp-controller="SeoFaq" asp-action="Update" method="post">
+                            @Html.AntiForgeryToken()
+                            <div class="modal-header">
+                                <h5 class="modal-title">Edit FAQ item</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <input type="hidden" name="Id" value="@item.Id" />
+                                <div class="mb-3">
+                                    <label class="form-label">Question</label>
+                                    <input name="Question" class="form-control" value="@item.Question" maxlength="500" />
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Answer</label>
+                                    <textarea name="Answer" class="form-control" rows="4" maxlength="4000">@item.Answer</textarea>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" class="btn btn-primary-soft">Save</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </permission>
+    }
+}
+
+<permission require="@WebPermission.FaqItem.Create">
+    <div class="modal fade" id="createFaqModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form asp-area="Admin" asp-controller="SeoFaq" asp-action="Create" method="post">
+                    @Html.AntiForgeryToken()
+                    <div class="modal-header">
+                        <h5 class="modal-title">Add FAQ item</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Entity type</label>
+                            <select name="EntityType" class="form-select" asp-items="entityTypes"></select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Entity id</label>
+                            <input name="EntityId" class="form-control" placeholder="00000000-0000-0000-0000-000000000000" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Question</label>
+                            <input name="Question" class="form-control" maxlength="500" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Answer</label>
+                            <textarea name="Answer" class="form-control" rows="4" maxlength="4000"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Sort order</label>
+                            <input name="SortOrder" type="number" class="form-control" value="0" min="0" max="1000" />
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary-soft">Create</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</permission>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

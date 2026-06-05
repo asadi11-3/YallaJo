@@ -42,3 +42,26 @@ public sealed class AddProviderDocumentResponse
     public string DocumentType { get; init; } = string.Empty;
     public string FileUrl { get; init; } = string.Empty;
 }
+
+/// <summary>Mirrors <c>ReplaceProviderDocumentResult</c> from <c>PUT /api/v1/provider/documents/{id}</c>.</summary>
+public sealed class ReplaceProviderDocumentResponse
+{
+    public Guid DocumentId { get; init; }
+    public string NewFileUrl { get; init; } = string.Empty;
+}
+
+/// <summary>
+/// Mirrors <c>ProviderSettingsResult</c> from <c>GET /api/v1/provider/settings</c>.
+/// <c>ProviderType</c> is the numeric enum value (the API serializes enums as numbers
+/// for this client; see <see cref="YallaJo.Web.Services.ApiClient"/> deserialize options).
+/// </summary>
+public sealed class ProviderSettingsResponse
+{
+    public string BusinessName { get; init; } = string.Empty;
+    public string ContactEmail { get; init; } = string.Empty;
+    public string ContactPhone { get; init; } = string.Empty;
+    public string Address { get; init; } = string.Empty;
+    public string Description { get; init; } = string.Empty;
+    public int ProviderType { get; init; }
+    public string? TypeSpecificDataJson { get; init; }
+}

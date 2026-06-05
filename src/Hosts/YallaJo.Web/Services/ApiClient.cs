@@ -56,6 +56,48 @@ public sealed class ApiClient : IApiClient
     public Task<ApiResult<T>> GetAsync<T>(string path, CancellationToken ct = default) =>
         SendWithBodyAsync<T>(path, () => _http.GetAsync(path, ct), ct);
 
+    public async Task<ApiResult<ApiFile>> GetFileAsync(string path, CancellationToken ct = default)
+    {
+        HttpResponseMessage? response = null;
+        try
+        {
+            response = await _http.GetAsync(path, HttpCompletionOption.ResponseHeadersRead, ct)
+                .ConfigureAwait(false);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var raw = await response.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
+                return ParseError<ApiFile>((int)response.StatusCode, raw);
+            }
+
+            var bytes = await response.Content.ReadAsByteArrayAsync(ct).ConfigureAwait(false);
+            var contentType = response.Content.Headers.ContentType?.MediaType ?? "application/octet-stream";
+            var fileName = response.Content.Headers.ContentDisposition?.FileNameStar
+                           ?? response.Content.Headers.ContentDisposition?.FileName?.Trim('"')
+                           ?? "download";
+
+            return ApiResult<ApiFile>.CreateSuccess(
+                new ApiFile(bytes, contentType, fileName),
+                (int)response.StatusCode);
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception ex) when (IsTransportFailure(ex))
+        {
+            _logger.LogWarning(
+                ex,
+                "API file download from {Path} failed at the transport layer; returning 503 to caller.",
+                path);
+            return ApiResult<ApiFile>.Fail(ServiceUnavailableStatusCode, ServiceUnavailableMessage);
+        }
+        finally
+        {
+            response?.Dispose();
+        }
+    }
+
     public Task<ApiResult<T>> PostAsync<T>(string path, object? body = null, CancellationToken ct = default) =>
         SendWithBodyAsync<T>(path, async () =>
         {

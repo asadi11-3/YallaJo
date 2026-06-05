@@ -1,0 +1,105 @@
+@using YallaJo.Web.Infrastructure.Authorization
+@model YallaJo.Web.Areas.Admin.Models.EntityCategories.EntityCategoriesVm
+@{
+    ViewData["Title"] = "Entity categories";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+    var assignedIds = new HashSet<Guid>(Model.Assigned.Select(a => a.CategoryId));
+}
+
+<div class="container mt-4">
+    <h1 class="h3 mb-3">Entity categories</h1>
+
+    @if (ViewBag.Error is string vbe)
+    {
+        <div class="alert alert-danger">@vbe</div>
+    }
+    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+    <div class="card mb-4 p-3">
+        <h2 class="h5">Look up an entity</h2>
+        <form asp-area="Admin" asp-controller="EntityCategories" asp-action="Index" method="get" class="row g-2 align-items-end">
+            <div class="col-md-5">
+                <label asp-for="Query.EntityType" class="form-label"></label>
+                <input asp-for="Query.EntityType" name="entityType" class="form-control" placeholder="e.g. Tour, Place, Business" />
+                <span asp-validation-for="Query.EntityType" class="text-danger"></span>
+            </div>
+            <div class="col-md-5">
+                <label asp-for="Query.EntityId" class="form-label"></label>
+                <input asp-for="Query.EntityId" name="entityId" class="form-control" />
+                <span asp-validation-for="Query.EntityId" class="text-danger"></span>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">Load</button>
+            </div>
+        </form>
+    </div>
+
+    @if (Model.HasQueried)
+    {
+        <div class="card mb-4 p-3">
+            <h2 class="h5">Assigned categories</h2>
+            <p class="text-muted small mb-2">@Model.Query.EntityType / @Model.Query.EntityId</p>
+            @if (!Model.HasAssigned)
+            {
+                <p class="text-muted mb-0">No categories assigned.</p>
+            }
+            else
+            {
+                <table class="table table-sm table-bordered align-middle mb-0">
+                    <thead>
+                        <tr><th>Name</th><th>Slug</th><th class="text-end">Actions</th></tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var row in Model.Assigned)
+                        {
+                            <tr>
+                                <td>@row.Name</td>
+                                <td><code>@row.Slug</code></td>
+                                <td class="text-end">
+                                    <permission require="@WebPermission.EntityCategory.Delete">
+                                        <form asp-area="Admin" asp-controller="EntityCategories" asp-action="Remove" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="entityType" value="@Model.Query.EntityType" />
+                                            <input type="hidden" name="entityId" value="@Model.Query.EntityId" />
+                                            <input type="hidden" name="categoryId" value="@row.CategoryId" />
+                                            <button type="submit" class="btn btn-sm btn-outline-danger"
+                                                    onclick="return confirm('Remove this category?');">Remove</button>
+                                        </form>
+                                    </permission>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+
+        <permission require="@WebPermission.EntityCategory.Create">
+            <div class="card mb-4 p-3">
+                <h2 class="h5">Assign categories</h2>
+                <form asp-area="Admin" asp-controller="EntityCategories" asp-action="Assign" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="entityType" value="@Model.Query.EntityType" />
+                    <input type="hidden" name="entityId" value="@Model.Query.EntityId" />
+                    <div class="mb-2">
+                        <label for="categoryIds" class="form-label">Categories</label>
+                        <select id="categoryIds" name="categoryIds" multiple size="10" class="form-select">
+                            @foreach (var o in Model.AvailableCategories)
+                            {
+                                var isAssigned = assignedIds.Contains(o.Id);
+                                <option value="@o.Id" disabled="@isAssigned">
+                                    @o.Name@(o.IsActive ? "" : " (inactive)")@(isAssigned ? " (assigned)" : "")
+                                </option>
+                            }
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Assign</button>
+                </form>
+            </div>
+        </permission>
+    }
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

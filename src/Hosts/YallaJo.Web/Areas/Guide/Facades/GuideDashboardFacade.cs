@@ -22,14 +22,16 @@ public sealed class GuideDashboardFacade
 
         var earningsTask = SafeEarningsAsync(ct);
         var blocksTask = SafeAvailabilityBlocksAsync(ct);
+        var tierTask = SafeTierProgressAsync(ct);
         var toursTask = profile is null
             ? Task.FromResult(new GuideToursResponse())
             : SafeToursAsync(profile.Id, ct);
 
-        await Task.WhenAll(earningsTask, blocksTask, toursTask);
+        await Task.WhenAll(earningsTask, blocksTask, tierTask, toursTask);
 
         var earnings = earningsTask.Result;
         var blocks = blocksTask.Result;
+        var tier = tierTask.Result;
         var tours = toursTask.Result;
 
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
@@ -65,6 +67,20 @@ public sealed class GuideDashboardFacade
             EarningsCurrency = earnings?.Currency ?? string.Empty,
             ActiveAvailabilityBlocks = activeBlocks,
             RecentTours = recentTours,
+            TierProgress = tier is null ? null : new TierProgressVm
+            {
+                CurrentTier = tier.CurrentTier,
+                NextTier = tier.NextTier,
+                CompletedTours = tier.CompletedTours,
+                CompletedToursRequired = tier.CompletedToursRequired,
+                AverageRating = tier.AverageRating,
+                AverageRatingRequired = tier.AverageRatingRequired,
+                ReportRate = tier.ReportRate,
+                MaxReportRateAllowed = tier.MaxReportRateAllowed,
+                ActiveMonths = tier.ActiveMonths,
+                ActiveMonthsRequired = tier.ActiveMonthsRequired,
+                CurrentCommissionRate = tier.CurrentCommissionRate,
+            },
         };
 
         return ApiResult<DashboardVm>.Ok(vm);
@@ -93,6 +109,19 @@ public sealed class GuideDashboardFacade
         catch
         {
             return [];
+        }
+    }
+
+    private async Task<GuideTierProgressResponse?> SafeTierProgressAsync(CancellationToken ct)
+    {
+        try
+        {
+            var result = await _api.GetTierProgressAsync(ct);
+            return result is { IsSuccess: true, Data: not null } ? result.Data : null;
+        }
+        catch
+        {
+            return null;
         }
     }
 

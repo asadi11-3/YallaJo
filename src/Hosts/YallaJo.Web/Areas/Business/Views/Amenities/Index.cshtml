@@ -1,0 +1,139 @@
+@using YallaJo.Web.Areas.Business.Shared
+@using YallaJo.Web.Infrastructure.Authorization
+@model YallaJo.Web.Areas.Business.Models.Amenities.AmenitiesVm
+@{
+    ViewData["Title"] = "Amenities";
+    ViewData["BusinessNav"] = "Amenities";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var sidebar = ViewBag.Sidebar as BusinessSidebarVm ?? new BusinessSidebarVm();
+}
+
+<partial name="_BusinessSidebar" model="sidebar" />
+
+<section class="pt-0">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-lg-8 col-xl-9">
+                @if (TempData["Success"] is string ok)
+                {
+                    <div class="alert alert-success">@ok</div>
+                }
+                @if (TempData["Error"] is string err)
+                {
+                    <div class="alert alert-danger">@err</div>
+                }
+
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h1 class="h3 mb-1">Amenities</h1>
+                        <p class="text-muted mb-0">@Model.BusinessName</p>
+                    </div>
+                    <a class="btn btn-sm btn-outline-secondary"
+                       asp-area="Business" asp-controller="MyBusinesses" asp-action="Manage" asp-route-id="@Model.BusinessId">
+                        <i class="bi bi-arrow-left me-1"></i>Back to business
+                    </a>
+                </div>
+
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                <div class="row g-4">
+                    <permission require="@WebPermission.BusinessAmenity.Create">
+                        <div class="col-lg-5">
+                            <div class="card border h-100">
+                                <div class="card-header border-bottom">
+                                    <h5 class="card-header-title mb-0">Add an amenity</h5>
+                                </div>
+                                <div class="card-body">
+                                    <form asp-action="Add" asp-route-id="@Model.BusinessId" method="post">
+                                        @Html.AntiForgeryToken()
+                                        <div class="mb-3">
+                                            <label asp-for="Form.Name" class="form-label"></label>
+                                            <input asp-for="Form.Name" class="form-control" />
+                                            <span asp-validation-for="Form.Name" class="text-danger small"></span>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label asp-for="Form.Icon" class="form-label"></label>
+                                            <input asp-for="Form.Icon" class="form-control" placeholder="bi-wifi" />
+                                            <span asp-validation-for="Form.Icon" class="text-danger small"></span>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label asp-for="Form.SortOrder" class="form-label"></label>
+                                            <input asp-for="Form.SortOrder" class="form-control" type="number" min="0" />
+                                            <span asp-validation-for="Form.SortOrder" class="text-danger small"></span>
+                                        </div>
+                                        <button type="submit" class="btn btn-primary-soft">
+                                            <i class="bi bi-plus-lg me-1"></i>Add amenity
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </permission>
+
+                    <div class="col-lg-7">
+                        <div class="card border h-100">
+                            <div class="card-header border-bottom d-flex justify-content-between align-items-center">
+                                <h5 class="card-header-title mb-0">Current amenities</h5>
+                                <span class="badge bg-primary bg-opacity-10 text-primary">@Model.Amenities.Count</span>
+                            </div>
+                            <div class="card-body">
+                                @if (!Model.HasAmenities)
+                                {
+                                    <div class="text-center text-body-secondary py-4">
+                                        <i class="bi bi-stars fs-1 d-block mb-2"></i>
+                                        No amenities added yet.
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="table-responsive">
+                                        <table class="table table-hover align-middle mb-0">
+                                            <thead>
+                                                <tr>
+                                                    <th>Amenity</th>
+                                                    <th>Order</th>
+                                                    <th class="text-end">Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach (var item in Model.Amenities)
+                                                {
+                                                    <tr>
+                                                        <td>
+                                                            @if (!string.IsNullOrWhiteSpace(item.Icon))
+                                                            {
+                                                                <i class="bi @item.Icon me-2"></i>
+                                                            }
+                                                            @item.Name
+                                                        </td>
+                                                        <td>@item.SortOrder</td>
+                                                        <td class="text-end">
+                                                            <permission require="@WebPermission.BusinessAmenity.Delete">
+                                                                <form asp-action="Remove" asp-route-id="@Model.BusinessId" asp-route-amenityId="@item.Id"
+                                                                      method="post" class="d-inline"
+                                                                      onsubmit="return confirm('Remove this amenity?');">
+                                                                    @Html.AntiForgeryToken()
+                                                                    <button type="submit" class="btn btn-sm btn-danger-soft">
+                                                                        <i class="bi bi-trash"></i>
+                                                                    </button>
+                                                                </form>
+                                                            </permission>
+                                                        </td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

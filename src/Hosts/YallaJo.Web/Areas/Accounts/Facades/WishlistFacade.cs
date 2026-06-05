@@ -139,6 +139,65 @@ public sealed class WishlistFacade
         return null;
     }
 
+    public async Task<ApiResult> AddAsync(FavoriteEntityType entityType, Guid entityId, CancellationToken ct = default)
+    {
+        var result = await _api.AddFavoriteAsync(new AddFavoriteRequest(entityType, entityId), ct);
+
+        if (result.IsUnauthorized)
+            return ApiResult.ForceSignOut();
+        // POST is treated idempotent for UX: a 409 (already favorited) is a success.
+        if (result.IsSuccess || result.IsConflict)
+            return ApiResult.Ok();
+        if (result.IsValidationError && result.ValidationErrors is not null)
+            return ApiResult.Invalid(result.ValidationErrors);
+
+        return ApiResult.Fail(result.StatusCode, result.Error ?? "Could not add the item to your wishlist.");
+    }
+
+    /// <summary>Returns the current favorited state for an entity (false on any non-success).</summary>
+    public async Task<ApiResult<bool>> IsFavoritedAsync(string entityType, Guid entityId, CancellationToken ct = default)
+    {
+        var result = await _api.CheckFavoriteAsync(entityType, entityId, ct);
+
+        if (result.IsUnauthorized)
+            return ApiResult<bool>.ForceSignOut();
+        if (!result.IsSuccess || result.Data is null)
+            return ApiResult<bool>.Fail(result.StatusCode, result.Error ?? "Could not check favorite status.");
+
+        return ApiResult<bool>.Ok(result.Data.IsFavorited);
+    }
+
+    /// <summary>Toggles favorite state: adds if not favorited, removes if favorited.
+    /// Returns the NEW state (true = now favorited) on success.</summary>
+    public async Task<ApiResult<bool>> ToggleAsync(string entityType, Guid entityId, CancellationToken ct = default)
+    {
+        if (!Enum.TryParse<FavoriteEntityType>(entityType, ignoreCase: true, out var parsedType))
+            return ApiResult<bool>.Fail(400, $"Invalid entity type '{entityType}'.");
+
+        var current = await _api.CheckFavoriteAsync(entityType, entityId, ct);
+        if (current.IsUnauthorized)
+            return ApiResult<bool>.ForceSignOut();
+        if (!current.IsSuccess || current.Data is null)
+            return ApiResult<bool>.Fail(current.StatusCode, current.Error ?? "Could not check favorite status.");
+
+        if (current.Data.IsFavorited)
+        {
+            var removed = await RemoveAsync(entityType, entityId, ct);
+            if (removed.RequireSignOut)
+                return ApiResult<bool>.ForceSignOut();
+            if (!removed.IsSuccess)
+                return ApiResult<bool>.Fail(removed.StatusCode, removed.Error ?? "Could not remove the item.");
+            return ApiResult<bool>.Ok(false);
+        }
+
+        var added = await AddAsync(parsedType, entityId, ct);
+        if (added.RequireSignOut)
+            return ApiResult<bool>.ForceSignOut();
+        if (!added.IsSuccess)
+            return ApiResult<bool>.Fail(added.StatusCode, added.Error ?? "Could not add the item.");
+        return ApiResult<bool>.Ok(true);
+    }
+
     public async Task<ApiResult> RemoveAsync(string entityType, Guid entityId, CancellationToken ct = default)
     {
         var result = await _api.RemoveFavoriteAsync(entityType, entityId, ct);

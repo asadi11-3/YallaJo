@@ -17,6 +17,7 @@
         || Has(WebPermission.Specialization.Read) || Has(WebPermission.TranslationCache.Read) || Has(WebPermission.Attachment.Read);
     var showTrust = Has(WebPermission.AdminCreatorQueue.Read) || Has(WebPermission.TourGuideProfile.Read) || Has(WebPermission.GuideApplication.Read) || Has(WebPermission.AdminModerationQueue.Read) || Has(WebPermission.SupportTicket.Read);
     var showOpsSystem = Has(WebPermission.NotificationTemplate.Read) || Has(WebPermission.Batch.Read) || Has(WebPermission.Outbox.Read);
+    var showSeo = Has(WebPermission.Redirect.Read) || Has(WebPermission.SeoMetadata.Read) || Has(WebPermission.Sitemap.Read) || Has(WebPermission.Weather.Read) || Has(WebPermission.FaqItem.Read);
 }
 
 <ul class="navbar-nav flex-column" id="navbar-sidebar">
@@ -245,12 +246,62 @@
                     <i class="bi bi-star fa-fw me-2"></i>Flagged reviews
                 </a>
             </li>
+            <li class="nav-item">
+                <a class="@Active("Moderation")" asp-area="Admin" asp-controller="Moderation" asp-action="Index">
+                    <i class="bi bi-shield-exclamation fa-fw me-2"></i>Moderation
+                </a>
+            </li>
         </permission>
 
         <permission require="@WebPermission.SupportTicket.Read">
             <li class="nav-item">
                 <a class="@Active("Support")" asp-area="Admin" asp-controller="Support" asp-action="Index">
                     <i class="bi bi-headset fa-fw me-2"></i>Support
+                </a>
+            </li>
+        </permission>
+    }
+
+    @if (showSeo)
+    {
+        <li class="nav-item ms-2 my-2 text-uppercase small fw-bold opacity-75">SEO &amp; site</li>
+
+        <permission require="@WebPermission.Redirect.Read">
+            <li class="nav-item">
+                <a class="@Active("SeoRedirects")" asp-area="Admin" asp-controller="SeoRedirects" asp-action="Index">
+                    <i class="bi bi-signpost-split fa-fw me-2"></i>Redirects
+                </a>
+            </li>
+        </permission>
+
+        <permission require="@WebPermission.SeoMetadata.Read">
+            <li class="nav-item">
+                <a class="@Active("SeoMetadata")" asp-area="Admin" asp-controller="SeoMetadata" asp-action="Index">
+                    <i class="bi bi-card-heading fa-fw me-2"></i>Metadata
+                </a>
+            </li>
+        </permission>
+
+        <permission require="@WebPermission.Sitemap.Read">
+            <li class="nav-item">
+                <a class="@Active("SeoSitemap")" asp-area="Admin" asp-controller="SeoSitemap" asp-action="Index">
+                    <i class="bi bi-diagram-3 fa-fw me-2"></i>Sitemap
+                </a>
+            </li>
+        </permission>
+
+        <permission require="@WebPermission.Weather.Read">
+            <li class="nav-item">
+                <a class="@Active("SeoWeather")" asp-area="Admin" asp-controller="SeoWeather" asp-action="Index">
+                    <i class="bi bi-cloud-sun fa-fw me-2"></i>Weather
+                </a>
+            </li>
+        </permission>
+
+        <permission require="@WebPermission.FaqItem.Read">
+            <li class="nav-item">
+                <a class="@Active("SeoFaq")" asp-area="Admin" asp-controller="SeoFaq" asp-action="Index">
+                    <i class="bi bi-question-circle fa-fw me-2"></i>FAQ
                 </a>
             </li>
         </permission>

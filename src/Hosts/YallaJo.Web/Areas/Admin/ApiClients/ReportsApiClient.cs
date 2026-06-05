@@ -8,7 +8,7 @@ namespace YallaJo.Web.Areas.Admin.ApiClients;
 
 public sealed class ReportsApiClient
 {
-    private const string Base = "/api/v1/reports";
+    private const string Base = "/api/v1/social/reports";
     private readonly IApiClient _api;
 
     public ReportsApiClient(IApiClient api) => _api = api;

@@ -223,6 +223,13 @@
     @* Theme functions *@
     <script src="~/assets/js/functions.js"></script>
 
+    @* Wishlist favorite toggle (delegated handler for .js-favorite buttons on cards). *@
+    @if (CurrentUser.IsAuthenticated)
+    {
+        @Html.AntiForgeryToken()
+        <script src="~/assets/js/favorites.js" asp-append-version="true"></script>
+    }
+
     @* Per-view extra scripts *@
     @await RenderSectionAsync("Scripts", required: false)
 </body>

@@ -67,3 +67,18 @@ public sealed class GuideAvailabilityBlockResponse
     public string? Reason { get; init; }
     public DateTime CreatedAt { get; init; }
 }
+
+public sealed class GuideTierProgressResponse
+{
+    public string CurrentTier { get; init; } = string.Empty;
+    public string? NextTier { get; init; }
+    public int CompletedTours { get; init; }
+    public int CompletedToursRequired { get; init; }
+    public decimal AverageRating { get; init; }
+    public decimal AverageRatingRequired { get; init; }
+    public decimal ReportRate { get; init; }
+    public decimal MaxReportRateAllowed { get; init; }
+    public int ActiveMonths { get; init; }
+    public int ActiveMonthsRequired { get; init; }
+    public decimal CurrentCommissionRate { get; init; }
+}

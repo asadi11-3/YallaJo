@@ -16,6 +16,13 @@ public sealed class WishlistApiClient
     public Task<ApiResult> RemoveFavoriteAsync(string entityType, Guid entityId, CancellationToken ct = default)
         => _api.DeleteAsync($"/api/v1/social/favorites/{Uri.EscapeDataString(entityType)}/{entityId}", ct);
 
+    public Task<ApiResult<Guid>> AddFavoriteAsync(AddFavoriteRequest request, CancellationToken ct = default)
+        => _api.PostAsync<Guid>("/api/v1/social/favorites", request, ct);
+
+    public Task<ApiResult<CheckFavoriteResponse>> CheckFavoriteAsync(string entityType, Guid entityId, CancellationToken ct = default)
+        => _api.GetAsync<CheckFavoriteResponse>(
+            $"/api/v1/social/favorites/check/{Uri.EscapeDataString(entityType)}/{entityId}", ct);
+
     public Task<ApiResult<TourLookupResponse>> GetTourAsync(Guid id, CancellationToken ct = default)
         => _api.GetAsync<TourLookupResponse>($"/api/v1/tours/{id}", ct);
 

@@ -97,6 +97,60 @@ public static class WebPermission
         public const string Delete = "Permission.Tag.Delete";
     }
 
+    public static class EntityTag
+    {
+        public const string Read   = "Permission.EntityTag.Read";
+        public const string Create = "Permission.EntityTag.Create";
+        public const string Delete = "Permission.EntityTag.Delete";
+    }
+
+    public static class EntityCategory
+    {
+        public const string Read   = "Permission.EntityCategory.Read";
+        public const string Create = "Permission.EntityCategory.Create";
+        public const string Delete = "Permission.EntityCategory.Delete";
+    }
+
+    // ── SEO (ContentSeo module) ───────────────────────────────────────────────
+    public static class Redirect
+    {
+        public const string Read   = "Permission.Redirect.Read";
+        public const string Create = "Permission.Redirect.Create";
+        public const string Update = "Permission.Redirect.Update";
+        public const string Delete = "Permission.Redirect.Delete";
+    }
+
+    public static class SeoMetadata
+    {
+        public const string Read   = "Permission.SeoMetadata.Read";
+        public const string Create = "Permission.SeoMetadata.Create";
+        public const string Update = "Permission.SeoMetadata.Update";
+    }
+
+    public static class Sitemap
+    {
+        public const string Read    = "Permission.Sitemap.Read";
+        public const string Update  = "Permission.Sitemap.Update";
+        public const string Delete  = "Permission.Sitemap.Delete";
+        public const string Refresh = "Permission.Sitemap.Refresh";
+    }
+
+    public static class Weather
+    {
+        public const string Read    = "Permission.Weather.Read";
+        public const string Refresh = "Permission.Weather.Refresh";
+        public const string Update  = "Permission.Weather.Update";
+        public const string Delete  = "Permission.Weather.Delete";
+    }
+
+    public static class FaqItem
+    {
+        public const string Read   = "Permission.FaqItem.Read";
+        public const string Create = "Permission.FaqItem.Create";
+        public const string Update = "Permission.FaqItem.Update";
+        public const string Delete = "Permission.FaqItem.Delete";
+    }
+
     // ── Place ─────────────────────────────────────────────────────────────────
     public static class Place
     {
@@ -146,6 +200,25 @@ public static class WebPermission
     {
         public const string Create = "Permission.Payment.Create";
         public const string Read   = "Permission.Payment.Read";
+    }
+
+    // ── Invoice (Finance — Permission.Invoice.*) ──────────────────────────────────
+    // Granted to the User/traveler role so buyers can list + download invoices
+    // for their own bookings.
+    public static class Invoice
+    {
+        public const string Read     = "Permission.Invoice.Read";
+        public const string Download = "Permission.Invoice.Download";
+    }
+
+    // ── ProviderPaymentMethod (Finance — Permission.ProviderPaymentMethod.*) ───────
+    // Granted to the Provider role so providers manage their own payout methods.
+    public static class ProviderPaymentMethod
+    {
+        public const string Read   = "Permission.ProviderPaymentMethod.Read";
+        public const string Create = "Permission.ProviderPaymentMethod.Create";
+        public const string Update = "Permission.ProviderPaymentMethod.Update";
+        public const string Delete = "Permission.ProviderPaymentMethod.Delete";
     }
 
     // ── AdminBookingDashboard (Permission.AdminBookingDashboard.*) ─────────────────
@@ -240,11 +313,14 @@ public static class WebPermission
         public const string Read = "Permission.GuideDashboard.Read";
     }
 
-    // ── Review (provider responses) ───────────────────────────────────────────
+    // ── Review (user-authored reviews + provider responses) ───────────────────
     public static class Review
     {
         public const string Read   = "Permission.Review.Read";
         public const string Create = "Permission.Review.Create";
+        public const string Update = "Permission.Review.Update";
+        public const string Delete = "Permission.Review.Delete";
+        public const string Vote   = "Permission.Review.Vote";
     }
 
     // ── ReviewReply (provider responds to a review) ───────────────────────────
@@ -405,7 +481,21 @@ public static class WebPermission
     // ── Interaction (user interaction analytics) ───────────────────────────────
     public static class Interaction
     {
-        public const string Read = "Permission.Interaction.Read";
+        public const string Read   = "Permission.Interaction.Read";
+        public const string Create = "Permission.Interaction.Create";
+    }
+
+    // ── Recommendation (Analytics personalization consumer feed) ───────────────
+    public static class Recommendation
+    {
+        public const string Read = "Permission.Recommendation.Read";
+    }
+
+    // ── Preference (Analytics personalization preferences) ─────────────────────
+    public static class Preference
+    {
+        public const string Read   = "Permission.Preference.Read";
+        public const string Update = "Permission.Preference.Update";
     }
 
     // ── AdminFinanceDashboard (admin finance/earnings dashboards) ──────────────
@@ -435,6 +525,14 @@ public static class WebPermission
         public const string Create = "Permission.NotificationTemplate.Create";
         public const string Update = "Permission.NotificationTemplate.Update";
         public const string Delete = "Permission.NotificationTemplate.Delete";
+    }
+
+    // ── Notification (current user's own notification inbox) ────────────────────
+    // Mirror the Messaging backend permissions (Permission.Notification.{Action}).
+    public static class Notification
+    {
+        public const string Read   = "Permission.Notification.Read";
+        public const string Update = "Permission.Notification.Update";
     }
 
     // ── AdminModerationQueue (social reports / flagged reviews / user moderation) ──
@@ -528,12 +626,53 @@ public static class WebPermission
     public static class Business
     {
         public const string Read        = "Permission.Business.Read";
+        public const string Create      = "Permission.Business.Create";
+        public const string Update      = "Permission.Business.Update";
+        public const string Submit      = "Permission.Business.Submit";
         public const string Approve     = "Permission.Business.Approve";
         public const string Reject      = "Permission.Business.Reject";
         public const string RequestDocs = "Permission.Business.RequestDocs";
         public const string Suspend     = "Permission.Business.Suspend";
         public const string Reinstate   = "Permission.Business.Reinstate";
         public const string Delete      = "Permission.Business.Delete";
+    }
+
+    // ── Business owner self-service (ContentPlaces module) ──────────────────────
+    public static class BusinessHours
+    {
+        public const string Read   = "Permission.BusinessHours.Read";
+        public const string Update = "Permission.BusinessHours.Update";
+    }
+
+    public static class BusinessAmenity
+    {
+        public const string Read   = "Permission.BusinessAmenity.Read";
+        public const string Create = "Permission.BusinessAmenity.Create";
+        public const string Update = "Permission.BusinessAmenity.Update";
+        public const string Delete = "Permission.BusinessAmenity.Delete";
+    }
+
+    public static class BusinessStaff
+    {
+        public const string Read   = "Permission.BusinessStaff.Read";
+        public const string Create = "Permission.BusinessStaff.Create";
+        public const string Update = "Permission.BusinessStaff.Update";
+        public const string Delete = "Permission.BusinessStaff.Delete";
+    }
+
+    public static class ServiceItem
+    {
+        public const string Read   = "Permission.ServiceItem.Read";
+        public const string Create = "Permission.ServiceItem.Create";
+        public const string Update = "Permission.ServiceItem.Update";
+        public const string Delete = "Permission.ServiceItem.Delete";
+        public const string SoftDelete = "Permission.ServiceItem.SoftDelete";
+    }
+
+    public static class AccessibilityFeature
+    {
+        public const string Read   = "Permission.AccessibilityFeature.Read";
+        public const string Update = "Permission.AccessibilityFeature.Update";
     }
 
     // ── AuditLog (admin audit trail) ───────────────────────────────────────────

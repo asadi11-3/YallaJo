@@ -53,6 +53,24 @@ public sealed class WishlistController : BaseController
         return RedirectToAction(nameof(Index));
     }
 
+    /// <summary>AJAX toggle for the reusable heart button on tour/place/business cards.
+    /// Returns JSON { isFavorited } (or 401 for the client to redirect to sign-in).</summary>
+    [HttpPost("accounts/wishlist/toggle/{entityType}/{entityId:guid}")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Toggle(string entityType, Guid entityId, CancellationToken ct)
+    {
+        var result = await _wishlist.ToggleAsync(entityType, entityId, ct);
+
+        if (result.RequireSignOut)
+            return Unauthorized(new { error = "Please sign in to save favorites." });
+
+        if (!result.IsSuccess)
+            return StatusCode(result.StatusCode == 0 ? 500 : result.StatusCode,
+                new { error = result.Error ?? "Could not update your wishlist." });
+
+        return Ok(new { isFavorited = result.Data });
+    }
+
     [HttpPost("accounts/wishlist/remove-all")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> RemoveAll(CancellationToken ct)

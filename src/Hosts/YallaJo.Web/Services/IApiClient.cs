@@ -17,6 +17,13 @@ public interface IApiClient
 {
     Task<ApiResult<T>> GetAsync<T>(string path, CancellationToken ct = default);
 
+    /// <summary>
+    /// GET a binary payload (e.g. a rendered PDF) and return its bytes,
+    /// content type and suggested file name. Used to proxy file downloads
+    /// (such as invoice PDFs) through the BFF so the JWT never leaves the server.
+    /// </summary>
+    Task<ApiResult<ApiFile>> GetFileAsync(string path, CancellationToken ct = default);
+
     Task<ApiResult<T>> PostAsync<T>(string path, object? body = null, CancellationToken ct = default);
 
     Task<ApiResult> PostAsync(string path, object? body = null, CancellationToken ct = default);

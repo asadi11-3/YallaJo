@@ -1,0 +1,110 @@
+@using YallaJo.Web.Infrastructure.Authorization
+@model YallaJo.Web.Areas.Admin.Models.EntityTags.EntityTagsVm
+@{
+    ViewData["Title"] = "Entity Tags";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+    var entityType = Model.Query.EntityType;
+    var entityId = Model.Query.EntityId;
+    var assignedIds = new HashSet<Guid>(Model.Assigned.Select(a => a.TagId));
+}
+
+<div class="container mt-4">
+    <h2>Entity Tags</h2>
+    <p class="text-muted">Assign or remove tags for any taggable entity (tour, place, business, …) by its type and id.</p>
+
+    @if (ViewBag.Error is string vbe) { <div class="alert alert-danger">@vbe</div> }
+    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+    <div class="card mb-4 p-3">
+        <h5>Look up an entity</h5>
+        <form asp-area="Admin" asp-controller="EntityTags" asp-action="Index" method="get">
+            <div class="row g-2">
+                <div class="col-md-5">
+                    <label asp-for="Query.EntityType" class="form-label"></label>
+                    <input asp-for="Query.EntityType" name="entityType" class="form-control" placeholder="e.g. Tour, Place, Business" />
+                    <span asp-validation-for="Query.EntityType" class="text-danger"></span>
+                </div>
+                <div class="col-md-5">
+                    <label asp-for="Query.EntityId" class="form-label"></label>
+                    <input asp-for="Query.EntityId" name="entityId" class="form-control" placeholder="00000000-0000-0000-0000-000000000000" />
+                    <span asp-validation-for="Query.EntityId" class="text-danger"></span>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary">Load</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    @if (Model.HasQueried)
+    {
+        <div class="card mb-4 p-3">
+            <h5>Assigned tags <small class="text-muted">(@entityType / @entityId)</small></h5>
+            @if (!Model.HasAssigned)
+            {
+                <p class="text-muted mb-0">No tags are currently assigned to this entity.</p>
+            }
+            else
+            {
+                <table class="table table-sm table-bordered mb-0">
+                    <thead>
+                        <tr><th>Name</th><th>Slug</th><th></th></tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var t in Model.Assigned)
+                        {
+                            <tr>
+                                <td>@t.Name</td>
+                                <td>@t.Slug</td>
+                                <td>
+                                    <permission require="@WebPermission.EntityTag.Delete">
+                                        <form asp-area="Admin" asp-controller="EntityTags" asp-action="Remove" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="entityType" value="@entityType" />
+                                            <input type="hidden" name="entityId" value="@entityId" />
+                                            <input type="hidden" name="tagId" value="@t.TagId" />
+                                            <button type="submit" class="btn btn-sm btn-outline-danger"
+                                                    onclick="return confirm('Remove this tag?');">Remove</button>
+                                        </form>
+                                    </permission>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+
+        <permission require="@WebPermission.EntityTag.Create">
+            <div class="card mb-4 p-3">
+                <h5>Assign tags</h5>
+                <form asp-area="Admin" asp-controller="EntityTags" asp-action="Assign" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="entityType" value="@entityType" />
+                    <input type="hidden" name="entityId" value="@entityId" />
+                    <div class="mb-2">
+                        <label for="tagIds" class="form-label">Tags (Ctrl/Cmd-click to multi-select)</label>
+                        <select id="tagIds" name="tagIds" class="form-select" multiple size="8">
+                            @foreach (var opt in Model.AvailableTags)
+                            {
+                                if (assignedIds.Contains(opt.Id))
+                                {
+                                    <option value="@opt.Id" disabled>@opt.Name (assigned)</option>
+                                }
+                                else
+                                {
+                                    <option value="@opt.Id">@opt.Name@(opt.IsActive ? "" : " (inactive)")</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Assign selected</button>
+                </form>
+            </div>
+        </permission>
+    }
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

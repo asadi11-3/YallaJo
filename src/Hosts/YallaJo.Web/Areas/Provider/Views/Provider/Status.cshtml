@@ -111,14 +111,64 @@
                     <ul class="list-group list-group-flush small mb-0">
                         @foreach (var doc in Model.Documents)
                         {
-                            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
-                                <span>
-                                    <i class="bi bi-file-earmark-text me-1"></i>
-                                    <strong>@doc.DocumentTypeLabel</strong> — @doc.FileName
-                                </span>
-                                <span class="text-muted">
-                                    @(doc.ExpiresAt.HasValue ? $"expires {doc.ExpiresAt.Value:yyyy-MM-dd}" : "")
-                                </span>
+                            var replaceId = $"replace-{doc.DocumentId:N}";
+                            <li class="list-group-item px-0">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span>
+                                        <i class="bi bi-file-earmark-text me-1"></i>
+                                        <strong>@doc.DocumentTypeLabel</strong> — @doc.FileName
+                                    </span>
+                                    <span class="text-muted">
+                                        @(doc.ExpiresAt.HasValue ? $"expires {doc.ExpiresAt.Value:yyyy-MM-dd}" : "")
+                                        @if (Model.CanUploadDocuments)
+                                        {
+                                            <permission require="@WebPermission.ProviderApplication.Update">
+                                                <button type="button" class="btn btn-link btn-sm p-0 ms-2"
+                                                        data-bs-toggle="collapse" data-bs-target="#@replaceId">
+                                                    Replace
+                                                </button>
+                                            </permission>
+                                        }
+                                    </span>
+                                </div>
+
+                                @if (Model.CanUploadDocuments)
+                                {
+                                    <permission require="@WebPermission.ProviderApplication.Update">
+                                        <div class="collapse mt-2" id="@replaceId">
+                                            @* Posts the top-level ReplaceProviderDocumentVm bound by the
+                                               ReplaceDocument action; plain name attributes are used here. *@
+                                            <form asp-area="Provider" asp-controller="Provider" asp-action="ReplaceDocument"
+                                                  method="post" class="row g-2 align-items-end">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="DocumentId" value="@doc.DocumentId" />
+
+                                                <div class="col-md-4">
+                                                    <label class="form-label">New file URL</label>
+                                                    <input name="FileUrl" type="url" class="form-control"
+                                                           value="@doc.FileUrl" placeholder="https://…" />
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <label class="form-label">File name</label>
+                                                    <input name="FileName" type="text" class="form-control"
+                                                           value="@doc.FileName" />
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <label class="form-label">Size (bytes)</label>
+                                                    <input name="FileSizeBytes" type="number" min="1" class="form-control" />
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <label class="form-label">Expires at</label>
+                                                    <input name="ExpiresAt" type="date" class="form-control"
+                                                           value="@(doc.ExpiresAt?.ToString("yyyy-MM-dd"))" />
+                                                </div>
+                                                <div class="col-md-1 d-grid">
+                                                    <button type="submit" class="btn btn-outline-primary btn-sm">Save</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </permission>
+                                }
                             </li>
                         }
                     </ul>

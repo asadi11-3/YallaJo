@@ -1,0 +1,122 @@
+@using YallaJo.Web.Areas.Business.Shared
+@using YallaJo.Web.Infrastructure.Authorization
+@model YallaJo.Web.Areas.Business.Models.Staff.StaffVm
+@{
+    ViewData["Title"] = "Staff";
+    ViewData["BusinessNav"] = "Staff";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var sidebar = ViewBag.Sidebar as BusinessSidebarVm ?? new BusinessSidebarVm();
+}
+
+<partial name="_BusinessSidebar" model="sidebar" />
+
+<section class="pt-0">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-lg-8 col-xl-9">
+                @if (TempData["Success"] is string ok)
+                {
+                    <div class="alert alert-success">@ok</div>
+                }
+                @if (TempData["Error"] is string err)
+                {
+                    <div class="alert alert-danger">@err</div>
+                }
+
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h1 class="h4 mb-0">Staff &mdash; @Model.BusinessName</h1>
+                        <p class="text-body-secondary mb-0">Manage the team that runs this business.</p>
+                    </div>
+                    <a class="btn btn-sm btn-outline-secondary"
+                       asp-controller="MyBusinesses" asp-action="Manage" asp-route-id="@Model.BusinessId">
+                        <i class="bi bi-arrow-left me-1"></i>Back to business
+                    </a>
+                </div>
+
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                <div class="row g-4">
+                    <permission require="@WebPermission.BusinessStaff.Create">
+                        <div class="col-xl-5">
+                            <div class="card card-body border h-100">
+                                <h5 class="mb-3">Add a staff member</h5>
+                                <form asp-action="Add" asp-route-id="@Model.BusinessId" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <div class="mb-3">
+                                        <label asp-for="Form.UserId" class="form-label"></label>
+                                        <input asp-for="Form.UserId" class="form-control" placeholder="00000000-0000-0000-0000-000000000000" />
+                                        <span asp-validation-for="Form.UserId" class="text-danger small"></span>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label asp-for="Form.Role" class="form-label"></label>
+                                        <select asp-for="Form.Role" asp-items="Html.GetEnumSelectList<YallaJo.Web.Areas.Business.Models.Staff.BusinessStaffRole>()" class="form-select"></select>
+                                        <span asp-validation-for="Form.Role" class="text-danger small"></span>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary-soft">
+                                        <i class="bi bi-person-plus me-1"></i>Add staff
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </permission>
+
+                    <div class="col-xl-7">
+                        <div class="card card-body border h-100">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="mb-0">Current staff</h5>
+                                <span class="badge bg-primary bg-opacity-10 text-primary">@Model.Staff.Count</span>
+                            </div>
+
+                            @if (!Model.HasStaff)
+                            {
+                                <div class="text-center text-body-secondary py-4">
+                                    <i class="bi bi-people fs-1 d-block mb-2"></i>
+                                    No staff members yet.
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="table-responsive">
+                                    <table class="table table-hover align-middle mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th>User</th>
+                                                <th>Role</th>
+                                                <th class="text-end">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var s in Model.Staff)
+                                            {
+                                                <tr>
+                                                    <td><code>@s.UserId.ToString("D")[..8]</code></td>
+                                                    <td><span class="badge bg-secondary bg-opacity-10 text-secondary">@s.Role</span></td>
+                                                    <td class="text-end">
+                                                        <permission require="@WebPermission.BusinessStaff.Delete">
+                                                            <form asp-action="Remove" asp-route-id="@Model.BusinessId" asp-route-staffId="@s.Id" method="post"
+                                                                  onsubmit="return confirm('Remove this staff member?');">
+                                                                @Html.AntiForgeryToken()
+                                                                <button type="submit" class="btn btn-sm btn-danger-soft">
+                                                                    <i class="bi bi-trash"></i>
+                                                                </button>
+                                                            </form>
+                                                        </permission>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

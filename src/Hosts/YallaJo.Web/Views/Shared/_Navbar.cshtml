@@ -187,27 +187,10 @@
             <ul class="nav flex-row align-items-center list-unstyled ms-xl-auto">
                 @if (CurrentUser.IsAuthenticated)
                 {
-                    @* Notification dropdown START *@
-                    <li class="nav-item ms-3 dropdown">
-                        <a class="btn btn-light btn-round mb-0" href="#" id="notifDropdown" role="button" data-bs-auto-close="outside" data-bs-display="static" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="bi bi-bell fa-fw"></i>
-                        </a>
-                        <span class="badge bg-danger rounded-circle notif-badge animation-blink"></span>
-
-                        <div class="dropdown-menu dropdown-animation dropdown-menu-end dropdown-menu-size-md p-0 shadow-lg border-0" aria-labelledby="notifDropdown">
-                            <div class="card bg-transparent">
-                                <div class="card-header bg-transparent d-flex justify-content-between align-items-center border-bottom">
-                                    <h6 class="m-0">Notifications</h6>
-                                </div>
-                                <div class="card-body p-0">
-                                    <ul class="list-group list-group-flush list-unstyled p-2 mb-0">
-                                        <li class="text-center small text-muted py-3">No new notifications</li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                    </li>
-                    @* Notification dropdown END *@
+                    @* Notification dropdown (shared ViewComponent — real Messaging inbox) *@
+                    <permission require="@WebPermission.Notification.Read">
+                        <vc:notification-bell />
+                    </permission>
 
                     @* Profile dropdown START *@
                     <li class="nav-item ms-3 dropdown">

@@ -4,6 +4,8 @@ using YallaJo.Web.Areas.Accounts.Facades;
 using YallaJo.Web.Areas.Accounts.Models.ChangePassword;
 using YallaJo.Web.Areas.Accounts.Models.Profile;
 using YallaJo.Web.Areas.Accounts.Models.UpdatePhone;
+using YallaJo.Web.Areas.Provider.ApiClients;
+using YallaJo.Web.Areas.Provider.Models;
 using YallaJo.Web.Areas.Provider.Models.Settings;
 using YallaJo.Web.Areas.Provider.Shared;
 using YallaJo.Web.Infrastructure.Mvc;
@@ -17,12 +19,21 @@ public sealed class SettingsController : BaseController
     private readonly ProfileFacade _profile;
     private readonly ChangePasswordFacade _password;
     private readonly UpdatePhoneFacade _phone;
+    private readonly ProviderApiClient _provider;
+    private readonly ILogger<SettingsController> _logger;
 
-    public SettingsController(ProfileFacade profile, ChangePasswordFacade password, UpdatePhoneFacade phone)
+    public SettingsController(
+        ProfileFacade profile,
+        ChangePasswordFacade password,
+        UpdatePhoneFacade phone,
+        ProviderApiClient provider,
+        ILogger<SettingsController> logger)
     {
         _profile = profile;
         _password = password;
         _phone = phone;
+        _provider = provider;
+        _logger = logger;
     }
 
     [HttpGet("provider/settings")]
@@ -39,7 +50,8 @@ public sealed class SettingsController : BaseController
             return View(new ProviderSettingsVm());
         }
 
-        return View(BuildVm(result.Data));
+        var business = await SafeBusinessAsync(ct);
+        return View(BuildVm(result.Data, business));
     }
 
     [HttpPost("provider/settings/profile")]
@@ -117,9 +129,10 @@ public sealed class SettingsController : BaseController
         var result = await _profile.GetAsync(ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
+        var business = await SafeBusinessAsync(ct);
         var vm = result.IsSuccess && result.Data is not null
-            ? BuildVm(result.Data)
-            : new ProviderSettingsVm();
+            ? BuildVm(result.Data, business)
+            : new ProviderSettingsVm { Business = business };
 
         if (profile is not null) vm.Profile = profile;
         if (password is not null) vm.Password = password;
@@ -128,7 +141,7 @@ public sealed class SettingsController : BaseController
         return View(nameof(Index), vm);
     }
 
-    private static ProviderSettingsVm BuildVm(ProfileVm p) => new()
+    private static ProviderSettingsVm BuildVm(ProfileVm p, ProviderBusinessInfoVm? business) => new()
     {
         Email = p.Email,
         DisplayName = string.IsNullOrWhiteSpace(p.DisplayName) ? $"{p.FirstName} {p.LastName}".Trim() : p.DisplayName,
@@ -136,6 +149,50 @@ public sealed class SettingsController : BaseController
         PhoneNumber = p.PhoneNumber,
         Profile = p.Update,
         Phone = new UpdatePhoneVm { PhoneNumber = p.PhoneNumber ?? string.Empty },
+        Business = business,
+    };
+
+    /// <summary>
+    /// Loads the provider business information from <c>GET /api/v1/provider/settings</c>.
+    /// Non-blocking: returns <c>null</c> on any failure (e.g. no application yet) so the
+    /// account-settings forms always render.
+    /// </summary>
+    private async Task<ProviderBusinessInfoVm?> SafeBusinessAsync(CancellationToken ct)
+    {
+        try
+        {
+            var result = await _provider.GetSettingsAsync(ct);
+            if (!result.IsSuccess || result.Data is null) return null;
+
+            var d = result.Data;
+            return new ProviderBusinessInfoVm
+            {
+                BusinessName = d.BusinessName,
+                ContactEmail = d.ContactEmail,
+                ContactPhone = d.ContactPhone,
+                Address = d.Address,
+                Description = d.Description,
+                ProviderType = ProviderTypeLabel(d.ProviderType),
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to load provider business settings");
+            return null;
+        }
+    }
+
+    // Mirrors Accounts.Domain.Enums.ProviderType (byte). The API serializes the enum
+    // as its numeric value for this client (no JsonStringEnumConverter configured).
+    private static string ProviderTypeLabel(int value) => value switch
+    {
+        0 => "Tour Operator",
+        1 => "Independent Guide",
+        2 => "Hotel / Resort",
+        3 => "Activity Center",
+        4 => "Agency",
+        5 => "Business Owner",
+        _ => "Unknown",
     };
 
     private void SetSidebar()
