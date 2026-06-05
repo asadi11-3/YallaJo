@@ -13,11 +13,20 @@ public sealed class PlacesFacade
 
     public PlacesFacade(PlacesApiClient api) => _api = api;
 
-    public async Task<ApiResult<PlacesGridVm>> GetGridAsync(int page, CancellationToken ct = default)
+    public async Task<ApiResult<PlacesGridVm>> GetGridAsync(
+        PlaceFiltersVm filters, int page, CancellationToken ct = default)
     {
         var pageNumber = page < 1 ? 1 : page;
 
-        var result = await _api.ListAsync(pageNumber, PageSize, ct);
+        var result = await _api.ListAsync(
+            pageNumber,
+            PageSize,
+            filters.City,
+            filters.Country,
+            filters.EffectiveRatingMin,
+            filters.HasActiveTours,
+            ct);
+
         if (!result.IsSuccess || result.Data is null)
             return ApiResult<PlacesGridVm>.Fail(result.StatusCode, result.Error ?? "Could not load places.");
 
@@ -48,6 +57,7 @@ public sealed class PlacesFacade
             TotalPages      = data.TotalPages,
             HasPreviousPage = data.HasPreviousPage,
             HasNextPage     = data.HasNextPage,
+            Filters         = filters,
         });
     }
 

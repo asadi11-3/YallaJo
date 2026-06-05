@@ -24,6 +24,46 @@
 <section class="pt-4">
     <div class="container">
 
+        <!-- Filter bar START -->
+        <form method="get" asp-area="Public" asp-controller="Places" asp-action="Index" class="card bg-light p-3 mb-4">
+            <div class="row g-3 align-items-end">
+                <div class="col-sm-6 col-lg-3">
+                    <label for="city" class="form-label small mb-1">City</label>
+                    <input type="text" id="city" name="city" value="@Model.Filters.City" class="form-control" placeholder="e.g. Petra" />
+                </div>
+                <div class="col-sm-6 col-lg-3">
+                    <label for="country" class="form-label small mb-1">Country</label>
+                    <input type="text" id="country" name="country" value="@Model.Filters.Country" class="form-control" placeholder="e.g. Jordan" />
+                </div>
+                <div class="col-sm-6 col-lg-2">
+                    <label for="ratingMin" class="form-label small mb-1">Minimum rating</label>
+                    <select id="ratingMin" name="ratingMin" class="form-select">
+                        <option value="" selected="@(Model.Filters.RatingMin is null or 0)">Any</option>
+                        @for (var r = 1; r <= 4; r++)
+                        {
+                            <option value="@r" selected="@(Model.Filters.RatingMin == r)">@r+</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-sm-6 col-lg-2">
+                    <div class="form-check mt-4">
+                        <input type="checkbox" id="hasActiveTours" name="hasActiveTours" value="true" class="form-check-input" checked="@Model.Filters.HasActiveTours" />
+                        <label for="hasActiveTours" class="form-check-label small">Has active tours</label>
+                    </div>
+                </div>
+                <div class="col-lg-2 d-grid d-sm-flex gap-2">
+                    <button type="submit" class="btn btn-primary mb-0"><i class="bi bi-funnel me-1"></i>Filter</button>
+                    <a asp-area="Public" asp-controller="Places" asp-action="Index" class="btn btn-outline-secondary mb-0">Reset</a>
+                </div>
+            </div>
+            <div class="row mt-2">
+                <div class="col-12">
+                    <span class="form-text">Enter the full city or country name (exact match).</span>
+                </div>
+            </div>
+        </form>
+        <!-- Filter bar END -->
+
         <div class="row mb-4">
             <div class="col-12">
                 <h5 class="mb-0">
@@ -34,12 +74,21 @@
 
         @if (!Model.HasResults)
         {
-            <!-- Empty state -->
+            <!-- Empty state (filter-aware) -->
             <div class="row">
                 <div class="col-12 text-center py-5">
                     <img src="~/assets/images/element/17.svg" class="h-100px mb-3" alt="No places">
-                    <h5 class="mb-1">No places found</h5>
-                    <p class="mb-0">Check back soon.</p>
+                    @if (Model.Filters.HasAnyFilter)
+                    {
+                        <h5 class="mb-1">No places match your filters</h5>
+                        <p class="mb-2">Try removing or changing a filter.</p>
+                        <a asp-area="Public" asp-controller="Places" asp-action="Index" class="btn btn-sm btn-outline-secondary">Reset filters</a>
+                    }
+                    else
+                    {
+                        <h5 class="mb-1">No places found</h5>
+                        <p class="mb-0">Check back soon.</p>
+                    }
                 </div>
             </div>
         }
@@ -112,6 +161,10 @@
                                     <a class="page-link"
                                        asp-area="Public" asp-controller="Places" asp-action="Index"
                                        asp-route-page="@(Model.PageNumber - 1)"
+                                       asp-route-city="@Model.Filters.City"
+                                       asp-route-country="@Model.Filters.Country"
+                                       asp-route-ratingMin="@(Model.Filters.RatingMin is > 0 ? Model.Filters.RatingMin : null)"
+                                       asp-route-hasActiveTours="@(Model.Filters.HasActiveTours ? "true" : null)"
                                        tabindex="-1"><i class="fa-solid fa-angle-left"></i></a>
                                 </li>
                                 @for (var p = 1; p <= Model.TotalPages; p++)
@@ -119,13 +172,21 @@
                                     <li class="page-item mb-0 @(p == Model.PageNumber ? "active" : "")">
                                         <a class="page-link"
                                            asp-area="Public" asp-controller="Places" asp-action="Index"
-                                           asp-route-page="@p">@p</a>
+                                           asp-route-page="@p"
+                                           asp-route-city="@Model.Filters.City"
+                                           asp-route-country="@Model.Filters.Country"
+                                           asp-route-ratingMin="@(Model.Filters.RatingMin is > 0 ? Model.Filters.RatingMin : null)"
+                                           asp-route-hasActiveTours="@(Model.Filters.HasActiveTours ? "true" : null)">@p</a>
                                     </li>
                                 }
                                 <li class="page-item mb-0 @(Model.HasNextPage ? "" : "disabled")">
                                     <a class="page-link"
                                        asp-area="Public" asp-controller="Places" asp-action="Index"
-                                       asp-route-page="@(Model.PageNumber + 1)"><i class="fa-solid fa-angle-right"></i></a>
+                                       asp-route-page="@(Model.PageNumber + 1)"
+                                       asp-route-city="@Model.Filters.City"
+                                       asp-route-country="@Model.Filters.Country"
+                                       asp-route-ratingMin="@(Model.Filters.RatingMin is > 0 ? Model.Filters.RatingMin : null)"
+                                       asp-route-hasActiveTours="@(Model.Filters.HasActiveTours ? "true" : null)"><i class="fa-solid fa-angle-right"></i></a>
                                 </li>
                             </ul>
                         </nav>

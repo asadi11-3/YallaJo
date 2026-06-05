@@ -17,13 +17,25 @@ public sealed class PlacesApiClient
     public Task<ApiResult<PlaceLookupResponse>> GetByIdAsync(Guid id, CancellationToken ct = default)
         => _api.GetAsync<PlaceLookupResponse>($"{Base}/{id}", ct);
     public Task<ApiResult<PaginatedPlacesResponse>> ListAsync(
-        int page, int pageSize, CancellationToken ct = default)
+        int page,
+        int pageSize,
+        string? city = null,
+        string? country = null,
+        int? ratingMin = null,
+        bool hasActiveTours = false,
+        CancellationToken ct = default)
     {
         var query = new Dictionary<string, string?>
         {
             ["page"]     = page.ToString(),
             ["pageSize"] = pageSize.ToString(),
         };
+
+        // Only attach filter params when set, so the API receives a clean query.
+        if (!string.IsNullOrWhiteSpace(city))    query["city"]    = city.Trim();
+        if (!string.IsNullOrWhiteSpace(country)) query["country"] = country.Trim();
+        if (ratingMin is >= 1 and <= 5)          query["ratingMin"] = ratingMin.Value.ToString();
+        if (hasActiveTours)                      query["hasActiveTours"] = "true";
 
         var url = QueryHelpers.AddQueryString(Base, query);
         return _api.GetAsync<PaginatedPlacesResponse>(url, ct);

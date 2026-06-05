@@ -28,7 +28,7 @@ public sealed class PlaceCardVm
         };
 }
 
-/// <summary>The public places browse grid (list + pagination).</summary>
+/// <summary>The public places browse grid (list + pagination + echoed filters).</summary>
 public sealed class PlacesGridVm
 {
     public IReadOnlyList<PlaceCardVm> Places { get; init; } = [];
@@ -39,6 +39,9 @@ public sealed class PlacesGridVm
     public int  TotalPages      { get; init; }
     public bool HasPreviousPage { get; init; }
     public bool HasNextPage     { get; init; }
+
+    /// <summary>Echoed filters — keeps the form populated and pagination links filter-aware.</summary>
+    public PlaceFiltersVm Filters { get; init; } = new();
 
     public bool HasResults => Places.Count > 0;
 }
