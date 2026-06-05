@@ -1,6 +1,5 @@
-namespace YallaJo.Web.Areas.Guide.Models;
+namespace YallaJo.Web.Areas.Guide.Models.Dashboard;
 
-// ---- Profile (GET /guides/me, PUT /guides/{id}) ----
 public sealed class TourGuideProfileResponse
 {
     public Guid Id { get; init; }
@@ -23,6 +22,7 @@ public sealed class TourGuideLanguageResponse
     public Guid LanguageId { get; init; }
     public string? Name { get; init; }
     public string? Code { get; init; }
+    public string? Proficiency { get; init; }
 }
 
 public sealed class TourGuideSpecializationResponse
@@ -32,13 +32,16 @@ public sealed class TourGuideSpecializationResponse
     public string? Icon { get; init; }
 }
 
-public sealed record UpdateTourGuideProfileRequest(
-    string Bio,
-    int YearsOfExperience,
-    bool HasFirstAid,
-    string? MoTALicenseNumber);
+public sealed class GuideEarningsSummaryResponse
+{
+    public decimal TotalEarned { get; init; }
+    public decimal ThisMonth { get; init; }
+    public decimal PendingPayout { get; init; }
+    public decimal CommissionDeducted { get; init; }
+    public decimal NetEarnings { get; init; }
+    public string Currency { get; init; } = string.Empty;
+}
 
-// ---- Tours (GET /guides/{id}/tours) ----
 public sealed class GuideToursResponse
 {
     public IReadOnlyList<GuideTourItemResponse> Items { get; init; } = [];
@@ -56,7 +59,6 @@ public sealed class GuideTourItemResponse
     public DateTime? AssignedAt { get; init; }
 }
 
-// ---- Availability blocks (GET/POST/DELETE /guides/me/availability-blocks) ----
 public sealed class GuideAvailabilityBlockResponse
 {
     public Guid Id { get; init; }
@@ -64,27 +66,4 @@ public sealed class GuideAvailabilityBlockResponse
     public DateOnly EndDate { get; init; }
     public string? Reason { get; init; }
     public DateTime CreatedAt { get; init; }
-}
-
-public sealed record CreateGuideAvailabilityBlockRequest(DateOnly StartDate, DateOnly EndDate, string? Reason);
-
-// ---- Earnings (GET /guides/me/earnings/summary) ----
-public sealed class GuideEarningsSummaryResponse
-{
-    public decimal TotalEarned { get; init; }
-    public decimal ThisMonth { get; init; }
-    public decimal PendingPayout { get; init; }
-    public decimal CommissionDeducted { get; init; }
-    public decimal NetEarnings { get; init; }
-    public string Currency { get; init; } = string.Empty;
-}
-
-// ---- Specializations lookup (GET /content-core/specializations) ----
-public sealed class SpecializationResponse
-{
-    public Guid Id { get; init; }
-    public string Name { get; init; } = string.Empty;
-    public string? Description { get; init; }
-    public string? Icon { get; init; }
-    public bool IsActive { get; init; }
 }

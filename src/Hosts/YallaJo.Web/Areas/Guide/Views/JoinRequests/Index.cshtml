@@ -1,0 +1,124 @@
+@model YallaJo.Web.Areas.Guide.Models.JoinRequests.JoinRequestsVm
+@using YallaJo.Web.Areas.Guide.Models.JoinRequests
+@using YallaJo.Web.Areas.Guide.Shared
+@{
+    ViewData["Title"] = "Join Requests";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var sidebar = ViewBag.Sidebar as GuideSidebarVm ?? new GuideSidebarVm();
+
+    string StatusBadge(JoinRequestStatus status) => status switch
+    {
+        JoinRequestStatus.Approved => "bg-success-soft text-success",
+        JoinRequestStatus.Rejected => "bg-danger-soft text-danger",
+        JoinRequestStatus.Cancelled => "bg-secondary-soft text-secondary",
+        JoinRequestStatus.Expired => "bg-secondary-soft text-secondary",
+        _ => "bg-warning-soft text-warning"
+    };
+}
+
+<partial name="_GuideSidebar" model="sidebar" />
+
+<section class="pt-0">
+    <div class="container vstack gap-4">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                <h1 class="h4 mb-0">Join Requests</h1>
+                <p class="text-body-secondary mb-0">Review requests from travellers who want to join your group tours.</p>
+            </div>
+            @if (Model.PendingCount > 0)
+            {
+                <span class="badge bg-warning-soft text-warning fs-6">@Model.PendingCount pending</span>
+            }
+        </div>
+
+        <div class="card card-body border">
+            @if (!Model.HasRequests)
+            {
+                <div class="text-center text-body-secondary py-5">
+                    <i class="bi bi-people fs-1 d-block mb-2"></i>
+                    No join requests yet.
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th scope="col">Booking</th>
+                                <th scope="col">Participants</th>
+                                <th scope="col">Message</th>
+                                <th scope="col">Status</th>
+                                <th scope="col">Requested</th>
+                                <th scope="col">Expires</th>
+                                <th scope="col" class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var req in Model.Requests)
+                            {
+                                <tr>
+                                    <td><code class="small">@req.TourBookingId.ToString()[..8]</code></td>
+                                    <td>@req.ParticipantCount</td>
+                                    <td class="text-truncate" style="max-width: 240px;">
+                                        @if (string.IsNullOrWhiteSpace(req.Message))
+                                        {
+                                            <span class="text-body-secondary">&mdash;</span>
+                                        }
+                                        else
+                                        {
+                                            @req.Message
+                                        }
+                                        @if (!string.IsNullOrWhiteSpace(req.ResponseMessage))
+                                        {
+                                            <div class="small text-body-secondary mt-1">
+                                                <i class="bi bi-reply"></i> @req.ResponseMessage
+                                            </div>
+                                        }
+                                    </td>
+                                    <td>
+                                        <span class="badge @StatusBadge(req.Status)">@req.Status</span>
+                                        @if (req.IsExpired)
+                                        {
+                                            <span class="badge bg-secondary-soft text-secondary">Expired</span>
+                                        }
+                                    </td>
+                                    <td>@req.CreatedAt.ToString("dd MMM yyyy")</td>
+                                    <td>@req.ExpiresAt.ToString("dd MMM yyyy HH:mm")</td>
+                                    <td class="text-end">
+                                        @if (req.IsPending && !req.IsExpired)
+                                        {
+                                            <div class="d-inline-flex gap-2">
+                                                <form asp-area="Guide" asp-controller="JoinRequests" asp-action="Approve" method="post" class="d-inline">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="RequestId" value="@req.Id" />
+                                                    <button type="submit" class="btn btn-sm btn-success-soft">
+                                                        <i class="bi bi-check-lg"></i> Approve
+                                                    </button>
+                                                </form>
+                                                <form asp-area="Guide" asp-controller="JoinRequests" asp-action="Reject" method="post" class="d-inline"
+                                                      onsubmit="return confirm('Reject this join request?');">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="RequestId" value="@req.Id" />
+                                                    <button type="submit" class="btn btn-sm btn-danger-soft">
+                                                        <i class="bi bi-x-lg"></i> Reject
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-body-secondary small">
+                                                @(req.RespondedAt.HasValue ? req.RespondedAt.Value.ToString("dd MMM yyyy") : "—")
+                                            </span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+</section>

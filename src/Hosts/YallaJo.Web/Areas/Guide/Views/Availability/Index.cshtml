@@ -1,0 +1,116 @@
+@model YallaJo.Web.Areas.Guide.Models.Availability.AvailabilityVm
+@using YallaJo.Web.Areas.Guide.Shared
+@{
+    ViewData["Title"] = "Availability";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var sidebar = ViewBag.Sidebar as GuideSidebarVm ?? new GuideSidebarVm();
+}
+
+<partial name="_GuideSidebar" model="sidebar" />
+
+<section class="pt-0">
+    <div class="container vstack gap-4">
+        <div class="row g-4">
+            <div class="col-12">
+                <div class="d-sm-flex justify-content-between align-items-center">
+                    <h1 class="h3 mb-2 mb-sm-0">Availability</h1>
+                </div>
+                <p class="text-secondary mb-0">Block out dates when you are unavailable to run tours.</p>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-5">
+                <div class="card card-body border">
+                    <h5 class="mb-3">Add unavailable dates</h5>
+                    <form asp-area="Guide" asp-controller="Availability" asp-action="Add" method="post" class="vstack gap-3">
+                        @Html.AntiForgeryToken()
+                        <div asp-validation-summary="ModelOnly" class="text-danger small"></div>
+                        <div>
+                            <label asp-for="Form.StartDate" class="form-label"></label>
+                            <input asp-for="Form.StartDate" class="form-control" type="date" />
+                            <span asp-validation-for="Form.StartDate" class="text-danger small"></span>
+                        </div>
+                        <div>
+                            <label asp-for="Form.EndDate" class="form-label"></label>
+                            <input asp-for="Form.EndDate" class="form-control" type="date" />
+                            <span asp-validation-for="Form.EndDate" class="text-danger small"></span>
+                        </div>
+                        <div>
+                            <label asp-for="Form.Reason" class="form-label"></label>
+                            <input asp-for="Form.Reason" class="form-control" placeholder="e.g. Vacation" />
+                            <span asp-validation-for="Form.Reason" class="text-danger small"></span>
+                        </div>
+                        <div>
+                            <button type="submit" class="btn btn-primary mb-0">
+                                <i class="bi bi-plus-circle me-1"></i>Add block
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="col-lg-7">
+                <div class="card border">
+                    <div class="card-header border-bottom">
+                        <h5 class="mb-0">Blocked dates</h5>
+                    </div>
+                    <div class="card-body">
+                        @if (!Model.HasBlocks)
+                        {
+                            <div class="text-center py-4">
+                                <i class="bi bi-calendar-x display-6 text-secondary"></i>
+                                <p class="text-secondary mt-2 mb-0">No availability blocks yet.</p>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="table-responsive">
+                                <table class="table table-sm align-middle mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>From</th>
+                                            <th>To</th>
+                                            <th>Reason</th>
+                                            <th>Status</th>
+                                            <th class="text-end">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var block in Model.Blocks)
+                                        {
+                                            <tr>
+                                                <td>@block.StartDate.ToString("yyyy-MM-dd")</td>
+                                                <td>@block.EndDate.ToString("yyyy-MM-dd")</td>
+                                                <td>@(string.IsNullOrWhiteSpace(block.Reason) ? "—" : block.Reason)</td>
+                                                <td>
+                                                    @if (block.IsActive)
+                                                    {
+                                                        <span class="badge bg-warning-soft">Active</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="badge bg-secondary-soft">Past</span>
+                                                    }
+                                                </td>
+                                                <td class="text-end">
+                                                    <form asp-area="Guide" asp-controller="Availability" asp-action="Delete"
+                                                          asp-route-blockId="@block.Id" method="post" class="d-inline">
+                                                        @Html.AntiForgeryToken()
+                                                        <button type="submit" class="btn btn-sm btn-outline-danger mb-0">
+                                                            <i class="bi bi-trash"></i>
+                                                        </button>
+                                                    </form>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

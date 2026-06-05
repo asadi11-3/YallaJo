@@ -498,6 +498,31 @@ public static class WebPermission
         public const string Reject  = "Permission.GuideApplication.Reject";
     }
 
+    public static class GuideOffering
+    {
+        public const string Read      = "Permission.GuideOffering.Read";
+        public const string Create    = "Permission.GuideOffering.Create";
+        public const string Update    = "Permission.GuideOffering.Update";
+        public const string Delete    = "Permission.GuideOffering.Delete";
+        public const string Suspend   = "Permission.GuideOffering.Suspend";
+        public const string Reinstate = "Permission.GuideOffering.Reinstate";
+    }
+
+    public static class TourProposal
+    {
+        public const string Read   = "Permission.TourProposal.Read";
+        public const string Create = "Permission.TourProposal.Create";
+        public const string Submit = "Permission.TourProposal.Submit";
+    }
+
+    public static class GuideAgency
+    {
+        public const string Read   = "Permission.GuideAgency.Read";
+        public const string Create = "Permission.GuideAgency.Create";
+        public const string Update = "Permission.GuideAgency.Update";
+        public const string Delete = "Permission.GuideAgency.Delete";
+    }
+
     // ── Business (place-business approval moderation) ───────────────────────────
     // Mirror the ContentPlaces backend permissions (Permission.Business.{Action}).
     public static class Business

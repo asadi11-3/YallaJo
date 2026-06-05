@@ -1,66 +1,73 @@
 using YallaJo.Web.Areas.Guide.ApiClients;
-using YallaJo.Web.Areas.Guide.Models;
+using YallaJo.Web.Areas.Guide.Models.Dashboard;
 using YallaJo.Web.Infrastructure.Api.Contracts;
 
 namespace YallaJo.Web.Areas.Guide.Facades;
 
 public sealed class GuideDashboardFacade
 {
-    private readonly GuideApiClient _api;
+    private readonly DashboardApiClient _api;
 
-    public GuideDashboardFacade(GuideApiClient api) => _api = api;
+    public GuideDashboardFacade(DashboardApiClient api) => _api = api;
 
-    public async Task<ApiResult<GuideDashboardVm>> GetDashboardAsync(CancellationToken ct = default)
+    public async Task<ApiResult<DashboardVm>> GetDashboardAsync(CancellationToken ct = default)
     {
-        var profile = await _api.GetMyProfileAsync(ct);
-        if (profile.IsUnauthorized)
+        var profileResult = await _api.GetMyProfileAsync(ct);
+        if (profileResult.RequireSignOut)
         {
-            return ApiResult<GuideDashboardVm>.ForceSignOut();
+            return ApiResult<DashboardVm>.ForceSignOut();
         }
 
-        // Not a guide (no profile row) -> show empty-state, not an error.
-        if (profile is not { IsSuccess: true, Data: not null })
-        {
-            return ApiResult<GuideDashboardVm>.Ok(new GuideDashboardVm { IsGuide = false });
-        }
-
-        var p = profile.Data;
-        var vm = new GuideDashboardVm
-        {
-            IsGuide = true,
-            DisplayName = p.DisplayName,
-            TourCount = p.TourCount,
-            AverageRating = p.AverageRating,
-            ReviewCount = p.ReviewCount,
-            YearsOfExperience = p.YearsOfExperience,
-        };
+        var profile = profileResult is { IsSuccess: true, Data: not null } ? profileResult.Data : null;
 
         var earningsTask = SafeEarningsAsync(ct);
-        var toursTask = SafeToursAsync(p.Id, ct);
-        await Task.WhenAll(earningsTask, toursTask);
+        var blocksTask = SafeAvailabilityBlocksAsync(ct);
+        var toursTask = profile is null
+            ? Task.FromResult(new GuideToursResponse())
+            : SafeToursAsync(profile.Id, ct);
+
+        await Task.WhenAll(earningsTask, blocksTask, toursTask);
 
         var earnings = earningsTask.Result;
-        if (earnings is not null)
-        {
-            vm.NetEarnings = earnings.NetEarnings;
-            vm.ThisMonth = earnings.ThisMonth;
-            vm.PendingPayout = earnings.PendingPayout;
-            vm.EarningsCurrency = earnings.Currency;
-        }
+        var blocks = blocksTask.Result;
+        var tours = toursTask.Result;
 
-        vm.RecentTours = toursTask.Result
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var activeBlocks = blocks.Count(b => b.EndDate >= today);
+
+        var recentTours = tours.Items
+            .OrderByDescending(t => t.AssignedAt ?? DateTime.MinValue)
             .Take(5)
-            .Select(t => new GuideTourCardVm
+            .Select(t => new RecentTourVm
             {
                 TourId = t.TourId,
                 Title = t.Title,
                 Slug = t.Slug,
                 OfferingStatus = t.OfferingStatus,
-                IsProposer = t.IsProposer,
+                OffersPrivateTour = t.OffersPrivateTour,
+                AssignedAt = t.AssignedAt,
             })
             .ToList();
 
-        return ApiResult<GuideDashboardVm>.Ok(vm);
+        var vm = new DashboardVm
+        {
+            DisplayName = profile?.DisplayName ?? string.Empty,
+            AvatarUrl = profile?.AvatarUrl,
+            AverageRating = profile?.AverageRating ?? 0m,
+            ReviewCount = profile?.ReviewCount ?? 0,
+            TourCount = profile?.TourCount ?? tours.TotalCount,
+            YearsOfExperience = profile?.YearsOfExperience ?? 0,
+            HasFirstAid = profile?.HasFirstAid ?? false,
+            TotalEarned = earnings?.TotalEarned ?? 0m,
+            ThisMonth = earnings?.ThisMonth ?? 0m,
+            PendingPayout = earnings?.PendingPayout ?? 0m,
+            NetEarnings = earnings?.NetEarnings ?? 0m,
+            EarningsCurrency = earnings?.Currency ?? string.Empty,
+            ActiveAvailabilityBlocks = activeBlocks,
+            RecentTours = recentTours,
+        };
+
+        return ApiResult<DashboardVm>.Ok(vm);
     }
 
     private async Task<GuideEarningsSummaryResponse?> SafeEarningsAsync(CancellationToken ct)
@@ -76,16 +83,29 @@ public sealed class GuideDashboardFacade
         }
     }
 
-    private async Task<IReadOnlyList<GuideTourItemResponse>> SafeToursAsync(Guid guideId, CancellationToken ct)
+    private async Task<List<GuideAvailabilityBlockResponse>> SafeAvailabilityBlocksAsync(CancellationToken ct)
     {
         try
         {
-            var result = await _api.GetGuideToursAsync(guideId, 1, 5, ct);
-            return result is { IsSuccess: true, Data: not null } ? result.Data.Items : [];
+            var result = await _api.GetAvailabilityBlocksAsync(ct);
+            return result is { IsSuccess: true, Data: not null } ? result.Data : [];
         }
         catch
         {
             return [];
+        }
+    }
+
+    private async Task<GuideToursResponse> SafeToursAsync(Guid guideId, CancellationToken ct)
+    {
+        try
+        {
+            var result = await _api.GetMyToursAsync(guideId, 1, 5, ct);
+            return result is { IsSuccess: true, Data: not null } ? result.Data : new GuideToursResponse();
+        }
+        catch
+        {
+            return new GuideToursResponse();
         }
     }
 }

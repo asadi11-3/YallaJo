@@ -1,0 +1,177 @@
+@model YallaJo.Web.Areas.Guide.Models.Discounts.DiscountsVm
+@using YallaJo.Web.Areas.Guide.Models.Discounts
+@using YallaJo.Web.Areas.Guide.Shared
+@{
+    ViewData["Title"] = "Discounts";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var sidebar = ViewBag.Sidebar as GuideSidebarVm ?? new GuideSidebarVm();
+
+    string FormatValue(DiscountRowVm d) =>
+        d.DiscountType == GuideDiscountType.Percentage
+            ? $"{d.DiscountValue:0.##}%"
+            : $"{d.DiscountValue:N2} {d.Currency}";
+
+    string DateRange(DiscountRowVm d) =>
+        d.ValidUntil.HasValue
+            ? $"{d.ValidFrom:dd MMM yyyy} – {d.ValidUntil.Value:dd MMM yyyy}"
+            : $"From {d.ValidFrom:dd MMM yyyy}";
+
+    string Usage(DiscountRowVm d) =>
+        d.MaxUsageCount.HasValue ? $"{d.CurrentUsageCount} / {d.MaxUsageCount}" : d.CurrentUsageCount.ToString();
+}
+
+<partial name="_GuideSidebar" model="sidebar" />
+
+<section class="pt-0">
+    <div class="container vstack gap-4">
+        <div class="row g-4">
+            <div class="col-lg-5">
+                <div class="card card-body border h-100">
+                    <h5 class="mb-3"><i class="bi bi-tag me-2"></i>Create discount</h5>
+                    <form asp-area="Guide" asp-controller="Discounts" asp-action="Create" method="post">
+                        @Html.AntiForgeryToken()
+                        <div asp-validation-summary="ModelOnly" class="text-danger small mb-2"></div>
+
+                        <div class="mb-3">
+                            <label asp-for="Form.Name" class="form-label"></label>
+                            <input asp-for="Form.Name" class="form-control" />
+                            <span asp-validation-for="Form.Name" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Form.Description" class="form-label"></label>
+                            <textarea asp-for="Form.Description" class="form-control" rows="2"></textarea>
+                            <span asp-validation-for="Form.Description" class="text-danger small"></span>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-sm-6">
+                                <label asp-for="Form.DiscountType" class="form-label"></label>
+                                <select asp-for="Form.DiscountType" asp-items="Html.GetEnumSelectList<GuideDiscountType>()" class="form-select"></select>
+                                <span asp-validation-for="Form.DiscountType" class="text-danger small"></span>
+                            </div>
+                            <div class="col-sm-6">
+                                <label asp-for="Form.DiscountValue" class="form-label"></label>
+                                <input asp-for="Form.DiscountValue" type="number" step="0.01" min="0" class="form-control" />
+                                <span asp-validation-for="Form.DiscountValue" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mt-0">
+                            <div class="col-sm-6">
+                                <label asp-for="Form.Currency" class="form-label"></label>
+                                <input asp-for="Form.Currency" class="form-control text-uppercase" maxlength="3" />
+                                <span asp-validation-for="Form.Currency" class="text-danger small"></span>
+                            </div>
+                            <div class="col-sm-6">
+                                <label asp-for="Form.MaxUsageCount" class="form-label"></label>
+                                <input asp-for="Form.MaxUsageCount" type="number" min="1" class="form-control" />
+                                <span asp-validation-for="Form.MaxUsageCount" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mt-0">
+                            <div class="col-sm-6">
+                                <label asp-for="Form.ValidFrom" class="form-label"></label>
+                                <input asp-for="Form.ValidFrom" type="date" class="form-control" />
+                                <span asp-validation-for="Form.ValidFrom" class="text-danger small"></span>
+                            </div>
+                            <div class="col-sm-6">
+                                <label asp-for="Form.ValidUntil" class="form-label"></label>
+                                <input asp-for="Form.ValidUntil" type="date" class="form-control" />
+                                <span asp-validation-for="Form.ValidUntil" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3 mt-3">
+                            <label asp-for="Form.TourId" class="form-label"></label>
+                            <input asp-for="Form.TourId" class="form-control" placeholder="Leave empty to apply to all your tours" />
+                            <span asp-validation-for="Form.TourId" class="text-danger small"></span>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary mt-2">
+                            <i class="bi bi-plus-lg me-1"></i>Create discount
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="col-lg-7">
+                <div class="card card-body border h-100">
+                    <h5 class="mb-3"><i class="bi bi-percent me-2"></i>My discounts</h5>
+
+                    @if (!Model.HasDiscounts)
+                    {
+                        <div class="text-center text-body-secondary py-4">
+                            <i class="bi bi-tag fs-1 d-block mb-2"></i>
+                            You haven't created any discounts yet.
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Type</th>
+                                        <th>Value</th>
+                                        <th>Valid</th>
+                                        <th>Usage</th>
+                                        <th>Status</th>
+                                        <th class="text-end">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var d in Model.Discounts)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <div class="fw-semibold">@d.Name</div>
+                                                @if (!string.IsNullOrWhiteSpace(d.Description))
+                                                {
+                                                    <div class="small text-body-secondary text-truncate" style="max-width: 220px;">@d.Description</div>
+                                                }
+                                            </td>
+                                            <td>@(d.DiscountType == GuideDiscountType.Percentage ? "Percentage" : "Fixed amount")</td>
+                                            <td>@FormatValue(d)</td>
+                                            <td class="small">@DateRange(d)</td>
+                                            <td>@Usage(d)</td>
+                                            <td>
+                                                @if (d.IsActive)
+                                                {
+                                                    <span class="badge bg-success-soft">Active</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-secondary-soft">Inactive</span>
+                                                }
+                                            </td>
+                                            <td class="text-end">
+                                                @if (d.IsActive)
+                                                {
+                                                    <form asp-area="Guide" asp-controller="Discounts" asp-action="Deactivate"
+                                                          asp-route-id="@d.Id" method="post" class="d-inline"
+                                                          onsubmit="return confirm('Deactivate this discount?');">
+                                                        @Html.AntiForgeryToken()
+                                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                            <i class="bi bi-x-circle"></i>
+                                                        </button>
+                                                    </form>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-body-secondary small">—</span>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
