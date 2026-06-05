@@ -64,7 +64,12 @@ public static class PlacesMapper
         Id              = r.Id,
         Name            = r.Name,
         Slug            = r.Slug,
-        PlaceType       = r.PlaceType,
+        // The API sends PlaceType as its enum name (string). Parse it back into
+        // the strongly-typed PlaceTypeOption the edit-form <select> binds to;
+        // fall back to the default if the API ever sends an unknown value.
+        PlaceType       = Enum.TryParse<PlaceTypeOption>(r.PlaceType, ignoreCase: true, out var pt)
+            ? pt
+            : PlaceTypeOption.Attraction,
         Latitude        = r.Latitude,
         Longitude       = r.Longitude,
         Description     = r.Description,
