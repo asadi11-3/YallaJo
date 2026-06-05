@@ -1,0 +1,161 @@
+@model YallaJo.Web.Areas.Public.Models.Places.PlaceDetailVm
+@{
+    ViewData["Title"] = string.IsNullOrWhiteSpace(Model.MetaTitle) ? Model.Name : Model.MetaTitle;
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<!-- ======================= Place detail banner START -->
+<section class="pt-4">
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <nav aria-label="breadcrumb" class="mb-2">
+                    <ol class="breadcrumb breadcrumb-dots mb-0">
+                        <li class="breadcrumb-item"><a asp-area="Public" asp-controller="Places" asp-action="Index">Places</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">@Model.Name</li>
+                    </ol>
+                </nav>
+
+                <div class="d-sm-flex justify-content-sm-between align-items-start">
+                    <div>
+                        <h1 class="fs-2 mb-2">@Model.Name</h1>
+                        <ul class="nav nav-divider align-items-center small mb-0">
+                            @if (!string.IsNullOrWhiteSpace(Model.PlaceType))
+                            {
+                                <li class="nav-item"><span class="badge text-bg-light">@Model.PlaceType</span></li>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(Model.LocationLabel))
+                            {
+                                <li class="nav-item"><i class="bi bi-geo-alt me-1"></i>@Model.LocationLabel</li>
+                            }
+                            <li class="nav-item">
+                                <i class="bi bi-star-fill text-warning me-1"></i>@Model.AverageRating.ToString("0.0")
+                                <span class="text-body">(@Model.ReviewCount review@(Model.ReviewCount == 1 ? "" : "s"))</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="mt-3 mt-sm-0">
+                        @if (Model.IsFeatured)
+                        {
+                            <span class="badge text-bg-dark">Featured</span>
+                        }
+                        @if (Model.IsVerified)
+                        {
+                            <span class="badge text-bg-success"><i class="bi bi-patch-check-fill me-1"></i>Verified</span>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- ======================= Place detail banner END -->
+
+<!-- ======================= Place detail body START -->
+<section class="pt-4 pb-5">
+    <div class="container">
+        <div class="row g-4">
+            <!-- Main column -->
+            <div class="col-lg-8">
+                <div class="card shadow mb-4">
+                    <img src="@Model.ImageUrl" class="card-img-top" alt="@Model.Name" style="height:360px;object-fit:cover;">
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(Model.Description))
+                {
+                    <div class="card shadow">
+                        <div class="card-header border-bottom"><h5 class="mb-0">About</h5></div>
+                        <div class="card-body">
+                            <p class="mb-0">@Model.Description</p>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- Sidebar -->
+            <div class="col-lg-4">
+                <div class="card shadow mb-4">
+                    <div class="card-header border-bottom"><h5 class="mb-0">Location</h5></div>
+                    <div class="card-body">
+                        <ul class="list-group list-group-borderless">
+                            @if (!string.IsNullOrWhiteSpace(Model.Address))
+                            {
+                                <li class="list-group-item d-flex">
+                                    <i class="bi bi-pin-map-fill text-primary me-2"></i>
+                                    <span>@Model.Address</span>
+                                </li>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(Model.LocationLabel))
+                            {
+                                <li class="list-group-item d-flex">
+                                    <i class="bi bi-geo-alt text-primary me-2"></i>
+                                    <span>@Model.LocationLabel@(string.IsNullOrWhiteSpace(Model.PostalCode) ? "" : $" {Model.PostalCode}")</span>
+                                </li>
+                            }
+                            <li class="list-group-item d-flex">
+                                <i class="bi bi-compass text-primary me-2"></i>
+                                <span class="text-body">@Model.Latitude.ToString("0.0000"), @Model.Longitude.ToString("0.0000")</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                @if (Model.HasContact)
+                {
+                    <div class="card shadow mb-4">
+                        <div class="card-header border-bottom"><h5 class="mb-0">Contact</h5></div>
+                        <div class="card-body">
+                            <ul class="list-group list-group-borderless">
+                                @if (!string.IsNullOrWhiteSpace(Model.Phone))
+                                {
+                                    <li class="list-group-item d-flex">
+                                        <i class="bi bi-telephone text-primary me-2"></i>
+                                        <span>@Model.Phone</span>
+                                    </li>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(Model.Email))
+                                {
+                                    <li class="list-group-item d-flex">
+                                        <i class="bi bi-envelope text-primary me-2"></i>
+                                        <span>@Model.Email</span>
+                                    </li>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(Model.Website))
+                                {
+                                    <li class="list-group-item d-flex">
+                                        <i class="bi bi-globe text-primary me-2"></i>
+                                        <a href="@Model.Website" target="_blank" rel="noopener noreferrer">@Model.Website</a>
+                                    </li>
+                                }
+                            </ul>
+                        </div>
+                    </div>
+                }
+
+                @if (Model.HasAccessibility)
+                {
+                    <div class="card shadow">
+                        <div class="card-header border-bottom"><h5 class="mb-0">Accessibility</h5></div>
+                        <div class="card-body">
+                            <ul class="list-group list-group-borderless mb-0">
+                                @if (Model.IsWheelchairAccessible)
+                                {
+                                    <li class="list-group-item"><i class="bi bi-check-circle-fill text-success me-2"></i>Wheelchair accessible</li>
+                                }
+                                @if (Model.HasAudioGuide)
+                                {
+                                    <li class="list-group-item"><i class="bi bi-check-circle-fill text-success me-2"></i>Audio guide</li>
+                                }
+                                @if (Model.HasBrailleSignage)
+                                {
+                                    <li class="list-group-item"><i class="bi bi-check-circle-fill text-success me-2"></i>Braille signage</li>
+                                }
+                            </ul>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</section>
+<!-- ======================= Place detail body END -->

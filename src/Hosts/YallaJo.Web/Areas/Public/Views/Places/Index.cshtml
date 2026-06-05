@@ -1,0 +1,138 @@
+@model YallaJo.Web.Areas.Public.Models.Places.PlacesGridVm
+@{
+    ViewData["Title"] = "Explore Places";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var rangeStart = Model.TotalCount == 0 ? 0 : ((Model.PageNumber - 1) * Model.PageSize) + 1;
+    var rangeEnd = Math.Min(Model.PageNumber * Model.PageSize, Model.TotalCount);
+}
+
+<!-- ======================= Page banner START -->
+<section class="pt-3">
+    <div class="container">
+        <div class="row">
+            <div class="col-12 text-center">
+                <h1 class="h2 mb-2">Explore Places</h1>
+                <p class="mb-0">Discover destinations and points of interest.</p>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- ======================= Page banner END -->
+
+<!-- ======================= Places grid START -->
+<section class="pt-4">
+    <div class="container">
+
+        <div class="row mb-4">
+            <div class="col-12">
+                <h5 class="mb-0">
+                    Showing @rangeStart-@rangeEnd of @Model.TotalCount place@(Model.TotalCount == 1 ? "" : "s")
+                </h5>
+            </div>
+        </div>
+
+        @if (!Model.HasResults)
+        {
+            <!-- Empty state -->
+            <div class="row">
+                <div class="col-12 text-center py-5">
+                    <img src="~/assets/images/element/17.svg" class="h-100px mb-3" alt="No places">
+                    <h5 class="mb-1">No places found</h5>
+                    <p class="mb-0">Check back soon.</p>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="row g-4">
+                @foreach (var place in Model.Places)
+                {
+                    <!-- Card item START -->
+                    <div class="col-md-6 col-xl-4">
+                        <div class="card card-hover-shadow pb-0 h-100">
+                            <!-- Image + overlay -->
+                            <div class="position-relative">
+                                <img src="@place.ImageUrl" class="card-img-top" alt="@place.Name" style="height:220px;object-fit:cover;">
+                                <div class="card-img-overlay d-flex flex-column p-3 z-index-1">
+                                    <div>
+                                        @if (place.IsFeatured)
+                                        {
+                                            <span class="badge text-bg-dark">Featured</span>
+                                        }
+                                        @if (place.IsVerified)
+                                        {
+                                            <span class="badge text-bg-success"><i class="bi bi-patch-check-fill me-1"></i>Verified</span>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Card body -->
+                            <div class="card-body px-3">
+                                <h5 class="card-title mb-1">
+                                    <a asp-area="Public" asp-controller="Places" asp-action="Details" asp-route-slug="@place.Slug" class="stretched-link">@place.Name</a>
+                                </h5>
+                                <ul class="nav nav-divider mb-0 small">
+                                    @if (!string.IsNullOrWhiteSpace(place.PlaceType))
+                                    {
+                                        <li class="nav-item"><span class="badge text-bg-light">@place.PlaceType</span></li>
+                                    }
+                                    @if (!string.IsNullOrWhiteSpace(place.LocationLabel))
+                                    {
+                                        <li class="nav-item"><i class="bi bi-geo-alt me-1"></i>@place.LocationLabel</li>
+                                    }
+                                </ul>
+                                <ul class="nav nav-divider mb-0 small mt-1">
+                                    <li class="nav-item">
+                                        <i class="bi bi-star-fill text-warning me-1"></i>@place.AverageRating.ToString("0.0")
+                                        <span class="text-body">(@place.ReviewCount)</span>
+                                    </li>
+                                </ul>
+                            </div>
+
+                            <!-- Card footer -->
+                            <div class="card-footer pt-0">
+                                <a asp-area="Public" asp-controller="Places" asp-action="Details" asp-route-slug="@place.Slug" class="btn btn-sm btn-primary mb-0">View Details</a>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Card item END -->
+                }
+            </div>
+
+            <!-- Pagination -->
+            @if (Model.TotalPages > 1)
+            {
+                <div class="row">
+                    <div class="col-12">
+                        <nav class="mt-4 d-flex justify-content-center" aria-label="Places pagination">
+                            <ul class="pagination pagination-primary-soft d-inline-block d-md-flex rounded mb-0">
+                                <li class="page-item mb-0 @(Model.HasPreviousPage ? "" : "disabled")">
+                                    <a class="page-link"
+                                       asp-area="Public" asp-controller="Places" asp-action="Index"
+                                       asp-route-page="@(Model.PageNumber - 1)"
+                                       tabindex="-1"><i class="fa-solid fa-angle-left"></i></a>
+                                </li>
+                                @for (var p = 1; p <= Model.TotalPages; p++)
+                                {
+                                    <li class="page-item mb-0 @(p == Model.PageNumber ? "active" : "")">
+                                        <a class="page-link"
+                                           asp-area="Public" asp-controller="Places" asp-action="Index"
+                                           asp-route-page="@p">@p</a>
+                                    </li>
+                                }
+                                <li class="page-item mb-0 @(Model.HasNextPage ? "" : "disabled")">
+                                    <a class="page-link"
+                                       asp-area="Public" asp-controller="Places" asp-action="Index"
+                                       asp-route-page="@(Model.PageNumber + 1)"><i class="fa-solid fa-angle-right"></i></a>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</section>
+<!-- ======================= Places grid END -->
