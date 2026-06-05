@@ -15,14 +15,14 @@ public sealed class ToursController : BaseController
     public ToursController(ToursFacade tours) => _tours = tours;
 
     [HttpGet("tours")]
-    public async Task<IActionResult> Index(int page = 1, string? sort = null, string? q = null, CancellationToken ct = default)
+    public async Task<IActionResult> Index(int page = 1, string? sort = null, string? q = null, Guid? placeId = null, CancellationToken ct = default)
     {
-        var result = await _tours.GetGridAsync(page, sort, q, ct);
+        var result = await _tours.GetGridAsync(page, sort, q, placeId, ct);
 
         if (!result.IsSuccess || result.Data is null)
         {
             SetError(result.Error);
-            return View(new TourGridVm { Sort = ToursFacade.NormalizeSort(sort), Query = q });
+            return View(new TourGridVm { Sort = ToursFacade.NormalizeSort(sort), Query = q, PlaceId = placeId });
         }
 
         return View(result.Data);

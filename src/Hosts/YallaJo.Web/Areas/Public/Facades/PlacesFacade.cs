@@ -1,6 +1,7 @@
 using YallaJo.Web.Areas.Public.ApiClients;
 using YallaJo.Web.Areas.Public.Helpers;
 using YallaJo.Web.Areas.Public.Models.Places;
+using YallaJo.Web.Areas.Public.Models.Tours;
 using YallaJo.Web.Infrastructure.Api.Contracts;
 
 namespace YallaJo.Web.Areas.Public.Facades;
@@ -9,9 +10,17 @@ public sealed class PlacesFacade
 {
     private const int PageSize = 20;
 
-    private readonly PlacesApiClient _api;
+    // Small, fixed number of related tours shown on the place detail page.
+    private const int RelatedToursCount = 4;
 
-    public PlacesFacade(PlacesApiClient api) => _api = api;
+    private readonly PlacesApiClient _api;
+    private readonly ToursApiClient _toursApi;
+
+    public PlacesFacade(PlacesApiClient api, ToursApiClient toursApi)
+    {
+        _api = api;
+        _toursApi = toursApi;
+    }
 
     public async Task<ApiResult<PlacesGridVm>> GetGridAsync(
         PlaceFiltersVm filters, int page, CancellationToken ct = default)
@@ -71,6 +80,7 @@ public sealed class PlacesFacade
         var vm = new PlaceDetailVm
         {
             Id                     = d.Id,
+            PlaceId                = d.Id,
             Name                   = d.Name,
             Slug                   = d.Slug,
             ImageUrl               = PublicImagePlaceholder.ResolvePlaceImage(d.Id),
@@ -95,6 +105,42 @@ public sealed class PlacesFacade
             MetaTitle              = d.MetaTitle,
         };
 
+        // CP-3c: hydrate a small set of related (approved) tours for this place.
+        // Tolerant — a failed/empty fetch leaves RelatedTours empty and never
+        // breaks the place detail page.
+        vm.RelatedTours = await GetRelatedToursAsync(d.Id, ct);
+
         return ApiResult<PlaceDetailVm>.Ok(vm);
+    }
+
+    /// <summary>
+    /// Loads up to <see cref="RelatedToursCount"/> approved public tours linked
+    /// to the place via <c>GET /api/v1/tours?placeId=...</c>. Never throws to the
+    /// caller (except cancellation) — returns an empty list on any failure.
+    /// </summary>
+    private async Task<IReadOnlyList<TourCardVm>> GetRelatedToursAsync(Guid placeId, CancellationToken ct)
+    {
+        try
+        {
+            var result = await _toursApi.GetToursAsync(
+                page: 1, pageSize: RelatedToursCount, sort: "popularity_desc", placeId: placeId, ct: ct);
+
+            if (result is { IsSuccess: true, Data: { } data })
+            {
+                return data.Items
+                    .Select(t => TourGridMapper.ToCardVm(t, PublicImagePlaceholder.ResolveTourImage(t.Id)))
+                    .ToList();
+            }
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch
+        {
+            // tolerate related-tours hydration failure
+        }
+
+        return [];
     }
 }

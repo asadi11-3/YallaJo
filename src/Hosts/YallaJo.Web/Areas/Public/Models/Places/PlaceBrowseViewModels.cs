@@ -1,3 +1,5 @@
+using YallaJo.Web.Areas.Public.Models.Tours;
+
 namespace YallaJo.Web.Areas.Public.Models.Places;
 
 /// <summary>A single place card on the public browse grid.</summary>
@@ -50,6 +52,7 @@ public sealed class PlacesGridVm
 public sealed class PlaceDetailVm
 {
     public Guid    Id                     { get; init; }
+    public Guid    PlaceId                { get; init; }
     public string  Name                   { get; init; } = string.Empty;
     public string  Slug                   { get; init; } = string.Empty;
     public string? ImageUrl               { get; init; }
@@ -72,6 +75,12 @@ public sealed class PlaceDetailVm
     public bool    HasAudioGuide          { get; init; }
     public bool    HasBrailleSignage      { get; init; }
     public string? MetaTitle              { get; init; }
+
+    // CP-3c: related public (approved) tours for this place. Reuses the public
+    // TourCardVm so the tour-card styling is shared. Set by the facade; tolerant
+    // of a failed related-tours fetch (stays empty, never breaks the page).
+    public IReadOnlyList<TourCardVm> RelatedTours { get; set; } = [];
+    public bool HasRelatedTours => RelatedTours.Count > 0;
 
     public string? LocationLabel => PlaceCardVm.FormatLocation(City, Country);
     public bool HasContact => !string.IsNullOrWhiteSpace(Phone)

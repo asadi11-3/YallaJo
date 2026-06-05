@@ -11,9 +11,14 @@ public sealed class ToursApiClient
     public ToursApiClient(IApiClient api) => _api = api;
 
     public Task<ApiResult<PaginatedToursResponse>> GetToursAsync(
-        int page, int pageSize, string sort, CancellationToken ct = default)
-        => _api.GetAsync<PaginatedToursResponse>(
-            $"/api/v1/tours?page={page}&pageSize={pageSize}&sort={Uri.EscapeDataString(sort)}", ct);
+        int page, int pageSize, string sort, Guid? placeId = null, CancellationToken ct = default)
+    {
+        var url = $"/api/v1/tours?page={page}&pageSize={pageSize}&sort={Uri.EscapeDataString(sort)}";
+        if (placeId is { } id)
+            url += $"&placeId={id}";
+
+        return _api.GetAsync<PaginatedToursResponse>(url, ct);
+    }
 
     public Task<ApiResult<List<CategoryResponse>>> GetCategoriesAsync(CancellationToken ct = default)
         => _api.GetAsync<List<CategoryResponse>>("/api/v1/content-core/categories", ct);

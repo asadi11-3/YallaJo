@@ -159,3 +159,60 @@
     </div>
 </section>
 <!-- ======================= Place detail body END -->
+
+<!-- ======================= Related tours START -->
+<section class="pb-5">
+    <div class="container">
+        <div class="d-sm-flex justify-content-sm-between align-items-center mb-3">
+            <h4 class="mb-0">Tours in @Model.Name</h4>
+            @if (Model.HasRelatedTours)
+            {
+                <a asp-area="Public" asp-controller="Tours" asp-action="Index" asp-route-placeId="@Model.PlaceId" class="btn btn-sm btn-outline-primary mb-0">
+                    View all tours in this place
+                </a>
+            }
+        </div>
+
+        @if (!Model.HasRelatedTours)
+        {
+            <p class="text-body mb-0">No tours are currently available for this place.</p>
+        }
+        else
+        {
+            <div class="row g-4">
+                @foreach (var tour in Model.RelatedTours)
+                {
+                    <div class="col-md-6 col-xl-3">
+                        <div class="card card-hover-shadow pb-0 h-100">
+                            <div class="position-relative">
+                                <img src="@tour.ImageUrl" class="card-img-top" alt="@tour.Name" style="height:180px;object-fit:cover;">
+                                @if (tour.IsFeatured)
+                                {
+                                    <div class="card-img-overlay d-flex flex-column p-3 z-index-1">
+                                        <div><span class="badge text-bg-dark">Featured</span></div>
+                                    </div>
+                                }
+                            </div>
+                            <div class="card-body px-3">
+                                <h6 class="card-title mb-1">
+                                    <a asp-area="Public" asp-controller="Tours" asp-action="Detail" asp-route-slug="@tour.Slug" class="stretched-link">@tour.Name</a>
+                                </h6>
+                                <ul class="nav nav-divider mb-0 small">
+                                    <li class="nav-item">
+                                        <i class="bi bi-star-fill text-warning me-1"></i>@tour.AverageRating.ToString("0.0")
+                                        <span class="text-body">(@tour.ReviewCount)</span>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="card-footer pt-0">
+                                <span class="fw-normal text-success">@(tour.Currency is { Length: > 0 } ? $"{tour.EffectivePrice:N0} {tour.Currency}" : tour.EffectivePrice.ToString("N0"))</span>
+                                <small>/per person</small>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</section>
+<!-- ======================= Related tours END -->

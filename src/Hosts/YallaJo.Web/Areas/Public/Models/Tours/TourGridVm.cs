@@ -48,5 +48,14 @@ public sealed class TourGridVm
     public string? Query { get; init; }
     public string Sort { get; init; } = "popularity_desc";
 
+    // CP-3c: optional place filter (driven by /tours?placeId=...). The label is
+    // hydrated from the place name when possible; falls back to a generic label.
+    public Guid? PlaceId { get; init; }
+    public string? PlaceFilterName { get; init; }
+    public bool HasPlaceFilter => PlaceId is not null;
+    public string PlaceFilterLabel => string.IsNullOrWhiteSpace(PlaceFilterName)
+        ? "Tours for selected place"
+        : $"Tours in {PlaceFilterName}";
+
     public bool HasResults => Tours.Count > 0;
 }

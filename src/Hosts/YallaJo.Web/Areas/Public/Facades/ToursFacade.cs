@@ -28,15 +28,18 @@ public sealed class ToursFacade
         => sort is not null && AllowedSorts.Contains(sort) ? sort.ToLowerInvariant() : "popularity_desc";
 
     public async Task<ApiResult<TourGridVm>> GetGridAsync(
-        int page, string? sort, string? query, CancellationToken ct = default)
+        int page, string? sort, string? query, Guid? placeId = null, CancellationToken ct = default)
     {
         const int pageSize = 12;
         var pageNumber = page < 1 ? 1 : page;
         var normalizedSort = NormalizeSort(sort);
 
-        var toursTask = _api.GetToursAsync(pageNumber, pageSize, normalizedSort, ct);
+        var toursTask = _api.GetToursAsync(pageNumber, pageSize, normalizedSort, placeId, ct);
         var categoriesTask = _api.GetCategoriesAsync(ct);
-        await Task.WhenAll(toursTask, categoriesTask);
+        // CP-3c: when a place filter is active, resolve its name for the heading
+        // label. Tolerant — a failed/missing place just yields the generic label.
+        var placeNameTask = SafePlaceNameAsync(placeId, ct);
+        await Task.WhenAll(toursTask, categoriesTask, placeNameTask);
 
         var toursResult = await toursTask;
         var categoriesResult = await categoriesTask;
@@ -69,6 +72,8 @@ public sealed class ToursFacade
             HasNextPage = page0.HasNextPage,
             Query = query,
             Sort = normalizedSort,
+            PlaceId = placeId,
+            PlaceFilterName = placeNameTask.Result,
         });
     }
 
@@ -271,6 +276,14 @@ public sealed class ToursFacade
         }
 
         return null;
+    }
+
+    // CP-3c: resolve only the place name for the /tours filter heading. Reuses
+    // the tolerant SafePlaceAsync (returns null on missing/deleted/failed lookup).
+    private async Task<string?> SafePlaceNameAsync(Guid? placeId, CancellationToken ct)
+    {
+        var place = await SafePlaceAsync(placeId, ct);
+        return string.IsNullOrWhiteSpace(place?.Name) ? null : place!.Name;
     }
 
     private static async Task<List<T>> SafeListAsync<T>(Func<Task<ApiResult<List<T>>>> call)
