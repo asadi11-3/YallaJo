@@ -104,6 +104,10 @@ public static class WebPermission
         public const string Create = "Permission.Place.Create";
         public const string Update = "Permission.Place.Update";
         public const string Delete = "Permission.Place.Delete";
+        // Owner-scoped delete — mirrors the backend DELETE /api/v1/places/{id}
+        // endpoint which is gated on Permission.Place.DeleteOwn (admins satisfy
+        // it via the handler's admin-tier / Place.DeleteAny override).
+        public const string DeleteOwn = "Permission.Place.DeleteOwn";
         public const string SoftDelete = "Permission.Place.SoftDelete";
     }
 
