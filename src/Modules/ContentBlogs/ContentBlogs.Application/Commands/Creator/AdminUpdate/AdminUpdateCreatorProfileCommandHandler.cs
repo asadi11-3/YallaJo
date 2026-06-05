@@ -34,9 +34,6 @@ public sealed class AdminUpdateCreatorProfileCommandHandler(
             if (updateResult.IsFailure)
                 return updateResult;
 
-            if (request.CoverImageUrl is not null)
-                profile.UpdateCoverImage(request.CoverImageUrl);
-
             if (!string.IsNullOrEmpty(request.Slug) && request.Slug != profile.Slug)
             {
                 if (await profileRepository.IsSlugTakenAsync(request.Slug, profile.Id, cancellationToken).ConfigureAwait(false))

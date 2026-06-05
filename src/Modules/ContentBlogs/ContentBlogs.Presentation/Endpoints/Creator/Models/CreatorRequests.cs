@@ -60,7 +60,6 @@ public sealed record AdminUpdateCreatorProfileRequest(
     string DisplayName,
     string? Bio,
     string? AvatarUrl,
-    string? CoverImageUrl,
     string? Slug);
 
 public sealed record AdminDeleteCreatorProfileRequest(string Reason);

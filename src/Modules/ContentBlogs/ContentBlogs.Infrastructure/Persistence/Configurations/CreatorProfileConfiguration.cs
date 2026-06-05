@@ -32,10 +32,6 @@ public class CreatorProfileConfiguration : IEntityTypeConfiguration<CreatorProfi
             .IsRequired(false)
             .HasMaxLength(500);
 
-        builder.Property(x => x.CoverImageUrl)
-            .IsRequired(false)
-            .HasMaxLength(500);
-
         builder.Property(x => x.TrustTier)
             .IsRequired()
             .HasConversion<int>();

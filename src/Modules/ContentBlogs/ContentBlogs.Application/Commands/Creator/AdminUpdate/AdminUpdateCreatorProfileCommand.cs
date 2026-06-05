@@ -7,5 +7,4 @@ public sealed record AdminUpdateCreatorProfileCommand(
     string DisplayName,
     string? Bio,
     string? AvatarUrl,
-    string? CoverImageUrl,
     string? Slug) : ICommand;
