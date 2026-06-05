@@ -1,111 +1,140 @@
-@using YallaJo.Web.Areas.Guide.Models
+@model YallaJo.Web.Areas.Guide.Models.Dashboard.DashboardVm
 @using YallaJo.Web.Areas.Guide.Shared
-@model GuideDashboardVm
 @{
     ViewData["Title"] = "Guide Dashboard";
     Layout = "~/Views/Shared/_Layout.cshtml";
     var sidebar = ViewBag.Sidebar as GuideSidebarVm ?? new GuideSidebarVm();
-
-    string Money(decimal amount, string? currency) =>
-        string.IsNullOrWhiteSpace(currency) ? amount.ToString("N2") : $"{amount:N2} {currency}";
+    string Money(decimal a, string? c) => string.IsNullOrWhiteSpace(c) ? a.ToString("N0") : $"{a:N0} {c}";
 }
 
 <partial name="_GuideSidebar" model="sidebar" />
 
 <section class="pt-0">
     <div class="container vstack gap-4">
-        <h1 class="fs-4 mb-0"><i class="bi bi-house-door me-2"></i>Dashboard</h1>
-
-        @if (!Model.IsGuide)
-        {
-            <div class="card card-body border text-center py-5">
-                <img src="~/assets/images/element/17.svg" class="h-100px mb-3" alt="">
-                <h5>You are not a registered guide yet</h5>
-                <p class="text-body mb-0">Your guide profile is not active. Once a guide profile is created for your account, your tours, schedule and earnings will appear here.</p>
-            </div>
-        }
-        else
-        {
-            <div class="row g-4">
-                <div class="col-sm-6 col-xl-3">
-                    <div class="card card-body border">
-                        <div class="d-flex align-items-center">
-                            <div class="icon-xl bg-success bg-opacity-10 rounded-3 text-success"><i class="bi bi-signpost-2 fs-5"></i></div>
-                            <div class="ms-3">
-                                <h4 class="mb-0">@Model.TourCount</h4>
-                                <span class="small">Assigned tours</span>
-                            </div>
+        <div class="row g-4">
+            <div class="col-sm-6 col-xl-3">
+                <div class="card card-body border h-100">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1 text-body-secondary">Net Earnings</h6>
+                            <h4 class="mb-0">@Money(Model.NetEarnings, Model.EarningsCurrency)</h4>
                         </div>
-                    </div>
-                </div>
-                <div class="col-sm-6 col-xl-3">
-                    <div class="card card-body border">
-                        <div class="d-flex align-items-center">
-                            <div class="icon-xl bg-warning bg-opacity-10 rounded-3 text-warning"><i class="bi bi-star fs-5"></i></div>
-                            <div class="ms-3">
-                                <h4 class="mb-0">@Model.AverageRating.ToString("0.0") <span class="small text-body">(@Model.ReviewCount)</span></h4>
-                                <span class="small">Average rating</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-sm-6 col-xl-3">
-                    <div class="card card-body border">
-                        <div class="d-flex align-items-center">
-                            <div class="icon-xl bg-info bg-opacity-10 rounded-3 text-info"><i class="bi bi-graph-up-arrow fs-5"></i></div>
-                            <div class="ms-3">
-                                <h4 class="mb-0">@Money(Model.NetEarnings, Model.EarningsCurrency)</h4>
-                                <span class="small">Net earnings</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-sm-6 col-xl-3">
-                    <div class="card card-body border">
-                        <div class="d-flex align-items-center">
-                            <div class="icon-xl bg-primary bg-opacity-10 rounded-3 text-primary"><i class="bi bi-hourglass-split fs-5"></i></div>
-                            <div class="ms-3">
-                                <h4 class="mb-0">@Money(Model.PendingPayout, Model.EarningsCurrency)</h4>
-                                <span class="small">Pending payout</span>
-                            </div>
+                        <div class="icon-xl bg-success-soft text-success rounded-circle">
+                            <i class="bi bi-wallet2"></i>
                         </div>
                     </div>
                 </div>
             </div>
-
-            <div class="card border">
-                <div class="card-header border-bottom d-flex justify-content-between align-items-center">
-                    <h5 class="card-header-title mb-0">Recent tours</h5>
-                    <a asp-area="Guide" asp-controller="MyTours" asp-action="Index" class="btn btn-sm btn-primary-soft mb-0">View all</a>
+            <div class="col-sm-6 col-xl-3">
+                <div class="card card-body border h-100">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1 text-body-secondary">This Month</h6>
+                            <h4 class="mb-0">@Money(Model.ThisMonth, Model.EarningsCurrency)</h4>
+                        </div>
+                        <div class="icon-xl bg-primary-soft text-primary rounded-circle">
+                            <i class="bi bi-calendar-month"></i>
+                        </div>
+                    </div>
                 </div>
-                <div class="card-body">
+            </div>
+            <div class="col-sm-6 col-xl-3">
+                <div class="card card-body border h-100">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1 text-body-secondary">Pending Payout</h6>
+                            <h4 class="mb-0">@Money(Model.PendingPayout, Model.EarningsCurrency)</h4>
+                        </div>
+                        <div class="icon-xl bg-warning-soft text-warning rounded-circle">
+                            <i class="bi bi-hourglass-split"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-xl-3">
+                <div class="card card-body border h-100">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1 text-body-secondary">Tours</h6>
+                            <h4 class="mb-0">@Model.TourCount</h4>
+                        </div>
+                        <div class="icon-xl bg-info-soft text-info rounded-circle">
+                            <i class="bi bi-map"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-xl-4">
+                <div class="card card-body border h-100">
+                    <h6 class="mb-3">Profile</h6>
+                    <ul class="list-unstyled mb-0 vstack gap-2">
+                        <li class="d-flex justify-content-between">
+                            <span class="text-body-secondary">Rating</span>
+                            <span><i class="bi bi-star-fill text-warning me-1"></i>@Model.AverageRating.ToString("0.0") (@Model.ReviewCount)</span>
+                        </li>
+                        <li class="d-flex justify-content-between">
+                            <span class="text-body-secondary">Experience</span>
+                            <span>@Model.YearsOfExperience yrs</span>
+                        </li>
+                        <li class="d-flex justify-content-between">
+                            <span class="text-body-secondary">First Aid</span>
+                            <span>@(Model.HasFirstAid ? "Yes" : "No")</span>
+                        </li>
+                        <li class="d-flex justify-content-between">
+                            <span class="text-body-secondary">Active Availability Blocks</span>
+                            <span>@Model.ActiveAvailabilityBlocks</span>
+                        </li>
+                    </ul>
+                    <a asp-area="Guide" asp-controller="Profile" asp-action="Index" class="btn btn-sm btn-primary-soft mt-3">
+                        <i class="bi bi-pencil me-1"></i>Edit Profile
+                    </a>
+                </div>
+            </div>
+
+            <div class="col-xl-8">
+                <div class="card card-body border h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="mb-0">Recent Tours</h6>
+                        <a asp-area="Guide" asp-controller="MyTours" asp-action="Index" class="btn btn-sm btn-link">View all</a>
+                    </div>
                     @if (Model.RecentTours.Count == 0)
                     {
-                        <div class="text-center py-4">
-                            <img src="~/assets/images/element/17.svg" class="h-80px mb-2" alt="">
-                            <p class="mb-0">No tours assigned to you yet.</p>
+                        <div class="text-center text-body-secondary py-4">
+                            <i class="bi bi-map fs-1 d-block mb-2"></i>
+                            No tours yet.
                         </div>
                     }
                     else
                     {
-                        <ul class="list-group list-group-borderless">
-                            @foreach (var tour in Model.RecentTours)
-                            {
-                                <li class="list-group-item d-flex justify-content-between align-items-center px-0">
-                                    <div>
-                                        <h6 class="mb-0">@tour.Title</h6>
-                                        @if (tour.IsProposer)
-                                        {
-                                            <span class="small text-body">Proposed by you</span>
-                                        }
-                                    </div>
-                                    <span class="badge text-bg-light">@(tour.OfferingStatus ?? "Assigned")</span>
-                                </li>
-                            }
-                        </ul>
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Tour</th>
+                                        <th>Offering</th>
+                                        <th>Private</th>
+                                        <th>Assigned</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var t in Model.RecentTours)
+                                    {
+                                        <tr>
+                                            <td>@t.Title</td>
+                                            <td>@(string.IsNullOrWhiteSpace(t.OfferingStatus) ? "-" : t.OfferingStatus)</td>
+                                            <td>@(t.OffersPrivateTour ? "Yes" : "No")</td>
+                                            <td>@(t.AssignedAt?.ToString("yyyy-MM-dd") ?? "-")</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
                     }
                 </div>
             </div>
-        }
+        </div>
     </div>
 </section>

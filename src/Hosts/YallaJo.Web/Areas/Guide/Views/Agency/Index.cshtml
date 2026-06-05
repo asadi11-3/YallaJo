@@ -1,0 +1,130 @@
+@model YallaJo.Web.Areas.Guide.Models.Agency.AgencyVm
+@using YallaJo.Web.Areas.Guide.Shared
+@using YallaJo.Web.Areas.Guide.Models.Agency
+@{
+    ViewData["Title"] = "My Agency";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var sidebar = ViewBag.Sidebar as GuideSidebarVm ?? new GuideSidebarVm();
+    string StatusBadge(AgencyInvitationStatus s) => s switch
+    {
+        AgencyInvitationStatus.Accepted => "success",
+        AgencyInvitationStatus.Declined => "danger",
+        AgencyInvitationStatus.Expired => "secondary",
+        _ => "warning"
+    };
+}
+
+<partial name="_GuideSidebar" model="sidebar" />
+
+<section class="pt-0">
+    <div class="container vstack gap-4">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <h1 class="h3 mb-0">My Agency</h1>
+            @if (Model.PendingCount > 0)
+            {
+                <span class="badge bg-warning">@Model.PendingCount pending</span>
+            }
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-5">
+                <div class="vstack gap-4">
+                    <div class="card card-body border">
+                        <h5 class="mb-3">Apply to an agency</h5>
+                        <form asp-action="Apply" method="post">
+                            @Html.AntiForgeryToken()
+                            <div asp-validation-summary="ModelOnly" class="text-danger small mb-2"></div>
+                            <div class="mb-3">
+                                <label asp-for="ApplyForm.AgencyUserId" class="form-label"></label>
+                                <input asp-for="ApplyForm.AgencyUserId" class="form-control" placeholder="00000000-0000-0000-0000-000000000000" />
+                                <span asp-validation-for="ApplyForm.AgencyUserId" class="text-danger small"></span>
+                            </div>
+                            <div class="mb-3">
+                                <label asp-for="ApplyForm.Message" class="form-label"></label>
+                                <textarea asp-for="ApplyForm.Message" class="form-control" rows="3"></textarea>
+                                <span asp-validation-for="ApplyForm.Message" class="text-danger small"></span>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Submit application</button>
+                        </form>
+                    </div>
+
+                    <div class="card card-body border">
+                        <h5 class="mb-3">Leave my current agency</h5>
+                        <p class="text-body-secondary small">If you are affiliated with an agency, you can end that affiliation here.</p>
+                        <form asp-action="Leave" method="post" onsubmit="return confirm('Are you sure you want to leave your current agency?');">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-outline-danger">Leave agency</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-7">
+                <div class="card card-body border h-100">
+                    <h5 class="mb-3">Agency invitations</h5>
+                    @if (!Model.HasInvitations)
+                    {
+                        <div class="text-center text-body-secondary py-4">
+                            <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                            You have no agency invitations.
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Agency</th>
+                                        <th>Commission</th>
+                                        <th>Message</th>
+                                        <th>Status</th>
+                                        <th>Expires</th>
+                                        <th class="text-end">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var inv in Model.Invitations)
+                                    {
+                                        <tr>
+                                            <td><code>@inv.AgencyUserId.ToString()[..8]</code></td>
+                                            <td>@inv.ProposedCommissionPercentage.ToString("0.##")%</td>
+                                            <td>@(string.IsNullOrWhiteSpace(inv.Message) ? "—" : inv.Message)</td>
+                                            <td>
+                                                <span class="badge bg-@(StatusBadge(inv.Status))-soft">@inv.Status</span>
+                                                @if (inv.IsExpired)
+                                                {
+                                                    <span class="badge bg-secondary-soft">Expired</span>
+                                                }
+                                            </td>
+                                            <td>@inv.ExpiresAt.ToString("dd MMM yyyy HH:mm")</td>
+                                            <td class="text-end">
+                                                @if (inv.IsPending && !inv.IsExpired)
+                                                {
+                                                    <div class="d-inline-flex gap-2">
+                                                        <form asp-action="Accept" asp-route-id="@inv.Id" method="post" class="d-inline">
+                                                            @Html.AntiForgeryToken()
+                                                            <button type="submit" class="btn btn-sm btn-success-soft">Accept</button>
+                                                        </form>
+                                                        <form asp-action="Decline" asp-route-id="@inv.Id" method="post" class="d-inline">
+                                                            @Html.AntiForgeryToken()
+                                                            <button type="submit" class="btn btn-sm btn-danger-soft">Decline</button>
+                                                        </form>
+                                                    </div>
+                                                }
+                                                else
+                                                {
+                                                    @(inv.RespondedAt?.ToString("dd MMM yyyy") ?? "—")
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

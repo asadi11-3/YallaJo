@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using YallaJo.Web.Areas.Guide.Facades;
-using YallaJo.Web.Areas.Guide.Models;
+using YallaJo.Web.Areas.Guide.Models.Profile;
 using YallaJo.Web.Areas.Guide.Shared;
 using YallaJo.Web.Infrastructure.Mvc;
 
@@ -11,6 +11,8 @@ namespace YallaJo.Web.Areas.Guide.Controllers;
 [Authorize]
 public sealed class ProfileController : BaseController
 {
+    private const long MaxImageBytes = 5 * 1024 * 1024; // 5 MB
+
     private readonly GuideProfileFacade _profile;
 
     public ProfileController(GuideProfileFacade profile) => _profile = profile;
@@ -28,30 +30,23 @@ public sealed class ProfileController : BaseController
         if (!result.IsSuccess || result.Data is null)
         {
             SetError(result.Error);
-            return View(new GuideProfileVm());
+            return View(new ProfileVm());
         }
 
         return View(result.Data);
     }
 
-    [HttpPost("guide/profile")]
+    [HttpPost("guide/profile/update")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Update(EditGuideProfileVm form, Guid guideId, CancellationToken ct = default)
+    public async Task<IActionResult> Update(ProfileFormVm form, CancellationToken ct = default)
     {
         SetSidebar();
-
-        if (guideId == Guid.Empty)
-        {
-            SetError("We could not resolve your guide profile. Please reload and try again.");
-            return RedirectToAction(nameof(Index));
-        }
-
         if (!ModelState.IsValid)
         {
             return await ReloadAsync(form, ct);
         }
 
-        var result = await _profile.UpdateAsync(guideId, form, ct);
+        var result = await _profile.UpdateProfileAsync(form, ct);
         if (GuardSignOut(result) is { } signOut)
         {
             return signOut;
@@ -71,17 +66,107 @@ public sealed class ProfileController : BaseController
         return RedirectToAction(nameof(Index));
     }
 
-    private async Task<IActionResult> ReloadAsync(EditGuideProfileVm form, CancellationToken ct)
+    [HttpPost("guide/profile/languages")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> AddLanguage(Guid languageId, string proficiency, CancellationToken ct = default)
     {
-        var result = await _profile.GetAsync(ct);
+        var result = await _profile.AddLanguageAsync(languageId, proficiency, ct);
+        return HandleMutation(result, "Language added.");
+    }
+
+    [HttpPost("guide/profile/languages/delete")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> RemoveLanguage(Guid languageId, CancellationToken ct = default)
+    {
+        var result = await _profile.RemoveLanguageAsync(languageId, ct);
+        return HandleMutation(result, "Language removed.");
+    }
+
+    [HttpPost("guide/profile/specializations")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> AddSpecialization(Guid specializationId, CancellationToken ct = default)
+    {
+        var result = await _profile.AddSpecializationAsync(specializationId, ct);
+        return HandleMutation(result, "Specialization added.");
+    }
+
+    [HttpPost("guide/profile/avatar")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> UploadAvatar(IFormFile? file, CancellationToken ct = default)
+    {
+        if (!TryValidateImage(file, out var error))
+        {
+            SetError(error);
+            return RedirectToAction(nameof(Index));
+        }
+
+        await using var stream = file!.OpenReadStream();
+        var result = await _profile.UploadAvatarAsync(stream, file.FileName, file.ContentType, ct);
+        return HandleMutation(result, "Avatar updated.");
+    }
+
+    [HttpPost("guide/profile/cover")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> UploadCover(IFormFile? file, CancellationToken ct = default)
+    {
+        if (!TryValidateImage(file, out var error))
+        {
+            SetError(error);
+            return RedirectToAction(nameof(Index));
+        }
+
+        await using var stream = file!.OpenReadStream();
+        var result = await _profile.UploadCoverAsync(stream, file.FileName, file.ContentType, ct);
+        return HandleMutation(result, "Cover image updated.");
+    }
+
+    private IActionResult HandleMutation(
+        Infrastructure.Api.Contracts.ApiResult result, string successMessage)
+    {
         if (GuardSignOut(result) is { } signOut)
         {
             return signOut;
         }
 
-        var vm = result is { IsSuccess: true, Data: not null } ? result.Data : new GuideProfileVm();
-        vm.Edit = form;
-        return View(nameof(Index), vm);
+        SetFlash(result, successMessage);
+        return RedirectToAction(nameof(Index));
+    }
+
+    private async Task<IActionResult> ReloadAsync(ProfileFormVm form, CancellationToken ct)
+    {
+        var result = await _profile.GetAsync(ct);
+        if (result is { IsSuccess: true, Data: not null })
+        {
+            var vm = result.Data;
+            vm.Form = form; // preserve user input + surface ModelState errors
+            return View(nameof(Index), vm);
+        }
+
+        return View(nameof(Index), new ProfileVm { Form = form });
+    }
+
+    private static bool TryValidateImage(IFormFile? file, out string error)
+    {
+        if (file is null || file.Length == 0)
+        {
+            error = "Please choose an image to upload.";
+            return false;
+        }
+
+        if (file.Length > MaxImageBytes)
+        {
+            error = "Image must be 5 MB or smaller.";
+            return false;
+        }
+
+        if (!file.ContentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase))
+        {
+            error = "Only image files are allowed.";
+            return false;
+        }
+
+        error = string.Empty;
+        return true;
     }
 
     private void SetSidebar()

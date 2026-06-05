@@ -1,0 +1,95 @@
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using YallaJo.Web.Areas.Guide.Facades;
+using YallaJo.Web.Areas.Guide.Models.Agency;
+using YallaJo.Web.Areas.Guide.Shared;
+using YallaJo.Web.Infrastructure.Mvc;
+
+namespace YallaJo.Web.Areas.Guide.Controllers;
+
+[Area("Guide")]
+[Authorize]
+public sealed class AgencyController : BaseController
+{
+    private readonly GuideAgencyFacade _facade;
+
+    public AgencyController(GuideAgencyFacade facade) => _facade = facade;
+
+    [HttpGet("guide/agency")]
+    public async Task<IActionResult> Index(CancellationToken ct = default)
+    {
+        SetSidebar();
+        var result = await _facade.GetAsync(ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+        if (!result.IsSuccess || result.Data is null)
+        {
+            SetError(result.Error);
+            return View(new AgencyVm());
+        }
+
+        return View(result.Data);
+    }
+
+    [HttpPost("guide/agency/apply")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Apply(ApplyToAgencyFormVm form, CancellationToken ct = default)
+    {
+        SetSidebar();
+        if (!ModelState.IsValid) return await ReloadAsync(form, ct);
+
+        var result = await _facade.ApplyAsync(form, ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+        if (!result.IsSuccess)
+        {
+            if (!ApplyValidationErrors(result)) SetError(result.Error);
+            return await ReloadAsync(form, ct);
+        }
+
+        SetSuccess("Application submitted to the agency.");
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost("guide/agency/invitations/{id:guid}/accept")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Accept(Guid id, CancellationToken ct = default)
+    {
+        var result = await _facade.AcceptAsync(id, ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+        SetFlash(result, "Invitation accepted.");
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost("guide/agency/invitations/{id:guid}/decline")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Decline(Guid id, CancellationToken ct = default)
+    {
+        var result = await _facade.DeclineAsync(id, ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+        SetFlash(result, "Invitation declined.");
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost("guide/agency/leave")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Leave(CancellationToken ct = default)
+    {
+        var result = await _facade.LeaveAsync(ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+        SetFlash(result, "You have left the agency.");
+        return RedirectToAction(nameof(Index));
+    }
+
+    private async Task<IActionResult> ReloadAsync(ApplyToAgencyFormVm form, CancellationToken ct)
+    {
+        var result = await _facade.GetAsync(ct);
+        var vm = result.IsSuccess && result.Data is not null ? result.Data : new AgencyVm();
+        vm.ApplyForm = form;
+        return View(nameof(Index), vm);
+    }
+
+    private void SetSidebar()
+    {
+        ViewData["GuideNav"] = "Agency";
+        ViewBag.Sidebar = new GuideSidebarVm { DisplayName = User.Identity?.Name ?? "Guide" };
+    }
+}

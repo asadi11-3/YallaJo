@@ -1,0 +1,195 @@
+@model YallaJo.Web.Areas.Guide.Models.Analytics.AnalyticsVm
+@using YallaJo.Web.Areas.Guide.Shared
+@{
+    ViewData["Title"] = "Analytics";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var sidebar = ViewBag.Sidebar as GuideSidebarVm ?? new GuideSidebarVm();
+
+    string Pct(decimal value) => $"{value:N1}%";
+    int Bar(int value, int max) => max <= 0 ? 0 : (int)Math.Round(value * 100.0 / max);
+}
+
+<partial name="_GuideSidebar" model="sidebar" />
+
+<section class="pt-0">
+    <div class="container vstack gap-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="h4 mb-0">Analytics</h1>
+                <p class="text-body-secondary mb-0">An overview of your booking performance.</p>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-sm-6 col-xl-3">
+                <div class="card card-body border h-100">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1 text-body-secondary">Total Bookings</h6>
+                            <h4 class="mb-0">@Model.TotalBookings.ToString("N0")</h4>
+                        </div>
+                        <div class="icon-xl bg-primary-soft text-primary rounded-circle">
+                            <i class="bi bi-calendar-check"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-xl-3">
+                <div class="card card-body border h-100">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1 text-body-secondary">Upcoming</h6>
+                            <h4 class="mb-0">@Model.UpcomingBookings.ToString("N0")</h4>
+                        </div>
+                        <div class="icon-xl bg-info-soft text-info rounded-circle">
+                            <i class="bi bi-hourglass-split"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-xl-3">
+                <div class="card card-body border h-100">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1 text-body-secondary">Completed</h6>
+                            <h4 class="mb-0">@Model.CompletedBookings.ToString("N0")</h4>
+                        </div>
+                        <div class="icon-xl bg-success-soft text-success rounded-circle">
+                            <i class="bi bi-check2-circle"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-xl-3">
+                <div class="card card-body border h-100">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1 text-body-secondary">Cancellation Rate</h6>
+                            <h4 class="mb-0">@Pct(Model.CancellationRate)</h4>
+                        </div>
+                        <div class="icon-xl bg-warning-soft text-warning rounded-circle">
+                            <i class="bi bi-x-circle"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-12 col-xl-7">
+                <div class="card border h-100">
+                    <div class="card-header border-bottom">
+                        <h5 class="mb-0">Booking Trends</h5>
+                    </div>
+                    <div class="card-body">
+                        @if (Model.HasBookingTrends)
+                        {
+                            <div class="vstack gap-3">
+                                @foreach (var trend in Model.BookingTrends)
+                                {
+                                    <div>
+                                        <div class="d-flex justify-content-between mb-1">
+                                            <span class="small text-body-secondary">@trend.Period</span>
+                                            <span class="small fw-semibold">@trend.BookingCount.ToString("N0")</span>
+                                        </div>
+                                        <div class="progress" style="height: 8px;">
+                                            <div class="progress-bar bg-primary"
+                                                 role="progressbar"
+                                                 style="width: @(Bar(trend.BookingCount, Model.MaxTrendCount))%"
+                                                 aria-valuenow="@trend.BookingCount"
+                                                 aria-valuemin="0"
+                                                 aria-valuemax="@Model.MaxTrendCount"></div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="text-center text-body-secondary py-4">
+                                <i class="bi bi-bar-chart fs-1 d-block mb-2"></i>
+                                No booking trend data yet.
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-xl-5">
+                <div class="card border h-100">
+                    <div class="card-header border-bottom">
+                        <h5 class="mb-0">Peak Days</h5>
+                    </div>
+                    <div class="card-body">
+                        @if (Model.HasPeakDays)
+                        {
+                            <div class="vstack gap-3">
+                                @foreach (var day in Model.PeakDays)
+                                {
+                                    <div>
+                                        <div class="d-flex justify-content-between mb-1">
+                                            <span class="small text-body-secondary">@day.DayOfWeek</span>
+                                            <span class="small fw-semibold">@day.BookingCount.ToString("N0")</span>
+                                        </div>
+                                        <div class="progress" style="height: 8px;">
+                                            <div class="progress-bar bg-info"
+                                                 role="progressbar"
+                                                 style="width: @(Bar(day.BookingCount, Model.MaxPeakDayCount))%"
+                                                 aria-valuenow="@day.BookingCount"
+                                                 aria-valuemin="0"
+                                                 aria-valuemax="@Model.MaxPeakDayCount"></div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="text-center text-body-secondary py-4">
+                                <i class="bi bi-calendar-week fs-1 d-block mb-2"></i>
+                                No peak day data yet.
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card border">
+            <div class="card-header border-bottom">
+                <h5 class="mb-0">Popular Tours</h5>
+            </div>
+            <div class="card-body">
+                @if (Model.HasPopularTours)
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Tour</th>
+                                    <th scope="col" class="text-end">Bookings</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var tour in Model.PopularTours)
+                                {
+                                    <tr>
+                                        <td>@tour.TourName</td>
+                                        <td class="text-end fw-semibold">@tour.BookingCount.ToString("N0")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center text-body-secondary py-4">
+                        <i class="bi bi-trophy fs-1 d-block mb-2"></i>
+                        No popular tour data yet.
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</section>

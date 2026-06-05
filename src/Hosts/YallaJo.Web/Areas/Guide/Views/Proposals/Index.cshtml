@@ -1,0 +1,171 @@
+@model YallaJo.Web.Areas.Guide.Models.Proposals.ProposalsVm
+@using YallaJo.Web.Areas.Guide.Shared
+@{
+    ViewData["Title"] = "My Proposals";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var sidebar = ViewBag.Sidebar as GuideSidebarVm ?? new GuideSidebarVm();
+
+    string Money(decimal amount, string? currency)
+        => string.IsNullOrWhiteSpace(currency) ? amount.ToString("N2") : $"{amount:N2} {currency}";
+
+    string StatusBadge(string status) => status.ToLowerInvariant() switch
+    {
+        "approved" => "bg-success-soft text-success",
+        "rejected" => "bg-danger-soft text-danger",
+        "submitted" or "pendingreview" or "pending" => "bg-warning-soft text-warning",
+        "draft" => "bg-secondary-soft text-secondary",
+        _ => "bg-secondary-soft text-secondary"
+    };
+
+    bool CanSubmit(string status)
+        => status.Equals("draft", StringComparison.OrdinalIgnoreCase);
+}
+
+<partial name="_GuideSidebar" model="sidebar" />
+
+<section class="pt-0">
+    <div class="container vstack gap-4">
+        <div>
+            <h1 class="h4 mb-0">My Proposals</h1>
+            <p class="text-body-secondary mb-0">Propose a brand-new tour. Drafts can be submitted for admin review.</p>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-5">
+                <div class="card card-body border h-100">
+                    <h5 class="mb-3">New proposal</h5>
+                    <form asp-area="Guide" asp-controller="Proposals" asp-action="Create" method="post" class="vstack gap-3">
+                        @Html.AntiForgeryToken()
+                        <div asp-validation-summary="ModelOnly" class="text-danger small"></div>
+
+                        <div>
+                            <label asp-for="Form.Title" class="form-label"></label>
+                            <input asp-for="Form.Title" class="form-control" />
+                            <span asp-validation-for="Form.Title" class="text-danger small"></span>
+                        </div>
+
+                        <div>
+                            <label asp-for="Form.ShortDescription" class="form-label"></label>
+                            <input asp-for="Form.ShortDescription" class="form-control" />
+                            <span asp-validation-for="Form.ShortDescription" class="text-danger small"></span>
+                        </div>
+
+                        <div>
+                            <label asp-for="Form.Description" class="form-label"></label>
+                            <textarea asp-for="Form.Description" class="form-control" rows="4"></textarea>
+                            <span asp-validation-for="Form.Description" class="text-danger small"></span>
+                        </div>
+
+                        <div>
+                            <label asp-for="Form.PlaceId" class="form-label"></label>
+                            <input asp-for="Form.PlaceId" class="form-control" placeholder="Place ID (GUID)" />
+                            <span asp-validation-for="Form.PlaceId" class="text-danger small"></span>
+                        </div>
+
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <label asp-for="Form.DurationMinutes" class="form-label"></label>
+                                <input asp-for="Form.DurationMinutes" type="number" class="form-control" />
+                                <span asp-validation-for="Form.DurationMinutes" class="text-danger small"></span>
+                            </div>
+                            <div class="col-6">
+                                <label asp-for="Form.MaxGroupSize" class="form-label"></label>
+                                <input asp-for="Form.MaxGroupSize" type="number" class="form-control" />
+                                <span asp-validation-for="Form.MaxGroupSize" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="row g-2">
+                            <div class="col-8">
+                                <label asp-for="Form.BasePrice" class="form-label"></label>
+                                <input asp-for="Form.BasePrice" type="number" step="0.01" class="form-control" />
+                                <span asp-validation-for="Form.BasePrice" class="text-danger small"></span>
+                            </div>
+                            <div class="col-4">
+                                <label asp-for="Form.Currency" class="form-label"></label>
+                                <input asp-for="Form.Currency" class="form-control text-uppercase" maxlength="3" />
+                                <span asp-validation-for="Form.Currency" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="form-check">
+                            <input asp-for="Form.RequestExclusive" class="form-check-input" />
+                            <label asp-for="Form.RequestExclusive" class="form-check-label"></label>
+                        </div>
+
+                        <div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-lightbulb"></i> Create draft
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="col-lg-7">
+                <div class="card card-body border h-100">
+                    <h5 class="mb-3">Submitted proposals</h5>
+                    @if (!Model.HasProposals)
+                    {
+                        <div class="text-center text-body-secondary py-5">
+                            <i class="bi bi-lightbulb fs-1 d-block mb-2"></i>
+                            You have no proposals yet. Create a draft to get started.
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">Title</th>
+                                        <th scope="col">Base price</th>
+                                        <th scope="col">Status</th>
+                                        <th scope="col">Created</th>
+                                        <th scope="col" class="text-end">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var proposal in Model.Proposals)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <div class="fw-medium">@proposal.Title</div>
+                                                @if (!string.IsNullOrWhiteSpace(proposal.ShortDescription))
+                                                {
+                                                    <div class="small text-body-secondary text-truncate" style="max-width: 260px;">
+                                                        @proposal.ShortDescription
+                                                    </div>
+                                                }
+                                            </td>
+                                            <td>@Money(proposal.BasePrice, proposal.Currency)</td>
+                                            <td><span class="badge @StatusBadge(proposal.Status)">@proposal.Status</span></td>
+                                            <td>@proposal.CreatedAt.ToString("dd MMM yyyy")</td>
+                                            <td class="text-end">
+                                                @if (CanSubmit(proposal.Status))
+                                                {
+                                                    <form asp-area="Guide" asp-controller="Proposals" asp-action="Submit"
+                                                          asp-route-id="@proposal.Id" method="post" class="d-inline"
+                                                          onsubmit="return confirm('Submit this proposal for admin review?');">
+                                                        @Html.AntiForgeryToken()
+                                                        <button type="submit" class="btn btn-sm btn-primary-soft">
+                                                            <i class="bi bi-send"></i> Submit
+                                                        </button>
+                                                    </form>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-body-secondary small">&mdash;</span>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

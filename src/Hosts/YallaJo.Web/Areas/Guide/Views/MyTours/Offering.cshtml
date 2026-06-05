@@ -1,0 +1,269 @@
+@model YallaJo.Web.Areas.Guide.Models.MyTours.OfferingDetailVm
+@using YallaJo.Web.Areas.Guide.Models.MyTours
+@using YallaJo.Web.Areas.Guide.Shared
+@{
+    ViewData["Title"] = "Manage Offering";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var sidebar = ViewBag.Sidebar as GuideSidebarVm ?? new GuideSidebarVm();
+    string Money(decimal a, string? c) => string.IsNullOrWhiteSpace(c) ? a.ToString("N2") : $"{a:N2} {c}";
+}
+
+<partial name="_GuideSidebar" model="sidebar" />
+
+<section class="pt-0">
+    <div class="container vstack gap-4">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                <a class="btn btn-sm btn-link px-0 text-secondary"
+                   asp-area="Guide" asp-controller="MyTours" asp-action="Index">
+                    <i class="bi bi-arrow-left me-1"></i>Back to my tours
+                </a>
+                <h1 class="h4 mb-0">Manage Offering</h1>
+                <p class="text-secondary mb-0">
+                    Status: <span class="badge bg-info-soft text-info">@Model.Status</span>
+                    @if (Model.IsProposer)
+                    {
+                        <span class="badge bg-primary-soft text-primary ms-1">Proposer</span>
+                    }
+                </p>
+            </div>
+        </div>
+
+        <!-- Schedules -->
+        <div class="card border">
+            <div class="card-header bg-transparent">
+                <h2 class="h6 mb-0"><i class="bi bi-calendar-week me-2"></i>Schedules</h2>
+            </div>
+            <div class="card-body vstack gap-3">
+                @if (Model.Schedules.Count == 0)
+                {
+                    <p class="text-secondary mb-0">No schedules yet.</p>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Day</th>
+                                    <th>Start</th>
+                                    <th>End</th>
+                                    <th>Active</th>
+                                    <th class="text-end">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var s in Model.Schedules)
+                                {
+                                    <tr>
+                                        <td>@OfferingDetailVm.DayName(s.DayOfWeek)</td>
+                                        <td>@s.StartTime</td>
+                                        <td>@(string.IsNullOrWhiteSpace(s.EndTime) ? "—" : s.EndTime)</td>
+                                        <td>
+                                            @if (s.IsActive)
+                                            {
+                                                <i class="bi bi-check-circle-fill text-success"></i>
+                                            }
+                                            else
+                                            {
+                                                <i class="bi bi-dash-circle text-secondary"></i>
+                                            }
+                                        </td>
+                                        <td class="text-end">
+                                            <form method="post" class="d-inline"
+                                                  asp-area="Guide" asp-controller="MyTours" asp-action="DeleteSchedule"
+                                                  asp-route-tourId="@Model.TourId" asp-route-scheduleId="@s.Id">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="btn btn-sm btn-danger-soft">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+
+                <form method="post" class="row g-2 align-items-end"
+                      asp-area="Guide" asp-controller="MyTours" asp-action="AddSchedule"
+                      asp-route-tourId="@Model.TourId">
+                    @Html.AntiForgeryToken()
+                    <div class="col-sm-3">
+                        <label class="form-label" asp-for="ScheduleForm.DayOfWeek"></label>
+                        <select class="form-select" asp-for="ScheduleForm.DayOfWeek"
+                                asp-items="@(new SelectList(OfferingDetailVm.DayOptions, nameof(DayOptionVm.Value), nameof(DayOptionVm.Label)))"></select>
+                    </div>
+                    <div class="col-sm-3">
+                        <label class="form-label" asp-for="ScheduleForm.StartTime"></label>
+                        <input type="time" class="form-control" asp-for="ScheduleForm.StartTime" />
+                    </div>
+                    <div class="col-sm-3">
+                        <label class="form-label" asp-for="ScheduleForm.EndTime"></label>
+                        <input type="time" class="form-control" asp-for="ScheduleForm.EndTime" />
+                    </div>
+                    <div class="col-sm-3">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-plus-lg me-1"></i>Add schedule
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Pricing tiers -->
+        <div class="card border">
+            <div class="card-header bg-transparent">
+                <h2 class="h6 mb-0"><i class="bi bi-cash-coin me-2"></i>Pricing tiers</h2>
+            </div>
+            <div class="card-body vstack gap-3">
+                @if (Model.PricingTiers.Count == 0)
+                {
+                    <p class="text-secondary mb-0">No pricing tiers yet.</p>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Price</th>
+                                    <th>Participants</th>
+                                    <th>Active</th>
+                                    <th class="text-end">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var p in Model.PricingTiers)
+                                {
+                                    <tr>
+                                        <td>
+                                            <span class="fw-semibold">@p.Name</span>
+                                            @if (!string.IsNullOrWhiteSpace(p.Description))
+                                            {
+                                                <div class="text-secondary small">@p.Description</div>
+                                            }
+                                        </td>
+                                        <td>@Money(p.Price, p.Currency)</td>
+                                        <td>@p.MinParticipants&ndash;@p.MaxParticipants</td>
+                                        <td>
+                                            @if (p.IsActive)
+                                            {
+                                                <i class="bi bi-check-circle-fill text-success"></i>
+                                            }
+                                            else
+                                            {
+                                                <i class="bi bi-dash-circle text-secondary"></i>
+                                            }
+                                        </td>
+                                        <td class="text-end">
+                                            <form method="post" class="d-inline"
+                                                  asp-area="Guide" asp-controller="MyTours" asp-action="DeletePricingTier"
+                                                  asp-route-tourId="@Model.TourId" asp-route-tierId="@p.Id">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="btn btn-sm btn-danger-soft">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+
+                <form method="post" class="row g-2 align-items-end"
+                      asp-area="Guide" asp-controller="MyTours" asp-action="AddPricingTier"
+                      asp-route-tourId="@Model.TourId">
+                    @Html.AntiForgeryToken()
+                    <div class="col-sm-4">
+                        <label class="form-label" asp-for="PricingTierForm.Name"></label>
+                        <input class="form-control" asp-for="PricingTierForm.Name" />
+                    </div>
+                    <div class="col-sm-2">
+                        <label class="form-label" asp-for="PricingTierForm.Price"></label>
+                        <input type="number" step="0.01" class="form-control" asp-for="PricingTierForm.Price" />
+                    </div>
+                    <div class="col-sm-2">
+                        <label class="form-label" asp-for="PricingTierForm.Currency"></label>
+                        <input class="form-control" asp-for="PricingTierForm.Currency" />
+                    </div>
+                    <div class="col-sm-2">
+                        <label class="form-label" asp-for="PricingTierForm.MinParticipants"></label>
+                        <input type="number" class="form-control" asp-for="PricingTierForm.MinParticipants" />
+                    </div>
+                    <div class="col-sm-2">
+                        <label class="form-label" asp-for="PricingTierForm.MaxParticipants"></label>
+                        <input type="number" class="form-control" asp-for="PricingTierForm.MaxParticipants" />
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label" asp-for="PricingTierForm.Description"></label>
+                        <input class="form-control" asp-for="PricingTierForm.Description" />
+                    </div>
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-plus-lg me-1"></i>Add pricing tier
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Private tour -->
+        <div class="card border">
+            <div class="card-header bg-transparent">
+                <h2 class="h6 mb-0"><i class="bi bi-person-lock me-2"></i>Private tour</h2>
+            </div>
+            <div class="card-body vstack gap-3">
+                @if (Model.OffersPrivateTour)
+                {
+                    <p class="mb-0">
+                        Private tour is <span class="badge bg-success-soft text-success">enabled</span>.
+                        @if (Model.PrivateTourPriceMultiplier.HasValue)
+                        {
+                            <span class="ms-2">Multiplier: <strong>@Model.PrivateTourPriceMultiplier.Value.ToString("N2")</strong></span>
+                        }
+                        @if (Model.PrivateTourFlatPrice.HasValue)
+                        {
+                            <span class="ms-2">Flat price: <strong>@Model.PrivateTourFlatPrice.Value.ToString("N2")</strong></span>
+                        }
+                    </p>
+                    <form method="post"
+                          asp-area="Guide" asp-controller="MyTours" asp-action="DisablePrivateTour"
+                          asp-route-tourId="@Model.TourId">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-danger-soft">
+                            <i class="bi bi-x-circle me-1"></i>Disable private tour
+                        </button>
+                    </form>
+                }
+                else
+                {
+                    <p class="text-secondary mb-0">Private tour is not enabled. Set a multiplier or a flat price.</p>
+                }
+
+                <form method="post" class="row g-2 align-items-end"
+                      asp-area="Guide" asp-controller="MyTours" asp-action="EnablePrivateTour"
+                      asp-route-tourId="@Model.TourId">
+                    @Html.AntiForgeryToken()
+                    <div class="col-sm-4">
+                        <label class="form-label" asp-for="PrivateTourForm.Multiplier"></label>
+                        <input type="number" step="0.01" class="form-control" asp-for="PrivateTourForm.Multiplier" />
+                    </div>
+                    <div class="col-sm-4">
+                        <label class="form-label" asp-for="PrivateTourForm.FlatPrice"></label>
+                        <input type="number" step="0.01" class="form-control" asp-for="PrivateTourForm.FlatPrice" />
+                    </div>
+                    <div class="col-sm-4">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-check-lg me-1"></i>@(Model.OffersPrivateTour ? "Update" : "Enable") private tour
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
