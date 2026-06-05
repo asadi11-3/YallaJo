@@ -257,4 +257,72 @@ public sealed class RolePermissionMappingTests
         guest.Should().NotContain("Permission.Creator.Delete");
         guest.Should().NotContain("Permission.Creator.RedeemInvitation");
     }
+
+    // ── CCD-4: creator article authoring (Blog.{ReadOwn,Update,Submit}) ─────────
+    // Mirrors the real catalog grouping: Blog.{Read,Create,Update,DeleteOwn} are
+    // ContentManagement; Blog.{ReadOwn,Submit} are SystemAccess. The Creator role
+    // must end up with all five article-authoring permissions.
+
+    private static RolePermissionMapping BuildBlogArticleCatalog() =>
+        Build(
+            P("Blog", AppAction.Read,      PermissionGroup.ContentManagement),
+            P("Blog", AppAction.Create,    PermissionGroup.ContentManagement),
+            P("Blog", AppAction.Update,    PermissionGroup.ContentManagement),
+            P("Blog", AppAction.DeleteOwn, PermissionGroup.ContentManagement),
+            P("Blog", AppAction.ReadOwn,   PermissionGroup.SystemAccess),
+            P("Blog", AppAction.Submit,    PermissionGroup.SystemAccess));
+
+    private static readonly string[] CreatorArticlePermissions =
+    [
+        "Permission.Blog.Read",       // admin-get edit prefetch
+        "Permission.Blog.Create",     // create draft
+        "Permission.Blog.Update",     // update
+        "Permission.Blog.DeleteOwn",  // delete + restore
+        "Permission.Blog.ReadOwn",    // my-blogs
+        "Permission.Blog.Submit",     // submit for review
+    ];
+
+    [Fact]
+    public void Creator_receives_all_article_authoring_permissions()
+    {
+        var creator = BuildBlogArticleCatalog().GetPermissionsForRole(AppRoles.Creator);
+
+        creator.Should().Contain(CreatorArticlePermissions,
+            "an approved creator must be able to list, create, edit, submit, delete and "
+            + "restore their own articles (CCD-4)");
+    }
+
+    [Fact]
+    public void Creator_article_grant_includes_the_three_previously_missing_permissions()
+    {
+        // Regression guard for the CCD-4 prerequisite: Update (ContentManagement, but
+        // excluded from the Creator sweep) + ReadOwn/Submit (SystemAccess, never swept).
+        var creator = BuildBlogArticleCatalog().GetPermissionsForRole(AppRoles.Creator);
+
+        creator.Should().Contain("Permission.Blog.Update");
+        creator.Should().Contain("Permission.Blog.ReadOwn");
+        creator.Should().Contain("Permission.Blog.Submit");
+    }
+
+    [Fact]
+    public void User_does_not_receive_creator_article_authoring_permissions()
+    {
+        // The base User role must NOT gain article authoring (it is granted only to the
+        // Creator role, not via ConsumerPermissions).
+        var user = BuildBlogArticleCatalog().GetPermissionsForRole(AppRoles.User);
+
+        user.Should().NotContain("Permission.Blog.ReadOwn");
+        user.Should().NotContain("Permission.Blog.Update");
+        user.Should().NotContain("Permission.Blog.Submit");
+        user.Should().NotContain("Permission.Blog.Create");
+    }
+
+    [Fact]
+    public void Admin_still_covers_article_authoring_permissions()
+    {
+        var admin = BuildBlogArticleCatalog().GetPermissionsForRole(AppRoles.Admin);
+
+        admin.Should().Contain(CreatorArticlePermissions,
+            "Admin retains article permissions via its full sweep");
+    }
 }

@@ -240,6 +240,15 @@ public sealed class RolePermissionMapping
                              // Owner-scoped blog delete (DeleteOwn split); Blog.Delete
                              // was renamed to Blog.DeleteAny (admin-only).
                              || (p.Feature == "Blog" && p.Action == AppAction.DeleteOwn)
+                             // CCD-4: creator article authoring self-service. The Creator
+                             // ContentManagement sweep above already grants Blog.{Read,Create}
+                             // (admin-get prefetch + create), but NOT Blog.Update (sweep is
+                             // Read/Create/Delete only) nor Blog.{ReadOwn,Submit} (SystemAccess,
+                             // never swept). Grant them explicitly here, scoped to the Creator
+                             // role only — all three are owner-enforced server-side (my-blogs is
+                             // author-filtered; update/submit guard on AuthorId).
+                             || (p.Feature == "Blog" && p.Action is AppAction.Update
+                                     or AppAction.ReadOwn or AppAction.Submit)
                              || ConsumerPermissions.Contains(p.Name))
                     .Select(p => p.Name).ToList(),
 

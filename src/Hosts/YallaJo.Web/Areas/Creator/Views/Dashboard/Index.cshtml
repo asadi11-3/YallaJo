@@ -29,11 +29,11 @@
                             }
                         </div>
                         <div class="mt-2 mt-sm-0">
-                            @* Forward CTA to CCD-4 (My Articles) — disabled until that batch lands. *@
-                            <button type="button" class="btn btn-sm btn-primary" disabled
-                                    title="Coming soon">
-                                <i class="bi bi-plus-lg me-1"></i>New Article (Coming soon)
-                            </button>
+                            <permission require="@WebPermission.Blog.Create">
+                                <a asp-area="Creator" asp-controller="Articles" asp-action="New" class="btn btn-sm btn-primary">
+                                    <i class="bi bi-plus-lg me-1"></i>New Article
+                                </a>
+                            </permission>
                         </div>
                     </div>
                 </div>
@@ -96,9 +96,11 @@
                 <div class="card border">
                     <div class="card-header border-bottom d-flex justify-content-between align-items-center">
                         <h5 class="card-header-title mb-0">Recent Articles</h5>
-                        <button type="button" class="btn btn-sm btn-primary-soft" disabled title="Coming soon">
-                            View all (Coming soon)
-                        </button>
+                        <permission require="@WebPermission.Blog.ReadOwn">
+                            <a asp-area="Creator" asp-controller="Articles" asp-action="Index" class="btn btn-sm btn-primary-soft">
+                                View all
+                            </a>
+                        </permission>
                     </div>
                     <div class="card-body">
                         @if (Model.RecentArticles.Count == 0)

@@ -55,6 +55,13 @@
                                     </a>
                                 </li>
                             </permission>
+                            <permission require="@WebPermission.Blog.ReadOwn">
+                                <li class="nav-item">
+                                    <a class="@Nav("Articles")" asp-area="Creator" asp-controller="Articles" asp-action="Index">
+                                        <i class="bi bi-journals fa-fw me-1"></i>My Articles
+                                    </a>
+                                </li>
+                            </permission>
                             <permission require="@WebPermission.Creator.Submit">
                                 <li class="nav-item">
                                     <a class="@Nav("Application")" asp-area="Creator" asp-controller="Application" asp-action="Index">
