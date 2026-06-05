@@ -6,7 +6,6 @@ using ContentBlogs.Application.Commands.Creator.SubmitApplication;
 using ContentBlogs.Application.Commands.Creator.UnfollowCreator;
 using ContentBlogs.Application.Commands.Creator.UpdateApplication;
 using ContentBlogs.Application.Commands.Creator.UpdateAvatar;
-using ContentBlogs.Application.Commands.Creator.UpdateCoverImage;
 using ContentBlogs.Application.Commands.Creator.UpdateProfile;
 using ContentBlogs.Application.Queries.Blog.GetCreatorBlogs;
 using ContentBlogs.Application.Queries.Blog.GetCreatorBlogsBySlug;
@@ -302,23 +301,6 @@ internal static class CreatorEndpoints
         })
         .WithName("UpdateCreatorAvatar")
         .WithSummary("Update creator avatar URL")
-        .Produces(StatusCodes.Status200OK)
-        .ProducesValidationProblem()
-        .ProducesProblem(StatusCodes.Status401Unauthorized)
-        .ProducesProblem(StatusCodes.Status404NotFound)
-        .WithMetadata(new MustHavePermissionAttribute(ContentBlogsFeatures.Creator, AppAction.Update));
-
-        // ── PUT /api/v1/blogs/creators/profile/mine/cover-image ──────────
-        group.MapPut("/profile/mine/cover-image", async (
-            UpdateCreatorCoverImageRequest request,
-            ISender sender,
-            CancellationToken ct) =>
-        {
-            var result = await sender.Send(new UpdateCreatorCoverImageCommand(request.CoverImageUrl), ct);
-            return result.ToApiResult();
-        })
-        .WithName("UpdateCreatorCoverImage")
-        .WithSummary("Update creator cover image URL")
         .Produces(StatusCodes.Status200OK)
         .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status401Unauthorized)

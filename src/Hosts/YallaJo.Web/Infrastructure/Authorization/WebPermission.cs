@@ -334,12 +334,21 @@ public static class WebPermission
     }
 
     // ── Creator (blog creator identity + follow) ──────────────────────────────
+    // Mirror the ContentBlogs backend permissions (Permission.Creator.{Action}).
     public static class Creator
     {
         public const string Read     = "Permission.Creator.Read";
         public const string Submit   = "Permission.Creator.Submit";
         public const string Follow   = "Permission.Creator.Follow";
         public const string Unfollow = "Permission.Creator.Unfollow";
+        // Update powers creator self-profile edits + avatar URL update +
+        // application resubmission (PUT /creators/profile/mine, /avatar,
+        // PUT /creators/applications/{id}).
+        public const string Update           = "Permission.Creator.Update";
+        // Delete gates voluntary self-deactivation (DELETE /creators/profile/mine).
+        public const string Delete           = "Permission.Creator.Delete";
+        // RedeemInvitation gates POST /creators/invitations/redeem.
+        public const string RedeemInvitation = "Permission.Creator.RedeemInvitation";
     }
 
     // ── Blog (creator posts) ──────────────────────────────────────────────────

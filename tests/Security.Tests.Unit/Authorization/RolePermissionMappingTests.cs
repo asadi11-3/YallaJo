@@ -192,4 +192,69 @@ public sealed class RolePermissionMappingTests
         provider.Should().NotContain("Permission.AdminProviderQueue.Approve");
         provider.Should().NotContain("Permission.Payout.Trigger");
     }
+
+    // ── CCD-2/CCD-3 follow-up: creator self-service permissions ────────────────
+    // Creator.{Update,Delete,RedeemInvitation} are group SystemAccess, so they are
+    // NOT swept by any CRUD rule — they reach a role only via ConsumerPermissions.
+
+    private static readonly string[] CreatorSelfServicePermissions =
+    [
+        "Permission.Creator.Update",
+        "Permission.Creator.Delete",
+        "Permission.Creator.RedeemInvitation",
+    ];
+
+    private static RolePermissionMapping BuildCreatorSelfServiceCatalog() =>
+        Build(
+            P(ContentBlogsCreatorFeature, AppAction.Update,           PermissionGroup.SystemAccess),
+            P(ContentBlogsCreatorFeature, AppAction.Delete,           PermissionGroup.SystemAccess),
+            P(ContentBlogsCreatorFeature, AppAction.RedeemInvitation, PermissionGroup.SystemAccess));
+
+    private const string ContentBlogsCreatorFeature = "Creator";
+
+    [Fact]
+    public void User_receives_creator_self_service_permissions()
+    {
+        var user = BuildCreatorSelfServiceCatalog().GetPermissionsForRole(AppRoles.User);
+
+        user.Should().Contain(CreatorSelfServicePermissions,
+            "ordinary signed-in users must be able to edit/deactivate their own creator "
+            + "profile and redeem invitations (CCD-2/CCD-3)");
+    }
+
+    [Fact]
+    public void Creator_Provider_TourGuide_receive_same_consumer_propagation()
+    {
+        var mapping = BuildCreatorSelfServiceCatalog();
+
+        foreach (var role in new[] { AppRoles.Creator, AppRoles.Provider, AppRoles.TourGuide })
+        {
+            mapping.GetPermissionsForRole(role)
+                .Should().Contain(CreatorSelfServicePermissions,
+                    $"role {role} also includes ConsumerPermissions");
+        }
+    }
+
+    [Fact]
+    public void Admin_Owner_SuperAdmin_already_cover_creator_self_service_permissions()
+    {
+        var mapping = BuildCreatorSelfServiceCatalog();
+
+        foreach (var role in new[] { AppRoles.Admin, AppRoles.SuperAdmin, AppRoles.Owner })
+        {
+            mapping.GetPermissionsForRole(role)
+                .Should().Contain(CreatorSelfServicePermissions,
+                    $"role {role} receives these via its full permission sweep");
+        }
+    }
+
+    [Fact]
+    public void Guest_does_not_receive_creator_self_service_permissions()
+    {
+        var guest = BuildCreatorSelfServiceCatalog().GetPermissionsForRole(AppRoles.Guest);
+
+        guest.Should().NotContain("Permission.Creator.Update");
+        guest.Should().NotContain("Permission.Creator.Delete");
+        guest.Should().NotContain("Permission.Creator.RedeemInvitation");
+    }
 }

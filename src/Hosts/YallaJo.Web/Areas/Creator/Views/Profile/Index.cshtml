@@ -1,0 +1,135 @@
+@model YallaJo.Web.Areas.Creator.Models.Profile.CreatorProfileVm
+@{
+    ViewData["Title"] = "My Creator Profile";
+    var sidebar = ViewBag.Sidebar as YallaJo.Web.Areas.Creator.Shared.CreatorSidebarVm
+                  ?? new YallaJo.Web.Areas.Creator.Shared.CreatorSidebarVm();
+}
+
+<partial name="_CreatorSidebar" model="sidebar" />
+
+<section class="pt-0">
+    <div class="container vstack gap-4">
+        <div class="d-sm-flex justify-content-between align-items-center">
+            <h1 class="fs-4 mb-0"><i class="bi bi-person-badge me-2"></i>My Creator Profile</h1>
+            @if (Model.IsActive)
+            {
+                <span class="badge text-bg-success mt-2 mt-sm-0">Active@(string.IsNullOrWhiteSpace(Model.TrustTier) ? "" : " · " + Model.TrustTier)</span>
+            }
+        </div>
+
+        @if (!Model.HasProfile)
+        {
+            <div class="card border">
+                <div class="card-body text-center py-5">
+                    <h5>No creator profile found</h5>
+                    <p class="text-body-secondary mb-0">We couldn't load a creator profile for your account.</p>
+                </div>
+            </div>
+        }
+        else if (!Model.IsActive)
+        {
+            <div class="card border">
+                <div class="card-body text-center py-5">
+                    <h5>Your creator profile is @Model.Status?.ToLowerInvariant()</h5>
+                    <p class="text-body-secondary mb-0">
+                        Profile editing is unavailable while your profile is @Model.Status?.ToLowerInvariant().
+                    </p>
+                </div>
+            </div>
+        }
+        else
+        {
+            @* ── Profile details (PUT /profile/mine) ─────────────────────────── *@
+            <form asp-area="Creator" asp-controller="Profile" asp-action="Update" method="post" class="card border">
+                <div class="card-header border-bottom"><h5 class="card-header-title mb-0">Profile details</h5></div>
+                <div class="card-body vstack gap-3">
+                    <div asp-validation-summary="ModelOnly" class="text-danger small"></div>
+
+                    <div>
+                        <label asp-for="DisplayName" class="form-label"></label>
+                        <input asp-for="DisplayName" class="form-control" />
+                        <span asp-validation-for="DisplayName" class="text-danger small"></span>
+                    </div>
+
+                    <div>
+                        <label asp-for="Bio" class="form-label">Bio</label>
+                        <textarea asp-for="Bio" class="form-control" rows="4"></textarea>
+                        <span asp-validation-for="Bio" class="text-danger small"></span>
+                    </div>
+
+                    <div>
+                        <label asp-for="AvatarUrl" class="form-label"></label>
+                        <input asp-for="AvatarUrl" class="form-control" placeholder="https://..." />
+                        <span asp-validation-for="AvatarUrl" class="text-danger small"></span>
+                    </div>
+
+                    <div>
+                        <label asp-for="NewSlug" class="form-label"></label>
+                        <div class="input-group">
+                            <span class="input-group-text">/creators/</span>
+                            <input asp-for="NewSlug" class="form-control" placeholder="@Model.CurrentSlug" />
+                        </div>
+                        <span class="small text-body-secondary">Current: /creators/@Model.CurrentSlug — leave blank to keep it.</span>
+                        <span asp-validation-for="NewSlug" class="text-danger small d-block"></span>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-save me-1"></i>Save profile</button>
+                </div>
+            </form>
+
+            @* ── Avatar URL (PUT /avatar) ─────────────────────────────────────── *@
+            <form asp-area="Creator" asp-controller="Profile" asp-action="Avatar" method="post" class="card border">
+                <div class="card-header border-bottom"><h5 class="card-header-title mb-0">Avatar</h5></div>
+                <div class="card-body">
+                    <label class="form-label" for="avatarUrlField">Avatar URL</label>
+                    <div class="input-group">
+                        <input id="avatarUrlField" name="AvatarUrl" class="form-control"
+                               value="@Model.AvatarUrl" placeholder="https://..." />
+                        <button type="submit" class="btn btn-primary-soft">Update avatar</button>
+                    </div>
+                </div>
+            </form>
+
+            @* ── Danger zone: self-deactivate (modal-confirmed) ──────────────── *@
+            <div class="card border border-danger">
+                <div class="card-header border-bottom"><h5 class="card-header-title mb-0 text-danger">Deactivate account</h5></div>
+                <div class="card-body d-sm-flex justify-content-between align-items-center">
+                    <p class="text-body-secondary mb-2 mb-sm-0">
+                        Deactivating soft-deletes your creator profile. You have 60 days to reactivate before it is permanently removed.
+                    </p>
+                    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deactivateModal">
+                        <i class="bi bi-exclamation-triangle me-1"></i>Deactivate
+                    </button>
+                </div>
+            </div>
+
+            <div class="modal fade" id="deactivateModal" tabindex="-1" aria-labelledby="deactivateModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <form asp-area="Creator" asp-controller="Profile" asp-action="Deactivate" method="post" class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="deactivateModalLabel">Deactivate creator profile?</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body vstack gap-3">
+                            <p class="mb-0">
+                                This soft-deletes your creator profile. You'll have <strong>60 days</strong> to reactivate
+                                before it is permanently removed.
+                            </p>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="confirm" value="true" id="confirmDeactivate" required>
+                                <label class="form-check-label" for="confirmDeactivate">
+                                    I understand and want to deactivate my creator profile.
+                                </label>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-danger">Deactivate my profile</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        }
+    </div>
+</section>

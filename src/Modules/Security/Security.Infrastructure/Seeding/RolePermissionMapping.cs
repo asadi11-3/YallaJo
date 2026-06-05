@@ -106,6 +106,17 @@ public sealed class RolePermissionMapping
             // F69 2026-05-30: User couldn't apply to become creator via /blogs/creators/applications → 403
             "Permission.Creator.Submit",
             "Permission.Creator.Read",
+
+            // CCD-2/CCD-3 follow-up: own-resource, owner-enforced creator self-service.
+            // These permissions are group SystemAccess (not ContentManagement), so they
+            // are never granted by any role's CRUD sweep — ConsumerPermissions is the only
+            // path. Granting here propagates to User, Creator, Provider and TourGuide.
+            // All three are scoped to the caller's own creator profile/application server
+            // side (handlers 403 on non-owner; redeem validates the token), so this does
+            // not widen blast radius beyond the caller's own resources.
+            "Permission.Creator.Update",            // edit own application (CCD-2) + own profile/avatar/cover (CCD-3)
+            "Permission.Creator.Delete",            // self-deactivate own creator account (CCD-3)
+            "Permission.Creator.RedeemInvitation",  // redeem an invitation token (the token itself is the authorization)
         };
 
     // Provider self-service permissions that an approved provider (TourGuide,

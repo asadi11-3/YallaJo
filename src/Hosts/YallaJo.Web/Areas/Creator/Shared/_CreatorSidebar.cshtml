@@ -1,0 +1,79 @@
+@model YallaJo.Web.Areas.Creator.Shared.CreatorSidebarVm
+@{
+    var active = ViewData["CreatorNav"] as string ?? "Dashboard";
+    string Nav(string key) => active == key ? "nav-link active" : "nav-link";
+}
+
+@* CCD-0 shell: only the Dashboard entry is wired because it is the only
+   implemented route this batch. Profile / My Articles / Application links are
+   intentionally omitted to avoid dead links and are added in CCD-1..CCD-4.
+   Each future entry must use asp-area/asp-controller/asp-action, be gated with
+   a <permission> tag, and carry an active-key. *@
+<section class="pt-4">
+    <div class="container">
+        <div class="card rounded-3 border p-3 pb-2">
+            <div class="d-sm-flex align-items-center">
+                <div class="avatar avatar-xl flex-shrink-0">
+                    <img class="avatar-img rounded-circle border border-white border-3"
+                         src="@(string.IsNullOrWhiteSpace(Model.AvatarUrl) ? Url.Content("~/assets/images/avatar/01.jpg") : Model.AvatarUrl)"
+                         alt="avatar">
+                </div>
+                <div class="ms-sm-3 mt-2 mt-sm-0">
+                    <h5 class="mb-0"><span class="fw-light">Hi,</span> @(string.IsNullOrWhiteSpace(Model.DisplayName) ? "Creator" : Model.DisplayName)</h5>
+                    @if (!string.IsNullOrWhiteSpace(Model.Email))
+                    {
+                        <span class="small text-body-secondary">@Model.Email</span>
+                    }
+                </div>
+            </div>
+
+            <button class="btn btn-primary w-100 d-block d-xl-none mt-3"
+                    type="button" data-bs-toggle="offcanvas" data-bs-target="#creatorDashboardMenu"
+                    aria-controls="creatorDashboardMenu">
+                <i class="bi bi-list me-1"></i> Dashboard Menu
+            </button>
+
+            <div class="offcanvas-xl offcanvas-end mt-xl-3" tabindex="-1" id="creatorDashboardMenu">
+                <div class="offcanvas-header">
+                    <h5 class="offcanvas-title">Menu</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#creatorDashboardMenu" aria-label="Close"></button>
+                </div>
+                <div class="offcanvas-body p-3 p-xl-0">
+                    <div class="navbar navbar-expand-xl w-100">
+                        <ul class="navbar-nav nav nav-pills nav-pills-primary-soft flex-xl-row flex-column w-100">
+                            <permission require="@WebPermission.Creator.Read">
+                                <li class="nav-item">
+                                    <a class="@Nav("Dashboard")" asp-area="Creator" asp-controller="Dashboard" asp-action="Index">
+                                        <i class="bi bi-house-door fa-fw me-1"></i>Dashboard
+                                    </a>
+                                </li>
+                            </permission>
+                            <permission require="@WebPermission.Creator.Read">
+                                <li class="nav-item">
+                                    <a class="@Nav("Profile")" asp-area="Creator" asp-controller="Profile" asp-action="Index">
+                                        <i class="bi bi-person-badge fa-fw me-1"></i>My Profile
+                                    </a>
+                                </li>
+                            </permission>
+                            <permission require="@WebPermission.Creator.Submit">
+                                <li class="nav-item">
+                                    <a class="@Nav("Application")" asp-area="Creator" asp-controller="Application" asp-action="Index">
+                                        <i class="bi bi-pencil-square fa-fw me-1"></i>Application
+                                    </a>
+                                </li>
+                            </permission>
+                            <li class="nav-item ms-xl-auto">
+                                <form asp-area="Auth" asp-controller="Auth" asp-action="Logout" method="post" class="d-grid">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="nav-link text-start text-danger bg-danger-soft-hover border-0 bg-transparent w-100">
+                                        <i class="fas fa-sign-out-alt fa-fw me-1"></i>Sign Out
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

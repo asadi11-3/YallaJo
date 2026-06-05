@@ -30,8 +30,6 @@ public sealed record RedeemCreatorInvitationRequest(string Token);
 
 public sealed record UpdateCreatorAvatarRequest(string AvatarUrl);
 
-public sealed record UpdateCreatorCoverImageRequest(string CoverImageUrl);
-
 public sealed record ApproveApplicationRequest(
     string DisplayName,
     string? AvatarUrl);
