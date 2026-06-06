@@ -249,6 +249,15 @@ public sealed class RolePermissionMapping
                              // author-filtered; update/submit guard on AuthorId).
                              || (p.Feature == "Blog" && p.Action is AppAction.Update
                                      or AppAction.ReadOwn or AppAction.Submit)
+                             // CCD-5: creator article image management. The Creator
+                             // ContentManagement sweep grants Attachment/EntityImage
+                             // {Read,Create,Delete}, but NOT the Update action (sweep is
+                             // Read/Create/Delete only). Grant Attachment.Update (reorder)
+                             // and EntityImage.Update (set primary image) explicitly here,
+                             // scoped to the Creator role only — both are owner-enforced
+                             // server-side (IOwnershipGuard on the attachment's entity).
+                             || (p.Feature is "Attachment" or "EntityImage"
+                                     && p.Action == AppAction.Update)
                              || ConsumerPermissions.Contains(p.Name))
                     .Select(p => p.Name).ToList(),
 

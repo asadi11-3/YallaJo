@@ -1,0 +1,33 @@
+namespace YallaJo.Web.Areas.Creator.Models.Articles.Images;
+
+/// <summary>
+/// Web-side projection of the ContentCore <c>AttachmentDto</c> returned by
+/// GET /api/v1/content-core/attachments. Note: there is no IsPrimary flag on the
+/// attachment DTO, so the current primary image cannot be highlighted (CCD-5 gap B).
+/// </summary>
+public sealed class AttachmentItemResponse
+{
+    public Guid Id { get; init; }
+    public string EntityType { get; init; } = string.Empty;
+    public Guid EntityId { get; init; }
+    public string Type { get; init; } = string.Empty;
+    public string Url { get; init; } = string.Empty;
+    public string? ThumbnailUrl { get; init; }
+    public string? OriginalFileName { get; init; }
+    public string? MimeType { get; init; }
+    public long? FileSize { get; init; }
+    public int? Width { get; init; }
+    public int? Height { get; init; }
+    public int? DurationSeconds { get; init; }
+    public int SortOrder { get; init; }
+    public DateTime UploadedAt { get; init; }
+    public Guid UploadedByUserId { get; init; }
+}
+
+/// <summary>Response of the single-upload endpoint (POST /attachments).</summary>
+public sealed class UploadAttachmentResponse
+{
+    public Guid Id { get; init; }
+    public string Url { get; init; } = string.Empty;
+    public long FileSize { get; init; }
+}

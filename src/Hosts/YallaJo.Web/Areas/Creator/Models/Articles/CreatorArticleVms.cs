@@ -69,6 +69,13 @@ public sealed class ArticleEditorVm
     /// <summary>True backend status ("Draft"/"Rejected"/"PendingReview"/…) for edit; null on create.</summary>
     public string? Status { get; set; }
 
+    /// <summary>
+    /// Article images section (CCD-5). Populated on GET edit (once a BlogId exists);
+    /// null for a new (not-yet-created) article. Image management is a separate
+    /// multipart flow — it never participates in the article text-save/RowVersion path.
+    /// </summary>
+    public Images.ArticleImagesVm? Images { get; set; }
+
     [Required(ErrorMessage = "Please enter a title.")]
     [StringLength(200, MinimumLength = 3, ErrorMessage = "Title must be 3-200 characters.")]
     public string Title { get; set; } = string.Empty;

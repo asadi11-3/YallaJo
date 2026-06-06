@@ -325,4 +325,70 @@ public sealed class RolePermissionMappingTests
         admin.Should().Contain(CreatorArticlePermissions,
             "Admin retains article permissions via its full sweep");
     }
+
+    // ── CCD-5: creator article image management (Attachment/EntityImage) ────────
+    // All Attachment/EntityImage actions are ContentManagement. The Creator sweep
+    // grants Read/Create/Delete; the prerequisite follow-up adds the Update action
+    // for Attachment (reorder) and EntityImage (set primary), Creator role only.
+
+    private static RolePermissionMapping BuildAttachmentCatalog() =>
+        Build(
+            P("Attachment", AppAction.Read,   PermissionGroup.ContentManagement),
+            P("Attachment", AppAction.Create, PermissionGroup.ContentManagement),
+            P("Attachment", AppAction.Update, PermissionGroup.ContentManagement),
+            P("Attachment", AppAction.Delete, PermissionGroup.ContentManagement),
+            P("EntityImage", AppAction.Read,   PermissionGroup.ContentManagement),
+            P("EntityImage", AppAction.Create, PermissionGroup.ContentManagement),
+            P("EntityImage", AppAction.Update, PermissionGroup.ContentManagement),
+            P("EntityImage", AppAction.Delete, PermissionGroup.ContentManagement));
+
+    private static readonly string[] CreatorImagePermissions =
+    [
+        "Permission.Attachment.Read",    // list images
+        "Permission.Attachment.Create",  // upload
+        "Permission.Attachment.Delete",  // delete
+        "Permission.Attachment.Update",  // reorder
+        "Permission.EntityImage.Update", // set primary
+    ];
+
+    [Fact]
+    public void Creator_receives_all_article_image_permissions()
+    {
+        var creator = BuildAttachmentCatalog().GetPermissionsForRole(AppRoles.Creator);
+
+        creator.Should().Contain(CreatorImagePermissions,
+            "an approved creator must be able to list, upload, delete, reorder and set "
+            + "the primary image for their own articles (CCD-5)");
+    }
+
+    [Fact]
+    public void Creator_image_grant_includes_the_two_previously_missing_update_permissions()
+    {
+        // Regression guard for the CCD-5 prerequisite: the two Update actions excluded
+        // from the Creator Read/Create/Delete sweep.
+        var creator = BuildAttachmentCatalog().GetPermissionsForRole(AppRoles.Creator);
+
+        creator.Should().Contain("Permission.Attachment.Update");
+        creator.Should().Contain("Permission.EntityImage.Update");
+    }
+
+    [Fact]
+    public void User_does_not_receive_article_image_update_permissions()
+    {
+        // The base User role must NOT gain image management (granted only to Creator).
+        var user = BuildAttachmentCatalog().GetPermissionsForRole(AppRoles.User);
+
+        user.Should().NotContain("Permission.Attachment.Update");
+        user.Should().NotContain("Permission.EntityImage.Update");
+        user.Should().NotContain("Permission.Attachment.Create");
+    }
+
+    [Fact]
+    public void Admin_still_covers_article_image_permissions()
+    {
+        var admin = BuildAttachmentCatalog().GetPermissionsForRole(AppRoles.Admin);
+
+        admin.Should().Contain(CreatorImagePermissions,
+            "Admin retains image permissions via its full sweep");
+    }
 }

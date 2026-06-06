@@ -27,8 +27,13 @@ public sealed class ArticlesController : BaseController
     private const string UndoTitleKey = "ArticleUndoTitle";
 
     private readonly CreatorArticlesFacade _facade;
+    private readonly CreatorArticleImagesFacade _images;
 
-    public ArticlesController(CreatorArticlesFacade facade) => _facade = facade;
+    public ArticlesController(CreatorArticlesFacade facade, CreatorArticleImagesFacade images)
+    {
+        _facade = facade;
+        _images = images;
+    }
 
     // GET /creator/articles
     [HttpGet("creator/articles")]
@@ -116,7 +121,14 @@ public sealed class ArticlesController : BaseController
             return RedirectToAction(nameof(Index));
         }
 
-        return View("Editor", result.Data);
+        var vm = result.Data;
+
+        // Load the article's images (best-effort: a failure here must not block editing).
+        var imagesResult = await _images.GetImagesAsync(id, ct);
+        if (imagesResult is { IsSuccess: true, Data: { } imagesVm })
+            vm.Images = imagesVm;
+
+        return View("Editor", vm);
     }
 
     // POST /creator/articles/{id}/edit  — Blog.Update (RowVersion)
@@ -216,6 +228,68 @@ public sealed class ArticlesController : BaseController
 
         SetFlash(result, "Your article was restored.", "Could not restore your article.");
         return RedirectToAction(nameof(Index));
+    }
+
+    // ── Article images (CCD-5) — separate multipart flow; never mixed with text-save ──
+
+    // POST /creator/articles/{id}/images/upload  — Attachment.Create
+    [HttpPost("creator/articles/{id:guid}/images/upload")]
+    [ValidateAntiForgeryToken]
+    [RequirePermission(WebPermission.Attachment.Create)]
+    public async Task<IActionResult> UploadImages(
+        Guid id, List<IFormFile> files, int existingCount, CancellationToken ct = default)
+    {
+        var result = await _images.UploadAsync(id, files ?? [], existingCount, ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+
+        SetFlash(result, "Image(s) uploaded.", result.Error ?? "Could not upload image(s).");
+        return RedirectToAction(nameof(Edit), new { id });
+    }
+
+    // POST /creator/articles/{id}/images/{attachmentId}/delete  — Attachment.Delete
+    [HttpPost("creator/articles/{id:guid}/images/{attachmentId:guid}/delete")]
+    [ValidateAntiForgeryToken]
+    [RequirePermission(WebPermission.Attachment.Delete)]
+    public async Task<IActionResult> DeleteImage(Guid id, Guid attachmentId, CancellationToken ct = default)
+    {
+        var result = await _images.DeleteAsync(attachmentId, ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+
+        SetFlash(result, "Image deleted.", "Could not delete the image.");
+        return RedirectToAction(nameof(Edit), new { id });
+    }
+
+    // POST /creator/articles/{id}/images/{attachmentId}/primary  — EntityImage.Update
+    [HttpPost("creator/articles/{id:guid}/images/{attachmentId:guid}/primary")]
+    [ValidateAntiForgeryToken]
+    [RequirePermission(WebPermission.EntityImage.Update)]
+    public async Task<IActionResult> SetPrimaryImage(Guid id, Guid attachmentId, CancellationToken ct = default)
+    {
+        var result = await _images.SetPrimaryAsync(id, attachmentId, ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+
+        SetFlash(result, "Primary image updated.", "Could not set the primary image.");
+        return RedirectToAction(nameof(Edit), new { id });
+    }
+
+    // POST /creator/articles/{id}/images/reorder  — Attachment.Update
+    [HttpPost("creator/articles/{id:guid}/images/reorder")]
+    [ValidateAntiForgeryToken]
+    [RequirePermission(WebPermission.Attachment.Update)]
+    public async Task<IActionResult> ReorderImages(
+        Guid id, List<Guid> orderedAttachmentIds, CancellationToken ct = default)
+    {
+        if (orderedAttachmentIds is null || orderedAttachmentIds.Count == 0)
+        {
+            SetError("No image order was provided.");
+            return RedirectToAction(nameof(Edit), new { id });
+        }
+
+        var result = await _images.ReorderAsync(id, orderedAttachmentIds, ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+
+        SetFlash(result, "Image order updated.", "Could not reorder the images.");
+        return RedirectToAction(nameof(Edit), new { id });
     }
 
     private void SetSidebar()
