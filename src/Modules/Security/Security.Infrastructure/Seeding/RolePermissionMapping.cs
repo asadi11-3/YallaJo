@@ -49,6 +49,12 @@ public sealed class RolePermissionMapping
             "Permission.Favorite.Delete",
             "Permission.Notification.Read",
             "Permission.Notification.Update",
+            // FE-1B 2026-06-08: notification owner may delete their OWN notifications
+            // (DELETE /notifications/{id} + /batch require Notification.Delete). The
+            // handlers scope every delete to the caller's own rows, so granting this
+            // consumer-wide does not widen blast radius. Admin/SuperAdmin/Owner already
+            // receive it via their full permission sweep.
+            "Permission.Notification.Delete",
             "Permission.NotificationPreference.Read",
             "Permission.NotificationPreference.Update",
             "Permission.DeviceToken.Create",
