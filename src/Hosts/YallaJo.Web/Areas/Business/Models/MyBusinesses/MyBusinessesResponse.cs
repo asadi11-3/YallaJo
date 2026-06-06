@@ -1,5 +1,27 @@
 namespace YallaJo.Web.Areas.Business.Models.MyBusinesses;
 
+/// <summary>
+/// Lightweight place option used to populate the Place picker on the
+/// "Register a business" form. Maps the subset of the public places list
+/// (GET /api/v1/places) the form needs: an id, a label, and coordinates so the
+/// owner's latitude/longitude can be pre-filled from the chosen place.
+/// </summary>
+public sealed class PlaceOptionResponse
+{
+    public Guid Id { get; set; }
+    public string Name { get; set; } = "";
+    public decimal Latitude { get; set; }
+    public decimal Longitude { get; set; }
+    public string? City { get; set; }
+    public string? Country { get; set; }
+}
+
+/// <summary>Wraps the paginated places list returned by GET /api/v1/places.</summary>
+public sealed class PlaceOptionsResponse
+{
+    public List<PlaceOptionResponse> Items { get; set; } = [];
+}
+
 /// <summary>Mirrors ContentPlaces BusinessSummaryDto.</summary>
 public sealed class BusinessSummaryResponse
 {

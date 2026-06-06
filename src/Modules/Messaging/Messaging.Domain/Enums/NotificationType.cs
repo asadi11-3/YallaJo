@@ -65,6 +65,13 @@ public enum NotificationType : byte
     AgencyAffiliationApproved   = 49,
     GuideOfferingSuspended      = 50,
     GuideApplicationSubmitted   = 51,
+
+    // ── Disputes (52+) ────────────────────────────────────────────────────────
+    DisputeOpened               = 52,  // CRITICAL  — Finance payment-level dispute opened
+    BookingDisputed             = 53,  // CRITICAL  — Booking-level dispute opened by traveler (Phase-3 WS-3b)
+    BookingDisputeResolved      = 54,  //             Booking dispute resolved by admin     (Phase-3 WS-3b)
+    DisputeResolved             = 55,  //             Finance payment-level dispute resolved (Phase-3 WS-4)
+    DisputeEscalated            = 56,  // CRITICAL  — Finance payment-level dispute escalated  (Phase-3 WS-4)
 }
 
 /// <summary>Extension methods for NotificationType.</summary>
@@ -81,6 +88,9 @@ public static class NotificationTypeExtensions
         NotificationType.OtpDelivery,
         NotificationType.SecurityAlert,
         NotificationType.LoginFromNewDevice,
+        NotificationType.DisputeOpened,
+        NotificationType.DisputeEscalated,
+        NotificationType.BookingDisputed,
     ];
 
     /// <summary>Critical notifications cannot be disabled by the user and are never auto-purged.</summary>

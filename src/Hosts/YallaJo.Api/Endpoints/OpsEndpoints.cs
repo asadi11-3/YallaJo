@@ -1,3 +1,4 @@
+using ContentTours.Application.Commands.Snapshot.TriggerTourSnapshotBackfill;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -47,6 +48,23 @@ public static class OpsEndpoints
             .ProducesProblem(StatusCodes.Status401Unauthorized)
             .ProducesProblem(StatusCodes.Status403Forbidden)
             .ProducesProblem(StatusCodes.Status404NotFound);
+
+        var contentTours = app.MapGroup("/api/v1/ops/content-tours")
+            .WithTags("Operations — ContentTours")
+            .RequireAuthorization();
+
+        contentTours.MapPost("/backfill/tour-snapshots",
+            async (ISender sender, int? batchSize, CancellationToken ct) =>
+            {
+                var result = await sender.Send(new TriggerTourSnapshotBackfillCommand(batchSize ?? 100), ct);
+                return result.ToApiResult();
+            })
+            .WithMetadata(new MustHavePermissionAttribute(OpsFeatures.Outbox, AppAction.Replay))
+            .WithName("BackfillTourSnapshots")
+            .WithSummary("Re-emit enriched TourApproved events for all approved tours to repopulate Booking snapshots")
+            .Produces<TriggerTourSnapshotBackfillResult>(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status403Forbidden);
 
         return app;
     }

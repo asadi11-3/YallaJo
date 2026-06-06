@@ -20,6 +20,7 @@ internal sealed class TourSnapshotConfiguration : IEntityTypeConfiguration<TourS
         builder.Property(x => x.IsActive).IsRequired().HasDefaultValue(false);
         builder.Property(x => x.IsApproved).IsRequired().HasDefaultValue(false);
         builder.Property(x => x.IsInstantBooking).IsRequired().HasDefaultValue(false);
+        builder.Property(x => x.MaxGroupSize).IsRequired().HasDefaultValue(int.MaxValue);
         builder.Property(x => x.RefundPolicyId).IsRequired(false);
         builder.Property(x => x.RefundPolicySnapshotJson).IsRequired(false).HasMaxLength(4000);
         builder.Property(x => x.LastUpdatedAt).IsRequired();

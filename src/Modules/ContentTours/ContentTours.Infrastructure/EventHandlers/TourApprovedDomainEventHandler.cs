@@ -24,7 +24,12 @@ public sealed class TourApprovedDomainEventHandler(
                 TourId:           evt.TourId,
                 CreatedByUserId:  evt.CreatedByUserId,
                 ApprovedByUserId: evt.ApprovedByUserId,
-                ApprovedAt:       evt.ApprovedAt)));
+                ApprovedAt:       evt.ApprovedAt,
+                Title:            evt.Title,
+                BasePrice:        evt.BasePrice,
+                Currency:         evt.Currency,
+                IsInstantBooking: evt.IsInstantBooking,
+                MaxGroupSize:     evt.MaxGroupSize)));
 
         logger.LogInformation(
             "TourApprovedDomainEvent: tour {TourId} approved by {ApprovedByUserId} at {ApprovedAt}.",

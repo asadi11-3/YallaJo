@@ -1,0 +1,187 @@
+@using YallaJo.Web.Areas.Business.Models.MyBusinesses
+@using YallaJo.Web.Areas.Business.Shared
+@using YallaJo.Web.Infrastructure.Authorization
+@model RegisterBusinessVm
+@{
+    ViewData["Title"] = "Register a business";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var sidebar = ViewBag.Sidebar as BusinessSidebarVm ?? new BusinessSidebarVm();
+}
+
+<partial name="_BusinessSidebar" model="sidebar" />
+
+<section class="pt-0">
+    <div class="container vstack gap-4">
+        <div class="row align-items-center">
+            <div class="col">
+                <a class="small text-body-secondary" asp-area="Business" asp-controller="MyBusinesses" asp-action="Index">
+                    <i class="bi bi-arrow-left me-1"></i>All businesses
+                </a>
+                <h1 class="h3 mb-0 mt-1">Register a business</h1>
+                <p class="text-body-secondary mb-0 mt-1">
+                    Add your business so travellers can find it. After you submit, it is reviewed
+                    before it goes live. You can add opening hours, services and staff afterwards.
+                </p>
+            </div>
+        </div>
+
+        @if (TempData["Success"] is string ok) { <div class="alert alert-success">@ok</div> }
+        @if (TempData["Error"] is string err) { <div class="alert alert-danger">@err</div> }
+
+        @if (!Model.HasPlaces)
+        {
+            <div class="card border">
+                <div class="card-body text-center py-5">
+                    <div class="icon-lg bg-warning-soft text-warning rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width:56px;height:56px;">
+                        <i class="bi bi-geo-alt fs-4"></i>
+                    </div>
+                    <h5 class="mb-1">No places available yet</h5>
+                    <p class="text-body-secondary mb-0">
+                        A business must be attached to a place, but none are available right now.
+                        Please check back later or contact support.
+                    </p>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="card border">
+                <div class="card-header border-bottom">
+                    <h5 class="card-header-title mb-0">Business details</h5>
+                </div>
+                <div class="card-body">
+                    <form asp-area="Business" asp-controller="MyBusinesses" asp-action="Register" method="post">
+                        @Html.AntiForgeryToken()
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                        <div class="row g-3">
+                            <div class="col-md-8">
+                                <label asp-for="Form.Name" class="form-label"></label>
+                                <input asp-for="Form.Name" class="form-control" autocomplete="off" />
+                                <span asp-validation-for="Form.Name" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="Form.BusinessType" class="form-label"></label>
+                                <select asp-for="Form.BusinessType" asp-items="@(new SelectList(Model.BusinessTypes, "Value", "Text"))" class="form-select">
+                                    <option value="">Choose a type</option>
+                                </select>
+                                <span asp-validation-for="Form.BusinessType" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-8">
+                                <label asp-for="Form.PlaceId" class="form-label"></label>
+                                <select asp-for="Form.PlaceId" id="placeSelect" class="form-select">
+                                    <option value="">Choose a place</option>
+                                    @foreach (var p in Model.Places)
+                                    {
+                                        <option value="@p.Value" selected="@p.Selected">@p.Text</option>
+                                    }
+                                </select>
+                                <span asp-validation-for="Form.PlaceId" class="text-danger small"></span>
+                                <div class="form-text">The location your business sits within.</div>
+                            </div>
+
+                            <div class="col-md-2">
+                                <label asp-for="Form.Latitude" class="form-label"></label>
+                                <input asp-for="Form.Latitude" class="form-control" type="number" step="any" />
+                                <span asp-validation-for="Form.Latitude" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-2">
+                                <label asp-for="Form.Longitude" class="form-label"></label>
+                                <input asp-for="Form.Longitude" class="form-control" type="number" step="any" />
+                                <span asp-validation-for="Form.Longitude" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-12">
+                                <label asp-for="Form.Description" class="form-label"></label>
+                                <textarea asp-for="Form.Description" class="form-control" rows="3"></textarea>
+                                <span asp-validation-for="Form.Description" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label asp-for="Form.Address" class="form-label"></label>
+                                <input asp-for="Form.Address" class="form-control" />
+                            </div>
+                            <div class="col-md-3">
+                                <label asp-for="Form.City" class="form-label"></label>
+                                <input asp-for="Form.City" class="form-control" />
+                            </div>
+                            <div class="col-md-3">
+                                <label asp-for="Form.Country" class="form-label"></label>
+                                <input asp-for="Form.Country" class="form-control" />
+                            </div>
+
+                            <div class="col-md-3">
+                                <label asp-for="Form.PostalCode" class="form-label"></label>
+                                <input asp-for="Form.PostalCode" class="form-control" />
+                            </div>
+                            <div class="col-md-3">
+                                <label asp-for="Form.Phone" class="form-label"></label>
+                                <input asp-for="Form.Phone" class="form-control" />
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Form.Email" class="form-label"></label>
+                                <input asp-for="Form.Email" class="form-control" />
+                                <span asp-validation-for="Form.Email" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label asp-for="Form.Website" class="form-label"></label>
+                                <input asp-for="Form.Website" class="form-control" placeholder="https://" />
+                            </div>
+                            <div class="col-md-3">
+                                <label asp-for="Form.LicenseNumber" class="form-label"></label>
+                                <input asp-for="Form.LicenseNumber" class="form-control" />
+                            </div>
+                            <div class="col-md-3">
+                                <label asp-for="Form.TaxId" class="form-label"></label>
+                                <input asp-for="Form.TaxId" class="form-control" />
+                            </div>
+
+                            <div class="col-12 d-flex flex-wrap gap-4">
+                                <div class="form-check">
+                                    <input asp-for="Form.IsHalal" class="form-check-input" />
+                                    <label asp-for="Form.IsHalal" class="form-check-label"></label>
+                                </div>
+                                <div class="form-check">
+                                    <input asp-for="Form.HasVegetarianOptions" class="form-check-input" />
+                                    <label asp-for="Form.HasVegetarianOptions" class="form-check-label"></label>
+                                </div>
+                                <div class="form-check">
+                                    <input asp-for="Form.HasAlcoholFreeArea" class="form-check-input" />
+                                    <label asp-for="Form.HasAlcoholFreeArea" class="form-check-label"></label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 d-flex flex-wrap gap-2">
+                            <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Register business</button>
+                            <a class="btn btn-primary-soft" asp-area="Business" asp-controller="MyBusinesses" asp-action="Index">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        }
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            // Pre-fill latitude/longitude from the chosen place's coordinates, but
+            // only when the owner has not already typed their own values.
+            var coords = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.PlaceCoordinates));
+            var select = document.getElementById("placeSelect");
+            var lat = document.getElementById("Form_Latitude");
+            var lng = document.getElementById("Form_Longitude");
+            if (!select || !lat || !lng) return;
+            select.addEventListener("change", function () {
+                var c = coords[select.value];
+                if (!c) return;
+                if (!lat.value || lat.value === "0") lat.value = c.Lat;
+                if (!lng.value || lng.value === "0") lng.value = c.Lng;
+            });
+        })();
+    </script>
+}

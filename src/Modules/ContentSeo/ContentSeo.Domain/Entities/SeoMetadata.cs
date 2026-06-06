@@ -106,6 +106,18 @@ public sealed class SeoMetadata : AuditableEntity, IAggregateRoot
         AddDomainEvent(new SeoMetadataUpdatedDomainEvent(Id, EntityType, EntityId));
     }
 
+    /// <summary>
+    /// Soft-deletes this SEO metadata record and emits <see cref="SeoMetadataDeletedDomainEvent"/>.
+    /// Throws if the record is already deleted; callers should pre-check <see cref="AuditableEntity{TKey}.IsDeleted"/>
+    /// (or treat NotFound==already-deleted at the application boundary).
+    /// </summary>
+    public void Delete()
+    {
+        EnsureNotDeleted();
+        SoftDelete();
+        AddDomainEvent(new SeoMetadataDeletedDomainEvent(Id, EntityType, EntityId));
+    }
+
     // ── Guards ────────────────────────────────────────────────────────────────
 
     private void EnsureNotDeleted()

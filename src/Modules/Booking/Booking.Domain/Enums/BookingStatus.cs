@@ -24,5 +24,18 @@ public enum BookingStatus : byte
     /// <summary>Payment received on non-instant tour; provider must confirm within 24h.</summary>
     PendingConfirmation = 11,
     /// <summary>Provider rejected a pending booking — triggers automatic full refund.</summary>
-    Rejected = 12
+    Rejected = 12,
+
+    // ── Phase 3: Dispute lifecycle (G4a) ──────────────────────────────────
+    /// <summary>
+    /// User opened a dispute on a Completed booking within the 48-hour window.
+    /// Admin must Resolve to clear.
+    /// </summary>
+    Disputed = 13,
+    /// <summary>
+    /// Admin resolved a Disputed booking. Terminal state for the dispute lifecycle.
+    /// Resolution notes captured on the aggregate; downstream consumers (Finance, Messaging)
+    /// react via the tour-booking.dispute-resolved.v1 integration event.
+    /// </summary>
+    Resolved = 14
 }

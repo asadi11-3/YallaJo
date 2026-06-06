@@ -1,0 +1,48 @@
+@using YallaJo.Web.Areas.Content.Models.CreatorApplication
+@model RedeemCreatorInvitationVm
+@{
+    ViewData["Title"] = "Redeem a creator invitation";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<section class="pt-0">
+    <div class="container vstack gap-4" style="max-width: 640px;">
+        <div>
+            <h1 class="h3 mb-1">Redeem a creator invitation</h1>
+            <p class="text-body-secondary mb-0">Enter the invitation token you received to activate your creator access.</p>
+        </div>
+
+        @if (TempData["Error"] is string err)
+        {
+            <div class="alert alert-danger" role="alert">@err</div>
+        }
+
+        <div class="card border">
+            <div class="card-body">
+                <form asp-area="Content" asp-controller="CreatorApplication" asp-action="Redeem" method="post">
+                    @Html.AntiForgeryToken()
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                    <div class="mb-4">
+                        <label asp-for="Token" class="form-label"></label>
+                        <input asp-for="Token" class="form-control font-data" autocomplete="off" />
+                        <span asp-validation-for="Token" class="text-danger small"></span>
+                    </div>
+
+                    <div class="d-flex flex-wrap gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-ticket-perforated me-1"></i>Redeem invitation
+                        </button>
+                        <a asp-area="Content" asp-controller="CreatorApplication" asp-action="Application" class="btn btn-primary-soft">
+                            <i class="bi bi-arrow-left me-1"></i>Back to my application
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -32,6 +32,42 @@ public sealed class MyBusinessesController : BaseController
         return View(result.Data);
     }
 
+    [HttpGet("business/businesses/register")]
+    [RequirePermission(WebPermission.Business.Create)]
+    public async Task<IActionResult> Register(CancellationToken ct = default)
+    {
+        SetSidebar("Register", null);
+        var result = await _facade.GetRegisterAsync(ct: ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+        if (!result.IsSuccess || result.Data is null)
+        {
+            SetError(result.Error);
+            return RedirectToAction(nameof(Index));
+        }
+        return View(result.Data);
+    }
+
+    [HttpPost("business/businesses/register")]
+    [ValidateAntiForgeryToken]
+    [RequirePermission(WebPermission.Business.Create)]
+    public async Task<IActionResult> Register(RegisterBusinessFormVm form, CancellationToken ct = default)
+    {
+        SetSidebar("Register", null);
+        if (!ModelState.IsValid)
+            return await ReloadRegisterAsync(form, ct);
+
+        var result = await _facade.RegisterAsync(form, ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+        if (!result.IsSuccess)
+        {
+            if (!ApplyValidationErrors(result)) SetError(result.Error);
+            return await ReloadRegisterAsync(form, ct);
+        }
+
+        SetSuccess("Business registered. It is now pending review.");
+        return RedirectToAction(nameof(Manage), new { id = result.Data });
+    }
+
     [HttpGet("business/businesses/{id:guid}")]
     public async Task<IActionResult> Manage(Guid id, CancellationToken ct = default)
     {
@@ -77,6 +113,15 @@ public sealed class MyBusinessesController : BaseController
         if (GuardSignOut(result) is { } signOut) return signOut;
         SetFlash(result, "Business resubmitted for review.", "Could not resubmit the business for review.");
         return RedirectToAction(nameof(Manage), new { id });
+    }
+
+    private async Task<IActionResult> ReloadRegisterAsync(RegisterBusinessFormVm form, CancellationToken ct)
+    {
+        var result = await _facade.GetRegisterAsync(form, ct);
+        var vm = result is { IsSuccess: true, Data: not null }
+            ? result.Data
+            : new RegisterBusinessVm { Form = form, BusinessTypes = MyBusinessesMapper.BusinessTypeOptions(form.BusinessType) };
+        return View(nameof(Register), vm);
     }
 
     private async Task<IActionResult> ReloadManageAsync(Guid id, EditBusinessFormVm form, CancellationToken ct)

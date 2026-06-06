@@ -54,6 +54,7 @@ public static class DependencyInjection
 
         // ── Repositories ──────────────────────────────────────────────────────
         services.AddScoped<IReviewRepository, ReviewRepository>();
+        services.AddScoped<IAccessibilityReviewRepository, AccessibilityReviewRepository>();
         services.AddScoped<IFavoriteRepository, FavoriteRepository>();
         services.AddScoped<IReportRepository, ReportRepository>();
         services.AddScoped<IContentModerationLogRepository, ContentModerationLogRepository>();

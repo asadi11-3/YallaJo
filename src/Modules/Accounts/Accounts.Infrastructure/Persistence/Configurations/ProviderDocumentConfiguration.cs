@@ -34,6 +34,12 @@ public sealed class ProviderDocumentConfiguration : IEntityTypeConfiguration<Pro
 
         builder.Property(d => d.UploadedAt).IsRequired();
 
+        // Match the principal's soft-delete query filter so that documents of a
+        // soft-deleted ProviderApplication are filtered out together with their parent.
+        // Without this matching filter EF warns that the required principal can be
+        // filtered out while the required dependent remains (linkid=2131316).
+        builder.HasQueryFilter(d => !d.Application.IsDeleted);
+
         // Indexes
         builder.HasIndex(d => d.ApplicationId)
             .HasDatabaseName("IX_ProviderDocuments_ApplicationId");

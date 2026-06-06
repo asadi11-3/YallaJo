@@ -28,6 +28,29 @@ public sealed class MyBusinessesApiClient
     public Task<ApiResult<BusinessDetailResponse>> GetByIdAsync(Guid id, CancellationToken ct = default)
         => _api.GetAsync<BusinessDetailResponse>($"{Base}/{id:D}", ct);
 
+    /// <summary>
+    /// Creates a new business (POST /api/v1/places/businesses). Returns the created
+    /// business detail so the caller can redirect straight into its management pages.
+    /// </summary>
+    public Task<ApiResult<BusinessDetailResponse>> CreateAsync(CreateBusinessApiRequest request, CancellationToken ct = default)
+        => _api.PostAsync<BusinessDetailResponse>(Base, request, ct);
+
+    /// <summary>
+    /// Loads places to populate the Register form's Place picker. Uses the public
+    /// places list (GET /api/v1/places); page size is generous so the dropdown can
+    /// show the full set without paging.
+    /// </summary>
+    public Task<ApiResult<PlaceOptionsResponse>> GetPlaceOptionsAsync(int pageSize = 200, CancellationToken ct = default)
+    {
+        var query = new Dictionary<string, string?>
+        {
+            ["page"] = "1",
+            ["pageSize"] = pageSize.ToString(CultureInfo.InvariantCulture),
+        };
+        var url = QueryHelpers.AddQueryString("/api/v1/places", query);
+        return _api.GetAsync<PlaceOptionsResponse>(url, ct);
+    }
+
     public Task<ApiResult> UpdateAsync(Guid id, UpdateBusinessApiRequest request, CancellationToken ct = default)
         => _api.PutAsync($"{Base}/{id:D}", request, ct);
 

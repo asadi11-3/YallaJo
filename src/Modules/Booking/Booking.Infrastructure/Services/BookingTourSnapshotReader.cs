@@ -37,9 +37,6 @@ internal sealed class BookingTourSnapshotReader(BookingDbContext dbContext)
             IsInstantBooking: snapshot.IsInstantBooking,
             RefundPolicyId: snapshot.RefundPolicyId,
             RefundPolicySnapshotJson: snapshot.RefundPolicySnapshotJson,
-            // TODO: TourSnapshot entity does not yet carry MaxGroupSize.
-            // Until a ContentTours event populates it onto the snapshot,
-            // treat as unlimited so capacity validation does not block creation.
-            MaxGroupSize: int.MaxValue);
+            MaxGroupSize: snapshot.MaxGroupSize);
     }
 }

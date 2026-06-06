@@ -40,6 +40,13 @@
                                 <i class="bi bi-shop fa-fw me-2"></i>My Businesses
                             </a>
                         </li>
+                        <permission require="@WebPermission.Business.Create">
+                            <li class="nav-item">
+                                <a class="@Nav("Register")" asp-area="Business" asp-controller="MyBusinesses" asp-action="Register">
+                                    <i class="bi bi-plus-circle fa-fw me-2"></i>Register a business
+                                </a>
+                            </li>
+                        </permission>
 
                         @if (hasBiz)
                         {

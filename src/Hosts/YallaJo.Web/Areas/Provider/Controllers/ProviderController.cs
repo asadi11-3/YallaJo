@@ -32,11 +32,21 @@ public sealed class ProviderController : BaseController
         return View(result.Data);
     }
 
-    // GET /provider/apply
+    // GET /provider/apply  (optional ?type= deep-link pre-selects the provider type, e.g. "Become a guide")
     [HttpGet("provider/apply")]
     [RequirePermission(WebPermission.ProviderApplication.Register)]
-    public IActionResult Apply()
-        => View(new ProviderApplyVm { TypeOptions = ProviderMapper.TypeOptions() });
+    public IActionResult Apply(string? type = null)
+    {
+        var options = ProviderMapper.TypeOptions();
+
+        // Honor a ?type= query param only when it matches a known provider-type value (case-insensitive).
+        var preset = string.IsNullOrWhiteSpace(type)
+            ? string.Empty
+            : options.FirstOrDefault(o => string.Equals(o.Value, type.Trim(), StringComparison.OrdinalIgnoreCase))?.Value
+              ?? string.Empty;
+
+        return View(new ProviderApplyVm { Type = preset, TypeOptions = options });
+    }
 
     // POST /provider/apply
     [HttpPost("provider/apply")]

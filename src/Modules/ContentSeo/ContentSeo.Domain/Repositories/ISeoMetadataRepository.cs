@@ -18,4 +18,16 @@ public interface ISeoMetadataRepository : IRepository<SeoMetadata>
         SeoEntityType entityType,
         Guid entityId,
         CancellationToken ct = default);
+
+    /// <summary>
+    /// Returns a paginated slice of SEO metadata records ordered by most-recently updated.
+    /// Used by the admin list endpoint. Soft-deleted records are excluded unless
+    /// <paramref name="includeDeleted"/> is <c>true</c>.
+    /// </summary>
+    Task<(IReadOnlyList<SeoMetadata> Items, int Total)> ListAsync(
+        SeoEntityType? entityType,
+        bool includeDeleted,
+        int skip,
+        int take,
+        CancellationToken ct = default);
 }

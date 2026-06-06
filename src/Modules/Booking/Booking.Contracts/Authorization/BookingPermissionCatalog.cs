@@ -59,5 +59,10 @@ public sealed class BookingPermissionCatalog : IPermissionCatalog
         // ── AdminBookingDashboard (2) ───────────────────────────────────────
         new(BookingFeatures.AdminBookingDashboard, AppAction.Read,   PermissionGroup.BookingOperations, "Admin: view booking dashboard (all bookings)"),
         new(BookingFeatures.AdminBookingDashboard, AppAction.Update, PermissionGroup.BookingOperations, "Admin: force refund / dashboard updates"),
+
+        // ── BookingDispute (3) — Phase 3 G4a ────────────────────────────────
+        new(BookingFeatures.BookingDispute, AppAction.Create,  PermissionGroup.BookingOperations, "Open a dispute on a Completed booking (owner)"),
+        new(BookingFeatures.BookingDispute, AppAction.Resolve, PermissionGroup.BookingOperations, "Admin: resolve a Disputed booking"),
+        new(BookingFeatures.BookingDispute, AppAction.Read,    PermissionGroup.BookingOperations, "View dispute history (admin/provider/owner)"),
     ];
 }

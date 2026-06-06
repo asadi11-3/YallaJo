@@ -46,8 +46,20 @@ internal sealed class PopularityScoreCalculationService(
         var stale = await scores.GetStaleAsync(settings.BatchSize, ct);
         foreach (var score in stale)
         {
-            var aggregate = await interactions.AggregateScoreAsync(score.EntityType, score.EntityId, now, ct);
-            var finalScore = aggregate.ViewScore + aggregate.ClickScore + aggregate.FavoriteScore + aggregate.BookingStartedScore + aggregate.BookingCompletedScore + aggregate.ReviewScore;
+            var aggregate = await interactions.AggregateForPopularityAsync(score.EntityType, score.EntityId, now, ct);
+            // Spec popularity formula (Agents/YallaJo.md §10):
+            //   score = bookingCount*3 + reviewCount*2 + avgRating*10 + viewCount*0.1 + favoriteCount*1.5 + recencyBonus
+            //   recencyBonus = max(0, 50 - daysSinceLastBooking)  (0 when no completed booking on record)
+            var recencyBonus = aggregate.DaysSinceLastBooking.HasValue
+                ? Math.Max(0m, 50m - aggregate.DaysSinceLastBooking.Value)
+                : 0m;
+            var finalScore =
+                (aggregate.BookingCount * 3m) +
+                (aggregate.ReviewCount * 2m) +
+                (aggregate.AverageRating * 10m) +
+                (aggregate.ViewCount * 0.1m) +
+                (aggregate.FavoriteCount * 1.5m) +
+                recencyBonus;
             score.Recalculate(finalScore, aggregate.InteractionCount, now);
         }
 

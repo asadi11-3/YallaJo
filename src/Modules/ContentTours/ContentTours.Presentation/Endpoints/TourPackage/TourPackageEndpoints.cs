@@ -1,6 +1,9 @@
 using ContentTours.Application.Commands.TourPackage.AddInclusion;
+using ContentTours.Application.Commands.TourPackage.ApproveTourPackage;
 using ContentTours.Application.Commands.TourPackage.CreateTourPackage;
 using ContentTours.Application.Commands.TourPackage.DeleteTourPackage;
+using ContentTours.Application.Commands.TourPackage.RejectTourPackage;
+using ContentTours.Application.Commands.TourPackage.SubmitTourPackage;
 using ContentTours.Application.Commands.TourPackage.UpdateTourPackage;
 using ContentTours.Application.Queries.TourPackage.Common;
 using ContentTours.Application.Queries.TourPackage.GetTourPackageById;
@@ -198,5 +201,72 @@ internal static class TourPackageEndpoints
         .WithMetadata(new MustHavePermissionAttribute(
             ContentToursFeatures.Package,
             AppAction.Update));
+
+        // ── POST /packages/{id}/submit ─ WS-5a (Phase 3 G3a) ──────────
+        packages.MapPost("/{id:guid}/submit", async (
+            Guid id,
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            var result = await sender.Send(new SubmitTourPackageCommand(id), ct);
+            return result.ToApiResult();
+        })
+        .WithName("SubmitTourPackage")
+        .WithSummary("Submit a tour package for admin review (provider)")
+        .Produces(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status409Conflict)
+        .WithMetadata(new MustHavePermissionAttribute(
+            ContentToursFeatures.Package,
+            AppAction.Submit))
+        .RequireAuthorization();
+
+        // ── POST /packages/{id}/approve ─ WS-5a (Phase 3 G3a) ─────────
+        packages.MapPost("/{id:guid}/approve", async (
+            Guid id,
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            var result = await sender.Send(new ApproveTourPackageCommand(id), ct);
+            return result.ToApiResult();
+        })
+        .WithName("ApproveTourPackage")
+        .WithSummary("Approve a tour package (Admin)")
+        .Produces(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status409Conflict)
+        .WithMetadata(new MustHavePermissionAttribute(
+            ContentToursFeatures.Package,
+            AppAction.Approve))
+        .RequireAuthorization();
+
+        // ── POST /packages/{id}/reject ─ WS-5a (Phase 3 G3a) ──────────
+        packages.MapPost("/{id:guid}/reject", async (
+            Guid id,
+            RejectTourPackageRequest request,
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            var result = await sender.Send(
+                new RejectTourPackageCommand(id, request.Reason),
+                ct);
+            return result.ToApiResult();
+        })
+        .WithName("RejectTourPackage")
+        .WithSummary("Reject a tour package (Admin)")
+        .Produces(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status409Conflict)
+        .WithMetadata(new MustHavePermissionAttribute(
+            ContentToursFeatures.Package,
+            AppAction.Reject))
+        .RequireAuthorization();
     }
 }

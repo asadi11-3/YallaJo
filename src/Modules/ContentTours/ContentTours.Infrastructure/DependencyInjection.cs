@@ -84,6 +84,9 @@ public static class DependencyInjection
         // ── Outbox writer (Application layer uses this to avoid DbContext dependency) ──
         services.AddScoped<IContentToursOutboxWriter, ContentToursOutboxWriter>();
 
+        // ── One-time backfill: re-emit enriched TourApproved events for existing approved tours ──
+        services.AddScoped<ITourSnapshotBackfillService, TourSnapshotBackfillService>();
+
         // ── Cross-module stubs (replaced by real implementations in other modules) ──
         services.AddScoped<IScheduleBookingCountService, NoOpScheduleBookingCountService>();
 

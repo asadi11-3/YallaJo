@@ -93,7 +93,7 @@ public sealed class Dispute : AuditableEntity, IAggregateRoot
         ResolvedByUserId = adminId;
         ResolvedAt = utcNow;
         MarkUpdated();
-        AddDomainEvent(new DisputeResolvedDomainEvent(Id, PaymentId, resolution, adminId));
+        AddDomainEvent(new DisputeResolvedDomainEvent(Id, PaymentId, UserId, resolution, adminId, ResolutionNotes));
         return Result.Success();
     }
 
@@ -119,6 +119,7 @@ public sealed class Dispute : AuditableEntity, IAggregateRoot
         EscalatedAt = utcNow;
         EscalationReason = reason.Trim();
         MarkUpdated();
+        AddDomainEvent(new DisputeEscalatedDomainEvent(Id, PaymentId, UserId, EscalationReason, adminId));
         return Result.Success();
     }
 }

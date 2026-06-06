@@ -14,6 +14,7 @@ public sealed class GetPopularEntitiesQueryHandler(IPopularityScoreRepository re
         if (!Enum.TryParse<EntityType>(request.EntityType, true, out var type)) return Result.Failure<IReadOnlyList<PopularEntityDto>>(new Error("Analytics.InvalidEntityType", "Unsupported entity type."));
         var rows = await repo.GetTopByTypeAsync(type, request.Count, ct);
         logger.LogDebug("Read {Count} popular {Type}", rows.Count, type);
-        return Result.Success((IReadOnlyList<PopularEntityDto>)rows.Select(x => new PopularEntityDto(x.EntityId, x.EntityType.ToString(), x.Score, x.TrendingRank, 0)).ToList());
+        // WS-5c (G9 fix): use the persisted PopularityScore.ReviewCountSnapshot (refreshed by the rating-recalculation pipeline) instead of the previous hardcoded 0.
+        return Result.Success((IReadOnlyList<PopularEntityDto>)rows.Select(x => new PopularEntityDto(x.EntityId, x.EntityType.ToString(), x.Score, x.TrendingRank, x.ReviewCountSnapshot)).ToList());
     }
 }

@@ -286,7 +286,12 @@ public sealed class Tour : AuditableEntity, IAggregateRoot
             TourId: Id,
             CreatedByUserId: CreatedByUserId,
             ApprovedByUserId: reviewerId,
-            ApprovedAt: ApprovedAt.Value));
+            ApprovedAt: ApprovedAt.Value,
+            Title: Name,
+            BasePrice: BasePrice.Amount,
+            Currency: Currency,
+            IsInstantBooking: IsInstantBooking,
+            MaxGroupSize: MaxGroupSize));
 
         if (PlaceId != Guid.Empty)
                     AddDomainEvent(new TourPlaceCountChangedDomainEvent(Id, PlaceId));

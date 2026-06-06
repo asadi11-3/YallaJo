@@ -49,6 +49,7 @@ public sealed class ContentPlacesPermissionCatalog : IPermissionCatalog
         // ── AccessibilityFeature ─────────────────────────────────────────────
         new(ContentPlacesFeatures.AccessibilityFeature, AppAction.Read,   PermissionGroup.ContentManagement, "View accessibility features"),
         new(ContentPlacesFeatures.AccessibilityFeature, AppAction.Update, PermissionGroup.ContentManagement, "Update accessibility features"),
+        new(ContentPlacesFeatures.AccessibilityFeature, AppAction.Delete, PermissionGroup.ContentManagement, "Delete an accessibility-feature assignment (admin)"),
 
         // ── ServiceItem ──────────────────────────────────────────────────────
         new(ContentPlacesFeatures.ServiceItem, AppAction.Read,       PermissionGroup.ContentManagement, "View service items"),

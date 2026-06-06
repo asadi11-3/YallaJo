@@ -336,10 +336,12 @@ public static class WebPermission
     // ── Creator (blog creator identity + follow) ──────────────────────────────
     public static class Creator
     {
-        public const string Read     = "Permission.Creator.Read";
-        public const string Submit   = "Permission.Creator.Submit";
-        public const string Follow   = "Permission.Creator.Follow";
-        public const string Unfollow = "Permission.Creator.Unfollow";
+        public const string Read             = "Permission.Creator.Read";
+        public const string Submit           = "Permission.Creator.Submit";
+        public const string Update           = "Permission.Creator.Update";
+        public const string RedeemInvitation = "Permission.Creator.RedeemInvitation";
+        public const string Follow           = "Permission.Creator.Follow";
+        public const string Unfollow         = "Permission.Creator.Unfollow";
     }
 
     // ── Blog (creator posts) ──────────────────────────────────────────────────

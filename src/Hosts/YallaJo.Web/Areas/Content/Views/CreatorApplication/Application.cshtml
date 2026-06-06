@@ -1,0 +1,166 @@
+@using YallaJo.Web.Areas.Content.Models.CreatorApplication
+@model CreatorApplicationStatusVm
+@{
+    ViewData["Title"] = "My creator application";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var color = CreatorApplicationMapper.StatusColor(Model.Status);
+}
+
+<section class="pt-0">
+    <div class="container vstack gap-4" style="max-width: 820px;">
+        <div>
+            <h1 class="h3 mb-1">My creator application</h1>
+            <p class="text-body-secondary mb-0">Track the status of your application and update the details when more information is needed.</p>
+        </div>
+
+        @if (TempData["Success"] is string ok)
+        {
+            <div class="alert alert-success" role="alert">@ok</div>
+        }
+        @if (TempData["Error"] is string err)
+        {
+            <div class="alert alert-danger" role="alert">@err</div>
+        }
+
+        @if (!Model.HasApplication)
+        {
+            <div class="card border">
+                <div class="card-body text-center py-5">
+                    <i class="bi bi-pencil-square fs-2 text-body-secondary"></i>
+                    <h2 class="h5 mt-3 mb-2">You have not applied yet</h2>
+                    <p class="text-body-secondary mb-4">Start an application to share your work and become a content creator.</p>
+                    <a asp-area="Content" asp-controller="CreatorApplication" asp-action="Apply" class="btn btn-primary">
+                        <i class="bi bi-send me-1"></i>Apply to become a creator
+                    </a>
+                    <div class="mt-3">
+                        <a asp-area="Content" asp-controller="CreatorApplication" asp-action="Redeem" class="link-secondary small">
+                            Have an invitation? Redeem it here
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="card border">
+                <div class="card-body">
+                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+                        <span class="badge bg-@(color)-soft text-@color">@Model.StatusLabel</span>
+                        <span class="text-body-secondary small">
+                            Submitted <time class="font-data">@Model.CreatedAt.ToString("yyyy-MM-dd")</time>
+                            @if (Model.UpdatedAt is { } updated)
+                            {
+                                <text> &middot; updated <time class="font-data">@updated.ToString("yyyy-MM-dd")</time></text>
+                            }
+                        </span>
+                    </div>
+
+                    @if (!string.IsNullOrWhiteSpace(Model.RejectionReason))
+                    {
+                        <div class="alert alert-danger" role="alert">
+                            <strong>Reason:</strong> @Model.RejectionReason
+                        </div>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(Model.AdminNote))
+                    {
+                        <div class="alert alert-warning" role="alert">
+                            <strong>Reviewer note:</strong> @Model.AdminNote
+                        </div>
+                    }
+
+                    @if (Model.IsEditable)
+                    {
+                        <form asp-area="Content" asp-controller="CreatorApplication" asp-action="Update" method="post">
+                            @Html.AntiForgeryToken()
+                            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                            <input type="hidden" asp-for="Form.Id" />
+
+                            <div class="mb-3">
+                                <label asp-for="Form.Bio" class="form-label"></label>
+                                <textarea asp-for="Form.Bio" class="form-control" rows="4"></textarea>
+                                <span asp-validation-for="Form.Bio" class="text-danger small"></span>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="Form.PortfolioUrls" class="form-label"></label>
+                                <textarea asp-for="Form.PortfolioUrls" class="form-control" rows="3"></textarea>
+                                <div class="form-text">One link per line.</div>
+                                <span asp-validation-for="Form.PortfolioUrls" class="text-danger small"></span>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="Form.SampleWorkUrls" class="form-label"></label>
+                                <textarea asp-for="Form.SampleWorkUrls" class="form-control" rows="3"></textarea>
+                                <div class="form-text">One link per line.</div>
+                                <span asp-validation-for="Form.SampleWorkUrls" class="text-danger small"></span>
+                            </div>
+
+                            @if (Model.Niches.Count > 0)
+                            {
+                                <div class="mb-3">
+                                    <span class="form-label d-block">Niches</span>
+                                    <div class="row g-2">
+                                        @foreach (var niche in Model.Niches)
+                                        {
+                                            <div class="col-md-6">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" name="Form.NicheIds" value="@niche.Id" id="niche-@niche.Id" @(niche.Selected ? "checked" : null) />
+                                                    <label class="form-check-label" for="niche-@niche.Id">@niche.Name</label>
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            }
+
+                            <div class="mb-3">
+                                <label asp-for="Form.FreeTags" class="form-label"></label>
+                                <input asp-for="Form.FreeTags" class="form-control" />
+                                <div class="form-text">Separate tags with commas.</div>
+                                <span asp-validation-for="Form.FreeTags" class="text-danger small"></span>
+                            </div>
+
+                            <div class="mb-4">
+                                <label asp-for="Form.SocialHandles" class="form-label"></label>
+                                <textarea asp-for="Form.SocialHandles" class="form-control" rows="3"></textarea>
+                                <div class="form-text">One per line, in the form handle: link.</div>
+                                <span asp-validation-for="Form.SocialHandles" class="text-danger small"></span>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-lg me-1"></i>Save changes
+                            </button>
+                        </form>
+
+                        @if (Model.CanSubmit)
+                        {
+                            <form asp-area="Content" asp-controller="CreatorApplication" asp-action="Submit" method="post" class="mt-3 pt-3 border-top">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@Model.Id" />
+                                <p class="text-body-secondary small mb-2">When your application is ready, submit it for review.</p>
+                                <button type="submit" class="btn btn-primary-soft">
+                                    <i class="bi bi-send me-1"></i>Submit for review
+                                </button>
+                            </form>
+                        }
+                    }
+                    else
+                    {
+                        <dl class="row mb-0">
+                            <dt class="col-sm-3">About you</dt>
+                            <dd class="col-sm-9">@(string.IsNullOrWhiteSpace(Model.Form.Bio) ? "Not provided" : Model.Form.Bio)</dd>
+                            <dt class="col-sm-3">Portfolio</dt>
+                            <dd class="col-sm-9">@(string.IsNullOrWhiteSpace(Model.Form.PortfolioUrls) ? "Not provided" : Model.Form.PortfolioUrls)</dd>
+                            <dt class="col-sm-3">Tags</dt>
+                            <dd class="col-sm-9">@(string.IsNullOrWhiteSpace(Model.Form.FreeTags) ? "Not provided" : Model.Form.FreeTags)</dd>
+                        </dl>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

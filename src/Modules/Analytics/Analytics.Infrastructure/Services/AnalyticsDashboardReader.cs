@@ -63,7 +63,13 @@ internal sealed class AnalyticsDashboardReader(AnalyticsDbContext db) : IAnalyti
         if (afterId is not null) query = query.Where(x => x.Score < afterId.Value);
         var rows = await query.OrderByDescending(x => x.Score).Take(size + 1).ToListAsync(ct);
         var next = rows.Count > size ? (long?)rows[^1].Score : null;
-        return new CursorPageDto<ProviderTourListItemDto>(rows.Take(size).Select(x => new ProviderTourListItemDto(x.EntityId, x.EntityId.ToString(), x.Score)).ToList(), next);
+        // WS-5c (G9 fix): hydrate real tour titles from EntityAttributeSnapshots (populated by ContentTours integration events) instead of returning the EntityId as the title.
+        var pageRows = rows.Take(size).ToList();
+        var pageIds = pageRows.Select(x => x.EntityId).ToList();
+        var titles = await db.EntityAttributeSnapshots.AsNoTracking()
+            .Where(s => s.EntityKind == EntityType.Tour && pageIds.Contains(s.EntityId))
+            .ToDictionaryAsync(s => s.EntityId, s => s.Name, ct);
+        return new CursorPageDto<ProviderTourListItemDto>(pageRows.Select(x => new ProviderTourListItemDto(x.EntityId, titles.TryGetValue(x.EntityId, out var name) ? name : x.EntityId.ToString(), x.Score)).ToList(), next);
     }
 
     private IQueryable<Analytics.Domain.Entities.PaymentSnapshot> FilterPayments(DateTime? from, DateTime? to)

@@ -42,6 +42,19 @@ public class TourPackageConfiguration : IEntityTypeConfiguration<TourPackage>
         builder.Property(x => x.ValidTo).IsRequired(false);
         builder.Property(x => x.IsActive).IsRequired().HasDefaultValue(true);
 
+        // ── WS-5a (Phase 3 G3a) — package approval state machine ────────────
+        builder.Property(x => x.Status)
+            .IsRequired()
+            .HasConversion<byte>()
+            .HasDefaultValue(ContentTours.Domain.Enums.TourPackageStatus.Draft);
+        builder.Property(x => x.SubmittedAt).IsRequired(false);
+        builder.Property(x => x.ReviewedByAdminId).IsRequired(false);
+        builder.Property(x => x.ReviewedAt).IsRequired(false);
+        builder.Property(x => x.RejectionReason)
+            .IsRequired(false)
+            .HasMaxLength(2000);
+        builder.HasIndex(x => x.Status);
+
         builder.Property(x => x.CreatedAt).IsRequired();
         builder.Property(x => x.UpdatedAt).IsRequired(false);
         builder.Property(x => x.IsDeleted).IsRequired().HasDefaultValue(false);

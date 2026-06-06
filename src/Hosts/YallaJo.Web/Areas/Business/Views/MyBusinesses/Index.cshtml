@@ -1,5 +1,6 @@
 @using YallaJo.Web.Areas.Business.Models.MyBusinesses
 @using YallaJo.Web.Areas.Business.Shared
+@using YallaJo.Web.Infrastructure.Authorization
 @model MyBusinessesVm
 @{
     ViewData["Title"] = "My Businesses";
@@ -11,11 +12,18 @@
 
 <section class="pt-0">
     <div class="container vstack gap-4">
-        <div class="row">
-            <div class="col-12">
+        <div class="row align-items-center">
+            <div class="col">
                 <h1 class="h3 mb-1"><i class="bi bi-shop me-2"></i>My Businesses</h1>
                 <p class="text-body-secondary mb-0">Manage the businesses you own, edit their profiles, and resubmit rejected listings.</p>
             </div>
+            <permission require="@WebPermission.Business.Create">
+                <div class="col-auto">
+                    <a class="btn btn-primary" asp-area="Business" asp-controller="MyBusinesses" asp-action="Register">
+                        <i class="bi bi-plus-circle me-1"></i>Register a business
+                    </a>
+                </div>
+            </permission>
         </div>
 
         @if (TempData["Success"] is string ok) { <div class="alert alert-success">@ok</div> }
@@ -26,7 +34,12 @@
             <div class="card card-body border text-center py-5">
                 <i class="bi bi-shop fs-1 d-block mb-2 text-body-secondary"></i>
                 <h6 class="mb-1">No businesses yet</h6>
-                <p class="text-body-secondary mb-0">You do not own any businesses on the platform.</p>
+                <p class="text-body-secondary mb-3">You do not own any businesses on the platform.</p>
+                <permission require="@WebPermission.Business.Create">
+                    <a class="btn btn-primary" asp-area="Business" asp-controller="MyBusinesses" asp-action="Register">
+                        <i class="bi bi-plus-circle me-1"></i>Register a business
+                    </a>
+                </permission>
             </div>
         }
         else

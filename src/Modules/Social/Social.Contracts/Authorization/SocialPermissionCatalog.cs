@@ -21,6 +21,16 @@ public sealed class SocialPermissionCatalog : IPermissionCatalog
         new(SocialFeatures.Review, AppAction.Vote, PermissionGroup.ContentManagement,
             "Mark a review as helpful"),
 
+        // ── AccessibilityReview (4) — Phase-3 WS-2 (G1) ──────────────────────
+        new(SocialFeatures.AccessibilityReview, AppAction.Create, PermissionGroup.ContentManagement,
+            "Submit an accessibility-focused review for an entity"),
+        new(SocialFeatures.AccessibilityReview, AppAction.Read, PermissionGroup.ContentManagement,
+            "Read own and public accessibility reviews"),
+        new(SocialFeatures.AccessibilityReview, AppAction.Update, PermissionGroup.ContentManagement,
+            "Edit own accessibility review within the 48-hour edit window (S-AR2)"),
+        new(SocialFeatures.AccessibilityReview, AppAction.Delete, PermissionGroup.ContentManagement,
+            "Soft-delete own accessibility review"),
+
         // ── ReviewReply (3) ─────────────────────────────────────────────────
         new(SocialFeatures.ReviewReply, AppAction.Create, PermissionGroup.ContentManagement,
             "Post a provider reply to a review"),

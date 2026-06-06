@@ -21,6 +21,56 @@ public sealed class MyBusinessesFacade
         return ApiResult<MyBusinessesVm>.Ok(MyBusinessesMapper.ToVm(result.Data));
     }
 
+    /// <summary>
+    /// Builds the "Register a business" page model: the BusinessType options are
+    /// always available; the Place options come from the public places list. A
+    /// failure to load places is non-fatal (the view shows an empty-state), so we
+    /// only force sign-out on an auth failure.
+    /// </summary>
+    public async Task<ApiResult<RegisterBusinessVm>> GetRegisterAsync(RegisterBusinessFormVm? form = null, CancellationToken ct = default)
+    {
+        form ??= new RegisterBusinessFormVm();
+
+        var places = await _api.GetPlaceOptionsAsync(ct: ct);
+        if (places.IsUnauthorized)
+            return ApiResult<RegisterBusinessVm>.ForceSignOut();
+
+        var placeData = places is { IsSuccess: true, Data: not null } ? places.Data.Items : [];
+        var placeItems = MyBusinessesMapper.PlaceOptions(placeData, form.PlaceId == Guid.Empty ? null : form.PlaceId);
+        var coords = placeData.ToDictionary(
+            p => p.Id.ToString("D"),
+            p => new PlaceCoord(p.Latitude, p.Longitude));
+
+        var vm = new RegisterBusinessVm
+        {
+            Form = form,
+            BusinessTypes = MyBusinessesMapper.BusinessTypeOptions(form.BusinessType),
+            Places = placeItems,
+            PlaceCoordinates = coords,
+        };
+        return ApiResult<RegisterBusinessVm>.Ok(vm);
+    }
+
+    /// <summary>
+    /// Creates a business and returns the new id so the controller can redirect
+    /// into its management pages.
+    /// </summary>
+    public async Task<ApiResult<Guid>> RegisterAsync(RegisterBusinessFormVm form, CancellationToken ct = default)
+    {
+        var request = MyBusinessesMapper.ToCreateRequest(form);
+        var result = await _api.CreateAsync(request, ct);
+
+        if (result.IsUnauthorized) return ApiResult<Guid>.ForceSignOut();
+        if (result.IsForbidden) return ApiResult<Guid>.Fail(403, "You do not have permission to register a business.");
+        if (result.IsConflict) return ApiResult<Guid>.Fail(409, "A business like this already exists. Please reload and try again.");
+        if (result.IsValidationError && result.ValidationErrors is { } errors)
+            return ApiResult<Guid>.ValidationFail(result.StatusCode, errors);
+        if (result is not { IsSuccess: true, Data: not null })
+            return ApiResult<Guid>.Fail(result.StatusCode, result.Error ?? "Could not register the business.");
+
+        return ApiResult<Guid>.Ok(result.Data.Id);
+    }
+
     public async Task<ApiResult<ManageBusinessVm>> GetManageAsync(Guid id, CancellationToken ct = default)
     {
         var result = await _api.GetByIdAsync(id, ct);

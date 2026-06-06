@@ -79,9 +79,14 @@ internal sealed class PublishRefundInitiatedHandler(
     }
 }
 
-/// <summary>Converts <see cref="RefundCompletedDomainEvent"/> into the outbound integration event.</summary>
+/// <summary>
+/// Converts <see cref="RefundCompletedDomainEvent"/> into the outbound integration event.
+/// Looks up the OriginalPayment aggregate to enrich UserId for downstream consumers
+/// (Messaging needs UserId to deliver a refund-completed notification to the traveler).
+/// </summary>
 internal sealed class PublishRefundCompletedHandler(
     IFinanceOutboxWriter outbox,
+    IPaymentRepository paymentRepository,
     ILogger<PublishRefundCompletedHandler> logger)
     : INotificationHandler<DomainEventNotification<RefundCompletedDomainEvent>>
 {
@@ -89,6 +94,18 @@ internal sealed class PublishRefundCompletedHandler(
     {
         ArgumentNullException.ThrowIfNull(notification);
         var e = notification.Event;
+
+        // Domain event fires during SaveChanges; the original captured payment is in the change tracker
+        // and carries the UserId of the traveler who paid (refund Payment row also has UserId, but
+        // looking up the original captured payment is the canonical reference).
+        Payment? originalPayment = await paymentRepository.GetByIdAsync(e.OriginalPaymentId, ct).ConfigureAwait(false);
+        if (originalPayment is null)
+        {
+            logger.LogWarning(
+                "Finance: OriginalPayment {OriginalPaymentId} not found during RefundCompleted converter — emitting event without UserId.",
+                e.OriginalPaymentId);
+        }
+
         var integration = new RefundCompletedIntegrationEvent(
             RefundPaymentId: e.RefundPaymentId,
             OriginalPaymentId: e.OriginalPaymentId,
@@ -97,7 +114,8 @@ internal sealed class PublishRefundCompletedHandler(
             Currency: e.Currency,
             Reason: e.Reason,
             GatewayRefundId: e.GatewayRefundId,
-            CompletedAt: e.OccurredOn);
+            CompletedAt: e.OccurredOn,
+            UserId: originalPayment?.UserId ?? Guid.Empty);
         await outbox.WriteAsync(integration, ct).ConfigureAwait(false);
         logger.LogInformation("Enqueued finance.refund.completed.v1 for RefundId {RefundId}", e.RefundPaymentId);
     }
@@ -125,6 +143,30 @@ internal sealed class PublishRefundFailedHandler(
             FailedAt: e.OccurredOn);
         await outbox.WriteAsync(integration, ct).ConfigureAwait(false);
         logger.LogInformation("Enqueued finance.refund.failed.v1 for RefundId {RefundId} (attempt {Attempt})", e.RefundPaymentId, e.AttemptCount);
+    }
+}
+
+/// <summary>
+/// Converts <see cref="DisputeOpenedDomainEvent"/> into the outbound integration event.
+/// Domain event already carries UserId, so no repository lookup is required.
+/// Consumers: Messaging (notifies the disputing traveler), Analytics (dispute funnel).
+/// </summary>
+internal sealed class PublishDisputeOpenedHandler(
+    IFinanceOutboxWriter outbox,
+    ILogger<PublishDisputeOpenedHandler> logger)
+    : INotificationHandler<DomainEventNotification<DisputeOpenedDomainEvent>>
+{
+    public async Task Handle(DomainEventNotification<DisputeOpenedDomainEvent> notification, CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(notification);
+        var e = notification.Event;
+        var integration = new DisputeOpenedIntegrationEvent(
+            DisputeId: e.DisputeId,
+            PaymentId: e.PaymentId,
+            UserId: e.UserId,
+            Reason: e.Reason);
+        await outbox.WriteAsync(integration, ct).ConfigureAwait(false);
+        logger.LogInformation("Enqueued finance.dispute-opened.v1 for Dispute {DisputeId} (Payment {PaymentId})", e.DisputeId, e.PaymentId);
     }
 }
 
@@ -275,5 +317,54 @@ internal sealed class PublishCommissionRuleDeletedHandler(
             OccurredAt: e.OccurredOn);
         await outbox.WriteAsync(integration, ct).ConfigureAwait(false);
         logger.LogInformation("Enqueued finance.commission-rule.deleted.v1 for Rule {RuleId}", e.RuleId);
+    }
+}
+
+/// <summary>
+/// Converts <see cref="DisputeResolvedDomainEvent"/> into the outbound integration event
+/// (Phase-3 WS-4: completes the dispute lifecycle that began in Phase-2 WS-3b with DisputeOpened).
+/// </summary>
+internal sealed class PublishDisputeResolvedHandler(
+    IFinanceOutboxWriter outbox,
+    ILogger<PublishDisputeResolvedHandler> logger)
+    : INotificationHandler<DomainEventNotification<DisputeResolvedDomainEvent>>
+{
+    public async Task Handle(DomainEventNotification<DisputeResolvedDomainEvent> notification, CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(notification);
+        var e = notification.Event;
+        var integration = new DisputeResolvedIntegrationEvent(
+            DisputeId: e.DisputeId,
+            PaymentId: e.PaymentId,
+            UserId: e.UserId,
+            Resolution: e.Resolution.ToString(),
+            ResolvedByAdminId: e.ResolvedByAdminId,
+            ResolutionNotes: e.ResolutionNotes);
+        await outbox.WriteAsync(integration, ct).ConfigureAwait(false);
+        logger.LogInformation("Enqueued finance.dispute-resolved.v1 for Dispute {DisputeId} (resolution {Resolution})", e.DisputeId, e.Resolution);
+    }
+}
+
+/// <summary>
+/// Converts <see cref="DisputeEscalatedDomainEvent"/> into the outbound integration event
+/// (Phase-3 WS-4: adds the missing escalation event to the dispute lifecycle).
+/// </summary>
+internal sealed class PublishDisputeEscalatedHandler(
+    IFinanceOutboxWriter outbox,
+    ILogger<PublishDisputeEscalatedHandler> logger)
+    : INotificationHandler<DomainEventNotification<DisputeEscalatedDomainEvent>>
+{
+    public async Task Handle(DomainEventNotification<DisputeEscalatedDomainEvent> notification, CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(notification);
+        var e = notification.Event;
+        var integration = new DisputeEscalatedIntegrationEvent(
+            DisputeId: e.DisputeId,
+            PaymentId: e.PaymentId,
+            UserId: e.UserId,
+            Reason: e.Reason,
+            EscalatedByAdminId: e.EscalatedByAdminId);
+        await outbox.WriteAsync(integration, ct).ConfigureAwait(false);
+        logger.LogInformation("Enqueued finance.dispute-escalated.v1 for Dispute {DisputeId} (by admin {AdminId})", e.DisputeId, e.EscalatedByAdminId);
     }
 }

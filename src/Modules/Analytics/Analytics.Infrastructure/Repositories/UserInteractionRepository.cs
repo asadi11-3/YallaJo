@@ -27,33 +27,37 @@ internal sealed class UserInteractionRepository(AnalyticsDbContext context) : IU
         return (items.Take(size).ToList(), next);
     }
 
-    public async Task<(decimal ViewScore, decimal ClickScore, decimal FavoriteScore, decimal BookingStartedScore, decimal BookingCompletedScore, decimal ReviewScore, int InteractionCount)> AggregateScoreAsync(EntityType entityType, Guid entityId, DateTime now, CancellationToken ct = default)
+    public async Task<(int ViewCount, int FavoriteCount, int BookingCount, int ReviewCount, decimal AverageRating, int? DaysSinceLastBooking, int InteractionCount)> AggregateForPopularityAsync(EntityType entityType, Guid entityId, DateTime now, CancellationToken ct = default)
     {
+        // Aggregates raw inputs for the spec popularity formula (Agents/YallaJo.md §10):
+        //   score = bookingCount*3 + reviewCount*2 + avgRating*10 + viewCount*0.1 + favoriteCount*1.5 + recencyBonus
+        // We only look at the last 90 days of interactions so stale activity decays naturally.
         var cutoff = now.AddDays(-90);
         var interactions = await context.UserInteractions.AsNoTracking()
             .Where(x => x.EntityType == entityType && x.EntityId == entityId && x.OccurredAt >= cutoff)
             .Select(x => new { x.InteractionType, x.OccurredAt })
             .ToListAsync(ct);
 
-        decimal ScoreFor(InteractionType type, decimal weight) => interactions
-            .Where(x => x.InteractionType == type)
-            .Sum(x => weight * (decimal)Math.Pow(0.5d, Math.Max(0d, (now - x.OccurredAt).TotalDays) / 30d));
+        var viewCount = interactions.Count(x => x.InteractionType == InteractionType.View);
+        var favoriteCount = interactions.Count(x => x.InteractionType == InteractionType.AddToFavorite);
+        var bookingCount = interactions.Count(x => x.InteractionType == InteractionType.BookingCompleted);
+        var reviewCount = interactions.Count(x => x.InteractionType == InteractionType.ReviewSubmitted);
+
+        DateTime? lastBooking = interactions
+            .Where(x => x.InteractionType == InteractionType.BookingCompleted)
+            .OrderByDescending(x => x.OccurredAt)
+            .Select(x => (DateTime?)x.OccurredAt)
+            .FirstOrDefault();
+        int? daysSinceLastBooking = lastBooking is null
+            ? null
+            : (int)Math.Max(0d, Math.Floor((now - lastBooking.Value).TotalDays));
 
         var rating = await context.PopularityScores.AsNoTracking()
             .Where(x => x.EntityType == entityType && x.EntityId == entityId)
-            .Select(x => new { x.AverageRatingSnapshot, x.ReviewCountSnapshot })
+            .Select(x => new { x.AverageRatingSnapshot })
             .FirstOrDefaultAsync(ct);
-        var multiplier = rating is { ReviewCountSnapshot: >= 3, AverageRatingSnapshot: not null }
-            ? 1m + rating.AverageRatingSnapshot.Value / 10m
-            : 1m;
+        var averageRating = rating?.AverageRatingSnapshot ?? 0m;
 
-        return (
-            ScoreFor(InteractionType.View, 1m) * multiplier,
-            ScoreFor(InteractionType.Click, 2m) * multiplier,
-            ScoreFor(InteractionType.AddToFavorite, 5m) * multiplier,
-            ScoreFor(InteractionType.BookingStarted, 8m) * multiplier,
-            ScoreFor(InteractionType.BookingCompleted, 15m) * multiplier,
-            ScoreFor(InteractionType.ReviewSubmitted, 4m) * multiplier,
-            interactions.Count);
+        return (viewCount, favoriteCount, bookingCount, reviewCount, averageRating, daysSinceLastBooking, interactions.Count);
     }
 }

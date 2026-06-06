@@ -34,24 +34,26 @@ public sealed class TourApprovedSnapshotHandler(
             var snapshot = TourSnapshot.Create(
                 tourId: evt.TourId,
                 providerId: evt.CreatedByUserId,
-                title: string.Empty, // Will be updated by TourUpdated event
-                currency: "JOD",
-                basePrice: 0m,
+                title: evt.Title,
+                currency: evt.Currency,
+                basePrice: evt.BasePrice,
                 isActive: true,
                 isApproved: true,
-                isInstantBooking: false);
+                isInstantBooking: evt.IsInstantBooking,
+                maxGroupSize: evt.MaxGroupSize);
 
             dbContext.TourSnapshots.Add(snapshot);
         }
         else
         {
             existing.Update(
-                title: existing.Title,
-                currency: existing.Currency,
-                basePrice: existing.BasePrice,
+                title: evt.Title,
+                currency: evt.Currency,
+                basePrice: evt.BasePrice,
                 isActive: true,
                 isApproved: true,
-                isInstantBooking: existing.IsInstantBooking);
+                isInstantBooking: evt.IsInstantBooking,
+                maxGroupSize: evt.MaxGroupSize);
         }
 
         await unitOfWork.SaveChangesAsync(ct).ConfigureAwait(false);

@@ -21,6 +21,7 @@ public sealed class TourSnapshot : BaseEntity
     public bool IsActive { get; private set; }
     public bool IsApproved { get; private set; }
     public bool IsInstantBooking { get; private set; }
+    public int MaxGroupSize { get; private set; }
     public Guid? RefundPolicyId { get; private set; }
     public string? RefundPolicySnapshotJson { get; private set; }
     public DateTime LastUpdatedAt { get; private set; }
@@ -34,6 +35,7 @@ public sealed class TourSnapshot : BaseEntity
         bool isActive,
         bool isApproved,
         bool isInstantBooking,
+        int maxGroupSize = int.MaxValue,
         Guid? refundPolicyId = null,
         string? refundPolicySnapshotJson = null)
     {
@@ -48,6 +50,7 @@ public sealed class TourSnapshot : BaseEntity
             IsActive = isActive,
             IsApproved = isApproved,
             IsInstantBooking = isInstantBooking,
+            MaxGroupSize = maxGroupSize,
             RefundPolicyId = refundPolicyId,
             RefundPolicySnapshotJson = refundPolicySnapshotJson,
             LastUpdatedAt = DateTime.UtcNow
@@ -60,7 +63,8 @@ public sealed class TourSnapshot : BaseEntity
         decimal basePrice,
         bool isActive,
         bool isApproved,
-        bool isInstantBooking)
+        bool isInstantBooking,
+        int maxGroupSize)
     {
         Title = title;
         Currency = currency;
@@ -68,6 +72,7 @@ public sealed class TourSnapshot : BaseEntity
         IsActive = isActive;
         IsApproved = isApproved;
         IsInstantBooking = isInstantBooking;
+        MaxGroupSize = maxGroupSize;
         LastUpdatedAt = DateTime.UtcNow;
     }
 

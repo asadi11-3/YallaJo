@@ -2,7 +2,9 @@ using System.Globalization;
 using Booking.Application.Commands.CancelTourBooking;
 using Booking.Application.Commands.CompleteTourBooking;
 using Booking.Application.Commands.ConfirmTourBooking;
+using Booking.Application.Commands.OpenBookingDispute;
 using Booking.Application.Commands.RejectTourBooking;
+using Booking.Application.Commands.ResolveBookingDispute;
 using Booking.Application.Queries.GetAllBookings;
 using Booking.Application.Queries.GetMyBookings;
 using Booking.Application.Queries.GetProviderBookings;
@@ -37,6 +39,68 @@ internal static class TourBookingEndpoints
         MapRejectTourBookingEndpoint(group);
         MapCancelTourBookingEndpoint(group);
         MapCompleteTourBookingEndpoint(group);
+        MapOpenBookingDisputeEndpoint(group);
+        MapResolveBookingDisputeEndpoint(group);
+    }
+
+    // Phase-3 (G4a): Owner opens a dispute on a Completed booking (within 48h window).
+    private static void MapOpenBookingDisputeEndpoint(RouteGroupBuilder group)
+    {
+        group.MapPost("/{id:guid}/dispute", async (
+                Guid id,
+                OpenBookingDisputeRequest request,
+                ISender sender,
+                CancellationToken cancellationToken) =>
+            {
+                var result = await sender.Send(request.ToCommand(id), cancellationToken);
+                return result.ToApiResult();
+            })
+            .WithName("OpenBookingDispute")
+            .WithSummary("Booking owner opens a dispute on a Completed booking.")
+            .WithDescription(
+                "Reason required (10-2000 chars). Caller must be the booking owner. " +
+                "Booking must be Completed within the past 48 hours. " +
+                "Transitions the booking to Disputed and emits booking.tour-booking.disputed.v1.")
+            .Accepts<OpenBookingDisputeRequest>("application/json")
+            .Produces<OpenBookingDisputeResult>(StatusCodes.Status200OK)
+            .ProducesValidationProblem()
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status403Forbidden)
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status409Conflict)
+            .ProducesProblem(StatusCodes.Status422UnprocessableEntity)
+            .WithMetadata(new MustHavePermissionAttribute(BookingFeatures.BookingDispute, AppAction.Create))
+            .RequireAuthorization();
+    }
+
+    // Phase-3 (G4a): Admin resolves a Disputed booking.
+    private static void MapResolveBookingDisputeEndpoint(RouteGroupBuilder group)
+    {
+        group.MapPost("/admin/{id:guid}/dispute/resolve", async (
+                Guid id,
+                ResolveBookingDisputeRequest request,
+                ISender sender,
+                CancellationToken cancellationToken) =>
+            {
+                var result = await sender.Send(request.ToCommand(id), cancellationToken);
+                return result.ToApiResult();
+            })
+            .WithName("ResolveBookingDispute")
+            .WithSummary("Admin resolves a Disputed booking with resolution notes.")
+            .WithDescription(
+                "ResolutionNotes required (10-2000 chars). Admin-only (BookingDispute.Resolve permission). " +
+                "Booking must be in Disputed status. " +
+                "Transitions the booking to Resolved and emits booking.tour-booking.dispute-resolved.v1.")
+            .Accepts<ResolveBookingDisputeRequest>("application/json")
+            .Produces<ResolveBookingDisputeResult>(StatusCodes.Status200OK)
+            .ProducesValidationProblem()
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status403Forbidden)
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status409Conflict)
+            .ProducesProblem(StatusCodes.Status422UnprocessableEntity)
+            .WithMetadata(new MustHavePermissionAttribute(BookingFeatures.BookingDispute, AppAction.Resolve))
+            .RequireAuthorization();
     }
 
     private static void MapCompleteTourBookingEndpoint(RouteGroupBuilder group)

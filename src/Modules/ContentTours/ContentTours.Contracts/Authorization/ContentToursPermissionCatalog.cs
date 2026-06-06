@@ -29,10 +29,14 @@ public sealed class ContentToursPermissionCatalog : IPermissionCatalog
         new(ContentToursFeatures.Tour, AppAction.Feature,   PermissionGroup.ContentManagement, "Feature or unfeature a tour (admin curation)"),
         new(ContentToursFeatures.Tour, AppAction.Archive,   PermissionGroup.ContentManagement, "Archive a tour (provider)"),
 
-        new(ContentToursFeatures.Package, AppAction.Read,   PermissionGroup.ContentManagement, "View tour packages"),
-        new(ContentToursFeatures.Package, AppAction.Create, PermissionGroup.ContentManagement, "Create a tour package"),
-        new(ContentToursFeatures.Package, AppAction.Update, PermissionGroup.ContentManagement, "Update a tour package or add inclusions"),
-        new(ContentToursFeatures.Package, AppAction.Delete, PermissionGroup.ContentManagement, "Soft-delete a tour package"),
+        new(ContentToursFeatures.Package, AppAction.Read,    PermissionGroup.ContentManagement, "View tour packages"),
+        new(ContentToursFeatures.Package, AppAction.Create,  PermissionGroup.ContentManagement, "Create a tour package"),
+        new(ContentToursFeatures.Package, AppAction.Update,  PermissionGroup.ContentManagement, "Update a tour package or add inclusions"),
+        new(ContentToursFeatures.Package, AppAction.Delete,  PermissionGroup.ContentManagement, "Soft-delete a tour package"),
+        // WS-5a (Phase 3 G3a): package approval state machine.
+        new(ContentToursFeatures.Package, AppAction.Submit,  PermissionGroup.ContentManagement, "Submit a draft tour package for admin review (provider)"),
+        new(ContentToursFeatures.Package, AppAction.Approve, PermissionGroup.ContentManagement, "Approve a submitted tour package (admin)"),
+        new(ContentToursFeatures.Package, AppAction.Reject,  PermissionGroup.ContentManagement, "Reject a submitted tour package (admin)"),
 
         // ── TourGuide (assign / unassign guides on a tour) ────────────────────
         new(ContentToursFeatures.TourGuide, AppAction.Update, PermissionGroup.ContentManagement, "Assign or unassign guides on a tour"),

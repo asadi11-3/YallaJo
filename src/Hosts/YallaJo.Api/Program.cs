@@ -210,6 +210,40 @@ builder.Services.AddCors(options =>
         .AllowAnyHeader()
         .AllowAnyMethod()
         .AllowCredentials());
+
+    // Production CORS policy. Applied globally (see UseCors below) so the
+    // YallaJo.Web frontend and the SignalR NotificationHub can call the API
+    // cross-origin. AllowCredentials is REQUIRED for SignalR (it sends the
+    // access token / cookies) and for authenticated fetch from the web app.
+    // Origins are read from configuration (Cors:AllowedOrigins) so deployments
+    // can set their own hostnames without a code change. With AllowCredentials,
+    // wildcard origins are illegal, so an explicit list is mandatory.
+    var allowedOrigins = builder.Configuration
+        .GetSection("Cors:AllowedOrigins")
+        .Get<string[]>() ?? Array.Empty<string>();
+
+    options.AddPolicy("YallaJoPolicy", policy =>
+    {
+        if (allowedOrigins.Length > 0)
+        {
+            policy.WithOrigins(allowedOrigins)
+                .AllowAnyHeader()
+                .AllowAnyMethod()
+                .AllowCredentials();
+        }
+    });
+});
+
+// ── Response Compression ───────────────────────────────────────────────────
+// Brotli + Gzip for API/JSON and SignalR payloads. Brotli first (better ratio),
+// Gzip fallback for older clients. Enabled for HTTPS as well (payloads here are
+// API JSON, not secrets in URLs, so BREACH risk is mitigated by anti-forgery /
+// no-secret-in-body conventions).
+builder.Services.AddResponseCompression(options =>
+{
+    options.EnableForHttps = true;
+    options.Providers.Add<Microsoft.AspNetCore.ResponseCompression.BrotliCompressionProvider>();
+    options.Providers.Add<Microsoft.AspNetCore.ResponseCompression.GzipCompressionProvider>();
 });
 
 builder.Services.AddEndpointsApiExplorer();
@@ -247,6 +281,10 @@ builder.Services.AddSwaggerGen(options =>
 // ── Exception Handlers (order matters — first match wins) ─────────────────
 builder.Services.AddExceptionHandler<ValidationExceptionHandler>();
 builder.Services.AddExceptionHandler<DbUpdateExceptionHandler>();
+// Maps DomainException subtypes: EntityNotFoundException → 404,
+// BusinessRuleViolationException/ConcurrencyException → 409. Must run before the
+// GlobalExceptionHandler catch-all so these never fall through to a generic 500.
+builder.Services.AddExceptionHandler<DomainExceptionHandler>();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
 // ── Problem Details (RFC 7807) ────────────────────────────────────────────
@@ -277,6 +315,10 @@ using (var scope = app.Services.CreateScope())
 // 1. Global exception handler — must be first so it wraps all downstream errors
 app.UseExceptionHandler();
 app.UseStatusCodePages();
+
+// 1a. Response compression — early so all downstream responses (module
+// endpoints, SignalR negotiate, health) are compressed.
+app.UseResponseCompression();
 
 // 1b. Security & observability headers (F114) — applied to every response,
 // including error responses, via OnStarting inside the middleware.
@@ -317,6 +359,12 @@ app.UseStaticFiles();
 
 // 6. Request localization — parse Accept-Language, set CultureInfo
 app.UseMiddleware<RequestLocalizationMiddleware>();
+
+// 6b. CORS — production policy for the YallaJo.Web frontend + SignalR hub.
+// Must run before rate limiter / authentication so the browser's OPTIONS
+// preflight is never throttled or 401'd. Dev-only scoped policies (SwaggerDocs,
+// LocalDevApi) are applied above via UseWhen and are unaffected by this.
+app.UseCors("YallaJoPolicy");
 
 // 7. Rate limiter — must precede authentication
 app.UseRateLimiter();

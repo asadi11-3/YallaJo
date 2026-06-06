@@ -44,7 +44,8 @@ public sealed class TourUpdatedSnapshotHandler(
             basePrice: existing.BasePrice,
             isActive: existing.IsActive,
             isApproved: existing.IsApproved,
-            isInstantBooking: existing.IsInstantBooking);
+            isInstantBooking: existing.IsInstantBooking,
+            maxGroupSize: existing.MaxGroupSize);
 
         await unitOfWork.SaveChangesAsync(ct).ConfigureAwait(false);
 

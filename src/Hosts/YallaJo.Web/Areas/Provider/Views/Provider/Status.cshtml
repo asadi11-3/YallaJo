@@ -16,8 +16,20 @@
         <div class="card">
             <div class="card-body text-center">
                 <p class="mb-3">You haven't applied to become a provider yet.</p>
-                <a asp-area="Provider" asp-controller="Provider" asp-action="Apply"
-                   class="btn btn-primary">Become a provider</a>
+                <div class="d-flex flex-wrap gap-2 justify-content-center">
+                    <a asp-area="Provider" asp-controller="Provider" asp-action="Apply"
+                       class="btn btn-primary">
+                        <i class="bi bi-building-add me-1"></i>Become a provider
+                    </a>
+                    <a asp-area="Provider" asp-controller="Provider" asp-action="Apply"
+                       asp-route-type="IndependentGuide"
+                       class="btn btn-primary-soft">
+                        <i class="bi bi-person-badge me-1"></i>Become a guide
+                    </a>
+                </div>
+                <p class="form-text mt-2 mb-0">
+                    Independent guides apply through the same form with the guide type pre-selected.
+                </p>
             </div>
         </div>
     }

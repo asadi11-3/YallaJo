@@ -2,7 +2,11 @@ using ContentTours.Application.Commands.TourProposal.Approve;
 using ContentTours.Application.Commands.TourProposal.Create;
 using ContentTours.Application.Commands.TourProposal.Reject;
 using ContentTours.Application.Commands.TourProposal.Submit;
+using ContentTours.Application.Queries.TourProposal.Common;
+using ContentTours.Application.Queries.TourProposal.GetTourProposalById;
+using ContentTours.Application.Queries.TourProposal.ListTourProposals;
 using ContentTours.Contracts.Authorization;
+using ContentTours.Domain.Enums;
 using ContentTours.Presentation.Endpoints.TourGuide.Models;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
@@ -21,17 +25,39 @@ internal static class TourProposalEndpoints
         var proposals = endpoints.MapGroup("/api/v1/tours/proposals")
             .WithTags("ContentTours | Tour Proposals");
 
-        // GET /tours/proposals — guide views own proposals; admin views all pending
+        // WS-5b (Phase 3 G3b): real list handler — supports guide-scoped (?guideId=&status=) + admin pending queue.
         proposals.MapGet("/", async (
+            Guid? guideId,
+            TourProposalStatus? status,
             ISender sender,
             CancellationToken ct) =>
         {
-            // Placeholder — full query handler in next iteration
-            return Results.Ok(Array.Empty<object>());
+            var result = await sender.Send(new ListTourProposalsQuery(guideId, status), ct);
+            return result.ToApiResult();
         })
         .WithName("ListTourProposals")
-        .WithSummary("List tour proposals (guide: own; admin: all pending)")
-        .Produces(StatusCodes.Status200OK)
+        .WithSummary("List tour proposals (guideId omitted = admin pending queue; with guideId = that guide's own, optional status filter)")
+        .Produces<IReadOnlyList<TourProposalDto>>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .WithMetadata(new MustHavePermissionAttribute(ContentToursFeatures.TourProposal, AppAction.Read))
+        .RequireAuthorization();
+
+        // WS-5b (Phase 3 G3b): get a single proposal by id.
+        proposals.MapGet("/{id:guid}", async (
+            Guid id,
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            var result = await sender.Send(new GetTourProposalByIdQuery(id), ct);
+            return result.ToApiResult();
+        })
+        .WithName("GetTourProposalById")
+        .WithSummary("Get a single tour proposal by id")
+        .Produces<TourProposalDto>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .ProducesProblem(StatusCodes.Status404NotFound)
         .WithMetadata(new MustHavePermissionAttribute(ContentToursFeatures.TourProposal, AppAction.Read))
         .RequireAuthorization();
 

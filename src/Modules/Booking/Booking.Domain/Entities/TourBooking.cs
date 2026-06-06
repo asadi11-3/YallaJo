@@ -80,6 +80,14 @@ public sealed class TourBooking : AuditableEntity, IAggregateRoot
     public DateTime? CompletedAt { get; private set; }
     public Guid? CompletedByUserId { get; private set; }
 
+    // === Phase 3 (G4a): Dispute lifecycle ===
+    public DateTime? DisputedAt { get; private set; }
+    public Guid? DisputeOpenedByUserId { get; private set; }
+    public string? DisputeReason { get; private set; }
+    public DateTime? ResolvedAt { get; private set; }
+    public Guid? ResolvedByAdminId { get; private set; }
+    public string? ResolutionNotes { get; private set; }
+
     // === Optional user input ===
     public string? SpecialRequests { get; private set; }
 
@@ -328,6 +336,77 @@ public sealed class TourBooking : AuditableEntity, IAggregateRoot
             ProviderId: ProviderId,
             CompletedAt: now,
             CompletedByUserId: completedByUserId));
+    }
+
+    /// <summary>
+    /// User opens a dispute on a Completed booking within the 48-hour post-completion window.
+    /// Spec §G4a: Completed→Disputed; only the booking owner may open. Reason 10-2000 chars.
+    /// Raises <see cref="TourBookingDisputedDomainEvent"/>.
+    /// </summary>
+    public void OpenDispute(Guid openedByUserId, string reason)
+    {
+        if (openedByUserId == Guid.Empty)
+            throw new BusinessRuleViolationException("OpenedByUserId must be provided.");
+        if (openedByUserId != UserId)
+            throw new BusinessRuleViolationException("Only the booking owner may open a dispute.");
+        if (Status != BookingStatus.Completed)
+            throw new BusinessRuleViolationException($"Cannot open dispute from state {Status}. Must be Completed.");
+        if (CompletedAt is null)
+            throw new BusinessRuleViolationException("Completed booking has no CompletedAt timestamp.");
+        if (DateTime.UtcNow > CompletedAt.Value.AddHours(48))
+            throw new BusinessRuleViolationException("Dispute window has closed (48 hours after completion).");
+        if (string.IsNullOrWhiteSpace(reason) || reason.Length < 10)
+            throw new BusinessRuleViolationException("Dispute reason must be at least 10 characters.");
+        if (reason.Length > 2000)
+            throw new BusinessRuleViolationException("Dispute reason must be at most 2000 characters.");
+
+        var now = DateTime.UtcNow;
+        Status = BookingStatus.Disputed;
+        DisputedAt = now;
+        DisputeOpenedByUserId = openedByUserId;
+        DisputeReason = reason.Trim();
+        MarkUpdated();
+
+        AddDomainEvent(new TourBookingDisputedDomainEvent(
+            BookingId: Id,
+            UserId: UserId,
+            TourId: TourId,
+            ProviderId: ProviderId,
+            DisputedAt: now,
+            Reason: DisputeReason));
+    }
+
+    /// <summary>
+    /// Admin resolves a Disputed booking. Terminal state for the dispute lifecycle.
+    /// Resolution notes 10-2000 chars.
+    /// Raises <see cref="TourBookingDisputeResolvedDomainEvent"/>.
+    /// </summary>
+    public void ResolveDispute(Guid resolvedByAdminId, string resolutionNotes)
+    {
+        if (resolvedByAdminId == Guid.Empty)
+            throw new BusinessRuleViolationException("ResolvedByAdminId must be provided.");
+        if (Status != BookingStatus.Disputed)
+            throw new BusinessRuleViolationException($"Cannot resolve dispute from state {Status}. Must be Disputed.");
+        if (string.IsNullOrWhiteSpace(resolutionNotes) || resolutionNotes.Length < 10)
+            throw new BusinessRuleViolationException("Resolution notes must be at least 10 characters.");
+        if (resolutionNotes.Length > 2000)
+            throw new BusinessRuleViolationException("Resolution notes must be at most 2000 characters.");
+
+        var now = DateTime.UtcNow;
+        Status = BookingStatus.Resolved;
+        ResolvedAt = now;
+        ResolvedByAdminId = resolvedByAdminId;
+        ResolutionNotes = resolutionNotes.Trim();
+        MarkUpdated();
+
+        AddDomainEvent(new TourBookingDisputeResolvedDomainEvent(
+            BookingId: Id,
+            UserId: UserId,
+            TourId: TourId,
+            ProviderId: ProviderId,
+            ResolvedByAdminId: resolvedByAdminId,
+            ResolvedAt: now,
+            ResolutionNotes: ResolutionNotes));
     }
 
     /// <summary>

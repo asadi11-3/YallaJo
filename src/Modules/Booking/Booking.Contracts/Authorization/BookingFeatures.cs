@@ -14,4 +14,7 @@ public static class BookingFeatures
     public const string BookingAdmin            = nameof(BookingAdmin);
     public const string BookingReports          = nameof(BookingReports);
     public const string AdminBookingDashboard   = nameof(AdminBookingDashboard);
+
+    // Phase 3 (G4a): Dispute lifecycle on a Completed booking (Completed→Disputed→Resolved).
+    public const string BookingDispute          = nameof(BookingDispute);
 }

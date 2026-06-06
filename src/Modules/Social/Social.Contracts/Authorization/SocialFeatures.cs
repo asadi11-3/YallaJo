@@ -6,6 +6,12 @@ public static class SocialFeatures
     /// <summary>Review CRUD — created by users, public visibility.</summary>
     public const string Review = nameof(Review);
 
+    /// <summary>
+    /// Accessibility-focused review for an entity (tour/place/business/tour-guide) — Phase-3 WS-2 (G1).
+    /// Separate from generic <see cref="Review"/>; tracks accessibility feature usability.
+    /// </summary>
+    public const string AccessibilityReview = nameof(AccessibilityReview);
+
     /// <summary>Provider replies to reviews.</summary>
     public const string ReviewReply = nameof(ReviewReply);
 

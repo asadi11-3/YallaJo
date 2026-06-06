@@ -6,4 +6,9 @@ public sealed record TourApprovedIntegrationEvent(
     Guid TourId,
     Guid CreatedByUserId,
     Guid ApprovedByUserId,
-    DateTime ApprovedAt) : IntegrationEventBase;
+    DateTime ApprovedAt,
+    string Title = "",
+    decimal BasePrice = 0m,
+    string Currency = "JOD",
+    bool IsInstantBooking = false,
+    int MaxGroupSize = int.MaxValue) : IntegrationEventBase;

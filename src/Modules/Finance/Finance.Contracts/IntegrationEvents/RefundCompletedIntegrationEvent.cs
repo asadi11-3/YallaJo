@@ -7,6 +7,11 @@ namespace Finance.Contracts.IntegrationEvents;
 /// confirmed by the gateway. Consumers: Booking (final cancellation accounting),
 /// Messaging (user confirmation), Analytics.
 /// </summary>
+/// <param name="UserId">
+/// Identifier of the traveler who originally paid. Defaulted to <see cref="Guid.Empty"/> for
+/// backward-compatibility with in-flight outbox messages produced before this field existed;
+/// consumers MUST tolerate <c>Guid.Empty</c> and skip user-targeted notifications in that case.
+/// </param>
 public sealed record RefundCompletedIntegrationEvent(
     Guid RefundPaymentId,
     Guid OriginalPaymentId,
@@ -15,4 +20,5 @@ public sealed record RefundCompletedIntegrationEvent(
     string Currency,
     string Reason,
     string GatewayRefundId,
-    DateTime CompletedAt) : IntegrationEventBase;
+    DateTime CompletedAt,
+    Guid UserId = default) : IntegrationEventBase;

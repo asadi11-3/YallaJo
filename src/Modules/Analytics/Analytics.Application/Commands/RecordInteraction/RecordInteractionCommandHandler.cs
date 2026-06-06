@@ -37,7 +37,21 @@ public sealed class RecordInteractionCommandHandler(IInteractionIngestQueue queu
             }
         }
 
-        _ = queue.TryEnqueue(new InteractionEnvelope(request.UserId, request.SessionId, entityType, request.EntityId, interactionType, DateTime.UtcNow, request.ClientIp, request.UserAgent));
+        var envelope = new InteractionEnvelope(request.UserId, request.SessionId, entityType, request.EntityId, interactionType, DateTime.UtcNow, request.ClientIp, request.UserAgent);
+
+        // Use the backpressure-aware path so we never silently drop an interaction.
+        // EnqueueAsync uses TryWrite fast-path internally and only awaits when full.
+        try
+        {
+            await queue.EnqueueAsync(envelope, ct).ConfigureAwait(false);
+        }
+        catch (InvalidOperationException ex)
+        {
+            // Channel closed (shutting down) — record but do not fail the caller.
+            logger.LogWarning(ex, "Analytics queue closed; dropped interaction {EntityType}/{EntityId}", entityType, request.EntityId);
+            return Result.Success();
+        }
+
         logger.LogDebug("Queued analytics interaction {EntityType}/{EntityId}", entityType, request.EntityId);
         return Result.Success();
     }

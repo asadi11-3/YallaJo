@@ -4,10 +4,12 @@
 
 namespace ContentSeo.Presentation.Endpoints.SeoMetadata;
 
+using ContentSeo.Application.Commands.SeoMetadata.DeleteSeoMetadata;
 using ContentSeo.Application.Commands.SeoMetadata.UpdateSeoMetadata;
 using ContentSeo.Application.Commands.SeoMetadata.UpsertSeoMetadata;
 using ContentSeo.Application.Queries.SeoMetadata.Common;
 using ContentSeo.Application.Queries.SeoMetadata.GetSeoMetadata;
+using ContentSeo.Application.Queries.SeoMetadata.ListSeoMetadata;
 using ContentSeo.Contracts.Authorization;
 using ContentSeo.Domain.Enums;
 using ContentSeo.Presentation.Endpoints.SeoMetadata.Models;
@@ -93,5 +95,42 @@ internal static class SeoMetadataEndpoints
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status409Conflict)
         .WithMetadata(new MustHavePermissionAttribute(ContentSeoFeatures.SeoMetadata, AppAction.Update));
+
+        group.MapDelete("/metadata/{id:guid}", async (Guid id, ISender sender, CancellationToken ct) =>
+        {
+            var result = await sender.Send(new DeleteSeoMetadataCommand(id), ct);
+            return result.ToApiResult();
+        })
+        .WithName("DeleteSeoMetadata")
+        .WithSummary("Soft-delete SEO metadata by id.")
+        .Produces(StatusCodes.Status204NoContent)
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status409Conflict)
+        .WithMetadata(new MustHavePermissionAttribute(ContentSeoFeatures.SeoMetadata, AppAction.Delete));
+
+        group.MapGet("/metadata", async (
+            SeoEntityType? entityType,
+            bool? includeDeleted,
+            int? skip,
+            int? take,
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            var query = new ListSeoMetadataQuery(
+                entityType,
+                includeDeleted ?? false,
+                skip ?? 0,
+                take ?? 50);
+            var result = await sender.Send(query, ct);
+            return result.ToApiResult();
+        })
+        .WithName("ListSeoMetadata")
+        .WithSummary("Admin list of SEO metadata, optionally filtered by entity type, with paging.")
+        .Produces<ListSeoMetadataResult>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .WithMetadata(new MustHavePermissionAttribute(ContentSeoFeatures.SeoMetadata, AppAction.Read));
     }
 }

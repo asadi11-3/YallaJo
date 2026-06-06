@@ -167,3 +167,58 @@ internal sealed class PublishTourBookingPaymentExpiredHandler(IBookingOutboxWrit
             e.BookingId);
     }
 }
+
+/// <summary>
+/// Phase-3 (G4a): Converts <see cref="TourBookingDisputedDomainEvent"/> to outbound integration event.
+/// Booking owner has opened a dispute on a Completed booking within the 48h window.
+/// Consumers: Messaging (notify provider + admin), Finance (correlate to payment dispute if any), Analytics.
+/// </summary>
+internal sealed class PublishTourBookingDisputedHandler(IBookingOutboxWriter outbox, ILogger<PublishTourBookingDisputedHandler> logger)
+    : INotificationHandler<DomainEventNotification<TourBookingDisputedDomainEvent>>
+{
+    public async Task Handle(DomainEventNotification<TourBookingDisputedDomainEvent> notification, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(notification);
+        var e = notification.Event;
+        var integration = new TourBookingDisputedIntegrationEvent(
+            BookingId: e.BookingId,
+            UserId: e.UserId,
+            TourId: e.TourId,
+            ProviderId: e.ProviderId,
+            DisputedAt: e.DisputedAt,
+            Reason: e.Reason);
+
+        await outbox.WriteAsync(integration, cancellationToken).ConfigureAwait(false);
+        logger.LogInformation(
+            "Enqueued booking.tour-booking.disputed.v1 for booking {BookingId}",
+            e.BookingId);
+    }
+}
+
+/// <summary>
+/// Phase-3 (G4a): Converts <see cref="TourBookingDisputeResolvedDomainEvent"/> to outbound integration event.
+/// Admin has resolved a Disputed booking. Consumers: Messaging (notify owner + provider), Analytics.
+/// </summary>
+internal sealed class PublishTourBookingDisputeResolvedHandler(IBookingOutboxWriter outbox, ILogger<PublishTourBookingDisputeResolvedHandler> logger)
+    : INotificationHandler<DomainEventNotification<TourBookingDisputeResolvedDomainEvent>>
+{
+    public async Task Handle(DomainEventNotification<TourBookingDisputeResolvedDomainEvent> notification, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(notification);
+        var e = notification.Event;
+        var integration = new TourBookingDisputeResolvedIntegrationEvent(
+            BookingId: e.BookingId,
+            UserId: e.UserId,
+            TourId: e.TourId,
+            ProviderId: e.ProviderId,
+            ResolvedByAdminId: e.ResolvedByAdminId,
+            ResolvedAt: e.ResolvedAt,
+            ResolutionNotes: e.ResolutionNotes);
+
+        await outbox.WriteAsync(integration, cancellationToken).ConfigureAwait(false);
+        logger.LogInformation(
+            "Enqueued booking.tour-booking.dispute-resolved.v1 for booking {BookingId} (by admin {AdminId})",
+            e.BookingId,
+            e.ResolvedByAdminId);
+    }
+}

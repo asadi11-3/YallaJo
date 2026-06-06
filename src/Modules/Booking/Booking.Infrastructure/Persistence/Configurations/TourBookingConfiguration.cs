@@ -71,6 +71,14 @@ public class TourBookingConfiguration : IEntityTypeConfiguration<TourBooking>
         builder.Property(x => x.CompletedAt).IsRequired(false);
         builder.Property(x => x.CompletedByUserId).IsRequired(false);
 
+        // Phase 3 (G4a): Dispute lifecycle
+        builder.Property(x => x.DisputedAt).IsRequired(false);
+        builder.Property(x => x.DisputeOpenedByUserId).IsRequired(false);
+        builder.Property(x => x.DisputeReason).IsRequired(false).HasMaxLength(2000);
+        builder.Property(x => x.ResolvedAt).IsRequired(false);
+        builder.Property(x => x.ResolvedByAdminId).IsRequired(false);
+        builder.Property(x => x.ResolutionNotes).IsRequired(false).HasMaxLength(2000);
+
         // Optional user input
         builder.Property(x => x.SpecialRequests).IsRequired(false).HasMaxLength(2000);
 

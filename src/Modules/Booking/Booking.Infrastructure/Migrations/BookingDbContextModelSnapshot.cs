@@ -625,6 +625,16 @@ namespace Booking.Infrastructure.Migrations
                         .HasColumnType("decimal(19,4)")
                         .HasDefaultValue(0m);
 
+                    b.Property<Guid?>("DisputeOpenedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("DisputeReason")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<DateTime?>("DisputedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<Guid>("GuideId")
                         .HasColumnType("uniqueidentifier");
 
@@ -687,6 +697,16 @@ namespace Booking.Infrastructure.Migrations
                     b.Property<string>("RejectionReason")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("ResolutionNotes")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<DateTime?>("ResolvedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("ResolvedByAdminId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
@@ -889,6 +909,11 @@ namespace Booking.Infrastructure.Migrations
 
                     b.Property<DateTime>("LastUpdatedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<int>("MaxGroupSize")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(2147483647);
 
                     b.Property<Guid>("ProviderId")
                         .HasColumnType("uniqueidentifier");

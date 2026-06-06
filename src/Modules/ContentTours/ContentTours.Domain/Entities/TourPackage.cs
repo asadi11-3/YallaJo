@@ -1,3 +1,6 @@
+using ContentTours.Domain.Enums;
+using ContentTours.Domain.Events;
+using YallaJo.SharedKernel.Domain.Abstractions.Results;
 using YallaJo.SharedKernel.Domain.Entities;
 using YallaJo.SharedKernel.Domain.ValueObjects;
 
@@ -27,6 +30,20 @@ public sealed class TourPackage : AuditableEntity, IAggregateRoot
     public DateTime? ValidTo { get; private set; }
 
     public bool IsActive { get; private set; } = true;
+
+    // ─── Phase-3 WS-5a approval state machine ───────────────────────────────
+    // Draft → Submitted → Approved | Rejected. Rejected packages can be edited
+    // back to Draft via Update() and resubmitted. Existing rows pre-migration
+    // are stamped Approved by the EF migration (they were already in use).
+    public TourPackageStatus Status { get; private set; } = TourPackageStatus.Draft;
+
+    public DateTime? SubmittedAt { get; private set; }
+
+    public Guid? ReviewedByAdminId { get; private set; }
+
+    public DateTime? ReviewedAt { get; private set; }
+
+    public string? RejectionReason { get; private set; }
 
     public IReadOnlyCollection<TourPackageTour> IncludedTours => _includedTours.AsReadOnly();
 
@@ -174,6 +191,100 @@ public sealed class TourPackage : AuditableEntity, IAggregateRoot
         }
 
         MarkUpdated();
+    }
+
+    /// <summary>
+    /// Provider submits a draft package for admin review.
+    /// Only Draft or Rejected packages can be submitted (rejected = resubmit).
+    /// </summary>
+    public Result Submit(DateTime utcNow)
+    {
+        EnsureNotDeleted();
+
+        if (Status != TourPackageStatus.Draft && Status != TourPackageStatus.Rejected)
+        {
+            return Result.Failure(new Error(
+                "TourPackage.NotSubmittable",
+                "Only draft or rejected packages can be submitted for review."));
+        }
+
+        Status = TourPackageStatus.Submitted;
+        SubmittedAt = utcNow;
+        // Clear any prior review fields so the next reviewer sees a clean slate.
+        ReviewedByAdminId = null;
+        ReviewedAt = null;
+        RejectionReason = null;
+        MarkUpdated();
+        AddDomainEvent(new TourPackageSubmittedDomainEvent(Id, CreatedByUserId, Name));
+        return Result.Success();
+    }
+
+    /// <summary>
+    /// Admin approves a submitted package.
+    /// </summary>
+    public Result Approve(Guid adminId, DateTime utcNow)
+    {
+        EnsureNotDeleted();
+
+        if (Status != TourPackageStatus.Submitted)
+        {
+            return Result.Failure(new Error(
+                "TourPackage.NotSubmitted",
+                "Only submitted packages can be approved."));
+        }
+
+        if (adminId == Guid.Empty)
+        {
+            return Result.Failure(new Error(
+                "TourPackage.AdminRequired",
+                "An admin id is required to approve a tour package."));
+        }
+
+        Status = TourPackageStatus.Approved;
+        ReviewedByAdminId = adminId;
+        ReviewedAt = utcNow;
+        RejectionReason = null;
+        MarkUpdated();
+        AddDomainEvent(new TourPackageApprovedDomainEvent(Id, CreatedByUserId, adminId));
+        return Result.Success();
+    }
+
+    /// <summary>
+    /// Admin rejects a submitted package with a reason. Provider may then
+    /// edit + resubmit.
+    /// </summary>
+    public Result Reject(Guid adminId, string reason, DateTime utcNow)
+    {
+        EnsureNotDeleted();
+
+        if (Status != TourPackageStatus.Submitted)
+        {
+            return Result.Failure(new Error(
+                "TourPackage.NotSubmitted",
+                "Only submitted packages can be rejected."));
+        }
+
+        if (adminId == Guid.Empty)
+        {
+            return Result.Failure(new Error(
+                "TourPackage.AdminRequired",
+                "An admin id is required to reject a tour package."));
+        }
+
+        if (string.IsNullOrWhiteSpace(reason))
+        {
+            return Result.Failure(new Error(
+                "TourPackage.ReasonRequired",
+                "A rejection reason is required."));
+        }
+
+        Status = TourPackageStatus.Rejected;
+        ReviewedByAdminId = adminId;
+        ReviewedAt = utcNow;
+        RejectionReason = reason.Trim();
+        MarkUpdated();
+        AddDomainEvent(new TourPackageRejectedDomainEvent(Id, CreatedByUserId, reason.Trim()));
+        return Result.Success();
     }
 
     public TourPackageInclusion AddInclusion(string description)
