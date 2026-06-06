@@ -5,21 +5,8 @@ using YallaJo.Web.Infrastructure.Authentication.SignIn;
 using YallaJo.Web.Infrastructure.Authorization;
 using YallaJo.Web.Infrastructure.DependencyInjection;
 using YallaJo.Web.Infrastructure.Identity;
-using YallaJo.Web.Infrastructure.Mvc;
 using YallaJo.Web.Infrastructure.Security.Recaptcha;
 using YallaJo.Web.Services;
-
-// ── Auth layer registrations (facades + api clients) ─────────────────────────
-using YallaJo.Web.Areas.Auth.Facades;
-using YallaJo.Web.Areas.Auth.ApiClients;
-
-// ── Accounts (non-admin, self-service) layer registrations ───────────────────
-using YallaJo.Web.Areas.Accounts.Facades;
-using YallaJo.Web.Areas.Accounts.ApiClients;
-
-// ── Admin layer registrations (facades + api clients) ────────────────────────
-using YallaJo.Web.Areas.Admin.Facades;
-using YallaJo.Web.Areas.Admin.ApiClients;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -156,6 +143,36 @@ builder.Services.AddOutputCache(options =>
     options.AddPolicy("PublicList", b => b
         .Expire(TimeSpan.FromSeconds(30))
         .SetVaryByQuery("page", "pageSize"));
+
+    // ── Plan caching policies (UI-UX §5 / UI-PERF-C1) ────────────────────────
+    // Public, anonymous-safe pages. VaryByQuery("*") so parameterised listings
+    // (page/sort/filters) cache per distinct query while static pages (home)
+    // keep a single entry. Per-entity tags (homepage, tour:{id}, place:{id},
+    // business:{id}, blog:{id}, category:tree) are attached per-action via
+    // [OutputCache(Tags = ...)] and evicted with IOutputCacheStore.EvictByTagAsync.
+    options.AddPolicy("PublicShort",  b => b.Expire(TimeSpan.FromMinutes(5)).SetVaryByQuery("*"));
+    options.AddPolicy("PublicMedium", b => b.Expire(TimeSpan.FromMinutes(30)).SetVaryByQuery("*"));
+    options.AddPolicy("PublicLong",   b => b.Expire(TimeSpan.FromHours(1)).SetVaryByQuery("*"));
+    options.AddPolicy("PublicDay",    b => b.Expire(TimeSpan.FromHours(24)).SetVaryByQuery("*"));
+
+    // Authenticated pages: explicit no-store marker (base policy is already
+    // NoCache; naming it documents intent at the action site).
+    options.AddPolicy("NoStore", b => b.NoCache());
+});
+
+// ── Localization (UI-UX §2: en + ar, DEFAULT ar / RTL — Jordan-first) ─────────
+// Provider order is the framework default: QueryString → Cookie → Accept-Language,
+// matching the plan. The cookie provider lets the language switcher persist a
+// choice. Resources live under /Resources (e.g. Resources/SharedResource.ar.resx).
+builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
+
+string[] supportedCultures = ["ar", "en"];
+builder.Services.Configure<RequestLocalizationOptions>(options =>
+{
+    options.SetDefaultCulture("ar");
+    options.AddSupportedCultures(supportedCultures);
+    options.AddSupportedUICultures(supportedCultures);
+    options.ApplyCurrentCultureToResponseHeaders = true;
 });
 
 // ── MVC + custom Razor view locations ────────────────────────────────────────
@@ -187,7 +204,9 @@ var mvcBuilder  = builder.Services.AddControllersWithViews(options =>
         // controller's folder.
         o.AreaViewLocationFormats.Add("~/Areas/{2}/Shared/{0}.cshtml");
 
-    });
+    })
+    .AddViewLocalization()
+    .AddDataAnnotationsLocalization();
 
 #if DEBUG
 // Razor runtime compilation watches the filesystem and recompiles views on
@@ -206,10 +225,15 @@ var app = builder.Build();
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/error");
+    app.UseStatusCodePagesWithReExecute("/error/{0}");
     app.UseHsts();
 }
 
 app.UseHttpsRedirection();
+
+// Apply request culture (query string → cookie → Accept-Language) before the
+// MVC pipeline renders any view, so dir/lang and localized strings are correct.
+app.UseRequestLocalization();
 
 app.UseAuthentication();
 app.UseAuthorization();
@@ -236,12 +260,8 @@ app.MapControllerRoute(
     pattern: "{area:exists}/{controller=Dashboard}/{action=Index}/{id?}")
    .WithStaticAssets();
 
-// Root landing → AuthController.SignIn (attribute-routed at /auth/sign-in).
-// AuthController uses [Route("auth")] + [HttpGet("sign-in")], so it cannot be
-// reached through a conventional MapControllerRoute default (attribute-routed
-// actions are unreachable from conventional routing). Redirect instead.
-app.MapGet("/", () => Results.Redirect("/explore"))
-   .AllowAnonymous()
-   .ExcludeFromDescription();
-
+// Root "/" is served by HomeController.Index ([Area("Public")] + [HttpGet("")]),
+// reconciling the storefront home to the plan's canonical route (§2.1). The
+// former "/" → /explore redirect has been removed; /explore and /home remain as
+// secondary aliases on the same action.
 app.Run();

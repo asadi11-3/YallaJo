@@ -1,0 +1,1066 @@
+<?xml version='1.0' encoding='utf-8'?>
+<root xmlns:ns1="urn:schemas-microsoft-com:xml-msdata" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:schema id="root">
+    <xs:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xs:element name="root" ns1:IsDataSet="true">
+      <xs:complexType>
+        <xs:choice maxOccurs="unbounded">
+          <xs:element name="metadata">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element name="value" type="xsd:string" minOccurs="0" />
+              </xs:sequence>
+              <xs:attribute name="name" use="required" type="xsd:string" />
+              <xs:attribute name="type" type="xsd:string" />
+              <xs:attribute name="mimetype" type="xsd:string" />
+              <xs:attribute ref="xml:space" />
+            </xs:complexType>
+          </xs:element>
+          <xs:element name="assembly">
+            <xs:complexType>
+              <xs:attribute name="alias" type="xsd:string" />
+              <xs:attribute name="name" type="xsd:string" />
+            </xs:complexType>
+          </xs:element>
+          <xs:element name="data">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element name="value" type="xsd:string" minOccurs="0" ns1:Ordinal="1" />
+                <xs:element name="comment" type="xsd:string" minOccurs="0" ns1:Ordinal="2" />
+              </xs:sequence>
+              <xs:attribute name="name" type="xsd:string" use="required" ns1:Ordinal="1" />
+              <xs:attribute name="type" type="xsd:string" ns1:Ordinal="3" />
+              <xs:attribute name="mimetype" type="xsd:string" ns1:Ordinal="4" />
+              <xs:attribute ref="xml:space" />
+            </xs:complexType>
+          </xs:element>
+          <xs:element name="resheader">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element name="value" type="xsd:string" minOccurs="0" ns1:Ordinal="1" />
+              </xs:sequence>
+              <xs:attribute name="name" type="xsd:string" use="required" />
+            </xs:complexType>
+          </xs:element>
+        </xs:choice>
+      </xs:complexType>
+    </xs:element>
+  </xs:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Home.Hero.Title" xml:space="preserve">
+    <value>الحياة مغامرة، اكتشفها</value>
+  </data>
+  <data name="Home.Hero.Lead" xml:space="preserve">
+    <value>اكتشف جولات مختارة بعناية وتجارب مع مرشدين وأماكن لا تُنسى.</value>
+  </data>
+  <data name="Home.Search.Label" xml:space="preserve">
+    <value>ابحث عن الجولات</value>
+  </data>
+  <data name="Home.Search.Placeholder" xml:space="preserve">
+    <value>ابحث عن جولات أو وجهات أو أنشطة…</value>
+  </data>
+  <data name="Home.Search.Button" xml:space="preserve">
+    <value>استكشف الجولات</value>
+  </data>
+  <data name="Home.Featured.Title" xml:space="preserve">
+    <value>جولات مميّزة</value>
+  </data>
+  <data name="Home.Featured.Subtitle" xml:space="preserve">
+    <value>أفضل تجاربنا المختارة بعناية.</value>
+  </data>
+  <data name="Home.Popular.Title" xml:space="preserve">
+    <value>الأكثر رواجاً الآن</value>
+  </data>
+  <data name="Home.Popular.Subtitle" xml:space="preserve">
+    <value>الأكثر إعجاباً لدى المسافرين.</value>
+  </data>
+  <data name="Home.Places.Title" xml:space="preserve">
+    <value>وجهات شهيرة</value>
+  </data>
+  <data name="Home.Places.Subtitle" xml:space="preserve">
+    <value>أماكن يستكشفها المسافرون الآن.</value>
+  </data>
+  <data name="Home.Businesses.Title" xml:space="preserve">
+    <value>أعمال محلية</value>
+  </data>
+  <data name="Home.Businesses.Subtitle" xml:space="preserve">
+    <value>خدمات وأماكن موثوقة يحبها المجتمع.</value>
+  </data>
+  <data name="Home.Categories.Title" xml:space="preserve">
+    <value>تصفّح حسب الفئة</value>
+  </data>
+  <data name="Home.Categories.Subtitle" xml:space="preserve">
+    <value>اعثر على نوع التجربة التي تبحث عنها.</value>
+  </data>
+  <data name="Home.ViewAll" xml:space="preserve">
+    <value>عرض الكل</value>
+  </data>
+  <data name="Home.Empty.Title" xml:space="preserve">
+    <value>لا يوجد ما نعرضه بعد</value>
+  </data>
+  <data name="Home.Empty.Subtitle" xml:space="preserve">
+    <value>عُد قريباً لاكتشاف جولات وأماكن وتجارب جديدة.</value>
+  </data>
+  <data name="Home.BrowseAllTours" xml:space="preserve">
+    <value>تصفّح كل الجولات</value>
+  </data>
+  <data name="Nav.Places" xml:space="preserve">
+    <value>الأماكن</value>
+  </data>
+  <data name="Nav.SignIn" xml:space="preserve">
+    <value>تسجيل الدخول</value>
+  </data>
+  <data name="Nav.Language" xml:space="preserve">
+    <value>اللغة</value>
+  </data>
+  <data name="Lang.Arabic" xml:space="preserve">
+    <value>العربية</value>
+  </data>
+  <data name="Lang.English" xml:space="preserve">
+    <value>English</value>
+  </data>
+  <data name="Contact.Submit.Success" xml:space="preserve">
+    <value>تم إرسال رسالتك. سيتواصل معك فريق الدعم.</value>
+  </data>
+  <data name="Public.1.Terrible" xml:space="preserve">
+    <value>1 - سيئ جداً</value>
+  </data>
+  <data name="Public.2.Poor" xml:space="preserve">
+    <value>2 - ضعيف</value>
+  </data>
+  <data name="Public.3.Average" xml:space="preserve">
+    <value>3 - متوسط</value>
+  </data>
+  <data name="Public.4.Very.good" xml:space="preserve">
+    <value>4 - جيد جداً</value>
+  </data>
+  <data name="Public.5.Excellent" xml:space="preserve">
+    <value>5 - ممتاز</value>
+  </data>
+  <data name="Public.About" xml:space="preserve">
+    <value>نبذة</value>
+  </data>
+  <data name="Public.About.this.package" xml:space="preserve">
+    <value>About this package</value>
+  </data>
+  <data name="Public.Accessibility" xml:space="preserve">
+    <value>إتاحة الوصول</value>
+  </data>
+  <data name="Public.Account.help" xml:space="preserve">
+    <value>مساعدة الحساب</value>
+  </data>
+  <data name="Public.Additional.details" xml:space="preserve">
+    <value>تفاصيل إضافية</value>
+  </data>
+  <data name="Public.Adults" xml:space="preserve">
+    <value>البالغون</value>
+  </data>
+  <data name="Public.Agencies" xml:space="preserve">
+    <value>الوكالات</value>
+  </data>
+  <data name="Public.Agencies.pagination" xml:space="preserve">
+    <value>Agencies pagination</value>
+  </data>
+  <data name="Public.All" xml:space="preserve">
+    <value>الكل</value>
+  </data>
+  <data name="Public.All.categories" xml:space="preserve">
+    <value>All categories</value>
+  </data>
+  <data name="Public.Amenities" xml:space="preserve">
+    <value>المرافق</value>
+  </data>
+  <data name="Public.Any" xml:space="preserve">
+    <value>أي خيار</value>
+  </data>
+  <data name="Public.Apply.to.this.Agency" xml:space="preserve">
+    <value>Apply to this Agency</value>
+  </data>
+  <data name="Public.Are.you.a.tour.guide" xml:space="preserve">
+    <value>Are you a tour guide?</value>
+  </data>
+  <data name="Public.Articles.Count" xml:space="preserve">
+    <value>{0} مقالات</value>
+  </data>
+  <data name="Public.At.a.glance" xml:space="preserve">
+    <value>At a glance</value>
+  </data>
+  <data name="Public.Audio.guide" xml:space="preserve">
+    <value>Audio guide</value>
+  </data>
+  <data name="Public.Available" xml:space="preserve">
+    <value>متاح</value>
+  </data>
+  <data name="Public.Between.20.and.2000.characters" xml:space="preserve">
+    <value>Between 20 and 2000 characters.</value>
+  </data>
+  <data name="Public.Blog" xml:space="preserve">
+    <value>المدونة</value>
+  </data>
+  <data name="Public.Blog.pagination" xml:space="preserve">
+    <value>Blog pagination</value>
+  </data>
+  <data name="Public.Book" xml:space="preserve">
+    <value>Book</value>
+  </data>
+  <data name="Public.Book.Now" xml:space="preserve">
+    <value>احجز الآن</value>
+  </data>
+  <data name="Public.Book.as.guest.with.Google" xml:space="preserve">
+    <value>Book as guest with Google</value>
+  </data>
+  <data name="Public.Booking.issue" xml:space="preserve">
+    <value>مشكلة في الحجز</value>
+  </data>
+  <data name="Public.Braille.signage" xml:space="preserve">
+    <value>Braille signage</value>
+  </data>
+  <data name="Public.Browse.all.tours" xml:space="preserve">
+    <value>تصفّح كل الجولات</value>
+  </data>
+  <data name="Public.Business.escapeHtml.it.name" xml:space="preserve">
+    <value>Business: ' + escapeHtml(it.name) + '</value>
+  </data>
+  <data name="Public.Call.us" xml:space="preserve">
+    <value>اتصل بنا</value>
+  </data>
+  <data name="Public.Check.back.soon" xml:space="preserve">
+    <value>عُد قريباً.</value>
+  </data>
+  <data name="Public.Check.back.soon.for.curated.tour.bundles" xml:space="preserve">
+    <value>Check back soon for curated tour bundles.</value>
+  </data>
+  <data name="Public.Check.back.soon.for.travel.stories.and.guides" xml:space="preserve">
+    <value>Check back soon for travel stories and guides.</value>
+  </data>
+  <data name="Public.Check.back.soon.for.verified.travel.agencies" xml:space="preserve">
+    <value>Check back soon for verified travel agencies.</value>
+  </data>
+  <data name="Public.Check.back.soon.to.meet.our.verified.local.guides" xml:space="preserve">
+    <value>Check back soon to meet our verified local guides.</value>
+  </data>
+  <data name="Public.Child.friendly" xml:space="preserve">
+    <value>مناسبة للأطفال</value>
+  </data>
+  <data name="Public.Children" xml:space="preserve">
+    <value>الأطفال</value>
+  </data>
+  <data name="Public.Choose.date.amp.time" xml:space="preserve">
+    <value>Choose date &amp;amp; time</value>
+  </data>
+  <data name="Public.City" xml:space="preserve">
+    <value>المدينة</value>
+  </data>
+  <data name="Public.Close" xml:space="preserve">
+    <value>إغلاق</value>
+  </data>
+  <data name="Public.Closed" xml:space="preserve">
+    <value>Closed</value>
+  </data>
+  <data name="Public.Comment" xml:space="preserve">
+    <value>Comment</value>
+  </data>
+  <data name="Public.Comments" xml:space="preserve">
+    <value>التعليقات</value>
+  </data>
+  <data name="Public.Comments.Count" xml:space="preserve">
+    <value>{0} تعليق</value>
+  </data>
+  <data name="Public.Community.member" xml:space="preserve">
+    <value>عضو في المجتمع</value>
+  </data>
+  <data name="Public.Contact" xml:space="preserve">
+    <value>تواصل</value>
+  </data>
+  <data name="Public.Contact.Us" xml:space="preserve">
+    <value>تواصل معنا</value>
+  </data>
+  <data name="Public.Contact.amp.info" xml:space="preserve">
+    <value>Contact &amp;amp; info</value>
+  </data>
+  <data name="Public.Continue" xml:space="preserve">
+    <value>متابعة</value>
+  </data>
+  <data name="Public.Country" xml:space="preserve">
+    <value>الدولة</value>
+  </data>
+  <data name="Public.Create.your.booking.and.pay.securely.once.you.are.signed.in" xml:space="preserve">
+    <value>Create your booking and pay securely once you are signed in.</value>
+  </data>
+  <data name="Public.Curated.bundles.of.tours.at.a.single.price" xml:space="preserve">
+    <value>باقات مختارة من الجولات بسعر واحد.</value>
+  </data>
+  <data name="Public.Delete.your.comment" xml:space="preserve">
+    <value>حذف تعليقك</value>
+  </data>
+  <data name="Public.Delete.your.reply" xml:space="preserve">
+    <value>حذف ردك</value>
+  </data>
+  <data name="Public.Delete.your.review" xml:space="preserve">
+    <value>Delete your review</value>
+  </data>
+  <data name="Public.Details" xml:space="preserve">
+    <value>التفاصيل</value>
+  </data>
+  <data name="Public.Dietary.needs.accessibility.pickup.notes" xml:space="preserve">
+    <value>Dietary needs, accessibility, pickup notes...</value>
+  </data>
+  <data name="Public.Difficulty" xml:space="preserve">
+    <value>الصعوبة</value>
+  </data>
+  <data name="Public.Directory.pages" xml:space="preserve">
+    <value>Directory pages</value>
+  </data>
+  <data name="Public.Discover.amp.connect.with.great.places" xml:space="preserve">
+    <value>Discover &amp;amp; connect with great places</value>
+  </data>
+  <data name="Public.Discover.destinations.and.points.of.interest" xml:space="preserve">
+    <value>اكتشف الوجهات ونقاط الاهتمام.</value>
+  </data>
+  <data name="Public.Discover.handpicked.experiences.and.book.your.next.adventure" xml:space="preserve">
+    <value>اكتشف تجارب مختارة بعناية واحجز مغامرتك القادمة.</value>
+  </data>
+  <data name="Public.Discover.verified.local.guides.and.the.experiences.they.lead" xml:space="preserve">
+    <value>اكتشف مرشدين محليين موثّقين والتجارب التي يقودونها.</value>
+  </data>
+  <data name="Public.Duration" xml:space="preserve">
+    <value>المدة</value>
+  </data>
+  <data name="Public.Edit.your.comment" xml:space="preserve">
+    <value>Edit your comment</value>
+  </data>
+  <data name="Public.Edit.your.reply" xml:space="preserve">
+    <value>Edit your reply</value>
+  </data>
+  <data name="Public.Edit.your.review" xml:space="preserve">
+    <value>Edit your review</value>
+  </data>
+  <data name="Public.Email.us" xml:space="preserve">
+    <value>راسلنا بالبريد الإلكتروني</value>
+  </data>
+  <data name="Public.Enter.a.promo.code" xml:space="preserve">
+    <value>Enter a promo code</value>
+  </data>
+  <data name="Public.Enter.the.full.city.or.country.name.exact.match" xml:space="preserve">
+    <value>Enter the full city or country name (exact match).</value>
+  </data>
+  <data name="Public.Estimate.only.The.final.total.is.calculated.by.us.at.confirmation.base" xml:space="preserve">
+    <value>Estimate only. The final total is calculated by us at confirmation based on your travelers, per-tier pricing, and any promo code.</value>
+  </data>
+  <data name="Public.Estimated.total" xml:space="preserve">
+    <value>الإجمالي التقديري</value>
+  </data>
+  <data name="Public.Experience" xml:space="preserve">
+    <value>Experience</value>
+  </data>
+  <data name="Public.Explore.Places" xml:space="preserve">
+    <value>استكشف الأماكن</value>
+  </data>
+  <data name="Public.Explore.Tours" xml:space="preserve">
+    <value>استكشف الجولات</value>
+  </data>
+  <data name="Public.Explore.the.Directory" xml:space="preserve">
+    <value>استكشف الدليل</value>
+  </data>
+  <data name="Public.Fake.review" xml:space="preserve">
+    <value>مراجعة مزيفة</value>
+  </data>
+  <data name="Public.Featured" xml:space="preserve">
+    <value>مميّز</value>
+  </data>
+  <data name="Public.Fill.in.the.form.below.and.we.ll.open.a.support.ticket.for.you" xml:space="preserve">
+    <value>املأ النموذج أدناه وسنفتح تذكرة دعم لك.</value>
+  </data>
+  <data name="Public.Filter" xml:space="preserve">
+    <value>تصفية</value>
+  </data>
+  <data name="Public.Filter.controls.price.slider.categories.rating.will.be.wired.in.the.2." xml:space="preserve">
+    <value>Filter controls (price slider, categories, rating) will be wired in the §2.2 follow-up pass.</value>
+  </data>
+  <data name="Public.Filter.tours.on.this.page" xml:space="preserve">
+    <value>Filter tours on this page...</value>
+  </data>
+  <data name="Public.Filters" xml:space="preserve">
+    <value>الفلاتر</value>
+  </data>
+  <data name="Public.First.aid.certified" xml:space="preserve">
+    <value>First aid certified</value>
+  </data>
+  <data name="Public.Flexible" xml:space="preserve">
+    <value>مرن</value>
+  </data>
+  <data name="Public.Follow" xml:space="preserve">
+    <value>متابعة</value>
+  </data>
+  <data name="Public.Follow.us" xml:space="preserve">
+    <value>تابعنا</value>
+  </data>
+  <data name="Public.Follow.us.for.updates" xml:space="preserve">
+    <value>تابعنا للحصول على التحديثات</value>
+  </data>
+  <data name="Public.Followers.Count" xml:space="preserve">
+    <value>{0} متابع</value>
+  </data>
+  <data name="Public.Free.cancellation" xml:space="preserve">
+    <value>إلغاء مجاني</value>
+  </data>
+  <data name="Public.Frequently.asked.questions" xml:space="preserve">
+    <value>الأسئلة الشائعة</value>
+  </data>
+  <data name="Public.From" xml:space="preserve">
+    <value>ابتداءً من</value>
+  </data>
+  <data name="Public.Get.in.touch" xml:space="preserve">
+    <value>تواصل معنا</value>
+  </data>
+  <data name="Public.Good.to.know" xml:space="preserve">
+    <value>معلومات مفيدة</value>
+  </data>
+  <data name="Public.Group.size" xml:space="preserve">
+    <value>حجم المجموعة</value>
+  </data>
+  <data name="Public.Guest.reviews" xml:space="preserve">
+    <value>مراجعات الضيوف</value>
+  </data>
+  <data name="Public.Guides" xml:space="preserve">
+    <value>المرشدون</value>
+  </data>
+  <data name="Public.Guides.pages" xml:space="preserve">
+    <value>Guides pages</value>
+  </data>
+  <data name="Public.Harassment" xml:space="preserve">
+    <value>مضايقة</value>
+  </data>
+  <data name="Public.Has.active.tours" xml:space="preserve">
+    <value>تتوفر فيها جولات نشطة</value>
+  </data>
+  <data name="Public.Have.a.question.about.a.tour.a.booking.or.your.account.Send.us.a.messa" xml:space="preserve">
+    <value>هل لديك سؤال عن جولة أو حجز أو حسابك؟ أرسل لنا رسالة وسيتواصل معك فريق الدعم.</value>
+  </data>
+  <data name="Public.Helpful" xml:space="preserve">
+    <value>مفيد</value>
+  </data>
+  <data name="Public.Home" xml:space="preserve">
+    <value>الرئيسية</value>
+  </data>
+  <data name="Public.Inappropriate" xml:space="preserve">
+    <value>غير مناسب</value>
+  </data>
+  <data name="Public.Inappropriate.content" xml:space="preserve">
+    <value>محتوى غير مناسب</value>
+  </data>
+  <data name="Public.Included.tours" xml:space="preserve">
+    <value>Included tours</value>
+  </data>
+  <data name="Public.Infants" xml:space="preserve">
+    <value>الرضّع</value>
+  </data>
+  <data name="Public.Instant.booking" xml:space="preserve">
+    <value>حجز فوري</value>
+  </data>
+  <data name="Public.Instant.confirmation" xml:space="preserve">
+    <value>تأكيد فوري</value>
+  </data>
+  <data name="Public.Itinerary" xml:space="preserve">
+    <value>خط سير الجولة</value>
+  </data>
+  <data name="Public.Join.this.agency.to.get.matched.with.tours" xml:space="preserve">
+    <value>Join this agency to get matched with tours.</value>
+  </data>
+  <data name="Public.Joining.a.friend.s.group.booking" xml:space="preserve">
+    <value>Joining a friend's group booking?</value>
+  </data>
+  <data name="Public.Languages.Count" xml:space="preserve">
+    <value>{0} لغات</value>
+  </data>
+  <data name="Public.Lead.guide" xml:space="preserve">
+    <value>المرشد الرئيسي</value>
+  </data>
+  <data name="Public.Left.Count" xml:space="preserve">
+    <value>متبقي {0}</value>
+  </data>
+  <data name="Public.Let.s.connect" xml:space="preserve">
+    <value>دعنا نتواصل</value>
+  </data>
+  <data name="Public.Like" xml:space="preserve">
+    <value>إعجاب</value>
+  </data>
+  <data name="Public.Likes.Count" xml:space="preserve">
+    <value>{0} إعجاب</value>
+  </data>
+  <data name="Public.List" xml:space="preserve">
+    <value>قائمة</value>
+  </data>
+  <data name="Public.Location" xml:space="preserve">
+    <value>الموقع</value>
+  </data>
+  <data name="Public.Log.in.to.save" xml:space="preserve">
+    <value>سجّل الدخول للحفظ</value>
+  </data>
+  <data name="Public.Make.this.a.private.tour" xml:space="preserve">
+    <value>اجعلها جولة خاصة</value>
+  </data>
+  <data name="Public.Map" xml:space="preserve">
+    <value>خريطة</value>
+  </data>
+  <data name="Public.Map.viewport" xml:space="preserve">
+    <value>نطاق الخريطة</value>
+  </data>
+  <data name="Public.Minimum.age" xml:space="preserve">
+    <value>الحد الأدنى للعمر</value>
+  </data>
+  <data name="Public.Minimum.rating" xml:space="preserve">
+    <value>الحد الأدنى للتقييم</value>
+  </data>
+  <data name="Public.Misleading" xml:space="preserve">
+    <value>مضلل</value>
+  </data>
+  <data name="Public.Misleading.information" xml:space="preserve">
+    <value>معلومات مضللة</value>
+  </data>
+  <data name="Public.Mon.to.Fri.9.00.18.00" xml:space="preserve">
+    <value>Mon to Fri, 9:00 - 18:00</value>
+  </data>
+  <data name="Public.Most.popular" xml:space="preserve">
+    <value>Most popular</value>
+  </data>
+  <data name="Public.Near.you" xml:space="preserve">
+    <value>Near you</value>
+  </data>
+  <data name="Public.Need.help" xml:space="preserve">
+    <value>هل تحتاج إلى مساعدة؟</value>
+  </data>
+  <data name="Public.Newest" xml:space="preserve">
+    <value>Newest</value>
+  </data>
+  <data name="Public.Next" xml:space="preserve">
+    <value>التالي</value>
+  </data>
+  <data name="Public.No.agencies.yet" xml:space="preserve">
+    <value>No agencies yet</value>
+  </data>
+  <data name="Public.No.articles.yet" xml:space="preserve">
+    <value>No articles yet</value>
+  </data>
+  <data name="Public.No.availability" xml:space="preserve">
+    <value>No availability</value>
+  </data>
+  <data name="Public.No.comments.yet.Be.the.first.to.start.the.conversation" xml:space="preserve">
+    <value>No comments yet. Be the first to start the conversation.</value>
+  </data>
+  <data name="Public.No.description.available.for.this.place.yet" xml:space="preserve">
+    <value>No description available for this place yet.</value>
+  </data>
+  <data name="Public.No.description.has.been.provided.for.this.tour.yet" xml:space="preserve">
+    <value>No description has been provided for this tour yet.</value>
+  </data>
+  <data name="Public.No.guides.yet" xml:space="preserve">
+    <value>No guides yet</value>
+  </data>
+  <data name="Public.No.packages.available.yet" xml:space="preserve">
+    <value>No packages available yet</value>
+  </data>
+  <data name="Public.No.places" xml:space="preserve">
+    <value>لا توجد أماكن</value>
+  </data>
+  <data name="Public.No.places.found" xml:space="preserve">
+    <value>لم يتم العثور على أماكن</value>
+  </data>
+  <data name="Public.No.places.match.your.filters" xml:space="preserve">
+    <value>لا توجد أماكن تطابق الفلاتر</value>
+  </data>
+  <data name="Public.No.published.articles.yet" xml:space="preserve">
+    <value>No published articles yet.</value>
+  </data>
+  <data name="Public.No.results" xml:space="preserve">
+    <value>No results</value>
+  </data>
+  <data name="Public.No.reviews.yet.Be.the.first.to.share.your.experience" xml:space="preserve">
+    <value>لا توجد مراجعات بعد. كن أول من يشارك تجربته.</value>
+  </data>
+  <data name="Public.No.tours" xml:space="preserve">
+    <value>لا توجد جولات</value>
+  </data>
+  <data name="Public.No.tours.are.currently.available.for.this.place" xml:space="preserve">
+    <value>No tours are currently available for this place.</value>
+  </data>
+  <data name="Public.No.tours.are.currently.linked.to.this.package" xml:space="preserve">
+    <value>No tours are currently linked to this package.</value>
+  </data>
+  <data name="Public.No.tours.found" xml:space="preserve">
+    <value>لم يتم العثور على جولات</value>
+  </data>
+  <data name="Public.No.tours.on.this.page.match.your.filter" xml:space="preserve">
+    <value>No tours on this page match your filter.</value>
+  </data>
+  <data name="Public.No.upcoming.availability.for.this.tour.right.now.Please.check.back.soo" xml:space="preserve">
+    <value>No upcoming availability for this tour right now. Please check back soon.</value>
+  </data>
+  <data name="Public.Nothing.matched.your.search" xml:space="preserve">
+    <value>Nothing matched your search</value>
+  </data>
+  <data name="Public.Number.it.distanceKm.toFixed.1.km" xml:space="preserve">
+    <value>— ' + Number(it.distanceKm).toFixed(1) + ' km</value>
+  </data>
+  <data name="Public.Number.pin.lat.toFixed.3.Number.pin.lng.toFixed.3" xml:space="preserve">
+    <value>(' + Number(pin.lat).toFixed(3) + ', ' + Number(pin.lng).toFixed(3) + ')</value>
+  </data>
+  <data name="Public.Only.approved.tour.guides.can.apply.to.agencies" xml:space="preserve">
+    <value>Only approved tour guides can apply to agencies.</value>
+  </data>
+  <data name="Public.Opening.hours" xml:space="preserve">
+    <value>Opening hours</value>
+  </data>
+  <data name="Public.Option" xml:space="preserve">
+    <value>الخيار</value>
+  </data>
+  <data name="Public.Other" xml:space="preserve">
+    <value>أخرى</value>
+  </data>
+  <data name="Public.Our.travel.experts.are.here.for.you" xml:space="preserve">
+    <value>Our travel experts are here for you.</value>
+  </data>
+  <data name="Public.Overview" xml:space="preserve">
+    <value>نظرة عامة</value>
+  </data>
+  <data name="Public.Packages" xml:space="preserve">
+    <value>الباقات</value>
+  </data>
+  <data name="Public.Packages.pages" xml:space="preserve">
+    <value>Packages pages</value>
+  </data>
+  <data name="Public.Participants" xml:space="preserve">
+    <value>المشاركون</value>
+  </data>
+  <data name="Public.Payment.problem" xml:space="preserve">
+    <value>مشكلة في الدفع</value>
+  </data>
+  <data name="Public.Place.escapeHtml.it.name" xml:space="preserve">
+    <value>Place: ' + escapeHtml(it.name) + '</value>
+  </data>
+  <data name="Public.Places" xml:space="preserve">
+    <value>الأماكن</value>
+  </data>
+  <data name="Public.Places.pagination" xml:space="preserve">
+    <value>Places pagination</value>
+  </data>
+  <data name="Public.Post.a.comment" xml:space="preserve">
+    <value>اكتب تعليقاً</value>
+  </data>
+  <data name="Public.Post.comment" xml:space="preserve">
+    <value>نشر التعليق</value>
+  </data>
+  <data name="Public.Post.reply" xml:space="preserve">
+    <value>نشر الرد</value>
+  </data>
+  <data name="Public.Prev" xml:space="preserve">
+    <value>السابق</value>
+  </data>
+  <data name="Public.Previous" xml:space="preserve">
+    <value>السابق</value>
+  </data>
+  <data name="Public.Price" xml:space="preserve">
+    <value>السعر</value>
+  </data>
+  <data name="Public.Price.high.to.low" xml:space="preserve">
+    <value>Price: high to low</value>
+  </data>
+  <data name="Public.Price.low.to.high" xml:space="preserve">
+    <value>Price: low to high</value>
+  </data>
+  <data name="Public.Price.summary" xml:space="preserve">
+    <value>ملخص السعر</value>
+  </data>
+  <data name="Public.Pricing.amp.Schedule" xml:space="preserve">
+    <value>Pricing &amp;amp; Schedule</value>
+  </data>
+  <data name="Public.Pricing.amp.schedule" xml:space="preserve">
+    <value>Pricing &amp;amp; schedule</value>
+  </data>
+  <data name="Public.Pricing.options" xml:space="preserve">
+    <value>خيارات الأسعار</value>
+  </data>
+  <data name="Public.Private.tour.available" xml:space="preserve">
+    <value>Private tour available</value>
+  </data>
+  <data name="Public.Promo.code" xml:space="preserve">
+    <value>رمز الخصم</value>
+  </data>
+  <data name="Public.Questions.about.a.tour.your.booking.or.your.account.We.re.here.to.help" xml:space="preserve">
+    <value>هل لديك أسئلة عن جولة أو حجزك أو حسابك؟ نحن هنا لمساعدتك.</value>
+  </data>
+  <data name="Public.Rating" xml:space="preserve">
+    <value>التقييم</value>
+  </data>
+  <data name="Public.ReadTime" xml:space="preserve">
+    <value>قراءة {0} دقيقة</value>
+  </data>
+  <data name="Public.Reason" xml:space="preserve">
+    <value>السبب</value>
+  </data>
+  <data name="Public.Recommended.for.this.place" xml:space="preserve">
+    <value>Recommended for this place</value>
+  </data>
+  <data name="Public.Related.businesses" xml:space="preserve">
+    <value>Related businesses</value>
+  </data>
+  <data name="Public.Reply" xml:space="preserve">
+    <value>رد</value>
+  </data>
+  <data name="Public.Report" xml:space="preserve">
+    <value>إبلاغ</value>
+  </data>
+  <data name="Public.Report.a.bug" xml:space="preserve">
+    <value>الإبلاغ عن خلل</value>
+  </data>
+  <data name="Public.Report.this.business" xml:space="preserve">
+    <value>Report this business</value>
+  </data>
+  <data name="Public.Report.this.guide" xml:space="preserve">
+    <value>Report this guide</value>
+  </data>
+  <data name="Public.Report.this.place" xml:space="preserve">
+    <value>Report this place</value>
+  </data>
+  <data name="Public.Report.this.tour" xml:space="preserve">
+    <value>Report this tour</value>
+  </data>
+  <data name="Public.Reset" xml:space="preserve">
+    <value>إعادة ضبط</value>
+  </data>
+  <data name="Public.Reset.filters" xml:space="preserve">
+    <value>إعادة ضبط الفلاتر</value>
+  </data>
+  <data name="Public.Review" xml:space="preserve">
+    <value>Review</value>
+  </data>
+  <data name="Public.Reviews" xml:space="preserve">
+    <value>المراجعات</value>
+  </data>
+  <data name="Public.Reviews.Count" xml:space="preserve">
+    <value>{0} مراجعة</value>
+  </data>
+  <data name="Public.Sat.Thu.9.00.18.00" xml:space="preserve">
+    <value>Sat – Thu, 9:00 – 18:00</value>
+  </data>
+  <data name="Public.Save" xml:space="preserve">
+    <value>حفظ</value>
+  </data>
+  <data name="Public.Save.article" xml:space="preserve">
+    <value>Save article</value>
+  </data>
+  <data name="Public.Save.changes" xml:space="preserve">
+    <value>حفظ التغييرات</value>
+  </data>
+  <data name="Public.Save.to.favourites" xml:space="preserve">
+    <value>حفظ في المفضلة</value>
+  </data>
+  <data name="Public.Save.to.wishlist" xml:space="preserve">
+    <value>حفظ في قائمة الرغبات</value>
+  </data>
+  <data name="Public.Search" xml:space="preserve">
+    <value>بحث</value>
+  </data>
+  <data name="Public.Search.pagination" xml:space="preserve">
+    <value>Search pagination</value>
+  </data>
+  <data name="Public.Search.view" xml:space="preserve">
+    <value>Search view</value>
+  </data>
+  <data name="Public.Secure.checkout" xml:space="preserve">
+    <value>دفع آمن</value>
+  </data>
+  <data name="Public.Select.a.topic" xml:space="preserve">
+    <value>اختر موضوعاً</value>
+  </data>
+  <data name="Public.Send.Message" xml:space="preserve">
+    <value>إرسال الرسالة</value>
+  </data>
+  <data name="Public.Send.us.a.message" xml:space="preserve">
+    <value>أرسل لنا رسالة</value>
+  </data>
+  <data name="Public.Seniors" xml:space="preserve">
+    <value>كبار السن</value>
+  </data>
+  <data name="Public.Services" xml:space="preserve">
+    <value>الخدمات</value>
+  </data>
+  <data name="Public.Share.your.thoughts.about.this.article" xml:space="preserve">
+    <value>Share your thoughts about this article.</value>
+  </data>
+  <data name="Public.Sign.in" xml:space="preserve">
+    <value>تسجيل الدخول</value>
+  </data>
+  <data name="Public.Sign.in.as.a.guide.to.apply" xml:space="preserve">
+    <value>Sign in as a guide to apply</value>
+  </data>
+  <data name="Public.Sign.in.to.book" xml:space="preserve">
+    <value>سجّل الدخول للحجز</value>
+  </data>
+  <data name="Public.Sign.in.to.comment.reply.and.like.comments" xml:space="preserve">
+    <value>Sign in to comment, reply, and like comments.</value>
+  </data>
+  <data name="Public.Sign.in.to.contact.support" xml:space="preserve">
+    <value>سجّل الدخول للتواصل مع الدعم</value>
+  </data>
+  <data name="Public.Sign.in.to.continue" xml:space="preserve">
+    <value>سجّل الدخول للمتابعة</value>
+  </data>
+  <data name="Public.Sign.in.to.follow" xml:space="preserve">
+    <value>Sign in to follow</value>
+  </data>
+  <data name="Public.Social.media" xml:space="preserve">
+    <value>وسائل التواصل الاجتماعي</value>
+  </data>
+  <data name="Public.Sort.tours" xml:space="preserve">
+    <value>Sort tours</value>
+  </data>
+  <data name="Public.Spam" xml:space="preserve">
+    <value>رسائل مزعجة</value>
+  </data>
+  <data name="Public.Special.requests" xml:space="preserve">
+    <value>طلبات خاصة</value>
+  </data>
+  <data name="Public.Sponsored" xml:space="preserve">
+    <value>إعلان ممول</value>
+  </data>
+  <data name="Public.Stories.tips.and.guides.from.local.creators" xml:space="preserve">
+    <value>قصص ونصائح وأدلة من منشئين محليين.</value>
+  </data>
+  <data name="Public.Submit.report" xml:space="preserve">
+    <value>إرسال البلاغ</value>
+  </data>
+  <data name="Public.Submit.review" xml:space="preserve">
+    <value>إرسال المراجعة</value>
+  </data>
+  <data name="Public.Suggestions.appear.as.you.type.Use.arrow.keys.to.navigate" xml:space="preserve">
+    <value>Suggestions appear as you type. Use arrow keys to navigate.</value>
+  </data>
+  <data name="Public.Switch.to.Map.to.load.public.place.pins" xml:space="preserve">
+    <value>Switch to Map to load public place pins.</value>
+  </data>
+  <data name="Public.This.agency.has.not.added.a.description.yet" xml:space="preserve">
+    <value>This agency has not added a description yet.</value>
+  </data>
+  <data name="Public.Title" xml:space="preserve">
+    <value>العنوان</value>
+  </data>
+  <data name="Public.Title.optional" xml:space="preserve">
+    <value>العنوان (اختياري)</value>
+  </data>
+  <data name="Public.Top.rated" xml:space="preserve">
+    <value>Top rated</value>
+  </data>
+  <data name="Public.Tour.guides" xml:space="preserve">
+    <value>المرشدون السياحيون</value>
+  </data>
+  <data name="Public.Tour.information" xml:space="preserve">
+    <value>معلومات الجولة</value>
+  </data>
+  <data name="Public.Tour.overview" xml:space="preserve">
+    <value>نظرة عامة على الجولة</value>
+  </data>
+  <data name="Public.Tour.packages" xml:space="preserve">
+    <value>باقات الجولات</value>
+  </data>
+  <data name="Public.Tour.review" xml:space="preserve">
+    <value>مراجعة الجولة</value>
+  </data>
+  <data name="Public.Tours" xml:space="preserve">
+    <value>الجولات</value>
+  </data>
+  <data name="Public.Tours.Count" xml:space="preserve">
+    <value>{0} جولات</value>
+  </data>
+  <data name="Public.Tours.by.this.guide" xml:space="preserve">
+    <value>Tours by this guide</value>
+  </data>
+  <data name="Public.Tours.pagination" xml:space="preserve">
+    <value>Tours pagination</value>
+  </data>
+  <data name="Public.Travel.agencies" xml:space="preserve">
+    <value>وكالات السفر</value>
+  </data>
+  <data name="Public.Travel.blog" xml:space="preserve">
+    <value>مدونة السفر</value>
+  </data>
+  <data name="Public.Travelers" xml:space="preserve">
+    <value>المسافرون</value>
+  </data>
+  <data name="Public.Try.a.different.category.city.or.search.term" xml:space="preserve">
+    <value>Try a different category, city, or search term.</value>
+  </data>
+  <data name="Public.Try.a.different.keyword.or.browse.all.available.tours" xml:space="preserve">
+    <value>Try a different keyword, or browse all available tours.</value>
+  </data>
+  <data name="Public.Try.a.different.sort.or.check.back.soon" xml:space="preserve">
+    <value>جرّب ترتيباً مختلفاً أو عُد قريباً.</value>
+  </data>
+  <data name="Public.Try.removing.or.changing.a.filter" xml:space="preserve">
+    <value>جرّب إزالة فلتر أو تغييره.</value>
+  </data>
+  <data name="Public.Undo.helpful" xml:space="preserve">
+    <value>تراجع عن مفيد</value>
+  </data>
+  <data name="Public.Unfollow" xml:space="preserve">
+    <value>إلغاء المتابعة</value>
+  </data>
+  <data name="Public.Unlike" xml:space="preserve">
+    <value>إلغاء الإعجاب</value>
+  </data>
+  <data name="Public.UpToParticipants" xml:space="preserve">
+    <value>حتى {0} مشاركين</value>
+  </data>
+  <data name="Public.UpToPeople" xml:space="preserve">
+    <value>حتى {0} أشخاص</value>
+  </data>
+  <data name="Public.Verified" xml:space="preserve">
+    <value>موثّق</value>
+  </data>
+  <data name="Public.Verified.agencies.offering.guided.tours.and.travel.services" xml:space="preserve">
+    <value>وكالات موثّقة تقدم جولات مع مرشدين وخدمات سفر.</value>
+  </data>
+  <data name="Public.Verified.booking" xml:space="preserve">
+    <value>حجز موثّق</value>
+  </data>
+  <data name="Public.View.Details" xml:space="preserve">
+    <value>عرض التفاصيل</value>
+  </data>
+  <data name="Public.Views.Count" xml:space="preserve">
+    <value>{0} مشاهدة</value>
+  </data>
+  <data name="Public.Visit.date" xml:space="preserve">
+    <value>تاريخ الزيارة</value>
+  </data>
+  <data name="Public.Visit.date.optional" xml:space="preserve">
+    <value>تاريخ الزيارة (اختياري)</value>
+  </data>
+  <data name="Public.Visit.website" xml:space="preserve">
+    <value>Visit website</value>
+  </data>
+  <data name="Public.Want.to.save.this.place" xml:space="preserve">
+    <value>Want to save this place?</value>
+  </data>
+  <data name="Public.Was" xml:space="preserve">
+    <value>كان</value>
+  </data>
+  <data name="Public.We.reply.within.24.hours" xml:space="preserve">
+    <value>We reply within 24 hours</value>
+  </data>
+  <data name="Public.Weather" xml:space="preserve">
+    <value>الطقس</value>
+  </data>
+  <data name="Public.Weekly.schedule" xml:space="preserve">
+    <value>الجدول الأسبوعي</value>
+  </data>
+  <data name="Public.What.are.you.looking.for" xml:space="preserve">
+    <value>What are you looking for?</value>
+  </data>
+  <data name="Public.What.s.included" xml:space="preserve">
+    <value>What's included</value>
+  </data>
+  <data name="Public.Wheelchair.accessible" xml:space="preserve">
+    <value>مناسب للكراسي المتحركة</value>
+  </data>
+  <data name="Public.Write.a.reply" xml:space="preserve">
+    <value>Write a reply.</value>
+  </data>
+  <data name="Public.Write.a.review" xml:space="preserve">
+    <value>اكتب مراجعة</value>
+  </data>
+  <data name="Public.Yes" xml:space="preserve">
+    <value>Yes</value>
+  </data>
+  <data name="Public.Your.guides" xml:space="preserve">
+    <value>مرشدوك</value>
+  </data>
+  <data name="Public.Your.review" xml:space="preserve">
+    <value>مراجعتك</value>
+  </data>
+  <data name="Public.breadcrumb" xml:space="preserve">
+    <value>breadcrumb</value>
+  </data>
+  <data name="Public.e.g.Jordan" xml:space="preserve">
+    <value>e.g. Jordan</value>
+  </data>
+  <data name="Public.e.g.Petra" xml:space="preserve">
+    <value>e.g. Petra</value>
+  </data>
+  <data name="Public.escapeHtml.it.name.meta" xml:space="preserve">
+    <value>' + escapeHtml(it.name) + (meta ? '</value>
+  </data>
+  <data name="Public.escapeHtml.pin.name" xml:space="preserve">
+    <value>' + escapeHtml(pin.name) + '</value>
+  </data>
+  <data name="Public.meta" xml:space="preserve">
+    <value>— ' + meta + '</value>
+  </data>
+  <data name="Public.name" xml:space="preserve">
+    <value>' + name + '</value>
+  </data>
+  <data name="Public.optional" xml:space="preserve">
+    <value>(optional)</value>
+  </data>
+  <data name="Public.per.person" xml:space="preserve">
+    <value>/per person</value>
+  </data>
+  <data name="Public.person" xml:space="preserve">
+    <value>/ person</value>
+  </data>
+  <data name="Public.traveler" xml:space="preserve">
+    <value>traveler</value>
+  </data>
+  <data name="Public.Clear.place.filter" xml:space="preserve">
+    <value>إزالة فلتر المكان</value>
+  </data>
+  <data name="Public.ShowingResults" xml:space="preserve">
+    <value>عرض {0}–{1} من {2} نتيجة</value>
+  </data>
+  <data name="Public.PercentOff" xml:space="preserve">
+    <value>خصم {0}%</value>
+  </data>
+  <data name="Public.BookedCount" xml:space="preserve">
+    <value>{0} حجز</value>
+  </data>
+  <data name="Public.ShowingPlaces" xml:space="preserve">
+    <value>عرض {0}–{1} من {2} مكان</value>
+  </data>
+  <data name="Public.PageOf" xml:space="preserve">
+    <value>الصفحة {0} من {1}</value>
+  </data>
+  <data name="Public.MinutesShort" xml:space="preserve">
+    <value>{0} دقيقة</value>
+  </data>
+  <data name="Public.FeelsLike" xml:space="preserve">
+    <value>تبدو كأنها {0}</value>
+  </data>
+  <data name="Public.KmPerHour" xml:space="preserve">
+    <value>{0} كم/س</value>
+  </data>
+  <data name="Public.Years" xml:space="preserve">
+    <value>{0} سنة</value>
+  </data>
+  <data name="Public.CancellationBefore" xml:space="preserve">
+    <value>حتى {0} ساعة قبل الموعد</value>
+  </data>
+  <data name="Public.HelpfulCount" xml:space="preserve">
+    <value>وجد {0} أشخاص أن هذا مفيد</value>
+  </data>
+  <data name="Public.EditedDate" xml:space="preserve">
+    <value>عُدّل في {0}</value>
+  </data>
+  <data name="Public.ArticlesBy" xml:space="preserve">
+    <value>مقالات {0}</value>
+  </data>
+</root>

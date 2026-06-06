@@ -1,7 +1,9 @@
 using YallaJo.Web.Areas.Public.ApiClients;
 using YallaJo.Web.Areas.Public.Helpers;
 using YallaJo.Web.Areas.Public.Models.Tours;
+using YallaJo.Web.Areas.Public.Translations;
 using YallaJo.Web.Infrastructure.Api.Contracts;
+using YallaJo.Web.Infrastructure.Seo;
 using YallaJo.Web.Services;
 
 namespace YallaJo.Web.Areas.Public.Facades;
@@ -10,6 +12,8 @@ public sealed class ToursFacade
 {
     private readonly ToursApiClient _api;
     private readonly PlacesApiClient _placesApi;
+    private readonly SeoApiClient _seo;
+    private readonly TranslationsApiClient _translations;
     private readonly IApiAssetUrlResolver _assetResolver;
 
     // Sort tokens accepted by GET /api/v1/tours.
@@ -17,10 +21,12 @@ public sealed class ToursFacade
         new(StringComparer.OrdinalIgnoreCase)
         { "price_asc", "price_desc", "rating_desc", "popularity_desc", "newest" };
 
-    public ToursFacade(ToursApiClient api, PlacesApiClient placesApi, IApiAssetUrlResolver assetResolver)
+    public ToursFacade(ToursApiClient api, PlacesApiClient placesApi, SeoApiClient seo, TranslationsApiClient translations, IApiAssetUrlResolver assetResolver)
     {
         _api = api;
         _placesApi = placesApi;
+        _seo = seo;
+        _translations = translations;
         _assetResolver = assetResolver;
     }
 
@@ -84,6 +90,8 @@ public sealed class ToursFacade
             return ApiResult<TourDetailVm>.Fail(detailResult.StatusCode, detailResult.Error ?? "Tour not found.");
 
         var d = detailResult.Data;
+        var languageCode = TranslationOverlay.ActiveLanguageCode;
+        var translationsTask = TranslationOverlay.GetApprovedAsync(_translations, "Tour", d.Id, languageCode, ct);
 
         var schedulesTask = SafeListAsync(() => _api.GetSchedulesAsync(d.Id, ct));
         var pricingTask = SafeListAsync(() => _api.GetPricingAsync(d.Id, ct));
@@ -95,7 +103,8 @@ public sealed class ToursFacade
         var joinSlotsTask = SafeJoinSlotsAsync(d.Id, ct);
         var placeTask = SafePlaceAsync(d.PlaceId, ct);
 
-        await Task.WhenAll(schedulesTask, pricingTask, waypointsTask, guidesTask, imagesTask, ratingTask, reviewsTask, joinSlotsTask, placeTask);
+        await Task.WhenAll(schedulesTask, pricingTask, waypointsTask, guidesTask, imagesTask, ratingTask, reviewsTask, joinSlotsTask, placeTask, translationsTask);
+        var translations = translationsTask.Result;
 
         // Real uploaded images come from the anonymous GET /api/v1/tours/{id}/images
         // endpoint (approved-only, primary-first). Relative /uploads URLs are resolved
@@ -117,11 +126,11 @@ public sealed class ToursFacade
         var vm = new TourDetailVm
         {
             Id = d.Id,
-            Name = d.Name,
+            Name = TranslationOverlay.Apply(translations, "Name", d.Name, languageCode) ?? d.Name,
             Slug = d.Slug,
-            Description = d.Description,
-            ShortDescription = d.ShortDescription,
-            Difficulty = d.Difficulty,
+            Description = TranslationOverlay.Apply(translations, "Description", d.Description, languageCode),
+            ShortDescription = TranslationOverlay.Apply(translations, "ShortDescription", d.ShortDescription, languageCode),
+            Difficulty = TranslationOverlay.Apply(translations, "Difficulty", d.Difficulty, languageCode) ?? d.Difficulty,
             DurationMinutes = d.DurationMinutes,
             MaxGroupSize = d.MaxGroupSize,
             MinAge = d.MinAge,
@@ -206,7 +215,63 @@ public sealed class ToursFacade
             }
         }
 
+        vm.Seo = TranslationOverlay.ApplySeo(
+            await GetSeoAsync(d.Id, d.ShortDescription ?? d.Description, ct), translations, languageCode,
+            fallbackTitle: vm.Name,
+            fallbackDescription: vm.ShortDescription ?? vm.Description);
+
         return ApiResult<TourDetailVm>.Ok(vm);
+    }
+
+    // SEO metadata + FAQ for the tour detail page (SeoEntityType.Tour). Best-effort:
+    // never fails the page — seeds from the tour itself, overrides from /seo/* when present.
+    private async Task<SeoContent> GetSeoAsync(Guid tourId, string? fallbackDescription, CancellationToken ct)
+    {
+        string? metaTitle = null;
+        var metaDescription = fallbackDescription;
+        string? canonical = null;
+        string? ogImage = PublicImagePlaceholder.ResolveTourImage(tourId);
+        IReadOnlyList<SeoFaqItem> faqs = [];
+
+        try
+        {
+            var metaTask = _seo.GetMetadataAsync(SeoEntityType.Tour, tourId, ct);
+            var faqTask = _seo.GetFaqAsync(SeoEntityType.Tour, tourId, ct);
+            await Task.WhenAll(metaTask, faqTask);
+
+            if (metaTask.Result is { IsSuccess: true, Data: { } meta })
+            {
+                if (!string.IsNullOrWhiteSpace(meta.Title)) metaTitle = meta.Title;
+                if (!string.IsNullOrWhiteSpace(meta.Description)) metaDescription = meta.Description;
+                canonical = meta.Canonical;
+                if (!string.IsNullOrWhiteSpace(meta.OgImage)) ogImage = meta.OgImage;
+            }
+
+            if (faqTask.Result is { IsSuccess: true, Data: { } items })
+            {
+                faqs = items
+                    .OrderBy(f => f.SortOrder)
+                    .Select(f => new SeoFaqItem { Question = f.Question, Answer = f.Answer })
+                    .ToList();
+            }
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch
+        {
+            // tolerate SEO hydration failure
+        }
+
+        return new SeoContent
+        {
+            MetaTitle = metaTitle,
+            MetaDescription = metaDescription,
+            Canonical = canonical,
+            OgImage = ogImage,
+            Faqs = faqs,
+        };
     }
 
     public async Task<ApiResult> SubmitJoinRequestAsync(SubmitJoinRequestBody body, CancellationToken ct = default)

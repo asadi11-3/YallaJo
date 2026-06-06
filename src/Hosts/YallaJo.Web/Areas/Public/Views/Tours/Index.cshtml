@@ -1,6 +1,8 @@
 @model YallaJo.Web.Areas.Public.Models.Tours.TourGridVm
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
-    ViewData["Title"] = "Explore Tours";
+    ViewData["Title"] = Localizer["Public.Explore.Tours"];
     Layout = "~/Views/Shared/_Layout.cshtml";
 
     string Currency(decimal amount, string currency) =>
@@ -15,8 +17,8 @@
     <div class="container">
         <div class="row">
             <div class="col-12 text-center">
-                <h1 class="h2 mb-2">Explore Tours</h1>
-                <p class="mb-0">Discover handpicked experiences and book your next adventure.</p>
+                <h1 class="h2 mb-2">@Localizer["Public.Explore.Tours"]</h1>
+                <p class="mb-0">@Localizer["Public.Discover.handpicked.experiences.and.book.your.next.adventure"]</p>
             </div>
         </div>
     </div>
@@ -36,7 +38,7 @@
                         <i class="bi bi-geo-alt me-1"></i>@Model.PlaceFilterLabel
                     </span>
                     <a asp-area="Public" asp-controller="Tours" asp-action="Index" class="btn btn-sm btn-outline-secondary">
-                        <i class="bi bi-x-lg me-1"></i>Clear place filter
+                        <i class="bi bi-x-lg me-1"></i>@Localizer["Public.Clear.place.filter"]
                     </a>
                 </div>
             </div>
@@ -46,7 +48,7 @@
         <div class="row g-3 align-items-center justify-content-between mb-4">
             <div class="col-12 col-xl-5">
                 <h5 class="mb-0">
-                    Showing @rangeStart-@rangeEnd of @Model.TotalCount result@(Model.TotalCount == 1 ? "" : "s")
+                    @Localizer["Public.ShowingResults", rangeStart, rangeEnd, Model.TotalCount]
                 </h5>
             </div>
 
@@ -55,7 +57,7 @@
                 <div class="input-group">
                     <span class="input-group-text bg-light border-end-0"><i class="bi bi-search"></i></span>
                     <input type="text" id="tourSearchInput" class="form-control border-start-0"
-                           placeholder="Filter tours on this page...">
+                           placeholder="@Localizer["Public.Filter.tours.on.this.page"]">
                 </div>
             </div>
 
@@ -66,12 +68,12 @@
                     {
                         <input type="hidden" name="q" value="@Model.Query" />
                     }
-                    <select name="sort" class="form-select" onchange="document.getElementById('sortForm').submit();" aria-label="Sort tours">
-                        <option value="popularity_desc" selected="@(Model.Sort == "popularity_desc")">Most popular</option>
-                        <option value="newest" selected="@(Model.Sort == "newest")">Newest</option>
-                        <option value="rating_desc" selected="@(Model.Sort == "rating_desc")">Top rated</option>
-                        <option value="price_asc" selected="@(Model.Sort == "price_asc")">Price: low to high</option>
-                        <option value="price_desc" selected="@(Model.Sort == "price_desc")">Price: high to low</option>
+                    <select name="sort" class="form-select" onchange="document.getElementById('sortForm').submit();" aria-label="@Localizer["Public.Sort.tours"]">
+                        <option value="popularity_desc" selected="@(Model.Sort == "popularity_desc")">@Localizer["Public.Most.popular"]</option>
+                        <option value="newest" selected="@(Model.Sort == "newest")">@Localizer["Public.Newest"]</option>
+                        <option value="rating_desc" selected="@(Model.Sort == "rating_desc")">@Localizer["Public.Top.rated"]</option>
+                        <option value="price_asc" selected="@(Model.Sort == "price_asc")">@Localizer["Public.Price.low.to.high"]</option>
+                        <option value="price_desc" selected="@(Model.Sort == "price_desc")">@Localizer["Public.Price.high.to.low"]</option>
                     </select>
                 </form>
             </div>
@@ -85,7 +87,7 @@
                 <div class="col-12">
                     <ul class="list-inline mb-0" id="categoryChips">
                         <li class="list-inline-item mb-2">
-                            <button type="button" class="btn btn-sm btn-primary js-category-chip active" data-category="">All</button>
+                            <button type="button" class="btn btn-sm btn-primary js-category-chip active" data-category="">@Localizer["Public.All"]</button>
                         </li>
                         @foreach (var cat in Model.Categories)
                         {
@@ -103,9 +105,9 @@
             <!-- Empty state -->
             <div class="row">
                 <div class="col-12 text-center py-5">
-                    <img src="~/assets/images/element/17.svg" class="h-100px mb-3" alt="No tours">
-                    <h5 class="mb-1">No tours found</h5>
-                    <p class="mb-0">Try a different sort or check back soon.</p>
+                    <img src="~/assets/images/element/17.svg" class="h-100px mb-3" alt="@Localizer["Public.No.tours"]">
+                    <h5 class="mb-1">@Localizer["Public.No.tours.found"]</h5>
+                    <p class="mb-0">@Localizer["Public.Try.a.different.sort.or.check.back.soon"]</p>
                 </div>
             </div>
         }
@@ -133,11 +135,11 @@
                                     <div>
                                         @if (tour.HasDiscount)
                                         {
-                                            <span class="badge text-bg-danger">@tour.DiscountPercent% Off</span>
+                                            <span class="badge text-bg-danger">@Localizer["Public.PercentOff", tour.DiscountPercent]</span>
                                         }
                                         @if (tour.IsFeatured)
                                         {
-                                            <span class="badge text-bg-dark">Featured</span>
+                                            <span class="badge text-bg-dark">@Localizer["Public.Featured"]</span>
                                         }
                                     </div>
                                 </div>
@@ -148,7 +150,7 @@
                                         <button type="button"
                                                 class="btn btn-sm btn-white rounded-circle js-favorite"
                                                 data-entity-type="Tour" data-entity-id="@tour.Id"
-                                                title="Save to wishlist" aria-label="Save to wishlist">
+                                                title="@Localizer["Public.Save.to.wishlist"]" aria-label="@Localizer["Public.Save.to.wishlist"]">
                                             <i class="bi bi-heart"></i>
                                         </button>
                                     }
@@ -157,7 +159,7 @@
                                         <button type="button"
                                                 class="btn btn-sm btn-white rounded-circle"
                                                 disabled
-                                                data-bs-toggle="tooltip" title="Log in to save">
+                                                data-bs-toggle="tooltip" title="@Localizer["Public.Log.in.to.save"]">
                                             <i class="bi bi-heart"></i>
                                         </button>
                                     }
@@ -176,7 +178,7 @@
                                     </li>
                                     @if (tour.BookingCount > 0)
                                     {
-                                        <li class="nav-item">@tour.BookingCount booked</li>
+                                        <li class="nav-item">@Localizer["Public.BookedCount", tour.BookingCount]</li>
                                     }
                                 </ul>
                             </div>
@@ -186,14 +188,14 @@
                                 <div class="d-sm-flex justify-content-sm-between align-items-center flex-wrap">
                                     <div class="hstack gap-2">
                                         <h5 class="fw-normal text-success mb-0">@Currency(tour.EffectivePrice, tour.Currency)</h5>
-                                        <small>/per person</small>
+                                        <small>@Localizer["Public.per.person"]</small>
                                         @if (tour.HasDiscount)
                                         {
                                             <span class="text-decoration-line-through small">@Currency(tour.BasePrice, tour.Currency)</span>
                                         }
                                     </div>
                                     <div class="mt-2 mt-sm-0">
-                                        <a asp-area="Public" asp-controller="Tours" asp-action="Detail" asp-route-slug="@tour.Slug" class="btn btn-sm btn-primary mb-0">View Details</a>
+                                        <a asp-area="Public" asp-controller="Tours" asp-action="Detail" asp-route-slug="@tour.Slug" class="btn btn-sm btn-primary mb-0">@Localizer["Public.View.Details"]</a>
                                     </div>
                                 </div>
                             </div>
@@ -206,7 +208,7 @@
             <!-- No client-filter matches notice -->
             <div class="row d-none" id="noFilterMatch">
                 <div class="col-12 text-center py-5">
-                    <h6 class="mb-0">No tours on this page match your filter.</h6>
+                    <h6 class="mb-0">@Localizer["Public.No.tours.on.this.page.match.your.filter"]</h6>
                 </div>
             </div>
 
@@ -215,7 +217,7 @@
             {
                 <div class="row">
                     <div class="col-12">
-                        <nav class="mt-4 d-flex justify-content-center" aria-label="Tours pagination">
+                        <nav class="mt-4 d-flex justify-content-center" aria-label="@Localizer["Public.Tours.pagination"]">
                             <ul class="pagination pagination-primary-soft d-inline-block d-md-flex rounded mb-0">
                                 <li class="page-item mb-0 @(Model.HasPreviousPage ? "" : "disabled")">
                                     <a class="page-link"
@@ -250,14 +252,8 @@
 <!-- ======================= Tour grid END -->
 
 @section Scripts {
-    @* Endpoint URL is surfaced as a data-* attribute (server-generated) instead of
-       being hardcoded as a literal inside the script below. *@
-    <span id="interactionConfig" hidden data-favorites-url="/api/v1/social/favorites"></span>
     <script>
         (function () {
-            var cfg = document.getElementById('interactionConfig');
-            var favoritesUrl = cfg ? cfg.dataset.favoritesUrl : '';
-
             // Enable Bootstrap tooltips (used by the disabled guest wishlist button).
             var tooltipTriggers = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
             tooltipTriggers.forEach(function (el) {
@@ -294,27 +290,6 @@
                 });
             });
 
-            // Wishlist favorite (authenticated users only).
-            var favButtons = [].slice.call(document.querySelectorAll('.js-favorite'));
-            var tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
-            favButtons.forEach(function (btn) {
-                btn.addEventListener('click', function () {
-                    var icon = btn.querySelector('i');
-                    var body = {
-                        entityType: btn.getAttribute('data-entity-type'),
-                        entityId: btn.getAttribute('data-entity-id')
-                    };
-                    var headers = { 'Content-Type': 'application/json' };
-                    if (tokenInput) headers['RequestVerificationToken'] = tokenInput.value;
-                    fetch(favoritesUrl, {
-                        method: 'POST',
-                        headers: headers,
-                        body: JSON.stringify(body)
-                    }).then(function (res) {
-                        if (res.ok && icon) { icon.classList.remove('bi-heart'); icon.classList.add('bi-heart-fill', 'text-danger'); }
-                    }).catch(function () { /* ignore */ });
-                });
-            });
         })();
     </script>
 }

@@ -30,14 +30,53 @@ public sealed class HomeCategoryVm
     public string? Icon { get; init; }
 }
 
+/// <summary>A place card shown on the homepage (popular destinations rail).</summary>
+public sealed class HomePlaceCardVm
+{
+    public Guid Id { get; init; }
+    public string Name { get; init; } = string.Empty;
+    public string Slug { get; init; } = string.Empty;
+    public string? ImageUrl { get; init; }
+    public string? City { get; init; }
+    public string? Country { get; init; }
+    public decimal AverageRating { get; init; }
+    public int ReviewCount { get; init; }
+    public bool IsFeatured { get; init; }
+
+    public string Location =>
+        string.Join(", ", new[] { City, Country }.Where(s => !string.IsNullOrWhiteSpace(s)));
+}
+
+/// <summary>A business card shown on the homepage (popular businesses rail).</summary>
+public sealed class HomeBusinessCardVm
+{
+    public Guid Id { get; init; }
+    public string Name { get; init; } = string.Empty;
+    public string Slug { get; init; } = string.Empty;
+    public string? ImageUrl { get; init; }
+    public string? BusinessType { get; init; }
+    public string? City { get; init; }
+    public string? Country { get; init; }
+    public decimal AverageRating { get; init; }
+    public int ReviewCount { get; init; }
+    public bool IsFeatured { get; init; }
+
+    public string Location =>
+        string.Join(", ", new[] { City, Country }.Where(s => !string.IsNullOrWhiteSpace(s)));
+}
+
 /// <summary>The complete homepage view model.</summary>
 public sealed class HomeVm
 {
     public IReadOnlyList<HomeTourCardVm> FeaturedTours { get; init; } = [];
     public IReadOnlyList<HomeTourCardVm> PopularTours { get; init; } = [];
+    public IReadOnlyList<HomePlaceCardVm> PopularPlaces { get; init; } = [];
+    public IReadOnlyList<HomeBusinessCardVm> PopularBusinesses { get; init; } = [];
     public IReadOnlyList<HomeCategoryVm> Categories { get; init; } = [];
 
     public bool HasFeatured => FeaturedTours.Count > 0;
     public bool HasPopular => PopularTours.Count > 0;
+    public bool HasPopularPlaces => PopularPlaces.Count > 0;
+    public bool HasPopularBusinesses => PopularBusinesses.Count > 0;
     public bool HasCategories => Categories.Count > 0;
 }

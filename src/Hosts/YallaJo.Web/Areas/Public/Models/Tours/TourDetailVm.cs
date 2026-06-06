@@ -1,3 +1,5 @@
+using YallaJo.Web.Infrastructure.Seo;
+
 namespace YallaJo.Web.Areas.Public.Models.Tours;
 
 public sealed class TourDetailVm
@@ -28,6 +30,8 @@ public sealed class TourDetailVm
     public string? PlaceCity { get; set; }
     public string? PlaceCountry { get; set; }
     public bool PlaceLookupFailed { get; set; }
+
+    public SeoContent? Seo { get; set; }
 
     public string? PlaceDisplay =>
         PlaceId is not { } id

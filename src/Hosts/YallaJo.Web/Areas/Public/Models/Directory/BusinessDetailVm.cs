@@ -1,3 +1,5 @@
+using YallaJo.Web.Infrastructure.Seo;
+
 namespace YallaJo.Web.Areas.Public.Models.Directory;
 
 public sealed class BusinessDetailVm
@@ -19,6 +21,10 @@ public sealed class BusinessDetailVm
     public int ReviewCount { get; init; }
     public bool IsVerified { get; init; }
     public bool IsFeatured { get; init; }
+
+    public Guid? PlaceId { get; init; }
+    public SeoContent? Seo { get; set; }
+    public WeatherResponse? Weather { get; set; }
 
     public IReadOnlyList<string> ImageUrls { get; init; } = [];
     public IReadOnlyList<BusinessHoursVm> Hours { get; init; } = [];

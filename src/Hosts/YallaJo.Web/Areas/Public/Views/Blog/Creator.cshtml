@@ -1,0 +1,123 @@
+@model YallaJo.Web.Areas.Public.Models.Blog.CreatorProfileVm
+@using YallaJo.Web.Infrastructure.Seo
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var isAuthed = User.Identity?.IsAuthenticated == true;
+    var returnUrl = Context.Request.PathBase + Context.Request.Path + Context.Request.QueryString;
+    var baseUrl = $"{Context.Request.Scheme}://{Context.Request.Host}";
+    ViewData.SetSeo(new SeoModel
+    {
+        Title = Model.Seo?.MetaTitle ?? Model.DisplayName,
+        Description = Model.Seo?.MetaDescription ?? Model.Bio,
+        Canonical = Model.Seo?.Canonical ?? $"{baseUrl}/creators/{Model.Slug}",
+        OgImage = Model.Seo?.OgImage ?? Model.AvatarUrl,
+        OgType = "profile",
+    });
+}
+@Html.AntiForgeryToken()
+
+<section class="pt-4">
+    <div class="container">
+        <nav aria-label="@Localizer["Public.breadcrumb"]">
+            <ol class="breadcrumb mb-3">
+                <li class="breadcrumb-item"><a asp-area="Public" asp-controller="Home" asp-action="Index">@Localizer["Public.Home"]</a></li>
+                <li class="breadcrumb-item"><a asp-area="Public" asp-controller="Blog" asp-action="Index">@Localizer["Public.Blog"]</a></li>
+                <li class="breadcrumb-item active" aria-current="page">@Model.DisplayName</li>
+            </ol>
+        </nav>
+        <div class="d-sm-flex align-items-center">
+            @if (Model.HasAvatar)
+            {
+                <img src="@Model.AvatarUrl" alt="@Model.DisplayName" class="rounded-circle flex-shrink-0" width="96" height="96" style="object-fit:cover;">
+            }
+            else
+            {
+                <span class="d-inline-flex align-items-center justify-content-center bg-light rounded-circle flex-shrink-0" style="width:96px;height:96px;"><i class="bi bi-person-circle display-5 text-secondary" aria-hidden="true"></i></span>
+            }
+            <div class="ms-sm-3 mt-3 mt-sm-0 flex-grow-1">
+                <h1 class="h3 mb-1">@Model.DisplayName</h1>
+                <ul class="nav nav-divider small text-secondary">
+                    <li class="nav-item"><i class="bi bi-journal-text me-1" aria-hidden="true"></i>@Localizer["Public.Articles.Count", Model.ArticleCount]</li>
+                    <li class="nav-item"><i class="bi bi-people me-1" aria-hidden="true"></i>@Localizer["Public.Followers.Count", Model.FollowerCount]</li>
+                    <li class="nav-item"><i class="bi bi-eye me-1" aria-hidden="true"></i>@Localizer["Public.Views.Count", Model.TotalViewCount]</li>
+                </ul>
+            </div>
+            <div class="mt-3 mt-sm-0">
+                @if (!isAuthed)
+                {
+                    <a class="btn btn-sm btn-outline-primary" asp-area="Auth" asp-controller="Auth" asp-action="SignIn" asp-route-returnUrl="@returnUrl"><i class="bi bi-person-plus me-1" aria-hidden="true"></i>@Localizer["Public.Sign.in.to.follow"]</a>
+                }
+                else if (Model.IsFollowing)
+                {
+                    <form method="post" asp-area="Public" asp-controller="Blog" asp-action="UnfollowCreator" asp-route-profileId="@Model.Id">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="creatorSlug" value="@Model.Slug" />
+                        <button type="submit" class="btn btn-sm btn-outline-primary"><i class="bi bi-person-dash me-1" aria-hidden="true"></i>@Localizer["Public.Unfollow"]</button>
+                    </form>
+                }
+                else
+                {
+                    <form method="post" asp-area="Public" asp-controller="Blog" asp-action="FollowCreator" asp-route-profileId="@Model.Id">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="creatorSlug" value="@Model.Slug" />
+                        <button type="submit" class="btn btn-sm btn-primary"><i class="bi bi-person-plus me-1" aria-hidden="true"></i>@Localizer["Public.Follow"]</button>
+                    </form>
+                }
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="pt-4 pb-5">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-lg-4">
+                @if (Model.HasBio)
+                {
+                    <div class="card border">
+                        <div class="card-header"><h2 class="h6 mb-0">@Localizer["Public.About"]</h2></div>
+                        <div class="card-body"><p class="mb-0" style="white-space:pre-line;">@Model.Bio</p></div>
+                    </div>
+                }
+            </div>
+            <div class="col-lg-8">
+                <h2 class="h5 mb-3">@Localizer["Public.ArticlesBy", Model.DisplayName]</h2>
+                @if (Model.HasPosts)
+                {
+                    <div class="row g-3 g-md-4">
+                        @foreach (var post in Model.Posts)
+                        {
+                            <div class="col-sm-6">
+                                <article class="card border h-100 card-hover-shadow position-relative">
+                                    <div class="card-body">
+                                        <i class="bi bi-journal-text fs-4 text-primary mb-2 d-block" aria-hidden="true"></i>
+                                        <h3 class="h6"><a class="stretched-link text-reset" asp-area="Public" asp-controller="Blog" asp-action="Post" asp-route-slug="@post.Slug">@post.Title</a></h3>
+                                        @if (post.PublishedAt is { } published)
+                                        {
+                                            <span class="text-secondary small"><i class="bi bi-calendar3 me-1" aria-hidden="true"></i>@published.ToString("d MMM yyyy")</span>
+                                        }
+                                    </div>
+                                </article>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <p class="text-secondary">@Localizer["Public.No.published.articles.yet"]</p>
+                }
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        // Tooltip init (Creator is not a FavoriteEntityType; follow CTA is a sign-in link for guests)
+        (function () {
+            document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) { new bootstrap.Tooltip(el); });
+        })();
+    </script>
+}

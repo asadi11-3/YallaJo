@@ -1,17 +1,30 @@
 @model YallaJo.Web.Areas.Public.Models.Places.PlaceDetailVm
+@using YallaJo.Web.Infrastructure.Seo
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
-    ViewData["Title"] = string.IsNullOrWhiteSpace(Model.MetaTitle) ? Model.Name : Model.MetaTitle;
     Layout = "~/Views/Shared/_Layout.cshtml";
+    var isAuthed = User.Identity?.IsAuthenticated == true;
+    var baseUrl = $"{Context.Request.Scheme}://{Context.Request.Host}";
+    ViewData.SetSeo(new SeoModel
+    {
+        Title = Model.Seo?.MetaTitle ?? Model.MetaTitle ?? Model.Name,
+        Description = Model.Seo?.MetaDescription,
+        Canonical = Model.Seo?.Canonical ?? $"{baseUrl}/places/{Model.Slug}",
+        OgImage = Model.Seo?.OgImage ?? Model.HeroImageUrl,
+        OgType = "website"
+    });
 }
+@Html.AntiForgeryToken()
 
 <!-- ======================= Place detail banner START -->
 <section class="pt-4">
     <div class="container">
         <div class="row">
             <div class="col-12">
-                <nav aria-label="breadcrumb" class="mb-2">
+                <nav aria-label="@Localizer["Public.breadcrumb"]" class="mb-2">
                     <ol class="breadcrumb breadcrumb-dots mb-0">
-                        <li class="breadcrumb-item"><a asp-area="Public" asp-controller="Places" asp-action="Index">Places</a></li>
+                        <li class="breadcrumb-item"><a asp-area="Public" asp-controller="Places" asp-action="Index">@Localizer["Public.Places"]</a></li>
                         <li class="breadcrumb-item active" aria-current="page">@Model.Name</li>
                     </ol>
                 </nav>
@@ -30,18 +43,32 @@
                             }
                             <li class="nav-item">
                                 <i class="bi bi-star-fill text-warning me-1"></i>@Model.AverageRating.ToString("0.0")
-                                <span class="text-body">(@Model.ReviewCount review@(Model.ReviewCount == 1 ? "" : "s"))</span>
+                                <span class="text-body">(@Localizer["Public.Reviews.Count", Model.ReviewCount])</span>
                             </li>
                         </ul>
                     </div>
-                    <div class="mt-3 mt-sm-0">
-                        @if (Model.IsFeatured)
+                    <div class="mt-3 mt-sm-0 text-sm-end">
+                        <div class="mb-2">
+                            @if (Model.IsFeatured)
+                            {
+                                <span class="badge text-bg-dark">@Localizer["Public.Featured"]</span>
+                            }
+                            @if (Model.IsVerified)
+                            {
+                                <span class="badge text-bg-success"><i class="bi bi-patch-check-fill me-1"></i>@Localizer["Public.Verified"]</span>
+                            }
+                        </div>
+                        @if (isAuthed)
                         {
-                            <span class="badge text-bg-dark">Featured</span>
+                            <button type="button" class="btn btn-sm btn-outline-danger js-favorite" data-entity-type="Place" data-entity-id="@Model.PlaceId" aria-label="@Localizer["Public.Save.to.favourites"]">
+                                <i class="bi bi-heart"></i>
+                            </button>
                         }
-                        @if (Model.IsVerified)
+                        else
                         {
-                            <span class="badge text-bg-success"><i class="bi bi-patch-check-fill me-1"></i>Verified</span>
+                            <button type="button" class="btn btn-sm btn-outline-danger" disabled data-bs-toggle="tooltip" title="@Localizer["Public.Log.in.to.save"]" aria-label="@Localizer["Public.Log.in.to.save"]">
+                                <i class="bi bi-heart"></i>
+                            </button>
                         }
                     </div>
                 </div>
@@ -76,7 +103,7 @@
                 @if (!string.IsNullOrWhiteSpace(Model.Description))
                 {
                     <div class="card shadow">
-                        <div class="card-header border-bottom"><h5 class="mb-0">About</h5></div>
+                        <div class="card-header border-bottom"><h5 class="mb-0">@Localizer["Public.About"]</h5></div>
                         <div class="card-body">
                             <p class="mb-0">@Model.Description</p>
                         </div>
@@ -87,7 +114,7 @@
             <!-- Sidebar -->
             <div class="col-lg-4">
                 <div class="card shadow mb-4">
-                    <div class="card-header border-bottom"><h5 class="mb-0">Location</h5></div>
+                    <div class="card-header border-bottom"><h5 class="mb-0">@Localizer["Public.Location"]</h5></div>
                     <div class="card-body">
                         <ul class="list-group list-group-borderless">
                             @if (!string.IsNullOrWhiteSpace(Model.Address))
@@ -112,10 +139,47 @@
                     </div>
                 </div>
 
+                @if (Model.Weather is { } weather)
+                {
+                    <div class="card shadow mb-4">
+                        <div class="card-header border-bottom"><h5 class="mb-0"><i class="bi bi-cloud-sun me-1" aria-hidden="true"></i>@Localizer["Public.Weather"]</h5></div>
+                        <div class="card-body d-flex justify-content-between align-items-center">
+                            <div>
+                                @if (weather.HasTemperature)
+                                {
+                                    <span class="h3 mb-0">@weather.Temperature.GetValueOrDefault().ToString("0")&deg;C</span>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(weather.Condition))
+                                {
+                                    <div class="text-body">@weather.Condition</div>
+                                }
+                                @if (weather.IsStale && !string.IsNullOrWhiteSpace(weather.StaleHumanLabel))
+                                {
+                                    <small class="text-secondary d-block mt-1">@weather.StaleHumanLabel</small>
+                                }
+                            </div>
+                            <ul class="list-unstyled small text-body mb-0 text-end">
+                                @if (weather.FeelsLike.HasValue)
+                                {
+                                    <li>Feels like @weather.FeelsLike.Value.ToString("0")&deg;C</li>
+                                }
+                                @if (weather.Humidity.HasValue)
+                                {
+                                    <li><i class="bi bi-droplet me-1" aria-hidden="true"></i>@weather.Humidity.Value%</li>
+                                }
+                                @if (weather.WindSpeed.HasValue)
+                                {
+                                    <li><i class="bi bi-wind me-1" aria-hidden="true"></i>@weather.WindSpeed.Value.ToString("0.#") km/h</li>
+                                }
+                            </ul>
+                        </div>
+                    </div>
+                }
+
                 @if (Model.HasContact)
                 {
                     <div class="card shadow mb-4">
-                        <div class="card-header border-bottom"><h5 class="mb-0">Contact</h5></div>
+                        <div class="card-header border-bottom"><h5 class="mb-0">@Localizer["Public.Contact"]</h5></div>
                         <div class="card-body">
                             <ul class="list-group list-group-borderless">
                                 @if (!string.IsNullOrWhiteSpace(Model.Phone))
@@ -144,25 +208,49 @@
                     </div>
                 }
 
-                @if (Model.HasAccessibility)
+                @if (Model.HasDetailedAccessibility || Model.HasAccessibility)
                 {
                     <div class="card shadow">
-                        <div class="card-header border-bottom"><h5 class="mb-0">Accessibility</h5></div>
+                        <div class="card-header border-bottom"><h5 class="mb-0">@Localizer["Public.Accessibility"]</h5></div>
                         <div class="card-body">
-                            <ul class="list-group list-group-borderless mb-0">
-                                @if (Model.IsWheelchairAccessible)
-                                {
-                                    <li class="list-group-item"><i class="bi bi-check-circle-fill text-success me-2"></i>Wheelchair accessible</li>
-                                }
-                                @if (Model.HasAudioGuide)
-                                {
-                                    <li class="list-group-item"><i class="bi bi-check-circle-fill text-success me-2"></i>Audio guide</li>
-                                }
-                                @if (Model.HasBrailleSignage)
-                                {
-                                    <li class="list-group-item"><i class="bi bi-check-circle-fill text-success me-2"></i>Braille signage</li>
-                                }
-                            </ul>
+                            @if (Model.HasDetailedAccessibility)
+                            {
+                                <ul class="list-group list-group-borderless mb-0">
+                                    @foreach (var feature in Model.AccessibilityFeatures)
+                                    {
+                                        <li class="list-group-item">
+                                            <i class="bi @(feature.IsAvailable ? "bi-check-circle-fill text-success" : "bi-x-circle text-muted") me-2"></i>@feature.Name
+                                            @if (!string.IsNullOrWhiteSpace(feature.Description))
+                                            {
+                                                <small class="d-block text-body ms-4">@feature.Description</small>
+                                            }
+                                        </li>
+                                    }
+                                </ul>
+                            }
+                            else
+                            {
+                                <ul class="list-group list-group-borderless mb-0">
+                                    @if (Model.IsWheelchairAccessible)
+                                    {
+                                        <li class="list-group-item"><i class="bi bi-check-circle-fill text-success me-2"></i>@Localizer["Public.Wheelchair.accessible"]</li>
+                                    }
+                                    @if (Model.HasAudioGuide)
+                                    {
+                                        <li class="list-group-item"><i class="bi bi-check-circle-fill text-success me-2"></i>@Localizer["Public.Audio.guide"]</li>
+                                    }
+                                    @if (Model.HasBrailleSignage)
+                                    {
+                                        <li class="list-group-item"><i class="bi bi-check-circle-fill text-success me-2"></i>@Localizer["Public.Braille.signage"]</li>
+                                    }
+                                </ul>
+                            }
+                            @if (Model.AccessibilityCatalog.Count > 0)
+                            {
+                                <div class="mt-3 small text-body">
+                                    Catalog: @string.Join(", ", Model.AccessibilityCatalog.Select(c => c.DisplayName))
+                                </div>
+                            }
                         </div>
                     </div>
                 }
@@ -171,6 +259,35 @@
     </div>
 </section>
 <!-- ======================= Place detail body END -->
+
+@if (Model.Seo?.HasFaqs == true)
+{
+    <!-- ======================= FAQ START -->
+    <section class="pb-5">
+        <div class="container">
+            <h4 class="mb-3">@Localizer["Public.Frequently.asked.questions"]</h4>
+            <div class="accordion accordion-flush" id="placeFaq">
+                @for (var i = 0; i < Model.Seo.Faqs.Count; i++)
+                {
+                    var faq = Model.Seo.Faqs[i];
+                    var headingId = $"placeFaqHeading{i}";
+                    var collapseId = $"placeFaqCollapse{i}";
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="@headingId">
+                            <button class="accordion-button @(i == 0 ? "" : "collapsed")" type="button" data-bs-toggle="collapse" data-bs-target="#@collapseId" aria-expanded="@(i == 0 ? "true" : "false")" aria-controls="@collapseId">
+                                @faq.Question
+                            </button>
+                        </h2>
+                        <div id="@collapseId" class="accordion-collapse collapse @(i == 0 ? "show" : "")" aria-labelledby="@headingId" data-bs-parent="#placeFaq">
+                            <div class="accordion-body">@faq.Answer</div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </section>
+    <!-- ======================= FAQ END -->
+}
 
 <!-- ======================= Related tours START -->
 <section class="pb-5">
@@ -187,7 +304,7 @@
 
         @if (!Model.HasRelatedTours)
         {
-            <p class="text-body mb-0">No tours are currently available for this place.</p>
+            <p class="text-body mb-0">@Localizer["Public.No.tours.are.currently.available.for.this.place"]</p>
         }
         else
         {
@@ -201,7 +318,7 @@
                                 @if (tour.IsFeatured)
                                 {
                                     <div class="card-img-overlay d-flex flex-column p-3 z-index-1">
-                                        <div><span class="badge text-bg-dark">Featured</span></div>
+                                        <div><span class="badge text-bg-dark">@Localizer["Public.Featured"]</span></div>
                                     </div>
                                 }
                             </div>
@@ -218,7 +335,7 @@
                             </div>
                             <div class="card-footer pt-0">
                                 <span class="fw-normal text-success">@(tour.Currency is { Length: > 0 } ? $"{tour.EffectivePrice:N0} {tour.Currency}" : tour.EffectivePrice.ToString("N0"))</span>
-                                <small>/per person</small>
+                                <small>@Localizer["Public.per.person"]</small>
                             </div>
                         </div>
                     </div>
@@ -228,3 +345,144 @@
     </div>
 </section>
 <!-- ======================= Related tours END -->
+
+@if (Model.HasBusinesses)
+{
+    <section class="pb-5">
+        <div class="container">
+            <h4 class="mb-3">Businesses at @Model.Name</h4>
+            <div class="row g-4">
+                @foreach (var business in Model.Businesses)
+                {
+                    <div class="col-md-6 col-xl-4">
+                        <div class="card card-hover-shadow h-100">
+                            <img src="@business.ImageUrl" class="card-img-top" alt="@business.Name" style="height:170px;object-fit:cover;">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <h5 class="h6 mb-0"><a asp-area="Public" asp-controller="Directory" asp-action="Detail" asp-route-id="@business.Id" class="stretched-link">@business.Name</a></h5>
+                                    @if (business.IsVerified)
+                                    {
+                                        <span class="badge text-bg-success">@Localizer["Public.Verified"]</span>
+                                    }
+                                </div>
+                                <p class="small text-body mb-2">@business.BusinessType</p>
+                                <span class="small"><i class="bi bi-star-fill text-warning me-1"></i>@business.AverageRating.ToString("0.0") (@business.ReviewCount)</span>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </section>
+}
+
+@if (Model.HasRecommendations)
+{
+    <section class="pb-5">
+        <div class="container">
+            <h4 class="mb-3">@Localizer["Public.Recommended.for.this.place"]</h4>
+            <div class="row g-4">
+                @foreach (var rec in Model.Recommendations.Concat(Model.SimilarRecommendations).Take(8))
+                {
+                    <div class="col-md-6 col-xl-3">
+                        <div class="card border h-100">
+                            <div class="card-body">
+                                @if (!string.IsNullOrWhiteSpace(rec.BadgeText))
+                                {
+                                    <span class="badge text-bg-primary mb-2">@rec.BadgeText</span>
+                                }
+                                else if (rec.IsBoosted)
+                                {
+                                    <span class="badge text-bg-warning mb-2">@Localizer["Public.Sponsored"]</span>
+                                }
+                                <h5 class="h6">@rec.Name</h5>
+                                <div class="small text-body mb-2"><i class="bi bi-star-fill text-warning me-1"></i>@rec.AverageRating.ToString("0.0")</div>
+                                @if (rec.BasePrice.HasValue)
+                                {
+                                    <div class="small text-success">@(string.IsNullOrWhiteSpace(rec.Currency) ? rec.BasePrice.Value.ToString("N0") : $"{rec.BasePrice.Value:N0} {rec.Currency}")</div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </section>
+}
+
+@if (ViewData["Reviews"] is YallaJo.Web.Areas.Public.Models.Reviews.ReviewListVm reviews)
+{
+    <partial name="~/Areas/Public/Views/Shared/_Reviews.cshtml" model="reviews" />
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+        <section class="pb-5">
+            <div class="container">
+                <div class="row g-4">
+                    <div class="col-lg-7">
+                        <form method="post" asp-area="Public" asp-controller="Places" asp-action="CreateReview" asp-route-slug="@Model.Slug" class="card border p-3 h-100">
+                            @Html.AntiForgeryToken()
+                            <h3 class="h6 mb-3">@Localizer["Public.Write.a.review"]</h3>
+                            <input type="hidden" name="Review.TargetId" value="@Model.PlaceId" />
+                            <div class="mb-2">
+                                <label class="form-label small" for="placeReviewRating">@Localizer["Public.Rating"]</label>
+                                <select id="placeReviewRating" name="Review.Rating" class="form-select form-select-sm">
+                                    <option value="5">@Localizer["Public.5.Excellent"]</option>
+                                    <option value="4">@Localizer["Public.4.Very.good"]</option>
+                                    <option value="3">@Localizer["Public.3.Average"]</option>
+                                    <option value="2">@Localizer["Public.2.Poor"]</option>
+                                    <option value="1">@Localizer["Public.1.Terrible"]</option>
+                                </select>
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label small" for="placeReviewTitle">@Localizer["Public.Title.optional"]</label>
+                                <input id="placeReviewTitle" name="Review.Title" maxlength="150" class="form-control form-control-sm" />
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label small" for="placeReviewContent">@Localizer["Public.Your.review"]</label>
+                                <textarea id="placeReviewContent" name="Review.Content" minlength="20" maxlength="2000" rows="4" required class="form-control form-control-sm"></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small" for="placeReviewVisit">@Localizer["Public.Visit.date.optional"]</label>
+                                <input id="placeReviewVisit" type="date" name="Review.VisitDate" class="form-control form-control-sm" />
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-sm">@Localizer["Public.Submit.review"]</button>
+                        </form>
+                    </div>
+                    <div class="col-lg-5">
+                        <form method="post" asp-area="Public" asp-controller="Places" asp-action="Report" asp-route-slug="@Model.Slug" class="card border p-3 h-100">
+                            @Html.AntiForgeryToken()
+                            <h3 class="h6 mb-3">@Localizer["Public.Report.this.place"]</h3>
+                            <input type="hidden" name="Report.EntityId" value="@Model.PlaceId" />
+                            <div class="mb-2">
+                                <label class="form-label small" for="placeReportReason">@Localizer["Public.Reason"]</label>
+                                <select id="placeReportReason" name="Report.Reason" class="form-select form-select-sm">
+                                    <option value="Inappropriate">@Localizer["Public.Inappropriate.content"]</option>
+                                    <option value="Misleading">@Localizer["Public.Misleading.information"]</option>
+                                    <option value="Spam">@Localizer["Public.Spam"]</option>
+                                    <option value="Harassment">@Localizer["Public.Harassment"]</option>
+                                    <option value="FakeReview">@Localizer["Public.Fake.review"]</option>
+                                    <option value="Other">@Localizer["Public.Other"]</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small" for="placeReportDesc">@Localizer["Public.Details"]</label>
+                                <textarea id="placeReportDesc" name="Report.Description" minlength="5" maxlength="1000" rows="3" required class="form-control form-control-sm"></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-outline-secondary btn-sm">@Localizer["Public.Submit.report"]</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </section>
+    }
+}
+
+@section Scripts {
+    <script>
+        // Tooltip init for the guest "Log in to save" hint. The shared authed-only
+        // ~/assets/js/favorites.js (loaded in _Layout) handles the .js-favorite heart POST.
+        (function () {
+            document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) { new bootstrap.Tooltip(el); });
+        })();
+    </script>
+}

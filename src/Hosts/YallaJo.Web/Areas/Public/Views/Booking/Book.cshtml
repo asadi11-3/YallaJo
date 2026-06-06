@@ -1,4 +1,6 @@
 @model YallaJo.Web.Areas.Public.Models.Booking.TourBookingVm
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
     ViewData["Title"] = $"Book {Model.TourName}";
     Layout = "~/Views/Shared/_Layout.cshtml";
@@ -14,22 +16,23 @@
 
 <section class="pt-3 pt-lg-5">
     <div class="container">
-        @Html.AntiForgeryToken()
-
-        <nav aria-label="breadcrumb" class="mb-3">
+        <nav aria-label="@Localizer["Public.breadcrumb"]" class="mb-3">
             <ol class="breadcrumb breadcrumb-dots mb-0">
-                <li class="breadcrumb-item"><a asp-area="Public" asp-controller="Tours" asp-action="Index">Tours</a></li>
+                <li class="breadcrumb-item"><a asp-area="Public" asp-controller="Tours" asp-action="Index">@Localizer["Public.Tours"]</a></li>
                 @if (!string.IsNullOrWhiteSpace(Model.TourSlug))
                 {
                     <li class="breadcrumb-item"><a asp-area="Public" asp-controller="Tours" asp-action="Detail" asp-route-slug="@Model.TourSlug">@Model.TourName</a></li>
                 }
-                <li class="breadcrumb-item active" aria-current="page">Book</li>
+                <li class="breadcrumb-item active" aria-current="page">@Localizer["Public.Book"]</li>
             </ol>
         </nav>
+
+        <h1 class="h3 mb-4">Book @Model.TourName</h1>
 
         <div asp-validation-summary="ModelOnly" class="alert alert-danger d-none-empty"></div>
 
         <form method="post" asp-area="Public" asp-controller="Booking" asp-action="Book" asp-route-tourId="@Model.TourId">
+            @Html.AntiForgeryToken()
             <input type="hidden" name="Form.TourId" value="@Model.TourId" />
             <input type="hidden" name="Form.GuideId" id="bookingGuideId" value="@Model.Form.GuideId" />
 
@@ -38,7 +41,7 @@
                     <!-- Tour review -->
                     <div class="card border mb-4">
                         <div class="card-header border-bottom">
-                            <h5 class="card-header-title mb-0">Tour review</h5>
+                            <h5 class="card-header-title mb-0">@Localizer["Public.Tour.review"]</h5>
                         </div>
                         <div class="card-body">
                             <div class="row g-3 align-items-center">
@@ -64,7 +67,7 @@
                                         }
                                         @if (Model.MaxGroupSize is > 0)
                                         {
-                                            <li class="nav-item">Up to @Model.MaxGroupSize people</li>
+                                            <li class="nav-item">Up to @Localizer["Public.UpToPeople", Model.MaxGroupSize]</li>
                                         }
                                     </ul>
                                     @if (Model.ReviewCount > 0)
@@ -79,7 +82,7 @@
                     <!-- Choose date & time -->
                     <div class="card border mb-4">
                         <div class="card-header border-bottom">
-                            <h5 class="card-header-title mb-0">Choose date &amp; time</h5>
+                            <h5 class="card-header-title mb-0">@Localizer["Public.Choose.date.amp.time"]</h5>
                         </div>
                         <div class="card-body">
                             @if (Model.HasSlots && Model.HasGuide)
@@ -98,7 +101,7 @@
                                                            autocomplete="off" checked="@(Model.Form.AvailabilitySlotId == slot.Id)" required />
                                                     <label class="btn btn-sm btn-outline-primary" for="slot-@slot.Id">
                                                         @(string.IsNullOrWhiteSpace(slotLabel) ? "Available" : slotLabel)
-                                                        <span class="d-block small text-body-secondary">@slot.AvailableCount left</span>
+                                                        <span class="d-block small text-body-secondary">@Localizer["Public.Left.Count", slot.AvailableCount]</span>
                                                     </label>
                                                 }
                                             </div>
@@ -116,8 +119,8 @@
                             else
                             {
                                 <div class="text-center py-4">
-                                    <img src="~/assets/images/element/17.svg" class="h-100px mb-3" alt="No availability" />
-                                    <p class="mb-0 text-secondary">No upcoming availability for this tour right now. Please check back soon.</p>
+                                    <img src="~/assets/images/element/17.svg" class="h-100px mb-3" alt="@Localizer["Public.No.availability"]" />
+                                    <p class="mb-0 text-secondary">@Localizer["Public.No.upcoming.availability.for.this.tour.right.now.Please.check.back.soo"]</p>
                                 </div>
                             }
                         </div>
@@ -126,25 +129,25 @@
                     <!-- Travelers -->
                     <div class="card border mb-4">
                         <div class="card-header border-bottom">
-                            <h5 class="card-header-title mb-0">Travelers</h5>
+                            <h5 class="card-header-title mb-0">@Localizer["Public.Travelers"]</h5>
                         </div>
                         <div class="card-body">
                             <div class="row g-3">
                                 <div class="col-sm-6 col-lg-3">
-                                    <label asp-for="Form.Adults" class="form-label">Adults</label>
+                                    <label asp-for="Form.Adults" class="form-label">@Localizer["Public.Adults"]</label>
                                     <input asp-for="Form.Adults" type="number" min="1" max="50" class="form-control js-participant" />
                                     <span asp-validation-for="Form.Adults" class="text-danger small"></span>
                                 </div>
                                 <div class="col-sm-6 col-lg-3">
-                                    <label asp-for="Form.Children" class="form-label">Children</label>
+                                    <label asp-for="Form.Children" class="form-label">@Localizer["Public.Children"]</label>
                                     <input asp-for="Form.Children" type="number" min="0" max="50" class="form-control js-participant" />
                                 </div>
                                 <div class="col-sm-6 col-lg-3">
-                                    <label asp-for="Form.Infants" class="form-label">Infants</label>
+                                    <label asp-for="Form.Infants" class="form-label">@Localizer["Public.Infants"]</label>
                                     <input asp-for="Form.Infants" type="number" min="0" max="50" class="form-control js-participant" />
                                 </div>
                                 <div class="col-sm-6 col-lg-3">
-                                    <label asp-for="Form.Seniors" class="form-label">Seniors</label>
+                                    <label asp-for="Form.Seniors" class="form-label">@Localizer["Public.Seniors"]</label>
                                     <input asp-for="Form.Seniors" type="number" min="0" max="50" class="form-control js-participant" />
                                 </div>
                             </div>
@@ -157,7 +160,7 @@
 
                             <div class="form-check form-switch mt-3">
                                 <input asp-for="Form.IsPrivate" class="form-check-input" />
-                                <label asp-for="Form.IsPrivate" class="form-check-label">Make this a private tour</label>
+                                <label asp-for="Form.IsPrivate" class="form-check-label">@Localizer["Public.Make.this.a.private.tour"]</label>
                             </div>
                         </div>
                     </div>
@@ -165,16 +168,16 @@
                     <!-- Extras -->
                     <div class="card border mb-4">
                         <div class="card-header border-bottom">
-                            <h5 class="card-header-title mb-0">Additional details</h5>
+                            <h5 class="card-header-title mb-0">@Localizer["Public.Additional.details"]</h5>
                         </div>
                         <div class="card-body">
                             <div class="mb-3">
-                                <label asp-for="Form.PromoCode" class="form-label">Promo code <span class="text-secondary small">(optional)</span></label>
-                                <input asp-for="Form.PromoCode" class="form-control" placeholder="Enter a promo code" />
+                                <label asp-for="Form.PromoCode" class="form-label">@Localizer["Public.Promo.code"] <span class="text-secondary small">@Localizer["Public.optional"]</span></label>
+                                <input asp-for="Form.PromoCode" class="form-control" placeholder="@Localizer["Public.Enter.a.promo.code"]" />
                             </div>
                             <div>
-                                <label asp-for="Form.SpecialRequests" class="form-label">Special requests <span class="text-secondary small">(optional)</span></label>
-                                <textarea asp-for="Form.SpecialRequests" class="form-control" rows="3" placeholder="Dietary needs, accessibility, pickup notes..."></textarea>
+                                <label asp-for="Form.SpecialRequests" class="form-label">@Localizer["Public.Special.requests"] <span class="text-secondary small">@Localizer["Public.optional"]</span></label>
+                                <textarea asp-for="Form.SpecialRequests" class="form-control" rows="3" placeholder="@Localizer["Public.Dietary.needs.accessibility.pickup.notes"]"></textarea>
                                 <span asp-validation-for="Form.SpecialRequests" class="text-danger small"></span>
                             </div>
                         </div>
@@ -185,51 +188,51 @@
                 <aside class="col-lg-4">
                     <div class="card border mb-4">
                         <div class="card-header border-bottom">
-                            <h5 class="card-header-title mb-0">Price summary</h5>
+                            <h5 class="card-header-title mb-0">@Localizer["Public.Price.summary"]</h5>
                         </div>
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-center mb-2">
-                                <span>From</span>
+                                <span>@Localizer["Public.From"]</span>
                                 <span class="h5 mb-0 text-success">@Money(Model.EffectivePrice, Model.Currency)</span>
                             </div>
                             @if (Model.HasDiscount)
                             {
                                 <div class="d-flex justify-content-between small text-secondary mb-2">
-                                    <span>Was</span>
+                                    <span>@Localizer["Public.Was"]</span>
                                     <span class="text-decoration-line-through">@Money(Model.BasePrice, Model.Currency)</span>
                                 </div>
                             }
                             <hr class="my-2" />
                             <div class="d-flex justify-content-between align-items-center mb-1">
-                                <span class="small">Estimated total <span class="text-secondary">(<span id="estCount">1</span> traveler<span id="estPlural"></span>)</span></span>
+                                <span class="small">@Localizer["Public.Estimated.total"] <span class="text-secondary">(<span id="estCount">1</span> @Localizer["Public.traveler"]<span id="estPlural"></span>)</span></span>
                                 <span class="h6 mb-0" id="estTotal"
                                       data-unit="@Model.EffectivePrice.ToString(System.Globalization.CultureInfo.InvariantCulture)"
                                       data-currency="@Model.Currency">@Money(Model.EstimatedTotal, Model.Currency)</span>
                             </div>
-                            <p class="small text-secondary mb-0">Estimate only. The final total is calculated by us at confirmation based on your travelers, per-tier pricing, and any promo code.</p>
+                            <p class="small text-secondary mb-0">@Localizer["Public.Estimate.only.The.final.total.is.calculated.by.us.at.confirmation.base"]</p>
                         </div>
                     </div>
 
                     @if (isAuthed)
                     {
                         <div class="d-grid mb-3">
-                            <button type="submit" class="btn btn-lg btn-primary mb-0" @((Model.HasSlots && Model.HasGuide) ? "" : "disabled")>Continue</button>
+                            <button type="submit" class="btn btn-lg btn-primary mb-0" @((Model.HasSlots && Model.HasGuide) ? "" : "disabled")>@Localizer["Public.Continue"]</button>
                         </div>
                     }
                     else
                     {
                         <div class="card border bg-light mb-3">
                             <div class="card-body">
-                                <h6 class="mb-2">Sign in to book</h6>
-                                <p class="small text-secondary mb-3">Create your booking and pay securely once you are signed in.</p>
+                                <h6 class="mb-2">@Localizer["Public.Sign.in.to.book"]</h6>
+                                <p class="small text-secondary mb-3">@Localizer["Public.Create.your.booking.and.pay.securely.once.you.are.signed.in"]</p>
                                 <div class="d-grid gap-2">
                                     <a class="btn btn-primary mb-0" asp-area="Auth" asp-controller="Auth" asp-action="SignIn"
-                                       asp-route-returnUrl="@Url.Action("Book", "Booking", new { area = "Public", tourId = Model.TourId })">Sign in to continue</a>
+                                       asp-route-returnUrl="@Url.Action("Book", "Booking", new { area = "Public", tourId = Model.TourId })">@Localizer["Public.Sign.in.to.continue"]</a>
                                     <form method="post" action="/auth/external/challenge" class="d-grid">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="provider" value="Google" />
                                         <input type="hidden" name="returnUrl" value="@Url.Action("Book", "Booking", new { area = "Public", tourId = Model.TourId })" />
-                                        <button type="submit" class="btn btn-light mb-0"><i class="fab fa-fw fa-google text-google-icon me-2"></i>Book as guest with Google</button>
+                                        <button type="submit" class="btn btn-light mb-0"><i class="fab fa-fw fa-google text-google-icon me-2"></i>@Localizer["Public.Book.as.guest.with.Google"]</button>
                                     </form>
                                 </div>
                             </div>
@@ -238,17 +241,17 @@
 
                     <div class="card border bg-light">
                         <div class="card-body">
-                            <h6 class="mb-2">Good to know</h6>
+                            <h6 class="mb-2">@Localizer["Public.Good.to.know"]</h6>
                             <ul class="list-group list-group-borderless small mb-0">
                                 @if (Model.IsInstantBooking)
                                 {
-                                    <li class="list-group-item px-0 py-1"><i class="bi bi-lightning-charge-fill text-warning me-2"></i>Instant confirmation</li>
+                                    <li class="list-group-item px-0 py-1"><i class="bi bi-lightning-charge-fill text-warning me-2"></i>@Localizer["Public.Instant.confirmation"]</li>
                                 }
                                 @if (Model.CancellationPolicyHours is > 0)
                                 {
                                     <li class="list-group-item px-0 py-1"><i class="bi bi-arrow-counterclockwise text-success me-2"></i>Free cancellation up to @Model.CancellationPolicyHours h before</li>
                                 }
-                                <li class="list-group-item px-0 py-1"><i class="bi bi-shield-check text-primary me-2"></i>Secure checkout</li>
+                                <li class="list-group-item px-0 py-1"><i class="bi bi-shield-check text-primary me-2"></i>@Localizer["Public.Secure.checkout"]</li>
                             </ul>
                         </div>
                     </div>

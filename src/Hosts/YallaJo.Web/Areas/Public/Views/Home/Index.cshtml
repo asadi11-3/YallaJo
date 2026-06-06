@@ -1,8 +1,20 @@
 @model YallaJo.Web.Areas.Public.Models.Home.HomeVm
+@using YallaJo.Web.Infrastructure.Seo
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
-    ViewData["Title"] = "Explore Tours & Experiences";
     Layout = "~/Views/Shared/_Layout.cshtml";
     var isAuthed = User.Identity?.IsAuthenticated == true;
+
+    var baseUrl = $"{Context.Request.Scheme}://{Context.Request.Host}";
+    ViewData.SetSeo(new SeoModel
+    {
+        Title = "Explore Tours & Experiences",
+        Description = "Discover and book hand-picked tours, guided experiences, local businesses and unforgettable places across Jordan with YallaJo.",
+        Canonical = $"{baseUrl}/",
+        OgImage = $"{baseUrl}/assets/images/bg/02.jpg",
+        OgType = "website",
+    });
 
     string Money(decimal amount, string currency) =>
         string.IsNullOrWhiteSpace(currency) ? amount.ToString("N0") : $"{amount:N0} {currency}";
@@ -28,22 +40,22 @@
              style="background-image:url('@Url.Content("~/assets/images/bg/02.jpg")');background-size:cover;background-position:center;">
             <div class="position-absolute top-0 start-0 w-100 h-100 bg-dark opacity-50"></div>
             <div class="position-relative text-white" style="max-width:640px;">
-                <h1 class="text-white display-6 fw-bold mb-2">Life is an adventure, explore it</h1>
+                <h1 class="text-white display-6 fw-bold mb-2">@Localizer["Home.Hero.Title"]</h1>
                 <p class="lead text-white opacity-75 mb-4">
-                    Discover hand-picked tours, guided experiences and unforgettable places.
+                    @Localizer["Home.Hero.Lead"]
                 </p>
 
                 <form asp-area="Public" asp-controller="Tours" asp-action="Index" method="get"
                       class="bg-mode shadow rounded-3 p-3">
                     <div class="row g-2 align-items-center">
                         <div class="col-12 col-md">
-                            <label class="visually-hidden" for="heroSearch">Search tours</label>
+                            <label class="visually-hidden" for="heroSearch">@Localizer["Home.Search.Label"]</label>
                             <input id="heroSearch" name="q" type="text" class="form-control border-0"
-                                   placeholder="Search tours, destinations, activities…" />
+                                   placeholder="@Localizer["Home.Search.Placeholder"]" />
                         </div>
                         <div class="col-12 col-md-auto d-grid">
                             <button type="submit" class="btn btn-dark mb-0">
-                                <i class="bi bi-search me-1"></i> Explore Tours
+                                <i class="bi bi-search me-1"></i> @Localizer["Home.Search.Button"]
                             </button>
                         </div>
                     </div>
@@ -60,11 +72,11 @@
         <div class="container">
             <div class="d-flex justify-content-between align-items-end mb-4">
                 <div>
-                    <h2 class="mb-0">Featured tours</h2>
-                    <p class="mb-0 text-body-secondary">Our best, hand-picked experiences.</p>
+                    <h2 class="mb-0">@Localizer["Home.Featured.Title"]</h2>
+                    <p class="mb-0 text-body-secondary">@Localizer["Home.Featured.Subtitle"]</p>
                 </div>
                 <a asp-area="Public" asp-controller="Tours" asp-action="Index"
-                   class="btn btn-sm btn-primary-soft mb-0">View all</a>
+                   class="btn btn-sm btn-primary-soft mb-0">@Localizer["Home.ViewAll"]</a>
             </div>
 
             <div class="row g-4">
@@ -84,8 +96,8 @@
         <div class="container">
             <div class="d-flex justify-content-between align-items-end mb-4">
                 <div>
-                    <h2 class="mb-0">Popular right now</h2>
-                    <p class="mb-0 text-body-secondary">Travellers love these the most.</p>
+                    <h2 class="mb-0">@Localizer["Home.Popular.Title"]</h2>
+                    <p class="mb-0 text-body-secondary">@Localizer["Home.Popular.Subtitle"]</p>
                 </div>
             </div>
 
@@ -99,14 +111,62 @@
     </section>
 }
 
+@* ─────────────────────────── Popular places ─────────────────────────── *@
+@if (Model.HasPopularPlaces)
+{
+    <section class="pt-5">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-end mb-4">
+                <div>
+                    <h2 class="mb-0">@Localizer["Home.Places.Title"]</h2>
+                    <p class="mb-0 text-body-secondary">@Localizer["Home.Places.Subtitle"]</p>
+                </div>
+                <a asp-area="Public" asp-controller="Places" asp-action="Index"
+                   class="btn btn-sm btn-primary-soft mb-0">@Localizer["Home.ViewAll"]</a>
+            </div>
+
+            <div class="row g-4">
+                @foreach (var place in Model.PopularPlaces)
+                {
+                    <partial name="_HomePlaceCard" model="place" view-data="@(new ViewDataDictionary(ViewData) { { "isAuthed", isAuthed } })" />
+                }
+            </div>
+        </div>
+    </section>
+}
+
+@* ─────────────────────────── Popular businesses ─────────────────────────── *@
+@if (Model.HasPopularBusinesses)
+{
+    <section class="pt-5">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-end mb-4">
+                <div>
+                    <h2 class="mb-0">@Localizer["Home.Businesses.Title"]</h2>
+                    <p class="mb-0 text-body-secondary">@Localizer["Home.Businesses.Subtitle"]</p>
+                </div>
+                <a asp-area="Public" asp-controller="Directory" asp-action="Index"
+                   class="btn btn-sm btn-primary-soft mb-0">@Localizer["Home.ViewAll"]</a>
+            </div>
+
+            <div class="row g-4">
+                @foreach (var business in Model.PopularBusinesses)
+                {
+                    <partial name="_HomeBusinessCard" model="business" view-data="@(new ViewDataDictionary(ViewData) { { "isAuthed", isAuthed } })" />
+                }
+            </div>
+        </div>
+    </section>
+}
+
 @* ─────────────────────────── Top categories ─────────────────────────── *@
 @if (Model.HasCategories)
 {
     <section class="pt-5 pb-5">
         <div class="container">
             <div class="mb-4">
-                <h2 class="mb-0">Browse by category</h2>
-                <p class="mb-0 text-body-secondary">Find the kind of experience you’re after.</p>
+                <h2 class="mb-0">@Localizer["Home.Categories.Title"]</h2>
+                <p class="mb-0 text-body-secondary">@Localizer["Home.Categories.Subtitle"]</p>
             </div>
 
             <div class="row g-3 g-xl-4">
@@ -134,53 +194,26 @@
     </section>
 }
 
-@if (!Model.HasFeatured && !Model.HasPopular && !Model.HasCategories)
+@if (!Model.HasFeatured && !Model.HasPopular && !Model.HasPopularPlaces && !Model.HasPopularBusinesses && !Model.HasCategories)
 {
     <section class="py-6">
         <div class="container text-center">
             <img src="~/assets/images/element/17.svg" alt="" class="h-150px mb-3" />
-            <h4>Nothing to show yet</h4>
-            <p class="text-body-secondary mb-3">Check back soon for new tours and experiences.</p>
-            <a asp-area="Public" asp-controller="Tours" asp-action="Index" class="btn btn-primary">Browse all tours</a>
+            <h4>@Localizer["Home.Empty.Title"]</h4>
+            <p class="text-body-secondary mb-3">@Localizer["Home.Empty.Subtitle"]</p>
+            <a asp-area="Public" asp-controller="Tours" asp-action="Index" class="btn btn-primary">@Localizer["Home.BrowseAllTours"]</a>
         </div>
     </section>
 }
 
 @section Scripts {
-    @* Endpoint URL is surfaced as a data-* attribute (server-generated) instead of
-       being hardcoded as a literal inside the script below. *@
-    <span id="interactionConfig" hidden data-favorites-url="/api/v1/social/favorites"></span>
+    @* Favorite (.js-favorite) clicks are handled by the shared, authenticated-only
+       ~/assets/js/favorites.js delegated handler loaded in _Layout — no inline dup here.
+       Only the guest "Log in to save" tooltips are initialized below. *@
     <script>
         (function () {
-            var cfg = document.getElementById('interactionConfig');
-            var favoritesUrl = cfg ? cfg.dataset.favoritesUrl : '';
-            // Tooltips (for the guest "Log in to save" hints).
             document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) {
                 new bootstrap.Tooltip(el);
-            });
-
-            // Wishlist (authenticated users only — guest buttons are disabled).
-            var tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
-            document.querySelectorAll('.js-favorite').forEach(function (btn) {
-                btn.addEventListener('click', function () {
-                    var entityType = btn.dataset.entityType;
-                    var entityId = btn.dataset.entityId;
-                    if (!entityId) return;
-                    btn.disabled = true;
-                    fetch(favoritesUrl, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'RequestVerificationToken': tokenInput ? tokenInput.value : ''
-                        },
-                        body: JSON.stringify({ entityType: entityType, entityId: entityId })
-                    }).then(function (res) {
-                        if (res.ok) {
-                            var icon = btn.querySelector('i');
-                            if (icon) { icon.classList.remove('bi-heart'); icon.classList.add('bi-heart-fill', 'text-danger'); }
-                        }
-                    }).finally(function () { btn.disabled = false; });
-                });
             });
         })();
     </script>

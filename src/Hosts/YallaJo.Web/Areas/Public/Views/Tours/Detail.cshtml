@@ -1,6 +1,44 @@
 @model YallaJo.Web.Areas.Public.Models.Tours.TourDetailVm
+@using YallaJo.Web.Infrastructure.Seo
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
-    ViewData["Title"] = Model.Name;
+    var baseUrl = $"{Context.Request.Scheme}://{Context.Request.Host}";
+    var heroImage = Model.ImageUrls.Count > 0 ? Model.ImageUrls[0] : null;
+    var seoDescription = Model.Seo?.MetaDescription ?? Model.ShortDescription ?? Model.Description;
+    var jsonLd = new Dictionary<string, object?>
+    {
+        ["@context"] = "https://schema.org",
+        ["@type"] = "TouristAttraction",
+        ["name"] = Model.Name,
+        ["description"] = seoDescription,
+        ["image"] = heroImage,
+        ["offers"] = new Dictionary<string, object?>
+        {
+            ["@type"] = "Offer",
+            ["price"] = Model.EffectivePrice,
+            ["priceCurrency"] = Model.Currency
+        }
+    };
+    if (Model.ReviewCount > 0)
+    {
+        jsonLd["aggregateRating"] = new Dictionary<string, object?>
+        {
+            ["@type"] = "AggregateRating",
+            ["ratingValue"] = Model.AverageRating,
+            ["reviewCount"] = Model.ReviewCount
+        };
+    }
+    // SANITIZED: JSON-LD serialized via System.Text.Json (output is JSON-safe; _Layout renders it as application/ld+json)
+    ViewData.SetSeo(new SeoModel
+    {
+        Title = Model.Seo?.MetaTitle ?? Model.Name,
+        Description = seoDescription,
+        Canonical = Model.Seo?.Canonical ?? $"{baseUrl}/tours/{Model.Slug}",
+        OgImage = Model.Seo?.OgImage ?? heroImage,
+        OgType = "website",
+        JsonLd = System.Text.Json.JsonSerializer.Serialize(jsonLd)
+    });
     Layout = "~/Views/Shared/_Layout.cshtml";
 
     var isAuthed = User.Identity?.IsAuthenticated == true;
@@ -19,9 +57,9 @@
     <div class="container">
         <div class="row">
             <div class="col-12">
-                <nav aria-label="breadcrumb" class="mb-2">
+                <nav aria-label="@Localizer["Public.breadcrumb"]" class="mb-2">
                     <ol class="breadcrumb breadcrumb-dots mb-0">
-                        <li class="breadcrumb-item"><a asp-area="Public" asp-controller="Tours" asp-action="Index">Tours</a></li>
+                        <li class="breadcrumb-item"><a asp-area="Public" asp-controller="Tours" asp-action="Index">@Localizer["Public.Tours"]</a></li>
                         <li class="breadcrumb-item active" aria-current="page">@Model.Name</li>
                     </ol>
                 </nav>
@@ -41,11 +79,11 @@
                             }
                             @if (Model.MaxGroupSize is > 0)
                             {
-                                <li class="nav-item"><i class="bi bi-people me-1"></i>Up to @Model.MaxGroupSize people</li>
+                                <li class="nav-item"><i class="bi bi-people me-1"></i>@Localizer["Public.UpToPeople", Model.MaxGroupSize]</li>
                             }
                             <li class="nav-item">
                                 <i class="bi bi-star-fill text-warning me-1"></i>@Model.AverageRating.ToString("0.0")
-                                <span class="text-body">(@Model.ReviewCount review@(Model.ReviewCount == 1 ? "" : "s"))</span>
+                                <span class="text-body">(@Localizer["Public.Reviews.Count", Model.ReviewCount])</span>
                             </li>
                         </ul>
                     </div>
@@ -55,14 +93,14 @@
                         {
                             <button type="button" class="btn btn-sm btn-light js-favorite"
                                     data-entity-type="Tour" data-entity-id="@Model.Id"
-                                    title="Save to wishlist">
+                                    title="@Localizer["Public.Save.to.wishlist"]">
                                 <i class="bi bi-heart me-1"></i>Save
                             </button>
                         }
                         else
                         {
                             <button type="button" class="btn btn-sm btn-light" disabled
-                                    data-bs-toggle="tooltip" title="Log in to save">
+                                    data-bs-toggle="tooltip" title="@Localizer["Public.Log.in.to.save"]">
                                 <i class="bi bi-heart me-1"></i>Save
                             </button>
                         }
@@ -125,25 +163,25 @@
                 <ul class="nav nav-pills nav-pills-bg-soft nav-responsive justify-content-center mb-4" id="tour-pills-tab" role="tablist">
                     <li class="nav-item" role="presentation">
                         <button class="nav-link active" id="pills-overview-tab" data-bs-toggle="pill"
-                                data-bs-target="#pane-overview" type="button" role="tab" aria-selected="true">Overview</button>
+                                data-bs-target="#pane-overview" type="button" role="tab" aria-selected="true">@Localizer["Public.Overview"]</button>
                     </li>
                     @if (showItinerary)
                     {
                         <li class="nav-item" role="presentation">
                             <button class="nav-link" id="pills-itinerary-tab" data-bs-toggle="pill"
-                                    data-bs-target="#pane-itinerary" type="button" role="tab">Itinerary</button>
+                                    data-bs-target="#pane-itinerary" type="button" role="tab">@Localizer["Public.Itinerary"]</button>
                         </li>
                     }
                     @if (showPricing)
                     {
                         <li class="nav-item" role="presentation">
                             <button class="nav-link" id="pills-pricing-tab" data-bs-toggle="pill"
-                                    data-bs-target="#pane-pricing" type="button" role="tab">Pricing &amp; Schedule</button>
+                                    data-bs-target="#pane-pricing" type="button" role="tab">@Localizer["Public.Pricing.amp.Schedule"]</button>
                         </li>
                     }
                     <li class="nav-item" role="presentation">
                         <button class="nav-link" id="pills-reviews-tab" data-bs-toggle="pill"
-                                data-bs-target="#pane-reviews" type="button" role="tab">Reviews</button>
+                                data-bs-target="#pane-reviews" type="button" role="tab">@Localizer["Public.Reviews"]</button>
                     </li>
                 </ul>
 
@@ -153,7 +191,7 @@
                     <div class="tab-pane fade show active" id="pane-overview" role="tabpanel">
                         <div class="card border">
                             <div class="card-header border-bottom">
-                                <h4 class="card-header-title">Tour overview</h4>
+                                <h4 class="card-header-title">@Localizer["Public.Tour.overview"]</h4>
                             </div>
                             <div class="card-body">
                                 @if (!string.IsNullOrWhiteSpace(Model.ShortDescription))
@@ -166,62 +204,62 @@
                                 }
                                 else if (string.IsNullOrWhiteSpace(Model.ShortDescription))
                                 {
-                                    <p class="text-body mb-0">No description has been provided for this tour yet.</p>
+                                    <p class="text-body mb-0">@Localizer["Public.No.description.has.been.provided.for.this.tour.yet"]</p>
                                 }
 
-                                <h6 class="mt-4 mb-2">Tour information</h6>
+                                <h6 class="mt-4 mb-2">@Localizer["Public.Tour.information"]</h6>
                                 <ul class="list-group list-group-borderless mb-0">
                                     <li class="list-group-item d-flex justify-content-between px-0">
-                                        <span class="h6 fw-light mb-0"><i class="bi bi-clock-history me-2"></i>Duration</span>
+                                        <span class="h6 fw-light mb-0"><i class="bi bi-clock-history me-2"></i>@Localizer["Public.Duration"]</span>
                                         <span>@Model.DurationLabel</span>
                                     </li>
                                     @if (!string.IsNullOrWhiteSpace(Model.Difficulty))
                                     {
                                         <li class="list-group-item d-flex justify-content-between px-0">
-                                            <span class="h6 fw-light mb-0"><i class="bi bi-graph-up-arrow me-2"></i>Difficulty</span>
+                                            <span class="h6 fw-light mb-0"><i class="bi bi-graph-up-arrow me-2"></i>@Localizer["Public.Difficulty"]</span>
                                             <span>@Model.Difficulty</span>
                                         </li>
                                     }
                                     @if (Model.MaxGroupSize is > 0)
                                     {
                                         <li class="list-group-item d-flex justify-content-between px-0">
-                                            <span class="h6 fw-light mb-0"><i class="bi bi-people me-2"></i>Group size</span>
-                                            <span>Up to @Model.MaxGroupSize</span>
+                                            <span class="h6 fw-light mb-0"><i class="bi bi-people me-2"></i>@Localizer["Public.Group.size"]</span>
+                                            <span>@Localizer["Public.UpToPeople", Model.MaxGroupSize]</span>
                                         </li>
                                     }
                                     @if (Model.MinAge is > 0)
                                     {
                                         <li class="list-group-item d-flex justify-content-between px-0">
-                                            <span class="h6 fw-light mb-0"><i class="bi bi-person-badge me-2"></i>Minimum age</span>
-                                            <span>@Model.MinAge years</span>
+                                            <span class="h6 fw-light mb-0"><i class="bi bi-person-badge me-2"></i>@Localizer["Public.Minimum.age"]</span>
+                                            <span>@Localizer["Public.Years", Model.MinAge]</span>
                                         </li>
                                     }
                                     @if (Model.IsChildFriendly)
                                     {
                                         <li class="list-group-item d-flex justify-content-between px-0">
-                                            <span class="h6 fw-light mb-0"><i class="bi bi-emoji-smile me-2"></i>Child friendly</span>
-                                            <span class="text-success">Yes</span>
+                                            <span class="h6 fw-light mb-0"><i class="bi bi-emoji-smile me-2"></i>@Localizer["Public.Child.friendly"]</span>
+                                            <span class="text-success">@Localizer["Public.Yes"]</span>
                                         </li>
                                     }
                                     @if (Model.IsAccessible)
                                     {
                                         <li class="list-group-item d-flex justify-content-between px-0">
-                                            <span class="h6 fw-light mb-0"><i class="bi bi-universal-access me-2"></i>Wheelchair accessible</span>
-                                            <span class="text-success">Yes</span>
+                                            <span class="h6 fw-light mb-0"><i class="bi bi-universal-access me-2"></i>@Localizer["Public.Wheelchair.accessible"]</span>
+                                            <span class="text-success">@Localizer["Public.Yes"]</span>
                                         </li>
                                     }
                                     @if (Model.IsInstantBooking)
                                     {
                                         <li class="list-group-item d-flex justify-content-between px-0">
-                                            <span class="h6 fw-light mb-0"><i class="bi bi-lightning-charge me-2"></i>Instant booking</span>
-                                            <span class="text-success">Available</span>
+                                            <span class="h6 fw-light mb-0"><i class="bi bi-lightning-charge me-2"></i>@Localizer["Public.Instant.booking"]</span>
+                                            <span class="text-success">@Localizer["Public.Available"]</span>
                                         </li>
                                     }
                                     @if (Model.CancellationPolicyHours is > 0)
                                     {
                                         <li class="list-group-item d-flex justify-content-between px-0">
-                                            <span class="h6 fw-light mb-0"><i class="bi bi-arrow-counterclockwise me-2"></i>Free cancellation</span>
-                                            <span>Up to @Model.CancellationPolicyHours h before</span>
+                                            <span class="h6 fw-light mb-0"><i class="bi bi-arrow-counterclockwise me-2"></i>@Localizer["Public.Free.cancellation"]</span>
+                                            <span>@Localizer["Public.CancellationBefore", Model.CancellationPolicyHours]</span>
                                         </li>
                                     }
                                 </ul>
@@ -235,7 +273,7 @@
                         <div class="tab-pane fade" id="pane-itinerary" role="tabpanel">
                             <div class="card border">
                                 <div class="card-header border-bottom">
-                                    <h4 class="card-header-title">Itinerary</h4>
+                                    <h4 class="card-header-title">@Localizer["Public.Itinerary"]</h4>
                                 </div>
                                 <div class="card-body">
                                     <div class="accordion accordion-icon accordion-bg-light" id="itineraryAccordion">
@@ -263,7 +301,7 @@
                                                     <div class="accordion-body">
                                                         @if (wp.DurationMinutes is > 0)
                                                         {
-                                                            <p class="small mb-2"><i class="bi bi-clock me-1"></i>@wp.DurationMinutes min</p>
+                                                            <p class="small mb-2"><i class="bi bi-clock me-1"></i>@Localizer["Public.MinutesShort", wp.DurationMinutes]</p>
                                                         }
                                                         <p class="mb-0">@(string.IsNullOrWhiteSpace(wp.Description) ? "—" : wp.Description)</p>
                                                     </div>
@@ -282,19 +320,19 @@
                         <div class="tab-pane fade" id="pane-pricing" role="tabpanel">
                             <div class="card border">
                                 <div class="card-header border-bottom">
-                                    <h4 class="card-header-title">Pricing &amp; schedule</h4>
+                                    <h4 class="card-header-title">@Localizer["Public.Pricing.amp.schedule"]</h4>
                                 </div>
                                 <div class="card-body">
                                     @if (Model.PricingTiers.Count > 0)
                                     {
-                                        <h6 class="mb-3">Pricing options</h6>
+                                        <h6 class="mb-3">@Localizer["Public.Pricing.options"]</h6>
                                         <div class="table-responsive">
                                             <table class="table table-borderless align-middle mb-0">
                                                 <thead class="table-light">
                                                     <tr>
-                                                        <th scope="col">Option</th>
-                                                        <th scope="col">Participants</th>
-                                                        <th scope="col" class="text-end">Price</th>
+                                                        <th scope="col">@Localizer["Public.Option"]</th>
+                                                        <th scope="col">@Localizer["Public.Participants"]</th>
+                                                        <th scope="col" class="text-end">@Localizer["Public.Price"]</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
@@ -336,7 +374,7 @@
 
                                     @if (Model.Schedules.Count > 0)
                                     {
-                                        <h6 class="mb-3 @(Model.PricingTiers.Count > 0 ? "mt-4" : "")">Weekly schedule</h6>
+                                        <h6 class="mb-3 @(Model.PricingTiers.Count > 0 ? "mt-4" : "")">@Localizer["Public.Weekly.schedule"]</h6>
                                         <ul class="list-group list-group-borderless mb-0">
                                             @foreach (var s in Model.Schedules)
                                             {
@@ -349,7 +387,7 @@
                                                         }
                                                         else
                                                         {
-                                                            <text>Flexible</text>
+                                                            <text>@Localizer["Public.Flexible"]</text>
                                                         }
                                                     </span>
                                                 </li>
@@ -365,16 +403,16 @@
                     <div class="tab-pane fade" id="pane-reviews" role="tabpanel">
                         <div class="card border">
                             <div class="card-header border-bottom d-sm-flex justify-content-between align-items-center">
-                                <h4 class="card-header-title mb-0">Guest reviews</h4>
+                                <h4 class="card-header-title mb-0">@Localizer["Public.Guest.reviews"]</h4>
                                 <div class="mt-2 mt-sm-0">
                                     <span class="h5 mb-0"><i class="bi bi-star-fill text-warning me-1"></i>@Model.AverageRating.ToString("0.0")</span>
-                                    <span class="small text-body">(@Model.ReviewCount review@(Model.ReviewCount == 1 ? "" : "s"))</span>
+                                    <span class="small text-body">(@Localizer["Public.Reviews.Count", Model.ReviewCount])</span>
                                 </div>
                             </div>
                             <div class="card-body">
                                 @if (Model.Reviews.Count == 0)
                                 {
-                                    <p class="text-body mb-0">No reviews yet. Be the first to share your experience.</p>
+                                    <p class="text-body mb-0">@Localizer["Public.No.reviews.yet.Be.the.first.to.share.your.experience"]</p>
                                 }
                                 else
                                 {
@@ -396,7 +434,7 @@
                                             </div>
                                             @if (r.IsVerifiedBooking)
                                             {
-                                                <span class="badge text-bg-success bg-opacity-10 text-success small mb-2"><i class="bi bi-patch-check me-1"></i>Verified booking</span>
+                                                <span class="badge text-bg-success bg-opacity-10 text-success small mb-2"><i class="bi bi-patch-check me-1"></i>@Localizer["Public.Verified.booking"]</span>
                                             }
                                             @if (!string.IsNullOrWhiteSpace(r.Content))
                                             {
@@ -404,7 +442,7 @@
                                             }
                                             @if (r.HelpfulVoteCount > 0)
                                             {
-                                                <small class="text-body"><i class="bi bi-hand-thumbs-up me-1"></i>@r.HelpfulVoteCount found this helpful</small>
+                                                <small class="text-body"><i class="bi bi-hand-thumbs-up me-1"></i>@Localizer["Public.HelpfulCount", r.HelpfulVoteCount]</small>
                                             }
                                         </div>
                                     }
@@ -412,7 +450,7 @@
 
                                 @if (Model.Guides.Count > 0)
                                 {
-                                    <h6 class="mt-2 mb-3">Your guides</h6>
+                                    <h6 class="mt-2 mb-3">@Localizer["Public.Your.guides"]</h6>
                                     <div class="row g-3">
                                         @foreach (var g in Model.Guides)
                                         {
@@ -433,7 +471,7 @@
                                                         <h6 class="mb-0">@g.DisplayName</h6>
                                                         @if (g.IsPrimary)
                                                         {
-                                                            <small class="text-primary">Lead guide</small>
+                                                            <small class="text-primary">@Localizer["Public.Lead.guide"]</small>
                                                         }
                                                     </div>
                                                 </div>
@@ -457,11 +495,11 @@
                             <div class="d-flex justify-content-between align-items-center mb-1">
                                 <div class="hstack gap-2 align-items-end">
                                     <h3 class="mb-0 text-success">@Currency(Model.EffectivePrice, Model.Currency)</h3>
-                                    <small class="mb-1">/ person</small>
+                                    <small class="mb-1">@Localizer["Public.person"]</small>
                                 </div>
                                 @if (Model.HasDiscount)
                                 {
-                                    <span class="badge text-bg-danger">@Model.DiscountPercent% off</span>
+                                    <span class="badge text-bg-danger">@Localizer["Public.PercentOff", Model.DiscountPercent]</span>
                                 }
                             </div>
                             @if (Model.HasDiscount)
@@ -475,7 +513,7 @@
 
                             <div class="d-grid gap-2">
                                 <a asp-area="Public" asp-controller="Booking" asp-action="Book"
-                                   asp-route-tourId="@Model.Id" class="btn btn-primary mb-0">Book Now</a>
+                                   asp-route-tourId="@Model.Id" class="btn btn-primary mb-0">@Localizer["Public.Book.Now"]</a>
                                 @if (isAuthed)
                                 {
                                     <button type="button" class="btn btn-outline-primary mb-0 js-favorite"
@@ -486,14 +524,14 @@
                                 else
                                 {
                                     <button type="button" class="btn btn-outline-primary mb-0" disabled
-                                            data-bs-toggle="tooltip" title="Log in to save">
+                                            data-bs-toggle="tooltip" title="@Localizer["Public.Log.in.to.save"]">
                                         <i class="bi bi-heart me-1"></i>Save to wishlist
                                     </button>
                                 }
                             </div>
 
                             <hr class="my-3">
-                            <p class="small text-body mb-2">Joining a friend's group booking?</p>
+                            <p class="small text-body mb-2">@Localizer["Public.Joining.a.friend.s.group.booking"]</p>
                             @if (isAuthed)
                             {
                                 <button type="button" class="btn btn-outline-primary w-100" data-bs-toggle="modal" data-bs-target="#joinRequestModal">
@@ -514,10 +552,10 @@
                     <!-- Need help -->
                     <div class="col-12">
                         <div class="card card-body bg-light border">
-                            <h5 class="mb-3">Need help?</h5>
+                            <h5 class="mb-3">@Localizer["Public.Need.help"]</h5>
                             <ul class="list-group list-group-borderless mb-0">
-                                <li class="list-group-item bg-transparent px-0 py-1"><i class="bi bi-headset me-2"></i>Our travel experts are here for you.</li>
-                                <li class="list-group-item bg-transparent px-0 py-1"><i class="bi bi-clock me-2"></i>Sat – Thu, 9:00 – 18:00</li>
+                                <li class="list-group-item bg-transparent px-0 py-1"><i class="bi bi-headset me-2"></i>@Localizer["Public.Our.travel.experts.are.here.for.you"]</li>
+                                <li class="list-group-item bg-transparent px-0 py-1"><i class="bi bi-clock me-2"></i>@Localizer["Public.Sat.Thu.9.00.18.00"]</li>
                             </ul>
                         </div>
                     </div>
@@ -529,23 +567,108 @@
 </section>
 <!-- ======================= Detail body END -->
 
+@if (Model.Seo?.HasFaqs == true)
+{
+    <section class="pb-5">
+        <div class="container">
+            <h4 class="mb-3">@Localizer["Public.Frequently.asked.questions"]</h4>
+            <div class="accordion accordion-flush" id="tourFaq">
+                @for (var i = 0; i < Model.Seo.Faqs.Count; i++)
+                {
+                    var faq = Model.Seo.Faqs[i];
+                    var headingId = $"tourFaqHeading{i}";
+                    var collapseId = $"tourFaqCollapse{i}";
+                    var expanded = i == 0;
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="@headingId">
+                            <button class="accordion-button @(expanded ? "" : "collapsed")" type="button" data-bs-toggle="collapse" data-bs-target="#@collapseId" aria-expanded="@(expanded ? "true" : "false")" aria-controls="@collapseId">@faq.Question</button>
+                        </h2>
+                        <div id="@collapseId" class="accordion-collapse collapse @(expanded ? "show" : "")" data-bs-parent="#tourFaq">
+                            <div class="accordion-body">@faq.Answer</div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </section>
+}
+
+@if (ViewData["Reviews"] is YallaJo.Web.Areas.Public.Models.Reviews.ReviewListVm reviews)
+{
+    <partial name="~/Areas/Public/Views/Shared/_Reviews.cshtml" model="reviews" />
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+        <section class="pb-5">
+            <div class="container">
+                <div class="row g-4">
+                    <div class="col-lg-7">
+                        <form method="post" asp-area="Public" asp-controller="Tours" asp-action="CreateReview" asp-route-slug="@Model.Slug" class="card border p-3">
+                            @Html.AntiForgeryToken()
+                            <h3 class="h6 mb-3">@Localizer["Public.Write.a.review"]</h3>
+                            <input type="hidden" name="Review.TargetId" value="@Model.Id" />
+                            <div class="mb-2">
+                                <label class="form-label" for="tourReviewRating">@Localizer["Public.Rating"]</label>
+                                <select id="tourReviewRating" name="Review.Rating" class="form-select">
+                                    <option value="5">@Localizer["Public.5.Excellent"]</option>
+                                    <option value="4">@Localizer["Public.4.Very.good"]</option>
+                                    <option value="3">@Localizer["Public.3.Average"]</option>
+                                    <option value="2">@Localizer["Public.2.Poor"]</option>
+                                    <option value="1">@Localizer["Public.1.Terrible"]</option>
+                                </select>
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label" for="tourReviewTitle">@Localizer["Public.Title"]</label>
+                                <input id="tourReviewTitle" name="Review.Title" maxlength="150" class="form-control" />
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label" for="tourReviewContent">@Localizer["Public.Your.review"]</label>
+                                <textarea id="tourReviewContent" name="Review.Content" rows="4" minlength="20" maxlength="2000" required class="form-control"></textarea>
+                                <div class="form-text">@Localizer["Public.Between.20.and.2000.characters"]</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label" for="tourReviewVisitDate">@Localizer["Public.Visit.date.optional"]</label>
+                                <input id="tourReviewVisitDate" type="date" name="Review.VisitDate" class="form-control" />
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-sm">@Localizer["Public.Submit.review"]</button>
+                        </form>
+                    </div>
+                    <div class="col-lg-5">
+                        <form method="post" asp-area="Public" asp-controller="Tours" asp-action="Report" asp-route-slug="@Model.Slug" class="card border p-3">
+                            @Html.AntiForgeryToken()
+                            <h3 class="h6 mb-3">@Localizer["Public.Report.this.tour"]</h3>
+                            <input type="hidden" name="Report.EntityId" value="@Model.Id" />
+                            <div class="mb-2">
+                                <label class="form-label" for="tourReportReason">@Localizer["Public.Reason"]</label>
+                                <select id="tourReportReason" name="Report.Reason" class="form-select">
+                                    <option value="Inappropriate">@Localizer["Public.Inappropriate"]</option>
+                                    <option value="Misleading">@Localizer["Public.Misleading"]</option>
+                                    <option value="Spam">@Localizer["Public.Spam"]</option>
+                                    <option value="Harassment">@Localizer["Public.Harassment"]</option>
+                                    <option value="FakeReview">@Localizer["Public.Fake.review"]</option>
+                                    <option value="Other">@Localizer["Public.Other"]</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label" for="tourReportDescription">@Localizer["Public.Details"]</label>
+                                <textarea id="tourReportDescription" name="Report.Description" rows="3" minlength="5" maxlength="1000" required class="form-control"></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-outline-secondary btn-sm">@Localizer["Public.Submit.report"]</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </section>
+    }
+}
+
 @if (isAuthed)
 {
     <partial name="_JoinRequestModal" model="Model" />
 }
 
 @section Scripts {
-    @* Endpoint URLs are surfaced as data-* attributes (server-generated) instead of
-       being hardcoded as literals inside the script below. *@
-    <span id="interactionConfig" hidden
-          data-favorites-url="/api/v1/social/favorites"
-          data-interactions-url="/api/v1/interactions"></span>
     <script>
         (function () {
-            var cfg = document.getElementById('interactionConfig');
-            var favoritesUrl = cfg ? cfg.dataset.favoritesUrl : '';
-            var interactionsUrl = cfg ? cfg.dataset.interactionsUrl : '';
-
             // Bootstrap tooltips (disabled guest wishlist buttons).
             var tooltipTriggers = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
             tooltipTriggers.forEach(function (el) {
@@ -554,43 +677,6 @@
 
             // GLightbox gallery (glightbox is loaded by the layout).
             if (window.GLightbox) { GLightbox({ selector: '.glightbox' }); }
-
-            // Wishlist favorite (authenticated users only).
-            var favButtons = [].slice.call(document.querySelectorAll('.js-favorite'));
-            var tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
-            favButtons.forEach(function (btn) {
-                btn.addEventListener('click', function () {
-                    var icon = btn.querySelector('i');
-                    var headers = { 'Content-Type': 'application/json' };
-                    if (tokenInput) headers['RequestVerificationToken'] = tokenInput.value;
-                    fetch(favoritesUrl, {
-                        method: 'POST',
-                        headers: headers,
-                        body: JSON.stringify({
-                            entityType: btn.getAttribute('data-entity-type'),
-                            entityId: btn.getAttribute('data-entity-id')
-                        })
-                    }).then(function (res) {
-                        if (res.ok && icon) { icon.classList.remove('bi-heart'); icon.classList.add('bi-heart-fill', 'text-danger'); }
-                    }).catch(function () { /* ignore */ });
-                });
-            });
-
-@if (isAuthed)
-{
-    <text>
-            // View telemetry (authenticated only; endpoint requires auth).
-            (function () {
-                var headers = { 'Content-Type': 'application/json' };
-                if (tokenInput) headers['RequestVerificationToken'] = tokenInput.value;
-                fetch(interactionsUrl, {
-                    method: 'POST',
-                    headers: headers,
-                    body: JSON.stringify({ entityType: 'Tour', entityId: '@Model.Id', interactionType: 'View' })
-                }).catch(function () { /* ignore */ });
-            })();
-    </text>
-}
         })();
     </script>
 }

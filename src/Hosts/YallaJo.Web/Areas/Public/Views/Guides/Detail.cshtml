@@ -1,0 +1,243 @@
+@model YallaJo.Web.Areas.Public.Models.Guides.GuideDetailVm
+@using YallaJo.Web.Infrastructure.Seo
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var isAuthed = User.Identity?.IsAuthenticated == true;
+    var baseUrl = $"{Context.Request.Scheme}://{Context.Request.Host}";
+    ViewData.SetSeo(new SeoModel
+    {
+        Title = Model.Seo?.MetaTitle ?? Model.DisplayName,
+        Description = Model.Seo?.MetaDescription ?? Model.Bio,
+        Canonical = Model.Seo?.Canonical ?? $"{baseUrl}/guides/{Model.Slug}",
+        OgImage = Model.Seo?.OgImage ?? Model.AvatarUrl,
+        OgType = "profile",
+    });
+}
+
+@Html.AntiForgeryToken()
+
+<section class="pt-4">
+    <div class="container">
+        <nav aria-label="@Localizer["Public.breadcrumb"]">
+            <ol class="breadcrumb breadcrumb-dots mb-3">
+                <li class="breadcrumb-item"><a asp-area="Public" asp-controller="Home" asp-action="Index">@Localizer["Public.Home"]</a></li>
+                <li class="breadcrumb-item"><a asp-area="Public" asp-controller="Guides" asp-action="Index">@Localizer["Public.Guides"]</a></li>
+                <li class="breadcrumb-item active" aria-current="page">@Model.DisplayName</li>
+            </ol>
+        </nav>
+
+        <div class="d-sm-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center">
+                @if (Model.HasAvatar)
+                {
+                    <img src="@Model.AvatarUrl" class="rounded-circle me-3" width="96" height="96" style="object-fit:cover;" alt="@Model.DisplayName" />
+                }
+                else
+                {
+                    <i class="bi bi-person-circle display-3 text-body-tertiary me-3" aria-hidden="true"></i>
+                }
+                <div>
+                    <h1 class="h3 mb-1">@Model.DisplayName</h1>
+                    <div class="small text-body-secondary">
+                        <i class="bi bi-star-fill text-warning" aria-hidden="true"></i>
+                        @Model.AverageRating.ToString("0.0")
+                        <span class="text-body-tertiary">(@Model.ReviewCount reviews)</span>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-3 mt-sm-0 text-sm-end">
+                @if (isAuthed)
+                {
+                    <button type="button" class="btn btn-sm btn-outline-danger js-favorite" data-entity-type="TourGuide" data-entity-id="@Model.Id" aria-label="@Localizer["Public.Save.to.favourites"]">
+                        <i class="bi bi-heart" aria-hidden="true"></i>
+                    </button>
+                }
+                else
+                {
+                    <button type="button" class="btn btn-sm btn-outline-danger" disabled data-bs-toggle="tooltip" title="@Localizer["Public.Log.in.to.save"]" aria-label="@Localizer["Public.Log.in.to.save"]">
+                        <i class="bi bi-heart" aria-hidden="true"></i>
+                    </button>
+                }
+            </div>
+        </div>
+
+        <ul class="nav nav-divider align-items-center mt-3">
+            <li class="nav-item"><span class="badge text-bg-light">@Localizer["Public.Tours.Count", Model.TourCount]</span></li>
+            @if (Model.YearsOfExperience > 0)
+            {
+                <li class="nav-item"><i class="bi bi-briefcase me-1" aria-hidden="true"></i>@Model.YearsOfExperience yrs experience</li>
+            }
+            @if (Model.HasFirstAid)
+            {
+                <li class="nav-item text-success"><i class="bi bi-patch-check-fill me-1" aria-hidden="true"></i>@Localizer["Public.First.aid.certified"]</li>
+            }
+            @if (Model.LanguageCount > 0)
+            {
+                <li class="nav-item"><i class="bi bi-translate me-1" aria-hidden="true"></i>@Localizer["Public.Languages.Count", Model.LanguageCount]</li>
+            }
+            @if (Model.SpecializationCount > 0)
+            {
+                <li class="nav-item"><i class="bi bi-stars me-1" aria-hidden="true"></i>@Model.SpecializationCount specialties</li>
+            }
+        </ul>
+    </div>
+</section>
+
+<section class="pt-4 pb-5">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-lg-8">
+                @if (Model.HasBio)
+                {
+                    <div class="card border mb-4">
+                        <div class="card-header bg-transparent"><h2 class="h5 mb-0">@Localizer["Public.About"]</h2></div>
+                        <div class="card-body">
+                            <p class="mb-0" style="white-space:pre-line;">@Model.Bio</p>
+                        </div>
+                    </div>
+                }
+
+                @if (Model.HasTours)
+                {
+                    <h2 class="h5 mb-3">@Localizer["Public.Tours.by.this.guide"]</h2>
+                    <div class="list-group">
+                        @foreach (var tour in Model.Tours)
+                        {
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <span>
+                                    @if (tour.HasSlug)
+                                    {
+                                        <a asp-area="Public" asp-controller="Tours" asp-action="Detail" asp-route-slug="@tour.Slug">@tour.Title</a>
+                                    }
+                                    else
+                                    {
+                                        @tour.Title
+                                    }
+                                </span>
+                                @if (tour.OffersPrivateTour)
+                                {
+                                    <span class="badge text-bg-light">@Localizer["Public.Private.tour.available"]</span>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card border">
+                    <div class="card-header bg-transparent"><h2 class="h6 mb-0">@Localizer["Public.At.a.glance"]</h2></div>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between"><span class="text-body-secondary">@Localizer["Public.Rating"]</span><span>@Model.AverageRating.ToString("0.0") / 5</span></li>
+                        <li class="list-group-item d-flex justify-content-between"><span class="text-body-secondary">@Localizer["Public.Reviews"]</span><span>@Model.ReviewCount</span></li>
+                        <li class="list-group-item d-flex justify-content-between"><span class="text-body-secondary">@Localizer["Public.Tours"]</span><span>@Model.TourCount</span></li>
+                        @if (Model.YearsOfExperience > 0)
+                        {
+                            <li class="list-group-item d-flex justify-content-between"><span class="text-body-secondary">@Localizer["Public.Experience"]</span><span>@Model.YearsOfExperience yrs</span></li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        @if (Model.Seo?.HasFaqs == true)
+        {
+            <div class="mt-5">
+                <h2 class="h5 mb-3">@Localizer["Public.Frequently.asked.questions"]</h2>
+                <div class="accordion accordion-flush" id="guideFaq">
+                    @for (var i = 0; i < Model.Seo.Faqs.Count; i++)
+                    {
+                        var faq = Model.Seo.Faqs[i];
+                        var headingId = $"guideFaqHeading{i}";
+                        var collapseId = $"guideFaqCollapse{i}";
+                        var expanded = i == 0;
+                        <div class="accordion-item">
+                            <h3 class="accordion-header" id="@headingId">
+                                <button class="accordion-button @(expanded ? "" : "collapsed")" type="button" data-bs-toggle="collapse" data-bs-target="#@collapseId" aria-expanded="@(expanded ? "true" : "false")" aria-controls="@collapseId">@faq.Question</button>
+                            </h3>
+                            <div id="@collapseId" class="accordion-collapse collapse @(expanded ? "show" : "")" aria-labelledby="@headingId" data-bs-parent="#guideFaq">
+                                <div class="accordion-body">@faq.Answer</div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+
+        @if (ViewData["Reviews"] is YallaJo.Web.Areas.Public.Models.Reviews.ReviewListVm reviews)
+        {
+            <div class="mt-5">
+                <partial name="~/Areas/Public/Views/Shared/_Reviews.cshtml" model="reviews" />
+                @if (isAuthed)
+                {
+                    <div class="row g-4">
+                        <div class="col-lg-7">
+                            <form method="post" asp-area="Public" asp-controller="Guides" asp-action="CreateReview" asp-route-slug="@Model.Slug" class="card border p-3 h-100">
+                                @Html.AntiForgeryToken()
+                                <h3 class="h6 mb-3">@Localizer["Public.Write.a.review"]</h3>
+                                <input type="hidden" name="Review.TargetId" value="@Model.Id" />
+                                <div class="mb-2">
+                                    <label class="form-label small" for="guideReviewRating">@Localizer["Public.Rating"]</label>
+                                    <select id="guideReviewRating" name="Review.Rating" class="form-select form-select-sm">
+                                        <option value="5">@Localizer["Public.5.Excellent"]</option>
+                                        <option value="4">@Localizer["Public.4.Very.good"]</option>
+                                        <option value="3">@Localizer["Public.3.Average"]</option>
+                                        <option value="2">@Localizer["Public.2.Poor"]</option>
+                                        <option value="1">@Localizer["Public.1.Terrible"]</option>
+                                    </select>
+                                </div>
+                                <div class="mb-2">
+                                    <label class="form-label small" for="guideReviewTitle">@Localizer["Public.Title"]</label>
+                                    <input id="guideReviewTitle" name="Review.Title" maxlength="150" class="form-control form-control-sm" />
+                                </div>
+                                <div class="mb-2">
+                                    <label class="form-label small" for="guideReviewContent">@Localizer["Public.Your.review"]</label>
+                                    <textarea id="guideReviewContent" name="Review.Content" minlength="20" maxlength="2000" rows="4" required class="form-control form-control-sm"></textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label small" for="guideReviewVisit">@Localizer["Public.Visit.date.optional"]</label>
+                                    <input id="guideReviewVisit" type="date" name="Review.VisitDate" class="form-control form-control-sm" />
+                                </div>
+                                <button type="submit" class="btn btn-primary btn-sm">@Localizer["Public.Submit.review"]</button>
+                            </form>
+                        </div>
+                        <div class="col-lg-5">
+                            <form method="post" asp-area="Public" asp-controller="Guides" asp-action="Report" asp-route-slug="@Model.Slug" class="card border p-3 h-100">
+                                @Html.AntiForgeryToken()
+                                <h3 class="h6 mb-3">@Localizer["Public.Report.this.guide"]</h3>
+                                <input type="hidden" name="Report.EntityId" value="@Model.Id" />
+                                <div class="mb-2">
+                                    <label class="form-label small" for="guideReportReason">@Localizer["Public.Reason"]</label>
+                                    <select id="guideReportReason" name="Report.Reason" class="form-select form-select-sm">
+                                        <option value="Inappropriate">@Localizer["Public.Inappropriate"]</option>
+                                        <option value="Misleading">@Localizer["Public.Misleading"]</option>
+                                        <option value="Spam">@Localizer["Public.Spam"]</option>
+                                        <option value="Harassment">@Localizer["Public.Harassment"]</option>
+                                        <option value="FakeReview">@Localizer["Public.Fake.review"]</option>
+                                        <option value="Other">@Localizer["Public.Other"]</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label small" for="guideReportDesc">@Localizer["Public.Details"]</label>
+                                    <textarea id="guideReportDesc" name="Report.Description" minlength="5" maxlength="1000" rows="3" required class="form-control form-control-sm"></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-outline-secondary btn-sm">@Localizer["Public.Submit.report"]</button>
+                            </form>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        // Shared authed-only ~/assets/js/favorites.js (loaded in _Layout) handles .js-favorite clicks.
+        (function () {
+            document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) { new bootstrap.Tooltip(el); });
+        })();
+    </script>
+}

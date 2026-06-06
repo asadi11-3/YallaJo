@@ -1,6 +1,7 @@
 @using YallaJo.Web.Infrastructure.Authorization
 @using YallaJo.Web.Infrastructure.Identity
 @inject ICurrentUser CurrentUser
+@inject Microsoft.Extensions.Localization.IStringLocalizer<YallaJo.Web.Resources.SharedResource> L
 @*
     Themed application header — extracted from _Layout.cshtml and adapted from the
     Webestica "Booking" Bootstrap 5 theme (Hotel Home / index.html).
@@ -193,6 +194,39 @@
 
             @* Profile START *@
             <ul class="nav flex-row align-items-center list-unstyled ms-xl-auto">
+                @* Language switcher (ar/en) — POSTs to Public/Culture/SetLanguage (cookie-based culture provider) *@
+                @{
+                    var currentLang = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+                    var langLabel = currentLang == "ar" ? L["Lang.Arabic"].Value : L["Lang.English"].Value;
+                    var returnPath = Context.Request.Path + Context.Request.QueryString;
+                }
+                <li class="nav-item dropdown ms-1">
+                    <a class="btn btn-light btn-round mb-0 dropdown-toggle" href="#" id="languageSwitcher"
+                       role="button" data-bs-toggle="dropdown" aria-expanded="false"
+                       aria-label="@L["Nav.Language"]" title="@L["Nav.Language"]">
+                        <i class="bi bi-globe" aria-hidden="true"></i>
+                        <span class="ms-1 d-none d-md-inline">@langLabel</span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="languageSwitcher">
+                        <li>
+                            <form method="post" asp-area="Public" asp-controller="Culture" asp-action="SetLanguage" class="m-0">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="culture" value="ar" />
+                                <input type="hidden" name="returnUrl" value="@returnPath" />
+                                <button type="submit" class="dropdown-item @(currentLang == "ar" ? "active" : "")">@L["Lang.Arabic"]</button>
+                            </form>
+                        </li>
+                        <li>
+                            <form method="post" asp-area="Public" asp-controller="Culture" asp-action="SetLanguage" class="m-0">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="culture" value="en" />
+                                <input type="hidden" name="returnUrl" value="@returnPath" />
+                                <button type="submit" class="dropdown-item @(currentLang == "en" ? "active" : "")">@L["Lang.English"]</button>
+                            </form>
+                        </li>
+                    </ul>
+                </li>
+
                 @if (CurrentUser.IsAuthenticated)
                 {
                     @* Notification dropdown (shared ViewComponent — real Messaging inbox) *@

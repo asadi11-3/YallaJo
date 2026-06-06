@@ -1,4 +1,7 @@
+using System.ComponentModel.DataAnnotations;
+using YallaJo.Web.Areas.Public.Models.Directory;
 using YallaJo.Web.Areas.Public.Models.Tours;
+using YallaJo.Web.Infrastructure.Seo;
 
 namespace YallaJo.Web.Areas.Public.Models.Places;
 
@@ -76,11 +79,27 @@ public sealed class PlaceDetailVm
     public bool    HasBrailleSignage      { get; init; }
     public string? MetaTitle              { get; init; }
 
+    /// <summary>SEO metadata + FAQ for this place (best-effort; null when the SEO fetch failed).</summary>
+    public SeoContent? Seo { get; set; }
+
     // CP-3c: related public (approved) tours for this place. Reuses the public
     // TourCardVm so the tour-card styling is shared. Set by the facade; tolerant
     // of a failed related-tours fetch (stays empty, never breaks the page).
     public IReadOnlyList<TourCardVm> RelatedTours { get; set; } = [];
     public bool HasRelatedTours => RelatedTours.Count > 0;
+
+    public WeatherResponse? Weather { get; set; }
+
+    public IReadOnlyList<PlaceAccessibilityFeatureVm> AccessibilityFeatures { get; set; } = [];
+    public IReadOnlyList<PlaceAccessibilityCatalogItemVm> AccessibilityCatalog { get; set; } = [];
+    public bool HasDetailedAccessibility => AccessibilityFeatures.Count > 0;
+
+    public IReadOnlyList<BusinessCardVm> Businesses { get; set; } = [];
+    public bool HasBusinesses => Businesses.Count > 0;
+
+    public IReadOnlyList<PlaceRecommendationVm> Recommendations { get; set; } = [];
+    public IReadOnlyList<PlaceRecommendationVm> SimilarRecommendations { get; set; } = [];
+    public bool HasRecommendations => Recommendations.Count > 0 || SimilarRecommendations.Count > 0;
 
     // CP-4: real uploaded place images (absolute URLs, primary-first). Set by the
     // facade; tolerant of a failed fetch (stays empty → placeholder used).
@@ -99,4 +118,60 @@ public sealed class PlaceDetailVm
                               || !string.IsNullOrWhiteSpace(Email)
                               || !string.IsNullOrWhiteSpace(Website);
     public bool HasAccessibility => IsWheelchairAccessible || HasAudioGuide || HasBrailleSignage;
+}
+
+public sealed class PlaceAccessibilityFeatureVm
+{
+    public string FeatureType { get; init; } = "";
+    public string Name { get; init; } = "";
+    public string? Description { get; init; }
+    public bool IsAvailable { get; init; }
+}
+
+public sealed class PlaceAccessibilityCatalogItemVm
+{
+    public string Code { get; init; } = "";
+    public string DisplayName { get; init; } = "";
+}
+
+public sealed class PlaceRecommendationVm
+{
+    public string Kind { get; init; } = "";
+    public Guid Id { get; init; }
+    public string Name { get; init; } = "";
+    public string Slug { get; init; } = "";
+    public decimal? BasePrice { get; init; }
+    public string? Currency { get; init; }
+    public decimal AverageRating { get; init; }
+    public bool IsFeatured { get; init; }
+    public bool IsPinned { get; init; }
+    public string? BadgeText { get; init; }
+    public bool IsBoosted { get; init; }
+
+    public string RouteController => Kind switch
+    {
+        "Business" => "Directory",
+        "Tour" => "Tours",
+        "Place" => "Places",
+        _ => "Home",
+    };
+    public string RouteAction => Kind.Equals("Business", StringComparison.OrdinalIgnoreCase) ? "Detail" : "Detail";
+}
+
+public sealed class SponsoredClickFormVm
+{
+    [Required]
+    public Guid BidId { get; set; }
+
+    [Required]
+    public string SourceKind { get; set; } = "Place";
+
+    [Required]
+    public Guid SourceId { get; set; }
+
+    [Range(1, 100)]
+    public int Position { get; set; } = 1;
+
+    [Range(0, int.MaxValue)]
+    public int DwellTimeSeconds { get; set; }
 }

@@ -1,6 +1,8 @@
 @model YallaJo.Web.Areas.Public.Models.Directory.DirectoryVm
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
-    ViewData["Title"] = "Explore the Directory";
+    ViewData["Title"] = Localizer["Public.Explore.the.Directory"];
     Layout = "~/Views/Shared/_Layout.cshtml";
     var isAuthed = User.Identity?.IsAuthenticated == true;
     var firstResult = Model.TotalCount == 0 ? 0 : ((Model.PageNumber - 1) * Model.PageSize) + 1;
@@ -29,15 +31,15 @@
     <div class="container position-relative">
         <div class="row">
             <div class="col-xl-9 mx-auto text-center">
-                <h6 class="text-white fw-normal mb-3">Discover &amp; connect with great places</h6>
-                <h1 class="display-5 text-white mb-4">Explore the Directory</h1>
+                <h6 class="text-white fw-normal mb-3">@Localizer["Public.Discover.amp.connect.with.great.places"]</h6>
+                <h1 class="display-5 text-white mb-4">@Localizer["Public.Explore.the.Directory"]</h1>
                 <form class="row g-2 justify-content-center" asp-area="Public" asp-controller="Directory" asp-action="Index" method="get">
                     <div class="col-lg-5">
-                        <input class="form-control form-control-lg" type="text" name="q" value="@Model.Query" placeholder="What are you looking for?" />
+                        <input class="form-control form-control-lg" type="text" name="q" value="@Model.Query" placeholder="@Localizer["Public.What.are.you.looking.for"]" />
                     </div>
                     <div class="col-lg-3">
                         <select class="form-select form-select-lg" name="businessType">
-                            <option value="">All categories</option>
+                            <option value="">@Localizer["Public.All.categories"]</option>
                             @foreach (var t in Model.BusinessTypes)
                             {
                                 if (string.Equals(t.Value, Model.SelectedBusinessType, StringComparison.OrdinalIgnoreCase))
@@ -52,10 +54,10 @@
                         </select>
                     </div>
                     <div class="col-lg-2">
-                        <input class="form-control form-control-lg" type="text" name="city" value="@Model.City" placeholder="City" />
+                        <input class="form-control form-control-lg" type="text" name="city" value="@Model.City" placeholder="@Localizer["Public.City"]" />
                     </div>
                     <div class="col-lg-2 d-grid">
-                        <button class="btn btn-lg btn-primary mb-0" type="submit">Search</button>
+                        <button class="btn btn-lg btn-primary mb-0" type="submit">@Localizer["Public.Search"]</button>
                     </div>
                 </form>
             </div>
@@ -68,7 +70,7 @@
     <div class="container">
         <div class="d-flex flex-wrap gap-2 justify-content-center">
             <a asp-area="Public" asp-controller="Directory" asp-action="Index" asp-route-q="@Model.Query" asp-route-city="@Model.City"
-               class="btn btn-sm @(string.IsNullOrEmpty(Model.SelectedBusinessType) ? "btn-primary" : "btn-primary-soft")">All</a>
+               class="btn btn-sm @(string.IsNullOrEmpty(Model.SelectedBusinessType) ? "btn-primary" : "btn-primary-soft")">@Localizer["Public.All"]</a>
             @foreach (var t in Model.BusinessTypes)
             {
                 var active = string.Equals(t.Value, Model.SelectedBusinessType, StringComparison.OrdinalIgnoreCase);
@@ -88,11 +90,11 @@
             <h5 class="mb-2 mb-sm-0">
                 @if (Model.HasResults)
                 {
-                    <text>Showing @firstResult&ndash;@lastResult of @Model.TotalCount places</text>
+                    <text>@Localizer["Public.ShowingPlaces", firstResult, lastResult, Model.TotalCount]</text>
                 }
                 else
                 {
-                    <text>No places found</text>
+                    <text>@Localizer["Public.No.places.found"]</text>
                 }
             </h5>
         </div>
@@ -100,9 +102,9 @@
         @if (!Model.HasResults)
         {
             <div class="text-center py-5">
-                <img src="@Url.Content("~/assets/images/element/17.svg")" class="h-100px mb-3" alt="No results" />
-                <h5 class="mb-1">Nothing matched your search</h5>
-                <p class="mb-0">Try a different category, city, or search term.</p>
+                <img src="@Url.Content("~/assets/images/element/17.svg")" class="h-100px mb-3" alt="@Localizer["Public.No.results"]" />
+                <h5 class="mb-1">@Localizer["Public.Nothing.matched.your.search"]</h5>
+                <p class="mb-0">@Localizer["Public.Try.a.different.category.city.or.search.term"]</p>
             </div>
         }
         else
@@ -130,19 +132,19 @@
                                     }
                                     @if (biz.IsVerified)
                                     {
-                                        <div class="badge text-bg-success">Verified</div>
+                                        <div class="badge text-bg-success">@Localizer["Public.Verified"]</div>
                                     }
                                 </div>
                                 <div class="position-absolute top-0 end-0 p-3 z-index-2">
                                     @if (isAuthed)
                                     {
-                                        <button type="button" class="btn btn-sm btn-light rounded-circle js-favorite" data-entity-type="Business" data-entity-id="@biz.Id" title="Save">
+                                        <button type="button" class="btn btn-sm btn-light rounded-circle js-favorite" data-entity-type="Business" data-entity-id="@biz.Id" title="@Localizer["Public.Save"]">
                                             <i class="bi bi-heart"></i>
                                         </button>
                                     }
                                     else
                                     {
-                                        <button type="button" class="btn btn-sm btn-light rounded-circle" disabled data-bs-toggle="tooltip" title="Log in to save">
+                                        <button type="button" class="btn btn-sm btn-light rounded-circle" disabled data-bs-toggle="tooltip" title="@Localizer["Public.Log.in.to.save"]">
                                             <i class="bi bi-heart"></i>
                                         </button>
                                     }
@@ -152,7 +154,7 @@
                             <div class="card-body">
                                 @if (biz.IsFeatured)
                                 {
-                                    <div class="badge bg-danger bg-opacity-10 text-danger mb-2">Featured</div>
+                                    <div class="badge bg-danger bg-opacity-10 text-danger mb-2">@Localizer["Public.Featured"]</div>
                                 }
                                 <h5 class="card-title mb-2">
                                     <a asp-area="Public" asp-controller="Directory" asp-action="Detail" asp-route-id="@biz.Id">@biz.Name</a>
@@ -165,7 +167,7 @@
                                         </li>
                                     }
                                     <li class="list-group-item small pb-0">
-                                        <i class="bi bi-star-fill fa-fw text-warning me-1"></i>@biz.AverageRating.ToString("0.0") <span class="text-body-secondary">(@biz.ReviewCount reviews)</span>
+                                        <i class="bi bi-star-fill fa-fw text-warning me-1"></i>@biz.AverageRating.ToString("0.0") <span class="text-body-secondary">(@Localizer["Public.Reviews.Count", biz.ReviewCount])</span>
                                     </li>
                                 </ul>
                             </div>
@@ -182,16 +184,16 @@
 
             @if (Model.TotalPages > 1)
             {
-                <nav class="mt-5" aria-label="Directory pages">
+                <nav class="mt-5" aria-label="@Localizer["Public.Directory.pages"]">
                     <ul class="pagination pagination-primary-soft justify-content-center mb-0">
                         <li class="page-item @(Model.HasPreviousPage ? "" : "disabled")">
                             <a class="page-link" asp-area="Public" asp-controller="Directory" asp-action="Index"
-                               asp-route-q="@Model.Query" asp-route-businessType="@Model.SelectedBusinessType" asp-route-city="@Model.City" asp-route-page="@(Model.PageNumber - 1)">Prev</a>
+                               asp-route-q="@Model.Query" asp-route-businessType="@Model.SelectedBusinessType" asp-route-city="@Model.City" asp-route-page="@(Model.PageNumber - 1)">@Localizer["Public.Prev"]</a>
                         </li>
-                        <li class="page-item disabled"><span class="page-link">Page @Model.PageNumber of @Model.TotalPages</span></li>
+                        <li class="page-item disabled"><span class="page-link">@Localizer["Public.PageOf", Model.PageNumber, Model.TotalPages]</span></li>
                         <li class="page-item @(Model.HasNextPage ? "" : "disabled")">
                             <a class="page-link" asp-area="Public" asp-controller="Directory" asp-action="Index"
-                               asp-route-q="@Model.Query" asp-route-businessType="@Model.SelectedBusinessType" asp-route-city="@Model.City" asp-route-page="@(Model.PageNumber + 1)">Next</a>
+                               asp-route-q="@Model.Query" asp-route-businessType="@Model.SelectedBusinessType" asp-route-city="@Model.City" asp-route-page="@(Model.PageNumber + 1)">@Localizer["Public.Next"]</a>
                         </li>
                     </ul>
                 </nav>
@@ -201,34 +203,9 @@
 </section>
 
 @section Scripts {
-    @* Endpoint URL is surfaced as a data-* attribute (server-generated) instead of
-       being hardcoded as a literal inside the script below. *@
-    <span id="interactionConfig" hidden data-favorites-url="/api/v1/social/favorites"></span>
     <script>
         (function () {
-            var cfg = document.getElementById('interactionConfig');
-            var favoritesUrl = cfg ? cfg.dataset.favoritesUrl : '';
-
             document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) { new bootstrap.Tooltip(el); });
-
-            var tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
-            document.querySelectorAll('.js-favorite').forEach(function (btn) {
-                btn.addEventListener('click', function () {
-                    fetch(favoritesUrl, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'RequestVerificationToken': tokenInput ? tokenInput.value : ''
-                        },
-                        body: JSON.stringify({ entityType: btn.dataset.entityType, entityId: btn.dataset.entityId })
-                    }).then(function (res) {
-                        if (res.ok) {
-                            var icon = btn.querySelector('i');
-                            if (icon) { icon.classList.remove('bi-heart'); icon.classList.add('bi-heart-fill', 'text-danger'); }
-                        }
-                    }).catch(function () { });
-                });
-            });
         })();
     </script>
 }

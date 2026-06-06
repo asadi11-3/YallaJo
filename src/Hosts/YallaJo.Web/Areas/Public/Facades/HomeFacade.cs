@@ -28,14 +28,18 @@ public sealed class HomeFacade
     {
         var featuredTask = BuildFeaturedAsync(ct);
         var popularTask = BuildPopularAsync(ct);
+        var placesTask = BuildPopularPlacesAsync(ct);
+        var businessesTask = BuildPopularBusinessesAsync(ct);
         var categoriesTask = BuildCategoriesAsync(ct);
 
-        await Task.WhenAll(featuredTask, popularTask, categoriesTask);
+        await Task.WhenAll(featuredTask, popularTask, placesTask, businessesTask, categoriesTask);
 
         var vm = new HomeVm
         {
             FeaturedTours = featuredTask.Result,
             PopularTours = popularTask.Result,
+            PopularPlaces = placesTask.Result,
+            PopularBusinesses = businessesTask.Result,
             Categories = categoriesTask.Result,
         };
 
@@ -121,6 +125,116 @@ public sealed class HomeFacade
                 ReviewCount = t.ReviewCount,
                 BookingCount = t.BookingCount,
                 IsFeatured = t.IsFeatured,
+            };
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private async Task<IReadOnlyList<HomePlaceCardVm>> BuildPopularPlacesAsync(CancellationToken ct)
+    {
+        try
+        {
+            var result = await _api.GetPopularPlacesAsync(ct);
+            if (result is not { IsSuccess: true, Data: { Count: > 0 } items })
+                return [];
+
+            var placeIds = items
+                .Where(p => string.Equals(p.EntityType, "Place", StringComparison.OrdinalIgnoreCase))
+                .Take(PopularLimit)
+                .Select(p => p.EntityId)
+                .ToList();
+
+            // The popular/places feed is already place-scoped; fall back to raw IDs if it omits EntityType.
+            if (placeIds.Count == 0)
+                placeIds = items.Take(PopularLimit).Select(p => p.EntityId).ToList();
+
+            var cards = await Task.WhenAll(placeIds.Select(id => BuildPlaceCardAsync(id, ct)));
+            return cards.Where(c => c is not null).Select(c => c!).ToList();
+        }
+        catch
+        {
+            return [];
+        }
+    }
+
+    private async Task<HomePlaceCardVm?> BuildPlaceCardAsync(Guid placeId, CancellationToken ct)
+    {
+        try
+        {
+            var result = await _api.GetPlaceByIdAsync(placeId, ct);
+            // Drop places we cannot deep-link (slug missing) so the rail never renders broken links.
+            if (result is not { IsSuccess: true, Data: { } p } || string.IsNullOrWhiteSpace(p.Slug))
+                return null;
+
+            return new HomePlaceCardVm
+            {
+                Id = p.Id,
+                Name = p.Name,
+                Slug = p.Slug,
+                ImageUrl = null,
+                City = p.City,
+                Country = p.Country,
+                AverageRating = p.AverageRating,
+                ReviewCount = p.ReviewCount,
+                IsFeatured = p.IsFeatured,
+            };
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private async Task<IReadOnlyList<HomeBusinessCardVm>> BuildPopularBusinessesAsync(CancellationToken ct)
+    {
+        try
+        {
+            var result = await _api.GetPopularBusinessesAsync(ct);
+            if (result is not { IsSuccess: true, Data: { Count: > 0 } items })
+                return [];
+
+            var businessIds = items
+                .Where(p => string.Equals(p.EntityType, "Business", StringComparison.OrdinalIgnoreCase))
+                .Take(PopularLimit)
+                .Select(p => p.EntityId)
+                .ToList();
+
+            // The popular/businesses feed is already business-scoped; fall back to raw IDs if it omits EntityType.
+            if (businessIds.Count == 0)
+                businessIds = items.Take(PopularLimit).Select(p => p.EntityId).ToList();
+
+            var cards = await Task.WhenAll(businessIds.Select(id => BuildBusinessCardAsync(id, ct)));
+            return cards.Where(c => c is not null).Select(c => c!).ToList();
+        }
+        catch
+        {
+            return [];
+        }
+    }
+
+    private async Task<HomeBusinessCardVm?> BuildBusinessCardAsync(Guid businessId, CancellationToken ct)
+    {
+        try
+        {
+            var result = await _api.GetBusinessByIdAsync(businessId, ct);
+            if (result is not { IsSuccess: true, Data: { } b } || string.IsNullOrWhiteSpace(b.Slug))
+                return null;
+
+            return new HomeBusinessCardVm
+            {
+                Id = b.Id,
+                Name = b.Name,
+                Slug = b.Slug,
+                ImageUrl = null,
+                BusinessType = b.BusinessType,
+                City = b.City,
+                Country = b.Country,
+                AverageRating = b.AverageRating,
+                ReviewCount = b.ReviewCount,
+                IsFeatured = b.IsFeatured,
             };
         }
         catch

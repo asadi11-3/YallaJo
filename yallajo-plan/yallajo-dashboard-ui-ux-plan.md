@@ -97,6 +97,7 @@ page it hangs off the place context.
 - **Avatar menu** → `GET /accounts/profile`.
 - **Session guard / nav driver** → `GET /security/me` **`SSR`** (returns JWT claims; nav is the union of claim-allowed dashboards).
 - **Language switcher** sets `Accept-Language`, which flows into translation-aware reads (`content-core/tags`, `translations/...`).
+- **Translated content (global rule):** any localizable entity's translated text can be fetched from the Content-Core translation endpoints — `GET /content-core/translations/{entityType}/{entityId}` (`?languageCode=&status=`) — and lookup/list reads honor `Accept-Language`. Pages/Facades should render localized fields from these reads **showing only the active culture's language** — request culture `ar` → render the Arabic value only, `en` → render the English value only (never both side-by-side), falling back to the default language **only** when the active-culture value is missing — instead of assuming the API already localized them. Authoring & approval of those translations is the Admin Content-Ops surface (§8.9: `translate|batch|approve|backfill`, `PUT /content-core/translations/{id}`).
 
 ---
 
@@ -147,31 +148,34 @@ Navigation = **union of claim-allowed dashboards**. Multi-role users get a
 ### 2.3 Place list + detail
 **Template:** `hotel-grid.html` / `hotel-list.html` ♻️ (list) · `room-detail.html` ♻️ / `hotel-detail.html` ♻️ (detail).
 **Redirects:** list card → this detail · "businesses here" → §2.4 Business detail · book CTA → §3.2 create booking (login-gated) · favorite → §3.4.
-**Buttons:** **Add to Favorites / Remove** → `POST /social/favorites` (entityType=Place) / `DELETE /social/favorites/Place/{id}` (state via `GET /social/favorites/check/Place/{id}`; login-gated) · **Write Review** → `POST /social/reviews` (login-gated) · **Add Accessibility Review** → `POST /social/accessibility/reviews` (login-gated) · **View Businesses** → §2.4 (nav).
+**Buttons:** **Add to Favorites / Remove** → `POST /social/favorites` (entityType=Place) / `DELETE /social/favorites/Place/{id}` (state via `GET /social/favorites/check/Place/{id}`; login-gated) · **Write Review** → `POST /social/reviews` (login-gated) · **Add Accessibility Review** → `POST /social/accessibility/reviews` (login-gated) · **Mark Helpful** → `POST /social/reviews/{id}/helpful` · undo `DELETE .../helpful` · **Report a review** → `POST /social/reviews/{id}/report` · **Report this place** → `POST /social/reports` (entityType=Place) · **View Businesses** → §2.4 (nav).
 **Stack:** **Area** `Public` · **Route** `/places`, `/places/{slug}` · **Cache** `PublicShort` list / `PublicMedium` detail (tag place:{id}, C5 ETag) · **Perm** `[AllowAnonymous]` · **Rules** `R2, SEO, IMG1, MAP1, NF6/WL1`
 
 - List `SSR`: `GET /places` (max 50/page).
 - **SEO head (`Place`):** `GET /seo/metadata/Place/{id}` + `GET /seo/faq/Place/{id}`.
+- Localized text (`AJAX`): `GET /content-core/translations/Place/{id}` (`?languageCode=&status=`) — honors `Accept-Language` with default-language fallback; Facade renders localized fields.
 - Detail `SSR`: `GET /places/{slug}` or `GET /places/{id}`; then `AJAX`: `GET /places/{id}/images`, `GET /places/{id}/accessibility`, `GET /places/{id}/businesses`, weather widget (§0.2), `GET /social/reviews/place/...` via `GET /social/reviews/{entityType}/{entityId}`, `GET /social/reviews/ratings`, `GET /social/accessibility/reviews`, `GET /analytics/recommendations/for/{kind}/{entityId}`.
 
 ### 2.4 Business detail `SSR` + `AJAX`
 **Template:** `directory-detail.html` ♻️ (primary) · `hotel-detail.html` ♻️ (amenities/hours layout).
 **Redirects:** "part of" → §2.3 parent Place detail · review CTA → login (§2.10) → §3.5 · weather widget (§0.2, no nav).
-**Buttons:** **Add to Favorites / Remove** → `POST /social/favorites` (entityType=Business) / `DELETE /social/favorites/Business/{id}` (login-gated) · **Write Review** → `POST /social/reviews` (login-gated) · **Mark Helpful** → `POST /social/reviews/{id}/helpful` · **Report Review** → `POST /social/reports` (login-gated).
+**Buttons:** **Add to Favorites / Remove** → `POST /social/favorites` (entityType=Business) / `DELETE /social/favorites/Business/{id}` (login-gated) · **Write Review** → `POST /social/reviews` (login-gated) · **Mark Helpful** → `POST /social/reviews/{id}/helpful` · undo `DELETE .../helpful` · **Report a review** → `POST /social/reviews/{id}/report` · **Report this business** → `POST /social/reports` (entityType=Business).
 **Stack:** **Area** `Public` (owner mgmt in Business §4.5) · **Route** `/businesses/{slug}` · **Cache** `PublicMedium` (tag business:{id}) · **Perm** `[AllowAnonymous]` · **Rules** `R2, SEO, IMG1, weather widget`
 
 - **SEO head (`Business`):** `GET /seo/metadata/Business/{id}` + `GET /seo/faq/Business/{id}`.
+- Localized text (`AJAX`): `GET /content-core/translations/Business/{id}` (`?languageCode=&status=`) — honors `Accept-Language` with default-language fallback; Facade renders localized fields.
 
 `GET /places/businesses/{id}` · `GET /places/businesses/{id}/hours` · `GET /places/businesses/{businessId}/amenities` · `GET /places/businesses/{businessId}/services` · `GET /places/businesses/services/{id}` · `GET /places/businesses/{id}/accessibility`.
 
 ### 2.5 Tour list + detail
 **Template:** `tour-grid.html` ✅ (list) · `tour-detail.html` ✅ (detail, Overview/Itinerary/Inclusions tabs).
 **Redirects:** list card → this detail · guide chip → §2.7 Guide detail · "Book this tour" → §3.2 (`tour-booking.html` checkout, login-gated) · similar tours → §2.5 (other) · favorite → §3.4.
-**Buttons:** **Book Now** → `POST /booking/tour` (→ AwaitingPayment, checks `GET /booking/availability/{tourId}/{date}`; login-gated) · **Add to Favorites / Remove** → `POST /social/favorites` (entityType=Tour) / `DELETE /social/favorites/Tour/{id}` · **Write Review** → `POST /social/reviews` (login-gated) · **Mark Helpful** → `POST /social/reviews/{id}/helpful` · **Report Review** → `POST /social/reports` · **Choose Guide** → §2.5 guide-offering select (nav) · view/similar beacons → `POST /analytics/recommendations/metrics`, `/sponsored-click` (fire-and-forget).
+**Buttons:** **Book Now** → `POST /booking/tour` (→ AwaitingPayment, checks `GET /booking/availability/{tourId}/{date}`; login-gated) · **Add to Favorites / Remove** → `POST /social/favorites` (entityType=Tour) / `DELETE /social/favorites/Tour/{id}` · **Write Review** → `POST /social/reviews` (login-gated) · **Mark Helpful** → `POST /social/reviews/{id}/helpful` · undo `DELETE .../helpful` · **Report a review** → `POST /social/reviews/{id}/report` · **Report this tour** → `POST /social/reports` (entityType=Tour) · **Choose Guide** → §2.5 guide-offering select (nav) · view/similar beacons → `POST /analytics/recommendations/metrics`, `/sponsored-click` (fire-and-forget).
 **Stack:** **Area** `Public` · **Route** `/tours`, `/tours/{slug}` · **Cache** `PublicShort` list / `PublicMedium` detail (tag tour:{id}) · **Perm** `[AllowAnonymous]` · **Rules** `R2, SEO+JSON-LD, IMG1, MAP4, CAL1-3 + S2 SignalR tour:{tourId}, D5 sticky CTA, NF6`
 
 - List `SSR`: `GET /tours`.
 - **SEO head (`Tour`):** `GET /seo/metadata/Tour/{id}` + `GET /seo/faq/Tour/{id}`.
+- Localized text (`AJAX`): `GET /content-core/translations/Tour/{id}` (`?languageCode=&status=`) — honors `Accept-Language` with default-language fallback; Facade renders localized fields.
 - Detail `SSR`: **canonical** `GET /tours/by-slug/{slug}` (alias `GET /tours/slug/{slug}` exists); or `GET /tours/{id}`.
 - `AJAX` tabs: `GET /tours/{id}/images` · `/waypoints` · `/children-info` · `/pricing` · `/schedules` · `/guides`.
 - Guide offerings: `GET /tours/{tourId}/guide-offerings` · `/{guideId}` · `/{guideId}/pricing-tiers` · `/{guideId}/schedules`.
@@ -189,12 +193,13 @@ Navigation = **union of claim-allowed dashboards**. Multi-role users get a
 ### 2.7 Guides list + detail
 **Template:** 🟥 USER builds (no template page; closest base = a directory/agent-profile card grid).
 **Redirects:** guide card → this detail · "tours by this guide" → §2.5 Tour detail · agency badge → §2.8 Agency.
-**Buttons:** **Add to Favorites** → `POST /social/favorites` (entityType mirrors TourGuide; login-gated) · **View Tours** → §2.5 (nav) · **View Agency** → §2.8 (nav).
-**Stack:** **Area** `Public` · **Route** `/guides`, `/guides/{slug}` · **Cache** `PublicShort` list / `PublicMedium` detail · **Perm** `[AllowAnonymous]` · **Rules** `R2, SEO, NF6 TourGuide favorite, WL1`
+**Buttons:** **Add to Favorites / Remove** → `POST /social/favorites` (entityType=TourGuide) / `DELETE /social/favorites/TourGuide/{id}` (state via `GET /social/favorites/check/TourGuide/{id}`; login-gated) · **Write Review** → `POST /social/reviews` (login-gated; edit ≤48h `PUT /social/reviews/{id}`, `DELETE`) · **Mark Helpful** → `POST /social/reviews/{id}/helpful` · undo `DELETE .../helpful` · **Report a review** → `POST /social/reviews/{id}/report` · **Report this guide** → `POST /social/reports` (entityType=TourGuide) · **View Tours** → §2.5 (nav) · **View Agency** → §2.8 (nav).
+**Stack:** **Area** `Public` · **Route** `/guides`, `/guides/{slug}` · **Cache** `PublicShort` list / `PublicMedium` detail · **Perm** `[AllowAnonymous]` · **Rules** `R2, SEO, NF6 TourGuide favorite, WL1, REV3-5 reviews`
 
 - **SEO head (`TourGuide`):** `GET /seo/metadata/TourGuide/{id}` + `GET /seo/faq/TourGuide/{id}`.
+- Localized text (`AJAX`): `GET /content-core/translations/TourGuide/{id}` (`?languageCode=&status=`) — honors `Accept-Language` with default-language fallback; Facade renders localized fields.
 
-`GET /guides` · **canonical** `GET /guides/by-slug/{slug}` · `GET /guides/{id}` · `GET /guides/{id}/tours`.
+`GET /guides` · **canonical** `GET /guides/by-slug/{slug}` · `GET /guides/{id}` · `GET /guides/{id}/tours`; reviews `GET /social/reviews/TourGuide/{id}` · `GET /social/reviews/ratings`.
 
 ### 2.8 Agencies
 **Template:** 🟥 USER builds (no template page).
@@ -207,11 +212,12 @@ Navigation = **union of claim-allowed dashboards**. Multi-role users get a
 ### 2.9 Blog list + post + creator profile
 **Template:** `blog.html` ✅ (list) · `blog-detail.html` ✅ (post). Creator profile = 🟥 USER builds (reuse `blog.html` author header).
 **Redirects:** list card → §2.9 Blog post · author/avatar → §2.9 Creator profile · related-tour chip → §2.5 Tour detail · follow CTA → login (§2.10).
-**Buttons:** **Follow / Unfollow Creator** → `POST` / `DELETE /blogs/creators/profiles/{profileId}/follow` (state via `GET .../following`; login-gated) · **Post Comment** → `POST /blogs/{id}/comments` (login-gated) · **Edit Comment (≤30min)** → `PUT /blogs/comments/{commentId}` · **Delete Comment** → `DELETE /blogs/comments/{commentId}` · **React / Unreact** → `POST` / `DELETE /blogs/comments/{commentId}/reactions` · view beacon → `POST /blogs/{id}/views` (fire-and-forget) · related-tour chip → §2.5 (nav).
+**Buttons:** **Add to Favorites / Remove** → `POST /social/favorites` (entityType=Blog) / `DELETE /social/favorites/Blog/{id}` (state via `GET /social/favorites/check/Blog/{id}`; login-gated) · **Report this post** → `POST /social/reports` (entityType=Blog; login-gated) · **Follow / Unfollow Creator** → `POST` / `DELETE /blogs/creators/profiles/{profileId}/follow` (state via `GET .../following`; login-gated) · **Post Comment** → `POST /blogs/{id}/comments` (login-gated) · **Edit Comment (≤30min)** → `PUT /blogs/comments/{commentId}` · **Delete Comment** → `DELETE /blogs/comments/{commentId}` · **React / Unreact** → `POST` / `DELETE /blogs/comments/{commentId}/reactions` · view beacon → `POST /blogs/{id}/views` (fire-and-forget) · related-tour chip → §2.5 (nav).
 **Stack:** **Area** `Public` · **Route** `/blog`, `/blog/{slug}`, `/creators/{slug}` · **Cache** `PublicShort` list / `PublicLong` post+profile · **Perm** `[AllowAnonymous]` · **Rules** `R2, SEO, SEC3 sanitized HTML, API2 view beacon, NF6`
 
 - List `SSR`: `GET /blogs` (incl. `isFeatured` filter).
 - Post `SSR`: **SEO head (`Blog`):** `GET /seo/metadata/Blog/{id}` + `GET /seo/faq/Blog/{id}`; then `GET /blogs/slug/{slug}` or `GET /blogs/{id}`; then `GET /blogs/{id}/comments` `AJAX`; beacon `POST /blogs/{id}/views`.
+- Localized text (`AJAX`): `GET /content-core/translations/Blog/{id}` (`?languageCode=&status=`) — honors `Accept-Language` with default-language fallback; Facade renders localized fields.
 - Creator profile: **SEO head (`Creator`):** `GET /seo/metadata/Creator/{profileId}` + `GET /seo/faq/Creator/{profileId}`; then `GET /blogs/creators/niches` · `GET /blogs/creators/profiles/{slug}` · `GET /blogs/creators/profiles/{slug}/blogs` · `GET /blogs/creators/profiles/{profileId}/followers`.
 - Follow state (auth): `GET /blogs/creators/profiles/{profileId}/following`, `POST/DELETE /blogs/creators/profiles/{profileId}/follow`.
 - Comment reactions (auth): `POST/DELETE /blogs/comments/{commentId}/reactions`.
@@ -891,3 +897,11 @@ public sealed class PackagesController(PackagesFacade packages) : BaseController
 ```
 
 **Supporting types** (same `Models/Packages/` feature folder): `PackageListResponse`/`PackageResponse` = `init`-setter DTOs; `CreatePackageRequest` = positional `record`; `PackageFormViewModel` = `set` + DataAnnotations; `PackagesMapper` = static `ToVm`/`ToRequest`. No manual DI registration — the suffix scan picks up `PackagesApiClient`/`PackagesFacade`.
+
+### Note — building the 🟥 (USER-builds) views
+
+These are the pages whose **Template:** line is `🟥 USER builds` (no Webestica template): storefront **§2.6** Tour Package, **§2.7** Guides (list + detail), **§2.8** Agencies; the guide-specific **§5** pages (5.2, 5.5–5.11); all of **§6** Agency and **§7** Content Creator; **§8.4–§8.12** Admin (Tours review, Places/Businesses, Blogs/Creators, Growth, Content-Ops, SEO console, Support, Platform Ops); and **§9** SuperAdmin RBAC.
+
+- **Load a design skill per page (on demand):** public, design-led storefront pages (§2.6–§2.8) → **`ui-ux-pro-max`** / **`huashu-design`**; dense dashboard & console pages (§5, §6, §7, §8.4–§8.12, §9) → **`impeccable`** / **`design-taste-frontend`**. Choose by the page's nature — not one skill for everything.
+- **View vs controller — rebuild permission:** You may **always rebuild the view** (`.cshtml`) — redesign it freely with the chosen design skill. You may **not rebuild the controller by default.** Run the §12 reconcile step to locate the controller for the page's Stack **Area**, then **rebuild/extend the controller only if the existing one does _not_ cover the needed actions/states** (the page's **Buttons** → write-endpoints, the required GET reads, and all status flows). If it already covers them, **adjust minimally or leave it as-is** — do not rebuild. Record a one-line **recommendation** per page: *view-only redesign* · *adjust controller (add missing action)* · *rebuild controller (does not cover needed states)* · *create new*.
+- **Design the page together with its controller** _only where the controller is missing or must be extended_ — on the four-tier pipeline (Controller → Facade → ApiClient → IApiClient), driven by the page's **Stack** + **Buttons** + **Endpoints** lines. This is a **spec/plan only — do not implement** until the spec is agreed.

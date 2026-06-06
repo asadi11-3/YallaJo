@@ -1,3 +1,4 @@
+@using System.Globalization
 @using YallaJo.Web.Infrastructure.Identity
 @inject ICurrentUser CurrentUser
 @*
@@ -14,8 +15,12 @@
 
     NOTE: assets/css/style.css already bundles Bootstrap v5.3.0, so no separate Bootstrap CSS link is loaded.
 *@
+@{
+    var seoCulture = CultureInfo.CurrentUICulture;
+    var seoDir = seoCulture.TextInfo.IsRightToLeft ? "rtl" : "ltr";
+}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="@seoCulture.TwoLetterISOLanguageName" dir="@seoDir">
 <head>
     @* dark mode switch (must run before stylesheets paint to avoid a flash of the wrong theme) *@
     <script>
@@ -80,6 +85,36 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <title>@ViewData["Title"] - YallaJo</title>
+
+    @* SEO metadata — reusable; populated per page via ViewData.SetSeo(...) (see Infrastructure/Seo) or set directly. *@
+    @if (ViewData["MetaDescription"] is string seoDescription && !string.IsNullOrWhiteSpace(seoDescription))
+    {
+        <meta name="description" content="@seoDescription" />
+        <meta property="og:description" content="@seoDescription" />
+    }
+    <meta property="og:title" content="@ViewData["Title"]" />
+    <meta property="og:type" content="@(ViewData["OgType"] as string ?? "website")" />
+    <meta property="og:site_name" content="YallaJo" />
+    <meta property="og:locale" content="@seoCulture.Name.Replace('-', '_')" />
+    @if (ViewData["Canonical"] is string seoCanonical && !string.IsNullOrWhiteSpace(seoCanonical))
+    {
+        <link rel="canonical" href="@seoCanonical" />
+        <meta property="og:url" content="@seoCanonical" />
+    }
+    @if (ViewData["OgImage"] is string seoOgImage && !string.IsNullOrWhiteSpace(seoOgImage))
+    {
+        <meta property="og:image" content="@seoOgImage" />
+        <meta name="twitter:card" content="summary_large_image" />
+    }
+    @if (ViewData["Robots"] is string seoRobots && !string.IsNullOrWhiteSpace(seoRobots))
+    {
+        <meta name="robots" content="@seoRobots" />
+    }
+    @if (ViewData["JsonLd"] is string seoJsonLd && !string.IsNullOrWhiteSpace(seoJsonLd))
+    {
+        @* // SANITIZED: JSON-LD is server-generated from typed builders, never user input. *@
+        <script type="application/ld+json">@Html.Raw(seoJsonLd)</script>
+    }
 
     @* favicon *@
     <link rel="shortcut icon" href="~/assets/images/favicon.ico" />

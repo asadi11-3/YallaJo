@@ -1,0 +1,331 @@
+@model YallaJo.Web.Areas.Public.Models.Search.SearchVm
+@using YallaJo.Web.Infrastructure.Seo
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var isAuthed = User.Identity?.IsAuthenticated == true;
+    var baseUrl = $"{Context.Request.Scheme}://{Context.Request.Host}";
+    var canonicalPath = string.IsNullOrWhiteSpace(Model.Query) ? "/search" : $"/search?q={Uri.EscapeDataString(Model.Query!)}";
+
+    ViewData.SetSeo(new SeoModel
+    {
+        Title = Model.HasQuery ? $"Search: {Model.Query}" : "Search tours and experiences",
+        Description = "Search hand-picked tours and experiences across Jordan with YallaJo.",
+        Canonical = $"{baseUrl}{canonicalPath}",
+        OgType = "website",
+        // S1/SEO: search-result pages should be noindex'd (no canonical thin content) — keep robots loose for results that have a query.
+        Robots = Model.HasQuery ? "noindex, follow" : null
+    });
+}
+
+@Html.AntiForgeryToken()
+
+<!-- ────────────────────── Hero search ────────────────────── -->
+<section class="bg-light py-4 py-md-5 border-bottom">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-9">
+                <h1 class="h2 mb-3">@Localizer["Home.Search.Button"]</h1>
+                <form method="get" asp-area="Public" asp-controller="Search" asp-action="Index" class="position-relative" autocomplete="off" role="search">
+                    <label for="searchQuery" class="visually-hidden">@Localizer["Home.Search.Label"]</label>
+                    <div class="input-group input-group-lg">
+                        <span class="input-group-text bg-white border-end-0" aria-hidden="true"><i class="bi bi-search"></i></span>
+                        <input id="searchQuery"
+                               name="q"
+                               type="search"
+                               class="form-control border-start-0"
+                               value="@Model.Query"
+                               placeholder="@Localizer["Home.Search.Placeholder"]"
+                               aria-describedby="searchSuggestHelp"
+                               aria-autocomplete="list"
+                               aria-controls="searchSuggestList"
+                               aria-expanded="false"
+                               autocomplete="off" />
+                        <button type="submit" class="btn btn-primary">@Localizer["Home.Search.Button"]</button>
+                    </div>
+                    <div id="searchSuggestList" class="list-group position-absolute w-100 shadow-sm d-none" role="listbox" style="z-index:1050;"></div>
+                    <small id="searchSuggestHelp" class="visually-hidden">@Localizer["Public.Suggestions.appear.as.you.type.Use.arrow.keys.to.navigate"]</small>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ────────────────────── Results ────────────────────── -->
+<section class="py-4 py-md-5">
+    <div class="container">
+
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+            <h2 class="h5 mb-0">
+                @if (Model.HasQuery)
+                {
+                    <span>Results for &ldquo;@Model.Query&rdquo;</span>
+                    <span class="text-muted fw-normal ms-2">(@Model.TotalCount)</span>
+                }
+                else
+                {
+                    <span>@Localizer["Home.Featured.Title"]</span>
+                }
+            </h2>
+            <!-- Filter offcanvas (S3/D4) is a follow-up; placeholder trigger kept to wire later. -->
+            <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="offcanvas" data-bs-target="#searchFilters" aria-controls="searchFilters">
+                <i class="bi bi-funnel me-1" aria-hidden="true"></i>Filters
+            </button>
+        </div>
+
+        <div class="card border mb-4" data-search-rails>
+            <div class="card-body">
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+                    <div class="btn-group" role="group" aria-label="@Localizer["Public.Search.view"]">
+                        <button id="searchListToggle" type="button" class="btn btn-sm btn-primary" aria-pressed="true">@Localizer["Public.List"]</button>
+                        <button id="searchMapToggle" type="button" class="btn btn-sm btn-outline-primary" aria-pressed="false">@Localizer["Public.Map"]</button>
+                    </div>
+                    <button id="searchUseLocation" type="button" class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-geo-alt me-1" aria-hidden="true"></i>Use my location
+                    </button>
+                </div>
+                <div id="searchListRail" class="small text-secondary" data-url="@Url.Action("Businesses", "Search", new { area = "Public" })" data-q="@Model.Query">
+                    Related businesses will appear here.
+                </div>
+                <div id="searchMapRail" class="d-none" data-url="@Url.Action("Map", "Search", new { area = "Public" })">
+                    <div class="border rounded bg-light p-3" style="min-height:220px;">
+                        <div class="fw-semibold mb-2">@Localizer["Public.Map.viewport"]</div>
+                        <div id="searchMapResults" class="small text-secondary">@Localizer["Public.Switch.to.Map.to.load.public.place.pins"]</div>
+                    </div>
+                </div>
+                <div id="searchNearbyRail" class="mt-3 small" data-url="@Url.Action("Nearby", "Search", new { area = "Public" })" aria-live="polite"></div>
+            </div>
+        </div>
+
+        @if (Model.HasResults)
+        {
+            <div class="row g-3 g-md-4">
+                @foreach (var item in Model.Items)
+                {
+                    <partial name="~/Areas/Public/Views/Home/_HomeTourCard.cshtml"
+                             model="item"
+                             view-data='@(new ViewDataDictionary(ViewData) { { "isAuthed", isAuthed } })' />
+                }
+            </div>
+
+            @if (Model.HasPreviousPage || Model.HasNextPage)
+            {
+                <nav aria-label="@Localizer["Public.Search.pagination"]" class="mt-4">
+                    <ul class="pagination justify-content-center mb-0">
+                        <li class="page-item @(Model.HasPreviousPage ? "" : "disabled")">
+                            <a class="page-link"
+                               asp-area="Public" asp-controller="Search" asp-action="Index"
+                               asp-route-q="@Model.Query"
+                               asp-route-page="@(Model.PageNumber - 1)"
+                               asp-route-pageSize="@Model.PageSize"
+                               aria-label="@Localizer["Public.Previous"]">
+                                <i class="bi bi-chevron-left" aria-hidden="true"></i>
+                                <span class="visually-hidden">@Localizer["Public.Previous"]</span>
+                            </a>
+                        </li>
+                        <li class="page-item disabled" aria-current="page">
+                            <span class="page-link">@Model.PageNumber</span>
+                        </li>
+                        <li class="page-item @(Model.HasNextPage ? "" : "disabled")">
+                            <a class="page-link"
+                               asp-area="Public" asp-controller="Search" asp-action="Index"
+                               asp-route-q="@Model.Query"
+                               asp-route-page="@(Model.PageNumber + 1)"
+                               asp-route-pageSize="@Model.PageSize"
+                               aria-label="@Localizer["Public.Next"]">
+                                <i class="bi bi-chevron-right" aria-hidden="true"></i>
+                                <span class="visually-hidden">@Localizer["Public.Next"]</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            }
+        }
+        else
+        {
+            <div class="text-center py-5">
+                <i class="bi bi-search display-4 text-muted d-block mb-3" aria-hidden="true"></i>
+                @if (Model.HasQuery)
+                {
+                    <h3 class="h5">No tours match &ldquo;@Model.Query&rdquo;</h3>
+                    <p class="text-muted mb-3">@Localizer["Public.Try.a.different.keyword.or.browse.all.available.tours"]</p>
+                }
+                else
+                {
+                    <h3 class="h5">@Localizer["Home.Empty.Title"]</h3>
+                    <p class="text-muted mb-3">@Localizer["Home.Empty.Subtitle"]</p>
+                }
+                <a class="btn btn-primary" asp-area="Public" asp-controller="Tours" asp-action="Index">
+                    @Localizer["Home.BrowseAllTours"]
+                </a>
+            </div>
+        }
+    </div>
+</section>
+
+<!-- Filter offcanvas placeholder — to be filled in §2.2 follow-up (noUiSlider price + facets). -->
+<div class="offcanvas offcanvas-end" tabindex="-1" id="searchFilters" aria-labelledby="searchFiltersLabel">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="searchFiltersLabel">@Localizer["Public.Filters"]</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="@Localizer["Public.Close"]"></button>
+    </div>
+    <div class="offcanvas-body">
+        <p class="text-muted">@Localizer["Public.Filter.controls.price.slider.categories.rating.will.be.wired.in.the.2."]</p>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            var listToggle = document.getElementById('searchListToggle');
+            var mapToggle = document.getElementById('searchMapToggle');
+            var locationButton = document.getElementById('searchUseLocation');
+            var listRail = document.getElementById('searchListRail');
+            var mapRail = document.getElementById('searchMapRail');
+            var mapResults = document.getElementById('searchMapResults');
+            var nearbyRail = document.getElementById('searchNearbyRail');
+            var mapLoaded = false;
+
+            function escapeHtml(value) {
+                return String(value || '').replace(/[<>&"]/g, function (c) { return '&#' + c.charCodeAt(0) + ';'; });
+            }
+
+            function setMode(mode) {
+                var showMap = mode === 'map';
+                listRail.classList.toggle('d-none', showMap);
+                mapRail.classList.toggle('d-none', !showMap);
+                listToggle.classList.toggle('btn-primary', !showMap);
+                listToggle.classList.toggle('btn-outline-primary', showMap);
+                mapToggle.classList.toggle('btn-primary', showMap);
+                mapToggle.classList.toggle('btn-outline-primary', !showMap);
+                listToggle.setAttribute('aria-pressed', String(!showMap));
+                mapToggle.setAttribute('aria-pressed', String(showMap));
+                if (showMap && !mapLoaded) { loadMap(); }
+            }
+
+            function loadBusinesses() {
+                if (!listRail || !listRail.dataset.url) { return; }
+                var url = listRail.dataset.url + '?pageSize=5';
+                if (listRail.dataset.q) { url += '&q=' + encodeURIComponent(listRail.dataset.q); }
+                fetch(url, { headers: { 'Accept': 'application/json' } })
+                    .then(function (r) { return r.ok ? r.json() : null; })
+                    .then(function (data) {
+                        var items = data && data.items ? data.items : [];
+                        if (!items.length) { listRail.textContent = 'No related businesses found.'; return; }
+                        listRail.innerHTML = '<div class="fw-semibold mb-2">@Localizer["Public.Related.businesses"]</div>' + items.map(function (it) {
+                            var meta = [it.businessType, it.city].filter(Boolean).map(escapeHtml).join(' · ');
+                            return '<a class="d-block text-decoration-none py-1" href="/businesses/' + encodeURIComponent(it.id) + '">@Localizer["Public.escapeHtml.it.name.meta"]<span class="text-secondary"> @Localizer["Public.meta"]</span>' : '') + '</a>';
+                        }).join('');
+                    })
+                    .catch(function () { listRail.textContent = 'Could not load related businesses.'; });
+            }
+
+            function loadMap() {
+                if (!mapRail || !mapRail.dataset.url || !mapResults) { return; }
+                mapLoaded = true;
+                mapResults.textContent = 'Loading map pins...';
+                var qs = '?northLat=33.4&southLat=29.1&eastLng=39.4&westLng=34.8';
+                fetch(mapRail.dataset.url + qs, { headers: { 'Accept': 'application/json' } })
+                    .then(function (r) { return r.ok ? r.json() : null; })
+                    .then(function (data) {
+                        var pins = data && data.pins ? data.pins : [];
+                        if (!pins.length) { mapResults.textContent = 'No place pins in this viewport.'; return; }
+                        mapResults.innerHTML = pins.slice(0, 12).map(function (pin) {
+                            return '<div class="py-1"><i class="bi bi-pin-map me-1" aria-hidden="true"></i>@Localizer["Public.escapeHtml.pin.name"]<span class="text-secondary"> @Localizer["Public.Number.pin.lat.toFixed.3.Number.pin.lng.toFixed.3"]</span></div>';
+                        }).join('');
+                    })
+                    .catch(function () { mapResults.textContent = 'Could not load map pins.'; });
+            }
+
+            function loadNearby(lat, lng) {
+                if (!nearbyRail || !nearbyRail.dataset.url) { return; }
+                nearbyRail.textContent = 'Finding nearby places and businesses...';
+                fetch(nearbyRail.dataset.url + '?lat=' + encodeURIComponent(lat) + '&lng=' + encodeURIComponent(lng) + '&radius=10&pageSize=6', { headers: { 'Accept': 'application/json' } })
+                    .then(function (r) { return r.ok ? r.json() : null; })
+                    .then(function (data) {
+                        var places = data && data.places ? data.places : [];
+                        var businesses = data && data.businesses ? data.businesses : [];
+                        var html = '<div class="fw-semibold mb-2">@Localizer["Public.Near.you"]</div>';
+                        if (!places.length && !businesses.length) { nearbyRail.textContent = 'No nearby results found.'; return; }
+                        places.forEach(function (it) {
+                            html += '<a class="d-block text-decoration-none py-1" href="/places/' + encodeURIComponent(it.slug) + '">@Localizer["Public.Place.escapeHtml.it.name"]<span class="text-secondary"> @Localizer["Public.Number.it.distanceKm.toFixed.1.km"]</span></a>';
+                        });
+                        businesses.forEach(function (it) {
+                            html += '<a class="d-block text-decoration-none py-1" href="/businesses/' + encodeURIComponent(it.id) + '">@Localizer["Public.Business.escapeHtml.it.name"]<span class="text-secondary"> @Localizer["Public.Number.it.distanceKm.toFixed.1.km"]</span></a>';
+                        });
+                        nearbyRail.innerHTML = html;
+                    })
+                    .catch(function () { nearbyRail.textContent = 'Could not load nearby results.'; });
+            }
+
+            if (listToggle && mapToggle && listRail && mapRail) {
+                listToggle.addEventListener('click', function () { setMode('list'); });
+                mapToggle.addEventListener('click', function () { setMode('map'); });
+                loadBusinesses();
+            }
+
+            if (locationButton && navigator.geolocation) {
+                locationButton.addEventListener('click', function () {
+                    navigator.geolocation.getCurrentPosition(function (pos) {
+                        loadNearby(pos.coords.latitude, pos.coords.longitude);
+                    }, function () { nearbyRail.textContent = 'Location access was not granted.'; });
+                });
+            } else if (locationButton) {
+                locationButton.disabled = true;
+            }
+        })();
+
+        // S2 autocomplete: debounce 300 ms; hits /search/suggest; renders as a list-group.
+        // Keeps an aria-expanded contract with the input + closes on outside click / Escape.
+        (function () {
+            var input = document.getElementById('searchQuery');
+            var box = document.getElementById('searchSuggestList');
+            if (!input || !box) { return; }
+
+            var t = null;
+            var controller = null;
+
+            function close() {
+                box.classList.add('d-none');
+                box.innerHTML = '';
+                input.setAttribute('aria-expanded', 'false');
+            }
+
+            function render(items) {
+                if (!items || items.length === 0) { close(); return; }
+                var html = '';
+                items.forEach(function (it) {
+                    var name = (it.name || '').replace(/[<>&"]/g, function (c) { return '&#' + c.charCodeAt(0) + ';'; });
+                    var slug = encodeURIComponent(it.slug || '');
+                    html += '<a class="list-group-item list-group-item-action" role="option" href="/tours/' + slug + '">@Localizer["Public.name"]</a>';
+                });
+                box.innerHTML = html;
+                box.classList.remove('d-none');
+                input.setAttribute('aria-expanded', 'true');
+            }
+
+            input.addEventListener('input', function () {
+                var q = input.value.trim();
+                if (t) { clearTimeout(t); }
+                if (controller) { controller.abort(); }
+                if (q.length < 2) { close(); return; }
+                t = setTimeout(function () {
+                    controller = new AbortController();
+                    fetch('/search/suggest?q=' + encodeURIComponent(q), { signal: controller.signal, headers: { 'Accept': 'application/json' } })
+                        .then(function (r) { return r.ok ? r.json() : []; })
+                        .then(render)
+                        .catch(function () { /* aborted or network error — silently ignore */ });
+                }, 300);
+            });
+
+            input.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape') { close(); }
+            });
+
+            document.addEventListener('click', function (e) {
+                if (!box.contains(e.target) && e.target !== input) { close(); }
+            });
+        })();
+    </script>
+}

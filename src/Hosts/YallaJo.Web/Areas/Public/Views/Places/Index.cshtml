@@ -1,6 +1,8 @@
 @model YallaJo.Web.Areas.Public.Models.Places.PlacesGridVm
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
-    ViewData["Title"] = "Explore Places";
+    ViewData["Title"] = Localizer["Public.Explore.Places"];
     Layout = "~/Views/Shared/_Layout.cshtml";
 
     var rangeStart = Model.TotalCount == 0 ? 0 : ((Model.PageNumber - 1) * Model.PageSize) + 1;
@@ -12,8 +14,8 @@
     <div class="container">
         <div class="row">
             <div class="col-12 text-center">
-                <h1 class="h2 mb-2">Explore Places</h1>
-                <p class="mb-0">Discover destinations and points of interest.</p>
+                <h1 class="h2 mb-2">@Localizer["Public.Explore.Places"]</h1>
+                <p class="mb-0">@Localizer["Public.Discover.destinations.and.points.of.interest"]</p>
             </div>
         </div>
     </div>
@@ -28,17 +30,17 @@
         <form method="get" asp-area="Public" asp-controller="Places" asp-action="Index" class="card bg-light p-3 mb-4">
             <div class="row g-3 align-items-end">
                 <div class="col-sm-6 col-lg-3">
-                    <label for="city" class="form-label small mb-1">City</label>
-                    <input type="text" id="city" name="city" value="@Model.Filters.City" class="form-control" placeholder="e.g. Petra" />
+                    <label for="city" class="form-label small mb-1">@Localizer["Public.City"]</label>
+                    <input type="text" id="city" name="city" value="@Model.Filters.City" class="form-control" placeholder="@Localizer["Public.e.g.Petra"]" />
                 </div>
                 <div class="col-sm-6 col-lg-3">
-                    <label for="country" class="form-label small mb-1">Country</label>
-                    <input type="text" id="country" name="country" value="@Model.Filters.Country" class="form-control" placeholder="e.g. Jordan" />
+                    <label for="country" class="form-label small mb-1">@Localizer["Public.Country"]</label>
+                    <input type="text" id="country" name="country" value="@Model.Filters.Country" class="form-control" placeholder="@Localizer["Public.e.g.Jordan"]" />
                 </div>
                 <div class="col-sm-6 col-lg-2">
-                    <label for="ratingMin" class="form-label small mb-1">Minimum rating</label>
+                    <label for="ratingMin" class="form-label small mb-1">@Localizer["Public.Minimum.rating"]</label>
                     <select id="ratingMin" name="ratingMin" class="form-select">
-                        <option value="" selected="@(Model.Filters.RatingMin is null or 0)">Any</option>
+                        <option value="" selected="@(Model.Filters.RatingMin is null or 0)">@Localizer["Public.Any"]</option>
                         @for (var r = 1; r <= 4; r++)
                         {
                             <option value="@r" selected="@(Model.Filters.RatingMin == r)">@r+</option>
@@ -48,17 +50,17 @@
                 <div class="col-sm-6 col-lg-2">
                     <div class="form-check mt-4">
                         <input type="checkbox" id="hasActiveTours" name="hasActiveTours" value="true" class="form-check-input" checked="@Model.Filters.HasActiveTours" />
-                        <label for="hasActiveTours" class="form-check-label small">Has active tours</label>
+                        <label for="hasActiveTours" class="form-check-label small">@Localizer["Public.Has.active.tours"]</label>
                     </div>
                 </div>
                 <div class="col-lg-2 d-grid d-sm-flex gap-2">
-                    <button type="submit" class="btn btn-primary mb-0"><i class="bi bi-funnel me-1"></i>Filter</button>
-                    <a asp-area="Public" asp-controller="Places" asp-action="Index" class="btn btn-outline-secondary mb-0">Reset</a>
+                    <button type="submit" class="btn btn-primary mb-0"><i class="bi bi-funnel me-1"></i>@Localizer["Public.Filter"]</button>
+                    <a asp-area="Public" asp-controller="Places" asp-action="Index" class="btn btn-outline-secondary mb-0">@Localizer["Public.Reset"]</a>
                 </div>
             </div>
             <div class="row mt-2">
                 <div class="col-12">
-                    <span class="form-text">Enter the full city or country name (exact match).</span>
+                    <span class="form-text">@Localizer["Public.Enter.the.full.city.or.country.name.exact.match"]</span>
                 </div>
             </div>
         </form>
@@ -77,17 +79,17 @@
             <!-- Empty state (filter-aware) -->
             <div class="row">
                 <div class="col-12 text-center py-5">
-                    <img src="~/assets/images/element/17.svg" class="h-100px mb-3" alt="No places">
+                    <img src="~/assets/images/element/17.svg" class="h-100px mb-3" alt="@Localizer["Public.No.places"]">
                     @if (Model.Filters.HasAnyFilter)
                     {
-                        <h5 class="mb-1">No places match your filters</h5>
-                        <p class="mb-2">Try removing or changing a filter.</p>
-                        <a asp-area="Public" asp-controller="Places" asp-action="Index" class="btn btn-sm btn-outline-secondary">Reset filters</a>
+                        <h5 class="mb-1">@Localizer["Public.No.places.match.your.filters"]</h5>
+                        <p class="mb-2">@Localizer["Public.Try.removing.or.changing.a.filter"]</p>
+                        <a asp-area="Public" asp-controller="Places" asp-action="Index" class="btn btn-sm btn-outline-secondary">@Localizer["Public.Reset.filters"]</a>
                     }
                     else
                     {
-                        <h5 class="mb-1">No places found</h5>
-                        <p class="mb-0">Check back soon.</p>
+                        <h5 class="mb-1">@Localizer["Public.No.places.found"]</h5>
+                        <p class="mb-0">@Localizer["Public.Check.back.soon"]</p>
                     }
                 </div>
             </div>
@@ -107,11 +109,11 @@
                                     <div>
                                         @if (place.IsFeatured)
                                         {
-                                            <span class="badge text-bg-dark">Featured</span>
+                                            <span class="badge text-bg-dark">@Localizer["Public.Featured"]</span>
                                         }
                                         @if (place.IsVerified)
                                         {
-                                            <span class="badge text-bg-success"><i class="bi bi-patch-check-fill me-1"></i>Verified</span>
+                                            <span class="badge text-bg-success"><i class="bi bi-patch-check-fill me-1"></i>@Localizer["Public.Verified"]</span>
                                         }
                                     </div>
                                 </div>
@@ -142,7 +144,7 @@
 
                             <!-- Card footer -->
                             <div class="card-footer pt-0">
-                                <a asp-area="Public" asp-controller="Places" asp-action="Details" asp-route-slug="@place.Slug" class="btn btn-sm btn-primary mb-0">View Details</a>
+                                <a asp-area="Public" asp-controller="Places" asp-action="Details" asp-route-slug="@place.Slug" class="btn btn-sm btn-primary mb-0">@Localizer["Public.View.Details"]</a>
                             </div>
                         </div>
                     </div>
@@ -155,7 +157,7 @@
             {
                 <div class="row">
                     <div class="col-12">
-                        <nav class="mt-4 d-flex justify-content-center" aria-label="Places pagination">
+                        <nav class="mt-4 d-flex justify-content-center" aria-label="@Localizer["Public.Places.pagination"]">
                             <ul class="pagination pagination-primary-soft d-inline-block d-md-flex rounded mb-0">
                                 <li class="page-item mb-0 @(Model.HasPreviousPage ? "" : "disabled")">
                                     <a class="page-link"

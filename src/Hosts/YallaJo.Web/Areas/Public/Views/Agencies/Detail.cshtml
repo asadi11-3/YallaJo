@@ -1,0 +1,117 @@
+@model YallaJo.Web.Areas.Public.Models.Agencies.AgencyDetailVm
+@using YallaJo.Web.Infrastructure.Seo
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var isAuthed = User.Identity?.IsAuthenticated == true;
+    var baseUrl = $"{Context.Request.Scheme}://{Context.Request.Host}";
+    ViewData.SetSeo(new SeoModel
+    {
+        Title = Model.BusinessName,
+        Description = Model.Description,
+        Canonical = $"{baseUrl}/agency/{Model.UserId}",
+        OgType = "website",
+    });
+}
+
+<section class="pt-4">
+    <div class="container">
+        <nav aria-label="@Localizer["Public.breadcrumb"]">
+            <ol class="breadcrumb mb-3">
+                <li class="breadcrumb-item"><a asp-area="Public" asp-controller="Home" asp-action="Index">@Localizer["Public.Home"]</a></li>
+                <li class="breadcrumb-item"><a asp-area="Public" asp-controller="Agencies" asp-action="Index">@Localizer["Public.Agencies"]</a></li>
+                <li class="breadcrumb-item active" aria-current="page">@Model.BusinessName</li>
+            </ol>
+        </nav>
+        <div class="d-flex align-items-center">
+            <div class="bg-light rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width:72px;height:72px;">
+                <i class="bi bi-building fs-2 text-primary" aria-hidden="true"></i>
+            </div>
+            <div class="ms-3">
+                <h1 class="h3 mb-1">@Model.BusinessName</h1>
+                <span class="badge text-bg-light me-1"><i class="bi bi-people me-1" aria-hidden="true"></i>@Model.ActiveGuideCount active guide@(Model.ActiveGuideCount == 1 ? "" : "s")</span>
+                @if (!string.IsNullOrWhiteSpace(Model.ProviderType))
+                {
+                    <span class="badge text-bg-light">@Model.ProviderType</span>
+                }
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="pt-4 pb-5">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-lg-8">
+                @if (Model.HasDescription)
+                {
+                    <div class="card border">
+                        <div class="card-header"><h2 class="h5 mb-0">@Localizer["Public.About"]</h2></div>
+                        <div class="card-body"><p class="mb-0" style="white-space:pre-line;">@Model.Description</p></div>
+                    </div>
+                }
+                else
+                {
+                    <p class="text-secondary">@Localizer["Public.This.agency.has.not.added.a.description.yet"]</p>
+                }
+            </div>
+            <div class="col-lg-4">
+                @if (Model.HasContact)
+                {
+                    <div class="card border mb-4">
+                        <div class="card-header"><h2 class="h6 mb-0">@Localizer["Public.Contact"]</h2></div>
+                        <ul class="list-group list-group-flush">
+                            @if (!string.IsNullOrWhiteSpace(Model.ContactEmail))
+                            {
+                                <li class="list-group-item"><i class="bi bi-envelope me-2" aria-hidden="true"></i><a href="mailto:@Model.ContactEmail">@Model.ContactEmail</a></li>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(Model.ContactPhone))
+                            {
+                                <li class="list-group-item"><i class="bi bi-telephone me-2" aria-hidden="true"></i><a href="tel:@Model.ContactPhone">@Model.ContactPhone</a></li>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(Model.Address))
+                            {
+                                <li class="list-group-item"><i class="bi bi-geo-alt me-2" aria-hidden="true"></i>@Model.Address</li>
+                            }
+                        </ul>
+                    </div>
+                }
+                <div class="card border bg-light">
+                    <div class="card-body">
+                        <h2 class="h6">@Localizer["Public.Are.you.a.tour.guide"]</h2>
+                        <p class="small text-secondary">@Localizer["Public.Join.this.agency.to.get.matched.with.tours"]</p>
+                        @if (User.IsInRole("TourGuide"))
+                        {
+                            <form method="post" asp-area="Public" asp-controller="Agencies" asp-action="Apply" asp-route-agencyUserId="@Model.UserId">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-primary w-100">@Localizer["Public.Apply.to.this.Agency"]</button>
+                            </form>
+                        }
+                        else if (isAuthed)
+                        {
+                            <p class="small mb-0 text-secondary">@Localizer["Public.Only.approved.tour.guides.can.apply.to.agencies"]</p>
+                        }
+                        else
+                        {
+                            <a class="btn btn-primary w-100"
+                               asp-area="Auth"
+                               asp-controller="Auth"
+                               asp-action="SignIn"
+                               asp-route-returnUrl="@Url.Action("Detail", "Agencies", new { area = "Public", agencyUserId = Model.UserId })">@Localizer["Public.Sign.in.as.a.guide.to.apply"]</a>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        // Tooltip init (agencies have no favourite buttons).
+        (function () {
+            document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) { new bootstrap.Tooltip(el); });
+        })();
+    </script>
+}

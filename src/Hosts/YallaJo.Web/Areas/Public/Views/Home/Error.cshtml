@@ -1,0 +1,29 @@
+@model YallaJo.Web.Areas.Public.Models.Home.ErrorVm
+
+@{
+    ViewData["Title"] = $"{Model.StatusCode} - {Model.Title}";
+}
+
+<section class="py-5 py-lg-6 bg-light">
+    <div class="container">
+        <div class="row justify-content-center text-center">
+            <div class="col-lg-8 col-xl-7">
+                <p class="text-primary fw-semibold mb-2">@Model.StatusCode</p>
+                <h1 class="display-5 fw-bold mb-3">@Model.Title</h1>
+                <p class="lead text-body-secondary mb-4">@Model.Message</p>
+
+                @if (!string.IsNullOrWhiteSpace(Model.CorrelationId))
+                {
+                    <p class="small text-body-secondary mb-4">
+                        Reference ID: <code>@Model.CorrelationId</code>
+                    </p>
+                }
+
+                <div class="d-flex flex-column flex-sm-row gap-2 justify-content-center">
+                    <a class="btn btn-primary" asp-area="Public" asp-controller="Home" asp-action="Index">Back to home</a>
+                    <a class="btn btn-outline-primary" asp-area="Public" asp-controller="Contact" asp-action="Index">Contact support</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

@@ -48,29 +48,32 @@
 ### 2.3 Place list + detail
 - List `SSR`: `GET /places`.
 - SEO head (`Place`): `GET /seo/metadata/Place/{id}` + `GET /seo/faq/Place/{id}`.
+- Localized text (`AJAX`): `GET /content-core/translations/Place/{id}` (`?languageCode=&status=`) — honors `Accept-Language` with default-language fallback; Facade renders localized fields.
 - Detail `SSR`: `GET /places/{slug}` or `/places/{id}`; then `AJAX`: `/places/{id}/images`, `/accessibility`, `/businesses`, weather, `GET /social/reviews/{entityType}/{entityId}`, `/ratings`, `/social/accessibility/reviews`, `GET /analytics/recommendations/for/{kind}/{entityId}`.
 - **Buttons (detail):**
   - **Add to Favorites / Remove** (login-gated) → `POST /social/favorites` · `DELETE /social/favorites/Place/{id}`; initial state `GET /social/favorites/check/Place/{id}` `AJAX`.
   - **Write a Review** (login-gated) → `POST /social/reviews`; edit ≤48h `PUT /social/reviews/{id}`, `DELETE /social/reviews/{id}`.
   - **Write Accessibility Review** (login-gated) → `POST /social/accessibility/reviews`; edit ≤48h `PUT .../{id}`.
   - **Helpful** on a review → `POST /social/reviews/{id}/helpful` · undo `DELETE .../helpful`.
-  - **Report** review/place → `POST /social/reports` (login-gated).
+  - **Report a review** → `POST /social/reviews/{id}/report` · **Report this place** → `POST /social/reports` (entityType=Place; login-gated).
   - **View Businesses here** → §2.4 (nav) · **Share** → client-only (no endpoint).
 - **Stack:** **Area** `Public` · **Route** `/places`, `/places/{slug}` · **Cache** list `PublicShort` · detail `PublicMedium` (30 min, tag `place:{id}`, `C5` ETag) · **Perm** `[AllowAnonymous]` · **Rules** `R2` SSR · `I1–I4` images · `MAP1` lazy map · `NF6/WL1` optimistic + guest-gated favorite · `REV3–5` reviews · `A11Y1`.
 
 ### 2.4 Business detail
 - SEO head (`Business`): `GET /seo/metadata/Business/{id}` + `/seo/faq/Business/{id}`.
+- Localized text (`AJAX`): `GET /content-core/translations/Business/{id}` (`?languageCode=&status=`) — honors `Accept-Language` with default-language fallback; Facade renders localized fields.
 - `GET /places/businesses/{id}` · `/hours` · `/{businessId}/amenities` · `/{businessId}/services` · `/services/{id}` · `/{id}/accessibility`.
 - **Buttons:**
   - **Add to Favorites / Remove** (login-gated) → `POST /social/favorites` · `DELETE /social/favorites/Business/{id}`; state `GET /social/favorites/check/Business/{id}`.
   - **Write a Review** (login-gated) → `POST /social/reviews`; edit ≤48h `PUT /social/reviews/{id}`.
   - **Helpful** → `POST /social/reviews/{id}/helpful` · undo `DELETE .../helpful`.
-  - **Report** → `POST /social/reports`.
+  - **Report a review** → `POST /social/reviews/{id}/report` · **Report this business** → `POST /social/reports` (entityType=Business).
   - **View parent Place** → §2.3 (nav) · **Directions / Call** → client-only (no endpoint).
 - **Stack:** **Area** `Public` (owner management lives in the `Business` area §4.5) · **Route** `/businesses/{slug}` · **Cache** `PublicMedium` (tag `business:{id}`, `C5` ETag) · **Perm** `[AllowAnonymous]` · **Rules** `R2` SSR · Place-contextual weather widget (§0.2) · `NF6/WL1` favorite · `REV3–5` reviews · `MAP1` lazy map.
 
 ### 2.5 Tour list + detail
 - List `SSR`: `GET /tours`. SEO head (`Tour`): `/seo/metadata/Tour/{id}` + `/seo/faq/Tour/{id}`.
+- Localized text (`AJAX`): `GET /content-core/translations/Tour/{id}` (`?languageCode=&status=`) — honors `Accept-Language` with default-language fallback; Facade renders localized fields.
 - Detail: `GET /tours/by-slug/{slug}` (canonical) or `/tours/{id}`; tabs `/images`·`/waypoints`·`/children-info`·`/pricing`·`/schedules`·`/guides`.
 - Offerings: `GET /tours/{tourId}/guide-offerings[/{guideId}][/pricing-tiers][/schedules]`.
 - Availability: `GET /booking/availability/{tourId}[/{date}]`.
@@ -79,7 +82,7 @@
   - **Book Now / Check Availability** → opens checkout; `GET /booking/availability/{tourId}/{date}` then `POST /booking/tour` (AwaitingPayment) → §3.2/§3.7 checkout (login-gated).
   - **Add to Favorites / Remove** (login-gated) → `POST /social/favorites` · `DELETE /social/favorites/Tour/{id}`; state `GET /social/favorites/check/Tour/{id}`.
   - **Write a Review** (login-gated) → `POST /social/reviews`; edit ≤48h `PUT /social/reviews/{id}`.
-  - **Helpful** → `POST /social/reviews/{id}/helpful` · undo `DELETE .../helpful` · **Report** → `POST /social/reports`.
+  - **Helpful** → `POST /social/reviews/{id}/helpful` · undo `DELETE .../helpful` · **Report a review** → `POST /social/reviews/{id}/report` · **Report this tour** → `POST /social/reports` (entityType=Tour).
   - **Choose a Guide** (guide-offerings) → §2.7 guide / select offering (nav) · **Similar tours** card → this detail (nav).
   - **Sponsored/recommendation click** beacon → `POST /analytics/recommendations/sponsored-click` / `POST /analytics/recommendations/metrics` (fire-and-forget) · **Share** → client-only.
 - **Stack:** **Area** `Public` · **Route** `/tours`, `/tours/{slug}` · **Cache** list `PublicShort` · detail `PublicMedium` (tag `tour:{id}`, `C5` ETag) · **Perm** `[AllowAnonymous]` · **Rules** `R2` SSR · JSON-LD `TouristAttraction` · `IMG1` GLightbox gallery · `MAP4` numbered waypoints · `CAL1–3` availability heatmap + SignalR `S2` `tour:{tourId}` live slots · `NF6/WL1` favorite · `REV2` review-when-Completed · `D5` sticky Book CTA · checkout → `CAL4` 10-min lock + `PAY`.
@@ -91,9 +94,10 @@
 
 ### 2.7 Guides list + detail
 - SEO head (`TourGuide`): `GET /seo/metadata/TourGuide/{id}` + `/seo/faq/TourGuide/{id}`.
-- `GET /guides` · `/guides/by-slug/{slug}` (canonical) · `/guides/{id}` · `/guides/{id}/tours`.
-- **Buttons:** **View Guide's Tours** → §2.5 list filtered by `/guides/{id}/tours` (nav) · **Book a tour with this guide** → §2.5 offering → `POST /booking/tour` (login-gated) · **Add to Favorites / Remove** (login-gated) → `POST /social/favorites` · `DELETE /social/favorites/TourGuide/{id}`; state `GET /social/favorites/check/TourGuide/{id}` · **Share** → client-only.
-- **Stack:** **Area** `Public` · **Route** `/guides`, `/guides/{slug}` · **Cache** list `PublicShort` · detail `PublicMedium` · **Perm** `[AllowAnonymous]` · **Rules** `R2` SSR · SEO `TourGuide` · `NF6/WL1` favorite (`TourGuide` is a valid `FavoriteEntityType`) · `A11Y1`.
+- Localized text (`AJAX`): `GET /content-core/translations/TourGuide/{id}` (`?languageCode=&status=`) — honors `Accept-Language` with default-language fallback; Facade renders localized fields.
+- `GET /guides` · `/guides/by-slug/{slug}` (canonical) · `/guides/{id}` · `/guides/{id}/tours`; reviews `GET /social/reviews/TourGuide/{id}` · `/social/reviews/ratings` `AJAX`.
+- **Buttons:** **View Guide's Tours** → §2.5 list filtered by `/guides/{id}/tours` (nav) · **Book a tour with this guide** → §2.5 offering → `POST /booking/tour` (login-gated) · **Add to Favorites / Remove** (login-gated) → `POST /social/favorites` · `DELETE /social/favorites/TourGuide/{id}`; state `GET /social/favorites/check/TourGuide/{id}` · **Write a Review** (login-gated) → `POST /social/reviews` (entityType=TourGuide); edit ≤48h `PUT /social/reviews/{id}`, `DELETE /social/reviews/{id}` · **Helpful** → `POST /social/reviews/{id}/helpful` · undo `DELETE .../helpful` · **Report a review** → `POST /social/reviews/{id}/report` · **Report this guide** → `POST /social/reports` (entityType=TourGuide) · **Share** → client-only.
+- **Stack:** **Area** `Public` · **Route** `/guides`, `/guides/{slug}` · **Cache** list `PublicShort` · detail `PublicMedium` · **Perm** `[AllowAnonymous]` · **Rules** `R2` SSR · SEO `TourGuide` · `NF6/WL1` favorite (`TourGuide` is a valid `FavoriteEntityType`) · `REV3–5` reviews · `A11Y1`.
 
 ### 2.8 Agencies
 `GET /agency` · `/agency/{agencyUserId}`.
@@ -103,6 +107,7 @@
 ### 2.9 Blog list + post + creator profile
 - List `SSR`: `GET /blogs`.
 - Post: SEO head (`Blog`) `GET /seo/metadata/Blog/{id}` + `/seo/faq/Blog/{id}`; `GET /blogs/slug/{slug}` or `/blogs/{id}`; `/blogs/{id}/comments`; beacon `POST /blogs/{id}/views`.
+- Localized text (`AJAX`): `GET /content-core/translations/Blog/{id}` (`?languageCode=&status=`) — honors `Accept-Language` with default-language fallback; Facade renders localized fields.
 - Creator profile: SEO head (`Creator`); `GET /blogs/creators/niches` · `/profiles/{slug}[/blogs]` · `/profiles/{profileId}/followers`.
 - Follow (auth): `GET /blogs/creators/profiles/{profileId}/following`, `POST/DELETE .../follow`.
 - Comment reactions (auth): `POST/DELETE /blogs/comments/{commentId}/reactions`.
@@ -110,8 +115,10 @@
   - **Post Comment / Reply** (login-gated) → `POST /blogs/{id}/comments`; edit ≤30min `PUT /blogs/comments/{commentId}`, `DELETE /blogs/comments/{commentId}`.
   - **React** (like) on a comment → `POST /blogs/comments/{commentId}/reactions` · remove `DELETE .../reactions`.
   - **Follow / Unfollow Creator** (login-gated) → `POST /blogs/creators/profiles/{profileId}/follow` · `DELETE .../follow`; state `GET .../following`.
+  - **Add to Favorites / Remove** (login-gated) → `POST /social/favorites` · `DELETE /social/favorites/Blog/{id}`; state `GET /social/favorites/check/Blog/{id}`.
+  - **Report this post** → `POST /social/reports` (entityType=Blog; login-gated).
   - **Related tour** card → §2.5 (nav) · **View Creator Profile** → §2.9 creator (nav) · **Share** → client-only · view beacon `POST /blogs/{id}/views` (auto, fire-and-forget).
-- **Stack:** **Area** `Public` · **Route** `/blog`, `/blog/{slug}`, `/creators/{slug}` · **Cache** list `PublicShort` · post/profile `PublicLong` (1h, tag `blog:{id}`) · **Perm** `[AllowAnonymous]` · **Rules** `R2` SSR · `SEC3` sanitized blog HTML (`Html.Raw` only with `// SANITIZED:`) · comments/follow/react = `AJAX` + `NF6` optimistic · view beacon `API2` fire-and-forget · `REV5`-style ≤30min comment-edit window.
+- **Stack:** **Area** `Public` · **Route** `/blog`, `/blog/{slug}`, `/creators/{slug}` · **Cache** list `PublicShort` · post/profile `PublicLong` (1h, tag `blog:{id}`) · **Perm** `[AllowAnonymous]` · **Rules** `R2` SSR · `SEC3` sanitized blog HTML (`Html.Raw` only with `// SANITIZED:`) · comments/follow/react/favorite = `AJAX` + `NF6` optimistic · report → `POST /social/reports` · view beacon `API2` fire-and-forget · `REV5`-style ≤30min comment-edit window.
 
 ### 2.10 Auth funnel
 `POST /auth/register` · `/verify-email` · `/resend-otp` · `/login` · `/forgot-password` · `/reset-password` · `/refresh` · `/invitations/accept` · `/external-providers/login` · `/logout` · `/logout-all`.

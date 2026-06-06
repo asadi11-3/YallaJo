@@ -1,0 +1,174 @@
+@model YallaJo.Web.Areas.Public.Models.Reviews.ReviewListVm
+@using YallaJo.Web.Infrastructure.Authentication.Claims
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
+@{
+    var isAuthed = User.Identity?.IsAuthenticated == true;
+    var currentUserId = Guid.TryParse(User.FindFirst(AppClaimTypes.UserId)?.Value, out var uid) ? uid : Guid.Empty;
+    var controller = Model.TargetType switch
+    {
+        "Business" => "Directory",
+        "Tour" => "Tours",
+        "TourGuide" => "Guides",
+        _ => "Places"
+    };
+    var routeSlug = Context.Request.RouteValues["slug"]?.ToString();
+    var routeId = Context.Request.RouteValues["id"]?.ToString();
+    var returnUrl = Context.Request.PathBase + Context.Request.Path + Context.Request.QueryString;
+
+    static string Stars(decimal rating)
+    {
+        var full = (int)System.Math.Round(rating, System.MidpointRounding.AwayFromZero);
+        var sb = new System.Text.StringBuilder();
+        for (var i = 1; i <= 5; i++)
+        {
+            sb.Append(i <= full
+                ? "<i class=\"bi bi-star-fill text-warning\" aria-hidden=\"true\"></i>"
+                : "<i class=\"bi bi-star text-warning\" aria-hidden=\"true\"></i>");
+        }
+        return sb.ToString();
+    }
+}
+
+<section class="pb-5" id="reviews">
+    <div class="container">
+        <div class="d-flex flex-wrap align-items-center justify-content-between mb-3">
+            <h2 class="h4 mb-0">@Localizer["Public.Reviews"]</h2>
+            <div class="text-secondary">
+                @Html.Raw(Stars(Model.AverageRating))
+                <span class="ms-1 fw-semibold">@Model.AverageRating.ToString("0.0")</span>
+                <span class="ms-1">(@Localizer["Public.Reviews.Count", Model.ReviewCount])</span>
+            </div>
+        </div>
+
+        @if (Model.HasResults)
+        {
+            <div class="vstack gap-3">
+                @foreach (var review in Model.Items)
+                {
+                    var ownReview = isAuthed && currentUserId != Guid.Empty && review.UserId == currentUserId;
+                    <div class="card border">
+                        <div class="card-body">
+                            <div class="d-flex flex-wrap align-items-center justify-content-between mb-1">
+                                <div>
+                                    @Html.Raw(Stars(review.Rating))
+                                    @if (!string.IsNullOrWhiteSpace(review.Title))
+                                    {
+                                        <span class="fw-semibold ms-2">@review.Title</span>
+                                    }
+                                </div>
+                                <div class="text-secondary small">
+                                    @if (review.IsVerifiedBooking)
+                                    {
+                                        <span class="badge text-bg-success me-2"><i class="bi bi-patch-check-fill me-1" aria-hidden="true"></i>@Localizer["Public.Verified.booking"]</span>
+                                    }
+                                    <span><i class="bi bi-calendar3 me-1" aria-hidden="true"></i>@review.CreatedAt.ToString("d MMM yyyy")</span>
+                                </div>
+                            </div>
+                            @if (!string.IsNullOrWhiteSpace(review.Content))
+                            {
+                                <p class="mb-1" style="white-space:pre-line;">@review.Content</p>
+                            }
+                            @if (review.HelpfulVoteCount > 0)
+                            {
+                                <span class="text-secondary small"><i class="bi bi-hand-thumbs-up me-1" aria-hidden="true"></i>@review.HelpfulVoteCount found this helpful</span>
+                            }
+                            @if (isAuthed)
+                            {
+                                <div class="d-flex flex-wrap gap-2 mt-3">
+                                    <form method="post" asp-area="Public" asp-controller="@controller" asp-action="MarkHelpful" asp-route-slug="@routeSlug" asp-route-id="@routeId" asp-route-reviewId="@review.Id">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-sm btn-light"><i class="bi bi-hand-thumbs-up me-1" aria-hidden="true"></i>@Localizer["Public.Helpful"]</button>
+                                    </form>
+                                    <form method="post" asp-area="Public" asp-controller="@controller" asp-action="UnmarkHelpful" asp-route-slug="@routeSlug" asp-route-id="@routeId" asp-route-reviewId="@review.Id">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-sm btn-outline-light text-secondary">@Localizer["Public.Undo.helpful"]</button>
+                                    </form>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="collapse" data-bs-target="#report-review-@review.Id" aria-expanded="false">@Localizer["Public.Report"]</button>
+                                </div>
+                                <div class="collapse mt-3" id="report-review-@review.Id">
+                                    <form method="post" asp-area="Public" asp-controller="@controller" asp-action="ReportReview" asp-route-slug="@routeSlug" asp-route-id="@routeId" asp-route-reviewId="@review.Id" class="border rounded p-3">
+                                        @Html.AntiForgeryToken()
+                                        <div class="row g-2">
+                                            <div class="col-sm-4">
+                                                <label class="form-label small" for="reportReason-@review.Id">@Localizer["Public.Reason"]</label>
+                                                <select id="reportReason-@review.Id" name="Report.Reason" class="form-select form-select-sm">
+                                                    <option value="Inappropriate">@Localizer["Public.Inappropriate"]</option>
+                                                    <option value="Misleading">@Localizer["Public.Misleading"]</option>
+                                                    <option value="Spam">@Localizer["Public.Spam"]</option>
+                                                    <option value="Harassment">@Localizer["Public.Harassment"]</option>
+                                                    <option value="FakeReview">@Localizer["Public.Fake.review"]</option>
+                                                    <option value="Other">@Localizer["Public.Other"]</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-sm-8">
+                                                <label class="form-label small" for="reportDescription-@review.Id">@Localizer["Public.Details"]</label>
+                                                <textarea id="reportDescription-@review.Id" name="Report.Description" minlength="5" maxlength="1000" rows="2" required class="form-control form-control-sm"></textarea>
+                                            </div>
+                                        </div>
+                                        <button type="submit" class="btn btn-sm btn-outline-secondary mt-2">@Localizer["Public.Submit.report"]</button>
+                                    </form>
+                                </div>
+                            }
+                            @if (ownReview && review.IsWithinEditWindow)
+                            {
+                                <div class="mt-3">
+                                    <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="collapse" data-bs-target="#edit-review-@review.Id" aria-expanded="false">@Localizer["Public.Edit.your.review"]</button>
+                                    <div class="collapse mt-3" id="edit-review-@review.Id">
+                                        <form method="post" asp-area="Public" asp-controller="@controller" asp-action="EditReview" asp-route-slug="@routeSlug" asp-route-id="@routeId" asp-route-reviewId="@review.Id" class="border rounded p-3">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="Review.RowVersion" value="@review.RowVersion" />
+                                            <div class="mb-2">
+                                                <label class="form-label small" for="editRating-@review.Id">@Localizer["Public.Rating"]</label>
+                                                <select id="editRating-@review.Id" name="Review.Rating" class="form-select form-select-sm">
+                                                    @for (var i = 5; i >= 1; i--)
+                                                    {
+                                                        <option value="@i" selected="@(review.Rating == i)">@i</option>
+                                                    }
+                                                </select>
+                                            </div>
+                                            <div class="mb-2">
+                                                <label class="form-label small" for="editTitle-@review.Id">@Localizer["Public.Title"]</label>
+                                                <input id="editTitle-@review.Id" name="Review.Title" value="@review.Title" maxlength="150" class="form-control form-control-sm" />
+                                            </div>
+                                            <div class="mb-2">
+                                                <label class="form-label small" for="editContent-@review.Id">@Localizer["Public.Review"]</label>
+                                                <textarea id="editContent-@review.Id" name="Review.Content" minlength="20" maxlength="2000" rows="3" required class="form-control form-control-sm">@review.Content</textarea>
+                                            </div>
+                                            <div class="mb-2">
+                                                <label class="form-label small" for="editVisit-@review.Id">@Localizer["Public.Visit.date"]</label>
+                                                <input id="editVisit-@review.Id" type="date" name="Review.VisitDate" value="@review.VisitDate?.ToString("yyyy-MM-dd")" class="form-control form-control-sm" />
+                                            </div>
+                                            <button type="submit" class="btn btn-sm btn-primary">@Localizer["Public.Save.changes"]</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            }
+                            @if (ownReview)
+                            {
+                                <form method="post" asp-area="Public" asp-controller="@controller" asp-action="DeleteReview" asp-route-slug="@routeSlug" asp-route-id="@routeId" asp-route-reviewId="@review.Id" class="mt-2">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="rowVersion" value="@review.RowVersion" />
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">@Localizer["Public.Delete.your.review"]</button>
+                                </form>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <p class="text-secondary">@Localizer["Public.No.reviews.yet.Be.the.first.to.share.your.experience"]</p>
+        }
+
+        @if (!isAuthed)
+        {
+            <div class="mt-3">
+                <a class="btn btn-outline-primary btn-sm" asp-area="Auth" asp-controller="Auth" asp-action="SignIn" asp-route-returnUrl="@returnUrl">
+                    <i class="bi bi-pencil-square me-1" aria-hidden="true"></i>Sign in to write a review
+                </a>
+            </div>
+        }
+    </div>
+</section>
