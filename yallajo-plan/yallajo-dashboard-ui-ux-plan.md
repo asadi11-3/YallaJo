@@ -795,3 +795,99 @@ Tabs — **Metadata / FAQ / Redirects / Sitemap / WeatherCache**:
 - `POST/DELETE /blogs/creators/profiles/{profileId}/follow` + `GET /following` — follow graph.
 - `POST /tours/{tourId}/guide-offerings/{guideId}/suspend` · `/reinstate` — offering moderation (admin).
 - `GET /content-core/categories/admin/{id}` — admin single-category read.
+
+---
+
+## §12 Build rule — reconcile-or-create the Web controller; prototype the build pages
+
+**Applies to every page in §2–§9.** Before building a page, reconcile it against the existing `src/Hosts/YallaJo.Web` code, then implement it to that page's **Stack** + **Buttons** lines.
+
+1. **Locate** the controller for the page's code **Area** (the `Area` field of its **Stack** line): §2 public → `Areas/Public`, §2.10 → `Areas/Auth`, §3 → `Areas/Accounts`, §4 → `Areas/Provider`, §4.5 → `Areas/Business`, §5 → `Areas/Guide`, §7 → `Areas/Creator`, §8.9–§8.10 → `Areas/Content`, the rest of §6/§8/§9 → `Areas/Admin`.
+2. **If the controller/action exists → adjust it to the plan:**
+   - **Route** = the Stack `Route` (`[Area]` + `[HttpGet]`/`[HttpPost("lowercase/path")]`).
+   - **Cache** = the Stack `Cache`: `[OutputCache(PolicyName="PublicShort|PublicMedium|PublicLong|PublicDay")]` for public pages; **no caching / no-store for every dashboard page** (UI-PERF-C2).
+   - **Perm** = the Stack `Perm`: `[AllowAnonymous]`, `[Authorize]`, policy `Provider`/`Admin`, or `[RequirePermission(WebPermission.Feature.Action)]`.
+   - **Buttons** — each named button calls its listed write-endpoint through a Facade; every write is `[HttpPost]` + `[ValidateAntiForgeryToken]` + **PRG** (UI-SEC SEC7).
+   - Bind any endpoint from the page's **Endpoints** block that the ApiClient is still missing.
+3. **If it does not exist → create it** on the four-tier pipeline **Controller → Facade → ApiClient → IApiClient** (suffix-named `*ApiClient`/`*Facade` auto-register; controllers never inject `IApiClient`/`HttpClient`).
+4. **For 🟥 build-from-scratch pages** (Template line = `🟥 USER builds` — e.g. §2.6–§2.8, the guide-specific §5 pages, all of §6 and §7, much of §8.4–§8.12, §9): start from the skeleton below, then build the view out from the page's **Buttons**.
+
+### Reusable prototype skeleton
+> One read + one write; repeat the write pattern per **Button**. Swap `Provider`/`Packages`/route/permission/DTOs to match the page's **Stack** line. For a **public** page use `[AllowAnonymous]` + `[OutputCache(PolicyName="PublicMedium")]` instead of the dashboard `[Authorize]`/no-store, and evict tags on writes via `IOutputCacheStore.EvictByTagAsync` (UI-PERF-C3).
+
+```csharp
+// Areas/Provider/ApiClients/PackagesApiClient.cs  (sealed; ctor takes IApiClient only)
+public sealed class PackagesApiClient(IApiClient api)
+{
+    public Task<ApiResult<PackageListResponse>> ListAsync(int page, CancellationToken ct)
+        => api.GetAsync<PackageListResponse>($"tours/packages?pageNumber={page}", ct);
+
+    public Task<ApiResult> CreateAsync(CreatePackageRequest body, CancellationToken ct)
+        => api.PostAsync("tours/packages", body, ct);
+}
+
+// Areas/Provider/Facades/PackagesFacade.cs  (sealed; maps ApiResult -> ViewModel; no HttpContext)
+public sealed class PackagesFacade(PackagesApiClient api)
+{
+    public async Task<ApiResult<PackagesViewModel>> GetListAsync(int page, CancellationToken ct)
+    {
+        var r = await api.ListAsync(page, ct);
+        return r.IsSuccess ? ApiResult<PackagesViewModel>.Ok(PackagesMapper.ToVm(r.Data!))
+                           : ApiResult<PackagesViewModel>.Fail(r.Error!, r.StatusCode);
+    }
+
+    public Task<ApiResult> CreateAsync(PackageFormViewModel vm, CancellationToken ct)
+        => api.CreateAsync(PackagesMapper.ToRequest(vm), ct);
+}
+
+// Areas/Provider/Controllers/PackagesController.cs  (inherits BaseController)
+[Area("Provider")]
+[Authorize(Policy = "Provider")]
+[RequirePermission(WebPermission.Tours.Write)]
+public sealed class PackagesController(PackagesFacade packages) : BaseController
+{
+    [HttpGet("provider/packages")]                  // Stack Route; dashboard => no OutputCache (no-store)
+    public async Task<IActionResult> Index(int page = 1, CancellationToken ct = default)
+    {
+        var r = await packages.GetListAsync(page, ct);
+        if (GuardSignOut(r, out var signOut)) return signOut;   // BaseController: 401 -> /auth/sign-in
+        return View(r.Data);                                    // R2: SSR first paint
+    }
+
+    [HttpPost("provider/packages")]                 // Button: "Create package"
+    [ValidateAntiForgeryToken]                      // SEC7
+    public async Task<IActionResult> Create(PackageFormViewModel vm, CancellationToken ct = default)
+    {
+        if (!ModelState.IsValid) return View("Index", vm);
+        var r = await packages.CreateAsync(vm, ct);
+        if (GuardSignOut(r, out var signOut)) return signOut;
+        ApplyValidationErrors(r);                    // API field errors -> ModelState
+        if (!r.IsSuccess) { SetError(r); return View("Index", vm); }
+        SetSuccess("Package created.");
+        return RedirectToAction(nameof(Index));      // PRG
+    }
+}
+```
+
+```cshtml
+@* Areas/Provider/Views/Packages/Index.cshtml *@
+@using YallaJo.Web.Infrastructure.Authorization
+@model PackagesViewModel
+@{ ViewData["Title"] = "Packages"; Layout = "~/Views/Shared/_Layout.cshtml"; }
+
+<partial name="_Alerts" />               @* flash after PRG *@
+<h1>Packages</h1>                        @* exactly one <h1> (A11Y6) *@
+
+@* SSR the list here (R2). Each Button = a POST form carrying an anti-forgery token. *@
+<form asp-area="Provider" asp-controller="Packages" asp-action="Create" method="post">
+    @Html.AntiForgeryToken()
+    @* fields bound to PackageFormViewModel (DataAnnotations) *@
+    <permission require="@WebPermission.Tours.Write">
+        <button type="submit" class="btn btn-primary">Create package</button>
+    </permission>
+</form>
+
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }
+```
+
+**Supporting types** (same `Models/Packages/` feature folder): `PackageListResponse`/`PackageResponse` = `init`-setter DTOs; `CreatePackageRequest` = positional `record`; `PackageFormViewModel` = `set` + DataAnnotations; `PackagesMapper` = static `ToVm`/`ToRequest`. No manual DI registration — the suffix scan picks up `PackagesApiClient`/`PackagesFacade`.
