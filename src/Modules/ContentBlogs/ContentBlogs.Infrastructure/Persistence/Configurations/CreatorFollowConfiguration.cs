@@ -19,11 +19,12 @@ public class CreatorFollowConfiguration : IEntityTypeConfiguration<CreatorFollow
         builder.Property(x => x.CreatedAt).IsRequired();
         builder.Property(x => x.UpdatedAt).IsRequired(false);
 
-        // Hard-delete entity: it has no IsDeleted of its own. However, the principal
-        // CreatorProfile defines a soft-delete query filter (!IsDeleted). To avoid EF's
-        // "required end of relationship may be filtered out" warning (linkid=2131316),
-        // mirror the principal's filter via the navigation so follows of a soft-deleted
-        // creator are filtered out together with their parent profile.
+        // Hard-delete entity on unfollow: no IsDeleted of its own.
+        // CCD-7: CreatorFollow is the required dependent of CreatorProfile, which has a
+        // global query filter (!IsDeleted). Mirror the principal's filter via the
+        // navigation so follows are hidden when the related profile is soft-deleted
+        // (matches the BlogTour / BlogTranslation / BlogComment precedent in this module).
+        // This is a model-level predicate only — no schema change, no migration.
         builder.HasQueryFilter(x => !x.CreatorProfile.IsDeleted);
 
         builder.HasIndex(x => new { x.FollowerUserId, x.CreatorProfileId }).IsUnique();

@@ -64,6 +64,13 @@
                             </permission>
                             <permission require="@WebPermission.Creator.Read">
                                 <li class="nav-item">
+                                    <a class="@Nav("Audience")" asp-area="Creator" asp-controller="Audience" asp-action="Index">
+                                        <i class="bi bi-people fa-fw me-1"></i>Audience
+                                    </a>
+                                </li>
+                            </permission>
+                            <permission require="@WebPermission.Creator.Read">
+                                <li class="nav-item">
                                     <a class="@Nav("Preview")" asp-area="Creator" asp-controller="Preview" asp-action="Index">
                                         <i class="bi bi-eye fa-fw me-1"></i>Public Preview
                                     </a>

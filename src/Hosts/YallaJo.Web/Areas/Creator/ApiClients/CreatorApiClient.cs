@@ -12,6 +12,7 @@ public sealed class CreatorApiClient
     private const string ApplicationMinePath = "/api/v1/blogs/creators/applications/mine";
     private const string ApplicationsPath = "/api/v1/blogs/creators/applications";
     private const string RedeemInvitationPath = "/api/v1/blogs/creators/invitations/redeem";
+    private const string ProfilesPath = "/api/v1/blogs/creators/profiles";
 
     private readonly IApiClient _api;
 
@@ -22,6 +23,18 @@ public sealed class CreatorApiClient
 
     public Task<ApiResult<CreatorApplicationMineResponse>> GetMyApplicationAsync(CancellationToken ct = default)
         => _api.GetAsync<CreatorApplicationMineResponse>(ApplicationMinePath, ct);
+
+    /// <summary>
+    /// GET /api/v1/blogs/creators/profiles/{profileId}/followers — paged follower
+    /// list for the Creator-area Audience page (CCD-7). The backend returns a bare
+    /// array of follower user IDs (no DTO, no pagination envelope). The Web layer
+    /// uses these only as opaque presence signals — the raw GUIDs are NEVER rendered.
+    /// Anonymous endpoint, but the Audience page is gated by Creator.Read.
+    /// </summary>
+    public Task<ApiResult<List<Guid>>> ListFollowersAsync(
+        Guid profileId, int page, int pageSize, CancellationToken ct = default)
+        => _api.GetAsync<List<Guid>>(
+            $"{ProfilesPath}/{profileId:D}/followers?page={page}&pageSize={pageSize}", ct);
 
 
     public Task<ApiResult<CreateApplicationResultResponse>> CreateApplicationAsync(
