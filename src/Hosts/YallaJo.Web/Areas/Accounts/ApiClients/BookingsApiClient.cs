@@ -24,6 +24,10 @@ public sealed class BookingsApiClient
     public Task<ApiResult> CancelAsync(Guid id, CancelBookingRequest request, CancellationToken ct = default)
         => _api.PostAsync($"/api/v1/booking/{id}/cancel", request, ct);
 
+    // POST /api/v1/booking/{id}/dispute — owner opens a dispute on a Completed booking (FE-1A)
+    public Task<ApiResult> OpenDisputeAsync(Guid id, OpenBookingDisputeRequest request, CancellationToken ct = default)
+        => _api.PostAsync($"/api/v1/booking/{id}/dispute", request, ct);
+
     public Task<ApiResult<TourLookupResponse>> GetTourAsync(Guid id, CancellationToken ct = default)
         => _api.GetAsync<TourLookupResponse>($"/api/v1/tours/{id}", ct);
 

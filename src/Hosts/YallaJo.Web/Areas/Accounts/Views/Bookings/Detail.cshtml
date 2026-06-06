@@ -1,5 +1,6 @@
 @model YallaJo.Web.Areas.Accounts.Models.Bookings.BookingDetailVm
 @using YallaJo.Web.Areas.Accounts.Shared
+@using YallaJo.Web.Infrastructure.Authorization
 @{
     ViewData["Title"] = "Manage Booking";
     ViewData["AccountNav"] = "Bookings";
@@ -130,6 +131,78 @@
                             @if (Model.RefundAmount is > 0)
                             {
                                 <p class="small text-success mb-0">Refund: @Model.RefundAmount.Value.ToString("0.00") @Model.Currency</p>
+                            }
+                        </div>
+                    </div>
+                }
+
+                @* ── Dispute lifecycle (FE-1A) ─────────────────────────────────── *@
+                @if (Model.IsDisputable)
+                {
+                    <permission require="@WebPermission.BookingDispute.Create">
+                        <div class="card border border-warning mt-3">
+                            <div class="card-header border-bottom"><h5 class="card-header-title mb-0 text-warning">Report an issue with this tour</h5></div>
+                            <div class="card-body">
+                                <p class="small text-muted">If something went wrong with your completed tour, you can open a dispute within 48 hours of completion. Our team will review it.</p>
+                                <button type="button" class="btn btn-warning mb-0" data-bs-toggle="modal" data-bs-target="#disputeModal">
+                                    <i class="bi bi-exclamation-triangle me-1"></i>Report an issue
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="modal fade" id="disputeModal" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <form asp-area="Accounts" asp-controller="Bookings" asp-action="OpenDispute" asp-route-id="@Model.Id" method="post" class="modal-content">
+                                    @Html.AntiForgeryToken()
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Report an issue</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p class="small text-muted">Tell us what went wrong. This opens a formal dispute that our team will investigate.</p>
+                                        <div class="mb-2">
+                                            <label class="form-label" for="dispute-reason">What happened?</label>
+                                            <textarea class="form-control" id="dispute-reason" name="reason" rows="4" minlength="10" maxlength="2000" required
+                                                      placeholder="Describe the issue in at least 10 characters…"></textarea>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                                        <button type="submit" class="btn btn-warning">Submit dispute</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </permission>
+                }
+                else if (Model.IsDisputed)
+                {
+                    <div class="card border border-warning mt-3">
+                        <div class="card-body">
+                            <h6 class="text-warning mb-1">Dispute under review</h6>
+                            @if (Model.DisputedAt is not null)
+                            {
+                                <p class="small text-muted mb-1">Opened on @Model.DisputedAt.Value.ToString("d MMM yyyy")</p>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(Model.DisputeReason))
+                            {
+                                <p class="small mb-0">Your report: @Model.DisputeReason</p>
+                            }
+                        </div>
+                    </div>
+                }
+                else if (Model.IsResolved)
+                {
+                    <div class="card border mt-3">
+                        <div class="card-body">
+                            <h6 class="text-primary mb-1">Dispute resolved</h6>
+                            @if (Model.ResolvedAt is not null)
+                            {
+                                <p class="small text-muted mb-1">Resolved on @Model.ResolvedAt.Value.ToString("d MMM yyyy")</p>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(Model.ResolutionNotes))
+                            {
+                                <p class="small mb-0">Resolution: @Model.ResolutionNotes</p>
                             }
                         </div>
                     </div>

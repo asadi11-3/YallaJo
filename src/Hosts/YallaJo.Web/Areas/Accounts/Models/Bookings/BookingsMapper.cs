@@ -27,9 +27,25 @@ public static class BookingsMapper
         IsCancellable = IsCancellable(item.Status),
     };
 
+    /// <summary>
+    /// FE-1A: an owner may open a dispute when the booking is Completed and the
+    /// completion happened within the past 48 hours, and no dispute is open yet.
+    /// Authoritative enforcement is server-side; this only governs button visibility.
+    /// </summary>
+    public static bool IsDisputable(string status, DateTime? completedAt, bool alreadyDisputed) =>
+        string.Equals(status, "Completed", StringComparison.OrdinalIgnoreCase)
+        && completedAt is { } c
+        && DateTime.UtcNow <= c.AddHours(48)
+        && !alreadyDisputed;
+
     public static BookingDetailVm ToDetailVm(TourBookingDetailResponse d, string tourName, string? imageUrl)
     {
         var pricing = d.Pricing;
+        var dispute = d.Dispute;
+        var completedAt = d.Completion?.CompletedAt;
+        var isDisputed = string.Equals(d.Status, "Disputed", StringComparison.OrdinalIgnoreCase);
+        var isResolved = string.Equals(d.Status, "Resolved", StringComparison.OrdinalIgnoreCase);
+
         return new BookingDetailVm
         {
             Id = d.Id,
@@ -56,6 +72,16 @@ public static class BookingsMapper
             CancellationReason = d.Cancellation?.Reason,
             CancelledAt = d.Cancellation?.CancelledAt,
             RefundAmount = d.Cancellation?.RefundAmount,
+
+            // ── Dispute lifecycle (FE-1A) ──────────────────────────────────────
+            CompletedAt = completedAt,
+            IsDisputable = IsDisputable(d.Status, completedAt, alreadyDisputed: dispute is not null || isDisputed),
+            IsDisputed = isDisputed,
+            IsResolved = isResolved,
+            DisputedAt = dispute?.DisputedAt,
+            DisputeReason = dispute?.Reason,
+            ResolvedAt = dispute?.ResolvedAt,
+            ResolutionNotes = dispute?.ResolutionNotes,
         };
     }
 }

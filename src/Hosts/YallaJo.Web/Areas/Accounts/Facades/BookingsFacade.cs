@@ -124,4 +124,38 @@ public sealed class BookingsFacade
 
         return ApiResult.Ok();
     }
+
+    /// <summary>
+    /// FE-1A: the booking owner opens a dispute on a Completed booking. Maps backend
+    /// failures to friendly, recoverable messages:
+    ///   403 → not the owner; 422 → outside the 48h window / wrong state; 409 → concurrency.
+    /// </summary>
+    public async Task<ApiResult> OpenDisputeAsync(Guid id, string reason, CancellationToken ct = default)
+    {
+        var result = await _api.OpenDisputeAsync(id, new OpenBookingDisputeRequest(reason ?? string.Empty), ct);
+
+        if (result.IsUnauthorized)
+            return ApiResult.ForceSignOut();
+        if (result.IsForbidden)
+            return ApiResult.Fail(403, "You can only open a dispute on your own booking.");
+        if (result.IsNotFound)
+            return ApiResult.Fail(404, "Booking not found.");
+        if (result.IsConflict)
+            return ApiResult.Fail(409, "This booking was just updated. Please reload and try again.");
+
+        // Field-level validation (FluentValidation surfaced a ValidationErrors dict).
+        if (result.IsValidationError && result.ValidationErrors is { Count: > 0 })
+            return ApiResult.Invalid(result.ValidationErrors);
+
+        // Domain guard (wrong state / outside the 48h window) arrives as 422 without a
+        // field dictionary — surface a friendly, actionable message.
+        if (result.StatusCode is 422 or 400)
+            return ApiResult.Fail(422, result.Error
+                ?? "A dispute can only be opened within 48 hours of a completed tour.");
+
+        if (!result.IsSuccess)
+            return ApiResult.Fail(result.StatusCode, result.Error ?? "Could not open the dispute.");
+
+        return ApiResult.Ok();
+    }
 }
