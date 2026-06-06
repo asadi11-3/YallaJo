@@ -45,4 +45,12 @@ public sealed class AdminBookingsApiClient
     // POST /api/v1/admin/bookings/{id}/force-refund — force-majeure cancel + full refund (E4)
     public Task<ApiResult> ForceRefundAsync(Guid id, string reason, CancellationToken ct = default)
         => _api.PostAsync($"/api/v1/admin/bookings/{id}/force-refund", new { reason }, ct);
+
+    // POST /api/v1/booking/admin/{id}/dispute/resolve — admin resolves a Disputed booking (FE-1A-2)
+    public Task<ApiResult> ResolveDisputeAsync(Guid id, ResolveBookingDisputeRequest request, CancellationToken ct = default)
+        => _api.PostAsync($"{Base}/admin/{id}/dispute/resolve", request, ct);
+
+    // POST /api/v1/payments/{id}/refund — issue a refund as part of dispute resolution (FE-1A-3)
+    public Task<ApiResult> RefundPaymentAsync(Guid paymentId, RefundPaymentRequest request, CancellationToken ct = default)
+        => _api.PostAsync($"/api/v1/payments/{paymentId}/refund", request, ct);
 }

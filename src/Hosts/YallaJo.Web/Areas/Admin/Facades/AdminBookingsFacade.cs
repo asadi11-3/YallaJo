@@ -63,6 +63,66 @@ public sealed class AdminBookingsFacade
         return ApiResult.Fail(result.StatusCode, result.Error ?? "Could not force-refund the booking.");
     }
 
+    /// <summary>
+    /// FE-1A-2 / FE-1A-3: resolve a disputed booking and, optionally, issue a payment
+    /// refund as a SECOND step. The two backend calls are independent (no distributed
+    /// transaction), so partial failure is possible and surfaced explicitly:
+    ///   • resolve fails → refund is NOT attempted; returns the resolve error.
+    ///   • resolve succeeds + refund requested + refund fails → returns a 207-style
+    ///     partial result so the admin knows the dispute is Resolved but the refund
+    ///     must be retried manually.
+    /// </summary>
+    public async Task<ResolveDisputeOutcome> ResolveDisputeAsync(
+        Guid bookingId,
+        string resolutionNotes,
+        RefundRequest? refund,
+        CancellationToken ct = default)
+    {
+        var resolve = await _api.ResolveDisputeAsync(
+            bookingId, new ResolveBookingDisputeRequest(resolutionNotes), ct);
+
+        if (resolve.IsUnauthorized)
+            return ResolveDisputeOutcome.SignOut();
+        if (!resolve.IsSuccess)
+            return ResolveDisputeOutcome.ResolveFailed(MapResolveError(resolve));
+
+        // Resolve succeeded. If no refund requested, we're done.
+        if (refund is null)
+            return ResolveDisputeOutcome.ResolvedNoRefund();
+
+        var refundResult = await _api.RefundPaymentAsync(
+            refund.PaymentId,
+            new RefundPaymentRequest(refund.Amount, refund.Currency, refund.Reason),
+            ct);
+
+        if (refundResult.IsSuccess)
+            return ResolveDisputeOutcome.ResolvedAndRefunded();
+
+        // CRITICAL: the dispute is already Resolved but the refund failed. Do NOT
+        // pretend the whole thing failed — tell the admin precisely what happened.
+        return ResolveDisputeOutcome.ResolvedButRefundFailed(MapRefundError(refundResult));
+    }
+
+    private static string MapResolveError(ApiResult r)
+    {
+        if (r.IsForbidden) return "You don't have permission to resolve disputes.";
+        if (r.IsNotFound) return "Booking not found.";
+        if (r.IsConflict) return "This booking was just updated. Please reload and try again.";
+        if (r.StatusCode is 422 or 400)
+            return r.Error ?? "This booking is not in a disputable state.";
+        return r.Error ?? "Could not resolve the dispute.";
+    }
+
+    private static string MapRefundError(ApiResult r)
+    {
+        if (r.IsForbidden) return "the refund was rejected (insufficient permission).";
+        if (r.IsNotFound) return "the payment could not be found.";
+        if (r.StatusCode == 502) return "the payment gateway is unavailable.";
+        if (r.IsConflict) return "the payment is in a state that cannot be refunded.";
+        if (r.StatusCode is 422 or 400) return r.Error ?? "the refund amount was invalid.";
+        return r.Error ?? "the refund could not be issued.";
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────────────
 
     private async Task<IReadOnlyDictionary<Guid, string>> HydrateTourNamesAsync(
