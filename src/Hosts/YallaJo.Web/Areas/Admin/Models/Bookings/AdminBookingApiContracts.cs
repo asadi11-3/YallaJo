@@ -50,8 +50,19 @@ public sealed class AdminBookingDetailResponse
     public DateTime? PaymentExpiresAt { get; init; }
     public string? SpecialRequests { get; init; }
     public AdminBookingCancellationResponse? Cancellation { get; init; }
+    public AdminBookingDisputeResponse? Dispute { get; init; }
     public DateTime CreatedAt { get; init; }
     public DateTime? UpdatedAt { get; init; }
+}
+
+public sealed class AdminBookingDisputeResponse
+{
+    public DateTime DisputedAt { get; init; }
+    public string Reason { get; init; } = string.Empty;
+    public Guid? OpenedByUserId { get; init; }
+    public DateTime? ResolvedAt { get; init; }
+    public string? ResolutionNotes { get; init; }
+    public Guid? ResolvedByAdminId { get; init; }
 }
 
 public sealed class AdminBookingPricingResponse

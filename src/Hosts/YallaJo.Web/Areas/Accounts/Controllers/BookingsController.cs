@@ -74,6 +74,28 @@ public sealed class BookingsController : BaseController
         return RedirectToAction(nameof(Detail), new { id });
     }
 
+    [HttpPost("accounts/bookings/{id:guid}/dispute")]
+    [ValidateAntiForgeryToken]
+    [RequirePermission(WebPermission.BookingDispute.Create)]
+    public async Task<IActionResult> OpenDispute(Guid id, string? reason, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(reason) || reason.Trim().Length < 10)
+        {
+            SetError("Please describe the issue in at least 10 characters.");
+            return RedirectToAction(nameof(Detail), new { id });
+        }
+
+        var result = await _bookings.OpenDisputeAsync(id, reason.Trim(), ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+
+        if (result.IsSuccess)
+            SetSuccess("Your dispute has been submitted. Our team will review it shortly.");
+        else
+            SetError(result.Error ?? "Could not open the dispute.");
+
+        return RedirectToAction(nameof(Detail), new { id });
+    }
+
     [HttpPost("accounts/bookings/{id:guid}/pay")]
     [ValidateAntiForgeryToken]
     [RequirePermission(WebPermission.Payment.Create)]

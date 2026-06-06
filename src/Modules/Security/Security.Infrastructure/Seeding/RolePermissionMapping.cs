@@ -79,6 +79,13 @@ public sealed class RolePermissionMapping
             "Permission.Recommendation.Read",
             "Permission.Refund.Read",
             "Permission.Refund.Create",
+            // FE-1A 2026-06-08: booking owner may open a dispute on their OWN Completed
+            // booking (POST /booking/{id}/dispute requires BookingDispute.Create). The
+            // handler + domain enforce owner-only + the 48h post-completion window, so
+            // granting this consumer-wide does not widen blast radius beyond the caller's
+            // own booking. Resolve (BookingDispute.Resolve) is intentionally NOT here —
+            // it reaches Admin/SuperAdmin/Owner only, via their full permission sweep.
+            "Permission.BookingDispute.Create",
             // PAY-0 2026-06-04: User must initiate + read payments for their own bookings
             // (POST /payments/initiate requires Payment.Create; GET /payments/{id} & /my-payments
             // require Payment.Read). Without these, the traveler payment flow 403s.

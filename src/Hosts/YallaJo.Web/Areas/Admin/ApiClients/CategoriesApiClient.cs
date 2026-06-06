@@ -10,14 +10,21 @@ public sealed class CategoriesApiClient
     private readonly IApiClient _api;
     public CategoriesApiClient(IApiClient api) => _api = api;
 
-    // Admin list (all categories including inactive) — ?isActive=false
+    // Admin list. Uses the permission-gated admin route, which (unlike the public
+    // anonymous route) honours the activeOnly flag and can return inactive categories.
+    // activeOnly defaults to false server-side, so includeInactive=true sends nothing;
+    // includeInactive=false explicitly requests active-only.
     public Task<ApiResult<List<CategoryItemResponse>>> GetCategoriesAsync(
         bool includeInactive, CancellationToken ct = default)
         => _api.GetAsync<List<CategoryItemResponse>>(
-            $"/api/v1/content-core/categories?isActive={(includeInactive ? "false" : "true")}", ct);
+            includeInactive
+                ? "/api/v1/content-core/categories/admin"
+                : "/api/v1/content-core/categories/admin?activeOnly=true", ct);
 
+    // Admin detail. Uses the admin route, which can return inactive categories
+    // (includeInactive defaults to true server-side).
     public Task<ApiResult<CategoryItemResponse>> GetAsync(Guid id, CancellationToken ct = default)
-        => _api.GetAsync<CategoryItemResponse>($"/api/v1/content-core/categories/{id}", ct);
+        => _api.GetAsync<CategoryItemResponse>($"/api/v1/content-core/categories/admin/{id}", ct);
 
     public Task<ApiResult> CreateAsync(CreateCategoryRequest request, CancellationToken ct = default)
         => _api.PostAsync("/api/v1/content-core/categories", request, ct);

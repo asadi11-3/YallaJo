@@ -15,8 +15,26 @@ public sealed class TourBookingDetailResponse
     public DateTime? PaymentExpiresAt { get; init; }
     public string? SpecialRequests { get; init; }
     public TourBookingCancellationResponse? Cancellation { get; init; }
+    public TourBookingCompletionResponse? Completion { get; init; }
+    public TourBookingDisputeResponse? Dispute { get; init; }
     public DateTime CreatedAt { get; init; }
     public DateTime? UpdatedAt { get; init; }
+}
+
+public sealed class TourBookingCompletionResponse
+{
+    public DateTime CompletedAt { get; init; }
+    public Guid? CompletedByUserId { get; init; }
+}
+
+public sealed class TourBookingDisputeResponse
+{
+    public DateTime DisputedAt { get; init; }
+    public string Reason { get; init; } = string.Empty;
+    public Guid? OpenedByUserId { get; init; }
+    public DateTime? ResolvedAt { get; init; }
+    public string? ResolutionNotes { get; init; }
+    public Guid? ResolvedByAdminId { get; init; }
 }
 
 public sealed class TourBookingPricingResponse

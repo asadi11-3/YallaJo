@@ -44,6 +44,23 @@ public sealed class BookingDetailVm
     public string? CancellationReason { get; init; }
     public DateTime? CancelledAt { get; init; }
     public decimal? RefundAmount { get; init; }
+
+    // ── Dispute lifecycle (FE-1A) ──────────────────────────────────────────────
+    public DateTime? CompletedAt { get; init; }
+
+    /// <summary>
+    /// True when the owner may open a dispute: booking is Completed AND completed
+    /// within the past 48 hours AND not already disputed. Defensive only — the
+    /// backend re-enforces both the owner check and the window.
+    /// </summary>
+    public bool IsDisputable { get; init; }
+
+    public bool IsDisputed { get; init; }
+    public bool IsResolved { get; init; }
+    public DateTime? DisputedAt { get; init; }
+    public string? DisputeReason { get; init; }
+    public DateTime? ResolvedAt { get; init; }
+    public string? ResolutionNotes { get; init; }
 }
 
 public sealed class BookingLineItemVm

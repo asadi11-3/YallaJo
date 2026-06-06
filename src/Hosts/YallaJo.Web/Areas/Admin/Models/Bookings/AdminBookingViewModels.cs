@@ -11,7 +11,7 @@ public sealed class AdminBookingFiltersVm
     public string? UserId { get; init; }
 
     public static readonly IReadOnlyList<string> StatusOptions =
-        ["AwaitingPayment", "PendingConfirmation", "Confirmed", "Completed", "Cancelled", "Rejected", "Refunded", "NoShow"];
+        ["AwaitingPayment", "PendingConfirmation", "Confirmed", "Completed", "Disputed", "Resolved", "Cancelled", "Rejected", "Refunded", "NoShow"];
 }
 
 public sealed class AdminBookingsIndexVm
@@ -69,6 +69,14 @@ public sealed class AdminBookingDetailsVm
     public DateTime? CancelledAt { get; init; }
     public string? CancellationReason { get; init; }
     public decimal? RefundAmount { get; init; }
+
+    // ── Dispute lifecycle (FE-1A-2 / FE-1A-3) ──────────────────────────────────
+    public bool IsDisputed { get; init; }
+    public bool IsResolved { get; init; }
+    public DateTime? DisputedAt { get; init; }
+    public string? DisputeReason { get; init; }
+    public DateTime? ResolvedAt { get; init; }
+    public string? ResolutionNotes { get; init; }
 }
 
 public sealed class AdminBookingLineVm

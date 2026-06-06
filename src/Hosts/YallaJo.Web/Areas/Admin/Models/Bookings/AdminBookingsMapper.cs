@@ -61,6 +61,13 @@ public static class AdminBookingsMapper
         CancelledAt        = d.Cancellation?.CancelledAt,
         CancellationReason = d.Cancellation?.Reason,
         RefundAmount       = d.Cancellation?.RefundAmount,
+
+        IsDisputed         = string.Equals(d.Status, "Disputed", StringComparison.OrdinalIgnoreCase),
+        IsResolved         = string.Equals(d.Status, "Resolved", StringComparison.OrdinalIgnoreCase),
+        DisputedAt         = d.Dispute?.DisputedAt,
+        DisputeReason      = d.Dispute?.Reason,
+        ResolvedAt         = d.Dispute?.ResolvedAt,
+        ResolutionNotes    = d.Dispute?.ResolutionNotes,
     };
 
     // ── Helpers ──────────────────────────────────────────────────────────────────────
@@ -79,6 +86,8 @@ public static class AdminBookingsMapper
         "Completed"           => "bg-primary",
         "AwaitingPayment"     => "bg-warning text-dark",
         "PendingConfirmation" => "bg-info text-dark",
+        "Disputed"            => "bg-warning text-dark",
+        "Resolved"            => "bg-primary",
         "Cancelled"           => "bg-secondary",
         "Rejected"            => "bg-danger",
         "Refunded"            => "bg-dark",

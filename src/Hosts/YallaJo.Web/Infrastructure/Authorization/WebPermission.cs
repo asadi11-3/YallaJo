@@ -287,6 +287,16 @@ public static class WebPermission
         public const string Reject   = "Permission.TourBooking.Reject";
     }
 
+    // ── BookingDispute (FE-1A — owner opens / admin resolves a booking dispute) ──
+    // Mirror the Booking backend permissions (Permission.BookingDispute.{Action}).
+    // Create is granted to consumer roles (open own dispute); Resolve is admin-only.
+    public static class BookingDispute
+    {
+        public const string Create  = "Permission.BookingDispute.Create";
+        public const string Resolve = "Permission.BookingDispute.Resolve";
+        public const string Read    = "Permission.BookingDispute.Read";
+    }
+
     // ── JoinRequest (group-booking join queue) ────────────────────────────────
     public static class JoinRequest
     {

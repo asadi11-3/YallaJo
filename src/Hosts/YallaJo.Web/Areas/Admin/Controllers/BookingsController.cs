@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using YallaJo.Web.Areas.Admin.Facades;
 using YallaJo.Web.Areas.Admin.Models.Bookings;
 using YallaJo.Web.Infrastructure.Authorization;
+using YallaJo.Web.Infrastructure.Identity;
 using YallaJo.Web.Infrastructure.Mvc;
 
 namespace YallaJo.Web.Areas.Admin.Controllers;
@@ -13,10 +14,16 @@ namespace YallaJo.Web.Areas.Admin.Controllers;
 public sealed class BookingsController : BaseController
 {
     private const int DefaultPageSize = 20;
+    private const string WarningKey = "Warning";
 
     private readonly AdminBookingsFacade _facade;
+    private readonly ICurrentUser _currentUser;
 
-    public BookingsController(AdminBookingsFacade facade) => _facade = facade;
+    public BookingsController(AdminBookingsFacade facade, ICurrentUser currentUser)
+    {
+        _facade = facade;
+        _currentUser = currentUser;
+    }
 
     // ── GET /admin/bookings ─────────────────────────────────────────────────────────
     [HttpGet("admin/bookings")]
@@ -86,5 +93,89 @@ public sealed class BookingsController : BaseController
 
         SetFlash(result, "Booking force-refunded.", "Could not force-refund the booking.");
         return RedirectToAction(nameof(Index));
+    }
+
+    // ── POST /admin/bookings/{id}/resolve-dispute ─────────────────────────────────────
+    // FE-1A-2 (resolve) + FE-1A-3 (optional refund). The refund leg is gated separately:
+    // it requires Permission.Refund.Create and is only attempted when the admin opts in.
+    [HttpPost("admin/bookings/{id:guid}/resolve-dispute")]
+    [ValidateAntiForgeryToken]
+    [RequirePermission(WebPermission.BookingDispute.Resolve)]
+    public async Task<IActionResult> ResolveDispute(
+        Guid id,
+        string? resolutionNotes,
+        bool issueRefund,
+        Guid? paymentId,
+        decimal? refundAmount,
+        string? refundCurrency,
+        CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(resolutionNotes) || resolutionNotes.Trim().Length < 10)
+        {
+            SetError("Resolution notes are required (at least 10 characters).");
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
+        RefundRequest? refund = null;
+        if (issueRefund)
+        {
+            // Financial action — enforce the dedicated permission here since the
+            // controller-level attribute only covers BookingDispute.Resolve.
+            if (!_currentUser.HasPermission(WebPermission.Refund.Create))
+            {
+                SetError("You don't have permission to issue refunds.");
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
+            if (paymentId is null || paymentId == Guid.Empty)
+            {
+                SetError("A payment ID is required to issue a refund.");
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
+            if (refundAmount is not { } amount || amount <= 0m)
+            {
+                SetError("A positive refund amount is required.");
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
+            if (string.IsNullOrWhiteSpace(refundCurrency))
+            {
+                SetError("A refund currency is required.");
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
+            refund = new RefundRequest(
+                paymentId.Value,
+                amount,
+                refundCurrency.Trim(),
+                $"Dispute resolution: {resolutionNotes.Trim()}");
+        }
+
+        var outcome = await _facade.ResolveDisputeAsync(id, resolutionNotes.Trim(), refund, ct);
+
+        if (outcome.RequireSignOut) return RedirectToLogin();
+
+        switch (outcome.Kind)
+        {
+            case ResolveDisputeOutcome.OutcomeKind.ResolvedNoRefund:
+                SetSuccess("Dispute resolved.");
+                break;
+            case ResolveDisputeOutcome.OutcomeKind.ResolvedAndRefunded:
+                SetSuccess("Dispute resolved and refund issued.");
+                break;
+            case ResolveDisputeOutcome.OutcomeKind.ResolvedButRefundFailed:
+                // Partial failure — the dispute is Resolved but the money did NOT move.
+                TempData[WarningKey] =
+                    $"The dispute was resolved, but the refund failed because {outcome.Message} "
+                    + "Please retry the refund manually.";
+                break;
+            case ResolveDisputeOutcome.OutcomeKind.ResolveFailed:
+            default:
+                SetError(outcome.Message ?? "Could not resolve the dispute.");
+                break;
+        }
+
+        return RedirectToAction(nameof(Details), new { id });
     }
 }

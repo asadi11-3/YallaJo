@@ -157,6 +157,70 @@ public sealed class RolePermissionMappingTests
         user.Should().NotContain("Permission.JoinRequest.Approve");
     }
 
+    // ── FE-1A: BookingDispute — Create is consumer-wide, Resolve is admin-only ──
+
+    private static RolePermissionMapping BuildBookingDisputeCatalog() =>
+        Build(
+            P("BookingDispute", AppAction.Create,  PermissionGroup.BookingOperations),
+            P("BookingDispute", AppAction.Resolve, PermissionGroup.BookingOperations),
+            P("BookingDispute", AppAction.Read,    PermissionGroup.BookingOperations));
+
+    [Fact]
+    public void BookingDispute_Create_is_granted_to_consumer_roles()
+    {
+        var mapping = BuildBookingDisputeCatalog();
+
+        foreach (var role in new[]
+                 {
+                     AppRoles.User, AppRoles.Provider, AppRoles.TourGuide, AppRoles.Creator,
+                 })
+        {
+            mapping.GetPermissionsForRole(role)
+                .Should().Contain("Permission.BookingDispute.Create",
+                    $"role {role} must be able to open a dispute on its own completed booking (FE-1A)");
+        }
+    }
+
+    [Fact]
+    public void BookingDispute_Resolve_is_not_granted_to_consumer_roles()
+    {
+        var mapping = BuildBookingDisputeCatalog();
+
+        foreach (var role in new[]
+                 {
+                     AppRoles.User, AppRoles.Provider, AppRoles.TourGuide, AppRoles.Creator,
+                 })
+        {
+            mapping.GetPermissionsForRole(role)
+                .Should().NotContain("Permission.BookingDispute.Resolve",
+                    $"role {role} must NOT be able to resolve disputes (admin-only)");
+        }
+    }
+
+    [Fact]
+    public void BookingDispute_Resolve_is_granted_to_Admin_SuperAdmin_Owner()
+    {
+        var mapping = BuildBookingDisputeCatalog();
+
+        foreach (var role in new[] { AppRoles.Admin, AppRoles.SuperAdmin, AppRoles.Owner })
+        {
+            var perms = mapping.GetPermissionsForRole(role);
+            perms.Should().Contain("Permission.BookingDispute.Resolve",
+                $"role {role} resolves disputes via its full permission sweep");
+            perms.Should().Contain("Permission.BookingDispute.Create",
+                $"role {role} also receives Create via its full sweep");
+        }
+    }
+
+    [Fact]
+    public void BookingDispute_permissions_not_granted_to_Guest()
+    {
+        var guest = BuildBookingDisputeCatalog().GetPermissionsForRole(AppRoles.Guest);
+
+        guest.Should().NotContain("Permission.BookingDispute.Create");
+        guest.Should().NotContain("Permission.BookingDispute.Resolve");
+    }
+
     // ── P1: Provider provisioning — ProviderSelf + Consumer, no admin "Any" ───
 
     [Fact]

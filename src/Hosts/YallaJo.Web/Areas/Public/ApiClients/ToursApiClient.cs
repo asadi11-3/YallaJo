@@ -24,7 +24,7 @@ public sealed class ToursApiClient
         => _api.GetAsync<List<CategoryResponse>>("/api/v1/content-core/categories", ct);
 
     public Task<ApiResult<TourDetailResponse>> GetTourBySlugAsync(string slug, CancellationToken ct = default)
-        => _api.GetAsync<TourDetailResponse>($"/api/v1/tours/slug/{Uri.EscapeDataString(slug)}", ct);
+        => _api.GetAsync<TourDetailResponse>($"/api/v1/tours/by-slug/{Uri.EscapeDataString(slug)}", ct);
 
     public Task<ApiResult<List<TourScheduleResponse>>> GetSchedulesAsync(Guid id, CancellationToken ct = default)
         => _api.GetAsync<List<TourScheduleResponse>>($"/api/v1/tours/{id}/schedules?activeOnly=true", ct);
