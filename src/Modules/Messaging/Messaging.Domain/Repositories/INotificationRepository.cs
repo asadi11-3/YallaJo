@@ -20,6 +20,14 @@ public interface INotificationRepository : IRepository<Notification, Guid>
 
     Task<int> GetUnreadCountByUserAsync(Guid userId, CancellationToken ct = default);
 
+    /// <summary>
+    /// Loads a single notification as a CHANGE-TRACKED entity so that mutations
+    /// (mark-read, soft-delete) are persisted by SaveChangesAsync. Use only in
+    /// command handlers; read/query flows must keep using the no-tracking methods.
+    /// Honors the global !IsDeleted query filter.
+    /// </summary>
+    Task<Notification?> GetByIdForUpdateAsync(Guid id, CancellationToken ct = default);
+
     /// <summary>Batch mark all unread as read for a user.</summary>
     Task MarkAllAsReadByUserAsync(Guid userId, CancellationToken ct = default);
 

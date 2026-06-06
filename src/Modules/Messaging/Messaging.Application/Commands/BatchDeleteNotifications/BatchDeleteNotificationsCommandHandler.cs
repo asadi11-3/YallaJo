@@ -23,7 +23,7 @@ internal sealed class BatchDeleteNotificationsCommandHandler(
 
         foreach (var id in request.NotificationIds.Distinct())
         {
-            var notification = await notificationRepository.GetByIdAsync(id, cancellationToken);
+            var notification = await notificationRepository.GetByIdForUpdateAsync(id, cancellationToken);
             if (notification is null)
                 return Result.Failure(new Error("Notification.NotFound", "Notification not found."), Outcome.NotFound);
 

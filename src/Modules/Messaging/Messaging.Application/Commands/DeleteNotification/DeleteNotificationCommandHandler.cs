@@ -15,7 +15,7 @@ internal sealed class DeleteNotificationCommandHandler(
 {
     public async Task<Result> Handle(DeleteNotificationCommand request, CancellationToken cancellationToken)
     {
-        var notification = await notificationRepository.GetByIdAsync(request.NotificationId, cancellationToken);
+        var notification = await notificationRepository.GetByIdForUpdateAsync(request.NotificationId, cancellationToken);
         if (notification is null)
             return Result.Failure(new Error("Notification.NotFound", "Notification not found."), Outcome.NotFound);
 
