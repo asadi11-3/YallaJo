@@ -1,0 +1,144 @@
+@model YallaJo.Web.Areas.Creator.Models.Preview.PublicProfilePreviewVm
+@using YallaJo.Web.Areas.Creator.Models.Preview
+@{
+    ViewData["Title"] = "Public Profile Preview";
+    var sidebar = ViewBag.Sidebar as YallaJo.Web.Areas.Creator.Shared.CreatorSidebarVm
+                  ?? new YallaJo.Web.Areas.Creator.Shared.CreatorSidebarVm();
+}
+
+<partial name="_CreatorSidebar" model="sidebar" />
+
+<section class="pt-0">
+    <div class="container vstack gap-4">
+        <div class="d-sm-flex justify-content-between align-items-center">
+            <h1 class="fs-4 mb-0"><i class="bi bi-eye me-2"></i>Public Profile Preview</h1>
+        </div>
+
+        @if (Model.State != PreviewState.Active)
+        {
+            <div class="card border">
+                <div class="card-body text-center py-5">
+                    <h5>Public preview unavailable</h5>
+                    <p class="text-body-secondary mb-0">
+                        Your public profile preview will be available once your creator profile is active and approved.
+                    </p>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-info mb-0 small">
+                <i class="bi bi-info-circle me-1"></i>This is a read-only preview of how visitors see your public profile.
+            </div>
+
+            @* ── Public profile header ─────────────────────────────────────── *@
+            <div class="card border">
+                <div class="card-body d-sm-flex align-items-center">
+                    <div class="avatar avatar-xl flex-shrink-0">
+                        <img class="avatar-img rounded-circle border border-white border-3"
+                             src="@(string.IsNullOrWhiteSpace(Model.AvatarUrl) ? Url.Content("~/assets/images/avatar/01.jpg") : Model.AvatarUrl)"
+                             alt="avatar">
+                    </div>
+                    <div class="ms-sm-3 mt-2 mt-sm-0">
+                        <h4 class="mb-1">
+                            @Model.DisplayName
+                            @if (!string.IsNullOrWhiteSpace(Model.TrustTier))
+                            {
+                                <span class="badge text-bg-light ms-1">@Model.TrustTier</span>
+                            }
+                        </h4>
+                        @if (!string.IsNullOrWhiteSpace(Model.Bio))
+                        {
+                            <p class="mb-0 text-body-secondary">@Model.Bio</p>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            @* ── Public metrics ────────────────────────────────────────────── *@
+            <div class="row g-3">
+                <div class="col-6 col-md">
+                    <div class="card card-body border text-center">
+                        <h5 class="mb-0">@Model.ArticleCount</h5><span class="small text-body-secondary">Articles</span>
+                    </div>
+                </div>
+                <div class="col-6 col-md">
+                    <div class="card card-body border text-center">
+                        <h5 class="mb-0">@Model.FollowerCount</h5><span class="small text-body-secondary">Followers</span>
+                    </div>
+                </div>
+                <div class="col-6 col-md">
+                    <div class="card card-body border text-center">
+                        <h5 class="mb-0">@Model.TotalViewCount</h5><span class="small text-body-secondary">Views</span>
+                    </div>
+                </div>
+                <div class="col-6 col-md">
+                    <div class="card card-body border text-center">
+                        <h5 class="mb-0">@Model.TotalReactionCount</h5><span class="small text-body-secondary">Reactions</span>
+                    </div>
+                </div>
+                <div class="col-6 col-md">
+                    <div class="card card-body border text-center">
+                        <h5 class="mb-0">@Model.TotalCommentCount</h5><span class="small text-body-secondary">Comments</span>
+                    </div>
+                </div>
+            </div>
+
+            @* ── Published articles ────────────────────────────────────────── *@
+            <div class="card border">
+                <div class="card-header border-bottom">
+                    <h5 class="card-header-title mb-0">Published Articles</h5>
+                </div>
+                <div class="card-body">
+                    @if (!Model.HasArticles)
+                    {
+                        <p class="text-body-secondary mb-0">No published articles yet.</p>
+                    }
+                    else
+                    {
+                        <ul class="list-group list-group-borderless">
+                            @foreach (var a in Model.Articles)
+                            {
+                                <li class="list-group-item px-0">
+                                    @* Title links to the real public article page (anonymous Content/Blogs/Details). *@
+                                    <a asp-area="Content" asp-controller="Blogs" asp-action="Details" asp-route-slug="@a.Slug"
+                                       class="h6 d-block mb-1">@a.Title</a>
+                                    @if (!string.IsNullOrWhiteSpace(a.Summary))
+                                    {
+                                        <p class="small text-body-secondary mb-1">@a.Summary</p>
+                                    }
+                                    <span class="small text-body-secondary">
+                                        @a.ViewCount view(s)@(a.ReadTimeMinutes is { } rt ? $" · {rt} min read" : "")@(a.PublishedAt is { } p ? $" · {p:d MMM yyyy}" : "")
+                                    </span>
+                                </li>
+                            }
+                        </ul>
+                    }
+                </div>
+            </div>
+
+            @if (Model.Pager.TotalPages > 1)
+            {
+                <nav class="d-flex justify-content-between align-items-center">
+                    <span class="small text-body-secondary">
+                        Page @Model.Pager.PageNumber of @Model.Pager.TotalPages (@Model.Pager.TotalCount total)
+                    </span>
+                    <div class="btn-group">
+                        @if (Model.Pager.HasPreviousPage)
+                        {
+                            <a class="btn btn-sm btn-secondary-soft"
+                               asp-area="Creator" asp-controller="Preview" asp-action="Index"
+                               asp-route-page="@(Model.Pager.PageNumber - 1)">Previous</a>
+                        }
+                        @if (Model.Pager.HasNextPage)
+                        {
+                            <a class="btn btn-sm btn-secondary-soft"
+                               asp-area="Creator" asp-controller="Preview" asp-action="Index"
+                               asp-route-page="@(Model.Pager.PageNumber + 1)">Next</a>
+                        }
+                    </div>
+                </nav>
+            }
+        }
+    </div>
+</section>
