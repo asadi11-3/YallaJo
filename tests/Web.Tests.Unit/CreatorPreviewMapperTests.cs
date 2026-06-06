@@ -11,23 +11,22 @@ namespace Web.Tests.Unit;
 /// </summary>
 public sealed class CreatorPreviewMapperTests
 {
+    // Gap 4: the public CreatorProfileResponse no longer carries UserId/Status/
+    // LinkedProviderId/CreatedAt — the backend public DTO never returns them — so the
+    // preview's public-safety guarantee is now enforced at the contract level too.
     private static CreatorProfileResponse PublicProfile() => new()
     {
         Id = Guid.NewGuid(),
-        UserId = Guid.NewGuid(),                 // internal — must NOT surface
         Slug = "jane-creator",
         DisplayName = "Jane Creator",
         Bio = "hello world",
         AvatarUrl = "https://cdn/a.jpg",
         TrustTier = "Trusted",
-        Status = "Active",                       // internal — must NOT surface
         ArticleCount = 7,
         TotalViewCount = 1234,
         TotalReactionCount = 56,
         TotalCommentCount = 12,
         FollowerCount = 89,
-        LinkedProviderId = Guid.NewGuid(),       // internal — must NOT surface
-        CreatedAt = DateTime.UtcNow,             // internal — must NOT surface
     };
 
     private static PaginatedResponse<BlogSummaryResponse> Blogs(params BlogSummaryResponse[] items) => new()
@@ -101,5 +100,17 @@ public sealed class CreatorPreviewMapperTests
         var rowProps = typeof(PreviewArticleRowVm).GetProperties().Select(p => p.Name).ToList();
         rowProps.Should().NotContain("Status");
         rowProps.Should().NotContain("AuthorId");
+    }
+
+    [Fact]
+    public void PublicCreatorProfileResponse_has_no_internal_fields()
+    {
+        // Gap 4: the Web projection of the public creator profile must not even declare
+        // the internal fields the anonymous endpoint no longer returns.
+        var props = typeof(CreatorProfileResponse).GetProperties().Select(p => p.Name).ToHashSet();
+        props.Should().NotContain("UserId");
+        props.Should().NotContain("Status");
+        props.Should().NotContain("LinkedProviderId");
+        props.Should().NotContain("CreatedAt");
     }
 }

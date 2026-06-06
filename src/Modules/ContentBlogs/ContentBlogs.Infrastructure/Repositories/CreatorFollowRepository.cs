@@ -64,4 +64,22 @@ public class CreatorFollowRepository(ContentBlogsDbContext context) : ICreatorFo
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
     }
+
+    public async Task<List<DateTime>> GetFollowerTimestampsAsync(
+        Guid creatorProfileId,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken = default)
+    {
+        // Public-safe (Gap 3 Phase A): projects only CreatedAt — never the
+        // FollowerUserId — so no follower identity can leak through this path.
+        return await context.CreatorFollows
+            .Where(f => f.CreatorProfileId == creatorProfileId)
+            .OrderByDescending(f => f.CreatedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(f => f.CreatedAt)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+    }
 }

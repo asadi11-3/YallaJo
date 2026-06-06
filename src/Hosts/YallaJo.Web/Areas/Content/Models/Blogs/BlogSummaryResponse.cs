@@ -12,4 +12,10 @@ public sealed class BlogSummaryResponse
     public Guid? PlaceId { get; init; }
     public string LanguageCode { get; init; } = string.Empty;
     public bool IsFeatured { get; init; }
+
+    // ── Creator Backend Contract Polish (Gap 1) ─────────────────────────────
+    // The article's lifecycle status (BlogStatus name) for the My Articles list.
+    public string Status { get; init; } = string.Empty;
+    // The language the article was originally written in (resolved server-side).
+    public string? SourceLanguageCode { get; init; }
 }

@@ -32,6 +32,9 @@ public sealed class ArticleImageRowVm
     public string? OriginalFileName { get; init; }
     public int SortOrder { get; init; }
 
+    /// <summary>Whether this image is the current primary image (Gap 2).</summary>
+    public bool IsPrimary { get; init; }
+
     /// <summary>Best display URL: thumbnail if present, else full image.</summary>
     public string DisplayUrl => string.IsNullOrWhiteSpace(ThumbnailUrl) ? Url : ThumbnailUrl!;
 }

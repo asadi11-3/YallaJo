@@ -23,6 +23,16 @@ public sealed class GetEntityAttachmentsQueryHandler(
                 orderBy: q => q.OrderBy(x => x.SortOrder),
                 ct: cancellationToken);
 
+            // Load the EntityImage join to surface primary-image state (Gap 2). The
+            // primary flag lives on EntityImage, not Attachment, so we build a set of
+            // primary AttachmentIds and project it onto each DTO.
+            var entityImages = await attachmentRepository.GetEntityImagesAsync(
+                request.EntityType, request.EntityId, cancellationToken);
+            var primaryAttachmentIds = entityImages
+                .Where(ei => ei.IsPrimary)
+                .Select(ei => ei.AttachmentId)
+                .ToHashSet();
+
             var dtos = attachments.Select(a => new AttachmentDto(
                 a.Id,
                 a.EntityType,
@@ -38,7 +48,8 @@ public sealed class GetEntityAttachmentsQueryHandler(
                 a.DurationSeconds,
                 a.SortOrder,
                 a.UploadedAt,
-                a.UploadedByUserId)).ToList();
+                a.UploadedByUserId,
+                IsPrimary: primaryAttachmentIds.Contains(a.Id))).ToList();
 
             logger.LogDebug(
                 "GetEntityAttachments: {Count} attachments for {EntityType}/{EntityId}",

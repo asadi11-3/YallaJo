@@ -30,6 +30,7 @@ public static class ArticleImagesMapper
                 ThumbnailUrl     = i.ThumbnailUrl,
                 OriginalFileName = i.OriginalFileName,
                 SortOrder        = i.SortOrder,
+                IsPrimary        = i.IsPrimary,
             })
             .ToList();
 

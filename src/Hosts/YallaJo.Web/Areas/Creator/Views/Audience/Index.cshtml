@@ -62,6 +62,10 @@
                                              src="@Url.Content("~/assets/images/avatar/01.jpg")" alt="follower">
                                     </div>
                                     <span class="ms-3">@f.Label</span>
+                                    @if (f.FollowedAt is { } followedAt)
+                                    {
+                                        <span class="ms-auto small text-body-secondary">Followed @followedAt.ToString("d MMM yyyy")</span>
+                                    }
                                 </li>
                             }
                         </ul>

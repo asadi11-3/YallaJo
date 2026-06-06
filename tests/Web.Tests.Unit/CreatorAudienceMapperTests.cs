@@ -5,10 +5,10 @@ using YallaJo.Web.Areas.Creator.Models.Dashboard;
 namespace Web.Tests.Unit;
 
 /// <summary>
-/// Pure-mapper coverage for the CCD-7 Audience page: profile state → VM state,
-/// authoritative follower count, and the bare follower-GUID array → anonymous
+/// Pure-mapper coverage for the Audience page: profile state → VM state, authoritative
+/// follower count, and the public-safe follower summaries (Gap 3 Phase A) → anonymous
 /// ordinal rows with page-aware positions and the "full page ⇒ has next" heuristic.
-/// <para>CRITICAL: asserts the raw follower GUIDs never appear in any rendered VM field.</para>
+/// <para>CRITICAL: asserts no follower identity (user id) appears in any rendered VM field.</para>
 /// </summary>
 public sealed class CreatorAudienceMapperTests
 {
@@ -23,7 +23,21 @@ public sealed class CreatorAudienceMapperTests
         FollowerCount = followerCount,
     };
 
-    private static List<Guid> Ids(int n) => Enumerable.Range(0, n).Select(_ => Guid.NewGuid()).ToList();
+    /// <summary>
+    /// Builds <paramref name="n"/> public-safe follower summaries with server-style
+    /// page-aware ordinals (Gap 3 Phase A) — no identity, just Ordinal + FollowedAt.
+    /// </summary>
+    private static List<FollowerSummaryResponse> Followers(int n, int page = 1, int pageSize = 20)
+    {
+        var start = ((page - 1) * pageSize) + 1;
+        return Enumerable.Range(0, n)
+            .Select(i => new FollowerSummaryResponse
+            {
+                Ordinal    = start + i,
+                FollowedAt = DateTime.UtcNow.AddDays(-i),
+            })
+            .ToList();
+    }
 
     [Fact]
     public void ToVm_NullProfile_IsNoProfileState()
@@ -38,7 +52,7 @@ public sealed class CreatorAudienceMapperTests
     [InlineData("Deactivated")]
     public void ToVm_NonActiveProfile_IsUnavailable(string status)
     {
-        var vm = CreatorAudienceMapper.ToVm(Profile(status, followerCount: 5), Ids(5), page: 1);
+        var vm = CreatorAudienceMapper.ToVm(Profile(status, followerCount: 5), Followers(5), page: 1);
 
         vm.State.Should().Be(AudienceState.Unavailable);
         vm.StatusLabel.Should().Be(status);
@@ -63,7 +77,7 @@ public sealed class CreatorAudienceMapperTests
     public void ToVm_ActiveProfile_UsesAuthoritativeFollowerCountFromProfile()
     {
         // Count comes from /profile/mine, not the followers array length.
-        var vm = CreatorAudienceMapper.ToVm(Profile("Active", followerCount: 37), Ids(20), page: 1, pageSize: 20);
+        var vm = CreatorAudienceMapper.ToVm(Profile("Active", followerCount: 37), Followers(20), page: 1, pageSize: 20);
 
         vm.FollowerCount.Should().Be(37);
         vm.Followers.Should().HaveCount(20);
@@ -72,7 +86,7 @@ public sealed class CreatorAudienceMapperTests
     [Fact]
     public void ToVm_FullPage_InfersHasNextPage()
     {
-        var vm = CreatorAudienceMapper.ToVm(Profile("Active", 100), Ids(20), page: 1, pageSize: 20);
+        var vm = CreatorAudienceMapper.ToVm(Profile("Active", 100), Followers(20), page: 1, pageSize: 20);
 
         vm.Pager.HasNextPage.Should().BeTrue("a full page of results implies more may exist");
     }
@@ -80,7 +94,7 @@ public sealed class CreatorAudienceMapperTests
     [Fact]
     public void ToVm_PartialPage_DisablesNextPage()
     {
-        var vm = CreatorAudienceMapper.ToVm(Profile("Active", 5), Ids(5), page: 1, pageSize: 20);
+        var vm = CreatorAudienceMapper.ToVm(Profile("Active", 5), Followers(5), page: 1, pageSize: 20);
 
         vm.Pager.HasNextPage.Should().BeFalse("fewer than a full page means this is the last page");
     }
@@ -88,7 +102,7 @@ public sealed class CreatorAudienceMapperTests
     [Fact]
     public void ToVm_Page2_OrdinalsArePageAware()
     {
-        var vm = CreatorAudienceMapper.ToVm(Profile("Active", 100), Ids(20), page: 2, pageSize: 20);
+        var vm = CreatorAudienceMapper.ToVm(Profile("Active", 100), Followers(20, page: 2, pageSize: 20), page: 2, pageSize: 20);
 
         vm.Pager.PageNumber.Should().Be(2);
         vm.Pager.HasPreviousPage.Should().BeTrue();
@@ -109,16 +123,19 @@ public sealed class CreatorAudienceMapperTests
     }
 
     [Fact]
-    public void ToVm_NeverExposesRawFollowerGuids()
+    public void ToVm_NeverExposesFollowerIdentity()
     {
-        var ids = Ids(20);
-        var vm = CreatorAudienceMapper.ToVm(Profile("Active", 20), ids, page: 1, pageSize: 20);
+        var vm = CreatorAudienceMapper.ToVm(Profile("Active", 20), Followers(20), page: 1, pageSize: 20);
 
-        // The only follower-derived field is the ordinal Label; no GUID may leak.
+        // Gap 3 Phase A: the row VM carries only an ordinal label + followed-at date.
+        // The row type must not expose any identity-bearing member (UserId/Name/Avatar).
+        var rowProps = typeof(AudienceFollowerRowVm).GetProperties().Select(p => p.Name).ToHashSet();
+        rowProps.Should().NotContain("UserId");
+        rowProps.Should().NotContain("FollowerUserId");
+        rowProps.Should().NotContain("DisplayName");
+        rowProps.Should().NotContain("AvatarUrl");
+
         foreach (var row in vm.Followers)
-        {
-            foreach (var id in ids)
-                row.Label.Should().NotContain(id.ToString());
-        }
+            row.Label.Should().StartWith("Follower #");
     }
 }

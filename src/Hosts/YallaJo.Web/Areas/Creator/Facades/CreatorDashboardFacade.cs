@@ -59,11 +59,15 @@ public sealed class CreatorDashboardFacade
     {
         try
         {
-            var result = await _blogs.ListMyBlogsAsync(ct).ConfigureAwait(false);
-            if (result is not { IsSuccess: true, Data: { } blogs })
+            // Paginated my-blogs contract (Gap 5); Status now real (Gap 1). Fetch the
+            // first page sized to the recent-articles count.
+            var result = await _blogs
+                .ListMyBlogsAsync(page: 1, pageSize: RecentArticlesCount, ct: ct)
+                .ConfigureAwait(false);
+            if (result is not { IsSuccess: true, Data: { } page })
                 return [];
 
-            return blogs
+            return page.Items
                 .OrderByDescending(b => b.PublishedAt ?? DateTime.MinValue)
                 .Take(RecentArticlesCount)
                 .Select(b => new CreatorDashboardArticleVm

@@ -68,7 +68,12 @@ public sealed class ListBlogsQueryHandler(
                         blog.PlaceId,
                         resolvedLanguageCode,
                         blog.FeaturedAt != null
-                            && (blog.FeaturedUntil == null || blog.FeaturedUntil > now)),
+                            && (blog.FeaturedUntil == null || blog.FeaturedUntil > now),
+                        // Public list shows only Published blogs (see filter below); the
+                        // creator-facing Status/SourceLanguageCode (Gap 1) are not projected
+                        // here. Pass explicit values — expression trees disallow optional args.
+                        blog.Status.ToString(),
+                        null),
                     filter: blog => blog.Status == BlogStatus.Published
                         && (request.PlaceId == null || blog.PlaceId == request.PlaceId)
                         && (featuredFilter == null

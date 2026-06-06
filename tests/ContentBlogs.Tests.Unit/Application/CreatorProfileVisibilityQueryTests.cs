@@ -1,4 +1,5 @@
 using ContentBlogs.Application.Queries.Blog.GetCreatorBlogsBySlug;
+using ContentBlogs.Application.Queries.Creator.Dtos;
 using ContentBlogs.Application.Queries.Creator.GetCreatorProfileBySlug;
 using ContentBlogs.Domain.Entities;
 using ContentBlogs.Domain.Entities.Creators;
@@ -56,7 +57,31 @@ public sealed class CreatorProfileVisibilityQueryTests
 
         result.IsSuccess.Should().BeTrue();
         result.Value!.Slug.Should().Be("active-creator");
-        result.Value.Status.Should().Be(CreatorProfileStatus.Active);
+        // Gap 4: the by-slug endpoint now returns the public-safe PublicCreatorProfileDto
+        // (only an Active profile is ever returned, so there is no Status field to leak).
+        result.Value.DisplayName.Should().NotBeNullOrWhiteSpace();
+    }
+
+    [Fact]
+    public async Task Public_profile_dto_does_not_expose_internal_fields()
+    {
+        // Gap 4: the public-safe PublicCreatorProfileDto must not carry UserId, internal
+        // Status, LinkedProviderId, or CreatedAt. Asserted at the type level (compile-time
+        // contract) so the privacy guarantee cannot regress unnoticed.
+        var publicProps = typeof(PublicCreatorProfileDto)
+            .GetProperties()
+            .Select(p => p.Name)
+            .ToHashSet(StringComparer.Ordinal);
+
+        publicProps.Should().NotContain("UserId");
+        publicProps.Should().NotContain("Status");
+        publicProps.Should().NotContain("LinkedProviderId");
+        publicProps.Should().NotContain("CreatedAt");
+
+        // …but it must still carry the public-safe display fields.
+        publicProps.Should().Contain("Slug");
+        publicProps.Should().Contain("DisplayName");
+        publicProps.Should().Contain("FollowerCount");
     }
 
     [Fact]

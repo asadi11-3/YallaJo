@@ -77,6 +77,7 @@
                         <thead>
                             <tr>
                                 <th>Title</th>
+                                <th>Status</th>
                                 <th>Language</th>
                                 <th>Published</th>
                                 <th class="text-end">Views</th>
@@ -92,9 +93,19 @@
                                         <span class="fw-semibold d-block">@a.Title</span>
                                         <span class="small text-body-secondary">/@a.Slug</span>
                                     </td>
-                                    @* Language is not returned by my-blogs (BlogSummaryDto omits it;
-                                       the API hard-codes "default"), so we never show a fake value. *@
-                                    <td>—</td>
+                                    @* Real status from my-blogs (BlogSummaryDto.Status, Gap 1). *@
+                                    <td>
+                                        @if (!string.IsNullOrWhiteSpace(a.Status))
+                                        {
+                                            <span class="badge text-bg-light">@a.Status</span>
+                                        }
+                                        else
+                                        {
+                                            <span>—</span>
+                                        }
+                                    </td>
+                                    @* Real source language code from my-blogs (Gap 1); never faked. *@
+                                    <td>@(string.IsNullOrWhiteSpace(a.SourceLanguageCode) ? "—" : a.SourceLanguageCode)</td>
                                     <td>@(a.PublishedAt is { } p ? p.ToString("d MMM yyyy") : "—")</td>
                                     <td class="text-end">@a.ViewCount</td>
                                     <td class="text-end">@(a.ReadTimeMinutes is { } rt ? $"{rt} min" : "—")</td>

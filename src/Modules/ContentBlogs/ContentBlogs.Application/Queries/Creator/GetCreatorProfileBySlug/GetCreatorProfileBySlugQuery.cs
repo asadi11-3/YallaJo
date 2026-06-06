@@ -5,7 +5,7 @@ using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 namespace ContentBlogs.Application.Queries.Creator.GetCreatorProfileBySlug;
 
 public sealed record GetCreatorProfileBySlugQuery(string Slug)
-    : IQuery<CreatorProfileDto>, ICacheableQuery
+    : IQuery<PublicCreatorProfileDto>, ICacheableQuery
 {
     public string CacheKey => ContentBlogsCacheKeys.CreatorProfileBySlug(Slug);
     public TimeSpan? CacheDuration => TimeSpan.FromMinutes(10);

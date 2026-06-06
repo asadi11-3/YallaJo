@@ -40,6 +40,12 @@ public sealed class MyArticleRowVm
     public DateTime? PublishedAt { get; init; }
     public int ViewCount { get; init; }
     public int? ReadTimeMinutes { get; init; }
+
+    // ── Creator Backend Contract Polish (Gap 1) ─────────────────────────────
+    /// <summary>The article's lifecycle status (BlogStatus name), e.g. "Draft".</summary>
+    public string Status { get; init; } = string.Empty;
+    /// <summary>The language the article was originally written in (may be null).</summary>
+    public string? SourceLanguageCode { get; init; }
 }
 
 public sealed class ArticlePagerVm

@@ -47,7 +47,7 @@ public sealed class CreatorAudienceFacade
         if (!string.Equals(mine.Status, "Active", StringComparison.OrdinalIgnoreCase))
             return ApiResult<CreatorAudienceVm>.Ok(CreatorAudienceMapper.Unavailable(mine.Status));
 
-        // 3. Active → fetch the current page of follower IDs.
+        // 3. Active → fetch the current page of public-safe follower summaries.
         var safePage = Math.Max(1, page);
         var followersResult = await _creator
             .ListFollowersAsync(mine.Id, safePage, PageSize, ct)
@@ -58,9 +58,9 @@ public sealed class CreatorAudienceFacade
 
         // The follower list is supplementary — a failure degrades to the authoritative
         // count with an empty list rather than failing the whole page.
-        var followerIds = followersResult is { IsSuccess: true, Data: { } ids } ? ids : null;
+        var followers = followersResult is { IsSuccess: true, Data: { } list } ? list : null;
 
         return ApiResult<CreatorAudienceVm>.Ok(
-            CreatorAudienceMapper.ToVm(mine, followerIds, safePage, PageSize));
+            CreatorAudienceMapper.ToVm(mine, followers, safePage, PageSize));
     }
 }

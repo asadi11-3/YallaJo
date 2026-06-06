@@ -81,6 +81,9 @@ public static class ContentBlogsCacheKeys
     public const string AdminBlogQueueTag = "admin:blog:queue:tag";
 
     // ── My Blogs (author) Cache Keys ─────────────────────────────────────
-    public static string MyBlogs(Guid userId, int page, int size) => $"cb:my:blogs:{userId}:{page}:{size}";
+    // The key must include every effective query parameter (user, page, size, status)
+    // so different status filters never collide on the same cache entry.
+    public static string MyBlogs(Guid userId, int page, int size, string? status = null) =>
+        $"cb:my:blogs:{userId}:{page}:{size}:{(string.IsNullOrWhiteSpace(status) ? "all" : status.ToLowerInvariant())}";
     public static string MyBlogsTag(Guid userId) => $"my:blogs:{userId}:tag";
 }

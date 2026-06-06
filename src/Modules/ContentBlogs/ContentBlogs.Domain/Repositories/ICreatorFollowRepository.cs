@@ -52,4 +52,15 @@ public interface ICreatorFollowRepository
         int page,
         int pageSize,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Returns the followed-at timestamps for a creator's followers (paginated,
+    /// newest first). Used by the public-safe followers endpoint (Gap 3 Phase A)
+    /// which must never expose follower user IDs.
+    /// </summary>
+    Task<List<DateTime>> GetFollowerTimestampsAsync(
+        Guid creatorProfileId,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken = default);
 }

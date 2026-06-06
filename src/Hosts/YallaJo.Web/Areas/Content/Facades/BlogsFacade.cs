@@ -263,13 +263,15 @@ public sealed class BlogsFacade
 
     public async Task<ApiResult<MyBlogsVm>> GetMyBlogsAsync(CancellationToken ct = default)
     {
-        var result = await _blogs.ListMyBlogsAsync(ct);
+        // Aligned to the paginated my-blogs contract (Gap 5). Status now comes through
+        // for real (Gap 1). This legacy Content view shows the first page only.
+        var result = await _blogs.ListMyBlogsAsync(ct: ct);
 
         if (result.IsUnauthorized) return ApiResult<MyBlogsVm>.ForceSignOut();
         if (!result.IsSuccess || result.Data is null)
             return ApiResult<MyBlogsVm>.Fail(result.StatusCode, result.Error ?? "Could not load your articles.");
 
-        var rows = result.Data
+        var rows = result.Data.Items
             .Select(b => new MyBlogRowVm
             {
                 Id          = b.Id,
@@ -285,8 +287,26 @@ public sealed class BlogsFacade
         return ApiResult<MyBlogsVm>.Ok(new MyBlogsVm { Blogs = rows });
     }
 
-    public Task<ApiResult> SubmitForReviewAsync(Guid id, CancellationToken ct = default)
-        => NormalizeAsync(() => _blogs.SubmitForReviewAsync(id, ct), "Could not submit your article for review.");
+    /// <summary>
+    /// Submits a creator's article for review. The backend requires the article's
+    /// RowVersion (Gap 5 fix): this controller route only carries the id, so we fetch
+    /// the current RowVersion via admin-get, then submit with it.
+    /// </summary>
+    public async Task<ApiResult> SubmitForReviewAsync(Guid id, CancellationToken ct = default)
+    {
+        var prefetch = await _blogs.GetAdminBlogAsync(id, ct);
+        if (prefetch.IsUnauthorized) return ApiResult.ForceSignOut();
+        if (!prefetch.IsSuccess || prefetch.Data is null)
+            return ApiResult.Fail(prefetch.StatusCode, prefetch.Error ?? "Could not load your article to submit.");
+
+        var rowVersion = prefetch.Data.RowVersion;
+        if (string.IsNullOrEmpty(rowVersion))
+            return ApiResult.Fail(409, "Missing version token. Please refresh and try again.");
+
+        return await NormalizeAsync(
+            () => _blogs.SubmitForReviewAsync(id, rowVersion, ct),
+            "Could not submit your article for review.");
+    }
 
     // ---------------------------------------------------------------------
 

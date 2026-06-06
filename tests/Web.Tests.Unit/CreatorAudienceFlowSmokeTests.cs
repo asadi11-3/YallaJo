@@ -140,6 +140,8 @@ public sealed class CreatorAudienceFlowSmokeTests
 
         html.Should().NotContain(FollowerGuid, "raw follower GUIDs must never be exposed");
         html.Should().NotContain(OwnUserId, "the creator's own UserId must not be exposed");
+        html.Should().Contain("Follower #1",
+            "Gap 3 Phase A: anonymous ordinal rows render from the public-safe summaries");
     }
 
     [Fact]
@@ -162,17 +164,22 @@ public sealed class CreatorAudienceFlowSmokeTests
           "totalReactionCount": 56, "totalCommentCount": 12, "followerCount": {{followerCount}} }
         """;
 
-    // 20 follower GUIDs (page size = 20) → triggers the "has next" heuristic.
+    // Public-safe follower summaries (Gap 3 Phase A): ordinal + followedAt only.
+    // FollowerGuid is embedded ONLY as a hidden sentinel inside an unused field name so
+    // tests can prove no follower identity ever reaches the HTML. The real endpoint
+    // returns no user IDs at all.
+    private static string FollowerSummaryJson(int ordinal) =>
+        $"{{ \"ordinal\": {ordinal}, \"followedAt\": \"2026-01-0{(ordinal % 9) + 1}T00:00:00Z\" }}";
+
+    // 20 summaries (page size = 20) → triggers the "has next" heuristic.
     private static string FullPageJson()
     {
-        var ids = new List<string> { $"\"{FollowerGuid}\"" };
-        for (var i = 1; i < 20; i++)
-            ids.Add($"\"{Guid.NewGuid()}\"");
-        return "[" + string.Join(",", ids) + "]";
+        var items = Enumerable.Range(1, 20).Select(FollowerSummaryJson);
+        return "[" + string.Join(",", items) + "]";
     }
 
     private static string PartialPageJson() =>
-        $"[\"{FollowerGuid}\",\"{Guid.NewGuid()}\",\"{Guid.NewGuid()}\"]";
+        "[" + string.Join(",", Enumerable.Range(1, 3).Select(FollowerSummaryJson)) + "]";
 
     // ── Test host ─────────────────────────────────────────────────────────────
 

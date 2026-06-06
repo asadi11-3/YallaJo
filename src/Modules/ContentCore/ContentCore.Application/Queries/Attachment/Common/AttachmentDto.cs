@@ -17,4 +17,9 @@ public sealed record AttachmentDto(
     int? DurationSeconds,
     int SortOrder,
     DateTime UploadedAt,
-    Guid UploadedByUserId);
+    Guid UploadedByUserId,
+    // ── Creator Backend Contract Polish (Gap 2) — appended, optional ─────────
+    // Whether this attachment is the primary image for its entity, sourced from
+    // the EntityImage join (EntityImage.IsPrimary). Defaults to false so existing
+    // positional constructions (e.g. GetAttachmentById, Tours) remain compatible.
+    bool IsPrimary = false);

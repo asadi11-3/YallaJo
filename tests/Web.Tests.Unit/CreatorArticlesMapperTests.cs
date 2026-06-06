@@ -33,7 +33,7 @@ public sealed class CreatorArticlesMapperTests
     // ── List mapping ───────────────────────────────────────────────────────────
 
     [Fact]
-    public void ToListVm_maps_rows_and_pager_without_any_status_field()
+    public void ToListVm_maps_rows_with_real_status_and_source_language()
     {
         var page = new PaginatedResponse<BlogSummaryResponse>
         {
@@ -44,6 +44,7 @@ public sealed class CreatorArticlesMapperTests
                     Id = Guid.NewGuid(), Slug = "a", Title = "A",
                     PublishedAt = new DateTime(2026, 1, 2, 0, 0, 0, DateTimeKind.Utc),
                     ViewCount = 10, ReadTimeMinutes = 4,
+                    Status = "Draft", SourceLanguageCode = "en",
                 },
             ],
             PageNumber = 2, PageSize = 20, TotalCount = 25, TotalPages = 2,
@@ -61,9 +62,10 @@ public sealed class CreatorArticlesMapperTests
         vm.Pager.HasPreviousPage.Should().BeTrue();
         vm.Pager.HasNextPage.Should().BeFalse();
 
-        // MyArticleRowVm must NOT carry a status (backend summary has none → no fake data).
-        typeof(MyArticleRowVm).GetProperty("Status").Should().BeNull(
-            "the list row must not invent a status the backend doesn't provide");
+        // Gap 1: the list row now carries the real status + source language (no fakery —
+        // these come straight from the backend my-blogs summary).
+        vm.Articles[0].Status.Should().Be("Draft");
+        vm.Articles[0].SourceLanguageCode.Should().Be("en");
     }
 
     [Fact]

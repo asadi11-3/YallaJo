@@ -11,9 +11,9 @@ namespace ContentBlogs.Application.Queries.Creator.GetCreatorProfileBySlug;
 public sealed class GetCreatorProfileBySlugQueryHandler(
     ICreatorProfileRepository profileRepository,
     ILogger<GetCreatorProfileBySlugQueryHandler> logger)
-    : IQueryHandler<GetCreatorProfileBySlugQuery, CreatorProfileDto>
+    : IQueryHandler<GetCreatorProfileBySlugQuery, PublicCreatorProfileDto>
 {
-    public async Task<Result<CreatorProfileDto>> Handle(
+    public async Task<Result<PublicCreatorProfileDto>> Handle(
         GetCreatorProfileBySlugQuery request,
         CancellationToken cancellationToken)
     {
@@ -25,32 +25,30 @@ public sealed class GetCreatorProfileBySlugQueryHandler(
 
             if (profile is null || profile.Status != CreatorProfileStatus.Active)
             {
-                return Result.Failure<CreatorProfileDto>(
+                return Result.Failure<PublicCreatorProfileDto>(
                     CreatorProfileErrors.NotFound, Outcome.NotFound);
             }
 
-            var dto = new CreatorProfileDto(
+            // Public-safe projection (Gap 4): never expose UserId, internal Status,
+            // LinkedProviderId, or CreatedAt on this anonymous endpoint.
+            var dto = new PublicCreatorProfileDto(
                 profile.Id,
-                profile.UserId,
                 profile.Slug,
                 profile.DisplayName,
                 profile.Bio,
                 profile.AvatarUrl,
                 profile.TrustTier,
-                profile.Status,
                 profile.ArticleCount,
                 profile.TotalViewCount,
                 profile.TotalReactionCount,
                 profile.TotalCommentCount,
-                profile.FollowerCount,
-                profile.LinkedProviderId,
-                profile.CreatedAt);
+                profile.FollowerCount);
 
-            return Result<CreatorProfileDto>.Success(dto);
+            return Result<PublicCreatorProfileDto>.Success(dto);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
-            return Result.Failure<CreatorProfileDto>(
+            return Result.Failure<PublicCreatorProfileDto>(
                 new Error("Request.Cancelled", "The request was cancelled."),
                 Outcome.Canceled);
         }

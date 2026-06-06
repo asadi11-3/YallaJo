@@ -1,4 +1,5 @@
 using YallaJo.Web.Areas.Creator.Models.Application;
+using YallaJo.Web.Areas.Creator.Models.Audience;
 using YallaJo.Web.Areas.Creator.Models.Dashboard;
 using YallaJo.Web.Areas.Creator.Models.Profile;
 using YallaJo.Web.Infrastructure.Api.Contracts;
@@ -27,13 +28,13 @@ public sealed class CreatorApiClient
     /// <summary>
     /// GET /api/v1/blogs/creators/profiles/{profileId}/followers — paged follower
     /// list for the Creator-area Audience page (CCD-7). The backend returns a bare
-    /// array of follower user IDs (no DTO, no pagination envelope). The Web layer
-    /// uses these only as opaque presence signals — the raw GUIDs are NEVER rendered.
+    /// list of public-safe follower summaries (Gap 3 Phase A): an opaque ordinal and
+    /// the followed-at timestamp only — NO follower user IDs are returned or rendered.
     /// Anonymous endpoint, but the Audience page is gated by Creator.Read.
     /// </summary>
-    public Task<ApiResult<List<Guid>>> ListFollowersAsync(
+    public Task<ApiResult<List<FollowerSummaryResponse>>> ListFollowersAsync(
         Guid profileId, int page, int pageSize, CancellationToken ct = default)
-        => _api.GetAsync<List<Guid>>(
+        => _api.GetAsync<List<FollowerSummaryResponse>>(
             $"{ProfilesPath}/{profileId:D}/followers?page={page}&pageSize={pageSize}", ct);
 
 

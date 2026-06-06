@@ -54,6 +54,9 @@ public sealed class AudienceFollowerRowVm
     /// <summary>1-based position within the full follower ordering (page-aware).</summary>
     public int Position { get; init; }
 
+    /// <summary>When this follower started following (Gap 3 Phase A). No identity.</summary>
+    public DateTime? FollowedAt { get; init; }
+
     /// <summary>Anonymous label shown in the UI, e.g. "Follower #21".</summary>
     public string Label => $"Follower #{Position}";
 }

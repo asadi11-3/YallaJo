@@ -1,4 +1,5 @@
 using YallaJo.Web.Areas.Content.Models.Blogs;
+using YallaJo.Web.Areas.Creator.Models.Articles;
 using YallaJo.Web.Infrastructure.Api.Contracts;
 using YallaJo.Web.Services;
 
@@ -76,9 +77,31 @@ public sealed class BlogsApiClient
     public Task<ApiResult> UpdateBlogAsync(Guid id, UpdateBlogRequestBody body, CancellationToken ct = default)
         => _api.PutAsync($"/api/v1/blogs/{id}", body, ct);
 
-    public Task<ApiResult<List<MyBlogResponse>>> ListMyBlogsAsync(CancellationToken ct = default)
-        => _api.GetAsync<List<MyBlogResponse>>("/api/v1/blogs/my-blogs", ct);
+    /// <summary>
+    /// GET /api/v1/blogs/my-blogs — own articles. Aligned to the real paginated
+    /// contract (Gap 5): the backend returns PaginatedResult&lt;BlogSummaryDto&gt;,
+    /// which now also carries Status + SourceLanguageCode (Gap 1). Supports optional
+    /// paging/status filtering, matching the endpoint's parameters.
+    /// </summary>
+    public Task<ApiResult<PaginatedResponse<BlogSummaryResponse>>> ListMyBlogsAsync(
+        int page = 1, int pageSize = 20, string? status = null, CancellationToken ct = default)
+    {
+        var query = $"?page={page}&pageSize={pageSize}";
+        if (!string.IsNullOrWhiteSpace(status))
+            query += $"&status={Uri.EscapeDataString(status)}";
 
-    public Task<ApiResult> SubmitForReviewAsync(Guid id, CancellationToken ct = default)
-        => _api.PostAsync($"/api/v1/blogs/{id}/submit-for-review", null, ct);
+        return _api.GetAsync<PaginatedResponse<BlogSummaryResponse>>($"/api/v1/blogs/my-blogs{query}", ct);
+    }
+
+    /// <summary>
+    /// POST /api/v1/blogs/{id}/submit-for-review. The backend requires a RowVersion
+    /// (BlogRowVersionRequest); previously this posted a null body and always failed
+    /// (Gap 5 fix). The caller obtains the verbatim base64 RowVersion from the
+    /// admin-get prefetch.
+    /// </summary>
+    public Task<ApiResult> SubmitForReviewAsync(Guid id, string rowVersion, CancellationToken ct = default)
+        => _api.PostAsync(
+            $"/api/v1/blogs/{id}/submit-for-review",
+            new BlogRowVersionRequestBody(rowVersion),
+            ct);
 }

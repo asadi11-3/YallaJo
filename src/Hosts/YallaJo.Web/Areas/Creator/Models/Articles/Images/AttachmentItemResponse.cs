@@ -2,8 +2,8 @@ namespace YallaJo.Web.Areas.Creator.Models.Articles.Images;
 
 /// <summary>
 /// Web-side projection of the ContentCore <c>AttachmentDto</c> returned by
-/// GET /api/v1/content-core/attachments. Note: there is no IsPrimary flag on the
-/// attachment DTO, so the current primary image cannot be highlighted (CCD-5 gap B).
+/// GET /api/v1/content-core/attachments. The <see cref="IsPrimary"/> flag (Gap 2)
+/// now lets the UI highlight the current primary image.
 /// </summary>
 public sealed class AttachmentItemResponse
 {
@@ -22,6 +22,10 @@ public sealed class AttachmentItemResponse
     public int SortOrder { get; init; }
     public DateTime UploadedAt { get; init; }
     public Guid UploadedByUserId { get; init; }
+
+    // ── Creator Backend Contract Polish (Gap 2) ─────────────────────────────
+    /// <summary>Whether this attachment is the entity's current primary image.</summary>
+    public bool IsPrimary { get; init; }
 }
 
 /// <summary>Response of the single-upload endpoint (POST /attachments).</summary>

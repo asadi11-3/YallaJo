@@ -59,7 +59,7 @@ internal static class CreatorEndpoints
         })
         .WithName("GetCreatorProfileBySlug")
         .WithSummary("Get a public creator profile by slug")
-        .Produces<CreatorProfileDto>(StatusCodes.Status200OK)
+        .Produces<PublicCreatorProfileDto>(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .AllowAnonymous();
 
@@ -76,8 +76,8 @@ internal static class CreatorEndpoints
             return result.ToApiResult();
         })
         .WithName("ListCreatorFollowers")
-        .WithSummary("List followers of a creator")
-        .Produces<IReadOnlyList<Guid>>(StatusCodes.Status200OK)
+        .WithSummary("List followers of a creator (public-safe: no user IDs)")
+        .Produces<IReadOnlyList<FollowerSummaryDto>>(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .AllowAnonymous();
 

@@ -80,12 +80,22 @@ else
                         </div>
                         <div class="btn-group btn-group-sm">
                             <permission require="@WebPermission.EntityImage.Update">
-                                <form asp-area="Creator" asp-controller="Articles" asp-action="SetPrimaryImage"
-                                      asp-route-id="@Model.BlogId" asp-route-attachmentId="@img.Id" method="post" class="d-inline">
-                                    <button type="submit" class="btn btn-outline-primary" title="Set as primary">
-                                        <i class="bi bi-star"></i>
+                                @if (img.IsPrimary)
+                                {
+                                    @* Current primary image (Gap 2): show a filled, disabled star. *@
+                                    <button type="button" class="btn btn-primary" title="Primary image" disabled>
+                                        <i class="bi bi-star-fill"></i>
                                     </button>
-                                </form>
+                                }
+                                else
+                                {
+                                    <form asp-area="Creator" asp-controller="Articles" asp-action="SetPrimaryImage"
+                                          asp-route-id="@Model.BlogId" asp-route-attachmentId="@img.Id" method="post" class="d-inline">
+                                        <button type="submit" class="btn btn-outline-primary" title="Set as primary">
+                                            <i class="bi bi-star"></i>
+                                        </button>
+                                    </form>
+                                }
                             </permission>
                             <permission require="@WebPermission.Attachment.Delete">
                                 <button type="button" class="btn btn-outline-danger" title="Delete"

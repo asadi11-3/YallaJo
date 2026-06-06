@@ -34,12 +34,14 @@ public static class CreatorArticlesMapper
         var rows = page.Items
             .Select(b => new MyArticleRowVm
             {
-                Id              = b.Id,
-                Slug            = b.Slug,
-                Title           = b.Title,
-                PublishedAt     = b.PublishedAt,
-                ViewCount       = b.ViewCount,
-                ReadTimeMinutes = b.ReadTimeMinutes,
+                Id                 = b.Id,
+                Slug               = b.Slug,
+                Title              = b.Title,
+                PublishedAt        = b.PublishedAt,
+                ViewCount          = b.ViewCount,
+                ReadTimeMinutes    = b.ReadTimeMinutes,
+                Status             = b.Status,
+                SourceLanguageCode = b.SourceLanguageCode,
             })
             .ToList();
 
