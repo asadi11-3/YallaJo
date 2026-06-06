@@ -1,0 +1,549 @@
+DELETE  /api/v1/accounts/profile - Delete the current user's profile
+DELETE  /api/v1/accounts/profile/avatar - Remove the current user's avatar
+DELETE  /api/v1/admin/notification-templates/{id} - Delete a notification template.
+DELETE  /api/v1/agency/guides/{guideUserId} - Remove a guide from the agency roster
+DELETE  /api/v1/analytics/admin/boosts/{boostId} - Deactivate a boost package
+DELETE  /api/v1/analytics/admin/pins/{pinId} - Deactivate an editorial pin
+DELETE  /api/v1/analytics/admin/seasonality/{ruleId} - Deactivate a seasonality rule
+DELETE  /api/v1/analytics/recommendations/me - Request deletion of all personal analytics data (30-day window)
+DELETE  /api/v1/auth/admin/users/{userId}/sessions - Admin: force-revoke all sessions and refresh tokens for a user
+DELETE  /api/v1/auth/external-providers/{providerId} - Deactivate a linked external OAuth provider account
+DELETE  /api/v1/auth/sessions/{sessionId} - Revoke a specific session — user may only revoke their own sessions
+DELETE  /api/v1/blogs/{id} - Soft-delete a blog (owner; author-hierarchy guard; Admin+ via override)
+DELETE  /api/v1/blogs/{id}/tours/{tourId} - Remove a Blog ↔ Tour link
+DELETE  /api/v1/blogs/admin/creators/profiles/{id} - Admin — soft-delete a creator profile (60-day hard delete)
+DELETE  /api/v1/blogs/comments/{commentId} - Soft-delete a blog comment (content replaced with '[deleted]', replies preserved).
+DELETE  /api/v1/blogs/comments/{commentId}/reactions - Remove the current user's reaction on a blog comment (idempotent).
+DELETE  /api/v1/blogs/creators/profile/mine - Creator voluntarily deactivates own profile (soft delete, 60-day hard delete)
+DELETE  /api/v1/blogs/creators/profiles/{profileId}/follow - Unfollow a creator
+DELETE  /api/v1/booking/availability/slots/{id} - Deactivate an availability slot.
+DELETE  /api/v1/booking/guide-discounts/{id} - Guide deactivates a discount.
+DELETE  /api/v1/commissions/{id} - Admin: soft-delete a commission rule.
+DELETE  /api/v1/content-core/attachments/{id} - Delete an attachment and its file
+DELETE  /api/v1/content-core/categories/{id} - Soft-delete a category (sets IsDeleted = true)
+DELETE  /api/v1/content-core/entity-categories - Remove category assignment from an entity
+DELETE  /api/v1/content-core/entity-tags - Remove tag assignment from an entity
+DELETE  /api/v1/content-core/languages/{id} - Soft-delete a language
+DELETE  /api/v1/content-core/specializations/{id} - Soft-delete a specialization
+DELETE  /api/v1/content-core/tags/{id} - Delete a tag
+DELETE  /api/v1/devices/token/{id} - Delete a registered device token.
+DELETE  /api/v1/guides/{id}/languages/{languageId} - Remove a language from the authenticated owner's tour guide profile
+DELETE  /api/v1/guides/admin/{guideId} - Admin: Deactivate a tour guide
+DELETE  /api/v1/guides/me - Self-deactivate own tour guide account
+DELETE  /api/v1/guides/me/agency - Leave my current agency
+DELETE  /api/v1/guides/me/availability-blocks/{id} - Delete an availability block from own guide profile
+DELETE  /api/v1/notifications/{id} - Delete a notification for the current user.
+DELETE  /api/v1/notifications/batch - Delete multiple notifications for the current user.
+DELETE  /api/v1/places/{id} - Soft-delete a place — owner (Admin+ via override); blocked if active businesses exist
+DELETE  /api/v1/places/admin/accessibility/{assignmentId} - Admin: delete a single accessibility-feature assignment row
+DELETE  /api/v1/places/businesses/{id} - Soft-delete a business (admin only)
+DELETE  /api/v1/places/businesses/amenities/{amenityId} - Remove an amenity from a business (owner OR admin-tier)
+DELETE  /api/v1/places/businesses/services/{id} - Soft-delete a service item
+DELETE  /api/v1/places/businesses/staff/{id} - Deactivate a staff member (soft delete; owner OR admin-tier)
+DELETE  /api/v1/provider-payment-methods/{id} - Delete one of the current provider's payment methods.
+DELETE  /api/v1/security/roles/{roleId}/claims/{claimId} - Remove a claim from a role
+DELETE  /api/v1/security/users/{userId}/claims/{claimId} - Remove a claim from a user
+DELETE  /api/v1/security/users/{userId}/roles/{roleId} - Remove a role from a user
+DELETE  /api/v1/seo/faq/{id} - Soft-delete an FAQ item.
+DELETE  /api/v1/seo/metadata/{id} - Soft-delete SEO metadata by id.
+DELETE  /api/v1/seo/redirects/{id} - Deactivate and soft-delete a redirect.
+DELETE  /api/v1/seo/sitemap/entries/{id} - Delete a sitemap entry.
+DELETE  /api/v1/seo/weather/cache/{id} - Delete a weather cache entry.
+DELETE  /api/v1/social/accessibility/reviews/{id} - Soft-delete own accessibility review (or admin removal)
+DELETE  /api/v1/social/favorites/{entityType}/{entityId} - Remove a favorite
+DELETE  /api/v1/social/moderation/ban/{userId} - Admin: lift an active moderation ban for a user
+DELETE  /api/v1/social/reviews/{id} - Delete a review (author or admin)
+DELETE  /api/v1/social/reviews/{id}/helpful - Remove helpful vote from a review
+DELETE  /api/v1/social/reviews/{id}/reply/{replyId} - Delete a reply (provider own or admin)
+DELETE  /api/v1/tours/{id} - Soft-delete a tour (owner; Admin+ via override)
+DELETE  /api/v1/tours/{id}/guides/{guideUserId} - Remove a tour guide assignment (promotes next guide to primary if needed)
+DELETE  /api/v1/tours/{id}/pricing/{tierId} - Delete a pricing tier (Adult-tier guard applies)
+DELETE  /api/v1/tours/{id}/schedules/{scheduleId} - Delete a tour schedule (blocked if future bookings exist)
+DELETE  /api/v1/tours/{id}/waypoints/{waypointId} - Remove a waypoint from a tour (re-compacts SortOrder)
+DELETE  /api/v1/tours/{tourId}/guide-offerings/{guideId} - Remove a guide offering permanently
+DELETE  /api/v1/tours/{tourId}/guide-offerings/{guideId}/pricing-tiers/{tierId} - Delete a pricing tier
+DELETE  /api/v1/tours/{tourId}/guide-offerings/{guideId}/private-tour - Disable private tour pricing for a guide offering
+DELETE  /api/v1/tours/{tourId}/guide-offerings/{guideId}/schedules/{scheduleId} - Delete a guide schedule slot
+DELETE  /api/v1/tours/packages/{id} - Soft-delete a tour package
+GET     / - Returns API status and useful links.
+GET     /api/v1/accounts/me/marketing-consent - Get the current user's marketing consent
+GET     /api/v1/accounts/profile - Get the current user's profile
+GET     /api/v1/admin/audit-logs - Admin: list audit logs.
+GET     /api/v1/admin/audit-logs/export - Admin: export audit logs for a date range.
+GET     /api/v1/admin/dashboard - Admin: analytics dashboard overview.
+GET     /api/v1/admin/dashboard/bookings - Admin: bookings dashboard for a date range.
+GET     /api/v1/admin/dashboard/revenue - Admin: revenue dashboard for a date range.
+GET     /api/v1/admin/dashboard/users - Admin: users dashboard for a date range.
+GET     /api/v1/admin/interactions - Admin: list user interaction events.
+GET     /api/v1/admin/interactions/user/{userId} - Admin: list interactions for a specific user.
+GET     /api/v1/admin/notification-templates - List all notification templates.
+GET     /api/v1/admin/providers - Get the provider application queue (admin)
+GET     /api/v1/admin/providers/{id} - Get a provider application with documents and review details (admin)
+GET     /api/v1/agency - List approved agencies accepting guide applications
+GET     /api/v1/agency/{agencyUserId} - Get public detail of a specific agency
+GET     /api/v1/agency/applications - Get guide applications to my agency
+GET     /api/v1/agency/guides - Get all guides affiliated with my agency
+GET     /api/v1/agency/guides/available - Get independent guides available for agency affiliation (not yet affiliated)
+GET     /api/v1/agency/invitations/sent - Get invitations sent by my agency to guides
+GET     /api/v1/analytics/admin/batches - List recommendation suggestion batches
+GET     /api/v1/analytics/admin/holidays/{year} - List holiday calendar entries for a year
+GET     /api/v1/analytics/admin/metrics - Get CTR / conversion funnel metrics
+GET     /api/v1/analytics/admin/seasonality - List active seasonality rules
+GET     /api/v1/analytics/admin/segments - Query a re-engagement segment by rule
+GET     /api/v1/analytics/preferences - Get the current user's recommendation preferences
+GET     /api/v1/analytics/recommendations - Get personalized recommendations for the current user
+GET     /api/v1/analytics/recommendations/for/{kind}/{entityId} - Get contextual suggestions for an entity
+GET     /api/v1/analytics/recommendations/itinerary - Get a multi-day itinerary plan for Jordan
+GET     /api/v1/analytics/recommendations/me/export - Export all personal analytics data (GDPR portability)
+GET     /api/v1/analytics/recommendations/similar/{entityId} - Get entities similar to the specified entity
+GET     /api/v1/auth/invitations/roles - Admin: list active roles that can be pre-assigned during invite.
+GET     /api/v1/auth/sessions - List all active sessions for the current user
+GET     /api/v1/blogs - List public Published blogs with pagination and optional filters (incl. isFeatured)
+GET     /api/v1/blogs/{id} - Get a public Published blog by ID
+GET     /api/v1/blogs/{id}/comments - List comments for a Published blog (anonymous, paginated).
+GET     /api/v1/blogs/admin/{id} - Admin — get any non-deleted blog by ID with RowVersion (any status)
+GET     /api/v1/blogs/admin/{id}/translations - Admin — list translations for a blog
+GET     /api/v1/blogs/admin/{id}/translations/{languageCode} - Admin — get a blog translation by language code
+GET     /api/v1/blogs/admin/creators/applications - Admin — list creator applications with optional status filter
+GET     /api/v1/blogs/admin/creators/applications/{id} - Admin — get a single creator application by ID
+GET     /api/v1/blogs/admin/creators/profiles/{id} - Admin — get full creator profile detail
+GET     /api/v1/blogs/admin/deleted - Admin — list soft-deleted blogs (with RowVersion for restore)
+GET     /api/v1/blogs/admin/queue - Admin — view PendingReview blog moderation queue
+GET     /api/v1/blogs/creators/applications/mine - Get current user's latest creator application
+GET     /api/v1/blogs/creators/niches - List all active creator niches
+GET     /api/v1/blogs/creators/profile/mine - Get current user's creator profile
+GET     /api/v1/blogs/creators/profiles/{profileId}/followers - List followers of a creator
+GET     /api/v1/blogs/creators/profiles/{profileId}/following - Check if current user is following a creator
+GET     /api/v1/blogs/creators/profiles/{slug} - Get a public creator profile by slug
+GET     /api/v1/blogs/creators/profiles/{slug}/blogs - List published blogs by creator slug (public)
+GET     /api/v1/blogs/my-blogs - Creator — list my own blogs with optional status filter
+GET     /api/v1/blogs/slug/{slug} - Get a public Published blog by slug
+GET     /api/v1/booking/{id} - Get a tour booking by id (owner, provider, or admin).
+GET     /api/v1/booking/admin/all - Admin: list ALL bookings across all users and providers.
+GET     /api/v1/booking/availability/{tourId} - Get cursor-paginated availability grouped by date for a tour.
+GET     /api/v1/booking/availability/{tourId}/{date} - Get availability slots for a tour on a specific date.
+GET     /api/v1/booking/availability/{tourId}/manage - Owner: list all availability slots (incl. inactive) for a tour, with RowVersion.
+GET     /api/v1/booking/guide-discounts/mine - Guide lists their own discounts.
+GET     /api/v1/booking/join-requests - List join requests. Filter by booking or own requests.
+GET     /api/v1/booking/my-bookings - List the caller's tour bookings (cursor paginated).
+GET     /api/v1/booking/provider/bookings - Provider: list bookings for tours owned by the caller's provider (cursor paginated).
+GET     /api/v1/booking/provider/documents - List provider documents owned by the authenticated tour guide.
+GET     /api/v1/booking/provider/documents/{id} - Get a single provider document by id (provider self OR admin).
+GET     /api/v1/commissions - Admin: list commission rules.
+GET     /api/v1/content-core/attachments - List attachments for an entity
+GET     /api/v1/content-core/attachments/{id} - Get a single attachment by ID
+GET     /api/v1/content-core/categories - List active categories as a tree (public)
+GET     /api/v1/content-core/categories/{id} - Get active category by ID with direct children (public)
+GET     /api/v1/content-core/categories/admin - List categories (admin — may include inactive, requires read permission)
+GET     /api/v1/content-core/categories/admin/{id} - Get category by ID (admin — may include inactive)
+GET     /api/v1/content-core/entity-categories - Get categories assigned to an entity
+GET     /api/v1/content-core/entity-tags - Get tags assigned to an entity
+GET     /api/v1/content-core/languages - List all active languages
+GET     /api/v1/content-core/languages/{id} - Get a language by ID
+GET     /api/v1/content-core/specializations - List all specializations
+GET     /api/v1/content-core/specializations/{id} - Get a specialization by ID
+GET     /api/v1/content-core/tags - List tags (sends translations when Accept-Language header present)
+GET     /api/v1/content-core/tags/{id} - Get tag by ID
+GET     /api/v1/content-core/translations/{entityType}/{entityId} - Get translations for an entity (optional: ?languageCode=ar&status=AutoTranslated). Public.
+GET     /api/v1/devices/tokens - Get the current user's registered device tokens.
+GET     /api/v1/disputes/admin/open - Admin: list all open disputes.
+GET     /api/v1/disputes/my - List the current user's disputes.
+GET     /api/v1/finance/admin/dashboard - Admin: finance dashboard overview.
+GET     /api/v1/finance/guide - List the current guide's earnings.
+GET     /api/v1/finance/guide/summary - Get the current guide's earnings summary for a date range.
+GET     /api/v1/guide/analytics - Get the current guide's analytics for a date range.
+GET     /api/v1/guide/dashboard - Get the current guide's analytics dashboard.
+GET     /api/v1/guide/my-tours - List the current guide's tours with performance metrics.
+GET     /api/v1/guides - List active tour guides (public)
+GET     /api/v1/guides/{id} - Get a public tour guide profile
+GET     /api/v1/guides/{id}/tours - Get tours assigned to a guide
+GET     /api/v1/guides/admin/{guideId} - Admin: Get full tour guide profile
+GET     /api/v1/guides/by-slug/{slug} - Get a tour guide profile by slug (public)
+GET     /api/v1/guides/me - Get own tour guide profile
+GET     /api/v1/guides/me/analytics/booking-trends - Get own guide booking trends over time
+GET     /api/v1/guides/me/analytics/overview - Get own guide booking analytics overview
+GET     /api/v1/guides/me/analytics/peak-days - Get own guide peak booking days
+GET     /api/v1/guides/me/analytics/popular-tours - Get own most popular tours
+GET     /api/v1/guides/me/applications - List own guide applications
+GET     /api/v1/guides/me/availability-blocks - List own guide availability blocks
+GET     /api/v1/guides/me/earnings/by-tour - Get own guide earnings broken down by tour
+GET     /api/v1/guides/me/earnings/history - List own guide earnings history
+GET     /api/v1/guides/me/earnings/summary - Get own guide earnings summary
+GET     /api/v1/guides/me/invitations - Get agency invitations received by me as a guide
+GET     /api/v1/guides/me/tier - Get own guide tier progress
+GET     /api/v1/invoices/{id} - Read a single invoice.
+GET     /api/v1/invoices/{id}/download - Download the rendered invoice PDF (lazily rendered on first call).
+GET     /api/v1/invoices/my-invoices - Paginated list of invoices owned by the caller (buyer).
+GET     /api/v1/invoices/provider/my-invoices - Paginated list of invoices issued to the caller's provider account.
+GET     /api/v1/notifications - Get the current user's notifications (paged).
+GET     /api/v1/notifications/{id} - Get a notification by id.
+GET     /api/v1/notifications/preferences - Get the current user's notification preferences.
+GET     /api/v1/notifications/unread-count - Get the count of the current user's unread notifications.
+GET     /api/v1/ops/outbox/dead-letters - List dead-lettered outbox messages across all modules
+GET     /api/v1/payments/{id} - Read a single payment row.
+GET     /api/v1/payments/admin/all - Admin-only paginated list of payments with filters.
+GET     /api/v1/payments/my-payments - Paginated list of the caller's own payments.
+GET     /api/v1/payouts/{id} - Get one payout by id (self/admin).
+GET     /api/v1/payouts/admin/pending - Admin: payouts awaiting approval (Pending/Hold).
+GET     /api/v1/payouts/provider - Provider self-view of own payouts.
+GET     /api/v1/places - List places with pagination and optional filters (max 50 per page)
+GET     /api/v1/places/{id} - Get full place details by ID
+GET     /api/v1/places/{id}/accessibility - Get accessibility features for a place
+GET     /api/v1/places/{id}/businesses - List businesses for a place (public sees Approved only; owner/admin sees all statuses)
+GET     /api/v1/places/{id}/images - Get public images for a place (approved/public-safe; 404 for missing/deleted place)
+GET     /api/v1/places/{slug} - Get full place details by slug
+GET     /api/v1/places/accessibility/catalog - List all accessibility feature types (Wheelchair/Visual/Hearing/Cognitive/Mobility/Other)
+GET     /api/v1/places/businesses - List businesses (public; returns Approved only; optional businessType/city/country filters; max pageSize 50).
+GET     /api/v1/places/businesses/{businessId}/amenities - List amenities for a business
+GET     /api/v1/places/businesses/{businessId}/services - List service items for a business
+GET     /api/v1/places/businesses/{id} - Get a business by Id (public sees Approved only; owner/admin sees all statuses)
+GET     /api/v1/places/businesses/{id}/accessibility - List accessibility features for a business
+GET     /api/v1/places/businesses/{id}/hours - Get operating hours for a business (public sees Approved only)
+GET     /api/v1/places/businesses/{id}/staff - List business staff members (owner OR admin-tier)
+GET     /api/v1/places/businesses/mine - List all businesses owned by the authenticated provider
+GET     /api/v1/places/businesses/nearby - Get nearby businesses using Haversine formula (max 100km radius)
+GET     /api/v1/places/businesses/search - Search businesses by name, type, city, or country (public; returns Approved only)
+GET     /api/v1/places/businesses/services/{id} - Get service item details by ID
+GET     /api/v1/places/map/viewport - Get lightweight map pins for the current viewport bounding box
+GET     /api/v1/places/nearby - Get nearby places using Haversine formula (max 100km radius)
+GET     /api/v1/popular/businesses - List the most popular businesses.
+GET     /api/v1/popular/places - List the most popular places.
+GET     /api/v1/popular/tours - List the most popular tours.
+GET     /api/v1/provider/analytics - Get the current provider's analytics for a date range.
+GET     /api/v1/provider/dashboard - Get the current provider's analytics dashboard.
+GET     /api/v1/provider/dashboard/notifications - Get recent notifications for the provider (document expiry, status changes)
+GET     /api/v1/provider/dashboard/overview - Get provider dashboard overview stats
+GET     /api/v1/provider/dashboard/pending-actions - Get actions requiring provider attention
+GET     /api/v1/provider/my-tours - List the current provider's tours with performance metrics.
+GET     /api/v1/provider/settings - Get provider settings (business info)
+GET     /api/v1/provider/status - Get my provider application status
+GET     /api/v1/provider-payment-methods - List the current provider's payment methods.
+GET     /api/v1/security/audit-logs - Get paginated admin audit logs with optional filters (userId, actorUserId, action, from, to).
+GET     /api/v1/security/me - Returns claims from the current user's JWT
+GET     /api/v1/security/roles - List all active roles
+GET     /api/v1/security/roles/{roleId} - Get a role with its claims
+GET     /api/v1/security/users - List users with pagination
+GET     /api/v1/security/users/{userId} - Get a user by ID
+GET     /api/v1/seo/faq - List FAQ items across all entities (paginated). Active-only by default.
+GET     /api/v1/seo/faq/{entityType}/{entityId} - List FAQ items for an entity.
+GET     /api/v1/seo/metadata - Admin list of SEO metadata, optionally filtered by entity type, with paging.
+GET     /api/v1/seo/metadata/{entityType}/{entityId} - Get SEO metadata for a given entity.
+GET     /api/v1/seo/redirects - List redirects with optional filters and pagination.
+GET     /api/v1/seo/sitemap/entries - List sitemap entries with optional filters and pagination.
+GET     /api/v1/seo/weather - Returns cached weather data for a location (lat/lng). PDF §11: cache key = (lat-rounded-2dp, lng-rounded-2dp, date).
+GET     /api/v1/seo/weather/{placeId} - Returns cached weather data for a place. Sets X-Weather-Stale:true header when the snapshot has expired.
+GET     /api/v1/social/accessibility/reviews - Public: list accessibility reviews for an entity
+GET     /api/v1/social/accessibility/reviews/my - Get caller's accessibility reviews (paginated)
+GET     /api/v1/social/favorites - Get my favorites
+GET     /api/v1/social/favorites/check/{entityType}/{entityId} - Check if an entity is favorited
+GET     /api/v1/social/moderation/logs - Admin: content moderation log
+GET     /api/v1/social/reports/admin - Admin: list reports
+GET     /api/v1/social/reviews - Public: list reviews for an entity
+GET     /api/v1/social/reviews/{entityType}/{entityId} - Public: list approved reviews for an entity
+GET     /api/v1/social/reviews/admin/flagged - Admin: get flagged/awaiting-moderation reviews (S-R4/S-R5)
+GET     /api/v1/social/reviews/my-reviews - Get caller's reviews (paginated)
+GET     /api/v1/social/reviews/ratings - Public: get rating summary for an entity
+GET     /api/v1/support/tickets - List support tickets (own tickets, or all when admin).
+GET     /api/v1/support/tickets/{id} - Get a support ticket by id.
+GET     /api/v1/tours - List public tours with pagination and optional filters
+GET     /api/v1/tours/{id} - Get tour details by ID (owner/admin may view non-public statuses)
+GET     /api/v1/tours/{id}/children-info - Get children-info block for a tour
+GET     /api/v1/tours/{id}/guides - List tour guides assigned to a tour (primary first, then by Id)
+GET     /api/v1/tours/{id}/images - Get public image gallery for an approved tour
+GET     /api/v1/tours/{id}/pricing - List pricing tiers for a tour
+GET     /api/v1/tours/{id}/schedules - List schedules for a tour
+GET     /api/v1/tours/{id}/waypoints - List waypoints for a tour ordered by SortOrder
+GET     /api/v1/tours/{tourId}/applications - List all guide applications for a tour
+GET     /api/v1/tours/{tourId}/guide-offerings - List all guide offerings for a tour
+GET     /api/v1/tours/{tourId}/guide-offerings/{guideId} - Get detailed offering with schedules and pricing tiers
+GET     /api/v1/tours/{tourId}/guide-offerings/{guideId}/pricing-tiers - List pricing tiers for a guide offering
+GET     /api/v1/tours/{tourId}/guide-offerings/{guideId}/schedules - List schedules for a guide offering
+GET     /api/v1/tours/admin - Admin: list tours across all providers with optional status filter
+GET     /api/v1/tours/by-slug/{slug} - Get public tour details by slug (canonical path)
+GET     /api/v1/tours/featured - List editorially curated featured tours (top 20)
+GET     /api/v1/tours/packages - List tour packages with pagination
+GET     /api/v1/tours/packages/{id} - Get tour package by id
+GET     /api/v1/tours/proposals - List tour proposals (guideId omitted = admin pending queue; with guideId = that guide's own, optional status filter)
+GET     /api/v1/tours/proposals/{id} - Get a single tour proposal by id
+GET     /api/v1/tours/provider/my-tours - Provider dashboard — list own tours (all statuses)
+GET     /api/v1/tours/search - Full-text + faceted tour search
+GET     /api/v1/tours/search/suggest - Autocomplete tour name suggestions (matches Tour.Name + TourTranslation.Name)
+GET     /api/v1/tours/slug/{slug} - Get public tour details by slug
+GET     /api/v1/trending - List currently trending entities.
+GET     /sitemap.xml - Public XML sitemap (used by search engines).
+GET     /sitemaps/{entityType}.xml - Per-EntityType sub-sitemap (used when total URLs exceed 50,000).
+PATCH   /api/v1/auth/admin/users/{userId}/archive - Admin: archive a user account and revoke all active sessions.
+PATCH   /api/v1/auth/admin/users/{userId}/reactivate - Admin: reactivate a suspended user account.
+PATCH   /api/v1/auth/admin/users/{userId}/suspend - Admin: suspend a user account and revoke all active sessions.
+PATCH   /api/v1/auth/devices/{deviceId}/trust - Mark a device as trusted for the current user
+PATCH   /api/v1/content-core/categories/{id}/activate - Activate (restore) a deactivated category
+PATCH   /api/v1/content-core/categories/{id}/deactivate - Deactivate (hide) a category without deleting it
+PATCH   /api/v1/content-core/categories/{id}/restore - Restore a soft-deleted category (sets IsDeleted = false)
+PATCH   /api/v1/content-core/languages/{id}/activate - Activate a language — idempotent, no-op if already active
+PATCH   /api/v1/content-core/languages/{id}/deactivate - Deactivate a language — idempotent, no-op if already inactive
+PATCH   /api/v1/content-core/specializations/{id}/activate - Activate a specialization — idempotent, no-op if already active
+PATCH   /api/v1/content-core/specializations/{id}/deactivate - Deactivate a specialization — idempotent, no-op if already inactive
+PATCH   /api/v1/content-core/tags/{id}/activate - Activate a tag — idempotent, no-op if already active
+PATCH   /api/v1/content-core/tags/{id}/deactivate - Deactivate a tag — idempotent, no-op if already inactive
+PATCH   /api/v1/places/{id}/feature - Toggle featured status of a place — admin only
+PATCH   /api/v1/places/{id}/verify - Toggle verified status of a place — admin only
+PATCH   /api/v1/security/roles/{roleId} - Update a role's description
+PATCH   /api/v1/security/roles/{roleId}/deactivate - Deactivate a role
+PATCH   /api/v1/security/users/{userId}/activate - Activate a user account
+PATCH   /api/v1/security/users/{userId}/deactivate - Deactivate a user account
+PATCH   /api/v1/seo/sitemap/entries/{id} - Override sitemap entry priority or change frequency.
+PATCH   /api/v1/tours/admin/{id}/feature - Admin: feature or unfeature a tour
+POST    /api/v1/accounts/profile/avatar - Upload and set the current user's avatar image
+POST    /api/v1/accounts/profile/restore - Restore the current user's previously soft-deleted profile
+POST    /api/v1/admin/audit-logs/{id}/redact - Admin: redact an audit log entry.
+POST    /api/v1/admin/bookings/{id}/force-refund - Admin: force-majeure cancel + 100% refund a booking (bypasses RefundPolicy).
+POST    /api/v1/admin/notification-templates - Create a notification template.
+POST    /api/v1/admin/providers/{id}/approve - Approve a provider application
+POST    /api/v1/admin/providers/{id}/reinstate - Reinstate a suspended provider
+POST    /api/v1/admin/providers/{id}/reject - Reject a provider application
+POST    /api/v1/admin/providers/{id}/request-docs - Request additional documents from provider
+POST    /api/v1/admin/providers/{id}/suspend - Suspend an approved provider
+POST    /api/v1/agency/applications/{id}/approve - Approve a guide's application to join the agency
+POST    /api/v1/agency/applications/{id}/reject - Reject a guide's application to join the agency
+POST    /api/v1/agency/guides/invite - Invite an independent guide to join the agency
+POST    /api/v1/analytics/admin/batches/refresh - Refresh a recommendation suggestion batch
+POST    /api/v1/analytics/admin/boosts - Create a boost package for a provider entity
+POST    /api/v1/analytics/admin/boosts/cpc - Create a CPC (cost-per-click) sponsored bid
+POST    /api/v1/analytics/admin/experiments - Create an A/B experiment
+POST    /api/v1/analytics/admin/holidays - Create a holiday calendar entry
+POST    /api/v1/analytics/admin/pins - Create an editorial pin
+POST    /api/v1/analytics/admin/seasonality - Create a seasonality boost rule
+POST    /api/v1/analytics/recommendations/me/cancel-deletion - Cancel a pending GDPR deletion request
+POST    /api/v1/analytics/recommendations/metrics - Record an impression/click/booking event on a recommendation
+POST    /api/v1/analytics/recommendations/not-interested - Mark an entity as not interested (excluded for 90 days)
+POST    /api/v1/analytics/recommendations/onboarding - Submit cold-start onboarding quiz responses
+POST    /api/v1/analytics/recommendations/sponsored-click - Record a click on a sponsored placement
+POST    /api/v1/auth/admin/users/{userId}/reassign - Admin: reassign a user account to a new email — invalidates credentials, revokes sessions, and sends a fresh activation email.
+POST    /api/v1/auth/admin/users/{userId}/reset-password - Admin: force a password reset for a user — revokes sessions and sends a reset email.
+POST    /api/v1/auth/external-providers - Link a verified external OAuth provider account to the current user
+POST    /api/v1/auth/external-providers/login - Login via a previously-linked external provider using a signed BFF ticket
+POST    /api/v1/auth/forgot-password - Request a password reset code — sends OTP to email if account exists
+POST    /api/v1/auth/invitations - Admin: invite a new user — creates identity (pending) + profile and sends invite email.
+POST    /api/v1/auth/invitations/accept - Accept an invite — set password, verify email, activate account.
+POST    /api/v1/auth/invitations/resend - Admin: resend an invite link for a pending account.
+POST    /api/v1/auth/login - Login with email and password — returns access + refresh tokens
+POST    /api/v1/auth/logout - Logout — revokes the refresh token and its session
+POST    /api/v1/auth/logout-all - Logout all sessions — revokes all refresh tokens for the current user
+POST    /api/v1/auth/refresh - Refresh access token using a valid refresh token
+POST    /api/v1/auth/register - Register a new account — verification code is queued for email delivery
+POST    /api/v1/auth/resend-otp - Resend OTP code for email verification or password reset
+POST    /api/v1/auth/reset-password - Reset password using email and OTP code
+POST    /api/v1/auth/verify-email - Verify email with OTP code — returns access + refresh tokens
+POST    /api/v1/blogs - Create a new Blog in Draft status
+POST    /api/v1/blogs/{id}/archive - Archive a Published blog (read-only state)
+POST    /api/v1/blogs/{id}/comments - Create a new comment (or reply) on a Published blog.
+POST    /api/v1/blogs/{id}/feature - Admin — feature a Published blog with optional expiry
+POST    /api/v1/blogs/{id}/hide - Hide a Published blog (admin moderation)
+POST    /api/v1/blogs/{id}/publish - Publish a Draft blog
+POST    /api/v1/blogs/{id}/restore - Restore a soft-deleted blog (owner; author-hierarchy guard; Admin+ via override)
+POST    /api/v1/blogs/{id}/submit-for-review - Creator — submit a Draft blog for admin review
+POST    /api/v1/blogs/{id}/tours - Link one or more Tours to a Blog
+POST    /api/v1/blogs/{id}/unfeature - Admin — remove feature status from a blog
+POST    /api/v1/blogs/{id}/unhide - Unhide a Hidden blog (restore to Published)
+POST    /api/v1/blogs/{id}/unpublish - Unpublish a Published blog (back to Draft)
+POST    /api/v1/blogs/{id}/views - Track a unique blog view (lifetime-debounced per viewer)
+POST    /api/v1/blogs/admin/{id}/approve - Admin — approve a PendingReview blog (publishes it)
+POST    /api/v1/blogs/admin/{id}/reject - Admin — reject a PendingReview blog with a reason
+POST    /api/v1/blogs/admin/{id}/remove - Admin — permanently remove a Published blog for policy violations
+POST    /api/v1/blogs/admin/creators/applications/{id}/approve - Admin — approve a pending creator application
+POST    /api/v1/blogs/admin/creators/applications/{id}/reject - Admin — reject a pending creator application
+POST    /api/v1/blogs/admin/creators/applications/{id}/request-more-info - Admin — request additional information on a pending application
+POST    /api/v1/blogs/admin/creators/invitations - Admin — send a creator invitation via email or in-app
+POST    /api/v1/blogs/admin/creators/profiles/{profileId}/demote - Admin — demote a creator to a lower trust tier
+POST    /api/v1/blogs/admin/creators/profiles/{profileId}/promote - Admin — promote a creator to a higher trust tier
+POST    /api/v1/blogs/admin/creators/profiles/{profileId}/reinstate - Admin — reinstate a suspended creator profile
+POST    /api/v1/blogs/admin/creators/profiles/{profileId}/suspend - Admin — suspend a creator profile
+POST    /api/v1/blogs/comments/{commentId}/reactions - Add or replace the current user's reaction on a blog comment (idempotent).
+POST    /api/v1/blogs/creators/applications - Create a new creator application (Draft)
+POST    /api/v1/blogs/creators/applications/{applicationId}/submit - Submit a Draft application for review
+POST    /api/v1/blogs/creators/invitations/redeem - Redeem a creator invitation token
+POST    /api/v1/blogs/creators/profiles/{profileId}/follow - Follow a creator
+POST    /api/v1/booking/{id}/cancel - Cancel a booking (user, provider, or admin).
+POST    /api/v1/booking/{id}/complete - Provider marks a Confirmed booking as Completed after the tour has started.
+POST    /api/v1/booking/{id}/confirm - Provider confirms a booking that is in AwaitingPayment or PendingConfirmation state.
+POST    /api/v1/booking/{id}/dispute - Booking owner opens a dispute on a Completed booking.
+POST    /api/v1/booking/{id}/reject - Provider rejects a PendingConfirmation booking. ALWAYS triggers a 100% automatic refund.
+POST    /api/v1/booking/admin/{id}/dispute/resolve - Admin resolves a Disputed booking with resolution notes.
+POST    /api/v1/booking/availability/slots - Create one availability slot for a tour.
+POST    /api/v1/booking/availability/slots/bulk - Create recurring availability slots for a tour.
+POST    /api/v1/booking/guide-discounts - Guide creates a discount for their tour offerings.
+POST    /api/v1/booking/join-requests - Submit a join request to join an existing confirmed booking.
+POST    /api/v1/booking/join-requests/{id}/approve - Guide approves a join request.
+POST    /api/v1/booking/join-requests/{id}/reject - Guide rejects a join request.
+POST    /api/v1/booking/provider/documents - Upload a new provider document for the authenticated tour guide.
+POST    /api/v1/booking/tour - Create a tour booking in AwaitingPayment state.
+POST    /api/v1/commissions - Admin: create a commission rule.
+POST    /api/v1/content-core/attachments - Upload a file attachment for an entity
+POST    /api/v1/content-core/attachments/images - Bulk upload up to 20 images for an entity
+POST    /api/v1/content-core/categories - Create a category with auto-translation to all active languages
+POST    /api/v1/content-core/entity-categories - Assign categories to an entity
+POST    /api/v1/content-core/entity-tags - Assign tags to an entity
+POST    /api/v1/content-core/languages - Add a new language
+POST    /api/v1/content-core/specializations - Create a specialization
+POST    /api/v1/content-core/tags - Create a tag
+POST    /api/v1/content-core/translations/{id}/approve - Mark translation as human-reviewed
+POST    /api/v1/content-core/translations/approve-batch - Mark all auto-translated fields as human-reviewed for an entity + language in one shot
+POST    /api/v1/content-core/translations/backfill/{entityKind} - Backfill missing translations for all existing Tag or Specialization rows (entityKind: tag | specialization)
+POST    /api/v1/content-core/translations/batch - Batch translate multiple texts
+POST    /api/v1/content-core/translations/translate - On-demand translation (admin tool)
+POST    /api/v1/devices/token - Register a device token for push notifications.
+POST    /api/v1/disputes - Open a dispute against a payment.
+POST    /api/v1/disputes/{id}/escalate - Admin: escalate a dispute.
+POST    /api/v1/disputes/{id}/resolve - Admin: resolve a dispute.
+POST    /api/v1/disputes/{id}/review - Admin: mark a dispute as under review.
+POST    /api/v1/guides/{id}/languages - Add a language to the authenticated owner's tour guide profile
+POST    /api/v1/guides/{id}/specializations - Add a specialization to the authenticated owner's tour guide profile
+POST    /api/v1/guides/admin/{guideId}/reinstate - Admin: Reinstate a suspended tour guide
+POST    /api/v1/guides/admin/{guideId}/suspend - Admin: Suspend a tour guide
+POST    /api/v1/guides/agencies/{agencyUserId}/apply - Apply to join an agency as an independent guide
+POST    /api/v1/guides/invitations/{id}/accept - Accept an agency's invitation
+POST    /api/v1/guides/invitations/{id}/decline - Decline an agency's invitation
+POST    /api/v1/guides/me/availability-blocks - Create an availability block on own guide profile
+POST    /api/v1/interactions - Record a user interaction event.
+POST    /api/v1/notifications/{id}/read - Mark a notification as read.
+POST    /api/v1/notifications/read-all - Mark all of the current user's notifications as read.
+POST    /api/v1/ops/content-tours/backfill/tour-snapshots - Re-emit enriched TourApproved events for all approved tours to repopulate Booking snapshots
+POST    /api/v1/ops/outbox/dead-letters/{module}/{id}/replay - Replay a dead-lettered outbox message by cloning it with fresh retry state
+POST    /api/v1/payments/{bookingId}/simulate-success - DEV ONLY: complete the fake payment for a booking (no gateway webhook).
+POST    /api/v1/payments/{id}/refund - Refund a completed Booking payment.
+POST    /api/v1/payments/initiate - Initiate a payment for an existing booking.
+POST    /api/v1/payments/webhook - Receives signed webhook events from the payment gateway (HMAC verified before parse).
+POST    /api/v1/payouts/{id}/approve - Admin: approve a Pending payout > LargePayoutThreshold.
+POST    /api/v1/payouts/admin/trigger - Admin: manually trigger a payout sweep cycle.
+POST    /api/v1/places - Create a new place — admin only
+POST    /api/v1/places/businesses - Create a business linked to a Place (status starts as Pending)
+POST    /api/v1/places/businesses/{businessId}/amenities - Add an amenity to a business (owner OR admin-tier)
+POST    /api/v1/places/businesses/{businessId}/services - Create a service item for a business
+POST    /api/v1/places/businesses/{id}/resubmit - Resubmit a rejected business for review (owner only; status must be Rejected)
+POST    /api/v1/places/businesses/{id}/staff - Add a staff member to a business (owner OR admin-tier)
+POST    /api/v1/places/businesses/admin/{id}/approve - Approve a pending business (admin only; status must be Pending)
+POST    /api/v1/places/businesses/admin/{id}/reinstate - Reinstate a suspended business (admin only; status must be Suspended)
+POST    /api/v1/places/businesses/admin/{id}/reject - Reject a pending business with a reason (admin only; status must be Pending)
+POST    /api/v1/places/businesses/admin/{id}/request-more-docs - Request more documents from a pending business owner (admin only; status must be Pending or MoreDocsNeeded)
+POST    /api/v1/places/businesses/admin/{id}/suspend - Suspend an approved business with a reason (admin only; status must be Approved)
+POST    /api/v1/provider/apply - Submit provider application for review
+POST    /api/v1/provider/documents - Add a document to provider application
+POST    /api/v1/provider/documents/upload - Upload a document file to the provider application
+POST    /api/v1/provider/reapply - Reapply after a rejected provider application (cooling period must have passed)
+POST    /api/v1/provider/register - Register as a provider
+POST    /api/v1/provider-payment-methods - Add a payment method for the current provider.
+POST    /api/v1/provider-payment-methods/{id}/verify - Admin: verify a provider payment method.
+POST    /api/v1/security/roles - Create a new role
+POST    /api/v1/security/roles/{roleId}/claims - Add a claim to a role
+POST    /api/v1/security/users/{userId}/claims - Add a claim to a user
+POST    /api/v1/security/users/{userId}/roles - Assign a role to a user
+POST    /api/v1/seo/faq - Create a new FAQ item.
+POST    /api/v1/seo/metadata - Create or update SEO metadata for an entity.
+POST    /api/v1/seo/redirects - Create a redirect with automatic chain-flattening.
+POST    /api/v1/seo/sitemap/regenerate - Force a sitemap re-render and cache refresh.
+POST    /api/v1/seo/weather/refresh/{placeId} - Force-refresh weather data for a place.
+POST    /api/v1/social/accessibility/reviews - Submit a new accessibility-focused review (Phase-3 WS-2)
+POST    /api/v1/social/favorites - Add a favorite
+POST    /api/v1/social/moderation/ban - Admin: issue a moderation ban to a user
+POST    /api/v1/social/moderation/warn - Admin: issue a moderation warning to a user
+POST    /api/v1/social/reports - Submit a report
+POST    /api/v1/social/reports/admin/{id}/resolve - Admin: resolve a report
+POST    /api/v1/social/reviews - Create a new review (S-R1/S-R2/S-R4)
+POST    /api/v1/social/reviews/{id}/helpful - Mark a review as helpful
+POST    /api/v1/social/reviews/{id}/reply - Provider adds a reply to a review
+POST    /api/v1/social/reviews/{id}/report - Report a review
+POST    /api/v1/social/reviews/admin/{id}/approve - Admin: approve a review
+POST    /api/v1/social/reviews/admin/{id}/remove - Admin: remove a review
+POST    /api/v1/support/admin/tickets/{id}/assign - Assign a support ticket to an admin.
+POST    /api/v1/support/admin/tickets/{id}/resolve - Resolve a support ticket.
+POST    /api/v1/support/tickets - Create a new support ticket.
+POST    /api/v1/support/tickets/{id}/close - Close a support ticket.
+POST    /api/v1/support/tickets/{id}/messages - Post a message to a support ticket.
+POST    /api/v1/tours - Create a new tour in Draft status
+POST    /api/v1/tours/{id}/archive - Provider: archive own tour
+POST    /api/v1/tours/{id}/guides - Assign a tour guide to a tour (auto-promotes to primary on first assignment)
+POST    /api/v1/tours/{id}/pricing - Create a pricing tier for a tour
+POST    /api/v1/tours/{id}/schedules - Create tour schedules via recurrence pattern (Once/Daily/Weekly/Custom; 90-day cap; 120-row limit)
+POST    /api/v1/tours/{id}/submit - Submit a draft tour for admin review
+POST    /api/v1/tours/{id}/waypoints - Add a waypoint to a tour
+POST    /api/v1/tours/{tourId}/applications - Apply to run a tour (TourGuide)
+POST    /api/v1/tours/{tourId}/applications/{applicationId}/approve - Approve a guide application for a tour
+POST    /api/v1/tours/{tourId}/applications/{applicationId}/reject - Reject a guide application for a tour
+POST    /api/v1/tours/{tourId}/close-applications - Close a tour for guide applications
+POST    /api/v1/tours/{tourId}/guide-offerings/{guideId}/pricing-tiers - Add a pricing tier to a guide offering
+POST    /api/v1/tours/{tourId}/guide-offerings/{guideId}/private-tour - Enable private tour pricing for a guide offering
+POST    /api/v1/tours/{tourId}/guide-offerings/{guideId}/reinstate - Reinstate a suspended guide offering
+POST    /api/v1/tours/{tourId}/guide-offerings/{guideId}/schedules - Add a schedule slot to a guide offering
+POST    /api/v1/tours/{tourId}/guide-offerings/{guideId}/suspend - Suspend a guide offering
+POST    /api/v1/tours/{tourId}/open-applications - Open a tour for guide applications
+POST    /api/v1/tours/admin/{id}/approve - Admin: approve a pending tour
+POST    /api/v1/tours/admin/{id}/reinstate - Admin: reinstate a suspended tour
+POST    /api/v1/tours/admin/{id}/reject - Admin: reject a pending tour
+POST    /api/v1/tours/admin/{id}/suspend - Admin: suspend an approved tour
+POST    /api/v1/tours/packages - Create a tour package
+POST    /api/v1/tours/packages/{id}/approve - Approve a tour package (Admin)
+POST    /api/v1/tours/packages/{id}/inclusions - Add inclusion to tour package
+POST    /api/v1/tours/packages/{id}/reject - Reject a tour package (Admin)
+POST    /api/v1/tours/packages/{id}/submit - Submit a tour package for admin review (provider)
+POST    /api/v1/tours/proposals - Create a tour proposal draft (TourGuide)
+POST    /api/v1/tours/proposals/{id}/approve - Approve a tour proposal and create the tour (Admin)
+POST    /api/v1/tours/proposals/{id}/reject - Reject a tour proposal (Admin)
+POST    /api/v1/tours/proposals/{id}/submit - Submit a tour proposal for admin review
+PUT     /api/v1/accounts/me/marketing-consent - Update the current user's marketing consent
+PUT     /api/v1/accounts/profile - Update the current user's profile
+PUT     /api/v1/accounts/profile/avatar - Upload and set the current user's avatar image
+PUT     /api/v1/admin/notification-templates/{id} - Update a notification template.
+PUT     /api/v1/analytics/admin/entities/{kind}/{entityId}/photogenic - Set photogenic hotspot flag on an entity
+PUT     /api/v1/analytics/admin/experiments/{experimentId}/complete - Complete an A/B experiment
+PUT     /api/v1/analytics/admin/experiments/{experimentId}/start - Start an A/B experiment
+PUT     /api/v1/analytics/preferences - Update the current user's recommendation preferences
+PUT     /api/v1/blogs/{id} - Update a Draft or Published blog
+PUT     /api/v1/blogs/admin/{id}/translations/{languageCode} - Admin — create or update a blog translation for a language
+PUT     /api/v1/blogs/admin/creators/profiles/{id} - Admin — edit any creator profile fields
+PUT     /api/v1/blogs/comments/{commentId} - Update a blog comment (owner ≤30 min, admin/superadmin anytime).
+PUT     /api/v1/blogs/creators/applications/{applicationId} - Update a Draft/MoreInfoNeeded creator application
+PUT     /api/v1/blogs/creators/profile/mine - Update current user's creator profile
+PUT     /api/v1/blogs/creators/profile/mine/avatar - Update creator avatar URL
+PUT     /api/v1/booking/availability/slots/{id} - Update availability slot capacity.
+PUT     /api/v1/booking/guide-discounts/{id} - Guide updates an existing discount.
+PUT     /api/v1/booking/provider/documents/{id} - Replace the file and/or update the expiry of an existing provider document.
+PUT     /api/v1/commissions/{id} - Admin: update an existing commission rule.
+PUT     /api/v1/content-core/attachments/primary - Set an attachment as the primary image for an entity
+PUT     /api/v1/content-core/attachments/reorder - Reorder attachments for an entity
+PUT     /api/v1/content-core/categories/{id} - Update a category with auto re-translation
+PUT     /api/v1/content-core/categories/reorder - Reorder categories via batch sort order update
+PUT     /api/v1/content-core/languages/{id} - Update language settings
+PUT     /api/v1/content-core/specializations/{id} - Update a specialization
+PUT     /api/v1/content-core/tags/{id} - Update a tag
+PUT     /api/v1/content-core/translations/{id} - Update/override a translation
+PUT     /api/v1/guides/{id} - Update the authenticated owner's tour guide profile
+PUT     /api/v1/guides/admin/{guideId} - Admin: Update a tour guide profile
+PUT     /api/v1/guides/me/avatar - Update own tour guide avatar
+PUT     /api/v1/guides/me/cover-image - Update own tour guide cover image
+PUT     /api/v1/notifications/preferences - Update the current user's notification preferences.
+PUT     /api/v1/places/{id} - Update a place — admin only
+PUT     /api/v1/places/{id}/accessibility - Replace all accessibility features for a place (batch replace)
+PUT     /api/v1/places/businesses/{id} - Update a business (owner or admin only)
+PUT     /api/v1/places/businesses/{id}/accessibility - Replace all accessibility features for a business (owner only)
+PUT     /api/v1/places/businesses/{id}/hours - Replace all operating hours for a business (owner or admin only; max 2 entries/day)
+PUT     /api/v1/places/businesses/services/{id} - Update a service item
+PUT     /api/v1/provider/documents/{id} - Replace a provider document
+PUT     /api/v1/provider-payment-methods/{id} - Update one of the current provider's payment methods.
+PUT     /api/v1/security/account/password - Change the current user's password
+PUT     /api/v1/security/account/phone - Update the current user's primary phone number
+PUT     /api/v1/seo/faq/{id} - Update an FAQ item's question and answer.
+PUT     /api/v1/seo/faq/reorder - Reorder FAQ items in batch.
+PUT     /api/v1/seo/metadata/{id} - Update SEO metadata by id.
+PUT     /api/v1/seo/redirects/{id} - Update redirect target, status code, or active state.
+PUT     /api/v1/seo/weather/budget/reset - Reset the weather API daily budget counter for a UTC date (defaults to today).
+PUT     /api/v1/social/accessibility/reviews/{id} - Edit own accessibility review within the 48-hour edit window (S-AR2)
+PUT     /api/v1/social/reviews/{id} - Edit review within 48-hour window (S-R3)
+PUT     /api/v1/social/reviews/{id}/reply/{replyId} - Update an existing reply (S-R3: no time limit for replies)
+PUT     /api/v1/tours/{id} - Update a draft or rejected tour
+PUT     /api/v1/tours/{id}/children-info - Update children-related fields on a tour
+PUT     /api/v1/tours/{id}/pricing/{tierId} - Update a pricing tier
+PUT     /api/v1/tours/{id}/schedules/{scheduleId} - Update a tour schedule
+PUT     /api/v1/tours/{id}/waypoints/reorder - Reorder all waypoints in a tour (batch — PDF B2 shape)
+PUT     /api/v1/tours/{tourId}/guide-offerings/{guideId}/pricing-tiers/{tierId} - Update a pricing tier
+PUT     /api/v1/tours/{tourId}/guide-offerings/{guideId}/schedules/{scheduleId} - Update a guide schedule slot
+PUT     /api/v1/tours/packages/{id} - Update a tour package

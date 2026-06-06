@@ -9,7 +9,7 @@ same physical layout: layered by type.**
 
 | Area | Layout | Folders |
 |---|---|---|
-| **All areas** (Auth, Accounts, Content, Admin) | **Layered (by type)** | `Areas/{Area}/{Controllers,Facades,ApiClients,Models/{Feature},Views/{Controller}}` |
+| **All areas** (Accounts, Admin, Auth, Business, Content, Creator, Guide, Provider, Public) | **Layered (by type)** | `Areas/{Area}/{Controllers,Facades,ApiClients,Models/{Feature},Views/{Controller}}` |
 
 > **Layered-by-type is the universal standard.** Files are grouped by their **role**
 > (Controllers, Facades, ApiClients, Models, Views), never by feature folder. Models stay
@@ -63,7 +63,7 @@ area's shared layer folders:
 | Models (DTOs + VMs + Mappers) | `Areas/{Area}/Models/{Feature}/` | `YallaJo.Web.Areas.{Area}.Models.{Feature}` |
 | Views | `Areas/{Area}/Views/{Controller}/` | (view path) |
 
-`{Area}` is one of `Auth`, `Accounts`, `Content`, `Admin`. Some areas add extra role folders:
+`{Area}` is one of `Accounts`, `Admin`, `Auth`, `Business`, `Content`, `Creator`, `Guide`, `Provider`, `Public`. Some areas add extra role folders:
 
 | Extra layer | Where | Namespace | Used for |
 |---|---|---|---|
@@ -425,7 +425,7 @@ public sealed class LanguagesController : BaseController
     public async Task<IActionResult> Index(bool activeOnly = false, CancellationToken ct = default)
     {
         var result = await _facade.GetLanguagesAsync(activeOnly, ct);
-        if (GuardSignOut(result) is { } signOut) return signOut;   // 401 → /auth/login
+        if (GuardSignOut(result) is { } signOut) return signOut;   // 401 → /auth/sign-in
         if (!result.IsSuccess)
         {
             ViewBag.Error = result.Error;
@@ -680,7 +680,7 @@ Global shared: ~/Views/Shared/{View}.cshtml          (_Layout, _Navbar, _Alerts,
 ```
 These are registered once in `Program.cs` (`AddRazorOptions` → `AreaViewLocationFormats`). The
 generic `~/Areas/{2}/Views/{1}/{0}.cshtml` format is **area-agnostic**, so a new screen in **any**
-area (Auth, Accounts, Content, Admin) at `Areas/{Area}/Views/{Controller}/{Action}.cshtml` is
+area (Accounts, Admin, Auth, Business, Content, Creator, Guide, Provider, Public) at `Areas/{Area}/Views/{Controller}/{Action}.cshtml` is
 picked up at startup with **no per-screen `Program.cs` change**. Per-feature partials live in
 `Views/{Controller}/Partials/` and are referenced by relative name
 (e.g. `<partial name="Partials/_MetadataDetails" />`).
@@ -875,7 +875,7 @@ If your feature is a new resource, add a new nested group here first, then refer
    *(Run it alone — parallel builds can hit a VBCSCompiler DLL lock, CS2012.)*
 2. **Run** and navigate to the route (e.g. `/Admin/Languages`).
 3. **Check:**
-   - List loads; 401 redirects to `/auth/login` (the `GuardSignOut` guard).
+   - List loads; 401 redirects to `/auth/sign-in` (the `GuardSignOut` guard).
    - Create/Edit POSTs succeed; success banner shows (via `_Alerts`).
    - Submitting an invalid form shows field errors (server + client).
    - Permissions hide/deny the actions you gated.
@@ -1118,7 +1118,7 @@ unobtrusive adapter does the AJAX call to your endpoint as the field blurs.
 
 ## 15. New-feature checklist (copy this into the PR)
 
-- [ ] Files placed per the layered layout (see §1, same for **every** area — Auth, Accounts, Content, Admin):
+- [ ] Files placed per the layered layout (see §1, same for **every** area — Accounts, Admin, Auth, Business, Content, Creator, Guide, Provider, Public):
   - `Controllers/{Name}Controller.cs` (`...Areas.{Area}.Controllers`), `Facades/{Name}Facade.cs` (`...Areas.{Area}.Facades`), `ApiClients/{Name}ApiClient.cs` (`...Areas.{Area}.ApiClients`), DTOs/VMs/Mapper under `Models/{Feature}/` (`...Areas.{Area}.Models.{Feature}`), views under `Views/{Controller}/`
   - Extra role folders where used: `Validators/` (`...Areas.{Area}.Validators`), `Helpers/` (`...Areas.{Area}.Helpers`), `Shared/` for area-shared partials
 - [ ] DTOs: Requests + Responses (init setters, camelCase)
