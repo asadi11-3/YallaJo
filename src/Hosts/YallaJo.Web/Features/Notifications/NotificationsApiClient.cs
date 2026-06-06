@@ -1,3 +1,5 @@
+using System.Globalization;
+using Microsoft.AspNetCore.WebUtilities;
 using YallaJo.Web.Infrastructure.Api.Contracts;
 using YallaJo.Web.Services;
 
@@ -16,8 +18,36 @@ public sealed class NotificationsApiClient
 
     public NotificationsApiClient(IApiClient api) => _api = api;
 
+    /// <summary>
+    /// Paged notification list with optional filters (FE-1B inbox + load-more).
+    /// <paramref name="type"/> is the NotificationType enum name (e.g. "BookingConfirmed").
+    /// </summary>
+    public Task<ApiResult<NotificationPageResponse>> GetListAsync(
+        string? type = null,
+        bool? isRead = null,
+        DateTime? from = null,
+        DateTime? to = null,
+        Guid? cursor = null,
+        int pageSize = 20,
+        CancellationToken ct = default)
+    {
+        var query = new Dictionary<string, string?>
+        {
+            ["pageSize"] = pageSize.ToString(CultureInfo.InvariantCulture),
+        };
+        if (!string.IsNullOrWhiteSpace(type)) query["type"] = type;
+        if (isRead is { } r) query["isRead"] = r ? "true" : "false";
+        if (from is { } f) query["from"] = f.ToString("O", CultureInfo.InvariantCulture);
+        if (to is { } t) query["to"] = t.ToString("O", CultureInfo.InvariantCulture);
+        if (cursor is { } c && c != Guid.Empty) query["cursor"] = c.ToString("D");
+
+        var url = QueryHelpers.AddQueryString($"{Base}/", query);
+        return _api.GetAsync<NotificationPageResponse>(url, ct);
+    }
+
+    /// <summary>Convenience wrapper used by the notification bell (recent N, no filters).</summary>
     public Task<ApiResult<NotificationPageResponse>> GetRecentAsync(int pageSize = 10, CancellationToken ct = default)
-        => _api.GetAsync<NotificationPageResponse>($"{Base}/?pageSize={pageSize}", ct);
+        => GetListAsync(pageSize: pageSize, ct: ct);
 
     public Task<ApiResult<int>> GetUnreadCountAsync(CancellationToken ct = default)
         => _api.GetAsync<int>($"{Base}/unread-count", ct);
@@ -27,4 +57,8 @@ public sealed class NotificationsApiClient
 
     public Task<ApiResult> MarkAllReadAsync(CancellationToken ct = default)
         => _api.PostAsync($"{Base}/read-all", null, ct);
+
+    // DELETE /api/v1/notifications/{id} — delete a single own notification (FE-1B)
+    public Task<ApiResult> DeleteAsync(Guid id, CancellationToken ct = default)
+        => _api.DeleteAsync($"{Base}/{id}", ct);
 }
