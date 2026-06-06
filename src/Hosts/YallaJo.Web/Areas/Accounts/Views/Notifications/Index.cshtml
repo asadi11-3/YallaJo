@@ -1,0 +1,176 @@
+@model YallaJo.Web.Areas.Accounts.Models.Notifications.NotificationsInboxVm
+@using YallaJo.Web.Areas.Accounts.Models.Notifications
+@using YallaJo.Web.Areas.Accounts.Shared
+@using YallaJo.Web.Infrastructure.Authorization
+@{
+    ViewData["Title"] = "Notifications";
+    ViewData["AccountNav"] = "Notifications";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var sidebar = ViewBag.Sidebar as AccountSidebarVm ?? new AccountSidebarVm();
+
+    string TimeAgo(DateTime utc)
+    {
+        var span = DateTime.UtcNow - utc;
+        if (span.TotalMinutes < 1) return "just now";
+        if (span.TotalMinutes < 60) return $"{(int)span.TotalMinutes}m ago";
+        if (span.TotalHours < 24) return $"{(int)span.TotalHours}h ago";
+        if (span.TotalDays < 7) return $"{(int)span.TotalDays}d ago";
+        return utc.ToString("dd MMM yyyy");
+    }
+
+    string LoadMoreUrl() => Url.Action("Index", "Notifications", new
+    {
+        area = "Accounts",
+        status = Model.Filter.Status,
+        type = Model.Filter.Type,
+        fromDate = Model.Filter.FromDate,
+        toDate = Model.Filter.ToDate,
+        cursor = Model.NextCursor,
+    })!;
+}
+
+<section class="pt-3">
+    <div class="container">
+        <div class="row g-4 g-xl-5">
+            <partial name="_AccountSidebar" model="sidebar" />
+
+            <div class="col-lg-8 col-xl-9">
+                <div class="d-grid d-lg-none mb-3">
+                    <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasSidebar">
+                        <i class="fas fa-sliders-h me-2"></i>Account menu
+                    </button>
+                </div>
+
+                <div class="card border mb-4">
+                    <div class="card-header border-bottom d-flex justify-content-between align-items-center">
+                        <h4 class="card-header-title mb-0">
+                            Notifications
+                            @if (Model.UnreadCount > 0)
+                            {
+                                <span class="badge bg-danger bg-opacity-10 text-danger ms-2">@Model.UnreadCount unread</span>
+                            }
+                        </h4>
+                        @if (Model.UnreadCount > 0)
+                        {
+                            <form asp-area="" asp-controller="Notifications" asp-action="MarkAllRead" method="post" class="m-0">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-sm btn-light mb-0">Mark all read</button>
+                            </form>
+                        }
+                    </div>
+
+                    <div class="card-body border-bottom">
+                        <form method="get" asp-area="Accounts" asp-controller="Notifications" asp-action="Index" class="row g-2 align-items-end">
+                            <div class="col-sm-3">
+                                <label class="form-label small mb-1" for="status">Status</label>
+                                <select class="form-select form-select-sm" id="status" name="status">
+                                    @foreach (var s in NotificationInboxFilterVm.StatusOptions)
+                                    {
+                                        var label = s switch { "unread" => "Unread", "read" => "Read", _ => "All" };
+                                        <option value="@s" selected="@(string.Equals(s, Model.Filter.Status, StringComparison.OrdinalIgnoreCase))">@label</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-sm-4">
+                                <label class="form-label small mb-1" for="type">Type</label>
+                                <select class="form-select form-select-sm" id="type" name="type">
+                                    <option value="">All types</option>
+                                    @foreach (var group in NotificationInboxFilterVm.TypeGroups)
+                                    {
+                                        <optgroup label="@group.Key">
+                                            @foreach (var t in group.Value)
+                                            {
+                                                <option value="@t" selected="@(string.Equals(t, Model.Filter.Type, StringComparison.OrdinalIgnoreCase))">@t</option>
+                                            }
+                                        </optgroup>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-sm-2">
+                                <label class="form-label small mb-1" for="fromDate">From</label>
+                                <input type="date" class="form-control form-control-sm" id="fromDate" name="fromDate" value="@Model.Filter.FromDate" />
+                            </div>
+                            <div class="col-sm-2">
+                                <label class="form-label small mb-1" for="toDate">To</label>
+                                <input type="date" class="form-control form-control-sm" id="toDate" name="toDate" value="@Model.Filter.ToDate" />
+                            </div>
+                            <div class="col-sm-1 d-grid">
+                                <button type="submit" class="btn btn-sm btn-primary mb-0">Filter</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="card-body p-3">
+                        @if (!Model.HasItems)
+                        {
+                            <div class="text-center py-5">
+                                <i class="bi bi-bell-slash fs-1 text-muted d-block mb-2"></i>
+                                <p class="text-muted mb-1">No notifications to show.</p>
+                                <a asp-area="Accounts" asp-controller="Settings" asp-action="Index" class="small">Manage notification preferences</a>
+                            </div>
+                        }
+                        else
+                        {
+                            <ul class="list-group list-group-flush">
+                                @foreach (var n in Model.Items)
+                                {
+                                    <li class="list-group-item px-2 @(n.IsRead ? "" : "bg-primary bg-opacity-10")">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div class="me-2">
+                                                <div class="d-flex align-items-center mb-1">
+                                                    <h6 class="mb-0 @(n.IsRead ? "text-body" : "fw-bold")">@n.Title</h6>
+                                                    <span class="badge bg-secondary bg-opacity-10 text-secondary ms-2 small">@n.Type</span>
+                                                </div>
+                                                @if (!string.IsNullOrWhiteSpace(n.Body))
+                                                {
+                                                    <p class="mb-1 small text-body-secondary">@n.Body</p>
+                                                }
+                                                <span class="small text-muted" title="@n.CreatedAt.ToString("yyyy-MM-dd HH:mm") UTC">@TimeAgo(n.CreatedAt)</span>
+                                                @if (!string.IsNullOrWhiteSpace(n.LinkUrl))
+                                                {
+                                                    <a href="@n.LinkUrl" class="small ms-2">View</a>
+                                                }
+                                            </div>
+                                            <div class="d-flex gap-1 flex-shrink-0">
+                                                @if (!n.IsRead)
+                                                {
+                                                    <form asp-area="" asp-controller="Notifications" asp-action="MarkRead" method="post" class="m-0">
+                                                        @Html.AntiForgeryToken()
+                                                        <input type="hidden" name="id" value="@n.Id" />
+                                                        <button type="submit" class="btn btn-sm btn-link p-0 text-decoration-none" title="Mark as read"><i class="bi bi-check2"></i></button>
+                                                    </form>
+                                                }
+                                                <permission require="@WebPermission.Notification.Delete">
+                                                    <form asp-area="Accounts" asp-controller="Notifications" asp-action="Delete" asp-route-id="@n.Id" method="post" class="m-0"
+                                                          onsubmit="return confirm('Delete this notification? This cannot be undone.');">
+                                                        @Html.AntiForgeryToken()
+                                                        <input type="hidden" name="status" value="@Model.Filter.Status" />
+                                                        <input type="hidden" name="type" value="@Model.Filter.Type" />
+                                                        <input type="hidden" name="fromDate" value="@Model.Filter.FromDate" />
+                                                        <input type="hidden" name="toDate" value="@Model.Filter.ToDate" />
+                                                        <button type="submit" class="btn btn-sm btn-link p-0 text-danger text-decoration-none" title="Delete"><i class="bi bi-trash"></i></button>
+                                                    </form>
+                                                </permission>
+                                            </div>
+                                        </div>
+                                    </li>
+                                }
+                            </ul>
+
+                            <div class="text-center mt-3">
+                                @if (Model.HasNextPage)
+                                {
+                                    <a href="@LoadMoreUrl()" class="btn btn-sm btn-outline-secondary">Load more</a>
+                                }
+                                else
+                                {
+                                    <span class="small text-muted">End of notifications</span>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

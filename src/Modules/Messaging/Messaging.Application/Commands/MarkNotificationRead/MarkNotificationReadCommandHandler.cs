@@ -15,7 +15,7 @@ internal sealed class MarkNotificationReadCommandHandler(
 {
     public async Task<Result> Handle(MarkNotificationReadCommand request, CancellationToken cancellationToken)
     {
-        var notification = await notificationRepository.GetByIdAsync(request.NotificationId, cancellationToken);
+        var notification = await notificationRepository.GetByIdForUpdateAsync(request.NotificationId, cancellationToken);
         if (notification is null)
             return Result.Failure(new Error("Notification.NotFound", "Notification not found."), Outcome.NotFound);
 

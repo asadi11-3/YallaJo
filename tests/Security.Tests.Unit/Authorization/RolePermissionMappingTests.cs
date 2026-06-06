@@ -221,6 +221,51 @@ public sealed class RolePermissionMappingTests
         guest.Should().NotContain("Permission.BookingDispute.Resolve");
     }
 
+    // ── FE-1B: Notification.Delete — consumer-wide, never Guest ────────────────
+
+    private static RolePermissionMapping BuildNotificationCatalog() =>
+        Build(
+            P("Notification", AppAction.Read,   PermissionGroup.SupportOperations),
+            P("Notification", AppAction.Update, PermissionGroup.SupportOperations),
+            P("Notification", AppAction.Delete, PermissionGroup.SupportOperations));
+
+    [Fact]
+    public void Notification_Delete_is_granted_to_consumer_roles()
+    {
+        var mapping = BuildNotificationCatalog();
+
+        foreach (var role in new[]
+                 {
+                     AppRoles.User, AppRoles.Provider, AppRoles.TourGuide, AppRoles.Creator,
+                 })
+        {
+            mapping.GetPermissionsForRole(role)
+                .Should().Contain("Permission.Notification.Delete",
+                    $"role {role} must be able to delete its own notifications (FE-1B)");
+        }
+    }
+
+    [Fact]
+    public void Notification_Delete_is_granted_to_Admin_SuperAdmin_Owner()
+    {
+        var mapping = BuildNotificationCatalog();
+
+        foreach (var role in new[] { AppRoles.Admin, AppRoles.SuperAdmin, AppRoles.Owner })
+        {
+            mapping.GetPermissionsForRole(role)
+                .Should().Contain("Permission.Notification.Delete",
+                    $"role {role} receives Notification.Delete via its full permission sweep");
+        }
+    }
+
+    [Fact]
+    public void Notification_Delete_is_not_granted_to_Guest()
+    {
+        var guest = BuildNotificationCatalog().GetPermissionsForRole(AppRoles.Guest);
+
+        guest.Should().NotContain("Permission.Notification.Delete");
+    }
+
     // ── P1: Provider provisioning — ProviderSelf + Consumer, no admin "Any" ───
 
     [Fact]

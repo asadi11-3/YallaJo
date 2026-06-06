@@ -36,6 +36,13 @@ internal sealed class NotificationRepository(MessagingDbContext context)
         => _context.Notifications.AsNoTracking()
             .CountAsync(n => n.UserId == userId && n.ReadAt == null, ct);
 
+    // Change-tracked single load for mutation handlers (mark-read / soft-delete).
+    // Without tracking, entity mutations are detached and SaveChangesAsync is a no-op.
+    // The DbSet carries the global HasQueryFilter(!IsDeleted), so already-deleted
+    // notifications resolve to null (idempotent deletes).
+    public Task<Notification?> GetByIdForUpdateAsync(Guid id, CancellationToken ct = default)
+        => _context.Notifications.FirstOrDefaultAsync(n => n.Id == id, ct);
+
     public async Task MarkAllAsReadByUserAsync(Guid userId, CancellationToken ct = default)
     {
         var now = DateTime.UtcNow;

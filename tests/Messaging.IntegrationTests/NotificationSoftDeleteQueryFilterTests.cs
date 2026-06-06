@@ -211,13 +211,14 @@ public sealed class NotificationSoftDeleteQueryFilterTests : IAsyncLifetime
     // ── 7. Delete-handler semantics: re-fetch of a soft-deleted row is NotFound
 
     /// <summary>
-    /// Documents and locks in the chosen delete-handler behaviour: after the fix, a
-    /// default (filter-respecting) lookup of an already soft-deleted notification returns
-    /// null. DeleteNotificationCommandHandler / BatchDeleteNotificationsCommandHandler use
-    /// the default <c>GetByIdAsync</c> (tracking=true path is AsNoTracking + filtered),
-    /// so re-deleting an already-deleted notification yields NotFound rather than an
-    /// idempotent success. This is intentional and consistent with the soft-delete
-    /// semantics; IgnoreQueryFilters() is deliberately NOT used in those handlers.
+    /// Documents and locks in the chosen delete-handler behaviour: a filter-respecting
+    /// lookup of an already soft-deleted notification returns null.
+    /// DeleteNotificationCommandHandler / BatchDeleteNotificationsCommandHandler now use
+    /// <c>GetByIdForUpdateAsync</c> (a CHANGE-TRACKED lookup that still honors the global
+    /// !IsDeleted filter), so re-deleting an already-deleted notification yields NotFound
+    /// rather than an idempotent success. This is intentional and consistent with the
+    /// soft-delete semantics; IgnoreQueryFilters() is deliberately NOT used in those
+    /// handlers.
     /// </summary>
     [Fact]
     public async Task SoftDeletedNotification_IsNotFound_ByDefaultLookup()

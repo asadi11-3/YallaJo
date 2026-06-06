@@ -556,6 +556,7 @@ public static class WebPermission
     {
         public const string Read   = "Permission.Notification.Read";
         public const string Update = "Permission.Notification.Update";
+        public const string Delete = "Permission.Notification.Delete";
     }
 
     // ── AdminModerationQueue (social reports / flagged reviews / user moderation) ──

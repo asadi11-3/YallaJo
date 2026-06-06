@@ -1,3 +1,4 @@
+using YallaJo.Web.Areas.Accounts.Models.Notifications;
 using YallaJo.Web.Infrastructure.Api.Contracts;
 
 namespace YallaJo.Web.Features.Notifications;
@@ -8,7 +9,8 @@ namespace YallaJo.Web.Features.Notifications;
 /// </summary>
 public sealed class NotificationsFacade
 {
-    private const int RecentPageSize = 8;
+    private const int RecentPageSize = 10;
+    private const int InboxPageSize = 20;
 
     private readonly NotificationsApiClient _api;
     private readonly ILogger<NotificationsFacade> _logger;
@@ -61,6 +63,75 @@ public sealed class NotificationsFacade
             return ApiResult.Fail("Could not mark notifications as read.");
         }
     }
+
+    /// <summary>
+    /// Builds the inbox page VM (FE-1B). Safe-degrades like the bell: any API failure
+    /// returns an empty inbox with a non-null <see cref="NotificationsInboxVm.LoadError"/>
+    /// so the page chrome always renders instead of 500-ing.
+    /// </summary>
+    public async Task<NotificationsInboxVm> GetInboxAsync(
+        NotificationInboxFilterVm filter, Guid? cursor, CancellationToken ct = default)
+    {
+        var from = ParseDate(filter.FromDate);
+        var to = ParseDate(filter.ToDate);
+
+        var listTask = SafeListAsync(filter.Type, filter.ToIsRead(), from, to, cursor, ct);
+        var unreadTask = SafeUnreadCountAsync(ct);
+        await Task.WhenAll(listTask, unreadTask);
+
+        var (page, error) = listTask.Result;
+        var vm = NotificationsMapper.ToInboxVm(page, filter, unreadTask.Result);
+
+        return new NotificationsInboxVm
+        {
+            Filter = filter,
+            Items = vm.Items,
+            NextCursor = vm.NextCursor,
+            UnreadCount = vm.UnreadCount,
+            LoadError = error,
+        };
+    }
+
+    public async Task<ApiResult> DeleteAsync(Guid id, CancellationToken ct = default)
+    {
+        try
+        {
+            var result = await _api.DeleteAsync(id, ct);
+            if (result.IsSuccess) return ApiResult.Ok();
+            if (result.IsUnauthorized) return ApiResult.ForceSignOut();
+            if (result.IsForbidden) return ApiResult.Fail(403, "You don't have permission to delete this notification.");
+            if (result.IsNotFound) return ApiResult.Fail(404, "Notification not found.");
+            return ApiResult.Fail(result.StatusCode, result.Error ?? "Could not delete the notification.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to delete notification {NotificationId}", id);
+            return ApiResult.Fail("Could not delete the notification.");
+        }
+    }
+
+    private async Task<(NotificationPageResponse Page, string? Error)> SafeListAsync(
+        string? type, bool? isRead, DateTime? from, DateTime? to, Guid? cursor, CancellationToken ct)
+    {
+        try
+        {
+            var result = await _api.GetListAsync(type, isRead, from, to, cursor, InboxPageSize, ct);
+            if (result.IsSuccess && result.Data is not null)
+            {
+                return (result.Data, null);
+            }
+
+            return (new NotificationPageResponse(), result.Error ?? "Could not load notifications.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to load notifications inbox");
+            return (new NotificationPageResponse(), "Could not load notifications.");
+        }
+    }
+
+    private static DateTime? ParseDate(string? value)
+        => DateTime.TryParse(value, out var d) ? d : null;
 
     private async Task<int> SafeUnreadCountAsync(CancellationToken ct)
     {
