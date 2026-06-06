@@ -26,4 +26,7 @@
     <ProjectReference Include="..\ContentCore.Domain\ContentCore.Domain.csproj" />
     <ProjectReference Include="..\..\..\BuildingBlocks\YallaJo.SharedKernel.Infrastructure\YallaJo.SharedKernel.Infrastructure.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="ContentCore.Tests.Unit" />
+  </ItemGroup>
 </Project>

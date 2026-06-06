@@ -16,6 +16,7 @@ namespace ContentBlogs.Application.Commands.Blog.CreateBlog;
 
 public sealed class CreateBlogCommandHandler(
     IBlogRepository blogRepository,
+    ICreatorProfileRepository creatorProfileRepository,
     IActiveLanguageProvider activeLanguageProvider,
     IContentBlogsUnitOfWork unitOfWork,
     HybridCache cache,
@@ -82,18 +83,38 @@ public sealed class CreateBlogCommandHandler(
             var utcNow = DateTime.UtcNow;
             var readTimeMinutes = EstimateReadTimeMinutes(request.Content);
 
-            var blog = BlogEntity.Create(
-                title:            request.Title,
-                slug:             slug,
-                content:          request.Content,
-                authorId:         currentUser.UserId!.Value,
-                sourceLanguageId: sourceLanguage.Id,
-                utcNow:           utcNow,
-                summary:          request.Summary,
-                metaTitle:        request.MetaTitle,
-                metaDescription: request.MetaDescription,
-                placeId:          request.PlaceId,
-                readTimeMinutes:  readTimeMinutes);
+            var authorId = currentUser.UserId!.Value;
+
+            var creatorProfile = await creatorProfileRepository
+                .GetByUserIdAsync(authorId, cancellationToken)
+                .ConfigureAwait(false);
+
+            var blog = creatorProfile is not null
+                ? BlogEntity.CreateByCreator(
+                    title:             request.Title,
+                    slug:              slug,
+                    content:           request.Content,
+                    authorId:          authorId,
+                    creatorProfileId:  creatorProfile.Id,
+                    sourceLanguageId:  sourceLanguage.Id,
+                    utcNow:            utcNow,
+                    summary:           request.Summary,
+                    metaTitle:         request.MetaTitle,
+                    metaDescription:   request.MetaDescription,
+                    placeId:           request.PlaceId,
+                    readTimeMinutes:   readTimeMinutes)
+                : BlogEntity.Create(
+                    title:            request.Title,
+                    slug:             slug,
+                    content:          request.Content,
+                    authorId:         authorId,
+                    sourceLanguageId: sourceLanguage.Id,
+                    utcNow:           utcNow,
+                    summary:          request.Summary,
+                    metaTitle:        request.MetaTitle,
+                    metaDescription: request.MetaDescription,
+                    placeId:          request.PlaceId,
+                    readTimeMinutes:  readTimeMinutes);
 
             // Source-language translation in the same unit of work.
             var sourceTranslation = BlogTranslationEntity.Create(
@@ -123,8 +144,8 @@ public sealed class CreateBlogCommandHandler(
                 .ConfigureAwait(false);
 
             logger.LogInformation(
-                "Blog created: {BlogId} (Slug={Slug}, AuthorId={AuthorId})",
-                blog.Id, blog.Slug, blog.AuthorId);
+                "Blog created: {BlogId} (Slug={Slug}, AuthorId={AuthorId}, AuthoredByCreatorId={CreatorId})",
+                blog.Id, blog.Slug, blog.AuthorId, blog.AuthoredByCreatorId);
 
             return Result.Created(new CreateBlogResult(blog.Id, blog.Slug));
         }

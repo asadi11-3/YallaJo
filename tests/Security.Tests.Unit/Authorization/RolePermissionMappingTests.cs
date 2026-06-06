@@ -192,4 +192,203 @@ public sealed class RolePermissionMappingTests
         provider.Should().NotContain("Permission.AdminProviderQueue.Approve");
         provider.Should().NotContain("Permission.Payout.Trigger");
     }
+
+    // ── CCD-2/CCD-3 follow-up: creator self-service permissions ────────────────
+    // Creator.{Update,Delete,RedeemInvitation} are group SystemAccess, so they are
+    // NOT swept by any CRUD rule — they reach a role only via ConsumerPermissions.
+
+    private static readonly string[] CreatorSelfServicePermissions =
+    [
+        "Permission.Creator.Update",
+        "Permission.Creator.Delete",
+        "Permission.Creator.RedeemInvitation",
+    ];
+
+    private static RolePermissionMapping BuildCreatorSelfServiceCatalog() =>
+        Build(
+            P(ContentBlogsCreatorFeature, AppAction.Update,           PermissionGroup.SystemAccess),
+            P(ContentBlogsCreatorFeature, AppAction.Delete,           PermissionGroup.SystemAccess),
+            P(ContentBlogsCreatorFeature, AppAction.RedeemInvitation, PermissionGroup.SystemAccess));
+
+    private const string ContentBlogsCreatorFeature = "Creator";
+
+    [Fact]
+    public void User_receives_creator_self_service_permissions()
+    {
+        var user = BuildCreatorSelfServiceCatalog().GetPermissionsForRole(AppRoles.User);
+
+        user.Should().Contain(CreatorSelfServicePermissions,
+            "ordinary signed-in users must be able to edit/deactivate their own creator "
+            + "profile and redeem invitations (CCD-2/CCD-3)");
+    }
+
+    [Fact]
+    public void Creator_Provider_TourGuide_receive_same_consumer_propagation()
+    {
+        var mapping = BuildCreatorSelfServiceCatalog();
+
+        foreach (var role in new[] { AppRoles.Creator, AppRoles.Provider, AppRoles.TourGuide })
+        {
+            mapping.GetPermissionsForRole(role)
+                .Should().Contain(CreatorSelfServicePermissions,
+                    $"role {role} also includes ConsumerPermissions");
+        }
+    }
+
+    [Fact]
+    public void Admin_Owner_SuperAdmin_already_cover_creator_self_service_permissions()
+    {
+        var mapping = BuildCreatorSelfServiceCatalog();
+
+        foreach (var role in new[] { AppRoles.Admin, AppRoles.SuperAdmin, AppRoles.Owner })
+        {
+            mapping.GetPermissionsForRole(role)
+                .Should().Contain(CreatorSelfServicePermissions,
+                    $"role {role} receives these via its full permission sweep");
+        }
+    }
+
+    [Fact]
+    public void Guest_does_not_receive_creator_self_service_permissions()
+    {
+        var guest = BuildCreatorSelfServiceCatalog().GetPermissionsForRole(AppRoles.Guest);
+
+        guest.Should().NotContain("Permission.Creator.Update");
+        guest.Should().NotContain("Permission.Creator.Delete");
+        guest.Should().NotContain("Permission.Creator.RedeemInvitation");
+    }
+
+    // ── CCD-4: creator article authoring (Blog.{ReadOwn,Update,Submit}) ─────────
+    // Mirrors the real catalog grouping: Blog.{Read,Create,Update,DeleteOwn} are
+    // ContentManagement; Blog.{ReadOwn,Submit} are SystemAccess. The Creator role
+    // must end up with all five article-authoring permissions.
+
+    private static RolePermissionMapping BuildBlogArticleCatalog() =>
+        Build(
+            P("Blog", AppAction.Read,      PermissionGroup.ContentManagement),
+            P("Blog", AppAction.Create,    PermissionGroup.ContentManagement),
+            P("Blog", AppAction.Update,    PermissionGroup.ContentManagement),
+            P("Blog", AppAction.DeleteOwn, PermissionGroup.ContentManagement),
+            P("Blog", AppAction.ReadOwn,   PermissionGroup.SystemAccess),
+            P("Blog", AppAction.Submit,    PermissionGroup.SystemAccess));
+
+    private static readonly string[] CreatorArticlePermissions =
+    [
+        "Permission.Blog.Read",       // admin-get edit prefetch
+        "Permission.Blog.Create",     // create draft
+        "Permission.Blog.Update",     // update
+        "Permission.Blog.DeleteOwn",  // delete + restore
+        "Permission.Blog.ReadOwn",    // my-blogs
+        "Permission.Blog.Submit",     // submit for review
+    ];
+
+    [Fact]
+    public void Creator_receives_all_article_authoring_permissions()
+    {
+        var creator = BuildBlogArticleCatalog().GetPermissionsForRole(AppRoles.Creator);
+
+        creator.Should().Contain(CreatorArticlePermissions,
+            "an approved creator must be able to list, create, edit, submit, delete and "
+            + "restore their own articles (CCD-4)");
+    }
+
+    [Fact]
+    public void Creator_article_grant_includes_the_three_previously_missing_permissions()
+    {
+        // Regression guard for the CCD-4 prerequisite: Update (ContentManagement, but
+        // excluded from the Creator sweep) + ReadOwn/Submit (SystemAccess, never swept).
+        var creator = BuildBlogArticleCatalog().GetPermissionsForRole(AppRoles.Creator);
+
+        creator.Should().Contain("Permission.Blog.Update");
+        creator.Should().Contain("Permission.Blog.ReadOwn");
+        creator.Should().Contain("Permission.Blog.Submit");
+    }
+
+    [Fact]
+    public void User_does_not_receive_creator_article_authoring_permissions()
+    {
+        // The base User role must NOT gain article authoring (it is granted only to the
+        // Creator role, not via ConsumerPermissions).
+        var user = BuildBlogArticleCatalog().GetPermissionsForRole(AppRoles.User);
+
+        user.Should().NotContain("Permission.Blog.ReadOwn");
+        user.Should().NotContain("Permission.Blog.Update");
+        user.Should().NotContain("Permission.Blog.Submit");
+        user.Should().NotContain("Permission.Blog.Create");
+    }
+
+    [Fact]
+    public void Admin_still_covers_article_authoring_permissions()
+    {
+        var admin = BuildBlogArticleCatalog().GetPermissionsForRole(AppRoles.Admin);
+
+        admin.Should().Contain(CreatorArticlePermissions,
+            "Admin retains article permissions via its full sweep");
+    }
+
+    // ── CCD-5: creator article image management (Attachment/EntityImage) ────────
+    // All Attachment/EntityImage actions are ContentManagement. The Creator sweep
+    // grants Read/Create/Delete; the prerequisite follow-up adds the Update action
+    // for Attachment (reorder) and EntityImage (set primary), Creator role only.
+
+    private static RolePermissionMapping BuildAttachmentCatalog() =>
+        Build(
+            P("Attachment", AppAction.Read,   PermissionGroup.ContentManagement),
+            P("Attachment", AppAction.Create, PermissionGroup.ContentManagement),
+            P("Attachment", AppAction.Update, PermissionGroup.ContentManagement),
+            P("Attachment", AppAction.Delete, PermissionGroup.ContentManagement),
+            P("EntityImage", AppAction.Read,   PermissionGroup.ContentManagement),
+            P("EntityImage", AppAction.Create, PermissionGroup.ContentManagement),
+            P("EntityImage", AppAction.Update, PermissionGroup.ContentManagement),
+            P("EntityImage", AppAction.Delete, PermissionGroup.ContentManagement));
+
+    private static readonly string[] CreatorImagePermissions =
+    [
+        "Permission.Attachment.Read",    // list images
+        "Permission.Attachment.Create",  // upload
+        "Permission.Attachment.Delete",  // delete
+        "Permission.Attachment.Update",  // reorder
+        "Permission.EntityImage.Update", // set primary
+    ];
+
+    [Fact]
+    public void Creator_receives_all_article_image_permissions()
+    {
+        var creator = BuildAttachmentCatalog().GetPermissionsForRole(AppRoles.Creator);
+
+        creator.Should().Contain(CreatorImagePermissions,
+            "an approved creator must be able to list, upload, delete, reorder and set "
+            + "the primary image for their own articles (CCD-5)");
+    }
+
+    [Fact]
+    public void Creator_image_grant_includes_the_two_previously_missing_update_permissions()
+    {
+        // Regression guard for the CCD-5 prerequisite: the two Update actions excluded
+        // from the Creator Read/Create/Delete sweep.
+        var creator = BuildAttachmentCatalog().GetPermissionsForRole(AppRoles.Creator);
+
+        creator.Should().Contain("Permission.Attachment.Update");
+        creator.Should().Contain("Permission.EntityImage.Update");
+    }
+
+    [Fact]
+    public void User_does_not_receive_article_image_update_permissions()
+    {
+        // The base User role must NOT gain image management (granted only to Creator).
+        var user = BuildAttachmentCatalog().GetPermissionsForRole(AppRoles.User);
+
+        user.Should().NotContain("Permission.Attachment.Update");
+        user.Should().NotContain("Permission.EntityImage.Update");
+        user.Should().NotContain("Permission.Attachment.Create");
+    }
+
+    [Fact]
+    public void Admin_still_covers_article_image_permissions()
+    {
+        var admin = BuildAttachmentCatalog().GetPermissionsForRole(AppRoles.Admin);
+
+        admin.Should().Contain(CreatorImagePermissions,
+            "Admin retains image permissions via its full sweep");
+    }
 }

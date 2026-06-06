@@ -20,7 +20,11 @@ internal sealed class AnalyticsDashboardReader(AnalyticsDbContext db) : IAnalyti
     public async Task<AdminRevenueDashboardDto> GetAdminRevenueAsync(DateTime? from, DateTime? to, CancellationToken ct)
     {
         var q = FilterPayments(from, to).Where(x => x.Type == "Payment" && x.Status == "Completed");
-        var series = await q.GroupBy(x => x.CompletedAt.Date).Select(g => new RevenueTimePointDto(g.Key, g.Sum(x => x.Amount))).OrderBy(x => x.Date).ToListAsync(ct);
+        var grouped = await q.GroupBy(x => x.CompletedAt.Date)
+            .Select(g => new { Date = g.Key, Revenue = g.Sum(x => x.Amount) })
+            .OrderBy(x => x.Date)
+            .ToListAsync(ct);
+        var series = grouped.Select(x => new RevenueTimePointDto(x.Date, x.Revenue)).ToList();
         return new AdminRevenueDashboardDto(series, series.Sum(x => x.Revenue));
     }
 
@@ -51,7 +55,11 @@ internal sealed class AnalyticsDashboardReader(AnalyticsDbContext db) : IAnalyti
     public async Task<ProviderAnalyticsDto> GetProviderAnalyticsAsync(Guid providerId, DateTime? from, DateTime? to, CancellationToken ct)
     {
         var q = FilterPayments(from, to).Where(x => x.ProviderId == providerId && x.Type == "Payment" && x.Status == "Completed");
-        var series = await q.GroupBy(x => x.CompletedAt.Date).Select(g => new RevenueTimePointDto(g.Key, g.Sum(x => x.Amount))).OrderBy(x => x.Date).ToListAsync(ct);
+        var grouped = await q.GroupBy(x => x.CompletedAt.Date)
+            .Select(g => new { Date = g.Key, Revenue = g.Sum(x => x.Amount) })
+            .OrderBy(x => x.Date)
+            .ToListAsync(ct);
+        var series = grouped.Select(x => new RevenueTimePointDto(x.Date, x.Revenue)).ToList();
         return new ProviderAnalyticsDto(providerId, series);
     }
 

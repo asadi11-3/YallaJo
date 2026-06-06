@@ -58,11 +58,21 @@ internal sealed class LocalFileStorageService : IFileStorageService
 
         var filePath = Path.Combine(folderPath, uniqueName);
 
-        await using var fileStream = new FileStream(
-            filePath, FileMode.Create, FileAccess.Write, FileShare.None, 81920, useAsync: true);
-        await stream.CopyToAsync(fileStream, ct);
+        long fileSize;
+        await using (var fileStream = new FileStream(
+            filePath, FileMode.Create, FileAccess.Write, FileShare.None, 81920, useAsync: true))
+        {
+            await stream.CopyToAsync(fileStream, ct);
+            // CRITICAL: flush the FileStream's 81920-byte buffer BEFORE we
+            // sample the on-disk size. Otherwise FileInfo.Length samples a
+            // not-yet-flushed file and we persist FileSize=0 on the DB row
+            // even though the file itself reaches disk correctly once the
+            // stream is disposed at method exit. Reproduced on staging
+            // proxy as part of the Blocker #2 verification.
+            await fileStream.FlushAsync(ct);
+            fileSize = fileStream.Length;
+        }
 
-        var fileSize = new FileInfo(filePath).Length;
         var storageKey = $"{folder}/{uniqueName}";
         var url = $"{_baseUrl}/{folder}/{uniqueName}";
 

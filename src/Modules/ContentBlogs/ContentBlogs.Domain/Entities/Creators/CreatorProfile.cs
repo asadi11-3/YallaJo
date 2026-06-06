@@ -34,9 +34,6 @@ public sealed class CreatorProfile : AuditableEntity, IAggregateRoot
     /// <summary>Profile avatar URL.</summary>
     public string? AvatarUrl { get; private set; }
 
-    /// <summary>Profile cover image URL.</summary>
-    public string? CoverImageUrl { get; private set; }
-
     // ─── Trust & Status ─────────────────────────────────────────────────────
 
     /// <summary>Current trust tier determining publishing privileges.</summary>
@@ -311,13 +308,6 @@ public sealed class CreatorProfile : AuditableEntity, IAggregateRoot
     public void UpdateAvatar(string avatarUrl)
     {
         AvatarUrl = avatarUrl;
-        MarkUpdated();
-    }
-
-    /// <summary>Update cover image URL directly (used for dedicated cover image upload endpoint).</summary>
-    public void UpdateCoverImage(string coverImageUrl)
-    {
-        CoverImageUrl = coverImageUrl;
         MarkUpdated();
     }
 

@@ -10,6 +10,7 @@ using ContentCore.Presentation.Endpoints.Attachment.Models;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using ContentCore.Contracts.Authorization;
 using Security.Contracts.Authorization;
@@ -27,35 +28,64 @@ internal static class AttachmentEndpoints
         var attachments = group.MapGroup("/attachments").WithTags("ContentCore | Attachments");
 
         // Upload attachment (multipart/form-data)
-        attachments.MapPost("/", async (IFormFile file, [AsParameters] UploadAttachmentRequest request,
-            ICurrentUser currentUser, ISender sender, CancellationToken ct = default) =>
+
+        attachments.MapPost("/", async (
+            IFormFile file,
+            [FromForm] string EntityType,
+            [FromForm] Guid EntityId,
+            [FromForm] string AttachmentType,
+            [FromForm] int? Width,
+            [FromForm] int? Height,
+            [FromForm] int? DurationSeconds,
+            [FromForm] int SortOrder,
+            ICurrentUser currentUser,
+            ISender sender,
+            CancellationToken ct) =>
         {
-            if (!Enum.TryParse<EntityType>(request.EntityType, true, out var entityType))
+            if (!Enum.TryParse<EntityType>(EntityType, true, out var entityType))
                 return Results.BadRequest("Invalid EntityType.");
 
-            if (!Enum.TryParse<Domain.Enums.AttachmentType>(request.AttachmentType, true, out var attachmentType))
+            if (!Enum.TryParse<Domain.Enums.AttachmentType>(AttachmentType, true, out var attachmentType))
                 return Results.BadRequest("Invalid AttachmentType.");
+
             if (currentUser.UserId is null)
                 return Results.Unauthorized();
 
-            await using var stream = file.OpenReadStream();
+            if (file is null || file.Length == 0)
+                return Results.BadRequest("File is required and must not be empty.");
+
+            // Copy the IFormFile into a fully-seekable MemoryStream BEFORE handing
+            // it to the handler. The handler's magic-byte detection seeks the
+            // stream; the storage service then copies from the current position.
+            // A buffered IFormFile.OpenReadStream is in principle seekable, but
+            // we observed FileSize=0 persisted attachments in staging proxy
+            // smoke when the upload "succeeded" — the safest fix is to
+            // materialize the entire payload in memory once so every consumer
+            // sees the full content. The upstream FluentValidation limits
+            // (AttachmentLimits.GetMaxFileSize per type) bound this memory
+            // footprint.
+            await using var bufferedStream = new MemoryStream(checked((int)file.Length));
+            await file.CopyToAsync(bufferedStream, ct);
+            bufferedStream.Position = 0;
+
             var result = await sender.Send(
                 new UploadAttachmentCommand(
-                stream,
-                file.FileName,
-                file.ContentType,
-                file.Length,
-                entityType,
-                request.EntityId,
-                attachmentType,
-                currentUser.UserId.Value,
-                request.Width,
-                request.Height,
-                request.DurationSeconds,
-                request.SortOrder), ct);
+                    bufferedStream,
+                    file.FileName,
+                    file.ContentType,
+                    bufferedStream.Length,
+                    entityType,
+                    EntityId,
+                    attachmentType,
+                    currentUser.UserId.Value,
+                    Width,
+                    Height,
+                    DurationSeconds,
+                    SortOrder), ct);
             return result.ToApiResult();
         })
         .WithName("UploadAttachment")
+        .Accepts<IFormFile>("multipart/form-data")
         .Produces<UploadAttachmentResult>(StatusCodes.Status201Created)
         .ProducesValidationProblem()
         .WithSummary("Upload a file attachment for an entity")
@@ -139,19 +169,35 @@ internal static class AttachmentEndpoints
         .RequireAuthorization();
 
         // Bulk upload images (up to 20 images, multipart/form-data)
-        // POST /attachments/images — entityType + entityId as query params
+        //
+        // Binding: EntityType and EntityId are accepted from BOTH the multipart
+        // form (preferred — matches the singular endpoint) and the query string
+        // (preserved for any existing caller). The [FromForm] attribute makes
+        // the form path explicit; the binder will fall back to the query string
+        // when the form field is absent.
         attachments.MapPost("/images", async (
             IFormFileCollection files,
-            string entityType,
-            Guid entityId,
+            [FromForm] string? EntityType,
+            [FromForm] Guid? EntityId,
+            [FromQuery] string? entityType,
+            [FromQuery] Guid? entityId,
             ICurrentUser currentUser,
             ISender sender,
-            CancellationToken ct = default) =>
+            CancellationToken ct) =>
         {
             if (currentUser.UserId is null)
                 return Results.Unauthorized();
 
-            if (!Enum.TryParse<EntityType>(entityType, true, out var parsedEntityType))
+            var entityTypeValue = !string.IsNullOrWhiteSpace(EntityType) ? EntityType : entityType;
+            var entityIdValue = EntityId ?? entityId;
+
+            if (string.IsNullOrWhiteSpace(entityTypeValue))
+                return Results.BadRequest("entityType is required.");
+
+            if (entityIdValue is null || entityIdValue.Value == Guid.Empty)
+                return Results.BadRequest("entityId is required.");
+
+            if (!Enum.TryParse<EntityType>(entityTypeValue, true, out var parsedEntityType))
                 return Results.BadRequest("Invalid entityType.");
 
             if (files.Count == 0)
@@ -166,15 +212,24 @@ internal static class AttachmentEndpoints
             for (var i = 0; i < files.Count; i++)
             {
                 var file = files[i];
-                await using var stream = file.OpenReadStream();
+                if (file.Length == 0)
+                {
+                    errors.Add($"{file.FileName}: file is empty.");
+                    continue;
+                }
+
+                await using var bufferedStream = new MemoryStream(checked((int)file.Length));
+                await file.CopyToAsync(bufferedStream, ct);
+                bufferedStream.Position = 0;
+
                 var result = await sender.Send(
                     new UploadAttachmentCommand(
-                        stream,
+                        bufferedStream,
                         file.FileName,
                         file.ContentType,
-                        file.Length,
+                        bufferedStream.Length,
                         parsedEntityType,
-                        entityId,
+                        entityIdValue.Value,
                         AttachmentType.Image,
                         currentUser.UserId.Value,
                         SortOrder: i),
@@ -192,6 +247,7 @@ internal static class AttachmentEndpoints
             return Results.Ok(new BulkUploadImagesResult(uploadedIds, errors));
         })
         .WithName("BulkUploadImages")
+        .Accepts<IFormFileCollection>("multipart/form-data")
         .Produces<BulkUploadImagesResult>(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status400BadRequest)
         .ProducesProblem(StatusCodes.Status422UnprocessableEntity)

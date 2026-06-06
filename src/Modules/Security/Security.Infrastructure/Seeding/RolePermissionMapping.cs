@@ -106,6 +106,17 @@ public sealed class RolePermissionMapping
             // F69 2026-05-30: User couldn't apply to become creator via /blogs/creators/applications → 403
             "Permission.Creator.Submit",
             "Permission.Creator.Read",
+
+            // CCD-2/CCD-3 follow-up: own-resource, owner-enforced creator self-service.
+            // These permissions are group SystemAccess (not ContentManagement), so they
+            // are never granted by any role's CRUD sweep — ConsumerPermissions is the only
+            // path. Granting here propagates to User, Creator, Provider and TourGuide.
+            // All three are scoped to the caller's own creator profile/application server
+            // side (handlers 403 on non-owner; redeem validates the token), so this does
+            // not widen blast radius beyond the caller's own resources.
+            "Permission.Creator.Update",            // edit own application (CCD-2) + own profile/avatar/cover (CCD-3)
+            "Permission.Creator.Delete",            // self-deactivate own creator account (CCD-3)
+            "Permission.Creator.RedeemInvitation",  // redeem an invitation token (the token itself is the authorization)
         };
 
     // Provider self-service permissions that an approved provider (TourGuide,
@@ -229,6 +240,24 @@ public sealed class RolePermissionMapping
                              // Owner-scoped blog delete (DeleteOwn split); Blog.Delete
                              // was renamed to Blog.DeleteAny (admin-only).
                              || (p.Feature == "Blog" && p.Action == AppAction.DeleteOwn)
+                             // CCD-4: creator article authoring self-service. The Creator
+                             // ContentManagement sweep above already grants Blog.{Read,Create}
+                             // (admin-get prefetch + create), but NOT Blog.Update (sweep is
+                             // Read/Create/Delete only) nor Blog.{ReadOwn,Submit} (SystemAccess,
+                             // never swept). Grant them explicitly here, scoped to the Creator
+                             // role only — all three are owner-enforced server-side (my-blogs is
+                             // author-filtered; update/submit guard on AuthorId).
+                             || (p.Feature == "Blog" && p.Action is AppAction.Update
+                                     or AppAction.ReadOwn or AppAction.Submit)
+                             // CCD-5: creator article image management. The Creator
+                             // ContentManagement sweep grants Attachment/EntityImage
+                             // {Read,Create,Delete}, but NOT the Update action (sweep is
+                             // Read/Create/Delete only). Grant Attachment.Update (reorder)
+                             // and EntityImage.Update (set primary image) explicitly here,
+                             // scoped to the Creator role only — both are owner-enforced
+                             // server-side (IOwnershipGuard on the attachment's entity).
+                             || (p.Feature is "Attachment" or "EntityImage"
+                                     && p.Action == AppAction.Update)
                              || ConsumerPermissions.Contains(p.Name))
                     .Select(p => p.Name).ToList(),
 

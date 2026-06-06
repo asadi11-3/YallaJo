@@ -1,0 +1,138 @@
+@model YallaJo.Web.Areas.Creator.Models.Articles.MyArticlesVm
+@{
+    ViewData["Title"] = "My Articles";
+    var sidebar = ViewBag.Sidebar as YallaJo.Web.Areas.Creator.Shared.CreatorSidebarVm
+                  ?? new YallaJo.Web.Areas.Creator.Shared.CreatorSidebarVm();
+}
+
+<partial name="_CreatorSidebar" model="sidebar" />
+
+<section class="pt-0">
+    <div class="container vstack gap-4">
+        <div class="d-sm-flex justify-content-between align-items-center">
+            <h1 class="fs-4 mb-0"><i class="bi bi-journals me-2"></i>My Articles</h1>
+            <permission require="@WebPermission.Blog.Create">
+                <a asp-area="Creator" asp-controller="Articles" asp-action="New" class="btn btn-sm btn-primary mt-2 mt-sm-0">
+                    <i class="bi bi-plus-lg me-1"></i>New Article
+                </a>
+            </permission>
+        </div>
+
+        @if (Model.ShowUndo)
+        {
+            <div class="alert alert-success d-flex justify-content-between align-items-center mb-0">
+                <span>Deleted "@Model.UndoTitle".</span>
+                <form asp-area="Creator" asp-controller="Articles" asp-action="Restore" method="post" class="m-0">
+                    <input type="hidden" name="id" value="@Model.UndoArticleId" />
+                    <input type="hidden" name="rowVersion" value="@Model.UndoRowVersion" />
+                    <button type="submit" class="btn btn-sm btn-success-soft">Undo</button>
+                </form>
+            </div>
+        }
+
+        @* Status filter — uses the BlogStatus name as a query param. *@
+        <form method="get" asp-area="Creator" asp-controller="Articles" asp-action="Index" class="row g-2 align-items-end">
+            <div class="col-sm-4 col-md-3">
+                <label class="form-label" for="statusFilter">Status</label>
+                <select id="statusFilter" name="status" class="form-select" onchange="this.form.submit()">
+                    <option value="">All</option>
+                    @foreach (var opt in Model.StatusOptions)
+                    {
+                        if (string.Equals(opt, Model.StatusFilter, StringComparison.OrdinalIgnoreCase))
+                        {
+                            <option value="@opt" selected>@opt</option>
+                        }
+                        else
+                        {
+                            <option value="@opt">@opt</option>
+                        }
+                    }
+                </select>
+            </div>
+        </form>
+
+        @if (!Model.HasArticles)
+        {
+            <div class="card border">
+                <div class="card-body text-center py-5">
+                    <h5>No articles yet</h5>
+                    <p class="text-body-secondary mb-3">
+                        @(string.IsNullOrEmpty(Model.StatusFilter)
+                            ? "You haven't written any articles yet."
+                            : $"You have no articles with status \"{Model.StatusFilter}\".")
+                    </p>
+                    <permission require="@WebPermission.Blog.Create">
+                        <a asp-area="Creator" asp-controller="Articles" asp-action="New" class="btn btn-primary">
+                            <i class="bi bi-plus-lg me-1"></i>Write your first article
+                        </a>
+                    </permission>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="card border">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Language</th>
+                                <th>Published</th>
+                                <th class="text-end">Views</th>
+                                <th class="text-end">Read</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var a in Model.Articles)
+                            {
+                                <tr>
+                                    <td>
+                                        <span class="fw-semibold d-block">@a.Title</span>
+                                        <span class="small text-body-secondary">/@a.Slug</span>
+                                    </td>
+                                    @* Language is not returned by my-blogs (BlogSummaryDto omits it;
+                                       the API hard-codes "default"), so we never show a fake value. *@
+                                    <td>—</td>
+                                    <td>@(a.PublishedAt is { } p ? p.ToString("d MMM yyyy") : "—")</td>
+                                    <td class="text-end">@a.ViewCount</td>
+                                    <td class="text-end">@(a.ReadTimeMinutes is { } rt ? $"{rt} min" : "—")</td>
+                                    <td class="text-end">
+                                        <permission require="@WebPermission.Blog.Read">
+                                            <a asp-area="Creator" asp-controller="Articles" asp-action="Edit"
+                                               asp-route-id="@a.Id" class="btn btn-sm btn-secondary-soft">Edit</a>
+                                        </permission>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            @if (Model.Pager.TotalPages > 1)
+            {
+                <nav class="d-flex justify-content-between align-items-center">
+                    <span class="small text-body-secondary">
+                        Page @Model.Pager.PageNumber of @Model.Pager.TotalPages (@Model.Pager.TotalCount total)
+                    </span>
+                    <div class="btn-group">
+                        @if (Model.Pager.HasPreviousPage)
+                        {
+                            <a class="btn btn-sm btn-secondary-soft"
+                               asp-area="Creator" asp-controller="Articles" asp-action="Index"
+                               asp-route-page="@(Model.Pager.PageNumber - 1)" asp-route-status="@Model.StatusFilter">Previous</a>
+                        }
+                        @if (Model.Pager.HasNextPage)
+                        {
+                            <a class="btn btn-sm btn-secondary-soft"
+                               asp-area="Creator" asp-controller="Articles" asp-action="Index"
+                               asp-route-page="@(Model.Pager.PageNumber + 1)" asp-route-status="@Model.StatusFilter">Next</a>
+                        }
+                    </div>
+                </nav>
+            }
+        }
+    </div>
+</section>

@@ -1,0 +1,154 @@
+@model YallaJo.Web.Areas.Creator.Models.Articles.ArticleEditorVm
+@{
+    ViewData["Title"] = Model.IsNew ? "New Article" : "Edit Article";
+    var sidebar = ViewBag.Sidebar as YallaJo.Web.Areas.Creator.Shared.CreatorSidebarVm
+                  ?? new YallaJo.Web.Areas.Creator.Shared.CreatorSidebarVm();
+    var postAction = Model.IsNew ? "New" : "Edit";
+}
+
+<partial name="_CreatorSidebar" model="sidebar" />
+
+<section class="pt-0">
+    <div class="container vstack gap-4">
+        <div class="d-sm-flex justify-content-between align-items-center">
+            <h1 class="fs-4 mb-0"><i class="bi bi-pencil-square me-2"></i>@ViewData["Title"]</h1>
+            <div class="mt-2 mt-sm-0 d-flex gap-2 align-items-center">
+                @* True status from admin-get — only available when editing. *@
+                @if (!Model.IsNew && !string.IsNullOrWhiteSpace(Model.Status))
+                {
+                    <span class="badge text-bg-light">@Model.Status</span>
+                }
+                <a asp-area="Creator" asp-controller="Articles" asp-action="Index" class="btn btn-sm btn-secondary-soft">
+                    Back to list
+                </a>
+            </div>
+        </div>
+
+        <form asp-area="Creator" asp-controller="Articles" asp-action="@postAction"
+              asp-route-id="@(Model.IsNew ? null : Model.Id?.ToString())" method="post" class="card border">
+            <div class="card-body vstack gap-3">
+                <div asp-validation-summary="ModelOnly" class="text-danger small"></div>
+
+                @if (!Model.IsNew)
+                {
+                    <input type="hidden" asp-for="Id" />
+                    <input type="hidden" asp-for="RowVersion" />
+                    <input type="hidden" asp-for="Status" />
+                }
+
+                <div>
+                    <label asp-for="Title" class="form-label"></label>
+                    <input asp-for="Title" class="form-control" />
+                    <span asp-validation-for="Title" class="text-danger small"></span>
+                </div>
+
+                <div>
+                    <label asp-for="Slug" class="form-label"></label>
+                    <input asp-for="Slug" class="form-control" placeholder="auto-generated from title if blank" />
+                    <span asp-validation-for="Slug" class="text-danger small"></span>
+                </div>
+
+                <div>
+                    <label asp-for="SourceLanguageCode" class="form-label"></label>
+                    <input asp-for="SourceLanguageCode" class="form-control" />
+                    <span asp-validation-for="SourceLanguageCode" class="text-danger small"></span>
+                </div>
+
+                <div>
+                    <label asp-for="Summary" class="form-label">Summary</label>
+                    <textarea asp-for="Summary" class="form-control" rows="2"></textarea>
+                    <span asp-validation-for="Summary" class="text-danger small"></span>
+                </div>
+
+                <div>
+                    <label asp-for="Content" class="form-label">Content</label>
+                    <textarea asp-for="Content" class="form-control" rows="12"></textarea>
+                    <span asp-validation-for="Content" class="text-danger small"></span>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label asp-for="MetaTitle" class="form-label"></label>
+                        <input asp-for="MetaTitle" class="form-control" />
+                        <span asp-validation-for="MetaTitle" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="MetaDescription" class="form-label"></label>
+                        <input asp-for="MetaDescription" class="form-control" />
+                        <span asp-validation-for="MetaDescription" class="text-danger small"></span>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer d-flex gap-2">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-save me-1"></i>@(Model.IsNew ? "Save draft" : "Save changes")
+                </button>
+            </div>
+        </form>
+
+        @* ── Article images (CCD-5) — separate from the text-save form above ── *@
+        <div class="card border">
+            <div class="card-header border-bottom">
+                <h5 class="card-header-title mb-0"><i class="bi bi-images me-2"></i>Images</h5>
+            </div>
+            <div class="card-body">
+                @if (Model.IsNew || Model.Images is null)
+                {
+                    <p class="text-body-secondary mb-0">
+                        <i class="bi bi-info-circle me-1"></i>Save the draft first, then you can add images.
+                    </p>
+                }
+                else
+                {
+                    <partial name="_ArticleImages" model="Model.Images" />
+                }
+            </div>
+        </div>
+
+        @if (!Model.IsNew)
+        {
+            <div class="d-flex gap-2">
+                @if (Model.CanSubmit)
+                {
+                    <permission require="@WebPermission.Blog.Submit">
+                        <form asp-area="Creator" asp-controller="Articles" asp-action="Submit"
+                              asp-route-id="@Model.Id" method="post">
+                            <input type="hidden" name="rowVersion" value="@Model.RowVersion" />
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-send me-1"></i>Submit for review
+                            </button>
+                        </form>
+                    </permission>
+                }
+                <permission require="@WebPermission.Blog.DeleteOwn">
+                    <button type="button" class="btn btn-danger ms-auto" data-bs-toggle="modal" data-bs-target="#deleteArticleModal">
+                        <i class="bi bi-trash me-1"></i>Delete
+                    </button>
+                </permission>
+            </div>
+
+            <div class="modal fade" id="deleteArticleModal" tabindex="-1" aria-labelledby="deleteArticleModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <form asp-area="Creator" asp-controller="Articles" asp-action="Delete"
+                          asp-route-id="@Model.Id" method="post" class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="deleteArticleModalLabel">Delete this article?</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <input type="hidden" name="rowVersion" value="@Model.RowVersion" />
+                            <p class="mb-0">
+                                "<strong>@Model.Title</strong>" will be deleted. You'll be able to undo this
+                                immediately afterwards from the articles list.
+                            </p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-danger">Delete article</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        }
+    </div>
+</section>

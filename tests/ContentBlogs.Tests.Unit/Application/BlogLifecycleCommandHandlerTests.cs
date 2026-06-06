@@ -5,8 +5,10 @@ using ContentBlogs.Application.Commands.Blog.Common;
 using ContentBlogs.Application.Commands.Blog.CreateBlog;
 using ContentBlogs.Application.Commands.Blog.DeleteBlog;
 using ContentBlogs.Application.Commands.Blog.PublishBlog;
+using ContentBlogs.Application.Commands.Blog.SubmitBlogForReview;
 using ContentBlogs.Application.Commands.Blog.UnpublishBlog;
 using ContentBlogs.Application.Commands.Blog.UpdateBlog;
+using ContentBlogs.Domain.Entities.Creators;
 using ContentBlogs.Application.Interfaces;
 using ContentBlogs.Domain.Entities;
 using ContentBlogs.Domain.Enums;
@@ -122,8 +124,145 @@ public sealed class BlogLifecycleCommandHandlerTests
         saved.Slug.Should().Be("wadi-rum-guide");
         saved.AuthorId.Should().Be(TestUserId);
         saved.Status.Should().Be(BlogStatus.Draft);
+        saved.AuthoredByCreatorId.Should().BeNull(
+            "non-creator authors must not populate AuthoredByCreatorId");
         saved.BlogTranslations.Should().ContainSingle();
         saved.BlogTranslations.First().LanguageId.Should().Be(EnglishLanguageId);
+    }
+
+    [Fact]
+    public async Task CreateBlog_PopulatesAuthoredByCreatorId_WhenAuthorHasActiveCreatorProfile()
+    {
+        await using var dbContext = CreateDbContext();
+
+        var creatorProfile = SeedActiveCreatorProfile(dbContext, TestUserId);
+        await dbContext.SaveChangesAsync();
+
+        var handler = CreateCreateHandler(
+            dbContext,
+            creatorProfileRepository: new CreatorProfileRepository(dbContext));
+
+        var result = await handler.Handle(
+            SampleCreateCommand() with { Slug = "creator-wadi-rum-guide" },
+            CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Outcome.Should().Be(Outcome.Created);
+
+        var saved = await dbContext.Blogs
+            .FirstAsync(b => b.Slug == "creator-wadi-rum-guide");
+        saved.AuthorId.Should().Be(TestUserId,
+            "AuthorId must remain the user id, not the creator profile id");
+        saved.AuthoredByCreatorId.Should().Be(creatorProfile.Id,
+            "creator-authored articles must reference the active CreatorProfile.Id");
+        saved.Status.Should().Be(BlogStatus.Draft);
+    }
+
+    [Fact]
+    public async Task SubmitForReview_Succeeds_ForCreatorAuthoredDraft_WithMatchingRowVersion()
+    {
+        await using var dbContext = CreateDbContext();
+
+        var creatorProfile = SeedActiveCreatorProfile(dbContext, TestUserId);
+        await dbContext.SaveChangesAsync();
+
+        var createHandler = CreateCreateHandler(
+            dbContext,
+            creatorProfileRepository: new CreatorProfileRepository(dbContext));
+
+        var createResult = await createHandler.Handle(
+            SampleCreateCommand() with { Slug = "creator-petra-submit" },
+            CancellationToken.None);
+        createResult.IsSuccess.Should().BeTrue();
+
+        var draft = await dbContext.Blogs.FirstAsync(b => b.Slug == "creator-petra-submit");
+        draft.AuthoredByCreatorId.Should().Be(creatorProfile.Id);
+
+        // Re-read from a fresh tracking-clean context so the submit handler sees the
+        // persisted RowVersion exactly as the API would.
+        var rowVersion = (byte[])draft.RowVersion.Clone();
+        dbContext.ChangeTracker.Clear();
+
+        var submitHandler = new SubmitBlogForReviewCommandHandler(
+            blogRepository:        Repository(dbContext),
+            currentUser:           CurrentUser(TestUserId),
+            authorHierarchyGuard:  PermissiveGuard(),
+            unitOfWork:            UnitOfWork(dbContext),
+            cache:                 Substitute.For<HybridCache>(),
+            logger:                NullLogger<SubmitBlogForReviewCommandHandler>.Instance);
+
+        var submitResult = await submitHandler.Handle(
+            new SubmitBlogForReviewCommand(draft.Id, rowVersion),
+            CancellationToken.None);
+
+        submitResult.IsSuccess.Should().BeTrue(
+            "creator-authored drafts must be allowed to enter the review queue");
+        var afterSubmit = await dbContext.Blogs.AsNoTracking().FirstAsync(b => b.Id == draft.Id);
+        afterSubmit.Status.Should().Be(BlogStatus.PendingReview);
+        afterSubmit.SubmittedAt.Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task SubmitForReview_Fails_NotCreatorAuthored_ForLegacyAuthorDraft()
+    {
+        // Regression guard: a draft created without a CreatorProfile must still
+        // produce Blog.NotCreatorAuthored on submit. This proves the existing
+        // domain rule is preserved by the create-handler change.
+        await using var dbContext = CreateDbContext();
+
+        var createHandler = CreateCreateHandler(dbContext); // default: no creator profile
+
+        var createResult = await createHandler.Handle(
+            SampleCreateCommand() with { Slug = "non-creator-draft" },
+            CancellationToken.None);
+        createResult.IsSuccess.Should().BeTrue();
+
+        var draft = await dbContext.Blogs.FirstAsync(b => b.Slug == "non-creator-draft");
+        draft.AuthoredByCreatorId.Should().BeNull();
+
+        var rowVersion = (byte[])draft.RowVersion.Clone();
+        dbContext.ChangeTracker.Clear();
+
+        var submitHandler = new SubmitBlogForReviewCommandHandler(
+            blogRepository:        Repository(dbContext),
+            currentUser:           CurrentUser(TestUserId),
+            authorHierarchyGuard:  PermissiveGuard(),
+            unitOfWork:            UnitOfWork(dbContext),
+            cache:                 Substitute.For<HybridCache>(),
+            logger:                NullLogger<SubmitBlogForReviewCommandHandler>.Instance);
+
+        var submitResult = await submitHandler.Handle(
+            new SubmitBlogForReviewCommand(draft.Id, rowVersion),
+            CancellationToken.None);
+
+        submitResult.IsSuccess.Should().BeFalse();
+        submitResult.Errors[0].Code.Should().Be("Blog.NotCreatorAuthored");
+    }
+
+    [Fact]
+    public async Task CreateBlog_DoesNotSetAuthoredByCreatorId_WhenCreatorProfileIsNotActive()
+    {
+        // GetByUserIdAsync returns null for non-Active profiles (Suspended / Deactivated).
+        // We exercise that contract through the real repository: seed a Suspended profile
+        // and confirm the blog falls back to the non-creator path.
+        await using var dbContext = CreateDbContext();
+
+        var suspended = SeedActiveCreatorProfile(dbContext, TestUserId);
+        suspended.Suspend(adminId: Guid.NewGuid(), reason: "test");
+        await dbContext.SaveChangesAsync();
+
+        var handler = CreateCreateHandler(
+            dbContext,
+            creatorProfileRepository: new CreatorProfileRepository(dbContext));
+
+        var result = await handler.Handle(
+            SampleCreateCommand() with { Slug = "suspended-creator-draft" },
+            CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        var saved = await dbContext.Blogs.FirstAsync(b => b.Slug == "suspended-creator-draft");
+        saved.AuthoredByCreatorId.Should().BeNull();
+        saved.AuthorId.Should().Be(TestUserId);
     }
 
     [Fact]
@@ -1033,14 +1172,50 @@ public sealed class BlogLifecycleCommandHandlerTests
         ContentBlogsDbContext dbContext,
         UserIdSentinel? userId = null,
         HybridCache? cache = null,
-        IActiveLanguageProvider? languageProvider = null) =>
+        IActiveLanguageProvider? languageProvider = null,
+        ICreatorProfileRepository? creatorProfileRepository = null) =>
         new(
-            blogRepository:         Repository(dbContext),
-            activeLanguageProvider: languageProvider ?? LanguageProviderWithEnglish(),
-            unitOfWork:             UnitOfWork(dbContext),
-            cache:                  cache ?? Substitute.For<HybridCache>(),
-            currentUser:            CurrentUser((userId ?? DefaultUser).Value),
-            logger:                 NullLogger<CreateBlogCommandHandler>.Instance);
+            blogRepository:           Repository(dbContext),
+            creatorProfileRepository: creatorProfileRepository ?? NoCreatorProfileRepository(),
+            activeLanguageProvider:   languageProvider ?? LanguageProviderWithEnglish(),
+            unitOfWork:               UnitOfWork(dbContext),
+            cache:                    cache ?? Substitute.For<HybridCache>(),
+            currentUser:              CurrentUser((userId ?? DefaultUser).Value),
+            logger:                   NullLogger<CreateBlogCommandHandler>.Instance);
+
+    /// <summary>
+    /// Default test double: the author has no CreatorProfile, so blogs are
+    /// created via <c>Blog.Create</c> (non-creator path). Most existing tests
+    /// rely on this baseline.
+    /// </summary>
+    private static ICreatorProfileRepository NoCreatorProfileRepository()
+    {
+        var repo = Substitute.For<ICreatorProfileRepository>();
+        repo.GetByUserIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
+            .Returns((CreatorProfile?)null);
+        return repo;
+    }
+
+    /// <summary>
+    /// Inserts an Active CreatorProfile for the given user into the in-memory
+    /// store and returns it. Caller is responsible for SaveChanges.
+    /// </summary>
+    private static CreatorProfile SeedActiveCreatorProfile(
+        ContentBlogsDbContext dbContext, Guid userId)
+    {
+        var createResult = CreatorProfile.Create(
+            userId:        userId,
+            applicationId: Guid.NewGuid(),
+            slug:          $"creator-{userId:N}".Substring(0, 24),
+            displayName:   "Test Creator",
+            bio:           null,
+            avatarUrl:     null);
+        createResult.IsSuccess.Should().BeTrue(
+            "CreatorProfile.Create must succeed in test fixtures");
+        var profile = createResult.Value!;
+        dbContext.CreatorProfiles.Add(profile);
+        return profile;
+    }
 
     /// <summary>
     /// Returns an <see cref="IBlogAuthorHierarchyGuard"/> that always allows the

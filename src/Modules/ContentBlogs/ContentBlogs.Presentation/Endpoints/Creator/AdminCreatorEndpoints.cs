@@ -239,7 +239,7 @@ internal static class AdminCreatorEndpoints
             ISender sender,
             CancellationToken ct) =>
         {
-            var cmd = new AdminUpdateCreatorProfileCommand(id, request.DisplayName, request.Bio, request.AvatarUrl, request.CoverImageUrl, request.Slug);
+            var cmd = new AdminUpdateCreatorProfileCommand(id, request.DisplayName, request.Bio, request.AvatarUrl, request.Slug);
             var result = await sender.Send(cmd, ct);
             return result.ToApiResult();
         })
