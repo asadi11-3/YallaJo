@@ -5,10 +5,12 @@ namespace Booking.Tests.Unit;
 
 /// <summary>
 /// Verifies the BookingPermissionCatalog has the expected breadth
-/// (30 permissions across 9 features) and that every entry references a valid
+/// (33 permissions across 10 features) and that every entry references a valid
 /// feature key. Mohammad sprint added <see cref="BookingFeatures.AdminBookingDashboard"/>
 /// (2 permissions) and <see cref="BookingFeatures.TourBooking"/> + Complete (1 permission).
 /// TASK 3 added <see cref="BookingFeatures.ProviderDocument"/> + Update (1 permission).
+/// Phase 3 (G4a) / FE-1A added <see cref="BookingFeatures.BookingDispute"/>
+/// (3 permissions: Create, Resolve, Read).
 /// Original catalog had 26 perms / 8 features.
 /// </summary>
 public sealed class BookingPermissionCatalogTests
@@ -21,15 +23,15 @@ public sealed class BookingPermissionCatalogTests
     }
 
     [Fact]
-    public void Catalog_contains_30_permissions_across_9_features()
+    public void Catalog_contains_33_permissions_across_10_features()
     {
         var catalog = new BookingPermissionCatalog();
-        catalog.Permissions.Should().HaveCount(30);
+        catalog.Permissions.Should().HaveCount(33);
         catalog.Permissions
             .Select(p => p.Feature)
             .Distinct()
             .Should()
-            .HaveCount(9);
+            .HaveCount(10);
     }
 
     [Fact]
@@ -57,6 +59,7 @@ public sealed class BookingPermissionCatalogTests
             BookingFeatures.BookingAdmin,
             BookingFeatures.BookingReports,
             BookingFeatures.AdminBookingDashboard,
+            BookingFeatures.BookingDispute,
         };
 
         catalog.Permissions
@@ -84,5 +87,17 @@ public sealed class BookingPermissionCatalogTests
             .Select(p => p.Action)
             .Should()
             .BeEquivalentTo(new[] { "Read", "Update" });
+    }
+
+    [Fact]
+    public void BookingDispute_feature_includes_Create_Resolve_and_Read_actions()
+    {
+        var catalog = new BookingPermissionCatalog();
+        catalog.Permissions
+            .Where(p => p.Feature == BookingFeatures.BookingDispute)
+            .Select(p => p.Action)
+            .Should()
+            .BeEquivalentTo(new[] { "Create", "Resolve", "Read" },
+                "FE-1A relies on BookingDispute.Create (owner opens) and BookingDispute.Resolve (admin resolves)");
     }
 }

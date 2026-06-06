@@ -107,6 +107,18 @@ public sealed class GetTourBookingByIdQueryHandler(
                 ? new TourBookingCompletionDto(booking.CompletedAt.Value, booking.CompletedByUserId)
                 : null;
 
+            // FE-1A: surface the dispute lifecycle so the booking detail page can render
+            // the open-dispute reason and (once resolved) the admin resolution notes.
+            TourBookingDisputeDto? disputeDto = booking.DisputedAt.HasValue
+                ? new TourBookingDisputeDto(
+                    booking.DisputedAt.Value,
+                    booking.DisputeReason ?? string.Empty,
+                    booking.DisputeOpenedByUserId,
+                    booking.ResolvedAt,
+                    booking.ResolutionNotes,
+                    booking.ResolvedByAdminId)
+                : null;
+
             var dto = new TourBookingDetailDto(
                 booking.Id,
                 booking.Reference,
@@ -124,6 +136,7 @@ public sealed class GetTourBookingByIdQueryHandler(
                 rejectionDto,
                 cancellationDto,
                 completionDto,
+                disputeDto,
                 booking.CreatedAt,
                 booking.UpdatedAt);
 

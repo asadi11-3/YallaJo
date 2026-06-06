@@ -166,6 +166,11 @@ public static class IntegrationEventTypeRegistry
         ["booking.tour-booking.completed.v1"] = typeof(TourBookingCompletedIntegrationEvent),
         ["booking.tour-booking.payment-expired.v1"] = typeof(TourBookingPaymentExpiredIntegrationEvent),
         ["booking.tour-booking.rejected.v1"] = typeof(TourBookingRejectedIntegrationEvent),
+        // FE-1A: dispute lifecycle (G4a). The domain events + outbox converters existed
+        // but the integration-event names were never registered, so the dispute endpoints
+        // 500'd at publish time. Registering both fixes the open/resolve flow end-to-end.
+        ["booking.tour-booking.disputed.v1"] = typeof(TourBookingDisputedIntegrationEvent),
+        ["booking.tour-booking.dispute-resolved.v1"] = typeof(TourBookingDisputeResolvedIntegrationEvent),
         ["booking.join-request.created.v1"] = typeof(JoinRequestCreatedIntegrationEvent),
         ["booking.join-request.approved.v1"] = typeof(JoinRequestApprovedIntegrationEvent),
         ["booking.join-request.rejected.v1"] = typeof(JoinRequestRejectedIntegrationEvent),

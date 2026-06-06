@@ -25,6 +25,7 @@ public sealed record TourBookingDetailDto(
     TourBookingRejectionDto? Rejection,
     TourBookingCancellationDto? Cancellation,
     TourBookingCompletionDto? Completion,
+    TourBookingDisputeDto? Dispute,
     DateTime CreatedAt,
     DateTime? UpdatedAt);
 
@@ -49,3 +50,16 @@ public sealed record TourBookingCancellationDto(
     decimal? RefundAmount);
 
 public sealed record TourBookingCompletionDto(DateTime CompletedAt, Guid? CompletedByUserId);
+
+/// <summary>
+/// Dispute lifecycle projection (FE-1A). Present once a booking has been disputed.
+/// <see cref="ResolvedAt"/> / <see cref="ResolutionNotes"/> are populated only after
+/// an admin resolves the dispute.
+/// </summary>
+public sealed record TourBookingDisputeDto(
+    DateTime DisputedAt,
+    string Reason,
+    Guid? OpenedByUserId,
+    DateTime? ResolvedAt,
+    string? ResolutionNotes,
+    Guid? ResolvedByAdminId);
