@@ -18,6 +18,22 @@ Verification: every "consumed / not consumed" claim below was checked against re
 
 ---
 
+## 0.1 FE-0B audit corrections (verified during route-cleanup pass)
+
+These three rows in the original audit were re-verified against current source and corrected. They do **not** reflect new work — only fixes to inaccurate or now-outdated audit claims.
+
+- **Profile avatar DELETE — CONNECTED (was reported missing/unwired).**
+  `DELETE /api/v1/accounts/profile/avatar` is fully wired end-to-end:
+  `Accounts/Views/Profile/Index.cshtml` (remove-avatar `<form>`) → `Accounts.Controllers.ProfileController.DeleteAvatar` (`POST /accounts/profile/avatar/delete`) → `ProfileFacade.DeleteAvatarAsync` → `Accounts.ProfileApiClient.DeleteAvatarAsync`. No frontend work needed. (The §3 Accounts row already marks `Profile …/avatar/delete/…` ✅; this note records the explicit confirmation.)
+
+- **Booking `/booking/provider/documents` — separate compliance-docs feature, NOT a duplicate/dead route.**
+  The Booking-module `ProviderDocument` aggregate (`Booking.Domain.Entities.ProviderDocument`, `CreateForTourGuide` / `CreateForBusiness`, with expiry + suspension domain events) is a distinct bounded-context concern from the Accounts-module provider-application onboarding paperwork at `/api/v1/provider/documents/*`. They share a path substring by coincidence only. Reclassified from "duplicate/dead" to **MISSING FRONTEND** for an unbuilt operational compliance-docs UI (future feature batch, e.g. `FE-PROVIDER-COMPLIANCE-DOCS`). No backend cleanup; no FE-0B action.
+
+- **Tour by-slug route — CONNECTED after FE-0B.**
+  `Public.ToursApiClient.GetTourBySlugAsync` was migrated from the legacy alias `/api/v1/tours/slug/{slug}` to the canonical `/api/v1/tours/by-slug/{slug}`. Both backend routes remain alive (no backend change). The §3 ContentTours "Tour public/…" row (✅) now uses the canonical route.
+
+---
+
 ## 1. Bugs on already-built pages (fix immediately)
 
 These pages are built and shipping, but call the wrong backend path. Every request 404s.
@@ -101,7 +117,7 @@ Recommendation: wire the provider dashboard/settings/documents endpoints into th
 | TourBooking `complete` | ❌ |
 | AvailabilitySlot manage/slots/public | ✅ |
 | AvailabilitySlot `slots/bulk` | ❌ |
-| ProviderDocument group (`/booking/provider/documents`) | ❌ |
+| ProviderDocument group (`/booking/provider/documents`) | ❌ — missing frontend for a **separate compliance-docs feature** (NOT a duplicate of Accounts onboarding docs; see FE-0B note §0.1) |
 | JoinRequest get/approve/reject/submit | ✅ |
 | GuideDiscount | ❌ |
 
