@@ -62,6 +62,8 @@ public static class DependencyInjection
         services.AddScoped<IContentToursUnitOfWork, ContentToursUnitOfWork>();
         services.AddScoped<IContentToursInboxStore, ContentToursInboxStore>();
         services.AddScoped<IModuleDbInitializer, ContentToursDbInitializer>();
+        // FE-2D development-only smoke data (Development-gated by UseDataSeedingAsync).
+        services.AddScoped<IModuleDbInitializer, Fe2dSmokeTourGuideSeeder>();
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
         services.AddScoped<IOutboxProcessor, OutboxProcessor<ContentToursDbContext>>();
         services.AddScoped<IOutboxCleaner, OutboxCleaner<ContentToursDbContext>>();

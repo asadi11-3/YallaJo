@@ -44,6 +44,9 @@ public static class DependencyInjection
         // DEV-ONLY: Admin Blog UI test data (per-slug idempotent; gated by the seeding
         // pipeline's Development/Seeding:Enabled check). Runs after ContentBlogsDbInitializer.
         services.AddScoped<IModuleDbInitializer, BlogTestDataDbInitializer>();
+        // DEV-ONLY: FE-2D smoke data — a seeded creator + creator-authored blogs in every status
+        // with comment states (per-slug idempotent; Development-gated). Runs after the above.
+        services.AddScoped<IModuleDbInitializer, Fe2dSmokeBlogSeeder>();
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
         services.AddScoped<IOutboxProcessor, OutboxProcessor<ContentBlogsDbContext>>();
         services.AddScoped<IOutboxCleaner, OutboxCleaner<ContentBlogsDbContext>>();

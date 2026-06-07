@@ -49,6 +49,8 @@ public static class DependencyInjection
         services.AddScoped<IContentPlacesInboxStore, ContentPlacesInboxStore>();
         services.AddScoped<IContentPlacesOutboxWriter, ContentPlacesOutboxWriter>();
         services.AddScoped<IModuleDbInitializer, ContentPlacesDbInitializer>();
+        // FE-2D development-only Place smoke data (Development-gated by UseDataSeedingAsync).
+        services.AddScoped<IModuleDbInitializer, Fe2dSmokePlaceSeeder>();
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
         services.AddScoped<IOutboxProcessor, OutboxProcessor<ContentPlacesDbContext>>();
         services.AddScoped<IOutboxCleaner, OutboxCleaner<ContentPlacesDbContext>>();

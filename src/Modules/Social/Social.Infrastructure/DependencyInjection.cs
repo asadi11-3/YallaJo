@@ -39,6 +39,8 @@ public static class DependencyInjection
 
         services.AddScoped<IUnitOfWork<SocialDbContext>, UnitOfWork<SocialDbContext>>();
         services.AddScoped<IModuleDbInitializer, SocialDbInitializer>();
+        // FE-2D development-only accessibility-review smoke data (Development-gated by UseDataSeedingAsync).
+        services.AddScoped<IModuleDbInitializer, AccessibilityReviewSeeder>();
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
         services.AddScoped<IOutboxProcessor, OutboxProcessor<SocialDbContext>>();
         services.AddScoped<IOutboxCleaner, OutboxCleaner<SocialDbContext>>();
