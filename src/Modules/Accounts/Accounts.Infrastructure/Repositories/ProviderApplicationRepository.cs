@@ -32,6 +32,18 @@ public sealed class ProviderApplicationRepository(AccountsDbContext context)
         => await context.ProviderApplications
             .AnyAsync(a => a.UserId == userId && a.Status == ProviderApplicationStatus.Approved, ct);
 
+    public async Task<IReadOnlyList<(Guid UserId, Guid ProviderId)>> GetApprovedUserProviderPairsAsync(
+        CancellationToken ct = default)
+    {
+        var rows = await context.ProviderApplications
+            .Where(a => a.Status == ProviderApplicationStatus.Approved)
+            .Select(a => new { a.UserId, a.Id })
+            .AsNoTracking()
+            .ToListAsync(ct);
+
+        return rows.Select(r => (r.UserId, r.Id)).ToList();
+    }
+
     public async Task<IReadOnlyList<ProviderApplication>> GetQueueAsync(
         ProviderApplicationStatus? statusFilter,
         ProviderType? typeFilter,

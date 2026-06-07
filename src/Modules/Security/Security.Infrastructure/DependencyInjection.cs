@@ -38,6 +38,7 @@ public static class DependencyInjection
 
         services.AddScoped<IUnitOfWork<SecurityDbContext>, UnitOfWork<SecurityDbContext>>();
         services.AddScoped<IModuleDbInitializer, SecurityDbInitializer>();
+        services.AddScoped<IModuleDbInitializer, ProviderIdClaimBackfillInitializer>();
         services.AddScoped<ISecurityUnitOfWork, SecurityUnitOfWork>();
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IRoleRepository, RoleRepository>();

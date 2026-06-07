@@ -3,19 +3,24 @@ using MediatR;
 using Microsoft.Extensions.Logging;
 using Security.Application.Interfaces;
 using Security.Contracts.Authorization;
+using Security.Domain.Entities;
 using Security.Domain.Repositories;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 
 namespace Security.Infrastructure.EventHandlers;
 
 /// <summary>
-/// Assigns the Provider or TourGuide role when a provider application is approved.
+/// Assigns the Provider or TourGuide role when a provider application is approved,
+/// and issues the server-generated <c>provider_id</c> identity claim
+/// (value = approved <c>ProviderApplication.Id</c>) so provider-scoped Finance
+/// endpoints can resolve the caller's provider from the JWT.
 /// IndependentGuide → TourGuide role. All other ProviderTypes → Provider role.
-/// Idempotent: skips if user already has the target role.
+/// Idempotent: skips role/claim assignment when already present.
 /// </summary>
 public sealed class ProviderApprovedAssignRoleHandler(
     IUserRepository userRepository,
     IRoleRepository roleRepository,
+    IUserClaimRepository userClaimRepository,
     ISecurityUnitOfWork unitOfWork,
     ISecurityInboxStore inboxStore,
     ILogger<ProviderApprovedAssignRoleHandler> logger)
@@ -55,8 +60,12 @@ public sealed class ProviderApprovedAssignRoleHandler(
         if (existing is not null)
         {
             logger.LogInformation(
-                "Security: User {UserId} already has role {Role} — skipping.",
+                "Security: User {UserId} already has role {Role} — skipping role assignment.",
                 ev.UserId, roleName);
+
+            // Still ensure the provider_id claim exists — the role may have been
+            // granted before claim-issuing logic existed.
+            await EnsureProviderIdClaimAsync(ev.UserId, ev.ApplicationId, cancellationToken);
             inboxStore.MarkAsProcessed(notification.MessageId);
             await unitOfWork.SaveChangesAsync(cancellationToken);
             return;
@@ -74,11 +83,48 @@ public sealed class ProviderApprovedAssignRoleHandler(
         }
 
         user.AssignRole(role);
+        await EnsureProviderIdClaimAsync(ev.UserId, ev.ApplicationId, cancellationToken);
         inboxStore.MarkAsProcessed(notification.MessageId);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         logger.LogInformation(
             "Security: Assigned role {Role} to user {UserId} (provider type: {ProviderType}).",
             roleName, ev.UserId, ev.ProviderType);
+    }
+
+    /// <summary>
+    /// Idempotently persists the <c>provider_id</c> UserClaim for the approved
+    /// provider. The value is the server-side <c>ProviderApplication.Id</c> carried
+    /// on the approval event — never sourced from a client. Does not call SaveChanges;
+    /// the caller commits within its unit of work.
+    /// </summary>
+    private async Task EnsureProviderIdClaimAsync(
+        Guid userId,
+        Guid providerId,
+        CancellationToken cancellationToken)
+    {
+        var claimValue = providerId.ToString();
+
+        var alreadyIssued = await userClaimRepository.AnyAsync(
+            c => c.UserId == userId
+                 && c.ClaimType == ProviderClaimTypes.ProviderId
+                 && c.ClaimValue == claimValue,
+            cancellationToken);
+
+        if (alreadyIssued)
+        {
+            logger.LogInformation(
+                "Security: provider_id claim already present for user {UserId} (provider {ProviderId}) — skipping.",
+                userId, providerId);
+            return;
+        }
+
+        await userClaimRepository.AddAsync(
+            UserClaim.Create(userId, ProviderClaimTypes.ProviderId, claimValue),
+            cancellationToken);
+
+        logger.LogInformation(
+            "Security: Issued provider_id claim for user {UserId} (provider {ProviderId}).",
+            userId, providerId);
     }
 }
