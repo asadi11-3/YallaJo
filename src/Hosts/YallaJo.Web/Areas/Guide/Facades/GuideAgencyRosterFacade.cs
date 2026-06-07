@@ -76,20 +76,68 @@ public sealed class GuideAgencyRosterFacade
         return ApiResult<AgencyRosterVm>.Ok(vm);
     }
 
-    public async Task<ApiResult<IReadOnlyList<AvailableGuideResponse>>> GetAvailableGuidesAsync(CancellationToken ct = default)
+    /// <summary>Builds the invite form, populating the available-guides picker.</summary>
+    public async Task<ApiResult<InviteGuideFormVm>> GetInviteFormAsync(CancellationToken ct = default)
     {
         var result = await _api.GetAvailableGuidesAsync(page: 1, pageSize: AvailableGuidesPageSize, ct: ct);
         if (result.RequireSignOut)
         {
-            return ApiResult<IReadOnlyList<AvailableGuideResponse>>.ForceSignOut();
+            return ApiResult<InviteGuideFormVm>.ForceSignOut();
         }
 
         if (!result.IsSuccess || result.Data is null)
         {
-            return ApiResult<IReadOnlyList<AvailableGuideResponse>>.Fail(
-                result.StatusCode, result.Error ?? "Could not load available guides.");
+            return ApiResult<InviteGuideFormVm>.Fail(result.StatusCode, result.Error ?? "Could not load available guides.");
         }
 
-        return ApiResult<IReadOnlyList<AvailableGuideResponse>>.Ok(result.Data);
+        var options = result.Data
+            .Select(g => new AvailableGuideOptionVm(g.UserId, g.BusinessName, g.ContactEmail))
+            .ToList();
+
+        return ApiResult<InviteGuideFormVm>.Ok(new InviteGuideFormVm { AvailableGuides = options });
     }
+
+    /// <summary>Re-populates the available-guides picker on an invite form (e.g. after a validation error).</summary>
+    public async Task PopulateAvailableGuidesAsync(InviteGuideFormVm form, CancellationToken ct = default)
+    {
+        var result = await _api.GetAvailableGuidesAsync(page: 1, pageSize: AvailableGuidesPageSize, ct: ct);
+        form.AvailableGuides = result.IsSuccess && result.Data is not null
+            ? result.Data.Select(g => new AvailableGuideOptionVm(g.UserId, g.BusinessName, g.ContactEmail)).ToList()
+            : [];
+    }
+
+    public async Task<ApiResult> InviteAsync(InviteGuideFormVm form, CancellationToken ct = default)
+    {
+        var req = new InviteGuideApiRequest(
+            form.GuideUserId,
+            NullIfBlank(form.Message),
+            form.ProposedCommissionPercentage);
+
+        try
+        {
+            var result = await _api.InviteGuideAsync(req, ct);
+            if (result.IsSuccess || result.RequireSignOut)
+            {
+                return result;
+            }
+
+            return ApiResult.Fail(result.StatusCode, MapInviteError(result));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to invite guide {GuideUserId} to agency.", form.GuideUserId);
+            return ApiResult.Fail(500, "Unable to send the invitation. Please try again.");
+        }
+    }
+
+    private static string MapInviteError(ApiResult result) => result.StatusCode switch
+    {
+        404 => "That guide could not be found, or is no longer available.",
+        409 => "That guide is already affiliated or already has a pending invitation.",
+        422 => result.Error is { Length: > 0 } e ? e : "The invitation details are invalid.",
+        _ => result.Error ?? "Unable to send the invitation.",
+    };
+
+    private static string? NullIfBlank(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 }

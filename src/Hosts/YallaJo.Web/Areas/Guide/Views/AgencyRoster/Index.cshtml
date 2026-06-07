@@ -1,5 +1,6 @@
 @using YallaJo.Web.Areas.Guide.Models.AgencyRoster
 @using YallaJo.Web.Areas.Guide.Shared
+@using YallaJo.Web.Infrastructure.Authorization
 @model AgencyRosterVm
 @{
     ViewData["Title"] = "Agency Roster";
@@ -13,11 +14,16 @@
     <div class="container vstack gap-4">
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
             <h1 class="fs-4 mb-0"><i class="bi bi-people-fill me-2"></i>Agency Roster</h1>
-            <div class="d-flex gap-2">
+            <div class="d-flex gap-2 align-items-center">
                 @if (Model.PendingApplicationCount > 0)
                 {
                     <span class="badge text-bg-warning align-self-center">@Model.PendingApplicationCount pending application@(Model.PendingApplicationCount == 1 ? "" : "s")</span>
                 }
+                <permission require="@WebPermission.AgencyRoster.Create">
+                    <a asp-action="Invite" class="btn btn-sm btn-primary">
+                        <i class="bi bi-person-plus me-1"></i>Invite a guide
+                    </a>
+                </permission>
             </div>
         </div>
 

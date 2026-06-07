@@ -52,6 +52,54 @@ public sealed class AgencyRosterSmokeTests
         response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }
 
+    [Fact]
+    public async Task RosterIndex_WithCreate_ShowsInviteCta()
+    {
+        using var factory = new AgencyRosterWebFactory();
+        var client = factory.CreateClientFor(["Permission.AgencyRoster.Read", "Permission.AgencyRoster.Create"]);
+
+        var html = await (await client.GetAsync("/guide/agency/roster")).Content.ReadAsStringAsync();
+
+        html.Should().Contain("Invite a guide", "the gated Invite CTA must render with AgencyRoster.Create");
+        html.Should().Contain("/guide/agency/roster/invite");
+    }
+
+    [Fact]
+    public async Task RosterIndex_WithoutCreate_HidesInviteCta()
+    {
+        using var factory = new AgencyRosterWebFactory();
+        var client = factory.CreateClientFor(["Permission.AgencyRoster.Read"]);
+
+        var html = await (await client.GetAsync("/guide/agency/roster")).Content.ReadAsStringAsync();
+
+        html.Should().NotContain("/guide/agency/roster/invite",
+            "the Invite CTA must be hidden without AgencyRoster.Create");
+    }
+
+    [Fact]
+    public async Task InviteForm_WithCreate_Loads()
+    {
+        using var factory = new AgencyRosterWebFactory();
+        var client = factory.CreateClientFor(["Permission.AgencyRoster.Read", "Permission.AgencyRoster.Create"]);
+
+        var response = await client.GetAsync("/guide/agency/roster/invite");
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var html = await response.Content.ReadAsStringAsync();
+        html.Should().Contain("Invite a guide");
+    }
+
+    [Fact]
+    public async Task InviteForm_WithoutCreate_IsForbidden()
+    {
+        using var factory = new AgencyRosterWebFactory();
+        var client = factory.CreateClientFor(["Permission.AgencyRoster.Read"]);
+
+        var response = await client.GetAsync("/guide/agency/roster/invite");
+
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
     // ── Test host ─────────────────────────────────────────────────────────────
 
     internal sealed class AgencyRosterWebFactory : WebApplicationFactory<Program>

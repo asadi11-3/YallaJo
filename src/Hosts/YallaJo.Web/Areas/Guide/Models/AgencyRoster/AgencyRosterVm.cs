@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace YallaJo.Web.Areas.Guide.Models.AgencyRoster;
 
 /// <summary>Aggregated agency-owner roster overview for GET /guide/agency/roster.</summary>
@@ -48,3 +50,27 @@ public sealed record AgencySentInvitationRowVm(
     DateTime ExpiresAt,
     DateTime? RespondedAt,
     DateTime CreatedAt);
+
+/// <summary>Invite-guide form (GET/POST /guide/agency/roster/invite). Validation mirrors
+/// the backend InviteGuideCommandValidator (commission 0–100, message ≤1000).</summary>
+public sealed class InviteGuideFormVm
+{
+    [Required(ErrorMessage = "Please choose a guide to invite.")]
+    [Display(Name = "Guide")]
+    public Guid GuideUserId { get; set; }
+
+    [Range(0, 100, ErrorMessage = "Commission must be between 0 and 100.")]
+    [Display(Name = "Proposed commission (%)")]
+    public decimal ProposedCommissionPercentage { get; set; } = 20m;
+
+    [StringLength(1000, ErrorMessage = "Message must not exceed 1000 characters.")]
+    [Display(Name = "Message (optional)")]
+    public string? Message { get; set; }
+
+    /// <summary>Available independent guides to pick from (populated for rendering).</summary>
+    public IReadOnlyList<AvailableGuideOptionVm> AvailableGuides { get; set; } = [];
+
+    public bool HasAvailableGuides => AvailableGuides.Count > 0;
+}
+
+public sealed record AvailableGuideOptionVm(Guid UserId, string BusinessName, string ContactEmail);
