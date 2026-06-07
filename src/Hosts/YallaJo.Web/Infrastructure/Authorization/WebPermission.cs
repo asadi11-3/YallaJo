@@ -645,6 +645,20 @@ public static class WebPermission
         public const string Delete = "Permission.GuideAgency.Delete";
     }
 
+    // ── AgencyRoster (agency-owner managing their guide roster) ─────────────────
+    // Mirror the Accounts backend permissions (Permission.AgencyRoster.{Action}).
+    // Granted to agency owners (TourGuide role) + Admin+; the command handlers
+    // additionally enforce the agency-ownership guard, so the permission alone
+    // never grants cross-agency access.
+    public static class AgencyRoster
+    {
+        public const string Read    = "Permission.AgencyRoster.Read";
+        public const string Create  = "Permission.AgencyRoster.Create";
+        public const string Approve = "Permission.AgencyRoster.Approve";
+        public const string Reject  = "Permission.AgencyRoster.Reject";
+        public const string Delete  = "Permission.AgencyRoster.Delete";
+    }
+
     // ── Business (place-business approval moderation) ───────────────────────────
     // Mirror the ContentPlaces backend permissions (Permission.Business.{Action}).
     public static class Business

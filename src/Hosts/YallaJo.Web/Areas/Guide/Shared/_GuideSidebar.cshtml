@@ -1,7 +1,10 @@
+@using YallaJo.Web.Infrastructure.Authorization
+@inject YallaJo.Web.Infrastructure.Identity.ICurrentUser CurrentUser
 @model YallaJo.Web.Areas.Guide.Shared.GuideSidebarVm
 @{
     var active = ViewData["GuideNav"] as string ?? "Dashboard";
     string Nav(string key) => active == key ? "nav-link active" : "nav-link";
+    bool Has(string permission) => CurrentUser.HasPermission(permission);
 }
 
 <section class="pt-4">
@@ -92,6 +95,14 @@
                                     <i class="bi bi-building fa-fw me-1"></i>My Agency
                                 </a>
                             </li>
+                            @if (Has(WebPermission.AgencyRoster.Read))
+                            {
+                                <li class="nav-item">
+                                    <a class="@Nav("AgencyRoster")" asp-area="Guide" asp-controller="AgencyRoster" asp-action="Index">
+                                        <i class="bi bi-people-fill fa-fw me-1"></i>Agency Roster
+                                    </a>
+                                </li>
+                            }
                             <li class="nav-item">
                                 <a class="@Nav("Reviews")" asp-area="Guide" asp-controller="Reviews" asp-action="Index">
                                     <i class="bi bi-star fa-fw me-1"></i>Reviews
