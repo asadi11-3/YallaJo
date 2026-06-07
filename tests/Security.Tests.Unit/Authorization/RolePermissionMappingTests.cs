@@ -500,4 +500,64 @@ public sealed class RolePermissionMappingTests
         admin.Should().Contain(CreatorImagePermissions,
             "Admin retains image permissions via its full sweep");
     }
+
+    // ── FE-2D: accessibility reviews — authored by regular travelers ────────────
+    // All four AccessibilityReview actions are ContentManagement, but accessibility
+    // reviews are written by ordinary users, so the consumer roles need the full CRUD
+    // set (granted via ConsumerPermissions, mirroring the normal Review.* grants).
+
+    private static RolePermissionMapping BuildAccessibilityReviewCatalog() =>
+        Build(
+            P("AccessibilityReview", AppAction.Read,   PermissionGroup.ContentManagement),
+            P("AccessibilityReview", AppAction.Create, PermissionGroup.ContentManagement),
+            P("AccessibilityReview", AppAction.Update, PermissionGroup.ContentManagement),
+            P("AccessibilityReview", AppAction.Delete, PermissionGroup.ContentManagement));
+
+    private static readonly string[] AccessibilityReviewPermissions =
+    [
+        "Permission.AccessibilityReview.Read",
+        "Permission.AccessibilityReview.Create",
+        "Permission.AccessibilityReview.Update",
+        "Permission.AccessibilityReview.Delete",
+    ];
+
+    [Fact]
+    public void User_receives_all_accessibility_review_permissions()
+    {
+        // The base User role (regular traveler) is the primary author of accessibility
+        // reviews, so it must receive the full CRUD set via ConsumerPermissions — note
+        // Update in particular is excluded from every business-role ContentManagement sweep.
+        var user = BuildAccessibilityReviewCatalog().GetPermissionsForRole(AppRoles.User);
+
+        user.Should().Contain(AccessibilityReviewPermissions,
+            "a regular traveler must be able to read, create, edit (within 48h) and delete "
+            + "their own accessibility reviews (FE-2D); ownership and the edit window are "
+            + "enforced server-side");
+    }
+
+    [Theory]
+    [InlineData("Creator")]
+    [InlineData("Provider")]
+    [InlineData("TourGuide")]
+    public void Consumer_roles_receive_all_accessibility_review_permissions(string role)
+    {
+        // The Update action is excluded from the business-role Read/Create/Delete sweeps,
+        // so without the ConsumerPermissions grant these roles could not edit. Verify the
+        // grant reaches every consumer role.
+        var perms = BuildAccessibilityReviewCatalog().GetPermissionsForRole(role);
+
+        perms.Should().Contain(AccessibilityReviewPermissions);
+    }
+
+    [Theory]
+    [InlineData("Admin")]
+    [InlineData("SuperAdmin")]
+    [InlineData("Owner")]
+    public void Admin_tier_still_covers_accessibility_review_permissions(string role)
+    {
+        var perms = BuildAccessibilityReviewCatalog().GetPermissionsForRole(role);
+
+        perms.Should().Contain(AccessibilityReviewPermissions,
+            "the admin tier retains accessibility-review permissions via its full sweep");
+    }
 }

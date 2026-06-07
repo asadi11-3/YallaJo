@@ -101,6 +101,17 @@ public sealed class RolePermissionMapping
             // F30 2026-05-30: User couldn't read own reviews via /social/reviews/my-reviews → 403
             "Permission.Review.Read",
 
+            // FE-2D 2026-06-XX: accessibility reviews are authored by regular travelers,
+            // so the consumer roles need the full CRUD set (mirrors the normal Review.*
+            // grants above). All four are owner-enforced server-side (Update/Delete 403 on
+            // non-owner; the 48-hour edit window is enforced in the handler), so granting
+            // them consumer-wide does not widen blast radius. Admin/SuperAdmin/Owner already
+            // receive these via their full permission sweep.
+            "Permission.AccessibilityReview.Read",
+            "Permission.AccessibilityReview.Create",
+            "Permission.AccessibilityReview.Update",
+            "Permission.AccessibilityReview.Delete",
+
             // F33 2026-05-30: User couldn't list own device tokens via /devices/tokens → 403
             "Permission.DeviceToken.Read",
 
