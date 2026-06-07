@@ -1,0 +1,109 @@
+@model YallaJo.Web.Areas.Accounts.Models.Support.SupportListVm
+@using YallaJo.Web.Areas.Accounts.Shared
+@{
+    ViewData["Title"] = "Support";
+    ViewData["AccountNav"] = "Support";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var sidebar = ViewBag.Sidebar as AccountSidebarVm ?? new AccountSidebarVm();
+
+    string TimeAgo(DateTime utc)
+    {
+        var span = DateTime.UtcNow - utc;
+        if (span.TotalMinutes < 1) return "just now";
+        if (span.TotalMinutes < 60) return $"{(int)span.TotalMinutes}m ago";
+        if (span.TotalHours < 24) return $"{(int)span.TotalHours}h ago";
+        if (span.TotalDays < 7) return $"{(int)span.TotalDays}d ago";
+        return utc.ToString("dd MMM yyyy");
+    }
+
+    string StatusClass(string status, bool isClosed) => isClosed
+        ? "bg-secondary bg-opacity-10 text-secondary"
+        : status.ToLowerInvariant() switch
+        {
+            "resolved" => "bg-success bg-opacity-10 text-success",
+            "awaitinguser" => "bg-warning bg-opacity-10 text-warning",
+            _ => "bg-primary bg-opacity-10 text-primary",
+        };
+
+    string LoadMoreUrl() => Url.Action("Index", "Support", new
+    {
+        area = "Accounts",
+        cursor = Model.NextCursor,
+    })!;
+}
+
+<section class="pt-3">
+    <div class="container">
+        <div class="row g-4 g-xl-5">
+            <partial name="_AccountSidebar" model="sidebar" />
+
+            <div class="col-lg-8 col-xl-9">
+                <div class="d-grid d-lg-none mb-3">
+                    <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasSidebar">
+                        <i class="fas fa-sliders-h me-2"></i>Account menu
+                    </button>
+                </div>
+
+                <div class="card border mb-4">
+                    <div class="card-header border-bottom d-flex justify-content-between align-items-center">
+                        <h4 class="card-header-title mb-0">My Support Tickets</h4>
+                        @* Creation reuses the existing public Contact form (FE-1C). *@
+                        <a asp-area="Public" asp-controller="Contact" asp-action="Index" class="btn btn-sm btn-primary mb-0">
+                            <i class="bi bi-plus-lg me-1"></i>New ticket
+                        </a>
+                    </div>
+
+                    @if (!string.IsNullOrWhiteSpace(Model.LoadError))
+                    {
+                        <div class="card-body border-bottom">
+                            <div class="alert alert-warning mb-0" role="alert">@Model.LoadError</div>
+                        </div>
+                    }
+
+                    <div class="card-body p-3">
+                        @if (!Model.HasItems)
+                        {
+                            <div class="text-center py-5">
+                                <i class="bi bi-life-preserver fs-1 text-muted d-block mb-2"></i>
+                                <p class="text-muted mb-2">You have no support tickets yet.</p>
+                                <a asp-area="Public" asp-controller="Contact" asp-action="Index" class="btn btn-sm btn-outline-primary">
+                                    Open a support ticket
+                                </a>
+                            </div>
+                        }
+                        else
+                        {
+                            <ul class="list-group list-group-flush">
+                                @foreach (var t in Model.Items)
+                                {
+                                    <li class="list-group-item px-2">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div class="me-2">
+                                                <a asp-area="Accounts" asp-controller="Support" asp-action="Details" asp-route-id="@t.Id"
+                                                   class="h6 mb-1 d-block text-decoration-none">@t.Subject</a>
+                                                <span class="badge bg-secondary bg-opacity-10 text-secondary small me-2">@t.Category</span>
+                                                <span class="small text-muted" title="@t.CreatedAt.ToString("yyyy-MM-dd HH:mm") UTC">@TimeAgo(t.CreatedAt)</span>
+                                            </div>
+                                            <span class="badge @StatusClass(t.Status, t.IsClosed) flex-shrink-0">@t.Status</span>
+                                        </div>
+                                    </li>
+                                }
+                            </ul>
+
+                            <div class="text-center mt-3">
+                                @if (Model.HasNextPage)
+                                {
+                                    <a href="@LoadMoreUrl()" class="btn btn-sm btn-outline-secondary">Load more</a>
+                                }
+                                else
+                                {
+                                    <span class="small text-muted">End of tickets</span>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

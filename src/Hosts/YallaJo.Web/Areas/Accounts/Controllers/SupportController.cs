@@ -1,0 +1,116 @@
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using YallaJo.Web.Areas.Accounts.Facades;
+using YallaJo.Web.Areas.Accounts.Shared;
+using YallaJo.Web.Infrastructure.Authorization;
+using YallaJo.Web.Infrastructure.Mvc;
+
+namespace YallaJo.Web.Areas.Accounts.Controllers;
+
+/// <summary>
+/// FE-1C — authenticated user-facing Support Tickets pages.
+/// Creation is intentionally NOT here: users open new tickets via the existing
+/// /contact form (the list page links to it). This controller covers list / detail /
+/// reply / close for the caller's OWN tickets; the backend auto-scopes ownership.
+/// </summary>
+[Area("Accounts")]
+[Authorize]
+public sealed class SupportController : BaseController
+{
+    private readonly SupportFacade _support;
+    private readonly ProfileFacade _profile;
+
+    public SupportController(SupportFacade support, ProfileFacade profile)
+    {
+        _support = support;
+        _profile = profile;
+    }
+
+    [HttpGet("accounts/support")]
+    [RequirePermission(WebPermission.SupportTicket.Read)]
+    public async Task<IActionResult> Index(Guid? cursor, CancellationToken ct)
+    {
+        ViewData["AccountNav"] = "Support";
+        await PopulateSidebarAsync(ct);
+
+        var vm = await _support.GetListAsync(cursor, ct);
+        return View(vm);
+    }
+
+    [HttpGet("accounts/support/{id:guid}")]
+    [RequirePermission(WebPermission.SupportTicket.Read)]
+    public async Task<IActionResult> Details(Guid id, CancellationToken ct)
+    {
+        ViewData["AccountNav"] = "Support";
+        await PopulateSidebarAsync(ct);
+
+        var result = await _support.GetDetailAsync(id, ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+
+        if (!result.IsSuccess || result.Data is null)
+        {
+            SetError(result.Error);
+            return RedirectToAction(nameof(Index));
+        }
+
+        return View(result.Data);
+    }
+
+    [HttpPost("accounts/support/{id:guid}/messages")]
+    [ValidateAntiForgeryToken]
+    [RequirePermission(WebPermission.SupportTicket.Read)]
+    public async Task<IActionResult> Reply(Guid id, string? body, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(body))
+        {
+            SetError("Please type a message before sending.");
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
+        var result = await _support.PostMessageAsync(id, body.Trim(), ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+
+        if (result.IsSuccess)
+            SetSuccess("Your reply was sent.");
+        else
+            SetError(result.Error ?? "Could not post your reply.");
+
+        return RedirectToAction(nameof(Details), new { id });
+    }
+
+    [HttpPost("accounts/support/{id:guid}/close")]
+    [ValidateAntiForgeryToken]
+    [RequirePermission(WebPermission.SupportTicket.Close)]
+    public async Task<IActionResult> Close(Guid id, string? rowVersion, CancellationToken ct)
+    {
+        var result = await _support.CloseAsync(id, rowVersion, ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+
+        if (result.IsSuccess)
+            SetSuccess("Ticket closed.");
+        else
+            SetError(result.Error ?? "Could not close the ticket.");
+
+        return RedirectToAction(nameof(Details), new { id });
+    }
+
+    private async Task PopulateSidebarAsync(CancellationToken ct)
+    {
+        var profile = await _profile.GetAsync(ct);
+        if (profile is { IsSuccess: true, Data: { } p })
+        {
+            ViewBag.Sidebar = new AccountSidebarVm
+            {
+                AvatarUrl = p.AvatarUrl,
+                DisplayName = string.IsNullOrWhiteSpace(p.DisplayName)
+                    ? $"{p.FirstName} {p.LastName}".Trim()
+                    : p.DisplayName,
+                Email = p.Email,
+            };
+        }
+        else
+        {
+            ViewBag.Sidebar = new AccountSidebarVm();
+        }
+    }
+}
