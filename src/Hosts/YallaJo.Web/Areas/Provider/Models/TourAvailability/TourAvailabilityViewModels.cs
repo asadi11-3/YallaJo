@@ -62,3 +62,52 @@ public sealed class AvailabilitySlotFormVm
     /// <summary>RowVersion for optimistic concurrency on edit (hidden field).</summary>
     public string? RowVersion { get; set; }
 }
+
+/// <summary>Bulk recurring-slot generation form.</summary>
+public sealed class BulkAvailabilitySlotFormVm
+{
+    public Guid TourId { get; set; }
+
+    [Required(ErrorMessage = "Please choose a start date.")]
+    [DataType(DataType.Date)]
+    [Display(Name = "Start date")]
+    public DateOnly? StartDate { get; set; }
+
+    [Required(ErrorMessage = "Please choose an end date.")]
+    [DataType(DataType.Date)]
+    [Display(Name = "End date")]
+    public DateOnly? EndDate { get; set; }
+
+    [Required]
+    [Display(Name = "Recurrence")]
+    public string Recurrence { get; set; } = "Daily";
+
+    [Display(Name = "Days of week")]
+    public List<string> DaysOfWeek { get; set; } = [];
+
+    [Required(ErrorMessage = "Please enter a start time.")]
+    [DataType(DataType.Time)]
+    [Display(Name = "Start time")]
+    public TimeOnly? StartTime { get; set; }
+
+    [Required(ErrorMessage = "Please enter an end time.")]
+    [DataType(DataType.Time)]
+    [Display(Name = "End time")]
+    public TimeOnly? EndTime { get; set; }
+
+    [Range(1, 1000, ErrorMessage = "Capacity must be at least 1.")]
+    [Display(Name = "Capacity per slot")]
+    public int MaxCapacity { get; set; } = 1;
+
+    [Display(Name = "Skip dates that already have a slot")]
+    public bool SkipExisting { get; set; } = true;
+
+    public static IReadOnlyList<string> RecurrenceOptions { get; } = ["Daily", "Weekly", "Custom"];
+
+    // (form value, short label) — value is the full DayOfWeek name the API expects.
+    public static IReadOnlyList<(string Value, string Label)> DayOptions { get; } =
+    [
+        ("Monday", "Mon"), ("Tuesday", "Tue"), ("Wednesday", "Wed"), ("Thursday", "Thu"),
+        ("Friday", "Fri"), ("Saturday", "Sat"), ("Sunday", "Sun"),
+    ];
+}

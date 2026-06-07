@@ -1,0 +1,127 @@
+@using YallaJo.Web.Infrastructure.Authorization
+@using YallaJo.Web.Areas.Provider.Shared
+@model YallaJo.Web.Areas.Provider.Models.TourWaypoints.TourWaypointsIndexVm
+@{
+    ViewData["Title"] = $"Route — {Model.TourName}";
+    ViewData["ProviderNav"] = "Listings";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var sidebar = ViewBag.Sidebar as ProviderSidebarVm ?? new ProviderSidebarVm();
+    var ids = Model.Waypoints.Select(w => w.Id).ToList();
+}
+
+<partial name="_ProviderSidebar" model="sidebar" />
+
+<section class="pt-0">
+    <div class="container vstack gap-4">
+        <div class="d-sm-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="fs-4 mb-0"><i class="bi bi-geo-alt me-2"></i>Route &amp; Waypoints</h1>
+                <span class="small text-body-secondary"><bdi>@Model.TourName</bdi> · @Model.TourStatusLabel</span>
+            </div>
+            <div class="mt-2 mt-sm-0 d-flex gap-2">
+                <a asp-area="Provider" asp-controller="Tours" asp-action="Edit" asp-route-id="@Model.TourId"
+                   class="btn btn-sm btn-secondary-soft"><i class="bi bi-arrow-left me-1"></i>Back to listing</a>
+                <permission require="@WebPermission.TourWaypoint.Create">
+                    <a asp-area="Provider" asp-controller="TourWaypoints" asp-action="Create" asp-route-id="@Model.TourId"
+                       class="btn btn-sm btn-primary"><i class="bi bi-plus-lg me-1"></i>Add waypoint</a>
+                </permission>
+            </div>
+        </div>
+
+        @if (!Model.HasWaypoints)
+        {
+            <div class="card border">
+                <div class="card-body text-center py-5">
+                    <h5 class="mb-1">No waypoints yet</h5>
+                    <p class="text-body-secondary mb-3">Add stops to build the tour route. The first stop is usually the meeting point.</p>
+                    <permission require="@WebPermission.TourWaypoint.Create">
+                        <a asp-area="Provider" asp-controller="TourWaypoints" asp-action="Create" asp-route-id="@Model.TourId"
+                           class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Add the first waypoint</a>
+                    </permission>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="card border">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <caption class="visually-hidden">Tour waypoints in route order</caption>
+                        <thead class="table-light">
+                            <tr>
+                                <th scope="col">#</th>
+                                <th scope="col">Stop</th>
+                                <th scope="col">Coordinates</th>
+                                <th scope="col">Stop time</th>
+                                <th scope="col"><span class="visually-hidden">Reorder &amp; actions</span></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (var i = 0; i < Model.Waypoints.Count; i++)
+                            {
+                                var w = Model.Waypoints[i];
+                                <tr>
+                                    <td>@(i + 1)</td>
+                                    <td>
+                                        <span class="fw-semibold"><bdi>@w.Name</bdi></span>
+                                        @if (w.IsMeetingPoint)
+                                        {
+                                            <span class="badge text-bg-primary ms-1"><i class="bi bi-flag-fill me-1" aria-hidden="true"></i>Meeting point</span>
+                                        }
+                                        @if (!string.IsNullOrWhiteSpace(w.Description))
+                                        {
+                                            <div class="small text-body-secondary"><bdi>@w.Description</bdi></div>
+                                        }
+                                    </td>
+                                    <td><span dir="ltr">@w.CoordinatesLabel</span></td>
+                                    <td>@w.StopDurationLabel</td>
+                                    <td class="text-end">
+                                        <div class="d-inline-flex gap-1">
+                                            <permission require="@WebPermission.TourWaypoint.Update">
+                                                @if (i > 0)
+                                                {
+                                                    var up = ids.ToList();
+                                                    (up[i - 1], up[i]) = (up[i], up[i - 1]);
+                                                    <form asp-area="Provider" asp-controller="TourWaypoints" asp-action="Reorder" asp-route-id="@Model.TourId" method="post" class="d-inline">
+                                                        @Html.AntiForgeryToken()
+                                                        @foreach (var wid in up)
+                                                        {
+                                                            <input type="hidden" name="waypointIds" value="@wid" />
+                                                        }
+                                                        <button type="submit" class="btn btn-sm btn-light" aria-label="Move @w.Name up"><i class="bi bi-arrow-up" aria-hidden="true"></i></button>
+                                                    </form>
+                                                }
+                                                @if (i < Model.Waypoints.Count - 1)
+                                                {
+                                                    var down = ids.ToList();
+                                                    (down[i + 1], down[i]) = (down[i], down[i + 1]);
+                                                    <form asp-area="Provider" asp-controller="TourWaypoints" asp-action="Reorder" asp-route-id="@Model.TourId" method="post" class="d-inline">
+                                                        @Html.AntiForgeryToken()
+                                                        @foreach (var wid in down)
+                                                        {
+                                                            <input type="hidden" name="waypointIds" value="@wid" />
+                                                        }
+                                                        <button type="submit" class="btn btn-sm btn-light" aria-label="Move @w.Name down"><i class="bi bi-arrow-down" aria-hidden="true"></i></button>
+                                                    </form>
+                                                }
+                                                <a asp-area="Provider" asp-controller="TourWaypoints" asp-action="Edit" asp-route-id="@Model.TourId" asp-route-waypointId="@w.Id"
+                                                   class="btn btn-sm btn-light" aria-label="Edit @w.Name"><i class="bi bi-pencil" aria-hidden="true"></i></a>
+                                            </permission>
+                                            <permission require="@WebPermission.TourWaypoint.Delete">
+                                                <form asp-area="Provider" asp-controller="TourWaypoints" asp-action="Delete" asp-route-id="@Model.TourId" asp-route-waypointId="@w.Id"
+                                                      method="post" class="d-inline" onsubmit="return confirm('Delete waypoint &quot;@w.Name&quot;? This cannot be undone.');">
+                                                    @Html.AntiForgeryToken()
+                                                    <button type="submit" class="btn btn-sm btn-danger-soft" aria-label="Delete @w.Name"><i class="bi bi-trash" aria-hidden="true"></i></button>
+                                                </form>
+                                            </permission>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        }
+    </div>
+</section>

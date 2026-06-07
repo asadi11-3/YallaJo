@@ -1,34 +1,41 @@
 @using YallaJo.Web.Areas.Provider.Models.TourSchedules
+@using YallaJo.Web.Areas.Provider.Shared
 @model TourScheduleFormVm
 @{
     ViewData["Title"] = "Add schedule";
+    ViewData["ProviderNav"] = "Listings";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2 class="mb-0">Add schedule</h2>
-        <a asp-area="Provider" asp-controller="TourSchedules" asp-action="Index" asp-route-id="@Model.TourId"
-           class="btn btn-sm btn-outline-secondary">← Back to schedules</a>
-    </div>
+<partial name="_ProviderSidebar" model="@(new ProviderSidebarVm { DisplayName = User.Identity?.Name ?? "Provider" })" />
 
-    @if (!string.IsNullOrWhiteSpace(Model.TourName))
-    {
-        <p class="text-muted">Listing: <strong>@Model.TourName</strong></p>
-    }
-    <p class="text-muted">Schedules repeat <strong>weekly</strong> on the selected day. New schedules are <strong>Active</strong>.</p>
+<section class="pt-0">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-9 col-xl-8">
+                <h1 class="fs-4 mb-1"><i class="bi bi-calendar-event me-2"></i>Add schedule</h1>
+                <p class="small text-body-secondary">
+                    @if (!string.IsNullOrWhiteSpace(Model.TourName)) { <bdi>@Model.TourName</bdi><text> · </text> }
+                    Schedules repeat <strong>weekly</strong> on the selected day. New schedules are <strong>Active</strong>.
+                </p>
 
-    <form asp-area="Provider" asp-controller="TourSchedules" asp-action="Create" asp-route-id="@Model.TourId" method="post">
-        @Html.AntiForgeryToken()
-        <partial name="_Form" model="Model" />
-
-        <div class="mt-4 d-flex gap-2">
-            <button type="submit" class="btn btn-primary">Create schedule</button>
-            <a asp-area="Provider" asp-controller="TourSchedules" asp-action="Index" asp-route-id="@Model.TourId"
-               class="btn btn-outline-secondary">Cancel</a>
+                <div class="card border">
+                    <div class="card-body">
+                        <form asp-area="Provider" asp-controller="TourSchedules" asp-action="Create" asp-route-id="@Model.TourId" method="post">
+                            @Html.AntiForgeryToken()
+                            <partial name="_Form" model="Model" />
+                            <div class="mt-4 d-flex gap-2">
+                                <button type="submit" class="btn btn-primary">Create schedule</button>
+                                <a asp-area="Provider" asp-controller="TourSchedules" asp-action="Index" asp-route-id="@Model.TourId"
+                                   class="btn btn-link">Cancel</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
         </div>
-    </form>
-</div>
+    </div>
+</section>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />

@@ -29,7 +29,7 @@
                 <img src="~/assets/images/element/17.svg" class="h-100px mx-auto mb-3" alt="" />
                 <h5 class="mb-1">No listings yet</h5>
                 <p class="text-muted mb-3">Publish a tour to start collecting reviews from your guests.</p>
-                <div><a class="btn btn-primary" asp-area="Provider" asp-controller="Listings" asp-action="Create"><i class="bi bi-plus-lg me-1"></i>Add New Listing</a></div>
+                <div><a class="btn btn-primary" asp-area="Provider" asp-controller="Tours" asp-action="Create"><i class="bi bi-plus-lg me-1"></i>Add New Listing</a></div>
             </div>
         }
         else
@@ -108,8 +108,26 @@
                                 @if (r.HasReply)
                                 {
                                     <div class="bg-light rounded p-3 mt-2">
-                                        <div class="small fw-semibold mb-1"><i class="bi bi-reply-fill me-1"></i>Your reply</div>
-                                        <div class="small mb-0">@r.ReplyContent</div>
+                                        <div class="small fw-semibold mb-1"><i class="bi bi-reply-fill me-1" aria-hidden="true"></i>Your reply</div>
+                                        <div class="small mb-2"><bdi>@r.ReplyContent</bdi></div>
+                                        <div class="d-flex gap-3">
+                                            <a class="small text-primary" data-bs-toggle="collapse" href="#edit-reply-@r.Id" role="button"><i class="bi bi-pencil me-1" aria-hidden="true"></i>Edit</a>
+                                            <form method="post" asp-area="Provider" asp-controller="Reviews" asp-action="DeleteReply"
+                                                  asp-route-id="@r.Id" asp-route-replyId="@r.ReplyId" asp-route-tourId="@Model.SelectedTourId"
+                                                  class="d-inline" onsubmit="return confirm('Delete your reply? This cannot be undone.');">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="btn btn-link btn-sm p-0 text-danger small"><i class="bi bi-trash me-1" aria-hidden="true"></i>Delete</button>
+                                            </form>
+                                        </div>
+                                        <div class="collapse mt-2" id="edit-reply-@r.Id">
+                                            <form method="post" asp-area="Provider" asp-controller="Reviews" asp-action="EditReply"
+                                                  asp-route-id="@r.Id" asp-route-replyId="@r.ReplyId" asp-route-tourId="@Model.SelectedTourId">
+                                                @Html.AntiForgeryToken()
+                                                <label class="visually-hidden" for="edit-reply-text-@r.Id">Edit your reply</label>
+                                                <textarea id="edit-reply-text-@r.Id" name="content" class="form-control mb-2" rows="3" maxlength="2000" required>@r.ReplyContent</textarea>
+                                                <button type="submit" class="btn btn-sm btn-primary">Save reply</button>
+                                            </form>
+                                        </div>
                                     </div>
                                 }
 

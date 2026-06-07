@@ -42,3 +42,16 @@ public sealed record CreateAvailabilitySlotApiRequest(
 public sealed record UpdateAvailabilitySlotApiRequest(
     int MaxCapacity,
     string RowVersion);
+
+// POST /api/v1/booking/availability/slots/bulk
+// Recurrence: "Daily" | "Weekly" | "Custom". DaysOfWeek (full names, e.g. "Monday") required when Custom.
+public sealed record CreateBulkAvailabilitySlotsApiRequest(
+    Guid TourId,
+    DateOnly StartDate,
+    DateOnly EndDate,
+    string Recurrence,
+    IReadOnlyList<string>? DaysOfWeek,
+    TimeOnly StartTime,
+    TimeOnly EndTime,
+    int MaxCapacity,
+    bool? SkipExisting);

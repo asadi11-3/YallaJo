@@ -7,7 +7,7 @@
 > **Architecture & rules:** every page follows the four-tier pipeline (Controller → Facade → ApiClient → IApiClient) and the UI-UX rules — see [`0-architecture-and-rules.md`](0-architecture-and-rules.md).
 > **Code area:** all pages live in the **`Guide`** area (`/guide/*`), `NoStore` cache (UI-PERF-C2, authenticated), gated by policy `Guide` + `WebPermission.Guide.*`.
 
-**Status legend:** ✅ Wire (use template page as-is) · ♻️ Repurpose (adapt an existing template page) · ⏭️ Skip (no UI) · 🟥 USER builds (no template page)
+**Status legend:** ✅ Wire (use template page as-is) · ♻️ Repurpose (adapt an existing template page) · ⏭️ Skip (no UI) · 🟥 Build Using Design skills (match the template theme)
 
 **Shared shell:** top bar = global search + language switcher + notification bell (`GET /notifications/unread-count` `AJAX⟳`) + avatar menu (`GET /accounts/profile`). Nav driver = `GET /security/me`.
 **Load tags:** `SSR` / `AJAX` / `AJAX⟳` (poll/SignalR) / `AJAX↑` (upload).
@@ -19,16 +19,16 @@
 | # | Page | Template | Redirects to |
 |---|------|----------|--------------|
 | 5.1 | Overview `/guide` | `agent-dashboard.html` ♻️ | KPI cards → §5.4 Earnings, §5.7 My Offerings |
-| 5.2 | Profile | 🟥 USER builds | save inline · view public → §2.7 Guide detail |
+| 5.2 | Profile | 🟥 Build Using Design skills | save inline · view public → §2.7 Guide detail |
 | 5.3 | Analytics | `agent-dashboard.html` ♻️ (charts) | drill-down → §5.4 / §5.7 |
 | 5.4 | Earnings | `agent-earnings.html` ♻️ | by-tour → §5.7 · invoice download inline |
-| 5.5 | Tier | 🟥 USER builds | — |
-| 5.6 | Availability | 🟥 USER builds (Flatpickr) | save inline |
-| 5.7 | My Offerings | 🟥 USER builds | offering editor inline · parent tour → §2.5 |
-| 5.8 | Discounts | 🟥 USER builds | create/edit inline |
-| 5.9 | Applications & Proposals | 🟥 USER builds | open tour → §2.5 · proposal detail inline |
-| 5.10 | Join Requests | 🟥 USER builds | approve/reject inline |
-| 5.11 | Agency | 🟥 USER builds | invitation → §5.11 · browse agencies → §2.8 |
+| 5.5 | Tier | 🟥 Build Using Design skills | — |
+| 5.6 | Availability | 🟥 Build Using Design skills (Flatpickr) | save inline |
+| 5.7 | My Offerings | 🟥 Build Using Design skills | offering editor inline · parent tour → §2.5 |
+| 5.8 | Discounts | 🟥 Build Using Design skills | create/edit inline |
+| 5.9 | Applications & Proposals | 🟥 Build Using Design skills | open tour → §2.5 · proposal detail inline |
+| 5.10 | Join Requests | 🟥 Build Using Design skills | approve/reject inline |
+| 5.11 | Agency | 🟥 Build Using Design skills | invitation → §5.11 · browse agencies → §2.8 |
 
 ---
 

@@ -442,6 +442,15 @@ public static class WebPermission
         public const string Read = "Permission.ProviderDashboard.Read";
     }
 
+    // ── ProviderDocument (Booking module — provider/guide compliance documents) ──
+    // Mirrors Permission.ProviderDocument.{Action} (BookingFeatures.ProviderDocument).
+    public static class ProviderDocument
+    {
+        public const string Read   = "Permission.ProviderDocument.Read";
+        public const string Create = "Permission.ProviderDocument.Create";
+        public const string Update = "Permission.ProviderDocument.Update";
+    }
+
     // ── Tour (provider tour/listing management) ────────────────────────────────
     // Mirrors Permission.Tour.{Action}. ReadOwn/Submit/Archive are granted to approved
     // Provider/TourGuide roles (PT-0); Create/Update via the ContentManagement sweep.

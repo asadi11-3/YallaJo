@@ -42,4 +42,7 @@ public sealed class ProviderToursApiClient
 
     public Task<ApiResult> ArchiveAsync(Guid id, byte[] rowVersion, CancellationToken ct = default)
         => _api.PostAsync($"{Base}/{id}/archive", new TourRowVersionApiRequest(rowVersion), ct);
+
+    public Task<ApiResult> DeleteAsync(Guid id, CancellationToken ct = default)
+        => _api.DeleteAsync($"{Base}/{id}", ct);
 }

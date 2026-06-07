@@ -1,119 +1,160 @@
 @using YallaJo.Web.Infrastructure.Authorization
 @using YallaJo.Web.Areas.Provider.Models.Tours
+@using YallaJo.Web.Areas.Provider.Shared
 @model ProviderToursIndexVm
 @{
     ViewData["Title"] = "My listings";
+    ViewData["ProviderNav"] = "Listings";
     Layout = "~/Views/Shared/_Layout.cshtml";
 
     string PageUrl(int p) => Url.Action("Index", "Tours",
         new { area = "Provider", status = Model.Status, page = p })!;
 }
 
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2 class="mb-0">My listings</h2>
-        <a asp-area="Provider" asp-controller="Tours" asp-action="Create" class="btn btn-primary">Create listing</a>
-    </div>
+<partial name="_ProviderSidebar" model="@(new ProviderSidebarVm { DisplayName = User.Identity?.Name ?? "Provider" })" />
 
-    @* Success/Error flash banners are rendered globally by the shared _Alerts partial. *@
-
-    <form asp-area="Provider" asp-controller="Tours" asp-action="Index" method="get" class="row g-2 mb-3">
-        <div class="col-sm-4">
-            <select name="status" class="form-select" aria-label="Filter by status">
-                <option value="">All statuses</option>
-                @foreach (var opt in Model.StatusOptions)
-                {
-                    <option value="@opt.Value" selected="@(string.Equals(opt.Value, Model.Status, StringComparison.OrdinalIgnoreCase))">@opt.Label</option>
-                }
-            </select>
-        </div>
-        <div class="col-sm-2 d-grid">
-            <button type="submit" class="btn btn-outline-secondary">Filter</button>
-        </div>
-        <div class="col-sm-2 d-grid">
-            <a asp-area="Provider" asp-controller="Tours" asp-action="Index" class="btn btn-outline-light border">Reset</a>
-        </div>
-    </form>
-
-    @if (!Model.HasItems)
-    {
-        <div class="alert alert-info">
-            You don't have any listings yet.
-            <a asp-area="Provider" asp-controller="Tours" asp-action="Create" class="alert-link">Create your first listing</a>.
-        </div>
-    }
-    else
-    {
-        <div class="table-responsive">
-            <table class="table table-hover align-middle">
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Status</th>
-                        <th class="text-end">Price</th>
-                        <th>Created</th>
-                        <th class="text-end">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var row in Model.Items)
-                    {
-                        <tr>
-                            <td>@row.Name</td>
-                            <td><span class="badge @row.StatusBadgeClass">@row.StatusLabel</span></td>
-                            <td class="text-end">@row.BasePrice.ToString("0.##") @row.Currency</td>
-                            <td>@row.CreatedAt.ToString("yyyy-MM-dd")</td>
-                            <td class="text-end">
-                                <div class="d-flex justify-content-end gap-2">
-                                    @if (row.CanEdit)
-                                    {
-                                        <permission require="@WebPermission.Tour.Update">
-                                            <a asp-area="Provider" asp-controller="Tours" asp-action="Edit"
-                                               asp-route-id="@row.Id" class="btn btn-sm btn-outline-secondary">Edit</a>
-                                        </permission>
-                                    }
-                                    @if (row.CanSubmit)
-                                    {
-                                        <permission require="@WebPermission.Tour.Submit">
-                                            <form asp-area="Provider" asp-controller="Tours" asp-action="Submit"
-                                                  asp-route-id="@row.Id" method="post" class="d-inline">
-                                                @Html.AntiForgeryToken()
-                                                <button type="submit" class="btn btn-sm btn-outline-primary">Submit</button>
-                                            </form>
-                                        </permission>
-                                    }
-                                    @if (row.CanArchive)
-                                    {
-                                        <permission require="@WebPermission.Tour.Archive">
-                                            <form asp-area="Provider" asp-controller="Tours" asp-action="Archive"
-                                                  asp-route-id="@row.Id" method="post" class="d-inline"
-                                                  onsubmit="return confirm('Archive this listing?');">
-                                                @Html.AntiForgeryToken()
-                                                <button type="submit" class="btn btn-sm btn-outline-danger">Archive</button>
-                                            </form>
-                                        </permission>
-                                    }
-                                </div>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
+<section class="pt-0">
+    <div class="container vstack gap-4">
+        <div class="d-sm-flex justify-content-between align-items-center">
+            <h1 class="fs-4 mb-0"><i class="bi bi-journals me-2"></i>My listings</h1>
+            <a asp-area="Provider" asp-controller="Tours" asp-action="Create" class="btn btn-sm btn-primary mt-2 mt-sm-0">
+                <i class="bi bi-plus-lg me-1"></i>Create listing
+            </a>
         </div>
 
-        @if (Model.TotalPages > 1)
+        <div class="card border">
+            <div class="card-body">
+                <form asp-area="Provider" asp-controller="Tours" asp-action="Index" method="get" class="row g-2 align-items-end">
+                    <div class="col-sm-5 col-lg-4">
+                        <label for="status" class="form-label small mb-1">Filter by status</label>
+                        <select id="status" name="status" class="form-select form-select-sm">
+                            <option value="">All statuses</option>
+                            @foreach (var opt in Model.StatusOptions)
+                            {
+                                <option value="@opt.Value" selected="@(string.Equals(opt.Value, Model.Status, StringComparison.OrdinalIgnoreCase))">@opt.Label</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-auto">
+                        <button type="submit" class="btn btn-sm btn-primary-soft">Filter</button>
+                    </div>
+                    <div class="col-auto">
+                        <a asp-area="Provider" asp-controller="Tours" asp-action="Index" class="btn btn-sm btn-link">Reset</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        @if (!Model.HasItems)
         {
-            <nav aria-label="Listings pagination">
-                <ul class="pagination justify-content-center mb-0">
-                    <li class="page-item @(Model.HasPreviousPage ? "" : "disabled")">
-                        <a class="page-link" href="@PageUrl(Model.Page - 1)">Previous</a>
-                    </li>
-                    <li class="page-item active"><span class="page-link">Page @Model.Page of @Model.TotalPages</span></li>
-                    <li class="page-item @(Model.HasNextPage ? "" : "disabled")">
-                        <a class="page-link" href="@PageUrl(Model.Page + 1)">Next</a>
-                    </li>
-                </ul>
-            </nav>
+            <div class="card border">
+                <div class="card-body text-center py-5">
+                    <i class="bi bi-journals fs-1 text-body-secondary d-block mb-2" aria-hidden="true"></i>
+                    <h2 class="h6 mb-1">No listings yet</h2>
+                    <p class="text-body-secondary mb-3">Create your first tour listing to start receiving bookings.</p>
+                    <a asp-area="Provider" asp-controller="Tours" asp-action="Create" class="btn btn-primary">
+                        <i class="bi bi-plus-lg me-1"></i>Create your first listing
+                    </a>
+                </div>
+            </div>
         }
-    }
-</div>
+        else
+        {
+            <div class="card border">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <caption class="visually-hidden">Your tour listings</caption>
+                        <thead class="table-light">
+                            <tr>
+                                <th scope="col">Name</th>
+                                <th scope="col">Status</th>
+                                <th scope="col" class="text-end">Price</th>
+                                <th scope="col">Created</th>
+                                <th scope="col" class="text-end"><span class="visually-hidden">Actions</span></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var row in Model.Items)
+                            {
+                                <tr>
+                                    <td class="fw-semibold"><bdi>@row.Name</bdi></td>
+                                    <td><span class="badge @row.StatusBadgeClass">@row.StatusLabel</span></td>
+                                    <td class="text-end"><span dir="ltr">@row.BasePrice.ToString("0.##") @row.Currency</span></td>
+                                    <td class="small text-body-secondary">@row.CreatedAt.ToString("d MMM yyyy")</td>
+                                    <td class="text-end">
+                                        <div class="d-inline-flex justify-content-end gap-1 flex-wrap">
+                                            @if (row.CanEdit)
+                                            {
+                                                <permission require="@WebPermission.Tour.Update">
+                                                    <a asp-area="Provider" asp-controller="Tours" asp-action="Edit"
+                                                       asp-route-id="@row.Id" class="btn btn-sm btn-outline-secondary">Edit</a>
+                                                </permission>
+                                                <div class="dropdown d-inline">
+                                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button"
+                                                            data-bs-toggle="dropdown" aria-expanded="false"
+                                                            aria-label="Manage @row.Name">Manage</button>
+                                                    <ul class="dropdown-menu dropdown-menu-end">
+                                                        <li><a class="dropdown-item" asp-area="Provider" asp-controller="TourPricing" asp-action="Index" asp-route-id="@row.Id"><i class="bi bi-tag me-2" aria-hidden="true"></i>Pricing</a></li>
+                                                        <li><a class="dropdown-item" asp-area="Provider" asp-controller="TourSchedules" asp-action="Index" asp-route-id="@row.Id"><i class="bi bi-calendar-event me-2" aria-hidden="true"></i>Schedules</a></li>
+                                                        <li><a class="dropdown-item" asp-area="Provider" asp-controller="TourWaypoints" asp-action="Index" asp-route-id="@row.Id"><i class="bi bi-geo-alt me-2" aria-hidden="true"></i>Route &amp; waypoints</a></li>
+                                                        <li><a class="dropdown-item" asp-area="Provider" asp-controller="TourGuides" asp-action="Index" asp-route-id="@row.Id"><i class="bi bi-person-badge me-2" aria-hidden="true"></i>Guides</a></li>
+                                                        <li><a class="dropdown-item" asp-area="Provider" asp-controller="TourApplications" asp-action="Index" asp-route-id="@row.Id"><i class="bi bi-person-lines-fill me-2" aria-hidden="true"></i>Applications</a></li>
+                                                        <li><a class="dropdown-item" asp-area="Provider" asp-controller="TourImages" asp-action="Index" asp-route-id="@row.Id"><i class="bi bi-images me-2" aria-hidden="true"></i>Images</a></li>
+                                                    </ul>
+                                                </div>
+                                            }
+                                            @if (row.CanSubmit)
+                                            {
+                                                <permission require="@WebPermission.Tour.Submit">
+                                                    <form asp-area="Provider" asp-controller="Tours" asp-action="Submit"
+                                                          asp-route-id="@row.Id" method="post" class="d-inline">
+                                                        @Html.AntiForgeryToken()
+                                                        <button type="submit" class="btn btn-sm btn-outline-primary">Submit</button>
+                                                    </form>
+                                                </permission>
+                                            }
+                                            @if (row.CanArchive)
+                                            {
+                                                <permission require="@WebPermission.Tour.Archive">
+                                                    <form asp-area="Provider" asp-controller="Tours" asp-action="Archive"
+                                                          asp-route-id="@row.Id" method="post" class="d-inline"
+                                                          onsubmit="return confirm('Archive this listing?');">
+                                                        @Html.AntiForgeryToken()
+                                                        <button type="submit" class="btn btn-sm btn-outline-danger">Archive</button>
+                                                    </form>
+                                                </permission>
+                                            }
+                                            <permission require="@WebPermission.Tour.DeleteOwn">
+                                                <form asp-area="Provider" asp-controller="Tours" asp-action="Delete"
+                                                      asp-route-id="@row.Id" method="post" class="d-inline"
+                                                      onsubmit="return confirm('Delete &quot;@row.Name&quot;? This cannot be undone.');">
+                                                    @Html.AntiForgeryToken()
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                                                </form>
+                                            </permission>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            @if (Model.TotalPages > 1)
+            {
+                <nav aria-label="Listings pagination">
+                    <ul class="pagination pagination-sm justify-content-center mb-0">
+                        <li class="page-item @(Model.HasPreviousPage ? "" : "disabled")">
+                            <a class="page-link" href="@PageUrl(Model.Page - 1)">Previous</a>
+                        </li>
+                        <li class="page-item active" aria-current="page"><span class="page-link">Page @Model.Page of @Model.TotalPages</span></li>
+                        <li class="page-item @(Model.HasNextPage ? "" : "disabled")">
+                            <a class="page-link" href="@PageUrl(Model.Page + 1)">Next</a>
+                        </li>
+                    </ul>
+                </nav>
+            }
+        }
+    </div>
+</section>

@@ -27,6 +27,9 @@
         @if (TempData["Success"] is string ok) { <div class="alert alert-success">@ok</div> }
         @if (TempData["Error"] is string err) { <div class="alert alert-danger">@err</div> }
 
+        @* §0.2 Place-contextual weather widget (renders only when data is available). *@
+        @await Component.InvokeAsync("WeatherWidget", new { placeId = Model.Form.PlaceId })
+
         @if (Model.CanResubmit)
         {
             <div class="card border-danger">

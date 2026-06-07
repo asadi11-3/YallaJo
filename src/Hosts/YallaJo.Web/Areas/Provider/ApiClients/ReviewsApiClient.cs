@@ -22,6 +22,12 @@ public sealed class ReviewsApiClient
     public Task<ApiResult> ReplyAsync(Guid reviewId, AddReplyRequest request, CancellationToken ct = default) =>
         _api.PostAsync($"/api/v1/social/reviews/{reviewId}/reply", request, ct);
 
+    public Task<ApiResult> UpdateReplyAsync(Guid reviewId, Guid replyId, AddReplyRequest request, CancellationToken ct = default) =>
+        _api.PutAsync($"/api/v1/social/reviews/{reviewId}/reply/{replyId}", request, ct);
+
+    public Task<ApiResult> DeleteReplyAsync(Guid reviewId, Guid replyId, CancellationToken ct = default) =>
+        _api.DeleteAsync($"/api/v1/social/reviews/{reviewId}/reply/{replyId}", ct);
+
     public Task<ApiResult> ReportAsync(Guid reviewId, ReviewReportRequest request, CancellationToken ct = default) =>
         _api.PostAsync($"/api/v1/social/reviews/{reviewId}/report", request, ct);
 }

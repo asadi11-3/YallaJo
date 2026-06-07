@@ -119,6 +119,13 @@ public sealed class ProviderToursFacade
         return NormalizeAction(result, "Could not archive the listing.");
     }
 
+    // DELETE /tours/{id} is a soft-delete on the API and does not require a RowVersion.
+    public async Task<ProviderTourActionResult> DeleteAsync(Guid id, CancellationToken ct = default)
+    {
+        var result = await _api.DeleteAsync(id, ct);
+        return NormalizeAction(result, "Could not delete the listing.");
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────────────
 
     // Fetches the owner detail to obtain a fresh RowVersion for submit/archive (the list

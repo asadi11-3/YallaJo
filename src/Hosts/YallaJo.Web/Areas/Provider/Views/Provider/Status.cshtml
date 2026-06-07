@@ -6,14 +6,17 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<div class="container mt-4">
-    <h2 class="mb-3">My provider application</h2>
+<section class="pt-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <h1 class="fs-3 mb-3"><i class="bi bi-clipboard-check me-2"></i>My provider application</h1>
 
     @* Success/Error flash banners are rendered globally by the shared _Alerts partial. *@
 
     @if (!Model.HasApplication)
     {
-        <div class="card">
+        <div class="card border">
             <div class="card-body text-center">
                 <p class="mb-3">You haven't applied to become a provider yet.</p>
                 <div class="d-flex flex-wrap gap-2 justify-content-center">
@@ -35,7 +38,7 @@
     }
     else
     {
-        <div class="card mb-3">
+        <div class="card border mb-3">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-start mb-2">
                     <div>
@@ -111,7 +114,7 @@
             </div>
         </div>
 
-        <div class="card mb-3">
+        <div class="card border mb-3">
             <div class="card-header"><strong>Documents</strong></div>
             <div class="card-body">
                 @if (!Model.HasDocuments)
@@ -242,4 +245,7 @@
             </permission>
         }
     }
-</div>
+            </div>
+        </div>
+    </div>
+</section>

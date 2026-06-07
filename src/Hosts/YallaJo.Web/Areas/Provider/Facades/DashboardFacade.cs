@@ -21,12 +21,13 @@ public sealed class DashboardFacade
 
         await Task.WhenAll(toursTask, earningsTask, joinTask, overviewTask, pendingActionsTask, notificationsTask);
 
-        var tours = toursTask.Result;
-        var earnings = earningsTask.Result;
-        var joins = joinTask.Result;
-        var overview = overviewTask.Result;
-        var pendingActions = pendingActionsTask.Result;
-        var notifications = notificationsTask.Result;
+        // UI-PERF-R1: never read .Result — await the already-completed tasks (no sync-over-async).
+        var tours = await toursTask;
+        var earnings = await earningsTask;
+        var joins = await joinTask;
+        var overview = await overviewTask;
+        var pendingActions = await pendingActionsTask;
+        var notifications = await notificationsTask;
 
         var recentListings = tours.Items
             .OrderByDescending(t => t.CreatedAt)

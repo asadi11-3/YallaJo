@@ -1,72 +1,97 @@
 @using YallaJo.Web.Infrastructure.Authorization
 @using YallaJo.Web.Areas.Provider.Models.Tours
+@using YallaJo.Web.Areas.Provider.Shared
 @model ProviderTourFormVm
 @{
     ViewData["Title"] = "Edit listing";
+    ViewData["ProviderNav"] = "Listings";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <div>
-            <h2 class="mb-1">Edit listing</h2>
-            @if (!string.IsNullOrWhiteSpace(Model.StatusLabel))
-            {
-                <span class="text-muted">Status: <strong>@Model.StatusLabel</strong></span>
-            }
+<partial name="_ProviderSidebar" model="@(new ProviderSidebarVm { DisplayName = User.Identity?.Name ?? "Provider" })" />
+
+<section class="pt-0">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-10 col-xl-9 vstack gap-4">
+                <div class="d-sm-flex justify-content-between align-items-center">
+                    <div>
+                        <h1 class="fs-4 mb-0"><i class="bi bi-journals me-2"></i>Edit listing</h1>
+                        @if (!string.IsNullOrWhiteSpace(Model.StatusLabel))
+                        {
+                            <span class="small text-body-secondary">Status: <strong>@Model.StatusLabel</strong></span>
+                        }
+                    </div>
+                    <a asp-area="Provider" asp-controller="Tours" asp-action="Index" class="btn btn-sm btn-secondary-soft mt-2 mt-sm-0">
+                        <i class="bi bi-arrow-left me-1"></i>Back to listings
+                    </a>
+                </div>
+
+                @if (Model.TourId is { } stepTourId)
+                {
+                    <partial name="_TourWizardSteps" model="@(new YallaJo.Web.Areas.Provider.Models.Tours.TourWizardStepsVm { TourId = stepTourId, CurrentStep = 1 })" />
+                }
+
+                <div class="card border">
+                    <div class="card-header border-bottom d-flex flex-wrap gap-2">
+                        <span class="me-auto fw-semibold align-self-center">Manage</span>
+                        <a asp-area="Provider" asp-controller="TourImages" asp-action="Index" asp-route-id="@Model.TourId" class="btn btn-sm btn-secondary-soft"><i class="bi bi-images me-1" aria-hidden="true"></i>Images</a>
+                        <a asp-area="Provider" asp-controller="TourPricing" asp-action="Index" asp-route-id="@Model.TourId" class="btn btn-sm btn-secondary-soft"><i class="bi bi-tag me-1" aria-hidden="true"></i>Pricing</a>
+                        <a asp-area="Provider" asp-controller="TourSchedules" asp-action="Index" asp-route-id="@Model.TourId" class="btn btn-sm btn-secondary-soft"><i class="bi bi-calendar-event me-1" aria-hidden="true"></i>Schedules</a>
+                        <a asp-area="Provider" asp-controller="TourAvailability" asp-action="Index" asp-route-id="@Model.TourId" class="btn btn-sm btn-secondary-soft"><i class="bi bi-calendar2-week me-1" aria-hidden="true"></i>Availability</a>
+                        <a asp-area="Provider" asp-controller="TourWaypoints" asp-action="Index" asp-route-id="@Model.TourId" class="btn btn-sm btn-secondary-soft"><i class="bi bi-geo-alt me-1" aria-hidden="true"></i>Route</a>
+                        <a asp-area="Provider" asp-controller="TourGuides" asp-action="Index" asp-route-id="@Model.TourId" class="btn btn-sm btn-secondary-soft"><i class="bi bi-person-badge me-1" aria-hidden="true"></i>Guides</a>
+                        <a asp-area="Provider" asp-controller="TourApplications" asp-action="Index" asp-route-id="@Model.TourId" class="btn btn-sm btn-secondary-soft"><i class="bi bi-person-lines-fill me-1" aria-hidden="true"></i>Applications</a>
+                    </div>
+                    <div class="card-body">
+                        <form asp-area="Provider" asp-controller="Tours" asp-action="Edit" asp-route-id="@Model.TourId" method="post">
+                            @Html.AntiForgeryToken()
+                            <partial name="_Form" model="Model" />
+                            <div class="mt-4 d-flex gap-2">
+                                <button type="submit" class="btn btn-primary">Save changes</button>
+                                <a asp-area="Provider" asp-controller="Tours" asp-action="Index" class="btn btn-link">Cancel</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                @if (Model.CanSubmit || Model.CanArchive)
+                {
+                    <div class="card border">
+                        <div class="card-body">
+                            <div class="d-flex flex-wrap gap-2">
+                                @if (Model.CanSubmit)
+                                {
+                                    <permission require="@WebPermission.Tour.Submit">
+                                        <form asp-area="Provider" asp-controller="Tours" asp-action="Submit" asp-route-id="@Model.TourId" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-outline-primary"><i class="bi bi-send me-1"></i>Submit for review</button>
+                                        </form>
+                                    </permission>
+                                }
+                                @if (Model.CanArchive)
+                                {
+                                    <permission require="@WebPermission.Tour.Archive">
+                                        <form asp-area="Provider" asp-controller="Tours" asp-action="Archive" asp-route-id="@Model.TourId" method="post" class="d-inline"
+                                              onsubmit="return confirm('Archive this listing?');">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-outline-danger"><i class="bi bi-archive me-1"></i>Archive</button>
+                                        </form>
+                                    </permission>
+                                }
+                            </div>
+                            <p class="text-body-secondary small mt-2 mb-0">
+                                Submitting requires a complete listing: description ≥ 100 characters, a meeting point, and at least
+                                one image, one active Adult pricing tier, and one active schedule. Use the <strong>Manage</strong>
+                                links above to add them.
+                            </p>
+                        </div>
+                    </div>
+                }
+            </div>
         </div>
-        <a asp-area="Provider" asp-controller="Tours" asp-action="Index" class="btn btn-sm btn-outline-secondary">← Back to listings</a>
     </div>
-
-    <form asp-area="Provider" asp-controller="Tours" asp-action="Edit" asp-route-id="@Model.TourId" method="post">
-        @Html.AntiForgeryToken()
-        <partial name="_Form" model="Model" />
-
-        <div class="mt-4 d-flex gap-2">
-            <button type="submit" class="btn btn-primary">Save changes</button>
-            <a asp-area="Provider" asp-controller="Tours" asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
-            <a asp-area="Provider" asp-controller="TourImages" asp-action="Index" asp-route-id="@Model.TourId"
-               class="btn btn-outline-secondary">Manage images</a>
-            <a asp-area="Provider" asp-controller="TourPricing" asp-action="Index" asp-route-id="@Model.TourId"
-               class="btn btn-outline-secondary">Manage pricing</a>
-            <a asp-area="Provider" asp-controller="TourSchedules" asp-action="Index" asp-route-id="@Model.TourId"
-               class="btn btn-outline-secondary">Manage schedules</a>
-            <a asp-area="Provider" asp-controller="TourAvailability" asp-action="Index" asp-route-id="@Model.TourId"
-               class="btn btn-outline-secondary">Manage availability</a>
-        </div>
-    </form>
-
-    @if (Model.CanSubmit || Model.CanArchive)
-    {
-        <hr class="my-4" />
-        <div class="d-flex gap-2">
-            @if (Model.CanSubmit)
-            {
-                <permission require="@WebPermission.Tour.Submit">
-                    <form asp-area="Provider" asp-controller="Tours" asp-action="Submit" asp-route-id="@Model.TourId" method="post" class="d-inline">
-                        @Html.AntiForgeryToken()
-                        <button type="submit" class="btn btn-outline-primary">Submit for review</button>
-                    </form>
-                </permission>
-            }
-            @if (Model.CanArchive)
-            {
-                <permission require="@WebPermission.Tour.Archive">
-                    <form asp-area="Provider" asp-controller="Tours" asp-action="Archive" asp-route-id="@Model.TourId" method="post" class="d-inline"
-                          onsubmit="return confirm('Archive this listing?');">
-                        @Html.AntiForgeryToken()
-                        <button type="submit" class="btn btn-outline-danger">Archive</button>
-                    </form>
-                </permission>
-            }
-        </div>
-        <p class="text-muted small mt-2 mb-0">
-            Submitting requires the listing to be complete: description ≥ 100 characters, a meeting point, and at least
-            one image, one active Adult pricing tier, and one active schedule. Use <strong>Manage images</strong>,
-            <strong>Manage pricing</strong>, and <strong>Manage schedules</strong> above to add them.
-        </p>
-    }
-</div>
+</section>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />

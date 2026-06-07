@@ -57,7 +57,32 @@ public sealed class PaymentMethodsController : BaseController
         }
 
         SetSuccess("Payment method added.");
-        return RedirectToAction(nameof(Index));
+        return RedirectToAction("Index", "Finance");
+    }
+
+    [HttpPost("provider/payment-methods/{id:guid}/edit")]
+    [ValidateAntiForgeryToken]
+    [RequirePermission(WebPermission.ProviderPaymentMethod.Update)]
+    public async Task<IActionResult> Edit(Guid id, CreatePaymentMethodFormVm form, CancellationToken ct = default)
+    {
+        SetSidebar();
+
+        if (!ModelState.IsValid)
+            return await ReloadAsync(form, ct);
+
+        var result = await _paymentMethods.UpdateAsync(id, form, ct);
+        if (GuardSignOut(result) is { } signOut)
+            return signOut;
+
+        if (!result.IsSuccess)
+        {
+            if (!ApplyValidationErrors(result))
+                SetError(result.Error);
+            return await ReloadAsync(form, ct);
+        }
+
+        SetSuccess("Payment method updated.");
+        return RedirectToAction("Index", "Finance");
     }
 
     [HttpPost("provider/payment-methods/{id:guid}/delete")]
@@ -70,7 +95,7 @@ public sealed class PaymentMethodsController : BaseController
             return signOut;
 
         SetFlash(result, "Payment method deleted.", "Could not delete the payment method.");
-        return RedirectToAction(nameof(Index));
+        return RedirectToAction("Index", "Finance");
     }
 
     private async Task<IActionResult> ReloadAsync(CreatePaymentMethodFormVm form, CancellationToken ct)
