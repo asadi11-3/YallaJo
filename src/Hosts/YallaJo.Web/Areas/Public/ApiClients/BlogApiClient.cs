@@ -59,9 +59,6 @@ public sealed class BlogApiClient(IApiClient api)
     public Task<ApiResult> EditCommentAsync(Guid commentId, EditBlogCommentBody body, CancellationToken ct = default)
         => api.PutAsync($"{Base}/comments/{commentId}", body, ct);
 
-    public Task<ApiResult> DeleteCommentAsync(Guid commentId, CancellationToken ct = default)
-        => api.DeleteAsync($"{Base}/comments/{commentId}", ct);
-
     public Task<ApiResult> DeleteCommentAsync(Guid commentId, DeleteBlogCommentBody body, CancellationToken ct = default)
         => api.DeleteAsync($"{Base}/comments/{commentId}", body, ct);
 
