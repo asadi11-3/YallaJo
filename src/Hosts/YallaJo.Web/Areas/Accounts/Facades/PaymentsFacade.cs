@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Hosting;
 using YallaJo.Web.Areas.Accounts.ApiClients;
 using YallaJo.Web.Areas.Accounts.Models.Payments;
 using YallaJo.Web.Infrastructure.Api.Contracts;
@@ -9,8 +10,13 @@ public sealed class PaymentsFacade
     private const int PageSize = 50;
 
     private readonly PaymentsApiClient _api;
+    private readonly IHostEnvironment _env;
 
-    public PaymentsFacade(PaymentsApiClient api) => _api = api;
+    public PaymentsFacade(PaymentsApiClient api, IHostEnvironment env)
+    {
+        _api = api;
+        _env = env;
+    }
 
     public async Task<ApiResult<PaymentsVm>> GetAsync(CancellationToken ct = default)
     {
@@ -57,6 +63,12 @@ public sealed class PaymentsFacade
             return ApiResult.Fail(initiate.StatusCode, initiate.Error ?? "Payment could not be started yet. Please try again in a moment.");
         if (!initiate.IsSuccess)
             return ApiResult.Fail(initiate.StatusCode, initiate.Error ?? "Could not start payment.");
+
+        // PAY4: in production the PSP webhook server-confirms the payment asynchronously
+        // ("Processing…"); the dev-only simulate-success endpoint must NEVER be invoked
+        // outside Development (the API itself only exposes it in Development).
+        if (!_env.IsDevelopment())
+            return ApiResult.Ok();
 
         var simulate = await _api.SimulateSuccessAsync(bookingId, ct);
         if (simulate.IsUnauthorized) return ApiResult.ForceSignOut();
