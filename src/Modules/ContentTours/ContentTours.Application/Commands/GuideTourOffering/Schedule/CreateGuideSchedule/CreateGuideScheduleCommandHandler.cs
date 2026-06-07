@@ -5,6 +5,7 @@ using ContentTours.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
+using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
@@ -12,9 +13,11 @@ namespace ContentTours.Application.Commands.GuideTourOffering.Schedule.CreateGui
 
 internal sealed class CreateGuideScheduleCommandHandler(
     IGuideTourOfferingRepository offeringRepository,
+    ITourGuideRepository tourGuideRepository,
     IGuideScheduleRepository scheduleRepository,
     IContentToursUnitOfWork unitOfWork,
     HybridCache cache,
+    ICurrentUser currentUser,
     ILogger<CreateGuideScheduleCommandHandler> logger) : ICommandHandler<CreateGuideScheduleCommand, Guid>
 {
     public async Task<Result<Guid>> Handle(CreateGuideScheduleCommand request, CancellationToken cancellationToken)
@@ -22,6 +25,10 @@ internal sealed class CreateGuideScheduleCommandHandler(
         var offering = await offeringRepository.GetByTourAndGuideAsync(request.TourId, request.TourGuideId, cancellationToken, asNoTracking: false);
         if (offering is null)
             return Result<Guid>.Failure(new Error("GuideTourOffering.NotFound", "Guide offering not found for this tour and guide."), Outcome.NotFound);
+
+        var callerGuide = await tourGuideRepository.GetByUserIdAsync(currentUser.UserId!.Value, cancellationToken);
+        if (callerGuide is null || offering.TourGuideId != callerGuide.Id)
+            return Result<Guid>.Failure(new Error("GuideTourOffering.NotOwner", "You can only manage your own tour offerings."), Outcome.Forbidden);
 
         if (!TimeOnly.TryParse(request.StartTime, out var startTime))
             return Result<Guid>.Failure(new Error("GuideSchedule.InvalidStartTime", "Invalid start time format. Use HH:mm."), Outcome.Invalid);

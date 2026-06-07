@@ -18,3 +18,13 @@ public sealed class JoinRequestResponse
     public Guid? ResultingBookingId { get; init; }
     public DateTime CreatedAt { get; init; }
 }
+
+/// <summary>
+/// Outbound payload for POST /api/v1/booking/join-requests (create a join request).
+/// Mirrors the API wire DTO <c>SubmitJoinRequestRequest</c>.
+/// </summary>
+public sealed record SubmitJoinRequestApiRequest(
+    Guid TourBookingId,
+    Guid AvailabilitySlotId,
+    int ParticipantCount,
+    string? Message);

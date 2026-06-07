@@ -186,6 +186,46 @@
                         </form>
                     </div>
                 </div>
+
+                @* §3.6 — cold-start onboarding quiz. Uses the current recommendation rows as the
+                   quiz options; each is marked 👍 interested or 👎 not interested, posted as
+                   "Kind:EntityId" tokens to the Onboarding action. *@
+                @if (Model.HasRecommendations)
+                {
+                    <div class="card border mt-4">
+                        <div class="card-header border-bottom">
+                            <h4 class="card-header-title mb-0">Tell us what you like</h4>
+                            <p class="small text-body mb-0">Pick a few you love or aren't keen on — we'll tune your feed.</p>
+                        </div>
+                        <div class="card-body">
+                            <form asp-area="Accounts" asp-controller="Recommendations" asp-action="Onboarding" method="post">
+                                @Html.AntiForgeryToken()
+                                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                                <ul class="list-unstyled mb-3">
+                                    @foreach (var rec in Model.Recommendations)
+                                    {
+                                        var token = $"{rec.Kind}:{rec.Id}";
+                                        var groupName = $"onb-{rec.Id}";
+                                        <li class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                                            <span class="text-body"><bdi>@rec.Name</bdi> <span class="badge bg-light text-body ms-1">@rec.KindLabel</span></span>
+                                            <span class="btn-group btn-group-sm" role="group" aria-label="@($"Preference for {rec.Name}")">
+                                                <input type="radio" class="btn-check" name="@groupName" id="@($"{groupName}-up")" value="up" autocomplete="off" />
+                                                <label class="btn btn-outline-success" for="@($"{groupName}-up")"
+                                                       data-onb-token="@token" data-onb-list="Interested"><i class="bi bi-hand-thumbs-up"></i></label>
+                                                <input type="radio" class="btn-check" name="@groupName" id="@($"{groupName}-down")" value="down" autocomplete="off" />
+                                                <label class="btn btn-outline-danger" for="@($"{groupName}-down")"
+                                                       data-onb-token="@token" data-onb-list="NotInterested"><i class="bi bi-hand-thumbs-down"></i></label>
+                                            </span>
+                                        </li>
+                                    }
+                                </ul>
+                                @* Hidden inputs populated by the script below from the selected radios. *@
+                                <div id="onb-hidden-inputs"></div>
+                                <button type="submit" class="btn btn-primary">Personalise my feed</button>
+                            </form>
+                        </div>
+                    </div>
+                }
             </div>
         </div>
     </div>
@@ -193,4 +233,5 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script src="~/assets/js/recommendations-onboarding.js" asp-append-version="true" defer></script>
 }

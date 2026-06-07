@@ -12,4 +12,7 @@ public sealed class JoinRequestsApiClient
 
     public Task<ApiResult<List<JoinRequestResponse>>> GetMyJoinRequestsAsync(CancellationToken ct = default) =>
         _api.GetAsync<List<JoinRequestResponse>>("/api/v1/booking/join-requests?myRequestsOnly=true", ct);
+
+    public Task<ApiResult<Guid>> SubmitAsync(SubmitJoinRequestApiRequest request, CancellationToken ct = default) =>
+        _api.PostAsync<Guid>("/api/v1/booking/join-requests", request, ct);
 }

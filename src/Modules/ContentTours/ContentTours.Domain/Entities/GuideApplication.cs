@@ -39,7 +39,8 @@ public sealed class GuideApplication : AuditableEntity, IAggregateRoot
         Guid guideUserId,
         string message,
         string? relevantExperience = null,
-        decimal? proposedBasePrice = null)
+        decimal? proposedBasePrice = null,
+        string? proposedScheduleJson = null)
     {
         if (string.IsNullOrWhiteSpace(message) || message.Trim().Length > 2000)
             return Result.Failure<GuideApplication>(new Error("GuideApplication.InvalidMessage", "Message is required and cannot exceed 2000 characters."));
@@ -55,7 +56,8 @@ public sealed class GuideApplication : AuditableEntity, IAggregateRoot
             Status = GuideApplicationStatus.Draft,
             Message = message.Trim(),
             RelevantExperience = string.IsNullOrWhiteSpace(relevantExperience) ? null : relevantExperience.Trim(),
-            ProposedBasePrice = proposedBasePrice
+            ProposedBasePrice = proposedBasePrice,
+            ProposedScheduleJson = proposedScheduleJson
         });
     }
 

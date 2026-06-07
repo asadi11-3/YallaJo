@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using YallaJo.Web.Areas.Accounts.Facades;
 using YallaJo.Web.Areas.Accounts.Models.JoinRequests;
 using YallaJo.Web.Areas.Accounts.Shared;
+using YallaJo.Web.Infrastructure.Authorization;
 using YallaJo.Web.Infrastructure.Mvc;
 
 namespace YallaJo.Web.Areas.Accounts.Controllers;
@@ -37,6 +38,28 @@ public sealed class JoinRequestsController : BaseController
         }
 
         return View(result.Data);
+    }
+
+    [HttpPost("accounts/join-requests")]
+    [ValidateAntiForgeryToken]
+    [RequirePermission(WebPermission.JoinRequest.Create)]
+    public async Task<IActionResult> Create(JoinRequestFormVm form, CancellationToken ct = default)
+    {
+        if (!ModelState.IsValid)
+        {
+            SetError("Please check the booking reference, slot, and participant count, then try again.");
+            return RedirectToAction(nameof(Index));
+        }
+
+        var result = await _joinRequests.SubmitAsync(form, ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+
+        if (result.IsSuccess)
+            SetSuccess("Your request to join the group was sent.");
+        else
+            SetError(result.Error ?? "Could not submit your join request.");
+
+        return RedirectToAction(nameof(Index));
     }
 
     private async Task PopulateSidebarAsync(CancellationToken ct)

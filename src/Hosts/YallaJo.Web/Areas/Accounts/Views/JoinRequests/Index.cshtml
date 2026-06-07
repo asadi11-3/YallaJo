@@ -80,7 +80,23 @@
                         }
                     </div>
                 </div>
+
+                @* §3.2 — request to join an existing confirmed group booking.
+                   Posts to JoinRequestsController.Create (POST /accounts/join-requests). *@
+                <div class="card border mt-4">
+                    <div class="card-header border-bottom">
+                        <h4 class="card-header-title mb-0">Request to join a group</h4>
+                        <p class="small text-body mb-0">Have a booking reference and slot from the organiser? Ask to join their group.</p>
+                    </div>
+                    <div class="card-body">
+                        <partial name="_JoinRequestForm" model="new YallaJo.Web.Areas.Accounts.Models.JoinRequests.JoinRequestFormVm()" />
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

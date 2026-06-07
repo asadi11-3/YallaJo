@@ -4,6 +4,7 @@ using ContentTours.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
+using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 using YallaJo.SharedKernel.Domain.ValueObjects;
@@ -12,8 +13,10 @@ namespace ContentTours.Application.Commands.GuideTourOffering.PricingTier.Update
 
 internal sealed class UpdateGuidePricingTierCommandHandler(
     IGuidePricingTierRepository pricingTierRepository,
+    ITourGuideRepository tourGuideRepository,
     IContentToursUnitOfWork unitOfWork,
     HybridCache cache,
+    ICurrentUser currentUser,
     ILogger<UpdateGuidePricingTierCommandHandler> logger) : ICommandHandler<UpdateGuidePricingTierCommand>
 {
     public async Task<Result> Handle(UpdateGuidePricingTierCommand request, CancellationToken cancellationToken)
@@ -21,6 +24,10 @@ internal sealed class UpdateGuidePricingTierCommandHandler(
         var tier = await pricingTierRepository.GetByIdAsync(request.TierId, cancellationToken, asNoTracking: false);
         if (tier is null)
             return Result.Failure(new Error("GuidePricingTier.NotFound", "Pricing tier not found."), Outcome.NotFound);
+
+        var callerGuide = await tourGuideRepository.GetByUserIdAsync(currentUser.UserId!.Value, cancellationToken);
+        if (callerGuide is null || tier.TourGuideId != callerGuide.Id)
+            return Result.Failure(new Error("GuideTourOffering.NotOwner", "You can only manage your own tour offerings."), Outcome.Forbidden);
 
         var price = new Money(request.Price, request.Currency);
         tier.Update(request.Name, price, request.MinParticipants, request.MaxParticipants, request.Description);

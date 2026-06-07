@@ -117,6 +117,7 @@ internal sealed class PublishAvailabilitySlotCapacityChangedHandler(
         var e = notification.Event;
         var integration = new AvailabilitySlotCapacityChangedIntegrationEvent(
             SlotId: e.SlotId,
+            TourId: e.TourId,
             OldCapacity: e.OldCapacity,
             NewCapacity: e.NewCapacity);
         await outbox.WriteAsync(integration, ct).ConfigureAwait(false);

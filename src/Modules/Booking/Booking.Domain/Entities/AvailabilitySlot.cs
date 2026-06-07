@@ -98,7 +98,7 @@ public sealed class AvailabilitySlot : AuditableEntity, IAggregateRoot
         var previousAvailable = AvailableCount;
         LockedCount += participantCount;
         MarkUpdated();
-        AddDomainEvent(new AvailabilitySlotCapacityChangedDomainEvent(Id, previousAvailable, AvailableCount));
+        AddDomainEvent(new AvailabilitySlotCapacityChangedDomainEvent(Id, TourId, previousAvailable, AvailableCount));
     }
 
     /// <summary>
@@ -120,7 +120,7 @@ public sealed class AvailabilitySlot : AuditableEntity, IAggregateRoot
         var previousAvailable = AvailableCount;
         LockedCount -= participantCount;
         MarkUpdated();
-        AddDomainEvent(new AvailabilitySlotCapacityChangedDomainEvent(Id, previousAvailable, AvailableCount));
+        AddDomainEvent(new AvailabilitySlotCapacityChangedDomainEvent(Id, TourId, previousAvailable, AvailableCount));
     }
 
     /// <summary>
@@ -164,7 +164,7 @@ public sealed class AvailabilitySlot : AuditableEntity, IAggregateRoot
         var previousAvailable = AvailableCount;
         BookedCount -= participantCount;
         MarkUpdated();
-        AddDomainEvent(new AvailabilitySlotCapacityChangedDomainEvent(Id, previousAvailable, AvailableCount));
+        AddDomainEvent(new AvailabilitySlotCapacityChangedDomainEvent(Id, TourId, previousAvailable, AvailableCount));
     }
 
     /// <summary>
@@ -208,7 +208,7 @@ public sealed class AvailabilitySlot : AuditableEntity, IAggregateRoot
         var previousAvailable = AvailableCount;
         IsActive = true;
         MarkUpdated();
-        AddDomainEvent(new AvailabilitySlotCapacityChangedDomainEvent(Id, previousAvailable, AvailableCount));
+        AddDomainEvent(new AvailabilitySlotCapacityChangedDomainEvent(Id, TourId, previousAvailable, AvailableCount));
     }
 
     public void Book(int participantCount)
@@ -232,7 +232,7 @@ public sealed class AvailabilitySlot : AuditableEntity, IAggregateRoot
         var previousAvailable = AvailableCount;
         BookedCount += participantCount;
         MarkUpdated();
-        AddDomainEvent(new AvailabilitySlotCapacityChangedDomainEvent(Id, previousAvailable, AvailableCount));
+        AddDomainEvent(new AvailabilitySlotCapacityChangedDomainEvent(Id, TourId, previousAvailable, AvailableCount));
     }
 
     public void Cancel(int participantCount) => ReleaseBooking(participantCount);
@@ -259,7 +259,7 @@ public sealed class AvailabilitySlot : AuditableEntity, IAggregateRoot
         var previousAvailable = AvailableCount;
         MaxCapacity = newMaxCapacity;
         MarkUpdated();
-        AddDomainEvent(new AvailabilitySlotCapacityChangedDomainEvent(Id, previousAvailable, AvailableCount));
+        AddDomainEvent(new AvailabilitySlotCapacityChangedDomainEvent(Id, TourId, previousAvailable, AvailableCount));
     }
 
     public void RequestDeactivation()

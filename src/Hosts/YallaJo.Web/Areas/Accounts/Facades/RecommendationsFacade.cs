@@ -73,6 +73,24 @@ public sealed class RecommendationsFacade
                 new RecordInteractionApiRequest(null, null, entityType, entityId, interactionType), ct),
             "Could not record the interaction.");
 
+    public Task<ApiResult> SubmitOnboardingAsync(OnboardingFormVm form, CancellationToken ct = default)
+    {
+        var interested = form.Interested
+            .Select(OnboardingFormVm.ParseToken)
+            .Where(r => r is not null)
+            .Select(r => new OnboardingEntityRefApiRequest(r!.Value.Kind, r.Value.EntityId))
+            .ToList();
+
+        var notInterested = form.NotInterested
+            .Select(OnboardingFormVm.ParseToken)
+            .Where(r => r is not null)
+            .Select(r => new OnboardingEntityRefApiRequest(r!.Value.Kind, r.Value.EntityId))
+            .ToList();
+
+        var request = new OnboardingApiRequest(interested, notInterested);
+        return NormalizeAsync(_api.SubmitOnboardingAsync(request, ct), "Could not save your onboarding answers.");
+    }
+
     private async Task<UserPreferencesResponse?> SafePreferencesAsync(CancellationToken ct)
     {
         try

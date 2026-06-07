@@ -56,7 +56,8 @@ public sealed class ApplyForTourCommandHandler(
                 userId,
                 request.Message,
                 request.RelevantExperience,
-                request.ProposedBasePrice);
+                request.ProposedBasePrice,
+                request.ProposedScheduleJson);
 
             if (!applicationResult.IsSuccess)
             {

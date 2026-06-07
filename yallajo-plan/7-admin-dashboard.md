@@ -5,9 +5,11 @@
 > **Source of truth:** YallaJo code (`yallajo-endpoints.txt`, 549 endpoints). All routes are `/api/v1`-prefixed.
 > **Template family:** Webestica `admin-*` pages cover the overview, moderation, providers (agents), finance lists and users; the rest of the admin consoles have **no template page** and are built by you.
 > **Architecture & rules:** see [`0-architecture-and-rules.md`](0-architecture-and-rules.md) — four-tier pipeline (Controller → Facade → ApiClient → IApiClient), code areas, caching, permissions.
-> **Code area:** mostly **`Admin`** (`/admin/*`); **§8.9 Content Operations** + **§8.10 SEO Console** live in the **`Content`** area (`/content/*`). Every page is **`NoStore`** (UI-PERF-C2), policy **`Admin`** + a `WebPermission.{Feature}.{Action}` constant; every write is anti-forgery protected (SEC7) and uses PRG.
+> **Code area:** **everything is in the `Admin` area (`/admin/*`)** — the entire surface is **already implemented (43 shipped controllers)**. The planned separate `Content` area was **consolidated into `Admin` in code**: §8.9 Content Ops → `/admin/categories|tags|languages|specializations|translations|attachments`, §8.10 SEO → `/admin/seo/*` (this diverges from `0-architecture-and-rules.md` §2, which still lists `Content` as a distinct area — the shipped code wins). Every page is **`NoStore`** (UI-PERF-C2), policy **`Admin`** + a `WebPermission.{Feature}.{Action}` constant; every write is anti-forgery protected (SEC7) and uses PRG.
+> **Permission + route reality:** the **Perm** and **Route** lines below are taken from the *shipped* `[Area("Admin")]` controllers' `[RequirePermission]` attributes. There is **no** `Admin.Read`, `*.Manage`, or `*.Moderate` umbrella constant — the real constants are granular per-action.
+> **BFF verbs are `POST` (PRG):** the `PATCH`/`PUT`/`DELETE` shown in endpoint/button lines are **API-layer** verbs (ApiClient → API). Every BFF action is `[HttpPost]` + anti-forgery + PRG (e.g. `POST /admin/providers/{id}/request-documents`, `POST /admin/seo/metadata/save`, `POST /admin/tours/{id}/feature`).
 
-**Status legend:** ✅ Wire · ♻️ Repurpose · ⏭️ Skip ·  🟥 Build Using Design skills (match the template theme)
+**Status legend:** ✅ Wire · ♻️ Repurpose · ⏭️ Skip · 🟥 USER builds (no template page — but note: most 🟥 admin pages below are **already shipped controllers**; only the view `.cshtml` needs (re)design)
 
 **Shared shell:** top bar = global search + language switcher + notification bell (`GET /notifications/unread-count` `AJAX⟳`) + avatar menu (`GET /accounts/profile`). Nav driver = `GET /security/me`.
 **Load tags:** `SSR` / `AJAX` / `AJAX⟳` / `AJAX↑`. Status is first-class UI (badge + action menu); inline mutations return the updated row + toast.
@@ -21,15 +23,15 @@
 | 8.1 | Overview | `admin-dashboard.html` ✅ | KPI cards → §8.7 Finance / §8.13 Users / §8.4 Tours |
 | 8.2 | Moderation | `admin-reviews.html` ✅ | resolve/approve/remove inline · reported entity |
 | 8.3 | Providers | `admin-agent-list.html` ✅ + `admin-agent-detail.html` ✅ | row → provider detail · lifecycle inline |
-| 8.4 | Tours Review |  🟥 Build Using Design skills (match the template theme)| row → §2.5 Tour preview · approve/reject inline |
-| 8.5 | Places & Businesses |  🟥 Build Using Design skills (match the template theme)| row → §2.3 / §2.4 preview · moderation inline |
-| 8.6 | Blogs & Creators |  🟥 Build Using Design skills (match the template theme)| row → §2.9 post/creator · feature/hide inline |
+| 8.4 | Tours Review | 🟥 view redesign (controller shipped `ToursController`) | row → §2.5 Tour preview · approve/reject inline |
+| 8.5 | Places & Businesses | 🟥 view redesign (shipped `Places`/`Businesses` controllers) | row → §2.3 / §2.4 preview · moderation inline |
+| 8.6 | Blogs & Creators | 🟥 view redesign (shipped `Blogs`/`Creators` controllers) | row → §2.9 post/creator · feature/hide inline |
 | 8.7 | Finance Ops | `admin-booking-list.html` ♻️ + `admin-booking-detail.html` ♻️ + `admin-earnings.html` ✅ | booking detail · refund inline · payout detail |
-| 8.8 | Growth & Merchandising |  🟥 Build Using Design skills (match the template theme)| targeted entity → §2.5 / §2.3 |
-| 8.9 | Content Operations |  🟥 Build Using Design skills (match the template theme)(tabbed CRUD) | inline edits |
-| 8.10 | SEO Console |  🟥 Build Using Design skills (match the template theme)(entityType picker) | §2.x detail preview · inline |
-| 8.11 | Support |  🟥 Build Using Design skills (match the template theme)(reuse help-center) | ticket thread |
-| 8.12 | Platform Ops |  🟥 Build Using Design skills (match the template theme)| dead-letter detail inline |
+| 8.8 | Growth & Merchandising | 🟥 view redesign (shipped `GrowthController`) | targeted entity → §2.5 / §2.3 |
+| 8.9 | Content Operations | 🟥 view redesign (shipped `Categories`/`Tags`/`Languages`/… controllers) — tabbed CRUD | inline edits |
+| 8.10 | SEO Console | 🟥 view redesign (shipped `Seo*` controllers) — entityType picker | §2.x detail preview · inline |
+| 8.11 | Support | 🟥 view redesign (shipped `SupportController`) | ticket thread |
+| 8.12 | Platform Ops | 🟥 view redesign (shipped `Outbox`/`NotificationTemplates` controllers) | dead-letter detail inline |
 | 8.13 | Users & Audit | `admin-guest-list.html` ✅ + `admin-guest-detail.html` ✅ + `admin-settings.html` ♻️ | guest detail · lifecycle inline · audit export |
 | 8.14 | Tour Guides | `admin-agent-detail.html` ♻️ + `admin-agent-list.html` ♻️ | row → §2.7 Guide detail · lifecycle inline · offerings → §8.4 |
 
@@ -41,7 +43,7 @@
 - `GET /admin/dashboard` `[/bookings | /revenue | /users]` `SSR`
 - `GET /trending` · `GET /popular/*` `AJAX`
 - **Buttons:** read-only KPIs; **drill-in** cards → §8.7 / §8.13 / §8.4 (nav). *(No write-endpoints.)*
-- **Stack:** **Area** `Admin` · **Route** `/admin/dashboard` · **Cache** `NoStore` · **Perm** `Admin` + `WebPermission.Admin.Read` · **Rules** `R2` SSR first paint, `API1` Task.WhenAll for the independent KPI calls, ApexCharts via `dashboard.bundle.js` (allowed — not a public page), read-only so no SEC7.
+- **Stack:** **Area** `Admin` · **Route** `/admin`, `/admin/dashboard` (shipped `HomeController`; analytics drill = `/admin/analytics`, shipped `StatisticsController`, `Interaction.Read`) · **Cache** `NoStore` · **Perm** policy `Admin` + `WebPermission.AdminDashboard.Read` (shipped) · **Rules** `R2` SSR first paint, `API1` Task.WhenAll (then `GuardSignOut` each), `ERR3` each KPI section degrades to a "Couldn't load — [Retry]" card, ApexCharts via `dashboard.bundle.js` (allowed — not a public page), read-only so no SEC7.
 
 ### 8.2 Moderation
 - `GET /social/reports/admin` · `POST /social/reports/admin/{id}/resolve` `AJAX`
@@ -49,13 +51,13 @@
 - `GET /social/moderation/logs` `AJAX`
 - `POST /social/moderation/warn` · `/ban` · `DELETE /social/moderation/ban/{userId}` `AJAX`
 - **Buttons:** **Resolve Report** → `POST /social/reports/admin/{id}/resolve` · **Approve Review** → `POST /social/reviews/admin/{id}/approve` · **Remove Review** → `/remove` · **Warn User** → `POST /social/moderation/warn` · **Ban User** → `/ban` · **Unban** → `DELETE /social/moderation/ban/{userId}`.
-- **Stack:** **Area** `Admin` · **Route** `/admin/moderation` · **Cache** `NoStore` · **Perm** `Admin` + `WebPermission.Moderation.Manage` · **Rules** `D1` paged queues, `F8` confirm modal on Ban/Remove (destructive), `RT5` admin SignalR moderation badge, `A11Y5` status = colour+icon+text, `NF1` toast on inline action, `SEC7`.
+- **Stack:** **Area** `Admin` · **Route** `/admin/moderation` (+ `/admin/reports`, `/admin/flagged-reviews`) · **Cache** `NoStore` · **Perm** policy `Admin` + (shipped, split across `Moderation`/`Reports`/`FlaggedReviews` controllers): class reads `ContentModerationLog.Read` / `AdminModerationQueue.Read`; actions `AdminModerationQueue.Warn` / `.Ban` (warn/ban/unban), `.Resolve` (resolve report), `.Approve` / `.Remove` (flagged reviews) · **Rules** `D1` paged queues, `F8` confirm modal on Ban/Remove (destructive), `RT5` admin SignalR moderation badge, `A11Y5` status = colour+icon+text, `NF1` toast on inline action, `SEC7`.
 
 ### 8.3 Providers
 - `GET /admin/providers` · `GET /admin/providers/{id}` `SSR`
 - `POST /admin/providers/{id}/approve` · `/reject` · `/request-docs` · `/suspend` · `/reinstate` `AJAX`
 - **Buttons:** **Approve** → `POST /admin/providers/{id}/approve` · **Reject** → `/reject` · **Request Docs** → `/request-docs` · **Suspend** → `/suspend` · **Reinstate** → `/reinstate`.
-- **Stack:** **Area** `Admin` · **Route** `/admin/providers` + `/admin/providers/{id}` · **Cache** `NoStore` · **Perm** `Admin` + `WebPermission.Providers.Manage` · **Rules** `R2` SSR list+detail, `D1` paging, `F8` confirm Suspend/Reject, status badges (`A11Y5`), `SEC7`.
+- **Stack:** **Area** `Admin` · **Route** `/admin/providers` + `/admin/providers/{id}` · **Cache** `NoStore` · **Perm** policy `Admin` + `WebPermission.AdminProviderQueue.Read` (class); actions `.Approve`/`.Reject`/`.RequestDocs`/`.Suspend`/`.Reinstate` (shipped) · **Rules** `R2` SSR list+detail, `D1` paging, `F8` confirm Suspend/Reject, status badges (`A11Y5`), `SEC7`. *(BFF: Request Docs = `POST /admin/providers/{id}/request-documents`.)*
 
 ### 8.4 Tours Review
 - `GET /tours/admin?status=` `SSR`
@@ -65,7 +67,7 @@
 - Packages: `POST /tours/packages/{id}/approve` · `/reject` `AJAX`
 - Offerings: `POST /tours/{tourId}/guide-offerings/{guideId}/suspend` · `/reinstate` `AJAX`
 - **Buttons:** **Approve** → `POST /tours/admin/{id}/approve` · **Reject** → `/reject` · **Suspend** → `/suspend` · **Reinstate** → `/reinstate` · **Feature** → `PATCH /tours/admin/{id}/feature` · **Approve/Reject Proposal** → `POST /tours/proposals/{id}/approve|reject` · **Approve/Reject Package** → `POST /tours/packages/{id}/approve|reject` · **Suspend/Reinstate Offering** → `POST /tours/{tourId}/guide-offerings/{guideId}/suspend|reinstate`.
-- **Stack:** **Area** `Admin` · **Route** `/admin/tours` · **Cache** `NoStore` · **Perm** `Admin` + `WebPermission.Tours.Moderate` · **Rules** `R2` SSR, `D1` paged + status filter (preserve filter across page links), `F8` confirm Suspend/Reject, `C3` evict `tour:{id}` after approve/feature, row → §2.5 preview, `SEC7`.
+- **Stack:** **Area** `Admin` · **Route** `/admin/tours` · **Cache** `NoStore` · **Perm** policy `Admin` + `WebPermission.Tour.ReadAny` (class); actions `Tour.Approve`/`.Reject`/`.Suspend`/`.Reinstate`/`.Feature`, proposals `TourProposal.Approve`/`.Reject`, packages `Package.Approve`/`.Reject`, offerings `GuideOffering.Suspend`/`.Reinstate` (shipped) · **Rules** `R2` SSR, `D1` paged + status filter (preserve filter across page links), `F8` confirm Suspend/Reject, `C3` evict `tour:{id}` after approve/feature, row → §2.5 preview, `SEC7`. *(BFF: feature/proposal actions are `POST /admin/tours/{id}/feature`, `POST /admin/tours/proposals/{id}/approve|reject`.)*
 
 ### 8.5 Places & Businesses
 - Places: `GET / POST / PUT / DELETE /places[/{id}]` `SSR`/`AJAX`
@@ -75,7 +77,7 @@
 - Business moderation: `POST /places/businesses/admin/{id}/approve` · `/reject` · `/suspend` · `/reinstate` · `/request-more-docs` `AJAX`
 - `DELETE /places/businesses/{id}` `AJAX`
 - **Buttons:** **New/Save/Delete Place** → `POST/PUT/DELETE /places[/{id}]` · **Feature** → `PATCH /places/{id}/feature` · **Verify** → `/verify` · **Set/Remove Accessibility** → `PUT /places/{id}/accessibility` / `DELETE /places/admin/accessibility/{assignmentId}` · **Approve/Reject/Suspend/Reinstate/Request-More-Docs Business** → `POST /places/businesses/admin/{id}/approve|reject|suspend|reinstate|request-more-docs` · **Delete Business** → `DELETE /places/businesses/{id}`.
-- **Stack:** **Area** `Admin` · **Route** `/admin/places` (+ `/admin/businesses` moderation) · **Cache** `NoStore` · **Perm** `Admin` + `WebPermission.Places.Manage` · **Rules** `R2`+`D1`, `F8` confirm Delete (destructive), `C3` evict `place:{id}` / `business:{id}` after feature/verify/moderation, `MAP3` single map instance for map ops, `SEC7`.
+- **Stack:** **Area** `Admin` · **Route** `/admin/places` (+ `/admin/businesses` moderation) · **Cache** `NoStore` · **Perm** policy `Admin` + Places `WebPermission.Place.Read` (class) / `Place.Create`/`Update`/`DeleteOwn` + Businesses `Business.Read` (class) / `Business.Approve`/`Reject`/`RequestDocs`/`Suspend`/`Reinstate`/`Delete` (shipped) · **Rules** `R2`+`D1`, `F8` confirm Delete (destructive), `C3` evict `place:{id}` / `business:{id}` after feature/verify/moderation, `MAP3` single map instance for map ops, `SEC7`. *(BFF: `POST /admin/places/{id}/create|edit|delete|feature|verify`, `POST /admin/businesses/{id}/approve|…|delete`.)*
 
 ### 8.6 Blogs & Creators
 - `GET /blogs/admin/queue[/{id}]` · `POST .../{id}/approve` · `/reject` · `/remove` `AJAX`
@@ -85,7 +87,7 @@
 - Creator apps + profiles: `promote` · `demote` · `suspend` · `reinstate`
 - `POST /blogs/admin/creators/invitations` `AJAX`
 - **Buttons:** **Approve/Reject/Remove Blog** → `POST /blogs/admin/{id}/approve|reject|remove` · **Feature/Unfeature** → `POST /blogs/{id}/feature|unfeature` · **Hide/Unhide** → `/hide|unhide` · **Restore** → `POST /blogs/{id}/restore` · **Save Translation** → `PUT /blogs/admin/{id}/translations/{languageCode}` · **Approve/Reject/Request-Info Creator App** → `POST /blogs/admin/creators/applications/{id}/approve|reject|request-more-info` · **Promote/Demote/Suspend/Reinstate Creator** → `POST /blogs/admin/creators/profiles/{profileId}/promote|demote|suspend|reinstate` · **Delete Creator Profile** → `DELETE /blogs/admin/creators/profiles/{id}` · **Edit Creator Profile** → `PUT /blogs/admin/creators/profiles/{id}` · **Send Invitation** → `POST /blogs/admin/creators/invitations`.
-- **Stack:** **Area** `Admin` · **Route** `/admin/blogs` · **Cache** `NoStore` · **Perm** `Admin` + `WebPermission.Blogs.Moderate` · **Rules** `R2`+`D1` queues, `F8` confirm Remove/Delete, `C3` evict `blog:{id}`/`homepage` after feature/hide, `SEC3` sanitized HTML preview, `SEC7`.
+- **Stack:** **Area** `Admin` · **Route** `/admin/blogs` (+ `/admin/creators`) · **Cache** `NoStore` · **Perm** policy `Admin` + Blogs `WebPermission.Blog.Read` (class) / `Blog.Create`/`Update`/`DeleteOwn`/`Approve`/`Reject`/`Remove`/`Feature`/`Unfeature` (+ `AdminBlogQueue.Read` queue) + Creators `AdminCreatorQueue.Read` (class) / `.Approve`/`.Reject`/`.RequestMoreInfo`/`.Suspend`/`.Reinstate`/`.PromoteTier`/`.DemoteTier`/`.Update`/`.Delete`/`.Invite` (shipped) · **Rules** `R2`+`D1` queues, `F8` confirm Remove/Delete, `C3` evict `blog:{id}`/`homepage` after feature/hide, `SEC3` sanitized HTML preview, `SEC7`.
 
 ### 8.7 Finance Ops
 - `GET /finance/admin/dashboard` `SSR`
@@ -96,14 +98,14 @@
 - `GET /disputes/admin/open` · `POST /disputes/{id}/review` · `/escalate` · `/resolve` `AJAX`
 - `POST /booking/admin/{id}/dispute/resolve` · `POST /admin/bookings/{id}/force-refund` · `GET /booking/admin/all` `AJAX`
 - **Buttons:** **Refund** → `POST /payments/{id}/refund` · **Approve Payout** → `POST /payouts/{id}/approve` · **Trigger Sweep** → `POST /payouts/admin/trigger` · **Verify Method** → `POST /provider-payment-methods/{id}/verify` · **Review/Escalate/Resolve Dispute** → `POST /disputes/{id}/review|escalate|resolve` · **Resolve Booking Dispute** → `POST /booking/admin/{id}/dispute/resolve` · **Force Refund** → `POST /admin/bookings/{id}/force-refund` · **New/Save/Delete Commission** → `POST /commissions` / `PUT|DELETE /commissions/{id}`.
-- **Stack:** **Area** `Admin` · **Route** `/admin/finance` · **Cache** `NoStore` · **Perm** `Admin` + `WebPermission.Finance.Manage` · **Rules** `R6` DataTables server-side for >500-row payment/payout tables, `D1` paging, `F8` confirm Refund/Force-Refund (irreversible money), `PAY2` idempotency key on refund, `CON3` JOD 3-dp, `SEC7`.
+- **Stack:** **Area** `Admin` · **Route** `/admin/finance` (+ `/admin/commissions`, `/admin/payments`, `/admin/payouts`, `/admin/disputes`, `/admin/bookings`) · **Cache** `NoStore` · **Perm** policy `Admin` + (shipped, split across controllers): `AdminFinanceDashboard.Read`/`Update`/`Approve` (dashboard + disputes review/escalate/resolve) · `Refund.Create` (payment refund) · `Payout.Read`/`Trigger`/`Approve` · `CommissionRule.Read`/`Create`/`Update`/`Delete` · `AdminBookingDashboard.Read`/`Update` + `BookingDispute.Resolve` (booking finance/force-refund) · **Rules** `R6` DataTables server-side for >500-row payment/payout tables, `D1` paging, `F8` confirm Refund/Force-Refund (irreversible money), `PAY2` idempotency key on refund, `CON3` JOD 3-dp, `SEC7`.
 
 ### 8.8 Growth & Merchandising
 - `GET /analytics/admin/metrics` `SSR`
 - Batches, boosts/cpc, pins, seasonality, experiments, `holidays/{year}`, segments `AJAX`
 - `PUT /analytics/admin/entities/{kind}/{entityId}/photogenic` `AJAX`
 - **Buttons:** **Refresh Batch** → `POST /analytics/admin/batches/refresh` · **Add/Remove Boost** → `POST /analytics/admin/boosts` (+ `/boosts/cpc`) / `DELETE .../boosts/{boostId}` · **Add/Remove Pin** → `POST /analytics/admin/pins` / `DELETE .../pins/{pinId}` · **Add/Remove Seasonality** → `POST /analytics/admin/seasonality` / `DELETE .../{ruleId}` · **New Experiment / Start / Complete** → `POST /analytics/admin/experiments` / `PUT .../{experimentId}/start|complete` · **Add Holiday** → `POST /analytics/admin/holidays` · **Toggle Photogenic** → `PUT /analytics/admin/entities/{kind}/{entityId}/photogenic`.
-- **Stack:** **Area** `Admin` · **Route** `/admin/growth` · **Cache** `NoStore` · **Perm** `Admin` + `WebPermission.Growth.Manage` · **Rules** `R2`+`D1`, ApexCharts metrics (admin-only, OK), `C3` evict target `tour:{id}`/`place:{id}`/`homepage` after boost/pin/photogenic, `NF1` toast, `SEC7`.
+- **Stack:** **Area** `Admin` · **Route** `/admin/growth` · **Cache** `NoStore` · **Perm** policy `Admin` + `WebPermission.Batch.Read` (class); actions `Batch.Refresh`, `BoostPackage.Create`/`Delete`, `EditorialPin.Create`/`Delete`, `SeasonalityRule.Create`/`Delete`, `Experiment.Create`/`Update`, `HolidayCalendar.Create`, `Photogenic.Update` (shipped `GrowthController`) · **Rules** `R2`+`D1`, ApexCharts metrics (admin-only, OK), `C3` evict target `tour:{id}`/`place:{id}`/`homepage` after boost/pin/photogenic, `NF1` toast, `SEC7`. *(BFF: `POST /admin/growth/seasonality`, `…/photogenic`, `…/experiments/{id}/start`, etc.)*
 
 ### 8.9 Content Operations
 > Tabs — **Categories / Tags / Languages / Specializations / Translations / Attachments**
@@ -111,7 +113,7 @@
 - Translations: `translate | batch | approve | backfill` `AJAX`
 - `entity-categories` · `entity-tags` `AJAX`
 - **Buttons:** (per tab) **New/Save/Delete** category|tag|language|specialization → `POST/PUT/DELETE /content-core/{kind}[/{id}]` · **Reorder** → `PUT /content-core/categories/reorder` · **Activate/Deactivate/Restore** → `PATCH .../{id}/activate|deactivate|restore` · **Translate / Batch / Approve / Backfill** → `POST /content-core/translations/translate|batch` · `POST .../{id}/approve` · `/approve-batch` · `/backfill/{entityKind}` · **Save Translation** → `PUT /content-core/translations/{id}` · **Assign/Unassign** → `POST/DELETE /content-core/entity-categories|entity-tags`.
-- **Stack:** **Area** `Content` · **Route** `/content/categories` · `/content/tags` · `/content/languages` · `/content/specializations` · `/content/translations` · `/content/attachments` · **Cache** `NoStore` · **Perm** `Admin` + `WebPermission.Content.Manage` · **Rules** lazy non-default tabs, drag **Reorder** then `PUT .../reorder`, `C3` evict `category:tree`/`lookups` (IMemoryCache categories 1h / languages 24h) after any write, `D1` paging, RTL-correct translation editor, `SEC7`.
+- **Stack:** **Area** `Admin` *(the planned `Content` area was consolidated into `Admin` in code)* · **Route** `/admin/categories` · `/admin/tags` · `/admin/languages` · `/admin/specializations` · `/admin/translations` · `/admin/attachments` (shipped controllers) · **Cache** `NoStore` · **Perm** policy `Admin` + per-tab class reads + per-action: `Category.Read`/`Create`/`Update`/`Delete`, `Tag.*`, `Language.*`, `Specialization.*`, `TranslationCache.Read`/`Create`/`Update` (translations), `EntityCategory.*`/`EntityTag.*` (assignments), `Attachment.*` (shipped) · **Rules** lazy non-default tabs, drag **Reorder** then `PUT .../reorder`, `C3` evict `category:tree`/`lookups` (IMemoryCache categories 1h / languages 24h) after any write, `D1` paging, RTL-correct translation editor, `SEC7`. *(BFF: `POST /admin/categories/create|{id}/edit`, `POST /admin/translations/on-demand`, `POST /admin/attachments/upload|{id}/delete|{id}/set-primary`.)*
 
 ### 8.10 SEO Console
 > Tabs — **Metadata / FAQ / Redirects / Sitemap / WeatherCache** · entityType picker bound to the **6-value `SeoEntityType` {Place, Tour, Business, Blog, TourGuide, Creator}**
@@ -121,21 +123,21 @@
 - `GET /seo/sitemap/entries` · `PATCH /seo/sitemap/entries/{id}` · `DELETE /seo/sitemap/entries/{id}` · `POST /seo/sitemap/regenerate` `AJAX`
 - Weather cache ops `AJAX`
 - **Buttons:** **New/Save/Delete Metadata** → `POST /seo/metadata` / `PUT|DELETE /seo/metadata/{id}` · **New/Save/Delete FAQ** → `POST /seo/faq` / `PUT|DELETE /seo/faq/{id}` · **Reorder FAQ** → `PUT /seo/faq/reorder` · **New/Save/Delete Redirect** → `POST /seo/redirects` / `PUT|DELETE /seo/redirects/{id}` · **Edit/Delete Sitemap Entry** → `PATCH|DELETE /seo/sitemap/entries/{id}` · **Regenerate Sitemap** → `POST /seo/sitemap/regenerate` · **Clear Weather Cache** → `DELETE /seo/weather/cache/{id}` · **Reset Budget** → `PUT /seo/weather/budget/reset` · **Refresh Weather** → `POST /seo/weather/refresh/{placeId}`. *(entityType selector limited to the 6 `SeoEntityType` values.)*
-- **Stack:** **Area** `Content` · **Route** `/content/seo` (tabs `/content/seo/metadata|faq|redirects|sitemap|weather`) · **Cache** `NoStore` · **Perm** `Admin` + `WebPermission.Seo.Manage` · **Rules** entityType picker hard-bound to the 6 `SeoEntityType` values, FAQ drag-reorder → `PUT /seo/faq/reorder`, edits drive §3 SEO head/`C5` ETag on the public detail page, **Save** → §2.x preview, `D1`, `SEC7`.
+- **Stack:** **Area** `Admin` *(consolidated from the planned `Content` area)* · **Route** `/admin/seo/metadata` · `/admin/seo/faq` · `/admin/seo/redirects` · `/admin/seo/sitemap` · `/admin/seo/weather` (shipped controllers) · **Cache** `NoStore` · **Perm** policy `Admin` + per-tab: `SeoMetadata.Read`/`Create`/`Delete`, `FaqItem.Read`/`Create`/`Update`/`Delete`, `Redirect.*`, `Sitemap.Read`/`Update`/`Delete`/`Refresh`, `Weather.Read`/`Refresh`/`Update`/`Delete` (shipped) · **Rules** entityType picker hard-bound to the 6 `SeoEntityType` values, FAQ drag-reorder → `PUT /seo/faq/reorder`, edits drive §3 SEO head/`C5` ETag on the public detail page, **Save** → §2.x preview, `D1`, `SEC7`. *(BFF: `POST /admin/seo/metadata/save|{id}/delete`, `POST /admin/seo/weather/refresh|purge|reset-budget`.)*
 
 ### 8.11 Support
 - `GET /support/tickets[/{id}]` `SSR`
 - `POST /support/admin/tickets/{id}/assign` · `/resolve` `AJAX`
 - `POST /support/tickets/{id}/messages` · `/close` `AJAX`
 - **Buttons:** **Assign** → `POST /support/admin/tickets/{id}/assign` · **Resolve** → `/resolve` · **Reply** → `POST /support/tickets/{id}/messages` · **Close** → `/close`.
-- **Stack:** **Area** `Admin` · **Route** `/admin/support` + `/admin/support/{id}` · **Cache** `NoStore` · **Perm** `Admin` + `WebPermission.Support.Manage` · **Rules** `R2` SSR ticket list+thread, `D1` paging, `NF1` toast on assign/resolve, `L6` empty-state, `SEC7`.
+- **Stack:** **Area** `Admin` · **Route** `/admin/support` + `/admin/support/{id}` · **Cache** `NoStore` · **Perm** policy `Admin` + `WebPermission.SupportTicket.Read` (class) / `SupportTicket.Close` (close) + `AdminSupportQueue.Assign`/`Resolve` (shipped) · **Rules** `R2` SSR ticket list+thread, `D1` paging, `NF1` toast on assign/resolve, `L6` empty-state, `SEC7`.
 
 ### 8.12 Platform Ops
 - `GET /ops/outbox/dead-letters` · `POST /ops/outbox/dead-letters/{module}/{id}/replay` `AJAX`
 - `POST /ops/content-tours/backfill/tour-snapshots` `AJAX`
 - Notification templates: `GET` (list) · `POST` · `PUT/{id}` · `DELETE/{id}` — **no GET-by-id** `AJAX`
 - **Buttons:** **Replay** → `POST /ops/outbox/dead-letters/{module}/{id}/replay` · **Backfill Snapshots** → `POST /ops/content-tours/backfill/tour-snapshots` · **New/Save/Delete Template** → `POST /admin/notification-templates` / `PUT|DELETE /admin/notification-templates/{id}` *(edit opens from list row — no GET-by-id)*.
-- **Stack:** **Area** `Admin` · **Route** `/admin/ops` · **Cache** `NoStore` · **Perm** `Admin` + `WebPermission.Ops.Manage` (SuperAdmin-tier) · **Rules** `R6` DataTables for dead-letter list, `F8` confirm Replay/Backfill (side-effecting), template edit hydrated from the list row (no GET-by-id), `ERR4` correlation id in detail, `SEC7`.
+- **Stack:** **Area** `Admin` · **Route** `/admin/ops` (+ notification templates) · **Cache** `NoStore` · **Perm** policy `Admin` + `WebPermission.Outbox.Read` (class) / `Outbox.Replay` (replay/backfill) + `NotificationTemplate.Read`/`Create`/`Update`/`Delete` (shipped) · **Rules** `R6` DataTables for dead-letter list, `F8` confirm Replay/Backfill (side-effecting), template edit hydrated from the list row (no GET-by-id), `ERR4` correlation id in detail, `SEC7`.
 
 ### 8.13 Users & Audit
 - `GET /admin/audit-logs[/export]` · `POST /admin/audit-logs/{id}/redact` `SSR`/`AJAX`
@@ -144,11 +146,11 @@
 - `POST /auth/admin/users/{userId}/reassign` · `/reset-password` · `DELETE .../sessions` `AJAX`
 - Invitations: `GET /auth/invitations/roles` · `POST /auth/invitations[/accept | /resend]` `AJAX`
 - **Buttons:** **Suspend/Reactivate/Archive** → `PATCH /auth/admin/users/{userId}/suspend|reactivate|archive` · **Reassign** → `POST .../reassign` · **Reset Password** → `/reset-password` · **Revoke Sessions** → `DELETE /auth/admin/users/{userId}/sessions` · **Redact Audit** → `POST /admin/audit-logs/{id}/redact` · **Export Audit** → `GET /admin/audit-logs/export` (nav/download) · **Invite User** → `POST /auth/invitations` · **Resend Invite** → `/invitations/resend`.
-- **Stack:** **Area** `Admin` · **Route** `/admin/users` (+ `/admin/audit`) · **Cache** `NoStore` · **Perm** `Admin` + `WebPermission.Users.Manage` · **Rules** `R6` DataTables + `IAsyncEnumerable` export when >10K rows, `D1` paging, `F8` confirm Suspend/Archive/Reset-Password/Revoke (destructive), `ST1` concurrency, `SEC7`.
+- **Stack:** **Area** `Admin` · **Route** `/admin/users` (+ `/admin/audit`) · **Cache** `NoStore` · **Perm** policy `Admin` + `WebPermission.User.Read` (class) / `User.UpdateAny` (lifecycle suspend/reactivate/archive/reassign/reset/revoke, shipped `Users`/`Lifecycle` controllers) / `UserRole.Create`/`Delete` + audit `AuditLog.Redact`/`Export` & `System.Read` (audit list) (shipped `AuditLogsController`) · **Rules** `R6` DataTables + `IAsyncEnumerable` export when >10K rows, `D1` paging, `F8` confirm Suspend/Archive/Reset-Password/Revoke (destructive) · staleness via API state-precondition guards (the user-lifecycle endpoints are not in §10's RowVersion-exposing set — no `ST1` token round-trip) · `SEC7`.
 
 ### 8.14 Tour Guides
 - `GET /guides/admin/{guideId}` (full profile + private stats) `SSR`
 - `PUT /guides/admin/{guideId}` · `DELETE /guides/admin/{guideId}` `AJAX`
 - `POST /guides/admin/{guideId}/suspend` · `/reinstate` `AJAX`
 - **Buttons:** **Edit Guide** → `PUT /guides/admin/{guideId}` · **Suspend** → `POST .../suspend` · **Reinstate** → `POST .../reinstate` · **Delete Guide** → `DELETE /guides/admin/{guideId}` *(confirm — 60-day hard delete)*.
-- **Stack:** **Area** `Admin` · **Route** `/admin/guides` + `/admin/guides/{id}` · **Cache** `NoStore` · **Perm** `Admin` + `WebPermission.Guides.Manage` · **Rules** `R2` SSR profile+private stats, `D1` paged list, `F8` confirm Delete (60-day hard delete) + Suspend, status badges (`A11Y5`), `SEC7`.
+- **Stack:** **Area** `Admin` · **Route** `/admin/guides` + `/admin/guides/{id}` · **Cache** `NoStore` · **Perm** policy `Admin` + `WebPermission.TourGuideProfile.Read` (class) / `TourGuideProfile.Suspend`/`Reinstate`/`Update`/`DeleteAny` (shipped `GuidesController`) · **Rules** `R2` SSR profile+private stats, `D1` paged list, `F8` confirm Delete (60-day hard delete) + Suspend, status badges (`A11Y5`), `SEC7`.

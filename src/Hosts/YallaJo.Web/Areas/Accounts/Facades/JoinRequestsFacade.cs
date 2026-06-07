@@ -38,4 +38,25 @@ public sealed class JoinRequestsFacade
 
         return ApiResult<MyJoinRequestsVm>.Ok(new MyJoinRequestsVm { Requests = rows });
     }
+
+    public async Task<ApiResult> SubmitAsync(JoinRequestFormVm form, CancellationToken ct = default)
+    {
+        // GUIDs are guaranteed non-null/non-empty by JoinRequestFormVm validation (the controller
+        // only reaches here when ModelState.IsValid). Default to Empty defensively.
+        var request = new SubmitJoinRequestApiRequest(
+            form.TourBookingId ?? Guid.Empty,
+            form.AvailabilitySlotId ?? Guid.Empty,
+            form.ParticipantCount,
+            string.IsNullOrWhiteSpace(form.Message) ? null : form.Message.Trim());
+
+        var result = await _api.SubmitAsync(request, ct);
+
+        if (result.IsSuccess) return ApiResult.Ok();
+        if (result.IsUnauthorized) return ApiResult.ForceSignOut();
+        if (result.IsValidationError && result.ValidationErrors is not null)
+        {
+            return ApiResult.Invalid(result.ValidationErrors);
+        }
+        return ApiResult.Fail(result.StatusCode, result.Error ?? "Could not submit your join request.");
+    }
 }

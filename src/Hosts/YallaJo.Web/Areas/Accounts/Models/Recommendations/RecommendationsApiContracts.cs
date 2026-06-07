@@ -76,3 +76,12 @@ public sealed record RecordInteractionApiRequest(
     string EntityType,
     Guid EntityId,
     string InteractionType);
+
+// Cold-start onboarding quiz (POST /analytics/recommendations/onboarding).
+// Property names MUST match the API wire DTO exactly: InterestedEntityIds /
+// NotInterestedEntityIds, item Kind / EntityId.
+public sealed record OnboardingApiRequest(
+    IReadOnlyList<OnboardingEntityRefApiRequest> InterestedEntityIds,
+    IReadOnlyList<OnboardingEntityRefApiRequest> NotInterestedEntityIds);
+
+public sealed record OnboardingEntityRefApiRequest(RecommendationEntityType Kind, Guid EntityId);

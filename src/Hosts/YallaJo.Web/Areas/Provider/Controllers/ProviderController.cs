@@ -100,8 +100,10 @@ public sealed class ProviderController : BaseController
         return RedirectToAction(nameof(Status));
     }
 
-    // POST /provider/documents/upload  (multipart file upload, then PRG back to status)
-    [HttpPost("provider/documents/upload")]
+    // POST /provider/apply/documents/upload  (application-flow multipart upload, then PRG back to status)
+    // Scoped under /provider/apply/* so it does not collide with the standalone
+    // ProviderDocumentsController's POST /provider/documents/upload (different permission family).
+    [HttpPost("provider/apply/documents/upload")]
     [ValidateAntiForgeryToken]
     [RequirePermission(WebPermission.ProviderApplication.Create)]
     public async Task<IActionResult> UploadDocument(ProviderDocumentUploadVm vm, CancellationToken ct)
@@ -129,8 +131,10 @@ public sealed class ProviderController : BaseController
         return RedirectToAction(nameof(Status));
     }
 
-    // PUT semantics via POST  (replace an existing document's stored reference, then PRG back to status)
-    [HttpPost("provider/documents/replace")]
+    // POST /provider/apply/documents/replace  (PUT semantics via POST; application-flow replace, then PRG back to status)
+    // Scoped under /provider/apply/* to keep the application-document route family distinct from the
+    // standalone ProviderDocumentsController (/provider/documents/{id}/replace, ProviderDocument.Update).
+    [HttpPost("provider/apply/documents/replace")]
     [ValidateAntiForgeryToken]
     [RequirePermission(WebPermission.ProviderApplication.Update)]
     public async Task<IActionResult> ReplaceDocument(ReplaceProviderDocumentVm vm, CancellationToken ct)

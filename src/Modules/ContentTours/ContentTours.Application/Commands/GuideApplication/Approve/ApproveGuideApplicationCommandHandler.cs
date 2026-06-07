@@ -55,7 +55,11 @@ public sealed class ApproveGuideApplicationCommandHandler(
             }
             else if (existingOffering.Status != GuideOfferingStatus.Active)
             {
-                existingOffering.Reinstate();
+                var reinstateResult = existingOffering.Reinstate();
+                if (!reinstateResult.IsSuccess)
+                {
+                    return reinstateResult;
+                }
             }
 
             try

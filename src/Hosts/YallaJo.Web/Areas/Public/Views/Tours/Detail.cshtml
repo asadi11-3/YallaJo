@@ -2,8 +2,11 @@
 @using YallaJo.Web.Infrastructure.Seo
 @using Microsoft.Extensions.Localization
 @inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
+@inject Microsoft.Extensions.Configuration.IConfiguration Configuration
 @{
     var baseUrl = $"{Context.Request.Scheme}://{Context.Request.Host}";
+    // API origin the public tour-slots SignalR hub (/hubs/tour) lives on (UI-PERF S2).
+    var apiBaseUrl = (Configuration["ApiBaseUrl"] ?? string.Empty).TrimEnd('/');
     var heroImage = Model.ImageUrls.Count > 0 ? Model.ImageUrls[0] : null;
     var seoDescription = Model.Seo?.MetaDescription ?? Model.ShortDescription ?? Model.Description;
     var jsonLd = new Dictionary<string, object?>
@@ -530,6 +533,37 @@
                                 }
                             </div>
 
+                            @if (Model.HasJoinSlots)
+                            {
+                                <hr class="my-3">
+                                @* Live availability (UI-UX-CAL3 / RT1): seats remaining update over SignalR
+                                   on the tour:{tourId} group. data-hub-url points at the API origin; the
+                                   client (tour-slots.js) joins JoinTour(tourId) and patches [data-remaining]. *@
+                                <div class="tour-slots"
+                                     data-yj-component="tour-slots"
+                                     data-tour-id="@Model.Id"
+                                     data-hub-url="@apiBaseUrl"
+                                     data-full-label="@Localizer["Public.Slot.Full"]"
+                                     data-offline-label="@Localizer["Public.Live.availability.paused"]"
+                                     data-reconnect-label="@Localizer["Public.Reconnect"]"
+                                     aria-live="polite">
+                                    <h6 class="small fw-bold mb-2">
+                                        <i class="bi bi-broadcast me-1" aria-hidden="true"></i>@Localizer["Public.Live.availability"]
+                                    </h6>
+                                    <ul class="list-unstyled mb-0 small">
+                                        @foreach (var slot in Model.JoinSlots)
+                                        {
+                                            <li class="d-flex justify-content-between align-items-center py-1 tour-slots__row"
+                                                data-slot-id="@slot.SlotId">
+                                                <span class="text-body"><bdi>@slot.Label</bdi></span>
+                                                <span class="badge bg-success-subtle text-success-emphasis"
+                                                      data-remaining>&mdash;</span>
+                                            </li>
+                                        }
+                                    </ul>
+                                </div>
+                            }
+
                             <hr class="my-3">
                             <p class="small text-body mb-2">@Localizer["Public.Joining.a.friend.s.group.booking"]</p>
                             @if (isAuthed)
@@ -679,9 +713,15 @@
             tooltipTriggers.forEach(function (el) {
                 if (window.bootstrap && bootstrap.Tooltip) new bootstrap.Tooltip(el);
             });
-
             // GLightbox gallery (glightbox is loaded by the layout).
             if (window.GLightbox) { GLightbox({ selector: '.glightbox' }); }
         })();
     </script>
+    @if (Model.HasJoinSlots && !string.IsNullOrEmpty(apiBaseUrl))
+    {
+        @* UI-PERF S2: the ONE public-page SignalR hub. Self-hosted client (CSP-friendly: external
+           scripts from 'self'; the negotiate/ws connection needs connect-src to allowlist @apiBaseUrl + wss:). *@
+        <script src="~/assets/js/lib/signalr/signalr.min.js" asp-append-version="true"></script>
+        <script src="~/assets/js/tour-slots.js" asp-append-version="true" defer></script>
+    }
 }

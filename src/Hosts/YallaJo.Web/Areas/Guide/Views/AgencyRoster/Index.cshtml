@@ -130,7 +130,7 @@
                                                         </form>
                                                     </permission>
                                                     <permission require="@WebPermission.AgencyRoster.Reject">
-                                                        <form asp-action="Reject" asp-route-id="@a.Id" method="post" class="d-inline reject-form">
+                                                        <form asp-action="Reject" asp-route-id="@a.Id" method="post" class="d-inline" data-yj-reject-reason-form>
                                                             @Html.AntiForgeryToken()
                                                             <input type="hidden" name="reason" />
                                                             <button type="submit" class="btn btn-sm btn-outline-danger">Reject</button>
@@ -200,18 +200,6 @@
 </section>
 
 @section Scripts {
-    <script>
-        // Prompt for a rejection reason (the backend requires one) before submitting.
-        document.querySelectorAll('form.reject-form').forEach(function (form) {
-            form.addEventListener('submit', function (e) {
-                var reason = window.prompt('Reason for rejecting this application:');
-                if (reason === null || reason.trim() === '') {
-                    e.preventDefault();
-                    return false;
-                }
-                form.querySelector('input[name="reason"]').value = reason.trim();
-                return true;
-            });
-        });
-    </script>
+    @* CSP-safe external handler (A6/SEC1: no inline scripts; J3/JS3: delegated listener). *@
+    <script src="~/assets/js/guide-agency-roster.js" asp-append-version="true" defer></script>
 }

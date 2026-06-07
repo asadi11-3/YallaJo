@@ -25,8 +25,16 @@ public static class MessagingEndpoints
         var notificationTemplates = endpoints.MapGroup("/api/v1/admin/notification-templates");
         NotificationTemplateEndpoints.MapNotificationTemplateEndpoints(notificationTemplates);
 
-        // SignalR hub (T2)
+        // SignalR hub (T2) — authenticated notifications (user/provider/admin groups)
         endpoints.MapHub<NotificationHub>("/hubs/notifications");
+
+        // SignalR hub — PUBLIC anonymous live tour-slot capacity (UI-PERF S2 / CAL3 / RT1).
+        // tour:{tourId} group only; WebSockets + LongPolling (skip SSE per S1).
+        endpoints.MapHub<TourSlotsHub>(
+            "/hubs/tour",
+            options => options.Transports =
+                Microsoft.AspNetCore.Http.Connections.HttpTransportType.WebSockets
+                | Microsoft.AspNetCore.Http.Connections.HttpTransportType.LongPolling);
 
         return endpoints;
     }

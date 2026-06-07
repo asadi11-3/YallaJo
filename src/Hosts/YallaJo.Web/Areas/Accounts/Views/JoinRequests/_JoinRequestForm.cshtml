@@ -1,0 +1,34 @@
+@model YallaJo.Web.Areas.Accounts.Models.JoinRequests.JoinRequestFormVm
+
+@* §3.2 — request to join an existing confirmed group booking.
+   Typed partial so asp-for / asp-validation-for bind to the JoinRequestFormVm property
+   names exactly; the controller action binds `JoinRequestFormVm form` at top level. *@
+<form asp-area="Accounts" asp-controller="JoinRequests" asp-action="Create" method="post">
+    @Html.AntiForgeryToken()
+    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+    <div class="row g-3">
+        <div class="col-md-6">
+            <label asp-for="TourBookingId" class="form-label"></label>
+            <input asp-for="TourBookingId" class="form-control" placeholder="00000000-0000-0000-0000-000000000000" />
+            <span asp-validation-for="TourBookingId" class="text-danger"></span>
+        </div>
+        <div class="col-md-6">
+            <label asp-for="AvailabilitySlotId" class="form-label"></label>
+            <input asp-for="AvailabilitySlotId" class="form-control" placeholder="00000000-0000-0000-0000-000000000000" />
+            <span asp-validation-for="AvailabilitySlotId" class="text-danger"></span>
+        </div>
+        <div class="col-md-4">
+            <label asp-for="ParticipantCount" class="form-label"></label>
+            <input asp-for="ParticipantCount" type="number" min="1" max="50" class="form-control" />
+            <span asp-validation-for="ParticipantCount" class="text-danger"></span>
+        </div>
+        <div class="col-md-8">
+            <label asp-for="Message" class="form-label"></label>
+            <input asp-for="Message" class="form-control" maxlength="500" />
+            <span asp-validation-for="Message" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="mt-4">
+        <button type="submit" class="btn btn-primary"><i class="bi bi-people me-2"></i>Send request</button>
+    </div>
+</form>

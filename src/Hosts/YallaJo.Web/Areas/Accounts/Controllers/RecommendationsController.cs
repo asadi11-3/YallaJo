@@ -78,6 +78,28 @@ public sealed class RecommendationsController : BaseController
         return RedirectToAction(nameof(Index));
     }
 
+    [HttpPost("accounts/recommendations/onboarding")]
+    [ValidateAntiForgeryToken]
+    [RequirePermission(WebPermission.Preference.Update)]
+    public async Task<IActionResult> Onboarding(OnboardingFormVm form, CancellationToken ct)
+    {
+        if (!ModelState.IsValid)
+        {
+            SetError("Please pick at least one option (up to 20) and try again.");
+            return RedirectToAction(nameof(Index));
+        }
+
+        var result = await _recommendations.SubmitOnboardingAsync(form, ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+
+        if (result.IsSuccess)
+            SetSuccess("Thanks! We've personalised your recommendations.");
+        else
+            SetError(result.Error ?? "Could not save your onboarding answers.");
+
+        return RedirectToAction(nameof(Index));
+    }
+
     // AJAX endpoint for lightweight interaction tracking (view/click), mirrors the favorites toggle pattern.
     [HttpPost("accounts/recommendations/track")]
     [ValidateAntiForgeryToken]

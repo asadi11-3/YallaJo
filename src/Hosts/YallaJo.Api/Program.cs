@@ -119,7 +119,18 @@ builder.Services.AddFinanceInfrastructure(builder.Configuration);
 
 builder.Services.AddMessagingApplication();
 builder.Services.AddMessagingInfrastructure(builder.Configuration);
-builder.Services.AddSignalR();
+builder.Services.AddSignalR(o =>
+{
+    // UI-PERF S7: client keep-alive 15s, server timeout 30s.
+    o.KeepAliveInterval = TimeSpan.FromSeconds(15);
+    o.ClientTimeoutInterval = TimeSpan.FromSeconds(30);
+    // Bounds concurrent hub-method invocations per connection (defence-in-depth).
+    // NOTE: this is NOT the UI-PERF S6 "max 5 connections per user" cap — that is a
+    // per-user connection limit enforced at the gateway / a hub connection registry,
+    // not by SignalR options. (The public TourSlotsHub is anonymous, so S6 applies to
+    // the authenticated NotificationHub; tour-hub abuse is bounded by rate-limiting.)
+    o.MaximumParallelInvocationsPerClient = 5;
+});
 
 builder.Services.AddSocialApplication();
 builder.Services.AddSocialInfrastructure(builder.Configuration);

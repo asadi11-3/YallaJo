@@ -24,13 +24,15 @@ public sealed class AgencyApplication : AuditableEntity, IAggregateRoot
     public static AgencyApplication Create(
         Guid guideUserId,
         Guid agencyUserId,
-        string message)
+        string? message)
     {
         var application = new AgencyApplication
         {
             GuideUserId = guideUserId,
             AgencyUserId = agencyUserId,
-            Message = message.Trim(),
+            // Message is optional (the apply form labels it "optional" and sends null for blank).
+            // Null-coalesce mirrors AgencyInvitation.Create and prevents a NullReferenceException.
+            Message = message?.Trim() ?? string.Empty,
             Status = AgencyApplicationStatus.Pending,
         };
 

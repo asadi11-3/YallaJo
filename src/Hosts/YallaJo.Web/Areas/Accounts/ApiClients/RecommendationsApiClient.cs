@@ -43,4 +43,7 @@ public sealed class RecommendationsApiClient
 
     public Task<ApiResult> RecordInteractionAsync(RecordInteractionApiRequest request, CancellationToken ct = default) =>
         _api.PostAsync(InteractionsBase, request, ct);
+
+    public Task<ApiResult> SubmitOnboardingAsync(OnboardingApiRequest request, CancellationToken ct = default) =>
+        _api.PostAsync($"{AnalyticsBase}/recommendations/onboarding", request, ct);
 }
