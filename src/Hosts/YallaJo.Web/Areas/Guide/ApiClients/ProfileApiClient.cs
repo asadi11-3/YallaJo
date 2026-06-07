@@ -56,9 +56,19 @@ public sealed class ProfileApiClient
     public Task<ApiResult<UploadAttachmentResponse>> UploadImageAsync(
         Guid guideId, Stream fileStream, string fileName, string contentType, CancellationToken ct = default)
     {
-        var url = $"{AttachmentsBase}?EntityType={GuideEntityType}&EntityId={guideId}&AttachmentType={ImageAttachmentType}";
+        // The singular attachment endpoint binds EntityType/EntityId/AttachmentType
+        // from multipart form fields ([FromForm]) only — not the query string.
+        // Match the working Creator/Admin upload pattern.
+        var fields = new Dictionary<string, string>
+        {
+            ["EntityType"]     = GuideEntityType,
+            ["EntityId"]       = guideId.ToString(),
+            ["AttachmentType"] = ImageAttachmentType,
+        };
+
         return _api.PostFileAsync<UploadAttachmentResponse>(
-            url, fileStream, fileName, contentType, formFieldName: "file", ct: ct);
+            AttachmentsBase, fileStream, fileName, contentType,
+            formFields: fields, formFieldName: "file", ct: ct);
     }
 
     // GET /api/v1/content-core/specializations?activeOnly=true
