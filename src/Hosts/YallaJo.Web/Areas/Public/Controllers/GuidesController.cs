@@ -9,7 +9,6 @@ using YallaJo.Web.Infrastructure.Mvc;
 namespace YallaJo.Web.Areas.Public.Controllers;
 
 [Area("Public")]
-[AllowAnonymous]
 public sealed class GuidesController(GuidesFacade guides, ReviewsFacade reviews) : BaseController
 {
     private const string TargetType = "TourGuide";

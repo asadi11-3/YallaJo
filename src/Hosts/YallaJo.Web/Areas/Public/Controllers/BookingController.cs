@@ -7,7 +7,6 @@ using YallaJo.Web.Infrastructure.Mvc;
 namespace YallaJo.Web.Areas.Public.Controllers;
 
 [Area("Public")]
-[AllowAnonymous]
 public sealed class BookingController : BaseController
 {
     private readonly BookingFacade _booking;

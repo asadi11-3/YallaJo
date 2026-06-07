@@ -2,7 +2,6 @@ using System.Net;
 using FluentAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
 using AdminCategoriesApiClient = YallaJo.Web.Areas.Admin.ApiClients.CategoriesApiClient;
-using ContentCategoriesApiClient = YallaJo.Web.Areas.Content.ApiClients.CategoriesApiClient;
 using YallaJo.Web.Services;
 
 namespace Web.Tests.Unit;
@@ -11,9 +10,8 @@ namespace Web.Tests.Unit;
 /// FE-0A (BR-1) — verifies the Admin <c>CategoriesApiClient</c> targets the
 /// permission-gated admin routes (<c>/categories/admin</c> and
 /// <c>/categories/admin/{id}</c>) so the Admin UI can see inactive/deactivated
-/// categories, while the public <c>Content.CategoriesApiClient</c> stays on the
-/// anonymous active-only route. The URLs are the contract between Web and the
-/// ContentCore category endpoints; any drift silently breaks the admin list.
+/// categories. The URLs are the contract between Web and the ContentCore
+/// category endpoints; any drift silently breaks the admin list.
 /// </summary>
 public sealed class AdminCategoriesApiClientTests
 {
@@ -42,14 +40,6 @@ public sealed class AdminCategoriesApiClientTests
         var http = new HttpClient(handler) { BaseAddress = new Uri("https://api.test/") };
         var api = new ApiClient(http, NullLogger<ApiClient>.Instance);
         return (new AdminCategoriesApiClient(api), handler);
-    }
-
-    private static (ContentCategoriesApiClient Sut, CapturingHandler Handler) CreatePublicSut(string jsonBody = "[]")
-    {
-        var handler = new CapturingHandler(jsonBody);
-        var http = new HttpClient(handler) { BaseAddress = new Uri("https://api.test/") };
-        var api = new ApiClient(http, NullLogger<ApiClient>.Instance);
-        return (new ContentCategoriesApiClient(api), handler);
     }
 
     [Fact]
@@ -115,20 +105,4 @@ public sealed class AdminCategoriesApiClientTests
             "the admin list must include deactivated categories so admins can manage them");
     }
 
-    [Fact]
-    public async Task PublicContentClient_ShouldStillTarget_AnonymousActiveOnlyRoute()
-    {
-        // Guard: FE-0A must not touch the public client. It still hits the bare
-        // public route (which returns active-only) and never the admin route.
-        var (sut, handler) = CreatePublicSut();
-
-        await sut.ListCategoriesAsync();
-
-        handler.Calls.Should().HaveCount(1);
-        handler.Calls[0].Method.Should().Be(HttpMethod.Get);
-        handler.Calls[0].RequestUri!.AbsolutePath
-            .Should().Be("/api/v1/content-core/categories");
-        handler.Calls[0].RequestUri!.AbsolutePath
-            .Should().NotContain("/admin", "the public client must remain on the anonymous active-only route");
-    }
 }

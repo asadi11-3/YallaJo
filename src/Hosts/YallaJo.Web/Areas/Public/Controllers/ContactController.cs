@@ -30,7 +30,6 @@ public sealed class ContactController : BaseController
         Task.FromResult<IActionResult>(View("Index2", new ContactFormVm()));
 
     [HttpPost("contact")]
-    [Authorize]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Submit(ContactFormVm form, CancellationToken ct = default)
     {

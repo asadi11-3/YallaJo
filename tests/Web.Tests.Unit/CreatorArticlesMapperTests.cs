@@ -1,5 +1,5 @@
 using FluentAssertions;
-using YallaJo.Web.Areas.Content.Models.Blogs;
+using YallaJo.Web.Features.Blogs.Models;
 using YallaJo.Web.Areas.Creator.Models.Articles;
 
 namespace Web.Tests.Unit;

@@ -1,4 +1,4 @@
-using YallaJo.Web.Areas.Content.ApiClients;
+using YallaJo.Web.Features.Blogs.ApiClients;
 using YallaJo.Web.Areas.Creator.ApiClients;
 using YallaJo.Web.Areas.Creator.Models.Application;
 using YallaJo.Web.Infrastructure.Api.Contracts;

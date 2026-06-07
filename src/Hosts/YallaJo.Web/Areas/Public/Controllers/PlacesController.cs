@@ -10,7 +10,6 @@ using YallaJo.Web.Infrastructure.Mvc;
 namespace YallaJo.Web.Areas.Public.Controllers;
 
 [Area("Public")]
-[AllowAnonymous]
 public sealed class PlacesController : BaseController
 {
     private const string TargetType = "Place";
