@@ -26,8 +26,8 @@ public sealed class RecommendationsFacade
         return ApiResult<RecommendationsVm>.Ok(RecommendationsMapper.ToVm(result.Data));
     }
 
-    public Task<ApiResult> RefreshBatchesAsync(CancellationToken ct = default)
-        => Normalize(_api.RefreshBatchesAsync(ct), "Could not refresh the recommendation batches.");
+    public Task<ApiResult> RefreshBatchesAsync(RefreshBatchRequest req, CancellationToken ct = default)
+        => Normalize(_api.RefreshBatchesAsync(req, ct), "Could not refresh the recommendation batches.");
 
     public Task<ApiResult> CreateBoostAsync(CreateBoostRequest req, CancellationToken ct = default)
         => Normalize(_api.CreateBoostAsync(req, ct), "Could not create the boost package.");

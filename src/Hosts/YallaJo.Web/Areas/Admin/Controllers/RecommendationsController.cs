@@ -38,15 +38,21 @@ public sealed class RecommendationsController : BaseController
     [HttpPost("admin/recommendations/batches/refresh")]
     [ValidateAntiForgeryToken]
     [RequirePermission(WebPermission.Batch.Refresh)]
-    public async Task<IActionResult> RefreshBatches(CancellationToken ct)
+    public async Task<IActionResult> RefreshBatches([FromForm] RefreshBatchRequest req, CancellationToken ct)
     {
-        var result = await _facade.RefreshBatchesAsync(ct);
+        if (string.IsNullOrWhiteSpace(req.SourceKind) || req.SourceId == Guid.Empty || string.IsNullOrWhiteSpace(req.Context))
+        {
+            SetError("A batch source kind, source id and context are required to refresh.");
+            return RedirectToAction(nameof(Index));
+        }
+
+        var result = await _facade.RefreshBatchesAsync(req, ct);
         if (GuardSignOut(result) is { } signOut)
         {
             return signOut;
         }
 
-        SetFlash(result, "Recommendation batches refreshed.", "Could not refresh the recommendation batches.");
+        SetFlash(result, "Recommendation batch refreshed.", "Could not refresh the recommendation batch.");
         return RedirectToAction(nameof(Index));
     }
 

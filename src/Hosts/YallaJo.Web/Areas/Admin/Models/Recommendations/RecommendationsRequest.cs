@@ -19,3 +19,10 @@ public sealed class CreatePinRequest
     public string? BadgeText { get; set; }
     public DateTime? ExpiresAt { get; set; }
 }
+
+public sealed class RefreshBatchRequest
+{
+    public string SourceKind { get; set; } = string.Empty;
+    public Guid SourceId { get; set; }
+    public string Context { get; set; } = string.Empty;
+}

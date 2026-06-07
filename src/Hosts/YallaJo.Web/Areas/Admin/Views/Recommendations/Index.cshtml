@@ -20,14 +20,6 @@
         <p class="text-muted mb-0">Suggestion batches, boost packages and editorial pins.</p>
     </div>
     <div class="d-flex flex-wrap gap-2">
-        <permission require="@WebPermission.Batch.Refresh">
-            <form method="post" asp-action="RefreshBatches">
-                @Html.AntiForgeryToken()
-                <button type="submit" class="btn btn-sm btn-outline-secondary">
-                    <i class="bi bi-arrow-clockwise me-1"></i>Refresh batches
-                </button>
-            </form>
-        </permission>
         <permission require="@WebPermission.BoostPackage.Create">
             <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#createBoostModal">
                 <i class="bi bi-rocket-takeoff me-1"></i>Create boost
@@ -75,6 +67,9 @@
                         <th>Items</th>
                         <th>Freshness</th>
                         <th>Computed</th>
+                        <permission require="@WebPermission.Batch.Refresh">
+                            <th class="text-end">Actions</th>
+                        </permission>
                     </tr>
                 </thead>
                 <tbody>
@@ -95,6 +90,19 @@
                                 </span>
                             </td>
                             <td class="font-data">@b.ComputedAt.ToString("g")</td>
+                            <permission require="@WebPermission.Batch.Refresh">
+                                <td class="text-end">
+                                    <form method="post" asp-action="RefreshBatches" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="SourceKind" value="@b.SourceKind" />
+                                        <input type="hidden" name="SourceId" value="@b.SourceId" />
+                                        <input type="hidden" name="Context" value="@b.Context" />
+                                        <button type="submit" class="btn btn-sm btn-outline-secondary">
+                                            <i class="bi bi-arrow-clockwise me-1"></i>Refresh
+                                        </button>
+                                    </form>
+                                </td>
+                            </permission>
                         </tr>
                     }
                 </tbody>

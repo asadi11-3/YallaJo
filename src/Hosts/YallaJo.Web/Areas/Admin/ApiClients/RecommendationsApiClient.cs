@@ -14,8 +14,13 @@ public sealed class RecommendationsApiClient
     public Task<ApiResult<IReadOnlyList<BatchResponse>>> GetBatchesAsync(CancellationToken ct = default)
         => _api.GetAsync<IReadOnlyList<BatchResponse>>($"{Base}/batches/", ct);
 
-    public Task<ApiResult> RefreshBatchesAsync(CancellationToken ct = default)
-        => _api.PostAsync($"{Base}/batches/refresh", null, ct);
+    public Task<ApiResult> RefreshBatchesAsync(RefreshBatchRequest req, CancellationToken ct = default)
+        => _api.PostAsync($"{Base}/batches/refresh", new
+        {
+            sourceKind = req.SourceKind,
+            sourceId = req.SourceId,
+            context = req.Context,
+        }, ct);
 
     public Task<ApiResult> CreateBoostAsync(CreateBoostRequest req, CancellationToken ct = default)
         => _api.PostAsync($"{Base}/boosts/", new
