@@ -29,6 +29,11 @@
                     </div>
                     <ul class="nav nav-pills-primary-soft flex-column">
                         <li class="nav-item">
+                            <a class="@Pill("Overview")" asp-area="Accounts" asp-controller="Overview" asp-action="Index">
+                                <i class="bi bi-grid fa-fw me-2"></i>Overview
+                            </a>
+                        </li>
+                        <li class="nav-item">
                             <a class="@Pill("Profile")" asp-area="Accounts" asp-controller="Profile" asp-action="Index">
                                 <i class="bi bi-person fa-fw me-2"></i>My Profile
                             </a>
@@ -81,6 +86,11 @@
                         <li class="nav-item">
                             <a class="@Pill("Payments")" asp-area="Accounts" asp-controller="Payments" asp-action="Index">
                                 <i class="bi bi-credit-card fa-fw me-2"></i>My Payments
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="@Pill("Disputes")" asp-area="Accounts" asp-controller="Disputes" asp-action="Index">
+                                <i class="bi bi-exclamation-octagon fa-fw me-2"></i>My Disputes
                             </a>
                         </li>
                         <li class="nav-item">

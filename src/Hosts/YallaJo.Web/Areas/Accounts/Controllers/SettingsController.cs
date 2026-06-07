@@ -5,6 +5,8 @@ using YallaJo.Web.Areas.Accounts.Models.Settings;
 using YallaJo.Web.Areas.Accounts.Models.UpdatePhone;
 using YallaJo.Web.Areas.Accounts.Shared;
 using YallaJo.Web.Areas.Auth.Facades;
+using YallaJo.Web.Infrastructure.Authentication.ExternalAuth;
+using YallaJo.Web.Infrastructure.Authorization;
 using YallaJo.Web.Infrastructure.Mvc;
 
 namespace YallaJo.Web.Areas.Accounts.Controllers;
@@ -36,6 +38,14 @@ public sealed class SettingsController : BaseController
         _profile = profile;
     }
 
+    // Supported external sign-in providers (canonical names + display labels). Rendered
+    // from local constants only — there is no GET-list endpoint for linked providers.
+    private static readonly IReadOnlyList<LinkedAccountVm> SupportedProviders =
+    [
+        new(ExternalProviderConstants.Google, "Google", false),
+        new(ExternalProviderConstants.Facebook, "Facebook", false),
+    ];
+
     [HttpGet]
     public async Task<IActionResult> Index(CancellationToken ct)
     {
@@ -53,6 +63,9 @@ public sealed class SettingsController : BaseController
         var profileResult = await _profile.GetAsync(ct);
         if (GuardSignOut(profileResult) is { } so4) return so4;
 
+        // §3.10 Devices tab — best-effort list (degrades to empty, never blocks the page).
+        var devices = await _devices.GetTokensAsync(ct);
+
         var profile = profileResult.Data;
         ViewBag.Sidebar = new AccountSidebarVm
         {
@@ -69,7 +82,9 @@ public sealed class SettingsController : BaseController
             NotificationRows = rowsResult.Data ?? [],
             Marketing = marketingResult.Data ?? new MarketingConsentVm(),
             PhoneNumber = profile?.PhoneNumber,
-            Sessions = sessionsResult.Data?.Sessions ?? []
+            Sessions = sessionsResult.Data?.Sessions ?? [],
+            Devices = devices,
+            LinkedAccounts = SupportedProviders,
         };
 
         return View(vm);
@@ -164,5 +179,39 @@ public sealed class SettingsController : BaseController
         var result = await _logoutAll.HandleAsync(ct);
         if (!result.IsSuccess) SetError(result.Error);
         return RedirectToAction("SignIn", "Auth", new { area = "Auth" });
+    }
+
+    // ── §3.10 Devices tab — register / remove push-notification device tokens ────
+
+    [HttpPost("accounts/settings/devices")]
+    [ValidateAntiForgeryToken]
+    [RequirePermission(WebPermission.DeviceToken.Create)]
+    public async Task<IActionResult> RegisterDevice(
+        string deviceId, string platform, string token, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(deviceId) || string.IsNullOrWhiteSpace(token)
+            || string.IsNullOrWhiteSpace(platform))
+        {
+            SetError("Device id, platform and token are all required.");
+            return RedirectToAction(nameof(Index));
+        }
+
+        var result = await _devices.RegisterTokenAsync(deviceId, platform, token, ct);
+        if (GuardSignOut(result) is { } so) return so;
+        if (result.IsSuccess) SetSuccess("Device registered for notifications.");
+        else SetError(result.Error);
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost("accounts/settings/devices/{id:guid}/remove")]
+    [ValidateAntiForgeryToken]
+    [RequirePermission(WebPermission.DeviceToken.Delete)]
+    public async Task<IActionResult> RemoveDevice(Guid id, CancellationToken ct)
+    {
+        var result = await _devices.DeleteTokenAsync(id, ct);
+        if (GuardSignOut(result) is { } so) return so;
+        if (result.IsSuccess) SetSuccess("Device removed.");
+        else SetError(result.Error);
+        return RedirectToAction(nameof(Index));
     }
 }
