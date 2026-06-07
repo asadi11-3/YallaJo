@@ -230,6 +230,51 @@ public sealed class ArticlesController : BaseController
         return RedirectToAction(nameof(Index));
     }
 
+    // ── Blog ↔ Tour links (§7.2) — RowVersion-guarded, separate from text-save ──
+
+    // POST /creator/articles/{id}/tours  — BlogTourLink.Create (RowVersion)
+    [HttpPost("creator/articles/{id:guid}/tours")]
+    [ValidateAntiForgeryToken]
+    [RequirePermission(WebPermission.BlogTourLink.Create)]
+    public async Task<IActionResult> LinkTour(Guid id, Guid tourId, string rowVersion, CancellationToken ct = default)
+    {
+        if (tourId == Guid.Empty)
+        {
+            SetError("Please provide a valid tour to link.");
+            return RedirectToAction(nameof(Edit), new { id });
+        }
+        if (string.IsNullOrEmpty(rowVersion))
+        {
+            SetError("Missing version token. Please refresh and try again.");
+            return RedirectToAction(nameof(Edit), new { id });
+        }
+
+        var result = await _facade.LinkTourAsync(id, tourId, rowVersion, ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+
+        SetFlash(result, "Tour linked to your article.", "Could not link the tour.");
+        return RedirectToAction(nameof(Edit), new { id });
+    }
+
+    // POST /creator/articles/{id}/tours/{tourId}/unlink  — BlogTourLink.Delete (RowVersion)
+    [HttpPost("creator/articles/{id:guid}/tours/{tourId:guid}/unlink")]
+    [ValidateAntiForgeryToken]
+    [RequirePermission(WebPermission.BlogTourLink.Delete)]
+    public async Task<IActionResult> UnlinkTour(Guid id, Guid tourId, string rowVersion, CancellationToken ct = default)
+    {
+        if (string.IsNullOrEmpty(rowVersion))
+        {
+            SetError("Missing version token. Please refresh and try again.");
+            return RedirectToAction(nameof(Edit), new { id });
+        }
+
+        var result = await _facade.UnlinkTourAsync(id, tourId, rowVersion, ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+
+        SetFlash(result, "Tour unlinked from your article.", "Could not unlink the tour.");
+        return RedirectToAction(nameof(Edit), new { id });
+    }
+
     // ── Article images (CCD-5) — separate multipart flow; never mixed with text-save ──
 
     // POST /creator/articles/{id}/images/upload  — Attachment.Create

@@ -58,4 +58,27 @@ public sealed class CreatorArticlesApiClient
     /// </summary>
     public Task<ApiResult> RestoreArticleAsync(Guid id, string rowVersion, CancellationToken ct = default)
         => _api.PostAsync($"/api/v1/blogs/{id}/restore", new BlogRowVersionRequestBody(rowVersion), ct);
+
+    // ── Blog ↔ Tour links (CCD §7.2) — RowVersion-guarded ──────────────────────
+
+    /// <summary>
+    /// POST /api/v1/blogs/{id}/tours (BlogTourLink.Create). Links one tour to the blog;
+    /// RowVersion required (ST1). The backend accepts a batch, but the editor links one
+    /// tour at a time.
+    /// </summary>
+    public Task<ApiResult> LinkTourAsync(Guid id, Guid tourId, string rowVersion, CancellationToken ct = default)
+        => _api.PostAsync(
+            $"/api/v1/blogs/{id}/tours",
+            new BlogLinkToursRequestBody(rowVersion, [new BlogLinkTourItemBody(tourId)]),
+            ct);
+
+    /// <summary>
+    /// DELETE /api/v1/blogs/{id}/tours/{tourId} (BlogTourLink.Delete). Removes one
+    /// blog↔tour link; RowVersion in the body (ST1).
+    /// </summary>
+    public Task<ApiResult> UnlinkTourAsync(Guid id, Guid tourId, string rowVersion, CancellationToken ct = default)
+        => _api.DeleteAsync(
+            $"/api/v1/blogs/{id}/tours/{tourId}",
+            new BlogRowVersionRequestBody(rowVersion),
+            ct);
 }

@@ -97,6 +97,14 @@ public sealed class CreatorArticlesFacade
     public async Task<ApiResult> RestoreAsync(Guid id, string rowVersion, CancellationToken ct = default)
         => Normalize(await _articles.RestoreArticleAsync(id, rowVersion, ct).ConfigureAwait(false), "restore");
 
+    // ── Blog ↔ Tour links (§7.2) ────────────────────────────────────────────────
+
+    public async Task<ApiResult> LinkTourAsync(Guid id, Guid tourId, string rowVersion, CancellationToken ct = default)
+        => Normalize(await _articles.LinkTourAsync(id, tourId, rowVersion, ct).ConfigureAwait(false), "link the tour to");
+
+    public async Task<ApiResult> UnlinkTourAsync(Guid id, Guid tourId, string rowVersion, CancellationToken ct = default)
+        => Normalize(await _articles.UnlinkTourAsync(id, tourId, rowVersion, ct).ConfigureAwait(false), "unlink the tour from");
+
     /// <summary>
     /// Fetches the current RowVersion for an article (via admin-get) so destructive
     /// actions (delete) can be issued from the list where the summary lacks RowVersion.

@@ -105,6 +105,56 @@
             </div>
         </div>
 
+        @* ── Related tours (§7.2) — separate from the text-save form above ── *@
+        @if (!Model.IsNew)
+        {
+            <div class="card border">
+                <div class="card-header border-bottom">
+                    <h5 class="card-header-title mb-0"><i class="bi bi-link-45deg me-2"></i>Related tours</h5>
+                    <small class="text-body-secondary">Associate tours with this article (by tour ID).</small>
+                </div>
+                <div class="card-body vstack gap-3">
+                    <permission require="@WebPermission.BlogTourLink.Create">
+                        <form asp-area="Creator" asp-controller="Articles" asp-action="LinkTour"
+                              asp-route-id="@Model.Id" method="post" class="row g-2 align-items-end">
+                            <input type="hidden" name="rowVersion" value="@Model.RowVersion" />
+                            <div class="col-sm-8">
+                                <label for="linkTourId" class="form-label">Tour ID</label>
+                                <input type="text" id="linkTourId" name="tourId" class="form-control"
+                                       placeholder="00000000-0000-0000-0000-000000000000" />
+                            </div>
+                            <div class="col-sm-4 d-grid">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-plus-lg me-1"></i>Link tour
+                                </button>
+                            </div>
+                        </form>
+                    </permission>
+                    <permission require="@WebPermission.BlogTourLink.Delete">
+                        <form asp-area="Creator" asp-controller="Articles" asp-action="UnlinkTour"
+                              asp-route-id="@Model.Id" method="post" class="row g-2 align-items-end"
+                              onsubmit="return confirm('Unlink this tour from the article?');">
+                            <input type="hidden" name="rowVersion" value="@Model.RowVersion" />
+                            <div class="col-sm-8">
+                                <label for="unlinkTourId" class="form-label">Tour ID to unlink</label>
+                                <input type="text" id="unlinkTourId" name="tourId" class="form-control"
+                                       placeholder="00000000-0000-0000-0000-000000000000" />
+                            </div>
+                            <div class="col-sm-4 d-grid">
+                                <button type="submit" class="btn btn-outline-danger">
+                                    <i class="bi bi-x-lg me-1"></i>Unlink tour
+                                </button>
+                            </div>
+                        </form>
+                    </permission>
+                    <p class="text-body-secondary small mb-0">
+                        <i class="bi bi-info-circle me-1"></i>Linking uses the article's current version; if it was
+                        changed elsewhere, refresh the editor first.
+                    </p>
+                </div>
+            </div>
+        }
+
         @if (!Model.IsNew)
         {
             <div class="d-flex gap-2">
