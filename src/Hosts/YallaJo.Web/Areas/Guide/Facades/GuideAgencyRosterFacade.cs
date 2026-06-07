@@ -130,6 +130,74 @@ public sealed class GuideAgencyRosterFacade
         }
     }
 
+    public async Task<ApiResult> ApproveApplicationAsync(Guid applicationId, CancellationToken ct = default)
+    {
+        try
+        {
+            var result = await _api.ApproveApplicationAsync(applicationId, ct);
+            return result.IsSuccess || result.RequireSignOut
+                ? result
+                : ApiResult.Fail(result.StatusCode, MapApplicationActionError(result, "approve"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to approve agency application {ApplicationId}.", applicationId);
+            return ApiResult.Fail(500, "Unable to approve the application. Please try again.");
+        }
+    }
+
+    public async Task<ApiResult> RejectApplicationAsync(Guid applicationId, string reason, CancellationToken ct = default)
+    {
+        try
+        {
+            var result = await _api.RejectApplicationAsync(applicationId, new RejectAgencyApplicationApiRequest(reason), ct);
+            return result.IsSuccess || result.RequireSignOut
+                ? result
+                : ApiResult.Fail(result.StatusCode, MapApplicationActionError(result, "reject"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to reject agency application {ApplicationId}.", applicationId);
+            return ApiResult.Fail(500, "Unable to reject the application. Please try again.");
+        }
+    }
+
+    public async Task<ApiResult> RemoveGuideAsync(Guid guideUserId, string reason, CancellationToken ct = default)
+    {
+        try
+        {
+            var result = await _api.RemoveGuideAsync(guideUserId, new RemoveAgencyGuideApiRequest(reason), ct);
+            if (result.IsSuccess || result.RequireSignOut)
+            {
+                return result;
+            }
+
+            var message = result.StatusCode switch
+            {
+                403 => "You can only remove guides from your own agency.",
+                404 => "That guide is not currently on your roster.",
+                409 => "The roster changed. Reload and try again.",
+                422 => result.Error is { Length: > 0 } e ? e : "A reason is required to remove a guide.",
+                _ => result.Error ?? "Unable to remove the guide.",
+            };
+            return ApiResult.Fail(result.StatusCode, message);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to remove guide {GuideUserId} from agency.", guideUserId);
+            return ApiResult.Fail(500, "Unable to remove the guide. Please try again.");
+        }
+    }
+
+    private static string MapApplicationActionError(ApiResult result, string verb) => result.StatusCode switch
+    {
+        403 => "You can only manage applications to your own agency.",
+        404 => "That application could not be found.",
+        409 => "That application is no longer pending (it may already be approved or rejected).",
+        422 => result.Error is { Length: > 0 } e ? e : $"Unable to {verb} the application.",
+        _ => result.Error ?? $"Unable to {verb} the application.",
+    };
+
     private static string MapInviteError(ApiResult result) => result.StatusCode switch
     {
         404 => "That guide could not be found, or is no longer available.",

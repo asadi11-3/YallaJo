@@ -82,6 +82,54 @@ public sealed class AgencyRosterController : BaseController
         return RedirectToAction(nameof(Index));
     }
 
+    [HttpPost("guide/agency/roster/applications/{id:guid}/approve")]
+    [ValidateAntiForgeryToken]
+    [RequirePermission(WebPermission.AgencyRoster.Approve)]
+    public async Task<IActionResult> Approve(Guid id, CancellationToken ct = default)
+    {
+        var result = await _facade.ApproveApplicationAsync(id, ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+
+        SetFlash(result, "Application approved. The guide has been added to your roster.");
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost("guide/agency/roster/applications/{id:guid}/reject")]
+    [ValidateAntiForgeryToken]
+    [RequirePermission(WebPermission.AgencyRoster.Reject)]
+    public async Task<IActionResult> Reject(Guid id, string? reason, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(reason))
+        {
+            SetError("Please provide a reason for rejecting the application.");
+            return RedirectToAction(nameof(Index));
+        }
+
+        var result = await _facade.RejectApplicationAsync(id, reason, ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+
+        SetFlash(result, "Application rejected.");
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost("guide/agency/roster/guides/{guideUserId:guid}/remove")]
+    [ValidateAntiForgeryToken]
+    [RequirePermission(WebPermission.AgencyRoster.Delete)]
+    public async Task<IActionResult> Remove(Guid guideUserId, string? reason, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(reason))
+        {
+            SetError("Please provide a reason for removing the guide.");
+            return RedirectToAction(nameof(Index));
+        }
+
+        var result = await _facade.RemoveGuideAsync(guideUserId, reason, ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+
+        SetFlash(result, "Guide removed from your roster.");
+        return RedirectToAction(nameof(Index));
+    }
+
     private void SetSidebar()
     {
         ViewData["GuideNav"] = "AgencyRoster";

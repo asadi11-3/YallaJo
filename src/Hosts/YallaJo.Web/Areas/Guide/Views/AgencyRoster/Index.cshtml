@@ -50,6 +50,9 @@
                                     <th>Guide</th>
                                     <th class="text-end">Commission</th>
                                     <th>Joined</th>
+                                    <permission require="@WebPermission.AgencyRoster.Delete">
+                                        <th class="text-end">Actions</th>
+                                    </permission>
                                 </tr>
                             </thead>
                             <tbody>
@@ -59,6 +62,18 @@
                                         <td>@g.GuideHandle</td>
                                         <td class="text-end">@g.CommissionPercentage.ToString("0.##")%</td>
                                         <td class="small">@g.JoinedAt.ToString("yyyy-MM-dd")</td>
+                                        <permission require="@WebPermission.AgencyRoster.Delete">
+                                            <td class="text-end">
+                                                <form asp-action="Remove" asp-route-guideUserId="@g.GuideUserId" method="post" class="d-inline"
+                                                      onsubmit="return confirm('Remove @g.GuideHandle from your agency? This ends the affiliation and cannot be undone.');">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="reason" value="Removed by agency" />
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                        <i class="bi bi-person-dash me-1"></i>Remove
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        </permission>
                                     </tr>
                                 }
                             </tbody>
@@ -92,6 +107,7 @@
                                     <th>Message</th>
                                     <th>Status</th>
                                     <th>Applied</th>
+                                    <th class="text-end">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -102,6 +118,31 @@
                                         <td class="small text-muted">@(string.IsNullOrWhiteSpace(a.Message) ? "—" : a.Message)</td>
                                         <td><span class="badge @a.StatusBadgeClass">@a.Status</span></td>
                                         <td class="small">@a.CreatedAt.ToString("yyyy-MM-dd")</td>
+                                        <td class="text-end">
+                                            @if (a.IsPending)
+                                            {
+                                                <div class="d-inline-flex gap-1">
+                                                    <permission require="@WebPermission.AgencyRoster.Approve">
+                                                        <form asp-action="Approve" asp-route-id="@a.Id" method="post" class="d-inline"
+                                                              onsubmit="return confirm('Approve @a.GuideHandle and add them to your roster?');">
+                                                            @Html.AntiForgeryToken()
+                                                            <button type="submit" class="btn btn-sm btn-success">Approve</button>
+                                                        </form>
+                                                    </permission>
+                                                    <permission require="@WebPermission.AgencyRoster.Reject">
+                                                        <form asp-action="Reject" asp-route-id="@a.Id" method="post" class="d-inline reject-form">
+                                                            @Html.AntiForgeryToken()
+                                                            <input type="hidden" name="reason" />
+                                                            <button type="submit" class="btn btn-sm btn-outline-danger">Reject</button>
+                                                        </form>
+                                                    </permission>
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted small">—</span>
+                                            }
+                                        </td>
                                     </tr>
                                 }
                             </tbody>
@@ -157,3 +198,20 @@
         </div>
     </div>
 </section>
+
+@section Scripts {
+    <script>
+        // Prompt for a rejection reason (the backend requires one) before submitting.
+        document.querySelectorAll('form.reject-form').forEach(function (form) {
+            form.addEventListener('submit', function (e) {
+                var reason = window.prompt('Reason for rejecting this application:');
+                if (reason === null || reason.trim() === '') {
+                    e.preventDefault();
+                    return false;
+                }
+                form.querySelector('input[name="reason"]').value = reason.trim();
+                return true;
+            });
+        });
+    </script>
+}
