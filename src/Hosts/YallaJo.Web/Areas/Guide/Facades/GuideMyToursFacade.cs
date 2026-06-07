@@ -138,6 +138,9 @@ public sealed class GuideMyToursFacade
     public Task<ApiResult> DisablePrivateTourAsync(Guid tourId, CancellationToken ct = default) =>
         WithGuideIdAsync((guideId, token) => _api.DisablePrivateTourAsync(tourId, guideId, token), ct);
 
+    public Task<ApiResult> RemoveOfferingAsync(Guid tourId, CancellationToken ct = default) =>
+        WithGuideIdAsync((guideId, token) => _api.RemoveOfferingAsync(tourId, guideId, token), ct);
+
     private async Task<ApiResult> WithGuideIdAsync(Func<Guid, CancellationToken, Task<ApiResult>> action, CancellationToken ct)
     {
         var guideId = await ResolveGuideIdAsync(ct);

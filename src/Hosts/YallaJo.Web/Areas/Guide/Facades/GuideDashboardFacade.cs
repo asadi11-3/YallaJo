@@ -29,10 +29,11 @@ public sealed class GuideDashboardFacade
 
         await Task.WhenAll(earningsTask, blocksTask, tierTask, toursTask);
 
-        var earnings = earningsTask.Result;
-        var blocks = blocksTask.Result;
-        var tier = tierTask.Result;
-        var tours = toursTask.Result;
+        // UI-PERF-R1: await the already-completed tasks (no .Result / sync-over-async).
+        var earnings = await earningsTask;
+        var blocks = await blocksTask;
+        var tier = await tierTask;
+        var tours = await toursTask;
 
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
         var activeBlocks = blocks.Count(b => b.EndDate >= today);

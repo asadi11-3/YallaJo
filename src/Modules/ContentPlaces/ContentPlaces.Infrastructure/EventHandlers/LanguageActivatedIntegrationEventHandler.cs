@@ -191,16 +191,14 @@ public sealed class LanguageActivatedIntegrationEventHandler(
 
                 if (translatedSets.Count == 0)
                 {
-                    // Translation service is unhealthy — log and abort this
-                    // batch gracefully.  The inbox row is never written, so
-                    // the next delivery will retry via the same anti-join.
                     logger.LogError(
                         "Translation orchestrator returned no translated set for Place " +
                         "{PlaceId} (language={LanguageCode}). " +
                         "Aborting place backfill; inbox will not be marked processed.",
                         candidate.PlaceId, targetCodes[0]);
 
-                    return (totalTranslated, Completed: false);
+                    throw new InvalidOperationException(
+                        $"Translation orchestrator returned no translated set for Place '{candidate.PlaceId}'.");
                 }
 
                 var translated = translatedSets[0];
@@ -290,16 +288,14 @@ public sealed class LanguageActivatedIntegrationEventHandler(
 
                 if (translatedSets.Count == 0)
                 {
-                    // Translation service is unhealthy — log and abort this
-                    // batch gracefully.  The inbox row is never written, so
-                    // the next delivery will retry via the same anti-join.
                     logger.LogError(
                         "Translation orchestrator returned no translated set for Business " +
                         "{BusinessId} (language={LanguageCode}). " +
                         "Aborting business backfill; inbox will not be marked processed.",
                         candidate.BusinessId, targetCodes[0]);
 
-                    return (totalTranslated, Completed: false);
+                    throw new InvalidOperationException(
+                        $"Translation orchestrator returned no translated set for Business '{candidate.BusinessId}'.");
                 }
 
                 var translated = translatedSets[0];

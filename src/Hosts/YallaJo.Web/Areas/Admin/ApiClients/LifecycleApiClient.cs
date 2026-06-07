@@ -46,4 +46,9 @@ public sealed class LifecycleApiClient
         AdminReassignAccountRequest request,
         CancellationToken ct = default)
         => _api.PostAsync($"/api/v1/auth/admin/users/{userId}/reassign", request, ct);
+
+    // ── §8.13: force-revoke all sessions for a user ───────────────────────────
+    // DELETE /api/v1/auth/admin/users/{userId}/sessions
+    public Task<ApiResult> RevokeSessionsAsync(Guid userId, CancellationToken ct = default)
+        => _api.DeleteAsync($"/api/v1/auth/admin/users/{userId}/sessions", ct);
 }

@@ -20,8 +20,13 @@ public sealed class ProvidersController : BaseController
     private const int DefaultPageSize = 20;
 
     private readonly ProvidersFacade _facade;
+    private readonly ProviderPaymentMethodsFacade _paymentMethods;
 
-    public ProvidersController(ProvidersFacade facade) => _facade = facade;
+    public ProvidersController(ProvidersFacade facade, ProviderPaymentMethodsFacade paymentMethods)
+    {
+        _facade = facade;
+        _paymentMethods = paymentMethods;
+    }
 
     // ── GET /admin/providers ────────────────────────────────────────────────────────
     [HttpGet]
@@ -154,6 +159,26 @@ public sealed class ProvidersController : BaseController
 
         SetFlash(result, "Provider reinstated.", "Could not reinstate the provider.");
         return Back(id, fromDetails);
+    }
+
+    // ── POST /admin/providers/{id}/payment-methods/{methodId}/verify ─────────────────
+    // §8.7 — admin/KYC: confirm or revoke verification of a provider payout method.
+    // Gated separately by the Finance-mirrored ProviderPaymentMethod.Verify permission
+    // (the page-level attribute only grants AdminProviderQueue.Read). `id` is the
+    // provider id, used only to redirect back to the right details page.
+    [HttpPost("admin/providers/{id:guid}/payment-methods/{methodId:guid}/verify")]
+    [ValidateAntiForgeryToken]
+    [RequirePermission(WebPermission.ProviderPaymentMethod.Verify)]
+    public async Task<IActionResult> VerifyPaymentMethod(Guid id, Guid methodId, bool isVerified, CancellationToken ct)
+    {
+        var result = await _paymentMethods.VerifyAsync(methodId, isVerified, ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+
+        SetFlash(
+            result,
+            isVerified ? "Payment method verified." : "Payment method verification revoked.",
+            "Could not update the payment method verification.");
+        return RedirectToAction(nameof(Details), new { id });
     }
 
     // Redirects to the details page when the action came from there (so the admin sees

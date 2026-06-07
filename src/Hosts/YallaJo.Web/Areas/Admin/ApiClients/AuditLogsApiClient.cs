@@ -66,4 +66,18 @@ public sealed class AuditLogsApiClient
 
         return url;
     }
+
+    // §8.13 — POST /api/v1/admin/audit-logs/{id}/redact (admin redacts a log entry).
+    // NB: audit-log ids are long; the AdminUserId is taken from the token server-side.
+    public Task<ApiResult> RedactAsync(long id, string reason, CancellationToken ct = default)
+        => _api.PostAsync($"/api/v1/admin/audit-logs/{id}/redact", new { reason }, ct);
+
+    // §8.13 — GET /api/v1/admin/audit-logs/export?from=&to= (returns serialized CSV content).
+    public Task<ApiResult<string>> ExportAsync(DateTime from, DateTime to, CancellationToken ct = default)
+    {
+        var url = $"/api/v1/admin/audit-logs/export"
+            + $"?from={Uri.EscapeDataString(from.ToString("o", CultureInfo.InvariantCulture))}"
+            + $"&to={Uri.EscapeDataString(to.ToString("o", CultureInfo.InvariantCulture))}";
+        return _api.GetAsync<string>(url, ct);
+    }
 }

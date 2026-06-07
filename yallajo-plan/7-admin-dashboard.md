@@ -7,7 +7,7 @@
 > **Architecture & rules:** see [`0-architecture-and-rules.md`](0-architecture-and-rules.md) — four-tier pipeline (Controller → Facade → ApiClient → IApiClient), code areas, caching, permissions.
 > **Code area:** mostly **`Admin`** (`/admin/*`); **§8.9 Content Operations** + **§8.10 SEO Console** live in the **`Content`** area (`/content/*`). Every page is **`NoStore`** (UI-PERF-C2), policy **`Admin`** + a `WebPermission.{Feature}.{Action}` constant; every write is anti-forgery protected (SEC7) and uses PRG.
 
-**Status legend:** ✅ Wire · ♻️ Repurpose · ⏭️ Skip · 🟥 USER builds (no template page)
+**Status legend:** ✅ Wire · ♻️ Repurpose · ⏭️ Skip ·  🟥 Build Using Design skills (match the template theme)
 
 **Shared shell:** top bar = global search + language switcher + notification bell (`GET /notifications/unread-count` `AJAX⟳`) + avatar menu (`GET /accounts/profile`). Nav driver = `GET /security/me`.
 **Load tags:** `SSR` / `AJAX` / `AJAX⟳` / `AJAX↑`. Status is first-class UI (badge + action menu); inline mutations return the updated row + toast.
@@ -21,15 +21,15 @@
 | 8.1 | Overview | `admin-dashboard.html` ✅ | KPI cards → §8.7 Finance / §8.13 Users / §8.4 Tours |
 | 8.2 | Moderation | `admin-reviews.html` ✅ | resolve/approve/remove inline · reported entity |
 | 8.3 | Providers | `admin-agent-list.html` ✅ + `admin-agent-detail.html` ✅ | row → provider detail · lifecycle inline |
-| 8.4 | Tours Review | 🟥 USER builds | row → §2.5 Tour preview · approve/reject inline |
-| 8.5 | Places & Businesses | 🟥 USER builds | row → §2.3 / §2.4 preview · moderation inline |
-| 8.6 | Blogs & Creators | 🟥 USER builds | row → §2.9 post/creator · feature/hide inline |
+| 8.4 | Tours Review |  🟥 Build Using Design skills (match the template theme)| row → §2.5 Tour preview · approve/reject inline |
+| 8.5 | Places & Businesses |  🟥 Build Using Design skills (match the template theme)| row → §2.3 / §2.4 preview · moderation inline |
+| 8.6 | Blogs & Creators |  🟥 Build Using Design skills (match the template theme)| row → §2.9 post/creator · feature/hide inline |
 | 8.7 | Finance Ops | `admin-booking-list.html` ♻️ + `admin-booking-detail.html` ♻️ + `admin-earnings.html` ✅ | booking detail · refund inline · payout detail |
-| 8.8 | Growth & Merchandising | 🟥 USER builds | targeted entity → §2.5 / §2.3 |
-| 8.9 | Content Operations | 🟥 USER builds (tabbed CRUD) | inline edits |
-| 8.10 | SEO Console | 🟥 USER builds (entityType picker) | §2.x detail preview · inline |
-| 8.11 | Support | 🟥 USER builds (reuse help-center) | ticket thread |
-| 8.12 | Platform Ops | 🟥 USER builds | dead-letter detail inline |
+| 8.8 | Growth & Merchandising |  🟥 Build Using Design skills (match the template theme)| targeted entity → §2.5 / §2.3 |
+| 8.9 | Content Operations |  🟥 Build Using Design skills (match the template theme)(tabbed CRUD) | inline edits |
+| 8.10 | SEO Console |  🟥 Build Using Design skills (match the template theme)(entityType picker) | §2.x detail preview · inline |
+| 8.11 | Support |  🟥 Build Using Design skills (match the template theme)(reuse help-center) | ticket thread |
+| 8.12 | Platform Ops |  🟥 Build Using Design skills (match the template theme)| dead-letter detail inline |
 | 8.13 | Users & Audit | `admin-guest-list.html` ✅ + `admin-guest-detail.html` ✅ + `admin-settings.html` ♻️ | guest detail · lifecycle inline · audit export |
 | 8.14 | Tour Guides | `admin-agent-detail.html` ♻️ + `admin-agent-list.html` ♻️ | row → §2.7 Guide detail · lifecycle inline · offerings → §8.4 |
 

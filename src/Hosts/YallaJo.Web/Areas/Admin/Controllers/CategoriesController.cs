@@ -134,6 +134,32 @@ public sealed class CategoriesController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    // §8.9 — restore a soft-deleted category.
+    [HttpPost("admin/categories/{id:guid}/restore")]
+    [ValidateAntiForgeryToken]
+    [RequirePermission(WebPermission.Category.Update)]
+    public async Task<IActionResult> Restore(Guid id, CancellationToken ct)
+    {
+        var result = await _facade.RestoreAsync(id, ct);
+        if (result.RequireSignOut) return RedirectToLogin();
+        TempData[result.IsSuccess ? "Success" : "Error"] =
+            result.IsSuccess ? "Category restored." : result.Error ?? "Failed.";
+        return RedirectToAction(nameof(Index));
+    }
+
+    // §8.9 — batch reorder categories.
+    [HttpPost("admin/categories/reorder")]
+    [ValidateAntiForgeryToken]
+    [RequirePermission(WebPermission.Category.Update)]
+    public async Task<IActionResult> Reorder(List<Guid> ids, List<int> sortOrders, CancellationToken ct)
+    {
+        var result = await _facade.ReorderAsync(ids, sortOrders, ct);
+        if (result.RequireSignOut) return RedirectToLogin();
+        TempData[result.IsSuccess ? "Success" : "Error"] =
+            result.IsSuccess ? "Categories reordered." : result.Error ?? "Failed.";
+        return RedirectToAction(nameof(Index));
+    }
+
     private async Task<IActionResult> ReloadIndex(CreateCategoryVm create, CancellationToken ct)
     {
         var list = await _facade.GetCategoriesAsync(includeInactive: true, ct);

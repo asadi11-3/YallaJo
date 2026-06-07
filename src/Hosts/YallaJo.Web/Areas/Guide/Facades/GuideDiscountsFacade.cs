@@ -74,6 +74,27 @@ public sealed class GuideDiscountsFacade
         }
     }
 
+    public async Task<ApiResult> UpdateAsync(Guid id, EditDiscountFormVm form, CancellationToken ct = default)
+    {
+        var request = new UpdateGuideDiscountRequest(
+            form.Name.Trim(),
+            string.IsNullOrWhiteSpace(form.Description) ? null : form.Description.Trim(),
+            form.DiscountValue,
+            form.ValidFrom,
+            form.ValidUntil,
+            form.MaxUsageCount);
+
+        try
+        {
+            return await _api.UpdateAsync(id, request, ct);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to update guide discount {Id}.", id);
+            return ApiResult.Fail(500, "Unable to update the discount. Please try again.");
+        }
+    }
+
     public async Task<ApiResult> DeactivateAsync(Guid id, CancellationToken ct = default) =>
         await _api.DeactivateAsync(id, ct);
 }

@@ -58,6 +58,71 @@ public sealed class CreatorsFacade
     public Task<ApiResult> ReinstateAsync(Guid profileId, CancellationToken ct)
         => Normalize(_api.ReinstateAsync(profileId, ct), "Could not reinstate the creator profile.");
 
+    // ── §8.6: tier, edit, delete, invitation ───────────────────────────────────
+
+    public Task<ApiResult> PromoteAsync(Guid profileId, string? targetTier, CancellationToken ct)
+        => string.IsNullOrWhiteSpace(targetTier)
+            ? Task.FromResult(ApiResult.Fail(400, "A target tier is required."))
+            : Normalize(_api.PromoteAsync(profileId, targetTier.Trim(), ct), "Could not promote the creator.");
+
+    public Task<ApiResult> DemoteAsync(Guid profileId, string? targetTier, string? reason, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(targetTier))
+        {
+            return Task.FromResult(ApiResult.Fail(400, "A target tier is required."));
+        }
+        if (string.IsNullOrWhiteSpace(reason))
+        {
+            return Task.FromResult(ApiResult.Fail(400, "A demotion reason is required."));
+        }
+        return Normalize(_api.DemoteAsync(profileId, targetTier.Trim(), reason.Trim(), ct), "Could not demote the creator.");
+    }
+
+    public Task<ApiResult> EditAsync(Guid id, string? displayName, string? bio, string? avatarUrl, string? slug, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(displayName))
+        {
+            return Task.FromResult(ApiResult.Fail(400, "A display name is required."));
+        }
+
+        var body = new
+        {
+            displayName = displayName.Trim(),
+            bio = string.IsNullOrWhiteSpace(bio) ? null : bio.Trim(),
+            avatarUrl = string.IsNullOrWhiteSpace(avatarUrl) ? null : avatarUrl.Trim(),
+            slug = string.IsNullOrWhiteSpace(slug) ? null : slug.Trim(),
+        };
+        return Normalize(_api.EditAsync(id, body, ct), "Could not update the creator profile.");
+    }
+
+    public Task<ApiResult> DeleteAsync(Guid id, string? reason, CancellationToken ct)
+        => string.IsNullOrWhiteSpace(reason)
+            ? Task.FromResult(ApiResult.Fail(400, "A reason is required to delete a creator profile."))
+            : Normalize(_api.DeleteAsync(id, reason.Trim(), ct), "Could not delete the creator profile.");
+
+    public Task<ApiResult> SendInvitationAsync(string? kind, string? email, Guid? invitedUserId, string? personalMessage, CancellationToken ct)
+    {
+        var normalizedKind = string.IsNullOrWhiteSpace(kind) ? "Email" : kind.Trim();
+
+        if (string.Equals(normalizedKind, "Email", StringComparison.OrdinalIgnoreCase) && string.IsNullOrWhiteSpace(email))
+        {
+            return Task.FromResult(ApiResult.Fail(400, "An email address is required for an email invitation."));
+        }
+        if (string.Equals(normalizedKind, "InApp", StringComparison.OrdinalIgnoreCase) && (invitedUserId is null || invitedUserId == Guid.Empty))
+        {
+            return Task.FromResult(ApiResult.Fail(400, "A user is required for an in-app invitation."));
+        }
+
+        var body = new
+        {
+            kind = normalizedKind,
+            email = string.IsNullOrWhiteSpace(email) ? null : email.Trim(),
+            invitedUserId,
+            personalMessage = string.IsNullOrWhiteSpace(personalMessage) ? null : personalMessage.Trim(),
+        };
+        return Normalize(_api.SendInvitationAsync(body, ct), "Could not send the creator invitation.");
+    }
+
     private static async Task<ApiResult> Normalize(Task<ApiResult> call, string fallback)
     {
         var result = await call;

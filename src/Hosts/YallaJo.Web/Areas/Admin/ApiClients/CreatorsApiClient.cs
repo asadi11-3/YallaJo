@@ -47,4 +47,26 @@ public sealed class CreatorsApiClient
 
     public Task<ApiResult> ReinstateAsync(Guid profileId, CancellationToken ct)
         => _api.PostAsync($"{Base}/profiles/{profileId:D}/reinstate", null, ct);
+
+    // ── §8.6: tier management, edit, delete, invitations ───────────────────────
+
+    // POST /profiles/{profileId}/promote — body { targetTier }
+    public Task<ApiResult> PromoteAsync(Guid profileId, string targetTier, CancellationToken ct)
+        => _api.PostAsync($"{Base}/profiles/{profileId:D}/promote", new { targetTier }, ct);
+
+    // POST /profiles/{profileId}/demote — body { targetTier, reason }
+    public Task<ApiResult> DemoteAsync(Guid profileId, string targetTier, string reason, CancellationToken ct)
+        => _api.PostAsync($"{Base}/profiles/{profileId:D}/demote", new { targetTier, reason }, ct);
+
+    // PUT /profiles/{id} — body { displayName, bio, avatarUrl, slug }
+    public Task<ApiResult> EditAsync(Guid id, object body, CancellationToken ct)
+        => _api.PutAsync($"{Base}/profiles/{id:D}", body, ct);
+
+    // DELETE /profiles/{id} — body { reason }
+    public Task<ApiResult> DeleteAsync(Guid id, string reason, CancellationToken ct)
+        => _api.DeleteAsync($"{Base}/profiles/{id:D}", new { reason }, ct);
+
+    // POST /invitations — body { kind, email, invitedUserId, personalMessage }
+    public Task<ApiResult> SendInvitationAsync(object body, CancellationToken ct)
+        => _api.PostAsync($"{Base}/invitations", body, ct);
 }

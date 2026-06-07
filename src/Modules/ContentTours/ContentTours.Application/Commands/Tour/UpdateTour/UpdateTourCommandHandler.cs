@@ -28,6 +28,13 @@ public sealed class UpdateTourCommandHandler(
     {
         try
         {
+            if (currentUser.UserId is null)
+            {
+                return Result.Failure(
+                    Error.Unauthorized("Authentication is required."),
+                    Outcome.Unauthorized);
+            }
+
             var tour = await tourRepository
                 .GetByIdAsync(request.Id, cancellationToken, asNoTracking: false)
                 .ConfigureAwait(false);
@@ -38,7 +45,8 @@ public sealed class UpdateTourCommandHandler(
                     Outcome.NotFound);
             }
 
-            if (tour.CreatedByUserId != currentUser.UserId!.Value)
+            var isAdminTier = AppRoles.HighestPrivilegeLevel(currentUser.Roles) >= RolePrivilegeLevel.Admin;
+            if (!isAdminTier && tour.CreatedByUserId != currentUser.UserId!.Value)
             {
                 return Result.Failure(
                     new Error("Tour.NotOwner", "You do not have permission to update this tour."),
@@ -126,7 +134,7 @@ public sealed class UpdateTourCommandHandler(
                     shortDescription:        request.ShortDescription,
                     minAge:                  request.MinAge,
                     meetingPoint:            meetingPoint,
-                    placeId:                 request.PlaceId,
+                    placeId:                 request.PlaceId == Guid.Empty ? tour.PlaceId : request.PlaceId,
                     isChildFriendly:         request.IsChildFriendly,
                     isAccessible:            request.IsAccessible,
                     ageRestriction:          request.AgeRestriction,

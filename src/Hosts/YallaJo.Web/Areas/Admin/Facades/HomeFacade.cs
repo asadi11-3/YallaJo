@@ -30,10 +30,16 @@ public sealed class HomeFacade
 
         await Task.WhenAll(revenueTask, bookingsTask, usersTask, interactionsTask);
 
-        var revenue = revenueTask.Result is { IsSuccess: true, Data: not null } r ? r.Data : null;
-        var bookings = bookingsTask.Result is { IsSuccess: true, Data: not null } b ? b.Data : null;
-        var users = usersTask.Result is { IsSuccess: true, Data: not null } u ? u.Data : null;
-        var interactions = interactionsTask.Result is { IsSuccess: true, Data: not null } i ? i.Data : null;
+        // UI-PERF-R1: await the completed tasks rather than reading .Result.
+        var revenueResult = await revenueTask;
+        var bookingsResult = await bookingsTask;
+        var usersResult = await usersTask;
+        var interactionsResult = await interactionsTask;
+
+        var revenue = revenueResult is { IsSuccess: true, Data: not null } r ? r.Data : null;
+        var bookings = bookingsResult is { IsSuccess: true, Data: not null } b ? b.Data : null;
+        var users = usersResult is { IsSuccess: true, Data: not null } u ? u.Data : null;
+        var interactions = interactionsResult is { IsSuccess: true, Data: not null } i ? i.Data : null;
 
         var vm = new DashboardVm
         {

@@ -54,4 +54,47 @@ public sealed class AuditLogsController : BaseController
 
         return View(result.Data);
     }
+
+    // ── POST /admin/audit-logs/{id}/redact ──────────────────────────────────────────
+    // §8.13 — financial/compliance action; gated separately from the page-level read.
+    [HttpPost("admin/audit-logs/{id:long}/redact")]
+    [ValidateAntiForgeryToken]
+    [RequirePermission(WebPermission.AuditLog.Redact)]
+    public async Task<IActionResult> Redact(long id, string? reason, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(reason))
+        {
+            SetError("A redaction reason is required.");
+            return RedirectToAction(nameof(Index));
+        }
+
+        var result = await _facade.RedactAsync(id, reason.Trim(), ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+
+        SetFlash(result, "Audit-log entry redacted.", "Could not redact the audit-log entry.");
+        return RedirectToAction(nameof(Index));
+    }
+
+    // ── GET /admin/audit-logs/export ────────────────────────────────────────────────
+    // §8.13 — exports the selected date range as a downloadable CSV.
+    [HttpGet("admin/audit-logs/export")]
+    [RequirePermission(WebPermission.AuditLog.Export)]
+    public async Task<IActionResult> Export(DateTime? from, DateTime? to, CancellationToken ct)
+    {
+        var rangeFrom = from ?? DateTime.UtcNow.Date.AddDays(-30);
+        var rangeTo   = to ?? DateTime.UtcNow;
+
+        var result = await _facade.ExportAsync(rangeFrom, rangeTo, ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+
+        if (!result.IsSuccess || result.Data is null)
+        {
+            SetError(result.Error ?? "Could not export the audit logs.");
+            return RedirectToAction(nameof(Index));
+        }
+
+        var fileName = $"audit-logs_{rangeFrom:yyyyMMdd}_{rangeTo:yyyyMMdd}.csv";
+        var bytes = System.Text.Encoding.UTF8.GetBytes(result.Data);
+        return File(bytes, "text/csv", fileName);
+    }
 }

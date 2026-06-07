@@ -182,4 +182,37 @@ public sealed class PlacesController : BaseController
             SetError(result.Error ?? "Failed.");
         return RedirectToAction(nameof(Index));
     }
+
+    // ── §8.5: accessibility set (batch replace) ────────────────────────────────
+    [HttpPost("admin/places/{id:guid}/accessibility")]
+    [ValidateAntiForgeryToken]
+    [RequirePermission(WebPermission.AccessibilityFeature.Update)]
+    public async Task<IActionResult> SetAccessibility(
+        Guid id, List<AccessibilityFeatureFormItem>? features, CancellationToken ct)
+    {
+        var result = await _facade.SetAccessibilityAsync(id, features ?? [], ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+
+        if (result.IsSuccess)
+            SetSuccess("Accessibility features updated.");
+        else
+            SetError(result.Error ?? "Could not update accessibility features.");
+        return RedirectToAction(nameof(Details), new { id });
+    }
+
+    // ── §8.5: accessibility remove (single assignment row) ─────────────────────
+    [HttpPost("admin/places/{id:guid}/accessibility/{assignmentId:guid}/remove")]
+    [ValidateAntiForgeryToken]
+    [RequirePermission(WebPermission.AccessibilityFeature.Delete)]
+    public async Task<IActionResult> RemoveAccessibility(Guid id, Guid assignmentId, CancellationToken ct)
+    {
+        var result = await _facade.RemoveAccessibilityAssignmentAsync(assignmentId, ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+
+        if (result.IsSuccess)
+            SetSuccess("Accessibility feature removed.");
+        else
+            SetError(result.Error ?? "Could not remove the accessibility feature.");
+        return RedirectToAction(nameof(Details), new { id });
+    }
 }

@@ -47,4 +47,17 @@ public sealed class SeoMetadataController : BaseController
         SetFlash(result, "SEO metadata saved.", "Could not save the SEO metadata.");
         return RedirectToAction(nameof(Index), new { entityType = form.EntityType, entityId = form.EntityId });
     }
+
+    // ── §8.10: soft-delete SEO metadata ─────────────────────────────────────────
+    [HttpPost("admin/seo/metadata/{id:guid}/delete")]
+    [ValidateAntiForgeryToken]
+    [RequirePermission(WebPermission.SeoMetadata.Delete)]
+    public async Task<IActionResult> Delete(Guid id, SeoEntityType entityType, Guid? entityId, CancellationToken ct)
+    {
+        var result = await _facade.DeleteAsync(id, ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+
+        SetFlash(result, "SEO metadata deleted.", "Could not delete the SEO metadata.");
+        return RedirectToAction(nameof(Index), new { entityType, entityId });
+    }
 }

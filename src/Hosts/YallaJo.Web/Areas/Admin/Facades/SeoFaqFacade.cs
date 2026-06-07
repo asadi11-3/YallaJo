@@ -60,6 +60,24 @@ public sealed class SeoFaqFacade
     public Task<ApiResult> DeleteAsync(Guid id, CancellationToken ct = default)
         => Normalize(this._api.DeleteAsync(id, ct), "Could not delete the FAQ item.");
 
+    // §8.10 — batch reorder FAQ items within one entity's list.
+    public Task<ApiResult> ReorderAsync(
+        SeoEntityType entityType, Guid entityId, IReadOnlyList<ReorderFaqItemApi> items, CancellationToken ct = default)
+    {
+        if (entityId == Guid.Empty)
+        {
+            return Task.FromResult(ApiResult.Fail(400, "A valid entity is required to reorder FAQ items."));
+        }
+
+        if (items is null || items.Count == 0)
+        {
+            return Task.FromResult(ApiResult.Fail(400, "No FAQ items were provided to reorder."));
+        }
+
+        var request = new ReorderFaqItemsApiRequest(entityType, entityId, items);
+        return Normalize(this._api.ReorderAsync(request, ct), "Could not reorder the FAQ items.");
+    }
+
     private static async Task<ApiResult> Normalize<T>(Task<ApiResult<T>> call, string fallback)
     {
         var result = await call;

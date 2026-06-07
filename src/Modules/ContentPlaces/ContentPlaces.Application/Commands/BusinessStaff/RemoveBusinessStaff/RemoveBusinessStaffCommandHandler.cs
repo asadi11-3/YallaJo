@@ -25,6 +25,13 @@ public sealed class RemoveBusinessStaffCommandHandler(
         RemoveBusinessStaffCommand request,
         CancellationToken cancellationToken)
     {
+        if (currentUser.UserId is null)
+        {
+            return Result.Failure(
+                Error.Unauthorized("Authentication required."),
+                Outcome.Unauthorized);
+        }
+
         var staff = await staffRepository.GetByIdWithBusinessAsync(
             request.Id,
             asNoTracking: false,
@@ -37,7 +44,9 @@ public sealed class RemoveBusinessStaffCommandHandler(
         }
 
         // Ownership check (IDOR prevention).
-        if (staff.Business.OwnerId != currentUser.UserId!.Value)
+        var isAdminTier = AppRoles.HighestPrivilegeLevel(currentUser.Roles) >= RolePrivilegeLevel.Admin;
+
+        if (!isAdminTier && staff.Business.OwnerId != currentUser.UserId.Value)
         {
             return Result.Failure(
                 Error.Forbidden("You are not allowed to modify this business"));

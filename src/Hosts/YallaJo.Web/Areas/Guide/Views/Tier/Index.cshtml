@@ -1,0 +1,102 @@
+@using YallaJo.Web.Areas.Guide.Shared
+@model YallaJo.Web.Areas.Guide.Models.Dashboard.TierProgressVm
+@{
+    ViewData["Title"] = "Tier & Progress";
+    ViewData["GuideNav"] = "Tier";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var sidebar = ViewBag.Sidebar as GuideSidebarVm ?? new GuideSidebarVm();
+
+    string Pct(int p) => $"{Math.Clamp(p, 0, 100)}%";
+}
+
+<partial name="_GuideSidebar" model="sidebar" />
+
+<section class="pt-0">
+    <div class="container vstack gap-4">
+        <h1 class="fs-4 mb-0"><i class="bi bi-award me-2"></i>Tier &amp; Progress</h1>
+
+        <div class="row g-4">
+            <div class="col-lg-5">
+                <div class="card border h-100">
+                    <div class="card-body text-center d-flex flex-column justify-content-center">
+                        <span class="small text-body-secondary">Current tier</span>
+                        <div class="display-6 fw-bold my-1"><bdi>@(string.IsNullOrWhiteSpace(Model.CurrentTier) ? "—" : Model.CurrentTier)</bdi></div>
+                        <div>
+                            <span class="badge text-bg-success fs-6">
+                                <i class="bi bi-percent me-1" aria-hidden="true"></i>@Model.CurrentCommissionRate.ToString("0.##")% commission
+                            </span>
+                        </div>
+                        @if (Model.HasNextTier)
+                        {
+                            <p class="small text-body-secondary mt-3 mb-0">
+                                Meet all the targets below to reach <strong><bdi>@Model.NextTier</bdi></strong>.
+                            </p>
+                        }
+                        else
+                        {
+                            <p class="small text-body-secondary mt-3 mb-0">You're at the top tier. Keep up the great work.</p>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-7">
+                <div class="card border h-100">
+                    <div class="card-header border-bottom"><h2 class="h6 mb-0">Progress to next tier</h2></div>
+                    <div class="card-body vstack gap-3">
+                        @{
+                            void Bar(string label, string valueText, int percent, bool met)
+                            {
+                                <div>
+                                    <div class="d-flex justify-content-between small mb-1">
+                                        <span>@label</span>
+                                        <span class="@(met ? "text-success" : "text-body-secondary")">
+                                            @if (met) { <i class="bi bi-check-circle me-1" aria-hidden="true"></i> }
+                                            <span dir="ltr">@valueText</span>
+                                        </span>
+                                    </div>
+                                    <div class="progress" role="progressbar" aria-label="@label" aria-valuenow="@percent" aria-valuemin="0" aria-valuemax="100" style="height:.5rem;">
+                                        <div class="progress-bar @(met ? "bg-success" : "")" style="width:@Pct(percent)"></div>
+                                    </div>
+                                </div>
+                            }
+                        }
+
+                        @{ Bar("Completed tours",
+                               $"{Model.CompletedTours} / {Model.CompletedToursRequired}",
+                               Model.ToursPercent,
+                               Model.CompletedTours >= Model.CompletedToursRequired); }
+
+                        @{ Bar("Average rating",
+                               $"{Model.AverageRating:0.0} / {Model.AverageRatingRequired:0.0}",
+                               Model.AverageRatingRequired <= 0 ? 100 : (int)Math.Round((double)(Model.AverageRating / Model.AverageRatingRequired) * 100),
+                               Model.AverageRating >= Model.AverageRatingRequired); }
+
+                        @{ Bar("Active months",
+                               $"{Model.ActiveMonths} / {Model.ActiveMonthsRequired}",
+                               Model.ActiveMonthsRequired <= 0 ? 100 : (int)Math.Round((double)Model.ActiveMonths / Model.ActiveMonthsRequired * 100),
+                               Model.ActiveMonths >= Model.ActiveMonthsRequired); }
+
+                        @{
+                            var reportOk = Model.ReportRate <= Model.MaxReportRateAllowed;
+                            <div>
+                                <div class="d-flex justify-content-between small mb-1">
+                                    <span>Report rate (max @Model.MaxReportRateAllowed.ToString("0.##")%)</span>
+                                    <span class="@(reportOk ? "text-success" : "text-danger")">
+                                        @if (reportOk) { <i class="bi bi-check-circle me-1" aria-hidden="true"></i> }
+                                        else { <i class="bi bi-exclamation-triangle me-1" aria-hidden="true"></i> }
+                                        <span dir="ltr">@Model.ReportRate.ToString("0.##")%</span>
+                                    </span>
+                                </div>
+                            </div>
+                        }
+
+                        <a asp-area="Guide" asp-controller="Analytics" asp-action="Index" class="btn btn-sm btn-secondary-soft align-self-start mt-2">
+                            <i class="bi bi-graph-up me-1" aria-hidden="true"></i>View analytics
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

@@ -3,12 +3,14 @@ using Microsoft.AspNetCore.Mvc;
 using YallaJo.Web.Areas.Guide.Facades;
 using YallaJo.Web.Areas.Guide.Models.Dashboard;
 using YallaJo.Web.Areas.Guide.Shared;
+using YallaJo.Web.Infrastructure.Authorization;
 using YallaJo.Web.Infrastructure.Mvc;
 
 namespace YallaJo.Web.Areas.Guide.Controllers;
 
 [Area("Guide")]
 [Authorize]
+[RequirePermission(WebPermission.GuideDashboard.Read)]
 public sealed class DashboardController : BaseController
 {
     private readonly GuideDashboardFacade _dashboard;

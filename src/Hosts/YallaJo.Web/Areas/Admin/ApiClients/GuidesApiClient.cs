@@ -20,4 +20,12 @@ public sealed class GuidesApiClient
 
     public Task<ApiResult> ReinstateAsync(Guid guideId, CancellationToken ct)
         => _api.PostAsync($"{Base}/{guideId:D}/reinstate", null, ct);
+
+    // §8.14 — PUT /api/v1/guides/admin/{guideId} (update profile)
+    public Task<ApiResult> UpdateAsync(Guid guideId, AdminUpdateGuideApiRequest request, CancellationToken ct)
+        => _api.PutAsync($"{Base}/{guideId:D}/", request, ct);
+
+    // §8.14 — DELETE /api/v1/guides/admin/{guideId} (deactivate)
+    public Task<ApiResult> DeleteAsync(Guid guideId, CancellationToken ct)
+        => _api.DeleteAsync($"{Base}/{guideId:D}/", ct);
 }

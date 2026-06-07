@@ -1,3 +1,4 @@
+@using YallaJo.Web.Infrastructure.Authorization
 @model YallaJo.Web.Areas.Admin.Models.AuditLogs.AuditLogListVm
 @{
     ViewData["Title"] = "Audit Timeline";
@@ -17,7 +18,7 @@
 }
 
 <div class="container mt-4">
-    <h2>Audit Timeline</h2>
+    <h1 class="h3 mb-3">Audit Timeline</h1>
 
     @if (ViewBag.Error is string err) { <div class="alert alert-danger">@err</div> }
 
@@ -59,6 +60,29 @@
             }
         </div>
     </form>
+
+    @* ── §8.13 Export (CSV for a date range) ────────────────────────── *@
+    <permission require="@WebPermission.AuditLog.Export">
+        <form method="get" asp-area="Admin" asp-controller="AuditLogs" asp-action="Export"
+              class="row g-2 mb-3 align-items-end border-top pt-3">
+            <div class="col-md-3">
+                <label class="form-label small text-muted mb-0" for="export-from">Export from (UTC)</label>
+                <input type="datetime-local" id="export-from" name="from" class="form-control form-control-sm"
+                       value="@FmtDate(Model.FilterFrom)" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small text-muted mb-0" for="export-to">Export to (UTC)</label>
+                <input type="datetime-local" id="export-to" name="to" class="form-control form-control-sm"
+                       value="@FmtDate(Model.FilterTo)" />
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-sm btn-outline-primary">
+                    <i class="fa-solid fa-file-csv fa-fw" aria-hidden="true"></i>
+                    <span>Export CSV</span>
+                </button>
+            </div>
+        </form>
+    </permission>
 
     @* ── Table ──────────────────────────────────────────────────────── *@
     <table class="table table-sm table-bordered align-middle">

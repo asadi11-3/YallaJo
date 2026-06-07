@@ -25,6 +25,13 @@ public sealed class UpdatePlaceCommandHandler(
     {
         try
         {
+            if (currentUser.UserId is null)
+            {
+                return Result<UpdatePlaceResult>.Failure(
+                    Error.Unauthorized("Authentication required."),
+                    Outcome.Unauthorized);
+            }
+
             var place = await placeRepository.GetByIdAsync(request.Id, cancellationToken, asNoTracking: false);
             if (place is null)
             {
@@ -34,7 +41,10 @@ public sealed class UpdatePlaceCommandHandler(
             }
 
             // Ownership check (IDOR prevention).
-            if (place.CreatedByUserId != currentUser.UserId!.Value)
+            var isAdminTier =
+                AppRoles.HighestPrivilegeLevel(currentUser.Roles) >= RolePrivilegeLevel.Admin;
+
+            if (!isAdminTier && place.CreatedByUserId != currentUser.UserId.Value)
             {
                 return Result<UpdatePlaceResult>.Failure(
                     Error.Forbidden("You do not have permission to update this place."),

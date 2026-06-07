@@ -55,4 +55,20 @@ public sealed class OutboxController : BaseController
         SetFlash(result, "Outbox message replayed.", "Could not replay the outbox message.");
         return RedirectToAction(nameof(Index));
     }
+
+    // ── §8.12: re-emit TourApproved events to repopulate Booking snapshots ──────────
+    [HttpPost("admin/outbox/backfill/tour-snapshots")]
+    [ValidateAntiForgeryToken]
+    [RequirePermission(WebPermission.Outbox.Replay)]
+    public async Task<IActionResult> BackfillTourSnapshots(int? batchSize, CancellationToken ct)
+    {
+        var result = await _facade.BackfillTourSnapshotsAsync(batchSize, ct);
+        if (GuardSignOut(result) is { } signOut)
+        {
+            return signOut;
+        }
+
+        SetFlash(result, "Tour-snapshot backfill started.", "Could not start the tour-snapshot backfill.");
+        return RedirectToAction(nameof(Index));
+    }
 }

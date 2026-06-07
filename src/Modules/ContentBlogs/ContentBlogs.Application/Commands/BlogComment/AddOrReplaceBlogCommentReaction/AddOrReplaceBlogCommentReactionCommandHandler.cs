@@ -24,6 +24,13 @@ public sealed class AddOrReplaceBlogCommentReactionCommandHandler(
     {
         try
         {
+            if (currentUser.UserId is null)
+            {
+                return Result.Failure(
+                    new Error("BlogCommentReaction.Unauthorized", "Authentication is required to react to comments."),
+                    Outcome.Unauthorized);
+            }
+
             // Load tracked with reactions: aggregate enforces one-per-user invariant.
             var comment = await blogCommentRepository
                 .GetWithReactionsAsync(request.CommentId, cancellationToken)
@@ -40,7 +47,7 @@ public sealed class AddOrReplaceBlogCommentReactionCommandHandler(
 
             try
             {
-                comment.AddOrReplaceReaction(currentUser.UserId!.Value, request.ReactionType, utcNow);
+                comment.AddOrReplaceReaction(currentUser.UserId.Value, request.ReactionType, utcNow);
             }
             catch (InvalidOperationException ex) when (
                 ex.Message.StartsWith("BlogComment.Redacted", StringComparison.Ordinal))
@@ -86,7 +93,7 @@ public sealed class AddOrReplaceBlogCommentReactionCommandHandler(
             logger.LogInformation(
                 "BlogCommentReaction add-or-replaced: CommentId={CommentId}, BlogId={BlogId}, " +
                 "UserId={UserId}, ReactionType={ReactionType}",
-                comment.Id, comment.BlogId, currentUser.UserId!.Value, request.ReactionType);
+                comment.Id, comment.BlogId, currentUser.UserId.Value, request.ReactionType);
 
             return Result.Success();
         }

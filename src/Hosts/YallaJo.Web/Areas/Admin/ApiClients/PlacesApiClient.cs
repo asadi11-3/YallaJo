@@ -53,6 +53,25 @@ public sealed class PlacesApiClient
             body: null,
             ct);
 
+    // ── §8.5: accessibility features ───────────────────────────────────────────
+
+    // GET /api/v1/places/accessibility/catalog
+    public Task<ApiResult<IReadOnlyList<AccessibilityFeatureCatalogItemResponse>>> GetAccessibilityCatalogAsync(CancellationToken ct = default)
+        => _api.GetAsync<IReadOnlyList<AccessibilityFeatureCatalogItemResponse>>($"{BasePath}/accessibility/catalog", ct);
+
+    // GET /api/v1/places/{id}/accessibility
+    public Task<ApiResult<IReadOnlyList<AccessibilityFeatureResponse>>> GetAccessibilityAsync(Guid id, CancellationToken ct = default)
+        => _api.GetAsync<IReadOnlyList<AccessibilityFeatureResponse>>($"{BasePath}/{id}/accessibility", ct);
+
+    // PUT /api/v1/places/{id}/accessibility  (batch replace)
+    public Task<ApiResult> SetAccessibilityAsync(
+        Guid id, IReadOnlyList<AccessibilityFeatureItemApiRequest> items, CancellationToken ct = default)
+        => _api.PutAsync($"{BasePath}/{id}/accessibility", items, ct);
+
+    // DELETE /api/v1/places/admin/accessibility/{assignmentId}
+    public Task<ApiResult> RemoveAccessibilityAssignmentAsync(Guid assignmentId, CancellationToken ct = default)
+        => _api.DeleteAsync($"{BasePath}/admin/accessibility/{assignmentId}", ct);
+
     // ── Helpers ──────────────────────────────────────────────────────────────
     private static string BuildListQuery(int page, int pageSize, PlaceListFilterVm filter)
     {

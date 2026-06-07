@@ -25,3 +25,11 @@ public sealed record CreateFaqItemApiRequest(
     int SortOrder);
 
 public sealed record UpdateFaqItemApiRequest(string Question, string Answer);
+
+// §8.10 — body for PUT /api/v1/seo/faq/reorder (batch reorder within one entity's FAQ list).
+public sealed record ReorderFaqItemsApiRequest(
+    SeoEntityType EntityType,
+    Guid EntityId,
+    IReadOnlyList<ReorderFaqItemApi> Items);
+
+public sealed record ReorderFaqItemApi(Guid Id, int SortOrder);

@@ -48,4 +48,8 @@ public sealed class SeoFaqApiClient
 
     public Task<ApiResult> DeleteAsync(Guid id, CancellationToken ct = default)
         => this._api.DeleteAsync($"{Base}/{id:D}", ct);
+
+    // §8.10 — PUT /api/v1/seo/faq/reorder (batch reorder within an entity's FAQ list).
+    public Task<ApiResult> ReorderAsync(ReorderFaqItemsApiRequest request, CancellationToken ct = default)
+        => this._api.PutAsync($"{Base}/reorder", request, ct);
 }

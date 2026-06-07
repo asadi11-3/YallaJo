@@ -60,6 +60,37 @@ public sealed class TranslationsFacade
     public async Task<ApiResult> ApproveAsync(Guid id, CancellationToken ct = default)
         => Normalize(await _api.ApproveAsync(id, ct), "Could not approve translation.");
 
+    // §8.9 — backfill missing translations for all Tag or Specialization rows.
+    public async Task<ApiResult> BackfillAsync(string? entityKind, CancellationToken ct = default)
+    {
+        var kind = (entityKind ?? string.Empty).Trim().ToLowerInvariant();
+        if (kind is not ("tag" or "specialization"))
+        {
+            return ApiResult.Fail(400, "Entity kind must be 'tag' or 'specialization'.");
+        }
+
+        return Normalize(await _api.BackfillAsync(kind, ct), "Could not start the translation backfill.");
+    }
+
+    // §8.9 — mark all auto-translated fields reviewed for an entity + language.
+    public async Task<ApiResult> ApproveBatchAsync(
+        string? entityType, Guid entityId, string? languageCode, IReadOnlyList<string>? fieldNames, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(entityType) || entityId == Guid.Empty || string.IsNullOrWhiteSpace(languageCode))
+        {
+            return ApiResult.Fail(400, "Entity type, entity id, and language code are required.");
+        }
+
+        var request = new
+        {
+            entityType = entityType.Trim(),
+            entityId,
+            languageCode = languageCode.Trim(),
+            fieldNames = (fieldNames ?? []).Where(f => !string.IsNullOrWhiteSpace(f)).Select(f => f.Trim()).ToList(),
+        };
+        return Normalize(await _api.ApproveBatchAsync(request, ct), "Could not approve the translations.");
+    }
+
     private static ApiResult Normalize(ApiResult result, string fallback)
     {
         if (result.IsSuccess)         return ApiResult.Ok();

@@ -23,6 +23,13 @@ public sealed class DeletePlaceCommandHandler(
     {
         try
         {
+            if (currentUser.UserId is null)
+            {
+                return Result.Failure(
+                    Error.Unauthorized("Authentication required."),
+                    Outcome.Unauthorized);
+            }
+
             var place = await placeRepository.GetByIdAsync(request.PlaceId, cancellationToken, asNoTracking: false);
             if (place is null)
             {

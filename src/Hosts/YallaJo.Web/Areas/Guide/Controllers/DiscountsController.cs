@@ -70,6 +70,40 @@ public sealed class DiscountsController : BaseController
         return RedirectToAction(nameof(Index));
     }
 
+    [HttpPost("guide/discounts/{id:guid}/edit")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Edit(Guid id, EditDiscountFormVm form, CancellationToken ct = default)
+    {
+        if (form.ValidUntil.HasValue && form.ValidUntil.Value < form.ValidFrom)
+        {
+            SetError("Valid-until must be on or after the valid-from date.");
+            return RedirectToAction(nameof(Index));
+        }
+
+        if (!ModelState.IsValid)
+        {
+            SetError("Please correct the discount details and try again.");
+            return RedirectToAction(nameof(Index));
+        }
+
+        var result = await _discounts.UpdateAsync(id, form, ct);
+        if (GuardSignOut(result) is { } signOut)
+        {
+            return signOut;
+        }
+
+        if (result.IsSuccess)
+        {
+            SetSuccess("Discount updated.");
+        }
+        else if (!ApplyValidationErrors(result))
+        {
+            SetError(result.Error ?? "Could not update the discount.");
+        }
+
+        return RedirectToAction(nameof(Index));
+    }
+
     [HttpPost("guide/discounts/{id:guid}/delete")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Deactivate(Guid id, CancellationToken ct = default)

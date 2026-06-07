@@ -72,5 +72,53 @@ public sealed class GuidesController : BaseController
         return Back(id);
     }
 
+    // ── POST /admin/guides/{id}/edit ────────────────────────────────────────────────
+    // §8.14 — admin edits a guide profile (PUT /guides/admin/{guideId}).
+    [HttpPost("admin/guides/{id:guid}/edit")]
+    [ValidateAntiForgeryToken]
+    [RequirePermission(WebPermission.TourGuideProfile.Update)]
+    public async Task<IActionResult> Edit(Guid id, AdminEditGuideVm form, CancellationToken ct)
+    {
+        form.Id = id;
+
+        if (!ModelState.IsValid)
+        {
+            SetError("Please correct the highlighted fields and try again.");
+            return Back(id);
+        }
+
+        var result = await _facade.UpdateAsync(form, ct);
+        if (GuardSignOut(result) is { } signOut)
+        {
+            return signOut;
+        }
+
+        SetFlash(result, "Tour guide profile updated.", "Could not update the tour guide profile.");
+        return Back(id);
+    }
+
+    // ── POST /admin/guides/{id}/delete ──────────────────────────────────────────────
+    // §8.14 — admin deactivates a guide (DELETE /guides/admin/{guideId}).
+    [HttpPost("admin/guides/{id:guid}/delete")]
+    [ValidateAntiForgeryToken]
+    [RequirePermission(WebPermission.TourGuideProfile.DeleteAny)]
+    public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
+    {
+        var result = await _facade.DeleteAsync(id, ct);
+        if (GuardSignOut(result) is { } signOut)
+        {
+            return signOut;
+        }
+
+        if (result.IsSuccess)
+        {
+            SetSuccess("Tour guide deactivated.");
+            return RedirectToAction(nameof(Index));
+        }
+
+        SetError(result.Error ?? "Could not deactivate the tour guide.");
+        return Back(id);
+    }
+
     private IActionResult Back(Guid id) => RedirectToAction(nameof(Index), new { id });
 }

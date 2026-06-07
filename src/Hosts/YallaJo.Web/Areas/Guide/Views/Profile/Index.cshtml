@@ -197,5 +197,22 @@
             }
         </div>
 
+        @* Danger zone — self-deactivate the guide profile (DELETE /guides/me). *@
+        <div class="card border border-danger-subtle">
+            <div class="card-header border-bottom">
+                <h2 class="h6 mb-0 text-danger"><i class="bi bi-exclamation-triangle me-2" aria-hidden="true"></i>Deactivate profile</h2>
+            </div>
+            <div class="card-body d-sm-flex justify-content-between align-items-center gap-3">
+                <p class="small text-body-secondary mb-2 mb-sm-0">
+                    Deactivating hides your guide profile and removes you from public listings. You can re-apply later.
+                </p>
+                <form asp-area="Guide" asp-controller="Profile" asp-action="Deactivate" method="post" class="flex-shrink-0"
+                      onsubmit="return confirm('Deactivate your guide profile? You will be removed from public listings.');">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-outline-danger"><i class="bi bi-person-x me-1" aria-hidden="true"></i>Deactivate</button>
+                </form>
+            </div>
+        </div>
+
     </div>
 </section>

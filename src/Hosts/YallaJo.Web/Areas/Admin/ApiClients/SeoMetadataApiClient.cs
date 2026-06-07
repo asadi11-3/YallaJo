@@ -22,4 +22,8 @@ public sealed class SeoMetadataApiClient
     public Task<ApiResult> UpdateAsync(
         Guid id, UpdateSeoMetadataApiRequest request, CancellationToken ct = default) =>
         _api.PutAsync($"{Base}/{id:D}", request, ct);
+
+    // §8.10 — DELETE /api/v1/seo/metadata/{id} (soft-delete).
+    public Task<ApiResult> DeleteAsync(Guid id, CancellationToken ct = default) =>
+        _api.DeleteAsync($"{Base}/{id:D}", ct);
 }

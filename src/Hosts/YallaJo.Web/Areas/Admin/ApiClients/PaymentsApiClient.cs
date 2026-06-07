@@ -1,4 +1,5 @@
 using System.Globalization;
+using YallaJo.Web.Areas.Admin.Models.Bookings;
 using YallaJo.Web.Areas.Admin.Models.Payments;
 using YallaJo.Web.Infrastructure.Api.Contracts;
 using YallaJo.Web.Services;
@@ -45,4 +46,9 @@ public sealed class PaymentsApiClient
         var url = "/api/v1/payments/admin/all?" + string.Join("&", query);
         return _api.GetAsync<PaymentPageResponse>(url, ct);
     }
+
+    // POST /api/v1/payments/{id}/refund — refund a completed Booking payment (§8.7).
+    // Reuses the shared RefundPaymentRequest contract (Amount, Currency, Reason).
+    public Task<ApiResult> RefundAsync(Guid paymentId, RefundPaymentRequest request, CancellationToken ct = default)
+        => _api.PostAsync($"/api/v1/payments/{paymentId}/refund", request, ct);
 }

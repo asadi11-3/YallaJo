@@ -31,6 +31,13 @@ public sealed class OutboxFacade
     public Task<ApiResult> ReplayAsync(string module, Guid id, CancellationToken ct = default)
         => Normalize(_api.ReplayAsync(module, id, ct), "Could not replay the outbox message.");
 
+    // §8.12 — trigger the tour-snapshot backfill (clamps batch size to a sane range).
+    public Task<ApiResult> BackfillTourSnapshotsAsync(int? batchSize, CancellationToken ct = default)
+    {
+        var size = batchSize is < 1 or > 1000 ? 100 : batchSize.Value;
+        return Normalize(_api.BackfillTourSnapshotsAsync(size, ct), "Could not start the tour-snapshot backfill.");
+    }
+
     private static async Task<ApiResult> Normalize(Task<ApiResult> call, string fallback)
     {
         var result = await call;

@@ -140,5 +140,95 @@ public sealed class CreatorsController : BaseController
         return Back(id);
     }
 
+    // ── §8.6: promote / demote tier ─────────────────────────────────────────────
+    [HttpPost("admin/creators/profiles/{id:guid}/promote")]
+    [ValidateAntiForgeryToken]
+    [RequirePermission(WebPermission.AdminCreatorQueue.PromoteTier)]
+    public async Task<IActionResult> Promote(Guid id, string? targetTier, CancellationToken ct)
+    {
+        var result = await _facade.PromoteAsync(id, targetTier, ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+
+        SetFlash(result, "Creator promoted.", "Could not promote the creator.");
+        return Back(id);
+    }
+
+    [HttpPost("admin/creators/profiles/{id:guid}/demote")]
+    [ValidateAntiForgeryToken]
+    [RequirePermission(WebPermission.AdminCreatorQueue.DemoteTier)]
+    public async Task<IActionResult> Demote(Guid id, string? targetTier, string? reason, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(reason))
+        {
+            SetError("A demotion reason is required.");
+            return Back(id);
+        }
+
+        var result = await _facade.DemoteAsync(id, targetTier, reason.Trim(), ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+
+        SetFlash(result, "Creator demoted.", "Could not demote the creator.");
+        return Back(id);
+    }
+
+    // ── §8.6: edit creator profile ──────────────────────────────────────────────
+    [HttpPost("admin/creators/profiles/{id:guid}/edit")]
+    [ValidateAntiForgeryToken]
+    [RequirePermission(WebPermission.AdminCreatorQueue.Update)]
+    public async Task<IActionResult> Edit(
+        Guid id, string? displayName, string? bio, string? avatarUrl, string? slug, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(displayName))
+        {
+            SetError("A display name is required.");
+            return Back(id);
+        }
+
+        var result = await _facade.EditAsync(id, displayName.Trim(), bio, avatarUrl, slug, ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+
+        SetFlash(result, "Creator profile updated.", "Could not update the creator profile.");
+        return Back(id);
+    }
+
+    // ── §8.6: delete (soft) creator profile ─────────────────────────────────────
+    [HttpPost("admin/creators/profiles/{id:guid}/delete")]
+    [ValidateAntiForgeryToken]
+    [RequirePermission(WebPermission.AdminCreatorQueue.Delete)]
+    public async Task<IActionResult> Delete(Guid id, string? reason, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(reason))
+        {
+            SetError("A reason is required to delete a creator profile.");
+            return Back(id);
+        }
+
+        var result = await _facade.DeleteAsync(id, reason.Trim(), ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+
+        if (result.IsSuccess)
+        {
+            SetSuccess("Creator profile deleted.");
+            return RedirectToAction(nameof(Index));
+        }
+
+        SetError(result.Error ?? "Could not delete the creator profile.");
+        return Back(id);
+    }
+
+    // ── §8.6: send creator invitation ───────────────────────────────────────────
+    [HttpPost("admin/creators/invitations")]
+    [ValidateAntiForgeryToken]
+    [RequirePermission(WebPermission.AdminCreatorQueue.Invite)]
+    public async Task<IActionResult> SendInvitation(
+        string? kind, string? email, Guid? invitedUserId, string? personalMessage, CancellationToken ct)
+    {
+        var result = await _facade.SendInvitationAsync(kind, email, invitedUserId, personalMessage, ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+
+        SetFlash(result, "Creator invitation sent.", "Could not send the creator invitation.");
+        return RedirectToAction(nameof(Index));
+    }
+
     private IActionResult Back(Guid id) => RedirectToAction(nameof(Index), new { id });
 }

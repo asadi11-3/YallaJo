@@ -187,7 +187,7 @@ public sealed class Blog : AuditableEntity, IAggregateRoot
 
         Status = BlogStatus.PendingReview;
         SubmittedAt = utcNow;
-        MarkUpdated();
+        UpdatedAt = utcNow;
 
         AddDomainEvent(new BlogSubmittedForReviewDomainEvent(
             BlogId: Id,
@@ -215,7 +215,7 @@ public sealed class Blog : AuditableEntity, IAggregateRoot
         ReviewedAt = utcNow;
         ReviewedByAdminId = adminId;
         RejectionReason = null;
-        MarkUpdated();
+        UpdatedAt = utcNow;
 
         AddDomainEvent(new BlogApprovedDomainEvent(
             BlogId: Id,
@@ -251,7 +251,7 @@ public sealed class Blog : AuditableEntity, IAggregateRoot
         ReviewedAt = utcNow;
         ReviewedByAdminId = adminId;
         RejectionReason = reason;
-        MarkUpdated();
+        UpdatedAt = utcNow;
 
         AddDomainEvent(new BlogRejectedDomainEvent(
             BlogId: Id,
@@ -277,7 +277,7 @@ public sealed class Blog : AuditableEntity, IAggregateRoot
             return Result.Failure(BlogErrors.InvalidTransitionToRemoved);
 
         Status = BlogStatus.Removed;
-        MarkUpdated();
+        UpdatedAt = utcNow;
 
         AddDomainEvent(new BlogRemovedDomainEvent(
             BlogId: Id,
@@ -306,7 +306,7 @@ public sealed class Blog : AuditableEntity, IAggregateRoot
         FeaturedAt = utcNow;
         FeaturedByAdminId = adminId;
         FeaturedUntil = until;
-        MarkUpdated();
+        UpdatedAt = utcNow;
 
         AddDomainEvent(new BlogFeaturedDomainEvent(
             BlogId: Id,
@@ -333,7 +333,7 @@ public sealed class Blog : AuditableEntity, IAggregateRoot
         FeaturedAt = null;
         FeaturedByAdminId = null;
         FeaturedUntil = null;
-        MarkUpdated();
+        UpdatedAt = utcNow;
 
         AddDomainEvent(new BlogUnfeaturedDomainEvent(
             BlogId: Id,
@@ -510,10 +510,10 @@ public sealed class Blog : AuditableEntity, IAggregateRoot
     {
         EnsureNotDeleted();
 
-        if (Status is BlogStatus.Archived or BlogStatus.Removed)
+        if (Status != BlogStatus.Published)
         {
             throw new InvalidOperationException(
-               $"Blog.InvalidTransition: cannot archive a blog with status {Status}.");
+               $"Blog.InvalidTransition: cannot archive a blog with status {Status}. Required: Published.");
         }
 
         Status = BlogStatus.Archived;
@@ -699,7 +699,7 @@ public sealed class Blog : AuditableEntity, IAggregateRoot
         if (Status is BlogStatus.Archived or BlogStatus.Removed)
         {
             throw new InvalidOperationException(
-               $"Blog.ReadOnly: blogs with status {Status} cannot be modified.");
+               $"Blog.ArchivedReadOnly: blogs with status {Status} cannot be modified.");
         }
     }
 

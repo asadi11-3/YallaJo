@@ -83,13 +83,11 @@ public sealed class AttachmentDomainEventTests
         evt.Url.Should().Be(expectedUrl);
     }
 
-    // ── MarkForDeletion — NOT idempotent ──────────────────────────────────────
+    // ── MarkForDeletion — repeated calls ──────────────────────────────────────
 
     [Fact]
     public void MarkForDeletion_CalledTwice_AppendsTwoSeparateEvents()
     {
-        // MarkForDeletion is not idempotent — each call appends a new event.
-        // The command handler only calls it once; this test documents the raw domain behaviour.
         var attachment = MakeFreshAttachment();
 
         attachment.MarkForDeletion();
@@ -97,7 +95,7 @@ public sealed class AttachmentDomainEventTests
 
         attachment.DomainEvents
             .OfType<AttachmentDeletedDomainEvent>()
-            .Should().HaveCount(2, because: "each MarkForDeletion call appends a new domain event");
+            .Should().HaveCount(2, because: "each MarkForDeletion call appends a fresh delete event");
     }
 
     // ── Create + MarkForDeletion — cumulative events ──────────────────────────

@@ -192,7 +192,8 @@ public sealed class Tour : AuditableEntity, IAggregateRoot
         ValidateBasePrice(basePriceAmount);
         var normalizedCurrency = ValidateAndNormalizeCurrency(currency);
         ValidateLocation(location);
-        ValidatePlaceId(placeId);
+        var effectivePlaceId = placeId == Guid.Empty ? PlaceId : placeId;
+        ValidatePlaceId(effectivePlaceId);
         ValidateCancellationPolicyHours(cancellationPolicyHours);
         ValidateAge(minAge, nameof(minAge));
         ValidateAge(ageRestriction, nameof(ageRestriction));
@@ -205,7 +206,7 @@ public sealed class Tour : AuditableEntity, IAggregateRoot
         var nameChanged = !string.Equals(Name, newName, StringComparison.Ordinal);
         var descriptionChanged = !string.Equals(Description, newDescription, StringComparison.Ordinal);
         var shortDescriptionChanged = !string.Equals(ShortDescription, newShortDescription, StringComparison.Ordinal);
-        var placeIdChanged = PlaceId != placeId;
+        var placeIdChanged = PlaceId != effectivePlaceId;
 
         Name = newName;
         Slug = newSlug;
@@ -219,7 +220,7 @@ public sealed class Tour : AuditableEntity, IAggregateRoot
         Currency = normalizedCurrency;
         Location = location;
         MeetingPoint = meetingPoint;
-        PlaceId = placeId;
+        PlaceId = effectivePlaceId;
         IsChildFriendly = isChildFriendly;
         IsAccessible = isAccessible;
         AgeRestriction = ageRestriction;

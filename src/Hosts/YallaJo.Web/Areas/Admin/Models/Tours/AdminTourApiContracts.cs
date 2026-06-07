@@ -60,3 +60,16 @@ public sealed record TourRowVersionApiRequest(byte[] RowVersion);
 public sealed record RejectTourApiRequest(byte[] RowVersion, string Reason);
 
 public sealed record SuspendTourApiRequest(byte[] RowVersion, string Reason);
+
+// ── §8.4 moderation extras (no optimistic-concurrency token on these endpoints) ──
+// PATCH /tours/admin/{id}/feature
+public sealed record ToggleTourFeaturedApiRequest(bool IsFeatured);
+
+// POST /tours/proposals/{id}/approve
+public sealed record ApproveTourProposalApiRequest(bool IsExclusive);
+
+// POST /tours/proposals/{id}/reject  and  POST /tours/packages/{id}/reject
+public sealed record RejectReasonApiRequest(string Reason);
+
+// POST /tours/{tourId}/guide-offerings/{guideId}/suspend
+public sealed record SuspendOfferingApiRequest(string Reason);

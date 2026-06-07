@@ -334,6 +334,14 @@
                 </a>
             </li>
         </permission>
+
+        <permission require="@WebPermission.Batch.Read">
+            <li class="nav-item">
+                <a class="@Active("Growth")" asp-area="Admin" asp-controller="Growth" asp-action="Index">
+                    <i class="bi bi-graph-up-arrow fa-fw me-2"></i>Growth tools
+                </a>
+            </li>
+        </permission>
     }
 
 </ul>

@@ -91,6 +91,10 @@ public sealed class ContentSeoUnitOfWorkDispatchesEventsTests
             entityType: SeoEntityType.Blog,
             entityId: Guid.CreateVersion7());
 
+        // SeoMetadata.Create raises a SeoMetadataCreatedDomainEvent; clear it so this
+        // scenario genuinely models "no aggregates raising events" (per the test name).
+        seo.ClearDomainEvents();
+
         context.SeoMetadata.Add(seo);
 
         // Act

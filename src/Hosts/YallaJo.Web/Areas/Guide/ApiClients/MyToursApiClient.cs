@@ -49,4 +49,8 @@ public sealed class MyToursApiClient
 
     public Task<ApiResult> DisablePrivateTourAsync(Guid tourId, Guid guideId, CancellationToken ct = default) =>
         _api.DeleteAsync($"{ToursBase}/{tourId}/guide-offerings/{guideId}/private-tour", ct);
+
+    // DELETE /api/v1/tours/{tourId}/guide-offerings/{guideId} — remove the whole offering
+    public Task<ApiResult> RemoveOfferingAsync(Guid tourId, Guid guideId, CancellationToken ct = default) =>
+        _api.DeleteAsync($"{ToursBase}/{tourId}/guide-offerings/{guideId}", ct);
 }

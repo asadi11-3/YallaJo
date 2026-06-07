@@ -62,3 +62,32 @@ public sealed class CreateDiscountFormVm
     [Display(Name = "Max usage count")]
     public int? MaxUsageCount { get; set; }
 }
+
+/// <summary>Edit form for an existing discount. Type/Currency/Tour are immutable after creation.</summary>
+public sealed class EditDiscountFormVm
+{
+    [Required]
+    [StringLength(100, MinimumLength = 1)]
+    [Display(Name = "Discount name")]
+    public string Name { get; set; } = string.Empty;
+
+    [StringLength(500)]
+    [Display(Name = "Description")]
+    public string? Description { get; set; }
+
+    [Range(0, 1_000_000)]
+    [Display(Name = "Discount value")]
+    public decimal DiscountValue { get; set; }
+
+    [DataType(DataType.Date)]
+    [Display(Name = "Valid from")]
+    public DateTime ValidFrom { get; set; }
+
+    [DataType(DataType.Date)]
+    [Display(Name = "Valid until")]
+    public DateTime? ValidUntil { get; set; }
+
+    [Range(1, 100_000)]
+    [Display(Name = "Max usage count")]
+    public int? MaxUsageCount { get; set; }
+}

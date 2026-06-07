@@ -81,6 +81,30 @@ public sealed class AdminToursFacade
     public Task<ApiResult> ReinstateAsync(Guid id, CancellationToken ct = default)
         => WithRowVersion(id, rv => _api.ReinstateAsync(id, rv, ct), "Could not reinstate the tour.", ct);
 
+    // ── §8.4 moderation extras (no optimistic-concurrency token required) ─────────
+
+    public Task<ApiResult> FeatureAsync(Guid id, bool isFeatured, CancellationToken ct = default)
+        => Normalize(_api.FeatureAsync(id, isFeatured, ct),
+            isFeatured ? "Could not feature the tour." : "Could not unfeature the tour.");
+
+    public Task<ApiResult> ApproveProposalAsync(Guid id, bool isExclusive, CancellationToken ct = default)
+        => Normalize(_api.ApproveProposalAsync(id, isExclusive, ct), "Could not approve the proposal.");
+
+    public Task<ApiResult> RejectProposalAsync(Guid id, string reason, CancellationToken ct = default)
+        => Normalize(_api.RejectProposalAsync(id, reason, ct), "Could not reject the proposal.");
+
+    public Task<ApiResult> ApprovePackageAsync(Guid id, CancellationToken ct = default)
+        => Normalize(_api.ApprovePackageAsync(id, ct), "Could not approve the package.");
+
+    public Task<ApiResult> RejectPackageAsync(Guid id, string reason, CancellationToken ct = default)
+        => Normalize(_api.RejectPackageAsync(id, reason, ct), "Could not reject the package.");
+
+    public Task<ApiResult> SuspendOfferingAsync(Guid tourId, Guid guideId, string reason, CancellationToken ct = default)
+        => Normalize(_api.SuspendOfferingAsync(tourId, guideId, reason, ct), "Could not suspend the guide offering.");
+
+    public Task<ApiResult> ReinstateOfferingAsync(Guid tourId, Guid guideId, CancellationToken ct = default)
+        => Normalize(_api.ReinstateOfferingAsync(tourId, guideId, ct), "Could not reinstate the guide offering.");
+
 
     private async Task<ApiResult> WithRowVersion(
         Guid id, Func<byte[], Task<ApiResult>> mutate, string fallback, CancellationToken ct)

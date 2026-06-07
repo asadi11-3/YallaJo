@@ -125,6 +125,9 @@ public static class WebPermission
         public const string Read   = "Permission.SeoMetadata.Read";
         public const string Create = "Permission.SeoMetadata.Create";
         public const string Update = "Permission.SeoMetadata.Update";
+
+        // Soft-delete SEO metadata by id. Mirrors backend ContentSeoFeatures.SeoMetadata + AppAction.Delete.
+        public const string Delete = "Permission.SeoMetadata.Delete";
     }
 
     public static class Sitemap
@@ -223,6 +226,10 @@ public static class WebPermission
         public const string Create = "Permission.ProviderPaymentMethod.Create";
         public const string Update = "Permission.ProviderPaymentMethod.Update";
         public const string Delete = "Permission.ProviderPaymentMethod.Delete";
+
+        // Admin/KYC: confirm or revoke verification of a provider's payout method.
+        // Mirrors backend FinanceFeatures.ProviderPaymentMethod + AppAction.Verify.
+        public const string Verify = "Permission.ProviderPaymentMethod.Verify";
     }
 
     // ── AdminBookingDashboard (Permission.AdminBookingDashboard.*) ─────────────────
@@ -254,6 +261,11 @@ public static class WebPermission
         public const string Create = "Permission.Package.Create";
         public const string Update = "Permission.Package.Update";
         public const string Delete = "Permission.Package.Delete";
+
+        // Admin review of provider-submitted packages (WS-5a). Mirrors backend
+        // ContentToursFeatures.Package + AppAction.Approve/Reject.
+        public const string Approve = "Permission.Package.Approve";
+        public const string Reject  = "Permission.Package.Reject";
     }
 
     // ── TourGuide (assign guides to a tour) ───────────────────────────────────
@@ -480,6 +492,7 @@ public static class WebPermission
         public const string Reject    = "Permission.Tour.Reject";
         public const string Suspend   = "Permission.Tour.Suspend";
         public const string Reinstate = "Permission.Tour.Reinstate";
+        public const string Feature   = "Permission.Tour.Feature";
     }
 
     // ── TourPricingTier (provider tour pricing management) ─────────────────────
@@ -664,9 +677,14 @@ public static class WebPermission
 
     public static class TourProposal
     {
-        public const string Read   = "Permission.TourProposal.Read";
-        public const string Create = "Permission.TourProposal.Create";
-        public const string Submit = "Permission.TourProposal.Submit";
+        public const string Read    = "Permission.TourProposal.Read";
+        public const string Create  = "Permission.TourProposal.Create";
+        public const string Submit  = "Permission.TourProposal.Submit";
+
+        // Admin review of guide-submitted tour proposals. Mirrors backend
+        // ContentToursFeatures.TourProposal + AppAction.Approve/Reject.
+        public const string Approve = "Permission.TourProposal.Approve";
+        public const string Reject  = "Permission.TourProposal.Reject";
     }
 
     public static class GuideAgency
@@ -743,6 +761,10 @@ public static class WebPermission
     {
         public const string Read   = "Permission.AccessibilityFeature.Read";
         public const string Update = "Permission.AccessibilityFeature.Update";
+
+        // Admin: delete a single accessibility-feature assignment row.
+        // Mirrors backend ContentPlacesFeatures.AccessibilityFeature + AppAction.Delete.
+        public const string Delete = "Permission.AccessibilityFeature.Delete";
     }
 
     // ── AuditLog (admin audit trail) ───────────────────────────────────────────
@@ -758,6 +780,29 @@ public static class WebPermission
     {
         public const string Read    = "Permission.Batch.Read";
         public const string Refresh = "Permission.Batch.Refresh";
+    }
+
+    // ── §8.8 Growth tools (Analytics admin) — mirror Permission.{Feature}.{Action} ──
+    public static class SeasonalityRule
+    {
+        public const string Create = "Permission.SeasonalityRule.Create";
+        public const string Delete = "Permission.SeasonalityRule.Delete";
+    }
+
+    public static class HolidayCalendar
+    {
+        public const string Create = "Permission.HolidayCalendar.Create";
+    }
+
+    public static class Photogenic
+    {
+        public const string Update = "Permission.Photogenic.Update";
+    }
+
+    public static class Experiment
+    {
+        public const string Create = "Permission.Experiment.Create";
+        public const string Update = "Permission.Experiment.Update";
     }
 
     public static class BoostPackage

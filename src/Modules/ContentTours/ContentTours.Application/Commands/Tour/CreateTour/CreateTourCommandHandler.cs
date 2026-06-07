@@ -34,6 +34,13 @@ public sealed class CreateTourCommandHandler(
     {
         try
         {
+            if (currentUser.UserId is null)
+            {
+                return Result<CreateTourResult>.Failure(
+                    Error.Unauthorized("Authentication is required."),
+                    Outcome.Unauthorized);
+            }
+
             var userId = currentUser.UserId!.Value;
 
             if (!await providerStatusService.IsApprovedProviderAsync(userId, cancellationToken)

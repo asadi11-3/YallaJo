@@ -95,6 +95,34 @@ public sealed class PlacesFacade
             await _api.VerifyAsync(id, verified, ct),
             verified ? "Could not verify place." : "Could not unverify place.");
 
+    // §8.5 — replace a place's accessibility features (batch).
+    public async Task<ApiResult> SetAccessibilityAsync(
+        Guid id, IReadOnlyList<AccessibilityFeatureFormItem> items, CancellationToken ct = default)
+    {
+        if (id == Guid.Empty)
+        {
+            return ApiResult.Fail(400, "A valid place is required.");
+        }
+
+        // Drop blank rows (the editor may submit empty trailing rows).
+        var payload = (items ?? [])
+            .Where(i => !string.IsNullOrWhiteSpace(i.FeatureType) && !string.IsNullOrWhiteSpace(i.Name))
+            .Select(i => new AccessibilityFeatureItemApiRequest(
+                i.FeatureType.Trim(),
+                i.Name.Trim(),
+                string.IsNullOrWhiteSpace(i.Description) ? null : i.Description.Trim(),
+                i.IsAvailable))
+            .ToList();
+
+        return Normalize(await _api.SetAccessibilityAsync(id, payload, ct), "Could not update accessibility features.");
+    }
+
+    // §8.5 — remove a single accessibility-feature assignment row.
+    public async Task<ApiResult> RemoveAccessibilityAssignmentAsync(Guid assignmentId, CancellationToken ct = default)
+        => assignmentId == Guid.Empty
+            ? ApiResult.Fail(400, "A valid accessibility assignment is required.")
+            : Normalize(await _api.RemoveAccessibilityAssignmentAsync(assignmentId, ct), "Could not remove the accessibility feature.");
+
     private static ApiResult Normalize(ApiResult result, string fallback)
     {
         if (result.IsSuccess)         return ApiResult.Ok();

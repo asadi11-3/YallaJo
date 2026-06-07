@@ -29,7 +29,8 @@ public sealed class AddBusinessAmenityCommandHandler(
         if (business is null)
         {
             return Result<BusinessAmenityDto>.Failure(
-                Error.NotFound("Business.NotFound", "Business not found"));
+                new Error("Business.NotFound", "Business not found"),
+                Outcome.NotFound);
         }
 
         if (business.OwnerId != request.ActingUserId)

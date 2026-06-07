@@ -130,7 +130,7 @@ public sealed class AccountsAccessibilityReviewsSmokeTests
         public Task<ApiResult> PatchAsync(string path, object? body = null, CancellationToken ct = default) => Task.FromResult(ApiResult.Fail(501));
         public Task<ApiResult<T>> PutAsync<T>(string path, object? body = null, CancellationToken ct = default) => Task.FromResult(ApiResult<T>.Fail(501));
         public Task<ApiResult> PutAsync(string path, object? body = null, CancellationToken ct = default) => Task.FromResult(ApiResult.Fail(501));
-        public Task<ApiResult<T>> PutFileAsync<T>(string path, Stream s, string f, string c, string ff = "file", CancellationToken ct = default) => Task.FromResult(ApiResult<T>.Fail(501));
+        public Task<ApiResult<T>> PutFileAsync<T>(string path, Stream s, string f, string c, IReadOnlyDictionary<string, string>? formFields = null, string ff = "file", CancellationToken ct = default) => Task.FromResult(ApiResult<T>.Fail(501));
         public Task<ApiResult<T>> PostFileAsync<T>(string path, Stream s, string f, string c, IReadOnlyDictionary<string, string>? ff = null, string fn = "file", CancellationToken ct = default) => Task.FromResult(ApiResult<T>.Fail(501));
         public Task<ApiResult> DeleteAsync(string path, CancellationToken ct = default) => Task.FromResult(ApiResult.Fail(501));
         public Task<ApiResult> DeleteAsync(string path, object? body, CancellationToken ct = default) => Task.FromResult(ApiResult.Fail(501));

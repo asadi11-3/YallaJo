@@ -35,4 +35,34 @@ public sealed class PaymentsController : BaseController
 
         return View(result.Data);
     }
+
+    // ── POST /admin/finance/{id}/refund ───────────────────────────────────────────────
+    // §8.7 — standalone refund of a completed Booking payment. Financial action, so it is
+    // gated by the dedicated Refund.Create permission (the page-level attribute only
+    // grants AdminFinanceDashboard.Read).
+    [HttpPost("admin/finance/{id:guid}/refund")]
+    [ValidateAntiForgeryToken]
+    [RequirePermission(WebPermission.Refund.Create)]
+    public async Task<IActionResult> Refund(
+        Guid id,
+        decimal amount,
+        string? currency,
+        string? reason,
+        CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(reason))
+        {
+            SetError("A refund reason is required.");
+            return RedirectToAction(nameof(Index));
+        }
+
+        var result = await _payments.RefundAsync(id, amount, currency, reason, ct);
+        if (GuardSignOut(result) is { } signOut)
+        {
+            return signOut;
+        }
+
+        SetFlash(result, "Refund issued.", "Could not process the refund.");
+        return RedirectToAction(nameof(Index));
+    }
 }

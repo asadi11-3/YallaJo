@@ -204,6 +204,9 @@ PublishScripts/
 # literally named "Packages" and must NOT be caught by the NuGet packages rule above.
 !src/Hosts/YallaJo.Web/Areas/Public/Models/Packages/
 !src/Hosts/YallaJo.Web/Areas/Public/Models/Packages/**
+# Same collision for the provider tour-packages view models.
+!src/Hosts/YallaJo.Web/Areas/Provider/Models/Packages/
+!src/Hosts/YallaJo.Web/Areas/Provider/Models/Packages/**
 # Uncomment if necessary however generally it will be regenerated when needed
 #!**/[Pp]ackages/repositories.config
 # NuGet v3's project.json files produces more ignorable files

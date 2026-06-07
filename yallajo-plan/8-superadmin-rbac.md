@@ -7,7 +7,7 @@
 > **Code area:** RBAC has **no dedicated code area** — it is hosted under the **`Admin`** area (`/admin/security/*`) but gated to **SuperAdmin** via `WebPermission.Security.Manage` (stricter than the platform `Admin` policy). All panes are `NoStore`; every mutation is `[ValidateAntiForgeryToken]` + PRG.
 > **No Webestica template page maps to the RBAC console** — built by you. It is a single console with Roles / Users / Audit panes.
 
-**Status legend:** ✅ Wire · ♻️ Repurpose · ⏭️ Skip · 🟥 USER builds (no template page)
+**Status legend:** ✅ Wire · ♻️ Repurpose · ⏭️ Skip ·  🟥 Build Using Design skills (match the template theme)
 
 **Shared shell:** top bar = global search + language switcher + notification bell (`GET /notifications/unread-count` `AJAX⟳`) + avatar menu (`GET /accounts/profile`). Nav driver = `GET /security/me`.
 **Load tags:** `SSR` / `AJAX` / `AJAX⟳` / `AJAX↑`.
@@ -18,7 +18,7 @@
 
 | # | Page | Template | Redirects to |
 |---|------|----------|--------------|
-| 9 | RBAC Console (Roles / Users / Audit) | 🟥 USER builds | role row → role detail · user row → user detail · activate inline · audit → audit-logs |
+| 9 | RBAC Console (Roles / Users / Audit) |  🟥 Build Using Design skills (match the template theme)| role row → role detail · user row → user detail · activate inline · audit → audit-logs |
 
 ---
 

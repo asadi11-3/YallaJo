@@ -71,6 +71,23 @@ public sealed class SeoMetadataFacade
         return Normalize(_api.UpsertAsync(request, ct), "Could not save the SEO metadata.");
     }
 
+    // §8.10 — soft-delete SEO metadata by id.
+    public Task<ApiResult> DeleteAsync(Guid id, CancellationToken ct = default)
+        => id == Guid.Empty
+            ? Task.FromResult(ApiResult.Fail(400, "A valid SEO metadata entry is required."))
+            : NormalizePlain(_api.DeleteAsync(id, ct), "Could not delete the SEO metadata.");
+
+    private static async Task<ApiResult> NormalizePlain(Task<ApiResult> call, string fallback)
+    {
+        var result = await call;
+        if (result.IsSuccess) return ApiResult.Ok();
+        if (result.IsUnauthorized) return ApiResult.ForceSignOut();
+        if (result.IsNotFound) return ApiResult.Fail(404, "The SEO metadata was not found.");
+        if (result.IsConflict) return ApiResult.Fail(409, "This change conflicts with the current state. Please reload and try again.");
+        if (result.IsValidationError && result.ValidationErrors is not null) return ApiResult.Invalid(result.ValidationErrors);
+        return ApiResult.Fail(result.StatusCode, result.Error ?? fallback);
+    }
+
     private static async Task<ApiResult> Normalize<T>(Task<ApiResult<T>> call, string fallback)
     {
         var result = await call;

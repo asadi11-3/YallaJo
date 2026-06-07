@@ -31,4 +31,12 @@ public sealed class OutboxApiClient
 
     public Task<ApiResult> ReplayAsync(string module, Guid id, CancellationToken ct = default)
         => _api.PostAsync($"{Base}/dead-letters/{module}/{id:D}/replay", null, ct);
+
+    // §8.12 — POST /api/v1/ops/content-tours/backfill/tour-snapshots?batchSize={n}
+    // Re-emits enriched TourApproved events to repopulate Booking snapshots.
+    public Task<ApiResult> BackfillTourSnapshotsAsync(int batchSize, CancellationToken ct = default)
+        => _api.PostAsync(
+            $"/api/v1/ops/content-tours/backfill/tour-snapshots?batchSize={batchSize.ToString(CultureInfo.InvariantCulture)}",
+            null,
+            ct);
 }

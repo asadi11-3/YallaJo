@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using YallaJo.Web.Areas.Guide.Facades;
 using YallaJo.Web.Areas.Guide.Models.Profile;
 using YallaJo.Web.Areas.Guide.Shared;
+using YallaJo.Web.Infrastructure.Authorization;
 using YallaJo.Web.Infrastructure.Mvc;
 
 namespace YallaJo.Web.Areas.Guide.Controllers;
@@ -118,6 +119,29 @@ public sealed class ProfileController : BaseController
         await using var stream = file!.OpenReadStream();
         var result = await _profile.UploadCoverAsync(stream, file.FileName, file.ContentType, ct);
         return HandleMutation(result, "Cover image updated.");
+    }
+
+    // POST /guide/profile/deactivate — self-deactivate the guide profile (DELETE /guides/me).
+    [HttpPost("guide/profile/deactivate")]
+    [ValidateAntiForgeryToken]
+    [RequirePermission(WebPermission.TourGuideProfile.DeleteOwn)]
+    public async Task<IActionResult> Deactivate(CancellationToken ct = default)
+    {
+        var result = await _profile.DeactivateAsync(ct);
+        if (GuardSignOut(result) is { } signOut)
+        {
+            return signOut;
+        }
+
+        if (!result.IsSuccess)
+        {
+            SetError(result.Error ?? "Could not deactivate your guide profile.");
+            return RedirectToAction(nameof(Index));
+        }
+
+        // Profile deactivated — the user is no longer an active guide; leave the dashboard.
+        SetSuccess("Your guide profile has been deactivated.");
+        return Redirect("~/accounts");
     }
 
     private IActionResult HandleMutation(

@@ -104,6 +104,15 @@ public sealed class LifecycleController : Controller
         return RedirectAfter(userId, result, "Account reassigned. Activation email queued.");
     }
 
+    // §8.13 — force-revoke all active sessions for a user.
+    [HttpPost("admin/users/{userId:guid}/revoke-sessions")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> RevokeSessions(Guid userId, CancellationToken ct)
+    {
+        var result = await _facade.RevokeSessionsAsync(userId, ct);
+        return RedirectAfter(userId, result, "All sessions revoked. The user will need to sign in again.");
+    }
+
     private IActionResult RedirectAfter(Guid userId, Infrastructure.Api.Contracts.ApiResult result, string successMessage)
     {
         if (result.RequireSignOut)

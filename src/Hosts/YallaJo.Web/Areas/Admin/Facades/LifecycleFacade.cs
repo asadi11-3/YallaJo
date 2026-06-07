@@ -56,6 +56,10 @@ public sealed class LifecycleFacade
         return Map(result, "Could not reassign the account.");
     }
 
+    // §8.13 — force-revoke all of a user's active sessions and refresh tokens.
+    public async Task<ApiResult> RevokeSessionsAsync(Guid userId, CancellationToken ct = default)
+        => Map(await _client.RevokeSessionsAsync(userId, ct), "Could not revoke the user's sessions.");
+
     /// <summary>
     /// Phase 5B — single shared error mapper so every admin lifecycle
     /// verb surfaces consistent admin-facing copy. The backend

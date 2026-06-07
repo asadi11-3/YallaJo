@@ -66,6 +66,29 @@ public sealed class CategoriesFacade
     public async Task<ApiResult> ActivateAsync(Guid id, CancellationToken ct = default)
         => await NormalizeAsync(await _api.ActivateAsync(id, ct), "Could not activate category.", ct);
 
+    // §8.9 — restore a soft-deleted category.
+    public async Task<ApiResult> RestoreAsync(Guid id, CancellationToken ct = default)
+        => id == Guid.Empty
+            ? ApiResult.Fail(400, "A valid category is required.")
+            : await NormalizeAsync(await _api.RestoreAsync(id, ct), "Could not restore the category.", ct);
+
+    // §8.9 — batch sort-order update. Pairs ids[i] with sortOrders[i].
+    public async Task<ApiResult> ReorderAsync(IReadOnlyList<Guid> ids, IReadOnlyList<int> sortOrders, CancellationToken ct = default)
+    {
+        if (ids is null || ids.Count == 0 || sortOrders is null || ids.Count != sortOrders.Count)
+        {
+            return ApiResult.Fail(400, "Invalid reorder request.");
+        }
+
+        var request = new
+        {
+            sortOrders = ids
+                .Select((id, idx) => new { categoryId = id, sortOrder = sortOrders[idx] })
+                .ToList()
+        };
+        return await NormalizeAsync(await _api.ReorderAsync(request, ct), "Could not reorder the categories.", ct);
+    }
+
     // Evicts the shared "lookups" output-cache tag whenever a write succeeds, so
     // any cached anonymous/public lookup reads reflect the change immediately.
     private async Task<ApiResult> NormalizeAsync(ApiResult result, string fallback, CancellationToken ct)

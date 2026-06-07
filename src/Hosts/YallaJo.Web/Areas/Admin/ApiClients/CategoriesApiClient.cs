@@ -40,4 +40,12 @@ public sealed class CategoriesApiClient
 
     public Task<ApiResult> ActivateAsync(Guid id, CancellationToken ct = default)
         => _api.PatchAsync($"/api/v1/content-core/categories/{id}/activate", null, ct);
+
+    // §8.9 — PATCH /categories/{id}/restore (restore a soft-deleted category).
+    public Task<ApiResult> RestoreAsync(Guid id, CancellationToken ct = default)
+        => _api.PatchAsync($"/api/v1/content-core/categories/{id}/restore", null, ct);
+
+    // §8.9 — PUT /categories/reorder (batch sort-order update).
+    public Task<ApiResult> ReorderAsync(object request, CancellationToken ct = default)
+        => _api.PutAsync("/api/v1/content-core/categories/reorder", request, ct);
 }

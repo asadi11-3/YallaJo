@@ -32,7 +32,14 @@ public sealed class CreateBlogCommandHandler(
     {
         try
         {
-                        // ── Resolve source language ──────────────────────────────────────
+            if (currentUser.UserId is null)
+            {
+                return Result.Failure<CreateBlogResult>(
+                    new Error("Auth.UserIdMissing", "Authenticated user id is required to create a blog."),
+                    Outcome.Unauthorized);
+            }
+
+            // ── Resolve source language ──────────────────────────────────────
             var sourceLanguageCode = (request.SourceLanguageCode ?? string.Empty)
                 .Trim()
                 .ToLowerInvariant();
@@ -83,7 +90,7 @@ public sealed class CreateBlogCommandHandler(
             var utcNow = DateTime.UtcNow;
             var readTimeMinutes = EstimateReadTimeMinutes(request.Content);
 
-            var authorId = currentUser.UserId!.Value;
+            var authorId = currentUser.UserId.Value;
 
             var creatorProfile = await creatorProfileRepository
                 .GetByUserIdAsync(authorId, cancellationToken)

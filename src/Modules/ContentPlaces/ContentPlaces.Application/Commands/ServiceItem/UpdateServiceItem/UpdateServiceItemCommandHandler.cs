@@ -24,6 +24,10 @@ public sealed class UpdateServiceItemCommandHandler(
         UpdateServiceItemCommand request,
         CancellationToken cancellationToken)
     {
+        if (currentUser.UserId is null)
+            return Result.Failure(
+                Error.Unauthorized("Authentication required."), Outcome.Unauthorized);
+
         var item = await serviceItemRepository.GetByIdAsync(
             request.Id, cancellationToken, asNoTracking: false);
 
@@ -38,7 +42,9 @@ public sealed class UpdateServiceItemCommandHandler(
             return Result.Failure(
                 new Error("Business.NotFound", "Business not found."), Outcome.NotFound);
 
-        if (business.OwnerId != currentUser.UserId!.Value)
+        var isAdminTier = AppRoles.HighestPrivilegeLevel(currentUser.Roles) >= RolePrivilegeLevel.Admin;
+
+        if (!isAdminTier && business.OwnerId != currentUser.UserId.Value)
             return Result.Failure(
                 Error.Forbidden("You do not own this business."), Outcome.Forbidden);
 

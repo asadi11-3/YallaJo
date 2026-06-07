@@ -37,6 +37,29 @@ public sealed class GuidesFacade
     public Task<ApiResult> ReinstateAsync(Guid guideId, CancellationToken ct)
         => Normalize(_api.ReinstateAsync(guideId, ct), "Could not reinstate the tour guide.");
 
+    // §8.14 — update a guide profile.
+    public Task<ApiResult> UpdateAsync(AdminEditGuideVm form, CancellationToken ct)
+    {
+        if (form.Id == Guid.Empty)
+        {
+            return Task.FromResult(ApiResult.Fail(400, "A valid guide is required."));
+        }
+
+        var request = new AdminUpdateGuideApiRequest(
+            string.IsNullOrWhiteSpace(form.Bio) ? null : form.Bio.Trim(),
+            form.YearsOfExperience,
+            form.HasFirstAid,
+            string.IsNullOrWhiteSpace(form.MoTALicenseNumber) ? null : form.MoTALicenseNumber.Trim());
+
+        return Normalize(_api.UpdateAsync(form.Id, request, ct), "Could not update the tour guide profile.");
+    }
+
+    // §8.14 — deactivate (delete) a guide.
+    public Task<ApiResult> DeleteAsync(Guid guideId, CancellationToken ct)
+        => guideId == Guid.Empty
+            ? Task.FromResult(ApiResult.Fail(400, "A valid guide is required."))
+            : Normalize(_api.DeleteAsync(guideId, ct), "Could not deactivate the tour guide.");
+
     private static async Task<ApiResult> Normalize(Task<ApiResult> call, string fallback)
     {
         var result = await call;

@@ -121,4 +121,122 @@ public sealed class ToursController : BaseController
         SetFlash(result, "Tour reinstated.", "Could not reinstate the tour.");
         return RedirectToAction(nameof(Details), new { id });
     }
+
+    // ── POST /admin/tours/{id}/feature ──────────────────────────────────────────────
+    [HttpPost("admin/tours/{id:guid}/feature")]
+    [ValidateAntiForgeryToken]
+    [RequirePermission(WebPermission.Tour.Feature)]
+    public async Task<IActionResult> Feature(Guid id, bool isFeatured, CancellationToken ct)
+    {
+        var result = await _facade.FeatureAsync(id, isFeatured, ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+
+        SetFlash(
+            result,
+            isFeatured ? "Tour featured." : "Tour unfeatured.",
+            isFeatured ? "Could not feature the tour." : "Could not unfeature the tour.");
+        return RedirectToAction(nameof(Details), new { id });
+    }
+
+    // ── POST /admin/tours/proposals/{id}/approve ────────────────────────────────────
+    [HttpPost("admin/tours/proposals/{id:guid}/approve")]
+    [ValidateAntiForgeryToken]
+    [RequirePermission(WebPermission.TourProposal.Approve)]
+    public async Task<IActionResult> ApproveProposal(Guid id, bool isExclusive, CancellationToken ct)
+    {
+        var result = await _facade.ApproveProposalAsync(id, isExclusive, ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+
+        SetFlash(result, "Proposal approved and tour created.", "Could not approve the proposal.");
+        return RedirectToAction(nameof(Index), new { status = DefaultStatus });
+    }
+
+    // ── POST /admin/tours/proposals/{id}/reject ─────────────────────────────────────
+    [HttpPost("admin/tours/proposals/{id:guid}/reject")]
+    [ValidateAntiForgeryToken]
+    [RequirePermission(WebPermission.TourProposal.Reject)]
+    public async Task<IActionResult> RejectProposal(Guid id, string? reason, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(reason))
+        {
+            SetError("A rejection reason is required.");
+            return RedirectToAction(nameof(Index), new { status = DefaultStatus });
+        }
+
+        var result = await _facade.RejectProposalAsync(id, reason.Trim(), ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+
+        SetFlash(result, "Proposal rejected.", "Could not reject the proposal.");
+        return RedirectToAction(nameof(Index), new { status = DefaultStatus });
+    }
+
+    // ── POST /admin/tours/packages/{id}/approve ─────────────────────────────────────
+    [HttpPost("admin/tours/packages/{id:guid}/approve")]
+    [ValidateAntiForgeryToken]
+    [RequirePermission(WebPermission.Package.Approve)]
+    public async Task<IActionResult> ApprovePackage(Guid id, Guid? tourId, CancellationToken ct)
+    {
+        var result = await _facade.ApprovePackageAsync(id, ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+
+        SetFlash(result, "Package approved.", "Could not approve the package.");
+        return tourId is { } tid
+            ? RedirectToAction(nameof(Details), new { id = tid })
+            : RedirectToAction(nameof(Index), new { status = DefaultStatus });
+    }
+
+    // ── POST /admin/tours/packages/{id}/reject ──────────────────────────────────────
+    [HttpPost("admin/tours/packages/{id:guid}/reject")]
+    [ValidateAntiForgeryToken]
+    [RequirePermission(WebPermission.Package.Reject)]
+    public async Task<IActionResult> RejectPackage(Guid id, string? reason, Guid? tourId, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(reason))
+        {
+            SetError("A rejection reason is required.");
+            return tourId is { } tidErr
+                ? RedirectToAction(nameof(Details), new { id = tidErr })
+                : RedirectToAction(nameof(Index), new { status = DefaultStatus });
+        }
+
+        var result = await _facade.RejectPackageAsync(id, reason.Trim(), ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+
+        SetFlash(result, "Package rejected.", "Could not reject the package.");
+        return tourId is { } tid
+            ? RedirectToAction(nameof(Details), new { id = tid })
+            : RedirectToAction(nameof(Index), new { status = DefaultStatus });
+    }
+
+    // ── POST /admin/tours/{tourId}/guide-offerings/{guideId}/suspend ─────────────────
+    [HttpPost("admin/tours/{tourId:guid}/guide-offerings/{guideId:guid}/suspend")]
+    [ValidateAntiForgeryToken]
+    [RequirePermission(WebPermission.GuideOffering.Suspend)]
+    public async Task<IActionResult> SuspendOffering(Guid tourId, Guid guideId, string? reason, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(reason))
+        {
+            SetError("A suspension reason is required.");
+            return RedirectToAction(nameof(Details), new { id = tourId });
+        }
+
+        var result = await _facade.SuspendOfferingAsync(tourId, guideId, reason.Trim(), ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+
+        SetFlash(result, "Guide offering suspended.", "Could not suspend the guide offering.");
+        return RedirectToAction(nameof(Details), new { id = tourId });
+    }
+
+    // ── POST /admin/tours/{tourId}/guide-offerings/{guideId}/reinstate ───────────────
+    [HttpPost("admin/tours/{tourId:guid}/guide-offerings/{guideId:guid}/reinstate")]
+    [ValidateAntiForgeryToken]
+    [RequirePermission(WebPermission.GuideOffering.Reinstate)]
+    public async Task<IActionResult> ReinstateOffering(Guid tourId, Guid guideId, CancellationToken ct)
+    {
+        var result = await _facade.ReinstateOfferingAsync(tourId, guideId, ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+
+        SetFlash(result, "Guide offering reinstated.", "Could not reinstate the guide offering.");
+        return RedirectToAction(nameof(Details), new { id = tourId });
+    }
 }

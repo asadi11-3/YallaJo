@@ -197,7 +197,9 @@ public sealed class LanguageActivatedIntegrationEventHandler(
                         "Translation orchestrator returned no translated set for Tour {TourId} " +
                         "(language={LanguageCode}). Aborting backfill so the inbox is not marked processed.",
                         candidate.TourId, targetCodes[0]);
-                    return (totalTranslated, Completed: false);
+                    throw new InvalidOperationException(
+                        $"Translation orchestrator returned no translated set for Tour '{candidate.TourId}' " +
+                        $"and language '{targetCodes[0]}'.");
                 }
 
                 dbContext.TourTranslations.Add(TourTranslation.Create(

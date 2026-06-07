@@ -4,6 +4,7 @@ using YallaJo.Web.Areas.Guide.Facades;
 using YallaJo.Web.Areas.Guide.Models.MyTours;
 using YallaJo.Web.Areas.Guide.Shared;
 using YallaJo.Web.Infrastructure.Api.Contracts;
+using YallaJo.Web.Infrastructure.Authorization;
 using YallaJo.Web.Infrastructure.Mvc;
 
 namespace YallaJo.Web.Areas.Guide.Controllers;
@@ -107,6 +108,31 @@ public sealed class MyToursController : BaseController
     {
         var result = await _facade.DisablePrivateTourAsync(tourId, ct);
         return HandleMutation(result, tourId, "Private tour disabled.");
+    }
+
+    // POST /guide/tours/{tourId}/offering/remove — remove the guide's whole offering on this tour.
+    [HttpPost("guide/tours/{tourId:guid}/offering/remove")]
+    [ValidateAntiForgeryToken]
+    [RequirePermission(WebPermission.GuideOffering.Delete)]
+    public async Task<IActionResult> RemoveOffering(Guid tourId, CancellationToken ct = default)
+    {
+        var result = await _facade.RemoveOfferingAsync(tourId, ct);
+        if (GuardSignOut(result) is { } signOut)
+        {
+            return signOut;
+        }
+
+        if (result.IsSuccess)
+        {
+            SetSuccess("Offering removed.");
+        }
+        else
+        {
+            SetError(result.Error ?? "Could not remove the offering.");
+        }
+
+        // The offering no longer exists — return to the tours list, not the offering page.
+        return RedirectToAction(nameof(Index));
     }
 
     private IActionResult HandleMutation(ApiResult result, Guid tourId, string successMessage)

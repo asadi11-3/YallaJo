@@ -37,8 +37,9 @@ public sealed class GuideProfileFacade
         var langsTask = SafeLanguagesAsync(ct);
         await Task.WhenAll(specsTask, langsTask);
 
-        var allSpecs = specsTask.Result;
-        var allLangs = langsTask.Result;
+        // UI-PERF-R1: await the already-completed tasks (no .Result).
+        var allSpecs = await specsTask;
+        var allLangs = await langsTask;
 
         var langNameById = allLangs.ToDictionary(l => l.Id, l => l.Name);
         var specNameById = allSpecs.ToDictionary(s => s.Id, s => s.Name);
@@ -143,6 +144,9 @@ public sealed class GuideProfileFacade
         return await _api.AddSpecializationAsync(
             guideId.Value, new AddTourGuideSpecializationRequest(specializationId), ct);
     }
+
+    public Task<ApiResult> DeactivateAsync(CancellationToken ct = default)
+        => _api.DeactivateAsync(ct);
 
     public Task<ApiResult> UploadAvatarAsync(
         Stream fileStream, string fileName, string contentType, CancellationToken ct = default)

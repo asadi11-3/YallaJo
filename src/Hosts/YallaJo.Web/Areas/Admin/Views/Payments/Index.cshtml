@@ -1,12 +1,23 @@
 @model YallaJo.Web.Areas.Admin.Models.Payments.PaymentsVm
 @using YallaJo.Web.Areas.Admin.Models.Payments
+@using YallaJo.Web.Infrastructure.Authorization
+@inject YallaJo.Web.Infrastructure.Identity.ICurrentUser CurrentUser
 @{
     ViewData["Title"] = "Earnings";
     ViewData["AdminNav"] = "Finance";
+    var canRefund = CurrentUser.HasPermission(WebPermission.Refund.Create);
 }
 @functions {
     static string Money(decimal amount, string? currency)
         => string.IsNullOrWhiteSpace(currency) ? amount.ToString("N2") : $"{amount:N2} {currency}";
+
+    // §8.7 — a payment is refundable when it has settled and still has a refundable balance.
+    static bool IsRefundable(PaymentRowVm p)
+    {
+        var status = p.Status?.Trim().ToLowerInvariant();
+        var settled = status is "succeeded" or "completed" or "captured" or "partiallyrefunded" or "partially refunded";
+        return settled && p.Amount - p.RefundedTotal > 0m;
+    }
 }
 
 <div class="d-sm-flex justify-content-between align-items-center mb-4">
@@ -114,6 +125,10 @@
                             <th scope="col" class="text-end">Refunded</th>
                             <th scope="col">Gateway</th>
                             <th scope="col">Created</th>
+                            @if (canRefund)
+                            {
+                                <th scope="col" class="text-end">Actions</th>
+                            }
                         </tr>
                     </thead>
                     <tbody>
@@ -130,11 +145,81 @@
                                 <td class="text-end font-data">@(p.RefundedTotal > 0 ? Money(p.RefundedTotal, p.Currency) : "-")</td>
                                 <td>@p.GatewayProvider</td>
                                 <td class="font-data small text-secondary">@p.CreatedAt.ToString("g")</td>
+                                @if (canRefund)
+                                {
+                                    <td class="text-end">
+                                        @if (IsRefundable(p))
+                                        {
+                                            <button type="button" class="btn btn-sm btn-outline-danger"
+                                                    data-bs-toggle="modal" data-bs-target="#refundModal-@p.Id.ToString("N")">
+                                                <i class="fa-solid fa-rotate-left fa-fw" aria-hidden="true"></i>
+                                                <span>Refund</span>
+                                            </button>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-secondary small">&mdash;</span>
+                                        }
+                                    </td>
+                                }
                             </tr>
                         }
                     </tbody>
                 </table>
             </div>
+
+            @* §8.7 — per-row refund modals (rendered only for refundable rows the admin can act on) *@
+            @if (canRefund)
+            {
+                foreach (var p in Model.Payments.Where(IsRefundable))
+                {
+                    var modalId = $"refundModal-{p.Id:N}";
+                    var labelId = $"refundLabel-{p.Id:N}";
+                    var maxRefund = p.Amount - p.RefundedTotal;
+                    <div class="modal fade" id="@modalId" tabindex="-1" aria-labelledby="@labelId" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content">
+                                <form method="post" asp-area="Admin" asp-controller="Payments" asp-action="Refund"
+                                      asp-route-id="@p.Id" onsubmit="return confirm('Refund this payment? This action cannot be undone.');">
+                                    @Html.AntiForgeryToken()
+                                    <div class="modal-header">
+                                        <h2 class="modal-title h5 mb-0" id="@labelId">Refund payment</h2>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p class="small text-secondary">
+                                            Payment <bdi class="font-data" dir="ltr">@p.Id.ToString("D")</bdi><br />
+                                            Charged <strong>@Money(p.Amount, p.Currency)</strong>,
+                                            already refunded <strong>@Money(p.RefundedTotal, p.Currency)</strong>.
+                                            Refundable balance: <strong>@Money(maxRefund, p.Currency)</strong>.
+                                        </p>
+                                        <input type="hidden" name="currency" value="@p.Currency" />
+                                        <div class="mb-3">
+                                            <label class="form-label" for="amount-@p.Id.ToString("N")">Amount (@p.Currency)</label>
+                                            <input type="number" step="0.01" min="0.01" max="@maxRefund.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                                                   class="form-control font-data" id="amount-@p.Id.ToString("N")" name="amount"
+                                                   value="@maxRefund.ToString(System.Globalization.CultureInfo.InvariantCulture)" required />
+                                        </div>
+                                        <div class="mb-1">
+                                            <label class="form-label" for="reason-@p.Id.ToString("N")">Reason</label>
+                                            <textarea class="form-control" id="reason-@p.Id.ToString("N")" name="reason"
+                                                      rows="3" maxlength="500" required placeholder="Why is this payment being refunded?"></textarea>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                                        <button type="submit" class="btn btn-danger">
+                                            <i class="fa-solid fa-rotate-left fa-fw" aria-hidden="true"></i>
+                                            <span>Issue refund</span>
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+
             @if (Model.NextCursor is { } next)
             {
                 <div class="text-center mt-3">

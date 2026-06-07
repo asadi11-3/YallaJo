@@ -28,12 +28,18 @@ public sealed class CreateServiceItemCommandHandler(
         CancellationToken cancellationToken)
     {
         // ── IDOR: caller must own the business ────────────────────────────────
+        if (currentUser.UserId is null)
+            return Result<CreateServiceItemResult>.Failure(
+                Error.Unauthorized("Authentication required."), Outcome.Unauthorized);
+
         var business = await businessRepository.GetByIdAsync(request.BusinessId, cancellationToken);
         if (business is null)
             return Result<CreateServiceItemResult>.Failure(
                 new Error("Business.NotFound", "Business not found."), Outcome.NotFound);
 
-        if (business.OwnerId != currentUser.UserId!.Value)
+        var isAdminTier = AppRoles.HighestPrivilegeLevel(currentUser.Roles) >= RolePrivilegeLevel.Admin;
+
+        if (!isAdminTier && business.OwnerId != currentUser.UserId.Value)
             return Result<CreateServiceItemResult>.Failure(
                 Error.Forbidden("You do not own this business."), Outcome.Forbidden);
 

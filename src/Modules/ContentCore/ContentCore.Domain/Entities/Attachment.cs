@@ -108,16 +108,13 @@ public sealed class Attachment : BaseEntity, IAggregateRoot
 
     public void MarkForDeletion()
     {
-        if (IsMarkedForDeletion)
-            return;
-
         IsMarkedForDeletion = true;
 
         AddDomainEvent(new AttachmentDeletedDomainEvent(
-     Id,
-     EntityType,
-     EntityId,
-     Type,
-     Url));
+            Id,
+            EntityType,
+            EntityId,
+            Type,
+            Url));
     }
 }

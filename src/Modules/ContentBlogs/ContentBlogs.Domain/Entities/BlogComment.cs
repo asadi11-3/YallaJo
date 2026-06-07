@@ -197,18 +197,7 @@ public sealed class BlogComment : AuditableEntity, IAggregateRoot
 
         if (existing.ReactionType == reactionType)
         {
-            // Toggle: same user re-sends the same reaction type → remove it (PDF §9).
-            var removedType = existing.ReactionType;
-            _reactions.Remove(existing);
-            UpdatedAt = utcNow;
-
-            AddDomainEvent(new BlogCommentReactionChangedDomainEvent(
-                CommentId: Id,
-                BlogId: BlogId,
-                UserId: userId,
-                OldType: removedType,
-                NewType: null,
-                OccurredAtUtc: utcNow));
+            // Idempotent: same user re-sends the same reaction type → no-op.
             return;
         }
 

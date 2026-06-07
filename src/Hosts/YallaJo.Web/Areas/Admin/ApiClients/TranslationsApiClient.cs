@@ -25,4 +25,12 @@ public sealed class TranslationsApiClient
 
     public Task<ApiResult> ApproveAsync(Guid id, CancellationToken ct = default)
         => _api.PostAsync($"/api/v1/content-core/translations/{id}/approve", null, ct);
+
+    // §8.9 — POST /translations/backfill/{entityKind} (entityKind: tag | specialization).
+    public Task<ApiResult> BackfillAsync(string entityKind, CancellationToken ct = default)
+        => _api.PostAsync($"/api/v1/content-core/translations/backfill/{Uri.EscapeDataString(entityKind)}", null, ct);
+
+    // §8.9 — POST /translations/approve-batch (mark all auto-translated fields reviewed).
+    public Task<ApiResult> ApproveBatchAsync(object request, CancellationToken ct = default)
+        => _api.PostAsync("/api/v1/content-core/translations/approve-batch", request, ct);
 }

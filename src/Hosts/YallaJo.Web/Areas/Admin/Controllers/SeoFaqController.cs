@@ -95,4 +95,31 @@ public sealed class SeoFaqController : BaseController
         this.SetFlash(result, "FAQ item deleted.", "Could not delete the FAQ item.");
         return this.RedirectToAction(nameof(this.Index));
     }
+
+    // ── §8.10: batch reorder FAQ items within one entity's list ─────────────────
+    [HttpPost("admin/seo/faq/reorder")]
+    [ValidateAntiForgeryToken]
+    [RequirePermission(WebPermission.FaqItem.Update)]
+    public async Task<IActionResult> Reorder(
+        SeoEntityType entityType, Guid entityId, List<Guid> ids, List<int> sortOrders, CancellationToken ct)
+    {
+        if (ids is null || ids.Count == 0 || sortOrders is null || ids.Count != sortOrders.Count)
+        {
+            this.SetError("Invalid reorder request.");
+            return this.RedirectToAction(nameof(this.Index), new { entityType, entityId });
+        }
+
+        var items = ids
+            .Select((id, idx) => new ReorderFaqItemApi(id, sortOrders[idx]))
+            .ToList();
+
+        var result = await this._facade.ReorderAsync(entityType, entityId, items, ct);
+        if (this.GuardSignOut(result) is { } signOut)
+        {
+            return signOut;
+        }
+
+        this.SetFlash(result, "FAQ items reordered.", "Could not reorder the FAQ items.");
+        return this.RedirectToAction(nameof(this.Index), new { entityType, entityId });
+    }
 }

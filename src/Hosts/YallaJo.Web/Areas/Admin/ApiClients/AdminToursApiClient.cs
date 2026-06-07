@@ -48,4 +48,34 @@ public sealed class AdminToursApiClient
     // POST /api/v1/tours/admin/{id}/reinstate
     public Task<ApiResult> ReinstateAsync(Guid id, byte[] rowVersion, CancellationToken ct = default)
         => _api.PostAsync($"{Base}/admin/{id}/reinstate", new TourRowVersionApiRequest(rowVersion), ct);
+
+    // ── §8.4 moderation extras ───────────────────────────────────────────────────
+
+    // PATCH /api/v1/tours/admin/{id}/feature
+    public Task<ApiResult> FeatureAsync(Guid id, bool isFeatured, CancellationToken ct = default)
+        => _api.PatchAsync($"{Base}/admin/{id}/feature", new ToggleTourFeaturedApiRequest(isFeatured), ct);
+
+    // POST /api/v1/tours/proposals/{id}/approve
+    public Task<ApiResult> ApproveProposalAsync(Guid id, bool isExclusive, CancellationToken ct = default)
+        => _api.PostAsync($"{Base}/proposals/{id}/approve", new ApproveTourProposalApiRequest(isExclusive), ct);
+
+    // POST /api/v1/tours/proposals/{id}/reject
+    public Task<ApiResult> RejectProposalAsync(Guid id, string reason, CancellationToken ct = default)
+        => _api.PostAsync($"{Base}/proposals/{id}/reject", new RejectReasonApiRequest(reason), ct);
+
+    // POST /api/v1/tours/packages/{id}/approve  (no body)
+    public Task<ApiResult> ApprovePackageAsync(Guid id, CancellationToken ct = default)
+        => _api.PostAsync($"{Base}/packages/{id}/approve", body: null, ct);
+
+    // POST /api/v1/tours/packages/{id}/reject
+    public Task<ApiResult> RejectPackageAsync(Guid id, string reason, CancellationToken ct = default)
+        => _api.PostAsync($"{Base}/packages/{id}/reject", new RejectReasonApiRequest(reason), ct);
+
+    // POST /api/v1/tours/{tourId}/guide-offerings/{guideId}/suspend
+    public Task<ApiResult> SuspendOfferingAsync(Guid tourId, Guid guideId, string reason, CancellationToken ct = default)
+        => _api.PostAsync($"{Base}/{tourId}/guide-offerings/{guideId}/suspend", new SuspendOfferingApiRequest(reason), ct);
+
+    // POST /api/v1/tours/{tourId}/guide-offerings/{guideId}/reinstate  (no body)
+    public Task<ApiResult> ReinstateOfferingAsync(Guid tourId, Guid guideId, CancellationToken ct = default)
+        => _api.PostAsync($"{Base}/{tourId}/guide-offerings/{guideId}/reinstate", body: null, ct);
 }

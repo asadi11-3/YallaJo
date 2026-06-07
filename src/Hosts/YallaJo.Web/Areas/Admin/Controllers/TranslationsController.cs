@@ -135,6 +135,35 @@ public sealed class TranslationsController : Controller
         return RedirectToAction(nameof(Index), new { entityType, entityId });
     }
 
+    // §8.9 — backfill missing translations for all Tag or Specialization rows.
+    [HttpPost("admin/translations/backfill")]
+    [ValidateAntiForgeryToken]
+    [RequirePermission(WebPermission.TranslationCache.Create)]
+    public async Task<IActionResult> Backfill(string? entityKind, CancellationToken ct)
+    {
+        var result = await _facade.BackfillAsync(entityKind, ct);
+        if (result.RequireSignOut) return RedirectToLogin();
+
+        TempData[result.IsSuccess ? "Success" : "Error"] =
+            result.IsSuccess ? "Translation backfill started." : result.Error ?? "Could not start the backfill.";
+        return RedirectToAction(nameof(Index));
+    }
+
+    // §8.9 — mark all auto-translated fields reviewed for an entity + language.
+    [HttpPost("admin/translations/approve-batch")]
+    [ValidateAntiForgeryToken]
+    [RequirePermission(WebPermission.TranslationCache.Update)]
+    public async Task<IActionResult> ApproveBatch(
+        EntityTypeOption entityType, Guid entityId, string? languageCode, List<string>? fieldNames, CancellationToken ct)
+    {
+        var result = await _facade.ApproveBatchAsync(entityType.ToString(), entityId, languageCode, fieldNames, ct);
+        if (result.RequireSignOut) return RedirectToLogin();
+
+        TempData[result.IsSuccess ? "Success" : "Error"] =
+            result.IsSuccess ? "Translations approved." : result.Error ?? "Could not approve the translations.";
+        return RedirectToAction(nameof(Index), new { entityType, entityId });
+    }
+
     private IActionResult RedirectToLogin()
         => RedirectToAction("SignIn", "Auth", new { area = "Auth" });
 }

@@ -35,7 +35,8 @@ public sealed class RemoveTourWaypointCommandHandler(
                     Outcome.NotFound);
             }
 
-            if (tour.CreatedByUserId != currentUser.UserId!.Value)
+            var isAdminTier = AppRoles.HighestPrivilegeLevel(currentUser.Roles) >= RolePrivilegeLevel.Admin;
+            if (!isAdminTier && tour.CreatedByUserId != currentUser.UserId!.Value)
             {
                 return Result.Failure(
                     new Error(

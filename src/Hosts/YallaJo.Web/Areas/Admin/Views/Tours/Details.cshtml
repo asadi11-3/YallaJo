@@ -11,7 +11,7 @@
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <div>
-            <h2 class="mb-1">@Model.Name</h2>
+                <h1 class="h3 mb-1">@Model.Name</h1>
             <span class="badge @Model.StatusBadgeClass">@Model.Status</span>
             <code class="ms-2">@Model.Slug</code>
         </div>
@@ -155,6 +155,34 @@
                                 @Html.AntiForgeryToken()
                                 <button type="submit" class="btn btn-success w-100">Reinstate</button>
                             </form>
+                        </permission>
+                    }
+
+                    @* §8.4 — homepage curation. Only meaningful once a tour is live (Approved). *@
+                    @if (Model.Status == "Approved")
+                    {
+                        <permission require="@WebPermission.Tour.Feature">
+                            <div class="border-top pt-3">
+                                <label class="form-label small mb-2 d-block">Homepage curation</label>
+                                <div class="d-flex gap-2">
+                                    <form asp-area="Admin" asp-controller="Tours" asp-action="Feature" asp-route-id="@Model.Id" method="post" class="flex-fill">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="isFeatured" value="true" />
+                                        <button type="submit" class="btn btn-outline-primary w-100">
+                                            <i class="fa-solid fa-star fa-fw" aria-hidden="true"></i>
+                                            <span>Feature</span>
+                                        </button>
+                                    </form>
+                                    <form asp-area="Admin" asp-controller="Tours" asp-action="Feature" asp-route-id="@Model.Id" method="post" class="flex-fill">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="isFeatured" value="false" />
+                                        <button type="submit" class="btn btn-outline-secondary w-100">
+                                            <i class="fa-regular fa-star fa-fw" aria-hidden="true"></i>
+                                            <span>Unfeature</span>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
                         </permission>
                     }
                 </div>

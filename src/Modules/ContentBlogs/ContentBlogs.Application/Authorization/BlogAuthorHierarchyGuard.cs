@@ -15,6 +15,13 @@ public sealed class BlogAuthorHierarchyGuard(
         Guid authorId,
         CancellationToken cancellationToken = default)
     {
+        if (currentUser.UserId is null)
+        {
+            return Result.Failure(
+                new Error("Blog.Unauthorized", "Authentication is required to manage this blog."),
+                Outcome.Unauthorized);
+        }
+
         // ── 1. Self-management is always allowed ──────────────────────────────
         // The endpoint's MustHavePermissionAttribute has already verified the
         // actor holds the Blog/{Update|Delete|Approve|Read} permission.  An
@@ -22,7 +29,7 @@ public sealed class BlogAuthorHierarchyGuard(
         // of their privilege level — including a Standard author editing their
         // own blog (something the user-management hierarchy explicitly forbids,
         // which is why we do NOT delegate to EnsureCanManageUserAsync).
-        if (currentUser.UserId!.Value == authorId)
+        if (currentUser.UserId.Value == authorId)
         {
             return Result.Success();
         }

@@ -58,7 +58,8 @@ public sealed class CreateTourScheduleCommandHandler(
                 tour.Status, tour.Id);
             }
 
-        if (tour.CreatedByUserId != currentUser.UserId!.Value)
+        var isAdminTier = AppRoles.HighestPrivilegeLevel(currentUser.Roles) >= RolePrivilegeLevel.Admin;
+        if (!isAdminTier && tour.CreatedByUserId != currentUser.UserId!.Value)
             {
                 return Result<CreateTourScheduleResult>.Failure(
                 new Error("Tour.NotOwner", "You do not have permission to create schedules for this tour."),
