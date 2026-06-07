@@ -3,12 +3,14 @@ using Microsoft.AspNetCore.Mvc;
 using YallaJo.Web.Areas.Provider.Facades;
 using YallaJo.Web.Areas.Provider.Models.Dashboard;
 using YallaJo.Web.Areas.Provider.Shared;
+using YallaJo.Web.Infrastructure.Authorization;
 using YallaJo.Web.Infrastructure.Mvc;
 
 namespace YallaJo.Web.Areas.Provider.Controllers;
 
 [Area("Provider")]
 [Authorize]
+[RequirePermission(WebPermission.ProviderDashboard.Read)]
 public sealed class DashboardController : BaseController
 {
     private readonly DashboardFacade _dashboard;

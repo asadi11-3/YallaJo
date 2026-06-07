@@ -1,98 +1,110 @@
 @using YallaJo.Web.Infrastructure.Authorization
 @using YallaJo.Web.Areas.Provider.Models.TourSchedules
+@using YallaJo.Web.Areas.Provider.Shared
 @model TourSchedulesIndexVm
 @{
-    ViewData["Title"] = "Schedules";
+    ViewData["Title"] = $"Schedules — {Model.TourName}";
+    ViewData["ProviderNav"] = "Listings";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <div>
-            <h2 class="mb-1">Schedules</h2>
-            <span class="text-muted">@Model.TourName</span>
-            @if (!string.IsNullOrWhiteSpace(Model.TourStatusLabel))
-            {
-                <span class="text-muted">· @Model.TourStatusLabel</span>
-            }
+<partial name="_ProviderSidebar" model="@(new ProviderSidebarVm { DisplayName = User.Identity?.Name ?? "Provider" })" />
+
+<section class="pt-0">
+    <div class="container vstack gap-4">
+        <div class="d-sm-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="fs-4 mb-0"><i class="bi bi-calendar-event me-2"></i>Schedules</h1>
+                <span class="small text-body-secondary"><bdi>@Model.TourName</bdi>@(string.IsNullOrWhiteSpace(Model.TourStatusLabel) ? "" : $" · {Model.TourStatusLabel}")</span>
+            </div>
+            <div class="mt-2 mt-sm-0 d-flex gap-2">
+                <a asp-area="Provider" asp-controller="Tours" asp-action="Edit" asp-route-id="@Model.TourId"
+                   class="btn btn-sm btn-secondary-soft"><i class="bi bi-arrow-left me-1"></i>Back to listing</a>
+                <permission require="@WebPermission.TourSchedule.Create">
+                    <a asp-area="Provider" asp-controller="TourSchedules" asp-action="Create" asp-route-id="@Model.TourId"
+                       class="btn btn-sm btn-primary"><i class="bi bi-plus-lg me-1"></i>Add schedule</a>
+                </permission>
+            </div>
         </div>
-        <div class="d-flex gap-2">
-            <a asp-area="Provider" asp-controller="Tours" asp-action="Edit" asp-route-id="@Model.TourId"
-               class="btn btn-sm btn-outline-secondary">← Back to listing</a>
-            <permission require="@WebPermission.TourSchedule.Create">
-                <a asp-area="Provider" asp-controller="TourSchedules" asp-action="Create" asp-route-id="@Model.TourId"
-                   class="btn btn-primary btn-sm">Add schedule</a>
-            </permission>
-        </div>
+
+        <partial name="_TourWizardSteps" model="@(new YallaJo.Web.Areas.Provider.Models.Tours.TourWizardStepsVm { TourId = Model.TourId, CurrentStep = 3 })" />
+
+        @if (!Model.HasActiveSchedule)
+        {
+            <div class="alert alert-info mb-0" role="status">
+                <i class="bi bi-info-circle me-1" aria-hidden="true"></i>
+                A listing needs at least one <strong>active schedule</strong> before it can be submitted for review.
+            </div>
+        }
+
+        @if (!Model.HasSchedules)
+        {
+            <div class="card border">
+                <div class="card-body text-center py-5">
+                    <i class="bi bi-calendar-event fs-1 text-body-secondary d-block mb-2" aria-hidden="true"></i>
+                    <h2 class="h6 mb-1">No schedules yet</h2>
+                    <p class="text-body-secondary mb-3">Add a weekly schedule so travelers know when the tour runs.</p>
+                    <permission require="@WebPermission.TourSchedule.Create">
+                        <a asp-area="Provider" asp-controller="TourSchedules" asp-action="Create" asp-route-id="@Model.TourId"
+                           class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Add a schedule</a>
+                    </permission>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="card border">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <caption class="visually-hidden">Tour schedules</caption>
+                        <thead class="table-light">
+                            <tr>
+                                <th scope="col">Day</th>
+                                <th scope="col">Time</th>
+                                <th scope="col">Status</th>
+                                <th scope="col" class="text-end"><span class="visually-hidden">Actions</span></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var s in Model.Schedules)
+                            {
+                                <tr>
+                                    <td class="fw-semibold">@s.DayLabel</td>
+                                    <td><span dir="ltr">@s.TimeRangeLabel</span></td>
+                                    <td>
+                                        @if (s.IsActive)
+                                        {
+                                            <span class="badge text-bg-success"><i class="bi bi-check-circle me-1" aria-hidden="true"></i>Active</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge text-bg-secondary"><i class="bi bi-slash-circle me-1" aria-hidden="true"></i>Inactive</span>
+                                        }
+                                    </td>
+                                    <td class="text-end">
+                                        <div class="d-inline-flex justify-content-end gap-1">
+                                            <permission require="@WebPermission.TourSchedule.Update">
+                                                <a asp-area="Provider" asp-controller="TourSchedules" asp-action="Edit"
+                                                   asp-route-id="@Model.TourId" asp-route-scheduleId="@s.Id"
+                                                   class="btn btn-sm btn-outline-secondary" aria-label="Edit schedule"><i class="bi bi-pencil" aria-hidden="true"></i></a>
+                                            </permission>
+                                            <permission require="@WebPermission.TourSchedule.Delete">
+                                                <form asp-area="Provider" asp-controller="TourSchedules" asp-action="Delete"
+                                                      asp-route-id="@Model.TourId" asp-route-scheduleId="@s.Id"
+                                                      method="post" class="d-inline"
+                                                      onsubmit="return confirm('Delete this schedule?');">
+                                                    @Html.AntiForgeryToken()
+                                                    <button type="submit" class="btn btn-sm btn-danger-soft" aria-label="Delete schedule"><i class="bi bi-trash" aria-hidden="true"></i></button>
+                                                </form>
+                                            </permission>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        }
     </div>
-
-    @* Success/Error flash banners are rendered globally by the shared _Alerts partial. *@
-
-    @if (!Model.HasActiveSchedule)
-    {
-        <div class="alert alert-info">
-            A listing needs at least one <strong>active schedule</strong> before it can be submitted for review.
-            <permission require="@WebPermission.TourSchedule.Create">
-                <a asp-area="Provider" asp-controller="TourSchedules" asp-action="Create" asp-route-id="@Model.TourId"
-                   class="alert-link">Add a schedule</a>.
-            </permission>
-        </div>
-    }
-
-    @if (!Model.HasSchedules)
-    {
-        <div class="alert alert-secondary">No schedules yet.</div>
-    }
-    else
-    {
-        <div class="table-responsive">
-            <table class="table table-hover align-middle">
-                <thead>
-                    <tr>
-                        <th>Day</th>
-                        <th>Time</th>
-                        <th>Status</th>
-                        <th class="text-end">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var s in Model.Schedules)
-                    {
-                        <tr>
-                            <td>@s.DayLabel</td>
-                            <td>@s.TimeRangeLabel</td>
-                            <td>
-                                @if (s.IsActive)
-                                {
-                                    <span class="badge text-bg-success">Active</span>
-                                }
-                                else
-                                {
-                                    <span class="badge text-bg-secondary">Inactive</span>
-                                }
-                            </td>
-                            <td class="text-end">
-                                <div class="d-flex justify-content-end gap-2">
-                                    <permission require="@WebPermission.TourSchedule.Update">
-                                        <a asp-area="Provider" asp-controller="TourSchedules" asp-action="Edit"
-                                           asp-route-id="@Model.TourId" asp-route-scheduleId="@s.Id"
-                                           class="btn btn-sm btn-outline-secondary">Edit</a>
-                                    </permission>
-                                    <permission require="@WebPermission.TourSchedule.Delete">
-                                        <form asp-area="Provider" asp-controller="TourSchedules" asp-action="Delete"
-                                              asp-route-id="@Model.TourId" asp-route-scheduleId="@s.Id"
-                                              method="post" class="d-inline"
-                                              onsubmit="return confirm('Delete this schedule?');">
-                                            @Html.AntiForgeryToken()
-                                            <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
-                                        </form>
-                                    </permission>
-                                </div>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
-    }
-</div>
+</section>

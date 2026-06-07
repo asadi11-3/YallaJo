@@ -39,6 +39,7 @@ public interface IApiClient
         Stream fileStream,
         string fileName,
         string contentType,
+        IReadOnlyDictionary<string, string>? formFields = null,
         string formFieldName = "file",
         CancellationToken ct = default);
 

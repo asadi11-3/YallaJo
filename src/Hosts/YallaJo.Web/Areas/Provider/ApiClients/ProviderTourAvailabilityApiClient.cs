@@ -27,6 +27,11 @@ public sealed class ProviderTourAvailabilityApiClient
         CreateAvailabilitySlotApiRequest request, CancellationToken ct = default)
         => _api.PostAsync<CreateAvailabilitySlotResponse>($"{Base}/slots", request, ct);
 
+    // POST /api/v1/booking/availability/slots/bulk — recurring slot generation
+    public Task<ApiResult> CreateBulkAsync(
+        CreateBulkAvailabilitySlotsApiRequest request, CancellationToken ct = default)
+        => _api.PostAsync($"{Base}/slots/bulk", request, ct);
+
     // PUT /api/v1/booking/availability/slots/{slotId}
     public Task<ApiResult> UpdateAsync(
         Guid slotId, UpdateAvailabilitySlotApiRequest request, CancellationToken ct = default)

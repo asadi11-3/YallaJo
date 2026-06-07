@@ -1,0 +1,90 @@
+@using YallaJo.Web.Areas.Business.Models.Services
+@using YallaJo.Web.Areas.Business.Shared
+@model EditServiceFormVm
+@{
+    ViewData["Title"] = "Edit service";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var sidebar = ViewBag.Sidebar as BusinessSidebarVm ?? new BusinessSidebarVm();
+}
+
+<partial name="_BusinessSidebar" model="sidebar" />
+
+<section class="pt-0">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-9 col-xl-8">
+                <h1 class="fs-4 mb-1"><i class="bi bi-pencil-square me-2"></i>Edit service</h1>
+                <p class="small text-body-secondary"><bdi>@Model.BusinessName</bdi></p>
+
+                <div class="card border">
+                    <div class="card-body">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                        <form asp-area="Business" asp-controller="Services" asp-action="Edit"
+                              asp-route-id="@Model.BusinessId" asp-route-serviceId="@Model.ServiceId"
+                              method="post" class="row g-3">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" asp-for="ServiceId" />
+                            <input type="hidden" asp-for="BusinessId" />
+
+                            <div class="col-md-8">
+                                <label asp-for="Name" class="form-label"></label>
+                                <input asp-for="Name" class="form-control" />
+                                <span asp-validation-for="Name" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="Category" class="form-label"></label>
+                                <select asp-for="Category" asp-items="Html.GetEnumSelectList<ServiceCategory>()" class="form-select"></select>
+                                <small class="form-text">Re-select the category (not returned by the service detail).</small>
+                                <span asp-validation-for="Category" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label asp-for="Price" class="form-label"></label>
+                                <input asp-for="Price" class="form-control" type="number" step="0.001" dir="ltr" inputmode="decimal" />
+                                <span asp-validation-for="Price" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="Currency" class="form-label"></label>
+                                <input asp-for="Currency" class="form-control" dir="ltr" maxlength="3" />
+                                <span asp-validation-for="Currency" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="SortOrder" class="form-label"></label>
+                                <input asp-for="SortOrder" class="form-control" type="number" min="0" inputmode="numeric" />
+                                <span asp-validation-for="SortOrder" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label asp-for="DurationMinutes" class="form-label"></label>
+                                <input asp-for="DurationMinutes" class="form-control" type="number" min="0" inputmode="numeric" />
+                                <span asp-validation-for="DurationMinutes" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="MaxCapacity" class="form-label"></label>
+                                <input asp-for="MaxCapacity" class="form-control" type="number" min="0" inputmode="numeric" />
+                                <span asp-validation-for="MaxCapacity" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-12">
+                                <label asp-for="Description" class="form-label"></label>
+                                <textarea asp-for="Description" class="form-control" rows="2"></textarea>
+                                <span asp-validation-for="Description" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-12 d-flex gap-2 mt-2">
+                                <button type="submit" class="btn btn-primary">Save changes</button>
+                                <a asp-area="Business" asp-controller="Services" asp-action="Index" asp-route-id="@Model.BusinessId"
+                                   class="btn btn-link">Cancel</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

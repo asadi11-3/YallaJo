@@ -48,6 +48,47 @@ public sealed class ServicesController : BaseController
         return RedirectToAction(nameof(Index), new { id });
     }
 
+    [HttpGet("business/businesses/{id:guid}/services/{serviceId:guid}/edit")]
+    [RequirePermission(WebPermission.ServiceItem.Update)]
+    public async Task<IActionResult> Edit(Guid id, Guid serviceId, CancellationToken ct)
+    {
+        SetSidebar(id);
+        var result = await _facade.GetEditAsync(id, serviceId, ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+        if (!result.IsSuccess || result.Data is null)
+        {
+            SetError(result.Error);
+            return RedirectToAction(nameof(Index), new { id });
+        }
+        return View(result.Data);
+    }
+
+    [HttpPost("business/businesses/{id:guid}/services/{serviceId:guid}/edit")]
+    [ValidateAntiForgeryToken]
+    [RequirePermission(WebPermission.ServiceItem.Update)]
+    public async Task<IActionResult> Edit(Guid id, Guid serviceId, EditServiceFormVm form, CancellationToken ct)
+    {
+        SetSidebar(id);
+        form.ServiceId = serviceId;
+        form.BusinessId = id;
+
+        if (!ModelState.IsValid)
+            return View(form);
+
+        var result = await _facade.UpdateAsync(id, serviceId, form, ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+
+        if (!result.IsSuccess)
+        {
+            if (!ApplyValidationErrors(result))
+                SetError(result.Error);
+            return View(form);
+        }
+
+        SetSuccess("Service updated.");
+        return RedirectToAction(nameof(Index), new { id });
+    }
+
     [HttpPost("business/businesses/{id:guid}/services/{serviceId:guid}/remove")]
     [ValidateAntiForgeryToken]
     [RequirePermission(WebPermission.ServiceItem.SoftDelete)]

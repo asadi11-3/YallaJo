@@ -77,6 +77,27 @@ public sealed class ProviderTourAvailabilityFacade
             "Could not create the slot.");
     }
 
+    public async Task<TourAvailabilityActionResult> BulkCreateAsync(
+        Guid tourId, BulkAvailabilitySlotFormVm vm, CancellationToken ct = default)
+    {
+        var isCustom = string.Equals(vm.Recurrence, "Custom", StringComparison.OrdinalIgnoreCase);
+        var request = new CreateBulkAvailabilitySlotsApiRequest(
+            TourId:      tourId,
+            StartDate:   vm.StartDate ?? default,
+            EndDate:     vm.EndDate ?? default,
+            Recurrence:  vm.Recurrence,
+            DaysOfWeek:  isCustom ? vm.DaysOfWeek : null,
+            StartTime:   vm.StartTime ?? default,
+            EndTime:     vm.EndTime ?? default,
+            MaxCapacity: vm.MaxCapacity,
+            SkipExisting: vm.SkipExisting);
+
+        var result = await _availabilityApi.CreateBulkAsync(request, ct);
+        return NormalizeAction(result.IsUnauthorized, result.IsForbidden, result.IsNotFound,
+            result.IsConflict, result.IsValidationError, result.ValidationErrors, result.Error,
+            "Could not create the recurring slots.", result.IsSuccess);
+    }
+
     public async Task<TourAvailabilityFormResult> GetEditAsync(Guid tourId, Guid slotId, CancellationToken ct = default)
     {
         var tour = await LoadTourAsync(tourId, ct);

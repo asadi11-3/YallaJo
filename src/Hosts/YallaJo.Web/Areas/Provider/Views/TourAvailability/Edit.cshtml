@@ -1,34 +1,42 @@
 @using YallaJo.Web.Areas.Provider.Models.TourAvailability
+@using YallaJo.Web.Areas.Provider.Shared
 @model AvailabilitySlotFormVm
 @{
     ViewData["Title"] = "Edit availability slot";
+    ViewData["ProviderNav"] = "Listings";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2 class="mb-0">Edit availability slot</h2>
-        <a asp-area="Provider" asp-controller="TourAvailability" asp-action="Index" asp-route-id="@Model.TourId"
-           class="btn btn-sm btn-outline-secondary">← Back to availability</a>
-    </div>
+<partial name="_ProviderSidebar" model="@(new ProviderSidebarVm { DisplayName = User.Identity?.Name ?? "Provider" })" />
 
-    @if (!string.IsNullOrWhiteSpace(Model.TourName))
-    {
-        <p class="text-muted">Listing: <strong>@Model.TourName</strong></p>
-    }
+<section class="pt-0">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-9 col-xl-8">
+                <h1 class="fs-4 mb-1"><i class="bi bi-calendar2-week me-2"></i>Edit availability slot</h1>
+                @if (!string.IsNullOrWhiteSpace(Model.TourName))
+                {
+                    <p class="small text-body-secondary"><bdi>@Model.TourName</bdi></p>
+                }
 
-    <form asp-area="Provider" asp-controller="TourAvailability" asp-action="Edit"
-          asp-route-id="@Model.TourId" asp-route-slotId="@Model.SlotId" method="post">
-        @Html.AntiForgeryToken()
-        <partial name="_Form" model="Model" />
-
-        <div class="mt-4 d-flex gap-2">
-            <button type="submit" class="btn btn-primary">Save slot</button>
-            <a asp-area="Provider" asp-controller="TourAvailability" asp-action="Index" asp-route-id="@Model.TourId"
-               class="btn btn-outline-secondary">Cancel</a>
+                <div class="card border">
+                    <div class="card-body">
+                        <form asp-area="Provider" asp-controller="TourAvailability" asp-action="Edit"
+                              asp-route-id="@Model.TourId" asp-route-slotId="@Model.SlotId" method="post">
+                            @Html.AntiForgeryToken()
+                            <partial name="_Form" model="Model" />
+                            <div class="mt-4 d-flex gap-2">
+                                <button type="submit" class="btn btn-primary">Save slot</button>
+                                <a asp-area="Provider" asp-controller="TourAvailability" asp-action="Index" asp-route-id="@Model.TourId"
+                                   class="btn btn-link">Cancel</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
         </div>
-    </form>
-</div>
+    </div>
+</section>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />

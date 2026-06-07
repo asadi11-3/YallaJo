@@ -52,6 +52,26 @@ public sealed class ProviderPaymentMethodsFacade
         }
     }
 
+    public async Task<ApiResult> UpdateAsync(Guid id, CreatePaymentMethodFormVm form, CancellationToken ct = default)
+    {
+        var request = new ProviderPaymentMethodRequest(
+            form.PaymentMethodType,
+            form.DisplayName.Trim(),
+            form.AccountIdentifier.Trim(),
+            NullIfBlank(form.BankName),
+            form.IsDefault);
+
+        try
+        {
+            return Normalize(await _api.UpdateAsync(id, request, ct), "Could not update the payment method.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to update provider payment method {Id}", id);
+            return ApiResult.Fail("Could not update the payment method.");
+        }
+    }
+
     public async Task<ApiResult> DeleteAsync(Guid id, CancellationToken ct = default)
     {
         try

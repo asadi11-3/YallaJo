@@ -133,12 +133,18 @@
                                                         <td>@Money(s.Price, s.Currency)</td>
                                                         <td>@s.DurationMinutes min</td>
                                                         <td class="text-end">
+                                                            <permission require="@WebPermission.ServiceItem.Update">
+                                                                <a asp-action="Edit" asp-route-id="@Model.BusinessId" asp-route-serviceId="@s.Id"
+                                                                   class="btn btn-sm btn-outline-secondary" aria-label="Edit @s.Name">
+                                                                    <i class="bi bi-pencil" aria-hidden="true"></i>
+                                                                </a>
+                                                            </permission>
                                                             <permission require="@WebPermission.ServiceItem.SoftDelete">
                                                                 <form asp-action="Remove" asp-route-id="@Model.BusinessId" asp-route-serviceId="@s.Id" method="post"
                                                                       onsubmit="return confirm('Remove this service?');">
                                                                     @Html.AntiForgeryToken()
-                                                                    <button type="submit" class="btn btn-sm btn-danger-soft">
-                                                                        <i class="bi bi-trash"></i>
+                                                                    <button type="submit" class="btn btn-sm btn-danger-soft" aria-label="Remove @s.Name">
+                                                                        <i class="bi bi-trash" aria-hidden="true"></i>
                                                                     </button>
                                                                 </form>
                                                             </permission>

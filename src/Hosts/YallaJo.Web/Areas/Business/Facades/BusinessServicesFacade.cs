@@ -53,6 +53,51 @@ public sealed class BusinessServicesFacade
         return Normalize(_api.AddAsync(businessId, request, ct), "Could not add the service.");
     }
 
+    public async Task<ApiResult<EditServiceFormVm>> GetEditAsync(Guid businessId, Guid serviceId, CancellationToken ct = default)
+    {
+        var business = await _businesses.GetByIdAsync(businessId, ct);
+        if (business.IsUnauthorized)
+            return ApiResult<EditServiceFormVm>.ForceSignOut();
+        if (business is not { IsSuccess: true, Data: not null })
+            return ApiResult<EditServiceFormVm>.Fail(business.StatusCode, business.Error ?? "Could not load the business.");
+
+        var svc = await _api.GetByIdAsync(serviceId, ct);
+        if (svc.IsUnauthorized)
+            return ApiResult<EditServiceFormVm>.ForceSignOut();
+        if (svc is not { IsSuccess: true, Data: not null })
+            return ApiResult<EditServiceFormVm>.Fail(svc.StatusCode, svc.Error ?? "Could not load the service.");
+
+        var d = svc.Data;
+        // The detail projection omits Category/Description — the user re-selects Category on edit.
+        return ApiResult<EditServiceFormVm>.Ok(new EditServiceFormVm
+        {
+            ServiceId       = d.Id,
+            BusinessId      = businessId,
+            BusinessName    = business.Data.Name,
+            Name            = d.Name,
+            Price           = d.Price,
+            Currency        = string.IsNullOrWhiteSpace(d.Currency) ? "JOD" : d.Currency,
+            DurationMinutes = d.DurationMinutes,
+            MaxCapacity     = d.MaxCapacity,
+            SortOrder       = d.SortOrder,
+        });
+    }
+
+    public Task<ApiResult> UpdateAsync(Guid businessId, Guid serviceId, EditServiceFormVm form, CancellationToken ct = default)
+    {
+        var request = new UpdateServiceItemApiRequest(
+            businessId,
+            form.Name.Trim(),
+            form.Price,
+            form.DurationMinutes,
+            form.MaxCapacity,
+            string.IsNullOrWhiteSpace(form.Currency) ? "JOD" : form.Currency.Trim().ToUpperInvariant(),
+            form.Category,
+            NullIfBlank(form.Description),
+            form.SortOrder);
+        return Normalize(_api.UpdateAsync(serviceId, request, ct), "Could not update the service.");
+    }
+
     public Task<ApiResult> RemoveAsync(Guid serviceId, CancellationToken ct = default) =>
         Normalize(_api.RemoveAsync(serviceId, ct), "Could not delete the service.");
 

@@ -54,6 +54,44 @@ public sealed class ReviewsController : BaseController
         return RedirectToAction(nameof(Index), new { tourId });
     }
 
+    [HttpPost("provider/reviews/{id:guid}/reply/{replyId:guid}/edit")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> EditReply(Guid id, Guid replyId, string content, Guid tourId, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(content))
+        {
+            SetError("Please enter a reply.");
+            return RedirectToAction(nameof(Index), new { tourId });
+        }
+
+        var result = await _reviews.EditReplyAsync(id, replyId, content, ct);
+        if (GuardSignOut(result) is { } signOut)
+            return signOut;
+
+        if (result.IsSuccess)
+            SetSuccess("Your reply was updated.");
+        else
+            SetError(result.Error);
+
+        return RedirectToAction(nameof(Index), new { tourId });
+    }
+
+    [HttpPost("provider/reviews/{id:guid}/reply/{replyId:guid}/delete")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteReply(Guid id, Guid replyId, Guid tourId, CancellationToken ct = default)
+    {
+        var result = await _reviews.DeleteReplyAsync(id, replyId, ct);
+        if (GuardSignOut(result) is { } signOut)
+            return signOut;
+
+        if (result.IsSuccess)
+            SetSuccess("Your reply was deleted.");
+        else
+            SetError(result.Error);
+
+        return RedirectToAction(nameof(Index), new { tourId });
+    }
+
     [HttpPost("provider/reviews/{id:guid}/report")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Report(Guid id, string reason, string? description, Guid tourId, CancellationToken ct = default)

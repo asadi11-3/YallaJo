@@ -56,6 +56,9 @@ public sealed class ReviewsFacade
                         ReplyContent = r.Replies
                             .OrderByDescending(p => p.CreatedAt)
                             .FirstOrDefault()?.Content,
+                        ReplyId = r.Replies
+                            .OrderByDescending(p => p.CreatedAt)
+                            .FirstOrDefault()?.Id,
                     })
                     .ToList();
             }
@@ -86,6 +89,18 @@ public sealed class ReviewsFacade
     {
         var result = await _api.ReplyAsync(reviewId, new AddReplyRequest(content.Trim()), ct);
         return Normalize(result, "Your reply could not be saved.");
+    }
+
+    public async Task<ApiResult> EditReplyAsync(Guid reviewId, Guid replyId, string content, CancellationToken ct = default)
+    {
+        var result = await _api.UpdateReplyAsync(reviewId, replyId, new AddReplyRequest(content.Trim()), ct);
+        return Normalize(result, "Your reply could not be updated.");
+    }
+
+    public async Task<ApiResult> DeleteReplyAsync(Guid reviewId, Guid replyId, CancellationToken ct = default)
+    {
+        var result = await _api.DeleteReplyAsync(reviewId, replyId, ct);
+        return Normalize(result, "Your reply could not be deleted.");
     }
 
     public async Task<ApiResult> ReportAsync(Guid reviewId, string reason, string? description, CancellationToken ct = default)

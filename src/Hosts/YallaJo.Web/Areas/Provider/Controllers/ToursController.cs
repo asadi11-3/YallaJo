@@ -188,6 +188,25 @@ public sealed class ToursController : BaseController
         return RedirectToAction(nameof(Index));
     }
 
+    // ── POST /provider/tours/{id}/delete ──────────────────────────────────────────
+    [HttpPost("provider/tours/{id:guid}/delete")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
+    {
+        if (!_currentUser.HasPermission(WebPermission.Tour.DeleteOwn))
+            return RedirectToStatus();
+
+        var result = await _facade.DeleteAsync(id, ct);
+        if (result.Outcome == ProviderTourOutcome.ForceSignOut) return RedirectToLogin();
+
+        if (result.Outcome == ProviderTourOutcome.Ok)
+            SetSuccess("Listing deleted.");
+        else
+            SetError(result.Error ?? "Could not delete the listing.");
+
+        return RedirectToAction(nameof(Index));
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────────────
 
     private async Task<IActionResult?> PopulatePlaceOptionsAsync(ProviderTourFormVm vm, CancellationToken ct)

@@ -28,6 +28,12 @@ public sealed class ServicesApiClient
     public Task<ApiResult> AddAsync(Guid businessId, CreateServiceItemApiRequest request, CancellationToken ct = default) =>
         _api.PostAsync($"{Base}/{businessId:D}/services", request, ct);
 
+    public Task<ApiResult<ServiceItemDetailResponse>> GetByIdAsync(Guid serviceId, CancellationToken ct = default) =>
+        _api.GetAsync<ServiceItemDetailResponse>($"{Base}/services/{serviceId:D}", ct);
+
+    public Task<ApiResult> UpdateAsync(Guid serviceId, UpdateServiceItemApiRequest request, CancellationToken ct = default) =>
+        _api.PutAsync($"{Base}/services/{serviceId:D}", request, ct);
+
     public Task<ApiResult> RemoveAsync(Guid serviceId, CancellationToken ct = default) =>
         _api.DeleteAsync($"{Base}/services/{serviceId:D}", ct);
 }

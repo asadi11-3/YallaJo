@@ -25,7 +25,7 @@ public sealed class ProfileApiClient
             Stream stream, string name, string type, CancellationToken token)
         {
             var result = await _api.PutFileAsync<object>(
-                "/api/v1/accounts/profile/avatar", stream, name, type, formFieldName: "file", token);
+                "/api/v1/accounts/profile/avatar", stream, name, type, formFieldName: "file", ct: token);
 
             return result.IsSuccess
                 ? ApiResult.Ok(result.StatusCode)

@@ -33,6 +33,7 @@ public sealed class ReviewRowVm
     public int HelpfulVoteCount { get; init; }
     public DateTime CreatedAt { get; init; }
     public string? ReplyContent { get; init; }
+    public Guid? ReplyId { get; init; }
 
-    public bool HasReply => !string.IsNullOrWhiteSpace(ReplyContent);
+    public bool HasReply => !string.IsNullOrWhiteSpace(ReplyContent) && ReplyId.HasValue;
 }

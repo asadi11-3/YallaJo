@@ -38,6 +38,38 @@ public sealed class TourAvailabilityController : BaseController
         };
     }
 
+    // ── POST /provider/tours/{id}/availability/bulk ───────────────────────────────
+    [HttpPost("provider/tours/{id:guid}/availability/bulk")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Bulk(Guid id, BulkAvailabilitySlotFormVm vm, CancellationToken ct)
+    {
+        if (!_currentUser.HasPermission(WebPermission.AvailabilitySlot.Create))
+            return RedirectToStatus();
+
+        vm.TourId = id;
+        if (!ModelState.IsValid)
+        {
+            SetError("Please complete the recurring-slots form correctly.");
+            return RedirectToAction(nameof(Index), new { id });
+        }
+
+        var result = await _facade.BulkCreateAsync(id, vm, ct);
+        switch (result.Outcome)
+        {
+            case TourAvailabilityOutcome.Ok:
+                SetSuccess("Recurring availability slots created.");
+                return RedirectToAction(nameof(Index), new { id });
+            case TourAvailabilityOutcome.ForceSignOut:
+                return RedirectToLogin();
+            case TourAvailabilityOutcome.Forbidden:
+                SetError(result.Error);
+                return RedirectToStatus();
+            default:
+                SetError(result.Error ?? "Could not create the recurring slots.");
+                return RedirectToAction(nameof(Index), new { id });
+        }
+    }
+
     // ── GET /provider/tours/{id}/availability/create ──────────────────────────────
     [HttpGet("provider/tours/{id:guid}/availability/create")]
     public async Task<IActionResult> Create(Guid id, CancellationToken ct)

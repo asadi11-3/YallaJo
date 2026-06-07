@@ -1,93 +1,170 @@
 @using YallaJo.Web.Infrastructure.Authorization
 @using YallaJo.Web.Areas.Provider.Models.TourAvailability
+@using YallaJo.Web.Areas.Provider.Shared
 @model TourAvailabilityIndexVm
 @{
-    ViewData["Title"] = "Availability";
+    ViewData["Title"] = $"Availability — {Model.TourName}";
+    ViewData["ProviderNav"] = "Listings";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <div>
-            <h2 class="mb-1">Availability</h2>
-            <span class="text-muted">@Model.TourName</span>
-            @if (!string.IsNullOrWhiteSpace(Model.TourStatusLabel))
-            {
-                <span class="text-muted">· @Model.TourStatusLabel</span>
-            }
+<partial name="_ProviderSidebar" model="@(new ProviderSidebarVm { DisplayName = User.Identity?.Name ?? "Provider" })" />
+
+<section class="pt-0">
+    <div class="container vstack gap-4">
+        <div class="d-sm-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="fs-4 mb-0"><i class="bi bi-calendar2-week me-2"></i>Availability</h1>
+                <span class="small text-body-secondary"><bdi>@Model.TourName</bdi>@(string.IsNullOrWhiteSpace(Model.TourStatusLabel) ? "" : $" · {Model.TourStatusLabel}")</span>
+            </div>
+            <div class="mt-2 mt-sm-0 d-flex gap-2">
+                <a asp-area="Provider" asp-controller="Tours" asp-action="Edit" asp-route-id="@Model.TourId"
+                   class="btn btn-sm btn-secondary-soft"><i class="bi bi-arrow-left me-1"></i>Back to listing</a>
+                <permission require="@WebPermission.AvailabilitySlot.Create">
+                    <a asp-area="Provider" asp-controller="TourAvailability" asp-action="Create" asp-route-id="@Model.TourId"
+                       class="btn btn-sm btn-primary"><i class="bi bi-plus-lg me-1"></i>Add slot</a>
+                    <button type="button" class="btn btn-sm btn-primary-soft" data-bs-toggle="collapse" data-bs-target="#bulk-slots"
+                            aria-expanded="false" aria-controls="bulk-slots"><i class="bi bi-calendar-plus me-1"></i>Bulk add</button>
+                </permission>
+            </div>
         </div>
-        <div class="d-flex gap-2">
-            <a asp-area="Provider" asp-controller="Tours" asp-action="Edit" asp-route-id="@Model.TourId"
-               class="btn btn-sm btn-outline-secondary">← Back to listing</a>
-            <permission require="@WebPermission.AvailabilitySlot.Create">
-                <a asp-area="Provider" asp-controller="TourAvailability" asp-action="Create" asp-route-id="@Model.TourId"
-                   class="btn btn-primary btn-sm">Add slot</a>
-            </permission>
-        </div>
-    </div>
 
     <div class="alert alert-info">
         Availability slots are the specific dates &amp; times travelers can book. The guide is assigned automatically for this version.
     </div>
 
-    @if (!Model.HasSlots)
-    {
-        <div class="alert alert-secondary">No availability slots yet. Add one so travelers can book this tour.</div>
-    }
-    else
-    {
-        <div class="table-responsive">
-            <table class="table table-hover align-middle">
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Time</th>
-                        <th class="text-end">Capacity</th>
-                        <th class="text-end">Available</th>
-                        <th>Status</th>
-                        <th class="text-end">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var s in Model.Slots)
-                    {
-                        <tr>
-                            <td>@s.DateLabel</td>
-                            <td>@s.StartTime – @s.EndTime</td>
-                            <td class="text-end">@s.MaxCapacity</td>
-                            <td class="text-end">@s.AvailableCount</td>
-                            <td>
-                                @if (s.IsActive)
+    <permission require="@WebPermission.AvailabilitySlot.Create">
+        <div class="collapse mb-3" id="bulk-slots">
+            <div class="card border">
+                <div class="card-header border-bottom"><h2 class="h6 mb-0">Add recurring slots</h2></div>
+                <div class="card-body">
+                    <form asp-area="Provider" asp-controller="TourAvailability" asp-action="Bulk" asp-route-id="@Model.TourId" method="post" class="row g-3">
+                        @Html.AntiForgeryToken()
+                        <div class="col-md-3">
+                            <label class="form-label" for="bulk-start">Start date</label>
+                            <input id="bulk-start" name="StartDate" type="date" class="form-control" required />
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label" for="bulk-end">End date</label>
+                            <input id="bulk-end" name="EndDate" type="date" class="form-control" required />
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label" for="bulk-rec">Recurrence</label>
+                            <select id="bulk-rec" name="Recurrence" class="form-select">
+                                @foreach (var r in BulkAvailabilitySlotFormVm.RecurrenceOptions)
                                 {
-                                    <span class="badge text-bg-success">Active</span>
+                                    <option value="@r">@r</option>
                                 }
-                                else
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label" for="bulk-cap">Capacity per slot</label>
+                            <input id="bulk-cap" name="MaxCapacity" type="number" min="1" value="1" class="form-control" required />
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label" for="bulk-stime">Start time</label>
+                            <input id="bulk-stime" name="StartTime" type="time" class="form-control" dir="ltr" required />
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label" for="bulk-etime">End time</label>
+                            <input id="bulk-etime" name="EndTime" type="time" class="form-control" dir="ltr" required />
+                        </div>
+                        <div class="col-md-6">
+                            <span class="form-label d-block">Days of week <span class="text-body-secondary small">(used when recurrence is Custom)</span></span>
+                            <div class="d-flex flex-wrap gap-2">
+                                @foreach (var (val, label) in BulkAvailabilitySlotFormVm.DayOptions)
                                 {
-                                    <span class="badge text-bg-secondary">Inactive</span>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="checkbox" name="DaysOfWeek" value="@val" id="day-@val" />
+                                        <label class="form-check-label" for="day-@val">@label</label>
+                                    </div>
                                 }
-                            </td>
-                            <td class="text-end">
-                                <div class="d-flex justify-content-end gap-2">
-                                    <permission require="@WebPermission.AvailabilitySlot.Update">
-                                        <a asp-area="Provider" asp-controller="TourAvailability" asp-action="Edit"
-                                           asp-route-id="@Model.TourId" asp-route-slotId="@s.Id"
-                                           class="btn btn-sm btn-outline-secondary">Edit</a>
-                                    </permission>
-                                    <permission require="@WebPermission.AvailabilitySlot.Delete">
-                                        <form asp-area="Provider" asp-controller="TourAvailability" asp-action="Delete"
-                                              asp-route-id="@Model.TourId" asp-route-slotId="@s.Id"
-                                              method="post" class="d-inline"
-                                              onsubmit="return confirm('Remove this slot?');">
-                                            @Html.AntiForgeryToken()
-                                            <button type="submit" class="btn btn-sm btn-outline-danger">Remove</button>
-                                        </form>
-                                    </permission>
-                                </div>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check">
+                                <input type="hidden" name="SkipExisting" value="false" />
+                                <input class="form-check-input" type="checkbox" name="SkipExisting" value="true" id="bulk-skip" checked />
+                                <label class="form-check-label" for="bulk-skip">Skip dates that already have a slot</label>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary">Generate slots</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
-    }
-</div>
+    </permission>
+
+        @if (!Model.HasSlots)
+        {
+            <div class="card border">
+                <div class="card-body text-center py-5">
+                    <i class="bi bi-calendar2-week fs-1 text-body-secondary d-block mb-2" aria-hidden="true"></i>
+                    <h2 class="h6 mb-1">No availability slots yet</h2>
+                    <p class="text-body-secondary mb-0">Add a slot (or bulk-add recurring slots) so travelers can book this tour.</p>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="card border">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <caption class="visually-hidden">Bookable availability slots</caption>
+                        <thead class="table-light">
+                            <tr>
+                                <th scope="col">Date</th>
+                                <th scope="col">Time</th>
+                                <th scope="col" class="text-end">Capacity</th>
+                                <th scope="col" class="text-end">Available</th>
+                                <th scope="col">Status</th>
+                                <th scope="col" class="text-end"><span class="visually-hidden">Actions</span></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var s in Model.Slots)
+                            {
+                                <tr>
+                                    <td class="fw-semibold">@s.DateLabel</td>
+                                    <td><span dir="ltr">@s.StartTime – @s.EndTime</span></td>
+                                    <td class="text-end">@s.MaxCapacity</td>
+                                    <td class="text-end">@s.AvailableCount</td>
+                                    <td>
+                                        @if (s.IsActive)
+                                        {
+                                            <span class="badge text-bg-success"><i class="bi bi-check-circle me-1" aria-hidden="true"></i>Active</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge text-bg-secondary"><i class="bi bi-slash-circle me-1" aria-hidden="true"></i>Inactive</span>
+                                        }
+                                    </td>
+                                    <td class="text-end">
+                                        <div class="d-inline-flex justify-content-end gap-1">
+                                            <permission require="@WebPermission.AvailabilitySlot.Update">
+                                                <a asp-area="Provider" asp-controller="TourAvailability" asp-action="Edit"
+                                                   asp-route-id="@Model.TourId" asp-route-slotId="@s.Id"
+                                                   class="btn btn-sm btn-outline-secondary" aria-label="Edit slot"><i class="bi bi-pencil" aria-hidden="true"></i></a>
+                                            </permission>
+                                            <permission require="@WebPermission.AvailabilitySlot.Delete">
+                                                <form asp-area="Provider" asp-controller="TourAvailability" asp-action="Delete"
+                                                      asp-route-id="@Model.TourId" asp-route-slotId="@s.Id"
+                                                      method="post" class="d-inline"
+                                                      onsubmit="return confirm('Remove this slot?');">
+                                                    @Html.AntiForgeryToken()
+                                                    <button type="submit" class="btn btn-sm btn-danger-soft" aria-label="Remove slot"><i class="bi bi-trash" aria-hidden="true"></i></button>
+                                                </form>
+                                            </permission>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        }
+    </div>
+</section>

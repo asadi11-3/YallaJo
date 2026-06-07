@@ -23,7 +23,7 @@
                         <span class="small text-body-secondary">@Model.Email</span>
                     }
                 </div>
-                <a asp-area="Provider" asp-controller="Tour" asp-action="Create"
+                <a asp-area="Provider" asp-controller="Tours" asp-action="Create"
                    class="btn btn-sm btn-primary-soft ms-sm-auto mt-2 mt-sm-0">
                     <i class="bi bi-plus-lg me-2"></i>Add New Listing
                 </a>
@@ -49,8 +49,13 @@
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="@Nav("Listings")" asp-area="Provider" asp-controller="Listings" asp-action="Index">
+                                <a class="@Nav("Listings")" asp-area="Provider" asp-controller="Tours" asp-action="Index">
                                     <i class="bi bi-journals fa-fw me-1"></i>Listings
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="@Nav("Packages")" asp-area="Provider" asp-controller="Packages" asp-action="Index">
+                                    <i class="bi bi-box-seam fa-fw me-1"></i>Packages
                                 </a>
                             </li>
                             <li class="nav-item">
@@ -59,26 +64,18 @@
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="@Nav("Earnings")" asp-area="Provider" asp-controller="Earnings" asp-action="Index">
-                                    <i class="bi bi-graph-up-arrow fa-fw me-1"></i>Earnings
-                                </a>
-                            </li>
-                            @if (Has(WebPermission.Invoice.Read))
-                            {
-                                <li class="nav-item">
-                                    <a class="@Nav("Invoices")" asp-area="Provider" asp-controller="Invoices" asp-action="Index">
-                                        <i class="bi bi-receipt fa-fw me-1"></i>Invoices
-                                    </a>
-                                </li>
-                            }
-                            <li class="nav-item">
-                                <a class="@Nav("PaymentMethods")" asp-area="Provider" asp-controller="PaymentMethods" asp-action="Index">
-                                    <i class="bi bi-credit-card-2-back fa-fw me-1"></i>Payment Methods
+                                <a class="@Nav("Finance")" asp-area="Provider" asp-controller="Finance" asp-action="Index">
+                                    <i class="bi bi-cash-coin fa-fw me-1"></i>Finance
                                 </a>
                             </li>
                             <li class="nav-item">
                                 <a class="@Nav("Reviews")" asp-area="Provider" asp-controller="Reviews" asp-action="Index">
                                     <i class="bi bi-star fa-fw me-1"></i>Reviews
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="@Nav("Documents")" asp-area="Provider" asp-controller="ProviderDocuments" asp-action="Index">
+                                    <i class="bi bi-file-earmark-text fa-fw me-1"></i>Documents
                                 </a>
                             </li>
                             <li class="nav-item">

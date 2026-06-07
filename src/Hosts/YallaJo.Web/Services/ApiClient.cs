@@ -141,6 +141,7 @@ public sealed class ApiClient : IApiClient
         Stream fileStream,
         string fileName,
         string contentType,
+        IReadOnlyDictionary<string, string>? formFields = null,
         string formFieldName = "file",
         CancellationToken ct = default) =>
         SendWithBodyAsync<T>(path, async () =>
@@ -149,6 +150,14 @@ public sealed class ApiClient : IApiClient
             using var streamContent = new StreamContent(fileStream);
             streamContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(contentType);
             multipart.Add(streamContent, formFieldName, fileName);
+
+            if (formFields is not null)
+            {
+                foreach (var kvp in formFields)
+                {
+                    multipart.Add(new StringContent(kvp.Value), kvp.Key);
+                }
+            }
 
             using var request = new HttpRequestMessage(HttpMethod.Put, path)
             {

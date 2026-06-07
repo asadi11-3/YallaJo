@@ -1,0 +1,40 @@
+@using YallaJo.Web.Areas.Provider.Shared
+@model YallaJo.Web.Areas.Provider.Models.TourWaypoints.TourWaypointFormVm
+@{
+    ViewData["Title"] = "Edit waypoint";
+    ViewData["ProviderNav"] = "Listings";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var sidebar = ViewBag.Sidebar as ProviderSidebarVm ?? new ProviderSidebarVm();
+}
+
+<partial name="_ProviderSidebar" model="sidebar" />
+
+<section class="pt-0">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-9 col-xl-8">
+                <h1 class="fs-4 mb-1"><i class="bi bi-geo-alt me-2"></i>Edit waypoint</h1>
+                <p class="small text-body-secondary"><bdi>@Model.TourName</bdi></p>
+
+                <div class="card border">
+                    <div class="card-body">
+                        <form asp-area="Provider" asp-controller="TourWaypoints" asp-action="Edit"
+                              asp-route-id="@Model.TourId" asp-route-waypointId="@Model.WaypointId" method="post" class="vstack gap-2">
+                            @Html.AntiForgeryToken()
+                            <partial name="_Form" model="Model" />
+                            <div class="d-flex gap-2 mt-3">
+                                <button type="submit" class="btn btn-primary">Save changes</button>
+                                <a asp-area="Provider" asp-controller="TourWaypoints" asp-action="Index" asp-route-id="@Model.TourId"
+                                   class="btn btn-link">Cancel</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

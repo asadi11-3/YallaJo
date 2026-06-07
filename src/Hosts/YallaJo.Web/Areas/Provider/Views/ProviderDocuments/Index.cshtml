@@ -1,0 +1,134 @@
+@using YallaJo.Web.Infrastructure.Authorization
+@using YallaJo.Web.Areas.Provider.Shared
+@using YallaJo.Web.Areas.Provider.Models.ProviderDocuments
+@model ProviderDocumentsIndexVm
+@{
+    ViewData["Title"] = "Documents";
+    ViewData["ProviderNav"] = "Documents";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var sidebar = ViewBag.Sidebar as ProviderSidebarVm ?? new ProviderSidebarVm();
+}
+
+<partial name="_ProviderSidebar" model="sidebar" />
+
+<section class="pt-0">
+    <div class="container vstack gap-4">
+        <h1 class="fs-4 mb-0"><i class="bi bi-file-earmark-text me-2"></i>Compliance Documents</h1>
+
+        <div class="row g-4">
+            <permission require="@WebPermission.ProviderDocument.Create">
+                <div class="col-lg-5">
+                    <div class="card border h-100">
+                        <div class="card-header border-bottom"><h2 class="h6 mb-0">Upload a document</h2></div>
+                        <div class="card-body">
+                            <div asp-validation-summary="ModelOnly" class="text-danger small mb-2"></div>
+                            <form asp-area="Provider" asp-controller="ProviderDocuments" asp-action="Upload" method="post"
+                                  enctype="multipart/form-data" class="vstack gap-3">
+                                @Html.AntiForgeryToken()
+                                <div>
+                                    <label asp-for="Upload.Type" class="form-label"></label>
+                                    <select asp-for="Upload.Type" asp-items="Html.GetEnumSelectList<DocumentType>()" class="form-select"></select>
+                                    <span asp-validation-for="Upload.Type" class="text-danger small"></span>
+                                </div>
+                                <div>
+                                    <label asp-for="Upload.ExpiresAt" class="form-label"></label>
+                                    <input asp-for="Upload.ExpiresAt" class="form-control" type="date" dir="ltr" />
+                                    <span asp-validation-for="Upload.ExpiresAt" class="text-danger small"></span>
+                                </div>
+                                <div>
+                                    <label asp-for="Upload.File" class="form-label"></label>
+                                    <input asp-for="Upload.File" class="form-control" type="file"
+                                           accept=".pdf,.jpg,.jpeg,.png,.webp" />
+                                    <small class="form-text">PDF or image. Files are validated and scanned server-side.</small>
+                                    <span asp-validation-for="Upload.File" class="text-danger small"></span>
+                                </div>
+                                <button type="submit" class="btn btn-primary"><i class="bi bi-upload me-1"></i>Upload document</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </permission>
+
+            <div class="col-lg-7">
+                <div class="card border h-100">
+                    <div class="card-header border-bottom d-flex justify-content-between align-items-center">
+                        <h2 class="h6 mb-0">My documents</h2>
+                        <span class="badge text-bg-light">@Model.Documents.Count</span>
+                    </div>
+                    <div class="card-body">
+                        @if (!Model.HasDocuments)
+                        {
+                            <div class="text-center text-body-secondary py-4">
+                                <i class="bi bi-file-earmark-text fs-1 d-block mb-2"></i>
+                                No documents uploaded yet.
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="vstack gap-2">
+                                @foreach (var d in Model.Documents)
+                                {
+                                    var (css, icon) = d.StatusBadge;
+                                    <div class="border rounded p-3">
+                                        <div class="d-flex justify-content-between align-items-start gap-2">
+                                            <div>
+                                                <div class="fw-semibold">@d.TypeLabel</div>
+                                                <div class="small text-body-secondary">
+                                                    @if (!string.IsNullOrWhiteSpace(d.FileName)) { <bdi>@d.FileName</bdi> }
+                                                    @if (d.ExpiresAt is { } exp)
+                                                    {
+                                                        <text> · expires @exp.ToString("d MMM yyyy")</text>
+                                                        @if (d.IsExpiringSoon) { <span class="badge text-bg-warning ms-1">Expiring soon</span> }
+                                                    }
+                                                </div>
+                                                @if (d.Status == DocumentStatus.Rejected && !string.IsNullOrWhiteSpace(d.RejectionReason))
+                                                {
+                                                    <div class="small text-danger mt-1"><i class="bi bi-x-circle me-1" aria-hidden="true"></i><bdi>@d.RejectionReason</bdi></div>
+                                                }
+                                            </div>
+                                            <span class="badge @css"><i class="bi @icon me-1" aria-hidden="true"></i>@d.Status</span>
+                                        </div>
+                                        <div class="d-flex gap-3 mt-2">
+                                            @if (!string.IsNullOrWhiteSpace(d.DocumentUrl))
+                                            {
+                                                <a class="small" href="@d.DocumentUrl" target="_blank" rel="noopener"><i class="bi bi-box-arrow-up-right me-1" aria-hidden="true"></i>View file</a>
+                                            }
+                                            <permission require="@WebPermission.ProviderDocument.Update">
+                                                <a class="small text-primary" data-bs-toggle="collapse" href="#replace-@d.Id" role="button"><i class="bi bi-arrow-repeat me-1" aria-hidden="true"></i>Replace</a>
+                                            </permission>
+                                        </div>
+                                        <permission require="@WebPermission.ProviderDocument.Update">
+                                            <div class="collapse mt-2" id="replace-@d.Id">
+                                                <form asp-area="Provider" asp-controller="ProviderDocuments" asp-action="Replace"
+                                                      asp-route-id="@d.Id" method="post" enctype="multipart/form-data" class="row g-2 align-items-end">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="rowVersion" value="@d.RowVersion" />
+                                                    <div class="col-md-6">
+                                                        <label class="form-label small mb-1" for="rf-@d.Id">New file</label>
+                                                        <input id="rf-@d.Id" name="file" type="file" class="form-control form-control-sm"
+                                                               accept=".pdf,.jpg,.jpeg,.png,.webp" required />
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <label class="form-label small mb-1" for="re-@d.Id">Expiry</label>
+                                                        <input id="re-@d.Id" name="expiresAt" type="date" class="form-control form-control-sm" dir="ltr" />
+                                                    </div>
+                                                    <div class="col-md-2 d-grid">
+                                                        <button type="submit" class="btn btn-sm btn-primary">Replace</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </permission>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
