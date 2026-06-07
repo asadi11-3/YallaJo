@@ -1,0 +1,217 @@
+@using YallaJo.Web.Areas.Guide.Models.AgencyRoster
+@using YallaJo.Web.Areas.Guide.Shared
+@using YallaJo.Web.Infrastructure.Authorization
+@model AgencyRosterVm
+@{
+    ViewData["Title"] = "Agency Roster";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var sidebar = ViewBag.Sidebar as GuideSidebarVm ?? new GuideSidebarVm();
+}
+
+<partial name="_GuideSidebar" model="sidebar" />
+
+<section class="pt-0">
+    <div class="container vstack gap-4">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <h1 class="fs-4 mb-0"><i class="bi bi-people-fill me-2"></i>Agency Roster</h1>
+            <div class="d-flex gap-2 align-items-center">
+                @if (Model.PendingApplicationCount > 0)
+                {
+                    <span class="badge text-bg-warning align-self-center">@Model.PendingApplicationCount pending application@(Model.PendingApplicationCount == 1 ? "" : "s")</span>
+                }
+                <permission require="@WebPermission.AgencyRoster.Create">
+                    <a asp-action="Invite" class="btn btn-sm btn-primary">
+                        <i class="bi bi-person-plus me-1"></i>Invite a guide
+                    </a>
+                </permission>
+            </div>
+        </div>
+
+        @* ── Current guides ──────────────────────────────────────────────── *@
+        <div class="card border">
+            <div class="card-header border-bottom">
+                <h5 class="card-header-title mb-0">Current guides</h5>
+                <small class="text-muted">Guides affiliated with your agency.</small>
+            </div>
+            <div class="card-body">
+                @if (!Model.HasGuides)
+                {
+                    <div class="text-center text-muted py-4">
+                        <i class="bi bi-people fs-1 d-block mb-2"></i>
+                        <p class="mb-0">No guides on your roster yet.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Guide</th>
+                                    <th class="text-end">Commission</th>
+                                    <th>Joined</th>
+                                    <permission require="@WebPermission.AgencyRoster.Delete">
+                                        <th class="text-end">Actions</th>
+                                    </permission>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var g in Model.Guides)
+                                {
+                                    <tr>
+                                        <td>@g.GuideHandle</td>
+                                        <td class="text-end">@g.CommissionPercentage.ToString("0.##")%</td>
+                                        <td class="small">@g.JoinedAt.ToString("yyyy-MM-dd")</td>
+                                        <permission require="@WebPermission.AgencyRoster.Delete">
+                                            <td class="text-end">
+                                                <form asp-action="Remove" asp-route-guideUserId="@g.GuideUserId" method="post" class="d-inline"
+                                                      onsubmit="return confirm('Remove @g.GuideHandle from your agency? This ends the affiliation and cannot be undone.');">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="reason" value="Removed by agency" />
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                        <i class="bi bi-person-dash me-1"></i>Remove
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        </permission>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+
+        @* ── Pending applications ────────────────────────────────────────── *@
+        <div class="card border">
+            <div class="card-header border-bottom">
+                <h5 class="card-header-title mb-0">Guide applications</h5>
+                <small class="text-muted">Guides who applied to join your agency.</small>
+            </div>
+            <div class="card-body">
+                @if (!Model.HasApplications)
+                {
+                    <div class="text-center text-muted py-4">
+                        <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                        <p class="mb-0">No applications yet.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Guide</th>
+                                    <th>Message</th>
+                                    <th>Status</th>
+                                    <th>Applied</th>
+                                    <th class="text-end">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var a in Model.Applications)
+                                {
+                                    <tr>
+                                        <td>@a.GuideHandle</td>
+                                        <td class="small text-muted">@(string.IsNullOrWhiteSpace(a.Message) ? "—" : a.Message)</td>
+                                        <td><span class="badge @a.StatusBadgeClass">@a.Status</span></td>
+                                        <td class="small">@a.CreatedAt.ToString("yyyy-MM-dd")</td>
+                                        <td class="text-end">
+                                            @if (a.IsPending)
+                                            {
+                                                <div class="d-inline-flex gap-1">
+                                                    <permission require="@WebPermission.AgencyRoster.Approve">
+                                                        <form asp-action="Approve" asp-route-id="@a.Id" method="post" class="d-inline"
+                                                              onsubmit="return confirm('Approve @a.GuideHandle and add them to your roster?');">
+                                                            @Html.AntiForgeryToken()
+                                                            <button type="submit" class="btn btn-sm btn-success">Approve</button>
+                                                        </form>
+                                                    </permission>
+                                                    <permission require="@WebPermission.AgencyRoster.Reject">
+                                                        <form asp-action="Reject" asp-route-id="@a.Id" method="post" class="d-inline reject-form">
+                                                            @Html.AntiForgeryToken()
+                                                            <input type="hidden" name="reason" />
+                                                            <button type="submit" class="btn btn-sm btn-outline-danger">Reject</button>
+                                                        </form>
+                                                    </permission>
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted small">—</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+
+        @* ── Sent invitations ────────────────────────────────────────────── *@
+        <div class="card border">
+            <div class="card-header border-bottom">
+                <h5 class="card-header-title mb-0">Sent invitations</h5>
+                <small class="text-muted">Invitations your agency has sent to guides.</small>
+            </div>
+            <div class="card-body">
+                @if (!Model.HasSentInvitations)
+                {
+                    <div class="text-center text-muted py-4">
+                        <i class="bi bi-envelope fs-1 d-block mb-2"></i>
+                        <p class="mb-0">No invitations sent yet.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Guide</th>
+                                    <th class="text-end">Proposed commission</th>
+                                    <th>Status</th>
+                                    <th>Expires</th>
+                                    <th>Sent</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var i in Model.SentInvitations)
+                                {
+                                    <tr>
+                                        <td>@i.GuideHandle</td>
+                                        <td class="text-end">@i.ProposedCommissionPercentage.ToString("0.##")%</td>
+                                        <td><span class="badge @i.StatusBadgeClass">@i.Status</span></td>
+                                        <td class="small">@i.ExpiresAt.ToString("yyyy-MM-dd")</td>
+                                        <td class="small">@i.CreatedAt.ToString("yyyy-MM-dd")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        // Prompt for a rejection reason (the backend requires one) before submitting.
+        document.querySelectorAll('form.reject-form').forEach(function (form) {
+            form.addEventListener('submit', function (e) {
+                var reason = window.prompt('Reason for rejecting this application:');
+                if (reason === null || reason.trim() === '') {
+                    e.preventDefault();
+                    return false;
+                }
+                form.querySelector('input[name="reason"]').value = reason.trim();
+                return true;
+            });
+        });
+    </script>
+}

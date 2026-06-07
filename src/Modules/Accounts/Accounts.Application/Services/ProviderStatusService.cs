@@ -11,4 +11,15 @@ internal sealed class ProviderStatusService(
     {
         return providerApplicationRepository.ExistsApprovedForUserAsync(userId, cancellationToken);
     }
+
+    public async Task<IReadOnlyList<ApprovedProviderClaim>> GetApprovedProviderClaimsAsync(
+        CancellationToken cancellationToken = default)
+    {
+        var pairs = await providerApplicationRepository
+            .GetApprovedUserProviderPairsAsync(cancellationToken);
+
+        return pairs
+            .Select(p => new ApprovedProviderClaim(p.UserId, p.ProviderId))
+            .ToList();
+    }
 }

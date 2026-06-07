@@ -1,7 +1,10 @@
+@using YallaJo.Web.Infrastructure.Authorization
+@inject YallaJo.Web.Infrastructure.Identity.ICurrentUser CurrentUser
 @model YallaJo.Web.Areas.Provider.Shared.ProviderSidebarVm
 @{
     var active = ViewData["ProviderNav"] as string ?? "Dashboard";
     string Nav(string key) => active == key ? "nav-link active" : "nav-link";
+    bool Has(string permission) => CurrentUser.HasPermission(permission);
 }
 
 <section class="pt-4">
@@ -60,6 +63,14 @@
                                     <i class="bi bi-graph-up-arrow fa-fw me-1"></i>Earnings
                                 </a>
                             </li>
+                            @if (Has(WebPermission.Invoice.Read))
+                            {
+                                <li class="nav-item">
+                                    <a class="@Nav("Invoices")" asp-area="Provider" asp-controller="Invoices" asp-action="Index">
+                                        <i class="bi bi-receipt fa-fw me-1"></i>Invoices
+                                    </a>
+                                </li>
+                            }
                             <li class="nav-item">
                                 <a class="@Nav("PaymentMethods")" asp-area="Provider" asp-controller="PaymentMethods" asp-action="Index">
                                     <i class="bi bi-credit-card-2-back fa-fw me-1"></i>Payment Methods

@@ -1,0 +1,87 @@
+@using YallaJo.Web.Areas.Provider.Models.Invoices
+@using YallaJo.Web.Areas.Provider.Shared
+@using YallaJo.Web.Infrastructure.Authorization
+@model ProviderInvoicesVm
+@{
+    ViewData["Title"] = "Invoices";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var sidebar = ViewBag.Sidebar as ProviderSidebarVm ?? new ProviderSidebarVm();
+
+    string StatusBadge(string status) => status?.ToLowerInvariant() switch
+    {
+        "paid" or "issued" or "settled" => "badge text-bg-success",
+        "pending" or "draft" => "badge text-bg-warning",
+        "void" or "cancelled" or "refunded" => "badge text-bg-danger",
+        _ => "badge text-bg-secondary",
+    };
+}
+
+<partial name="_ProviderSidebar" model="sidebar" />
+
+<section class="pt-0">
+    <div class="container">
+        <div class="card border">
+            <div class="card-header border-bottom">
+                <h1 class="fs-5 mb-0"><i class="bi bi-receipt me-2"></i>Invoices</h1>
+                <small class="text-body-secondary">Invoices issued for your bookings.</small>
+            </div>
+            <div class="card-body">
+                @if (!Model.HasInvoices)
+                {
+                    <div class="text-center text-muted py-5">
+                        <i class="bi bi-receipt fs-1 d-block mb-2"></i>
+                        <p class="mb-0">No invoices yet.</p>
+                        <p class="small mb-0">Invoices appear here after your bookings are paid.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Invoice #</th>
+                                    <th>Customer</th>
+                                    <th>Issued</th>
+                                    <th>Status</th>
+                                    <th class="text-end">Total</th>
+                                    <th class="text-end">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var inv in Model.Invoices)
+                                {
+                                    <tr>
+                                        <td>
+                                            <span class="d-block"><code>@inv.InvoiceNumber</code></span>
+                                            <span class="small text-body-secondary">@inv.ItemCount item@(inv.ItemCount == 1 ? "" : "s")</span>
+                                        </td>
+                                        <td>@inv.BuyerName</td>
+                                        <td>@inv.IssuedAt.ToString("yyyy-MM-dd")</td>
+                                        <td><span class="@StatusBadge(inv.Status)">@inv.Status</span></td>
+                                        <td class="text-end">@inv.AmountTotal.ToString("0.##") @inv.Currency</td>
+                                        <td class="text-end">
+                                            @if (inv.PdfAvailable)
+                                            {
+                                                <permission require="@WebPermission.Invoice.Download">
+                                                    <a class="btn btn-sm btn-primary-soft" asp-area="Provider" asp-controller="Invoices"
+                                                       asp-action="Download" asp-route-id="@inv.Id">
+                                                        <i class="bi bi-download me-1"></i>PDF
+                                                    </a>
+                                                </permission>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-body-secondary small">—</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</section>

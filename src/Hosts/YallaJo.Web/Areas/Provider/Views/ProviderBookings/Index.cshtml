@@ -1,0 +1,94 @@
+@using YallaJo.Web.Areas.Provider.Models.Bookings
+@using YallaJo.Web.Areas.Provider.Shared
+@model ProviderBookingsIndexVm
+@{
+    ViewData["Title"] = "Manage bookings";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var sidebar = ViewBag.Sidebar as ProviderSidebarVm ?? new ProviderSidebarVm();
+
+    string Money(decimal amount, string? currency) =>
+        string.IsNullOrWhiteSpace(currency) ? amount.ToString("N0") : $"{amount:N0} {currency}";
+}
+
+<partial name="_ProviderSidebar" model="sidebar" />
+
+<section class="pt-0">
+    <div class="container vstack gap-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <h1 class="fs-4 mb-0"><i class="bi bi-bookmark-check me-2"></i>Manage bookings</h1>
+            <a asp-area="Provider" asp-controller="Bookings" asp-action="Index" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-people me-1"></i>Join requests
+            </a>
+        </div>
+
+        <div class="card border">
+            <div class="card-header border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <h5 class="card-header-title mb-0">Bookings for your tours</h5>
+                <form method="get" asp-action="Index" class="d-flex align-items-center gap-2">
+                    <label class="form-label small mb-0">Status</label>
+                    <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+                        <option value="">All</option>
+                        @foreach (var s in ProviderBookingsIndexVm.StatusFilters)
+                        {
+                            if (Model.Status == s)
+                            {
+                                <option value="@s" selected>@s</option>
+                            }
+                            else
+                            {
+                                <option value="@s">@s</option>
+                            }
+                        }
+                    </select>
+                </form>
+            </div>
+            <div class="card-body">
+                @if (!Model.HasItems)
+                {
+                    <div class="text-center text-muted py-5">
+                        <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                        <p class="mb-0">No bookings@(string.IsNullOrWhiteSpace(Model.Status) ? "" : $" in {Model.Status} status") yet.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Reference</th>
+                                    <th>Tour</th>
+                                    <th>Traveler</th>
+                                    <th>Slot</th>
+                                    <th class="text-end">Guests</th>
+                                    <th class="text-end">Total</th>
+                                    <th>Status</th>
+                                    <th class="text-end">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var b in Model.Items)
+                                {
+                                    <tr>
+                                        <td><code>@b.Reference</code></td>
+                                        <td>@b.TourName</td>
+                                        <td>@b.TravelerHandle</td>
+                                        <td class="small">@b.SlotLabel</td>
+                                        <td class="text-end">@b.ParticipantCount</td>
+                                        <td class="text-end">@Money(b.TotalAmount, b.Currency)</td>
+                                        <td><span class="badge @b.StatusBadgeClass">@b.Status</span></td>
+                                        <td class="text-end">
+                                            <a asp-action="Details" asp-route-id="@b.Id" class="btn btn-sm btn-outline-primary">
+                                                Manage
+                                            </a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</section>

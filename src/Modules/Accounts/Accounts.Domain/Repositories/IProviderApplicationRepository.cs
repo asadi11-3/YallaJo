@@ -16,6 +16,14 @@ public interface IProviderApplicationRepository : IRepository<ProviderApplicatio
 
     Task<bool> ExistsApprovedForUserAsync(Guid userId, CancellationToken ct = default);
 
+    /// <summary>
+    /// Returns the (owner user id, application id) pairs for every approved provider
+    /// application. The application id is the canonical ProviderId. Used for backfilling
+    /// the server-generated <c>provider_id</c> identity claim.
+    /// </summary>
+    Task<IReadOnlyList<(Guid UserId, Guid ProviderId)>> GetApprovedUserProviderPairsAsync(
+        CancellationToken ct = default);
+
     Task<IReadOnlyList<ProviderApplication>> GetQueueAsync(
         ProviderApplicationStatus? statusFilter,
         ProviderType? typeFilter,

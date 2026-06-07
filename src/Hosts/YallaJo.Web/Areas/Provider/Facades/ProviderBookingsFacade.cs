@@ -73,6 +73,33 @@ public sealed class ProviderBookingsFacade
     public async Task<ProviderBookingActionResult> RejectAsync(Guid id, string reason, CancellationToken ct = default)
         => Normalize(await _api.RejectAsync(id, reason, ct), "Could not reject the booking.");
 
+    public async Task<ProviderBookingActionResult> CompleteAsync(Guid id, CancellationToken ct = default)
+    {
+        var result = await _api.CompleteAsync(id, ct);
+        if (result.IsSuccess) return new(ProviderBookingOutcome.Ok);
+        if (result.IsUnauthorized) return new(ProviderBookingOutcome.ForceSignOut);
+        if (result.IsForbidden) return new(ProviderBookingOutcome.Forbidden,
+            Error: "Only the provider of this tour (or an admin) can complete this booking.");
+        if (result.IsNotFound) return new(ProviderBookingOutcome.NotFound, Error: "Booking not found.");
+        if (result.IsConflict) return new(ProviderBookingOutcome.Conflict,
+            Error: "The booking was changed by another request. Reload and try again.");
+
+        // The backend returns 400 for both "not yet started" and "invalid state".
+        // The non-generic ApiResult pipeline does not preserve the backend Detail on a
+        // 400, so we surface one clear, actionable message that covers the dominant case
+        // (a Confirmed booking whose tour has not started yet) without misleading wording.
+        if (result.IsValidationError)
+        {
+            return new(ProviderBookingOutcome.ValidationError,
+                Error: result.Error is { Length: > 0 } e
+                    ? e
+                    : "This booking can't be completed yet — a tour can only be completed after it has started.");
+        }
+
+        return new(ProviderBookingOutcome.ValidationError,
+            Error: result.Error ?? "Could not complete the booking.");
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────────────
 
     private async Task<IReadOnlyDictionary<Guid, string>> HydrateTourNamesAsync(
