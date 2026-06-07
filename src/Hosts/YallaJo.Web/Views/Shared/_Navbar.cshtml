@@ -39,11 +39,40 @@
 
             @* Main navbar START *@
             <div class="navbar-collapse collapse" id="navbarCollapse">
-                @* Public browse link — visible to everyone (CP-3a). Kept minimal:
-                   a single "Places" entry, no redesign of the wider navbar. *@
+                @* Public browse links — visible to everyone. Each entry maps to a confirmed
+                   existing anonymous Public-area GET page. Labels are hardcoded English to match
+                   the existing navbar items (the prior "Places" link, "Sign In", admin menus).
+                   NOTE: the @@Localizer["Public.*"] keys do NOT currently resolve at runtime
+                   (a pre-existing app-wide issue also affecting the public breadcrumbs/headings),
+                   so localized labels would render raw keys; using literal text keeps the navbar
+                   readable until that localization issue is addressed separately. *@
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
+                        <a class="nav-link" asp-area="Public" asp-controller="Home" asp-action="Index">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" asp-area="Public" asp-controller="Tours" asp-action="Index">Tours</a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" asp-area="Public" asp-controller="Places" asp-action="Index">Places</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" asp-area="Public" asp-controller="Directory" asp-action="Index">Businesses</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" asp-area="Public" asp-controller="Packages" asp-action="Index">Packages</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" asp-area="Public" asp-controller="Blog" asp-action="Index">Blog</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" asp-area="Public" asp-controller="Guides" asp-action="Index">Guides</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" asp-area="Public" asp-controller="Agencies" asp-action="Index">Agencies</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" asp-area="Public" asp-controller="Contact" asp-action="Index">Contact</a>
                     </li>
                 </ul>
 

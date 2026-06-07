@@ -316,7 +316,7 @@ public sealed class SupportPagesSmokeTests
             => Task.FromResult(ApiResult<T>.Fail(501, "not implemented in stub"));
         public Task<ApiResult> PutAsync(string path, object? body = null, CancellationToken ct = default)
             => Task.FromResult(ApiResult.Fail(501, "not implemented in stub"));
-        public Task<ApiResult<T>> PutFileAsync<T>(string path, Stream fileStream, string fileName, string contentType, string formFieldName = "file", CancellationToken ct = default)
+        public Task<ApiResult<T>> PutFileAsync<T>(string path, Stream fileStream, string fileName, string contentType, IReadOnlyDictionary<string, string>? formFields = null, string formFieldName = "file", CancellationToken ct = default)
             => Task.FromResult(ApiResult<T>.Fail(501, "not implemented in stub"));
         public Task<ApiResult<T>> PostFileAsync<T>(string path, Stream fileStream, string fileName, string contentType, IReadOnlyDictionary<string, string>? formFields = null, string formFieldName = "file", CancellationToken ct = default)
             => Task.FromResult(ApiResult<T>.Fail(501, "not implemented in stub"));

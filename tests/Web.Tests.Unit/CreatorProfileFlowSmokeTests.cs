@@ -310,7 +310,7 @@ public sealed class CreatorProfileFlowSmokeTests
             => Task.FromResult(ApiResult.Fail(501, "n/a"));
         public Task<ApiResult<T>> PutAsync<T>(string path, object? body = null, CancellationToken ct = default)
             => Task.FromResult(ApiResult<T>.Fail(501, "n/a"));
-        public Task<ApiResult<T>> PutFileAsync<T>(string path, Stream fileStream, string fileName, string contentType, string formFieldName = "file", CancellationToken ct = default)
+        public Task<ApiResult<T>> PutFileAsync<T>(string path, Stream fileStream, string fileName, string contentType, IReadOnlyDictionary<string, string>? formFields = null, string formFieldName = "file", CancellationToken ct = default)
             => Task.FromResult(ApiResult<T>.Fail(501, "n/a"));
         public Task<ApiResult<T>> PostFileAsync<T>(string path, Stream fileStream, string fileName, string contentType, IReadOnlyDictionary<string, string>? formFields = null, string formFieldName = "file", CancellationToken ct = default)
             => Task.FromResult(ApiResult<T>.Fail(501, "n/a"));
