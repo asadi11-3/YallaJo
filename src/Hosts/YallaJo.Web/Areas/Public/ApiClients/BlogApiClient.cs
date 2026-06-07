@@ -71,8 +71,16 @@ public sealed class BlogApiClient(IApiClient api)
     public Task<ApiResult> RemoveCommentReactionAsync(Guid commentId, CancellationToken ct = default)
         => api.DeleteAsync($"{Base}/comments/{commentId}/reactions", ct);
 
-    public Task<ApiResult<FollowStateResponse>> GetFollowStateAsync(Guid profileId, CancellationToken ct = default)
-        => api.GetAsync<FollowStateResponse>($"{Base}/creators/profiles/{profileId}/following", ct);
+    public async Task<ApiResult<FollowStateResponse>> GetFollowStateAsync(Guid profileId, CancellationToken ct = default)
+    {
+        // The backend returns a bare JSON boolean (`true`/`false`), so we
+        // deserialize a bool and wrap it into FollowStateResponse to keep the
+        // facade/controller contract unchanged.
+        var result = await api.GetAsync<bool>($"{Base}/creators/profiles/{profileId}/following", ct);
+        return result.IsSuccess
+            ? ApiResult<FollowStateResponse>.Ok(new FollowStateResponse { IsFollowing = result.Data }, result.StatusCode)
+            : ApiResult<FollowStateResponse>.Fail(result.StatusCode, result.Error);
+    }
 
     public Task<ApiResult> FollowCreatorAsync(Guid profileId, CancellationToken ct = default)
         => api.PostAsync($"{Base}/creators/profiles/{profileId}/follow", null, ct);
