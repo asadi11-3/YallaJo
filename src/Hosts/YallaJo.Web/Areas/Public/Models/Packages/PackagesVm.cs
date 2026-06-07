@@ -13,6 +13,7 @@ public sealed class PackageCardVm
     public int IncludedTourCount { get; init; }
     public DateTime? ValidFrom { get; init; }
     public DateTime? ValidTo { get; init; }
+    public bool HasValidity => ValidFrom is not null || ValidTo is not null;
 }
 
 /// <summary>The public packages listing page view model (paged grid).</summary>
@@ -25,6 +26,7 @@ public sealed class PackagesGridVm
     public int TotalPages { get; init; }
     public bool HasPreviousPage { get; init; }
     public bool HasNextPage { get; init; }
+    public bool HasResults => Packages.Count > 0;
 }
 
 /// <summary>The public package detail page view model.</summary>
@@ -44,4 +46,7 @@ public sealed class PackageDetailVm
 
     /// <summary>Free-text inclusion lines, ordered by the backend SortOrder.</summary>
     public IReadOnlyList<string> Inclusions { get; init; } = [];
+    public bool HasIncludedTours => IncludedTours.Count > 0;
+    public bool HasInclusions => Inclusions.Count > 0;
+    public bool HasValidity => ValidFrom is not null || ValidTo is not null;
 }
