@@ -1,0 +1,251 @@
+@model YallaJo.Web.Areas.Accounts.Models.Overview.OverviewVm
+@using YallaJo.Web.Areas.Accounts.Shared
+@{
+    ViewData["Title"] = "My Account";
+    ViewData["AccountNav"] = "Overview";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var sidebar = ViewBag.Sidebar as AccountSidebarVm ?? new AccountSidebarVm();
+
+    string StatusBadge(string status) => status switch
+    {
+        "Confirmed" => "bg-success bg-opacity-10 text-success",
+        "Completed" => "bg-primary bg-opacity-10 text-primary",
+        "Cancelled" => "bg-danger bg-opacity-10 text-danger",
+        "Rejected" => "bg-danger bg-opacity-10 text-danger",
+        "AwaitingPayment" => "bg-warning bg-opacity-10 text-warning",
+        "PendingConfirmation" => "bg-warning bg-opacity-10 text-warning",
+        _ => "bg-secondary bg-opacity-10 text-secondary",
+    };
+}
+
+<section class="pt-3">
+    <div class="container">
+        <div class="row g-4 g-xl-5">
+            <partial name="_AccountSidebar" model="sidebar" />
+
+            <div class="col-lg-8 col-xl-9">
+                <div class="d-grid d-lg-none mb-3">
+                    <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasSidebar">
+                        <i class="fas fa-sliders-h me-2"></i>Account menu
+                    </button>
+                </div>
+
+                @* ── Hero / greeting ─────────────────────────────────────────── *@
+                <div class="card border bg-light mb-4">
+                    <div class="card-body d-flex flex-wrap justify-content-between align-items-center gap-3">
+                        <div>
+                            <h1 class="h4 mb-1">Welcome back, @Model.DisplayName</h1>
+                            <p class="text-muted mb-0">Here's a quick look at your trips, favorites and picks for you.</p>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <a asp-area="Accounts" asp-controller="Notifications" asp-action="Index"
+                               class="btn btn-sm btn-light border position-relative">
+                                <i class="bi bi-bell me-1"></i>Notifications
+                                @if (Model.UnreadCount > 0)
+                                {
+                                    <span class="badge bg-danger rounded-pill position-absolute top-0 start-100 translate-middle"
+                                          aria-live="polite" aria-label="@Model.UnreadCount unread notifications">@Model.UnreadCount</span>
+                                }
+                            </a>
+                            @if (Model.UnreadCount > 0)
+                            {
+                                <form asp-area="" asp-controller="Notifications" asp-action="MarkAllRead" method="post" class="m-0">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-sm btn-primary-soft mb-0">
+                                        <i class="bi bi-check2-all me-1"></i>Mark all read
+                                    </button>
+                                </form>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                @* ── KPI tiles ───────────────────────────────────────────────── *@
+                <div class="row g-3 mb-4">
+                    <div class="col-sm-4">
+                        <a asp-area="Accounts" asp-controller="Bookings" asp-action="Index"
+                           class="card border h-100 text-reset text-decoration-none">
+                            <div class="card-body text-center">
+                                <i class="bi bi-ticket-perforated display-6 text-primary"></i>
+                                <h2 class="h3 mt-2 mb-0">@Model.UpcomingBookingsCount</h2>
+                                <p class="text-muted small mb-0">Upcoming trips</p>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-sm-4">
+                        <a asp-area="Accounts" asp-controller="Wishlist" asp-action="Index"
+                           class="card border h-100 text-reset text-decoration-none">
+                            <div class="card-body text-center">
+                                <i class="bi bi-heart display-6 text-danger"></i>
+                                <h2 class="h3 mt-2 mb-0">@Model.FavoritesCount</h2>
+                                <p class="text-muted small mb-0">Favorites</p>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-sm-4">
+                        <a asp-area="Accounts" asp-controller="Recommendations" asp-action="Index"
+                           class="card border h-100 text-reset text-decoration-none">
+                            <div class="card-body text-center">
+                                <i class="bi bi-stars display-6 text-warning"></i>
+                                <h2 class="h3 mt-2 mb-0">@Model.RecommendationsCount</h2>
+                                <p class="text-muted small mb-0">Picks for you</p>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+
+                @* ── Upcoming trips preview ──────────────────────────────────── *@
+                <div class="card border mb-4">
+                    <div class="card-header border-bottom d-flex justify-content-between align-items-center">
+                        <h2 class="card-header-title h5 mb-0">Upcoming trips</h2>
+                        <a asp-area="Accounts" asp-controller="Bookings" asp-action="Index" class="btn btn-sm btn-primary-soft mb-0">View bookings</a>
+                    </div>
+                    <div class="card-body">
+                        @if (Model.BookingsFailed)
+                        {
+                            <div class="text-center py-4">
+                                <p class="text-muted mb-2">Couldn't load your bookings.</p>
+                                <a asp-area="Accounts" asp-controller="Overview" asp-action="Index" class="btn btn-sm btn-outline-primary">Retry</a>
+                            </div>
+                        }
+                        else if (Model.UpcomingBookings is { Count: > 0 })
+                        {
+                            <div class="vstack gap-3">
+                                @foreach (var b in Model.UpcomingBookings)
+                                {
+                                    <div class="d-flex flex-wrap justify-content-between align-items-center border rounded p-3 gap-2">
+                                        <div>
+                                            <h3 class="h6 mb-1">@b.TourName</h3>
+                                            <div class="small text-muted">
+                                                <span class="me-3"><i class="bi bi-calendar3 me-1"></i>@b.Date.ToString("d MMM yyyy")</span>
+                                                <span><i class="bi bi-people me-1"></i>@b.ParticipantCount guest(s)</span>
+                                            </div>
+                                        </div>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <span class="badge @StatusBadge(b.Status)">@b.Status</span>
+                                            <a class="btn btn-sm btn-primary-soft mb-0"
+                                               asp-area="Accounts" asp-controller="Bookings" asp-action="Detail" asp-route-id="@b.Id">Manage</a>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="text-center py-4">
+                                <p class="text-muted mb-2">No upcoming trips yet.</p>
+                                <a asp-area="Public" asp-controller="Tours" asp-action="Index" class="btn btn-sm btn-primary">Explore tours</a>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <div class="row g-4">
+                    @* ── Favorites preview ───────────────────────────────────── *@
+                    <div class="col-lg-6">
+                        <div class="card border h-100">
+                            <div class="card-header border-bottom d-flex justify-content-between align-items-center">
+                                <h2 class="card-header-title h5 mb-0">Your favorites</h2>
+                                <a asp-area="Accounts" asp-controller="Wishlist" asp-action="Index" class="btn btn-sm btn-primary-soft mb-0">View all</a>
+                            </div>
+                            <div class="card-body">
+                                @if (Model.FavoritesFailed)
+                                {
+                                    <div class="text-center py-4">
+                                        <p class="text-muted mb-2">Couldn't load your favorites.</p>
+                                        <a asp-area="Accounts" asp-controller="Overview" asp-action="Index" class="btn btn-sm btn-outline-primary">Retry</a>
+                                    </div>
+                                }
+                                else if (Model.Favorites is { Count: > 0 })
+                                {
+                                    <div class="vstack gap-3">
+                                        @foreach (var f in Model.Favorites)
+                                        {
+                                            <a href="@f.DetailUrl" class="d-flex align-items-center gap-3 text-reset text-decoration-none">
+                                                <div class="avatar avatar-md flex-shrink-0">
+                                                    @if (!string.IsNullOrEmpty(f.ImageUrl))
+                                                    {
+                                                        <img src="@f.ImageUrl" class="avatar-img rounded" alt="@f.Title" />
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="avatar-img rounded bg-light d-flex align-items-center justify-content-center">
+                                                            <i class="bi bi-image text-secondary"></i>
+                                                        </span>
+                                                    }
+                                                </div>
+                                                <div class="min-w-0">
+                                                    <h3 class="h6 mb-0 text-truncate">@f.Title</h3>
+                                                    <span class="small text-muted">@f.KindLabel</span>
+                                                </div>
+                                            </a>
+                                        }
+                                    </div>
+                                }
+                                else
+                                {
+                                    <p class="text-muted text-center py-4 mb-0">No favorites saved yet.</p>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    @* ── Recommendations preview ─────────────────────────────── *@
+                    <div class="col-lg-6">
+                        <div class="card border h-100">
+                            <div class="card-header border-bottom d-flex justify-content-between align-items-center">
+                                <h2 class="card-header-title h5 mb-0">Picks for you</h2>
+                                <a asp-area="Accounts" asp-controller="Recommendations" asp-action="Index" class="btn btn-sm btn-primary-soft mb-0">Discover</a>
+                            </div>
+                            <div class="card-body">
+                                @if (Model.RecommendationsFailed)
+                                {
+                                    <div class="text-center py-4">
+                                        <p class="text-muted mb-2">Couldn't load recommendations.</p>
+                                        <a asp-area="Accounts" asp-controller="Overview" asp-action="Index" class="btn btn-sm btn-outline-primary">Retry</a>
+                                    </div>
+                                }
+                                else if (Model.Recommendations is { Count: > 0 })
+                                {
+                                    <div class="vstack gap-3">
+                                        @foreach (var r in Model.Recommendations)
+                                        {
+                                            <div class="d-flex align-items-center gap-3">
+                                                <div class="min-w-0 flex-grow-1">
+                                                    <h3 class="h6 mb-0 text-truncate">
+                                                        @if (r.DetailUrl is not null)
+                                                        {
+                                                            <a href="@r.DetailUrl" class="text-reset text-primary-hover text-decoration-none">@r.Name</a>
+                                                        }
+                                                        else
+                                                        {
+                                                            @r.Name
+                                                        }
+                                                    </h3>
+                                                    <span class="small text-muted">@r.KindLabel</span>
+                                                </div>
+                                                @if (r.AverageRating > 0)
+                                                {
+                                                    <span class="badge bg-warning bg-opacity-10 text-warning flex-shrink-0">
+                                                        <i class="bi bi-star-fill me-1"></i>@r.AverageRating.ToString("0.0")
+                                                    </span>
+                                                }
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="text-center py-4">
+                                        <p class="text-muted mb-2">No recommendations yet.</p>
+                                        <a asp-area="Accounts" asp-controller="Recommendations" asp-action="Index" class="btn btn-sm btn-primary">Discover</a>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
