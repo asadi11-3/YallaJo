@@ -320,8 +320,10 @@ internal static class RecommendationsEndpoints
         .WithName("RecordSponsoredClick")
         .Produces(StatusCodes.Status200OK)
         .WithSummary("Record a click on a sponsored placement")
-        .WithMetadata(new MustHavePermissionAttribute(AnalyticsFeatures.Recommendation, AppAction.Read))
-        .RequireAuthorization();
+        // Sponsored-click telemetry is fired from public pages by both anonymous
+        // and authenticated visitors. The command's UserId is nullable by design;
+        // currentUser.UserId is populated when authenticated and null otherwise.
+        .AllowAnonymous();
 
         // 6.2: A/B experiments admin
         var experiments = group.MapGroup("/analytics/admin/experiments").WithTags("Analytics | Experiments");
