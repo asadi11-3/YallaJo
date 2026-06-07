@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OutputCaching;
 using YallaJo.Web.Areas.Public.Caching;
 using YallaJo.Web.Areas.Public.Facades;
+using YallaJo.Web.Areas.Public.Models.AccessibilityReviews;
 using YallaJo.Web.Areas.Public.Models.Places;
 using YallaJo.Web.Areas.Public.Models.Reviews;
 using YallaJo.Web.Infrastructure.Mvc;
@@ -17,11 +18,13 @@ public sealed class PlacesController : BaseController
 
     private readonly PlacesFacade _places;
     private readonly ReviewsFacade _reviews;
+    private readonly AccessibilityReviewsFacade _accessibilityReviews;
 
-    public PlacesController(PlacesFacade places, ReviewsFacade reviews)
+    public PlacesController(PlacesFacade places, ReviewsFacade reviews, AccessibilityReviewsFacade accessibilityReviews)
     {
         _places = places;
         _reviews = reviews;
+        _accessibilityReviews = accessibilityReviews;
     }
 
     // ── GET /places ───────────────────────────────────────────────────────────
@@ -74,7 +77,65 @@ public sealed class PlacesController : BaseController
 
         PublicOutputCacheTagger.AddTag(HttpContext, $"place:{result.Data.PlaceId}");
         ViewData["Reviews"] = await _reviews.GetReviewListAsync(TargetType, result.Data.PlaceId, 1, ct);
+        ViewData["AccessibilityReviews"] = await _accessibilityReviews.GetListAsync(TargetType, result.Data.PlaceId, 1, ct);
         return View(result.Data);
+    }
+
+    // ── Accessibility reviews (login-gated create/edit/delete) ──────────────────
+
+    [HttpPost("places/{slug}/accessibility-reviews")]
+    [Authorize]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> CreateAccessibilityReview(
+        string slug, [Bind(Prefix = "AccessibilityReview")] AccessibilityReviewFormVm form, CancellationToken ct = default)
+    {
+        form.TargetType = TargetType;
+        if (!ModelState.IsValid)
+        {
+            SetError("Please complete the accessibility review form, including at least one feature.");
+            return RedirectToAction(nameof(Details), new { slug });
+        }
+
+        var result = await _accessibilityReviews.SubmitAsync(form, ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+        if (result.IsSuccess) SetSuccess("Thanks for your accessibility review!");
+        else if (!ApplyValidationErrors(result)) SetError(result.Error);
+
+        return RedirectToAction(nameof(Details), new { slug });
+    }
+
+    [HttpPost("places/{slug}/accessibility-reviews/{reviewId:guid}/edit")]
+    [Authorize]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> EditAccessibilityReview(
+        string slug, Guid reviewId, [Bind(Prefix = "AccessibilityReview")] AccessibilityReviewFormVm form, CancellationToken ct = default)
+    {
+        form.TargetType = TargetType;
+        if (!ModelState.IsValid)
+        {
+            SetError("Please complete the accessibility review form, including at least one feature.");
+            return RedirectToAction(nameof(Details), new { slug });
+        }
+
+        var result = await _accessibilityReviews.EditAsync(reviewId, form, ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+        if (result.IsSuccess) SetSuccess("Your accessibility review was updated.");
+        else if (!ApplyValidationErrors(result)) SetError(result.Error);
+
+        return RedirectToAction(nameof(Details), new { slug });
+    }
+
+    [HttpPost("places/{slug}/accessibility-reviews/{reviewId:guid}/delete")]
+    [Authorize]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteAccessibilityReview(string slug, Guid reviewId, CancellationToken ct = default)
+    {
+        var result = await _accessibilityReviews.DeleteAsync(reviewId, ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+        if (result.IsSuccess) SetSuccess("Your accessibility review was deleted.");
+        else if (!ApplyValidationErrors(result)) SetError(result.Error);
+
+        return RedirectToAction(nameof(Details), new { slug });
     }
 
     // ── POST /places/{slug}/reviews (login-gated review create) ─────────────────

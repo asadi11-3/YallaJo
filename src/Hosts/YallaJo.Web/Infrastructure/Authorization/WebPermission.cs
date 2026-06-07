@@ -343,6 +343,19 @@ public static class WebPermission
         public const string Create = "Permission.ReviewReply.Create";
     }
 
+    // ── AccessibilityReview (accessibility-focused entity reviews) ─────────────
+    // Mirror the Social backend permissions (Permission.AccessibilityReview.{Action}).
+    // Distinct from Review.* (normal reviews) and AccessibilityFeature.* (place/business
+    // accessibility attributes). Granted to consumer roles; ownership + the 48-hour edit
+    // window are enforced server-side.
+    public static class AccessibilityReview
+    {
+        public const string Read   = "Permission.AccessibilityReview.Read";
+        public const string Create = "Permission.AccessibilityReview.Create";
+        public const string Update = "Permission.AccessibilityReview.Update";
+        public const string Delete = "Permission.AccessibilityReview.Delete";
+    }
+
     // ── Creator (blog creator identity + follow) ──────────────────────────────
     // Mirror the ContentBlogs backend permissions (Permission.Creator.{Action}).
     public static class Creator

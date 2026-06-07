@@ -410,6 +410,11 @@
     </section>
 }
 
+@if (ViewData["AccessibilityReviews"] is YallaJo.Web.Areas.Public.Models.AccessibilityReviews.AccessibilityReviewListVm accessibilityReviews)
+{
+    <partial name="~/Areas/Public/Views/Shared/_AccessibilityReviews.cshtml" model="accessibilityReviews" />
+}
+
 @if (ViewData["Reviews"] is YallaJo.Web.Areas.Public.Models.Reviews.ReviewListVm reviews)
 {
     <partial name="~/Areas/Public/Views/Shared/_Reviews.cshtml" model="reviews" />
