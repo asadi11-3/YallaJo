@@ -49,7 +49,11 @@ public sealed class CreatorDashboardAuthenticatedSmokeTests
 
         html.Should().Contain("creatorDashboardMenu", "the Creator sidebar partial must render");
         html.Should().Contain("Creator Dashboard", "the dashboard heading must render");
-        html.Should().Contain("/creator/dashboard", "the permission-gated Dashboard link must render for Creator.Read holders");
+        // Assert on the rendered anchor href (the sidebar Dashboard link), NOT a bare URL
+        // substring — the layout's language-switcher form emits the current URL as a hidden
+        // returnUrl input (`<input value="/creator/dashboard">`), which would match either way
+        // and silently mask gating regressions. `href="..."` only matches real anchors.
+        html.Should().Contain("href=\"/creator/dashboard\"", "the permission-gated Dashboard link must render for Creator.Read holders");
     }
 
     [Fact]
@@ -67,7 +71,12 @@ public sealed class CreatorDashboardAuthenticatedSmokeTests
 
         html.Should().Contain("creatorDashboardMenu", "the sidebar chrome still renders");
         html.Should().NotContain("asp-action", "tag helpers must be processed, not emitted raw");
-        html.Should().NotContain("/creator/dashboard",
+        // The bare-string assertion `NotContain("/creator/dashboard")` was brittle: the
+        // layout's language-switcher form emits the current request URL as a hidden
+        // returnUrl input value (see _Navbar.cshtml ~line 215), which always matched.
+        // Restrict the assertion to the rendered anchor's href so it really verifies the
+        // <permission>-gated sidebar Dashboard link is absent.
+        html.Should().NotContain("href=\"/creator/dashboard\"",
             "the Dashboard nav link must be hidden when Creator.Read is absent");
     }
 

@@ -1,4 +1,4 @@
-using YallaJo.Web.Areas.Content.Models.Blogs;
+using YallaJo.Web.Features.Blogs.Models;
 
 namespace YallaJo.Web.Areas.Creator.Models.Preview;
 

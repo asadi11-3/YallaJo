@@ -76,7 +76,7 @@ public sealed class CreatorPreviewFlowSmokeTests
         html.Should().Contain("Trusted", "the public trust tier badge renders");
         html.Should().Contain("Published Articles");
         html.Should().Contain("My Public Post", "a published article title renders");
-        html.Should().Contain("/content/blogs/post-1", "article titles link to the real public article route");
+        html.Should().Contain("/blog/post-1", "article titles link to the canonical public article route (Public/Blog/Post)");
     }
 
     [Fact]

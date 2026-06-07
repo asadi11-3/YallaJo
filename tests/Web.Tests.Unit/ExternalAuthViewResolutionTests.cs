@@ -70,8 +70,9 @@ public sealed class ExternalAuthViewResolutionTests : IDisposable
         // ExternalAuthController.Callback renders the view via an explicit
         // absolute path — verify that path points at a real file so the
         // "view not found" runtime bug cannot reappear.
+        // Must match ExternalAuthController.CompleteViewPath (Areas/Auth/Controllers/ExternalAuthController.cs).
         const string completePath =
-            "~/Areas/Auth/Features/ExternalProviders/Views/Complete.cshtml";
+            "~/Areas/Auth/Views/ExternalProviders/Complete.cshtml";
 
         var result = engine.GetView(
             executingFilePath: null,
@@ -119,7 +120,10 @@ public sealed class ExternalAuthViewResolutionTests : IDisposable
 
     private static string LocateWebProjectRoot()
     {
-        // Walk up from the test binary to the repo root, then down to YallaJo.Web.
+        // Walk up from the test binary to the repo root (marked by YallaJo.sln),
+        // then down to the Web host. The project lives at src/Hosts/YallaJo.Web
+        // per the repo layout — the pre-restructure path (<repo>/YallaJo.Web)
+        // does not exist.
         var dir = new DirectoryInfo(AppContext.BaseDirectory);
         while (dir is not null && !File.Exists(Path.Combine(dir.FullName, "YallaJo.sln")))
             dir = dir.Parent;
@@ -127,7 +131,7 @@ public sealed class ExternalAuthViewResolutionTests : IDisposable
         if (dir is null)
             throw new InvalidOperationException("Could not locate repository root from test binary.");
 
-        return Path.Combine(dir.FullName, "YallaJo.Web");
+        return Path.Combine(dir.FullName, "src", "Hosts", "YallaJo.Web");
     }
 
     private sealed class StubWebHostEnvironment : IWebHostEnvironment

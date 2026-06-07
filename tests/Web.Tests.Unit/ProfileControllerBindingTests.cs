@@ -66,7 +66,7 @@ public sealed class ProfileControllerBindingTests
         var webProjectDir = LocateWebProjectRoot();
         var partialPath = Path.Combine(
             webProjectDir,
-            "Areas", "Accounts", "Features", "Profile", "Views", "_UpdateProfileForm.cshtml");
+            "Areas", "Accounts", "Views", "Profile", "_UpdateProfileForm.cshtml");
 
         File.Exists(partialPath).Should().BeTrue(
             $"the Details form is rendered from {partialPath}; " +
@@ -74,21 +74,23 @@ public sealed class ProfileControllerBindingTests
 
         var content = File.ReadAllText(partialPath);
         content.Should().Contain(
-            "@model YallaJo.Web.Areas.Accounts.Features.Profile.ViewModels.UpdateProfileVm",
+            "@model YallaJo.Web.Areas.Accounts.Models.Profile.UpdateProfileVm",
             "the partial must be typed to UpdateProfileVm so inputs render FLAT");
     }
 
     private static string LocateWebProjectRoot()
     {
+        // Walk up looking for src/Hosts/YallaJo.Web (the real project location).
+        // The pre-restructure path (<repo>/YallaJo.Web) does not exist.
         var dir = AppContext.BaseDirectory;
-        for (var i = 0; i < 8 && dir is not null; i++)
+        for (var i = 0; i < 10 && dir is not null; i++)
         {
-            var candidate = Path.Combine(dir, "YallaJo.Web");
+            var candidate = Path.Combine(dir, "src", "Hosts", "YallaJo.Web");
             if (Directory.Exists(candidate)) return candidate;
             dir = Path.GetDirectoryName(dir);
         }
 
         throw new InvalidOperationException(
-            "Could not locate the YallaJo.Web project root from test output directory.");
+            "Could not locate src/Hosts/YallaJo.Web from test output directory.");
     }
 }

@@ -100,8 +100,8 @@
                             @foreach (var a in Model.Articles)
                             {
                                 <li class="list-group-item px-0">
-                                    @* Title links to the real public article page (anonymous Content/Blogs/Details). *@
-                                    <a asp-area="Content" asp-controller="Blogs" asp-action="Details" asp-route-slug="@a.Slug"
+                                    @* Title links to the canonical public article page (Public/Blog/Post). *@
+                                    <a asp-area="Public" asp-controller="Blog" asp-action="Post" asp-route-slug="@a.Slug"
                                        class="h6 d-block mb-1">@a.Title</a>
                                     @if (!string.IsNullOrWhiteSpace(a.Summary))
                                     {

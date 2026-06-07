@@ -1,5 +1,5 @@
 using FluentAssertions;
-using YallaJo.Web.Areas.Content.ApiClients;
+using YallaJo.Web.Features.Blogs.ApiClients;
 using YallaJo.Web.Areas.Creator.Models.Articles;
 using YallaJo.Web.Infrastructure.Api.Contracts;
 using YallaJo.Web.Services;
