@@ -166,6 +166,13 @@
             </div>
         }
 
+        @if (ViewData["AccessibilityReviews"] is YallaJo.Web.Areas.Public.Models.AccessibilityReviews.AccessibilityReviewListVm accessibilityReviews)
+        {
+            <div class="mt-5">
+                <partial name="~/Areas/Public/Views/Shared/_AccessibilityReviews.cshtml" model="accessibilityReviews" />
+            </div>
+        }
+
         @if (ViewData["Reviews"] is YallaJo.Web.Areas.Public.Models.Reviews.ReviewListVm reviews)
         {
             <div class="mt-5">

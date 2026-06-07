@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OutputCaching;
 using YallaJo.Web.Areas.Public.Caching;
 using YallaJo.Web.Areas.Public.Facades;
+using YallaJo.Web.Areas.Public.Models.AccessibilityReviews;
 using YallaJo.Web.Areas.Public.Models.Directory;
 using YallaJo.Web.Areas.Public.Models.Reviews;
 using YallaJo.Web.Infrastructure.Mvc;
@@ -17,11 +18,13 @@ public sealed class DirectoryController : BaseController
 
     private readonly DirectoryFacade _directory;
     private readonly ReviewsFacade _reviews;
+    private readonly AccessibilityReviewsFacade _accessibilityReviews;
 
-    public DirectoryController(DirectoryFacade directory, ReviewsFacade reviews)
+    public DirectoryController(DirectoryFacade directory, ReviewsFacade reviews, AccessibilityReviewsFacade accessibilityReviews)
     {
         _directory = directory;
         _reviews = reviews;
+        _accessibilityReviews = accessibilityReviews;
     }
 
     [HttpGet("businesses")]
@@ -61,7 +64,65 @@ public sealed class DirectoryController : BaseController
 
         PublicOutputCacheTagger.AddTag(HttpContext, $"business:{result.Data.Id}");
         ViewData["Reviews"] = await _reviews.GetReviewListAsync(TargetType, result.Data.Id, 1, ct);
+        ViewData["AccessibilityReviews"] = await _accessibilityReviews.GetListAsync(TargetType, result.Data.Id, 1, ct);
         return View(result.Data);
+    }
+
+    // ── Accessibility reviews (login-gated create/edit/delete; id-routed) ───────
+
+    [HttpPost("businesses/{id:guid}/accessibility-reviews")]
+    [Authorize]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> CreateAccessibilityReview(
+        Guid id, [Bind(Prefix = "AccessibilityReview")] AccessibilityReviewFormVm form, CancellationToken ct = default)
+    {
+        form.TargetType = TargetType;
+        if (!ModelState.IsValid)
+        {
+            SetError("Please complete the accessibility review form, including at least one feature.");
+            return RedirectToAction(nameof(Detail), new { id });
+        }
+
+        var result = await _accessibilityReviews.SubmitAsync(form, ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+        if (result.IsSuccess) SetSuccess("Thanks for your accessibility review!");
+        else if (!ApplyValidationErrors(result)) SetError(result.Error);
+
+        return RedirectToAction(nameof(Detail), new { id });
+    }
+
+    [HttpPost("businesses/{id:guid}/accessibility-reviews/{reviewId:guid}/edit")]
+    [Authorize]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> EditAccessibilityReview(
+        Guid id, Guid reviewId, [Bind(Prefix = "AccessibilityReview")] AccessibilityReviewFormVm form, CancellationToken ct = default)
+    {
+        form.TargetType = TargetType;
+        if (!ModelState.IsValid)
+        {
+            SetError("Please complete the accessibility review form, including at least one feature.");
+            return RedirectToAction(nameof(Detail), new { id });
+        }
+
+        var result = await _accessibilityReviews.EditAsync(reviewId, form, ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+        if (result.IsSuccess) SetSuccess("Your accessibility review was updated.");
+        else if (!ApplyValidationErrors(result)) SetError(result.Error);
+
+        return RedirectToAction(nameof(Detail), new { id });
+    }
+
+    [HttpPost("businesses/{id:guid}/accessibility-reviews/{reviewId:guid}/delete")]
+    [Authorize]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteAccessibilityReview(Guid id, Guid reviewId, CancellationToken ct = default)
+    {
+        var result = await _accessibilityReviews.DeleteAsync(reviewId, ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+        if (result.IsSuccess) SetSuccess("Your accessibility review was deleted.");
+        else if (!ApplyValidationErrors(result)) SetError(result.Error);
+
+        return RedirectToAction(nameof(Detail), new { id });
     }
 
     [HttpPost("businesses/{id:guid}/reviews")]

@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OutputCaching;
 using YallaJo.Web.Areas.Public.Facades;
+using YallaJo.Web.Areas.Public.Models.AccessibilityReviews;
 using YallaJo.Web.Areas.Public.Models.Guides;
 using YallaJo.Web.Areas.Public.Models.Reviews;
 using YallaJo.Web.Infrastructure.Mvc;
@@ -10,7 +11,10 @@ namespace YallaJo.Web.Areas.Public.Controllers;
 
 [Area("Public")]
 [AllowAnonymous]
-public sealed class GuidesController(GuidesFacade guides, ReviewsFacade reviews) : BaseController
+public sealed class GuidesController(
+    GuidesFacade guides,
+    ReviewsFacade reviews,
+    AccessibilityReviewsFacade accessibilityReviews) : BaseController
 {
     private const string TargetType = "TourGuide";
 
@@ -45,7 +49,65 @@ public sealed class GuidesController(GuidesFacade guides, ReviewsFacade reviews)
         }
 
         ViewData["Reviews"] = await reviews.GetReviewListAsync(TargetType, result.Data.Id, 1, ct);
+        ViewData["AccessibilityReviews"] = await accessibilityReviews.GetListAsync(TargetType, result.Data.Id, 1, ct);
         return View(result.Data);
+    }
+
+    // ── Accessibility reviews (login-gated create/edit/delete) ──────────────────
+
+    [HttpPost("guides/{slug}/accessibility-reviews")]
+    [Authorize]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> CreateAccessibilityReview(
+        string slug, [Bind(Prefix = "AccessibilityReview")] AccessibilityReviewFormVm form, CancellationToken ct = default)
+    {
+        form.TargetType = TargetType;
+        if (!ModelState.IsValid)
+        {
+            SetError("Please complete the accessibility review form, including at least one feature.");
+            return RedirectToAction(nameof(Detail), new { slug });
+        }
+
+        var result = await accessibilityReviews.SubmitAsync(form, ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+        if (result.IsSuccess) SetSuccess("Thanks for your accessibility review!");
+        else if (!ApplyValidationErrors(result)) SetError(result.Error);
+
+        return RedirectToAction(nameof(Detail), new { slug });
+    }
+
+    [HttpPost("guides/{slug}/accessibility-reviews/{reviewId:guid}/edit")]
+    [Authorize]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> EditAccessibilityReview(
+        string slug, Guid reviewId, [Bind(Prefix = "AccessibilityReview")] AccessibilityReviewFormVm form, CancellationToken ct = default)
+    {
+        form.TargetType = TargetType;
+        if (!ModelState.IsValid)
+        {
+            SetError("Please complete the accessibility review form, including at least one feature.");
+            return RedirectToAction(nameof(Detail), new { slug });
+        }
+
+        var result = await accessibilityReviews.EditAsync(reviewId, form, ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+        if (result.IsSuccess) SetSuccess("Your accessibility review was updated.");
+        else if (!ApplyValidationErrors(result)) SetError(result.Error);
+
+        return RedirectToAction(nameof(Detail), new { slug });
+    }
+
+    [HttpPost("guides/{slug}/accessibility-reviews/{reviewId:guid}/delete")]
+    [Authorize]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteAccessibilityReview(string slug, Guid reviewId, CancellationToken ct = default)
+    {
+        var result = await accessibilityReviews.DeleteAsync(reviewId, ct);
+        if (GuardSignOut(result) is { } signOut) return signOut;
+        if (result.IsSuccess) SetSuccess("Your accessibility review was deleted.");
+        else if (!ApplyValidationErrors(result)) SetError(result.Error);
+
+        return RedirectToAction(nameof(Detail), new { slug });
     }
 
     [HttpPost("guides/{slug}/reviews")]
