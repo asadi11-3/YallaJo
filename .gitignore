@@ -200,6 +200,10 @@ PublishScripts/
 **/[Pp]ackages/*
 # except build/, which is used as an MSBuild target.
 !**/[Pp]ackages/build/
+# Application source: the public tour-packages view models live under a folder
+# literally named "Packages" and must NOT be caught by the NuGet packages rule above.
+!src/Hosts/YallaJo.Web/Areas/Public/Models/Packages/
+!src/Hosts/YallaJo.Web/Areas/Public/Models/Packages/**
 # Uncomment if necessary however generally it will be regenerated when needed
 #!**/[Pp]ackages/repositories.config
 # NuGet v3's project.json files produces more ignorable files
