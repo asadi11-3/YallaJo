@@ -53,12 +53,17 @@ public sealed class ProviderBookingDetailsVm
     public decimal? RefundAmount { get; init; }
 
     // Action flags mirror the backend state machine for the actions in this batch:
-    //   Confirm ← AwaitingPayment | PendingConfirmation
-    //   Cancel  ← AwaitingPayment | PendingConfirmation | Confirmed
-    public bool CanConfirm => Status is "AwaitingPayment" or "PendingConfirmation";
-    public bool CanReject  => Status is "PendingConfirmation";
-    public bool CanCancel  => Status is "AwaitingPayment" or "PendingConfirmation" or "Confirmed";
-    public bool HasAnyAction => CanConfirm || CanReject || CanCancel;
+    //   Confirm  ← AwaitingPayment | PendingConfirmation
+    //   Reject   ← PendingConfirmation
+    //   Cancel   ← AwaitingPayment | PendingConfirmation | Confirmed
+    //   Complete ← Confirmed (the backend additionally requires the slot to have started;
+    //              the detail DTO carries no slot time, so we show the action for any
+    //              Confirmed booking and rely on the backend's 422 "not yet started" guard).
+    public bool CanConfirm  => Status is "AwaitingPayment" or "PendingConfirmation";
+    public bool CanReject   => Status is "PendingConfirmation";
+    public bool CanCancel   => Status is "AwaitingPayment" or "PendingConfirmation" or "Confirmed";
+    public bool CanComplete => Status is "Confirmed";
+    public bool HasAnyAction => CanConfirm || CanReject || CanCancel || CanComplete;
 }
 
 public sealed class ProviderBookingLineVm

@@ -44,6 +44,10 @@ public sealed class ProviderBookingsApiClient
     public Task<ApiResult> RejectAsync(Guid id, string reason, CancellationToken ct = default)
         => _api.PostAsync($"{Base}/{id}/reject", new RejectBookingApiRequest(reason), ct);
 
+    // POST /api/v1/booking/{id}/complete — provider marks a started Confirmed booking Completed (empty body)
+    public Task<ApiResult> CompleteAsync(Guid id, CancellationToken ct = default)
+        => _api.PostAsync($"{Base}/{id}/complete", null, ct);
+
     // GET /api/v1/tours/{id} — tour name hydration
     public Task<ApiResult<ProviderTourLookupResponse>> GetTourAsync(Guid id, CancellationToken ct = default)
         => _api.GetAsync<ProviderTourLookupResponse>($"/api/v1/tours/{id}", ct);
