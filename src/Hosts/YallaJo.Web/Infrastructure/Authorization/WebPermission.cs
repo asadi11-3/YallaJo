@@ -321,6 +321,16 @@ public static class WebPermission
         public const string Create = "Permission.Refund.Create";
     }
 
+    // ── DeviceToken (Messaging — push-notification device tokens, §3.10 Devices) ──
+    // Mirror the Messaging backend permissions (Permission.DeviceToken.{Action}).
+    // Granted to the User/traveler role so users manage their own devices.
+    public static class DeviceToken
+    {
+        public const string Read   = "Permission.DeviceToken.Read";
+        public const string Create = "Permission.DeviceToken.Create";
+        public const string Delete = "Permission.DeviceToken.Delete";
+    }
+
     // ── GuideDashboard ────────────────────────────────────────────────────────
     public static class GuideDashboard
     {
