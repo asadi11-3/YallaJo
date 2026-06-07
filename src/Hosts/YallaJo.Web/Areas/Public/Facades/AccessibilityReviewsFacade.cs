@@ -41,6 +41,31 @@ public sealed class AccessibilityReviewsFacade(AccessibilityReviewsApiClient api
         }
     }
 
+    /// <summary>The caller's own accessibility reviews, for the Accounts "My …" page.</summary>
+    public async Task<ApiResult<MyAccessibilityReviewsVm>> GetMyAsync(CancellationToken ct = default)
+    {
+        var result = await api.GetMyAsync(cursor: null, pageSize: 50, ct);
+        if (result.RequireSignOut) return ApiResult<MyAccessibilityReviewsVm>.ForceSignOut();
+        if (!result.IsSuccess || result.Data is null)
+            return ApiResult<MyAccessibilityReviewsVm>.Fail(result.StatusCode, result.Error ?? "Could not load your accessibility reviews.");
+
+        var rows = result.Data.Items
+            .OrderByDescending(r => r.CreatedAt)
+            .Select(r => new MyAccessibilityReviewRowVm(
+                r.Id,
+                AccessibilityReviewMapper.TargetTypeName(r.TargetType),
+                r.TargetId,
+                r.Rating,
+                r.Title,
+                r.Content,
+                AccessibilityReviewMapper.ParseFeatures(r.FeatureTypesCsv),
+                r.CreatedAt,
+                r.LastEditedAt))
+            .ToList();
+
+        return ApiResult<MyAccessibilityReviewsVm>.Ok(new MyAccessibilityReviewsVm { Items = rows });
+    }
+
     public async Task<ApiResult> SubmitAsync(AccessibilityReviewFormVm vm, CancellationToken ct = default)
     {
         var body = new CreateAccessibilityReviewBody(

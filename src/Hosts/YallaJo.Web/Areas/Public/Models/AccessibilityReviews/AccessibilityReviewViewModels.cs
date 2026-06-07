@@ -30,6 +30,43 @@ public sealed record AccessibilityReviewRowVm(
     public bool IsWithinEditWindow => CreatedAt >= DateTime.UtcNow.AddHours(-48);
 }
 
+/// <summary>The caller's own accessibility reviews ("My Accessibility Reviews").</summary>
+public sealed class MyAccessibilityReviewsVm
+{
+    public IReadOnlyList<MyAccessibilityReviewRowVm> Items { get; init; } = [];
+    public bool HasItems => Items.Count > 0;
+}
+
+public sealed record MyAccessibilityReviewRowVm(
+    Guid Id,
+    string TargetType,
+    Guid TargetId,
+    decimal Rating,
+    string? Title,
+    string Content,
+    IReadOnlyList<string> FeatureTypes,
+    DateTime CreatedAt,
+    DateTime? LastEditedAt)
+{
+    public bool IsWithinEditWindow => CreatedAt >= DateTime.UtcNow.AddHours(-48);
+
+    /// <summary>Public detail URL for the reviewed entity (slug-less id links where applicable).</summary>
+    public string? EntityUrl => TargetType switch
+    {
+        "Business" => $"/businesses/{TargetId}",
+        _ => null, // Tour/Place/TourGuide are slug-routed; the id is not a slug, so no direct link.
+    };
+
+    public string EntityLabel => TargetType switch
+    {
+        "Tour" => "Tour",
+        "Place" => "Place",
+        "Business" => "Business",
+        "TourGuide" => "Tour guide",
+        _ => TargetType,
+    };
+}
+
 /// <summary>Create/edit form for an accessibility review. Validation mirrors the backend
 /// validator (rating 0.5–5 in 0.5 steps, content 10–5000, title ≤200, ≥1 feature type).</summary>
 public sealed class AccessibilityReviewFormVm
