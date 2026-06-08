@@ -42,27 +42,31 @@ public sealed class CommandHandlerCacheInvalidationTests
         IBusinessStaffRepository StaffRepo,
         IBusinessRepository BusinessRepo,
         IContentPlacesUnitOfWork Uow,
-        HybridCache Cache) BuildAddStaffSubject()
+        HybridCache Cache,
+        ICurrentUser CurrentUser) BuildAddStaffSubject()
     {
         var staffRepo = Substitute.For<IBusinessStaffRepository>();
         var businessRepo = Substitute.For<IBusinessRepository>();
         var uow = Substitute.For<IContentPlacesUnitOfWork>();
         var outbox = Substitute.For<IContentPlacesOutboxWriter>();
+        var currentUser = Substitute.For<ICurrentUser>();
+        currentUser.UserId.Returns(Guid.NewGuid()); // default; tests override below
         var cache = Substitute.For<HybridCache>();
         var logger = Substitute.For<ILogger<AddBusinessStaffCommandHandler>>();
 
         var handler = new AddBusinessStaffCommandHandler(
-            staffRepo, businessRepo, uow, outbox, cache, logger);
+            staffRepo, businessRepo, uow, outbox, cache, currentUser, logger);
 
-        return (handler, staffRepo, businessRepo, uow, cache);
+        return (handler, staffRepo, businessRepo, uow, cache, currentUser);
     }
 
     [Fact]
     public async Task AddBusinessStaff_OnSuccess_InvalidatesScopedBizTagAfterSave()
     {
-        var (handler, staffRepo, businessRepo, uow, cache) = BuildAddStaffSubject();
+        var (handler, staffRepo, businessRepo, uow, cache, currentUser) = BuildAddStaffSubject();
         var ownerId = Guid.NewGuid();
         var business = TestBusinessFactory.CreateBusiness(ownerId);
+        currentUser.UserId.Returns(ownerId);
 
         businessRepo
             .GetByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
@@ -72,7 +76,7 @@ public sealed class CommandHandlerCacheInvalidationTests
             .Returns(false);
 
         var result = await handler.Handle(
-            new AddBusinessStaffCommand(business.Id, ownerId, Guid.NewGuid(), BusinessStaffRole.Manager),
+            new AddBusinessStaffCommand(business.Id, Guid.NewGuid(), BusinessStaffRole.Manager),
             CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
@@ -91,13 +95,13 @@ public sealed class CommandHandlerCacheInvalidationTests
     [Fact]
     public async Task AddBusinessStaff_OnNotFound_DoesNotInvalidateCache()
     {
-        var (handler, _, businessRepo, uow, cache) = BuildAddStaffSubject();
+        var (handler, _, businessRepo, uow, cache, _) = BuildAddStaffSubject();
         businessRepo
             .GetByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
             .Returns((Business?)null);
 
         var result = await handler.Handle(
-            new AddBusinessStaffCommand(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), BusinessStaffRole.Staff),
+            new AddBusinessStaffCommand(Guid.NewGuid(), Guid.NewGuid(), BusinessStaffRole.Staff),
             CancellationToken.None);
 
         result.IsSuccess.Should().BeFalse();
@@ -108,17 +112,18 @@ public sealed class CommandHandlerCacheInvalidationTests
     [Fact]
     public async Task AddBusinessStaff_OnForbidden_DoesNotInvalidateCache()
     {
-        var (handler, _, businessRepo, uow, cache) = BuildAddStaffSubject();
+        var (handler, _, businessRepo, uow, cache, currentUser) = BuildAddStaffSubject();
         var ownerId = Guid.NewGuid();
         var callerId = Guid.NewGuid();
         var business = TestBusinessFactory.CreateBusiness(ownerId);
+        currentUser.UserId.Returns(callerId);
 
         businessRepo
             .GetByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
             .Returns(business);
 
         var result = await handler.Handle(
-            new AddBusinessStaffCommand(business.Id, callerId, Guid.NewGuid(), BusinessStaffRole.Staff),
+            new AddBusinessStaffCommand(business.Id, Guid.NewGuid(), BusinessStaffRole.Staff),
             CancellationToken.None);
 
         result.IsSuccess.Should().BeFalse();
@@ -254,26 +259,30 @@ public sealed class CommandHandlerCacheInvalidationTests
         IBusinessAmenityRepository AmenityRepo,
         IBusinessRepository BusinessRepo,
         IContentPlacesUnitOfWork Uow,
-        HybridCache Cache) BuildAddAmenitySubject()
+        HybridCache Cache,
+        ICurrentUser CurrentUser) BuildAddAmenitySubject()
     {
         var amenityRepo = Substitute.For<IBusinessAmenityRepository>();
         var businessRepo = Substitute.For<IBusinessRepository>();
         var uow = Substitute.For<IContentPlacesUnitOfWork>();
+        var currentUser = Substitute.For<ICurrentUser>();
+        currentUser.UserId.Returns(Guid.NewGuid()); // default; tests override below
         var cache = Substitute.For<HybridCache>();
         var logger = Substitute.For<ILogger<AddBusinessAmenityCommandHandler>>();
 
         var handler = new AddBusinessAmenityCommandHandler(
-            amenityRepo, businessRepo, uow, cache, logger);
+            amenityRepo, businessRepo, uow, cache, currentUser, logger);
 
-        return (handler, amenityRepo, businessRepo, uow, cache);
+        return (handler, amenityRepo, businessRepo, uow, cache, currentUser);
     }
 
     [Fact]
     public async Task AddBusinessAmenity_OnSuccess_InvalidatesScopedBizTagAfterSave()
     {
-        var (handler, amenityRepo, businessRepo, uow, cache) = BuildAddAmenitySubject();
+        var (handler, amenityRepo, businessRepo, uow, cache, currentUser) = BuildAddAmenitySubject();
         var ownerId = Guid.NewGuid();
         var business = TestBusinessFactory.CreateBusiness(ownerId);
+        currentUser.UserId.Returns(ownerId);
 
         businessRepo
             .GetByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
@@ -283,7 +292,7 @@ public sealed class CommandHandlerCacheInvalidationTests
             .Returns(false);
 
         var result = await handler.Handle(
-            new AddBusinessAmenityCommand(business.Id, ownerId, "WiFi", null, 0),
+            new AddBusinessAmenityCommand(business.Id, "WiFi", null, 0),
             CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
@@ -300,13 +309,13 @@ public sealed class CommandHandlerCacheInvalidationTests
     [Fact]
     public async Task AddBusinessAmenity_OnNotFound_DoesNotInvalidateCache()
     {
-        var (handler, _, businessRepo, uow, cache) = BuildAddAmenitySubject();
+        var (handler, _, businessRepo, uow, cache, _) = BuildAddAmenitySubject();
         businessRepo
             .GetByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
             .Returns((Business?)null);
 
         var result = await handler.Handle(
-            new AddBusinessAmenityCommand(Guid.NewGuid(), Guid.NewGuid(), "WiFi", null, 0),
+            new AddBusinessAmenityCommand(Guid.NewGuid(), "WiFi", null, 0),
             CancellationToken.None);
 
         result.IsSuccess.Should().BeFalse();
@@ -317,17 +326,18 @@ public sealed class CommandHandlerCacheInvalidationTests
     [Fact]
     public async Task AddBusinessAmenity_OnForbidden_DoesNotInvalidateCache()
     {
-        var (handler, _, businessRepo, uow, cache) = BuildAddAmenitySubject();
+        var (handler, _, businessRepo, uow, cache, currentUser) = BuildAddAmenitySubject();
         var ownerId = Guid.NewGuid();
         var callerId = Guid.NewGuid();
         var business = TestBusinessFactory.CreateBusiness(ownerId);
+        currentUser.UserId.Returns(callerId);
 
         businessRepo
             .GetByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
             .Returns(business);
 
         var result = await handler.Handle(
-            new AddBusinessAmenityCommand(business.Id, callerId, "WiFi", null, 0),
+            new AddBusinessAmenityCommand(business.Id, "WiFi", null, 0),
             CancellationToken.None);
 
         result.IsSuccess.Should().BeFalse();
@@ -341,17 +351,20 @@ public sealed class CommandHandlerCacheInvalidationTests
         RemoveBusinessAmenityCommandHandler Handler,
         IBusinessAmenityRepository AmenityRepo,
         IContentPlacesUnitOfWork Uow,
-        HybridCache Cache) BuildRemoveAmenitySubject()
+        HybridCache Cache,
+        ICurrentUser CurrentUser) BuildRemoveAmenitySubject()
     {
         var amenityRepo = Substitute.For<IBusinessAmenityRepository>();
         var uow = Substitute.For<IContentPlacesUnitOfWork>();
+        var currentUser = Substitute.For<ICurrentUser>();
+        currentUser.UserId.Returns(Guid.NewGuid()); // default; tests override below
         var cache = Substitute.For<HybridCache>();
         var logger = Substitute.For<ILogger<RemoveBusinessAmenityCommandHandler>>();
 
         var handler = new RemoveBusinessAmenityCommandHandler(
-            amenityRepo, uow, cache, logger);
+            amenityRepo, uow, cache, currentUser, logger);
 
-        return (handler, amenityRepo, uow, cache);
+        return (handler, amenityRepo, uow, cache, currentUser);
     }
 
     private static AmenityEntity SeedAmenityForBusiness(Guid ownerId)
@@ -369,16 +382,17 @@ public sealed class CommandHandlerCacheInvalidationTests
     [Fact]
     public async Task RemoveBusinessAmenity_OnSuccess_InvalidatesScopedBizTagAfterSave()
     {
-        var (handler, amenityRepo, uow, cache) = BuildRemoveAmenitySubject();
+        var (handler, amenityRepo, uow, cache, currentUser) = BuildRemoveAmenitySubject();
         var ownerId = Guid.NewGuid();
         var amenity = SeedAmenityForBusiness(ownerId);
+        currentUser.UserId.Returns(ownerId);
 
         amenityRepo
             .GetByIdWithBusinessAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
             .Returns(amenity);
 
         var result = await handler.Handle(
-            new RemoveBusinessAmenityCommand(amenity.Id, ownerId),
+            new RemoveBusinessAmenityCommand(amenity.Id),
             CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
@@ -395,13 +409,13 @@ public sealed class CommandHandlerCacheInvalidationTests
     [Fact]
     public async Task RemoveBusinessAmenity_OnNotFound_DoesNotInvalidateCache()
     {
-        var (handler, amenityRepo, uow, cache) = BuildRemoveAmenitySubject();
+        var (handler, amenityRepo, uow, cache, _) = BuildRemoveAmenitySubject();
         amenityRepo
             .GetByIdWithBusinessAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
             .Returns((AmenityEntity?)null);
 
         var result = await handler.Handle(
-            new RemoveBusinessAmenityCommand(Guid.NewGuid(), Guid.NewGuid()),
+            new RemoveBusinessAmenityCommand(Guid.NewGuid()),
             CancellationToken.None);
 
         result.IsSuccess.Should().BeFalse();
@@ -412,17 +426,18 @@ public sealed class CommandHandlerCacheInvalidationTests
     [Fact]
     public async Task RemoveBusinessAmenity_OnForbidden_DoesNotInvalidateCache()
     {
-        var (handler, amenityRepo, uow, cache) = BuildRemoveAmenitySubject();
+        var (handler, amenityRepo, uow, cache, currentUser) = BuildRemoveAmenitySubject();
         var ownerId = Guid.NewGuid();
         var callerId = Guid.NewGuid();
         var amenity = SeedAmenityForBusiness(ownerId);
+        currentUser.UserId.Returns(callerId);
 
         amenityRepo
             .GetByIdWithBusinessAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
             .Returns(amenity);
 
         var result = await handler.Handle(
-            new RemoveBusinessAmenityCommand(amenity.Id, callerId),
+            new RemoveBusinessAmenityCommand(amenity.Id),
             CancellationToken.None);
 
         result.IsSuccess.Should().BeFalse();

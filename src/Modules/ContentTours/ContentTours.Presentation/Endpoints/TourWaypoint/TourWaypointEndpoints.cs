@@ -1,6 +1,7 @@
 using ContentTours.Application.Commands.TourWaypoints.AddTourWaypoint;
 using ContentTours.Application.Commands.TourWaypoints.RemoveTourWaypoint;
 using ContentTours.Application.Commands.TourWaypoints.ReorderTourWaypoints;
+using ContentTours.Application.Commands.TourWaypoints.UpdateTourWaypoint;
 using ContentTours.Application.Queries.TourWaypoints.GetByTourId;
 using ContentTours.Contracts.Authorization;
 using ContentTours.Presentation.Endpoints.TourWaypoint.Models;
@@ -60,6 +61,36 @@ internal static class TourWaypointEndpoints
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status409Conflict)
         .WithMetadata(new MustHavePermissionAttribute(ContentToursFeatures.TourWaypoint, AppAction.Create));
+
+        // PDF Task 4A B1.4: per-waypoint edit. BFF shape (IsMeetingPoint:bool + StopDurationMinutes)
+        // — handler preserves existing Start/End semantics; only Stop ↔ MeetingPoint is editable.
+        waypoints.MapPut("/{waypointId:guid}", async (
+            Guid id,
+            Guid waypointId,
+            UpdateTourWaypointRequest request,
+            ISender sender,
+            CancellationToken ct) =>
+        {
+            var cmd = new UpdateTourWaypointCommand(
+                id,
+                waypointId,
+                request.Name,
+                request.Description,
+                request.Latitude,
+                request.Longitude,
+                request.IsMeetingPoint,
+                request.StopDurationMinutes);
+            var result = await sender.Send(cmd, ct);
+            return result.ToApiResult();
+        })
+        .WithName("UpdateTourWaypoint")
+        .WithSummary("Update a single waypoint on a tour")
+        .Produces(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status409Conflict)
+        .WithMetadata(new MustHavePermissionAttribute(ContentToursFeatures.TourWaypoint, AppAction.Update));
 
         // PDF Task 4A B2: batch reorder — body provides the full ordered WaypointIds list;
         // handler reassigns SortOrder = 0..N-1. Handler validates set-equality + duplicates.

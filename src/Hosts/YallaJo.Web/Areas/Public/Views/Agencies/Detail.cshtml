@@ -108,10 +108,5 @@
 </section>
 
 @section Scripts {
-    <script>
-        // Tooltip init (agencies have no favourite buttons).
-        (function () {
-            document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) { new bootstrap.Tooltip(el); });
-        })();
-    </script>
+    <script src="~/assets/js/agencies-detail.js" asp-append-version="true"></script>
 }

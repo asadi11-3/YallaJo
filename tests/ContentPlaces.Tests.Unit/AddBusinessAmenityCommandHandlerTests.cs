@@ -26,11 +26,12 @@ public sealed class AddBusinessAmenityCommandHandlerTests
         var businessRepo = Substitute.For<IBusinessRepository>();
         var uow = Substitute.For<IContentPlacesUnitOfWork>();
         var currentUser = Substitute.For<ICurrentUser>();
+        currentUser.UserId.Returns(Guid.NewGuid()); // default; tests override below
         var cache = Substitute.For<HybridCache>();
         var logger = Substitute.For<ILogger<AddBusinessAmenityCommandHandler>>();
 
         var handler = new AddBusinessAmenityCommandHandler(
-            amenityRepo, businessRepo, uow, cache, logger);
+            amenityRepo, businessRepo, uow, cache, currentUser, logger);
 
         return (handler, amenityRepo, businessRepo, uow, currentUser);
     }
@@ -44,7 +45,7 @@ public sealed class AddBusinessAmenityCommandHandlerTests
             .Returns((Business?)null);
 
         var result = await handler.Handle(
-            new AddBusinessAmenityCommand(Guid.NewGuid(), Guid.NewGuid(), "WiFi", null, 0),
+            new AddBusinessAmenityCommand(Guid.NewGuid(), "WiFi", null, 0),
             CancellationToken.None);
 
         result.IsSuccess.Should().BeFalse();
@@ -54,17 +55,18 @@ public sealed class AddBusinessAmenityCommandHandlerTests
     [Fact]
     public async Task ReturnsForbiddenWhenStandardUserIsNotOwner()
     {
-        var (handler, _, businessRepo, _, _) = BuildSubject();
+        var (handler, _, businessRepo, _, currentUser) = BuildSubject();
         var ownerId = Guid.NewGuid();
         var callerId = Guid.NewGuid();
         var business = TestBusinessFactory.CreateBusiness(ownerId);
+        currentUser.UserId.Returns(callerId);
 
         businessRepo
             .GetByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
             .Returns(business);
 
         var result = await handler.Handle(
-            new AddBusinessAmenityCommand(business.Id, callerId, "WiFi", null, 0),
+            new AddBusinessAmenityCommand(business.Id, "WiFi", null, 0),
             CancellationToken.None);
 
         result.IsSuccess.Should().BeFalse();
@@ -74,9 +76,10 @@ public sealed class AddBusinessAmenityCommandHandlerTests
     [Fact]
     public async Task SucceedsWhenCallerIsOwner()
     {
-        var (handler, amenityRepo, businessRepo, uow, _) = BuildSubject();
+        var (handler, amenityRepo, businessRepo, uow, currentUser) = BuildSubject();
         var ownerId = Guid.NewGuid();
         var business = TestBusinessFactory.CreateBusiness(ownerId);
+        currentUser.UserId.Returns(ownerId);
 
         businessRepo
             .GetByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
@@ -88,7 +91,7 @@ public sealed class AddBusinessAmenityCommandHandlerTests
             .Returns(false);
 
         var result = await handler.Handle(
-            new AddBusinessAmenityCommand(business.Id, ownerId, "WiFi", null, 0),
+            new AddBusinessAmenityCommand(business.Id, "WiFi", null, 0),
             CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
@@ -100,9 +103,10 @@ public sealed class AddBusinessAmenityCommandHandlerTests
     [Fact]
     public async Task ReturnsDuplicateWhenAmenityExists()
     {
-        var (handler, amenityRepo, businessRepo, _, _) = BuildSubject();
+        var (handler, amenityRepo, businessRepo, _, currentUser) = BuildSubject();
         var ownerId = Guid.NewGuid();
         var business = TestBusinessFactory.CreateBusiness(ownerId);
+        currentUser.UserId.Returns(ownerId);
 
         businessRepo
             .GetByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
@@ -114,7 +118,7 @@ public sealed class AddBusinessAmenityCommandHandlerTests
             .Returns(true);
 
         var result = await handler.Handle(
-            new AddBusinessAmenityCommand(business.Id, ownerId, "WiFi", null, 0),
+            new AddBusinessAmenityCommand(business.Id, "WiFi", null, 0),
             CancellationToken.None);
 
         result.IsSuccess.Should().BeFalse();

@@ -46,5 +46,11 @@ public sealed class AgencyApplicationConfiguration : IEntityTypeConfiguration<Ag
 
         builder.HasIndex(a => new { a.AgencyUserId, a.Status })
             .HasDatabaseName("IX_AgencyApplications_AgencyUserId_Status");
+
+        // Prevent duplicate pending applications for the same guide/agency pair
+        builder.HasIndex(a => new { a.GuideUserId, a.AgencyUserId })
+            .IsUnique()
+            .HasFilter("[Status] = 'Pending'")
+            .HasDatabaseName("UX_AgencyApplications_Pending_Guide_Agency");
     }
 }

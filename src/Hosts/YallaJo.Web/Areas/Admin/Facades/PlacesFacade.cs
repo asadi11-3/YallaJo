@@ -1,4 +1,4 @@
-using YallaJo.Web.Areas.Admin.Models.Places;
+using Microsoft.AspNetCore.OutputCaching;
 using YallaJo.Web.Areas.Admin.Models.Places;
 using YallaJo.Web.Infrastructure.Api.Contracts;
 
@@ -8,7 +8,12 @@ namespace YallaJo.Web.Areas.Admin.Facades;
 public sealed class PlacesFacade
 {
     private readonly PlacesApiClient _api;
-    public PlacesFacade(PlacesApiClient api) => _api = api;
+    private readonly IOutputCacheStore _cache;
+    public PlacesFacade(PlacesApiClient api, IOutputCacheStore cache)
+    {
+        _api = api;
+        _cache = cache;
+    }
 
     // ── Queries ──────────────────────────────────────────────────────────────
     public async Task<ApiResult<PlaceListVm>> GetPlacesAsync(
@@ -78,22 +83,22 @@ public sealed class PlacesFacade
     }
 
     public async Task<ApiResult> UpdateAsync(EditPlaceVm vm, CancellationToken ct = default)
-        => Normalize(
+        => await NormalizeAsync(
             await _api.UpdateAsync(vm.Id, PlacesMapper.ToUpdateRequest(vm), ct),
-            "Could not update place.");
+            "Could not update place.", vm.Id);
 
     public async Task<ApiResult> DeleteAsync(Guid id, CancellationToken ct = default)
-        => Normalize(await _api.DeleteAsync(id, ct), "Could not delete place.");
+        => await NormalizeAsync(await _api.DeleteAsync(id, ct), "Could not delete place.", id);
 
     public async Task<ApiResult> FeatureAsync(Guid id, bool featured, CancellationToken ct = default)
-        => Normalize(
+        => await NormalizeAsync(
             await _api.FeatureAsync(id, featured, ct),
-            featured ? "Could not feature place." : "Could not unfeature place.");
+            featured ? "Could not feature place." : "Could not unfeature place.", id);
 
     public async Task<ApiResult> VerifyAsync(Guid id, bool verified, CancellationToken ct = default)
-        => Normalize(
+        => await NormalizeAsync(
             await _api.VerifyAsync(id, verified, ct),
-            verified ? "Could not verify place." : "Could not unverify place.");
+            verified ? "Could not verify place." : "Could not unverify place.", id);
 
     // §8.5 — replace a place's accessibility features (batch).
     public async Task<ApiResult> SetAccessibilityAsync(
@@ -114,18 +119,28 @@ public sealed class PlacesFacade
                 i.IsAvailable))
             .ToList();
 
-        return Normalize(await _api.SetAccessibilityAsync(id, payload, ct), "Could not update accessibility features.");
+        return await NormalizeAsync(await _api.SetAccessibilityAsync(id, payload, ct), "Could not update accessibility features.", id);
     }
 
     // §8.5 — remove a single accessibility-feature assignment row.
+    // No place id at this call site (only the assignment id) — eviction deferred (G13-class).
     public async Task<ApiResult> RemoveAccessibilityAssignmentAsync(Guid assignmentId, CancellationToken ct = default)
         => assignmentId == Guid.Empty
             ? ApiResult.Fail(400, "A valid accessibility assignment is required.")
-            : Normalize(await _api.RemoveAccessibilityAssignmentAsync(assignmentId, ct), "Could not remove the accessibility feature.");
+            : await NormalizeAsync(await _api.RemoveAccessibilityAssignmentAsync(assignmentId, ct), "Could not remove the accessibility feature.", null);
 
-    private static ApiResult Normalize(ApiResult result, string fallback)
+    // Evicts the public place:{id} output-cache tag on a successful write (§8.5 C3) so the cached
+    // public place detail page reflects the change immediately. evictPlaceId is null for writes that
+    // have no place id at the call site (RemoveAccessibilityAssignment). Uses CancellationToken.None
+    // so eviction still runs if the admin client disconnected after the backend committed.
+    private async Task<ApiResult> NormalizeAsync(ApiResult result, string fallback, Guid? evictPlaceId)
     {
-        if (result.IsSuccess)         return ApiResult.Ok();
+        if (result.IsSuccess)
+        {
+            if (evictPlaceId is { } placeId)
+                await _cache.EvictByTagAsync($"place:{placeId}", CancellationToken.None);
+            return ApiResult.Ok();
+        }
         if (result.IsUnauthorized)    return ApiResult.ForceSignOut();
         if (result.IsForbidden)       return ApiResult.Fail(403, PreferDetail(result.Error, "You don't have permission to perform this action."));
         if (result.IsValidationError) return ApiResult.Invalid(result.ValidationErrors!);

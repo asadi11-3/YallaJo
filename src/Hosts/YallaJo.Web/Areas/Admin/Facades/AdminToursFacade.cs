@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.OutputCaching;
 using YallaJo.Web.Areas.Admin.ApiClients;
 using YallaJo.Web.Areas.Admin.Models.Tours;
 using YallaJo.Web.Infrastructure.Api.Contracts;
@@ -8,11 +9,13 @@ public sealed class AdminToursFacade
 {
     private readonly AdminToursApiClient _api;
     private readonly PlacesApiClient _placesApi;
+    private readonly IOutputCacheStore _cache;
 
-    public AdminToursFacade(AdminToursApiClient api, PlacesApiClient placesApi)
+    public AdminToursFacade(AdminToursApiClient api, PlacesApiClient placesApi, IOutputCacheStore cache)
     {
         _api = api;
         _placesApi = placesApi;
+        _cache = cache;
     }
 
     public async Task<ApiResult<AdminToursIndexVm>> GetListAsync(
@@ -70,22 +73,22 @@ public sealed class AdminToursFacade
     }
 
     public Task<ApiResult> ApproveAsync(Guid id, CancellationToken ct = default)
-        => WithRowVersion(id, rv => _api.ApproveAsync(id, rv, ct), "Could not approve the tour.", ct);
+        => WithRowVersion(id, rv => _api.ApproveAsync(id, rv, ct), "Could not approve the tour.", ct, $"tour:{id}");
 
     public Task<ApiResult> RejectAsync(Guid id, string reason, CancellationToken ct = default)
-        => WithRowVersion(id, rv => _api.RejectAsync(id, rv, reason, ct), "Could not reject the tour.", ct);
+        => WithRowVersion(id, rv => _api.RejectAsync(id, rv, reason, ct), "Could not reject the tour.", ct, $"tour:{id}");
 
     public Task<ApiResult> SuspendAsync(Guid id, string reason, CancellationToken ct = default)
-        => WithRowVersion(id, rv => _api.SuspendAsync(id, rv, reason, ct), "Could not suspend the tour.", ct);
+        => WithRowVersion(id, rv => _api.SuspendAsync(id, rv, reason, ct), "Could not suspend the tour.", ct, $"tour:{id}");
 
     public Task<ApiResult> ReinstateAsync(Guid id, CancellationToken ct = default)
-        => WithRowVersion(id, rv => _api.ReinstateAsync(id, rv, ct), "Could not reinstate the tour.", ct);
+        => WithRowVersion(id, rv => _api.ReinstateAsync(id, rv, ct), "Could not reinstate the tour.", ct, $"tour:{id}");
 
     // ── §8.4 moderation extras (no optimistic-concurrency token required) ─────────
 
     public Task<ApiResult> FeatureAsync(Guid id, bool isFeatured, CancellationToken ct = default)
         => Normalize(_api.FeatureAsync(id, isFeatured, ct),
-            isFeatured ? "Could not feature the tour." : "Could not unfeature the tour.");
+            isFeatured ? "Could not feature the tour." : "Could not unfeature the tour.", $"tour:{id}");
 
     public Task<ApiResult> ApproveProposalAsync(Guid id, bool isExclusive, CancellationToken ct = default)
         => Normalize(_api.ApproveProposalAsync(id, isExclusive, ct), "Could not approve the proposal.");
@@ -100,14 +103,14 @@ public sealed class AdminToursFacade
         => Normalize(_api.RejectPackageAsync(id, reason, ct), "Could not reject the package.");
 
     public Task<ApiResult> SuspendOfferingAsync(Guid tourId, Guid guideId, string reason, CancellationToken ct = default)
-        => Normalize(_api.SuspendOfferingAsync(tourId, guideId, reason, ct), "Could not suspend the guide offering.");
+        => Normalize(_api.SuspendOfferingAsync(tourId, guideId, reason, ct), "Could not suspend the guide offering.", $"tour:{tourId}");
 
     public Task<ApiResult> ReinstateOfferingAsync(Guid tourId, Guid guideId, CancellationToken ct = default)
-        => Normalize(_api.ReinstateOfferingAsync(tourId, guideId, ct), "Could not reinstate the guide offering.");
+        => Normalize(_api.ReinstateOfferingAsync(tourId, guideId, ct), "Could not reinstate the guide offering.", $"tour:{tourId}");
 
 
     private async Task<ApiResult> WithRowVersion(
-        Guid id, Func<byte[], Task<ApiResult>> mutate, string fallback, CancellationToken ct)
+        Guid id, Func<byte[], Task<ApiResult>> mutate, string fallback, CancellationToken ct, params string[] evictTags)
     {
         var detail = await _api.GetByIdAsync(id, ct);
         if (detail.IsUnauthorized) return ApiResult.ForceSignOut();
@@ -118,13 +121,21 @@ public sealed class AdminToursFacade
         if (detail.Data.RowVersion is not { Length: > 0 })
             return ApiResult.Fail(409, "This tour is missing concurrency data. Please reload and try again.");
 
-        return await Normalize(mutate(detail.Data.RowVersion), fallback);
+        return await Normalize(mutate(detail.Data.RowVersion), fallback, evictTags);
     }
 
-    private static async Task<ApiResult> Normalize(Task<ApiResult> call, string fallback)
+    // Evicts the public tour:{id} output-cache tag(s) on a successful moderation write so the
+    // cached public tour detail page reflects the change immediately (§8.4 C3). Uses
+    // CancellationToken.None so eviction still runs if the admin client disconnected.
+    private async Task<ApiResult> Normalize(Task<ApiResult> call, string fallback, params string[] evictTags)
     {
         var result = await call;
-        if (result.IsSuccess) return ApiResult.Ok();
+        if (result.IsSuccess)
+        {
+            foreach (var tag in evictTags)
+                await _cache.EvictByTagAsync(tag, CancellationToken.None);
+            return ApiResult.Ok();
+        }
         if (result.IsUnauthorized) return ApiResult.ForceSignOut();
         if (result.IsNotFound) return ApiResult.Fail(404, "Tour not found.");
         if (result.IsConflict)

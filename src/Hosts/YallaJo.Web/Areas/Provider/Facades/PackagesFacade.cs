@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.OutputCaching;
 using YallaJo.Web.Areas.Provider.ApiClients;
 using YallaJo.Web.Areas.Provider.Models.Packages;
 using YallaJo.Web.Infrastructure.Api.Contracts;
@@ -34,8 +35,13 @@ public sealed class PackagesFacade
     private const int DefaultPageSize = 20;
 
     private readonly PackagesApiClient _api;
+    private readonly IOutputCacheStore _cache;
 
-    public PackagesFacade(PackagesApiClient api) => _api = api;
+    public PackagesFacade(PackagesApiClient api, IOutputCacheStore cache)
+    {
+        _api = api;
+        _cache = cache;
+    }
 
     public async Task<PackageListResult> GetIndexAsync(int page, CancellationToken ct = default)
     {
@@ -66,14 +72,27 @@ public sealed class PackagesFacade
         => Normalize(await _api.CreateAsync(PackagesMapper.ToCreateRequest(vm), ct), "Could not create the package.");
 
     public async Task<PackageActionResult> AddInclusionAsync(Guid id, string description, CancellationToken ct = default)
-        => Normalize(await _api.AddInclusionAsync(id, new AddPackageInclusionApiRequest(description.Trim()), ct),
-                     "Could not add the inclusion.");
+    {
+        var outcome = Normalize(
+            await _api.AddInclusionAsync(id, new AddPackageInclusionApiRequest(description.Trim()), ct),
+            "Could not add the inclusion.");
+        if (outcome.Outcome == PackageOutcome.Ok) await _cache.EvictByTagAsync($"package:{id}", ct);
+        return outcome;
+    }
 
     public async Task<PackageActionResult> SubmitAsync(Guid id, CancellationToken ct = default)
-        => Normalize(await _api.SubmitAsync(id, ct), "Could not submit the package for review.");
+    {
+        var outcome = Normalize(await _api.SubmitAsync(id, ct), "Could not submit the package for review.");
+        if (outcome.Outcome == PackageOutcome.Ok) await _cache.EvictByTagAsync($"package:{id}", ct);
+        return outcome;
+    }
 
     public async Task<PackageActionResult> DeleteAsync(Guid id, CancellationToken ct = default)
-        => Normalize(await _api.DeleteAsync(id, ct), "Could not delete the package.");
+    {
+        var outcome = Normalize(await _api.DeleteAsync(id, ct), "Could not delete the package.");
+        if (outcome.Outcome == PackageOutcome.Ok) await _cache.EvictByTagAsync($"package:{id}", ct);
+        return outcome;
+    }
 
     private static PackageActionResult Normalize(ApiResult result, string fallback)
     {

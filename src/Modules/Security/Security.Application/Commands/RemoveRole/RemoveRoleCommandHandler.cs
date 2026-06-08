@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Security.Application.Authorization;
+using Security.Contracts.Authorization;
 using Security.Application.Caching;
 using Security.Domain.Errors;
 using Security.Domain.Repositories;
@@ -39,6 +40,21 @@ public sealed class RemoveRoleCommandHandler(
         var userRole = await userRepository.GetUserRoleAsync(request.UserId, request.RoleId, cancellationToken);
         if (userRole is null)
             return Result.Failure(RoleErrors.NotAssigned, Outcome.NotFound);
+
+        if (role.Name.Equals(AppRoles.Admin, StringComparison.OrdinalIgnoreCase)
+            || role.Name.Equals(AppRoles.SuperAdmin, StringComparison.OrdinalIgnoreCase))
+        {
+            var remainingAdminTierUsers = await userRepository.CountUsersInRolesExcludingAssignmentAsync(
+                [AppRoles.Admin, AppRoles.SuperAdmin],
+                request.UserId,
+                request.RoleId,
+                cancellationToken);
+
+            if (remainingAdminTierUsers == 0)
+                return Result.Failure(
+                    new Error("UserRole.LastAdmin", "Cannot remove the last Admin/SuperAdmin."),
+                    Outcome.Conflict);
+        }
 
         userRepository.RemoveUserRole(userRole);
 

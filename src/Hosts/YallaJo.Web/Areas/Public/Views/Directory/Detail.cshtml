@@ -443,11 +443,5 @@
 }
 
 @section Scripts {
-    <script>
-        (function () {
-            document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) { new bootstrap.Tooltip(el); });
-
-            if (window.GLightbox) { GLightbox({ selector: '.glightbox' }); }
-        })();
-    </script>
+    <script src="~/assets/js/directory-detail.js" asp-append-version="true"></script>
 }

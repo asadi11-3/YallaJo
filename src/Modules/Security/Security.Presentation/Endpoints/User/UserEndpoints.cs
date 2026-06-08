@@ -9,6 +9,7 @@ using Security.Application.Commands.DeactivateUser;
 using Security.Application.Commands.RemoveRole;
 using Security.Application.Commands.RemoveUserClaim;
 using Security.Application.Queries.Dtos;
+using Security.Application.Queries.GetSecurityMe;
 using Security.Application.Queries.GetUser;
 using Security.Application.Queries.ListUsers;
 using Security.Contracts.Authorization;
@@ -16,16 +17,12 @@ using YallaJo.SharedKernel.Presentation.Authorization;
 using YallaJo.SharedKernel.Application.Authorization;
 using Security.Presentation.Endpoints.User.Models;
 using System.Security.Claims;
-using YallaJo.SharedKernel.Domain.Abstractions.Pagination;
 using YallaJo.SharedKernel.Presentation;
 
 namespace Security.Presentation.Endpoints.User;
 
 internal static class UserEndpoints
 {
-    private static readonly HashSet<string> _jwtMetaClaims =
-        new(StringComparer.Ordinal) { "jti", "iat", "nbf", "exp", "iss", "aud", "sub", "email", "role" };
-
     internal static void MapUserEndpoints(RouteGroupBuilder group)
     {
         MapMeEndpoint(group);
@@ -41,23 +38,21 @@ internal static class UserEndpoints
 
     private static void MapMeEndpoint(RouteGroupBuilder group)
     {
-        group.MapGet("/me", (HttpContext ctx) =>
+        group.MapGet("/me", async (HttpContext ctx, ISender sender, CancellationToken ct) =>
         {
-            var user        = ctx.User;
-            var userId      = user.FindFirstValue("sub");
-            var email       = user.FindFirstValue("email");
-            var roles       = user.FindAll("role").Select(c => c.Value).ToList();
-            var extraClaims = user.Claims
-                .Where(c => !_jwtMetaClaims.Contains(c.Type))
-                .Select(c => new { c.Type, c.Value })
-                .ToList();
+            var sub = ctx.User.FindFirstValue("sub");
+            if (!Guid.TryParse(sub, out var userId))
+            {
+                return Results.Unauthorized();
+            }
 
-            return Results.Ok(new { userId, email, roles, claims = extraClaims });
+            var result = await sender.Send(new GetSecurityMeQuery(userId), ct);
+            return result.ToApiResult();
         })
         .WithName("Me")
-        .Produces(StatusCodes.Status200OK)
+        .Produces<SecurityMeDto>(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status401Unauthorized)
-        .WithSummary("Returns claims from the current user's JWT")
+        .WithSummary("Returns the current user's DB-backed roles & permissions snapshot")
         .WithMetadata(new MustHavePermissionAttribute(SecurityFeatures.User, AppAction.Read))
         .RequireAuthorization();
     }
@@ -70,7 +65,7 @@ internal static class UserEndpoints
             return result.ToApiResult();
         })
         .WithName("ListUsers")
-        .Produces<PaginatedResult<UserDto>>(StatusCodes.Status200OK)
+        .Produces<PagedUsersResponse>(StatusCodes.Status200OK)
         .WithSummary("List users with pagination")
         .WithMetadata(new MustHavePermissionAttribute(SecurityFeatures.User, AppAction.Read))
         .RequireAuthorization();

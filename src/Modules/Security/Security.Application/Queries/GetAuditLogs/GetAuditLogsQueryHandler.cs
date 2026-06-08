@@ -8,9 +8,9 @@ using YallaJo.SharedKernel.Domain.Abstractions.Results;
 namespace Security.Application.Queries.GetAuditLogs;
 
 public sealed class GetAuditLogsQueryHandler(IAuditLogRepository auditLogRepository)
-    : IQueryHandler<GetAuditLogsQuery, PaginatedResult<AuditLogDto>>
+    : IQueryHandler<GetAuditLogsQuery, PagedAuditLogsResponse>
 {
-    public async Task<Result<PaginatedResult<AuditLogDto>>> Handle(
+    public async Task<Result<PagedAuditLogsResponse>> Handle(
         GetAuditLogsQuery request, CancellationToken cancellationToken)
     {
         var action = string.IsNullOrWhiteSpace(request.Action) ? null : request.Action;
@@ -24,6 +24,11 @@ public sealed class GetAuditLogsQueryHandler(IAuditLogRepository auditLogReposit
             query => query.OrderByDescending(auditLog => auditLog.OccurredAt),
             cancellationToken);
 
-        return Result<PaginatedResult<AuditLogDto>>.Success(pagedLogs);
+        return Result<PagedAuditLogsResponse>.Success(
+            new PagedAuditLogsResponse(
+                pagedLogs.Items,
+                request.Page,
+                request.PageSize,
+                pagedLogs.TotalCount));
     }
 }

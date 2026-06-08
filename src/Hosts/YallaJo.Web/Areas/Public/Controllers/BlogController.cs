@@ -4,13 +4,16 @@ using Microsoft.AspNetCore.OutputCaching;
 using YallaJo.Web.Areas.Public.Caching;
 using YallaJo.Web.Areas.Public.Facades;
 using YallaJo.Web.Areas.Public.Models.Blog;
+using YallaJo.Web.Areas.Public.Models.Reviews;
 using YallaJo.Web.Infrastructure.Mvc;
 
 namespace YallaJo.Web.Areas.Public.Controllers;
 
 [Area("Public")]
-public sealed class BlogController(BlogFacade blog) : BaseController
+public sealed class BlogController(BlogFacade blog, ReviewsFacade reviews) : BaseController
 {
+    private const string TargetType = "Blog";
+
     [HttpGet("blog")]
     [OutputCache(PolicyName = "PublicShort")]
     public async Task<IActionResult> Index(int page = 1, CancellationToken ct = default)
@@ -181,6 +184,32 @@ public sealed class BlogController(BlogFacade blog) : BaseController
         else if (!ApplyValidationErrors(result)) SetError(result.Error);
 
         return RedirectToAction(nameof(Creator), new { slug = SafeSlug(creatorSlug) });
+    }
+
+    [HttpPost("blog/{slug}/report")]
+    [Authorize]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Report(string slug, [Bind(Prefix = "Report")] ReportFormVm form, CancellationToken ct = default)
+    {
+        form.EntityType = TargetType;
+
+        if (!ModelState.IsValid)
+        {
+            SetError("Please choose a reason and add a short description.");
+            return RedirectToAction(nameof(Post), new { slug = SafeSlug(slug) });
+        }
+
+        var result = await reviews.SubmitReportAsync(form, ct);
+
+        if (GuardSignOut(result) is { } signOut)
+            return signOut;
+
+        if (result.IsSuccess)
+            SetSuccess("Thanks for reporting. Our team will review it.");
+        else if (!ApplyValidationErrors(result))
+            SetError(result.Error);
+
+        return RedirectToAction(nameof(Post), new { slug = SafeSlug(slug) });
     }
 
     private static string SafeSlug(string? slug) => string.IsNullOrWhiteSpace(slug) ? "" : slug;

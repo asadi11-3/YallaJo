@@ -1,3 +1,6 @@
+using System.Globalization;
+using System.Runtime.CompilerServices;
+using Analytics.Domain.Entities;
 using Analytics.Application.Interfaces.Repositories;
 using Microsoft.Extensions.Logging;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
@@ -5,13 +8,41 @@ using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
 namespace Analytics.Application.Queries.ExportAuditLogs;
 
-public sealed class ExportAuditLogsQueryHandler(IAuditLogRepository repo, ILogger<ExportAuditLogsQueryHandler> logger) : IQueryHandler<ExportAuditLogsQuery, string>
+public sealed class ExportAuditLogsQueryHandler(IAuditLogRepository repo, ILogger<ExportAuditLogsQueryHandler> logger) : IQueryHandler<ExportAuditLogsQuery, IAsyncEnumerable<string>>
 {
-    public async Task<Result<string>> Handle(ExportAuditLogsQuery request, CancellationToken ct)
+    private const string Header = "Id,UserId,Action,EntityType,EntityId,OccurredAt";
+
+    public Task<Result<IAsyncEnumerable<string>>> Handle(ExportAuditLogsQuery request, CancellationToken ct)
     {
-        var count = await repo.CountAsync(request.From, request.To, ct);
-        if (count > 100_000) return Result.Failure<string>(new Error("AuditLog.ExportTooLarge", "Audit export exceeds 100,000 rows."), Outcome.UnprocessableEntity);
-        logger.LogDebug("Exporting {Count} audit logs", count);
-        return Result<string>.Success("Id,UserId,Action,EntityType,EntityId,OccurredAt\n");
+        logger.LogDebug("Streaming audit log export from {From} to {To}", request.From, request.To);
+        return Task.FromResult(Result<IAsyncEnumerable<string>>.Success(StreamCsvLines(request.From, request.To, ct)));
+    }
+
+    private async IAsyncEnumerable<string> StreamCsvLines(DateTime from, DateTime to, [EnumeratorCancellation] CancellationToken ct)
+    {
+        yield return Header;
+
+        await foreach (var log in repo.StreamAsync(from, to, ct).WithCancellation(ct))
+        {
+            yield return FormatLine(log);
+        }
+    }
+
+    private static string FormatLine(AuditLog log) => string.Join(',',
+        Escape(log.Id.ToString(CultureInfo.InvariantCulture)),
+        Escape(log.UserId?.ToString() ?? string.Empty),
+        Escape(log.Action.ToString()),
+        Escape(log.EntityType),
+        Escape(log.EntityId.ToString()),
+        Escape(log.OccurredAt.ToUniversalTime().ToString("o", CultureInfo.InvariantCulture)));
+
+    private static string Escape(string value)
+    {
+        if (!value.Contains(',') && !value.Contains('"') && !value.Contains('\r') && !value.Contains('\n'))
+        {
+            return value;
+        }
+
+        return $"\"{value.Replace("\"", "\"\"")}\"";
     }
 }

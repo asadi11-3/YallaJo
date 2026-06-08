@@ -28,10 +28,9 @@ internal static class ProviderPaymentMethodEndpoints
         .WithMetadata(new MustHavePermissionAttribute(FinanceFeatures.ProviderPaymentMethod, AppAction.Read))
         .RequireAuthorization();
 
-        group.MapPost("/", async (ProviderPaymentMethodRequest request, ICurrentUser currentUser, ISender sender, CancellationToken ct) =>
+        group.MapPost("/", async (ProviderPaymentMethodRequest request, ISender sender, CancellationToken ct) =>
         {
             var command = new CreateProviderPaymentMethodCommand(
-                currentUser.UserId!.Value,
                 request.PaymentMethodType,
                 request.DisplayName,
                 request.AccountIdentifier,
@@ -49,11 +48,10 @@ internal static class ProviderPaymentMethodEndpoints
         .WithMetadata(new MustHavePermissionAttribute(FinanceFeatures.ProviderPaymentMethod, AppAction.Create))
         .RequireAuthorization();
 
-        group.MapPut("/{id:guid}", async (Guid id, ProviderPaymentMethodRequest request, ICurrentUser currentUser, ISender sender, CancellationToken ct) =>
+        group.MapPut("/{id:guid}", async (Guid id, ProviderPaymentMethodRequest request, ISender sender, CancellationToken ct) =>
         {
             var command = new UpdateProviderPaymentMethodCommand(
                 id,
-                currentUser.UserId!.Value,
                 request.PaymentMethodType,
                 request.DisplayName,
                 request.AccountIdentifier,
@@ -70,9 +68,9 @@ internal static class ProviderPaymentMethodEndpoints
         .WithMetadata(new MustHavePermissionAttribute(FinanceFeatures.ProviderPaymentMethod, AppAction.Update))
         .RequireAuthorization();
 
-        group.MapDelete("/{id:guid}", async (Guid id, ICurrentUser currentUser, ISender sender, CancellationToken ct) =>
+        group.MapDelete("/{id:guid}", async (Guid id, ISender sender, CancellationToken ct) =>
         {
-            var result = await sender.Send(new DeleteProviderPaymentMethodCommand(id, currentUser.UserId!.Value), ct);
+            var result = await sender.Send(new DeleteProviderPaymentMethodCommand(id), ct);
             return result.ToApiResult();
         })
         .WithName("DeleteProviderPaymentMethod")

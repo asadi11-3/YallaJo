@@ -14,8 +14,10 @@
     <dl class="row">
         <dt class="col-sm-3">Status</dt>
         <dd class="col-sm-9">
+            @* A11Y5 — status conveyed by colour + icon + text. *@
             <span class="badge @(Model.IsActive ? "bg-success" : "bg-secondary")">
-                @(Model.IsActive ? "Active" : "Inactive")
+                <i class="fa-solid @(Model.IsActive ? "fa-circle-check" : "fa-ban") fa-fw" aria-hidden="true"></i>
+                <span>@(Model.IsActive ? "Active" : "Inactive")</span>
             </span>
         </dd>
         <dt class="col-sm-3">Description</dt>
@@ -40,10 +42,12 @@
         @if (Model.IsActive)
         {
             <form asp-area="Admin" asp-controller="Roles"
-                  asp-action="Deactivate" asp-route-roleId="@Model.RoleId" method="post" class="mb-4">
+                  asp-action="Deactivate" asp-route-roleId="@Model.RoleId" method="post" class="mb-4"
+                  data-confirm="Deactivate role @Model.Name? Members will lose this role's permissions."
+                  data-confirm-title="Deactivate role"
+                  data-confirm-action="Deactivate">
                 @Html.AntiForgeryToken()
-                <button type="submit" class="btn btn-warning btn-sm"
-                        onclick="return confirm('Deactivate role @Model.Name?')">Deactivate role</button>
+                <button type="submit" class="btn btn-warning btn-sm">Deactivate role</button>
             </form>
         }
     </permission>
@@ -91,10 +95,12 @@
                                 <form asp-area="Admin" asp-controller="Roles"
                                       asp-action="RemoveClaim"
                                       asp-route-roleId="@Model.RoleId"
-                                      asp-route-claimId="@c.Id" method="post" class="d-inline">
+                                      asp-route-claimId="@c.Id" method="post" class="d-inline"
+                                      data-confirm="Remove the @c.ClaimType claim from this role?"
+                                      data-confirm-title="Remove claim"
+                                      data-confirm-action="Remove">
                                     @Html.AntiForgeryToken()
-                                    <button type="submit" class="btn btn-danger btn-sm"
-                                            onclick="return confirm('Remove this claim?')">Remove</button>
+                                    <button type="submit" class="btn btn-danger btn-sm">Remove</button>
                                 </form>
                             </td>
                         </permission>

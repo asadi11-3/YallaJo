@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.OutputCaching;
 using YallaJo.Web.Areas.Business.ApiClients;
 using YallaJo.Web.Areas.Business.Models.Services;
 using YallaJo.Web.Infrastructure.Api.Contracts;
@@ -8,11 +9,13 @@ public sealed class BusinessServicesFacade
 {
     private readonly ServicesApiClient _api;
     private readonly MyBusinessesApiClient _businesses;
+    private readonly IOutputCacheStore _cache;
 
-    public BusinessServicesFacade(ServicesApiClient api, MyBusinessesApiClient businesses)
+    public BusinessServicesFacade(ServicesApiClient api, MyBusinessesApiClient businesses, IOutputCacheStore cache)
     {
         _api = api;
         _businesses = businesses;
+        _cache = cache;
     }
 
     public async Task<ApiResult<ServicesVm>> GetAsync(Guid businessId, CancellationToken ct = default)
@@ -39,7 +42,7 @@ public sealed class BusinessServicesFacade
         return ApiResult<ServicesVm>.Ok(vm);
     }
 
-    public Task<ApiResult> AddAsync(Guid businessId, AddServiceFormVm form, CancellationToken ct = default)
+    public async Task<ApiResult> AddAsync(Guid businessId, AddServiceFormVm form, CancellationToken ct = default)
     {
         var request = new CreateServiceItemApiRequest(
             form.Name.Trim(),
@@ -50,7 +53,9 @@ public sealed class BusinessServicesFacade
             form.Category,
             NullIfBlank(form.Description),
             form.SortOrder);
-        return Normalize(_api.AddAsync(businessId, request, ct), "Could not add the service.");
+        var result = await Normalize(_api.AddAsync(businessId, request, ct), "Could not add the service.");
+        if (result.IsSuccess) await _cache.EvictByTagAsync($"business:{businessId}", ct);
+        return result;
     }
 
     public async Task<ApiResult<EditServiceFormVm>> GetEditAsync(Guid businessId, Guid serviceId, CancellationToken ct = default)
@@ -83,7 +88,7 @@ public sealed class BusinessServicesFacade
         });
     }
 
-    public Task<ApiResult> UpdateAsync(Guid businessId, Guid serviceId, EditServiceFormVm form, CancellationToken ct = default)
+    public async Task<ApiResult> UpdateAsync(Guid businessId, Guid serviceId, EditServiceFormVm form, CancellationToken ct = default)
     {
         var request = new UpdateServiceItemApiRequest(
             businessId,
@@ -95,11 +100,17 @@ public sealed class BusinessServicesFacade
             form.Category,
             NullIfBlank(form.Description),
             form.SortOrder);
-        return Normalize(_api.UpdateAsync(serviceId, request, ct), "Could not update the service.");
+        var result = await Normalize(_api.UpdateAsync(serviceId, request, ct), "Could not update the service.");
+        if (result.IsSuccess) await _cache.EvictByTagAsync($"business:{businessId}", ct);
+        return result;
     }
 
-    public Task<ApiResult> RemoveAsync(Guid serviceId, CancellationToken ct = default) =>
-        Normalize(_api.RemoveAsync(serviceId, ct), "Could not delete the service.");
+    public async Task<ApiResult> RemoveAsync(Guid businessId, Guid serviceId, CancellationToken ct = default)
+    {
+        var result = await Normalize(_api.RemoveAsync(serviceId, ct), "Could not delete the service.");
+        if (result.IsSuccess) await _cache.EvictByTagAsync($"business:{businessId}", ct);
+        return result;
+    }
 
     private static async Task<ApiResult> Normalize(Task<ApiResult> call, string fallback)
     {

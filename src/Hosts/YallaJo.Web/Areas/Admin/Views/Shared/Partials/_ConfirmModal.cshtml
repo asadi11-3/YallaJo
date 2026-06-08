@@ -1,0 +1,78 @@
+@*
+    F8 — shared destructive-confirm modal. Replaces inline onclick/onsubmit
+    confirm() prompts across the Admin RBAC console (and is reusable by any
+    Admin view). Render once per page (it is emitted by _AdminLayout); then
+    mark any POST form as destructive with:
+
+        <form ... data-confirm="Deactivate role Foo?"
+                  data-confirm-title="Deactivate role"
+                  data-confirm-action="Deactivate">
+
+    The JS below intercepts that form's submit, shows this Bootstrap 5 modal,
+    and only submits the original form when the user confirms. Forms WITHOUT
+    a data-confirm attribute are unaffected. Anti-forgery + PRG are preserved
+    because the original form (tokens, asp-action, method=post) is submitted
+    unchanged.
+*@
+<div class="modal fade" id="adminConfirmModal" tabindex="-1"
+     aria-labelledby="adminConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="adminConfirmModalLabel">Please confirm</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p id="adminConfirmModalMessage" class="mb-0">Are you sure?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger btn-sm" id="adminConfirmModalConfirm">Confirm</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function () {
+        var modalEl = document.getElementById('adminConfirmModal');
+        if (!modalEl || typeof bootstrap === 'undefined') { return; }
+
+        var bsModal     = new bootstrap.Modal(modalEl);
+        var titleEl     = document.getElementById('adminConfirmModalLabel');
+        var messageEl   = document.getElementById('adminConfirmModalMessage');
+        var confirmBtn  = document.getElementById('adminConfirmModalConfirm');
+        var pendingForm = null;
+
+        // Intercept submit of any form flagged with data-confirm.
+        document.addEventListener('submit', function (e) {
+            var form = e.target;
+            if (!form || !form.matches || !form.matches('form[data-confirm]')) { return; }
+            if (form.dataset.confirmed === 'true') { return; } // already confirmed → let it submit
+
+            e.preventDefault();
+            pendingForm = form;
+            messageEl.textContent = form.getAttribute('data-confirm') || 'Are you sure?';
+            titleEl.textContent   = form.getAttribute('data-confirm-title') || 'Please confirm';
+            confirmBtn.textContent = form.getAttribute('data-confirm-action') || 'Confirm';
+            bsModal.show();
+        }, true);
+
+        confirmBtn.addEventListener('click', function () {
+            if (!pendingForm) { return; }
+            var form = pendingForm;
+            pendingForm = null;
+            bsModal.hide();
+            form.dataset.confirmed = 'true';
+            // Guard against double submit.
+            var submitBtn = form.querySelector('button[type="submit"]');
+            if (submitBtn) { submitBtn.disabled = true; }
+            if (typeof form.requestSubmit === 'function') { form.requestSubmit(); }
+            else { form.submit(); }
+        });
+
+        modalEl.addEventListener('hidden.bs.modal', function () {
+            pendingForm = null;
+        });
+    })();
+</script>

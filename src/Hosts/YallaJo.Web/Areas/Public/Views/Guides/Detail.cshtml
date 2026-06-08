@@ -241,10 +241,5 @@
 </section>
 
 @section Scripts {
-    <script>
-        // Shared authed-only ~/assets/js/favorites.js (loaded in _Layout) handles .js-favorite clicks.
-        (function () {
-            document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) { new bootstrap.Tooltip(el); });
-        })();
-    </script>
+    <script src="~/assets/js/guides-detail.js" asp-append-version="true"></script>
 }

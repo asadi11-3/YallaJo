@@ -7,7 +7,6 @@ using Security.Application.Queries.GetAuditLogs;
 using Security.Contracts.Authorization;
 using YallaJo.SharedKernel.Presentation.Authorization;
 using YallaJo.SharedKernel.Application.Authorization;
-using YallaJo.SharedKernel.Domain.Abstractions.Pagination;
 using YallaJo.SharedKernel.Presentation;
 
 namespace Security.Presentation.Endpoints.AuditLog;
@@ -32,7 +31,7 @@ internal static class AuditLogEndpoints
             return result.ToApiResult();
         })
         .WithName("GetAuditLogs")
-        .Produces<PaginatedResult<AuditLogDto>>(StatusCodes.Status200OK)
+        .Produces<PagedAuditLogsResponse>(StatusCodes.Status200OK)
         .WithSummary("Get paginated admin audit logs with optional filters (userId, actorUserId, action, from, to).")
         .WithMetadata(new MustHavePermissionAttribute(SecurityFeatures.AuditLog, AppAction.Read))
         .RequireAuthorization();

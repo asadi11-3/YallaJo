@@ -6,7 +6,6 @@ namespace ContentPlaces.Application.Commands.BusinessStaff.AddBusinessStaff;
 
 public sealed record AddBusinessStaffCommand(
     Guid BusinessId,
-    Guid ActingUserId,
     Guid UserId,
     BusinessStaffRole Role)
     : ICommand<BusinessStaffDto>;

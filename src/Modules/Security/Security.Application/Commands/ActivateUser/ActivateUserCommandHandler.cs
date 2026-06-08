@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Security.Application.Authorization;
 using Security.Application.Caching;
+using Security.Domain.Entities;
 using Security.Domain.Errors;
 using Security.Domain.Repositories;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
@@ -31,7 +32,19 @@ public sealed class ActivateUserCommandHandler(
         if (user.IsActive)
             return Result.Success(); // idempotent — already active
 
-        user.Activate();
+        // Errors-as-values: an archived (terminal) account cannot be reactivated.
+        // The domain enforces this invariant by throwing; translate to a Conflict result
+        // instead of letting the exception escape.
+        try
+        {
+            user.Activate();
+        }
+        catch (InvalidLifecycleTransitionException ex)
+        {
+            return Result.Failure(
+                new Error("User.InvalidLifecycleTransition", ex.Message),
+                Outcome.Conflict);
+        }
 
         try
         {

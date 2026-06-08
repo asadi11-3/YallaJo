@@ -169,7 +169,26 @@ public static class AnalyticsEndpoints
             .RequireAuthorization();
 
         group.MapGet("/admin/audit-logs/export", async (DateTime from, DateTime to, ISender sender, CancellationToken ct) =>
-            (await sender.Send(new ExportAuditLogsQuery(from, to), ct)).ToApiResult())
+        {
+            var result = await sender.Send(new ExportAuditLogsQuery(from, to), ct);
+            if (result.IsFailure)
+            {
+                return result.ToApiResult();
+            }
+
+            return Results.Stream(
+                async stream =>
+                {
+                    await using var writer = new StreamWriter(stream, leaveOpen: true);
+                    await foreach (var line in result.Value!.WithCancellation(ct))
+                    {
+                        await writer.WriteLineAsync(line.AsMemory(), ct);
+                        await writer.FlushAsync(ct);
+                    }
+                },
+                contentType: "text/csv",
+                fileDownloadName: "audit-logs.csv");
+        })
             .WithName("ExportAuditLogs")
             .WithSummary("Admin: export audit logs for a date range.")
             .WithMetadata(new MustHavePermissionAttribute(AnalyticsFeatures.AuditLog, AppAction.Export))

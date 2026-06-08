@@ -7,7 +7,6 @@ public sealed class UpdateTourGuideProfileCommandValidator : AbstractValidator<U
     public UpdateTourGuideProfileCommandValidator()
     {
         RuleFor(command => command.TourGuideId).NotEmpty();
-        RuleFor(command => command.CallerUserId).NotEmpty();
         RuleFor(command => command.Bio).NotEmpty().MaximumLength(2000);
         RuleFor(command => command.YearsOfExperience).InclusiveBetween(0, 80);
         RuleFor(command => command.MoTALicenseNumber).MaximumLength(128);

@@ -29,6 +29,19 @@ public sealed class ApplyToAgencyCommandHandler(
         if (guideApplication is null || guideApplication.Type != ProviderType.IndependentGuide)
             return Result<Guid>.Failure(AgencyErrors.NotAGuide, Outcome.Forbidden);
 
+        // Verify the caller's own provider account is approved
+        if (guideApplication.Status != ProviderApplicationStatus.Approved)
+            return Result<Guid>.Failure(AgencyErrors.CallerNotApproved, Outcome.Forbidden);
+
+        // Verify the target agency exists and is an Agency provider
+        var targetAgency = await providerApplicationRepository.GetByUserIdAsync(request.AgencyUserId, cancellationToken);
+        if (targetAgency is null || targetAgency.Type != ProviderType.Agency)
+            return Result<Guid>.Failure(AgencyErrors.AgencyNotFound, Outcome.NotFound);
+
+        // Verify the target agency is approved
+        if (targetAgency.Status != ProviderApplicationStatus.Approved)
+            return Result<Guid>.Failure(AgencyErrors.AgencyNotApproved, Outcome.UnprocessableEntity);
+
         // Verify guide is not already affiliated
         var alreadyAffiliated = await agencyAffiliationRepository.IsGuideAffiliatedAsync(guideUserId, cancellationToken);
         if (alreadyAffiliated)

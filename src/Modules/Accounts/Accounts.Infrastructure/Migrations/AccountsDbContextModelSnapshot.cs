@@ -144,6 +144,11 @@ namespace Accounts.Infrastructure.Migrations
                     b.HasIndex("AgencyUserId", "Status")
                         .HasDatabaseName("IX_AgencyApplications_AgencyUserId_Status");
 
+                    b.HasIndex("GuideUserId", "AgencyUserId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_AgencyApplications_Pending_Guide_Agency")
+                        .HasFilter("[Status] = 'Pending'");
+
                     b.ToTable("AgencyApplications", "accounts");
                 });
 
@@ -203,6 +208,11 @@ namespace Accounts.Infrastructure.Migrations
 
                     b.HasIndex("ExpiresAt")
                         .HasDatabaseName("IX_AgencyInvitations_ExpiresAt");
+
+                    b.HasIndex("AgencyUserId", "GuideUserId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_AgencyInvitations_Pending_Agency_Guide")
+                        .HasFilter("[Status] = 'Pending'");
 
                     b.HasIndex("GuideUserId", "Status")
                         .HasDatabaseName("IX_AgencyInvitations_GuideUserId_Status");

@@ -25,6 +25,7 @@ public static class BlogsMapper
         DeletedAt   = r.DeletedAt,
         IsFeatured  = r.IsFeatured,
         PlaceId     = r.PlaceId,
+        RowVersion  = EncodeRowVersion(r.RowVersion),
     };
 
     // ── Edit form ────────────────────────────────────────────────────────────────

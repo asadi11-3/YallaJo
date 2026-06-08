@@ -114,10 +114,5 @@
 </section>
 
 @section Scripts {
-    <script>
-        // Tooltip init (Creator is not a FavoriteEntityType; follow CTA is a sign-in link for guests)
-        (function () {
-            document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) { new bootstrap.Tooltip(el); });
-        })();
-    </script>
+    <script src="~/assets/js/blog-creator.js" asp-append-version="true"></script>
 }

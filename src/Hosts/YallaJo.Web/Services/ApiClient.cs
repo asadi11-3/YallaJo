@@ -1,8 +1,6 @@
 using System.Net;
 using System.Text;
 using System.Text.Json;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
 using YallaJo.Web.Infrastructure.Api.Contracts;
 
 namespace YallaJo.Web.Services;
@@ -91,6 +89,51 @@ public sealed class ApiClient : IApiClient
                 "API file download from {Path} failed at the transport layer; returning 503 to caller.",
                 path);
             return ApiResult<ApiFile>.Fail(ServiceUnavailableStatusCode, ServiceUnavailableMessage);
+        }
+        finally
+        {
+            response?.Dispose();
+        }
+    }
+
+    public async Task<ApiResult<ApiStream>> GetStreamAsync(string path, CancellationToken ct = default)
+    {
+        HttpResponseMessage? response = null;
+        try
+        {
+            response = await _http.GetAsync(path, HttpCompletionOption.ResponseHeadersRead, ct)
+                .ConfigureAwait(false);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var raw = await response.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
+                return ParseError<ApiStream>((int)response.StatusCode, raw);
+            }
+
+            var content = await response.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);
+            var contentType = response.Content.Headers.ContentType?.MediaType ?? "application/octet-stream";
+            var fileName = response.Content.Headers.ContentDisposition?.FileNameStar
+                           ?? response.Content.Headers.ContentDisposition?.FileName?.Trim('"')
+                           ?? "download";
+
+            var owner = response;
+            response = null;
+
+            return ApiResult<ApiStream>.CreateSuccess(
+                new ApiStream(new ResponseOwnedStream(content, owner), contentType, fileName),
+                (int)owner.StatusCode);
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception ex) when (IsTransportFailure(ex))
+        {
+            _logger.LogWarning(
+                ex,
+                "API stream download from {Path} failed at the transport layer; returning 503 to caller.",
+                path);
+            return ApiResult<ApiStream>.Fail(ServiceUnavailableStatusCode, ServiceUnavailableMessage);
         }
         finally
         {
@@ -388,5 +431,48 @@ public sealed class ApiClient : IApiClient
         public Dictionary<string, List<string>>? Errors { get; init; }
 
         public string? CorrelationId { get; init; }
+    }
+
+    private sealed class ResponseOwnedStream(Stream inner, HttpResponseMessage owner) : Stream
+    {
+        public override bool CanRead => inner.CanRead;
+        public override bool CanSeek => inner.CanSeek;
+        public override bool CanWrite => inner.CanWrite;
+        public override long Length => inner.Length;
+
+        public override long Position
+        {
+            get => inner.Position;
+            set => inner.Position = value;
+        }
+
+        public override void Flush() => inner.Flush();
+        public override Task FlushAsync(CancellationToken cancellationToken) => inner.FlushAsync(cancellationToken);
+        public override int Read(byte[] buffer, int offset, int count) => inner.Read(buffer, offset, count);
+        public override int Read(Span<byte> buffer) => inner.Read(buffer);
+        public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default) => inner.ReadAsync(buffer, cancellationToken);
+        public override long Seek(long offset, SeekOrigin origin) => inner.Seek(offset, origin);
+        public override void SetLength(long value) => inner.SetLength(value);
+        public override void Write(byte[] buffer, int offset, int count) => inner.Write(buffer, offset, count);
+        public override void Write(ReadOnlySpan<byte> buffer) => inner.Write(buffer);
+        public override ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default) => inner.WriteAsync(buffer, cancellationToken);
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                inner.Dispose();
+                owner.Dispose();
+            }
+
+            base.Dispose(disposing);
+        }
+
+        public override async ValueTask DisposeAsync()
+        {
+            await inner.DisposeAsync().ConfigureAwait(false);
+            owner.Dispose();
+            await base.DisposeAsync().ConfigureAwait(false);
+        }
     }
 }

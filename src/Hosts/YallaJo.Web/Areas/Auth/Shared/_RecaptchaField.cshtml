@@ -12,37 +12,13 @@
     var fieldId = $"recaptchaToken_{action}";
 }
 
-<input type="hidden" name="RecaptchaToken" id="@fieldId" value="" data-recaptcha-action="@action" />
+<input type="hidden" name="RecaptchaToken" id="@fieldId" value="" data-recaptcha-action="@action" data-recaptcha-sitekey="@Recaptcha.SiteKey" />
 
 @if (Recaptcha.IsEnabled)
 {
     <script src="https://www.google.com/recaptcha/api.js?render=@Recaptcha.SiteKey"></script>
-    <script>
-        (function () {
-            var input = document.getElementById('@fieldId');
-            if (!input) return;
-
-            var form = input.closest('form');
-            if (!form) return;
-
-            form.addEventListener('submit', function (ev) {
-                if (input.dataset.submitted === '1') return;
-                ev.preventDefault();
-
-                grecaptcha.ready(function () {
-                    grecaptcha.execute('@Recaptcha.SiteKey', { action: '@action' })
-                        .then(function (token) {
-                            input.value = token;
-                            input.dataset.submitted = '1';
-                            form.submit();
-                        })
-                        .catch(function () {
-                            input.value = '';
-                            input.dataset.submitted = '1';
-                            form.submit();
-                        });
-                });
-            });
-        })();
-    </script>
+    @* CSP (SEC1): reCAPTCHA submit wiring externalized to recaptcha-field.js (reads
+       data-recaptcha-sitekey + data-recaptcha-action off the hidden input) so no inline
+       <script> is needed on the auth funnel. *@
+    <script src="~/assets/js/recaptcha-field.js" asp-append-version="true" defer></script>
 }

@@ -72,6 +72,12 @@ public enum NotificationType : byte
     BookingDisputeResolved      = 54,  //             Booking dispute resolved by admin     (Phase-3 WS-3b)
     DisputeResolved             = 55,  //             Finance payment-level dispute resolved (Phase-3 WS-4)
     DisputeEscalated            = 56,  // CRITICAL  — Finance payment-level dispute escalated  (Phase-3 WS-4)
+
+    // ── Agency application/invitation responses (57-60) — Accounts module events ─
+    AgencyApplicationApproved   = 57,  // Guide notified their agency application was approved
+    AgencyApplicationRejected   = 58,  // Guide notified their agency application was declined
+    AgencyInvitationAccepted    = 59,  // Agency notified a guide accepted its invitation
+    AgencyInvitationDeclined    = 60,  // Agency notified a guide declined its invitation
 }
 
 /// <summary>Extension methods for NotificationType.</summary>

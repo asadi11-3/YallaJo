@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.OutputCaching;
 using YallaJo.Web.Areas.Admin.ApiClients;
 using YallaJo.Web.Areas.Admin.Models.Growth;
 using YallaJo.Web.Infrastructure.Api.Contracts;
@@ -12,8 +13,13 @@ namespace YallaJo.Web.Areas.Admin.Facades;
 public sealed class GrowthFacade
 {
     private readonly GrowthApiClient _api;
+    private readonly IOutputCacheStore _cache;
 
-    public GrowthFacade(GrowthApiClient api) => _api = api;
+    public GrowthFacade(GrowthApiClient api, IOutputCacheStore cache)
+    {
+        _api = api;
+        _cache = cache;
+    }
 
     public async Task<ApiResult<GrowthVm>> GetIndexAsync(int? year, CancellationToken ct = default)
     {
@@ -101,7 +107,22 @@ public sealed class GrowthFacade
             return Task.FromResult(ApiResult.Fail(400, "An entity kind and id are required."));
         }
 
-        return Normalize(_api.SetPhotogenicAsync(kind.Trim(), entityId, isPhotogenic, ct), "Could not update the photogenic flag.");
+        return Normalize(
+            _api.SetPhotogenicAsync(kind.Trim(), entityId, isPhotogenic, ct),
+            "Could not update the photogenic flag.",
+            PhotogenicTags(kind, entityId));
+    }
+
+    // §8.8 — toggling the photogenic flag changes the entity's public detail page and the
+    // homepage rails it can surface in. Evict the entity tag (when kind is tour/place) plus
+    // homepage so the cached public pages reflect the change immediately.
+    private static string[] PhotogenicTags(string? kind, Guid entityId)
+    {
+        if (string.Equals(kind, "tour", StringComparison.OrdinalIgnoreCase))
+            return ["homepage", $"tour:{entityId}"];
+        if (string.Equals(kind, "place", StringComparison.OrdinalIgnoreCase))
+            return ["homepage", $"place:{entityId}"];
+        return ["homepage"];
     }
 
     // ── A/B experiments ─────────────────────────────────────────────────────────
@@ -159,10 +180,20 @@ public sealed class GrowthFacade
             : ApiResult<string>.CreateFailure(result.Error ?? "Could not query the segment.");
     }
 
-    private static async Task<ApiResult> Normalize(Task<ApiResult> call, string fallback)
+    // Evicts the supplied public output-cache tags on a successful write so cached public
+    // pages reflect the change immediately (§8.8 C3). CancellationToken.None ensures the
+    // eviction still runs even if the admin client disconnected after the backend committed.
+    private async Task<ApiResult> Normalize(Task<ApiResult> call, string fallback, params string[] evictTags)
     {
         var result = await call;
-        if (result.IsSuccess) return ApiResult.Ok();
+        if (result.IsSuccess)
+        {
+            foreach (var tag in evictTags)
+            {
+                await _cache.EvictByTagAsync(tag, CancellationToken.None);
+            }
+            return ApiResult.Ok();
+        }
         if (result.IsUnauthorized) return ApiResult.ForceSignOut();
         if (result.IsNotFound) return ApiResult.Fail(404, "The requested item was not found.");
         if (result.IsConflict) return ApiResult.Fail(409, result.Error ?? "This action is not allowed in the current state.");

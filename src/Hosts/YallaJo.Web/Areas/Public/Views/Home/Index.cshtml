@@ -210,11 +210,5 @@
     @* Favorite (.js-favorite) clicks are handled by the shared, authenticated-only
        ~/assets/js/favorites.js delegated handler loaded in _Layout — no inline dup here.
        Only the guest "Log in to save" tooltips are initialized below. *@
-    <script>
-        (function () {
-            document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) {
-                new bootstrap.Tooltip(el);
-            });
-        })();
-    </script>
+    <script src="~/assets/js/home-index.js" asp-append-version="true"></script>
 }

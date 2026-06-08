@@ -4,6 +4,7 @@ using ContentPlaces.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
+using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
@@ -13,6 +14,7 @@ public sealed class RemoveBusinessAmenityCommandHandler(
     IBusinessAmenityRepository amenityRepository,
     IContentPlacesUnitOfWork unitOfWork,
     HybridCache cache,
+    ICurrentUser currentUser,
     ILogger<RemoveBusinessAmenityCommandHandler> logger)
     : ICommandHandler<RemoveBusinessAmenityCommand>
 {
@@ -20,6 +22,13 @@ public sealed class RemoveBusinessAmenityCommandHandler(
         RemoveBusinessAmenityCommand request,
         CancellationToken cancellationToken)
     {
+        if (currentUser.UserId is not Guid actingUserId)
+        {
+            return Result.Failure(
+                new Error("Auth.Unauthorized", "An authenticated user is required."),
+                Outcome.Unauthorized);
+        }
+
         // Get amenity with Business included
         var amenity = await amenityRepository.GetByIdWithBusinessAsync(
             request.AmenityId,
@@ -33,7 +42,7 @@ public sealed class RemoveBusinessAmenityCommandHandler(
                     "Amenity not found"));
         }
 
-        if (amenity.Business.OwnerId != request.ActingUserId)
+        if (amenity.Business.OwnerId != actingUserId)
         {
             return Result.Failure(
                 new Error("Business.Forbidden", "Not the owner"),

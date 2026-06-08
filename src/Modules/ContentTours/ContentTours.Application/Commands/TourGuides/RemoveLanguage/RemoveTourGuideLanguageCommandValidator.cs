@@ -7,7 +7,6 @@ public sealed class RemoveTourGuideLanguageCommandValidator : AbstractValidator<
     public RemoveTourGuideLanguageCommandValidator()
     {
         RuleFor(command => command.TourGuideId).NotEmpty();
-        RuleFor(command => command.CallerUserId).NotEmpty();
         RuleFor(command => command.LanguageId).NotEmpty();
     }
 }

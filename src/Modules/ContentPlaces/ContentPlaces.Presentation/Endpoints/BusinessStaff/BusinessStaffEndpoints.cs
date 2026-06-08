@@ -46,14 +46,12 @@ internal static class BusinessStaffEndpoints
         staff.MapPost("/{id:guid}/staff", async (
             Guid id,
             AddBusinessStaffRequest request,
-            ICurrentUser currentUser,
             ISender sender,
             CancellationToken ct) =>
         {
             var result = await sender.Send(
                 new AddBusinessStaffCommand(
                     id,
-                    currentUser.UserId!.Value,
                     request.UserId,
                     request.Role), ct);
 

@@ -1,5 +1,6 @@
 using Accounts.Application.Caching;
 using Accounts.Domain.Entities;
+using Accounts.Domain.Enums;
 using Accounts.Domain.Errors;
 using Accounts.Domain.Repositories;
 using Microsoft.Extensions.Caching.Hybrid;
@@ -26,8 +27,21 @@ public sealed class InviteGuideCommandHandler(
 
         // Verify caller is an Agency provider
         var agencyApplication = await providerApplicationRepository.GetByUserIdAsync(agencyUserId, cancellationToken);
-        if (agencyApplication is null || agencyApplication.Type != Domain.Enums.ProviderType.Agency)
+        if (agencyApplication is null || agencyApplication.Type != ProviderType.Agency)
             return Result<Guid>.Failure(AgencyErrors.NotAnAgency, Outcome.Forbidden);
+
+        // Verify the caller's own provider account is approved
+        if (agencyApplication.Status != ProviderApplicationStatus.Approved)
+            return Result<Guid>.Failure(AgencyErrors.CallerNotApproved, Outcome.Forbidden);
+
+        // Verify the target guide exists and is an IndependentGuide provider
+        var targetGuide = await providerApplicationRepository.GetByUserIdAsync(request.GuideUserId, cancellationToken);
+        if (targetGuide is null || targetGuide.Type != ProviderType.IndependentGuide)
+            return Result<Guid>.Failure(AgencyErrors.GuideNotFound, Outcome.NotFound);
+
+        // Verify the target guide is approved
+        if (targetGuide.Status != ProviderApplicationStatus.Approved)
+            return Result<Guid>.Failure(AgencyErrors.GuideNotApproved, Outcome.UnprocessableEntity);
 
         // Verify the guide is not already affiliated
         var alreadyAffiliated = await agencyAffiliationRepository.IsGuideAffiliatedAsync(request.GuideUserId, cancellationToken);

@@ -68,7 +68,8 @@
             <div class="row justify-content-center">
                 <div class="col-lg-9 col-xl-8">
                     <div class="blog-content">
-                        @* SANITIZED: BlogDetailDto.Content is sanitized on the creator-side write (plan §7.2 SEC3) *@
+                        @* SANITIZED: Model.Content is sanitized by ContentHtmlSanitizer (Ganss.Xss HtmlSanitizer)
+                           in BlogFacade.GetPostAsync, after TranslationOverlay.Apply (plan §7.2 SEC3). *@
                         @Html.Raw(Model.Content)
                     </div>
                 </div>
@@ -260,21 +261,45 @@
             </div>
         </div>
     </section>
+
+    @if (isAuthed)
+    {
+        <section class="pb-5" aria-labelledby="report-post-title">
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-lg-9 col-xl-8">
+                        <form method="post"
+                              asp-area="Public"
+                              asp-controller="Blog"
+                              asp-action="Report"
+                              asp-route-slug="@Model.Slug"
+                              class="card border p-3">
+                            @Html.AntiForgeryToken()
+                            <h2 id="report-post-title" class="h6 mb-3">@Localizer["Public.Report.this.post"]</h2>
+                            <input type="hidden" name="Report.EntityId" value="@Model.Id" />
+                            <div class="mb-2">
+                                <label class="form-label" for="blogReportReason">@Localizer["Public.Reason"]</label>
+                                <select id="blogReportReason" name="Report.Reason" class="form-select">
+                                    <option value="Inappropriate">@Localizer["Public.Inappropriate"]</option>
+                                    <option value="Misleading">@Localizer["Public.Misleading"]</option>
+                                    <option value="Spam">@Localizer["Public.Spam"]</option>
+                                    <option value="Harassment">@Localizer["Public.Harassment"]</option>
+                                    <option value="Other">@Localizer["Public.Other"]</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label" for="blogReportDescription">@Localizer["Public.Details"]</label>
+                                <textarea id="blogReportDescription" name="Report.Description" rows="3" minlength="5" maxlength="1000" required class="form-control"></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-outline-secondary btn-sm">@Localizer["Public.Submit.report"]</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </section>
+    }
 </article>
 
 @section Scripts {
-    <script>
-        // Tooltip init; favourites handled by shared authed-only favorites.js in _Layout.
-        (function () {
-            document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) { new bootstrap.Tooltip(el); });
-            // View beacon (BFF fire-and-forget; API debounces per viewer).
-            try {
-                if (navigator.sendBeacon) {
-                    navigator.sendBeacon('/blog/@Model.Id/view');
-                } else {
-                    fetch('/blog/@Model.Id/view', { method: 'POST', keepalive: true, credentials: 'same-origin' }).catch(function () { });
-                }
-            } catch (e) { }
-        })();
-    </script>
+    <script id="blog-post-script" src="~/assets/js/blog-post.js" asp-append-version="true" data-view-url="/blog/@Model.Id/view"></script>
 }

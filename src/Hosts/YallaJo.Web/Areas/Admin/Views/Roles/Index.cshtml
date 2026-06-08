@@ -39,8 +39,10 @@
                     <td><strong>@r.Name</strong></td>
                     <td>@(r.Description ?? "—")</td>
                     <td>
+                        @* A11Y5 — status conveyed by colour + icon + text. *@
                         <span class="badge @(r.IsActive ? "bg-success" : "bg-secondary")">
-                            @(r.IsActive ? "Active" : "Inactive")
+                            <i class="fa-solid @(r.IsActive ? "fa-circle-check" : "fa-ban") fa-fw" aria-hidden="true"></i>
+                            <span>@(r.IsActive ? "Active" : "Inactive")</span>
                         </span>
                     </td>
                     <td>
@@ -52,10 +54,12 @@
                             {
                                 <form asp-area="Admin" asp-controller="Roles"
                                       asp-action="Deactivate" asp-route-roleId="@r.Id"
-                                      method="post" class="d-inline">
+                                      method="post" class="d-inline"
+                                      data-confirm="Deactivate role @r.Name? Members will lose this role's permissions."
+                                      data-confirm-title="Deactivate role"
+                                      data-confirm-action="Deactivate">
                                     @Html.AntiForgeryToken()
-                                    <button type="submit" class="btn btn-warning btn-sm"
-                                            onclick="return confirm('Deactivate role @r.Name?')">Deactivate</button>
+                                    <button type="submit" class="btn btn-warning btn-sm">Deactivate</button>
                                 </form>
                             }
                         </permission>

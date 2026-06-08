@@ -33,29 +33,33 @@ public sealed class BusinessStaffOutboxPublishingTests
         IBusinessStaffRepository StaffRepo,
         IBusinessRepository BusinessRepo,
         IContentPlacesUnitOfWork Uow,
-        IContentPlacesOutboxWriter Outbox) BuildAddSubject()
+        IContentPlacesOutboxWriter Outbox,
+        ICurrentUser CurrentUser) BuildAddSubject()
     {
         var staffRepo = Substitute.For<IBusinessStaffRepository>();
         var businessRepo = Substitute.For<IBusinessRepository>();
         var uow = Substitute.For<IContentPlacesUnitOfWork>();
         var outbox = Substitute.For<IContentPlacesOutboxWriter>();
+        var currentUser = Substitute.For<ICurrentUser>();
+        currentUser.UserId.Returns(Guid.NewGuid()); // default; tests override below
         var cache = Substitute.For<HybridCache>();
         var logger = Substitute.For<ILogger<AddBusinessStaffCommandHandler>>();
 
         var handler = new AddBusinessStaffCommandHandler(
-            staffRepo, businessRepo, uow, outbox, cache, logger);
+            staffRepo, businessRepo, uow, outbox, cache, currentUser, logger);
 
-        return (handler, staffRepo, businessRepo, uow, outbox);
+        return (handler, staffRepo, businessRepo, uow, outbox, currentUser);
     }
 
     [Fact]
     public async Task AddBusinessStaff_OnSuccess_EnqueuesExactlyOneAddedEventWithCorrectPayload()
     {
-        var (handler, staffRepo, businessRepo, uow, outbox) = BuildAddSubject();
+        var (handler, staffRepo, businessRepo, uow, outbox, currentUser) = BuildAddSubject();
         var ownerId = Guid.NewGuid();
         var business = TestBusinessFactory.CreateBusiness(ownerId);
         var newStaffUserId = Guid.NewGuid();
         const BusinessStaffRole role = BusinessStaffRole.Manager;
+        currentUser.UserId.Returns(ownerId);
 
         businessRepo
             .GetByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
@@ -71,7 +75,7 @@ public sealed class BusinessStaffOutboxPublishingTests
             Arg.Any<CancellationToken>());
 
         var result = await handler.Handle(
-            new AddBusinessStaffCommand(business.Id, ownerId, newStaffUserId, role),
+            new AddBusinessStaffCommand(business.Id, newStaffUserId, role),
             CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
@@ -93,13 +97,13 @@ public sealed class BusinessStaffOutboxPublishingTests
     [Fact]
     public async Task AddBusinessStaff_OnNotFound_DoesNotEnqueueOrSave()
     {
-        var (handler, _, businessRepo, uow, outbox) = BuildAddSubject();
+        var (handler, _, businessRepo, uow, outbox, _) = BuildAddSubject();
         businessRepo
             .GetByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
             .Returns((Business?)null);
 
         var result = await handler.Handle(
-            new AddBusinessStaffCommand(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), BusinessStaffRole.Staff),
+            new AddBusinessStaffCommand(Guid.NewGuid(), Guid.NewGuid(), BusinessStaffRole.Staff),
             CancellationToken.None);
 
         result.IsSuccess.Should().BeFalse();
@@ -110,17 +114,18 @@ public sealed class BusinessStaffOutboxPublishingTests
     [Fact]
     public async Task AddBusinessStaff_OnForbidden_DoesNotEnqueueOrSave()
     {
-        var (handler, _, businessRepo, uow, outbox) = BuildAddSubject();
+        var (handler, _, businessRepo, uow, outbox, currentUser) = BuildAddSubject();
         var ownerId = Guid.NewGuid();
         var callerId = Guid.NewGuid();
         var business = TestBusinessFactory.CreateBusiness(ownerId);
+        currentUser.UserId.Returns(callerId);
 
         businessRepo
             .GetByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
             .Returns(business);
 
         var result = await handler.Handle(
-            new AddBusinessStaffCommand(business.Id, callerId, Guid.NewGuid(), BusinessStaffRole.Staff),
+            new AddBusinessStaffCommand(business.Id, Guid.NewGuid(), BusinessStaffRole.Staff),
             CancellationToken.None);
 
         result.IsSuccess.Should().BeFalse();

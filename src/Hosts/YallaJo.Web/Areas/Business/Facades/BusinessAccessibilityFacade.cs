@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.OutputCaching;
 using YallaJo.Web.Areas.Business.ApiClients;
 using YallaJo.Web.Areas.Business.Models.Accessibility;
 using YallaJo.Web.Infrastructure.Api.Contracts;
@@ -8,11 +9,13 @@ public sealed class BusinessAccessibilityFacade
 {
     private readonly AccessibilityApiClient _api;
     private readonly MyBusinessesApiClient _businesses;
+    private readonly IOutputCacheStore _cache;
 
-    public BusinessAccessibilityFacade(AccessibilityApiClient api, MyBusinessesApiClient businesses)
+    public BusinessAccessibilityFacade(AccessibilityApiClient api, MyBusinessesApiClient businesses, IOutputCacheStore cache)
     {
         _api = api;
         _businesses = businesses;
+        _cache = cache;
     }
 
     public async Task<ApiResult<AccessibilityVm>> GetAsync(Guid businessId, CancellationToken ct = default)
@@ -60,7 +63,9 @@ public sealed class BusinessAccessibilityFacade
                 f.IsAvailable))
             .ToList();
 
-        return await Normalize(_api.SaveAsync(businessId, payload, ct), "Could not save the accessibility features.");
+        var result = await Normalize(_api.SaveAsync(businessId, payload, ct), "Could not save the accessibility features.");
+        if (result.IsSuccess) await _cache.EvictByTagAsync($"business:{businessId}", ct);
+        return result;
     }
 
     private static async Task<ApiResult> Normalize(Task<ApiResult> call, string fallback)

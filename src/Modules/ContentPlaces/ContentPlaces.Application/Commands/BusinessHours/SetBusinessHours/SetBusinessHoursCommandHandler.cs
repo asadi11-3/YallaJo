@@ -4,6 +4,7 @@ using ContentPlaces.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
+using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 using BusinessHoursEntity = ContentPlaces.Domain.Entities.BusinessHours;
@@ -15,11 +16,19 @@ public sealed class SetBusinessHoursCommandHandler(
     IBusinessRepository businessRepository,
     IContentPlacesUnitOfWork unitOfWork,
     HybridCache cache,
+    ICurrentUser currentUser,
     ILogger<SetBusinessHoursCommandHandler> logger)
     : ICommandHandler<SetBusinessHoursCommand>
 {
     public async Task<Result> Handle(SetBusinessHoursCommand request, CancellationToken cancellationToken)
     {
+        if (currentUser.UserId is not Guid actingUserId)
+        {
+            return Result.Failure(
+                new Error("Auth.Unauthorized", "An authenticated user is required."),
+                Outcome.Unauthorized);
+        }
+
         try
         {
             var business = await businessRepository.GetByIdAsync(request.BusinessId, cancellationToken, asNoTracking: true);
@@ -30,7 +39,7 @@ public sealed class SetBusinessHoursCommandHandler(
                     Outcome.NotFound);
             }
 
-            if (business.OwnerId != request.ActingUserId)
+            if (business.OwnerId != actingUserId)
             {
                 return Result.Failure(
                     new Error("Business.Forbidden", "Not the owner"),

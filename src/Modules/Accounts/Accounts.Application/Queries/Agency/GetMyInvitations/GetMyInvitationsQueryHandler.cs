@@ -1,4 +1,5 @@
 using Accounts.Application.Caching;
+using Accounts.Domain.Enums;
 using Accounts.Domain.Repositories;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
@@ -22,12 +23,12 @@ public sealed class GetMyInvitationsQueryHandler(
         var userId = currentUser.UserId!.Value;
 
         var invitations = await cache.GetOrCreateAsync(
-            AccountsCacheKeys.AgencyInvitations(userId),
+            AccountsCacheKeys.AgencyInvitations(userId, request.Direction),
             async ct =>
             {
                 var list = request.Direction == "sent"
                     ? await agencyInvitationRepository.GetByAgencyUserIdAsync(userId, statusFilter: null, ct)
-                    : await agencyInvitationRepository.GetByGuideUserIdAsync(userId, statusFilter: null, ct);
+                    : await agencyInvitationRepository.GetByGuideUserIdAsync(userId, statusFilter: AgencyInvitationStatus.Pending, ct);
 
                 return list
                     .Select(i => new InvitationDto(

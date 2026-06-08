@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.OutputCaching;
 using YallaJo.Web.Areas.Business.ApiClients;
 using YallaJo.Web.Areas.Business.Models.MyBusinesses;
 using YallaJo.Web.Infrastructure.Api.Contracts;
@@ -7,8 +8,13 @@ namespace YallaJo.Web.Areas.Business.Facades;
 public sealed class MyBusinessesFacade
 {
     private readonly MyBusinessesApiClient _api;
+    private readonly IOutputCacheStore _cache;
 
-    public MyBusinessesFacade(MyBusinessesApiClient api) => _api = api;
+    public MyBusinessesFacade(MyBusinessesApiClient api, IOutputCacheStore cache)
+    {
+        _api = api;
+        _cache = cache;
+    }
 
     public async Task<ApiResult<MyBusinessesVm>> GetIndexAsync(CancellationToken ct = default)
     {
@@ -68,7 +74,9 @@ public sealed class MyBusinessesFacade
         if (result is not { IsSuccess: true, Data: not null })
             return ApiResult<Guid>.Fail(result.StatusCode, result.Error ?? "Could not register the business.");
 
-        return ApiResult<Guid>.Ok(result.Data.Id);
+        var newId = result.Data.Id;
+        await _cache.EvictByTagAsync($"business:{newId}", ct);
+        return ApiResult<Guid>.Ok(newId);
     }
 
     public async Task<ApiResult<ManageBusinessVm>> GetManageAsync(Guid id, CancellationToken ct = default)
@@ -100,11 +108,17 @@ public sealed class MyBusinessesFacade
             HasVegetarianOptions: form.HasVegetarianOptions,
             HasAlcoholFreeArea: form.HasAlcoholFreeArea);
 
-        return await Normalize(_api.UpdateAsync(form.Id, request, ct), "Could not update the business.");
+        var result = await Normalize(_api.UpdateAsync(form.Id, request, ct), "Could not update the business.");
+        if (result.IsSuccess) await _cache.EvictByTagAsync($"business:{form.Id}", ct);
+        return result;
     }
 
-    public Task<ApiResult> ResubmitAsync(Guid id, CancellationToken ct = default)
-        => Normalize(_api.ResubmitAsync(id, ct), "Could not resubmit the business for review.");
+    public async Task<ApiResult> ResubmitAsync(Guid id, CancellationToken ct = default)
+    {
+        var result = await Normalize(_api.ResubmitAsync(id, ct), "Could not resubmit the business for review.");
+        if (result.IsSuccess) await _cache.EvictByTagAsync($"business:{id}", ct);
+        return result;
+    }
 
     private static async Task<ApiResult> Normalize(Task<ApiResult> call, string fallback)
     {

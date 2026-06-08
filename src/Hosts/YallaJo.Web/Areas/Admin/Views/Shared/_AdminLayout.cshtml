@@ -123,8 +123,11 @@
             @* Responsive offcanvas body START *@
             <div class="offcanvas offcanvas-start flex-row custom-scrollbar h-100" data-bs-backdrop="true" tabindex="-1" id="offcanvasSidebar">
                 <div class="offcanvas-body sidebar-content d-flex flex-column pt-4">
-                    @* Sidebar menu (single source of truth) *@
-                    <partial name="_AdminSidebar" />
+                    @* Sidebar menu (single source of truth). Driven by the DB-backed
+                       GET /security/me snapshot via the AdminNav view component (plan §9 line 13);
+                       degrades to JWT-claim gating on snapshot failure (ERR3). *@
+                    <vc:admin-nav />
+
 
                     @* Sidebar footer START *@
                     <div class="d-flex align-items-center justify-content-between text-primary-hover mt-auto p-3">
@@ -275,6 +278,10 @@
 
     @* Bootstrap JS bundle (served locally; fingerprinted + immutable-cached via .WithStaticAssets()). *@
     <script src="~/assets/vendor/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+
+    @* F8 — shared destructive-confirm modal (rendered once; opened by any form[data-confirm]).
+       Placed after the Bootstrap bundle so the `bootstrap` global is available to its script. *@
+    <partial name="Partials/_ConfirmModal" />
 
     @* Vendor plugins *@
     <script src="~/assets/vendor/overlay-scrollbar/js/overlayscrollbars.min.js"></script>

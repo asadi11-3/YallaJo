@@ -50,5 +50,11 @@ public sealed class AgencyInvitationConfiguration : IEntityTypeConfiguration<Age
 
         builder.HasIndex(a => a.ExpiresAt)
             .HasDatabaseName("IX_AgencyInvitations_ExpiresAt");
+
+        // Prevent duplicate pending invitations for the same agency/guide pair
+        builder.HasIndex(a => new { a.AgencyUserId, a.GuideUserId })
+            .IsUnique()
+            .HasFilter("[Status] = 'Pending'")
+            .HasDatabaseName("UX_AgencyInvitations_Pending_Agency_Guide");
     }
 }

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.OutputCaching;
 using YallaJo.Web.Areas.Provider.ApiClients;
 using YallaJo.Web.Areas.Provider.Models.TourGuides;
 using YallaJo.Web.Infrastructure.Api.Contracts;
@@ -28,12 +29,14 @@ public sealed class ProviderTourGuidesFacade
 {
     private readonly ProviderTourGuidesApiClient _guidesApi;
     private readonly ProviderToursApiClient _toursApi;
+    private readonly IOutputCacheStore _cache;
 
     public ProviderTourGuidesFacade(
-        ProviderTourGuidesApiClient guidesApi, ProviderToursApiClient toursApi)
+        ProviderTourGuidesApiClient guidesApi, ProviderToursApiClient toursApi, IOutputCacheStore cache)
     {
         _guidesApi = guidesApi;
         _toursApi = toursApi;
+        _cache = cache;
     }
 
     public async Task<TourGuideListResult> GetIndexAsync(Guid tourId, CancellationToken ct = default)
@@ -57,13 +60,17 @@ public sealed class ProviderTourGuidesFacade
     public async Task<TourGuideActionResult> AssignAsync(Guid tourId, AssignTourGuideFormVm vm, CancellationToken ct = default)
     {
         var result = await _guidesApi.AssignAsync(tourId, TourGuidesMapper.ToAssignRequest(vm), ct);
-        return NormalizeAction(result, "Could not assign the guide.");
+        var outcome = NormalizeAction(result, "Could not assign the guide.");
+        if (outcome.Outcome == TourGuideOutcome.Ok) await _cache.EvictByTagAsync($"tour:{tourId}", ct);
+        return outcome;
     }
 
     public async Task<TourGuideActionResult> RemoveAsync(Guid tourId, Guid guideUserId, CancellationToken ct = default)
     {
         var result = await _guidesApi.RemoveAsync(tourId, guideUserId, ct);
-        return NormalizeAction(result, "Could not remove the guide.");
+        var outcome = NormalizeAction(result, "Could not remove the guide.");
+        if (outcome.Outcome == TourGuideOutcome.Ok) await _cache.EvictByTagAsync($"tour:{tourId}", ct);
+        return outcome;
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────────

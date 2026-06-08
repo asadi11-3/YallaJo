@@ -62,7 +62,7 @@ public sealed class AmenitiesController : BaseController
     [RequirePermission(WebPermission.BusinessAmenity.Delete)]
     public async Task<IActionResult> Remove(Guid id, Guid amenityId, CancellationToken ct)
     {
-        var result = await _facade.RemoveAsync(amenityId, ct);
+        var result = await _facade.RemoveAsync(id, amenityId, ct);
         if (GuardSignOut(result) is { } signOut)
         {
             return signOut;

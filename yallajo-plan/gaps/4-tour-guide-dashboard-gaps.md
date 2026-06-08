@@ -133,3 +133,65 @@
 6. **G8** note `/guide` = dashboard landing.
 
 > **Net:** permissions are correct, but the plan's **page map is off**: §5.7 is at `/guide/tours` (not `/guide/offerings`) and **can't edit** tiers/schedules (add+delete only); Applications & Proposals are **two pages**; and a whole **Reviews page ships with no §5.x**. The join-request, agency, and availability button routes also differ from the plan. G1/G2 are the behavioral corrections; G7 is a missing page.
+
+---
+
+## 6. 🔁 Re-audit verification round (no-regression full re-sweep)
+
+A complete code-first re-audit of the entire **Tour Guide Dashboard (Area `Guide`, plan §5)** was performed to prove no regression against the "ALL GAPS RESOLVED" state above. **Result: ZERO open code gaps. NO regression. NO code changes required this round.**
+
+### Hotspots re-verified end-to-end (the 3 prior backend fixes — all intact):
+- **Offering ownership (security):** all 6 `GuideTourOffering` handlers under `…/Commands/GuideTourOffering/{Schedule,PricingTier}/{Create,Update,Delete}` confirmed to inject `ITourGuideRepository` + `ICurrentUser`, resolve `callerGuide = GetByUserIdAsync(currentUser.UserId)`, and return `Result.Failure(Error("GuideTourOffering.NotOwner",…), Outcome.Forbidden)` unless `entity.TourGuideId == callerGuide.Id`. All carry a `DbUpdateConcurrencyException → Conflict` guard. ✅
+- **Discount validators (NRE→500):** `CreateGuideDiscountCommandValidator` (NotEmpty `Name`+`Currency`, `Description` max-length) and `UpdateGuideDiscountCommandValidator` (NotEmpty `DiscountId`+`Name`) both present and correct. ✅
+- **Data loss:** `ApplyForTourCommandHandler` threads `request.ProposedScheduleJson` into `GuideApplication.Create(...)`; `ApproveGuideApplicationCommandHandler` captures `existingOffering.Reinstate()`'s `Result` and returns failure before `SaveChanges`. ✅
+
+### All 14 Guide BFF controllers re-audited (`src/Hosts/YallaJo.Web/Areas/Guide/Controllers/`):
+Every controller: `[Area("Guide")]` + `[Authorize]`, `public sealed`, `BaseController`, **Facade-only injection** (no `IApiClient`/`HttpClient`), every action `async Task<IActionResult>` + trailing `CancellationToken`, `GuardSignOut` after every facade call, **every POST has `[ValidateAntiForgeryToken]` + PRG**, route literals unique and matching plan §5, permission attributes matching perm reality exactly (`GuideDashboard.Read` on Dashboard+Tier, `TourGuideProfile.DeleteOwn` on Profile/deactivate, `GuideOffering.Delete` on MyTours/offering-remove, `AgencyRoster.*` on AgencyRosterController; everything else `[Authorize]`-only). The only two POSTs taking raw `string? reason` (AgencyRoster reject + remove) validate non-blank at the controller before the facade — no NRE. ✅
+
+### Backend mutation surface re-audited (NRE + ownership):
+Every Guide command whose domain `.Trim()`s/derefs a string **has a `NotEmpty` validator OR the domain null-guards before `.Trim()`**; ownership enforced via `ICurrentUser` on every guide-scoped mutation. Verified: ContentTours TourProposal Create/Submit/Reject + TourGuides AddLanguage/AddSpecialization + GuideAvailabilityBlock Create (`Reason = IsNullOrWhiteSpace(reason) ? null : reason.Trim()` — `.Trim()` only after null-guard); Accounts Agency ApplyToAgency/InviteGuide/RemoveGuide/AcceptInvitation/DeclineInvitation/LeaveAgency. All have `DbUpdateConcurrencyException → Conflict` guards. ✅
+
+### Build + tests (evidence):
+- `dotnet build YallaJo.sln -c Debug` → **Build succeeded, 0 Errors** (100 pre-existing warnings, none in audited paths).
+- Changed-path unit tests — **all green, 1,088 passed, 0 failed:** `Web.Tests.Unit` 464/464, `ContentTours.Tests.Unit` 284/284, `Booking.Tests.Unit` 267/267, `Accounts.Tests.Unit` 73/73.
+
+> **Conclusion:** the Tour Guide Dashboard is fully compliant with the plan §5 + architecture rules. All previously-resolved gaps remain fixed; no new gaps found.
+
+---
+
+## 7. 🔁 Re-audit round 2 — TWO real gaps found + fixed (offering-handler ownership + C3 cache)
+
+A second deep code-first re-audit (4 parallel agents over BFF controllers / facades+apiclients / backend handlers / endpoint scoping, each finding verified code-first) found that round 1's "ZERO open gaps" claim **missed two real defects**. The §6 hotspot sweep checked only the **6** schedule/pricing-tier handlers — it did **not** inspect the **3 offering-level** handlers (Remove / EnablePrivateTour / DisablePrivateTour), which lacked ownership entirely; and the C3 output-cache eviction mandated by §5.7 was absent from the facade. Both are now fixed, built green, and unit-tested.
+
+### GAP-G18 — Guide-offering self-service handlers lacked caller-ownership enforcement (privilege escalation)
+- **Status:** ✅ RESOLVED
+- **Severity:** 🔴 HIGH (security — horizontal privilege escalation)
+- **Type:** MISSING (ownership guard)
+- **Layer(s):** Backend — `ContentTours.Application` command handlers
+- **Plan requirement (ref):** §5.7 — offering writes are guide self-service (`offering/remove` `GuideOffering.Delete`; `private-tour` enable/disable). Architecture rule: ownership via `ICurrentUser` (missing = HIGH).
+- **Code reality (file+symbol):** `RemoveGuideOfferingCommandHandler`, `EnablePrivateTourCommandHandler`, `DisablePrivateTourCommandHandler` (all under `src/Modules/ContentTours/ContentTours.Application/Commands/GuideTourOffering/{RemoveGuideOffering,EnablePrivateTour,DisablePrivateTour}/`) loaded the offering by **caller-supplied** `request.TourId`+`request.TourGuideId`, mutated, and saved with **no** `ICurrentUser` / `ITourGuideRepository` / `caller==owner` comparison. Endpoints (`GuideOfferingEndpoints.cs`) gate these with `AppAction.Delete`/`AppAction.Create` — the **same** `GuideOffering` permission family a guide legitimately holds — so RBAC alone does **not** restrict to *own* offering. → any authenticated guide could Remove / EnablePrivateTour / DisablePrivateTour **any** guide's offering by passing another `guideId`.
+- **Rule impact:** Ownership-via-`ICurrentUser` rule violated; the backend handler is the only enforcement point for these routes.
+- **Fix:** Each handler now injects `ITourGuideRepository tourGuideRepository, ICurrentUser currentUser` (sibling-order ctor) and, immediately after the `offering is null → NotFound` guard, runs: `var callerGuide = await tourGuideRepository.GetByUserIdAsync(currentUser.UserId!.Value, ct); if (callerGuide is null || offering.TourGuideId != callerGuide.Id) return Result.Failure(new Error("GuideTourOffering.NotOwner", "You can only manage your own tour offerings."), Outcome.Forbidden);` — mirrors the secure 6 schedule/pricing-tier handlers (e.g. `DeleteGuideScheduleCommandHandler`) exactly (compares the loaded entity's `TourGuideId`, no NotOwner logging, NotFound-before-ownership).
+- **Resolution:** Build `0 Errors`; new tests `tests/ContentTours.Tests.Unit/Mohammad/GuideOfferingOwnershipTests.cs` (9 `[Fact]`: NotOwner→Forbidden, NullCallerGuide→Forbidden, Owner→Success ×3 handlers). `ContentTours.Tests.Unit` **293/293** (284 baseline + 9).
+
+### GAP-G19 — `GuideMyToursFacade` did not evict the public `tour:{tourId}` output-cache tag after offering writes (stale C3 cache)
+- **Status:** ✅ RESOLVED
+- **Severity:** 🟠 MEDIUM (cache correctness — UI-PERF-C3)
+- **Type:** MISSING (cache eviction)
+- **Layer(s):** Web BFF — `Areas/Guide/Facades/GuideMyToursFacade.cs`
+- **Plan requirement (ref):** §5.7 — "C3 evict `tour:{tourId}` (offerings change tour detail)."
+- **Code reality (file+symbol):** Public `ToursController.Detail` is `[OutputCache(PolicyName="PublicMedium")]` (30-min TTL) + `PublicOutputCacheTagger.AddTag(HttpContext, $"tour:{id}")`, and its view renders `PricingTiers` / `Schedules` / per-guide offering data — i.e. exactly what guide offering writes mutate. `GuideMyToursFacade` injected only `(MyToursApiClient, ILogger)` and evicted nothing. Backend `HybridCache` cannot reach the Web host's in-process `IOutputCacheStore` (per the Admin GAP-P2 / Oracle ruling) → only the BFF facade can evict; guide offering edits left the public tour detail stale for up to 30 min.
+- **Rule impact:** UI-PERF-C3 (writes must evict their public output-cache tags) violated for all 7 offering writes.
+- **Fix:** `GuideMyToursFacade` now injects `IOutputCacheStore _cache`; the shared `WithGuideIdAsync` helper gained a leading `Guid tourId` param and, on `result.IsSuccess`, calls `await _cache.EvictByTagAsync($"tour:{tourId}", CancellationToken.None);` (CancellationToken.None survives client disconnect after the backend commit, matching Admin GAP-P2). All 7 writes (AddSchedule/DeleteSchedule/AddPricingTier/DeletePricingTier/EnablePrivateTour/DisablePrivateTour/RemoveOffering) thread `tourId`. Reads unchanged. Facade is auto-registered by reflection; `IOutputCacheStore` resolves from `AddOutputCache()` — no `Program.cs` change.
+- **Resolution:** Build `0 Errors`; new tests `tests/Web.Tests.Unit/GuideMyToursFacadeCacheEvictionTests.cs` (real `HttpClient` + `StubHandler` + hand-stubbed `CapturingCacheStore : IOutputCacheStore`; `[Theory]` over all 7 writes asserting success→exactly one `tour:{tourId}` evict with `CancellationToken.None`; negative theory: backend-failure→no evict; profile-unresolvable→no evict). `Web.Tests.Unit` **482/482** (467 baseline + 15).
+
+### Dismissed (investigated code-first, NOT gaps — recorded so they are not re-raised)
+- **`SuspendGuideOfferingCommandHandler` / `ReinstateGuideOfferingCommandHandler` — NOT ownership gaps (by design).** Their endpoints are gated by `AppAction.Suspend` / `AppAction.Reinstate` (admin-only permissions a guide does **not** hold), the `GuideOfferingEndpoints.cs` block is explicitly commented `// Admin: Suspend / Reinstate / Remove`, and `SuspendGuideOfferingCommandHandler` emits `GuideTourOfferingSuspendedIntegrationEvent` carrying `SuspendedByAdminId` — i.e. an admin deliberately acting on **another** guide's offering. Adding a caller==owner check would break admin moderation.
+- **3 minor BFF observations — quality/UX, not code gaps.** (1) `ProfileController.HandleMutation` helper has no `ct` param (synchronous helper, harmless). (2) `DiscountsController.Edit` redirects to Index with a generic error on invalid `ModelState` rather than re-rendering (minor UX inconsistency vs. Create). (3) `AgencyRosterController.Invite` POST returns `View(form)` on invalid input without `GuardSignOut` on the `PopulateAvailableGuidesAsync` result. None violate a binding rule.
+- **`guide:{guideId}` companion eviction — out of §5 scope (noted follow-up, NOT fixed here).** Public `GuidesController.Detail` **is** `[OutputCache(PolicyName="PublicMedium")]` and its view renders `tour.OffersPrivateTour`, but the action emits **no** `PublicOutputCacheTagger.AddTag($"guide:{id}")` — so the page is cached-but-untagged and any facade eviction of `guide:{guideId}` would be a no-op. The genuine deficiency is the **missing `AddTag` in `GuidesController.Detail`**, a Public-area concern; plan §5.7 mandates only `tour:{tourId}`. Per direction-of-truth (no plan mandate for `guide:{id}`) this is recorded as an out-of-scope Public-area follow-up, not a §5 code gap.
+
+### Build + tests (evidence, round 2):
+- `dotnet build YallaJo.sln -nologo -v:q` → **Build succeeded, 0 Errors** (only pre-existing benign warnings).
+- **`Web.Tests.Unit` 482/482** (467 + 15 new GAP-G19), **`ContentTours.Tests.Unit` 293/293** (284 + 9 new GAP-G18), **`Booking.Tests.Unit` 267/267**, **`Accounts.Tests.Unit` 73/73**.
+
+> **Conclusion (round 2):** the round-1 "ZERO gaps" claim was incomplete — it audited only the 6 schedule/pricing-tier offering handlers and missed the 3 offering-level handlers (GAP-G18, security) and the §5.7-mandated C3 facade eviction (GAP-G19). Both are now fixed, built green, and unit-tested. Suspend/Reinstate confirmed correct-by-design; 3 minor BFF items and the `guide:{guideId}` Public-area tag noted as non-§5/out-of-scope. **Zero open §5 code gaps remain.**

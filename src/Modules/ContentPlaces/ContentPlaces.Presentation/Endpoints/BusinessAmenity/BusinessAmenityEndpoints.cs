@@ -45,14 +45,12 @@ internal static class BusinessAmenityEndpoints
         amenities.MapPost("/{businessId:guid}/amenities", async (
             Guid businessId,
             AddBusinessAmenityRequest request,
-            ICurrentUser currentUser,
             ISender sender,
             CancellationToken ct) =>
         {
             var result = await sender.Send(
                 new AddBusinessAmenityCommand(
                     businessId,
-                    currentUser.UserId!.Value,
                     request.Name,
                     request.Icon,
                     request.SortOrder), ct);
@@ -73,12 +71,11 @@ internal static class BusinessAmenityEndpoints
         // Remove amenity (owner OR admin-tier role; enforced in handler)
         amenities.MapDelete("/amenities/{amenityId:guid}", async (
             Guid amenityId,
-            ICurrentUser currentUser,
             ISender sender,
             CancellationToken ct) =>
         {
             var result = await sender.Send(
-                new RemoveBusinessAmenityCommand(amenityId, currentUser.UserId!.Value), ct);
+                new RemoveBusinessAmenityCommand(amenityId), ct);
 
             return result.ToApiResult();
         })

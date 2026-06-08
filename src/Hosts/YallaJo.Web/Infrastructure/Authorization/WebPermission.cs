@@ -17,7 +17,8 @@ public static class WebPermission
         public const string Read   = "Permission.Role.Read";
         public const string Create = "Permission.Role.Create";
         public const string Update = "Permission.Role.Update";
-        public const string Delete = "Permission.Role.Delete";
+        // GAP-10: Role.Delete removed — no DeleteRole endpoint exists (roles are
+        // deactivated, not deleted). Constant deleted to prevent inline misuse.
     }
 
     // ── RoleClaim ─────────────────────────────────────────────────────────────

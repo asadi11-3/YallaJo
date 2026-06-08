@@ -32,15 +32,43 @@
     </dl>
 
     @*
-        Phase 5E — legacy Activate/Deactivate UI removed. The backend
-        controller actions on UsersController and the underlying API
-        endpoints `/api/v1/security/users/{id}/activate|deactivate`
-        remain callable for non-UI clients per the Phase 5E scope; the
-        Razor view simply no longer surfaces them. All admin lifecycle
-        flow now goes through the Phase 3B Suspend / Reactivate /
-        Phase 3B Archive / Phase 3A Reset password / Phase 3C Reassign
-        modals below.
+        Canonical RBAC Activate / Deactivate (plan §9). These post to the
+        UsersController.Activate / Deactivate actions (anti-forgery + PRG).
+        They are gated by User.UpdateAny and shown conditionally on the
+        binary IsActive state. Deactivate routes through the shared F8
+        confirm modal (data-confirm); Activate is non-destructive so it
+        submits directly. The lifecycle modals below (Suspend / Reactivate /
+        Archive / Reset password / Reassign) coexist with these.
     *@
+    <permission require="@WebPermission.User.UpdateAny">
+        <div class="mb-3 d-flex flex-wrap gap-2">
+            @if (Model.IsActive)
+            {
+                <form asp-area="Admin" asp-controller="Users"
+                      asp-action="Deactivate" asp-route-userId="@Model.UserId" method="post" class="d-inline"
+                      data-confirm="Deactivate @Model.Email? They will be unable to sign in until reactivated."
+                      data-confirm-title="Deactivate user"
+                      data-confirm-action="Deactivate">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-warning btn-sm">
+                        <i class="fa-solid fa-ban fa-fw" aria-hidden="true"></i>
+                        <span>Deactivate</span>
+                    </button>
+                </form>
+            }
+            else
+            {
+                <form asp-area="Admin" asp-controller="Users"
+                      asp-action="Activate" asp-route-userId="@Model.UserId" method="post" class="d-inline">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-success btn-sm">
+                        <i class="fa-solid fa-circle-check fa-fw" aria-hidden="true"></i>
+                        <span>Activate</span>
+                    </button>
+                </form>
+            }
+        </div>
+    </permission>
 
     @*
         Phase 5C — admin lifecycle actions, now driven by Bootstrap 5 modals.
@@ -97,7 +125,9 @@
                     @* §8.13 — force-revoke all of the user's active sessions. *@
                     <form asp-area="Admin" asp-controller="Lifecycle" asp-action="RevokeSessions"
                           asp-route-userId="@Model.UserId" method="post" class="d-inline"
-                          onsubmit="return confirm('Revoke all active sessions for this user? They will be signed out everywhere and must sign in again.');">
+                          data-confirm="Revoke all active sessions for this user? They will be signed out everywhere and must sign in again."
+                          data-confirm-title="Revoke sessions"
+                          data-confirm-action="Revoke sessions">
                         @Html.AntiForgeryToken()
                         <button type="submit" class="btn btn-outline-danger btn-sm">
                             <i class="fa-solid fa-right-from-bracket fa-fw" aria-hidden="true"></i>
@@ -156,10 +186,12 @@
                                 <form asp-area="Admin" asp-controller="Users"
                                       asp-action="RemoveRole"
                                       asp-route-userId="@Model.UserId"
-                                      asp-route-roleId="@role.Id" method="post" class="d-inline">
+                                      asp-route-roleId="@role.Id" method="post" class="d-inline"
+                                      data-confirm="Remove role @role.Name from this user?"
+                                      data-confirm-title="Remove role"
+                                      data-confirm-action="Remove">
                                     @Html.AntiForgeryToken()
-                                    <button type="submit" class="btn btn-danger btn-sm"
-                                            onclick="return confirm('Remove role @role.Name?')">Remove</button>
+                                    <button type="submit" class="btn btn-danger btn-sm">Remove</button>
                                 </form>
                             </td>
                         </permission>
@@ -212,10 +244,12 @@
                                 <form asp-area="Admin" asp-controller="Users"
                                       asp-action="RemoveClaim"
                                       asp-route-userId="@Model.UserId"
-                                      asp-route-claimId="@c.Id" method="post" class="d-inline">
+                                      asp-route-claimId="@c.Id" method="post" class="d-inline"
+                                      data-confirm="Remove the @c.ClaimType claim from this user?"
+                                      data-confirm-title="Remove claim"
+                                      data-confirm-action="Remove">
                                     @Html.AntiForgeryToken()
-                                    <button type="submit" class="btn btn-danger btn-sm"
-                                            onclick="return confirm('Remove this claim?')">Remove</button>
+                                    <button type="submit" class="btn btn-danger btn-sm">Remove</button>
                                 </form>
                             </td>
                         </permission>

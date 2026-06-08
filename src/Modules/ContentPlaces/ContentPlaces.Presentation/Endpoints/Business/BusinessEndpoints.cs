@@ -364,14 +364,13 @@ internal static class BusinessEndpoints
         businesses.MapPut("/places/businesses/{id:guid}/hours", async (
             Guid id,
             SetBusinessHoursRequest request,
-            ICurrentUser currentUser,
             ISender sender) =>
         {
             var entries = request.Hours
                 .Select(h => new BusinessHoursEntry(h.DayOfWeek, h.OpenTime, h.CloseTime, h.IsClosed))
                 .ToList();
 
-            var result = await sender.Send(new SetBusinessHoursCommand(id, currentUser.UserId!.Value, entries));
+            var result = await sender.Send(new SetBusinessHoursCommand(id, entries));
             return result.ToApiResult();
         })
         .WithName("SetBusinessHours")

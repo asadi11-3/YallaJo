@@ -16,7 +16,10 @@ public sealed class SecurityPermissionCatalog : IPermissionCatalog
         new(SecurityFeatures.Role, AppAction.Read,   PermissionGroup.SystemAccess, "View roles"),
         new(SecurityFeatures.Role, AppAction.Create, PermissionGroup.SystemAccess, "Create a new role"),
         new(SecurityFeatures.Role, AppAction.Update, PermissionGroup.SystemAccess, "Edit a role"),
-        new(SecurityFeatures.Role, AppAction.Delete, PermissionGroup.SystemAccess, "Delete a role"),
+        // GAP-10 (RBAC fix-code audit): Role.Delete removed. No DeleteRole command or
+        // endpoint exists — roles are DEACTIVATED (PATCH .../deactivate, plan §9), never
+        // hard-deleted. Seeding a permission for a non-existent capability is "invented
+        // functionality"; the dangling WebPermission.Role.Delete constant is removed too.
 
         // ── User-role assignment ─────────────────────────────────────────────
         new(SecurityFeatures.UserRole, AppAction.Create, PermissionGroup.SystemAccess, "Assign a role to a user"),
@@ -36,6 +39,15 @@ public sealed class SecurityPermissionCatalog : IPermissionCatalog
         new(SecurityFeatures.User, AppAction.UpdateSelf, PermissionGroup.SystemAccess, "Update own profile"),
 
         // ── System settings ──────────────────────────────────────────────────
+        // GAP-1 (RBAC fix-code audit): the Web AuditLogsController class gate is
+        // [RequirePermission(WebPermission.System.Read)] ("Permission.System.Read",
+        // plan §9 line 43), but this permission was never seeded — the audit pane
+        // failed closed for every role. System.Read is group SystemAccess and its
+        // action is Read (not Update), so it is NOT IsOwnerOnly and NOT IsSuperAdminOnly
+        // in RolePermissionMapping; the Admin/SuperAdmin/Owner full sweeps therefore
+        // grant it automatically. SeedRoleClaimsAsync is idempotent (inserts missing
+        // claims on boot), so no EF migration is required.
+        new(SecurityFeatures.System, AppAction.Read,   PermissionGroup.SystemAccess, "View system / audit console"),
         new(SecurityFeatures.System, AppAction.Update, PermissionGroup.SystemAccess, "Manage system settings"),
 
         // ── Audit log ────────────────────────────────────────────────────────

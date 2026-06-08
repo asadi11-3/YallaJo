@@ -8,6 +8,9 @@
 > - **Fix (Oracle-approved):** added `RejectGuideApplicationCommandValidator`, `RemoveGuideCommandValidator`, `ApplyToAgencyCommandValidator` (auto-discovered by the existing FluentValidation assembly scan); Reject/Remove now require a non-empty `Reason` (clean 400); `ApplyToAgencyCommand.Message` made `string?` and `AgencyApplication.Create` null-coalesces (`message?.Trim() ?? string.Empty`) since the apply message is optional. Build: `0 Error(s)`; LSP: 0 errors.
 >
 > **Documented follow-ups (out of scope — business-semantics/refactor, not the precedent-backed defect):** (a) Apply/Invite handlers don't verify the target agency/guide exists or is *approved* (only check caller's own `ProviderType`); (b) guide-side `GetMyInvitationsQuery` returns all statuses though the endpoint comment says "pending"; (c) no domain events on approve/reject/accept/decline; (d) sent/received invitations share one cache key (only collides if one user is both agency-owner and guide). These change business behavior and should be separately specced.
+>
+> ## ✅ RESOLVED — Round 2 (promoted business-semantics gaps GAP-a..d + 1 sub-gap)
+> The four "documented follow-ups" above were **promoted to in-scope** and fixed in code (Oracle-reviewed). All build green (`0 Error(s)`) and Accounts.Tests.Unit 94/94 + Messaging.Tests.Unit 2/2 pass. Detailed GAP-N entries in **Section 5** below.
 
 
 > **Method:** deep code-vs-plan audit against the **shipped** `Areas/Guide/Controllers/AgencyRosterController.cs` (138 lines, read in full),
@@ -91,3 +94,73 @@
 2. **G2** page table — annotate §6.1/§6.2/§6.3 as **sections of the single `/guide/agency/roster` Index**; §6.4 = the Invite form route. Add `PendingInvitationCount` to the badge notes.
 
 > **Net:** the agency plan is otherwise **accurate** (area, routes, perms, verbs, reason-required all verified against the 138-line controller). The single real gap is **§6.3**: the deep facade/VM read proves invitations are **already built inline** on the Roster Index — the plan's "🟥 not yet shipped" is wrong. Everything else is a structure-clarity note (3 of 4 "pages" are one consolidated Index).
+
+---
+
+## 5. ✅ RESOLVED (Round 2) — promoted business-semantics gaps GAP-a..d + sub-gap
+
+> All four "documented follow-ups" from the top banner were promoted to in-scope and implemented in code. Oracle-reviewed fix plan (binding adjustments: 422 not 409 for not-approved targets; per-direction Pending filter; notification-only events with role-assignment staying solely on `AgencyAffiliationCreated`; option-b two-cache-keys-one-tag). Build `0 Error(s)`; LSP 0 errors; **Accounts.Tests.Unit 94/94** (73 baseline + 21 new), **Messaging.Tests.Unit 2/2**.
+
+### GAP-a — Apply/Invite do not verify target exists or is approved (and caller approval unchecked)
+- **Status:** ✅ RESOLVED
+- **Severity:** 🟠 (incorrect business semantics — allows applying to / inviting non-existent or unapproved counterparties; and Draft/Pending callers could act)
+- **Type:** Missing existence + state-precondition guards
+- **Layer(s):** Accounts.Application (command handlers), Accounts.Domain (errors)
+- **Plan requirement:** §6 agency affiliations are between *approved* providers (an approved guide applies to an approved agency; an approved agency invites an approved guide).
+- **Code reality (before):** `ApplyToAgencyCommandHandler` / `InviteGuideCommandHandler` checked only the caller's own `ProviderType` (NotAGuide / NotAnAgency); never loaded the target, never checked approval status, never checked caller `Status == Approved`.
+- **Rule impact:** Rule 11 (existence/approved-state checks before cross-actor mutations).
+- **Fix:** Added 5 errors to `Accounts.Domain\Errors\AgencyErrors.cs` (`AgencyNotFound`, `AgencyNotApproved`, `GuideNotFound`, `GuideNotApproved`, `CallerNotApproved`). Both handlers now, after the existing caller-type check: (1) caller `Status != Approved` → `CallerNotApproved` (Forbidden); (2) load target via `providerApplicationRepository.GetByUserIdAsync(targetUserId)` — null or wrong `Type` → `AgencyNotFound`/`GuideNotFound` (NotFound, collapsing missing+wrong-type to avoid type-probing); (3) target `Status != Approved` → `AgencyNotApproved`/`GuideNotApproved` (**UnprocessableEntity / 422**, per Oracle — well-formed request, referenced entity's business state blocks; BFF facade already maps 422 to a friendly "not yet approved" message). Existing affiliation/pending guards and persistence/eviction unchanged.
+- **Resolution:** Handlers LSP-clean; 10 new handler-guard tests (5 each) assert Forbidden / NotFound / 422 / success paths.
+
+### GAP-b — `GetMyInvitationsQuery` returns all statuses though endpoint documents "pending"
+- **Status:** ✅ RESOLVED
+- **Severity:** 🟡 (received-invitations view showed non-actionable accepted/declined/expired rows)
+- **Type:** Missing status filter + missing input validation
+- **Layer(s):** Accounts.Application (query handler + new validator)
+- **Plan requirement:** Guide-side "received invitations" surface lists **pending** invitations to act on; agency-side "sent" surface lists all (it renders status + RespondedAt).
+- **Code reality (before):** Handler called `GetByGuideUserIdAsync`/`GetByAgencyUserIdAsync` with `statusFilter: null` for **both** directions; `Direction` was a free-form string with no allow-list.
+- **Rule impact:** Endpoint contract vs implementation drift.
+- **Fix (per-direction, per Oracle — a global Pending filter would wrongly truncate the sent view):** received (default) → `GetByGuideUserIdAsync(userId, statusFilter: AgencyInvitationStatus.Pending, ct)`; sent → `GetByAgencyUserIdAsync(userId, statusFilter: null, ct)`. Added `GetMyInvitationsQueryValidator` (`RuleFor(x => x.Direction).NotEmpty().Must(d => d is "sent" or "received")`), auto-discovered by the FluentValidation assembly scan. Both live callers verified: `GuideAgencyEndpoints` → "received", `AgencyPublicEndpoints` → "sent".
+- **Resolution:** 3 new query-handler tests assert received=Pending-only, sent=all-statuses, and per-direction repo routing.
+
+### GAP-c — No domain events on approve/reject/accept/decline
+- **Status:** ✅ RESOLVED
+- **Severity:** 🟠 (responders are never notified of application/invitation outcomes)
+- **Type:** Missing domain events + integration events + outbox converters + consumers
+- **Layer(s):** Accounts.Domain (events), Accounts.Contracts (integration events), Accounts.Infrastructure (outbox converters), Messaging.Domain (enum), Messaging.Infrastructure (consumers)
+- **Plan requirement:** §6 lifecycle transitions notify the counterparty (approved/rejected → notify guide; accepted/declined → notify agency).
+- **Code reality (before):** `AgencyApplication.Approve/Reject` and `AgencyInvitation.Accept/Decline` mutated state with **no** `AddDomainEvent`; only affiliation create/terminate raised events. No notification path for these four transitions.
+- **Rule impact:** Eventing pattern; outbox transactional guarantee; module isolation (public IDs only in integration payloads).
+- **Fix (NOTIFICATION-ONLY — role assignment stays exclusively on `AgencyAffiliationCreated`/`AgencyGuideAffiliated`, no double-notify since `PublishAgencyAffiliationCreatedHandler` does not fan out notifications):**
+  - **c1** 4 domain events (`AgencyApplicationApprovedDomainEvent`, `AgencyApplicationRejectedDomainEvent(...,Reason)`, `AgencyInvitationAcceptedDomainEvent`, `AgencyInvitationDeclinedDomainEvent`) in `Accounts.Domain\Events\Agency\`.
+  - **c2** raised via `AddDomainEvent` inside each domain method's `if (Status != Pending) return;` guard (Reject carries trimmed `RejectionReason`).
+  - **c3** 4 integration events (`: IntegrationEventBase`, action-past-tense timestamps) in `Accounts.Contracts\IntegrationEvents\`.
+  - **c4** 4 outbox converter handlers appended to `Accounts.Infrastructure\EventHandlers\AgencyIntegrationConverters.cs` (`INotificationHandler<DomainEventNotification<…>>`; only `outbox.WriteAsync(...)`, no repo / no SaveChanges → outbox guarantee preserved).
+  - **c5** `NotificationType` enum (Messaging.Domain) extended: `AgencyApplicationApproved=57, AgencyApplicationRejected=58, AgencyInvitationAccepted=59, AgencyInvitationDeclined=60`.
+  - **c6** NEW `Messaging.Infrastructure\EventHandlers\AgencyResponseNotificationHandlers.cs`: 4 inbox-idempotent consumers (mirror `AgencyAffiliationCreatedNotificationHandler`) — Approved/Rejected notify GuideUserId, Accepted/Declined notify AgencyUserId; Rejected body includes the reason.
+- **Resolution:** 8 new domain-event tests assert each transition raises the correct event with payload (and no event when the Status≠Pending guard short-circuits).
+
+### GAP-d — Sent/received invitations share one cache key
+- **Status:** ✅ RESOLVED
+- **Severity:** 🟡 (cache collision only when a single userId is both an agency-owner and a guide — but YallaJo supports multi-role providers, so real)
+- **Type:** Cache-key collision
+- **Layer(s):** Accounts.Application (cache keys + query handler)
+- **Plan requirement:** Sent and received invitation lists for the same user must not overwrite each other in cache.
+- **Code reality (before):** `AccountsCacheKeys.AgencyInvitations(userId)` produced one key for both directions; a dual-role user's "sent" and "received" results clobbered each other.
+- **Rule impact:** Cache correctness (C3).
+- **Fix (Oracle option-b — two keys, one tag):** added overload `AgencyInvitations(Guid userId, string direction) => $"accounts:agency:{userId}:invitations:{direction}"`; handler now keys on `(userId, request.Direction)`. The eviction **tag** `AgencyInvitationsTag(userId)` is unchanged, so a single `RemoveByTagAsync` still invalidates both direction keys atomically — **zero eviction-site changes**.
+- **Resolution:** Query-handler tests assert the two directions produce distinct cache keys.
+
+### SUB-GAP — No unique constraint preventing duplicate concurrent pending Apply/Invite
+- **Status:** ✅ RESOLVED
+- **Severity:** 🟡 (race: two concurrent Apply/Invite both pass the `HasPending*` check → duplicate Pending rows)
+- **Type:** Missing unique filtered index + migration
+- **Layer(s):** Accounts.Infrastructure (EF configs + migration)
+- **Plan requirement:** At most one *pending* application/invitation per (guide, agency) pair.
+- **Code reality (before):** Only non-unique indexes existed; the no-duplicate rule was enforced solely by an app-level `HasPending*` read (TOCTOU race).
+- **Fix:** `AgencyApplicationConfiguration` → unique filtered index on `(GuideUserId, AgencyUserId)` `HasFilter("[Status] = 'Pending'")` `UX_AgencyApplications_Pending_Guide_Agency`; `AgencyInvitationConfiguration` → unique filtered index on `(AgencyUserId, GuideUserId)` `HasFilter("[Status] = 'Pending'")` `UX_AgencyInvitations_Pending_Agency_Guide` (Status persisted as string). Migration `20260608170658_AddAgencyPendingUniqueIndexes` (Up creates both, Down drops both). All 3 Agency entities already carry `RowVersion` → `DbUpdateConcurrencyException` maps to Conflict.
+- **Resolution:** Both EF configs LSP-clean; migration verified.
+
+> **Note (eviction audit — NOT a gap):** the "two-sided eviction" concern was investigated and **downgraded**: invitation handlers already evict both parties' tags; applications/guides lists are agency-scoped only, so single-side eviction is correct. The only real cache bug was GAP-d.
+
+> **Round-2 net:** all promoted gaps (GAP-a..d) + the pending-uniqueness sub-gap are RESOLVED in code with tests; build + Accounts/Messaging unit tests green.

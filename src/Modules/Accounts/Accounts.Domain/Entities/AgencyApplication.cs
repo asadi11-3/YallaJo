@@ -52,6 +52,9 @@ public sealed class AgencyApplication : AuditableEntity, IAggregateRoot
         Status = AgencyApplicationStatus.Approved;
         RespondedAt = DateTime.UtcNow;
         MarkUpdated();
+
+        AddDomainEvent(
+            new AgencyApplicationApprovedDomainEvent(Id, GuideUserId, AgencyUserId));
     }
 
     public void Reject(string reason)
@@ -65,5 +68,8 @@ public sealed class AgencyApplication : AuditableEntity, IAggregateRoot
         RejectionReason = reason.Trim();
         RespondedAt = DateTime.UtcNow;
         MarkUpdated();
+
+        AddDomainEvent(
+            new AgencyApplicationRejectedDomainEvent(Id, GuideUserId, AgencyUserId, RejectionReason));
     }
 }

@@ -48,4 +48,19 @@ public static class AgencyErrors
 
     public static readonly Error NoActiveAffiliation =
         new("Agency.NoActiveAffiliation", "You are not currently affiliated with any agency.");
+
+    public static readonly Error AgencyNotFound =
+        new("Agency.AgencyNotFound", "The target agency was not found.");
+
+    public static readonly Error AgencyNotApproved =
+        new("Agency.AgencyNotApproved", "The target agency is not yet approved.");
+
+    public static readonly Error GuideNotFound =
+        new("Agency.GuideNotFound", "The target guide was not found.");
+
+    public static readonly Error GuideNotApproved =
+        new("Agency.GuideNotApproved", "The target guide is not yet approved.");
+
+    public static readonly Error CallerNotApproved =
+        new("Agency.CallerNotApproved", "Your provider account is not yet approved.");
 }

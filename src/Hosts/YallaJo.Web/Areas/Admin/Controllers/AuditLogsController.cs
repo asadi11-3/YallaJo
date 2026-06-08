@@ -94,7 +94,6 @@ public sealed class AuditLogsController : BaseController
         }
 
         var fileName = $"audit-logs_{rangeFrom:yyyyMMdd}_{rangeTo:yyyyMMdd}.csv";
-        var bytes = System.Text.Encoding.UTF8.GetBytes(result.Data);
-        return File(bytes, "text/csv", fileName);
+        return File(result.Data.Content, result.Data.ContentType, fileName);
     }
 }

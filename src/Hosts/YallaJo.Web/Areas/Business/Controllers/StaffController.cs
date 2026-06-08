@@ -62,7 +62,7 @@ public sealed class StaffController : BaseController
     [RequirePermission(WebPermission.BusinessStaff.Delete)]
     public async Task<IActionResult> Remove(Guid id, Guid staffId, CancellationToken ct = default)
     {
-        var result = await _facade.RemoveAsync(staffId, ct);
+        var result = await _facade.RemoveAsync(id, staffId, ct);
         if (GuardSignOut(result) is { } signOut)
         {
             return signOut;

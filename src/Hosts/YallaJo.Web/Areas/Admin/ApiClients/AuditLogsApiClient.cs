@@ -72,12 +72,12 @@ public sealed class AuditLogsApiClient
     public Task<ApiResult> RedactAsync(long id, string reason, CancellationToken ct = default)
         => _api.PostAsync($"/api/v1/admin/audit-logs/{id}/redact", new { reason }, ct);
 
-    // §8.13 — GET /api/v1/admin/audit-logs/export?from=&to= (returns serialized CSV content).
-    public Task<ApiResult<string>> ExportAsync(DateTime from, DateTime to, CancellationToken ct = default)
+    // §8.13 — GET /api/v1/admin/audit-logs/export?from=&to= (returns streamed CSV content).
+    public Task<ApiResult<ApiStream>> ExportAsync(DateTime from, DateTime to, CancellationToken ct = default)
     {
         var url = $"/api/v1/admin/audit-logs/export"
             + $"?from={Uri.EscapeDataString(from.ToString("o", CultureInfo.InvariantCulture))}"
             + $"&to={Uri.EscapeDataString(to.ToString("o", CultureInfo.InvariantCulture))}";
-        return _api.GetAsync<string>(url, ct);
+        return _api.GetStreamAsync(url, ct);
     }
 }

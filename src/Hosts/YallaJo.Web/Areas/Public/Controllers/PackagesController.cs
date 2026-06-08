@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OutputCaching;
+using YallaJo.Web.Areas.Public.Caching;
 using YallaJo.Web.Areas.Public.Facades;
 using YallaJo.Web.Areas.Public.Models.Packages;
 using YallaJo.Web.Infrastructure.Mvc;
@@ -41,6 +42,7 @@ public sealed class PackagesController(PackagesFacade packages) : BaseController
             return RedirectToAction(nameof(Index));
         }
 
+        PublicOutputCacheTagger.AddTag(HttpContext, $"package:{id}");
         return View(result.Data);
     }
 }

@@ -4,6 +4,7 @@ using ContentTours.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
+using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
@@ -13,6 +14,7 @@ public sealed class RemoveTourGuideLanguageCommandHandler(
     ITourGuideRepository guideRepository,
     IContentToursUnitOfWork unitOfWork,
     HybridCache cache,
+    ICurrentUser currentUser,
     ILogger<RemoveTourGuideLanguageCommandHandler> logger)
     : ICommandHandler<RemoveTourGuideLanguageCommand>
 {
@@ -20,6 +22,13 @@ public sealed class RemoveTourGuideLanguageCommandHandler(
     {
         try
         {
+            if (currentUser.UserId is not Guid callerUserId)
+            {
+                return Result.Failure(
+                    new Error("Auth.Unauthorized", "An authenticated user is required."),
+                    Outcome.Unauthorized);
+            }
+
             var guide = await guideRepository
                 .GetWithDetailsAsync(request.TourGuideId, cancellationToken, asNoTracking: false)
                 .ConfigureAwait(false);
@@ -31,7 +40,7 @@ public sealed class RemoveTourGuideLanguageCommandHandler(
                     Outcome.NotFound);
             }
 
-            if (guide.UserId != request.CallerUserId)
+            if (guide.UserId != callerUserId)
             {
                 return Result.Failure(
                     new Error("TourGuide.NotOwner", "You do not have permission to update this guide profile."),
@@ -65,7 +74,7 @@ public sealed class RemoveTourGuideLanguageCommandHandler(
                 "Removed LanguageId={LanguageId} from TourGuideId={TourGuideId} by UserId={UserId}",
                 request.LanguageId,
                 guide.Id,
-                request.CallerUserId);
+                callerUserId);
 
             return Result.Success();
         }

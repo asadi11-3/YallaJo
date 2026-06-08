@@ -55,6 +55,24 @@ internal sealed class UserRepository(SecurityDbContext context)
             .Where(ur => ur.Role.Name == roleName)
             .AnyAsync(ct);
 
+    public async Task<int> CountUsersInRolesExcludingAssignmentAsync(
+        IReadOnlyCollection<string> roleNames,
+        Guid excludedUserId,
+        Guid excludedRoleId,
+        CancellationToken ct = default)
+    {
+        if (roleNames.Count == 0)
+            return 0;
+
+        return await context.UserRoles
+            .AsNoTracking()
+            .Where(ur => roleNames.Contains(ur.Role.Name))
+            .Where(ur => ur.UserId != excludedUserId || ur.RoleId != excludedRoleId)
+            .Select(ur => ur.UserId)
+            .Distinct()
+            .CountAsync(ct);
+    }
+
     public async Task<UserRole?> GetUserRoleAsync(Guid userId, Guid roleId, CancellationToken ct = default)
         => await context.UserRoles
                .FirstOrDefaultAsync(ur => ur.UserId == userId && ur.RoleId == roleId, ct);

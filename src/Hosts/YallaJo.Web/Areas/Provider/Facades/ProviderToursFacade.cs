@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.OutputCaching;
 using YallaJo.Web.Areas.Provider.ApiClients;
 using YallaJo.Web.Areas.Provider.Models.Tours;
 using YallaJo.Web.Infrastructure.Api.Contracts;
@@ -41,8 +42,13 @@ public sealed class ProviderToursFacade
     private const int DefaultPageSize = 20;
 
     private readonly ProviderToursApiClient _api;
+    private readonly IOutputCacheStore _cache;
 
-    public ProviderToursFacade(ProviderToursApiClient api) => _api = api;
+    public ProviderToursFacade(ProviderToursApiClient api, IOutputCacheStore cache)
+    {
+        _api = api;
+        _cache = cache;
+    }
 
     public async Task<ProviderToursListResult> GetIndexAsync(
         string? status, int page, CancellationToken ct = default)
@@ -88,6 +94,9 @@ public sealed class ProviderToursFacade
         if (!result.IsSuccess || result.Data is null)
             return new(ProviderTourOutcome.ValidationError, Error: result.Error ?? "Could not create the listing.");
 
+        // Evict the public detail tag in case a stale entry exists (e.g., a previously rejected tour
+        // with the same id). For brand-new tours this is a safe no-op.
+        await _cache.EvictByTagAsync($"tour:{result.Data.TourId}", ct);
         return new(ProviderTourOutcome.Ok, result.Data.TourId);
     }
 
@@ -98,7 +107,7 @@ public sealed class ProviderToursFacade
                 Error: "The listing version is missing. Please reload the page and try again.");
 
         var result = await _api.UpdateAsync(id, ProviderToursMapper.ToUpdateRequest(vm, rowVersion), ct);
-        return NormalizeAction(result, "Could not save the listing.");
+        return await EvictOnOkAsync(NormalizeAction(result, "Could not save the listing."), id, ct);
     }
 
     public async Task<ProviderTourActionResult> SubmitAsync(Guid id, CancellationToken ct = default)
@@ -107,7 +116,7 @@ public sealed class ProviderToursFacade
         if (!ok) return failure!;
 
         var result = await _api.SubmitAsync(id, rowVersion!, ct);
-        return NormalizeAction(result, "Could not submit the listing.");
+        return await EvictOnOkAsync(NormalizeAction(result, "Could not submit the listing."), id, ct);
     }
 
     public async Task<ProviderTourActionResult> ArchiveAsync(Guid id, CancellationToken ct = default)
@@ -116,14 +125,14 @@ public sealed class ProviderToursFacade
         if (!ok) return failure!;
 
         var result = await _api.ArchiveAsync(id, rowVersion!, ct);
-        return NormalizeAction(result, "Could not archive the listing.");
+        return await EvictOnOkAsync(NormalizeAction(result, "Could not archive the listing."), id, ct);
     }
 
     // DELETE /tours/{id} is a soft-delete on the API and does not require a RowVersion.
     public async Task<ProviderTourActionResult> DeleteAsync(Guid id, CancellationToken ct = default)
     {
         var result = await _api.DeleteAsync(id, ct);
-        return NormalizeAction(result, "Could not delete the listing.");
+        return await EvictOnOkAsync(NormalizeAction(result, "Could not delete the listing."), id, ct);
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -165,5 +174,14 @@ public sealed class ProviderToursFacade
     {
         try { rowVersion = Convert.FromBase64String(base64); return rowVersion.Length > 0; }
         catch (FormatException) { rowVersion = []; return false; }
+    }
+
+    // Evicts the public detail cache tag for the affected tour when the action succeeded.
+    // Plan §3 rule #3: facades must evict output-cache tags after successful writes.
+    private async Task<ProviderTourActionResult> EvictOnOkAsync(ProviderTourActionResult result, Guid tourId, CancellationToken ct)
+    {
+        if (result.Outcome == ProviderTourOutcome.Ok)
+            await _cache.EvictByTagAsync($"tour:{tourId}", ct);
+        return result;
     }
 }

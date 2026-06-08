@@ -94,7 +94,7 @@ public sealed class ServicesController : BaseController
     [RequirePermission(WebPermission.ServiceItem.SoftDelete)]
     public async Task<IActionResult> Remove(Guid id, Guid serviceId, CancellationToken ct)
     {
-        var result = await _facade.RemoveAsync(serviceId, ct);
+        var result = await _facade.RemoveAsync(id, serviceId, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
         SetFlash(result, "Service removed.", "Could not remove the service.");
         return RedirectToAction(nameof(Index), new { id });

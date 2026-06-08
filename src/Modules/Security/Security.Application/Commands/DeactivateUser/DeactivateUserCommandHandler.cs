@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Security.Application.Authorization;
 using Security.Application.Caching;
+using Security.Domain.Entities;
 using Security.Domain.Errors;
 using Security.Domain.Repositories;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
@@ -31,7 +32,18 @@ public sealed class DeactivateUserCommandHandler(
         if (!user.IsActive)
             return Result.Success(); // idempotent — already deactivated
 
-        user.Deactivate();
+        // Errors-as-values: translate any disallowed lifecycle transition the domain
+        // enforces (by throwing) into a Conflict result instead of letting it escape.
+        try
+        {
+            user.Deactivate();
+        }
+        catch (InvalidLifecycleTransitionException ex)
+        {
+            return Result.Failure(
+                new Error("User.InvalidLifecycleTransition", ex.Message),
+                Outcome.Conflict);
+        }
 
         try
         {

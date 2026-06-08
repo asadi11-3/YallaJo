@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.OutputCaching;
 using YallaJo.Web.Areas.Provider.ApiClients;
 using YallaJo.Web.Areas.Provider.Models.TourSchedules;
 using YallaJo.Web.Infrastructure.Api.Contracts;
@@ -34,12 +35,14 @@ public sealed class ProviderTourSchedulesFacade
 {
     private readonly ProviderTourSchedulesApiClient _schedulesApi;
     private readonly ProviderToursApiClient _toursApi;
+    private readonly IOutputCacheStore _cache;
 
     public ProviderTourSchedulesFacade(
-        ProviderTourSchedulesApiClient schedulesApi, ProviderToursApiClient toursApi)
+        ProviderTourSchedulesApiClient schedulesApi, ProviderToursApiClient toursApi, IOutputCacheStore cache)
     {
         _schedulesApi = schedulesApi;
         _toursApi = toursApi;
+        _cache = cache;
     }
 
     public async Task<TourScheduleListResult> GetIndexAsync(Guid tourId, CancellationToken ct = default)
@@ -78,6 +81,7 @@ public sealed class ProviderTourSchedulesFacade
             if (result.Data is { Created: 0 })
                 return new(TourScheduleOutcome.NothingCreated,
                     Error: "No schedule was added. Please pick a valid day and time and try again.");
+            await _cache.EvictByTagAsync($"tour:{tourId}", ct);
             return new(TourScheduleOutcome.Ok);
         }
 
@@ -106,17 +110,21 @@ public sealed class ProviderTourSchedulesFacade
     public async Task<TourScheduleActionResult> UpdateAsync(Guid tourId, Guid scheduleId, TourScheduleFormVm vm, CancellationToken ct = default)
     {
         var result = await _schedulesApi.UpdateAsync(tourId, scheduleId, TourSchedulesMapper.ToUpdateRequest(vm), ct);
-        return NormalizeAction(result.IsUnauthorized, result.IsForbidden, result.IsNotFound,
+        var outcome = NormalizeAction(result.IsUnauthorized, result.IsForbidden, result.IsNotFound,
             result.IsConflict, result.IsValidationError, result.ValidationErrors, result.Error,
             "Could not save the schedule.", result.IsSuccess);
+        if (outcome.Outcome == TourScheduleOutcome.Ok) await _cache.EvictByTagAsync($"tour:{tourId}", ct);
+        return outcome;
     }
 
     public async Task<TourScheduleActionResult> DeleteAsync(Guid tourId, Guid scheduleId, CancellationToken ct = default)
     {
         var result = await _schedulesApi.DeleteAsync(tourId, scheduleId, ct);
-        return NormalizeAction(result.IsUnauthorized, result.IsForbidden, result.IsNotFound,
+        var outcome = NormalizeAction(result.IsUnauthorized, result.IsForbidden, result.IsNotFound,
             result.IsConflict, result.IsValidationError, result.ValidationErrors, result.Error,
             "Could not delete the schedule.", result.IsSuccess);
+        if (outcome.Outcome == TourScheduleOutcome.Ok) await _cache.EvictByTagAsync($"tour:{tourId}", ct);
+        return outcome;
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────────

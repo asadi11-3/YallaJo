@@ -74,7 +74,7 @@ public sealed class TourImagesController : BaseController
         if (!_currentUser.HasPermission(WebPermission.Attachment.Delete))
             return RedirectToStatus();
 
-        var result = await _facade.DeleteAsync(attachmentId, ct);
+        var result = await _facade.DeleteAsync(id, attachmentId, ct);
         if (result.Outcome == TourImagesOutcome.ForceSignOut) return RedirectToLogin();
 
         if (result.Outcome == TourImagesOutcome.Ok)

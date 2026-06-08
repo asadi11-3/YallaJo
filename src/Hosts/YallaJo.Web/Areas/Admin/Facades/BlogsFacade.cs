@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.OutputCaching;
 using YallaJo.Web.Areas.Admin.ApiClients;
 using YallaJo.Web.Areas.Admin.Models.Blogs;
 using YallaJo.Web.Infrastructure.Api.Contracts;
@@ -17,8 +18,13 @@ namespace YallaJo.Web.Areas.Admin.Facades;
 public sealed class BlogsFacade
 {
     private readonly BlogsApiClient _api;
+    private readonly IOutputCacheStore _cache;
 
-    public BlogsFacade(BlogsApiClient api) => _api = api;
+    public BlogsFacade(BlogsApiClient api, IOutputCacheStore cache)
+    {
+        _api = api;
+        _cache = cache;
+    }
 
     // ── List ─────────────────────────────────────────────────────────────────────
     public async Task<ApiResult<BlogListVm>> GetListAsync(
@@ -147,14 +153,16 @@ public sealed class BlogsFacade
             id,
             rv => _api.LinkToursAsync(id, new BlogLinkToursRequest(rv, [new BlogLinkTourItem(tourId)]), ct),
             "Could not link the tour.",
-            ct);
+            ct,
+            $"blog:{id}");
 
     public Task<ApiResult> UnlinkTourAsync(Guid id, Guid tourId, CancellationToken ct = default)
         => WithRowVersion(
             id,
             rv => _api.UnlinkTourAsync(id, tourId, new BlogRowVersionRequest(rv), ct),
             "Could not unlink the tour.",
-            ct);
+            ct,
+            $"blog:{id}");
 
     // ── Create / Update / Delete ──────────────────────────────────────────────────
     public async Task<ApiResult<CreateBlogResponse>> CreateAsync(CreateBlogVm vm, CancellationToken ct = default)
@@ -170,46 +178,46 @@ public sealed class BlogsFacade
     }
 
     public Task<ApiResult> UpdateAsync(EditBlogVm vm, CancellationToken ct = default)
-        => Normalize(_api.UpdateAsync(vm.Id, BlogsMapper.ToUpdateRequest(vm), ct), "Could not update the blog.");
+        => Normalize(_api.UpdateAsync(vm.Id, BlogsMapper.ToUpdateRequest(vm), ct), "Could not update the blog.", $"blog:{vm.Id}");
 
     public Task<ApiResult> DeleteAsync(Guid id, CancellationToken ct = default)
-        => WithRowVersion(id, rv => _api.DeleteAsync(id, new BlogRowVersionRequest(rv), ct), "Could not delete the blog.", ct);
+        => WithRowVersion(id, rv => _api.DeleteAsync(id, new BlogRowVersionRequest(rv), ct), "Could not delete the blog.", ct, $"blog:{id}");
 
     public Task<ApiResult> RestoreAsync(Guid id, byte[] rowVersion, CancellationToken ct = default)
-        => Normalize(_api.RestoreAsync(id, new BlogRowVersionRequest(rowVersion), ct), "Could not restore the blog.");
+        => Normalize(_api.RestoreAsync(id, new BlogRowVersionRequest(rowVersion), ct), "Could not restore the blog.", $"blog:{id}");
 
     public Task<ApiResult> PublishAsync(Guid id, CancellationToken ct = default)
-        => WithRowVersion(id, rv => _api.PublishAsync(id, new BlogRowVersionRequest(rv), ct), "Could not publish the blog.", ct);
+        => WithRowVersion(id, rv => _api.PublishAsync(id, new BlogRowVersionRequest(rv), ct), "Could not publish the blog.", ct, $"blog:{id}");
 
     public Task<ApiResult> UnpublishAsync(Guid id, CancellationToken ct = default)
-        => WithRowVersion(id, rv => _api.UnpublishAsync(id, new BlogRowVersionRequest(rv), ct), "Could not unpublish the blog.", ct);
+        => WithRowVersion(id, rv => _api.UnpublishAsync(id, new BlogRowVersionRequest(rv), ct), "Could not unpublish the blog.", ct, $"blog:{id}");
 
     public Task<ApiResult> ArchiveAsync(Guid id, CancellationToken ct = default)
-        => WithRowVersion(id, rv => _api.ArchiveAsync(id, new BlogRowVersionRequest(rv), ct), "Could not archive the blog.", ct);
+        => WithRowVersion(id, rv => _api.ArchiveAsync(id, new BlogRowVersionRequest(rv), ct), "Could not archive the blog.", ct, $"blog:{id}");
 
     public Task<ApiResult> FeatureAsync(Guid id, DateTime? featuredUntil, CancellationToken ct = default)
-        => WithRowVersion(id, rv => _api.FeatureAsync(id, new FeatureBlogRequest(rv, featuredUntil), ct), "Could not feature the blog.", ct);
+        => WithRowVersion(id, rv => _api.FeatureAsync(id, new FeatureBlogRequest(rv, featuredUntil), ct), "Could not feature the blog.", ct, $"blog:{id}", "homepage");
 
     public Task<ApiResult> UnfeatureAsync(Guid id, CancellationToken ct = default)
-        => WithRowVersion(id, rv => _api.UnfeatureAsync(id, new BlogRowVersionRequest(rv), ct), "Could not unfeature the blog.", ct);
+        => WithRowVersion(id, rv => _api.UnfeatureAsync(id, new BlogRowVersionRequest(rv), ct), "Could not unfeature the blog.", ct, $"blog:{id}", "homepage");
 
 
     public Task<ApiResult> ApproveAsync(Guid id, CancellationToken ct = default)
-        => WithRowVersion(id, rv => _api.ApproveAsync(id, new BlogRowVersionRequest(rv), ct), "Could not approve the blog.", ct);
+        => WithRowVersion(id, rv => _api.ApproveAsync(id, new BlogRowVersionRequest(rv), ct), "Could not approve the blog.", ct, $"blog:{id}");
 
     public Task<ApiResult> RejectAsync(Guid id, string reason, CancellationToken ct = default)
-        => WithRowVersion(id, rv => _api.RejectAsync(id, new RejectBlogRequest(rv, reason), ct), "Could not reject the blog.", ct);
+        => WithRowVersion(id, rv => _api.RejectAsync(id, new RejectBlogRequest(rv, reason), ct), "Could not reject the blog.", ct, $"blog:{id}");
 
     // ── Moderation (Phase 2B) ─────────────────────────────────────────────────────
 
     public Task<ApiResult> HideAsync(Guid id, string reason, CancellationToken ct = default)
-        => WithRowVersion(id, rv => _api.HideAsync(id, new HideBlogRequest(rv, reason), ct), "Could not hide the blog.", ct);
+        => WithRowVersion(id, rv => _api.HideAsync(id, new HideBlogRequest(rv, reason), ct), "Could not hide the blog.", ct, $"blog:{id}", "homepage");
 
     public Task<ApiResult> UnhideAsync(Guid id, CancellationToken ct = default)
-        => WithRowVersion(id, rv => _api.UnhideAsync(id, new BlogRowVersionRequest(rv), ct), "Could not unhide the blog.", ct);
+        => WithRowVersion(id, rv => _api.UnhideAsync(id, new BlogRowVersionRequest(rv), ct), "Could not unhide the blog.", ct, $"blog:{id}", "homepage");
 
     public Task<ApiResult> RemoveAsync(Guid id, string reason, CancellationToken ct = default)
-        => WithRowVersion(id, rv => _api.RemoveAsync(id, new RemoveBlogRequest(rv, reason), ct), "Could not remove the blog.", ct);
+        => WithRowVersion(id, rv => _api.RemoveAsync(id, new RemoveBlogRequest(rv, reason), ct), "Could not remove the blog.", ct, $"blog:{id}");
 
     // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -218,7 +226,8 @@ public sealed class BlogsFacade
     /// Needed because Published list rows do not carry RowVersion.
     /// </summary>
     private async Task<ApiResult> WithRowVersion(
-        Guid id, Func<byte[], Task<ApiResult>> mutate, string fallback, CancellationToken ct)
+        Guid id, Func<byte[], Task<ApiResult>> mutate, string fallback, CancellationToken ct,
+        params string[] evictTags)
     {
         var detail = await _api.GetAdminByIdAsync(id, ct);
         if (detail.IsUnauthorized) return ApiResult.ForceSignOut();
@@ -226,13 +235,21 @@ public sealed class BlogsFacade
         if (!detail.IsSuccess || detail.Data is null)
             return ApiResult.Fail(detail.StatusCode, detail.Error ?? fallback);
 
-        return await Normalize(mutate(detail.Data.RowVersion), fallback);
+        return await Normalize(mutate(detail.Data.RowVersion), fallback, evictTags);
     }
 
-    private static async Task<ApiResult> Normalize(Task<ApiResult> call, string fallback)
+    // Evicts the public output-cache tags for the mutated blog on success (§8.6 C3) so the
+    // cached public blog detail / homepage reflect the change immediately. Uses
+    // CancellationToken.None so eviction still runs if the admin client disconnected.
+    private async Task<ApiResult> Normalize(Task<ApiResult> call, string fallback, params string[] evictTags)
     {
         var result = await call;
-        if (result.IsSuccess) return ApiResult.Ok();
+        if (result.IsSuccess)
+        {
+            foreach (var tag in evictTags)
+                await _cache.EvictByTagAsync(tag, CancellationToken.None);
+            return ApiResult.Ok();
+        }
         if (result.IsUnauthorized) return ApiResult.ForceSignOut();
         if (result.IsNotFound) return ApiResult.Fail(404, "Blog not found.");
         if (result.IsConflict) return ApiResult.Fail(409, "This blog was modified by someone else, or the action is not allowed in its current state. Please reload and try again.");

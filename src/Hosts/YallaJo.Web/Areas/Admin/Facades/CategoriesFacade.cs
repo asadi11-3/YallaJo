@@ -91,11 +91,13 @@ public sealed class CategoriesFacade
 
     // Evicts the shared "lookups" output-cache tag whenever a write succeeds, so
     // any cached anonymous/public lookup reads reflect the change immediately.
+    // Eviction uses CancellationToken.None so cache consistency still runs even if
+    // the admin client disconnected after the backend write committed.
     private async Task<ApiResult> NormalizeAsync(ApiResult result, string fallback, CancellationToken ct)
     {
         if (result.IsSuccess)
         {
-            await _cache.EvictByTagAsync("lookups", ct);
+            await _cache.EvictByTagAsync("lookups", CancellationToken.None);
             return ApiResult.Ok();
         }
         if (result.IsUnauthorized)    return ApiResult.ForceSignOut();

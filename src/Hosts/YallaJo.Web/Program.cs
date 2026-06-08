@@ -231,6 +231,12 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+// GAP-7 (rule SEC2): baseline hardening headers (CSP, X-Frame-Options,
+// X-Content-Type-Options, Referrer-Policy, Permissions-Policy, X-Correlation-ID)
+// on every response. Registered early so it covers static assets, error pages,
+// and every MVC response including the §9 RBAC console.
+app.UseMiddleware<YallaJo.Web.Infrastructure.Middleware.SecurityHeadersMiddleware>();
+
 // Apply request culture (query string → cookie → Accept-Language) before the
 // MVC pipeline renders any view, so dir/lang and localized strings are correct.
 app.UseRequestLocalization();

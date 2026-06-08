@@ -24,6 +24,13 @@ public interface IApiClient
     /// </summary>
     Task<ApiResult<ApiFile>> GetFileAsync(string path, CancellationToken ct = default);
 
+    /// <summary>
+    /// GET a downloadable payload as a live response stream. Callers must return
+    /// or dispose the stream; it owns the underlying HTTP response lifetime.
+    /// </summary>
+    Task<ApiResult<ApiStream>> GetStreamAsync(string path, CancellationToken ct = default) =>
+        Task.FromResult(ApiResult<ApiStream>.Fail(501, "Streaming downloads are not supported by this API client."));
+
     Task<ApiResult<T>> PostAsync<T>(string path, object? body = null, CancellationToken ct = default);
 
     Task<ApiResult> PostAsync(string path, object? body = null, CancellationToken ct = default);

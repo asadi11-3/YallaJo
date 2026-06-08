@@ -6,6 +6,7 @@ using ContentPlaces.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
+using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Application.Abstractions.Messaging;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 using StaffEntity = ContentPlaces.Domain.Entities.BusinessStaff;
@@ -18,6 +19,7 @@ public sealed class AddBusinessStaffCommandHandler(
     IContentPlacesUnitOfWork unitOfWork,
     IContentPlacesOutboxWriter outbox,
     HybridCache cache,
+    ICurrentUser currentUser,
     ILogger<AddBusinessStaffCommandHandler> logger)
     : ICommandHandler<AddBusinessStaffCommand, BusinessStaffDto>
 {
@@ -25,6 +27,13 @@ public sealed class AddBusinessStaffCommandHandler(
         AddBusinessStaffCommand request,
         CancellationToken cancellationToken)
     {
+        if (currentUser.UserId is not Guid actingUserId)
+        {
+            return Result<BusinessStaffDto>.Failure(
+                new Error("Auth.Unauthorized", "An authenticated user is required."),
+                Outcome.Unauthorized);
+        }
+
         // Business existence
         var business = await businessRepository.GetByIdAsync(
             request.BusinessId,
@@ -38,7 +47,7 @@ public sealed class AddBusinessStaffCommandHandler(
                     "Business not found"));
         }
 
-        if (business.OwnerId != request.ActingUserId)
+        if (business.OwnerId != actingUserId)
         {
             return Result<BusinessStaffDto>.Failure(
                 new Error("Business.Forbidden", "Not the owner"),

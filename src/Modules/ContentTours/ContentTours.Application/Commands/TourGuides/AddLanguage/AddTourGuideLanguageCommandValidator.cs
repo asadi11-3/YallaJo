@@ -8,7 +8,6 @@ public sealed class AddTourGuideLanguageCommandValidator : AbstractValidator<Add
     public AddTourGuideLanguageCommandValidator()
     {
         RuleFor(command => command.TourGuideId).NotEmpty();
-        RuleFor(command => command.CallerUserId).NotEmpty();
         RuleFor(command => command.LanguageId).NotEmpty();
         RuleFor(command => command.Proficiency)
             .NotEmpty()

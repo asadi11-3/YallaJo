@@ -5,12 +5,12 @@ using Finance.Domain.Repositories;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
 namespace Finance.Application.ProviderPaymentMethods;
 
 public sealed record CreateProviderPaymentMethodCommand(
-    Guid UserId,
     ProviderPaymentMethodType PaymentMethodType,
     string DisplayName,
     string AccountIdentifier,
@@ -19,26 +19,33 @@ public sealed record CreateProviderPaymentMethodCommand(
 
 public sealed record UpdateProviderPaymentMethodCommand(
     Guid Id,
-    Guid UserId,
     ProviderPaymentMethodType PaymentMethodType,
     string DisplayName,
     string AccountIdentifier,
     string? BankName,
     bool IsDefault) : IRequest<Result<ProviderPaymentMethodDto>>;
 
-public sealed record DeleteProviderPaymentMethodCommand(Guid Id, Guid UserId) : IRequest<Result<bool>>;
+public sealed record DeleteProviderPaymentMethodCommand(Guid Id) : IRequest<Result<bool>>;
 
 public sealed record VerifyProviderPaymentMethodCommand(Guid Id, Guid AdminId, bool IsVerified) : IRequest<Result<ProviderPaymentMethodDto>>;
 
 public sealed class CreateProviderPaymentMethodCommandHandler(
     IProviderPaymentMethodRepository repository,
     IFinanceUnitOfWork unitOfWork,
+    ICurrentUser currentUser,
     ILogger<CreateProviderPaymentMethodCommandHandler> logger)
     : IRequestHandler<CreateProviderPaymentMethodCommand, Result<ProviderPaymentMethodDto>>
 {
     public async Task<Result<ProviderPaymentMethodDto>> Handle(CreateProviderPaymentMethodCommand request, CancellationToken ct)
     {
-        if (await repository.ExistsForProviderAsync(request.UserId, request.AccountIdentifier, ct))
+        if (currentUser.UserId is not Guid actingUserId)
+        {
+            return Result.Failure<ProviderPaymentMethodDto>(
+                new Error("Auth.Unauthorized", "An authenticated user is required."),
+                Outcome.Unauthorized);
+        }
+
+        if (await repository.ExistsForProviderAsync(actingUserId, request.AccountIdentifier, ct))
         {
             return Result.Failure<ProviderPaymentMethodDto>(
                 new Error("ProviderPaymentMethod.AlreadyExists", "Payment method already exists for this provider."),
@@ -46,7 +53,7 @@ public sealed class CreateProviderPaymentMethodCommandHandler(
         }
 
         var createResult = ProviderPaymentMethod.Create(
-            request.UserId,
+            actingUserId,
             request.PaymentMethodType,
             request.DisplayName,
             request.AccountIdentifier,
@@ -61,7 +68,7 @@ public sealed class CreateProviderPaymentMethodCommandHandler(
         var method = createResult.Value!;
         if (request.IsDefault)
         {
-            await ClearDefaultMethodsAsync(request.UserId, repository, ct);
+            await ClearDefaultMethodsAsync(actingUserId, repository, ct);
         }
 
         await repository.AddAsync(method, ct);
@@ -83,18 +90,26 @@ public sealed class CreateProviderPaymentMethodCommandHandler(
 public sealed class UpdateProviderPaymentMethodCommandHandler(
     IProviderPaymentMethodRepository repository,
     IFinanceUnitOfWork unitOfWork,
+    ICurrentUser currentUser,
     ILogger<UpdateProviderPaymentMethodCommandHandler> logger)
     : IRequestHandler<UpdateProviderPaymentMethodCommand, Result<ProviderPaymentMethodDto>>
 {
     public async Task<Result<ProviderPaymentMethodDto>> Handle(UpdateProviderPaymentMethodCommand request, CancellationToken ct)
     {
+        if (currentUser.UserId is not Guid actingUserId)
+        {
+            return Result.Failure<ProviderPaymentMethodDto>(
+                new Error("Auth.Unauthorized", "An authenticated user is required."),
+                Outcome.Unauthorized);
+        }
+
         var method = await repository.GetByIdAsync(request.Id, ct);
         if (method is null)
         {
             return Result.Failure<ProviderPaymentMethodDto>(new Error("ProviderPaymentMethod.NotFound", "Payment method not found."), Outcome.NotFound);
         }
 
-        if (method.UserId != request.UserId)
+        if (method.UserId != actingUserId)
         {
             return Result.Failure<ProviderPaymentMethodDto>(new Error("ProviderPaymentMethod.Forbidden", "Payment method belongs to another provider."), Outcome.Forbidden);
         }
@@ -107,7 +122,7 @@ public sealed class UpdateProviderPaymentMethodCommandHandler(
 
         if (request.IsDefault)
         {
-            var methods = await repository.GetByUserIdTrackedAsync(request.UserId, ct);
+            var methods = await repository.GetByUserIdTrackedAsync(actingUserId, ct);
             foreach (var other in methods.Where(x => x.Id != method.Id && x.IsDefault))
             {
                 other.ClearDefault();
@@ -135,18 +150,26 @@ public sealed class UpdateProviderPaymentMethodCommandHandler(
 public sealed class DeleteProviderPaymentMethodCommandHandler(
     IProviderPaymentMethodRepository repository,
     IFinanceUnitOfWork unitOfWork,
+    ICurrentUser currentUser,
     ILogger<DeleteProviderPaymentMethodCommandHandler> logger)
     : IRequestHandler<DeleteProviderPaymentMethodCommand, Result<bool>>
 {
     public async Task<Result<bool>> Handle(DeleteProviderPaymentMethodCommand request, CancellationToken ct)
     {
+        if (currentUser.UserId is not Guid actingUserId)
+        {
+            return Result.Failure<bool>(
+                new Error("Auth.Unauthorized", "An authenticated user is required."),
+                Outcome.Unauthorized);
+        }
+
         var method = await repository.GetByIdAsync(request.Id, ct);
         if (method is null)
         {
             return Result.Failure<bool>(new Error("ProviderPaymentMethod.NotFound", "Payment method not found."), Outcome.NotFound);
         }
 
-        if (method.UserId != request.UserId)
+        if (method.UserId != actingUserId)
         {
             return Result.Failure<bool>(new Error("ProviderPaymentMethod.Forbidden", "Payment method belongs to another provider."), Outcome.Forbidden);
         }

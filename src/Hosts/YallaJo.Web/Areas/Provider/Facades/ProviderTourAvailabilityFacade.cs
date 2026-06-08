@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.OutputCaching;
 using YallaJo.Web.Areas.Provider.ApiClients;
 using YallaJo.Web.Areas.Provider.Models.TourAvailability;
 using YallaJo.Web.Infrastructure.Api.Contracts;
@@ -33,12 +34,14 @@ public sealed class ProviderTourAvailabilityFacade
 {
     private readonly ProviderTourAvailabilityApiClient _availabilityApi;
     private readonly ProviderToursApiClient _toursApi;
+    private readonly IOutputCacheStore _cache;
 
     public ProviderTourAvailabilityFacade(
-        ProviderTourAvailabilityApiClient availabilityApi, ProviderToursApiClient toursApi)
+        ProviderTourAvailabilityApiClient availabilityApi, ProviderToursApiClient toursApi, IOutputCacheStore cache)
     {
         _availabilityApi = availabilityApi;
         _toursApi = toursApi;
+        _cache = cache;
     }
 
     public async Task<TourAvailabilityListResult> GetIndexAsync(Guid tourId, CancellationToken ct = default)
@@ -70,7 +73,11 @@ public sealed class ProviderTourAvailabilityFacade
     {
         vm.TourId = tourId;
         var result = await _availabilityApi.CreateAsync(TourAvailabilityMapper.ToCreateRequest(vm), ct);
-        if (result.IsSuccess) return new(TourAvailabilityOutcome.Ok);
+        if (result.IsSuccess)
+        {
+            await _cache.EvictByTagAsync($"tour:{tourId}", ct);
+            return new(TourAvailabilityOutcome.Ok);
+        }
 
         return NormalizeAction(result.IsUnauthorized, result.IsForbidden, result.IsNotFound,
             result.IsConflict, result.IsValidationError, result.ValidationErrors, result.Error,
@@ -93,9 +100,11 @@ public sealed class ProviderTourAvailabilityFacade
             SkipExisting: vm.SkipExisting);
 
         var result = await _availabilityApi.CreateBulkAsync(request, ct);
-        return NormalizeAction(result.IsUnauthorized, result.IsForbidden, result.IsNotFound,
+        var outcome = NormalizeAction(result.IsUnauthorized, result.IsForbidden, result.IsNotFound,
             result.IsConflict, result.IsValidationError, result.ValidationErrors, result.Error,
             "Could not create the recurring slots.", result.IsSuccess);
+        if (outcome.Outcome == TourAvailabilityOutcome.Ok) await _cache.EvictByTagAsync($"tour:{tourId}", ct);
+        return outcome;
     }
 
     public async Task<TourAvailabilityFormResult> GetEditAsync(Guid tourId, Guid slotId, CancellationToken ct = default)
@@ -132,9 +141,11 @@ public sealed class ProviderTourAvailabilityFacade
         }
 
         var result = await _availabilityApi.UpdateAsync(slotId, TourAvailabilityMapper.ToUpdateRequest(vm), ct);
-        return NormalizeAction(result.IsUnauthorized, result.IsForbidden, result.IsNotFound,
+        var outcome = NormalizeAction(result.IsUnauthorized, result.IsForbidden, result.IsNotFound,
             result.IsConflict, result.IsValidationError, result.ValidationErrors, result.Error,
             "Could not save the slot.", result.IsSuccess);
+        if (outcome.Outcome == TourAvailabilityOutcome.Ok) await _cache.EvictByTagAsync($"tour:{tourId}", ct);
+        return outcome;
     }
 
     public async Task<TourAvailabilityActionResult> DeleteAsync(
@@ -152,9 +163,11 @@ public sealed class ProviderTourAvailabilityFacade
         if (current is null) return new(TourAvailabilityOutcome.NotFound, Error: "Slot not found.");
 
         var result = await _availabilityApi.DeleteAsync(slotId, current.RowVersion, ct);
-        return NormalizeAction(result.IsUnauthorized, result.IsForbidden, result.IsNotFound,
+        var outcome = NormalizeAction(result.IsUnauthorized, result.IsForbidden, result.IsNotFound,
             result.IsConflict, result.IsValidationError, result.ValidationErrors, result.Error,
             "Could not delete the slot.", result.IsSuccess);
+        if (outcome.Outcome == TourAvailabilityOutcome.Ok) await _cache.EvictByTagAsync($"tour:{tourId}", ct);
+        return outcome;
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────────

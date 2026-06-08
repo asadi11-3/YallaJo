@@ -42,4 +42,7 @@ public sealed class BlogRowVm
     public int ViewCount { get; init; }
     public bool IsFeatured { get; init; }
     public Guid? PlaceId { get; init; }
+
+    /// <summary>Base64 optimistic-concurrency token (deleted tab only; required by Restore).</summary>
+    public string? RowVersion { get; init; }
 }

@@ -1,0 +1,11 @@
+@model YallaJo.Web.Features.AdminNav.AdminNavVm
+@{
+    // When the DB-backed /security/me snapshot loaded, hand its permission set to the
+    // sidebar so section visibility is driven by the database (plan §9 line 13).
+    // On failure (IsDbBacked == false) leave it null so the sidebar falls back to JWT claims (ERR3).
+    if (Model.IsDbBacked)
+    {
+        ViewData["SecurityMePermissions"] = Model.Permissions;
+    }
+}
+<partial name="_AdminSidebar" />

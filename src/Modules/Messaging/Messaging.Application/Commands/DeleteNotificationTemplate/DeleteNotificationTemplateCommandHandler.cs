@@ -1,6 +1,7 @@
 using MediatR;
 using Messaging.Application.Interfaces;
 using Messaging.Domain.Repositories;
+using Microsoft.EntityFrameworkCore;
 using YallaJo.SharedKernel.Application.Common;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
@@ -22,7 +23,18 @@ internal sealed class DeleteNotificationTemplateCommandHandler(
                 Outcome.Conflict);
 
         template.Delete();
-        await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        try
+        {
+            await unitOfWork.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Result.Failure(
+                new Error("NotificationTemplate.ConcurrencyConflict", "This template was modified by another user. Please refresh and try again."),
+                Outcome.Conflict);
+        }
+
         return Result.Success();
     }
 }

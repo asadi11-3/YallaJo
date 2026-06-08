@@ -45,4 +45,15 @@ internal static class LifecycleBadge
         _ = lifecycleState;
         return isActive ? "Active" : "Inactive";
     }
+
+    /// <summary>
+    /// Returns the Font Awesome icon CSS class for the badge so status is
+    /// conveyed by colour + icon + text (A11Y5), not colour alone:
+    /// <c>fa-circle-check</c> when active, <c>fa-ban</c> otherwise.
+    /// </summary>
+    public static string GetIconClass(bool isActive, string? lifecycleState = null)
+    {
+        _ = lifecycleState;
+        return isActive ? "fa-solid fa-circle-check" : "fa-solid fa-ban";
+    }
 }

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.OutputCaching;
 using YallaJo.Web.Areas.Provider.ApiClients;
 using YallaJo.Web.Areas.Provider.Models.TourWaypoints;
 using YallaJo.Web.Infrastructure.Api.Contracts;
@@ -33,12 +34,14 @@ public sealed class ProviderTourWaypointsFacade
 {
     private readonly ProviderTourWaypointsApiClient _waypointsApi;
     private readonly ProviderToursApiClient _toursApi;
+    private readonly IOutputCacheStore _cache;
 
     public ProviderTourWaypointsFacade(
-        ProviderTourWaypointsApiClient waypointsApi, ProviderToursApiClient toursApi)
+        ProviderTourWaypointsApiClient waypointsApi, ProviderToursApiClient toursApi, IOutputCacheStore cache)
     {
         _waypointsApi = waypointsApi;
         _toursApi = toursApi;
+        _cache = cache;
     }
 
     public async Task<TourWaypointListResult> GetIndexAsync(Guid tourId, CancellationToken ct = default)
@@ -73,7 +76,7 @@ public sealed class ProviderTourWaypointsFacade
     public async Task<TourWaypointActionResult> CreateAsync(Guid tourId, TourWaypointFormVm vm, CancellationToken ct = default)
     {
         var result = await _waypointsApi.CreateAsync(tourId, TourWaypointsMapper.ToCreateRequest(vm), ct);
-        return NormalizeAction(result, "Could not create the waypoint.");
+        return await EvictOnOkAsync(NormalizeAction(result, "Could not create the waypoint."), tourId, ct);
     }
 
     public async Task<TourWaypointFormResult> GetEditAsync(Guid tourId, Guid waypointId, CancellationToken ct = default)
@@ -99,19 +102,19 @@ public sealed class ProviderTourWaypointsFacade
     public async Task<TourWaypointActionResult> UpdateAsync(Guid tourId, Guid waypointId, TourWaypointFormVm vm, CancellationToken ct = default)
     {
         var result = await _waypointsApi.UpdateAsync(tourId, waypointId, TourWaypointsMapper.ToUpdateRequest(vm), ct);
-        return NormalizeAction(result, "Could not save the waypoint.");
+        return await EvictOnOkAsync(NormalizeAction(result, "Could not save the waypoint."), tourId, ct);
     }
 
     public async Task<TourWaypointActionResult> DeleteAsync(Guid tourId, Guid waypointId, CancellationToken ct = default)
     {
         var result = await _waypointsApi.DeleteAsync(tourId, waypointId, ct);
-        return NormalizeAction(result, "Could not delete the waypoint.");
+        return await EvictOnOkAsync(NormalizeAction(result, "Could not delete the waypoint."), tourId, ct);
     }
 
     public async Task<TourWaypointActionResult> ReorderAsync(Guid tourId, IReadOnlyList<Guid> orderedIds, CancellationToken ct = default)
     {
         var result = await _waypointsApi.ReorderAsync(tourId, new ReorderTourWaypointsApiRequest(orderedIds), ct);
-        return NormalizeAction(result, "Could not reorder the waypoints.");
+        return await EvictOnOkAsync(NormalizeAction(result, "Could not reorder the waypoints."), tourId, ct);
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -142,6 +145,15 @@ public sealed class ProviderTourWaypointsFacade
         if (result.IsValidationError) return new(TourWaypointOutcome.ValidationError,
             ValidationErrors: result.ValidationErrors, Error: result.Error);
         return new(TourWaypointOutcome.ValidationError, Error: result.Error ?? fallback);
+    }
+
+    // Evicts the public detail cache tag for the affected tour when the action succeeded.
+    // Plan §3 rule #3: facades must evict output-cache tags after successful writes.
+    private async Task<TourWaypointActionResult> EvictOnOkAsync(TourWaypointActionResult result, Guid tourId, CancellationToken ct)
+    {
+        if (result.Outcome == TourWaypointOutcome.Ok)
+            await _cache.EvictByTagAsync($"tour:{tourId}", ct);
+        return result;
     }
 
     private static string Humanize(string value)

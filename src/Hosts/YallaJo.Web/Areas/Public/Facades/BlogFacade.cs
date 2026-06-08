@@ -1,6 +1,7 @@
 using YallaJo.Web.Areas.Public.ApiClients;
 using YallaJo.Web.Areas.Public.Models.Blog;
 using YallaJo.Web.Areas.Public.Translations;
+using YallaJo.Web.Features.Blogs.Helpers;
 using YallaJo.Web.Infrastructure.Api.Contracts;
 using YallaJo.Web.Infrastructure.Seo;
 using YallaJo.Web.Services;
@@ -43,12 +44,19 @@ public sealed class BlogFacade(BlogApiClient api, SeoApiClient seo, Translations
 
         var languageCode = TranslationOverlay.ActiveLanguageCode;
         var blogTranslations = await TranslationOverlay.GetApprovedAsync(translations, "Blog", d.Id, languageCode, ct);
+
+        // SEC3: the resolved (translation-overlaid) blog body is rendered via @Html.Raw in
+        // Areas/Public/Views/Blog/Post.cshtml, so it MUST be server-side sanitized here at the
+        // mapper boundary. Translations are a separate untrusted-HTML source, so sanitize the
+        // FINAL resolved value (after TranslationOverlay.Apply), mirroring BlogsMapper.cs.
+        var resolvedContent =
+            TranslationOverlay.Apply(blogTranslations, "Content", d.Content, languageCode) ?? d.Content;
         var vm = new BlogPostVm
         {
             Id = d.Id,
             Slug = d.Slug,
             Title = TranslationOverlay.Apply(blogTranslations, "Title", d.Title, languageCode) ?? d.Title,
-            Content = TranslationOverlay.Apply(blogTranslations, "Content", d.Content, languageCode) ?? d.Content,
+            Content = ContentHtmlSanitizer.Sanitize(resolvedContent),
             Summary = TranslationOverlay.Apply(blogTranslations, "Summary", d.Summary, languageCode),
             PublishedAt = d.PublishedAt,
             ReadTimeMinutes = d.ReadTimeMinutes,

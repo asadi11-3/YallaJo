@@ -706,17 +706,7 @@
 }
 
 @section Scripts {
-    <script>
-        (function () {
-            // Bootstrap tooltips (disabled guest wishlist buttons).
-            var tooltipTriggers = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-            tooltipTriggers.forEach(function (el) {
-                if (window.bootstrap && bootstrap.Tooltip) new bootstrap.Tooltip(el);
-            });
-            // GLightbox gallery (glightbox is loaded by the layout).
-            if (window.GLightbox) { GLightbox({ selector: '.glightbox' }); }
-        })();
-    </script>
+    <script src="~/assets/js/tours-detail.js" asp-append-version="true"></script>
     @if (Model.HasJoinSlots && !string.IsNullOrEmpty(apiBaseUrl))
     {
         @* UI-PERF S2: the ONE public-page SignalR hub. Self-hosted client (CSP-friendly: external

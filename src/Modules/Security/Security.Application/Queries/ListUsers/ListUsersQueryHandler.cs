@@ -7,9 +7,9 @@ using YallaJo.SharedKernel.Domain.Abstractions.Results;
 namespace Security.Application.Queries.ListUsers;
 
 public sealed class ListUsersQueryHandler(IUserRepository userRepository)
-    : IQueryHandler<ListUsersQuery, PaginatedResult<UserDto>>
+    : IQueryHandler<ListUsersQuery, PagedUsersResponse>
 {
-    public async Task<Result<PaginatedResult<UserDto>>> Handle(
+    public async Task<Result<PagedUsersResponse>> Handle(
         ListUsersQuery request, CancellationToken cancellationToken)
     {
         var pagedUsers = await userRepository.GetPagedWithDetailsAsync(
@@ -32,7 +32,7 @@ public sealed class ListUsersQueryHandler(IUserRepository userRepository)
                 Claims: []);
         }).ToList();
 
-        return Result<PaginatedResult<UserDto>>.Success(
-            new PaginatedResult<UserDto>(dtos, pagedUsers.TotalCount, request.Page, request.PageSize));
+        return Result<PagedUsersResponse>.Success(
+            new PagedUsersResponse(dtos, request.Page, request.PageSize, pagedUsers.TotalCount));
     }
 }

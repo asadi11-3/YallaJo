@@ -117,12 +117,10 @@ internal static class TourGuideProfileEndpoints
             Guid id,
             UpdateTourGuideProfileRequest request,
             ISender sender,
-            ICurrentUser currentUser,
             CancellationToken ct) =>
         {
             var command = new UpdateTourGuideProfileCommand(
                 id,
-                currentUser.UserId!.Value,
                 request.Bio,
                 request.YearsOfExperience,
                 request.HasFirstAid,
@@ -146,12 +144,10 @@ internal static class TourGuideProfileEndpoints
             Guid id,
             AddTourGuideLanguageRequest request,
             ISender sender,
-            ICurrentUser currentUser,
             CancellationToken ct) =>
         {
             var command = new AddTourGuideLanguageCommand(
                 id,
-                currentUser.UserId!.Value,
                 request.LanguageId,
                 request.Proficiency);
 
@@ -173,12 +169,10 @@ internal static class TourGuideProfileEndpoints
             Guid id,
             Guid languageId,
             ISender sender,
-            ICurrentUser currentUser,
             CancellationToken ct) =>
         {
             var command = new RemoveTourGuideLanguageCommand(
                 id,
-                currentUser.UserId!.Value,
                 languageId);
 
             var result = await sender.Send(command, ct);
@@ -198,12 +192,10 @@ internal static class TourGuideProfileEndpoints
             Guid id,
             AddTourGuideSpecializationRequest request,
             ISender sender,
-            ICurrentUser currentUser,
             CancellationToken ct) =>
         {
             var command = new AddTourGuideSpecializationCommand(
                 id,
-                currentUser.UserId!.Value,
                 request.SpecializationId);
 
             var result = await sender.Send(command, ct);

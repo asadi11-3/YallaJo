@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.OutputCaching;
 using YallaJo.Web.Areas.Provider.ApiClients;
 using YallaJo.Web.Areas.Provider.Models.TourImages;
 namespace YallaJo.Web.Areas.Provider.Facades;
@@ -23,8 +24,13 @@ public sealed record TourImagesActionResult(
 public sealed class ProviderTourImagesFacade
 {
     private readonly ProviderTourImagesApiClient _api;
+    private readonly IOutputCacheStore _cache;
 
-    public ProviderTourImagesFacade(ProviderTourImagesApiClient api) => _api = api;
+    public ProviderTourImagesFacade(ProviderTourImagesApiClient api, IOutputCacheStore cache)
+    {
+        _api = api;
+        _cache = cache;
+    }
 
     public async Task<TourImagesListResult> GetIndexAsync(Guid tourId, CancellationToken ct = default)
     {
@@ -59,14 +65,21 @@ public sealed class ProviderTourImagesFacade
         if (!result.IsSuccess)
             return new(TourImagesOutcome.ValidationError, result.Error ?? "Could not upload the image.");
 
+        // Public detail page caches an image gallery — evict on every successful upload.
+        await _cache.EvictByTagAsync($"tour:{tourId}", ct);
         return new(TourImagesOutcome.Ok);
     }
 
-    public async Task<TourImagesActionResult> DeleteAsync(Guid attachmentId, CancellationToken ct = default)
+    public async Task<TourImagesActionResult> DeleteAsync(Guid tourId, Guid attachmentId, CancellationToken ct = default)
     {
         var result = await _api.DeleteImageAsync(attachmentId, ct);
 
-        if (result.IsSuccess) return new(TourImagesOutcome.Ok);
+        if (result.IsSuccess)
+        {
+            // Public detail page caches an image gallery — evict on every successful delete.
+            await _cache.EvictByTagAsync($"tour:{tourId}", ct);
+            return new(TourImagesOutcome.Ok);
+        }
         if (result.IsUnauthorized) return new(TourImagesOutcome.ForceSignOut);
         if (result.IsForbidden) return new(TourImagesOutcome.Forbidden,
             "You don't have permission to delete this image.");

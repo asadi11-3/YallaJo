@@ -150,3 +150,126 @@
 5. **G6/G7/G8/G9** status + route corrections (Packages `/{id:guid}`, mark §2.6/§2.7 shipped, add `/explore`,`/home`,`/search/*`, clarify by-slug, note `sign-out`).
 
 > **Net:** the storefront plan is **structurally sound** (no permission/area defect) but its **button targets are written at the API layer**; the shipped BFF uses page-scoped POST routes, favorites live in `Accounts`, and SignalR live-slots are unbuilt. G1 (SignalR) and G2 (favorites) are the only behavioral gaps; the rest are route-shape corrections.
+
+
+---
+
+## 7. Code-fix loop (code-first audit; CODE is fixed up to plan+rules)
+
+> This pass re-audited the storefront END TO END as a CODE-FIX loop (not docs reconciliation). The 9 prior gaps (G1-G9) were already RESOLVED in the earlier docs-reconciliation lens, so plan-vs-code consistency was established; this pass hunted deeper CODE deficiencies (NRE-without-validator, ownership/edit-windows, anti-forgery/PRG, CSP-for-SignalR, REV2 gate). Result: ONE real code gap (CSP connect-src) found + fixed; everything else verified PRESENT.
+
+### GAP-10 -- CSP connect-src blocks the shipped SignalR live-slots feature
+- Status: RESOLVED
+- Severity: HIGH
+- Type: NON-COMPLIANT
+- Layer(s): web (Infrastructure/Middleware)
+- Plan requirement: Section 1 conventions + Section 2.5 (S2/CAL3/RT1): the public tour-detail live-slots SignalR client connects to the API-hosted /hubs/tour, and "CSP connect-src must allowlist the API origin + wss:".
+- Code reality (before): src/Hosts/YallaJo.Web/Infrastructure/Middleware/SecurityHeadersMiddleware.cs emitted `connect-src 'self'` ONLY. ApiBaseUrl (appsettings.json) = https://localhost:57065 is a CROSS-ORIGIN host; Areas/Public/Views/Tours/Detail.cshtml sets data-hub-url="@apiBaseUrl" and tour-slots.js connects there. 'self'-only connect-src blocks BOTH the SignalR negotiate XHR (to the API origin) and the WebSocket (wss:), so the entire shipped live-slots pipeline (TourSlotsHub + BroadcastSlotCapacityToTourHandler + tour-slots.js) was DEAD in-browser.
+- Rule impact: SEC1 (CSP) / UI-PERF S2.
+- Fix: SecurityHeadersMiddleware now takes IConfiguration; parses ApiBaseUrl as an absolute http/https Uri (fail-fast InvalidOperationException if missing/invalid); derives the HTTP origin via Uri.GetLeftPart(UriPartial.Authority) and the WS origin by scheme-swap (https->wss / http->ws) preserving host+port; appends both specific origins to the connect-src directive: `connect-src 'self' {apiHttpOrigin} {apiWsOrigin};`. All other CSP directives unchanged. Origins are config-derived, never hardcoded; specific wss://host:port (tighter than broad wss:).
+- Resolution: SecurityHeadersMiddleware.cs (IConfiguration ctor + connect-src directive). YallaJo.Web build 0 Error(s); lsp clean. Runtime browser/DevTools verification (no CSP violation; /hubs/tour negotiate + WebSocket 101 / LongPolling succeed) is a documented MANUAL follow-up (not runnable in the headless build env).
+
+### Deferred -- separate CSP-baseline gap (NOT opened this pass; not proven-broken)
+The Web CSP is otherwise minimal and still lacks several plan-documented allowlists. These were NOT proven to break a shipped Section 1/auth page in this pass, so per the scope ruling they are a SEPARATE future CSP-baseline audit/fix, not this loop:
+- Mapbox allowlist (script-src/connect-src/img-src/worker-src) -- required only where Mapbox JS/tiles actually render.
+- asset-CDN allowlist -- required if rendered pages load CDN scripts/styles (verify validation/recaptcha).
+- AppInsights connect-src -- required only if browser AppInsights is configured.
+- /api/v1/csp-report report-uri/report-to -- spec item, separate.
+- script-src nonce (T5/A6 inline theme-bootstrap script) -- separate medium hardening; nonce rollout touches _Layout/views.
+
+### Dismissed -- evaluated, NOT gaps (correct as shipped)
+- Auth POSTs (sign-in/sign-up/forgot-password/reset-password/two-factor/sign-out) are [AllowAnonymous] -- correct for an auth funnel; anti-forgery present on the POSTs.
+- Blog comment react/unreact return NoContent() (AJAX) rather than PRG -- correct: Section 2.9 specifies comments/follow/react are AJAX + NF6 optimistic.
+- resend-otp returns JSON rather than PRG -- correct intentional AJAX endpoint.
+
+### Verified PRESENT (code-first, no change needed)
+- REV2: tour-review "completed booking" gate enforced backend-side (CreateReviewCommandHandler -> BookingEligibilitySnapshot.IsEligibleForVerifiedReview).
+- Ownership + edit-windows: review edit author + 48h, review delete author-or-admin; accessibility-review same; blog comment edit 30-min owner window + delete owner/moderation (BlogCommentAuthorizationGuard).
+- NRE/validator: no unguarded domain .Trim() -- CreateReview/SubmitReport/CreateAccessibilityReview/blog-comment all have FluentValidation validators (Content NotEmpty) before the domain trims.
+- Every public BFF mutation = page-scoped POST + [ValidateAntiForgeryToken] + PRG; mutations [Authorize]; agency apply [Authorize(Roles="TourGuide")]; no invented WebPermission.*.
+- SignalR pipeline (hub/broadcast-handler/event TourId/client reconnect+reduced-motion+disconnected-only-poll/tour-detail wiring) all PRESENT; the CSP fix above is what makes it reachable in-browser.
+
+
+### GAP-11 -- API CORS does not allow the Web origin for the SignalR hub
+
+- Status: RESOLVED
+- Severity: HIGH
+- Type: NON-COMPLIANT
+- Layer(s): api (configuration)
+- Plan requirement: Section 2.5 + conventions -- the shipped live-slots SignalR feature requires the browser (Web storefront origin) to reach the API-hosted hub at /hubs/tour cross-origin. Pairs with GAP-10 (Web CSP connect-src); BOTH are required for live-slots to work end-to-end.
+- Code reality (before): YallaJoPolicy (the global CORS policy applied via app.UseCors("YallaJoPolicy") in Program.cs, covering all paths incl. /hubs/tour, AllowCredentials) reads its origins from configuration Cors:AllowedOrigins. appsettings.Development.json had NO Cors section, so the policy registered zero origins -> the cross-origin SignalR negotiate from the Web storefront origin (https://localhost:57070 / http://localhost:57071, per Web/Properties/launchSettings.json) was blocked in-browser. (LocalDevApi policy lists only 57065/57066 and is scoped to /api only.)
+- Rule impact: SignalR live-slots (UI-PERF S2/CAL3/RT1) dead cross-origin.
+- Fix: add a Cors section to src/Hosts/YallaJo.Api/appsettings.Development.json: "Cors": { "AllowedOrigins": [ "https://localhost:57070", "http://localhost:57071" ] }. This populates the existing global YallaJoPolicy (WithOrigins + AllowCredentials) so the Web origins are permitted for all API paths incl. /hubs/tour negotiate. Config-only; no code change (the global UseCors mechanism already intends to cover Web + SignalR).
+- Resolution: appsettings.Development.json edited (Cors:AllowedOrigins added). JSON validated (ConvertFrom-Json OK). YallaJo.Api build green (0 Error(s)). Runtime browser verification (negotiate + WebSocket 101 / LongPolling, no CSP/CORS violation) is a documented manual follow-up (headless env). Pairs with GAP-10 (Web CSP connect-src) to restore the §2.5 live-slots feature end-to-end.
+
+#### Note -- unrelated pre-existing build-unblocker (NOT a §1 gap)
+
+The §1 green-build exit gate was blocked by a pre-existing CS0103 in src/Modules/Security/Security.Presentation/Endpoints/User/UserEndpoints.cs:47 (`_jwtMetaClaims` referenced by the GET /me handler but declared nowhere -- an incomplete in-flight edit from unrelated Security/Admin/Analytics work in the working tree, not caused by this loop). Per Oracle ruling, fixed additively (no refactor, no other Security edits) by declaring the missing `private static readonly HashSet<string> _jwtMetaClaims` (StringComparer.Ordinal; standard JWT registered claim names + the long-form ClaimTypes URIs) so GET /me filters meta-claims as intended. This is documented here only as the build-unblock; it is NOT a public-storefront gap.
+
+#### Scope notes (this code-fix loop)
+
+- Deferred (separate future CSP-baseline gap, not proven-broken this pass): script-src nonce (T5/A6), Mapbox / asset-CDN / AppInsights connect-/script-src allowlists, /api/v1/csp-report report-uri. Production Cors:AllowedOrigins (non-Dev appsettings) is set per-deployment and out of scope for this dev-facing fix.
+- Dismissed false-positives (verified correct by spec): auth funnel POSTs [AllowAnonymous] (correct for sign-in/up/forgot/reset; anti-forgery present); blog comment react/unreact returning NoContent() (AJAX/optimistic per §2.9); resend-otp returning JSON (intentional AJAX).
+- Verified PRESENT (no gap): REV2 completed-booking review gate; review/comment ownership + edit-windows (review <=48h, comment <=30min); Social command FluentValidation validators (no NRE-on-null-.Trim()); page-scoped POST + [ValidateAntiForgeryToken] + PRG on mutations; mutations [Authorize], agency apply [Authorize(Roles="TourGuide")], no invented WebPermission.*; full SignalR live-slots pipeline (hub, broadcast handler, TourId on events, client tour-slots.js, tour-detail wiring).
+
+
+### GAP-12 -- CSP script-src 'self' blocks shipped inline scripts (SEC1 baseline)
+- Status: RESOLVED
+- Severity: HIGH
+- Type: NON-COMPLIANT
+- Layer(s): web-view, web-middleware
+- Plan requirement: SEC1 CSP -- no unsafe-inline on script-src; plan 1-public-storefront.md:16 (SEC1 + T5/A6 nonce for the theme-bootstrap inline script) + UI-UX-Design.md:129,572.
+- Code reality (before): SecurityHeadersMiddleware.cs emitted `script-src 'self'` (no nonce, no CDN allowlist), which BLOCKS every shipped inline executable <script> on the public storefront + auth funnel -- incl. the required dark-mode theme-bootstrap pre-paint script (_Layout.cshtml, _AuthLayout.cshtml) and the CDN-loaded jQuery validation scripts (_ValidationScriptsPartial.cshtml). With script-src 'self' those pages' inline JS + CDN scripts silently fail.
+- Why nonce was NOT used: SecurityHeadersMiddleware runs at Program.cs:238, BEFORE app.UseOutputCache() at Program.cs:250. Public pages use OutputCache (PublicShort/Medium/Long), so a per-request nonce would be baked into cached HTML while later responses emit a different CSP nonce -> nonce mismatch -> scripts blocked on cache hits. Per-request nonce is fundamentally incompatible with output-cached HTML. => EXTERNALIZATION was used instead.
+- Fix: Externalized ALL 22 inline executable <script> blocks across the Sec1 public storefront + auth funnel + shared layouts into static files under wwwroot/assets/js/, referenced via <script src="~/assets/js/NAME.js" asp-append-version> (covered by plain script-src 'self'; cache-safe). Files: theme-bootstrap.js (shared by _Layout + _AuthLayout, loaded before stylesheets for dark-mode pre-paint), tours-index.js, tours-detail.js, places-details.js, search-index.js, agencies-detail.js, blog-creator.js, blog-post.js, home-index.js, guides-detail.js, booking-book.js, packages-detail.js, directory-detail.js, directory-index.js, help-index.js, contact-index.js, contact-index2.js, external-complete.js, auth-twofactor.js, auth-signup.js, auth-resetpassword.js, recaptcha-field.js. Razor-interpolated values bridged via data-* attributes (Search/Index, Blog/Post data-view-url, _RecaptchaField data-recaptcha-sitekey/-action) or a type="application/json" data island (Auth/TwoFactor) -- NOT moved into the static JS. JSON-LD block (_Layout.cshtml type="application/ld+json") left as-is (data, not executable, CSP-exempt). CSP directives updated to cover the legit external origins: script-src 'self' 'unsafe-inline' https://code.jquery.com https://cdn.jsdelivr.net https://www.google.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; frame-src https://www.google.com (reCAPTCHA challenge); connect-src 'self' {apiConnectSources} (GAP-10 preserved). report-uri OMITTED -- no /api/v1/csp-report endpoint exists (would be a dead URL / fake observability).
+- Resolution: 22 new wwwroot/assets/js/*.js + 22 edited .cshtml + Areas/Auth/Shared/_RecaptchaField.cshtml + SecurityHeadersMiddleware.cs. Verified: rg '<script>' over Areas/Public/Views + Areas/Auth/Views + Views/Shared/_Layout.cshtml = ZERO bare inline executable scripts; YallaJo.Web build 0 Error(s) (80 pre-existing warnings).
+
+#### Note -- script-src 'unsafe-inline' retained as documented CROSS-AREA DEBT (NOT a Sec1 blocker)
+SecurityHeadersMiddleware is GLOBAL (all areas). After the Sec1 externalization, the Sec1 public storefront + auth funnel emit ZERO inline executable <script>, so Sec1 is source-conformant. However 'unsafe-inline' is RETAINED on the global script-src because 10 inline <script> blocks remain in OTHER areas: Areas/Admin/* (Sec8: Home/Users/Details/Statistics/_AdminLayout/_ConfirmModal), Areas/Accounts/Wishlist+Delete (Sec2), Areas/Business/MyBusinesses/Register (Sec3). Dropping the global 'unsafe-inline' now would REGRESS those areas (their inline scripts would break) -- which violates the loop rule "do not break other areas / no scope-creep." DEBT: drop the global script-src 'unsafe-inline' once Admin/Accounts/Business externalize their inline scripts in their own per-area code-fix loops.
+
+#### Caveats (this loop)
+- Oracle was UNAVAILABLE for the final verification gate (timed out / aborted twice); final verification done by direct re-inspection (zero inline <script>) + green builds (Web 0 err + API 0 err), NOT an Oracle PASS.
+- GAP-11 CORS + the CSP origins are Development config (appsettings.Development.json); production must set Cors:AllowedOrigins per deployment.
+- Runtime browser/DevTools verification of CSP + SignalR negotiate/WebSocket is a documented MANUAL follow-up (headless env).
+- The _jwtMetaClaims build-unblock (UserEndpoints.cs) touched a file inside another worker's uncommitted in-flight change-set (additive, Oracle-approved).
+
+---
+
+## 8. Round-3 re-audit (independent 5-agent code-first re-sweep) — ONE gap found & fixed, no regressions
+
+> **Method:** five independent anthropic code-first audit agents (13 Public BFF controllers · 6 Auth controllers + agency-apply · SignalR live-slots pipeline E2E · Public Facades/ApiClients/VMs/OutputCache · backend Social/ContentBlogs/Seo/Booking storefront mutation paths). **Every agent flag was re-verified against the actual source via direct `Read`/grep before being accepted or dismissed** — agents over-flag. Baseline build was GREEN before auditing. Net: **one real MISSING gap (GAP-13, fixed below)**; all RESOLVED items (incl. the full SignalR pipeline GAP-1/10/11/12) verified intact with no regression.
+
+### GAP-13 — Blog post "Report this post" entity-report action missing
+- Status: RESOLVED
+- Severity: MEDIUM
+- Type: MISSING
+- Layer(s): bff-controller, web-view
+- Plan requirement: §2.9 buttons — *"Report this post → `POST /blog/{id}/report`-style entity report (login-gated; API `POST /social/reports` entityType=Blog)"*. All four sibling public entity-detail pages (Tours, Places, Businesses/Directory, Guides) ship an entity-report action; Blog was the sole outlier.
+- Code reality (before): `BlogController` (`Areas/Public/Controllers/BlogController.cs`) had view/comments/react/follow actions but **no report action**; `Areas/Public/Views/Blog/Post.cshtml` rendered **no "Report this post" form** (zero report markup). The backend + facade already fully supported it: `ReviewsFacade.SubmitReportAsync(ReportFormVm)` is entity-type-agnostic (`SubmitReportBody(EntityType, EntityId, Reason, Description)` → API `POST /social/reports`), `SubmitReportCommand` + `SubmitReportCommandValidator` (Description NotEmpty/MinLength20/MaxLength500) present, `Social.Domain/Enums/ReportableEntityType.Blog = 4` exists, `Report.cs` assigns Description directly (no NRE). Only the BFF action + the view button were missing.
+- Rule impact: plan §2.9 feature parity; page-scoped POST + anti-forgery + PRG (rule compliance).
+- Fix (Oracle-reviewed, mirrors the 4 sibling controllers exactly): `BlogController` primary ctor now `(BlogFacade blog, ReviewsFacade reviews)` + `private const string TargetType = "Blog";` + `using YallaJo.Web.Areas.Public.Models.Reviews;`. Added `[HttpPost("blog/{slug}/report")] [Authorize] [ValidateAntiForgeryToken] Report(string slug, [Bind(Prefix="Report")] ReportFormVm form, CancellationToken ct)` — sets `form.EntityType = "Blog"` server-side (trust boundary: server owns the type, page owns the id), `EntityId` arrives via the hidden form input, ModelState guard → PRG redirect to `Post` by slug, `reviews.SubmitReportAsync`, `GuardSignOut`, success/`ApplyValidationErrors`/error. Route uses `{slug}` (the public post identifier, like all 4 siblings) — the plan's literal `/blog/{id}` is a generic placeholder; using slug keeps the shared `ReportFormVm` untouched and the PRG trivial. `Post.cshtml` got a login-gated (`@if (isAuthed)`) "Report this post" `<section>` (anti-forgery, hidden `Report.EntityId=@Model.Id`, Reason select + Description textarea, `asp-route-slug=@Model.Slug`), mirroring `Tours/Detail.cshtml`.
+- Resolution: `BlogController.cs` (+ReviewsFacade ctor arg, +TargetType const, +Report action, +Reviews-models using), `Areas/Public/Views/Blog/Post.cshtml` (+report section). 0 shared-VM / 0 facade / 0 backend changes (all already present). YallaJo.Web build 0 Errors; full `dotnet build YallaJo.sln` 0 Errors.
+
+### Agent flags DISMISSED with code-first evidence (NOT gaps)
+- **8× "missing `[AllowAnonymous]` on public GET" (Places/Directory/Tours/Agencies/Blog/Booking)** → false positive. These controllers are `[Area("Public")]` with no class-level `[Authorize]`; their GET actions carry no `[Authorize]`. `Web/Program.cs:55` = bare `AddAuthorization()` with **no `FallbackPolicy`/`RequireAuthenticatedUser`**, so an action with no authz attribute is anonymous by default; `[AllowAnonymous]` is only needed to override an inherited `[Authorize]` (none exists). The storefront serves guests correctly. Not gaps.
+- **Guides/Agencies `Detail` "missing `PublicOutputCacheTagger.AddTag`" (guide:/agency: tag)** → not a gap. The plan's documented tag set (header Conventions + §5 confirmed-correct) is `homepage`/`place:`/`business:`/`tour:`/`blog:` only; §2.7/§2.8 specify `PublicMedium` with **no tag**. Guides/agencies expire by TTL; adding a `guide:`/`agency:` eviction tag (with no eviction caller) would invent functionality. Not a gap.
+- **`HomeController.Error()` not async** → style nit, not a mutation, no rule violation. Not a gap.
+- **`ExternalAuthController.Challenge` sync / `Callback` no `ct`** → not gaps. OAuth challenge returns a `ChallengeResult` redirect synchronously (correct idiom, no async I/O); the provider redirect-back callback omitting `ct` is a trivial cosmetic nit, not MISSING/INCORRECT/NON-COMPLIANT.
+- **Backend `SubmitJoinRequestCommand` "missing validator (HIGH)"** → not a RULE-10 gap AND out of scope. `JoinRequest.Create` assigns `Message = message` (plain assignment, `string?`, no `.Trim()`/deref) → no NRE→500. Length-only is a quality nit, not a code deficiency. (This command backs the Customer Dashboard §3.2 join-create, audited & closed in Area-2 with 876 passing tests; not a storefront command.) Not a gap.
+
+### Verified intact (code-first, no change)
+- **SignalR live-slots pipeline (17 links)**: `TourSlotsHub` `[AllowAnonymous]`, `tour:{tourId}` group only (S5); mapped `/hubs/tour` WebSockets+LongPolling (S1); `AddSignalR` KeepAlive 15s/timeout 30s (S7)/MaxParallel 5 (S6); all 6 `AvailabilitySlot` raise sites pass `TourId`; domain→integration converter → outbox; `BroadcastSlotCapacityToTourHandler` subscribes the **integration** event (post-commit) → `tour:{tourId}` group `SlotCapacityChanged{slotId,remainingCapacity}` IDs-only (S3); CORS `Cors:AllowedOrigins` (57070/57071) + Web CSP `connect-src 'self' {apiHttpOrigin} {wssOrigin}` (GAP-10/11); `tour-slots.js` reconnect[0,2000,10000,30000,60000] (S4)/M3/X12/PE2; `Detail.cshtml` wiring. **No regression.**
+- All public mutations page-scoped POST + `[ValidateAntiForgeryToken]` + PRG; no PUT/DELETE/PATCH in Public area; mutations `[Authorize]`; agency apply `[Authorize(Roles="TourGuide")]` at `/agency/{agencyUserId:guid}/apply`; no invented `WebPermission.*`; no favorite route in Public (cross-area Accounts, correct); blog/{id}/view beacon `[AllowAnonymous]`+`[IgnoreAntiforgeryToken]`.
+- Facades sealed/suffix/inject-ApiClient-only/no-HttpContext/i18n active-culture-render; ApiClients sealed/suffix/IApiClient-only; OutputCache policies PublicShort(5m)/PublicMedium(30m)/PublicLong(1h)/PublicDay(24h) + tags via `PublicOutputCacheTagger`; weather Place-contextual only; images via approved routes/Attachment.
+- Backend: REV2 completed-booking review gate (`CreateReviewCommandHandler` → `BookingEligibilitySnapshot.IsEligibleForVerifiedReview`); review edit author+48h / delete author-or-admin; accessibility-review same; blog comment edit owner+30min / delete owner-or-moderation (`BlogCommentAuthorizationGuard`); all storefront command string fields guarded (`IsNullOrWhiteSpace`-before-`.Trim()` or null-coalesce) with FluentValidation validators; no cross-module DB FK (Social/ContentBlogs/Booking references are by-value).
+
+### Tech-debt noted (NOT fixed — pre-existing, consistent across all 5 report forms)
+- Web `ReportFormVm.Description` validates MinLength 5 / MaxLength 1000, but backend `SubmitReportCommandValidator` enforces MinLength 20 / MaxLength 500. **All four sibling report forms (Tours/Places/Businesses/Guides) have this identical mismatch today**; the new Blog form was made consistent with them. Fixing the bound differences belongs to a separate cross-cutting pass (changing only Blog would make it inconsistent with the 4 shipped pages). Backend remains the authoritative guard (returns a clean validation error, surfaced via `ApplyValidationErrors`).
+
+### Build + changed-path tests (evidence, this round)
+- `dotnet build src\Hosts\YallaJo.Web` → **Build succeeded, 0 Errors**.
+- `dotnet build YallaJo.sln` → **Build succeeded, 0 Errors** (only pre-existing benign NU1603/NU1902 warnings).
+- Unit suites: **Web.Tests.Unit 482/482 · Social.Tests.Unit 2/2 · ContentBlogs.Tests.Unit 388/388 · Booking.Tests.Unit 267/267 = 1139 passed, 0 failed.**
+
+> **Round-3 conclusion:** One real MISSING gap (GAP-13, blog post report) found and fixed pattern-consistently (Oracle-reviewed); all other agent flags were false-positives or out-of-scope, each dismissed against the actual source; the SignalR live-slots pipeline and all prior RESOLVED gaps verified intact. **Public Storefront is at zero open code gaps with full architecture-rule compliance.**
+

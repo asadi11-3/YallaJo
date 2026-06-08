@@ -93,6 +93,7 @@
                                         <form asp-area="Admin" asp-controller="Blogs" asp-action="Restore"
                                               asp-route-id="@blog.Id" method="post" class="d-inline">
                                             @Html.AntiForgeryToken()
+                                            <input type="hidden" name="rowVersion" value="@blog.RowVersion" />
                                             <button type="submit" class="btn btn-sm btn-outline-success">Restore</button>
                                         </form>
                                     </permission>

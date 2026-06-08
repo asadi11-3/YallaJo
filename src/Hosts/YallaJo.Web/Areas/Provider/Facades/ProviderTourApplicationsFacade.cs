@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.OutputCaching;
 using YallaJo.Web.Areas.Provider.ApiClients;
 using YallaJo.Web.Areas.Provider.Models.TourApplications;
 using YallaJo.Web.Infrastructure.Api.Contracts;
@@ -29,12 +30,14 @@ public sealed class ProviderTourApplicationsFacade
 
     private readonly ProviderTourApplicationsApiClient _applicationsApi;
     private readonly ProviderToursApiClient _toursApi;
+    private readonly IOutputCacheStore _cache;
 
     public ProviderTourApplicationsFacade(
-        ProviderTourApplicationsApiClient applicationsApi, ProviderToursApiClient toursApi)
+        ProviderTourApplicationsApiClient applicationsApi, ProviderToursApiClient toursApi, IOutputCacheStore cache)
     {
         _applicationsApi = applicationsApi;
         _toursApi = toursApi;
+        _cache = cache;
     }
 
     public async Task<TourApplicationListResult> GetIndexAsync(Guid tourId, int page, CancellationToken ct = default)
@@ -58,17 +61,33 @@ public sealed class ProviderTourApplicationsFacade
     }
 
     public async Task<TourApplicationActionResult> ApproveAsync(Guid tourId, Guid applicationId, CancellationToken ct = default)
-        => Normalize(await _applicationsApi.ApproveAsync(tourId, applicationId, ct), "Could not approve the application.");
+    {
+        var outcome = Normalize(await _applicationsApi.ApproveAsync(tourId, applicationId, ct), "Could not approve the application.");
+        if (outcome.Outcome == TourApplicationOutcome.Ok) await _cache.EvictByTagAsync($"tour:{tourId}", ct);
+        return outcome;
+    }
 
     public async Task<TourApplicationActionResult> RejectAsync(Guid tourId, Guid applicationId, string reason, CancellationToken ct = default)
-        => Normalize(await _applicationsApi.RejectAsync(tourId, applicationId, new RejectGuideApplicationApiRequest(reason), ct),
-                     "Could not reject the application.");
+    {
+        var outcome = Normalize(await _applicationsApi.RejectAsync(tourId, applicationId, new RejectGuideApplicationApiRequest(reason), ct),
+                                "Could not reject the application.");
+        if (outcome.Outcome == TourApplicationOutcome.Ok) await _cache.EvictByTagAsync($"tour:{tourId}", ct);
+        return outcome;
+    }
 
     public async Task<TourApplicationActionResult> OpenAsync(Guid tourId, CancellationToken ct = default)
-        => Normalize(await _applicationsApi.OpenApplicationsAsync(tourId, ct), "Could not open applications.");
+    {
+        var outcome = Normalize(await _applicationsApi.OpenApplicationsAsync(tourId, ct), "Could not open applications.");
+        if (outcome.Outcome == TourApplicationOutcome.Ok) await _cache.EvictByTagAsync($"tour:{tourId}", ct);
+        return outcome;
+    }
 
     public async Task<TourApplicationActionResult> CloseAsync(Guid tourId, CancellationToken ct = default)
-        => Normalize(await _applicationsApi.CloseApplicationsAsync(tourId, ct), "Could not close applications.");
+    {
+        var outcome = Normalize(await _applicationsApi.CloseApplicationsAsync(tourId, ct), "Could not close applications.");
+        if (outcome.Outcome == TourApplicationOutcome.Ok) await _cache.EvictByTagAsync($"tour:{tourId}", ct);
+        return outcome;
+    }
 
     // ── Helpers ───────────────────────────────────────────────────────────────────
 

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.OutputCaching;
 using YallaJo.Web.Areas.Business.ApiClients;
 using YallaJo.Web.Areas.Business.Models.Hours;
 using YallaJo.Web.Infrastructure.Api.Contracts;
@@ -8,11 +9,13 @@ public sealed class BusinessHoursFacade
 {
     private readonly HoursApiClient _api;
     private readonly MyBusinessesApiClient _businesses;
+    private readonly IOutputCacheStore _cache;
 
-    public BusinessHoursFacade(HoursApiClient api, MyBusinessesApiClient businesses)
+    public BusinessHoursFacade(HoursApiClient api, MyBusinessesApiClient businesses, IOutputCacheStore cache)
     {
         _api = api;
         _businesses = businesses;
+        _cache = cache;
     }
 
     public async Task<ApiResult<HoursVm>> GetAsync(Guid businessId, CancellationToken ct = default)
@@ -50,7 +53,9 @@ public sealed class BusinessHoursFacade
             .ToList();
 
         var request = new SetHoursApiRequest(entries);
-        return await Normalize(_api.SetHoursAsync(businessId, request, ct), "Could not save the opening hours.");
+        var result = await Normalize(_api.SetHoursAsync(businessId, request, ct), "Could not save the opening hours.");
+        if (result.IsSuccess) await _cache.EvictByTagAsync($"business:{businessId}", ct);
+        return result;
     }
 
     private static async Task<ApiResult> Normalize(Task<ApiResult> call, string fallback)

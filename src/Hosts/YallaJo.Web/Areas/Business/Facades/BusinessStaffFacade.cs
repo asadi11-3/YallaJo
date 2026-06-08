@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.OutputCaching;
 using YallaJo.Web.Areas.Business.ApiClients;
 using YallaJo.Web.Areas.Business.Models.Staff;
 using YallaJo.Web.Infrastructure.Api.Contracts;
@@ -8,11 +9,13 @@ public sealed class BusinessStaffFacade
 {
     private readonly StaffApiClient _api;
     private readonly MyBusinessesApiClient _businesses;
+    private readonly IOutputCacheStore _cache;
 
-    public BusinessStaffFacade(StaffApiClient api, MyBusinessesApiClient businesses)
+    public BusinessStaffFacade(StaffApiClient api, MyBusinessesApiClient businesses, IOutputCacheStore cache)
     {
         _api = api;
         _businesses = businesses;
+        _cache = cache;
     }
 
     public async Task<ApiResult<StaffVm>> GetAsync(Guid businessId, CancellationToken ct = default)
@@ -53,14 +56,18 @@ public sealed class BusinessStaffFacade
     public async Task<ApiResult> AddAsync(Guid businessId, AddStaffFormVm form, CancellationToken ct = default)
     {
         var request = new AddBusinessStaffApiRequest(form.UserId, form.Role);
-        var result = await _api.AddAsync(businessId, request, ct);
-        return Normalize(result, "Could not add the staff member.");
+        var apiResult = await _api.AddAsync(businessId, request, ct);
+        var normalized = Normalize(apiResult, "Could not add the staff member.");
+        if (normalized.IsSuccess) await _cache.EvictByTagAsync($"business:{businessId}", ct);
+        return normalized;
     }
 
-    public async Task<ApiResult> RemoveAsync(Guid staffId, CancellationToken ct = default)
+    public async Task<ApiResult> RemoveAsync(Guid businessId, Guid staffId, CancellationToken ct = default)
     {
-        var result = await _api.RemoveAsync(staffId, ct);
-        return Normalize(result, "Could not remove the staff member.");
+        var apiResult = await _api.RemoveAsync(staffId, ct);
+        var normalized = Normalize(apiResult, "Could not remove the staff member.");
+        if (normalized.IsSuccess) await _cache.EvictByTagAsync($"business:{businessId}", ct);
+        return normalized;
     }
 
     private static ApiResult Normalize(ApiResult result, string fallback)

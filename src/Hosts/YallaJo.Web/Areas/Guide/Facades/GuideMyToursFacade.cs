@@ -1,4 +1,5 @@
 using System.Globalization;
+using Microsoft.AspNetCore.OutputCaching;
 using YallaJo.Web.Areas.Guide.ApiClients;
 using YallaJo.Web.Areas.Guide.Models.MyTours;
 using YallaJo.Web.Infrastructure.Api.Contracts;
@@ -10,11 +11,13 @@ public sealed class GuideMyToursFacade
     private const string TimeFormat = "HH:mm";
 
     private readonly MyToursApiClient _api;
+    private readonly IOutputCacheStore _cache;
     private readonly ILogger<GuideMyToursFacade> _logger;
 
-    public GuideMyToursFacade(MyToursApiClient api, ILogger<GuideMyToursFacade> logger)
+    public GuideMyToursFacade(MyToursApiClient api, IOutputCacheStore cache, ILogger<GuideMyToursFacade> logger)
     {
         _api = api;
+        _cache = cache;
         _logger = logger;
     }
 
@@ -117,31 +120,31 @@ public sealed class GuideMyToursFacade
     }
 
     public Task<ApiResult> AddScheduleAsync(Guid tourId, AddScheduleFormVm form, CancellationToken ct = default) =>
-        WithGuideIdAsync((guideId, token) =>
+        WithGuideIdAsync(tourId, (guideId, token) =>
             _api.AddScheduleAsync(tourId, guideId, new CreateScheduleRequest(form.DayOfWeek, form.StartTime, NullIfBlank(form.EndTime)), token), ct);
 
     public Task<ApiResult> DeleteScheduleAsync(Guid tourId, Guid scheduleId, CancellationToken ct = default) =>
-        WithGuideIdAsync((guideId, token) => _api.DeleteScheduleAsync(tourId, guideId, scheduleId, token), ct);
+        WithGuideIdAsync(tourId, (guideId, token) => _api.DeleteScheduleAsync(tourId, guideId, scheduleId, token), ct);
 
     public Task<ApiResult> AddPricingTierAsync(Guid tourId, AddPricingTierFormVm form, CancellationToken ct = default) =>
-        WithGuideIdAsync((guideId, token) =>
+        WithGuideIdAsync(tourId, (guideId, token) =>
             _api.AddPricingTierAsync(tourId, guideId, new CreatePricingTierRequest(
                 form.Name, form.Price, form.Currency, form.MinParticipants, form.MaxParticipants, NullIfBlank(form.Description)), token), ct);
 
     public Task<ApiResult> DeletePricingTierAsync(Guid tourId, Guid tierId, CancellationToken ct = default) =>
-        WithGuideIdAsync((guideId, token) => _api.DeletePricingTierAsync(tourId, guideId, tierId, token), ct);
+        WithGuideIdAsync(tourId, (guideId, token) => _api.DeletePricingTierAsync(tourId, guideId, tierId, token), ct);
 
     public Task<ApiResult> EnablePrivateTourAsync(Guid tourId, PrivateTourFormVm form, CancellationToken ct = default) =>
-        WithGuideIdAsync((guideId, token) =>
+        WithGuideIdAsync(tourId, (guideId, token) =>
             _api.EnablePrivateTourAsync(tourId, guideId, new EnablePrivateTourRequest(form.Multiplier, form.FlatPrice), token), ct);
 
     public Task<ApiResult> DisablePrivateTourAsync(Guid tourId, CancellationToken ct = default) =>
-        WithGuideIdAsync((guideId, token) => _api.DisablePrivateTourAsync(tourId, guideId, token), ct);
+        WithGuideIdAsync(tourId, (guideId, token) => _api.DisablePrivateTourAsync(tourId, guideId, token), ct);
 
     public Task<ApiResult> RemoveOfferingAsync(Guid tourId, CancellationToken ct = default) =>
-        WithGuideIdAsync((guideId, token) => _api.RemoveOfferingAsync(tourId, guideId, token), ct);
+        WithGuideIdAsync(tourId, (guideId, token) => _api.RemoveOfferingAsync(tourId, guideId, token), ct);
 
-    private async Task<ApiResult> WithGuideIdAsync(Func<Guid, CancellationToken, Task<ApiResult>> action, CancellationToken ct)
+    private async Task<ApiResult> WithGuideIdAsync(Guid tourId, Func<Guid, CancellationToken, Task<ApiResult>> action, CancellationToken ct)
     {
         var guideId = await ResolveGuideIdAsync(ct);
         if (guideId is null)
@@ -149,7 +152,17 @@ public sealed class GuideMyToursFacade
             return ApiResult.Fail("Unable to resolve your guide profile.");
         }
 
-        return await action(guideId.Value, ct);
+        var result = await action(guideId.Value, ct);
+        if (result.IsSuccess)
+        {
+            // Guide offering edits (schedules, pricing tiers, private-tour) change the public tour detail page,
+            // which is output-cached + tagged tour:{id}. Only this BFF facade can evict the Web-host output cache
+            // (backend HybridCache cannot reach it). Use CancellationToken.None so eviction survives a client
+            // disconnect after the backend already committed.
+            await _cache.EvictByTagAsync($"tour:{tourId}", CancellationToken.None);
+        }
+
+        return result;
     }
 
     private async Task<Guid?> ResolveGuideIdAsync(CancellationToken ct)

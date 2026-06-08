@@ -8,6 +8,7 @@ using FluentAssertions;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
+using YallaJo.SharedKernel.Application.Abstractions.Context;
 using YallaJo.SharedKernel.Domain.Abstractions.Results;
 
 namespace ContentPlaces.Tests.Unit;
@@ -18,31 +19,34 @@ public sealed class AddBusinessStaffCommandHandlerTests
         AddBusinessStaffCommandHandler Handler,
         IBusinessStaffRepository StaffRepo,
         IBusinessRepository BusinessRepo,
-        IContentPlacesUnitOfWork Uow) BuildSubject()
+        IContentPlacesUnitOfWork Uow,
+        ICurrentUser CurrentUser) BuildSubject()
     {
         var staffRepo = Substitute.For<IBusinessStaffRepository>();
         var businessRepo = Substitute.For<IBusinessRepository>();
         var uow = Substitute.For<IContentPlacesUnitOfWork>();
         var outbox = Substitute.For<IContentPlacesOutboxWriter>();
+        var currentUser = Substitute.For<ICurrentUser>();
+        currentUser.UserId.Returns(Guid.NewGuid()); // default; tests override below
         var cache = Substitute.For<HybridCache>();
         var logger = Substitute.For<ILogger<AddBusinessStaffCommandHandler>>();
 
         var handler = new AddBusinessStaffCommandHandler(
-            staffRepo, businessRepo, uow, outbox, cache, logger);
+            staffRepo, businessRepo, uow, outbox, cache, currentUser, logger);
 
-        return (handler, staffRepo, businessRepo, uow);
+        return (handler, staffRepo, businessRepo, uow, currentUser);
     }
 
     [Fact]
     public async Task ReturnsNotFoundWhenBusinessMissing()
     {
-        var (handler, _, businessRepo, _) = BuildSubject();
+        var (handler, _, businessRepo, _, _) = BuildSubject();
         businessRepo
             .GetByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
             .Returns((Business?)null);
 
         var result = await handler.Handle(
-            new AddBusinessStaffCommand(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), BusinessStaffRole.Staff),
+            new AddBusinessStaffCommand(Guid.NewGuid(), Guid.NewGuid(), BusinessStaffRole.Staff),
             CancellationToken.None);
 
         result.IsSuccess.Should().BeFalse();
@@ -52,17 +56,18 @@ public sealed class AddBusinessStaffCommandHandlerTests
     [Fact]
     public async Task ReturnsForbiddenWhenActingUserIsNotOwner()
     {
-        var (handler, _, businessRepo, _) = BuildSubject();
+        var (handler, _, businessRepo, _, currentUser) = BuildSubject();
         var ownerId = Guid.NewGuid();
         var callerId = Guid.NewGuid();
         var business = TestBusinessFactory.CreateBusiness(ownerId);
+        currentUser.UserId.Returns(callerId);
 
         businessRepo
             .GetByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
             .Returns(business);
 
         var result = await handler.Handle(
-            new AddBusinessStaffCommand(business.Id, callerId, Guid.NewGuid(), BusinessStaffRole.Staff),
+            new AddBusinessStaffCommand(business.Id, Guid.NewGuid(), BusinessStaffRole.Staff),
             CancellationToken.None);
 
         result.IsSuccess.Should().BeFalse();
@@ -72,9 +77,10 @@ public sealed class AddBusinessStaffCommandHandlerTests
     [Fact]
     public async Task ReturnsConflictWhenStaffAlreadyActive()
     {
-        var (handler, staffRepo, businessRepo, _) = BuildSubject();
+        var (handler, staffRepo, businessRepo, _, currentUser) = BuildSubject();
         var ownerId = Guid.NewGuid();
         var business = TestBusinessFactory.CreateBusiness(ownerId);
+        currentUser.UserId.Returns(ownerId);
 
         businessRepo
             .GetByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
@@ -86,7 +92,7 @@ public sealed class AddBusinessStaffCommandHandlerTests
             .Returns(true);
 
         var result = await handler.Handle(
-            new AddBusinessStaffCommand(business.Id, ownerId, Guid.NewGuid(), BusinessStaffRole.Staff),
+            new AddBusinessStaffCommand(business.Id, Guid.NewGuid(), BusinessStaffRole.Staff),
             CancellationToken.None);
 
         result.IsSuccess.Should().BeFalse();
@@ -96,9 +102,10 @@ public sealed class AddBusinessStaffCommandHandlerTests
     [Fact]
     public async Task SucceedsWhenActingUserIsOwner()
     {
-        var (handler, staffRepo, businessRepo, uow) = BuildSubject();
+        var (handler, staffRepo, businessRepo, uow, currentUser) = BuildSubject();
         var ownerId = Guid.NewGuid();
         var business = TestBusinessFactory.CreateBusiness(ownerId);
+        currentUser.UserId.Returns(ownerId);
 
         businessRepo
             .GetByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
@@ -110,7 +117,7 @@ public sealed class AddBusinessStaffCommandHandlerTests
             .Returns(false);
 
         var result = await handler.Handle(
-            new AddBusinessStaffCommand(business.Id, ownerId, Guid.NewGuid(), BusinessStaffRole.Manager),
+            new AddBusinessStaffCommand(business.Id, Guid.NewGuid(), BusinessStaffRole.Manager),
             CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();

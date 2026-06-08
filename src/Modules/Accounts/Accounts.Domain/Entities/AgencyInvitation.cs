@@ -56,6 +56,9 @@ public sealed class AgencyInvitation : AuditableEntity, IAggregateRoot
         Status = AgencyInvitationStatus.Accepted;
         RespondedAt = DateTime.UtcNow;
         MarkUpdated();
+
+        AddDomainEvent(
+            new AgencyInvitationAcceptedDomainEvent(Id, AgencyUserId, GuideUserId));
     }
 
     public void Decline()
@@ -68,6 +71,9 @@ public sealed class AgencyInvitation : AuditableEntity, IAggregateRoot
         Status = AgencyInvitationStatus.Declined;
         RespondedAt = DateTime.UtcNow;
         MarkUpdated();
+
+        AddDomainEvent(
+            new AgencyInvitationDeclinedDomainEvent(Id, AgencyUserId, GuideUserId));
     }
 
     public void Expire()

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.OutputCaching;
 using YallaJo.Web.Areas.Admin.ApiClients;
 using YallaJo.Web.Areas.Admin.Models.Trips;
 using YallaJo.Web.Infrastructure.Api.Contracts;
@@ -12,8 +13,13 @@ namespace YallaJo.Web.Areas.Admin.Facades;
 public sealed class TripsFacade
 {
     private readonly TripsApiClient _api;
+    private readonly IOutputCacheStore _cache;
 
-    public TripsFacade(TripsApiClient api) => _api = api;
+    public TripsFacade(TripsApiClient api, IOutputCacheStore cache)
+    {
+        _api = api;
+        _cache = cache;
+    }
 
     public async Task<ApiResult<TripsVm>> GetIndexAsync(Guid? id, int page, CancellationToken ct)
     {
@@ -36,25 +42,25 @@ public sealed class TripsFacade
     public async Task<ApiResult> ApproveAsync(Guid id, string rowVersionBase64, CancellationToken ct)
     {
         if (!TryFromBase64(rowVersionBase64, out var rv)) return InvalidToken();
-        return await Normalize(_api.ApproveAsync(id, rv, ct), "Could not approve the tour.");
+        return await Normalize(_api.ApproveAsync(id, rv, ct), id, "Could not approve the tour.");
     }
 
     public async Task<ApiResult> ReinstateAsync(Guid id, string rowVersionBase64, CancellationToken ct)
     {
         if (!TryFromBase64(rowVersionBase64, out var rv)) return InvalidToken();
-        return await Normalize(_api.ReinstateAsync(id, rv, ct), "Could not reinstate the tour.");
+        return await Normalize(_api.ReinstateAsync(id, rv, ct), id, "Could not reinstate the tour.");
     }
 
     public async Task<ApiResult> RejectAsync(Guid id, string rowVersionBase64, string reason, CancellationToken ct)
     {
         if (!TryFromBase64(rowVersionBase64, out var rv)) return InvalidToken();
-        return await Normalize(_api.RejectAsync(id, rv, reason, ct), "Could not reject the tour.");
+        return await Normalize(_api.RejectAsync(id, rv, reason, ct), id, "Could not reject the tour.");
     }
 
     public async Task<ApiResult> SuspendAsync(Guid id, string rowVersionBase64, string reason, CancellationToken ct)
     {
         if (!TryFromBase64(rowVersionBase64, out var rv)) return InvalidToken();
-        return await Normalize(_api.SuspendAsync(id, rv, reason, ct), "Could not suspend the tour.");
+        return await Normalize(_api.SuspendAsync(id, rv, reason, ct), id, "Could not suspend the tour.");
     }
 
     private static ApiResult InvalidToken()
@@ -75,10 +81,17 @@ public sealed class TripsFacade
         }
     }
 
-    private static async Task<ApiResult> Normalize(Task<ApiResult> call, string fallback)
+    // Evicts the public tour:{id} output-cache tag on a successful moderation write so the
+    // cached public tour detail page reflects the change immediately (§8.4a C3). Uses
+    // CancellationToken.None so eviction still runs if the admin client disconnected.
+    private async Task<ApiResult> Normalize(Task<ApiResult> call, Guid tourId, string fallback)
     {
         var result = await call;
-        if (result.IsSuccess) return ApiResult.Ok();
+        if (result.IsSuccess)
+        {
+            await _cache.EvictByTagAsync($"tour:{tourId}", CancellationToken.None);
+            return ApiResult.Ok();
+        }
         if (result.IsUnauthorized) return ApiResult.ForceSignOut();
         if (result.IsNotFound) return ApiResult.Fail(404, "Tour not found.");
         if (result.IsConflict)

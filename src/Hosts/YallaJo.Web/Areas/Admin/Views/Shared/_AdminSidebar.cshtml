@@ -3,7 +3,13 @@
     var nav = ViewData["AdminNav"] as string ?? string.Empty;
     string Active(string key) => string.Equals(nav, key, StringComparison.OrdinalIgnoreCase) ? "nav-link active" : "nav-link";
 
-    bool Has(string permission) => CurrentUser.HasPermission(permission);
+    // Nav driver (plan §9 line 13): prefer the DB-backed GET /security/me permission snapshot
+    // supplied by AdminNavViewComponent. When absent (direct partial render or snapshot load
+    // failure) fall back to the request's JWT-claim permissions so the shell still renders (ERR3).
+    var securityMePermissions = ViewData["SecurityMePermissions"] as IReadOnlyCollection<string>;
+    bool Has(string permission) => securityMePermissions is not null
+        ? securityMePermissions.Contains(permission)
+        : CurrentUser.HasPermission(permission);
 
     // Cluster visibility: only render a section header if the user can see at least one item in it.
     var showOverview = Has(WebPermission.AdminDashboard.Read) || Has(WebPermission.AuditLog.Read) || Has(WebPermission.System.Read) || Has(WebPermission.Interaction.Read);

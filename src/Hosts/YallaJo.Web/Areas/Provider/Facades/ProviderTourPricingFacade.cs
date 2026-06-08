@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.OutputCaching;
 using YallaJo.Web.Areas.Provider.ApiClients;
 using YallaJo.Web.Areas.Provider.Models.Tours;
 using YallaJo.Web.Areas.Provider.Models.TourPricing;
@@ -34,12 +35,14 @@ public sealed class ProviderTourPricingFacade
 {
     private readonly ProviderTourPricingApiClient _pricingApi;
     private readonly ProviderToursApiClient _toursApi;
+    private readonly IOutputCacheStore _cache;
 
     public ProviderTourPricingFacade(
-        ProviderTourPricingApiClient pricingApi, ProviderToursApiClient toursApi)
+        ProviderTourPricingApiClient pricingApi, ProviderToursApiClient toursApi, IOutputCacheStore cache)
     {
         _pricingApi = pricingApi;
         _toursApi = toursApi;
+        _cache = cache;
     }
 
     public async Task<TourPricingListResult> GetIndexAsync(Guid tourId, CancellationToken ct = default)
@@ -76,7 +79,7 @@ public sealed class ProviderTourPricingFacade
     public async Task<TourPricingActionResult> CreateAsync(Guid tourId, TourPricingFormVm vm, CancellationToken ct = default)
     {
         var result = await _pricingApi.CreateAsync(tourId, TourPricingMapper.ToCreateRequest(vm), ct);
-        return NormalizeAction(result, "Could not create the pricing tier.");
+        return await EvictOnOkAsync(NormalizeAction(result, "Could not create the pricing tier."), tourId, ct);
     }
 
     public async Task<TourPricingFormResult> GetEditAsync(Guid tourId, Guid tierId, CancellationToken ct = default)
@@ -102,13 +105,13 @@ public sealed class ProviderTourPricingFacade
     public async Task<TourPricingActionResult> UpdateAsync(Guid tourId, Guid tierId, TourPricingFormVm vm, CancellationToken ct = default)
     {
         var result = await _pricingApi.UpdateAsync(tourId, tierId, TourPricingMapper.ToUpdateRequest(vm), ct);
-        return NormalizeAction(result, "Could not save the pricing tier.");
+        return await EvictOnOkAsync(NormalizeAction(result, "Could not save the pricing tier."), tourId, ct);
     }
 
     public async Task<TourPricingActionResult> DeleteAsync(Guid tourId, Guid tierId, CancellationToken ct = default)
     {
         var result = await _pricingApi.DeleteAsync(tourId, tierId, ct);
-        return NormalizeAction(result, "Could not delete the pricing tier.");
+        return await EvictOnOkAsync(NormalizeAction(result, "Could not delete the pricing tier."), tourId, ct);
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -139,6 +142,15 @@ public sealed class ProviderTourPricingFacade
         if (result.IsValidationError) return new(TourPricingOutcome.ValidationError,
             ValidationErrors: result.ValidationErrors, Error: result.Error);
         return new(TourPricingOutcome.ValidationError, Error: result.Error ?? fallback);
+    }
+
+    // Evicts the public detail cache tag for the affected tour when the action succeeded.
+    // Plan §3 rule #3: facades must evict output-cache tags after successful writes.
+    private async Task<TourPricingActionResult> EvictOnOkAsync(TourPricingActionResult result, Guid tourId, CancellationToken ct)
+    {
+        if (result.Outcome == TourPricingOutcome.Ok)
+            await _cache.EvictByTagAsync($"tour:{tourId}", ct);
+        return result;
     }
 
     // "MoreDocsNeeded" → "More docs needed" (consistent with other provider screens).

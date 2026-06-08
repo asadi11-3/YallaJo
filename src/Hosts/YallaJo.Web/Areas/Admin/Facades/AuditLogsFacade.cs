@@ -1,5 +1,4 @@
 using YallaJo.Web.Areas.Admin.Models.AuditLogs;
-using YallaJo.Web.Areas.Admin.Models.AuditLogs;
 using YallaJo.Web.Infrastructure.Api.Contracts;
 
 using YallaJo.Web.Areas.Admin.ApiClients;
@@ -75,17 +74,17 @@ public sealed class AuditLogsFacade
             : ApiResult.Fail(result.StatusCode, result.Error ?? "Could not redact the audit-log entry.");
     }
 
-    // §8.13 — export audit logs for a date range (returns CSV content).
-    public async Task<ApiResult<string>> ExportAsync(DateTime from, DateTime to, CancellationToken ct = default)
+    // §8.13 — export audit logs for a date range (returns streamed CSV content).
+    public async Task<ApiResult<ApiStream>> ExportAsync(DateTime from, DateTime to, CancellationToken ct = default)
     {
         if (to < from)
         {
-            return ApiResult<string>.CreateFailure("The end date must be on or after the start date.");
+            return ApiResult<ApiStream>.CreateFailure("The end date must be on or after the start date.");
         }
 
         var result = await _api.ExportAsync(from, to, ct);
-        if (result.IsSuccess) return ApiResult<string>.CreateSuccess(result.Data ?? string.Empty);
-        if (result.IsUnauthorized) return ApiResult<string>.ForceSignOut();
-        return ApiResult<string>.CreateFailure(result.Error ?? "Could not export the audit logs.");
+        if (result.IsSuccess && result.Data is not null) return ApiResult<ApiStream>.CreateSuccess(result.Data, result.StatusCode);
+        if (result.IsUnauthorized) return ApiResult<ApiStream>.ForceSignOut();
+        return ApiResult<ApiStream>.CreateFailure(result.StatusCode, result.Error ?? "Could not export the audit logs.");
     }
 }
