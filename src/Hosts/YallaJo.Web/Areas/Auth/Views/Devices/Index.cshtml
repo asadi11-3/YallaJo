@@ -1,9 +1,21 @@
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
-    ViewData["Title"] = "Devices";
+    ViewData["Title"] = Localizer["Auth.Devices.Title"].Value;
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
-<div class="container mt-4">
-    <h2>Devices</h2>
-    <p>Use the <a asp-area="Auth" asp-controller="Sessions" asp-action="Index">Sessions</a> page
-       to view and manage your devices.</p>
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-8 col-lg-6">
+            <h1 class="h3 mb-3">@Localizer["Auth.Devices.Heading"]</h1>
+            <div class="card shadow">
+                <div class="card-body">
+                    <p class="mb-0 text-secondary">
+                        @Localizer["Auth.Devices.Info"]
+                        <a asp-area="Auth" asp-controller="Sessions" asp-action="Index">@Localizer["Auth.Devices.SessionsLink"]</a>.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>

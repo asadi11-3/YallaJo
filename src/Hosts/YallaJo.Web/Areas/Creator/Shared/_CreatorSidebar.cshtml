@@ -1,14 +1,12 @@
+@using Microsoft.Extensions.Localization
 @model YallaJo.Web.Areas.Creator.Shared.CreatorSidebarVm
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
     var active = ViewData["CreatorNav"] as string ?? "Dashboard";
     string Nav(string key) => active == key ? "nav-link active" : "nav-link";
+    bool Current(string key) => active == key;
 }
 
-@* CCD-0 shell: only the Dashboard entry is wired because it is the only
-   implemented route this batch. Profile / My Articles / Application links are
-   intentionally omitted to avoid dead links and are added in CCD-1..CCD-4.
-   Each future entry must use asp-area/asp-controller/asp-action, be gated with
-   a <permission> tag, and carry an active-key. *@
 <section class="pt-4">
     <div class="container">
         <div class="card rounded-3 border p-3 pb-2">
@@ -19,10 +17,10 @@
                          alt="avatar">
                 </div>
                 <div class="ms-sm-3 mt-2 mt-sm-0">
-                    <h5 class="mb-0"><span class="fw-light">Hi,</span> @(string.IsNullOrWhiteSpace(Model.DisplayName) ? "Creator" : Model.DisplayName)</h5>
+                    <h5 class="mb-0"><span class="fw-light">@Localizer["Creator.Nav.Greeting"]</span> @(string.IsNullOrWhiteSpace(Model.DisplayName) ? Localizer["Creator.Nav.DefaultName"].Value : Model.DisplayName)</h5>
                     @if (!string.IsNullOrWhiteSpace(Model.Email))
                     {
-                        <span class="small text-body-secondary">@Model.Email</span>
+                        <span class="small text-body-secondary"><bdi dir="ltr">@Model.Email</bdi></span>
                     }
                 </div>
             </div>
@@ -30,56 +28,56 @@
             <button class="btn btn-primary w-100 d-block d-xl-none mt-3"
                     type="button" data-bs-toggle="offcanvas" data-bs-target="#creatorDashboardMenu"
                     aria-controls="creatorDashboardMenu">
-                <i class="bi bi-list me-1"></i> Dashboard Menu
+                <i class="fa-solid fa-bars fa-fw me-1" aria-hidden="true"></i> @Localizer["Creator.Nav.Menu"]
             </button>
 
-            <div class="offcanvas-xl offcanvas-end mt-xl-3" tabindex="-1" id="creatorDashboardMenu">
+            <div class="offcanvas-xl offcanvas-end mt-xl-3" tabindex="-1" id="creatorDashboardMenu" aria-label="@Localizer["Creator.Nav.Aria"]">
                 <div class="offcanvas-header">
-                    <h5 class="offcanvas-title">Menu</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#creatorDashboardMenu" aria-label="Close"></button>
+                    <h5 class="offcanvas-title">@Localizer["Creator.Nav.Menu"]</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#creatorDashboardMenu" aria-label="@Localizer["Creator.Nav.Close"]"></button>
                 </div>
                 <div class="offcanvas-body p-3 p-xl-0">
-                    <div class="navbar navbar-expand-xl w-100">
+                    <nav class="navbar navbar-expand-xl w-100" aria-label="@Localizer["Creator.Nav.Aria"]">
                         <ul class="navbar-nav nav nav-pills nav-pills-primary-soft flex-xl-row flex-column w-100">
                             <permission require="@WebPermission.Creator.Read">
                                 <li class="nav-item">
-                                    <a class="@Nav("Dashboard")" asp-area="Creator" asp-controller="Dashboard" asp-action="Index">
-                                        <i class="bi bi-house-door fa-fw me-1"></i>Dashboard
+                                    <a class="@Nav("Dashboard")" aria-current="@(Current("Dashboard") ? "page" : null)" asp-area="Creator" asp-controller="Dashboard" asp-action="Index">
+                                        <i class="fa-solid fa-house fa-fw me-1" aria-hidden="true"></i>@Localizer["Creator.Nav.Dashboard"]
                                     </a>
                                 </li>
                             </permission>
                             <permission require="@WebPermission.Creator.Read">
                                 <li class="nav-item">
-                                    <a class="@Nav("Profile")" asp-area="Creator" asp-controller="Profile" asp-action="Index">
-                                        <i class="bi bi-person-badge fa-fw me-1"></i>My Profile
+                                    <a class="@Nav("Profile")" aria-current="@(Current("Profile") ? "page" : null)" asp-area="Creator" asp-controller="Profile" asp-action="Index">
+                                        <i class="fa-solid fa-id-badge fa-fw me-1" aria-hidden="true"></i>@Localizer["Creator.Nav.Profile"]
                                     </a>
                                 </li>
                             </permission>
                             <permission require="@WebPermission.Blog.ReadOwn">
                                 <li class="nav-item">
-                                    <a class="@Nav("Articles")" asp-area="Creator" asp-controller="Articles" asp-action="Index">
-                                        <i class="bi bi-journals fa-fw me-1"></i>My Articles
+                                    <a class="@Nav("Articles")" aria-current="@(Current("Articles") ? "page" : null)" asp-area="Creator" asp-controller="Articles" asp-action="Index">
+                                        <i class="fa-solid fa-book-open fa-fw me-1" aria-hidden="true"></i>@Localizer["Creator.Nav.Articles"]
                                     </a>
                                 </li>
                             </permission>
                             <permission require="@WebPermission.Creator.Read">
                                 <li class="nav-item">
-                                    <a class="@Nav("Audience")" asp-area="Creator" asp-controller="Audience" asp-action="Index">
-                                        <i class="bi bi-people fa-fw me-1"></i>Audience
+                                    <a class="@Nav("Audience")" aria-current="@(Current("Audience") ? "page" : null)" asp-area="Creator" asp-controller="Audience" asp-action="Index">
+                                        <i class="fa-solid fa-users fa-fw me-1" aria-hidden="true"></i>@Localizer["Creator.Nav.Audience"]
                                     </a>
                                 </li>
                             </permission>
                             <permission require="@WebPermission.Creator.Read">
                                 <li class="nav-item">
-                                    <a class="@Nav("Preview")" asp-area="Creator" asp-controller="Preview" asp-action="Index">
-                                        <i class="bi bi-eye fa-fw me-1"></i>Public Preview
+                                    <a class="@Nav("Preview")" aria-current="@(Current("Preview") ? "page" : null)" asp-area="Creator" asp-controller="Preview" asp-action="Index">
+                                        <i class="fa-solid fa-eye fa-fw me-1" aria-hidden="true"></i>@Localizer["Creator.Nav.Preview"]
                                     </a>
                                 </li>
                             </permission>
                             <permission require="@WebPermission.Creator.Submit">
                                 <li class="nav-item">
-                                    <a class="@Nav("Application")" asp-area="Creator" asp-controller="Application" asp-action="Index">
-                                        <i class="bi bi-pencil-square fa-fw me-1"></i>Application
+                                    <a class="@Nav("Application")" aria-current="@(Current("Application") ? "page" : null)" asp-area="Creator" asp-controller="Application" asp-action="Index">
+                                        <i class="fa-solid fa-pen-to-square fa-fw me-1" aria-hidden="true"></i>@Localizer["Creator.Nav.Application"]
                                     </a>
                                 </li>
                             </permission>
@@ -87,12 +85,12 @@
                                 <form asp-area="Auth" asp-controller="Auth" asp-action="Logout" method="post" class="d-grid">
                                     @Html.AntiForgeryToken()
                                     <button type="submit" class="nav-link text-start text-danger bg-danger-soft-hover border-0 bg-transparent w-100">
-                                        <i class="fas fa-sign-out-alt fa-fw me-1"></i>Sign Out
+                                        <i class="fa-solid fa-right-from-bracket fa-fw me-1" aria-hidden="true"></i>@Localizer["Creator.Nav.SignOut"]
                                     </button>
                                 </form>
                             </li>
                         </ul>
-                    </div>
+                    </nav>
                 </div>
             </div>
         </div>

@@ -1,17 +1,26 @@
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
-    ViewData["Title"] = "Invalid Invite Link";
+    ViewData["Title"] = Localizer["Auth.AcceptInvite.InvalidTitle"].Value;
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<div class="auth-card">
-    <h2>Invalid Invite Link</h2>
-    <p class="text-muted">
-        The invite link is missing required parameters.
-    </p>
-
-    <div class="alert alert-warning">
-        Ask your administrator to send a fresh invite.
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-8 col-lg-5">
+            <div class="card shadow">
+                <div class="card-body p-4 text-center">
+                    <i class="fa-solid fa-link-slash fa-2x text-danger mb-3" aria-hidden="true"></i>
+                    <h1 class="h3 mb-2">@Localizer["Auth.AcceptInvite.InvalidHeading"]</h1>
+                    <p class="text-secondary mb-3">@Localizer["Auth.AcceptInvite.InvalidMessage"]</p>
+                    <div class="alert alert-warning" role="alert">
+                        @Localizer["Auth.AcceptInvite.InvalidHelp"]
+                    </div>
+                    <a asp-area="Auth" asp-controller="Auth" asp-action="SignIn" class="btn btn-outline-primary w-100">
+                        @Localizer["Auth.Forgot.BackToSignIn"]
+                    </a>
+                </div>
+            </div>
+        </div>
     </div>
-
-    <a asp-area="Auth" asp-controller="Auth" asp-action="SignIn" class="btn btn-outline-primary w-100">Back to sign in</a>
 </div>

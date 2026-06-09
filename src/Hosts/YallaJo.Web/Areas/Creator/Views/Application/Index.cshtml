@@ -1,6 +1,8 @@
 @model YallaJo.Web.Areas.Creator.Models.Application.CreatorApplicationFormVm
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
-    ViewData["Title"] = "Creator Application";
+    ViewData["Title"] = Localizer["Creator.Application.Title"].Value;
     var sidebar = ViewBag.Sidebar as YallaJo.Web.Areas.Creator.Shared.CreatorSidebarVm
                   ?? new YallaJo.Web.Areas.Creator.Shared.CreatorSidebarVm();
 }
@@ -10,39 +12,42 @@
 <section class="pt-0">
     <div class="container vstack gap-4">
         <div class="d-sm-flex justify-content-between align-items-center">
-            <h1 class="fs-4 mb-0"><i class="bi bi-pencil-square me-2"></i>Creator Application</h1>
+            <h1 class="fs-4 mb-0">
+                <i class="fa-solid fa-pen-to-square me-2 text-primary" aria-hidden="true"></i>
+                @Localizer["Creator.Application.Heading"]
+            </h1>
             <permission require="@WebPermission.Creator.RedeemInvitation">
                 <a asp-area="Creator" asp-controller="Application" asp-action="Invite"
                    class="btn btn-sm btn-primary-soft mt-2 mt-sm-0">
-                    <i class="bi bi-envelope-open me-1"></i>Redeem invitation
+                    <i class="fa-solid fa-envelope-open-text me-1" aria-hidden="true"></i>
+                    @Localizer["Creator.Application.RedeemInvitation"]
                 </a>
             </permission>
         </div>
 
         @if (!string.IsNullOrWhiteSpace(Model.Status) && !Model.IsEditable)
         {
-            @* ── Read-only status states: Pending / Approved / Rejected ─────────── *@
             <div class="card border">
                 <div class="card-body py-4">
                     @switch (Model.Status)
                     {
                         case "Pending":
-                            <h5 class="mb-1">Your application is under review</h5>
-                            <p class="text-body-secondary mb-0">We'll notify you once an admin has reviewed it.</p>
+                            <h2 class="h5 mb-1">@Localizer["Creator.Application.PendingTitle"]</h2>
+                            <p class="text-body-secondary mb-0">@Localizer["Creator.Application.PendingMsg"]</p>
                             break;
                         case "Approved":
-                            <h5 class="mb-1">Your application was approved</h5>
-                            <p class="text-body-secondary mb-0">Welcome aboard! Your creator profile is now active.</p>
+                            <h2 class="h5 mb-1">@Localizer["Creator.Application.ApprovedTitle"]</h2>
+                            <p class="text-body-secondary mb-0">@Localizer["Creator.Application.ApprovedMsg"]</p>
                             break;
                         case "Rejected":
-                            <h5 class="mb-1">Your application was not approved</h5>
+                            <h2 class="h5 mb-1">@Localizer["Creator.Application.RejectedTitle"]</h2>
                             @if (!string.IsNullOrWhiteSpace(Model.AdminNote))
                             {
-                                <p class="text-body-secondary mb-0">Reviewer note: @Model.AdminNote</p>
+                                <p class="text-body-secondary mb-0">@Localizer["Creator.Application.ReviewerNote", Model.AdminNote]</p>
                             }
                             break;
                         default:
-                            <h5 class="mb-1">Application status: @Model.Status</h5>
+                            <h2 class="h5 mb-1">@Localizer["Creator.Application.StatusLabel", Model.Status]</h2>
                             break;
                     }
                 </div>
@@ -50,26 +55,26 @@
         }
         else
         {
-            @* ── Editable form: new (create) or Draft/MoreInfoNeeded (update) ───── *@
             @if (string.Equals(Model.Status, "MoreInfoNeeded", StringComparison.OrdinalIgnoreCase)
                  && !string.IsNullOrWhiteSpace(Model.AdminNote))
             {
-                <div class="alert alert-warning mb-0">
-                    <i class="bi bi-info-circle me-1"></i>More information requested: @Model.AdminNote
+                <div class="alert alert-warning mb-0" role="alert">
+                    <i class="fa-solid fa-circle-info me-1" aria-hidden="true"></i>
+                    @Localizer["Creator.Application.MoreInfoRequested", Model.AdminNote]
                 </div>
             }
 
             var postAction = Model.IsNew ? "Create" : "Update";
 
-            @* For a brand-new application Create is gated by Creator.Submit (all users);
-               for an existing one Update is gated by Creator.Update. The Update form is
-               wrapped so it is hidden from users lacking that permission. *@
             @if (Model.IsNew)
             {
                 <form asp-area="Creator" asp-controller="Application" asp-action="@postAction" method="post" class="card border">
                     <partial name="_ApplicationFormFields" model="Model" />
                     <div class="card-footer d-flex gap-2">
-                        <button type="submit" class="btn btn-primary"><i class="bi bi-save me-1"></i>Save draft</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fa-solid fa-floppy-disk me-1" aria-hidden="true"></i>
+                            @Localizer["Creator.Application.SaveDraft"]
+                        </button>
                     </div>
                 </form>
             }
@@ -81,20 +86,23 @@
                         <input type="hidden" asp-for="Status" />
                         <partial name="_ApplicationFormFields" model="Model" />
                         <div class="card-footer d-flex gap-2">
-                            <button type="submit" class="btn btn-primary"><i class="bi bi-save me-1"></i>Save changes</button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fa-solid fa-floppy-disk me-1" aria-hidden="true"></i>
+                                @Localizer["Creator.Application.SaveChanges"]
+                            </button>
                         </div>
                     </form>
                 </permission>
             }
 
-            @* Submit-for-review is a separate Creator.Submit action, shown only for a Draft. *@
             @if (Model.CanSubmit)
             {
                 <permission require="@WebPermission.Creator.Submit">
                     <form asp-area="Creator" asp-controller="Application" asp-action="Submit" method="post">
                         <input type="hidden" name="applicationId" value="@Model.ApplicationId" />
                         <button type="submit" class="btn btn-success">
-                            <i class="bi bi-send me-1"></i>Submit for review
+                            <i class="fa-solid fa-paper-plane me-1" aria-hidden="true"></i>
+                            @Localizer["Creator.Application.SubmitForReview"]
                         </button>
                     </form>
                 </permission>

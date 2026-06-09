@@ -1,49 +1,50 @@
 @model YallaJo.Web.Areas.Guide.Models.Availability.AvailabilityVm
+@using System.Globalization
+@using Microsoft.Extensions.Localization
 @using YallaJo.Web.Areas.Guide.Shared
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
-    ViewData["Title"] = "Availability";
+    ViewData["Title"] = Localizer["Guide.Availability.Title"].Value;
     Layout = "~/Views/Shared/_Layout.cshtml";
     var sidebar = ViewBag.Sidebar as GuideSidebarVm ?? new GuideSidebarVm();
+    var culture = CultureInfo.CurrentUICulture;
+    string Date(DateOnly d) => d.ToString("yyyy-MM-dd", culture);
 }
 
 <partial name="_GuideSidebar" model="sidebar" />
 
 <section class="pt-0">
     <div class="container vstack gap-4">
-        <div class="row g-4">
-            <div class="col-12">
-                <div class="d-sm-flex justify-content-between align-items-center">
-                    <h1 class="h3 mb-2 mb-sm-0">Availability</h1>
-                </div>
-                <p class="text-secondary mb-0">Block out dates when you are unavailable to run tours.</p>
-            </div>
+        <div>
+            <h1 class="h4 mb-1"><i class="fa-solid fa-calendar-xmark me-2" aria-hidden="true"></i>@Localizer["Guide.Availability.Heading"]</h1>
+            <p class="text-secondary mb-0">@Localizer["Guide.Availability.Subtitle"]</p>
         </div>
 
         <div class="row g-4">
             <div class="col-lg-5">
                 <div class="card card-body border">
-                    <h5 class="mb-3">Add unavailable dates</h5>
+                    <h2 class="card-header-title h5 mb-3">@Localizer["Guide.Availability.AddHeading"]</h2>
                     <form asp-area="Guide" asp-controller="Availability" asp-action="Add" method="post" class="vstack gap-3">
                         @Html.AntiForgeryToken()
-                        <div asp-validation-summary="ModelOnly" class="text-danger small"></div>
+                        <div asp-validation-summary="ModelOnly" class="text-danger small" role="alert"></div>
                         <div>
-                            <label asp-for="Form.StartDate" class="form-label"></label>
-                            <input asp-for="Form.StartDate" class="form-control" type="date" />
-                            <span asp-validation-for="Form.StartDate" class="text-danger small"></span>
+                            <label asp-for="Form.StartDate" class="form-label">@Localizer["Guide.Availability.StartDate"]</label>
+                            <input asp-for="Form.StartDate" class="form-control" type="date" dir="ltr" />
+                            <span asp-validation-for="Form.StartDate" class="text-danger small" role="alert"></span>
                         </div>
                         <div>
-                            <label asp-for="Form.EndDate" class="form-label"></label>
-                            <input asp-for="Form.EndDate" class="form-control" type="date" />
-                            <span asp-validation-for="Form.EndDate" class="text-danger small"></span>
+                            <label asp-for="Form.EndDate" class="form-label">@Localizer["Guide.Availability.EndDate"]</label>
+                            <input asp-for="Form.EndDate" class="form-control" type="date" dir="ltr" />
+                            <span asp-validation-for="Form.EndDate" class="text-danger small" role="alert"></span>
                         </div>
                         <div>
-                            <label asp-for="Form.Reason" class="form-label"></label>
-                            <input asp-for="Form.Reason" class="form-control" placeholder="e.g. Vacation" />
-                            <span asp-validation-for="Form.Reason" class="text-danger small"></span>
+                            <label asp-for="Form.Reason" class="form-label">@Localizer["Guide.Availability.Reason"]</label>
+                            <input asp-for="Form.Reason" class="form-control" placeholder="@Localizer["Guide.Availability.ReasonPlaceholder"]" />
+                            <span asp-validation-for="Form.Reason" class="text-danger small" role="alert"></span>
                         </div>
                         <div>
                             <button type="submit" class="btn btn-primary mb-0">
-                                <i class="bi bi-plus-circle me-1"></i>Add block
+                                <i class="fa-solid fa-plus me-1" aria-hidden="true"></i>@Localizer["Guide.Availability.AddBlock"]
                             </button>
                         </div>
                     </form>
@@ -53,54 +54,61 @@
             <div class="col-lg-7">
                 <div class="card border">
                     <div class="card-header border-bottom">
-                        <h5 class="mb-0">Blocked dates</h5>
+                        <h2 class="card-header-title h5 mb-0">@Localizer["Guide.Availability.BlockedHeading"]</h2>
                     </div>
                     <div class="card-body">
                         @if (!Model.HasBlocks)
                         {
-                            <div class="text-center py-4">
-                                <i class="bi bi-calendar-x display-6 text-secondary"></i>
-                                <p class="text-secondary mt-2 mb-0">No availability blocks yet.</p>
+                            <div class="text-center py-5">
+                                <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
+                                <p class="text-secondary mb-0">@Localizer["Guide.Availability.NoBlocks"]</p>
                             </div>
                         }
                         else
                         {
                             <div class="table-responsive">
-                                <table class="table table-sm align-middle mb-0">
+                                <table class="table table-hover align-middle mb-0">
                                     <thead>
                                         <tr>
-                                            <th>From</th>
-                                            <th>To</th>
-                                            <th>Reason</th>
-                                            <th>Status</th>
-                                            <th class="text-end">Actions</th>
+                                            <th scope="col">@Localizer["Guide.Availability.ColFrom"]</th>
+                                            <th scope="col">@Localizer["Guide.Availability.ColTo"]</th>
+                                            <th scope="col">@Localizer["Guide.Availability.ColReason"]</th>
+                                            <th scope="col">@Localizer["Guide.Availability.ColStatus"]</th>
+                                            <th scope="col" class="text-end">@Localizer["Guide.Availability.ColActions"]</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         @foreach (var block in Model.Blocks)
                                         {
                                             <tr>
-                                                <td>@block.StartDate.ToString("yyyy-MM-dd")</td>
-                                                <td>@block.EndDate.ToString("yyyy-MM-dd")</td>
-                                                <td>@(string.IsNullOrWhiteSpace(block.Reason) ? "—" : block.Reason)</td>
+                                                <td><bdi dir="ltr" class="font-data">@Date(block.StartDate)</bdi></td>
+                                                <td><bdi dir="ltr" class="font-data">@Date(block.EndDate)</bdi></td>
                                                 <td>
-                                                    @if (block.IsActive)
+                                                    @if (string.IsNullOrWhiteSpace(block.Reason))
                                                     {
-                                                        <span class="badge bg-warning-soft">Active</span>
+                                                        <span class="text-secondary" aria-label="@Localizer["Guide.Availability.NoReason"]">&mdash;</span>
                                                     }
                                                     else
                                                     {
-                                                        <span class="badge bg-secondary-soft">Past</span>
+                                                        @block.Reason
+                                                    }
+                                                </td>
+                                                <td>
+                                                    @if (block.IsActive)
+                                                    {
+                                                        <span class="badge bg-warning bg-opacity-10 text-warning"><i class="fa-solid fa-clock fa-fw" aria-hidden="true"></i> @Localizer["Guide.Availability.Active"]</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="badge bg-secondary bg-opacity-10 text-secondary"><i class="fa-solid fa-circle-check fa-fw" aria-hidden="true"></i> @Localizer["Guide.Availability.Past"]</span>
                                                     }
                                                 </td>
                                                 <td class="text-end">
-                                                    <form asp-area="Guide" asp-controller="Availability" asp-action="Delete"
-                                                          asp-route-blockId="@block.Id" method="post" class="d-inline">
-                                                        @Html.AntiForgeryToken()
-                                                        <button type="submit" class="btn btn-sm btn-outline-danger mb-0">
-                                                            <i class="bi bi-trash"></i>
-                                                        </button>
-                                                    </form>
+                                                    <button type="button" class="btn btn-sm btn-outline-danger mb-0"
+                                                            data-bs-toggle="modal" data-bs-target="#del-block-@block.Id"
+                                                            aria-label="@Localizer["Guide.Availability.DeleteLabel"]">
+                                                        <i class="fa-solid fa-trash" aria-hidden="true"></i>
+                                                    </button>
                                                 </td>
                                             </tr>
                                         }
@@ -114,3 +122,30 @@
         </div>
     </div>
 </section>
+
+@if (Model.HasBlocks)
+{
+    foreach (var block in Model.Blocks)
+    {
+        <div class="modal fade" id="del-block-@block.Id" tabindex="-1" aria-labelledby="del-block-title-@block.Id" aria-describedby="del-block-body-@block.Id" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2 class="modal-title h5" id="del-block-title-@block.Id">@Localizer["Guide.Availability.DeleteTitle"]</h2>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Guide.Common.Close"]"></button>
+                    </div>
+                    <div class="modal-body" id="del-block-body-@block.Id">
+                        <p class="mb-0">@Localizer["Guide.Availability.DeleteBody", Date(block.StartDate), Date(block.EndDate)]</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Localizer["Guide.Common.Cancel"]</button>
+                        <form asp-area="Guide" asp-controller="Availability" asp-action="Delete" asp-route-blockId="@block.Id" method="post">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-danger">@Localizer["Guide.Availability.DeleteConfirm"]</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+}

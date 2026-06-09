@@ -1,97 +1,105 @@
 @model YallaJo.Web.Areas.Guide.Models.Discounts.DiscountsVm
+@using System.Globalization
+@using Microsoft.Extensions.Localization
 @using YallaJo.Web.Areas.Guide.Models.Discounts
 @using YallaJo.Web.Areas.Guide.Shared
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
-    ViewData["Title"] = "Discounts";
+    ViewData["Title"] = Localizer["Guide.Discounts.Title"].Value;
     Layout = "~/Views/Shared/_Layout.cshtml";
     var sidebar = ViewBag.Sidebar as GuideSidebarVm ?? new GuideSidebarVm();
+    var culture = CultureInfo.CurrentUICulture;
 
     string FormatValue(DiscountRowVm d) =>
         d.DiscountType == GuideDiscountType.Percentage
-            ? $"{d.DiscountValue:0.##}%"
-            : $"{d.DiscountValue:N2} {d.Currency}";
+            ? d.DiscountValue.ToString("0.##", culture) + "%"
+            : d.DiscountValue.ToString("N2", culture) + " " + d.Currency;
 
     string DateRange(DiscountRowVm d) =>
         d.ValidUntil.HasValue
-            ? $"{d.ValidFrom:dd MMM yyyy} – {d.ValidUntil.Value:dd MMM yyyy}"
-            : $"From {d.ValidFrom:dd MMM yyyy}";
+            ? d.ValidFrom.ToString("dd MMM yyyy", culture) + " – " + d.ValidUntil.Value.ToString("dd MMM yyyy", culture)
+            : Localizer["Guide.Discounts.FromDate", d.ValidFrom.ToString("dd MMM yyyy", culture)].Value;
 
     string Usage(DiscountRowVm d) =>
-        d.MaxUsageCount.HasValue ? $"{d.CurrentUsageCount} / {d.MaxUsageCount}" : d.CurrentUsageCount.ToString();
+        d.MaxUsageCount.HasValue
+            ? d.CurrentUsageCount.ToString("N0", culture) + " / " + d.MaxUsageCount.Value.ToString("N0", culture)
+            : d.CurrentUsageCount.ToString("N0", culture);
 }
 
 <partial name="_GuideSidebar" model="sidebar" />
 
 <section class="pt-0">
     <div class="container vstack gap-4">
-        <h1 class="fs-4 mb-0"><i class="bi bi-percent me-2"></i>Discounts</h1>
+        <h1 class="h4 mb-0"><i class="fa-solid fa-tag me-2" aria-hidden="true"></i>@Localizer["Guide.Discounts.Heading"]</h1>
         <div class="row g-4">
             <div class="col-lg-5">
                 <div class="card card-body border h-100">
-                    <h5 class="mb-3"><i class="bi bi-tag me-2"></i>Create discount</h5>
+                    <h2 class="card-header-title h5 mb-3"><i class="fa-solid fa-plus me-2" aria-hidden="true"></i>@Localizer["Guide.Discounts.CreateHeading"]</h2>
                     <form asp-area="Guide" asp-controller="Discounts" asp-action="Create" method="post">
                         @Html.AntiForgeryToken()
-                        <div asp-validation-summary="ModelOnly" class="text-danger small mb-2"></div>
+                        <div asp-validation-summary="ModelOnly" class="text-danger small mb-2" role="alert"></div>
 
                         <div class="mb-3">
-                            <label asp-for="Form.Name" class="form-label"></label>
+                            <label asp-for="Form.Name" class="form-label">@Localizer["Guide.Discounts.Name"]</label>
                             <input asp-for="Form.Name" class="form-control" />
-                            <span asp-validation-for="Form.Name" class="text-danger small"></span>
+                            <span asp-validation-for="Form.Name" class="text-danger small" role="alert"></span>
                         </div>
 
                         <div class="mb-3">
-                            <label asp-for="Form.Description" class="form-label"></label>
+                            <label asp-for="Form.Description" class="form-label">@Localizer["Guide.Discounts.Description"]</label>
                             <textarea asp-for="Form.Description" class="form-control" rows="2"></textarea>
-                            <span asp-validation-for="Form.Description" class="text-danger small"></span>
+                            <span asp-validation-for="Form.Description" class="text-danger small" role="alert"></span>
                         </div>
 
                         <div class="row g-3">
                             <div class="col-sm-6">
-                                <label asp-for="Form.DiscountType" class="form-label"></label>
+                                <label asp-for="Form.DiscountType" class="form-label">@Localizer["Guide.Discounts.Type"]</label>
                                 <select asp-for="Form.DiscountType" asp-items="Html.GetEnumSelectList<GuideDiscountType>()" class="form-select"></select>
-                                <span asp-validation-for="Form.DiscountType" class="text-danger small"></span>
+                                <span asp-validation-for="Form.DiscountType" class="text-danger small" role="alert"></span>
                             </div>
                             <div class="col-sm-6">
-                                <label asp-for="Form.DiscountValue" class="form-label"></label>
-                                <input asp-for="Form.DiscountValue" type="number" step="0.01" min="0" class="form-control" />
-                                <span asp-validation-for="Form.DiscountValue" class="text-danger small"></span>
-                            </div>
-                        </div>
-
-                        <div class="row g-3 mt-0">
-                            <div class="col-sm-6">
-                                <label asp-for="Form.Currency" class="form-label"></label>
-                                <input asp-for="Form.Currency" class="form-control text-uppercase" maxlength="3" />
-                                <span asp-validation-for="Form.Currency" class="text-danger small"></span>
-                            </div>
-                            <div class="col-sm-6">
-                                <label asp-for="Form.MaxUsageCount" class="form-label"></label>
-                                <input asp-for="Form.MaxUsageCount" type="number" min="1" class="form-control" />
-                                <span asp-validation-for="Form.MaxUsageCount" class="text-danger small"></span>
+                                <label asp-for="Form.DiscountValue" class="form-label">@Localizer["Guide.Discounts.Value"]</label>
+                                <input asp-for="Form.DiscountValue" type="number" step="0.01" min="0" class="form-control" dir="ltr" />
+                                <span asp-validation-for="Form.DiscountValue" class="text-danger small" role="alert"></span>
                             </div>
                         </div>
 
                         <div class="row g-3 mt-0">
                             <div class="col-sm-6">
-                                <label asp-for="Form.ValidFrom" class="form-label"></label>
-                                <input asp-for="Form.ValidFrom" type="date" class="form-control" />
-                                <span asp-validation-for="Form.ValidFrom" class="text-danger small"></span>
+                                <label asp-for="Form.Currency" class="form-label">@Localizer["Guide.Discounts.Currency"]</label>
+                                <input asp-for="Form.Currency" class="form-control text-uppercase" maxlength="3" dir="ltr" />
+                                <span asp-validation-for="Form.Currency" class="text-danger small" role="alert"></span>
                             </div>
                             <div class="col-sm-6">
-                                <label asp-for="Form.ValidUntil" class="form-label"></label>
-                                <input asp-for="Form.ValidUntil" type="date" class="form-control" />
-                                <span asp-validation-for="Form.ValidUntil" class="text-danger small"></span>
+                                <label asp-for="Form.MaxUsageCount" class="form-label">@Localizer["Guide.Discounts.MaxUsage"]</label>
+                                <input asp-for="Form.MaxUsageCount" type="number" min="1" class="form-control" dir="ltr" />
+                                <span asp-validation-for="Form.MaxUsageCount" class="text-danger small" role="alert"></span>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mt-0">
+                            <div class="col-sm-6">
+                                <label asp-for="Form.ValidFrom" class="form-label">@Localizer["Guide.Discounts.ValidFrom"]</label>
+                                <input asp-for="Form.ValidFrom" type="date" class="form-control" dir="ltr" />
+                                <span asp-validation-for="Form.ValidFrom" class="text-danger small" role="alert"></span>
+                            </div>
+                            <div class="col-sm-6">
+                                <label asp-for="Form.ValidUntil" class="form-label">@Localizer["Guide.Discounts.ValidUntil"]</label>
+                                <input asp-for="Form.ValidUntil" type="date" class="form-control" dir="ltr" />
+                                <span asp-validation-for="Form.ValidUntil" class="text-danger small" role="alert"></span>
                             </div>
                         </div>
 
                         <div class="mb-3 mt-3">
-                            <label asp-for="Form.TourId" class="form-label"></label>
-                            <input asp-for="Form.TourId" class="form-control" placeholder="Leave empty to apply to all your tours" />
-                            <span asp-validation-for="Form.TourId" class="text-danger small"></span>
+                            <label asp-for="Form.TourId" class="form-label">@Localizer["Guide.Discounts.TourId"]</label>
+                            <input asp-for="Form.TourId" class="form-control font-data" dir="ltr" autocomplete="off"
+                                   aria-describedby="create-tour-help" placeholder="@Localizer["Guide.Discounts.TourIdPlaceholder"]" />
+                            <span asp-validation-for="Form.TourId" class="text-danger small" role="alert"></span>
+                            <div id="create-tour-help" class="form-text">@Localizer["Guide.Discounts.TourIdHelp"]</div>
                         </div>
 
                         <button type="submit" class="btn btn-primary mt-2">
-                            <i class="bi bi-plus-lg me-1"></i>Create discount
+                            <i class="fa-solid fa-plus me-1" aria-hidden="true"></i>@Localizer["Guide.Discounts.CreateSubmit"]
                         </button>
                     </form>
                 </div>
@@ -99,13 +107,13 @@
 
             <div class="col-lg-7">
                 <div class="card card-body border h-100">
-                    <h5 class="mb-3"><i class="bi bi-percent me-2"></i>My discounts</h5>
+                    <h2 class="card-header-title h5 mb-3"><i class="fa-solid fa-tags me-2" aria-hidden="true"></i>@Localizer["Guide.Discounts.MyDiscounts"]</h2>
 
                     @if (!Model.HasDiscounts)
                     {
-                        <div class="text-center text-body-secondary py-4">
-                            <i class="bi bi-tag fs-1 d-block mb-2"></i>
-                            You haven't created any discounts yet.
+                        <div class="text-center py-5">
+                            <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
+                            <p class="text-secondary mb-0">@Localizer["Guide.Discounts.NoDiscounts"]</p>
                         </div>
                     }
                     else
@@ -114,13 +122,13 @@
                             <table class="table table-hover align-middle mb-0">
                                 <thead>
                                     <tr>
-                                        <th>Name</th>
-                                        <th>Type</th>
-                                        <th>Value</th>
-                                        <th>Valid</th>
-                                        <th>Usage</th>
-                                        <th>Status</th>
-                                        <th class="text-end">Actions</th>
+                                        <th scope="col">@Localizer["Guide.Discounts.ColName"]</th>
+                                        <th scope="col">@Localizer["Guide.Discounts.ColType"]</th>
+                                        <th scope="col">@Localizer["Guide.Discounts.ColValue"]</th>
+                                        <th scope="col">@Localizer["Guide.Discounts.ColValid"]</th>
+                                        <th scope="col">@Localizer["Guide.Discounts.ColUsage"]</th>
+                                        <th scope="col">@Localizer["Guide.Discounts.ColStatus"]</th>
+                                        <th scope="col" class="text-end">@Localizer["Guide.Discounts.ColActions"]</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -134,34 +142,40 @@
                                                     <div class="small text-body-secondary text-truncate" style="max-width: 220px;">@d.Description</div>
                                                 }
                                             </td>
-                                            <td>@(d.DiscountType == GuideDiscountType.Percentage ? "Percentage" : "Fixed amount")</td>
-                                            <td>@FormatValue(d)</td>
-                                            <td class="small">@DateRange(d)</td>
-                                            <td>@Usage(d)</td>
                                             <td>
-                                                @if (d.IsActive)
+                                                @if (d.DiscountType == GuideDiscountType.Percentage)
                                                 {
-                                                    <span class="badge bg-success-soft">Active</span>
+                                                    @Localizer["Guide.Discounts.TypePercentage"]
                                                 }
                                                 else
                                                 {
-                                                    <span class="badge bg-secondary-soft">Inactive</span>
+                                                    @Localizer["Guide.Discounts.TypeFixed"]
+                                                }
+                                            </td>
+                                            <td><bdi dir="ltr" class="font-data">@FormatValue(d)</bdi></td>
+                                            <td class="small"><bdi dir="ltr">@DateRange(d)</bdi></td>
+                                            <td><bdi dir="ltr" class="font-data">@Usage(d)</bdi></td>
+                                            <td>
+                                                @if (d.IsActive)
+                                                {
+                                                    <span class="badge bg-success bg-opacity-10 text-success"><i class="fa-solid fa-circle-check fa-fw" aria-hidden="true"></i> @Localizer["Guide.Discounts.Active"]</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-secondary bg-opacity-10 text-secondary"><i class="fa-solid fa-circle-minus fa-fw" aria-hidden="true"></i> @Localizer["Guide.Discounts.Inactive"]</span>
                                                 }
                                             </td>
                                             <td class="text-end">
                                                 <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="collapse"
                                                         data-bs-target="#edit-disc-@d.Id" aria-expanded="false" aria-controls="edit-disc-@d.Id"
-                                                        aria-label="Edit @d.Name"><i class="bi bi-pencil" aria-hidden="true"></i></button>
+                                                        aria-label="@Localizer["Guide.Discounts.EditLabel", d.Name]"><i class="fa-solid fa-pen" aria-hidden="true"></i></button>
                                                 @if (d.IsActive)
                                                 {
-                                                    <form asp-area="Guide" asp-controller="Discounts" asp-action="Deactivate"
-                                                          asp-route-id="@d.Id" method="post" class="d-inline"
-                                                          onsubmit="return confirm('Deactivate this discount?');">
-                                                        @Html.AntiForgeryToken()
-                                                        <button type="submit" class="btn btn-sm btn-outline-danger" aria-label="Deactivate @d.Name">
-                                                            <i class="bi bi-x-circle" aria-hidden="true"></i>
-                                                        </button>
-                                                    </form>
+                                                    <button type="button" class="btn btn-sm btn-outline-danger"
+                                                            data-bs-toggle="modal" data-bs-target="#deact-disc-@d.Id"
+                                                            aria-label="@Localizer["Guide.Discounts.DeactivateLabel", d.Name]">
+                                                        <i class="fa-solid fa-circle-xmark" aria-hidden="true"></i>
+                                                    </button>
                                                 }
                                             </td>
                                         </tr>
@@ -171,30 +185,30 @@
                                                       method="post" class="row g-2 align-items-end">
                                                     @Html.AntiForgeryToken()
                                                     <div class="col-md-4">
-                                                        <label class="form-label small mb-1" for="dn-@d.Id">Name</label>
+                                                        <label class="form-label small mb-1" for="dn-@d.Id">@Localizer["Guide.Discounts.Name"]</label>
                                                         <input id="dn-@d.Id" name="Name" value="@d.Name" class="form-control form-control-sm" maxlength="100" required />
                                                     </div>
                                                     <div class="col-md-2">
-                                                        <label class="form-label small mb-1" for="dv-@d.Id">Value</label>
-                                                        <input id="dv-@d.Id" name="DiscountValue" value="@d.DiscountValue.ToString(System.Globalization.CultureInfo.InvariantCulture)" type="number" step="0.01" min="0" class="form-control form-control-sm" dir="ltr" required />
+                                                        <label class="form-label small mb-1" for="dv-@d.Id">@Localizer["Guide.Discounts.Value"]</label>
+                                                        <input id="dv-@d.Id" name="DiscountValue" value="@d.DiscountValue.ToString(CultureInfo.InvariantCulture)" type="number" step="0.01" min="0" class="form-control form-control-sm" dir="ltr" required />
                                                     </div>
                                                     <div class="col-md-3">
-                                                        <label class="form-label small mb-1" for="df-@d.Id">Valid from</label>
+                                                        <label class="form-label small mb-1" for="df-@d.Id">@Localizer["Guide.Discounts.ValidFrom"]</label>
                                                         <input id="df-@d.Id" name="ValidFrom" value="@d.ValidFrom.ToString("yyyy-MM-dd")" type="date" class="form-control form-control-sm" dir="ltr" required />
                                                     </div>
                                                     <div class="col-md-3">
-                                                        <label class="form-label small mb-1" for="du-@d.Id">Valid until</label>
+                                                        <label class="form-label small mb-1" for="du-@d.Id">@Localizer["Guide.Discounts.ValidUntil"]</label>
                                                         <input id="du-@d.Id" name="ValidUntil" value="@(d.ValidUntil?.ToString("yyyy-MM-dd"))" type="date" class="form-control form-control-sm" dir="ltr" />
                                                     </div>
                                                     <div class="col-md-4">
-                                                        <label class="form-label small mb-1" for="dd-@d.Id">Description</label>
+                                                        <label class="form-label small mb-1" for="dd-@d.Id">@Localizer["Guide.Discounts.Description"]</label>
                                                         <input id="dd-@d.Id" name="Description" value="@d.Description" class="form-control form-control-sm" maxlength="500" />
                                                     </div>
                                                     <div class="col-md-2">
-                                                        <label class="form-label small mb-1" for="dm-@d.Id">Max usage</label>
-                                                        <input id="dm-@d.Id" name="MaxUsageCount" value="@d.MaxUsageCount" type="number" min="1" class="form-control form-control-sm" />
+                                                        <label class="form-label small mb-1" for="dm-@d.Id">@Localizer["Guide.Discounts.MaxUsage"]</label>
+                                                        <input id="dm-@d.Id" name="MaxUsageCount" value="@d.MaxUsageCount" type="number" min="1" class="form-control form-control-sm" dir="ltr" />
                                                     </div>
-                                                    <div class="col-12"><button type="submit" class="btn btn-sm btn-primary">Save changes</button></div>
+                                                    <div class="col-12"><button type="submit" class="btn btn-sm btn-primary">@Localizer["Guide.Discounts.SaveChanges"]</button></div>
                                                 </form>
                                             </td>
                                         </tr>
@@ -208,3 +222,33 @@
         </div>
     </div>
 </section>
+
+@if (Model.HasDiscounts)
+{
+    foreach (var d in Model.Discounts)
+    {
+        if (d.IsActive)
+        {
+            <div class="modal fade" id="deact-disc-@d.Id" tabindex="-1" aria-labelledby="deact-disc-title-@d.Id" aria-describedby="deact-disc-body-@d.Id" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h2 class="modal-title h5" id="deact-disc-title-@d.Id">@Localizer["Guide.Discounts.DeactivateTitle"]</h2>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Guide.Common.Close"]"></button>
+                        </div>
+                        <div class="modal-body" id="deact-disc-body-@d.Id">
+                            <p class="mb-0">@Localizer["Guide.Discounts.DeactivateBody", d.Name]</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Localizer["Guide.Common.Cancel"]</button>
+                            <form asp-area="Guide" asp-controller="Discounts" asp-action="Deactivate" asp-route-id="@d.Id" method="post">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-danger">@Localizer["Guide.Discounts.DeactivateConfirm"]</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+}

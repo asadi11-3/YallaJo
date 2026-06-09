@@ -1,11 +1,17 @@
 @model YallaJo.Web.Areas.Guide.Models.MyTours.OfferingDetailVm
+@using System.Globalization
+@using Microsoft.Extensions.Localization
 @using YallaJo.Web.Areas.Guide.Models.MyTours
 @using YallaJo.Web.Areas.Guide.Shared
+@using YallaJo.Web.Infrastructure.Authorization
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
-    ViewData["Title"] = "Manage Offering";
+    ViewData["Title"] = Localizer["Guide.Offering.Title"].Value;
     Layout = "~/Views/Shared/_Layout.cshtml";
     var sidebar = ViewBag.Sidebar as GuideSidebarVm ?? new GuideSidebarVm();
-    string Money(decimal a, string? c) => string.IsNullOrWhiteSpace(c) ? a.ToString("N2") : $"{a:N2} {c}";
+    var culture = CultureInfo.CurrentUICulture;
+    string Money(decimal a, string? c) => a.ToString("N2", culture) + " " + (string.IsNullOrWhiteSpace(c) ? "JOD" : c);
+    string Num(decimal v) => v.ToString("N2", culture);
 }
 
 <partial name="_GuideSidebar" model="sidebar" />
@@ -16,28 +22,33 @@
             <div>
                 <a class="btn btn-sm btn-link px-0 text-secondary"
                    asp-area="Guide" asp-controller="MyTours" asp-action="Index">
-                    <i class="bi bi-arrow-left me-1"></i>Back to my tours
+                    <i class="fa-solid fa-arrow-left me-1" aria-hidden="true"></i>@Localizer["Guide.Offering.Back"]
                 </a>
-                <h1 class="h4 mb-0">Manage Offering</h1>
+                <h1 class="h4 mb-0"><i class="fa-solid fa-gear me-2" aria-hidden="true"></i>@Localizer["Guide.Offering.Heading"]</h1>
                 <p class="text-secondary mb-0">
-                    Status: <span class="badge bg-info-soft text-info">@Model.Status</span>
+                    @Localizer["Guide.Offering.StatusLabel"]
+                    <span class="badge bg-info bg-opacity-10 text-info">
+                        <i class="fa-solid fa-circle-info fa-fw" aria-hidden="true"></i> @Model.Status
+                    </span>
                     @if (Model.IsProposer)
                     {
-                        <span class="badge bg-primary-soft text-primary ms-1">Proposer</span>
+                        <span class="badge bg-primary bg-opacity-10 text-primary ms-1">
+                            <i class="fa-solid fa-lightbulb fa-fw" aria-hidden="true"></i> @Localizer["Guide.Offering.Proposer"]
+                        </span>
                     }
                 </p>
             </div>
         </div>
 
-        <!-- Schedules -->
+        @* Schedules *@
         <div class="card border">
             <div class="card-header bg-transparent">
-                <h2 class="h6 mb-0"><i class="bi bi-calendar-week me-2"></i>Schedules</h2>
+                <h2 class="card-header-title h5 mb-0"><i class="fa-solid fa-calendar-week me-2" aria-hidden="true"></i>@Localizer["Guide.Offering.Schedules"]</h2>
             </div>
             <div class="card-body vstack gap-3">
                 @if (Model.Schedules.Count == 0)
                 {
-                    <p class="text-secondary mb-0">No schedules yet.</p>
+                    <p class="text-secondary mb-0">@Localizer["Guide.Offering.NoSchedules"]</p>
                 }
                 else
                 {
@@ -45,11 +56,11 @@
                         <table class="table table-sm align-middle mb-0">
                             <thead>
                                 <tr>
-                                    <th>Day</th>
-                                    <th>Start</th>
-                                    <th>End</th>
-                                    <th>Active</th>
-                                    <th class="text-end">Actions</th>
+                                    <th scope="col">@Localizer["Guide.Offering.ColDay"]</th>
+                                    <th scope="col">@Localizer["Guide.Offering.ColStart"]</th>
+                                    <th scope="col">@Localizer["Guide.Offering.ColEnd"]</th>
+                                    <th scope="col">@Localizer["Guide.Offering.ColActive"]</th>
+                                    <th scope="col" class="text-end">@Localizer["Guide.Offering.ColActions"]</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -57,27 +68,38 @@
                                 {
                                     <tr>
                                         <td>@OfferingDetailVm.DayName(s.DayOfWeek)</td>
-                                        <td>@s.StartTime</td>
-                                        <td>@(string.IsNullOrWhiteSpace(s.EndTime) ? "—" : s.EndTime)</td>
+                                        <td><bdi dir="ltr" class="font-data">@s.StartTime</bdi></td>
                                         <td>
-                                            @if (s.IsActive)
+                                            @if (string.IsNullOrWhiteSpace(s.EndTime))
                                             {
-                                                <i class="bi bi-check-circle-fill text-success"></i>
+                                                <span class="text-secondary">&mdash;</span>
                                             }
                                             else
                                             {
-                                                <i class="bi bi-dash-circle text-secondary"></i>
+                                                <bdi dir="ltr" class="font-data">@s.EndTime</bdi>
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (s.IsActive)
+                                            {
+                                                <span class="badge bg-success bg-opacity-10 text-success">
+                                                    <i class="fa-solid fa-circle-check fa-fw" aria-hidden="true"></i> @Localizer["Guide.Common.Yes"]
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-secondary bg-opacity-10 text-secondary">
+                                                    <i class="fa-solid fa-circle-minus fa-fw" aria-hidden="true"></i> @Localizer["Guide.Common.No"]
+                                                </span>
                                             }
                                         </td>
                                         <td class="text-end">
-                                            <form method="post" class="d-inline"
-                                                  asp-area="Guide" asp-controller="MyTours" asp-action="DeleteSchedule"
-                                                  asp-route-tourId="@Model.TourId" asp-route-scheduleId="@s.Id">
-                                                @Html.AntiForgeryToken()
-                                                <button type="submit" class="btn btn-sm btn-danger-soft">
-                                                    <i class="bi bi-trash"></i>
-                                                </button>
-                                            </form>
+                                            <button type="button" class="btn btn-sm btn-danger-soft"
+                                                    data-bs-toggle="modal" data-bs-target="#del-sched-@s.Id"
+                                                    title="@Localizer["Guide.Offering.DeleteSchedule"]">
+                                                <i class="fa-solid fa-trash" aria-hidden="true"></i>
+                                                <span class="visually-hidden">@Localizer["Guide.Offering.DeleteSchedule"]</span>
+                                            </button>
                                         </td>
                                     </tr>
                                 }
@@ -91,36 +113,36 @@
                       asp-route-tourId="@Model.TourId">
                     @Html.AntiForgeryToken()
                     <div class="col-sm-3">
-                        <label class="form-label" asp-for="ScheduleForm.DayOfWeek"></label>
+                        <label class="form-label" asp-for="ScheduleForm.DayOfWeek">@Localizer["Guide.Offering.ColDay"]</label>
                         <select class="form-select" asp-for="ScheduleForm.DayOfWeek"
                                 asp-items="@(new SelectList(OfferingDetailVm.DayOptions, nameof(DayOptionVm.Value), nameof(DayOptionVm.Label)))"></select>
                     </div>
                     <div class="col-sm-3">
-                        <label class="form-label" asp-for="ScheduleForm.StartTime"></label>
-                        <input type="time" class="form-control" asp-for="ScheduleForm.StartTime" />
+                        <label class="form-label" asp-for="ScheduleForm.StartTime">@Localizer["Guide.Offering.ColStart"]</label>
+                        <input type="time" class="form-control" dir="ltr" asp-for="ScheduleForm.StartTime" />
                     </div>
                     <div class="col-sm-3">
-                        <label class="form-label" asp-for="ScheduleForm.EndTime"></label>
-                        <input type="time" class="form-control" asp-for="ScheduleForm.EndTime" />
+                        <label class="form-label" asp-for="ScheduleForm.EndTime">@Localizer["Guide.Offering.ColEnd"]</label>
+                        <input type="time" class="form-control" dir="ltr" asp-for="ScheduleForm.EndTime" />
                     </div>
                     <div class="col-sm-3">
                         <button type="submit" class="btn btn-primary w-100">
-                            <i class="bi bi-plus-lg me-1"></i>Add schedule
+                            <i class="fa-solid fa-plus me-1" aria-hidden="true"></i>@Localizer["Guide.Offering.AddSchedule"]
                         </button>
                     </div>
                 </form>
             </div>
         </div>
 
-        <!-- Pricing tiers -->
+        @* Pricing tiers *@
         <div class="card border">
             <div class="card-header bg-transparent">
-                <h2 class="h6 mb-0"><i class="bi bi-cash-coin me-2"></i>Pricing tiers</h2>
+                <h2 class="card-header-title h5 mb-0"><i class="fa-solid fa-coins me-2" aria-hidden="true"></i>@Localizer["Guide.Offering.PricingTiers"]</h2>
             </div>
             <div class="card-body vstack gap-3">
                 @if (Model.PricingTiers.Count == 0)
                 {
-                    <p class="text-secondary mb-0">No pricing tiers yet.</p>
+                    <p class="text-secondary mb-0">@Localizer["Guide.Offering.NoPricingTiers"]</p>
                 }
                 else
                 {
@@ -128,11 +150,11 @@
                         <table class="table table-sm align-middle mb-0">
                             <thead>
                                 <tr>
-                                    <th>Name</th>
-                                    <th>Price</th>
-                                    <th>Participants</th>
-                                    <th>Active</th>
-                                    <th class="text-end">Actions</th>
+                                    <th scope="col">@Localizer["Guide.Offering.ColName"]</th>
+                                    <th scope="col">@Localizer["Guide.Offering.ColPrice"]</th>
+                                    <th scope="col">@Localizer["Guide.Offering.ColParticipants"]</th>
+                                    <th scope="col">@Localizer["Guide.Offering.ColActive"]</th>
+                                    <th scope="col" class="text-end">@Localizer["Guide.Offering.ColActions"]</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -146,27 +168,29 @@
                                                 <div class="text-secondary small">@p.Description</div>
                                             }
                                         </td>
-                                        <td>@Money(p.Price, p.Currency)</td>
-                                        <td>@p.MinParticipants&ndash;@p.MaxParticipants</td>
+                                        <td><bdi dir="ltr" class="font-data">@Money(p.Price, p.Currency)</bdi></td>
+                                        <td><bdi dir="ltr" class="font-data">@p.MinParticipants&ndash;@p.MaxParticipants</bdi></td>
                                         <td>
                                             @if (p.IsActive)
                                             {
-                                                <i class="bi bi-check-circle-fill text-success"></i>
+                                                <span class="badge bg-success bg-opacity-10 text-success">
+                                                    <i class="fa-solid fa-circle-check fa-fw" aria-hidden="true"></i> @Localizer["Guide.Common.Yes"]
+                                                </span>
                                             }
                                             else
                                             {
-                                                <i class="bi bi-dash-circle text-secondary"></i>
+                                                <span class="badge bg-secondary bg-opacity-10 text-secondary">
+                                                    <i class="fa-solid fa-circle-minus fa-fw" aria-hidden="true"></i> @Localizer["Guide.Common.No"]
+                                                </span>
                                             }
                                         </td>
                                         <td class="text-end">
-                                            <form method="post" class="d-inline"
-                                                  asp-area="Guide" asp-controller="MyTours" asp-action="DeletePricingTier"
-                                                  asp-route-tourId="@Model.TourId" asp-route-tierId="@p.Id">
-                                                @Html.AntiForgeryToken()
-                                                <button type="submit" class="btn btn-sm btn-danger-soft">
-                                                    <i class="bi bi-trash"></i>
-                                                </button>
-                                            </form>
+                                            <button type="button" class="btn btn-sm btn-danger-soft"
+                                                    data-bs-toggle="modal" data-bs-target="#del-tier-@p.Id"
+                                                    title="@Localizer["Guide.Offering.DeleteTier"]">
+                                                <i class="fa-solid fa-trash" aria-hidden="true"></i>
+                                                <span class="visually-hidden">@Localizer["Guide.Offering.DeleteTier"]</span>
+                                            </button>
                                         </td>
                                     </tr>
                                 }
@@ -180,55 +204,58 @@
                       asp-route-tourId="@Model.TourId">
                     @Html.AntiForgeryToken()
                     <div class="col-sm-4">
-                        <label class="form-label" asp-for="PricingTierForm.Name"></label>
+                        <label class="form-label" asp-for="PricingTierForm.Name">@Localizer["Guide.Offering.ColName"]</label>
                         <input class="form-control" asp-for="PricingTierForm.Name" />
                     </div>
                     <div class="col-sm-2">
-                        <label class="form-label" asp-for="PricingTierForm.Price"></label>
-                        <input type="number" step="0.01" class="form-control" asp-for="PricingTierForm.Price" />
+                        <label class="form-label" asp-for="PricingTierForm.Price">@Localizer["Guide.Offering.ColPrice"]</label>
+                        <input type="number" step="0.01" class="form-control" dir="ltr" asp-for="PricingTierForm.Price" />
                     </div>
                     <div class="col-sm-2">
-                        <label class="form-label" asp-for="PricingTierForm.Currency"></label>
-                        <input class="form-control" asp-for="PricingTierForm.Currency" />
+                        <label class="form-label" asp-for="PricingTierForm.Currency">@Localizer["Guide.Offering.Currency"]</label>
+                        <input class="form-control" dir="ltr" asp-for="PricingTierForm.Currency" />
                     </div>
                     <div class="col-sm-2">
-                        <label class="form-label" asp-for="PricingTierForm.MinParticipants"></label>
-                        <input type="number" class="form-control" asp-for="PricingTierForm.MinParticipants" />
+                        <label class="form-label" asp-for="PricingTierForm.MinParticipants">@Localizer["Guide.Offering.Min"]</label>
+                        <input type="number" class="form-control" dir="ltr" asp-for="PricingTierForm.MinParticipants" />
                     </div>
                     <div class="col-sm-2">
-                        <label class="form-label" asp-for="PricingTierForm.MaxParticipants"></label>
-                        <input type="number" class="form-control" asp-for="PricingTierForm.MaxParticipants" />
+                        <label class="form-label" asp-for="PricingTierForm.MaxParticipants">@Localizer["Guide.Offering.Max"]</label>
+                        <input type="number" class="form-control" dir="ltr" asp-for="PricingTierForm.MaxParticipants" />
                     </div>
                     <div class="col-12">
-                        <label class="form-label" asp-for="PricingTierForm.Description"></label>
+                        <label class="form-label" asp-for="PricingTierForm.Description">@Localizer["Guide.Offering.Description"]</label>
                         <input class="form-control" asp-for="PricingTierForm.Description" />
                     </div>
                     <div class="col-12">
                         <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-plus-lg me-1"></i>Add pricing tier
+                            <i class="fa-solid fa-plus me-1" aria-hidden="true"></i>@Localizer["Guide.Offering.AddTier"]
                         </button>
                     </div>
                 </form>
             </div>
         </div>
 
-        <!-- Private tour -->
+        @* Private tour *@
         <div class="card border">
             <div class="card-header bg-transparent">
-                <h2 class="h6 mb-0"><i class="bi bi-person-lock me-2"></i>Private tour</h2>
+                <h2 class="card-header-title h5 mb-0"><i class="fa-solid fa-user-lock me-2" aria-hidden="true"></i>@Localizer["Guide.Offering.PrivateTour"]</h2>
             </div>
             <div class="card-body vstack gap-3">
                 @if (Model.OffersPrivateTour)
                 {
                     <p class="mb-0">
-                        Private tour is <span class="badge bg-success-soft text-success">enabled</span>.
+                        @Localizer["Guide.Offering.PrivateEnabledPrefix"]
+                        <span class="badge bg-success bg-opacity-10 text-success">
+                            <i class="fa-solid fa-circle-check fa-fw" aria-hidden="true"></i> @Localizer["Guide.Offering.Enabled"]
+                        </span>
                         @if (Model.PrivateTourPriceMultiplier.HasValue)
                         {
-                            <span class="ms-2">Multiplier: <strong>@Model.PrivateTourPriceMultiplier.Value.ToString("N2")</strong></span>
+                            <span class="ms-2">@Localizer["Guide.Offering.Multiplier"] <strong class="font-data"><bdi dir="ltr">@Num(Model.PrivateTourPriceMultiplier.Value)</bdi></strong></span>
                         }
                         @if (Model.PrivateTourFlatPrice.HasValue)
                         {
-                            <span class="ms-2">Flat price: <strong>@Model.PrivateTourFlatPrice.Value.ToString("N2")</strong></span>
+                            <span class="ms-2">@Localizer["Guide.Offering.FlatPrice"] <strong class="font-data"><bdi dir="ltr">@Num(Model.PrivateTourFlatPrice.Value)</bdi></strong></span>
                         }
                     </p>
                     <form method="post"
@@ -236,13 +263,13 @@
                           asp-route-tourId="@Model.TourId">
                         @Html.AntiForgeryToken()
                         <button type="submit" class="btn btn-danger-soft">
-                            <i class="bi bi-x-circle me-1"></i>Disable private tour
+                            <i class="fa-solid fa-circle-xmark me-1" aria-hidden="true"></i>@Localizer["Guide.Offering.DisablePrivate"]
                         </button>
                     </form>
                 }
                 else
                 {
-                    <p class="text-secondary mb-0">Private tour is not enabled. Set a multiplier or a flat price.</p>
+                    <p class="text-secondary mb-0">@Localizer["Guide.Offering.PrivateNotEnabled"]</p>
                 }
 
                 <form method="post" class="row g-2 align-items-end"
@@ -250,39 +277,110 @@
                       asp-route-tourId="@Model.TourId">
                     @Html.AntiForgeryToken()
                     <div class="col-sm-4">
-                        <label class="form-label" asp-for="PrivateTourForm.Multiplier"></label>
-                        <input type="number" step="0.01" class="form-control" asp-for="PrivateTourForm.Multiplier" />
+                        <label class="form-label" asp-for="PrivateTourForm.Multiplier">@Localizer["Guide.Offering.MultiplierLabel"]</label>
+                        <input type="number" step="0.01" class="form-control" dir="ltr" asp-for="PrivateTourForm.Multiplier" />
                     </div>
                     <div class="col-sm-4">
-                        <label class="form-label" asp-for="PrivateTourForm.FlatPrice"></label>
-                        <input type="number" step="0.01" class="form-control" asp-for="PrivateTourForm.FlatPrice" />
+                        <label class="form-label" asp-for="PrivateTourForm.FlatPrice">@Localizer["Guide.Offering.FlatPriceLabel"]</label>
+                        <input type="number" step="0.01" class="form-control" dir="ltr" asp-for="PrivateTourForm.FlatPrice" />
                     </div>
                     <div class="col-sm-4">
                         <button type="submit" class="btn btn-primary w-100">
-                            <i class="bi bi-check-lg me-1"></i>@(Model.OffersPrivateTour ? "Update" : "Enable") private tour
+                            <i class="fa-solid fa-check me-1" aria-hidden="true"></i>@(Model.OffersPrivateTour ? Localizer["Guide.Offering.UpdatePrivate"] : Localizer["Guide.Offering.EnablePrivate"])
                         </button>
                     </div>
                 </form>
             </div>
         </div>
 
-        @* Danger zone — remove the whole offering from this tour (DELETE guide-offerings/{guideId}). *@
-        <div class="card border border-danger-subtle">
-            <div class="card-header border-bottom bg-transparent">
-                <h2 class="h6 mb-0 text-danger"><i class="bi bi-exclamation-triangle me-2" aria-hidden="true"></i>Remove offering</h2>
+        @* Danger zone — remove the whole offering from this tour *@
+        <permission require="@WebPermission.GuideOffering.Delete">
+            <div class="card border border-danger-subtle">
+                <div class="card-header border-bottom bg-transparent">
+                    <h2 class="card-header-title h5 mb-0 text-danger"><i class="fa-solid fa-triangle-exclamation me-2" aria-hidden="true"></i>@Localizer["Guide.Offering.RemoveHeading"]</h2>
+                </div>
+                <div class="card-body d-sm-flex justify-content-between align-items-center gap-3">
+                    <p class="small text-body-secondary mb-2 mb-sm-0">@Localizer["Guide.Offering.RemoveMsg"]</p>
+                    <button type="button" class="btn btn-outline-danger flex-shrink-0"
+                            data-bs-toggle="modal" data-bs-target="#removeOfferingModal">
+                        <i class="fa-solid fa-circle-xmark me-1" aria-hidden="true"></i>@Localizer["Guide.Offering.RemoveOffering"]
+                    </button>
+                </div>
             </div>
-            <div class="card-body d-sm-flex justify-content-between align-items-center gap-3">
-                <p class="small text-body-secondary mb-2 mb-sm-0">
-                    Removing your offering withdraws you from this tour, including its schedules and pricing tiers.
-                </p>
-                <form asp-area="Guide" asp-controller="MyTours" asp-action="RemoveOffering" asp-route-tourId="@Model.TourId"
-                      method="post" class="flex-shrink-0"
-                      onsubmit="return confirm('Remove your offering from this tour? This withdraws your schedules and pricing.');">
-                    @Html.AntiForgeryToken()
-                    <button type="submit" class="btn btn-outline-danger"><i class="bi bi-x-circle me-1" aria-hidden="true"></i>Remove offering</button>
-                </form>
-            </div>
-        </div>
+        </permission>
     </div>
 </section>
 
+@* Delete-schedule modals *@
+@foreach (var s in Model.Schedules)
+{
+    <div class="modal fade" id="del-sched-@s.Id" tabindex="-1" aria-labelledby="del-sched-title-@s.Id" aria-describedby="del-sched-body-@s.Id" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title h5" id="del-sched-title-@s.Id">@Localizer["Guide.Offering.DeleteScheduleTitle"]</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Guide.Common.Close"]"></button>
+                </div>
+                <div class="modal-body" id="del-sched-body-@s.Id">
+                    @Localizer["Guide.Offering.DeleteScheduleBody", OfferingDetailVm.DayName(s.DayOfWeek)]
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Localizer["Guide.Common.Cancel"]</button>
+                    <form method="post" asp-area="Guide" asp-controller="MyTours" asp-action="DeleteSchedule"
+                          asp-route-tourId="@Model.TourId" asp-route-scheduleId="@s.Id">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-danger">@Localizer["Guide.Offering.DeleteSchedule"]</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@* Delete-pricing-tier modals *@
+@foreach (var p in Model.PricingTiers)
+{
+    <div class="modal fade" id="del-tier-@p.Id" tabindex="-1" aria-labelledby="del-tier-title-@p.Id" aria-describedby="del-tier-body-@p.Id" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title h5" id="del-tier-title-@p.Id">@Localizer["Guide.Offering.DeleteTierTitle"]</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Guide.Common.Close"]"></button>
+                </div>
+                <div class="modal-body" id="del-tier-body-@p.Id">
+                    @Localizer["Guide.Offering.DeleteTierBody", p.Name]
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Localizer["Guide.Common.Cancel"]</button>
+                    <form method="post" asp-area="Guide" asp-controller="MyTours" asp-action="DeletePricingTier"
+                          asp-route-tourId="@Model.TourId" asp-route-tierId="@p.Id">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-danger">@Localizer["Guide.Offering.DeleteTier"]</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@* Remove-offering modal *@
+<permission require="@WebPermission.GuideOffering.Delete">
+    <div class="modal fade" id="removeOfferingModal" tabindex="-1" aria-labelledby="removeOfferingTitle" aria-describedby="removeOfferingBody" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title h5" id="removeOfferingTitle">@Localizer["Guide.Offering.RemoveModalTitle"]</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Guide.Common.Close"]"></button>
+                </div>
+                <div class="modal-body" id="removeOfferingBody">@Localizer["Guide.Offering.RemoveModalBody"]</div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Localizer["Guide.Common.Cancel"]</button>
+                    <form asp-area="Guide" asp-controller="MyTours" asp-action="RemoveOffering" asp-route-tourId="@Model.TourId" method="post">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-danger">@Localizer["Guide.Offering.RemoveConfirm"]</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</permission>

@@ -1,28 +1,36 @@
 @model YallaJo.Web.Areas.Guide.Models.Dashboard.DashboardVm
+@using System.Globalization
+@using Microsoft.Extensions.Localization
 @using YallaJo.Web.Areas.Guide.Shared
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
-    ViewData["Title"] = "Guide Dashboard";
+    ViewData["Title"] = Localizer["Guide.Dashboard.Title"].Value;
     Layout = "~/Views/Shared/_Layout.cshtml";
     var sidebar = ViewBag.Sidebar as GuideSidebarVm ?? new GuideSidebarVm();
-    string Money(decimal a, string? c) => string.IsNullOrWhiteSpace(c) ? a.ToString("N0") : $"{a:N0} {c}";
-    string Pct(decimal v) => (v * 100m).ToString("0.#") + "%";
+    var culture = CultureInfo.CurrentUICulture;
+    string Money(decimal a, string? c) => a.ToString("N3", culture) + " " + (string.IsNullOrWhiteSpace(c) ? "JOD" : c);
+    string Count(int n) => n.ToString("N0", culture);
+    string Rating(decimal v) => v.ToString("0.0", culture);
+    string Pct(decimal v) => (v * 100m).ToString("0.#", culture) + "%";
+    string Date(DateTime d) => d.ToString("yyyy-MM-dd", culture);
 }
 
 <partial name="_GuideSidebar" model="sidebar" />
 
 <section class="pt-0">
     <div class="container vstack gap-4">
-        <h1 class="fs-4 mb-0"><i class="bi bi-house-door me-2"></i>Dashboard</h1>
+        <h1 class="fs-4 mb-0"><i class="fa-solid fa-house me-2" aria-hidden="true"></i>@Localizer["Guide.Dashboard.Heading"]</h1>
+
         <div class="row g-4">
             <div class="col-sm-6 col-xl-3">
                 <div class="card card-body border h-100">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <h6 class="mb-1 text-body-secondary">Net Earnings</h6>
-                            <h4 class="mb-0">@Money(Model.NetEarnings, Model.EarningsCurrency)</h4>
+                            <h2 class="h6 mb-1 text-body-secondary">@Localizer["Guide.Dashboard.NetEarnings"]</h2>
+                            <p class="h4 mb-0 font-data"><bdi dir="ltr">@Money(Model.NetEarnings, Model.EarningsCurrency)</bdi></p>
                         </div>
                         <div class="icon-xl bg-success-soft text-success rounded-circle">
-                            <i class="bi bi-wallet2"></i>
+                            <i class="fa-solid fa-wallet" aria-hidden="true"></i>
                         </div>
                     </div>
                 </div>
@@ -31,11 +39,11 @@
                 <div class="card card-body border h-100">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <h6 class="mb-1 text-body-secondary">This Month</h6>
-                            <h4 class="mb-0">@Money(Model.ThisMonth, Model.EarningsCurrency)</h4>
+                            <h2 class="h6 mb-1 text-body-secondary">@Localizer["Guide.Dashboard.ThisMonth"]</h2>
+                            <p class="h4 mb-0 font-data"><bdi dir="ltr">@Money(Model.ThisMonth, Model.EarningsCurrency)</bdi></p>
                         </div>
                         <div class="icon-xl bg-primary-soft text-primary rounded-circle">
-                            <i class="bi bi-calendar-month"></i>
+                            <i class="fa-solid fa-calendar-day" aria-hidden="true"></i>
                         </div>
                     </div>
                 </div>
@@ -44,11 +52,11 @@
                 <div class="card card-body border h-100">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <h6 class="mb-1 text-body-secondary">Pending Payout</h6>
-                            <h4 class="mb-0">@Money(Model.PendingPayout, Model.EarningsCurrency)</h4>
+                            <h2 class="h6 mb-1 text-body-secondary">@Localizer["Guide.Dashboard.PendingPayout"]</h2>
+                            <p class="h4 mb-0 font-data"><bdi dir="ltr">@Money(Model.PendingPayout, Model.EarningsCurrency)</bdi></p>
                         </div>
                         <div class="icon-xl bg-warning-soft text-warning rounded-circle">
-                            <i class="bi bi-hourglass-split"></i>
+                            <i class="fa-solid fa-hourglass-half" aria-hidden="true"></i>
                         </div>
                     </div>
                 </div>
@@ -57,74 +65,75 @@
                 <div class="card card-body border h-100">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <h6 class="mb-1 text-body-secondary">Tours</h6>
-                            <h4 class="mb-0">@Model.TourCount</h4>
+                            <h2 class="h6 mb-1 text-body-secondary">@Localizer["Guide.Dashboard.Tours"]</h2>
+                            <p class="h4 mb-0 font-data"><bdi dir="ltr">@Count(Model.TourCount)</bdi></p>
                         </div>
                         <div class="icon-xl bg-info-soft text-info rounded-circle">
-                            <i class="bi bi-map"></i>
+                            <i class="fa-solid fa-map" aria-hidden="true"></i>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        @if (Model.TierProgress is { } tier)
+        @if (Model.TierProgress is not null)
         {
+            var tier = Model.TierProgress;
             <div class="card card-body border">
                 <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
                     <div class="d-flex align-items-center gap-2">
-                        <i class="bi bi-award-fill text-warning fs-4"></i>
-                        <h6 class="mb-0">Tier Progress</h6>
+                        <i class="fa-solid fa-award text-warning fs-4" aria-hidden="true"></i>
+                        <h2 class="h6 mb-0">@Localizer["Guide.Dashboard.TierProgress"]</h2>
                         <span class="badge bg-primary-soft text-primary">@tier.CurrentTier</span>
                     </div>
                     <div class="text-body-secondary small">
-                        Commission rate: <span class="fw-semibold text-body">@Pct(tier.CurrentCommissionRate)</span>
+                        @Localizer["Guide.Dashboard.CommissionRate"] <span class="fw-semibold text-body"><bdi dir="ltr">@Pct(tier.CurrentCommissionRate)</bdi></span>
                         @if (tier.HasNextTier)
                         {
-                            <span class="ms-2">Next tier: <span class="fw-semibold text-body">@tier.NextTier</span></span>
+                            <span class="ms-2">@Localizer["Guide.Dashboard.NextTier"] <span class="fw-semibold text-body">@tier.NextTier</span></span>
                         }
                     </div>
                 </div>
 
                 @if (!tier.HasNextTier)
                 {
-                    <p class="text-success mb-3"><i class="bi bi-check-circle-fill me-1"></i>You've reached the highest tier.</p>
+                    <p class="text-success mb-3"><i class="fa-solid fa-circle-check me-1" aria-hidden="true"></i>@Localizer["Guide.Dashboard.HighestTier"]</p>
                 }
 
                 <div class="row g-4">
                     <div class="col-md-6 col-xl-3">
                         <div class="d-flex justify-content-between small mb-1">
-                            <span class="text-body-secondary">Completed Tours</span>
-                            <span class="fw-semibold">@tier.CompletedTours / @tier.CompletedToursRequired</span>
+                            <span class="text-body-secondary">@Localizer["Guide.Dashboard.CompletedTours"]</span>
+                            <span class="fw-semibold font-data"><bdi dir="ltr">@Count(tier.CompletedTours) / @Count(tier.CompletedToursRequired)</bdi></span>
                         </div>
-                        <div class="progress" style="height: 6px;" role="progressbar" aria-valuenow="@tier.ToursPercent" aria-valuemin="0" aria-valuemax="100">
+                        <div class="progress" style="height: 6px;" role="progressbar" aria-label="@Localizer["Guide.Dashboard.CompletedTours"]" aria-valuenow="@tier.ToursPercent" aria-valuemin="0" aria-valuemax="100">
                             <div class="progress-bar bg-primary" style="width: @(tier.ToursPercent)%"></div>
                         </div>
                     </div>
                     <div class="col-md-6 col-xl-3">
                         <div class="d-flex justify-content-between small mb-1">
-                            <span class="text-body-secondary">Average Rating</span>
-                            <span class="fw-semibold">@tier.AverageRating.ToString("0.0") / @tier.AverageRatingRequired.ToString("0.0")</span>
+                            <span class="text-body-secondary">@Localizer["Guide.Dashboard.AverageRating"]</span>
+                            <span class="fw-semibold font-data"><bdi dir="ltr">@Rating(tier.AverageRating) / @Rating(tier.AverageRatingRequired)</bdi></span>
                         </div>
-                        <div class="progress" style="height: 6px;" role="progressbar" aria-valuenow="@tier.RatingPercent" aria-valuemin="0" aria-valuemax="100">
+                        <div class="progress" style="height: 6px;" role="progressbar" aria-label="@Localizer["Guide.Dashboard.AverageRating"]" aria-valuenow="@tier.RatingPercent" aria-valuemin="0" aria-valuemax="100">
                             <div class="progress-bar bg-warning" style="width: @(tier.RatingPercent)%"></div>
                         </div>
                     </div>
                     <div class="col-md-6 col-xl-3">
                         <div class="d-flex justify-content-between small mb-1">
-                            <span class="text-body-secondary">Active Months</span>
-                            <span class="fw-semibold">@tier.ActiveMonths / @tier.ActiveMonthsRequired</span>
+                            <span class="text-body-secondary">@Localizer["Guide.Dashboard.ActiveMonths"]</span>
+                            <span class="fw-semibold font-data"><bdi dir="ltr">@Count(tier.ActiveMonths) / @Count(tier.ActiveMonthsRequired)</bdi></span>
                         </div>
-                        <div class="progress" style="height: 6px;" role="progressbar" aria-valuenow="@tier.ActiveMonthsPercent" aria-valuemin="0" aria-valuemax="100">
+                        <div class="progress" style="height: 6px;" role="progressbar" aria-label="@Localizer["Guide.Dashboard.ActiveMonths"]" aria-valuenow="@tier.ActiveMonthsPercent" aria-valuemin="0" aria-valuemax="100">
                             <div class="progress-bar bg-info" style="width: @(tier.ActiveMonthsPercent)%"></div>
                         </div>
                     </div>
                     <div class="col-md-6 col-xl-3">
                         <div class="d-flex justify-content-between small mb-1">
-                            <span class="text-body-secondary">Report Rate</span>
-                            <span class="fw-semibold @(tier.ReportRateOk ? "text-success" : "text-danger")">@Pct(tier.ReportRate) / @Pct(tier.MaxReportRateAllowed)</span>
+                            <span class="text-body-secondary">@Localizer["Guide.Dashboard.ReportRate"]</span>
+                            <span class="fw-semibold font-data @(tier.ReportRateOk ? "text-success" : "text-danger")"><bdi dir="ltr">@Pct(tier.ReportRate) / @Pct(tier.MaxReportRateAllowed)</bdi></span>
                         </div>
-                        <div class="progress" style="height: 6px;" role="progressbar" aria-valuenow="@tier.ReportRatePercent" aria-valuemin="0" aria-valuemax="100">
+                        <div class="progress" style="height: 6px;" role="progressbar" aria-label="@Localizer["Guide.Dashboard.ReportRate"]" aria-valuenow="@tier.ReportRatePercent" aria-valuemin="0" aria-valuemax="100">
                             <div class="progress-bar @(tier.ReportRateOk ? "bg-success" : "bg-danger")" style="width: @(tier.ReportRatePercent)%"></div>
                         </div>
                     </div>
@@ -135,27 +144,27 @@
         <div class="row g-4">
             <div class="col-xl-4">
                 <div class="card card-body border h-100">
-                    <h6 class="mb-3">Profile</h6>
+                    <h2 class="h6 mb-3">@Localizer["Guide.Dashboard.Profile"]</h2>
                     <ul class="list-unstyled mb-0 vstack gap-2">
                         <li class="d-flex justify-content-between">
-                            <span class="text-body-secondary">Rating</span>
-                            <span><i class="bi bi-star-fill text-warning me-1"></i>@Model.AverageRating.ToString("0.0") (@Model.ReviewCount)</span>
+                            <span class="text-body-secondary">@Localizer["Guide.Dashboard.Rating"]</span>
+                            <span><i class="fa-solid fa-star text-warning me-1" aria-hidden="true"></i><bdi dir="ltr">@Rating(Model.AverageRating) (@Count(Model.ReviewCount))</bdi></span>
                         </li>
                         <li class="d-flex justify-content-between">
-                            <span class="text-body-secondary">Experience</span>
-                            <span>@Model.YearsOfExperience yrs</span>
+                            <span class="text-body-secondary">@Localizer["Guide.Dashboard.Experience"]</span>
+                            <span><bdi dir="ltr">@Localizer["Guide.Dashboard.Years", Model.YearsOfExperience]</bdi></span>
                         </li>
                         <li class="d-flex justify-content-between">
-                            <span class="text-body-secondary">First Aid</span>
-                            <span>@(Model.HasFirstAid ? "Yes" : "No")</span>
+                            <span class="text-body-secondary">@Localizer["Guide.Dashboard.FirstAid"]</span>
+                            <span>@(Model.HasFirstAid ? Localizer["Guide.Common.Yes"] : Localizer["Guide.Common.No"])</span>
                         </li>
                         <li class="d-flex justify-content-between">
-                            <span class="text-body-secondary">Active Availability Blocks</span>
-                            <span>@Model.ActiveAvailabilityBlocks</span>
+                            <span class="text-body-secondary">@Localizer["Guide.Dashboard.ActiveBlocks"]</span>
+                            <span class="font-data"><bdi dir="ltr">@Count(Model.ActiveAvailabilityBlocks)</bdi></span>
                         </li>
                     </ul>
                     <a asp-area="Guide" asp-controller="Profile" asp-action="Index" class="btn btn-sm btn-primary-soft mt-3">
-                        <i class="bi bi-pencil me-1"></i>Edit Profile
+                        <i class="fa-solid fa-pen me-1" aria-hidden="true"></i>@Localizer["Guide.Dashboard.EditProfile"]
                     </a>
                 </div>
             </div>
@@ -163,14 +172,15 @@
             <div class="col-xl-8">
                 <div class="card card-body border h-100">
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h6 class="mb-0">Recent Tours</h6>
-                        <a asp-area="Guide" asp-controller="MyTours" asp-action="Index" class="btn btn-sm btn-link">View all</a>
+                        <h2 class="h6 mb-0">@Localizer["Guide.Dashboard.RecentTours"]</h2>
+                        <a asp-area="Guide" asp-controller="MyTours" asp-action="Index" class="btn btn-sm btn-link">@Localizer["Guide.Dashboard.ViewAll"]</a>
                     </div>
                     @if (Model.RecentTours.Count == 0)
                     {
-                        <div class="text-center text-body-secondary py-4">
-                            <i class="bi bi-map fs-1 d-block mb-2"></i>
-                            No tours yet.
+                        <div class="text-center py-5">
+                            <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
+                            <p class="mb-3 text-body-secondary">@Localizer["Guide.Dashboard.NoTours"]</p>
+                            <a asp-area="Guide" asp-controller="Applications" asp-action="Index" class="btn btn-sm btn-primary-soft">@Localizer["Guide.Dashboard.FindTours"]</a>
                         </div>
                     }
                     else
@@ -179,20 +189,38 @@
                             <table class="table table-hover align-middle mb-0">
                                 <thead>
                                     <tr>
-                                        <th>Tour</th>
-                                        <th>Offering</th>
-                                        <th>Private</th>
-                                        <th>Assigned</th>
+                                        <th scope="col">@Localizer["Guide.Dashboard.ColTour"]</th>
+                                        <th scope="col">@Localizer["Guide.Dashboard.ColOffering"]</th>
+                                        <th scope="col">@Localizer["Guide.Dashboard.ColPrivate"]</th>
+                                        <th scope="col">@Localizer["Guide.Dashboard.ColAssigned"]</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @foreach (var t in Model.RecentTours)
                                     {
                                         <tr>
-                                            <td>@t.Title</td>
-                                            <td>@(string.IsNullOrWhiteSpace(t.OfferingStatus) ? "-" : t.OfferingStatus)</td>
-                                            <td>@(t.OffersPrivateTour ? "Yes" : "No")</td>
-                                            <td>@(t.AssignedAt?.ToString("yyyy-MM-dd") ?? "-")</td>
+                                            <td class="fw-semibold">@t.Title</td>
+                                            <td>
+                                                @if (string.IsNullOrWhiteSpace(t.OfferingStatus))
+                                                {
+                                                    <span class="text-body-secondary">&mdash;</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-secondary bg-opacity-10 text-secondary">@t.OfferingStatus</span>
+                                                }
+                                            </td>
+                                            <td>@(t.OffersPrivateTour ? Localizer["Guide.Common.Yes"] : Localizer["Guide.Common.No"])</td>
+                                            <td>
+                                                @if (t.AssignedAt.HasValue)
+                                                {
+                                                    <bdi dir="ltr" class="font-data">@Date(t.AssignedAt.Value)</bdi>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-body-secondary">&mdash;</span>
+                                                }
+                                            </td>
                                         </tr>
                                     }
                                 </tbody>

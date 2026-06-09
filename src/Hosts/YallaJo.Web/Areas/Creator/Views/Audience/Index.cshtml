@@ -1,9 +1,15 @@
 @model YallaJo.Web.Areas.Creator.Models.Audience.CreatorAudienceVm
+@using System.Globalization
 @using YallaJo.Web.Areas.Creator.Models.Audience
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
-    ViewData["Title"] = "Audience";
+    ViewData["Title"] = Localizer["Creator.Audience.Title"].Value;
     var sidebar = ViewBag.Sidebar as YallaJo.Web.Areas.Creator.Shared.CreatorSidebarVm
                   ?? new YallaJo.Web.Areas.Creator.Shared.CreatorSidebarVm();
+    var culture = CultureInfo.CurrentUICulture;
+    string Date(DateTime d) => d.ToString("d MMM yyyy", culture);
+    string Count(int n) => n.ToString("N0", culture);
 }
 
 <partial name="_CreatorSidebar" model="sidebar" />
@@ -11,45 +17,44 @@
 <section class="pt-0">
     <div class="container vstack gap-4">
         <div class="d-sm-flex justify-content-between align-items-center">
-            <h1 class="fs-4 mb-0"><i class="bi bi-people me-2"></i>Audience</h1>
+            <h1 class="fs-4 mb-0"><i class="fa-solid fa-users me-2" aria-hidden="true"></i>@Localizer["Creator.Audience.Heading"]</h1>
         </div>
 
         @if (Model.State != AudienceState.Active)
         {
             <div class="card border">
                 <div class="card-body text-center py-5">
-                    <h5>Audience data unavailable</h5>
-                    <p class="text-body-secondary mb-0">
-                        Your audience data is unavailable until your creator profile is active.
-                    </p>
+                    <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
+                    <h2 class="h5">@Localizer["Creator.Audience.UnavailableTitle"]</h2>
+                    <p class="text-body-secondary mb-0">@Localizer["Creator.Audience.UnavailableMsg"]</p>
                 </div>
             </div>
         }
         else
         {
-            <div class="alert alert-info mb-0 small">
-                <i class="bi bi-info-circle me-1"></i>This is a read-only view of your audience.
+            <div class="alert alert-info mb-0 small" role="status">
+                <i class="fa-solid fa-circle-info me-1" aria-hidden="true"></i>@Localizer["Creator.Audience.ReadOnly"]
             </div>
 
-            @* ── Authoritative follower count (from /profile/mine) ──────────── *@
+            @* Authoritative follower count (from /profile/mine). *@
             <div class="row g-3">
                 <div class="col-12 col-md-4">
                     <div class="card card-body border text-center">
-                        <h5 class="mb-0">@Model.FollowerCount</h5>
-                        <span class="small text-body-secondary">Followers</span>
+                        <span class="h5 mb-0 font-data"><bdi dir="ltr">@Count(Model.FollowerCount)</bdi></span>
+                        <span class="small text-body-secondary">@Localizer["Creator.Audience.Followers"]</span>
                     </div>
                 </div>
             </div>
 
-            @* ── Anonymous follower list (no identities exposed) ────────────── *@
+            @* Anonymous follower list (no identities exposed — ordinal labels only, F10). *@
             <div class="card border">
                 <div class="card-header border-bottom">
-                    <h5 class="card-header-title mb-0">Recent followers</h5>
+                    <h2 class="card-header-title h5 mb-0">@Localizer["Creator.Audience.RecentFollowers"]</h2>
                 </div>
                 <div class="card-body">
                     @if (!Model.HasFollowers)
                     {
-                        <p class="text-body-secondary mb-0">No followers yet.</p>
+                        <p class="text-body-secondary mb-0">@Localizer["Creator.Audience.NoFollowers"]</p>
                     }
                     else
                     {
@@ -59,12 +64,13 @@
                                 <li class="list-group-item px-0 d-flex align-items-center">
                                     <div class="avatar avatar-sm flex-shrink-0">
                                         <img class="avatar-img rounded-circle border border-white border-2"
-                                             src="@Url.Content("~/assets/images/avatar/01.jpg")" alt="follower">
+                                             width="40" height="40"
+                                             src="@Url.Content("~/assets/images/avatar/01.jpg")" alt="" aria-hidden="true">
                                     </div>
-                                    <span class="ms-3">@f.Label</span>
-                                    @if (f.FollowedAt is { } followedAt)
+                                    <span class="ms-3">@Localizer["Creator.Audience.FollowerLabel", f.Position]</span>
+                                    @if (f.FollowedAt.HasValue)
                                     {
-                                        <span class="ms-auto small text-body-secondary">Followed @followedAt.ToString("d MMM yyyy")</span>
+                                        <span class="ms-auto small text-body-secondary">@Localizer["Creator.Audience.FollowedOn"] <bdi dir="ltr" class="font-data">@Date(f.FollowedAt.Value)</bdi></span>
                                     }
                                 </li>
                             }
@@ -75,20 +81,20 @@
 
             @if (Model.Pager.HasPreviousPage || Model.Pager.HasNextPage)
             {
-                <nav class="d-flex justify-content-between align-items-center">
-                    <span class="small text-body-secondary">Page @Model.Pager.PageNumber</span>
+                <nav class="d-flex justify-content-between align-items-center" aria-label="@Localizer["Creator.Audience.Pagination"]">
+                    <span class="small text-body-secondary">@Localizer["Creator.Audience.Page"] <bdi dir="ltr" class="font-data">@Count(Model.Pager.PageNumber)</bdi></span>
                     <div class="btn-group">
                         @if (Model.Pager.HasPreviousPage)
                         {
                             <a class="btn btn-sm btn-secondary-soft"
                                asp-area="Creator" asp-controller="Audience" asp-action="Index"
-                               asp-route-page="@(Model.Pager.PageNumber - 1)">Previous</a>
+                               asp-route-page="@(Model.Pager.PageNumber - 1)">@Localizer["Creator.Audience.Previous"]</a>
                         }
                         @if (Model.Pager.HasNextPage)
                         {
                             <a class="btn btn-sm btn-secondary-soft"
                                asp-area="Creator" asp-controller="Audience" asp-action="Index"
-                               asp-route-page="@(Model.Pager.PageNumber + 1)">Next</a>
+                               asp-route-page="@(Model.Pager.PageNumber + 1)">@Localizer["Creator.Audience.Next"]</a>
                         }
                     </div>
                 </nav>

@@ -1,41 +1,50 @@
 @model YallaJo.Web.Areas.Creator.Models.Application.CreatorApplicationFormVm
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 
 <div class="card-body vstack gap-3">
-    <div asp-validation-summary="ModelOnly" class="text-danger small"></div>
+    <div asp-validation-summary="ModelOnly" class="text-danger small" role="alert"></div>
 
     <div>
-        <label asp-for="Bio" class="form-label">Bio</label>
-        <textarea asp-for="Bio" class="form-control" rows="4"
-                  placeholder="Tell us about yourself and the content you create."></textarea>
-        <span asp-validation-for="Bio" class="text-danger small"></span>
+        <label asp-for="Bio" class="form-label">@Localizer["Creator.Application.BioLabel"]</label>
+        <textarea asp-for="Bio" class="form-control" rows="4" aria-describedby="bio-help"
+                  placeholder="@Localizer["Creator.Application.BioPlaceholder"]"></textarea>
+        <div id="bio-help" class="form-text">@Localizer["Creator.Application.BioHelp"]</div>
+        <span asp-validation-for="Bio" class="text-danger small" role="alert"></span>
     </div>
 
     <div>
-        <label asp-for="PortfolioUrlsText" class="form-label">Portfolio URLs</label>
-        <textarea asp-for="PortfolioUrlsText" class="form-control" rows="3"
-                  placeholder="One URL per line (max 10)."></textarea>
-        <span asp-validation-for="PortfolioUrlsText" class="text-danger small"></span>
+        <label asp-for="PortfolioUrlsText" class="form-label">@Localizer["Creator.Application.PortfolioLabel"]</label>
+        <textarea asp-for="PortfolioUrlsText" class="form-control" rows="3" dir="ltr" aria-describedby="portfolio-help"
+                  placeholder="@Localizer["Creator.Application.UrlsPlaceholder"]"></textarea>
+        <div id="portfolio-help" class="form-text">@Localizer["Creator.Application.UrlsHelp"]</div>
+        <span asp-validation-for="PortfolioUrlsText" class="text-danger small" role="alert"></span>
     </div>
 
     <div>
-        <label asp-for="SampleWorkUrlsText" class="form-label">Sample work URLs</label>
-        <textarea asp-for="SampleWorkUrlsText" class="form-control" rows="3"
-                  placeholder="One URL per line (max 10)."></textarea>
-        <span asp-validation-for="SampleWorkUrlsText" class="text-danger small"></span>
+        <label asp-for="SampleWorkUrlsText" class="form-label">@Localizer["Creator.Application.SampleWorkLabel"]</label>
+        <textarea asp-for="SampleWorkUrlsText" class="form-control" rows="3" dir="ltr" aria-describedby="sample-help"
+                  placeholder="@Localizer["Creator.Application.UrlsPlaceholder"]"></textarea>
+        <div id="sample-help" class="form-text">@Localizer["Creator.Application.UrlsHelp"]</div>
+        <span asp-validation-for="SampleWorkUrlsText" class="text-danger small" role="alert"></span>
     </div>
 
     <div>
-        <label asp-for="FreeTagsText" class="form-label">Tags</label>
-        <input asp-for="FreeTagsText" class="form-control"
-               placeholder="Comma-separated (max 20, each up to 50 characters)." />
-        <span asp-validation-for="FreeTagsText" class="text-danger small"></span>
+        <label asp-for="FreeTagsText" class="form-label">@Localizer["Creator.Application.TagsLabel"]</label>
+        <input asp-for="FreeTagsText" class="form-control" aria-describedby="tags-help"
+               placeholder="@Localizer["Creator.Application.TagsPlaceholder"]" />
+        <div id="tags-help" class="form-text">@Localizer["Creator.Application.TagsHelp"]</div>
+        <span asp-validation-for="FreeTagsText" class="text-danger small" role="alert"></span>
     </div>
 
     <div>
-        <label class="form-label">Niches <span class="text-body-secondary small">(choose up to 5)</span></label>
+        <label class="form-label">
+            @Localizer["Creator.Application.NichesLabel"]
+            <span class="text-body-secondary small">@Localizer["Creator.Application.NichesHint"]</span>
+        </label>
         @if (Model.NicheOptions.Count == 0)
         {
-            <p class="text-body-secondary small mb-0">No niches are available right now.</p>
+            <p class="text-body-secondary small mb-0">@Localizer["Creator.Application.NoNiches"]</p>
         }
         else
         {

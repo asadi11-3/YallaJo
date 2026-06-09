@@ -1,24 +1,27 @@
 @model YallaJo.Web.Areas.Guide.Models.Proposals.ProposalsVm
+@using System.Globalization
+@using Microsoft.Extensions.Localization
 @using YallaJo.Web.Areas.Guide.Shared
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
-    ViewData["Title"] = "My Proposals";
+    ViewData["Title"] = Localizer["Guide.Proposals.Title"].Value;
     Layout = "~/Views/Shared/_Layout.cshtml";
     var sidebar = ViewBag.Sidebar as GuideSidebarVm ?? new GuideSidebarVm();
-
+    var culture = CultureInfo.CurrentUICulture;
     string Money(decimal amount, string? currency)
-        => string.IsNullOrWhiteSpace(currency) ? amount.ToString("N2") : $"{amount:N2} {currency}";
+        => amount.ToString("N3", culture) + " " + (string.IsNullOrWhiteSpace(currency) ? "JOD" : currency);
+    string DateF(DateTime d) => d.ToString("yyyy-MM-dd", culture);
 
-    string StatusBadge(string status) => status.ToLowerInvariant() switch
+    (string Color, string Icon) StatusStyle(string status) => status.ToLowerInvariant() switch
     {
-        "approved" => "bg-success-soft text-success",
-        "rejected" => "bg-danger-soft text-danger",
-        "submitted" or "pendingreview" or "pending" => "bg-warning-soft text-warning",
-        "draft" => "bg-secondary-soft text-secondary",
-        _ => "bg-secondary-soft text-secondary"
+        "approved" => ("success", "circle-check"),
+        "rejected" => ("danger", "circle-xmark"),
+        "submitted" or "pendingreview" or "pending" => ("warning", "clock"),
+        "draft" => ("secondary", "pen-ruler"),
+        _ => ("secondary", "circle-info")
     };
 
-    bool CanSubmit(string status)
-        => status.Equals("draft", StringComparison.OrdinalIgnoreCase);
+    bool CanSubmit(string status) => status.Equals("draft", StringComparison.OrdinalIgnoreCase);
 }
 
 <partial name="_GuideSidebar" model="sidebar" />
@@ -26,76 +29,78 @@
 <section class="pt-0">
     <div class="container vstack gap-4">
         <div>
-            <h1 class="h4 mb-0">My Proposals</h1>
-            <p class="text-body-secondary mb-0">Propose a brand-new tour. Drafts can be submitted for admin review.</p>
+            <h1 class="h4 mb-0"><i class="fa-solid fa-lightbulb me-2" aria-hidden="true"></i>@Localizer["Guide.Proposals.Heading"]</h1>
+            <p class="text-body-secondary mb-0">@Localizer["Guide.Proposals.Subtitle"]</p>
         </div>
 
         <div class="row g-4">
             <div class="col-lg-5">
                 <div class="card card-body border h-100">
-                    <h5 class="mb-3">New proposal</h5>
+                    <h2 class="card-header-title h5 mb-3">@Localizer["Guide.Proposals.NewHeading"]</h2>
                     <form asp-area="Guide" asp-controller="Proposals" asp-action="Create" method="post" class="vstack gap-3">
                         @Html.AntiForgeryToken()
-                        <div asp-validation-summary="ModelOnly" class="text-danger small"></div>
+                        <div asp-validation-summary="ModelOnly" class="text-danger small" role="alert"></div>
 
                         <div>
-                            <label asp-for="Form.Title" class="form-label"></label>
+                            <label asp-for="Form.Title" class="form-label">@Localizer["Guide.Proposals.TitleLabel"]</label>
                             <input asp-for="Form.Title" class="form-control" />
-                            <span asp-validation-for="Form.Title" class="text-danger small"></span>
+                            <span asp-validation-for="Form.Title" class="text-danger small" role="alert"></span>
                         </div>
 
                         <div>
-                            <label asp-for="Form.ShortDescription" class="form-label"></label>
+                            <label asp-for="Form.ShortDescription" class="form-label">@Localizer["Guide.Proposals.ShortDescription"]</label>
                             <input asp-for="Form.ShortDescription" class="form-control" />
-                            <span asp-validation-for="Form.ShortDescription" class="text-danger small"></span>
+                            <span asp-validation-for="Form.ShortDescription" class="text-danger small" role="alert"></span>
                         </div>
 
                         <div>
-                            <label asp-for="Form.Description" class="form-label"></label>
+                            <label asp-for="Form.Description" class="form-label">@Localizer["Guide.Proposals.Description"]</label>
                             <textarea asp-for="Form.Description" class="form-control" rows="4"></textarea>
-                            <span asp-validation-for="Form.Description" class="text-danger small"></span>
+                            <span asp-validation-for="Form.Description" class="text-danger small" role="alert"></span>
                         </div>
 
                         <div>
-                            <label asp-for="Form.PlaceId" class="form-label"></label>
-                            <input asp-for="Form.PlaceId" class="form-control" placeholder="Place ID (GUID)" />
-                            <span asp-validation-for="Form.PlaceId" class="text-danger small"></span>
+                            <label asp-for="Form.PlaceId" class="form-label">@Localizer["Guide.Proposals.PlaceId"]</label>
+                            <input asp-for="Form.PlaceId" class="form-control font-data" dir="ltr" autocomplete="off"
+                                   aria-describedby="proposal-place-help" placeholder="@Localizer["Guide.Proposals.PlaceIdPlaceholder"]" />
+                            <div id="proposal-place-help" class="form-text">@Localizer["Guide.Proposals.PlaceIdHelp"]</div>
+                            <span asp-validation-for="Form.PlaceId" class="text-danger small" role="alert"></span>
                         </div>
 
                         <div class="row g-2">
                             <div class="col-6">
-                                <label asp-for="Form.DurationMinutes" class="form-label"></label>
-                                <input asp-for="Form.DurationMinutes" type="number" class="form-control" />
-                                <span asp-validation-for="Form.DurationMinutes" class="text-danger small"></span>
+                                <label asp-for="Form.DurationMinutes" class="form-label">@Localizer["Guide.Proposals.Duration"]</label>
+                                <input asp-for="Form.DurationMinutes" type="number" class="form-control" dir="ltr" />
+                                <span asp-validation-for="Form.DurationMinutes" class="text-danger small" role="alert"></span>
                             </div>
                             <div class="col-6">
-                                <label asp-for="Form.MaxGroupSize" class="form-label"></label>
-                                <input asp-for="Form.MaxGroupSize" type="number" class="form-control" />
-                                <span asp-validation-for="Form.MaxGroupSize" class="text-danger small"></span>
+                                <label asp-for="Form.MaxGroupSize" class="form-label">@Localizer["Guide.Proposals.MaxGroup"]</label>
+                                <input asp-for="Form.MaxGroupSize" type="number" class="form-control" dir="ltr" />
+                                <span asp-validation-for="Form.MaxGroupSize" class="text-danger small" role="alert"></span>
                             </div>
                         </div>
 
                         <div class="row g-2">
                             <div class="col-8">
-                                <label asp-for="Form.BasePrice" class="form-label"></label>
-                                <input asp-for="Form.BasePrice" type="number" step="0.01" class="form-control" />
-                                <span asp-validation-for="Form.BasePrice" class="text-danger small"></span>
+                                <label asp-for="Form.BasePrice" class="form-label">@Localizer["Guide.Proposals.BasePrice"]</label>
+                                <input asp-for="Form.BasePrice" type="number" step="0.001" class="form-control" dir="ltr" />
+                                <span asp-validation-for="Form.BasePrice" class="text-danger small" role="alert"></span>
                             </div>
                             <div class="col-4">
-                                <label asp-for="Form.Currency" class="form-label"></label>
-                                <input asp-for="Form.Currency" class="form-control text-uppercase" maxlength="3" />
-                                <span asp-validation-for="Form.Currency" class="text-danger small"></span>
+                                <label asp-for="Form.Currency" class="form-label">@Localizer["Guide.Proposals.Currency"]</label>
+                                <input asp-for="Form.Currency" class="form-control text-uppercase" dir="ltr" maxlength="3" />
+                                <span asp-validation-for="Form.Currency" class="text-danger small" role="alert"></span>
                             </div>
                         </div>
 
                         <div class="form-check">
                             <input asp-for="Form.RequestExclusive" class="form-check-input" />
-                            <label asp-for="Form.RequestExclusive" class="form-check-label"></label>
+                            <label asp-for="Form.RequestExclusive" class="form-check-label">@Localizer["Guide.Proposals.RequestExclusive"]</label>
                         </div>
 
                         <div>
                             <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-lightbulb"></i> Create draft
+                                <i class="fa-solid fa-lightbulb me-1" aria-hidden="true"></i>@Localizer["Guide.Proposals.CreateDraft"]
                             </button>
                         </div>
                     </form>
@@ -104,12 +109,12 @@
 
             <div class="col-lg-7">
                 <div class="card card-body border h-100">
-                    <h5 class="mb-3">Submitted proposals</h5>
+                    <h2 class="card-header-title h5 mb-3">@Localizer["Guide.Proposals.SubmittedHeading"]</h2>
                     @if (!Model.HasProposals)
                     {
-                        <div class="text-center text-body-secondary py-5">
-                            <i class="bi bi-lightbulb fs-1 d-block mb-2"></i>
-                            You have no proposals yet. Create a draft to get started.
+                        <div class="text-center py-5">
+                            <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
+                            <p class="mb-0 text-body-secondary">@Localizer["Guide.Proposals.NoProposals"]</p>
                         </div>
                     }
                     else
@@ -118,19 +123,20 @@
                             <table class="table table-hover align-middle mb-0">
                                 <thead>
                                     <tr>
-                                        <th scope="col">Title</th>
-                                        <th scope="col">Base price</th>
-                                        <th scope="col">Status</th>
-                                        <th scope="col">Created</th>
-                                        <th scope="col" class="text-end">Actions</th>
+                                        <th scope="col">@Localizer["Guide.Proposals.ColTitle"]</th>
+                                        <th scope="col">@Localizer["Guide.Proposals.ColBasePrice"]</th>
+                                        <th scope="col">@Localizer["Guide.Proposals.ColStatus"]</th>
+                                        <th scope="col">@Localizer["Guide.Proposals.ColCreated"]</th>
+                                        <th scope="col" class="text-end">@Localizer["Guide.Proposals.ColActions"]</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @foreach (var proposal in Model.Proposals)
                                     {
+                                        var style = StatusStyle(proposal.Status);
                                         <tr>
                                             <td>
-                                                <div class="fw-medium">@proposal.Title</div>
+                                                <div class="fw-semibold">@proposal.Title</div>
                                                 @if (!string.IsNullOrWhiteSpace(proposal.ShortDescription))
                                                 {
                                                     <div class="small text-body-secondary text-truncate" style="max-width: 260px;">
@@ -138,20 +144,20 @@
                                                     </div>
                                                 }
                                             </td>
-                                            <td>@Money(proposal.BasePrice, proposal.Currency)</td>
-                                            <td><span class="badge @StatusBadge(proposal.Status)">@proposal.Status</span></td>
-                                            <td>@proposal.CreatedAt.ToString("dd MMM yyyy")</td>
+                                            <td><bdi dir="ltr" class="font-data">@Money(proposal.BasePrice, proposal.Currency)</bdi></td>
+                                            <td>
+                                                <span class="badge bg-@style.Color bg-opacity-10 text-@style.Color">
+                                                    <i class="fa-solid fa-@style.Icon fa-fw" aria-hidden="true"></i> @proposal.Status
+                                                </span>
+                                            </td>
+                                            <td><bdi dir="ltr" class="font-data">@DateF(proposal.CreatedAt)</bdi></td>
                                             <td class="text-end">
                                                 @if (CanSubmit(proposal.Status))
                                                 {
-                                                    <form asp-area="Guide" asp-controller="Proposals" asp-action="Submit"
-                                                          asp-route-id="@proposal.Id" method="post" class="d-inline"
-                                                          onsubmit="return confirm('Submit this proposal for admin review?');">
-                                                        @Html.AntiForgeryToken()
-                                                        <button type="submit" class="btn btn-sm btn-primary-soft">
-                                                            <i class="bi bi-send"></i> Submit
-                                                        </button>
-                                                    </form>
+                                                    <button type="button" class="btn btn-sm btn-primary-soft"
+                                                            data-bs-toggle="modal" data-bs-target="#submit-proposal-@proposal.Id">
+                                                        <i class="fa-solid fa-paper-plane me-1" aria-hidden="true"></i>@Localizer["Guide.Proposals.Submit"]
+                                                    </button>
                                                 }
                                                 else
                                                 {
@@ -169,3 +175,29 @@
         </div>
     </div>
 </section>
+
+@foreach (var proposal in Model.Proposals.Where(p => CanSubmit(p.Status)))
+{
+    <div class="modal fade" id="submit-proposal-@proposal.Id" tabindex="-1" aria-labelledby="submit-title-@proposal.Id" aria-describedby="submit-body-@proposal.Id" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="submit-title-@proposal.Id">
+                <div class="modal-header">
+                    <h2 class="modal-title h5" id="submit-title-@proposal.Id">@Localizer["Guide.Proposals.SubmitTitle"]</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Guide.Common.Close"]"></button>
+                </div>
+                <div class="modal-body" id="submit-body-@proposal.Id">
+                    <p class="mb-0">@Localizer["Guide.Proposals.SubmitBody", proposal.Title]</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">@Localizer["Guide.Common.Cancel"]</button>
+                    <form asp-area="Guide" asp-controller="Proposals" asp-action="Submit" asp-route-id="@proposal.Id" method="post" class="d-inline">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fa-solid fa-paper-plane me-1" aria-hidden="true"></i>@Localizer["Guide.Proposals.SubmitConfirm"]
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+}

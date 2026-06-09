@@ -1,9 +1,15 @@
 @model YallaJo.Web.Areas.Creator.Models.Preview.PublicProfilePreviewVm
 @using YallaJo.Web.Areas.Creator.Models.Preview
+@using System.Globalization
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
-    ViewData["Title"] = "Public Profile Preview";
+    ViewData["Title"] = Localizer["Creator.Preview.Title"].Value;
     var sidebar = ViewBag.Sidebar as YallaJo.Web.Areas.Creator.Shared.CreatorSidebarVm
                   ?? new YallaJo.Web.Areas.Creator.Shared.CreatorSidebarVm();
+    var culture = CultureInfo.CurrentUICulture;
+    string Date(DateTime d) => d.ToString("d MMM yyyy", culture);
+    string Count(long n) => n.ToString("N0", culture);
 }
 
 <partial name="_CreatorSidebar" model="sidebar" />
@@ -11,24 +17,23 @@
 <section class="pt-0">
     <div class="container vstack gap-4">
         <div class="d-sm-flex justify-content-between align-items-center">
-            <h1 class="fs-4 mb-0"><i class="bi bi-eye me-2"></i>Public Profile Preview</h1>
+            <h1 class="fs-4 mb-0"><i class="fa-solid fa-eye me-2" aria-hidden="true"></i>@Localizer["Creator.Preview.Heading"]</h1>
         </div>
 
         @if (Model.State != PreviewState.Active)
         {
             <div class="card border">
                 <div class="card-body text-center py-5">
-                    <h5>Public preview unavailable</h5>
-                    <p class="text-body-secondary mb-0">
-                        Your public profile preview will be available once your creator profile is active and approved.
-                    </p>
+                    <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
+                    <h2 class="h5">@Localizer["Creator.Preview.UnavailableTitle"]</h2>
+                    <p class="text-body-secondary mb-0">@Localizer["Creator.Preview.UnavailableMsg"]</p>
                 </div>
             </div>
         }
         else
         {
-            <div class="alert alert-info mb-0 small">
-                <i class="bi bi-info-circle me-1"></i>This is a read-only preview of how visitors see your public profile.
+            <div class="alert alert-info mb-0 small" role="status">
+                <i class="fa-solid fa-circle-info me-1" aria-hidden="true"></i>@Localizer["Creator.Preview.ReadOnly"]
             </div>
 
             @* ── Public profile header ─────────────────────────────────────── *@
@@ -37,16 +42,16 @@
                     <div class="avatar avatar-xl flex-shrink-0">
                         <img class="avatar-img rounded-circle border border-white border-3"
                              src="@(string.IsNullOrWhiteSpace(Model.AvatarUrl) ? Url.Content("~/assets/images/avatar/01.jpg") : Model.AvatarUrl)"
-                             alt="avatar">
+                             width="96" height="96" alt="@Model.DisplayName">
                     </div>
                     <div class="ms-sm-3 mt-2 mt-sm-0">
-                        <h4 class="mb-1">
+                        <h2 class="h4 mb-1">
                             @Model.DisplayName
                             @if (!string.IsNullOrWhiteSpace(Model.TrustTier))
                             {
-                                <span class="badge text-bg-light ms-1">@Model.TrustTier</span>
+                                <span class="badge bg-secondary bg-opacity-10 text-secondary ms-1">@Model.TrustTier</span>
                             }
-                        </h4>
+                        </h2>
                         @if (!string.IsNullOrWhiteSpace(Model.Bio))
                         {
                             <p class="mb-0 text-body-secondary">@Model.Bio</p>
@@ -59,27 +64,32 @@
             <div class="row g-3">
                 <div class="col-6 col-md">
                     <div class="card card-body border text-center">
-                        <h5 class="mb-0">@Model.ArticleCount</h5><span class="small text-body-secondary">Articles</span>
+                        <span class="h5 mb-0 font-data"><bdi dir="ltr">@Count(Model.ArticleCount)</bdi></span>
+                        <span class="small text-body-secondary">@Localizer["Creator.Preview.Articles"]</span>
                     </div>
                 </div>
                 <div class="col-6 col-md">
                     <div class="card card-body border text-center">
-                        <h5 class="mb-0">@Model.FollowerCount</h5><span class="small text-body-secondary">Followers</span>
+                        <span class="h5 mb-0 font-data"><bdi dir="ltr">@Count(Model.FollowerCount)</bdi></span>
+                        <span class="small text-body-secondary">@Localizer["Creator.Preview.Followers"]</span>
                     </div>
                 </div>
                 <div class="col-6 col-md">
                     <div class="card card-body border text-center">
-                        <h5 class="mb-0">@Model.TotalViewCount</h5><span class="small text-body-secondary">Views</span>
+                        <span class="h5 mb-0 font-data"><bdi dir="ltr">@Count(Model.TotalViewCount)</bdi></span>
+                        <span class="small text-body-secondary">@Localizer["Creator.Preview.Views"]</span>
                     </div>
                 </div>
                 <div class="col-6 col-md">
                     <div class="card card-body border text-center">
-                        <h5 class="mb-0">@Model.TotalReactionCount</h5><span class="small text-body-secondary">Reactions</span>
+                        <span class="h5 mb-0 font-data"><bdi dir="ltr">@Count(Model.TotalReactionCount)</bdi></span>
+                        <span class="small text-body-secondary">@Localizer["Creator.Preview.Reactions"]</span>
                     </div>
                 </div>
                 <div class="col-6 col-md">
                     <div class="card card-body border text-center">
-                        <h5 class="mb-0">@Model.TotalCommentCount</h5><span class="small text-body-secondary">Comments</span>
+                        <span class="h5 mb-0 font-data"><bdi dir="ltr">@Count(Model.TotalCommentCount)</bdi></span>
+                        <span class="small text-body-secondary">@Localizer["Creator.Preview.Comments"]</span>
                     </div>
                 </div>
             </div>
@@ -87,12 +97,12 @@
             @* ── Published articles ────────────────────────────────────────── *@
             <div class="card border">
                 <div class="card-header border-bottom">
-                    <h5 class="card-header-title mb-0">Published Articles</h5>
+                    <h2 class="card-header-title h5 mb-0">@Localizer["Creator.Preview.PublishedArticles"]</h2>
                 </div>
                 <div class="card-body">
                     @if (!Model.HasArticles)
                     {
-                        <p class="text-body-secondary mb-0">No published articles yet.</p>
+                        <p class="text-body-secondary mb-0">@Localizer["Creator.Preview.NoArticles"]</p>
                     }
                     else
                     {
@@ -108,7 +118,15 @@
                                         <p class="small text-body-secondary mb-1">@a.Summary</p>
                                     }
                                     <span class="small text-body-secondary">
-                                        @a.ViewCount view(s)@(a.ReadTimeMinutes is { } rt ? $" · {rt} min read" : "")@(a.PublishedAt is { } p ? $" · {p:d MMM yyyy}" : "")
+                                        <bdi dir="ltr">@Count(a.ViewCount)</bdi> @Localizer["Creator.Preview.ViewsLabel"]
+                                        @if (a.ReadTimeMinutes.HasValue)
+                                        {
+                                            <span> · @Localizer["Creator.Preview.MinRead", a.ReadTimeMinutes.Value]</span>
+                                        }
+                                        @if (a.PublishedAt.HasValue)
+                                        {
+                                            <span> · <bdi dir="ltr">@Date(a.PublishedAt.Value)</bdi></span>
+                                        }
                                     </span>
                                 </li>
                             }
@@ -119,22 +137,22 @@
 
             @if (Model.Pager.TotalPages > 1)
             {
-                <nav class="d-flex justify-content-between align-items-center">
+                <nav class="d-flex justify-content-between align-items-center" aria-label="@Localizer["Creator.Preview.Pagination"]">
                     <span class="small text-body-secondary">
-                        Page @Model.Pager.PageNumber of @Model.Pager.TotalPages (@Model.Pager.TotalCount total)
+                        @Localizer["Creator.Preview.PageOf", Model.Pager.PageNumber, Model.Pager.TotalPages]
                     </span>
                     <div class="btn-group">
                         @if (Model.Pager.HasPreviousPage)
                         {
                             <a class="btn btn-sm btn-secondary-soft"
                                asp-area="Creator" asp-controller="Preview" asp-action="Index"
-                               asp-route-page="@(Model.Pager.PageNumber - 1)">Previous</a>
+                               asp-route-page="@(Model.Pager.PageNumber - 1)">@Localizer["Creator.Preview.Previous"]</a>
                         }
                         @if (Model.Pager.HasNextPage)
                         {
                             <a class="btn btn-sm btn-secondary-soft"
                                asp-area="Creator" asp-controller="Preview" asp-action="Index"
-                               asp-route-page="@(Model.Pager.PageNumber + 1)">Next</a>
+                               asp-route-page="@(Model.Pager.PageNumber + 1)">@Localizer["Creator.Preview.Next"]</a>
                         }
                     </div>
                 </nav>

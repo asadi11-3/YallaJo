@@ -6589,4 +6589,2134 @@
   <data name="Admin.Nav.Settings" xml:space="preserve">
     <value>الإعدادات</value>
   </data>
+  <data name="Auth.SignIn.Title" xml:space="preserve">
+    <value>تسجيل الدخول</value>
+  </data>
+  <data name="Auth.SignIn.Heading" xml:space="preserve">
+    <value>مرحباً بعودتك</value>
+  </data>
+  <data name="Auth.SignIn.NewHere" xml:space="preserve">
+    <value>جديد هنا؟</value>
+  </data>
+  <data name="Auth.SignIn.CreateAccount" xml:space="preserve">
+    <value>إنشاء حساب</value>
+  </data>
+  <data name="Auth.SignIn.RememberMe" xml:space="preserve">
+    <value>تذكرني؟</value>
+  </data>
+  <data name="Auth.SignIn.ForgotPassword" xml:space="preserve">
+    <value>نسيت كلمة المرور؟</value>
+  </data>
+  <data name="Auth.SignIn.Submit" xml:space="preserve">
+    <value>تسجيل الدخول</value>
+  </data>
+  <data name="Auth.SignIn.OrWith" xml:space="preserve">
+    <value>أو سجّل الدخول عبر</value>
+  </data>
+  <data name="Auth.SignUp.Title" xml:space="preserve">
+    <value>إنشاء حساب</value>
+  </data>
+  <data name="Auth.SignUp.Heading" xml:space="preserve">
+    <value>إنشاء حساب جديد</value>
+  </data>
+  <data name="Auth.SignUp.HaveAccount" xml:space="preserve">
+    <value>لديك حساب بالفعل؟</value>
+  </data>
+  <data name="Auth.SignUp.SignInLink" xml:space="preserve">
+    <value>تسجيل الدخول</value>
+  </data>
+  <data name="Auth.SignUp.PasswordHint" xml:space="preserve">
+    <value>استخدم 8 أحرف أو أكثر تتضمن حرفاً كبيراً وحرفاً صغيراً ورقماً ورمزاً.</value>
+  </data>
+  <data name="Auth.SignUp.Submit" xml:space="preserve">
+    <value>إنشاء حساب</value>
+  </data>
+  <data name="Auth.SignUp.OrWith" xml:space="preserve">
+    <value>أو سجّل عبر</value>
+  </data>
+  <data name="Auth.Forgot.Title" xml:space="preserve">
+    <value>نسيت كلمة المرور</value>
+  </data>
+  <data name="Auth.Forgot.Heading" xml:space="preserve">
+    <value>نسيت كلمة المرور؟</value>
+  </data>
+  <data name="Auth.Forgot.Intro" xml:space="preserve">
+    <value>أدخل البريد الإلكتروني المرتبط بحسابك وسنرسل لك رمز إعادة التعيين.</value>
+  </data>
+  <data name="Auth.Forgot.Submit" xml:space="preserve">
+    <value>إرسال رمز إعادة التعيين</value>
+  </data>
+  <data name="Auth.Forgot.BackTo" xml:space="preserve">
+    <value>العودة إلى</value>
+  </data>
+  <data name="Auth.Forgot.BackToSignIn" xml:space="preserve">
+    <value>تسجيل الدخول</value>
+  </data>
+  <data name="Auth.Reset.Title" xml:space="preserve">
+    <value>إعادة تعيين كلمة المرور</value>
+  </data>
+  <data name="Auth.Reset.Heading" xml:space="preserve">
+    <value>إنشاء كلمة مرور جديدة</value>
+  </data>
+  <data name="Auth.Reset.Intro" xml:space="preserve">
+    <value>أدخل الرمز الذي أرسلناه إلى بريدك الإلكتروني واختر كلمة مرور جديدة.</value>
+  </data>
+  <data name="Auth.Reset.OtpLabel" xml:space="preserve">
+    <value>رمز إعادة التعيين</value>
+  </data>
+  <data name="Auth.Reset.NewPasswordLabel" xml:space="preserve">
+    <value>كلمة المرور الجديدة</value>
+  </data>
+  <data name="Auth.Reset.PasswordHint" xml:space="preserve">
+    <value>استخدم 8 أحرف أو أكثر تتضمن حرفاً كبيراً وحرفاً صغيراً ورقماً ورمزاً.</value>
+  </data>
+  <data name="Auth.Reset.ConfirmLabel" xml:space="preserve">
+    <value>تأكيد كلمة المرور الجديدة</value>
+  </data>
+  <data name="Auth.Reset.Submit" xml:space="preserve">
+    <value>إعادة تعيين كلمة المرور</value>
+  </data>
+  <data name="Auth.TwoFactor.Title" xml:space="preserve">
+    <value>التحقق من البريد الإلكتروني</value>
+  </data>
+  <data name="Auth.TwoFactor.Heading" xml:space="preserve">
+    <value>المصادقة الثنائية</value>
+  </data>
+  <data name="Auth.TwoFactor.SentTo" xml:space="preserve">
+    <value>لقد أرسلنا رمز التحقق إلى</value>
+  </data>
+  <data name="Auth.TwoFactor.YourEmail" xml:space="preserve">
+    <value>بريدك الإلكتروني</value>
+  </data>
+  <data name="Auth.TwoFactor.Intro" xml:space="preserve">
+    <value>أدخل الرمز الذي أرسلناه إليك:</value>
+  </data>
+  <data name="Auth.TwoFactor.NoCode" xml:space="preserve">
+    <value>لم تستلم الرمز؟</value>
+  </data>
+  <data name="Auth.TwoFactor.Resend" xml:space="preserve">
+    <value>انقر لإعادة الإرسال</value>
+  </data>
+  <data name="Auth.TwoFactor.Submit" xml:space="preserve">
+    <value>تحقق وتابع</value>
+  </data>
+  <data name="Auth.Sessions.Title" xml:space="preserve">
+    <value>الجلسات النشطة</value>
+  </data>
+  <data name="Auth.Sessions.Heading" xml:space="preserve">
+    <value>الجلسات النشطة</value>
+  </data>
+  <data name="Auth.Sessions.Subtitle" xml:space="preserve">
+    <value>الأجهزة المسجّلة دخولها حالياً إلى حسابك.</value>
+  </data>
+  <data name="Auth.Sessions.ColDevice" xml:space="preserve">
+    <value>الجهاز</value>
+  </data>
+  <data name="Auth.Sessions.ColIp" xml:space="preserve">
+    <value>عنوان IP</value>
+  </data>
+  <data name="Auth.Sessions.ColStarted" xml:space="preserve">
+    <value>البدء</value>
+  </data>
+  <data name="Auth.Sessions.ColExpires" xml:space="preserve">
+    <value>الانتهاء</value>
+  </data>
+  <data name="Auth.Sessions.ColActions" xml:space="preserve">
+    <value>الإجراءات</value>
+  </data>
+  <data name="Auth.Sessions.Current" xml:space="preserve">
+    <value>الحالية</value>
+  </data>
+  <data name="Auth.Sessions.Trust" xml:space="preserve">
+    <value>اعتماد الجهاز</value>
+  </data>
+  <data name="Auth.Sessions.Revoke" xml:space="preserve">
+    <value>إلغاء</value>
+  </data>
+  <data name="Auth.Sessions.RevokeConfirm" xml:space="preserve">
+    <value>إلغاء هذه الجلسة؟ سيتم تسجيل خروج الجهاز.</value>
+  </data>
+  <data name="Auth.Sessions.SignOutAll" xml:space="preserve">
+    <value>تسجيل الخروج من جميع الأجهزة</value>
+  </data>
+  <data name="Auth.Sessions.SignOutAllConfirm" xml:space="preserve">
+    <value>تسجيل الخروج من جميع الأجهزة؟ ستحتاج إلى تسجيل الدخول مجدداً في كل مكان.</value>
+  </data>
+  <data name="Auth.Sessions.EmptyMessage" xml:space="preserve">
+    <value>لا توجد جلسات نشطة.</value>
+  </data>
+  <data name="Auth.Sessions.NoIp" xml:space="preserve">
+    <value>لا يوجد عنوان IP</value>
+  </data>
+  <data name="Auth.Devices.Title" xml:space="preserve">
+    <value>الأجهزة</value>
+  </data>
+  <data name="Auth.Devices.Heading" xml:space="preserve">
+    <value>الأجهزة</value>
+  </data>
+  <data name="Auth.Devices.Info" xml:space="preserve">
+    <value>استخدم</value>
+  </data>
+  <data name="Auth.Devices.SessionsLink" xml:space="preserve">
+    <value>صفحة الجلسات</value>
+  </data>
+  <data name="Auth.External.Title" xml:space="preserve">
+    <value>مزوّدو الدخول المرتبطون</value>
+  </data>
+  <data name="Auth.External.Heading" xml:space="preserve">
+    <value>مزوّدو الدخول المرتبطون</value>
+  </data>
+  <data name="Auth.External.Intro" xml:space="preserve">
+    <value>ستتم إعادة توجيهك إلى المزوّد لتسجيل الدخول قبل إتمام الربط.</value>
+  </data>
+  <data name="Auth.External.LinkGoogle" xml:space="preserve">
+    <value>ربط جوجل</value>
+  </data>
+  <data name="Auth.External.LinkFacebook" xml:space="preserve">
+    <value>ربط فيسبوك</value>
+  </data>
+  <data name="Auth.External.NoneAvailable" xml:space="preserve">
+    <value>لا يوجد مزوّدو دخول خارجيون مهيّأون على هذا الخادم. يرجى التواصل مع المسؤول.</value>
+  </data>
+  <data name="Auth.Complete.Title" xml:space="preserve">
+    <value>جارٍ إتمام تسجيل الدخول</value>
+  </data>
+  <data name="Auth.Complete.Message" xml:space="preserve">
+    <value>يرجى الانتظار لحظة بينما ننهي تسجيل دخولك.</value>
+  </data>
+  <data name="Auth.Complete.Continue" xml:space="preserve">
+    <value>متابعة</value>
+  </data>
+  <data name="Auth.AcceptInvite.Title" xml:space="preserve">
+    <value>قبول الدعوة</value>
+  </data>
+  <data name="Auth.AcceptInvite.Heading" xml:space="preserve">
+    <value>أكمل دعوتك</value>
+  </data>
+  <data name="Auth.AcceptInvite.Intro" xml:space="preserve">
+    <value>البريد المدعو:</value>
+  </data>
+  <data name="Auth.AcceptInvite.PasswordHint" xml:space="preserve">
+    <value>استخدم 8 أحرف أو أكثر تتضمن حرفاً كبيراً وحرفاً صغيراً ورقماً ورمزاً.</value>
+  </data>
+  <data name="Auth.AcceptInvite.Submit" xml:space="preserve">
+    <value>تفعيل الحساب</value>
+  </data>
+  <data name="Auth.AcceptInvite.ExpiredTitle" xml:space="preserve">
+    <value>انتهت صلاحية الدعوة</value>
+  </data>
+  <data name="Auth.AcceptInvite.ExpiredHeading" xml:space="preserve">
+    <value>انتهت صلاحية رابط الدعوة</value>
+  </data>
+  <data name="Auth.AcceptInvite.ExpiredMessage" xml:space="preserve">
+    <value>رابط الدعوة هذا منتهي الصلاحية أو لم يعد صالحاً لـ</value>
+  </data>
+  <data name="Auth.AcceptInvite.ExpiredHelp" xml:space="preserve">
+    <value>يرجى التواصل مع المسؤول لإعادة إرسال دعوتك.</value>
+  </data>
+  <data name="Auth.AcceptInvite.InvalidTitle" xml:space="preserve">
+    <value>رابط دعوة غير صالح</value>
+  </data>
+  <data name="Auth.AcceptInvite.InvalidHeading" xml:space="preserve">
+    <value>رابط دعوة غير صالح</value>
+  </data>
+  <data name="Auth.AcceptInvite.InvalidMessage" xml:space="preserve">
+    <value>رابط الدعوة يفتقد إلى المعطيات المطلوبة.</value>
+  </data>
+  <data name="Auth.AcceptInvite.InvalidHelp" xml:space="preserve">
+    <value>اطلب من المسؤول إرسال دعوة جديدة.</value>
+  </data>
+  <data name="Auth.Field.Email" xml:space="preserve">
+    <value>أدخل البريد الإلكتروني</value>
+  </data>
+  <data name="Auth.Field.Password" xml:space="preserve">
+    <value>كلمة المرور</value>
+  </data>
+  <data name="Auth.Field.ConfirmPassword" xml:space="preserve">
+    <value>تأكيد كلمة المرور</value>
+  </data>
+  <data name="Auth.Social.Google" xml:space="preserve">
+    <value>تسجيل الدخول عبر جوجل</value>
+  </data>
+  <data name="Auth.Social.Facebook" xml:space="preserve">
+    <value>تسجيل الدخول عبر فيسبوك</value>
+  </data>
+  <data name="Auth.Social.GoogleSignup" xml:space="preserve">
+    <value>إنشاء حساب عبر جوجل</value>
+  </data>
+  <data name="Auth.Social.FacebookSignup" xml:space="preserve">
+    <value>O�U+O'OO� O-O3OO" O1O"O� U?USO3O"U^U�</value>
+  </data>
+  <data name="Creator.Nav.Greeting" xml:space="preserve">
+    <value>مرحبًا،</value>
+  </data>
+  <data name="Creator.Nav.DefaultName" xml:space="preserve">
+    <value>صانع المحتوى</value>
+  </data>
+  <data name="Creator.Nav.Menu" xml:space="preserve">
+    <value>القائمة</value>
+  </data>
+  <data name="Creator.Nav.Aria" xml:space="preserve">
+    <value>قائمة صانع المحتوى</value>
+  </data>
+  <data name="Creator.Nav.Close" xml:space="preserve">
+    <value>إغلاق</value>
+  </data>
+  <data name="Creator.Nav.Dashboard" xml:space="preserve">
+    <value>لوحة التحكم</value>
+  </data>
+  <data name="Creator.Nav.Profile" xml:space="preserve">
+    <value>ملفي الشخصي</value>
+  </data>
+  <data name="Creator.Nav.Articles" xml:space="preserve">
+    <value>مقالاتي</value>
+  </data>
+  <data name="Creator.Nav.Audience" xml:space="preserve">
+    <value>الجمهور</value>
+  </data>
+  <data name="Creator.Nav.Preview" xml:space="preserve">
+    <value>المعاينة العامة</value>
+  </data>
+  <data name="Creator.Nav.Application" xml:space="preserve">
+    <value>الطلب</value>
+  </data>
+  <data name="Creator.Nav.SignOut" xml:space="preserve">
+    <value>تسجيل الخروج</value>
+  </data>
+  <data name="Creator.Status.Draft" xml:space="preserve">
+    <value>مسودة</value>
+  </data>
+  <data name="Creator.Status.Pending" xml:space="preserve">
+    <value>قيد المراجعة</value>
+  </data>
+  <data name="Creator.Status.Approved" xml:space="preserve">
+    <value>مقبول</value>
+  </data>
+  <data name="Creator.Status.Rejected" xml:space="preserve">
+    <value>مرفوض</value>
+  </data>
+  <data name="Creator.Status.MoreInfoNeeded" xml:space="preserve">
+    <value>معلومات إضافية مطلوبة</value>
+  </data>
+  <data name="Creator.Status.Published" xml:space="preserve">
+    <value>منشور</value>
+  </data>
+  <data name="Creator.Status.Active" xml:space="preserve">
+    <value>نشط</value>
+  </data>
+  <data name="Creator.Status.Suspended" xml:space="preserve">
+    <value>موقوف</value>
+  </data>
+  <data name="Creator.Status.Deactivated" xml:space="preserve">
+    <value>معطّل</value>
+  </data>
+  <data name="Creator.Dashboard.Title" xml:space="preserve">
+    <value>لوحة تحكم صانع المحتوى</value>
+  </data>
+  <data name="Creator.Dashboard.Heading" xml:space="preserve">
+    <value>لوحة تحكم صانع المحتوى</value>
+  </data>
+  <data name="Creator.Dashboard.ActiveCreator" xml:space="preserve">
+    <value>صانع محتوى نشط</value>
+  </data>
+  <data name="Creator.Dashboard.TrustTier" xml:space="preserve">
+    <value>المستوى {0}</value>
+  </data>
+  <data name="Creator.Dashboard.PreviewProfile" xml:space="preserve">
+    <value>معاينة الملف العام</value>
+  </data>
+  <data name="Creator.Dashboard.Audience" xml:space="preserve">
+    <value>الجمهور</value>
+  </data>
+  <data name="Creator.Dashboard.NewArticle" xml:space="preserve">
+    <value>مقال جديد</value>
+  </data>
+  <data name="Creator.Dashboard.Articles" xml:space="preserve">
+    <value>المقالات</value>
+  </data>
+  <data name="Creator.Dashboard.TotalViews" xml:space="preserve">
+    <value>إجمالي المشاهدات</value>
+  </data>
+  <data name="Creator.Dashboard.Reactions" xml:space="preserve">
+    <value>التفاعلات</value>
+  </data>
+  <data name="Creator.Dashboard.Followers" xml:space="preserve">
+    <value>المتابعون</value>
+  </data>
+  <data name="Creator.Dashboard.RecentArticles" xml:space="preserve">
+    <value>أحدث المقالات</value>
+  </data>
+  <data name="Creator.Dashboard.ViewAll" xml:space="preserve">
+    <value>عرض الكل</value>
+  </data>
+  <data name="Creator.Dashboard.NoArticles" xml:space="preserve">
+    <value>لا توجد مقالات بعد.</value>
+  </data>
+  <data name="Creator.Dashboard.ViewsCount" xml:space="preserve">
+    <value>{0} مشاهدة</value>
+  </data>
+  <data name="Creator.Dashboard.PendingTitle" xml:space="preserve">
+    <value>طلب صانع المحتوى الخاص بك قيد المراجعة</value>
+  </data>
+  <data name="Creator.Dashboard.PendingMsg" xml:space="preserve">
+    <value>سنعلمك بمجرد أن يراجع المسؤول طلبك.</value>
+  </data>
+  <data name="Creator.Dashboard.PendingMsgDated" xml:space="preserve">
+    <value>تم الإرسال في {0}.</value>
+  </data>
+  <data name="Creator.Dashboard.RejectedTitle" xml:space="preserve">
+    <value>لم تتم الموافقة على طلب صانع المحتوى الخاص بك</value>
+  </data>
+  <data name="Creator.Dashboard.ReviewerNote" xml:space="preserve">
+    <value>ملاحظة المراجع: {0}</value>
+  </data>
+  <data name="Creator.Dashboard.Reapply" xml:space="preserve">
+    <value>إعادة التقديم</value>
+  </data>
+  <data name="Creator.Dashboard.NeedsInfoTitle" xml:space="preserve">
+    <value>نحتاج إلى مزيد من المعلومات</value>
+  </data>
+  <data name="Creator.Dashboard.UpdateApplication" xml:space="preserve">
+    <value>تحديث الطلب</value>
+  </data>
+  <data name="Creator.Dashboard.DraftTitle" xml:space="preserve">
+    <value>أكمل طلب صانع المحتوى الخاص بك</value>
+  </data>
+  <data name="Creator.Dashboard.DraftMsg" xml:space="preserve">
+    <value>لقد بدأت طلبًا ولكنك لم ترسله بعد.</value>
+  </data>
+  <data name="Creator.Dashboard.ContinueApplication" xml:space="preserve">
+    <value>متابعة الطلب</value>
+  </data>
+  <data name="Creator.Dashboard.SuspendedTitle" xml:space="preserve">
+    <value>ملف صانع المحتوى الخاص بك موقوف</value>
+  </data>
+  <data name="Creator.Dashboard.SuspendedMsg" xml:space="preserve">
+    <value>أدوات صانع المحتوى غير متاحة أثناء إيقاف ملفك. يرجى التواصل مع الدعم إذا كنت تعتقد أن هذا خطأ.</value>
+  </data>
+  <data name="Creator.Dashboard.DeactivatedTitle" xml:space="preserve">
+    <value>ملف صانع المحتوى الخاص بك معطّل</value>
+  </data>
+  <data name="Creator.Dashboard.DeactivatedMsg" xml:space="preserve">
+    <value>تم تعطيل ملف صانع المحتوى الخاص بك. ستتوفر إعادة التفعيل من إعدادات ملفك.</value>
+  </data>
+  <data name="Creator.Dashboard.NotAppliedTitle" xml:space="preserve">
+    <value>كن صانع محتوى</value>
+  </data>
+  <data name="Creator.Dashboard.NotAppliedMsg" xml:space="preserve">
+    <value>شارك المقالات مع مجتمع يلا جو. قدّم طلبًا لتصبح صانع محتوى للبدء.</value>
+  </data>
+  <data name="Creator.Dashboard.BecomeCreator" xml:space="preserve">
+    <value>كن صانع محتوى</value>
+  </data>
+  <data name="Creator.Application.Title" xml:space="preserve">
+    <value>طلب صانع المحتوى</value>
+  </data>
+  <data name="Creator.Application.Heading" xml:space="preserve">
+    <value>طلب صانع المحتوى</value>
+  </data>
+  <data name="Creator.Application.RedeemInvitation" xml:space="preserve">
+    <value>استخدام دعوة</value>
+  </data>
+  <data name="Creator.Application.PendingTitle" xml:space="preserve">
+    <value>طلبك قيد المراجعة</value>
+  </data>
+  <data name="Creator.Application.PendingMsg" xml:space="preserve">
+    <value>سنخطرك بمجرد أن يراجعه أحد المسؤولين.</value>
+  </data>
+  <data name="Creator.Application.ApprovedTitle" xml:space="preserve">
+    <value>تمت الموافقة على طلبك</value>
+  </data>
+  <data name="Creator.Application.ApprovedMsg" xml:space="preserve">
+    <value>مرحبًا بك! ملف صانع المحتوى الخاص بك نشط الآن.</value>
+  </data>
+  <data name="Creator.Application.RejectedTitle" xml:space="preserve">
+    <value>لم تتم الموافقة على طلبك</value>
+  </data>
+  <data name="Creator.Application.ReviewerNote" xml:space="preserve">
+    <value>ملاحظة المراجع: {0}</value>
+  </data>
+  <data name="Creator.Application.StatusLabel" xml:space="preserve">
+    <value>حالة الطلب: {0}</value>
+  </data>
+  <data name="Creator.Application.MoreInfoRequested" xml:space="preserve">
+    <value>مطلوب مزيد من المعلومات: {0}</value>
+  </data>
+  <data name="Creator.Application.SaveDraft" xml:space="preserve">
+    <value>حفظ كمسودة</value>
+  </data>
+  <data name="Creator.Application.SaveChanges" xml:space="preserve">
+    <value>حفظ التغييرات</value>
+  </data>
+  <data name="Creator.Application.SubmitForReview" xml:space="preserve">
+    <value>إرسال للمراجعة</value>
+  </data>
+  <data name="Creator.Application.BioLabel" xml:space="preserve">
+    <value>نبذة</value>
+  </data>
+  <data name="Creator.Application.BioPlaceholder" xml:space="preserve">
+    <value>أخبرنا عن نفسك والمحتوى الذي تنشئه.</value>
+  </data>
+  <data name="Creator.Application.BioHelp" xml:space="preserve">
+    <value>شارك خلفيتك وما الذي تنشئه.</value>
+  </data>
+  <data name="Creator.Application.PortfolioLabel" xml:space="preserve">
+    <value>روابط معرض الأعمال</value>
+  </data>
+  <data name="Creator.Application.UrlsPlaceholder" xml:space="preserve">
+    <value>رابط واحد في كل سطر.</value>
+  </data>
+  <data name="Creator.Application.UrlsHelp" xml:space="preserve">
+    <value>رابط واحد في كل سطر (بحد أقصى 10).</value>
+  </data>
+  <data name="Creator.Application.SampleWorkLabel" xml:space="preserve">
+    <value>روابط نماذج الأعمال</value>
+  </data>
+  <data name="Creator.Application.TagsLabel" xml:space="preserve">
+    <value>الوسوم</value>
+  </data>
+  <data name="Creator.Application.TagsPlaceholder" xml:space="preserve">
+    <value>وسوم مفصولة بفواصل.</value>
+  </data>
+  <data name="Creator.Application.TagsHelp" xml:space="preserve">
+    <value>مفصولة بفواصل (بحد أقصى 20، كل منها حتى 50 حرفًا).</value>
+  </data>
+  <data name="Creator.Application.NichesLabel" xml:space="preserve">
+    <value>المجالات</value>
+  </data>
+  <data name="Creator.Application.NichesHint" xml:space="preserve">
+    <value>(اختر حتى 5)</value>
+  </data>
+  <data name="Creator.Application.NoNiches" xml:space="preserve">
+    <value>لا توجد مجالات متاحة حاليًا.</value>
+  </data>
+  <data name="Creator.Invite.Title" xml:space="preserve">
+    <value>استخدام دعوة</value>
+  </data>
+  <data name="Creator.Invite.Heading" xml:space="preserve">
+    <value>استخدام دعوة</value>
+  </data>
+  <data name="Creator.Invite.Back" xml:space="preserve">
+    <value>العودة إلى الطلب</value>
+  </data>
+  <data name="Creator.Invite.TokenLabel" xml:space="preserve">
+    <value>رمز الدعوة</value>
+  </data>
+  <data name="Creator.Invite.TokenPlaceholder" xml:space="preserve">
+    <value>الصق رمز الدعوة الخاص بك</value>
+  </data>
+  <data name="Creator.Invite.TokenHelp" xml:space="preserve">
+    <value>أدخل الرمز من بريد الدعوة الإلكتروني.</value>
+  </data>
+  <data name="Creator.Invite.Redeem" xml:space="preserve">
+    <value>استخدام</value>
+  </data>
+  <data name="Creator.Articles.Title" xml:space="preserve">
+    <value>مقالاتي</value>
+  </data>
+  <data name="Creator.Articles.Heading" xml:space="preserve">
+    <value>مقالاتي</value>
+  </data>
+  <data name="Creator.Articles.NewArticle" xml:space="preserve">
+    <value>مقال جديد</value>
+  </data>
+  <data name="Creator.Articles.Deleted" xml:space="preserve">
+    <value>تم حذف المقال</value>
+  </data>
+  <data name="Creator.Articles.DeletedNamed" xml:space="preserve">
+    <value>تم حذف "{0}".</value>
+  </data>
+  <data name="Creator.Articles.Dismiss" xml:space="preserve">
+    <value>إغلاق</value>
+  </data>
+  <data name="Creator.Articles.Undo" xml:space="preserve">
+    <value>تراجع</value>
+  </data>
+  <data name="Creator.Articles.StatusLabel" xml:space="preserve">
+    <value>الحالة</value>
+  </data>
+  <data name="Creator.Articles.AllStatuses" xml:space="preserve">
+    <value>الكل</value>
+  </data>
+  <data name="Creator.Articles.Apply" xml:space="preserve">
+    <value>تطبيق</value>
+  </data>
+  <data name="Creator.Articles.EmptyTitle" xml:space="preserve">
+    <value>لا توجد مقالات بعد</value>
+  </data>
+  <data name="Creator.Articles.EmptyMsg" xml:space="preserve">
+    <value>لم تكتب أي مقالات بعد.</value>
+  </data>
+  <data name="Creator.Articles.EmptyMsgFiltered" xml:space="preserve">
+    <value>لا توجد لديك مقالات بحالة "{0}".</value>
+  </data>
+  <data name="Creator.Articles.WriteFirst" xml:space="preserve">
+    <value>اكتب أول مقال لك</value>
+  </data>
+  <data name="Creator.Articles.ColTitle" xml:space="preserve">
+    <value>العنوان</value>
+  </data>
+  <data name="Creator.Articles.ColStatus" xml:space="preserve">
+    <value>الحالة</value>
+  </data>
+  <data name="Creator.Articles.ColLanguage" xml:space="preserve">
+    <value>اللغة</value>
+  </data>
+  <data name="Creator.Articles.ColPublished" xml:space="preserve">
+    <value>تاريخ النشر</value>
+  </data>
+  <data name="Creator.Articles.ColViews" xml:space="preserve">
+    <value>المشاهدات</value>
+  </data>
+  <data name="Creator.Articles.ColRead" xml:space="preserve">
+    <value>القراءة</value>
+  </data>
+  <data name="Creator.Articles.ColActions" xml:space="preserve">
+    <value>إجراءات</value>
+  </data>
+  <data name="Creator.Articles.NotSet" xml:space="preserve">
+    <value>غير محدد</value>
+  </data>
+  <data name="Creator.Articles.Minutes" xml:space="preserve">
+    <value>{0} دقيقة</value>
+  </data>
+  <data name="Creator.Articles.Edit" xml:space="preserve">
+    <value>تعديل</value>
+  </data>
+  <data name="Creator.Articles.Pagination" xml:space="preserve">
+    <value>صفحات المقالات</value>
+  </data>
+  <data name="Creator.Articles.PageOf" xml:space="preserve">
+    <value>صفحة {0} من {1}</value>
+  </data>
+  <data name="Creator.Articles.Previous" xml:space="preserve">
+    <value>السابق</value>
+  </data>
+  <data name="Creator.Articles.Next" xml:space="preserve">
+    <value>التالي</value>
+  </data>
+  <data name="Creator.Audience.Title" xml:space="preserve">
+    <value>الجمهور</value>
+  </data>
+  <data name="Creator.Audience.Heading" xml:space="preserve">
+    <value>الجمهور</value>
+  </data>
+  <data name="Creator.Audience.UnavailableTitle" xml:space="preserve">
+    <value>بيانات الجمهور غير متاحة</value>
+  </data>
+  <data name="Creator.Audience.UnavailableMsg" xml:space="preserve">
+    <value>بيانات جمهورك غير متاحة حتى يصبح ملف صانع المحتوى الخاص بك نشطًا.</value>
+  </data>
+  <data name="Creator.Audience.ReadOnly" xml:space="preserve">
+    <value>هذه نظرة للقراءة فقط على جمهورك.</value>
+  </data>
+  <data name="Creator.Audience.Followers" xml:space="preserve">
+    <value>المتابعون</value>
+  </data>
+  <data name="Creator.Audience.RecentFollowers" xml:space="preserve">
+    <value>أحدث المتابعين</value>
+  </data>
+  <data name="Creator.Audience.NoFollowers" xml:space="preserve">
+    <value>لا يوجد متابعون بعد.</value>
+  </data>
+  <data name="Creator.Audience.FollowerLabel" xml:space="preserve">
+    <value>متابع رقم {0}</value>
+  </data>
+  <data name="Creator.Audience.FollowedOn" xml:space="preserve">
+    <value>تابع في</value>
+  </data>
+  <data name="Creator.Audience.Pagination" xml:space="preserve">
+    <value>صفحات المتابعين</value>
+  </data>
+  <data name="Creator.Audience.Page" xml:space="preserve">
+    <value>صفحة</value>
+  </data>
+  <data name="Creator.Audience.Previous" xml:space="preserve">
+    <value>السابق</value>
+  </data>
+  <data name="Creator.Audience.Next" xml:space="preserve">
+    <value>التالي</value>
+  </data>
+  <data name="Creator.Profile.Title" xml:space="preserve">
+    <value>ملف صانع المحتوى الخاص بي</value>
+  </data>
+  <data name="Creator.Profile.Heading" xml:space="preserve">
+    <value>ملف صانع المحتوى الخاص بي</value>
+  </data>
+  <data name="Creator.Profile.Active" xml:space="preserve">
+    <value>نشط</value>
+  </data>
+  <data name="Creator.Profile.ActiveTier" xml:space="preserve">
+    <value>نشط · {0}</value>
+  </data>
+  <data name="Creator.Profile.NoProfileTitle" xml:space="preserve">
+    <value>لم يتم العثور على ملف صانع محتوى</value>
+  </data>
+  <data name="Creator.Profile.NoProfileMsg" xml:space="preserve">
+    <value>تعذّر علينا تحميل ملف صانع محتوى لحسابك.</value>
+  </data>
+  <data name="Creator.Profile.InactiveTitle" xml:space="preserve">
+    <value>ملف صانع المحتوى الخاص بك {0}</value>
+  </data>
+  <data name="Creator.Profile.InactiveMsg" xml:space="preserve">
+    <value>تعديل الملف غير متاح أثناء وجود ملفك في هذه الحالة.</value>
+  </data>
+  <data name="Creator.Profile.DetailsHeading" xml:space="preserve">
+    <value>تفاصيل الملف</value>
+  </data>
+  <data name="Creator.Profile.BioLabel" xml:space="preserve">
+    <value>نبذة</value>
+  </data>
+  <data name="Creator.Profile.BioHelp" xml:space="preserve">
+    <value>أخبر القرّاء عن نفسك.</value>
+  </data>
+  <data name="Creator.Profile.SlugHelp" xml:space="preserve">
+    <value>اتركه فارغًا للاحتفاظ بالرابط الحالي. الحالي:</value>
+  </data>
+  <data name="Creator.Profile.SaveProfile" xml:space="preserve">
+    <value>حفظ الملف</value>
+  </data>
+  <data name="Creator.Profile.AvatarHeading" xml:space="preserve">
+    <value>الصورة الرمزية</value>
+  </data>
+  <data name="Creator.Profile.AvatarLabel" xml:space="preserve">
+    <value>رابط الصورة الرمزية</value>
+  </data>
+  <data name="Creator.Profile.UpdateAvatar" xml:space="preserve">
+    <value>تحديث الصورة الرمزية</value>
+  </data>
+  <data name="Creator.Profile.DangerHeading" xml:space="preserve">
+    <value>تعطيل الحساب</value>
+  </data>
+  <data name="Creator.Profile.DangerMsg" xml:space="preserve">
+    <value>يؤدي التعطيل إلى حذف ملف صانع المحتوى الخاص بك حذفًا مؤقتًا. لديك 60 يومًا لإعادة التفعيل قبل إزالته نهائيًا.</value>
+  </data>
+  <data name="Creator.Profile.Deactivate" xml:space="preserve">
+    <value>تعطيل</value>
+  </data>
+  <data name="Creator.Profile.ModalTitle" xml:space="preserve">
+    <value>تعطيل ملف صانع المحتوى؟</value>
+  </data>
+  <data name="Creator.Profile.ModalBody" xml:space="preserve">
+    <value>يؤدي هذا إلى حذف ملف صانع المحتوى الخاص بك حذفًا مؤقتًا. سيكون لديك 60 يومًا لإعادة التفعيل قبل إزالته نهائيًا.</value>
+  </data>
+  <data name="Creator.Profile.ConfirmCheck" xml:space="preserve">
+    <value>أفهم وأرغب في تعطيل ملف صانع المحتوى الخاص بي.</value>
+  </data>
+  <data name="Creator.Profile.Cancel" xml:space="preserve">
+    <value>إلغاء</value>
+  </data>
+  <data name="Creator.Profile.ConfirmDeactivate" xml:space="preserve">
+    <value>تعطيل ملفي</value>
+  </data>
+  <data name="Creator.Editor.NewTitle" xml:space="preserve">
+    <value>مقال جديد</value>
+  </data>
+  <data name="Creator.Editor.EditTitle" xml:space="preserve">
+    <value>تعديل المقال</value>
+  </data>
+  <data name="Creator.Editor.BackToList" xml:space="preserve">
+    <value>العودة إلى القائمة</value>
+  </data>
+  <data name="Creator.Editor.SlugPlaceholder" xml:space="preserve">
+    <value>يُنشأ تلقائيًا من العنوان إذا تُرك فارغًا</value>
+  </data>
+  <data name="Creator.Editor.SlugHelp" xml:space="preserve">
+    <value>أحرف إنجليزية صغيرة وأرقام وشرطات. اتركه فارغًا للإنشاء التلقائي.</value>
+  </data>
+  <data name="Creator.Editor.LanguageHelp" xml:space="preserve">
+    <value>رمز لغة من حرفين، مثل en أو ar.</value>
+  </data>
+  <data name="Creator.Editor.SummaryLabel" xml:space="preserve">
+    <value>الملخص</value>
+  </data>
+  <data name="Creator.Editor.ContentLabel" xml:space="preserve">
+    <value>المحتوى</value>
+  </data>
+  <data name="Creator.Editor.SaveDraft" xml:space="preserve">
+    <value>حفظ كمسودة</value>
+  </data>
+  <data name="Creator.Editor.SaveChanges" xml:space="preserve">
+    <value>حفظ التغييرات</value>
+  </data>
+  <data name="Creator.Editor.ImagesHeading" xml:space="preserve">
+    <value>الصور</value>
+  </data>
+  <data name="Creator.Editor.ImagesAfterSave" xml:space="preserve">
+    <value>احفظ المسودة أولًا، ثم يمكنك إضافة الصور.</value>
+  </data>
+  <data name="Creator.Editor.ToursHeading" xml:space="preserve">
+    <value>الجولات ذات الصلة</value>
+  </data>
+  <data name="Creator.Editor.ToursSubtitle" xml:space="preserve">
+    <value>اربط الجولات بهذا المقال.</value>
+  </data>
+  <data name="Creator.Editor.TourIdLabel" xml:space="preserve">
+    <value>معرّف الجولة</value>
+  </data>
+  <data name="Creator.Editor.TourIdHelp" xml:space="preserve">
+    <value>الصق معرّف الجولة من صفحة تفاصيلها.</value>
+  </data>
+  <data name="Creator.Editor.LinkTour" xml:space="preserve">
+    <value>ربط جولة</value>
+  </data>
+  <data name="Creator.Editor.UnlinkTour" xml:space="preserve">
+    <value>إلغاء ربط جولة</value>
+  </data>
+  <data name="Creator.Editor.UnlinkTitle" xml:space="preserve">
+    <value>إلغaء ربط جولة؟</value>
+  </data>
+  <data name="Creator.Editor.UnlinkBody" xml:space="preserve">
+    <value>أدخل معرّف الجولة المراد إلغاء ربطها بهذا المقال.</value>
+  </data>
+  <data name="Creator.Editor.UnlinkTourIdLabel" xml:space="preserve">
+    <value>معرّف الجولة المراد إلغاء ربطها</value>
+  </data>
+  <data name="Creator.Editor.Cancel" xml:space="preserve">
+    <value>إلغاء</value>
+  </data>
+  <data name="Creator.Editor.ToursVersionNote" xml:space="preserve">
+    <value>يستخدم الربط النسخة الحالية من المقال؛ إذا تم تغييره في مكان آخر، فحدّث المحرر أولًا.</value>
+  </data>
+  <data name="Creator.Editor.SubmitForReview" xml:space="preserve">
+    <value>إرسال للمراجعة</value>
+  </data>
+  <data name="Creator.Editor.Delete" xml:space="preserve">
+    <value>حذف</value>
+  </data>
+  <data name="Creator.Editor.DeleteTitle" xml:space="preserve">
+    <value>حذف هذا المقال؟</value>
+  </data>
+  <data name="Creator.Editor.DeleteBody" xml:space="preserve">
+    <value>سيتم حذف "{0}". يمكنك التراجع عن ذلك فورًا بعدها من قائمة المقالات.</value>
+  </data>
+  <data name="Creator.Editor.DeleteConfirm" xml:space="preserve">
+    <value>حذف المقال</value>
+  </data>
+  <data name="Creator.Images.AddLabel" xml:space="preserve">
+    <value>إضافة صور</value>
+  </data>
+  <data name="Creator.Images.AddHint" xml:space="preserve">
+    <value>(JPG، PNG، GIF، WEBP · بحد أقصى 10 ميجابايت لكل منها · {0} خانة متبقية)</value>
+  </data>
+  <data name="Creator.Images.Upload" xml:space="preserve">
+    <value>رفع</value>
+  </data>
+  <data name="Creator.Images.MaxReached" xml:space="preserve">
+    <value>وصل هذا المقال إلى الحد الأقصى من الصور وهو {0}.</value>
+  </data>
+  <data name="Creator.Images.None" xml:space="preserve">
+    <value>لا توجد صور بعد.</value>
+  </data>
+  <data name="Creator.Images.MoveUp" xml:space="preserve">
+    <value>تحريك لأعلى</value>
+  </data>
+  <data name="Creator.Images.MoveDown" xml:space="preserve">
+    <value>تحريك لأسفل</value>
+  </data>
+  <data name="Creator.Images.Primary" xml:space="preserve">
+    <value>الصورة الرئيسية</value>
+  </data>
+  <data name="Creator.Images.SetPrimary" xml:space="preserve">
+    <value>تعيين كرئيسية</value>
+  </data>
+  <data name="Creator.Images.Delete" xml:space="preserve">
+    <value>حذف</value>
+  </data>
+  <data name="Creator.Images.DeleteTitle" xml:space="preserve">
+    <value>حذف هذه الصورة؟</value>
+  </data>
+  <data name="Creator.Images.DeleteBody" xml:space="preserve">
+    <value>سيتم حذف هذه الصورة نهائيًا. لا يمكن التراجع عن ذلك.</value>
+  </data>
+  <data name="Creator.Images.DeleteConfirm" xml:space="preserve">
+    <value>حذف الصورة</value>
+  </data>
+  <data name="Creator.Images.Cancel" xml:space="preserve">
+    <value>إلغاء</value>
+  </data>
+  <data name="Creator.Preview.Title" xml:space="preserve">
+    <value>معاينة الملف العام</value>
+  </data>
+  <data name="Creator.Preview.Heading" xml:space="preserve">
+    <value>معاينة الملف العام</value>
+  </data>
+  <data name="Creator.Preview.UnavailableTitle" xml:space="preserve">
+    <value>المعاينة العامة غير متاحة</value>
+  </data>
+  <data name="Creator.Preview.UnavailableMsg" xml:space="preserve">
+    <value>ستتوفر معاينة ملفك العام بمجرد أن يصبح ملف صانع المحتوى الخاص بك نشطًا ومقبولًا.</value>
+  </data>
+  <data name="Creator.Preview.ReadOnly" xml:space="preserve">
+    <value>هذه معاينة للقراءة فقط لكيفية رؤية الزوّار لملفك العام.</value>
+  </data>
+  <data name="Creator.Preview.Articles" xml:space="preserve">
+    <value>المقالات</value>
+  </data>
+  <data name="Creator.Preview.Followers" xml:space="preserve">
+    <value>المتابعون</value>
+  </data>
+  <data name="Creator.Preview.Views" xml:space="preserve">
+    <value>المشاهدات</value>
+  </data>
+  <data name="Creator.Preview.Reactions" xml:space="preserve">
+    <value>التفاعلات</value>
+  </data>
+  <data name="Creator.Preview.Comments" xml:space="preserve">
+    <value>التعليقات</value>
+  </data>
+  <data name="Creator.Preview.PublishedArticles" xml:space="preserve">
+    <value>المقالات المنشورة</value>
+  </data>
+  <data name="Creator.Preview.NoArticles" xml:space="preserve">
+    <value>لا توجد مقالات منشورة بعد.</value>
+  </data>
+  <data name="Creator.Preview.ViewsLabel" xml:space="preserve">
+    <value>مشاهدة</value>
+  </data>
+  <data name="Creator.Preview.MinRead" xml:space="preserve">
+    <value>{0} دقيقة قراءة</value>
+  </data>
+  <data name="Creator.Preview.Pagination" xml:space="preserve">
+    <value>صفحات المقالات</value>
+  </data>
+  <data name="Creator.Preview.PageOf" xml:space="preserve">
+    <value>صفحة {0} من {1}</value>
+  </data>
+  <data name="Creator.Preview.Previous" xml:space="preserve">
+    <value>السابق</value>
+  </data>
+  <data name="Creator.Preview.Next" xml:space="preserve">
+    <value>التالي</value>
+  </data>
+  <data name="Guide.Nav.AvatarAlt" xml:space="preserve">
+    <value>الصورة الرمزية</value>
+  </data>
+  <data name="Guide.Nav.Greeting" xml:space="preserve">
+    <value>مرحبًا،</value>
+  </data>
+  <data name="Guide.Nav.DefaultName" xml:space="preserve">
+    <value>مرشد</value>
+  </data>
+  <data name="Guide.Nav.Badge" xml:space="preserve">
+    <value>مرشد</value>
+  </data>
+  <data name="Guide.Nav.Menu" xml:space="preserve">
+    <value>القائمة</value>
+  </data>
+  <data name="Guide.Nav.Aria" xml:space="preserve">
+    <value>قائمة المرشد</value>
+  </data>
+  <data name="Guide.Nav.Close" xml:space="preserve">
+    <value>إغلاق</value>
+  </data>
+  <data name="Guide.Nav.Dashboard" xml:space="preserve">
+    <value>لوحة التحكم</value>
+  </data>
+  <data name="Guide.Nav.Profile" xml:space="preserve">
+    <value>ملفي الشخصي</value>
+  </data>
+  <data name="Guide.Nav.MyTours" xml:space="preserve">
+    <value>جولاتي وعروضي</value>
+  </data>
+  <data name="Guide.Nav.Availability" xml:space="preserve">
+    <value>التوفر</value>
+  </data>
+  <data name="Guide.Nav.Earnings" xml:space="preserve">
+    <value>الأرباح</value>
+  </data>
+  <data name="Guide.Nav.Analytics" xml:space="preserve">
+    <value>التحليلات</value>
+  </data>
+  <data name="Guide.Nav.Tier" xml:space="preserve">
+    <value>المستوى</value>
+  </data>
+  <data name="Guide.Nav.Applications" xml:space="preserve">
+    <value>الطلبات</value>
+  </data>
+  <data name="Guide.Nav.Discounts" xml:space="preserve">
+    <value>الخصومات</value>
+  </data>
+  <data name="Guide.Nav.JoinRequests" xml:space="preserve">
+    <value>طلبات الانضمام</value>
+  </data>
+  <data name="Guide.Nav.Proposals" xml:space="preserve">
+    <value>مقترحاتي</value>
+  </data>
+  <data name="Guide.Nav.Agency" xml:space="preserve">
+    <value>وكالتي</value>
+  </data>
+  <data name="Guide.Nav.AgencyRoster" xml:space="preserve">
+    <value>قائمة الوكالة</value>
+  </data>
+  <data name="Guide.Nav.Reviews" xml:space="preserve">
+    <value>التقييمات</value>
+  </data>
+  <data name="Guide.Nav.SignOut" xml:space="preserve">
+    <value>تسجيل الخروج</value>
+  </data>
+  <data name="Guide.Common.Yes" xml:space="preserve">
+    <value>نعم</value>
+  </data>
+  <data name="Guide.Common.No" xml:space="preserve">
+    <value>لا</value>
+  </data>
+  <data name="Guide.Common.Close" xml:space="preserve">
+    <value>إغلاق</value>
+  </data>
+  <data name="Guide.Common.Cancel" xml:space="preserve">
+    <value>إلغاء</value>
+  </data>
+  <data name="Guide.Common.Previous" xml:space="preserve">
+    <value>السابق</value>
+  </data>
+  <data name="Guide.Common.Next" xml:space="preserve">
+    <value>التالي</value>
+  </data>
+  <data name="Guide.Common.PageOf" xml:space="preserve">
+    <value>صفحة {0} من {1}</value>
+  </data>
+  <data name="Guide.Status.Paid" xml:space="preserve">
+    <value>مدفوع</value>
+  </data>
+  <data name="Guide.Status.Completed" xml:space="preserve">
+    <value>مكتمل</value>
+  </data>
+  <data name="Guide.Status.Pending" xml:space="preserve">
+    <value>قيد الانتظار</value>
+  </data>
+  <data name="Guide.Status.Cancelled" xml:space="preserve">
+    <value>ملغى</value>
+  </data>
+  <data name="Guide.Status.Refunded" xml:space="preserve">
+    <value>مسترد</value>
+  </data>
+  <data name="Guide.Status.Unknown" xml:space="preserve">
+    <value>غير معروف</value>
+  </data>
+  <data name="Guide.Dashboard.Title" xml:space="preserve">
+    <value>لوحة تحكم المرشد</value>
+  </data>
+  <data name="Guide.Dashboard.Heading" xml:space="preserve">
+    <value>لوحة التحكم</value>
+  </data>
+  <data name="Guide.Dashboard.NetEarnings" xml:space="preserve">
+    <value>صافي الأرباح</value>
+  </data>
+  <data name="Guide.Dashboard.ThisMonth" xml:space="preserve">
+    <value>هذا الشهر</value>
+  </data>
+  <data name="Guide.Dashboard.PendingPayout" xml:space="preserve">
+    <value>الدفعات المعلقة</value>
+  </data>
+  <data name="Guide.Dashboard.Tours" xml:space="preserve">
+    <value>الجولات</value>
+  </data>
+  <data name="Guide.Dashboard.TierProgress" xml:space="preserve">
+    <value>تقدم المستوى</value>
+  </data>
+  <data name="Guide.Dashboard.CommissionRate" xml:space="preserve">
+    <value>نسبة العمولة:</value>
+  </data>
+  <data name="Guide.Dashboard.NextTier" xml:space="preserve">
+    <value>المستوى التالي:</value>
+  </data>
+  <data name="Guide.Dashboard.HighestTier" xml:space="preserve">
+    <value>لقد وصلت إلى أعلى مستوى.</value>
+  </data>
+  <data name="Guide.Dashboard.CompletedTours" xml:space="preserve">
+    <value>الجولات المكتملة</value>
+  </data>
+  <data name="Guide.Dashboard.AverageRating" xml:space="preserve">
+    <value>متوسط التقييم</value>
+  </data>
+  <data name="Guide.Dashboard.ActiveMonths" xml:space="preserve">
+    <value>الأشهر النشطة</value>
+  </data>
+  <data name="Guide.Dashboard.ReportRate" xml:space="preserve">
+    <value>معدل البلاغات</value>
+  </data>
+  <data name="Guide.Dashboard.Profile" xml:space="preserve">
+    <value>الملف الشخصي</value>
+  </data>
+  <data name="Guide.Dashboard.Rating" xml:space="preserve">
+    <value>التقييم</value>
+  </data>
+  <data name="Guide.Dashboard.Experience" xml:space="preserve">
+    <value>الخبرة</value>
+  </data>
+  <data name="Guide.Dashboard.Years" xml:space="preserve">
+    <value>{0} سنوات</value>
+  </data>
+  <data name="Guide.Dashboard.FirstAid" xml:space="preserve">
+    <value>الإسعافات الأولية</value>
+  </data>
+  <data name="Guide.Dashboard.ActiveBlocks" xml:space="preserve">
+    <value>فترات عدم التوفر النشطة</value>
+  </data>
+  <data name="Guide.Dashboard.EditProfile" xml:space="preserve">
+    <value>تعديل الملف الشخصي</value>
+  </data>
+  <data name="Guide.Dashboard.RecentTours" xml:space="preserve">
+    <value>الجولات الأخيرة</value>
+  </data>
+  <data name="Guide.Dashboard.ViewAll" xml:space="preserve">
+    <value>عرض الكل</value>
+  </data>
+  <data name="Guide.Dashboard.NoTours" xml:space="preserve">
+    <value>لا توجد جولات بعد.</value>
+  </data>
+  <data name="Guide.Dashboard.FindTours" xml:space="preserve">
+    <value>ابحث عن جولات</value>
+  </data>
+  <data name="Guide.Dashboard.ColTour" xml:space="preserve">
+    <value>الجولة</value>
+  </data>
+  <data name="Guide.Dashboard.ColOffering" xml:space="preserve">
+    <value>العرض</value>
+  </data>
+  <data name="Guide.Dashboard.ColPrivate" xml:space="preserve">
+    <value>خاصة</value>
+  </data>
+  <data name="Guide.Dashboard.ColAssigned" xml:space="preserve">
+    <value>تاريخ الإسناد</value>
+  </data>
+  <data name="Guide.Tier.Title" xml:space="preserve">
+    <value>تقدم المستوى</value>
+  </data>
+  <data name="Guide.Tier.Heading" xml:space="preserve">
+    <value>تقدم المستوى</value>
+  </data>
+  <data name="Guide.Tier.CurrentTier" xml:space="preserve">
+    <value>المستوى الحالي</value>
+  </data>
+  <data name="Guide.Tier.Commission" xml:space="preserve">
+    <value>نسبة العمولة: {0}</value>
+  </data>
+  <data name="Guide.Tier.MeetTargets" xml:space="preserve">
+    <value>حقق الأهداف أدناه للتقدم إلى المستوى التالي.</value>
+  </data>
+  <data name="Guide.Tier.TopTier" xml:space="preserve">
+    <value>لقد وصلت إلى أعلى مستوى.</value>
+  </data>
+  <data name="Guide.Tier.ProgressHeading" xml:space="preserve">
+    <value>التقدم نحو المستوى التالي</value>
+  </data>
+  <data name="Guide.Tier.CompletedTours" xml:space="preserve">
+    <value>الجولات المكتملة</value>
+  </data>
+  <data name="Guide.Tier.AverageRating" xml:space="preserve">
+    <value>متوسط التقييم</value>
+  </data>
+  <data name="Guide.Tier.ActiveMonths" xml:space="preserve">
+    <value>الأشهر النشطة</value>
+  </data>
+  <data name="Guide.Tier.ReportRate" xml:space="preserve">
+    <value>معدل البلاغات (الحد الأقصى {0})</value>
+  </data>
+  <data name="Guide.Tier.ViewAnalytics" xml:space="preserve">
+    <value>عرض التحليلات</value>
+  </data>
+  <data name="Guide.Profile.Title" xml:space="preserve">
+    <value>ملفي الشخصي</value>
+  </data>
+  <data name="Guide.Profile.Heading" xml:space="preserve">
+    <value>ملفي الشخصي</value>
+  </data>
+  <data name="Guide.Profile.ToursCount" xml:space="preserve">
+    <value>{0} جولة</value>
+  </data>
+  <data name="Guide.Profile.AvatarUpload" xml:space="preserve">
+    <value>رفع صورة رمزية</value>
+  </data>
+  <data name="Guide.Profile.Avatar" xml:space="preserve">
+    <value>الصورة الرمزية</value>
+  </data>
+  <data name="Guide.Profile.CoverUpload" xml:space="preserve">
+    <value>رفع صورة الغلاف</value>
+  </data>
+  <data name="Guide.Profile.Cover" xml:space="preserve">
+    <value>الغلاف</value>
+  </data>
+  <data name="Guide.Profile.Details" xml:space="preserve">
+    <value>تفاصيل الملف الشخصي</value>
+  </data>
+  <data name="Guide.Profile.Bio" xml:space="preserve">
+    <value>نبذة</value>
+  </data>
+  <data name="Guide.Profile.BioPlaceholder" xml:space="preserve">
+    <value>أخبر المسافرين عن نفسك</value>
+  </data>
+  <data name="Guide.Profile.BioHelp" xml:space="preserve">
+    <value>وصف قصير يظهر في ملفك الشخصي العام.</value>
+  </data>
+  <data name="Guide.Profile.YearsLabel" xml:space="preserve">
+    <value>سنوات الخبرة</value>
+  </data>
+  <data name="Guide.Profile.LicenseLabel" xml:space="preserve">
+    <value>رقم رخصة وزارة السياحة</value>
+  </data>
+  <data name="Guide.Profile.FirstAidLabel" xml:space="preserve">
+    <value>حاصل على شهادة الإسعافات الأولية</value>
+  </data>
+  <data name="Guide.Profile.SaveChanges" xml:space="preserve">
+    <value>حفظ التغييرات</value>
+  </data>
+  <data name="Guide.Profile.Languages" xml:space="preserve">
+    <value>اللغات</value>
+  </data>
+  <data name="Guide.Profile.NoLanguages" xml:space="preserve">
+    <value>لم تتم إضافة لغات بعد.</value>
+  </data>
+  <data name="Guide.Profile.Remove" xml:space="preserve">
+    <value>إزالة</value>
+  </data>
+  <data name="Guide.Profile.RemoveLanguageLabel" xml:space="preserve">
+    <value>إزالة {0}</value>
+  </data>
+  <data name="Guide.Profile.Language" xml:space="preserve">
+    <value>اللغة</value>
+  </data>
+  <data name="Guide.Profile.SelectLanguage" xml:space="preserve">
+    <value>اختر لغة</value>
+  </data>
+  <data name="Guide.Profile.Proficiency" xml:space="preserve">
+    <value>مستوى الإتقان</value>
+  </data>
+  <data name="Guide.Profile.Proficiency.Native" xml:space="preserve">
+    <value>لغة أم</value>
+  </data>
+  <data name="Guide.Profile.Proficiency.Fluent" xml:space="preserve">
+    <value>بطلاقة</value>
+  </data>
+  <data name="Guide.Profile.Proficiency.Conversational" xml:space="preserve">
+    <value>محادثة</value>
+  </data>
+  <data name="Guide.Profile.Proficiency.Basic" xml:space="preserve">
+    <value>أساسي</value>
+  </data>
+  <data name="Guide.Profile.AddLanguage" xml:space="preserve">
+    <value>إضافة لغة</value>
+  </data>
+  <data name="Guide.Profile.Specializations" xml:space="preserve">
+    <value>التخصصات</value>
+  </data>
+  <data name="Guide.Profile.NoSpecializations" xml:space="preserve">
+    <value>لم تتم إضافة تخصصات بعد.</value>
+  </data>
+  <data name="Guide.Profile.Specialization" xml:space="preserve">
+    <value>التخصص</value>
+  </data>
+  <data name="Guide.Profile.SelectSpecialization" xml:space="preserve">
+    <value>اختر تخصصًا</value>
+  </data>
+  <data name="Guide.Profile.Add" xml:space="preserve">
+    <value>إضافة</value>
+  </data>
+  <data name="Guide.Profile.DeactivateHeading" xml:space="preserve">
+    <value>إلغاء تفعيل الملف الشخصي</value>
+  </data>
+  <data name="Guide.Profile.DeactivateMsg" xml:space="preserve">
+    <value>إلغاء التفعيل يخفي ملفك الشخصي وجولاتك عن المسافرين.</value>
+  </data>
+  <data name="Guide.Profile.Deactivate" xml:space="preserve">
+    <value>إلغاء التفعيل</value>
+  </data>
+  <data name="Guide.Profile.DeactivateModalTitle" xml:space="preserve">
+    <value>إلغاء تفعيل ملفك الشخصي؟</value>
+  </data>
+  <data name="Guide.Profile.DeactivateModalBody" xml:space="preserve">
+    <value>سيتم إخفاء ملفك الشخصي وجولاتك عن المسافرين حتى تعيد التفعيل.</value>
+  </data>
+  <data name="Guide.Profile.DeactivateConfirm" xml:space="preserve">
+    <value>إلغاء تفعيل الملف الشخصي</value>
+  </data>
+  <data name="Guide.Earnings.Title" xml:space="preserve">
+    <value>الأرباح</value>
+  </data>
+  <data name="Guide.Earnings.Heading" xml:space="preserve">
+    <value>الأرباح</value>
+  </data>
+  <data name="Guide.Earnings.NetEarnings" xml:space="preserve">
+    <value>صافي الأرباح</value>
+  </data>
+  <data name="Guide.Earnings.ThisMonth" xml:space="preserve">
+    <value>هذا الشهر</value>
+  </data>
+  <data name="Guide.Earnings.PendingPayout" xml:space="preserve">
+    <value>الدفعات المعلقة</value>
+  </data>
+  <data name="Guide.Earnings.CommissionDeducted" xml:space="preserve">
+    <value>العمولة المخصومة</value>
+  </data>
+  <data name="Guide.Earnings.ByTour" xml:space="preserve">
+    <value>الأرباح حسب الجولة</value>
+  </data>
+  <data name="Guide.Earnings.NoByTour" xml:space="preserve">
+    <value>لا توجد أرباح حسب الجولة بعد.</value>
+  </data>
+  <data name="Guide.Earnings.ColTour" xml:space="preserve">
+    <value>الجولة</value>
+  </data>
+  <data name="Guide.Earnings.ColBookings" xml:space="preserve">
+    <value>الحجوزات</value>
+  </data>
+  <data name="Guide.Earnings.ColGross" xml:space="preserve">
+    <value>الإجمالي</value>
+  </data>
+  <data name="Guide.Earnings.ColCommission" xml:space="preserve">
+    <value>العمولة</value>
+  </data>
+  <data name="Guide.Earnings.ColNet" xml:space="preserve">
+    <value>الصافي</value>
+  </data>
+  <data name="Guide.Earnings.History" xml:space="preserve">
+    <value>سجل الأرباح</value>
+  </data>
+  <data name="Guide.Earnings.NoHistory" xml:space="preserve">
+    <value>لا يوجد سجل أرباح بعد.</value>
+  </data>
+  <data name="Guide.Earnings.ColDate" xml:space="preserve">
+    <value>التاريخ</value>
+  </data>
+  <data name="Guide.Earnings.ColStatus" xml:space="preserve">
+    <value>الحالة</value>
+  </data>
+  <data name="Guide.Earnings.Pagination" xml:space="preserve">
+    <value>صفحات الأرباح</value>
+  </data>
+  <data name="Guide.Availability.Title" xml:space="preserve">
+    <value>التوفر</value>
+  </data>
+  <data name="Guide.Availability.Heading" xml:space="preserve">
+    <value>التوفر</value>
+  </data>
+  <data name="Guide.Availability.Subtitle" xml:space="preserve">
+    <value>حدد التواريخ التي لا تكون فيها متاحًا.</value>
+  </data>
+  <data name="Guide.Availability.AddHeading" xml:space="preserve">
+    <value>إضافة تواريخ غير متاحة</value>
+  </data>
+  <data name="Guide.Availability.StartDate" xml:space="preserve">
+    <value>تاريخ البدء</value>
+  </data>
+  <data name="Guide.Availability.EndDate" xml:space="preserve">
+    <value>تاريخ الانتهاء</value>
+  </data>
+  <data name="Guide.Availability.Reason" xml:space="preserve">
+    <value>السبب</value>
+  </data>
+  <data name="Guide.Availability.ReasonPlaceholder" xml:space="preserve">
+    <value>سبب اختياري</value>
+  </data>
+  <data name="Guide.Availability.AddBlock" xml:space="preserve">
+    <value>إضافة فترة</value>
+  </data>
+  <data name="Guide.Availability.BlockedHeading" xml:space="preserve">
+    <value>التواريخ المحجوبة</value>
+  </data>
+  <data name="Guide.Availability.NoBlocks" xml:space="preserve">
+    <value>لا توجد تواريخ محجوبة.</value>
+  </data>
+  <data name="Guide.Availability.ColFrom" xml:space="preserve">
+    <value>من</value>
+  </data>
+  <data name="Guide.Availability.ColTo" xml:space="preserve">
+    <value>إلى</value>
+  </data>
+  <data name="Guide.Availability.ColReason" xml:space="preserve">
+    <value>السبب</value>
+  </data>
+  <data name="Guide.Availability.ColStatus" xml:space="preserve">
+    <value>الحالة</value>
+  </data>
+  <data name="Guide.Availability.ColActions" xml:space="preserve">
+    <value>الإجراءات</value>
+  </data>
+  <data name="Guide.Availability.NoReason" xml:space="preserve">
+    <value>بدون سبب</value>
+  </data>
+  <data name="Guide.Availability.Active" xml:space="preserve">
+    <value>نشط</value>
+  </data>
+  <data name="Guide.Availability.Past" xml:space="preserve">
+    <value>منتهٍ</value>
+  </data>
+  <data name="Guide.Availability.DeleteLabel" xml:space="preserve">
+    <value>حذف الفترة</value>
+  </data>
+  <data name="Guide.Availability.DeleteTitle" xml:space="preserve">
+    <value>حذف التواريخ المحجوبة؟</value>
+  </data>
+  <data name="Guide.Availability.DeleteBody" xml:space="preserve">
+    <value>إزالة الفترة من {0} إلى {1}؟</value>
+  </data>
+  <data name="Guide.Availability.DeleteConfirm" xml:space="preserve">
+    <value>حذف الفترة</value>
+  </data>
+  <data name="Guide.Discounts.Title" xml:space="preserve">
+    <value>الخصومات</value>
+  </data>
+  <data name="Guide.Discounts.Heading" xml:space="preserve">
+    <value>الخصومات</value>
+  </data>
+  <data name="Guide.Discounts.CreateHeading" xml:space="preserve">
+    <value>إنشاء خصم</value>
+  </data>
+  <data name="Guide.Discounts.Name" xml:space="preserve">
+    <value>الاسم</value>
+  </data>
+  <data name="Guide.Discounts.Description" xml:space="preserve">
+    <value>الوصف</value>
+  </data>
+  <data name="Guide.Discounts.Type" xml:space="preserve">
+    <value>النوع</value>
+  </data>
+  <data name="Guide.Discounts.Value" xml:space="preserve">
+    <value>القيمة</value>
+  </data>
+  <data name="Guide.Discounts.Currency" xml:space="preserve">
+    <value>العملة</value>
+  </data>
+  <data name="Guide.Discounts.MaxUsage" xml:space="preserve">
+    <value>الحد الأقصى للاستخدام</value>
+  </data>
+  <data name="Guide.Discounts.ValidFrom" xml:space="preserve">
+    <value>صالح من</value>
+  </data>
+  <data name="Guide.Discounts.ValidUntil" xml:space="preserve">
+    <value>صالح حتى</value>
+  </data>
+  <data name="Guide.Discounts.TourId" xml:space="preserve">
+    <value>معرّف الجولة</value>
+  </data>
+  <data name="Guide.Discounts.TourIdPlaceholder" xml:space="preserve">
+    <value>معرّف الجولة (اختياري)</value>
+  </data>
+  <data name="Guide.Discounts.TourIdHelp" xml:space="preserve">
+    <value>الصق معرّف الجولة من صفحة تفاصيلها. اتركه فارغًا لتطبيقه على كل الجولات.</value>
+  </data>
+  <data name="Guide.Discounts.CreateSubmit" xml:space="preserve">
+    <value>إنشاء خصم</value>
+  </data>
+  <data name="Guide.Discounts.MyDiscounts" xml:space="preserve">
+    <value>خصوماتي</value>
+  </data>
+  <data name="Guide.Discounts.NoDiscounts" xml:space="preserve">
+    <value>لا توجد خصومات بعد.</value>
+  </data>
+  <data name="Guide.Discounts.ColName" xml:space="preserve">
+    <value>الاسم</value>
+  </data>
+  <data name="Guide.Discounts.ColType" xml:space="preserve">
+    <value>النوع</value>
+  </data>
+  <data name="Guide.Discounts.ColValue" xml:space="preserve">
+    <value>القيمة</value>
+  </data>
+  <data name="Guide.Discounts.ColValid" xml:space="preserve">
+    <value>الصلاحية</value>
+  </data>
+  <data name="Guide.Discounts.ColUsage" xml:space="preserve">
+    <value>الاستخدام</value>
+  </data>
+  <data name="Guide.Discounts.ColStatus" xml:space="preserve">
+    <value>الحالة</value>
+  </data>
+  <data name="Guide.Discounts.ColActions" xml:space="preserve">
+    <value>الإجراءات</value>
+  </data>
+  <data name="Guide.Discounts.TypePercentage" xml:space="preserve">
+    <value>نسبة مئوية</value>
+  </data>
+  <data name="Guide.Discounts.TypeFixed" xml:space="preserve">
+    <value>مبلغ ثابت</value>
+  </data>
+  <data name="Guide.Discounts.Active" xml:space="preserve">
+    <value>نشط</value>
+  </data>
+  <data name="Guide.Discounts.Inactive" xml:space="preserve">
+    <value>غير نشط</value>
+  </data>
+  <data name="Guide.Discounts.EditLabel" xml:space="preserve">
+    <value>تعديل {0}</value>
+  </data>
+  <data name="Guide.Discounts.DeactivateLabel" xml:space="preserve">
+    <value>إلغاء تفعيل {0}</value>
+  </data>
+  <data name="Guide.Discounts.SaveChanges" xml:space="preserve">
+    <value>حفظ التغييرات</value>
+  </data>
+  <data name="Guide.Discounts.FromDate" xml:space="preserve">
+    <value>من {0}</value>
+  </data>
+  <data name="Guide.Discounts.DeactivateTitle" xml:space="preserve">
+    <value>إلغاء تفعيل الخصم؟</value>
+  </data>
+  <data name="Guide.Discounts.DeactivateBody" xml:space="preserve">
+    <value>إلغاء تفعيل الخصم "{0}"؟</value>
+  </data>
+  <data name="Guide.Discounts.DeactivateConfirm" xml:space="preserve">
+    <value>إلغاء التفعيل</value>
+  </data>
+  <data name="Guide.Applications.Title" xml:space="preserve">
+    <value>طلبات الجولات</value>
+  </data>
+  <data name="Guide.Applications.Heading" xml:space="preserve">
+    <value>طلبات الجولات</value>
+  </data>
+  <data name="Guide.Applications.Subtitle" xml:space="preserve">
+    <value>تقدم لإرشاد الجولات الحالية.</value>
+  </data>
+  <data name="Guide.Applications.ApplyHeading" xml:space="preserve">
+    <value>التقدم لجولة</value>
+  </data>
+  <data name="Guide.Applications.TourId" xml:space="preserve">
+    <value>معرّف الجولة</value>
+  </data>
+  <data name="Guide.Applications.TourIdPlaceholder" xml:space="preserve">
+    <value>معرّف الجولة</value>
+  </data>
+  <data name="Guide.Applications.TourIdHelp" xml:space="preserve">
+    <value>الصق معرّف الجولة من صفحة تفاصيلها.</value>
+  </data>
+  <data name="Guide.Applications.Message" xml:space="preserve">
+    <value>الرسالة</value>
+  </data>
+  <data name="Guide.Applications.Experience" xml:space="preserve">
+    <value>الخبرة ذات الصلة</value>
+  </data>
+  <data name="Guide.Applications.ProposedPrice" xml:space="preserve">
+    <value>السعر الأساسي المقترح</value>
+  </data>
+  <data name="Guide.Applications.Submit" xml:space="preserve">
+    <value>إرسال الطلب</value>
+  </data>
+  <data name="Guide.Applications.MyApplications" xml:space="preserve">
+    <value>طلباتي</value>
+  </data>
+  <data name="Guide.Applications.NoApplications" xml:space="preserve">
+    <value>لا توجد طلبات بعد.</value>
+  </data>
+  <data name="Guide.Applications.ColTour" xml:space="preserve">
+    <value>الجولة</value>
+  </data>
+  <data name="Guide.Applications.ColStatus" xml:space="preserve">
+    <value>الحالة</value>
+  </data>
+  <data name="Guide.Applications.ColPrice" xml:space="preserve">
+    <value>السعر المقترح</value>
+  </data>
+  <data name="Guide.Applications.ColApplied" xml:space="preserve">
+    <value>تاريخ التقديم</value>
+  </data>
+  <data name="Guide.Applications.ColReviewed" xml:space="preserve">
+    <value>تاريخ المراجعة</value>
+  </data>
+  <data name="Guide.Applications.Pagination" xml:space="preserve">
+    <value>صفحات الطلبات</value>
+  </data>
+  <data name="Guide.JoinRequests.Title" xml:space="preserve">
+    <value>طلبات الانضمام</value>
+  </data>
+  <data name="Guide.JoinRequests.Heading" xml:space="preserve">
+    <value>طلبات الانضمام</value>
+  </data>
+  <data name="Guide.JoinRequests.Subtitle" xml:space="preserve">
+    <value>مسافرون يطلبون الانضمام إلى جولاتك الجماعية.</value>
+  </data>
+  <data name="Guide.JoinRequests.PendingCount" xml:space="preserve">
+    <value>{0} قيد الانتظار</value>
+  </data>
+  <data name="Guide.JoinRequests.NoRequests" xml:space="preserve">
+    <value>لا توجد طلبات انضمام.</value>
+  </data>
+  <data name="Guide.JoinRequests.ColRequest" xml:space="preserve">
+    <value>الطلب</value>
+  </data>
+  <data name="Guide.JoinRequests.ColParticipants" xml:space="preserve">
+    <value>المشاركون</value>
+  </data>
+  <data name="Guide.JoinRequests.ColMessage" xml:space="preserve">
+    <value>الرسالة</value>
+  </data>
+  <data name="Guide.JoinRequests.ColStatus" xml:space="preserve">
+    <value>الحالة</value>
+  </data>
+  <data name="Guide.JoinRequests.ColRequested" xml:space="preserve">
+    <value>تاريخ الطلب</value>
+  </data>
+  <data name="Guide.JoinRequests.ColExpires" xml:space="preserve">
+    <value>تاريخ الانتهاء</value>
+  </data>
+  <data name="Guide.JoinRequests.ColActions" xml:space="preserve">
+    <value>الإجراءات</value>
+  </data>
+  <data name="Guide.JoinRequests.RequestLabel" xml:space="preserve">
+    <value>طلب #{0}</value>
+  </data>
+  <data name="Guide.JoinRequests.NoMessage" xml:space="preserve">
+    <value>لا توجد رسالة</value>
+  </data>
+  <data name="Guide.JoinRequests.Expired" xml:space="preserve">
+    <value>منتهٍ</value>
+  </data>
+  <data name="Guide.JoinRequests.Approve" xml:space="preserve">
+    <value>موافقة</value>
+  </data>
+  <data name="Guide.JoinRequests.Reject" xml:space="preserve">
+    <value>رفض</value>
+  </data>
+  <data name="Guide.JoinRequests.RejectTitle" xml:space="preserve">
+    <value>رفض طلب الانضمام؟</value>
+  </data>
+  <data name="Guide.JoinRequests.RejectBody" xml:space="preserve">
+    <value>يمكنك اختياريًا إخبار المسافر بسبب رفض طلبه.</value>
+  </data>
+  <data name="Guide.JoinRequests.ReasonLabel" xml:space="preserve">
+    <value>رسالة الرد</value>
+  </data>
+  <data name="Guide.JoinRequests.ReasonHelp" xml:space="preserve">
+    <value>تتم مشاركة هذه الرسالة مع المسافر.</value>
+  </data>
+  <data name="Guide.JoinRequests.RejectConfirm" xml:space="preserve">
+    <value>رفض الطلب</value>
+  </data>
+  <data name="Guide.Agency.Title" xml:space="preserve">
+    <value>وكالتي</value>
+  </data>
+  <data name="Guide.Agency.Heading" xml:space="preserve">
+    <value>وكالتي</value>
+  </data>
+  <data name="Guide.Agency.PendingCount" xml:space="preserve">
+    <value>{0} قيد الانتظار</value>
+  </data>
+  <data name="Guide.Agency.ApplyHeading" xml:space="preserve">
+    <value>التقدم إلى وكالة</value>
+  </data>
+  <data name="Guide.Agency.AgencyIdLabel" xml:space="preserve">
+    <value>معرّف الوكالة</value>
+  </data>
+  <data name="Guide.Agency.AgencyIdPlaceholder" xml:space="preserve">
+    <value>معرّف الوكالة</value>
+  </data>
+  <data name="Guide.Agency.AgencyIdHelp" xml:space="preserve">
+    <value>الصق معرّف الوكالة من صفحة تفاصيلها.</value>
+  </data>
+  <data name="Guide.Agency.Message" xml:space="preserve">
+    <value>الرسالة</value>
+  </data>
+  <data name="Guide.Agency.SubmitApplication" xml:space="preserve">
+    <value>إرسال الطلب</value>
+  </data>
+  <data name="Guide.Agency.LeaveHeading" xml:space="preserve">
+    <value>مغادرة الوكالة</value>
+  </data>
+  <data name="Guide.Agency.LeaveMsg" xml:space="preserve">
+    <value>المغادرة تلغي ارتباطك بالوكالة.</value>
+  </data>
+  <data name="Guide.Agency.Leave" xml:space="preserve">
+    <value>مغادرة</value>
+  </data>
+  <data name="Guide.Agency.InvitationsHeading" xml:space="preserve">
+    <value>دعوات الوكالة</value>
+  </data>
+  <data name="Guide.Agency.NoInvitations" xml:space="preserve">
+    <value>لا توجد دعوات.</value>
+  </data>
+  <data name="Guide.Agency.ColInvitation" xml:space="preserve">
+    <value>الدعوة</value>
+  </data>
+  <data name="Guide.Agency.ColCommission" xml:space="preserve">
+    <value>العمولة</value>
+  </data>
+  <data name="Guide.Agency.ColMessage" xml:space="preserve">
+    <value>الرسالة</value>
+  </data>
+  <data name="Guide.Agency.ColStatus" xml:space="preserve">
+    <value>الحالة</value>
+  </data>
+  <data name="Guide.Agency.ColExpires" xml:space="preserve">
+    <value>تاريخ الانتهاء</value>
+  </data>
+  <data name="Guide.Agency.ColActions" xml:space="preserve">
+    <value>الإجراءات</value>
+  </data>
+  <data name="Guide.Agency.InvitationLabel" xml:space="preserve">
+    <value>دعوة #{0}</value>
+  </data>
+  <data name="Guide.Agency.NoMessage" xml:space="preserve">
+    <value>لا توجد رسالة</value>
+  </data>
+  <data name="Guide.Agency.Expired" xml:space="preserve">
+    <value>منتهٍ</value>
+  </data>
+  <data name="Guide.Agency.Accept" xml:space="preserve">
+    <value>قبول</value>
+  </data>
+  <data name="Guide.Agency.Decline" xml:space="preserve">
+    <value>رفض</value>
+  </data>
+  <data name="Guide.Agency.LeaveModalTitle" xml:space="preserve">
+    <value>مغادرة هذه الوكالة؟</value>
+  </data>
+  <data name="Guide.Agency.LeaveModalBody" xml:space="preserve">
+    <value>سيتم إلغاء ارتباطك بهذه الوكالة.</value>
+  </data>
+  <data name="Guide.Agency.LeaveConfirm" xml:space="preserve">
+    <value>مغادرة الوكالة</value>
+  </data>
+  <data name="Guide.Proposals.Title" xml:space="preserve">
+    <value>مقترحاتي</value>
+  </data>
+  <data name="Guide.Proposals.Heading" xml:space="preserve">
+    <value>مقترحاتي</value>
+  </data>
+  <data name="Guide.Proposals.Subtitle" xml:space="preserve">
+    <value>اقترح جولات جديدة للموافقة عليها.</value>
+  </data>
+  <data name="Guide.Proposals.NewHeading" xml:space="preserve">
+    <value>مقترح جولة جديد</value>
+  </data>
+  <data name="Guide.Proposals.TitleLabel" xml:space="preserve">
+    <value>العنوان</value>
+  </data>
+  <data name="Guide.Proposals.ShortDescription" xml:space="preserve">
+    <value>وصف مختصر</value>
+  </data>
+  <data name="Guide.Proposals.Description" xml:space="preserve">
+    <value>الوصف</value>
+  </data>
+  <data name="Guide.Proposals.PlaceId" xml:space="preserve">
+    <value>معرّف المكان</value>
+  </data>
+  <data name="Guide.Proposals.PlaceIdPlaceholder" xml:space="preserve">
+    <value>معرّف المكان</value>
+  </data>
+  <data name="Guide.Proposals.PlaceIdHelp" xml:space="preserve">
+    <value>الصق معرّف المكان من صفحة تفاصيله.</value>
+  </data>
+  <data name="Guide.Proposals.Duration" xml:space="preserve">
+    <value>المدة (دقائق)</value>
+  </data>
+  <data name="Guide.Proposals.MaxGroup" xml:space="preserve">
+    <value>الحد الأقصى لحجم المجموعة</value>
+  </data>
+  <data name="Guide.Proposals.BasePrice" xml:space="preserve">
+    <value>السعر الأساسي</value>
+  </data>
+  <data name="Guide.Proposals.Currency" xml:space="preserve">
+    <value>العملة</value>
+  </data>
+  <data name="Guide.Proposals.RequestExclusive" xml:space="preserve">
+    <value>طلب عرض حصري</value>
+  </data>
+  <data name="Guide.Proposals.CreateDraft" xml:space="preserve">
+    <value>إنشاء مسودة</value>
+  </data>
+  <data name="Guide.Proposals.SubmittedHeading" xml:space="preserve">
+    <value>مقترحاتي</value>
+  </data>
+  <data name="Guide.Proposals.NoProposals" xml:space="preserve">
+    <value>لا توجد مقترحات بعد.</value>
+  </data>
+  <data name="Guide.Proposals.ColTitle" xml:space="preserve">
+    <value>العنوان</value>
+  </data>
+  <data name="Guide.Proposals.ColBasePrice" xml:space="preserve">
+    <value>السعر الأساسي</value>
+  </data>
+  <data name="Guide.Proposals.ColStatus" xml:space="preserve">
+    <value>الحالة</value>
+  </data>
+  <data name="Guide.Proposals.ColCreated" xml:space="preserve">
+    <value>تاريخ الإنشاء</value>
+  </data>
+  <data name="Guide.Proposals.ColActions" xml:space="preserve">
+    <value>الإجراءات</value>
+  </data>
+  <data name="Guide.Proposals.Submit" xml:space="preserve">
+    <value>إرسال</value>
+  </data>
+  <data name="Guide.Proposals.SubmitTitle" xml:space="preserve">
+    <value>إرسال المقترح؟</value>
+  </data>
+  <data name="Guide.Proposals.SubmitBody" xml:space="preserve">
+    <value>إرسال المقترح "{0}" للمراجعة؟</value>
+  </data>
+  <data name="Guide.Proposals.SubmitConfirm" xml:space="preserve">
+    <value>إرسال المقترح</value>
+  </data>
+  <data name="Guide.AgencyRoster.Title" xml:space="preserve">
+    <value>قائمة الوكالة</value>
+  </data>
+  <data name="Guide.AgencyRoster.Heading" xml:space="preserve">
+    <value>قائمة الوكالة</value>
+  </data>
+  <data name="Guide.AgencyRoster.PendingCount" xml:space="preserve">
+    <value>{0} قيد الانتظار</value>
+  </data>
+  <data name="Guide.AgencyRoster.InviteGuide" xml:space="preserve">
+    <value>دعوة مرشد</value>
+  </data>
+  <data name="Guide.AgencyRoster.CurrentGuides" xml:space="preserve">
+    <value>المرشدون الحاليون</value>
+  </data>
+  <data name="Guide.AgencyRoster.CurrentGuidesSubtitle" xml:space="preserve">
+    <value>المرشدون الموجودون حاليًا في وكالتك.</value>
+  </data>
+  <data name="Guide.AgencyRoster.NoGuides" xml:space="preserve">
+    <value>لا يوجد مرشدون بعد.</value>
+  </data>
+  <data name="Guide.AgencyRoster.ColGuide" xml:space="preserve">
+    <value>المرشد</value>
+  </data>
+  <data name="Guide.AgencyRoster.ColCommission" xml:space="preserve">
+    <value>العمولة</value>
+  </data>
+  <data name="Guide.AgencyRoster.ColJoined" xml:space="preserve">
+    <value>تاريخ الانضمام</value>
+  </data>
+  <data name="Guide.AgencyRoster.ColActions" xml:space="preserve">
+    <value>الإجراءات</value>
+  </data>
+  <data name="Guide.AgencyRoster.Remove" xml:space="preserve">
+    <value>إزالة</value>
+  </data>
+  <data name="Guide.AgencyRoster.ApplicationsHeading" xml:space="preserve">
+    <value>طلبات المرشدين</value>
+  </data>
+  <data name="Guide.AgencyRoster.ApplicationsSubtitle" xml:space="preserve">
+    <value>مرشدون يتقدمون للانضمام إلى وكالتك.</value>
+  </data>
+  <data name="Guide.AgencyRoster.NoApplications" xml:space="preserve">
+    <value>لا توجد طلبات.</value>
+  </data>
+  <data name="Guide.AgencyRoster.ColMessage" xml:space="preserve">
+    <value>الرسالة</value>
+  </data>
+  <data name="Guide.AgencyRoster.ColStatus" xml:space="preserve">
+    <value>الحالة</value>
+  </data>
+  <data name="Guide.AgencyRoster.ColApplied" xml:space="preserve">
+    <value>تاريخ التقديم</value>
+  </data>
+  <data name="Guide.AgencyRoster.NoMessage" xml:space="preserve">
+    <value>لا توجد رسالة</value>
+  </data>
+  <data name="Guide.AgencyRoster.Approve" xml:space="preserve">
+    <value>موافقة</value>
+  </data>
+  <data name="Guide.AgencyRoster.Reject" xml:space="preserve">
+    <value>رفض</value>
+  </data>
+  <data name="Guide.AgencyRoster.SentHeading" xml:space="preserve">
+    <value>الدعوات المرسلة</value>
+  </data>
+  <data name="Guide.AgencyRoster.SentSubtitle" xml:space="preserve">
+    <value>الدعوات التي أرسلتها للمرشدين.</value>
+  </data>
+  <data name="Guide.AgencyRoster.NoSent" xml:space="preserve">
+    <value>لا توجد دعوات مرسلة.</value>
+  </data>
+  <data name="Guide.AgencyRoster.ColProposedCommission" xml:space="preserve">
+    <value>العمولة المقترحة</value>
+  </data>
+  <data name="Guide.AgencyRoster.ColExpires" xml:space="preserve">
+    <value>تاريخ الانتهاء</value>
+  </data>
+  <data name="Guide.AgencyRoster.ColSent" xml:space="preserve">
+    <value>تاريخ الإرسال</value>
+  </data>
+  <data name="Guide.AgencyRoster.RemoveTitle" xml:space="preserve">
+    <value>إزالة المرشد؟</value>
+  </data>
+  <data name="Guide.AgencyRoster.RemoveBody" xml:space="preserve">
+    <value>إزالة {0} من وكالتك؟</value>
+  </data>
+  <data name="Guide.AgencyRoster.RemoveConfirm" xml:space="preserve">
+    <value>إزالة المرشد</value>
+  </data>
+  <data name="Guide.AgencyInvite.Title" xml:space="preserve">
+    <value>دعوة مرشد</value>
+  </data>
+  <data name="Guide.AgencyInvite.Heading" xml:space="preserve">
+    <value>دعوة مرشد</value>
+  </data>
+  <data name="Guide.AgencyInvite.Back" xml:space="preserve">
+    <value>العودة إلى القائمة</value>
+  </data>
+  <data name="Guide.AgencyInvite.NoGuides" xml:space="preserve">
+    <value>لا يوجد مرشدون متاحون للدعوة.</value>
+  </data>
+  <data name="Guide.AgencyInvite.GuideLabel" xml:space="preserve">
+    <value>المرشد</value>
+  </data>
+  <data name="Guide.AgencyInvite.SelectGuide" xml:space="preserve">
+    <value>اختر مرشدًا</value>
+  </data>
+  <data name="Guide.AgencyInvite.CommissionLabel" xml:space="preserve">
+    <value>العمولة المقترحة (%)</value>
+  </data>
+  <data name="Guide.AgencyInvite.MessageLabel" xml:space="preserve">
+    <value>الرسالة</value>
+  </data>
+  <data name="Guide.AgencyInvite.MessagePlaceholder" xml:space="preserve">
+    <value>رسالة اختيارية للمرشد</value>
+  </data>
+  <data name="Guide.AgencyInvite.MessageHelp" xml:space="preserve">
+    <value>تتم مشاركتها مع المرشد في الدعوة.</value>
+  </data>
+  <data name="Guide.AgencyInvite.Send" xml:space="preserve">
+    <value>إرسال الدعوة</value>
+  </data>
+  <data name="Guide.MyTours.Title" xml:space="preserve">
+    <value>جولاتي</value>
+  </data>
+  <data name="Guide.MyTours.Heading" xml:space="preserve">
+    <value>جولاتي وعروضي</value>
+  </data>
+  <data name="Guide.MyTours.Subtitle" xml:space="preserve">
+    <value>الجولات التي تقترحها أو ترشدها.</value>
+  </data>
+  <data name="Guide.MyTours.NoTours" xml:space="preserve">
+    <value>لا توجد جولات بعد</value>
+  </data>
+  <data name="Guide.MyTours.NoToursMsg" xml:space="preserve">
+    <value>تقدم لجولة لبدء الإرشاد.</value>
+  </data>
+  <data name="Guide.MyTours.FindTours" xml:space="preserve">
+    <value>ابحث عن جولات</value>
+  </data>
+  <data name="Guide.MyTours.ColTour" xml:space="preserve">
+    <value>الجولة</value>
+  </data>
+  <data name="Guide.MyTours.ColRole" xml:space="preserve">
+    <value>الدور</value>
+  </data>
+  <data name="Guide.MyTours.ColOffering" xml:space="preserve">
+    <value>العرض</value>
+  </data>
+  <data name="Guide.MyTours.ColPrivate" xml:space="preserve">
+    <value>خاصة</value>
+  </data>
+  <data name="Guide.MyTours.ColAssigned" xml:space="preserve">
+    <value>تاريخ الإسناد</value>
+  </data>
+  <data name="Guide.MyTours.ColActions" xml:space="preserve">
+    <value>الإجراءات</value>
+  </data>
+  <data name="Guide.MyTours.RoleProposer" xml:space="preserve">
+    <value>مقترح</value>
+  </data>
+  <data name="Guide.MyTours.RoleAssigned" xml:space="preserve">
+    <value>مُسند</value>
+  </data>
+  <data name="Guide.MyTours.NoOffering" xml:space="preserve">
+    <value>لا يوجد عرض</value>
+  </data>
+  <data name="Guide.MyTours.ManageOffering" xml:space="preserve">
+    <value>إدارة العرض</value>
+  </data>
+  <data name="Guide.MyTours.Pagination" xml:space="preserve">
+    <value>صفحات الجولات</value>
+  </data>
+  <data name="Guide.Analytics.Title" xml:space="preserve">
+    <value>التحليلات</value>
+  </data>
+  <data name="Guide.Analytics.Heading" xml:space="preserve">
+    <value>التحليلات</value>
+  </data>
+  <data name="Guide.Analytics.Subtitle" xml:space="preserve">
+    <value>أداء حجوزاتك.</value>
+  </data>
+  <data name="Guide.Analytics.TotalBookings" xml:space="preserve">
+    <value>إجمالي الحجوزات</value>
+  </data>
+  <data name="Guide.Analytics.Upcoming" xml:space="preserve">
+    <value>القادمة</value>
+  </data>
+  <data name="Guide.Analytics.Completed" xml:space="preserve">
+    <value>المكتملة</value>
+  </data>
+  <data name="Guide.Analytics.CancellationRate" xml:space="preserve">
+    <value>معدل الإلغاء</value>
+  </data>
+  <data name="Guide.Analytics.BookingTrends" xml:space="preserve">
+    <value>اتجاهات الحجز</value>
+  </data>
+  <data name="Guide.Analytics.NoTrends" xml:space="preserve">
+    <value>لا توجد اتجاهات حجز بعد.</value>
+  </data>
+  <data name="Guide.Analytics.PeakDays" xml:space="preserve">
+    <value>أيام الذروة</value>
+  </data>
+  <data name="Guide.Analytics.NoPeakDays" xml:space="preserve">
+    <value>لا توجد بيانات أيام ذروة بعد.</value>
+  </data>
+  <data name="Guide.Analytics.PopularTours" xml:space="preserve">
+    <value>الجولات الشائعة</value>
+  </data>
+  <data name="Guide.Analytics.NoPopularTours" xml:space="preserve">
+    <value>لا توجد جولات شائعة بعد.</value>
+  </data>
+  <data name="Guide.Analytics.ColTour" xml:space="preserve">
+    <value>الجولة</value>
+  </data>
+  <data name="Guide.Analytics.ColBookings" xml:space="preserve">
+    <value>الحجوزات</value>
+  </data>
+  <data name="Guide.Offering.Title" xml:space="preserve">
+    <value>إدارة العرض</value>
+  </data>
+  <data name="Guide.Offering.Back" xml:space="preserve">
+    <value>العودة إلى جولاتي</value>
+  </data>
+  <data name="Guide.Offering.Heading" xml:space="preserve">
+    <value>إدارة العرض</value>
+  </data>
+  <data name="Guide.Offering.StatusLabel" xml:space="preserve">
+    <value>الحالة</value>
+  </data>
+  <data name="Guide.Offering.Proposer" xml:space="preserve">
+    <value>مقترح</value>
+  </data>
+  <data name="Guide.Offering.Schedules" xml:space="preserve">
+    <value>المواعيد</value>
+  </data>
+  <data name="Guide.Offering.NoSchedules" xml:space="preserve">
+    <value>لا توجد مواعيد بعد.</value>
+  </data>
+  <data name="Guide.Offering.ColDay" xml:space="preserve">
+    <value>اليوم</value>
+  </data>
+  <data name="Guide.Offering.ColStart" xml:space="preserve">
+    <value>البداية</value>
+  </data>
+  <data name="Guide.Offering.ColEnd" xml:space="preserve">
+    <value>النهاية</value>
+  </data>
+  <data name="Guide.Offering.ColActive" xml:space="preserve">
+    <value>نشط</value>
+  </data>
+  <data name="Guide.Offering.ColActions" xml:space="preserve">
+    <value>الإجراءات</value>
+  </data>
+  <data name="Guide.Offering.DeleteSchedule" xml:space="preserve">
+    <value>حذف الموعد</value>
+  </data>
+  <data name="Guide.Offering.AddSchedule" xml:space="preserve">
+    <value>إضافة موعد</value>
+  </data>
+  <data name="Guide.Offering.PricingTiers" xml:space="preserve">
+    <value>فئات التسعير</value>
+  </data>
+  <data name="Guide.Offering.NoPricingTiers" xml:space="preserve">
+    <value>لا توجد فئات تسعير بعد.</value>
+  </data>
+  <data name="Guide.Offering.ColName" xml:space="preserve">
+    <value>الاسم</value>
+  </data>
+  <data name="Guide.Offering.ColPrice" xml:space="preserve">
+    <value>السعر</value>
+  </data>
+  <data name="Guide.Offering.ColParticipants" xml:space="preserve">
+    <value>المشاركون</value>
+  </data>
+  <data name="Guide.Offering.DeleteTier" xml:space="preserve">
+    <value>حذف الفئة</value>
+  </data>
+  <data name="Guide.Offering.Currency" xml:space="preserve">
+    <value>العملة</value>
+  </data>
+  <data name="Guide.Offering.Min" xml:space="preserve">
+    <value>الحد الأدنى</value>
+  </data>
+  <data name="Guide.Offering.Max" xml:space="preserve">
+    <value>الحد الأقصى</value>
+  </data>
+  <data name="Guide.Offering.Description" xml:space="preserve">
+    <value>الوصف</value>
+  </data>
+  <data name="Guide.Offering.AddTier" xml:space="preserve">
+    <value>إضافة فئة</value>
+  </data>
+  <data name="Guide.Offering.PrivateTour" xml:space="preserve">
+    <value>جولة خاصة</value>
+  </data>
+  <data name="Guide.Offering.PrivateEnabledPrefix" xml:space="preserve">
+    <value>الجولات الخاصة مفعّلة.</value>
+  </data>
+  <data name="Guide.Offering.Enabled" xml:space="preserve">
+    <value>مفعّل</value>
+  </data>
+  <data name="Guide.Offering.Multiplier" xml:space="preserve">
+    <value>مضاعف السعر</value>
+  </data>
+  <data name="Guide.Offering.FlatPrice" xml:space="preserve">
+    <value>سعر ثابت</value>
+  </data>
+  <data name="Guide.Offering.DisablePrivate" xml:space="preserve">
+    <value>تعطيل الجولة الخاصة</value>
+  </data>
+  <data name="Guide.Offering.PrivateNotEnabled" xml:space="preserve">
+    <value>الجولات الخاصة غير مفعّلة.</value>
+  </data>
+  <data name="Guide.Offering.MultiplierLabel" xml:space="preserve">
+    <value>مضاعف السعر</value>
+  </data>
+  <data name="Guide.Offering.FlatPriceLabel" xml:space="preserve">
+    <value>سعر ثابت</value>
+  </data>
+  <data name="Guide.Offering.UpdatePrivate" xml:space="preserve">
+    <value>تحديث الجولة الخاصة</value>
+  </data>
+  <data name="Guide.Offering.EnablePrivate" xml:space="preserve">
+    <value>تفعيل الجولة الخاصة</value>
+  </data>
+  <data name="Guide.Offering.RemoveHeading" xml:space="preserve">
+    <value>إزالة العرض</value>
+  </data>
+  <data name="Guide.Offering.RemoveMsg" xml:space="preserve">
+    <value>الإزالة توقف تقديمك لهذه الجولة.</value>
+  </data>
+  <data name="Guide.Offering.RemoveOffering" xml:space="preserve">
+    <value>إزالة العرض</value>
+  </data>
+  <data name="Guide.Offering.DeleteScheduleTitle" xml:space="preserve">
+    <value>حذف الموعد؟</value>
+  </data>
+  <data name="Guide.Offering.DeleteScheduleBody" xml:space="preserve">
+    <value>حذف موعد {0}؟</value>
+  </data>
+  <data name="Guide.Offering.DeleteTierTitle" xml:space="preserve">
+    <value>حذف فئة التسعير؟</value>
+  </data>
+  <data name="Guide.Offering.DeleteTierBody" xml:space="preserve">
+    <value>حذف فئة التسعير "{0}"؟</value>
+  </data>
+  <data name="Guide.Offering.RemoveModalTitle" xml:space="preserve">
+    <value>إزالة هذا العرض؟</value>
+  </data>
+  <data name="Guide.Offering.RemoveModalBody" xml:space="preserve">
+    <value>ستتوقف عن تقديم هذه الجولة. يمكن إعداده مرة أخرى لاحقًا.</value>
+  </data>
+  <data name="Guide.Offering.RemoveConfirm" xml:space="preserve">
+    <value>إزالة العرض</value>
+  </data>
+  <data name="Guide.Reviews.Title" xml:space="preserve">
+    <value>التقييمات</value>
+  </data>
+  <data name="Guide.Reviews.Heading" xml:space="preserve">
+    <value>التقييمات</value>
+  </data>
+  <data name="Guide.Reviews.Subtitle" xml:space="preserve">
+    <value>ما يقوله المسافرون عن جولاتك.</value>
+  </data>
+  <data name="Guide.Reviews.NoReviews" xml:space="preserve">
+    <value>لا توجد تقييمات بعد.</value>
+  </data>
+  <data name="Guide.Reviews.Pagination" xml:space="preserve">
+    <value>صفحات التقييمات</value>
+  </data>
 </root>

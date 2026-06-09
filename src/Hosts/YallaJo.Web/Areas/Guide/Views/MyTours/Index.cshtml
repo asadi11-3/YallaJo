@@ -1,28 +1,39 @@
 @model YallaJo.Web.Areas.Guide.Models.MyTours.MyToursVm
+@using System.Globalization
+@using Microsoft.Extensions.Localization
 @using YallaJo.Web.Areas.Guide.Shared
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
-    ViewData["Title"] = "My Tours";
+    ViewData["Title"] = Localizer["Guide.MyTours.Title"].Value;
     Layout = "~/Views/Shared/_Layout.cshtml";
     var sidebar = ViewBag.Sidebar as GuideSidebarVm ?? new GuideSidebarVm();
+    var culture = CultureInfo.CurrentUICulture;
+    string Date(DateTime d) => d.ToString("yyyy-MM-dd", culture);
+    string Count(int n) => n.ToString("N0", culture);
 }
 
 <partial name="_GuideSidebar" model="sidebar" />
 
 <section class="pt-0">
     <div class="container vstack gap-4">
-        <div class="d-flex justify-content-between align-items-center">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
             <div>
-                <h1 class="h4 mb-0">My Tours</h1>
-                <p class="text-secondary mb-0">Tours you run and their guide offerings.</p>
+                <h1 class="h4 mb-0"><i class="fa-solid fa-map me-2" aria-hidden="true"></i>@Localizer["Guide.MyTours.Heading"]</h1>
+                <p class="text-secondary mb-0">@Localizer["Guide.MyTours.Subtitle"]</p>
             </div>
         </div>
 
         @if (!Model.HasTours)
         {
             <div class="card card-body border text-center py-5">
-                <i class="bi bi-map fs-1 text-secondary"></i>
-                <h2 class="h5 mt-3">No tours yet</h2>
-                <p class="text-secondary mb-0">Once you are assigned to or propose a tour, it will appear here.</p>
+                <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3 mx-auto" />
+                <h2 class="h5">@Localizer["Guide.MyTours.NoTours"]</h2>
+                <p class="text-secondary mb-3">@Localizer["Guide.MyTours.NoToursMsg"]</p>
+                <div>
+                    <a class="btn btn-sm btn-primary-soft" asp-area="Guide" asp-controller="Applications" asp-action="Index">
+                        <i class="fa-solid fa-magnifying-glass me-1" aria-hidden="true"></i>@Localizer["Guide.MyTours.FindTours"]
+                    </a>
+                </div>
             </div>
         }
         else
@@ -32,12 +43,12 @@
                     <table class="table table-hover align-middle mb-0">
                         <thead>
                             <tr>
-                                <th scope="col">Tour</th>
-                                <th scope="col">Role</th>
-                                <th scope="col">Offering</th>
-                                <th scope="col">Private tour</th>
-                                <th scope="col">Assigned</th>
-                                <th scope="col" class="text-end">Actions</th>
+                                <th scope="col">@Localizer["Guide.MyTours.ColTour"]</th>
+                                <th scope="col">@Localizer["Guide.MyTours.ColRole"]</th>
+                                <th scope="col">@Localizer["Guide.MyTours.ColOffering"]</th>
+                                <th scope="col">@Localizer["Guide.MyTours.ColPrivate"]</th>
+                                <th scope="col">@Localizer["Guide.MyTours.ColAssigned"]</th>
+                                <th scope="col" class="text-end">@Localizer["Guide.MyTours.ColActions"]</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -48,47 +59,64 @@
                                         <span class="fw-semibold">@tour.Title</span>
                                         @if (!string.IsNullOrWhiteSpace(tour.Slug))
                                         {
-                                            <div class="text-secondary small">@tour.Slug</div>
+                                            <div class="text-secondary small"><bdi dir="ltr">@tour.Slug</bdi></div>
                                         }
                                     </td>
                                     <td>
                                         @if (tour.IsProposer)
                                         {
-                                            <span class="badge bg-primary-soft text-primary">Proposer</span>
+                                            <span class="badge bg-primary bg-opacity-10 text-primary">
+                                                <i class="fa-solid fa-lightbulb fa-fw" aria-hidden="true"></i> @Localizer["Guide.MyTours.RoleProposer"]
+                                            </span>
                                         }
                                         else
                                         {
-                                            <span class="badge bg-secondary-soft text-secondary">Assigned</span>
+                                            <span class="badge bg-secondary bg-opacity-10 text-secondary">
+                                                <i class="fa-solid fa-user-check fa-fw" aria-hidden="true"></i> @Localizer["Guide.MyTours.RoleAssigned"]
+                                            </span>
                                         }
                                     </td>
                                     <td>
                                         @if (string.IsNullOrWhiteSpace(tour.OfferingStatus))
                                         {
-                                            <span class="text-secondary">&mdash;</span>
+                                            <span class="text-secondary" aria-label="@Localizer["Guide.MyTours.NoOffering"]">&mdash;</span>
                                         }
                                         else
                                         {
-                                            <span class="badge bg-info-soft text-info">@tour.OfferingStatus</span>
+                                            <span class="badge bg-info bg-opacity-10 text-info">
+                                                <i class="fa-solid fa-circle-info fa-fw" aria-hidden="true"></i> @tour.OfferingStatus
+                                            </span>
                                         }
                                     </td>
                                     <td>
                                         @if (tour.OffersPrivateTour)
                                         {
-                                            <i class="bi bi-check-circle-fill text-success"></i>
+                                            <span class="badge bg-success bg-opacity-10 text-success">
+                                                <i class="fa-solid fa-circle-check fa-fw" aria-hidden="true"></i> @Localizer["Guide.Common.Yes"]
+                                            </span>
                                         }
                                         else
                                         {
-                                            <i class="bi bi-dash-circle text-secondary"></i>
+                                            <span class="badge bg-secondary bg-opacity-10 text-secondary">
+                                                <i class="fa-solid fa-circle-minus fa-fw" aria-hidden="true"></i> @Localizer["Guide.Common.No"]
+                                            </span>
                                         }
                                     </td>
                                     <td>
-                                        @(tour.AssignedAt.HasValue ? tour.AssignedAt.Value.ToString("yyyy-MM-dd") : "—")
+                                        @if (tour.AssignedAt.HasValue)
+                                        {
+                                            <bdi dir="ltr" class="font-data">@Date(tour.AssignedAt.Value)</bdi>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-secondary">&mdash;</span>
+                                        }
                                     </td>
                                     <td class="text-end">
                                         <a class="btn btn-sm btn-primary-soft"
                                            asp-area="Guide" asp-controller="MyTours" asp-action="Offering"
                                            asp-route-tourId="@tour.TourId">
-                                            <i class="bi bi-gear me-1"></i>Manage offering
+                                            <i class="fa-solid fa-gear me-1" aria-hidden="true"></i>@Localizer["Guide.MyTours.ManageOffering"]
                                         </a>
                                     </td>
                                 </tr>
@@ -100,18 +128,18 @@
 
             @if (Model.TotalPages > 1)
             {
-                <nav aria-label="Tours pagination">
+                <nav aria-label="@Localizer["Guide.MyTours.Pagination"]">
                     <ul class="pagination justify-content-center mb-0">
                         <li class="page-item @(Model.HasPreviousPage ? "" : "disabled")">
                             <a class="page-link" asp-area="Guide" asp-controller="MyTours" asp-action="Index"
-                               asp-route-page="@(Model.Page - 1)">Previous</a>
+                               asp-route-page="@(Model.Page - 1)">@Localizer["Guide.Common.Previous"]</a>
                         </li>
                         <li class="page-item disabled">
-                            <span class="page-link">Page @Model.Page of @Model.TotalPages</span>
+                            <span class="page-link">@Localizer["Guide.Common.PageOf", Model.Page, Model.TotalPages]</span>
                         </li>
                         <li class="page-item @(Model.HasNextPage ? "" : "disabled")">
                             <a class="page-link" asp-area="Guide" asp-controller="MyTours" asp-action="Index"
-                               asp-route-page="@(Model.Page + 1)">Next</a>
+                               asp-route-page="@(Model.Page + 1)">@Localizer["Guide.Common.Next"]</a>
                         </li>
                     </ul>
                 </nav>

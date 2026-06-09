@@ -1,9 +1,15 @@
 @model YallaJo.Web.Areas.Creator.Models.Dashboard.CreatorDashboardVm
+@using System.Globalization
+@using Microsoft.Extensions.Localization
 @using YallaJo.Web.Areas.Creator.Models.Dashboard
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
-    ViewData["Title"] = "Creator Dashboard";
-    var sidebar = ViewBag.Sidebar as YallaJo.Web.Areas.Creator.Shared.CreatorSidebarVm
-                  ?? new YallaJo.Web.Areas.Creator.Shared.CreatorSidebarVm();
+    ViewData["Title"] = Localizer["Creator.Dashboard.Title"].Value;
+    var sidebar = ViewBag.Sidebar as CreatorSidebarVm ?? new CreatorSidebarVm();
+    var culture = CultureInfo.CurrentUICulture;
+    string Date(DateTime d) => d.ToString("d MMM yyyy", culture);
+    string Count(long n) => n.ToString("N0", culture);
+    string StatusLabel(string? s) => Localizer["Creator.Status." + (string.IsNullOrEmpty(s) ? "Draft" : s)].Value;
 }
 
 <partial name="_CreatorSidebar" model="sidebar" />
@@ -11,37 +17,47 @@
 <section class="pt-0">
     <div class="container vstack gap-4">
         <div class="d-sm-flex justify-content-between align-items-center">
-            <h1 class="fs-4 mb-0"><i class="bi bi-house-door me-2"></i>Creator Dashboard</h1>
+            <h1 class="fs-4 mb-0">
+                <i class="fa-solid fa-house me-2 text-primary" aria-hidden="true"></i>
+                @Localizer["Creator.Dashboard.Heading"]
+            </h1>
         </div>
 
         @switch (Model.State)
         {
             case CreatorDashboardState.Approved:
-                @* ── Approved creator: real stats + recent articles ──────────── *@
                 <div class="card border">
-                    <div class="card-body d-sm-flex justify-content-between align-items-center">
+                    <div class="card-body d-sm-flex justify-content-between align-items-center gap-3">
                         <div>
-                            <h5 class="mb-1">@Model.DisplayName</h5>
-                            <span class="badge text-bg-success">Active creator</span>
+                            <h2 class="h5 mb-2">@Model.DisplayName</h2>
+                            <span class="badge bg-success bg-opacity-10 text-success">
+                                <i class="fa-solid fa-circle-check fa-fw" aria-hidden="true"></i>
+                                @Localizer["Creator.Dashboard.ActiveCreator"]
+                            </span>
                             @if (!string.IsNullOrWhiteSpace(Model.TrustTier))
                             {
-                                <span class="badge text-bg-light ms-1">@Model.TrustTier tier</span>
+                                <span class="badge bg-secondary bg-opacity-10 text-secondary ms-1">
+                                    @Localizer["Creator.Dashboard.TrustTier", Model.TrustTier]
+                                </span>
                             }
                         </div>
-                        <div class="mt-2 mt-sm-0 d-flex gap-2">
+                        <div class="hstack gap-2 mt-3 mt-sm-0">
                             <permission require="@WebPermission.Creator.Read">
-                                <a asp-area="Creator" asp-controller="Preview" asp-action="Index" class="btn btn-sm btn-secondary-soft">
-                                    <i class="bi bi-eye me-1"></i>Preview public profile
+                                <a class="btn btn-sm btn-secondary-soft" asp-area="Creator" asp-controller="Preview" asp-action="Index">
+                                    <i class="fa-solid fa-eye fa-fw" aria-hidden="true"></i>
+                                    @Localizer["Creator.Dashboard.PreviewProfile"]
                                 </a>
                             </permission>
                             <permission require="@WebPermission.Creator.Read">
-                                <a asp-area="Creator" asp-controller="Audience" asp-action="Index" class="btn btn-sm btn-secondary-soft">
-                                    <i class="bi bi-people me-1"></i>Audience
+                                <a class="btn btn-sm btn-secondary-soft" asp-area="Creator" asp-controller="Audience" asp-action="Index">
+                                    <i class="fa-solid fa-users fa-fw" aria-hidden="true"></i>
+                                    @Localizer["Creator.Dashboard.Audience"]
                                 </a>
                             </permission>
                             <permission require="@WebPermission.Blog.Create">
-                                <a asp-area="Creator" asp-controller="Articles" asp-action="New" class="btn btn-sm btn-primary">
-                                    <i class="bi bi-plus-lg me-1"></i>New Article
+                                <a class="btn btn-sm btn-primary" asp-area="Creator" asp-controller="Articles" asp-action="New">
+                                    <i class="fa-solid fa-plus fa-fw" aria-hidden="true"></i>
+                                    @Localizer["Creator.Dashboard.NewArticle"]
                                 </a>
                             </permission>
                         </div>
@@ -53,11 +69,11 @@
                         <div class="card card-body border h-100">
                             <div class="d-flex align-items-center">
                                 <div class="icon-xl bg-success bg-opacity-10 rounded-3 text-success">
-                                    <i class="bi bi-journals fs-5"></i>
+                                    <i class="fa-solid fa-book-open fs-5" aria-hidden="true"></i>
                                 </div>
                                 <div class="ms-3">
-                                    <h4 class="mb-0">@Model.ArticleCount</h4>
-                                    <span class="small text-body-secondary">Articles</span>
+                                    <span class="h4 mb-0 font-data d-block"><bdi dir="ltr">@Count(Model.ArticleCount)</bdi></span>
+                                    <span class="small text-body-secondary">@Localizer["Creator.Dashboard.Articles"]</span>
                                 </div>
                             </div>
                         </div>
@@ -66,11 +82,11 @@
                         <div class="card card-body border h-100">
                             <div class="d-flex align-items-center">
                                 <div class="icon-xl bg-info bg-opacity-10 rounded-3 text-info">
-                                    <i class="bi bi-eye fs-5"></i>
+                                    <i class="fa-solid fa-eye fs-5" aria-hidden="true"></i>
                                 </div>
                                 <div class="ms-3">
-                                    <h4 class="mb-0">@Model.TotalViewCount</h4>
-                                    <span class="small text-body-secondary">Total Views</span>
+                                    <span class="h4 mb-0 font-data d-block"><bdi dir="ltr">@Count(Model.TotalViewCount)</bdi></span>
+                                    <span class="small text-body-secondary">@Localizer["Creator.Dashboard.TotalViews"]</span>
                                 </div>
                             </div>
                         </div>
@@ -79,11 +95,11 @@
                         <div class="card card-body border h-100">
                             <div class="d-flex align-items-center">
                                 <div class="icon-xl bg-warning bg-opacity-10 rounded-3 text-warning">
-                                    <i class="bi bi-hand-thumbs-up fs-5"></i>
+                                    <i class="fa-solid fa-thumbs-up fs-5" aria-hidden="true"></i>
                                 </div>
                                 <div class="ms-3">
-                                    <h4 class="mb-0">@Model.TotalReactionCount</h4>
-                                    <span class="small text-body-secondary">Reactions</span>
+                                    <span class="h4 mb-0 font-data d-block"><bdi dir="ltr">@Count(Model.TotalReactionCount)</bdi></span>
+                                    <span class="small text-body-secondary">@Localizer["Creator.Dashboard.Reactions"]</span>
                                 </div>
                             </div>
                         </div>
@@ -92,11 +108,11 @@
                         <div class="card card-body border h-100">
                             <div class="d-flex align-items-center">
                                 <div class="icon-xl bg-primary bg-opacity-10 rounded-3 text-primary">
-                                    <i class="bi bi-people fs-5"></i>
+                                    <i class="fa-solid fa-users fs-5" aria-hidden="true"></i>
                                 </div>
                                 <div class="ms-3">
-                                    <h4 class="mb-0">@Model.FollowerCount</h4>
-                                    <span class="small text-body-secondary">Followers</span>
+                                    <span class="h4 mb-0 font-data d-block"><bdi dir="ltr">@Count(Model.FollowerCount)</bdi></span>
+                                    <span class="small text-body-secondary">@Localizer["Creator.Dashboard.Followers"]</span>
                                 </div>
                             </div>
                         </div>
@@ -105,17 +121,17 @@
 
                 <div class="card border">
                     <div class="card-header border-bottom d-flex justify-content-between align-items-center">
-                        <h5 class="card-header-title mb-0">Recent Articles</h5>
+                        <h2 class="card-header-title h5 mb-0">@Localizer["Creator.Dashboard.RecentArticles"]</h2>
                         <permission require="@WebPermission.Blog.ReadOwn">
-                            <a asp-area="Creator" asp-controller="Articles" asp-action="Index" class="btn btn-sm btn-primary-soft">
-                                View all
+                            <a class="btn btn-sm btn-primary-soft" asp-area="Creator" asp-controller="Articles" asp-action="Index">
+                                @Localizer["Creator.Dashboard.ViewAll"]
                             </a>
                         </permission>
                     </div>
                     <div class="card-body">
                         @if (Model.RecentArticles.Count == 0)
                         {
-                            <p class="text-body-secondary small mb-0">No articles yet.</p>
+                            <p class="mb-0 text-body-secondary">@Localizer["Creator.Dashboard.NoArticles"]</p>
                         }
                         else
                         {
@@ -124,12 +140,16 @@
                                 {
                                     <li class="list-group-item px-0 d-flex justify-content-between align-items-center">
                                         <div>
-                                            <h6 class="mb-0">@article.Title</h6>
+                                            <p class="fw-semibold mb-1">@article.Title</p>
                                             <span class="small text-body-secondary">
-                                                @article.ViewCount view(s)@(article.PublishedAt is { } p ? " · " + p.ToString("d MMM yyyy") : "")
+                                                @Localizer["Creator.Dashboard.ViewsCount", article.ViewCount]
+                                                @if (article.PublishedAt.HasValue)
+                                                {
+                                                    <span> · <bdi dir="ltr">@Date(article.PublishedAt.Value)</bdi></span>
+                                                }
                                             </span>
                                         </div>
-                                        <span class="badge text-bg-light">@(article.Status ?? "Draft")</span>
+                                        <span class="badge bg-secondary bg-opacity-10 text-secondary">@StatusLabel(article.Status)</span>
                                     </li>
                                 }
                             </ul>
@@ -141,9 +161,13 @@
             case CreatorDashboardState.ApplicationPending:
                 <div class="card border">
                     <div class="card-body text-center py-5">
-                        <h5>Your creator application is under review</h5>
+                        <h2 class="h5 mb-2">@Localizer["Creator.Dashboard.PendingTitle"]</h2>
                         <p class="text-body-secondary mb-0">
-                            We'll let you know once an admin has reviewed your application@(Model.ApplicationSubmittedAt is { } s ? $" (submitted {s:d MMM yyyy})" : "").
+                            @if (Model.ApplicationSubmittedAt.HasValue)
+                            {
+                                <span>@Localizer["Creator.Dashboard.PendingMsgDated", Date(Model.ApplicationSubmittedAt.Value)] </span>
+                            }
+                            @Localizer["Creator.Dashboard.PendingMsg"]
                         </p>
                     </div>
                 </div>
@@ -152,13 +176,13 @@
             case CreatorDashboardState.ApplicationRejected:
                 <div class="card border">
                     <div class="card-body text-center py-5">
-                        <h5>Your creator application was not approved</h5>
+                        <h2 class="h5 mb-2">@Localizer["Creator.Dashboard.RejectedTitle"]</h2>
                         @if (!string.IsNullOrWhiteSpace(Model.AdminNote))
                         {
-                            <p class="text-body-secondary">Reviewer note: @Model.AdminNote</p>
+                            <p class="text-body-secondary mb-3">@Localizer["Creator.Dashboard.ReviewerNote", Model.AdminNote]</p>
                         }
-                        <a asp-area="Creator" asp-controller="Application" asp-action="Index" class="btn btn-primary">
-                            Reapply
+                        <a class="btn btn-primary" asp-area="Creator" asp-controller="Application" asp-action="Index">
+                            @Localizer["Creator.Dashboard.Reapply"]
                         </a>
                     </div>
                 </div>
@@ -167,13 +191,13 @@
             case CreatorDashboardState.ApplicationNeedsInfo:
                 <div class="card border">
                     <div class="card-body text-center py-5">
-                        <h5>We need a bit more information</h5>
+                        <h2 class="h5 mb-2">@Localizer["Creator.Dashboard.NeedsInfoTitle"]</h2>
                         @if (!string.IsNullOrWhiteSpace(Model.AdminNote))
                         {
-                            <p class="text-body-secondary">Reviewer note: @Model.AdminNote</p>
+                            <p class="text-body-secondary mb-3">@Localizer["Creator.Dashboard.ReviewerNote", Model.AdminNote]</p>
                         }
-                        <a asp-area="Creator" asp-controller="Application" asp-action="Index" class="btn btn-primary">
-                            Update application
+                        <a class="btn btn-primary" asp-area="Creator" asp-controller="Application" asp-action="Index">
+                            @Localizer["Creator.Dashboard.UpdateApplication"]
                         </a>
                     </div>
                 </div>
@@ -182,10 +206,10 @@
             case CreatorDashboardState.ApplicationDraft:
                 <div class="card border">
                     <div class="card-body text-center py-5">
-                        <h5>Finish your creator application</h5>
-                        <p class="text-body-secondary">You started an application but haven't submitted it yet.</p>
-                        <a asp-area="Creator" asp-controller="Application" asp-action="Index" class="btn btn-primary">
-                            Continue application
+                        <h2 class="h5 mb-2">@Localizer["Creator.Dashboard.DraftTitle"]</h2>
+                        <p class="text-body-secondary mb-3">@Localizer["Creator.Dashboard.DraftMsg"]</p>
+                        <a class="btn btn-primary" asp-area="Creator" asp-controller="Application" asp-action="Index">
+                            @Localizer["Creator.Dashboard.ContinueApplication"]
                         </a>
                     </div>
                 </div>
@@ -194,10 +218,8 @@
             case CreatorDashboardState.Suspended:
                 <div class="card border">
                     <div class="card-body text-center py-5">
-                        <h5>Your creator profile is suspended</h5>
-                        <p class="text-body-secondary mb-0">
-                            Creator tools are unavailable while your profile is suspended. Please contact support if you believe this is a mistake.
-                        </p>
+                        <h2 class="h5 mb-2">@Localizer["Creator.Dashboard.SuspendedTitle"]</h2>
+                        <p class="text-body-secondary mb-0">@Localizer["Creator.Dashboard.SuspendedMsg"]</p>
                     </div>
                 </div>
                 break;
@@ -205,24 +227,19 @@
             case CreatorDashboardState.Deactivated:
                 <div class="card border">
                     <div class="card-body text-center py-5">
-                        <h5>Your creator profile is deactivated</h5>
-                        <p class="text-body-secondary mb-0">
-                            Your creator profile has been deactivated. Reactivation will be available from your profile settings.
-                        </p>
+                        <h2 class="h5 mb-2">@Localizer["Creator.Dashboard.DeactivatedTitle"]</h2>
+                        <p class="text-body-secondary mb-0">@Localizer["Creator.Dashboard.DeactivatedMsg"]</p>
                     </div>
                 </div>
                 break;
 
             default:
-                @* NotApplied — become a creator CTA. *@
                 <div class="card border">
                     <div class="card-body text-center py-5">
-                        <h5>Become a content creator</h5>
-                        <p class="text-body-secondary">
-                            Share articles with the YallaJo community. Apply to become a creator to get started.
-                        </p>
-                        <a asp-area="Creator" asp-controller="Application" asp-action="Index" class="btn btn-primary">
-                            Become a creator
+                        <h2 class="h5 mb-2">@Localizer["Creator.Dashboard.NotAppliedTitle"]</h2>
+                        <p class="text-body-secondary mb-3">@Localizer["Creator.Dashboard.NotAppliedMsg"]</p>
+                        <a class="btn btn-primary" asp-area="Creator" asp-controller="Application" asp-action="Index">
+                            @Localizer["Creator.Dashboard.BecomeCreator"]
                         </a>
                     </div>
                 </div>

@@ -1,9 +1,12 @@
 @using YallaJo.Web.Infrastructure.Authorization
+@using Microsoft.Extensions.Localization
 @inject YallaJo.Web.Infrastructure.Identity.ICurrentUser CurrentUser
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @model YallaJo.Web.Areas.Guide.Shared.GuideSidebarVm
 @{
     var active = ViewData["GuideNav"] as string ?? "Dashboard";
     string Nav(string key) => active == key ? "nav-link active" : "nav-link";
+    bool Current(string key) => active == key;
     bool Has(string permission) => CurrentUser.HasPermission(permission);
 }
 
@@ -12,117 +15,117 @@
         <div class="card rounded-3 border p-3 pb-2">
             <div class="d-sm-flex align-items-center">
                 <div class="avatar avatar-xl flex-shrink-0">
-                    <img class="avatar-img rounded-circle border border-white border-3"
+                    <img class="avatar-img rounded-circle border border-white border-3" width="80" height="80"
                          src="@(string.IsNullOrWhiteSpace(Model.AvatarUrl) ? Url.Content("~/assets/images/avatar/01.jpg") : Model.AvatarUrl)"
-                         alt="avatar">
+                         alt="@Localizer["Guide.Nav.AvatarAlt"]">
                 </div>
                 <div class="ms-sm-3 mt-2 mt-sm-0">
-                    <h5 class="mb-0"><span class="fw-light">Hi,</span> @(string.IsNullOrWhiteSpace(Model.DisplayName) ? "Guide" : Model.DisplayName)</h5>
+                    <h2 class="h5 mb-0"><span class="fw-light">@Localizer["Guide.Nav.Greeting"]</span> @(string.IsNullOrWhiteSpace(Model.DisplayName) ? Localizer["Guide.Nav.DefaultName"].Value : Model.DisplayName)</h2>
                     @if (!string.IsNullOrWhiteSpace(Model.Email))
                     {
-                        <span class="small text-body-secondary">@Model.Email</span>
+                        <span class="small text-body-secondary"><bdi dir="ltr">@Model.Email</bdi></span>
                     }
                 </div>
-                <span class="badge bg-primary-soft ms-sm-auto mt-2 mt-sm-0">Guide</span>
+                <span class="badge bg-primary-soft ms-sm-auto mt-2 mt-sm-0">@Localizer["Guide.Nav.Badge"]</span>
             </div>
 
             <button class="btn btn-primary w-100 d-block d-xl-none mt-3"
                     type="button" data-bs-toggle="offcanvas" data-bs-target="#guideDashboardMenu"
                     aria-controls="guideDashboardMenu">
-                <i class="bi bi-list me-1"></i> Dashboard Menu
+                <i class="fa-solid fa-bars fa-fw me-1" aria-hidden="true"></i> @Localizer["Guide.Nav.Menu"]
             </button>
 
-            <div class="offcanvas-xl offcanvas-end mt-xl-3" tabindex="-1" id="guideDashboardMenu">
+            <div class="offcanvas-xl offcanvas-end mt-xl-3" tabindex="-1" id="guideDashboardMenu" aria-label="@Localizer["Guide.Nav.Aria"]">
                 <div class="offcanvas-header">
-                    <h5 class="offcanvas-title">Menu</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#guideDashboardMenu" aria-label="Close"></button>
+                    <h2 class="offcanvas-title h5">@Localizer["Guide.Nav.Menu"]</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#guideDashboardMenu" aria-label="@Localizer["Guide.Nav.Close"]"></button>
                 </div>
                 <div class="offcanvas-body p-3 p-xl-0">
-                    <div class="navbar navbar-expand-xl w-100">
+                    <nav class="navbar navbar-expand-xl w-100" aria-label="@Localizer["Guide.Nav.Aria"]">
                         <ul class="navbar-nav nav nav-pills nav-pills-primary-soft flex-xl-row flex-column w-100">
                             <li class="nav-item">
-                                <a class="@Nav("Dashboard")" asp-area="Guide" asp-controller="Dashboard" asp-action="Index">
-                                    <i class="bi bi-house-door fa-fw me-1"></i>Dashboard
+                                <a class="@Nav("Dashboard")" aria-current="@(Current("Dashboard") ? "page" : null)" asp-area="Guide" asp-controller="Dashboard" asp-action="Index">
+                                    <i class="fa-solid fa-house fa-fw me-1" aria-hidden="true"></i>@Localizer["Guide.Nav.Dashboard"]
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="@Nav("Profile")" asp-area="Guide" asp-controller="Profile" asp-action="Index">
-                                    <i class="bi bi-person-badge fa-fw me-1"></i>My Profile
+                                <a class="@Nav("Profile")" aria-current="@(Current("Profile") ? "page" : null)" asp-area="Guide" asp-controller="Profile" asp-action="Index">
+                                    <i class="fa-solid fa-id-badge fa-fw me-1" aria-hidden="true"></i>@Localizer["Guide.Nav.Profile"]
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="@Nav("MyTours")" asp-area="Guide" asp-controller="MyTours" asp-action="Index">
-                                    <i class="bi bi-map fa-fw me-1"></i>My Tours &amp; Offerings
+                                <a class="@Nav("MyTours")" aria-current="@(Current("MyTours") ? "page" : null)" asp-area="Guide" asp-controller="MyTours" asp-action="Index">
+                                    <i class="fa-solid fa-map fa-fw me-1" aria-hidden="true"></i>@Localizer["Guide.Nav.MyTours"]
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="@Nav("Availability")" asp-area="Guide" asp-controller="Availability" asp-action="Index">
-                                    <i class="bi bi-calendar-x fa-fw me-1"></i>Availability
+                                <a class="@Nav("Availability")" aria-current="@(Current("Availability") ? "page" : null)" asp-area="Guide" asp-controller="Availability" asp-action="Index">
+                                    <i class="fa-solid fa-calendar-xmark fa-fw me-1" aria-hidden="true"></i>@Localizer["Guide.Nav.Availability"]
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="@Nav("Earnings")" asp-area="Guide" asp-controller="Earnings" asp-action="Index">
-                                    <i class="bi bi-graph-up-arrow fa-fw me-1"></i>Earnings
+                                <a class="@Nav("Earnings")" aria-current="@(Current("Earnings") ? "page" : null)" asp-area="Guide" asp-controller="Earnings" asp-action="Index">
+                                    <i class="fa-solid fa-arrow-trend-up fa-fw me-1" aria-hidden="true"></i>@Localizer["Guide.Nav.Earnings"]
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="@Nav("Analytics")" asp-area="Guide" asp-controller="Analytics" asp-action="Index">
-                                    <i class="bi bi-bar-chart fa-fw me-1"></i>Analytics
+                                <a class="@Nav("Analytics")" aria-current="@(Current("Analytics") ? "page" : null)" asp-area="Guide" asp-controller="Analytics" asp-action="Index">
+                                    <i class="fa-solid fa-chart-column fa-fw me-1" aria-hidden="true"></i>@Localizer["Guide.Nav.Analytics"]
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="@Nav("Tier")" asp-area="Guide" asp-controller="Tier" asp-action="Index">
-                                    <i class="bi bi-award fa-fw me-1"></i>Tier
+                                <a class="@Nav("Tier")" aria-current="@(Current("Tier") ? "page" : null)" asp-area="Guide" asp-controller="Tier" asp-action="Index">
+                                    <i class="fa-solid fa-award fa-fw me-1" aria-hidden="true"></i>@Localizer["Guide.Nav.Tier"]
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="@Nav("Applications")" asp-area="Guide" asp-controller="Applications" asp-action="Index">
-                                    <i class="bi bi-file-earmark-text fa-fw me-1"></i>Applications
+                                <a class="@Nav("Applications")" aria-current="@(Current("Applications") ? "page" : null)" asp-area="Guide" asp-controller="Applications" asp-action="Index">
+                                    <i class="fa-solid fa-file-lines fa-fw me-1" aria-hidden="true"></i>@Localizer["Guide.Nav.Applications"]
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="@Nav("Discounts")" asp-area="Guide" asp-controller="Discounts" asp-action="Index">
-                                    <i class="bi bi-tag fa-fw me-1"></i>Discounts
+                                <a class="@Nav("Discounts")" aria-current="@(Current("Discounts") ? "page" : null)" asp-area="Guide" asp-controller="Discounts" asp-action="Index">
+                                    <i class="fa-solid fa-tag fa-fw me-1" aria-hidden="true"></i>@Localizer["Guide.Nav.Discounts"]
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="@Nav("JoinRequests")" asp-area="Guide" asp-controller="JoinRequests" asp-action="Index">
-                                    <i class="bi bi-people fa-fw me-1"></i>Join Requests
+                                <a class="@Nav("JoinRequests")" aria-current="@(Current("JoinRequests") ? "page" : null)" asp-area="Guide" asp-controller="JoinRequests" asp-action="Index">
+                                    <i class="fa-solid fa-users fa-fw me-1" aria-hidden="true"></i>@Localizer["Guide.Nav.JoinRequests"]
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="@Nav("Proposals")" asp-area="Guide" asp-controller="Proposals" asp-action="Index">
-                                    <i class="bi bi-lightbulb fa-fw me-1"></i>My Proposals
+                                <a class="@Nav("Proposals")" aria-current="@(Current("Proposals") ? "page" : null)" asp-area="Guide" asp-controller="Proposals" asp-action="Index">
+                                    <i class="fa-solid fa-lightbulb fa-fw me-1" aria-hidden="true"></i>@Localizer["Guide.Nav.Proposals"]
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="@Nav("Agency")" asp-area="Guide" asp-controller="Agency" asp-action="Index">
-                                    <i class="bi bi-building fa-fw me-1"></i>My Agency
+                                <a class="@Nav("Agency")" aria-current="@(Current("Agency") ? "page" : null)" asp-area="Guide" asp-controller="Agency" asp-action="Index">
+                                    <i class="fa-solid fa-building fa-fw me-1" aria-hidden="true"></i>@Localizer["Guide.Nav.Agency"]
                                 </a>
                             </li>
                             @if (Has(WebPermission.AgencyRoster.Read))
                             {
                                 <li class="nav-item">
-                                    <a class="@Nav("AgencyRoster")" asp-area="Guide" asp-controller="AgencyRoster" asp-action="Index">
-                                        <i class="bi bi-people-fill fa-fw me-1"></i>Agency Roster
+                                    <a class="@Nav("AgencyRoster")" aria-current="@(Current("AgencyRoster") ? "page" : null)" asp-area="Guide" asp-controller="AgencyRoster" asp-action="Index">
+                                        <i class="fa-solid fa-people-group fa-fw me-1" aria-hidden="true"></i>@Localizer["Guide.Nav.AgencyRoster"]
                                     </a>
                                 </li>
                             }
                             <li class="nav-item">
-                                <a class="@Nav("Reviews")" asp-area="Guide" asp-controller="Reviews" asp-action="Index">
-                                    <i class="bi bi-star fa-fw me-1"></i>Reviews
+                                <a class="@Nav("Reviews")" aria-current="@(Current("Reviews") ? "page" : null)" asp-area="Guide" asp-controller="Reviews" asp-action="Index">
+                                    <i class="fa-solid fa-star fa-fw me-1" aria-hidden="true"></i>@Localizer["Guide.Nav.Reviews"]
                                 </a>
                             </li>
                             <li class="nav-item ms-xl-auto">
                                 <form asp-area="Auth" asp-controller="Auth" asp-action="Logout" method="post" class="d-grid">
                                     @Html.AntiForgeryToken()
                                     <button type="submit" class="nav-link text-start text-danger bg-danger-soft-hover border-0 bg-transparent w-100">
-                                        <i class="fas fa-sign-out-alt fa-fw me-1"></i>Sign Out
+                                        <i class="fa-solid fa-right-from-bracket fa-fw me-1" aria-hidden="true"></i>@Localizer["Guide.Nav.SignOut"]
                                     </button>
                                 </form>
                             </li>
                         </ul>
-                    </div>
+                    </nav>
                 </div>
             </div>
         </div>

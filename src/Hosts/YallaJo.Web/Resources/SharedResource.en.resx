@@ -6589,4 +6589,2134 @@
   <data name="Admin.Nav.Settings" xml:space="preserve">
     <value>Settings</value>
   </data>
+  <data name="Auth.SignIn.Title" xml:space="preserve">
+    <value>Sign in</value>
+  </data>
+  <data name="Auth.SignIn.Heading" xml:space="preserve">
+    <value>Welcome back</value>
+  </data>
+  <data name="Auth.SignIn.NewHere" xml:space="preserve">
+    <value>New here?</value>
+  </data>
+  <data name="Auth.SignIn.CreateAccount" xml:space="preserve">
+    <value>Create an account</value>
+  </data>
+  <data name="Auth.SignIn.RememberMe" xml:space="preserve">
+    <value>Remember me?</value>
+  </data>
+  <data name="Auth.SignIn.ForgotPassword" xml:space="preserve">
+    <value>Forgot password?</value>
+  </data>
+  <data name="Auth.SignIn.Submit" xml:space="preserve">
+    <value>Login</value>
+  </data>
+  <data name="Auth.SignIn.OrWith" xml:space="preserve">
+    <value>Or sign in with</value>
+  </data>
+  <data name="Auth.SignUp.Title" xml:space="preserve">
+    <value>Sign up</value>
+  </data>
+  <data name="Auth.SignUp.Heading" xml:space="preserve">
+    <value>Create new account</value>
+  </data>
+  <data name="Auth.SignUp.HaveAccount" xml:space="preserve">
+    <value>Already a member?</value>
+  </data>
+  <data name="Auth.SignUp.SignInLink" xml:space="preserve">
+    <value>Log in</value>
+  </data>
+  <data name="Auth.SignUp.PasswordHint" xml:space="preserve">
+    <value>Use 8+ characters with uppercase, lowercase, a number and a symbol.</value>
+  </data>
+  <data name="Auth.SignUp.Submit" xml:space="preserve">
+    <value>Sign up</value>
+  </data>
+  <data name="Auth.SignUp.OrWith" xml:space="preserve">
+    <value>Or sign up with</value>
+  </data>
+  <data name="Auth.Forgot.Title" xml:space="preserve">
+    <value>Forgot password</value>
+  </data>
+  <data name="Auth.Forgot.Heading" xml:space="preserve">
+    <value>Forgot password?</value>
+  </data>
+  <data name="Auth.Forgot.Intro" xml:space="preserve">
+    <value>Enter the email address associated with your account and we'll send you a reset code.</value>
+  </data>
+  <data name="Auth.Forgot.Submit" xml:space="preserve">
+    <value>Send Reset Code</value>
+  </data>
+  <data name="Auth.Forgot.BackTo" xml:space="preserve">
+    <value>Back to</value>
+  </data>
+  <data name="Auth.Forgot.BackToSignIn" xml:space="preserve">
+    <value>Sign in</value>
+  </data>
+  <data name="Auth.Reset.Title" xml:space="preserve">
+    <value>Reset password</value>
+  </data>
+  <data name="Auth.Reset.Heading" xml:space="preserve">
+    <value>Create new password</value>
+  </data>
+  <data name="Auth.Reset.Intro" xml:space="preserve">
+    <value>Enter the code we sent to your email and choose a new password.</value>
+  </data>
+  <data name="Auth.Reset.OtpLabel" xml:space="preserve">
+    <value>Reset Code</value>
+  </data>
+  <data name="Auth.Reset.NewPasswordLabel" xml:space="preserve">
+    <value>New password</value>
+  </data>
+  <data name="Auth.Reset.PasswordHint" xml:space="preserve">
+    <value>Use 8+ characters with uppercase, lowercase, a number and a symbol.</value>
+  </data>
+  <data name="Auth.Reset.ConfirmLabel" xml:space="preserve">
+    <value>Confirm new password</value>
+  </data>
+  <data name="Auth.Reset.Submit" xml:space="preserve">
+    <value>Reset Password</value>
+  </data>
+  <data name="Auth.TwoFactor.Title" xml:space="preserve">
+    <value>Verify Email</value>
+  </data>
+  <data name="Auth.TwoFactor.Heading" xml:space="preserve">
+    <value>Two factor authentication</value>
+  </data>
+  <data name="Auth.TwoFactor.SentTo" xml:space="preserve">
+    <value>We have sent a verification code to</value>
+  </data>
+  <data name="Auth.TwoFactor.YourEmail" xml:space="preserve">
+    <value>your email</value>
+  </data>
+  <data name="Auth.TwoFactor.Intro" xml:space="preserve">
+    <value>Enter the code we have sent you:</value>
+  </data>
+  <data name="Auth.TwoFactor.NoCode" xml:space="preserve">
+    <value>Don't get a code?</value>
+  </data>
+  <data name="Auth.TwoFactor.Resend" xml:space="preserve">
+    <value>Click to resend</value>
+  </data>
+  <data name="Auth.TwoFactor.Submit" xml:space="preserve">
+    <value>Verify and Proceed</value>
+  </data>
+  <data name="Auth.Sessions.Title" xml:space="preserve">
+    <value>Active Sessions</value>
+  </data>
+  <data name="Auth.Sessions.Heading" xml:space="preserve">
+    <value>Active sessions</value>
+  </data>
+  <data name="Auth.Sessions.Subtitle" xml:space="preserve">
+    <value>Devices currently signed in to your account.</value>
+  </data>
+  <data name="Auth.Sessions.ColDevice" xml:space="preserve">
+    <value>Device</value>
+  </data>
+  <data name="Auth.Sessions.ColIp" xml:space="preserve">
+    <value>IP address</value>
+  </data>
+  <data name="Auth.Sessions.ColStarted" xml:space="preserve">
+    <value>Started</value>
+  </data>
+  <data name="Auth.Sessions.ColExpires" xml:space="preserve">
+    <value>Expires</value>
+  </data>
+  <data name="Auth.Sessions.ColActions" xml:space="preserve">
+    <value>Actions</value>
+  </data>
+  <data name="Auth.Sessions.Current" xml:space="preserve">
+    <value>Current</value>
+  </data>
+  <data name="Auth.Sessions.Trust" xml:space="preserve">
+    <value>Trust device</value>
+  </data>
+  <data name="Auth.Sessions.Revoke" xml:space="preserve">
+    <value>Revoke</value>
+  </data>
+  <data name="Auth.Sessions.RevokeConfirm" xml:space="preserve">
+    <value>Revoke this session? The device will be signed out.</value>
+  </data>
+  <data name="Auth.Sessions.SignOutAll" xml:space="preserve">
+    <value>Sign out all devices</value>
+  </data>
+  <data name="Auth.Sessions.SignOutAllConfirm" xml:space="preserve">
+    <value>Sign out of all devices? You will need to sign in again everywhere.</value>
+  </data>
+  <data name="Auth.Sessions.EmptyMessage" xml:space="preserve">
+    <value>No active sessions.</value>
+  </data>
+  <data name="Auth.Sessions.NoIp" xml:space="preserve">
+    <value>No IP address</value>
+  </data>
+  <data name="Auth.Devices.Title" xml:space="preserve">
+    <value>Devices</value>
+  </data>
+  <data name="Auth.Devices.Heading" xml:space="preserve">
+    <value>Devices</value>
+  </data>
+  <data name="Auth.Devices.Info" xml:space="preserve">
+    <value>Use the</value>
+  </data>
+  <data name="Auth.Devices.SessionsLink" xml:space="preserve">
+    <value>Sessions page</value>
+  </data>
+  <data name="Auth.External.Title" xml:space="preserve">
+    <value>Linked Providers</value>
+  </data>
+  <data name="Auth.External.Heading" xml:space="preserve">
+    <value>Linked providers</value>
+  </data>
+  <data name="Auth.External.Intro" xml:space="preserve">
+    <value>You will be redirected to the provider to sign in before the link is completed.</value>
+  </data>
+  <data name="Auth.External.LinkGoogle" xml:space="preserve">
+    <value>Link Google</value>
+  </data>
+  <data name="Auth.External.LinkFacebook" xml:space="preserve">
+    <value>Link Facebook</value>
+  </data>
+  <data name="Auth.External.NoneAvailable" xml:space="preserve">
+    <value>No external providers are configured on this server. Please contact your administrator.</value>
+  </data>
+  <data name="Auth.Complete.Title" xml:space="preserve">
+    <value>Completing sign-in</value>
+  </data>
+  <data name="Auth.Complete.Message" xml:space="preserve">
+    <value>Please wait a moment while we finish signing you in.</value>
+  </data>
+  <data name="Auth.Complete.Continue" xml:space="preserve">
+    <value>Continue</value>
+  </data>
+  <data name="Auth.AcceptInvite.Title" xml:space="preserve">
+    <value>Accept Invite</value>
+  </data>
+  <data name="Auth.AcceptInvite.Heading" xml:space="preserve">
+    <value>Complete your invitation</value>
+  </data>
+  <data name="Auth.AcceptInvite.Intro" xml:space="preserve">
+    <value>Invited email:</value>
+  </data>
+  <data name="Auth.AcceptInvite.PasswordHint" xml:space="preserve">
+    <value>Use 8+ characters with uppercase, lowercase, a number and a symbol.</value>
+  </data>
+  <data name="Auth.AcceptInvite.Submit" xml:space="preserve">
+    <value>Activate Account</value>
+  </data>
+  <data name="Auth.AcceptInvite.ExpiredTitle" xml:space="preserve">
+    <value>Invite Expired</value>
+  </data>
+  <data name="Auth.AcceptInvite.ExpiredHeading" xml:space="preserve">
+    <value>Invite link expired</value>
+  </data>
+  <data name="Auth.AcceptInvite.ExpiredMessage" xml:space="preserve">
+    <value>This invite link is expired or no longer valid for</value>
+  </data>
+  <data name="Auth.AcceptInvite.ExpiredHelp" xml:space="preserve">
+    <value>Please contact your administrator to resend your invite.</value>
+  </data>
+  <data name="Auth.AcceptInvite.InvalidTitle" xml:space="preserve">
+    <value>Invalid Invite Link</value>
+  </data>
+  <data name="Auth.AcceptInvite.InvalidHeading" xml:space="preserve">
+    <value>Invalid invite link</value>
+  </data>
+  <data name="Auth.AcceptInvite.InvalidMessage" xml:space="preserve">
+    <value>The invite link is missing required parameters.</value>
+  </data>
+  <data name="Auth.AcceptInvite.InvalidHelp" xml:space="preserve">
+    <value>Ask your administrator to send a fresh invite.</value>
+  </data>
+  <data name="Auth.Field.Email" xml:space="preserve">
+    <value>Enter email id</value>
+  </data>
+  <data name="Auth.Field.Password" xml:space="preserve">
+    <value>Password</value>
+  </data>
+  <data name="Auth.Field.ConfirmPassword" xml:space="preserve">
+    <value>Confirm password</value>
+  </data>
+  <data name="Auth.Social.Google" xml:space="preserve">
+    <value>Sign in with Google</value>
+  </data>
+  <data name="Auth.Social.Facebook" xml:space="preserve">
+    <value>Sign in with Facebook</value>
+  </data>
+  <data name="Auth.Social.GoogleSignup" xml:space="preserve">
+    <value>Sign up with Google</value>
+  </data>
+  <data name="Auth.Social.FacebookSignup" xml:space="preserve">
+    <value>Sign up with Facebook</value>
+  </data>
+  <data name="Creator.Nav.Greeting" xml:space="preserve">
+    <value>Hi,</value>
+  </data>
+  <data name="Creator.Nav.DefaultName" xml:space="preserve">
+    <value>Creator</value>
+  </data>
+  <data name="Creator.Nav.Menu" xml:space="preserve">
+    <value>Menu</value>
+  </data>
+  <data name="Creator.Nav.Aria" xml:space="preserve">
+    <value>Creator menu</value>
+  </data>
+  <data name="Creator.Nav.Close" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="Creator.Nav.Dashboard" xml:space="preserve">
+    <value>Dashboard</value>
+  </data>
+  <data name="Creator.Nav.Profile" xml:space="preserve">
+    <value>My Profile</value>
+  </data>
+  <data name="Creator.Nav.Articles" xml:space="preserve">
+    <value>My Articles</value>
+  </data>
+  <data name="Creator.Nav.Audience" xml:space="preserve">
+    <value>Audience</value>
+  </data>
+  <data name="Creator.Nav.Preview" xml:space="preserve">
+    <value>Public Preview</value>
+  </data>
+  <data name="Creator.Nav.Application" xml:space="preserve">
+    <value>Application</value>
+  </data>
+  <data name="Creator.Nav.SignOut" xml:space="preserve">
+    <value>Sign Out</value>
+  </data>
+  <data name="Creator.Status.Draft" xml:space="preserve">
+    <value>Draft</value>
+  </data>
+  <data name="Creator.Status.Pending" xml:space="preserve">
+    <value>Pending review</value>
+  </data>
+  <data name="Creator.Status.Approved" xml:space="preserve">
+    <value>Approved</value>
+  </data>
+  <data name="Creator.Status.Rejected" xml:space="preserve">
+    <value>Rejected</value>
+  </data>
+  <data name="Creator.Status.MoreInfoNeeded" xml:space="preserve">
+    <value>More info needed</value>
+  </data>
+  <data name="Creator.Status.Published" xml:space="preserve">
+    <value>Published</value>
+  </data>
+  <data name="Creator.Status.Active" xml:space="preserve">
+    <value>Active</value>
+  </data>
+  <data name="Creator.Status.Suspended" xml:space="preserve">
+    <value>Suspended</value>
+  </data>
+  <data name="Creator.Status.Deactivated" xml:space="preserve">
+    <value>Deactivated</value>
+  </data>
+  <data name="Creator.Dashboard.Title" xml:space="preserve">
+    <value>Creator Dashboard</value>
+  </data>
+  <data name="Creator.Dashboard.Heading" xml:space="preserve">
+    <value>Creator Dashboard</value>
+  </data>
+  <data name="Creator.Dashboard.ActiveCreator" xml:space="preserve">
+    <value>Active creator</value>
+  </data>
+  <data name="Creator.Dashboard.TrustTier" xml:space="preserve">
+    <value>{0} tier</value>
+  </data>
+  <data name="Creator.Dashboard.PreviewProfile" xml:space="preserve">
+    <value>Preview public profile</value>
+  </data>
+  <data name="Creator.Dashboard.Audience" xml:space="preserve">
+    <value>Audience</value>
+  </data>
+  <data name="Creator.Dashboard.NewArticle" xml:space="preserve">
+    <value>New Article</value>
+  </data>
+  <data name="Creator.Dashboard.Articles" xml:space="preserve">
+    <value>Articles</value>
+  </data>
+  <data name="Creator.Dashboard.TotalViews" xml:space="preserve">
+    <value>Total Views</value>
+  </data>
+  <data name="Creator.Dashboard.Reactions" xml:space="preserve">
+    <value>Reactions</value>
+  </data>
+  <data name="Creator.Dashboard.Followers" xml:space="preserve">
+    <value>Followers</value>
+  </data>
+  <data name="Creator.Dashboard.RecentArticles" xml:space="preserve">
+    <value>Recent Articles</value>
+  </data>
+  <data name="Creator.Dashboard.ViewAll" xml:space="preserve">
+    <value>View all</value>
+  </data>
+  <data name="Creator.Dashboard.NoArticles" xml:space="preserve">
+    <value>No articles yet.</value>
+  </data>
+  <data name="Creator.Dashboard.ViewsCount" xml:space="preserve">
+    <value>{0} view(s)</value>
+  </data>
+  <data name="Creator.Dashboard.PendingTitle" xml:space="preserve">
+    <value>Your creator application is under review</value>
+  </data>
+  <data name="Creator.Dashboard.PendingMsg" xml:space="preserve">
+    <value>We'll let you know once an admin has reviewed your application.</value>
+  </data>
+  <data name="Creator.Dashboard.PendingMsgDated" xml:space="preserve">
+    <value>Submitted {0}.</value>
+  </data>
+  <data name="Creator.Dashboard.RejectedTitle" xml:space="preserve">
+    <value>Your creator application was not approved</value>
+  </data>
+  <data name="Creator.Dashboard.ReviewerNote" xml:space="preserve">
+    <value>Reviewer note: {0}</value>
+  </data>
+  <data name="Creator.Dashboard.Reapply" xml:space="preserve">
+    <value>Reapply</value>
+  </data>
+  <data name="Creator.Dashboard.NeedsInfoTitle" xml:space="preserve">
+    <value>We need a bit more information</value>
+  </data>
+  <data name="Creator.Dashboard.UpdateApplication" xml:space="preserve">
+    <value>Update application</value>
+  </data>
+  <data name="Creator.Dashboard.DraftTitle" xml:space="preserve">
+    <value>Finish your creator application</value>
+  </data>
+  <data name="Creator.Dashboard.DraftMsg" xml:space="preserve">
+    <value>You started an application but haven't submitted it yet.</value>
+  </data>
+  <data name="Creator.Dashboard.ContinueApplication" xml:space="preserve">
+    <value>Continue application</value>
+  </data>
+  <data name="Creator.Dashboard.SuspendedTitle" xml:space="preserve">
+    <value>Your creator profile is suspended</value>
+  </data>
+  <data name="Creator.Dashboard.SuspendedMsg" xml:space="preserve">
+    <value>Creator tools are unavailable while your profile is suspended. Please contact support if you believe this is a mistake.</value>
+  </data>
+  <data name="Creator.Dashboard.DeactivatedTitle" xml:space="preserve">
+    <value>Your creator profile is deactivated</value>
+  </data>
+  <data name="Creator.Dashboard.DeactivatedMsg" xml:space="preserve">
+    <value>Your creator profile has been deactivated. Reactivation will be available from your profile settings.</value>
+  </data>
+  <data name="Creator.Dashboard.NotAppliedTitle" xml:space="preserve">
+    <value>Become a content creator</value>
+  </data>
+  <data name="Creator.Dashboard.NotAppliedMsg" xml:space="preserve">
+    <value>Share articles with the YallaJo community. Apply to become a creator to get started.</value>
+  </data>
+  <data name="Creator.Dashboard.BecomeCreator" xml:space="preserve">
+    <value>Become a creator</value>
+  </data>
+  <data name="Creator.Application.Title" xml:space="preserve">
+    <value>Creator Application</value>
+  </data>
+  <data name="Creator.Application.Heading" xml:space="preserve">
+    <value>Creator Application</value>
+  </data>
+  <data name="Creator.Application.RedeemInvitation" xml:space="preserve">
+    <value>Redeem invitation</value>
+  </data>
+  <data name="Creator.Application.PendingTitle" xml:space="preserve">
+    <value>Your application is under review</value>
+  </data>
+  <data name="Creator.Application.PendingMsg" xml:space="preserve">
+    <value>We'll notify you once an admin has reviewed it.</value>
+  </data>
+  <data name="Creator.Application.ApprovedTitle" xml:space="preserve">
+    <value>Your application was approved</value>
+  </data>
+  <data name="Creator.Application.ApprovedMsg" xml:space="preserve">
+    <value>Welcome aboard! Your creator profile is now active.</value>
+  </data>
+  <data name="Creator.Application.RejectedTitle" xml:space="preserve">
+    <value>Your application was not approved</value>
+  </data>
+  <data name="Creator.Application.ReviewerNote" xml:space="preserve">
+    <value>Reviewer note: {0}</value>
+  </data>
+  <data name="Creator.Application.StatusLabel" xml:space="preserve">
+    <value>Application status: {0}</value>
+  </data>
+  <data name="Creator.Application.MoreInfoRequested" xml:space="preserve">
+    <value>More information requested: {0}</value>
+  </data>
+  <data name="Creator.Application.SaveDraft" xml:space="preserve">
+    <value>Save draft</value>
+  </data>
+  <data name="Creator.Application.SaveChanges" xml:space="preserve">
+    <value>Save changes</value>
+  </data>
+  <data name="Creator.Application.SubmitForReview" xml:space="preserve">
+    <value>Submit for review</value>
+  </data>
+  <data name="Creator.Application.BioLabel" xml:space="preserve">
+    <value>Bio</value>
+  </data>
+  <data name="Creator.Application.BioPlaceholder" xml:space="preserve">
+    <value>Tell us about yourself and the content you create.</value>
+  </data>
+  <data name="Creator.Application.BioHelp" xml:space="preserve">
+    <value>Share your background and what you create.</value>
+  </data>
+  <data name="Creator.Application.PortfolioLabel" xml:space="preserve">
+    <value>Portfolio URLs</value>
+  </data>
+  <data name="Creator.Application.UrlsPlaceholder" xml:space="preserve">
+    <value>One URL per line.</value>
+  </data>
+  <data name="Creator.Application.UrlsHelp" xml:space="preserve">
+    <value>One URL per line (max 10).</value>
+  </data>
+  <data name="Creator.Application.SampleWorkLabel" xml:space="preserve">
+    <value>Sample work URLs</value>
+  </data>
+  <data name="Creator.Application.TagsLabel" xml:space="preserve">
+    <value>Tags</value>
+  </data>
+  <data name="Creator.Application.TagsPlaceholder" xml:space="preserve">
+    <value>Comma-separated tags.</value>
+  </data>
+  <data name="Creator.Application.TagsHelp" xml:space="preserve">
+    <value>Comma-separated (max 20, each up to 50 characters).</value>
+  </data>
+  <data name="Creator.Application.NichesLabel" xml:space="preserve">
+    <value>Niches</value>
+  </data>
+  <data name="Creator.Application.NichesHint" xml:space="preserve">
+    <value>(choose up to 5)</value>
+  </data>
+  <data name="Creator.Application.NoNiches" xml:space="preserve">
+    <value>No niches are available right now.</value>
+  </data>
+  <data name="Creator.Invite.Title" xml:space="preserve">
+    <value>Redeem Invitation</value>
+  </data>
+  <data name="Creator.Invite.Heading" xml:space="preserve">
+    <value>Redeem Invitation</value>
+  </data>
+  <data name="Creator.Invite.Back" xml:space="preserve">
+    <value>Back to application</value>
+  </data>
+  <data name="Creator.Invite.TokenLabel" xml:space="preserve">
+    <value>Invitation token</value>
+  </data>
+  <data name="Creator.Invite.TokenPlaceholder" xml:space="preserve">
+    <value>Paste your invitation token</value>
+  </data>
+  <data name="Creator.Invite.TokenHelp" xml:space="preserve">
+    <value>Enter the token from your invitation email.</value>
+  </data>
+  <data name="Creator.Invite.Redeem" xml:space="preserve">
+    <value>Redeem</value>
+  </data>
+  <data name="Creator.Articles.Title" xml:space="preserve">
+    <value>My Articles</value>
+  </data>
+  <data name="Creator.Articles.Heading" xml:space="preserve">
+    <value>My Articles</value>
+  </data>
+  <data name="Creator.Articles.NewArticle" xml:space="preserve">
+    <value>New Article</value>
+  </data>
+  <data name="Creator.Articles.Deleted" xml:space="preserve">
+    <value>Article deleted</value>
+  </data>
+  <data name="Creator.Articles.DeletedNamed" xml:space="preserve">
+    <value>Deleted "{0}".</value>
+  </data>
+  <data name="Creator.Articles.Dismiss" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="Creator.Articles.Undo" xml:space="preserve">
+    <value>Undo</value>
+  </data>
+  <data name="Creator.Articles.StatusLabel" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="Creator.Articles.AllStatuses" xml:space="preserve">
+    <value>All</value>
+  </data>
+  <data name="Creator.Articles.Apply" xml:space="preserve">
+    <value>Apply</value>
+  </data>
+  <data name="Creator.Articles.EmptyTitle" xml:space="preserve">
+    <value>No articles yet</value>
+  </data>
+  <data name="Creator.Articles.EmptyMsg" xml:space="preserve">
+    <value>You haven't written any articles yet.</value>
+  </data>
+  <data name="Creator.Articles.EmptyMsgFiltered" xml:space="preserve">
+    <value>You have no articles with status "{0}".</value>
+  </data>
+  <data name="Creator.Articles.WriteFirst" xml:space="preserve">
+    <value>Write your first article</value>
+  </data>
+  <data name="Creator.Articles.ColTitle" xml:space="preserve">
+    <value>Title</value>
+  </data>
+  <data name="Creator.Articles.ColStatus" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="Creator.Articles.ColLanguage" xml:space="preserve">
+    <value>Language</value>
+  </data>
+  <data name="Creator.Articles.ColPublished" xml:space="preserve">
+    <value>Published</value>
+  </data>
+  <data name="Creator.Articles.ColViews" xml:space="preserve">
+    <value>Views</value>
+  </data>
+  <data name="Creator.Articles.ColRead" xml:space="preserve">
+    <value>Read</value>
+  </data>
+  <data name="Creator.Articles.ColActions" xml:space="preserve">
+    <value>Actions</value>
+  </data>
+  <data name="Creator.Articles.NotSet" xml:space="preserve">
+    <value>Not set</value>
+  </data>
+  <data name="Creator.Articles.Minutes" xml:space="preserve">
+    <value>{0} min</value>
+  </data>
+  <data name="Creator.Articles.Edit" xml:space="preserve">
+    <value>Edit</value>
+  </data>
+  <data name="Creator.Articles.Pagination" xml:space="preserve">
+    <value>Article pages</value>
+  </data>
+  <data name="Creator.Articles.PageOf" xml:space="preserve">
+    <value>Page {0} of {1}</value>
+  </data>
+  <data name="Creator.Articles.Previous" xml:space="preserve">
+    <value>Previous</value>
+  </data>
+  <data name="Creator.Articles.Next" xml:space="preserve">
+    <value>Next</value>
+  </data>
+  <data name="Creator.Audience.Title" xml:space="preserve">
+    <value>Audience</value>
+  </data>
+  <data name="Creator.Audience.Heading" xml:space="preserve">
+    <value>Audience</value>
+  </data>
+  <data name="Creator.Audience.UnavailableTitle" xml:space="preserve">
+    <value>Audience data unavailable</value>
+  </data>
+  <data name="Creator.Audience.UnavailableMsg" xml:space="preserve">
+    <value>Your audience data is unavailable until your creator profile is active.</value>
+  </data>
+  <data name="Creator.Audience.ReadOnly" xml:space="preserve">
+    <value>This is a read-only view of your audience.</value>
+  </data>
+  <data name="Creator.Audience.Followers" xml:space="preserve">
+    <value>Followers</value>
+  </data>
+  <data name="Creator.Audience.RecentFollowers" xml:space="preserve">
+    <value>Recent followers</value>
+  </data>
+  <data name="Creator.Audience.NoFollowers" xml:space="preserve">
+    <value>No followers yet.</value>
+  </data>
+  <data name="Creator.Audience.FollowerLabel" xml:space="preserve">
+    <value>Follower #{0}</value>
+  </data>
+  <data name="Creator.Audience.FollowedOn" xml:space="preserve">
+    <value>Followed</value>
+  </data>
+  <data name="Creator.Audience.Pagination" xml:space="preserve">
+    <value>Follower pages</value>
+  </data>
+  <data name="Creator.Audience.Page" xml:space="preserve">
+    <value>Page</value>
+  </data>
+  <data name="Creator.Audience.Previous" xml:space="preserve">
+    <value>Previous</value>
+  </data>
+  <data name="Creator.Audience.Next" xml:space="preserve">
+    <value>Next</value>
+  </data>
+  <data name="Creator.Profile.Title" xml:space="preserve">
+    <value>My Creator Profile</value>
+  </data>
+  <data name="Creator.Profile.Heading" xml:space="preserve">
+    <value>My Creator Profile</value>
+  </data>
+  <data name="Creator.Profile.Active" xml:space="preserve">
+    <value>Active</value>
+  </data>
+  <data name="Creator.Profile.ActiveTier" xml:space="preserve">
+    <value>Active · {0}</value>
+  </data>
+  <data name="Creator.Profile.NoProfileTitle" xml:space="preserve">
+    <value>No creator profile found</value>
+  </data>
+  <data name="Creator.Profile.NoProfileMsg" xml:space="preserve">
+    <value>We couldn't load a creator profile for your account.</value>
+  </data>
+  <data name="Creator.Profile.InactiveTitle" xml:space="preserve">
+    <value>Your creator profile is {0}</value>
+  </data>
+  <data name="Creator.Profile.InactiveMsg" xml:space="preserve">
+    <value>Profile editing is unavailable while your profile is in this state.</value>
+  </data>
+  <data name="Creator.Profile.DetailsHeading" xml:space="preserve">
+    <value>Profile details</value>
+  </data>
+  <data name="Creator.Profile.BioLabel" xml:space="preserve">
+    <value>Bio</value>
+  </data>
+  <data name="Creator.Profile.BioHelp" xml:space="preserve">
+    <value>Tell readers about yourself.</value>
+  </data>
+  <data name="Creator.Profile.SlugHelp" xml:space="preserve">
+    <value>Leave blank to keep your current URL. Current:</value>
+  </data>
+  <data name="Creator.Profile.SaveProfile" xml:space="preserve">
+    <value>Save profile</value>
+  </data>
+  <data name="Creator.Profile.AvatarHeading" xml:space="preserve">
+    <value>Avatar</value>
+  </data>
+  <data name="Creator.Profile.AvatarLabel" xml:space="preserve">
+    <value>Avatar URL</value>
+  </data>
+  <data name="Creator.Profile.UpdateAvatar" xml:space="preserve">
+    <value>Update avatar</value>
+  </data>
+  <data name="Creator.Profile.DangerHeading" xml:space="preserve">
+    <value>Deactivate account</value>
+  </data>
+  <data name="Creator.Profile.DangerMsg" xml:space="preserve">
+    <value>Deactivating soft-deletes your creator profile. You have 60 days to reactivate before it is permanently removed.</value>
+  </data>
+  <data name="Creator.Profile.Deactivate" xml:space="preserve">
+    <value>Deactivate</value>
+  </data>
+  <data name="Creator.Profile.ModalTitle" xml:space="preserve">
+    <value>Deactivate creator profile?</value>
+  </data>
+  <data name="Creator.Profile.ModalBody" xml:space="preserve">
+    <value>This soft-deletes your creator profile. You'll have 60 days to reactivate before it is permanently removed.</value>
+  </data>
+  <data name="Creator.Profile.ConfirmCheck" xml:space="preserve">
+    <value>I understand and want to deactivate my creator profile.</value>
+  </data>
+  <data name="Creator.Profile.Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="Creator.Profile.ConfirmDeactivate" xml:space="preserve">
+    <value>Deactivate my profile</value>
+  </data>
+  <data name="Creator.Editor.NewTitle" xml:space="preserve">
+    <value>New Article</value>
+  </data>
+  <data name="Creator.Editor.EditTitle" xml:space="preserve">
+    <value>Edit Article</value>
+  </data>
+  <data name="Creator.Editor.BackToList" xml:space="preserve">
+    <value>Back to list</value>
+  </data>
+  <data name="Creator.Editor.SlugPlaceholder" xml:space="preserve">
+    <value>auto-generated from title if blank</value>
+  </data>
+  <data name="Creator.Editor.SlugHelp" xml:space="preserve">
+    <value>Lowercase letters, numbers and dashes. Leave blank to auto-generate.</value>
+  </data>
+  <data name="Creator.Editor.LanguageHelp" xml:space="preserve">
+    <value>Two-letter language code, e.g. en or ar.</value>
+  </data>
+  <data name="Creator.Editor.SummaryLabel" xml:space="preserve">
+    <value>Summary</value>
+  </data>
+  <data name="Creator.Editor.ContentLabel" xml:space="preserve">
+    <value>Content</value>
+  </data>
+  <data name="Creator.Editor.SaveDraft" xml:space="preserve">
+    <value>Save draft</value>
+  </data>
+  <data name="Creator.Editor.SaveChanges" xml:space="preserve">
+    <value>Save changes</value>
+  </data>
+  <data name="Creator.Editor.ImagesHeading" xml:space="preserve">
+    <value>Images</value>
+  </data>
+  <data name="Creator.Editor.ImagesAfterSave" xml:space="preserve">
+    <value>Save the draft first, then you can add images.</value>
+  </data>
+  <data name="Creator.Editor.ToursHeading" xml:space="preserve">
+    <value>Related tours</value>
+  </data>
+  <data name="Creator.Editor.ToursSubtitle" xml:space="preserve">
+    <value>Associate tours with this article.</value>
+  </data>
+  <data name="Creator.Editor.TourIdLabel" xml:space="preserve">
+    <value>Tour identifier</value>
+  </data>
+  <data name="Creator.Editor.TourIdHelp" xml:space="preserve">
+    <value>Paste the tour identifier from its detail page.</value>
+  </data>
+  <data name="Creator.Editor.LinkTour" xml:space="preserve">
+    <value>Link tour</value>
+  </data>
+  <data name="Creator.Editor.UnlinkTour" xml:space="preserve">
+    <value>Unlink tour</value>
+  </data>
+  <data name="Creator.Editor.UnlinkTitle" xml:space="preserve">
+    <value>Unlink a tour?</value>
+  </data>
+  <data name="Creator.Editor.UnlinkBody" xml:space="preserve">
+    <value>Enter the identifier of the tour to unlink from this article.</value>
+  </data>
+  <data name="Creator.Editor.UnlinkTourIdLabel" xml:space="preserve">
+    <value>Tour identifier to unlink</value>
+  </data>
+  <data name="Creator.Editor.Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="Creator.Editor.ToursVersionNote" xml:space="preserve">
+    <value>Linking uses the article's current version; if it was changed elsewhere, refresh the editor first.</value>
+  </data>
+  <data name="Creator.Editor.SubmitForReview" xml:space="preserve">
+    <value>Submit for review</value>
+  </data>
+  <data name="Creator.Editor.Delete" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="Creator.Editor.DeleteTitle" xml:space="preserve">
+    <value>Delete this article?</value>
+  </data>
+  <data name="Creator.Editor.DeleteBody" xml:space="preserve">
+    <value>"{0}" will be deleted. You can undo this immediately afterwards from the articles list.</value>
+  </data>
+  <data name="Creator.Editor.DeleteConfirm" xml:space="preserve">
+    <value>Delete article</value>
+  </data>
+  <data name="Creator.Images.AddLabel" xml:space="preserve">
+    <value>Add images</value>
+  </data>
+  <data name="Creator.Images.AddHint" xml:space="preserve">
+    <value>(JPG, PNG, GIF, WEBP · max 10 MB each · {0} slot(s) left)</value>
+  </data>
+  <data name="Creator.Images.Upload" xml:space="preserve">
+    <value>Upload</value>
+  </data>
+  <data name="Creator.Images.MaxReached" xml:space="preserve">
+    <value>This article has the maximum of {0} images.</value>
+  </data>
+  <data name="Creator.Images.None" xml:space="preserve">
+    <value>No images yet.</value>
+  </data>
+  <data name="Creator.Images.MoveUp" xml:space="preserve">
+    <value>Move up</value>
+  </data>
+  <data name="Creator.Images.MoveDown" xml:space="preserve">
+    <value>Move down</value>
+  </data>
+  <data name="Creator.Images.Primary" xml:space="preserve">
+    <value>Primary image</value>
+  </data>
+  <data name="Creator.Images.SetPrimary" xml:space="preserve">
+    <value>Set as primary</value>
+  </data>
+  <data name="Creator.Images.Delete" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="Creator.Images.DeleteTitle" xml:space="preserve">
+    <value>Delete this image?</value>
+  </data>
+  <data name="Creator.Images.DeleteBody" xml:space="preserve">
+    <value>This image will be permanently deleted. This can't be undone.</value>
+  </data>
+  <data name="Creator.Images.DeleteConfirm" xml:space="preserve">
+    <value>Delete image</value>
+  </data>
+  <data name="Creator.Images.Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="Creator.Preview.Title" xml:space="preserve">
+    <value>Public Profile Preview</value>
+  </data>
+  <data name="Creator.Preview.Heading" xml:space="preserve">
+    <value>Public Profile Preview</value>
+  </data>
+  <data name="Creator.Preview.UnavailableTitle" xml:space="preserve">
+    <value>Public preview unavailable</value>
+  </data>
+  <data name="Creator.Preview.UnavailableMsg" xml:space="preserve">
+    <value>Your public profile preview will be available once your creator profile is active and approved.</value>
+  </data>
+  <data name="Creator.Preview.ReadOnly" xml:space="preserve">
+    <value>This is a read-only preview of how visitors see your public profile.</value>
+  </data>
+  <data name="Creator.Preview.Articles" xml:space="preserve">
+    <value>Articles</value>
+  </data>
+  <data name="Creator.Preview.Followers" xml:space="preserve">
+    <value>Followers</value>
+  </data>
+  <data name="Creator.Preview.Views" xml:space="preserve">
+    <value>Views</value>
+  </data>
+  <data name="Creator.Preview.Reactions" xml:space="preserve">
+    <value>Reactions</value>
+  </data>
+  <data name="Creator.Preview.Comments" xml:space="preserve">
+    <value>Comments</value>
+  </data>
+  <data name="Creator.Preview.PublishedArticles" xml:space="preserve">
+    <value>Published Articles</value>
+  </data>
+  <data name="Creator.Preview.NoArticles" xml:space="preserve">
+    <value>No published articles yet.</value>
+  </data>
+  <data name="Creator.Preview.ViewsLabel" xml:space="preserve">
+    <value>view(s)</value>
+  </data>
+  <data name="Creator.Preview.MinRead" xml:space="preserve">
+    <value>{0} min read</value>
+  </data>
+  <data name="Creator.Preview.Pagination" xml:space="preserve">
+    <value>Article pages</value>
+  </data>
+  <data name="Creator.Preview.PageOf" xml:space="preserve">
+    <value>Page {0} of {1}</value>
+  </data>
+  <data name="Creator.Preview.Previous" xml:space="preserve">
+    <value>Previous</value>
+  </data>
+  <data name="Creator.Preview.Next" xml:space="preserve">
+    <value>Next</value>
+  </data>
+  <data name="Guide.Nav.AvatarAlt" xml:space="preserve">
+    <value>Avatar</value>
+  </data>
+  <data name="Guide.Nav.Greeting" xml:space="preserve">
+    <value>Hi,</value>
+  </data>
+  <data name="Guide.Nav.DefaultName" xml:space="preserve">
+    <value>Guide</value>
+  </data>
+  <data name="Guide.Nav.Badge" xml:space="preserve">
+    <value>Guide</value>
+  </data>
+  <data name="Guide.Nav.Menu" xml:space="preserve">
+    <value>Menu</value>
+  </data>
+  <data name="Guide.Nav.Aria" xml:space="preserve">
+    <value>Guide menu</value>
+  </data>
+  <data name="Guide.Nav.Close" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="Guide.Nav.Dashboard" xml:space="preserve">
+    <value>Dashboard</value>
+  </data>
+  <data name="Guide.Nav.Profile" xml:space="preserve">
+    <value>My Profile</value>
+  </data>
+  <data name="Guide.Nav.MyTours" xml:space="preserve">
+    <value>My Tours &amp; Offerings</value>
+  </data>
+  <data name="Guide.Nav.Availability" xml:space="preserve">
+    <value>Availability</value>
+  </data>
+  <data name="Guide.Nav.Earnings" xml:space="preserve">
+    <value>Earnings</value>
+  </data>
+  <data name="Guide.Nav.Analytics" xml:space="preserve">
+    <value>Analytics</value>
+  </data>
+  <data name="Guide.Nav.Tier" xml:space="preserve">
+    <value>Tier</value>
+  </data>
+  <data name="Guide.Nav.Applications" xml:space="preserve">
+    <value>Applications</value>
+  </data>
+  <data name="Guide.Nav.Discounts" xml:space="preserve">
+    <value>Discounts</value>
+  </data>
+  <data name="Guide.Nav.JoinRequests" xml:space="preserve">
+    <value>Join Requests</value>
+  </data>
+  <data name="Guide.Nav.Proposals" xml:space="preserve">
+    <value>My Proposals</value>
+  </data>
+  <data name="Guide.Nav.Agency" xml:space="preserve">
+    <value>My Agency</value>
+  </data>
+  <data name="Guide.Nav.AgencyRoster" xml:space="preserve">
+    <value>Agency Roster</value>
+  </data>
+  <data name="Guide.Nav.Reviews" xml:space="preserve">
+    <value>Reviews</value>
+  </data>
+  <data name="Guide.Nav.SignOut" xml:space="preserve">
+    <value>Sign Out</value>
+  </data>
+  <data name="Guide.Common.Yes" xml:space="preserve">
+    <value>Yes</value>
+  </data>
+  <data name="Guide.Common.No" xml:space="preserve">
+    <value>No</value>
+  </data>
+  <data name="Guide.Common.Close" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="Guide.Common.Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="Guide.Common.Previous" xml:space="preserve">
+    <value>Previous</value>
+  </data>
+  <data name="Guide.Common.Next" xml:space="preserve">
+    <value>Next</value>
+  </data>
+  <data name="Guide.Common.PageOf" xml:space="preserve">
+    <value>Page {0} of {1}</value>
+  </data>
+  <data name="Guide.Status.Paid" xml:space="preserve">
+    <value>Paid</value>
+  </data>
+  <data name="Guide.Status.Completed" xml:space="preserve">
+    <value>Completed</value>
+  </data>
+  <data name="Guide.Status.Pending" xml:space="preserve">
+    <value>Pending</value>
+  </data>
+  <data name="Guide.Status.Cancelled" xml:space="preserve">
+    <value>Cancelled</value>
+  </data>
+  <data name="Guide.Status.Refunded" xml:space="preserve">
+    <value>Refunded</value>
+  </data>
+  <data name="Guide.Status.Unknown" xml:space="preserve">
+    <value>Unknown</value>
+  </data>
+  <data name="Guide.Dashboard.Title" xml:space="preserve">
+    <value>Guide Dashboard</value>
+  </data>
+  <data name="Guide.Dashboard.Heading" xml:space="preserve">
+    <value>Dashboard</value>
+  </data>
+  <data name="Guide.Dashboard.NetEarnings" xml:space="preserve">
+    <value>Net Earnings</value>
+  </data>
+  <data name="Guide.Dashboard.ThisMonth" xml:space="preserve">
+    <value>This Month</value>
+  </data>
+  <data name="Guide.Dashboard.PendingPayout" xml:space="preserve">
+    <value>Pending Payout</value>
+  </data>
+  <data name="Guide.Dashboard.Tours" xml:space="preserve">
+    <value>Tours</value>
+  </data>
+  <data name="Guide.Dashboard.TierProgress" xml:space="preserve">
+    <value>Tier Progress</value>
+  </data>
+  <data name="Guide.Dashboard.CommissionRate" xml:space="preserve">
+    <value>Commission rate:</value>
+  </data>
+  <data name="Guide.Dashboard.NextTier" xml:space="preserve">
+    <value>Next tier:</value>
+  </data>
+  <data name="Guide.Dashboard.HighestTier" xml:space="preserve">
+    <value>You've reached the highest tier.</value>
+  </data>
+  <data name="Guide.Dashboard.CompletedTours" xml:space="preserve">
+    <value>Completed Tours</value>
+  </data>
+  <data name="Guide.Dashboard.AverageRating" xml:space="preserve">
+    <value>Average Rating</value>
+  </data>
+  <data name="Guide.Dashboard.ActiveMonths" xml:space="preserve">
+    <value>Active Months</value>
+  </data>
+  <data name="Guide.Dashboard.ReportRate" xml:space="preserve">
+    <value>Report Rate</value>
+  </data>
+  <data name="Guide.Dashboard.Profile" xml:space="preserve">
+    <value>Profile</value>
+  </data>
+  <data name="Guide.Dashboard.Rating" xml:space="preserve">
+    <value>Rating</value>
+  </data>
+  <data name="Guide.Dashboard.Experience" xml:space="preserve">
+    <value>Experience</value>
+  </data>
+  <data name="Guide.Dashboard.Years" xml:space="preserve">
+    <value>{0} yrs</value>
+  </data>
+  <data name="Guide.Dashboard.FirstAid" xml:space="preserve">
+    <value>First Aid</value>
+  </data>
+  <data name="Guide.Dashboard.ActiveBlocks" xml:space="preserve">
+    <value>Active Availability Blocks</value>
+  </data>
+  <data name="Guide.Dashboard.EditProfile" xml:space="preserve">
+    <value>Edit Profile</value>
+  </data>
+  <data name="Guide.Dashboard.RecentTours" xml:space="preserve">
+    <value>Recent Tours</value>
+  </data>
+  <data name="Guide.Dashboard.ViewAll" xml:space="preserve">
+    <value>View all</value>
+  </data>
+  <data name="Guide.Dashboard.NoTours" xml:space="preserve">
+    <value>No tours yet.</value>
+  </data>
+  <data name="Guide.Dashboard.FindTours" xml:space="preserve">
+    <value>Find tours</value>
+  </data>
+  <data name="Guide.Dashboard.ColTour" xml:space="preserve">
+    <value>Tour</value>
+  </data>
+  <data name="Guide.Dashboard.ColOffering" xml:space="preserve">
+    <value>Offering</value>
+  </data>
+  <data name="Guide.Dashboard.ColPrivate" xml:space="preserve">
+    <value>Private</value>
+  </data>
+  <data name="Guide.Dashboard.ColAssigned" xml:space="preserve">
+    <value>Assigned</value>
+  </data>
+  <data name="Guide.Tier.Title" xml:space="preserve">
+    <value>Tier Progress</value>
+  </data>
+  <data name="Guide.Tier.Heading" xml:space="preserve">
+    <value>Tier Progress</value>
+  </data>
+  <data name="Guide.Tier.CurrentTier" xml:space="preserve">
+    <value>Current tier</value>
+  </data>
+  <data name="Guide.Tier.Commission" xml:space="preserve">
+    <value>Commission rate: {0}</value>
+  </data>
+  <data name="Guide.Tier.MeetTargets" xml:space="preserve">
+    <value>Meet the targets below to advance to the next tier.</value>
+  </data>
+  <data name="Guide.Tier.TopTier" xml:space="preserve">
+    <value>You've reached the highest tier.</value>
+  </data>
+  <data name="Guide.Tier.ProgressHeading" xml:space="preserve">
+    <value>Progress to next tier</value>
+  </data>
+  <data name="Guide.Tier.CompletedTours" xml:space="preserve">
+    <value>Completed Tours</value>
+  </data>
+  <data name="Guide.Tier.AverageRating" xml:space="preserve">
+    <value>Average Rating</value>
+  </data>
+  <data name="Guide.Tier.ActiveMonths" xml:space="preserve">
+    <value>Active Months</value>
+  </data>
+  <data name="Guide.Tier.ReportRate" xml:space="preserve">
+    <value>Report Rate (max {0})</value>
+  </data>
+  <data name="Guide.Tier.ViewAnalytics" xml:space="preserve">
+    <value>View analytics</value>
+  </data>
+  <data name="Guide.Profile.Title" xml:space="preserve">
+    <value>My Profile</value>
+  </data>
+  <data name="Guide.Profile.Heading" xml:space="preserve">
+    <value>My Profile</value>
+  </data>
+  <data name="Guide.Profile.ToursCount" xml:space="preserve">
+    <value>{0} tour(s)</value>
+  </data>
+  <data name="Guide.Profile.AvatarUpload" xml:space="preserve">
+    <value>Upload avatar</value>
+  </data>
+  <data name="Guide.Profile.Avatar" xml:space="preserve">
+    <value>Avatar</value>
+  </data>
+  <data name="Guide.Profile.CoverUpload" xml:space="preserve">
+    <value>Upload cover</value>
+  </data>
+  <data name="Guide.Profile.Cover" xml:space="preserve">
+    <value>Cover</value>
+  </data>
+  <data name="Guide.Profile.Details" xml:space="preserve">
+    <value>Profile details</value>
+  </data>
+  <data name="Guide.Profile.Bio" xml:space="preserve">
+    <value>Bio</value>
+  </data>
+  <data name="Guide.Profile.BioPlaceholder" xml:space="preserve">
+    <value>Tell travelers about yourself</value>
+  </data>
+  <data name="Guide.Profile.BioHelp" xml:space="preserve">
+    <value>A short description shown on your public profile.</value>
+  </data>
+  <data name="Guide.Profile.YearsLabel" xml:space="preserve">
+    <value>Years of experience</value>
+  </data>
+  <data name="Guide.Profile.LicenseLabel" xml:space="preserve">
+    <value>MoTA license number</value>
+  </data>
+  <data name="Guide.Profile.FirstAidLabel" xml:space="preserve">
+    <value>First aid certified</value>
+  </data>
+  <data name="Guide.Profile.SaveChanges" xml:space="preserve">
+    <value>Save changes</value>
+  </data>
+  <data name="Guide.Profile.Languages" xml:space="preserve">
+    <value>Languages</value>
+  </data>
+  <data name="Guide.Profile.NoLanguages" xml:space="preserve">
+    <value>No languages added yet.</value>
+  </data>
+  <data name="Guide.Profile.Remove" xml:space="preserve">
+    <value>Remove</value>
+  </data>
+  <data name="Guide.Profile.RemoveLanguageLabel" xml:space="preserve">
+    <value>Remove {0}</value>
+  </data>
+  <data name="Guide.Profile.Language" xml:space="preserve">
+    <value>Language</value>
+  </data>
+  <data name="Guide.Profile.SelectLanguage" xml:space="preserve">
+    <value>Select a language</value>
+  </data>
+  <data name="Guide.Profile.Proficiency" xml:space="preserve">
+    <value>Proficiency</value>
+  </data>
+  <data name="Guide.Profile.Proficiency.Native" xml:space="preserve">
+    <value>Native</value>
+  </data>
+  <data name="Guide.Profile.Proficiency.Fluent" xml:space="preserve">
+    <value>Fluent</value>
+  </data>
+  <data name="Guide.Profile.Proficiency.Conversational" xml:space="preserve">
+    <value>Conversational</value>
+  </data>
+  <data name="Guide.Profile.Proficiency.Basic" xml:space="preserve">
+    <value>Basic</value>
+  </data>
+  <data name="Guide.Profile.AddLanguage" xml:space="preserve">
+    <value>Add language</value>
+  </data>
+  <data name="Guide.Profile.Specializations" xml:space="preserve">
+    <value>Specializations</value>
+  </data>
+  <data name="Guide.Profile.NoSpecializations" xml:space="preserve">
+    <value>No specializations added yet.</value>
+  </data>
+  <data name="Guide.Profile.Specialization" xml:space="preserve">
+    <value>Specialization</value>
+  </data>
+  <data name="Guide.Profile.SelectSpecialization" xml:space="preserve">
+    <value>Select a specialization</value>
+  </data>
+  <data name="Guide.Profile.Add" xml:space="preserve">
+    <value>Add</value>
+  </data>
+  <data name="Guide.Profile.DeactivateHeading" xml:space="preserve">
+    <value>Deactivate profile</value>
+  </data>
+  <data name="Guide.Profile.DeactivateMsg" xml:space="preserve">
+    <value>Deactivating hides your profile and tours from travelers.</value>
+  </data>
+  <data name="Guide.Profile.Deactivate" xml:space="preserve">
+    <value>Deactivate</value>
+  </data>
+  <data name="Guide.Profile.DeactivateModalTitle" xml:space="preserve">
+    <value>Deactivate your profile?</value>
+  </data>
+  <data name="Guide.Profile.DeactivateModalBody" xml:space="preserve">
+    <value>Your profile and tours will be hidden from travelers until you reactivate.</value>
+  </data>
+  <data name="Guide.Profile.DeactivateConfirm" xml:space="preserve">
+    <value>Deactivate profile</value>
+  </data>
+  <data name="Guide.Earnings.Title" xml:space="preserve">
+    <value>Earnings</value>
+  </data>
+  <data name="Guide.Earnings.Heading" xml:space="preserve">
+    <value>Earnings</value>
+  </data>
+  <data name="Guide.Earnings.NetEarnings" xml:space="preserve">
+    <value>Net Earnings</value>
+  </data>
+  <data name="Guide.Earnings.ThisMonth" xml:space="preserve">
+    <value>This Month</value>
+  </data>
+  <data name="Guide.Earnings.PendingPayout" xml:space="preserve">
+    <value>Pending Payout</value>
+  </data>
+  <data name="Guide.Earnings.CommissionDeducted" xml:space="preserve">
+    <value>Commission Deducted</value>
+  </data>
+  <data name="Guide.Earnings.ByTour" xml:space="preserve">
+    <value>Earnings by tour</value>
+  </data>
+  <data name="Guide.Earnings.NoByTour" xml:space="preserve">
+    <value>No earnings by tour yet.</value>
+  </data>
+  <data name="Guide.Earnings.ColTour" xml:space="preserve">
+    <value>Tour</value>
+  </data>
+  <data name="Guide.Earnings.ColBookings" xml:space="preserve">
+    <value>Bookings</value>
+  </data>
+  <data name="Guide.Earnings.ColGross" xml:space="preserve">
+    <value>Gross</value>
+  </data>
+  <data name="Guide.Earnings.ColCommission" xml:space="preserve">
+    <value>Commission</value>
+  </data>
+  <data name="Guide.Earnings.ColNet" xml:space="preserve">
+    <value>Net</value>
+  </data>
+  <data name="Guide.Earnings.History" xml:space="preserve">
+    <value>Earnings history</value>
+  </data>
+  <data name="Guide.Earnings.NoHistory" xml:space="preserve">
+    <value>No earnings history yet.</value>
+  </data>
+  <data name="Guide.Earnings.ColDate" xml:space="preserve">
+    <value>Date</value>
+  </data>
+  <data name="Guide.Earnings.ColStatus" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="Guide.Earnings.Pagination" xml:space="preserve">
+    <value>Earnings pages</value>
+  </data>
+  <data name="Guide.Availability.Title" xml:space="preserve">
+    <value>Availability</value>
+  </data>
+  <data name="Guide.Availability.Heading" xml:space="preserve">
+    <value>Availability</value>
+  </data>
+  <data name="Guide.Availability.Subtitle" xml:space="preserve">
+    <value>Block out dates when you are unavailable.</value>
+  </data>
+  <data name="Guide.Availability.AddHeading" xml:space="preserve">
+    <value>Add unavailable dates</value>
+  </data>
+  <data name="Guide.Availability.StartDate" xml:space="preserve">
+    <value>Start date</value>
+  </data>
+  <data name="Guide.Availability.EndDate" xml:space="preserve">
+    <value>End date</value>
+  </data>
+  <data name="Guide.Availability.Reason" xml:space="preserve">
+    <value>Reason</value>
+  </data>
+  <data name="Guide.Availability.ReasonPlaceholder" xml:space="preserve">
+    <value>Optional reason</value>
+  </data>
+  <data name="Guide.Availability.AddBlock" xml:space="preserve">
+    <value>Add block</value>
+  </data>
+  <data name="Guide.Availability.BlockedHeading" xml:space="preserve">
+    <value>Blocked dates</value>
+  </data>
+  <data name="Guide.Availability.NoBlocks" xml:space="preserve">
+    <value>No blocked dates.</value>
+  </data>
+  <data name="Guide.Availability.ColFrom" xml:space="preserve">
+    <value>From</value>
+  </data>
+  <data name="Guide.Availability.ColTo" xml:space="preserve">
+    <value>To</value>
+  </data>
+  <data name="Guide.Availability.ColReason" xml:space="preserve">
+    <value>Reason</value>
+  </data>
+  <data name="Guide.Availability.ColStatus" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="Guide.Availability.ColActions" xml:space="preserve">
+    <value>Actions</value>
+  </data>
+  <data name="Guide.Availability.NoReason" xml:space="preserve">
+    <value>No reason</value>
+  </data>
+  <data name="Guide.Availability.Active" xml:space="preserve">
+    <value>Active</value>
+  </data>
+  <data name="Guide.Availability.Past" xml:space="preserve">
+    <value>Past</value>
+  </data>
+  <data name="Guide.Availability.DeleteLabel" xml:space="preserve">
+    <value>Delete block</value>
+  </data>
+  <data name="Guide.Availability.DeleteTitle" xml:space="preserve">
+    <value>Delete blocked dates?</value>
+  </data>
+  <data name="Guide.Availability.DeleteBody" xml:space="preserve">
+    <value>Remove the block from {0} to {1}?</value>
+  </data>
+  <data name="Guide.Availability.DeleteConfirm" xml:space="preserve">
+    <value>Delete block</value>
+  </data>
+  <data name="Guide.Discounts.Title" xml:space="preserve">
+    <value>Discounts</value>
+  </data>
+  <data name="Guide.Discounts.Heading" xml:space="preserve">
+    <value>Discounts</value>
+  </data>
+  <data name="Guide.Discounts.CreateHeading" xml:space="preserve">
+    <value>Create discount</value>
+  </data>
+  <data name="Guide.Discounts.Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="Guide.Discounts.Description" xml:space="preserve">
+    <value>Description</value>
+  </data>
+  <data name="Guide.Discounts.Type" xml:space="preserve">
+    <value>Type</value>
+  </data>
+  <data name="Guide.Discounts.Value" xml:space="preserve">
+    <value>Value</value>
+  </data>
+  <data name="Guide.Discounts.Currency" xml:space="preserve">
+    <value>Currency</value>
+  </data>
+  <data name="Guide.Discounts.MaxUsage" xml:space="preserve">
+    <value>Max usage</value>
+  </data>
+  <data name="Guide.Discounts.ValidFrom" xml:space="preserve">
+    <value>Valid from</value>
+  </data>
+  <data name="Guide.Discounts.ValidUntil" xml:space="preserve">
+    <value>Valid until</value>
+  </data>
+  <data name="Guide.Discounts.TourId" xml:space="preserve">
+    <value>Tour identifier</value>
+  </data>
+  <data name="Guide.Discounts.TourIdPlaceholder" xml:space="preserve">
+    <value>Tour identifier (optional)</value>
+  </data>
+  <data name="Guide.Discounts.TourIdHelp" xml:space="preserve">
+    <value>Paste the tour identifier from its detail page. Leave blank for all tours.</value>
+  </data>
+  <data name="Guide.Discounts.CreateSubmit" xml:space="preserve">
+    <value>Create discount</value>
+  </data>
+  <data name="Guide.Discounts.MyDiscounts" xml:space="preserve">
+    <value>My discounts</value>
+  </data>
+  <data name="Guide.Discounts.NoDiscounts" xml:space="preserve">
+    <value>No discounts yet.</value>
+  </data>
+  <data name="Guide.Discounts.ColName" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="Guide.Discounts.ColType" xml:space="preserve">
+    <value>Type</value>
+  </data>
+  <data name="Guide.Discounts.ColValue" xml:space="preserve">
+    <value>Value</value>
+  </data>
+  <data name="Guide.Discounts.ColValid" xml:space="preserve">
+    <value>Valid</value>
+  </data>
+  <data name="Guide.Discounts.ColUsage" xml:space="preserve">
+    <value>Usage</value>
+  </data>
+  <data name="Guide.Discounts.ColStatus" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="Guide.Discounts.ColActions" xml:space="preserve">
+    <value>Actions</value>
+  </data>
+  <data name="Guide.Discounts.TypePercentage" xml:space="preserve">
+    <value>Percentage</value>
+  </data>
+  <data name="Guide.Discounts.TypeFixed" xml:space="preserve">
+    <value>Fixed amount</value>
+  </data>
+  <data name="Guide.Discounts.Active" xml:space="preserve">
+    <value>Active</value>
+  </data>
+  <data name="Guide.Discounts.Inactive" xml:space="preserve">
+    <value>Inactive</value>
+  </data>
+  <data name="Guide.Discounts.EditLabel" xml:space="preserve">
+    <value>Edit {0}</value>
+  </data>
+  <data name="Guide.Discounts.DeactivateLabel" xml:space="preserve">
+    <value>Deactivate {0}</value>
+  </data>
+  <data name="Guide.Discounts.SaveChanges" xml:space="preserve">
+    <value>Save changes</value>
+  </data>
+  <data name="Guide.Discounts.FromDate" xml:space="preserve">
+    <value>From {0}</value>
+  </data>
+  <data name="Guide.Discounts.DeactivateTitle" xml:space="preserve">
+    <value>Deactivate discount?</value>
+  </data>
+  <data name="Guide.Discounts.DeactivateBody" xml:space="preserve">
+    <value>Deactivate the discount "{0}"?</value>
+  </data>
+  <data name="Guide.Discounts.DeactivateConfirm" xml:space="preserve">
+    <value>Deactivate</value>
+  </data>
+  <data name="Guide.Applications.Title" xml:space="preserve">
+    <value>Tour Applications</value>
+  </data>
+  <data name="Guide.Applications.Heading" xml:space="preserve">
+    <value>Tour Applications</value>
+  </data>
+  <data name="Guide.Applications.Subtitle" xml:space="preserve">
+    <value>Apply to guide existing tours.</value>
+  </data>
+  <data name="Guide.Applications.ApplyHeading" xml:space="preserve">
+    <value>Apply for a tour</value>
+  </data>
+  <data name="Guide.Applications.TourId" xml:space="preserve">
+    <value>Tour identifier</value>
+  </data>
+  <data name="Guide.Applications.TourIdPlaceholder" xml:space="preserve">
+    <value>Tour identifier</value>
+  </data>
+  <data name="Guide.Applications.TourIdHelp" xml:space="preserve">
+    <value>Paste the tour identifier from its detail page.</value>
+  </data>
+  <data name="Guide.Applications.Message" xml:space="preserve">
+    <value>Message</value>
+  </data>
+  <data name="Guide.Applications.Experience" xml:space="preserve">
+    <value>Relevant experience</value>
+  </data>
+  <data name="Guide.Applications.ProposedPrice" xml:space="preserve">
+    <value>Proposed base price</value>
+  </data>
+  <data name="Guide.Applications.Submit" xml:space="preserve">
+    <value>Submit application</value>
+  </data>
+  <data name="Guide.Applications.MyApplications" xml:space="preserve">
+    <value>My applications</value>
+  </data>
+  <data name="Guide.Applications.NoApplications" xml:space="preserve">
+    <value>No applications yet.</value>
+  </data>
+  <data name="Guide.Applications.ColTour" xml:space="preserve">
+    <value>Tour</value>
+  </data>
+  <data name="Guide.Applications.ColStatus" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="Guide.Applications.ColPrice" xml:space="preserve">
+    <value>Proposed price</value>
+  </data>
+  <data name="Guide.Applications.ColApplied" xml:space="preserve">
+    <value>Applied</value>
+  </data>
+  <data name="Guide.Applications.ColReviewed" xml:space="preserve">
+    <value>Reviewed</value>
+  </data>
+  <data name="Guide.Applications.Pagination" xml:space="preserve">
+    <value>Application pages</value>
+  </data>
+  <data name="Guide.JoinRequests.Title" xml:space="preserve">
+    <value>Join Requests</value>
+  </data>
+  <data name="Guide.JoinRequests.Heading" xml:space="preserve">
+    <value>Join Requests</value>
+  </data>
+  <data name="Guide.JoinRequests.Subtitle" xml:space="preserve">
+    <value>Travelers asking to join your group tours.</value>
+  </data>
+  <data name="Guide.JoinRequests.PendingCount" xml:space="preserve">
+    <value>{0} pending</value>
+  </data>
+  <data name="Guide.JoinRequests.NoRequests" xml:space="preserve">
+    <value>No join requests.</value>
+  </data>
+  <data name="Guide.JoinRequests.ColRequest" xml:space="preserve">
+    <value>Request</value>
+  </data>
+  <data name="Guide.JoinRequests.ColParticipants" xml:space="preserve">
+    <value>Participants</value>
+  </data>
+  <data name="Guide.JoinRequests.ColMessage" xml:space="preserve">
+    <value>Message</value>
+  </data>
+  <data name="Guide.JoinRequests.ColStatus" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="Guide.JoinRequests.ColRequested" xml:space="preserve">
+    <value>Requested</value>
+  </data>
+  <data name="Guide.JoinRequests.ColExpires" xml:space="preserve">
+    <value>Expires</value>
+  </data>
+  <data name="Guide.JoinRequests.ColActions" xml:space="preserve">
+    <value>Actions</value>
+  </data>
+  <data name="Guide.JoinRequests.RequestLabel" xml:space="preserve">
+    <value>Request #{0}</value>
+  </data>
+  <data name="Guide.JoinRequests.NoMessage" xml:space="preserve">
+    <value>No message</value>
+  </data>
+  <data name="Guide.JoinRequests.Expired" xml:space="preserve">
+    <value>Expired</value>
+  </data>
+  <data name="Guide.JoinRequests.Approve" xml:space="preserve">
+    <value>Approve</value>
+  </data>
+  <data name="Guide.JoinRequests.Reject" xml:space="preserve">
+    <value>Reject</value>
+  </data>
+  <data name="Guide.JoinRequests.RejectTitle" xml:space="preserve">
+    <value>Reject join request?</value>
+  </data>
+  <data name="Guide.JoinRequests.RejectBody" xml:space="preserve">
+    <value>Optionally tell the traveler why their request was rejected.</value>
+  </data>
+  <data name="Guide.JoinRequests.ReasonLabel" xml:space="preserve">
+    <value>Response message</value>
+  </data>
+  <data name="Guide.JoinRequests.ReasonHelp" xml:space="preserve">
+    <value>This message is shared with the traveler.</value>
+  </data>
+  <data name="Guide.JoinRequests.RejectConfirm" xml:space="preserve">
+    <value>Reject request</value>
+  </data>
+  <data name="Guide.Agency.Title" xml:space="preserve">
+    <value>My Agency</value>
+  </data>
+  <data name="Guide.Agency.Heading" xml:space="preserve">
+    <value>My Agency</value>
+  </data>
+  <data name="Guide.Agency.PendingCount" xml:space="preserve">
+    <value>{0} pending</value>
+  </data>
+  <data name="Guide.Agency.ApplyHeading" xml:space="preserve">
+    <value>Apply to an agency</value>
+  </data>
+  <data name="Guide.Agency.AgencyIdLabel" xml:space="preserve">
+    <value>Agency identifier</value>
+  </data>
+  <data name="Guide.Agency.AgencyIdPlaceholder" xml:space="preserve">
+    <value>Agency identifier</value>
+  </data>
+  <data name="Guide.Agency.AgencyIdHelp" xml:space="preserve">
+    <value>Paste the agency identifier from its detail page.</value>
+  </data>
+  <data name="Guide.Agency.Message" xml:space="preserve">
+    <value>Message</value>
+  </data>
+  <data name="Guide.Agency.SubmitApplication" xml:space="preserve">
+    <value>Submit application</value>
+  </data>
+  <data name="Guide.Agency.LeaveHeading" xml:space="preserve">
+    <value>Leave agency</value>
+  </data>
+  <data name="Guide.Agency.LeaveMsg" xml:space="preserve">
+    <value>Leaving removes your agency affiliation.</value>
+  </data>
+  <data name="Guide.Agency.Leave" xml:space="preserve">
+    <value>Leave</value>
+  </data>
+  <data name="Guide.Agency.InvitationsHeading" xml:space="preserve">
+    <value>Agency invitations</value>
+  </data>
+  <data name="Guide.Agency.NoInvitations" xml:space="preserve">
+    <value>No invitations.</value>
+  </data>
+  <data name="Guide.Agency.ColInvitation" xml:space="preserve">
+    <value>Invitation</value>
+  </data>
+  <data name="Guide.Agency.ColCommission" xml:space="preserve">
+    <value>Commission</value>
+  </data>
+  <data name="Guide.Agency.ColMessage" xml:space="preserve">
+    <value>Message</value>
+  </data>
+  <data name="Guide.Agency.ColStatus" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="Guide.Agency.ColExpires" xml:space="preserve">
+    <value>Expires</value>
+  </data>
+  <data name="Guide.Agency.ColActions" xml:space="preserve">
+    <value>Actions</value>
+  </data>
+  <data name="Guide.Agency.InvitationLabel" xml:space="preserve">
+    <value>Invitation #{0}</value>
+  </data>
+  <data name="Guide.Agency.NoMessage" xml:space="preserve">
+    <value>No message</value>
+  </data>
+  <data name="Guide.Agency.Expired" xml:space="preserve">
+    <value>Expired</value>
+  </data>
+  <data name="Guide.Agency.Accept" xml:space="preserve">
+    <value>Accept</value>
+  </data>
+  <data name="Guide.Agency.Decline" xml:space="preserve">
+    <value>Decline</value>
+  </data>
+  <data name="Guide.Agency.LeaveModalTitle" xml:space="preserve">
+    <value>Leave this agency?</value>
+  </data>
+  <data name="Guide.Agency.LeaveModalBody" xml:space="preserve">
+    <value>Your affiliation with this agency will be removed.</value>
+  </data>
+  <data name="Guide.Agency.LeaveConfirm" xml:space="preserve">
+    <value>Leave agency</value>
+  </data>
+  <data name="Guide.Proposals.Title" xml:space="preserve">
+    <value>My Proposals</value>
+  </data>
+  <data name="Guide.Proposals.Heading" xml:space="preserve">
+    <value>My Proposals</value>
+  </data>
+  <data name="Guide.Proposals.Subtitle" xml:space="preserve">
+    <value>Propose new tours for approval.</value>
+  </data>
+  <data name="Guide.Proposals.NewHeading" xml:space="preserve">
+    <value>New tour proposal</value>
+  </data>
+  <data name="Guide.Proposals.TitleLabel" xml:space="preserve">
+    <value>Title</value>
+  </data>
+  <data name="Guide.Proposals.ShortDescription" xml:space="preserve">
+    <value>Short description</value>
+  </data>
+  <data name="Guide.Proposals.Description" xml:space="preserve">
+    <value>Description</value>
+  </data>
+  <data name="Guide.Proposals.PlaceId" xml:space="preserve">
+    <value>Place identifier</value>
+  </data>
+  <data name="Guide.Proposals.PlaceIdPlaceholder" xml:space="preserve">
+    <value>Place identifier</value>
+  </data>
+  <data name="Guide.Proposals.PlaceIdHelp" xml:space="preserve">
+    <value>Paste the place identifier from its detail page.</value>
+  </data>
+  <data name="Guide.Proposals.Duration" xml:space="preserve">
+    <value>Duration (minutes)</value>
+  </data>
+  <data name="Guide.Proposals.MaxGroup" xml:space="preserve">
+    <value>Max group size</value>
+  </data>
+  <data name="Guide.Proposals.BasePrice" xml:space="preserve">
+    <value>Base price</value>
+  </data>
+  <data name="Guide.Proposals.Currency" xml:space="preserve">
+    <value>Currency</value>
+  </data>
+  <data name="Guide.Proposals.RequestExclusive" xml:space="preserve">
+    <value>Request exclusive offering</value>
+  </data>
+  <data name="Guide.Proposals.CreateDraft" xml:space="preserve">
+    <value>Create draft</value>
+  </data>
+  <data name="Guide.Proposals.SubmittedHeading" xml:space="preserve">
+    <value>My proposals</value>
+  </data>
+  <data name="Guide.Proposals.NoProposals" xml:space="preserve">
+    <value>No proposals yet.</value>
+  </data>
+  <data name="Guide.Proposals.ColTitle" xml:space="preserve">
+    <value>Title</value>
+  </data>
+  <data name="Guide.Proposals.ColBasePrice" xml:space="preserve">
+    <value>Base price</value>
+  </data>
+  <data name="Guide.Proposals.ColStatus" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="Guide.Proposals.ColCreated" xml:space="preserve">
+    <value>Created</value>
+  </data>
+  <data name="Guide.Proposals.ColActions" xml:space="preserve">
+    <value>Actions</value>
+  </data>
+  <data name="Guide.Proposals.Submit" xml:space="preserve">
+    <value>Submit</value>
+  </data>
+  <data name="Guide.Proposals.SubmitTitle" xml:space="preserve">
+    <value>Submit proposal?</value>
+  </data>
+  <data name="Guide.Proposals.SubmitBody" xml:space="preserve">
+    <value>Submit the proposal "{0}" for review?</value>
+  </data>
+  <data name="Guide.Proposals.SubmitConfirm" xml:space="preserve">
+    <value>Submit proposal</value>
+  </data>
+  <data name="Guide.AgencyRoster.Title" xml:space="preserve">
+    <value>Agency Roster</value>
+  </data>
+  <data name="Guide.AgencyRoster.Heading" xml:space="preserve">
+    <value>Agency Roster</value>
+  </data>
+  <data name="Guide.AgencyRoster.PendingCount" xml:space="preserve">
+    <value>{0} pending</value>
+  </data>
+  <data name="Guide.AgencyRoster.InviteGuide" xml:space="preserve">
+    <value>Invite guide</value>
+  </data>
+  <data name="Guide.AgencyRoster.CurrentGuides" xml:space="preserve">
+    <value>Current guides</value>
+  </data>
+  <data name="Guide.AgencyRoster.CurrentGuidesSubtitle" xml:space="preserve">
+    <value>Guides currently in your agency.</value>
+  </data>
+  <data name="Guide.AgencyRoster.NoGuides" xml:space="preserve">
+    <value>No guides yet.</value>
+  </data>
+  <data name="Guide.AgencyRoster.ColGuide" xml:space="preserve">
+    <value>Guide</value>
+  </data>
+  <data name="Guide.AgencyRoster.ColCommission" xml:space="preserve">
+    <value>Commission</value>
+  </data>
+  <data name="Guide.AgencyRoster.ColJoined" xml:space="preserve">
+    <value>Joined</value>
+  </data>
+  <data name="Guide.AgencyRoster.ColActions" xml:space="preserve">
+    <value>Actions</value>
+  </data>
+  <data name="Guide.AgencyRoster.Remove" xml:space="preserve">
+    <value>Remove</value>
+  </data>
+  <data name="Guide.AgencyRoster.ApplicationsHeading" xml:space="preserve">
+    <value>Guide applications</value>
+  </data>
+  <data name="Guide.AgencyRoster.ApplicationsSubtitle" xml:space="preserve">
+    <value>Guides applying to join your agency.</value>
+  </data>
+  <data name="Guide.AgencyRoster.NoApplications" xml:space="preserve">
+    <value>No applications.</value>
+  </data>
+  <data name="Guide.AgencyRoster.ColMessage" xml:space="preserve">
+    <value>Message</value>
+  </data>
+  <data name="Guide.AgencyRoster.ColStatus" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="Guide.AgencyRoster.ColApplied" xml:space="preserve">
+    <value>Applied</value>
+  </data>
+  <data name="Guide.AgencyRoster.NoMessage" xml:space="preserve">
+    <value>No message</value>
+  </data>
+  <data name="Guide.AgencyRoster.Approve" xml:space="preserve">
+    <value>Approve</value>
+  </data>
+  <data name="Guide.AgencyRoster.Reject" xml:space="preserve">
+    <value>Reject</value>
+  </data>
+  <data name="Guide.AgencyRoster.SentHeading" xml:space="preserve">
+    <value>Sent invitations</value>
+  </data>
+  <data name="Guide.AgencyRoster.SentSubtitle" xml:space="preserve">
+    <value>Invitations you have sent to guides.</value>
+  </data>
+  <data name="Guide.AgencyRoster.NoSent" xml:space="preserve">
+    <value>No sent invitations.</value>
+  </data>
+  <data name="Guide.AgencyRoster.ColProposedCommission" xml:space="preserve">
+    <value>Proposed commission</value>
+  </data>
+  <data name="Guide.AgencyRoster.ColExpires" xml:space="preserve">
+    <value>Expires</value>
+  </data>
+  <data name="Guide.AgencyRoster.ColSent" xml:space="preserve">
+    <value>Sent</value>
+  </data>
+  <data name="Guide.AgencyRoster.RemoveTitle" xml:space="preserve">
+    <value>Remove guide?</value>
+  </data>
+  <data name="Guide.AgencyRoster.RemoveBody" xml:space="preserve">
+    <value>Remove {0} from your agency?</value>
+  </data>
+  <data name="Guide.AgencyRoster.RemoveConfirm" xml:space="preserve">
+    <value>Remove guide</value>
+  </data>
+  <data name="Guide.AgencyInvite.Title" xml:space="preserve">
+    <value>Invite Guide</value>
+  </data>
+  <data name="Guide.AgencyInvite.Heading" xml:space="preserve">
+    <value>Invite a guide</value>
+  </data>
+  <data name="Guide.AgencyInvite.Back" xml:space="preserve">
+    <value>Back to roster</value>
+  </data>
+  <data name="Guide.AgencyInvite.NoGuides" xml:space="preserve">
+    <value>No guides available to invite.</value>
+  </data>
+  <data name="Guide.AgencyInvite.GuideLabel" xml:space="preserve">
+    <value>Guide</value>
+  </data>
+  <data name="Guide.AgencyInvite.SelectGuide" xml:space="preserve">
+    <value>Select a guide</value>
+  </data>
+  <data name="Guide.AgencyInvite.CommissionLabel" xml:space="preserve">
+    <value>Proposed commission (%)</value>
+  </data>
+  <data name="Guide.AgencyInvite.MessageLabel" xml:space="preserve">
+    <value>Message</value>
+  </data>
+  <data name="Guide.AgencyInvite.MessagePlaceholder" xml:space="preserve">
+    <value>Optional message to the guide</value>
+  </data>
+  <data name="Guide.AgencyInvite.MessageHelp" xml:space="preserve">
+    <value>Shared with the guide in the invitation.</value>
+  </data>
+  <data name="Guide.AgencyInvite.Send" xml:space="preserve">
+    <value>Send invitation</value>
+  </data>
+  <data name="Guide.MyTours.Title" xml:space="preserve">
+    <value>My Tours</value>
+  </data>
+  <data name="Guide.MyTours.Heading" xml:space="preserve">
+    <value>My Tours &amp; Offerings</value>
+  </data>
+  <data name="Guide.MyTours.Subtitle" xml:space="preserve">
+    <value>Tours you propose or guide.</value>
+  </data>
+  <data name="Guide.MyTours.NoTours" xml:space="preserve">
+    <value>No tours yet</value>
+  </data>
+  <data name="Guide.MyTours.NoToursMsg" xml:space="preserve">
+    <value>Apply for a tour to start guiding.</value>
+  </data>
+  <data name="Guide.MyTours.FindTours" xml:space="preserve">
+    <value>Find tours</value>
+  </data>
+  <data name="Guide.MyTours.ColTour" xml:space="preserve">
+    <value>Tour</value>
+  </data>
+  <data name="Guide.MyTours.ColRole" xml:space="preserve">
+    <value>Role</value>
+  </data>
+  <data name="Guide.MyTours.ColOffering" xml:space="preserve">
+    <value>Offering</value>
+  </data>
+  <data name="Guide.MyTours.ColPrivate" xml:space="preserve">
+    <value>Private</value>
+  </data>
+  <data name="Guide.MyTours.ColAssigned" xml:space="preserve">
+    <value>Assigned</value>
+  </data>
+  <data name="Guide.MyTours.ColActions" xml:space="preserve">
+    <value>Actions</value>
+  </data>
+  <data name="Guide.MyTours.RoleProposer" xml:space="preserve">
+    <value>Proposer</value>
+  </data>
+  <data name="Guide.MyTours.RoleAssigned" xml:space="preserve">
+    <value>Assigned</value>
+  </data>
+  <data name="Guide.MyTours.NoOffering" xml:space="preserve">
+    <value>No offering</value>
+  </data>
+  <data name="Guide.MyTours.ManageOffering" xml:space="preserve">
+    <value>Manage offering</value>
+  </data>
+  <data name="Guide.MyTours.Pagination" xml:space="preserve">
+    <value>Tour pages</value>
+  </data>
+  <data name="Guide.Analytics.Title" xml:space="preserve">
+    <value>Analytics</value>
+  </data>
+  <data name="Guide.Analytics.Heading" xml:space="preserve">
+    <value>Analytics</value>
+  </data>
+  <data name="Guide.Analytics.Subtitle" xml:space="preserve">
+    <value>Your booking performance.</value>
+  </data>
+  <data name="Guide.Analytics.TotalBookings" xml:space="preserve">
+    <value>Total Bookings</value>
+  </data>
+  <data name="Guide.Analytics.Upcoming" xml:space="preserve">
+    <value>Upcoming</value>
+  </data>
+  <data name="Guide.Analytics.Completed" xml:space="preserve">
+    <value>Completed</value>
+  </data>
+  <data name="Guide.Analytics.CancellationRate" xml:space="preserve">
+    <value>Cancellation Rate</value>
+  </data>
+  <data name="Guide.Analytics.BookingTrends" xml:space="preserve">
+    <value>Booking trends</value>
+  </data>
+  <data name="Guide.Analytics.NoTrends" xml:space="preserve">
+    <value>No booking trends yet.</value>
+  </data>
+  <data name="Guide.Analytics.PeakDays" xml:space="preserve">
+    <value>Peak days</value>
+  </data>
+  <data name="Guide.Analytics.NoPeakDays" xml:space="preserve">
+    <value>No peak day data yet.</value>
+  </data>
+  <data name="Guide.Analytics.PopularTours" xml:space="preserve">
+    <value>Popular tours</value>
+  </data>
+  <data name="Guide.Analytics.NoPopularTours" xml:space="preserve">
+    <value>No popular tours yet.</value>
+  </data>
+  <data name="Guide.Analytics.ColTour" xml:space="preserve">
+    <value>Tour</value>
+  </data>
+  <data name="Guide.Analytics.ColBookings" xml:space="preserve">
+    <value>Bookings</value>
+  </data>
+  <data name="Guide.Offering.Title" xml:space="preserve">
+    <value>Manage Offering</value>
+  </data>
+  <data name="Guide.Offering.Back" xml:space="preserve">
+    <value>Back to my tours</value>
+  </data>
+  <data name="Guide.Offering.Heading" xml:space="preserve">
+    <value>Manage offering</value>
+  </data>
+  <data name="Guide.Offering.StatusLabel" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="Guide.Offering.Proposer" xml:space="preserve">
+    <value>Proposer</value>
+  </data>
+  <data name="Guide.Offering.Schedules" xml:space="preserve">
+    <value>Schedules</value>
+  </data>
+  <data name="Guide.Offering.NoSchedules" xml:space="preserve">
+    <value>No schedules yet.</value>
+  </data>
+  <data name="Guide.Offering.ColDay" xml:space="preserve">
+    <value>Day</value>
+  </data>
+  <data name="Guide.Offering.ColStart" xml:space="preserve">
+    <value>Start</value>
+  </data>
+  <data name="Guide.Offering.ColEnd" xml:space="preserve">
+    <value>End</value>
+  </data>
+  <data name="Guide.Offering.ColActive" xml:space="preserve">
+    <value>Active</value>
+  </data>
+  <data name="Guide.Offering.ColActions" xml:space="preserve">
+    <value>Actions</value>
+  </data>
+  <data name="Guide.Offering.DeleteSchedule" xml:space="preserve">
+    <value>Delete schedule</value>
+  </data>
+  <data name="Guide.Offering.AddSchedule" xml:space="preserve">
+    <value>Add schedule</value>
+  </data>
+  <data name="Guide.Offering.PricingTiers" xml:space="preserve">
+    <value>Pricing tiers</value>
+  </data>
+  <data name="Guide.Offering.NoPricingTiers" xml:space="preserve">
+    <value>No pricing tiers yet.</value>
+  </data>
+  <data name="Guide.Offering.ColName" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="Guide.Offering.ColPrice" xml:space="preserve">
+    <value>Price</value>
+  </data>
+  <data name="Guide.Offering.ColParticipants" xml:space="preserve">
+    <value>Participants</value>
+  </data>
+  <data name="Guide.Offering.DeleteTier" xml:space="preserve">
+    <value>Delete tier</value>
+  </data>
+  <data name="Guide.Offering.Currency" xml:space="preserve">
+    <value>Currency</value>
+  </data>
+  <data name="Guide.Offering.Min" xml:space="preserve">
+    <value>Min</value>
+  </data>
+  <data name="Guide.Offering.Max" xml:space="preserve">
+    <value>Max</value>
+  </data>
+  <data name="Guide.Offering.Description" xml:space="preserve">
+    <value>Description</value>
+  </data>
+  <data name="Guide.Offering.AddTier" xml:space="preserve">
+    <value>Add tier</value>
+  </data>
+  <data name="Guide.Offering.PrivateTour" xml:space="preserve">
+    <value>Private tour</value>
+  </data>
+  <data name="Guide.Offering.PrivateEnabledPrefix" xml:space="preserve">
+    <value>Private tours are enabled.</value>
+  </data>
+  <data name="Guide.Offering.Enabled" xml:space="preserve">
+    <value>Enabled</value>
+  </data>
+  <data name="Guide.Offering.Multiplier" xml:space="preserve">
+    <value>Price multiplier</value>
+  </data>
+  <data name="Guide.Offering.FlatPrice" xml:space="preserve">
+    <value>Flat price</value>
+  </data>
+  <data name="Guide.Offering.DisablePrivate" xml:space="preserve">
+    <value>Disable private tour</value>
+  </data>
+  <data name="Guide.Offering.PrivateNotEnabled" xml:space="preserve">
+    <value>Private tours are not enabled.</value>
+  </data>
+  <data name="Guide.Offering.MultiplierLabel" xml:space="preserve">
+    <value>Price multiplier</value>
+  </data>
+  <data name="Guide.Offering.FlatPriceLabel" xml:space="preserve">
+    <value>Flat price</value>
+  </data>
+  <data name="Guide.Offering.UpdatePrivate" xml:space="preserve">
+    <value>Update private tour</value>
+  </data>
+  <data name="Guide.Offering.EnablePrivate" xml:space="preserve">
+    <value>Enable private tour</value>
+  </data>
+  <data name="Guide.Offering.RemoveHeading" xml:space="preserve">
+    <value>Remove offering</value>
+  </data>
+  <data name="Guide.Offering.RemoveMsg" xml:space="preserve">
+    <value>Removing stops you offering this tour.</value>
+  </data>
+  <data name="Guide.Offering.RemoveOffering" xml:space="preserve">
+    <value>Remove offering</value>
+  </data>
+  <data name="Guide.Offering.DeleteScheduleTitle" xml:space="preserve">
+    <value>Delete schedule?</value>
+  </data>
+  <data name="Guide.Offering.DeleteScheduleBody" xml:space="preserve">
+    <value>Delete the {0} schedule?</value>
+  </data>
+  <data name="Guide.Offering.DeleteTierTitle" xml:space="preserve">
+    <value>Delete pricing tier?</value>
+  </data>
+  <data name="Guide.Offering.DeleteTierBody" xml:space="preserve">
+    <value>Delete the pricing tier "{0}"?</value>
+  </data>
+  <data name="Guide.Offering.RemoveModalTitle" xml:space="preserve">
+    <value>Remove this offering?</value>
+  </data>
+  <data name="Guide.Offering.RemoveModalBody" xml:space="preserve">
+    <value>You will stop offering this tour. This can be set up again later.</value>
+  </data>
+  <data name="Guide.Offering.RemoveConfirm" xml:space="preserve">
+    <value>Remove offering</value>
+  </data>
+  <data name="Guide.Reviews.Title" xml:space="preserve">
+    <value>Reviews</value>
+  </data>
+  <data name="Guide.Reviews.Heading" xml:space="preserve">
+    <value>Reviews</value>
+  </data>
+  <data name="Guide.Reviews.Subtitle" xml:space="preserve">
+    <value>What travelers say about your tours.</value>
+  </data>
+  <data name="Guide.Reviews.NoReviews" xml:space="preserve">
+    <value>No reviews yet.</value>
+  </data>
+  <data name="Guide.Reviews.Pagination" xml:space="preserve">
+    <value>Review pages</value>
+  </data>
 </root>

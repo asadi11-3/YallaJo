@@ -1,18 +1,25 @@
 @model YallaJo.Web.Areas.Guide.Models.JoinRequests.JoinRequestsVm
+@using System.Globalization
+@using Microsoft.Extensions.Localization
 @using YallaJo.Web.Areas.Guide.Models.JoinRequests
 @using YallaJo.Web.Areas.Guide.Shared
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
-    ViewData["Title"] = "Join Requests";
+    ViewData["Title"] = Localizer["Guide.JoinRequests.Title"].Value;
     Layout = "~/Views/Shared/_Layout.cshtml";
     var sidebar = ViewBag.Sidebar as GuideSidebarVm ?? new GuideSidebarVm();
+    var culture = CultureInfo.CurrentUICulture;
+    string Date(DateTime d) => d.ToString("dd MMM yyyy", culture);
+    string DateTimeS(DateTime d) => d.ToString("dd MMM yyyy HH:mm", culture);
+    string Count(int n) => n.ToString("N0", culture);
 
-    string StatusBadge(JoinRequestStatus status) => status switch
+    (string Color, string Icon) StatusStyle(JoinRequestStatus status) => status switch
     {
-        JoinRequestStatus.Approved => "bg-success-soft text-success",
-        JoinRequestStatus.Rejected => "bg-danger-soft text-danger",
-        JoinRequestStatus.Cancelled => "bg-secondary-soft text-secondary",
-        JoinRequestStatus.Expired => "bg-secondary-soft text-secondary",
-        _ => "bg-warning-soft text-warning"
+        JoinRequestStatus.Approved => ("success", "circle-check"),
+        JoinRequestStatus.Rejected => ("danger", "circle-xmark"),
+        JoinRequestStatus.Cancelled => ("secondary", "ban"),
+        JoinRequestStatus.Expired => ("secondary", "hourglass-end"),
+        _ => ("warning", "clock")
     };
 }
 
@@ -22,48 +29,51 @@
     <div class="container vstack gap-4">
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
             <div>
-                <h1 class="h4 mb-0">Join Requests</h1>
-                <p class="text-body-secondary mb-0">Review requests from travellers who want to join your group tours.</p>
+                <h1 class="h4 mb-1"><i class="fa-solid fa-users me-2" aria-hidden="true"></i>@Localizer["Guide.JoinRequests.Heading"]</h1>
+                <p class="text-body-secondary mb-0">@Localizer["Guide.JoinRequests.Subtitle"]</p>
             </div>
             @if (Model.PendingCount > 0)
             {
-                <span class="badge bg-warning-soft text-warning fs-6">@Model.PendingCount pending</span>
+                <span class="badge bg-warning bg-opacity-10 text-warning fs-6"><i class="fa-solid fa-clock fa-fw" aria-hidden="true"></i> @Localizer["Guide.JoinRequests.PendingCount", Count(Model.PendingCount)]</span>
             }
         </div>
 
         <div class="card card-body border">
             @if (!Model.HasRequests)
             {
-                <div class="text-center text-body-secondary py-5">
-                    <i class="bi bi-people fs-1 d-block mb-2"></i>
-                    No join requests yet.
+                <div class="text-center py-5">
+                    <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
+                    <p class="text-secondary mb-0">@Localizer["Guide.JoinRequests.NoRequests"]</p>
                 </div>
             }
             else
             {
+                var index = 0;
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0">
                         <thead>
                             <tr>
-                                <th scope="col">Booking</th>
-                                <th scope="col">Participants</th>
-                                <th scope="col">Message</th>
-                                <th scope="col">Status</th>
-                                <th scope="col">Requested</th>
-                                <th scope="col">Expires</th>
-                                <th scope="col" class="text-end">Actions</th>
+                                <th scope="col">@Localizer["Guide.JoinRequests.ColRequest"]</th>
+                                <th scope="col">@Localizer["Guide.JoinRequests.ColParticipants"]</th>
+                                <th scope="col">@Localizer["Guide.JoinRequests.ColMessage"]</th>
+                                <th scope="col">@Localizer["Guide.JoinRequests.ColStatus"]</th>
+                                <th scope="col">@Localizer["Guide.JoinRequests.ColRequested"]</th>
+                                <th scope="col">@Localizer["Guide.JoinRequests.ColExpires"]</th>
+                                <th scope="col" class="text-end">@Localizer["Guide.JoinRequests.ColActions"]</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach (var req in Model.Requests)
                             {
+                                index++;
+                                var s = StatusStyle(req.Status);
                                 <tr>
-                                    <td><code class="small">@req.TourBookingId.ToString()[..8]</code></td>
-                                    <td>@req.ParticipantCount</td>
+                                    <td class="fw-semibold">@Localizer["Guide.JoinRequests.RequestLabel", Count(index)]</td>
+                                    <td><bdi dir="ltr" class="font-data">@Count(req.ParticipantCount)</bdi></td>
                                     <td class="text-truncate" style="max-width: 240px;">
                                         @if (string.IsNullOrWhiteSpace(req.Message))
                                         {
-                                            <span class="text-body-secondary">&mdash;</span>
+                                            <span class="text-body-secondary" aria-label="@Localizer["Guide.JoinRequests.NoMessage"]">&mdash;</span>
                                         }
                                         else
                                         {
@@ -72,19 +82,19 @@
                                         @if (!string.IsNullOrWhiteSpace(req.ResponseMessage))
                                         {
                                             <div class="small text-body-secondary mt-1">
-                                                <i class="bi bi-reply"></i> @req.ResponseMessage
+                                                <i class="fa-solid fa-reply me-1" aria-hidden="true"></i> @req.ResponseMessage
                                             </div>
                                         }
                                     </td>
                                     <td>
-                                        <span class="badge @StatusBadge(req.Status)">@req.Status</span>
+                                        <span class="badge bg-@s.Color bg-opacity-10 text-@s.Color"><i class="fa-solid fa-@s.Icon fa-fw" aria-hidden="true"></i> @req.Status</span>
                                         @if (req.IsExpired)
                                         {
-                                            <span class="badge bg-secondary-soft text-secondary">Expired</span>
+                                            <span class="badge bg-secondary bg-opacity-10 text-secondary"><i class="fa-solid fa-hourglass-end fa-fw" aria-hidden="true"></i> @Localizer["Guide.JoinRequests.Expired"]</span>
                                         }
                                     </td>
-                                    <td>@req.CreatedAt.ToString("dd MMM yyyy")</td>
-                                    <td>@req.ExpiresAt.ToString("dd MMM yyyy HH:mm")</td>
+                                    <td><bdi dir="ltr" class="font-data">@Date(req.CreatedAt)</bdi></td>
+                                    <td><bdi dir="ltr" class="font-data">@DateTimeS(req.ExpiresAt)</bdi></td>
                                     <td class="text-end">
                                         @if (req.IsPending && !req.IsExpired)
                                         {
@@ -93,23 +103,26 @@
                                                     @Html.AntiForgeryToken()
                                                     <input type="hidden" name="RequestId" value="@req.Id" />
                                                     <button type="submit" class="btn btn-sm btn-success-soft">
-                                                        <i class="bi bi-check-lg"></i> Approve
+                                                        <i class="fa-solid fa-check me-1" aria-hidden="true"></i>@Localizer["Guide.JoinRequests.Approve"]
                                                     </button>
                                                 </form>
-                                                <form asp-area="Guide" asp-controller="JoinRequests" asp-action="Reject" method="post" class="d-inline"
-                                                      onsubmit="return confirm('Reject this join request?');">
-                                                    @Html.AntiForgeryToken()
-                                                    <input type="hidden" name="RequestId" value="@req.Id" />
-                                                    <button type="submit" class="btn btn-sm btn-danger-soft">
-                                                        <i class="bi bi-x-lg"></i> Reject
-                                                    </button>
-                                                </form>
+                                                <button type="button" class="btn btn-sm btn-danger-soft"
+                                                        data-bs-toggle="modal" data-bs-target="#reject-req-@req.Id">
+                                                    <i class="fa-solid fa-xmark me-1" aria-hidden="true"></i>@Localizer["Guide.JoinRequests.Reject"]
+                                                </button>
                                             </div>
                                         }
                                         else
                                         {
                                             <span class="text-body-secondary small">
-                                                @(req.RespondedAt.HasValue ? req.RespondedAt.Value.ToString("dd MMM yyyy") : "—")
+                                                @if (req.RespondedAt.HasValue)
+                                                {
+                                                    <bdi dir="ltr">@Date(req.RespondedAt.Value)</bdi>
+                                                }
+                                                else
+                                                {
+                                                    <span>&mdash;</span>
+                                                }
                                             </span>
                                         }
                                     </td>
@@ -122,3 +135,38 @@
         </div>
     </div>
 </section>
+
+@if (Model.HasRequests)
+{
+    foreach (var req in Model.Requests)
+    {
+        if (req.IsPending && !req.IsExpired)
+        {
+            <div class="modal fade" id="reject-req-@req.Id" tabindex="-1" aria-labelledby="reject-req-title-@req.Id" aria-describedby="reject-req-body-@req.Id" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h2 class="modal-title h5" id="reject-req-title-@req.Id">@Localizer["Guide.JoinRequests.RejectTitle"]</h2>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Guide.Common.Close"]"></button>
+                        </div>
+                        <form asp-area="Guide" asp-controller="JoinRequests" asp-action="Reject" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="RequestId" value="@req.Id" />
+                            <div class="modal-body" id="reject-req-body-@req.Id">
+                                <p>@Localizer["Guide.JoinRequests.RejectBody"]</p>
+                                <label class="form-label" for="reject-reason-@req.Id">@Localizer["Guide.JoinRequests.ReasonLabel"]</label>
+                                <textarea id="reject-reason-@req.Id" name="ResponseMessage" rows="3" maxlength="500" class="form-control"
+                                          aria-describedby="reject-reason-help-@req.Id"></textarea>
+                                <div id="reject-reason-help-@req.Id" class="form-text">@Localizer["Guide.JoinRequests.ReasonHelp"]</div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Localizer["Guide.Common.Cancel"]</button>
+                                <button type="submit" class="btn btn-danger">@Localizer["Guide.JoinRequests.RejectConfirm"]</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+}

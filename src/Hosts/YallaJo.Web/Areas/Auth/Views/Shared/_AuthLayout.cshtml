@@ -7,8 +7,13 @@
     site chrome (top navbar, footer, back-to-top, mobile navbar) so auth screens
     render as standalone, focused, full-height pages.
 *@
+@{
+    var authCulture = System.Globalization.CultureInfo.CurrentUICulture;
+    var authLang = authCulture.TwoLetterISOLanguageName;
+    var authDir = authCulture.TextInfo.IsRightToLeft ? "rtl" : "ltr";
+}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="@authLang" dir="@authDir">
 <head>
     @* dark mode switch (must run before stylesheets paint to avoid a flash of the wrong theme) *@
     <script src="~/assets/js/theme-bootstrap.js" asp-append-version="true"></script>
@@ -32,6 +37,12 @@
 
     @* Theme CSS (bundles Bootstrap v5.3.0) *@
     <link rel="stylesheet" type="text/css" href="~/assets/css/style.css" />
+
+    @* RTL overrides \u2014 loaded only when the active culture is right-to-left (Arabic). *@
+    @if (authDir == "rtl")
+    {
+        <link rel="stylesheet" type="text/css" href="~/assets/css/rtl.css" asp-append-version="true" />
+    }
 
     @* Per-view extra styles *@
     @await RenderSectionAsync("Styles", required: false)

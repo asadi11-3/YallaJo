@@ -1,11 +1,15 @@
 @model YallaJo.Web.Areas.Guide.Models.Analytics.AnalyticsVm
+@using System.Globalization
+@using Microsoft.Extensions.Localization
 @using YallaJo.Web.Areas.Guide.Shared
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
-    ViewData["Title"] = "Analytics";
+    ViewData["Title"] = Localizer["Guide.Analytics.Title"].Value;
     Layout = "~/Views/Shared/_Layout.cshtml";
     var sidebar = ViewBag.Sidebar as GuideSidebarVm ?? new GuideSidebarVm();
-
-    string Pct(decimal value) => $"{value:N1}%";
+    var culture = CultureInfo.CurrentUICulture;
+    string Count(int n) => n.ToString("N0", culture);
+    string Pct(decimal value) => value.ToString("N1", culture) + "%";
     int Bar(int value, int max) => max <= 0 ? 0 : (int)Math.Round(value * 100.0 / max);
 }
 
@@ -13,10 +17,10 @@
 
 <section class="pt-0">
     <div class="container vstack gap-4">
-        <div class="d-flex justify-content-between align-items-center">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
             <div>
-                <h1 class="h4 mb-0">Analytics</h1>
-                <p class="text-body-secondary mb-0">An overview of your booking performance.</p>
+                <h1 class="h4 mb-0"><i class="fa-solid fa-chart-column me-2" aria-hidden="true"></i>@Localizer["Guide.Analytics.Heading"]</h1>
+                <p class="text-body-secondary mb-0">@Localizer["Guide.Analytics.Subtitle"]</p>
             </div>
         </div>
 
@@ -25,11 +29,11 @@
                 <div class="card card-body border h-100">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <h6 class="mb-1 text-body-secondary">Total Bookings</h6>
-                            <h4 class="mb-0">@Model.TotalBookings.ToString("N0")</h4>
+                            <h2 class="h6 mb-1 text-body-secondary">@Localizer["Guide.Analytics.TotalBookings"]</h2>
+                            <p class="h4 mb-0 font-data"><bdi dir="ltr">@Count(Model.TotalBookings)</bdi></p>
                         </div>
                         <div class="icon-xl bg-primary-soft text-primary rounded-circle">
-                            <i class="bi bi-calendar-check"></i>
+                            <i class="fa-solid fa-calendar-check" aria-hidden="true"></i>
                         </div>
                     </div>
                 </div>
@@ -38,11 +42,11 @@
                 <div class="card card-body border h-100">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <h6 class="mb-1 text-body-secondary">Upcoming</h6>
-                            <h4 class="mb-0">@Model.UpcomingBookings.ToString("N0")</h4>
+                            <h2 class="h6 mb-1 text-body-secondary">@Localizer["Guide.Analytics.Upcoming"]</h2>
+                            <p class="h4 mb-0 font-data"><bdi dir="ltr">@Count(Model.UpcomingBookings)</bdi></p>
                         </div>
                         <div class="icon-xl bg-info-soft text-info rounded-circle">
-                            <i class="bi bi-hourglass-split"></i>
+                            <i class="fa-solid fa-hourglass-half" aria-hidden="true"></i>
                         </div>
                     </div>
                 </div>
@@ -51,11 +55,11 @@
                 <div class="card card-body border h-100">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <h6 class="mb-1 text-body-secondary">Completed</h6>
-                            <h4 class="mb-0">@Model.CompletedBookings.ToString("N0")</h4>
+                            <h2 class="h6 mb-1 text-body-secondary">@Localizer["Guide.Analytics.Completed"]</h2>
+                            <p class="h4 mb-0 font-data"><bdi dir="ltr">@Count(Model.CompletedBookings)</bdi></p>
                         </div>
                         <div class="icon-xl bg-success-soft text-success rounded-circle">
-                            <i class="bi bi-check2-circle"></i>
+                            <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
                         </div>
                     </div>
                 </div>
@@ -64,11 +68,11 @@
                 <div class="card card-body border h-100">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <h6 class="mb-1 text-body-secondary">Cancellation Rate</h6>
-                            <h4 class="mb-0">@Pct(Model.CancellationRate)</h4>
+                            <h2 class="h6 mb-1 text-body-secondary">@Localizer["Guide.Analytics.CancellationRate"]</h2>
+                            <p class="h4 mb-0 font-data"><bdi dir="ltr">@Pct(Model.CancellationRate)</bdi></p>
                         </div>
                         <div class="icon-xl bg-warning-soft text-warning rounded-circle">
-                            <i class="bi bi-x-circle"></i>
+                            <i class="fa-solid fa-circle-xmark" aria-hidden="true"></i>
                         </div>
                     </div>
                 </div>
@@ -79,7 +83,7 @@
             <div class="col-12 col-xl-7">
                 <div class="card border h-100">
                     <div class="card-header border-bottom">
-                        <h5 class="mb-0">Booking Trends</h5>
+                        <h2 class="card-header-title h5 mb-0">@Localizer["Guide.Analytics.BookingTrends"]</h2>
                     </div>
                     <div class="card-body">
                         @if (Model.HasBookingTrends)
@@ -89,16 +93,13 @@
                                 {
                                     <div>
                                         <div class="d-flex justify-content-between mb-1">
-                                            <span class="small text-body-secondary">@trend.Period</span>
-                                            <span class="small fw-semibold">@trend.BookingCount.ToString("N0")</span>
+                                            <span class="small text-body-secondary"><bdi dir="ltr">@trend.Period</bdi></span>
+                                            <span class="small fw-semibold font-data"><bdi dir="ltr">@Count(trend.BookingCount)</bdi></span>
                                         </div>
-                                        <div class="progress" style="height: 8px;">
-                                            <div class="progress-bar bg-primary"
-                                                 role="progressbar"
-                                                 style="width: @(Bar(trend.BookingCount, Model.MaxTrendCount))%"
-                                                 aria-valuenow="@trend.BookingCount"
-                                                 aria-valuemin="0"
-                                                 aria-valuemax="@Model.MaxTrendCount"></div>
+                                        <div class="progress" style="height: 8px;" role="progressbar"
+                                             aria-label="@trend.Period"
+                                             aria-valuenow="@trend.BookingCount" aria-valuemin="0" aria-valuemax="@Model.MaxTrendCount">
+                                            <div class="progress-bar bg-primary" style="width: @(Bar(trend.BookingCount, Model.MaxTrendCount))%"></div>
                                         </div>
                                     </div>
                                 }
@@ -106,9 +107,9 @@
                         }
                         else
                         {
-                            <div class="text-center text-body-secondary py-4">
-                                <i class="bi bi-bar-chart fs-1 d-block mb-2"></i>
-                                No booking trend data yet.
+                            <div class="text-center py-4">
+                                <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
+                                <p class="text-body-secondary mb-0">@Localizer["Guide.Analytics.NoTrends"]</p>
                             </div>
                         }
                     </div>
@@ -118,7 +119,7 @@
             <div class="col-12 col-xl-5">
                 <div class="card border h-100">
                     <div class="card-header border-bottom">
-                        <h5 class="mb-0">Peak Days</h5>
+                        <h2 class="card-header-title h5 mb-0">@Localizer["Guide.Analytics.PeakDays"]</h2>
                     </div>
                     <div class="card-body">
                         @if (Model.HasPeakDays)
@@ -129,15 +130,12 @@
                                     <div>
                                         <div class="d-flex justify-content-between mb-1">
                                             <span class="small text-body-secondary">@day.DayOfWeek</span>
-                                            <span class="small fw-semibold">@day.BookingCount.ToString("N0")</span>
+                                            <span class="small fw-semibold font-data"><bdi dir="ltr">@Count(day.BookingCount)</bdi></span>
                                         </div>
-                                        <div class="progress" style="height: 8px;">
-                                            <div class="progress-bar bg-info"
-                                                 role="progressbar"
-                                                 style="width: @(Bar(day.BookingCount, Model.MaxPeakDayCount))%"
-                                                 aria-valuenow="@day.BookingCount"
-                                                 aria-valuemin="0"
-                                                 aria-valuemax="@Model.MaxPeakDayCount"></div>
+                                        <div class="progress" style="height: 8px;" role="progressbar"
+                                             aria-label="@day.DayOfWeek"
+                                             aria-valuenow="@day.BookingCount" aria-valuemin="0" aria-valuemax="@Model.MaxPeakDayCount">
+                                            <div class="progress-bar bg-info" style="width: @(Bar(day.BookingCount, Model.MaxPeakDayCount))%"></div>
                                         </div>
                                     </div>
                                 }
@@ -145,9 +143,9 @@
                         }
                         else
                         {
-                            <div class="text-center text-body-secondary py-4">
-                                <i class="bi bi-calendar-week fs-1 d-block mb-2"></i>
-                                No peak day data yet.
+                            <div class="text-center py-4">
+                                <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
+                                <p class="text-body-secondary mb-0">@Localizer["Guide.Analytics.NoPeakDays"]</p>
                             </div>
                         }
                     </div>
@@ -157,7 +155,7 @@
 
         <div class="card border">
             <div class="card-header border-bottom">
-                <h5 class="mb-0">Popular Tours</h5>
+                <h2 class="card-header-title h5 mb-0">@Localizer["Guide.Analytics.PopularTours"]</h2>
             </div>
             <div class="card-body">
                 @if (Model.HasPopularTours)
@@ -166,8 +164,8 @@
                         <table class="table table-hover align-middle mb-0">
                             <thead>
                                 <tr>
-                                    <th scope="col">Tour</th>
-                                    <th scope="col" class="text-end">Bookings</th>
+                                    <th scope="col">@Localizer["Guide.Analytics.ColTour"]</th>
+                                    <th scope="col" class="text-end">@Localizer["Guide.Analytics.ColBookings"]</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -175,7 +173,7 @@
                                 {
                                     <tr>
                                         <td>@tour.TourName</td>
-                                        <td class="text-end fw-semibold">@tour.BookingCount.ToString("N0")</td>
+                                        <td class="text-end fw-semibold font-data"><bdi dir="ltr">@Count(tour.BookingCount)</bdi></td>
                                     </tr>
                                 }
                             </tbody>
@@ -184,9 +182,9 @@
                 }
                 else
                 {
-                    <div class="text-center text-body-secondary py-4">
-                        <i class="bi bi-trophy fs-1 d-block mb-2"></i>
-                        No popular tour data yet.
+                    <div class="text-center py-4">
+                        <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
+                        <p class="text-body-secondary mb-0">@Localizer["Guide.Analytics.NoPopularTours"]</p>
                     </div>
                 }
             </div>
