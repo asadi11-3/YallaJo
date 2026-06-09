@@ -20,11 +20,22 @@ public sealed class SearchFacade
 
     public SearchFacade(SearchApiClient api) => _api = api;
 
+    public const int MinParticipants = 1;
+    public const int MaxParticipants = 50;
+
     /// <summary>
     /// Primary SSR entry point for <c>GET /search</c>.
+    /// <paramref name="placeId"/> filters tours by their operating place (backend-supported).
+    /// <paramref name="from"/>/<paramref name="to"/>/<paramref name="participants"/> are
+    /// echoed onto the returned VM but NOT sent to the API yet — the search endpoint has no
+    /// availability-window filter today (TODO once available).
     /// </summary>
     public async Task<ApiResult<SearchVm>> SearchAsync(
         string? query,
+        Guid? placeId,
+        DateOnly? from,
+        DateOnly? to,
+        int? participants,
         int page,
         int pageSize,
         CancellationToken ct = default)
@@ -32,17 +43,24 @@ public sealed class SearchFacade
         var clampedPage = page < 1 ? 1 : page;
         var clampedSize = Math.Clamp(pageSize <= 0 ? DefaultPageSize : pageSize, 1, MaxPageSize);
         var trimmed = string.IsNullOrWhiteSpace(query) ? null : query.Trim();
+        var normalizedPlaceId = placeId is { } pid && pid != Guid.Empty ? pid : (Guid?)null;
+        var (normalizedFrom, normalizedTo) = NormalizeDateRange(from, to);
+        var normalizedParticipants = NormalizeParticipants(participants);
 
         var empty = new SearchVm
         {
             Query = trimmed,
+            PlaceId = normalizedPlaceId,
+            From = normalizedFrom,
+            To = normalizedTo,
+            Participants = normalizedParticipants,
             PageNumber = clampedPage,
             PageSize = clampedSize
         };
 
         try
         {
-            var result = await _api.SearchToursAsync(trimmed, clampedPage, clampedSize, ct);
+            var result = await _api.SearchToursAsync(trimmed, clampedPage, clampedSize, normalizedPlaceId, ct);
             if (!result.IsSuccess || result.Data is null)
             {
                 return ApiResult<SearchVm>.Ok(empty);
@@ -56,6 +74,10 @@ public sealed class SearchFacade
             var vm = new SearchVm
             {
                 Query = trimmed,
+                PlaceId = normalizedPlaceId,
+                From = normalizedFrom,
+                To = normalizedTo,
+                Participants = normalizedParticipants,
                 Items = items,
                 PageNumber = data.PageNumber,
                 PageSize = data.PageSize,
@@ -71,6 +93,20 @@ public sealed class SearchFacade
             return ApiResult<SearchVm>.Ok(empty);
         }
     }
+
+    /// <summary>
+    /// Inverts the range if <c>from &gt; to</c> so the URL stays meaningful even when a user
+    /// accidentally swaps the inputs; drops both sides if either is the sentinel <c>default</c>.
+    /// </summary>
+    private static (DateOnly?, DateOnly?) NormalizeDateRange(DateOnly? from, DateOnly? to)
+    {
+        if (from is null && to is null) return (null, null);
+        if (from is { } f && to is { } t && f > t) return (t, f);
+        return (from, to);
+    }
+
+    private static int? NormalizeParticipants(int? participants)
+        => participants is { } p ? Math.Clamp(p, MinParticipants, MaxParticipants) : (int?)null;
 
     /// <summary>
     /// Autocomplete entry point for <c>GET /search/suggest</c>. Returns at most ~5 suggestions

@@ -20,13 +20,30 @@ public sealed class SearchController : BaseController
 
     [HttpGet("search")]
     [OutputCache(PolicyName = "PublicShort")]
-    public async Task<IActionResult> Index(string? q = null, int page = 1, int pageSize = SearchFacade.DefaultPageSize, CancellationToken ct = default)
+    public async Task<IActionResult> Index(
+        string? q = null,
+        Guid? placeId = null,
+        DateOnly? from = null,
+        DateOnly? to = null,
+        int? participants = null,
+        int page = 1,
+        int pageSize = SearchFacade.DefaultPageSize,
+        CancellationToken ct = default)
     {
-        var result = await _search.SearchAsync(q, page, pageSize, ct);
+        var result = await _search.SearchAsync(q, placeId, from, to, participants, page, pageSize, ct);
         if (!result.IsSuccess || result.Data is null)
         {
             SetError(result.Error);
-            return View(new SearchVm { Query = q, PageNumber = page, PageSize = pageSize });
+            return View(new SearchVm
+            {
+                Query = q,
+                PlaceId = placeId,
+                From = from,
+                To = to,
+                Participants = participants,
+                PageNumber = page,
+                PageSize = pageSize
+            });
         }
         return View(result.Data);
     }

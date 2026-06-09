@@ -11,6 +11,17 @@ namespace YallaJo.Web.Areas.Public.Models.Search;
 public sealed class SearchVm
 {
     public string? Query { get; init; }
+
+    // ── Filters echoed from the Home "Check Availability" form ─────────────────
+    // PlaceId is the only filter currently honored by the backend search endpoint
+    // (SearchToursRequest.PlaceId). From/To/Participants are kept on the VM so the
+    // URL stays sticky across pagination and the chips can be rendered; once the
+    // backend gains an availability window we'll plumb them through to the API.
+    public Guid? PlaceId { get; init; }
+    public DateOnly? From { get; init; }
+    public DateOnly? To { get; init; }
+    public int? Participants { get; init; }
+
     public IReadOnlyList<HomeTourCardVm> Items { get; init; } = [];
     public int PageNumber { get; init; } = 1;
     public int PageSize { get; init; } = 20;
@@ -19,6 +30,11 @@ public sealed class SearchVm
     public bool HasNextPage { get; init; }
     public bool HasResults => Items.Count > 0;
     public bool HasQuery => !string.IsNullOrWhiteSpace(Query);
+    public bool HasFilters =>
+        (PlaceId is { } pid && pid != Guid.Empty)
+        || From is not null
+        || To is not null
+        || (Participants is { } p && p > 1);
 }
 
 public sealed class SearchBusinessRailVm

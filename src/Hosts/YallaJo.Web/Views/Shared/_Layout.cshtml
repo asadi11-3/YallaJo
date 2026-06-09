@@ -60,6 +60,88 @@
         <script type="application/ld+json">@Html.Raw(seoJsonLd)</script>
     }
 
+    <script>
+        const storedTheme = localStorage.getItem('theme')
+
+        const getPreferredTheme = () => {
+        if (storedTheme) {
+        return storedTheme
+        }
+        return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+        }
+
+        const setTheme = function (theme) {
+        if (theme === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.documentElement.setAttribute('data-bs-theme', 'dark')
+        } else {
+        document.documentElement.setAttribute('data-bs-theme', theme)
+        }
+        }
+
+        setTheme(getPreferredTheme())
+
+        window.addEventListener('DOMContentLoaded', () => {
+        var el = document.querySelector('.theme-icon-active');
+        if(el != 'undefined' && el != null) {
+        const showActiveTheme = theme => {
+        const activeThemeIcon = document.querySelector('.theme-icon-active use')
+        const btnToActive = document.querySelector(`[data-bs-theme-value="${theme}"]`)
+        const svgOfActiveBtn = btnToActive.querySelector('.mode-switch use').getAttribute('href')
+
+        document.querySelectorAll('[data-bs-theme-value]').forEach(element => {
+        element.classList.remove('active')
+        })
+
+        btnToActive.classList.add('active')
+        activeThemeIcon.setAttribute('href', svgOfActiveBtn)
+        }
+
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+        if (storedTheme !== 'light' || storedTheme !== 'dark') {
+        setTheme(getPreferredTheme())
+        }
+        })
+
+        showActiveTheme(getPreferredTheme())
+
+        document.querySelectorAll('[data-bs-theme-value]')
+        .forEach(toggle => {
+        toggle.addEventListener('click', () => {
+        const theme = toggle.getAttribute('data-bs-theme-value')
+        localStorage.setItem('theme', theme)
+        setTheme(theme)
+        showActiveTheme(theme)
+        })
+        })
+
+        }
+        });
+
+        // Language toggle — must run after the DOM is ready so the buttons exist
+        window.addEventListener('DOMContentLoaded', function () {
+        var buttons = document.querySelectorAll('.lang-toggle-btn');
+
+        function applyLang(lang, dir) {
+        document.documentElement.setAttribute('lang', lang);
+        document.documentElement.setAttribute('dir', dir);
+        buttons.forEach(function (b) {
+        b.classList.toggle('active', b.dataset.lang === lang);
+        });
+        }
+
+        buttons.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+        applyLang(this.dataset.lang, this.dataset.dir);
+        // TODO: hook into your i18n / routing (e.g. /ar/... vs /en/...)
+        });
+        });
+
+        // Default
+        applyLang('en', 'ltr');
+        });
+
+    </script>
+
     @* favicon *@
     <link rel="shortcut icon" href="~/assets/images/favicon.ico" />
 
@@ -81,7 +163,65 @@
 
     @* Per-view extra styles *@
     @await RenderSectionAsync("Styles", required: false)
+    <style>
+        .lang-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: .15rem;
+        background-color: var(--bs-light, #f5f5f5);
+        border-radius: var(--bs-border-radius, .5rem); /* match the notification button corners */
+        padding: .2rem;
+        height: 40px; /* match the bell / avatar height */
+        margin-inline-end: .5rem; /* keep clear of the notification button */
+        }
 
+        .lang-toggle-btn {
+        border: 0;
+        background: transparent;
+        color: var(--bs-secondary-color, #6c757d);
+        font-size: .8rem;
+        font-weight: 600;
+        line-height: 1;
+        padding: .35rem .6rem;
+        border-radius: calc(var(--bs-border-radius, .5rem) - .15rem); /* match inner corners */
+        cursor: pointer;
+        transition: background-color .2s ease, color .2s ease;
+        }
+
+        .lang-toggle-btn.active {
+        background-color: var(--bs-dark, #14191e);
+        color: #fff;
+        }
+
+        /* ===== RTL fixes for header dropdowns ===== */
+        /* The profile menu is positioned statically (data-bs-display="static"),
+        so its .dropdown-menu-end keeps right:0 even in RTL and opens off-screen.
+        Re-anchor end-aligned menus to the start edge when the page is RTL. */
+        [dir="rtl"] .navbar .dropdown-menu-end {
+        right: auto !important;
+        left: 0 !important;
+        }
+
+        /* Keep dropdown text/items reading from the right in RTL */
+        [dir="rtl"] .navbar .dropdown-menu,
+        [dir="rtl"] .navbar .dropdown-item,
+        [dir="rtl"] .navbar .card-header,
+        [dir="rtl"] .navbar .list-group-item {
+        text-align: right;
+        }
+
+        /* Profile header (avatar + name) realignment in RTL */
+        [dir="rtl"] .navbar .dropdown-menu .avatar.me-3 {
+        margin-right: 0 !important;
+        margin-left: 1rem !important;
+        }
+
+        /* Notification "dot" sits on the bell — move it to the opposite corner in RTL */
+        [dir="rtl"] .notif-badge {
+        right: auto;
+        left: 0.5rem;
+        }
+    </style>
     @* Import map for fingerprinted JS modules served via MapStaticAssets()/.WithStaticAssets(). *@
     <ImportMap />
 </head>

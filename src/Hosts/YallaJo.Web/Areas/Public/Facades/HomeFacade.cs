@@ -1,6 +1,7 @@
 using YallaJo.Web.Areas.Public.ApiClients;
 using YallaJo.Web.Areas.Public.Helpers;
 using YallaJo.Web.Areas.Public.Models.Home;
+using YallaJo.Web.Areas.Public.Models.Places;
 using YallaJo.Web.Infrastructure.Api.Contracts;
 using YallaJo.Web.Services;
 
@@ -12,11 +13,13 @@ public sealed class HomeFacade
     private const int PopularLimit = 6;
 
     private readonly HomeApiClient _api;
+    private readonly PlacesApiClient _placesApi;
     private readonly IApiAssetUrlResolver _assetResolver;
 
-    public HomeFacade(HomeApiClient api, IApiAssetUrlResolver assetResolver)
+    public HomeFacade(HomeApiClient api, PlacesApiClient placesApi, IApiAssetUrlResolver assetResolver)
     {
         _api = api;
+        _placesApi = placesApi;
         _assetResolver = assetResolver;
     }
 
@@ -164,7 +167,12 @@ public sealed class HomeFacade
     {
         try
         {
-            var result = await _api.GetPlaceByIdAsync(placeId, ct);
+            // API1: fetch place detail + images in parallel — both endpoints are public and independent.
+            var detailTask = _api.GetPlaceByIdAsync(placeId, ct);
+            var imagesTask = _placesApi.GetImagesAsync(placeId, ct);
+            await Task.WhenAll(detailTask, imagesTask);
+
+            var result = detailTask.Result;
             // Drop places we cannot deep-link (slug missing) so the rail never renders broken links.
             if (result is not { IsSuccess: true, Data: { } p } || string.IsNullOrWhiteSpace(p.Slug))
                 return null;
@@ -174,7 +182,7 @@ public sealed class HomeFacade
                 Id = p.Id,
                 Name = p.Name,
                 Slug = p.Slug,
-                ImageUrl = null,
+                ImageUrl = ResolvePlaceImage(p.Id, imagesTask.Result),
                 City = p.City,
                 Country = p.Country,
                 AverageRating = p.AverageRating,
@@ -186,6 +194,26 @@ public sealed class HomeFacade
         {
             return null;
         }
+    }
+
+    /// <summary>
+    /// Pick a real cover image for a place card from the public /api/v1/places/{id}/images endpoint.
+    /// Order: primary image → first by SortOrder → deterministic placeholder fallback (so the rail
+    /// never shows a broken/empty tile).
+    /// </summary>
+    private string ResolvePlaceImage(Guid placeId, ApiResult<List<PlaceImageResponse>>? imagesResult)
+    {
+        if (imagesResult is { IsSuccess: true, Data: { Count: > 0 } images })
+        {
+            var pick =
+                images.FirstOrDefault(i => i.IsPrimary && !string.IsNullOrWhiteSpace(i.Url))
+                ?? images.OrderBy(i => i.SortOrder).FirstOrDefault(i => !string.IsNullOrWhiteSpace(i.Url));
+
+            if (pick is not null && !string.IsNullOrWhiteSpace(pick.Url))
+                return _assetResolver.Resolve(pick.Url);
+        }
+
+        return PublicImagePlaceholder.ResolvePlaceImage(placeId);
     }
 
     private async Task<IReadOnlyList<HomeBusinessCardVm>> BuildPopularBusinessesAsync(CancellationToken ct)

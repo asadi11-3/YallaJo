@@ -26,6 +26,8 @@ public sealed class AdminNavFacade
             {
                 return new AdminNavVm
                 {
+                    Roles = result.Data.Roles
+                        .ToHashSet(StringComparer.OrdinalIgnoreCase),
                     Permissions = result.Data.Permissions
                         .ToHashSet(StringComparer.Ordinal),
                     IsDbBacked = true,

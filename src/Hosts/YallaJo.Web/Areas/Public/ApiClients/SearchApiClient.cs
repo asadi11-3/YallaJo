@@ -24,11 +24,15 @@ public sealed class SearchApiClient
 
     /// <summary>
     /// SSR result list. Backend caps <c>pageSize</c> at 50 (R4); caller is expected to clamp.
+    /// <paramref name="placeId"/> filters results to tours operating at that place (backend supported,
+    /// see <c>SearchToursRequest.PlaceId</c>). <c>from/to/participants</c> are NOT plumbed through —
+    /// the backend has no availability-window filter yet, so the BFF only echoes them on the VM.
     /// </summary>
     public Task<ApiResult<PaginatedTourSearchResponse>> SearchToursAsync(
         string? query,
         int page,
         int pageSize,
+        Guid? placeId = null,
         CancellationToken ct = default)
     {
         var qs = new Dictionary<string, string?>
@@ -39,6 +43,10 @@ public sealed class SearchApiClient
         if (!string.IsNullOrWhiteSpace(query))
         {
             qs["q"] = query.Trim();
+        }
+        if (placeId is { } id && id != Guid.Empty)
+        {
+            qs["placeId"] = id.ToString();
         }
         var url = QueryHelpers.AddQueryString(ToursSearch, qs);
         return _api.GetAsync<PaginatedTourSearchResponse>(url, ct);

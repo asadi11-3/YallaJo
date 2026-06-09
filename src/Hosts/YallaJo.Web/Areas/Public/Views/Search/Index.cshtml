@@ -74,6 +74,57 @@
             </button>
         </div>
 
+        @* Active filters chips: echo Home "Check Availability" form so users see what they searched. *@
+        @if (Model.HasFilters)
+        {
+            <div class="d-flex flex-wrap align-items-center gap-2 mb-3" aria-label="Active filters">
+                @if (Model.PlaceId is { } pid && pid != Guid.Empty)
+                {
+                    <a class="badge text-bg-light border text-decoration-none"
+                       asp-area="Public" asp-controller="Search" asp-action="Index"
+                       asp-route-q="@Model.Query"
+                       asp-route-from="@Model.From?.ToString("yyyy-MM-dd")"
+                       asp-route-to="@Model.To?.ToString("yyyy-MM-dd")"
+                       asp-route-participants="@Model.Participants">
+                        <i class="bi bi-geo-alt me-1" aria-hidden="true"></i>Place
+                        <i class="bi bi-x ms-1" aria-hidden="true"></i>
+                        <span class="visually-hidden">Clear place filter</span>
+                    </a>
+                }
+                @if (Model.From is not null || Model.To is not null)
+                {
+                    <a class="badge text-bg-light border text-decoration-none"
+                       asp-area="Public" asp-controller="Search" asp-action="Index"
+                       asp-route-q="@Model.Query"
+                       asp-route-placeId="@(Model.PlaceId == Guid.Empty ? null : Model.PlaceId)"
+                       asp-route-participants="@Model.Participants">
+                        <i class="bi bi-calendar3 me-1" aria-hidden="true"></i>
+                        @if (Model.From is { } f && Model.To is { } t) { @($"{f:MMM d} – {t:MMM d}") }
+                        else if (Model.From is { } fOnly) { @($"From {fOnly:MMM d}") }
+                        else if (Model.To is { } tOnly) { @($"Until {tOnly:MMM d}") }
+                        <i class="bi bi-x ms-1" aria-hidden="true"></i>
+                        <span class="visually-hidden">Clear date filter</span>
+                    </a>
+                }
+                @if (Model.Participants is { } parts && parts > 1)
+                {
+                    <a class="badge text-bg-light border text-decoration-none"
+                       asp-area="Public" asp-controller="Search" asp-action="Index"
+                       asp-route-q="@Model.Query"
+                       asp-route-placeId="@(Model.PlaceId == Guid.Empty ? null : Model.PlaceId)"
+                       asp-route-from="@Model.From?.ToString("yyyy-MM-dd")"
+                       asp-route-to="@Model.To?.ToString("yyyy-MM-dd")">
+                        <i class="bi bi-people me-1" aria-hidden="true"></i>@parts travelers
+                        <i class="bi bi-x ms-1" aria-hidden="true"></i>
+                        <span class="visually-hidden">Clear participants filter</span>
+                    </a>
+                }
+                <a class="btn btn-sm btn-link p-0 ms-1"
+                   asp-area="Public" asp-controller="Search" asp-action="Index"
+                   asp-route-q="@Model.Query">Clear all</a>
+            </div>
+        }
+
         <div class="card border mb-4" data-search-rails>
             <div class="card-body">
                 <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
@@ -117,6 +168,10 @@
                             <a class="page-link"
                                asp-area="Public" asp-controller="Search" asp-action="Index"
                                asp-route-q="@Model.Query"
+                               asp-route-placeId="@(Model.PlaceId == Guid.Empty ? null : Model.PlaceId)"
+                               asp-route-from="@Model.From?.ToString("yyyy-MM-dd")"
+                               asp-route-to="@Model.To?.ToString("yyyy-MM-dd")"
+                               asp-route-participants="@Model.Participants"
                                asp-route-page="@(Model.PageNumber - 1)"
                                asp-route-pageSize="@Model.PageSize"
                                aria-label="@Localizer["Public.Previous"]">
@@ -131,6 +186,10 @@
                             <a class="page-link"
                                asp-area="Public" asp-controller="Search" asp-action="Index"
                                asp-route-q="@Model.Query"
+                               asp-route-placeId="@(Model.PlaceId == Guid.Empty ? null : Model.PlaceId)"
+                               asp-route-from="@Model.From?.ToString("yyyy-MM-dd")"
+                               asp-route-to="@Model.To?.ToString("yyyy-MM-dd")"
+                               asp-route-participants="@Model.Participants"
                                asp-route-page="@(Model.PageNumber + 1)"
                                asp-route-pageSize="@Model.PageSize"
                                aria-label="@Localizer["Public.Next"]">

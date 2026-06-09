@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using YallaJo.Web.Areas.Guide.Facades;
 using YallaJo.Web.Areas.Guide.Models.Agency;
 using YallaJo.Web.Areas.Guide.Shared;
+using YallaJo.Web.Infrastructure.Authorization;
 using YallaJo.Web.Infrastructure.Mvc;
 
 namespace YallaJo.Web.Areas.Guide.Controllers;
@@ -16,6 +17,7 @@ public sealed class AgencyController : BaseController
     public AgencyController(GuideAgencyFacade facade) => _facade = facade;
 
     [HttpGet("guide/agency")]
+    [RequirePermission(WebPermission.GuideAgency.Read)]
     public async Task<IActionResult> Index(CancellationToken ct = default)
     {
         SetSidebar();
@@ -32,6 +34,7 @@ public sealed class AgencyController : BaseController
 
     [HttpPost("guide/agency/apply")]
     [ValidateAntiForgeryToken]
+    [RequirePermission(WebPermission.GuideAgency.Create)]
     public async Task<IActionResult> Apply(ApplyToAgencyFormVm form, CancellationToken ct = default)
     {
         SetSidebar();
@@ -51,6 +54,7 @@ public sealed class AgencyController : BaseController
 
     [HttpPost("guide/agency/invitations/{id:guid}/accept")]
     [ValidateAntiForgeryToken]
+    [RequirePermission(WebPermission.GuideAgency.Update)]
     public async Task<IActionResult> Accept(Guid id, CancellationToken ct = default)
     {
         var result = await _facade.AcceptAsync(id, ct);
@@ -61,6 +65,7 @@ public sealed class AgencyController : BaseController
 
     [HttpPost("guide/agency/invitations/{id:guid}/decline")]
     [ValidateAntiForgeryToken]
+    [RequirePermission(WebPermission.GuideAgency.Update)]
     public async Task<IActionResult> Decline(Guid id, CancellationToken ct = default)
     {
         var result = await _facade.DeclineAsync(id, ct);
@@ -71,6 +76,7 @@ public sealed class AgencyController : BaseController
 
     [HttpPost("guide/agency/leave")]
     [ValidateAntiForgeryToken]
+    [RequirePermission(WebPermission.GuideAgency.Delete)]
     public async Task<IActionResult> Leave(CancellationToken ct = default)
     {
         var result = await _facade.LeaveAsync(ct);

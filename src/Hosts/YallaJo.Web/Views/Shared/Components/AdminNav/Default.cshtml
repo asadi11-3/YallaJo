@@ -5,6 +5,7 @@
     // On failure (IsDbBacked == false) leave it null so the sidebar falls back to JWT claims (ERR3).
     if (Model.IsDbBacked)
     {
+        ViewData["SecurityMeRoles"]       = Model.Roles;
         ViewData["SecurityMePermissions"] = Model.Permissions;
     }
 }
