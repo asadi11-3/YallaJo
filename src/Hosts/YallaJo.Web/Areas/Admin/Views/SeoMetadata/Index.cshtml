@@ -1,39 +1,47 @@
+@using System.Globalization
+@using Microsoft.Extensions.Localization
 @using YallaJo.Web.Areas.Admin.Models.SeoMetadata
 @using YallaJo.Web.Infrastructure.Authorization
 @model SeoMetadataVm
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
-    ViewData["Title"] = "SEO Metadata";
+    ViewData["Title"] = Localizer["Admin.SeoMetadata.Title"].Value;
     ViewData["AdminNav"] = "SeoMetadata";
+    var culture = CultureInfo.CurrentCulture;
     var changeFreqs = new[] { "always", "hourly", "daily", "weekly", "monthly", "yearly", "never" };
+    string Date(DateTime dt) => dt.ToString("yyyy-MM-dd HH:mm", culture);
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="d-sm-flex justify-content-between align-items-center mb-4">
     <div>
-        <h1 class="h3 mb-1">SEO Metadata</h1>
-        <p class="text-muted mb-0">Look up and edit per-entity SEO metadata (title, description, Open Graph, sitemap).</p>
+        <h1 class="h3 mb-1">@Localizer["Admin.SeoMetadata.Title"]</h1>
+        <p class="text-secondary mb-0">@Localizer["Admin.SeoMetadata.Subtitle"]</p>
     </div>
 </div>
 
 @if (ViewBag.Error is string vbe)
 {
-    <div class="alert alert-danger">@vbe</div>
+    <div class="alert alert-danger" role="alert">@vbe</div>
 }
-<div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+<div asp-validation-summary="ModelOnly" class="text-danger mb-3" role="alert"></div>
 
 <div class="card shadow mb-4">
+    <div class="card-header border-bottom">
+        <h2 class="card-header-title h5 mb-0">@Localizer["Admin.SeoMetadata.LookupHeading"]</h2>
+    </div>
     <div class="card-body">
-        <h5 class="card-title mb-3">Look up an entity</h5>
         <form asp-area="Admin" asp-controller="SeoMetadata" asp-action="Index" method="get" class="row g-3 align-items-end">
             <div class="col-md-4">
-                <label asp-for="EntityType" class="form-label"></label>
+                <label asp-for="EntityType" class="form-label">@Localizer["Admin.SeoMetadata.EntityTypeLabel"]</label>
                 <select asp-for="EntityType" asp-items="Html.GetEnumSelectList<SeoEntityType>()" class="form-select"></select>
             </div>
             <div class="col-md-5">
-                <label asp-for="EntityId" class="form-label"></label>
-                <input asp-for="EntityId" class="form-control" placeholder="00000000-0000-0000-0000-000000000000" />
+                <label asp-for="EntityId" class="form-label">@Localizer["Admin.SeoMetadata.EntityIdLabel"]</label>
+                <input asp-for="EntityId" class="form-control" dir="ltr" aria-describedby="meta-entity-id-help" placeholder="00000000-0000-0000-0000-000000000000" />
+                <div id="meta-entity-id-help" class="form-text">@Localizer["Admin.SeoMetadata.EntityIdHelp"]</div>
             </div>
             <div class="col-md-3">
-                <button type="submit" class="btn btn-primary-soft w-100">Load</button>
+                <button type="submit" class="btn btn-primary w-100">@Localizer["Admin.SeoMetadata.Load"]</button>
             </div>
         </form>
     </div>
@@ -42,13 +50,31 @@
 @if (Model.HasQueried)
 {
     <permission require="@WebPermission.SeoMetadata.Create">
-        <div class="card shadow">
+        <section class="card shadow" aria-labelledby="meta-edit-heading">
+            <div class="card-header border-bottom d-flex justify-content-between align-items-center">
+                <h2 id="meta-edit-heading" class="card-header-title h5 mb-0">@(Model.Exists ? Localizer["Admin.SeoMetadata.EditHeading"] : Localizer["Admin.SeoMetadata.CreateHeading"])</h2>
+                @if (Model.Exists && Model.Metadata is { } metaHead)
+                {
+                    <permission require="@WebPermission.SeoMetadata.Delete">
+                        <form asp-area="Admin" asp-controller="SeoMetadata" asp-action="Delete" asp-route-id="@metaHead.Id" method="post" class="mb-0"
+                              data-confirm="@Localizer["Admin.SeoMetadata.DeleteConfirm"]" data-confirm-title="@Localizer["Admin.SeoMetadata.DeleteTitle"]" data-confirm-action="@Localizer["Admin.SeoMetadata.Delete"]">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="entityType" value="@metaHead.EntityType" />
+                            <input type="hidden" name="entityId" value="@metaHead.EntityId" />
+                            <button type="submit" class="btn btn-sm btn-danger-soft"><i class="fa-solid fa-trash fa-fw me-1" aria-hidden="true"></i>@Localizer["Admin.SeoMetadata.Delete"]</button>
+                        </form>
+                    </permission>
+                }
+            </div>
             <div class="card-body">
-                <h5 class="card-title mb-3">@(Model.Exists ? "Edit SEO metadata" : "Create SEO metadata")</h5>
                 @if (Model.Exists && Model.Metadata is { } meta)
                 {
-                    <p class="text-muted small mb-3">
-                        Created @meta.CreatedAt.ToString("g")@(meta.UpdatedAt.HasValue ? $" · Updated {meta.UpdatedAt.Value:g}" : string.Empty)
+                    <p class="text-secondary small mb-3">
+                        @Localizer["Admin.SeoMetadata.CreatedAt"] <bdi class="font-data" dir="ltr">@Date(meta.CreatedAt)</bdi>
+                        @if (meta.UpdatedAt.HasValue)
+                        {
+                            <text> · </text>@Localizer["Admin.SeoMetadata.UpdatedAt"] <bdi class="font-data" dir="ltr">@Date(meta.UpdatedAt.Value)</bdi>
+                        }
                     </p>
                 }
                 <form asp-area="Admin" asp-controller="SeoMetadata" asp-action="Save" method="post" class="row g-3">
@@ -57,68 +83,68 @@
                     <input type="hidden" asp-for="Form.EntityId" />
 
                     <div class="col-md-6">
-                        <label asp-for="Form.MetaTitle" class="form-label"></label>
+                        <label asp-for="Form.MetaTitle" class="form-label">@Localizer["Admin.SeoMetadata.MetaTitle"]</label>
                         <input asp-for="Form.MetaTitle" class="form-control" />
-                        <span asp-validation-for="Form.MetaTitle" class="text-danger"></span>
+                        <span asp-validation-for="Form.MetaTitle" class="text-danger" role="alert"></span>
                     </div>
                     <div class="col-md-6">
-                        <label asp-for="Form.CanonicalUrl" class="form-label"></label>
-                        <input asp-for="Form.CanonicalUrl" class="form-control" />
-                        <span asp-validation-for="Form.CanonicalUrl" class="text-danger"></span>
+                        <label asp-for="Form.CanonicalUrl" class="form-label">@Localizer["Admin.SeoMetadata.CanonicalUrl"]</label>
+                        <input asp-for="Form.CanonicalUrl" class="form-control" dir="ltr" />
+                        <span asp-validation-for="Form.CanonicalUrl" class="text-danger" role="alert"></span>
                     </div>
 
                     <div class="col-12">
-                        <label asp-for="Form.MetaDescription" class="form-label"></label>
+                        <label asp-for="Form.MetaDescription" class="form-label">@Localizer["Admin.SeoMetadata.MetaDescription"]</label>
                         <textarea asp-for="Form.MetaDescription" class="form-control" rows="2"></textarea>
-                        <span asp-validation-for="Form.MetaDescription" class="text-danger"></span>
+                        <span asp-validation-for="Form.MetaDescription" class="text-danger" role="alert"></span>
                     </div>
 
                     <div class="col-md-6">
-                        <label asp-for="Form.OgTitle" class="form-label"></label>
+                        <label asp-for="Form.OgTitle" class="form-label">@Localizer["Admin.SeoMetadata.OgTitle"]</label>
                         <input asp-for="Form.OgTitle" class="form-control" />
-                        <span asp-validation-for="Form.OgTitle" class="text-danger"></span>
+                        <span asp-validation-for="Form.OgTitle" class="text-danger" role="alert"></span>
                     </div>
                     <div class="col-md-6">
-                        <label asp-for="Form.OgImageUrl" class="form-label"></label>
-                        <input asp-for="Form.OgImageUrl" class="form-control" />
-                        <span asp-validation-for="Form.OgImageUrl" class="text-danger"></span>
+                        <label asp-for="Form.OgImageUrl" class="form-label">@Localizer["Admin.SeoMetadata.OgImageUrl"]</label>
+                        <input asp-for="Form.OgImageUrl" class="form-control" dir="ltr" />
+                        <span asp-validation-for="Form.OgImageUrl" class="text-danger" role="alert"></span>
                     </div>
 
                     <div class="col-12">
-                        <label asp-for="Form.OgDescription" class="form-label"></label>
+                        <label asp-for="Form.OgDescription" class="form-label">@Localizer["Admin.SeoMetadata.OgDescription"]</label>
                         <textarea asp-for="Form.OgDescription" class="form-control" rows="2"></textarea>
-                        <span asp-validation-for="Form.OgDescription" class="text-danger"></span>
+                        <span asp-validation-for="Form.OgDescription" class="text-danger" role="alert"></span>
                     </div>
 
                     <div class="col-md-4">
-                        <label asp-for="Form.SitemapPriority" class="form-label"></label>
-                        <input asp-for="Form.SitemapPriority" type="number" step="0.1" min="0" max="1" class="form-control" />
-                        <span asp-validation-for="Form.SitemapPriority" class="text-danger"></span>
+                        <label asp-for="Form.SitemapPriority" class="form-label">@Localizer["Admin.SeoMetadata.SitemapPriority"]</label>
+                        <input asp-for="Form.SitemapPriority" type="number" step="0.1" min="0" max="1" class="form-control" dir="ltr" />
+                        <span asp-validation-for="Form.SitemapPriority" class="text-danger" role="alert"></span>
                     </div>
                     <div class="col-md-4">
-                        <label asp-for="Form.SitemapChangeFrequency" class="form-label"></label>
+                        <label asp-for="Form.SitemapChangeFrequency" class="form-label">@Localizer["Admin.SeoMetadata.ChangeFrequency"]</label>
                         <select asp-for="Form.SitemapChangeFrequency" class="form-select">
-                            <option value="">(none)</option>
+                            <option value="">@Localizer["Admin.SeoMetadata.None"]</option>
                             @foreach (var f in changeFreqs)
                             {
                                 <option value="@f">@f</option>
                             }
                         </select>
-                        <span asp-validation-for="Form.SitemapChangeFrequency" class="text-danger"></span>
+                        <span asp-validation-for="Form.SitemapChangeFrequency" class="text-danger" role="alert"></span>
                     </div>
 
                     <div class="col-12">
-                        <label asp-for="Form.SchemaMarkup" class="form-label"></label>
-                        <textarea asp-for="Form.SchemaMarkup" class="form-control font-monospace" rows="4" placeholder="JSON-LD"></textarea>
-                        <span asp-validation-for="Form.SchemaMarkup" class="text-danger"></span>
+                        <label asp-for="Form.SchemaMarkup" class="form-label">@Localizer["Admin.SeoMetadata.SchemaMarkup"]</label>
+                        <textarea asp-for="Form.SchemaMarkup" class="form-control font-data" dir="ltr" rows="4" placeholder="JSON-LD"></textarea>
+                        <span asp-validation-for="Form.SchemaMarkup" class="text-danger" role="alert"></span>
                     </div>
 
                     <div class="col-12">
-                        <button type="submit" class="btn btn-primary-soft">Save metadata</button>
+                        <button type="submit" class="btn btn-primary">@Localizer["Admin.SeoMetadata.Save"]</button>
                     </div>
                 </form>
             </div>
-        </div>
+        </section>
     </permission>
 }
 

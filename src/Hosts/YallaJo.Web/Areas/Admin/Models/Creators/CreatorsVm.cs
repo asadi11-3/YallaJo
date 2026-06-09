@@ -18,6 +18,9 @@ public sealed class CreatorApplicationRowVm
 {
     public Guid Id { get; set; }
     public Guid ApplicantUserId { get; set; }
+
+    /// <summary>Human-readable applicant identity (email) resolved server-side; null when not resolvable (F10 — never show the raw GUID).</summary>
+    public string? ApplicantEmail { get; set; }
     public string Status { get; set; } = string.Empty;
     public string Source { get; set; } = string.Empty;
     public int ReapplicationCount { get; set; }
@@ -28,6 +31,9 @@ public sealed class CreatorApplicationDetailVm
 {
     public Guid Id { get; set; }
     public Guid ApplicantUserId { get; set; }
+
+    /// <summary>Human-readable applicant identity (email) resolved server-side; null when not resolvable (F10).</summary>
+    public string? ApplicantEmail { get; set; }
     public string? Bio { get; set; }
     public string Status { get; set; } = string.Empty;
     public string Source { get; set; } = string.Empty;

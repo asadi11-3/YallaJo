@@ -50,4 +50,14 @@ public static class DisputesMapper
         "Closed" => "secondary",
         _ => "secondary",
     };
+
+    public static string StatusIcon(string status) => status switch
+    {
+        "Resolved" => "circle-check",
+        "UnderReview" => "magnifying-glass",
+        "Open" => "circle-exclamation",
+        "Escalated" => "triangle-exclamation",
+        "Closed" => "circle-xmark",
+        _ => "circle-question",
+    };
 }

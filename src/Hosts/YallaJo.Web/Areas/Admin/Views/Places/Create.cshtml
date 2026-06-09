@@ -1,26 +1,34 @@
+@using Microsoft.Extensions.Localization
 @using YallaJo.Web.Areas.Admin.Models.Places
 @model CreatePlaceVm
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
-    ViewData["Title"] = "Create Place";
-    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"]    = Localizer["Admin.PlaceForm.CreateTitle"].Value;
+    ViewData["AdminNav"] = "Places";
 }
 
-<div class="container mt-4">
-    <h2>Create Place</h2>
+<div class="d-sm-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0">@Localizer["Admin.PlaceForm.CreateTitle"]</h1>
+    <a asp-area="Admin" asp-controller="Places" asp-action="Index"
+       class="btn btn-outline-secondary mt-3 mt-sm-0">@Localizer["Admin.PlaceForm.Back"]</a>
+</div>
 
-    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+<div class="card shadow">
+    <div class="card-body">
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3" role="alert"></div>
 
-    <form asp-area="Admin" asp-controller="Places" asp-action="Create" method="post">
-        @Html.AntiForgeryToken()
+        <form asp-area="Admin" asp-controller="Places" asp-action="Create" method="post">
+            @Html.AntiForgeryToken()
 
-        @* Strongly typed against the shared abstract PlaceFormVm. *@
-        <partial name="_Form" model="(PlaceFormVm)Model" />
+            @* Strongly typed against the shared abstract PlaceFormVm. *@
+            <partial name="_Form" model="(PlaceFormVm)Model" />
 
-        <div class="mt-4">
-            <button type="submit" class="btn btn-primary">Create</button>
-            <a asp-action="Index" class="btn btn-link">Cancel</a>
-        </div>
-    </form>
+            <div class="mt-4 d-flex gap-2">
+                <button type="submit" class="btn btn-primary">@Localizer["Admin.PlaceForm.Create"]</button>
+                <a asp-action="Index" class="btn btn-outline-secondary">@Localizer["Admin.PlaceForm.Cancel"]</a>
+            </div>
+        </form>
+    </div>
 </div>
 
 @section Scripts {

@@ -7,8 +7,13 @@ namespace YallaJo.Web.Areas.Admin.Facades;
 public sealed class CreatorsFacade
 {
     private readonly CreatorsApiClient _api;
+    private readonly UsersApiClient _users;
 
-    public CreatorsFacade(CreatorsApiClient api) => _api = api;
+    public CreatorsFacade(CreatorsApiClient api, UsersApiClient users)
+    {
+        _api = api;
+        _users = users;
+    }
 
     public async Task<ApiResult<CreatorsVm>> GetIndexAsync(
         string? status, Guid? id, int page, CancellationToken ct)
@@ -40,7 +45,58 @@ public sealed class CreatorsFacade
             }
         }
 
-        return ApiResult<CreatorsVm>.Ok(CreatorsMapper.ToVm(list.Data, detail, status));
+        // F10: resolve applicant GUIDs to human-readable emails so the view never shows a raw GUID (API1: concurrent, R7: no N+1).
+        var applicantIds = list.Data.Items.Select(i => i.ApplicantUserId);
+        if (detail is not null)
+        {
+            applicantIds = applicantIds.Append(detail.ApplicantUserId);
+        }
+
+        var applicantEmails = await ResolveApplicantEmailsAsync(applicantIds, ct);
+
+        return ApiResult<CreatorsVm>.Ok(CreatorsMapper.ToVm(list.Data, detail, status, applicantEmails));
+    }
+
+    private async Task<IReadOnlyDictionary<Guid, string>> ResolveApplicantEmailsAsync(
+        IEnumerable<Guid> userIds, CancellationToken ct)
+    {
+        var distinct = userIds.Where(g => g != Guid.Empty).Distinct().ToList();
+        if (distinct.Count == 0)
+        {
+            return new Dictionary<Guid, string>();
+        }
+
+        var tasks = distinct.Select(uid => ResolveOneAsync(uid, ct)).ToList();
+        var pairs = await Task.WhenAll(tasks);
+
+        var map = new Dictionary<Guid, string>();
+        foreach (var pair in pairs)
+        {
+            if (pair is { } kv)
+            {
+                map[kv.Key] = kv.Value;
+            }
+        }
+
+        return map;
+    }
+
+    private async Task<KeyValuePair<Guid, string>?> ResolveOneAsync(Guid userId, CancellationToken ct)
+    {
+        try
+        {
+            var result = await _users.GetUserAsync(userId, ct);
+            if (result is { IsSuccess: true, Data: not null } && !string.IsNullOrWhiteSpace(result.Data.Email))
+            {
+                return new KeyValuePair<Guid, string>(userId, result.Data.Email);
+            }
+        }
+        catch
+        {
+            // Graceful degradation: leave the applicant unresolved -> view shows a localized fallback, never a raw GUID.
+        }
+
+        return null;
     }
 
     public Task<ApiResult> ApproveAsync(Guid id, string displayName, string? avatarUrl, CancellationToken ct)

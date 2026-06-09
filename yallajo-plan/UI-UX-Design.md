@@ -404,6 +404,7 @@ Before merging a new page:
 | **F7** | Button states: disabled when invalid (after first submit attempt), spinner during submit, re-enabled if validation fails again. |
 | **F8** | Destructive confirmation modal: title = question, body = consequences + (for bookings) refund preview, two buttons — "Keep booking" primary (autofocus), "Yes, cancel" danger style. |
 | **F9** | `beforeunload` warning whenever any form field is dirty — no field-count exception. |
+| **F10** | **Never expose raw entity IDs (GUIDs/ints) as a typed input.** Any field that references another entity (tour, place, business, category, user, guide, agency, role, …) renders as a **`<select>` dropdown listing the entity's human-readable name** (with the ID as the option `value`). For large/unbounded sets use a searchable async combobox (Choices.js / autocomplete per S2, 300 ms debounce) that displays names and submits the ID. The user never reads, types, copies, or guesses an ID. Options come from a server-provided lookup (cache per §5 `lookups` tag); empty lookups show an empty-state + CTA, never a bare ID textbox. |
 
 ### §UI-UX-NF — Notifications
 
@@ -711,6 +712,7 @@ When a rule is added, removed, or modified, append a row here with rule ID, date
 | init | N3 | Marked optional, defer unless PWA is a goal | CDN immutable headers already solve asset caching. |
 | init | J6 | Reframed as guidance, not hard rule | Web Workers are rarely needed in SSR MVC. |
 | init | AAA suite | Removed entirely | WCAG AA is the contractual baseline; AAA features deferred indefinitely. |
+| init | F10 | Added: entity references use name dropdowns, never raw ID inputs | IDs (GUIDs) are unreadable/unguessable; users pick entities by name, the form submits the ID. |
 | init | AAA4 | Removed colorblind SVG filter | Misconceived — a simulation filter does not help colorblind users. |
 | init | F5 | localStorage authoritative; server sync conditional on endpoint shipping | `POST /api/v1/drafts/{type}` not in backend audit. |
 | init | F9 | Removed "< 10 fields" exception | Arbitrary threshold caused inconsistent UX. |

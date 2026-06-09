@@ -75,7 +75,12 @@ public sealed class CategoriesController : Controller
     public async Task<IActionResult> Edit(Guid id, UpdateCategoryVm vm, CancellationToken ct)
     {
         vm.Id = id;
-        if (!ModelState.IsValid) return View(vm);
+        if (!ModelState.IsValid)
+        {
+            // F10: repopulate the parent-name dropdown options before re-rendering.
+            vm.ParentOptions = await _facade.LoadParentOptionsAsync(id, ct);
+            return View(vm);
+        }
 
         var result = await _facade.UpdateAsync(vm, ct);
         if (result.RequireSignOut) return RedirectToLogin();
@@ -85,6 +90,8 @@ public sealed class CategoriesController : Controller
             TempData["Success"] = "Category updated.";
             return RedirectToAction(nameof(Index));
         }
+
+        vm.ParentOptions = await _facade.LoadParentOptionsAsync(id, ct);
 
         if (result.ValidationErrors is not null)
         {

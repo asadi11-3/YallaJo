@@ -28,3 +28,16 @@ public sealed class TourGuideSpecializationResponse
     public Guid SpecializationId { get; set; }
     public string? Name { get; set; }
 }
+
+// Minimal projection of GET /api/v1/guides (public list of active guides) — used to
+// populate the guide-name picker so admins never type a raw GUID (F10).
+public sealed class AdminGuideListResponse
+{
+    public IReadOnlyList<AdminGuideListItemResponse> Items { get; set; } = [];
+}
+
+public sealed class AdminGuideListItemResponse
+{
+    public Guid Id { get; set; }
+    public string? DisplayName { get; set; }
+}

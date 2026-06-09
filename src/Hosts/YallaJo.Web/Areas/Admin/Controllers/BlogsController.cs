@@ -44,7 +44,8 @@ public sealed class BlogsController : BaseController
     // ── GET /admin/blogs/create ─────────────────────────────────────────────────────
     [HttpGet("admin/blogs/create")]
     [RequirePermission(WebPermission.Blog.Create)]
-    public IActionResult Create() => View(new CreateBlogVm());
+    public async Task<IActionResult> Create(CancellationToken ct)
+        => View(await _facade.GetForCreateAsync(ct));
 
     // ── POST /admin/blogs/create ────────────────────────────────────────────────────
     [HttpPost("admin/blogs/create")]
@@ -52,7 +53,11 @@ public sealed class BlogsController : BaseController
     [RequirePermission(WebPermission.Blog.Create)]
     public async Task<IActionResult> Create(CreateBlogVm vm, CancellationToken ct)
     {
-        if (!ModelState.IsValid) return View(vm);
+        if (!ModelState.IsValid)
+        {
+            vm.PlaceOptions = await _facade.LoadPlaceOptionsAsync(ct);
+            return View(vm);
+        }
 
         var result = await _facade.CreateAsync(vm, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
@@ -63,6 +68,7 @@ public sealed class BlogsController : BaseController
             return RedirectToAction(nameof(Edit), new { id = result.Data.BlogId });
         }
 
+        vm.PlaceOptions = await _facade.LoadPlaceOptionsAsync(ct);
         if (ApplyValidationErrors(result)) return View(vm);
 
         ModelState.AddModelError(string.Empty, result.Error ?? "Could not create the blog.");
@@ -94,7 +100,11 @@ public sealed class BlogsController : BaseController
     public async Task<IActionResult> Edit(Guid id, EditBlogVm vm, CancellationToken ct)
     {
         vm.Id = id;
-        if (!ModelState.IsValid) return View(vm);
+        if (!ModelState.IsValid)
+        {
+            vm.PlaceOptions = await _facade.LoadPlaceOptionsAsync(ct);
+            return View(vm);
+        }
 
         var result = await _facade.UpdateAsync(vm, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
@@ -105,6 +115,7 @@ public sealed class BlogsController : BaseController
             return RedirectToAction(nameof(Edit), new { id });
         }
 
+        vm.PlaceOptions = await _facade.LoadPlaceOptionsAsync(ct);
         if (ApplyValidationErrors(result)) return View(vm);
 
         ModelState.AddModelError(string.Empty, result.Error ?? "Could not update the blog.");

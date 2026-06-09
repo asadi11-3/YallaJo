@@ -1,0 +1,177 @@
+/*
+ * rtl.css — Right-to-left (Arabic) overrides for the YallaJo shell.
+ *
+ * Loaded ONLY when the active culture is RTL (dir="rtl"), per UI-UX-Design.md §2
+ * ("Load style.rtl.css when culture is RTL — swap stylesheet, not append").
+ * It layers AFTER the LTR-authored Webestica theme (assets/css/style.css) and
+ * mirrors the handful of physical left/right rules that Bootstrap 5.3's logical
+ * utilities (margin/padding start-end, text-start, text-end, offcanvas-start) do
+ * NOT already auto-mirror.
+ *
+ * Rules satisfied: RTL1 (prefer logical mirroring), RTL2 (flip directional icons
+ * only), RTL3 (Latin/numerals stay LTR via <bdi> in markup — not styled here).
+ * Every rule is scoped under [dir="rtl"] so it is inert under LTR.
+ */
+
+/* ============================================================
+   1. Admin shell — fixed sidebar + page-content offset
+   The Webestica admin shell pins .sidebar to the physical left and
+   pushes .page-content with margin-left. Mirror both to the right.
+   ============================================================ */
+
+[dir="rtl"] .sidebar {
+    border-right: 0;
+    border-left: 1px solid var(--bs-border-color);
+}
+
+/* Desktop: fixed sidebar pinned to the (logical) start = right in RTL */
+[dir="rtl"] .sidebar.navbar-expand-sm,
+[dir="rtl"] .sidebar.navbar-expand-md,
+[dir="rtl"] .sidebar.navbar-expand-lg,
+[dir="rtl"] .sidebar.navbar-expand-xl,
+[dir="rtl"] .sidebar.navbar-expand-xxl,
+[dir="rtl"] .sidebar.navbar-expand {
+    left: auto !important;
+    right: 0 !important;
+}
+
+/* Collapsed (mobile, absolute) state slides off-screen to the right */
+@media (max-width: 575.98px) {
+    [dir="rtl"] .sidebar.navbar-expand-sm { left: auto !important; right: -300px !important; }
+}
+@media (max-width: 767.98px) {
+    [dir="rtl"] .sidebar.navbar-expand-md { left: auto !important; right: -300px !important; }
+}
+@media (max-width: 991.98px) {
+    [dir="rtl"] .sidebar.navbar-expand-lg { left: auto !important; right: -300px !important; }
+}
+@media (max-width: 1199.98px) {
+    [dir="rtl"] .sidebar.navbar-expand-xl { left: auto !important; right: -300px !important; }
+}
+@media (max-width: 1399.98px) {
+    [dir="rtl"] .sidebar.navbar-expand-xxl { left: auto !important; right: -300px !important; }
+}
+
+/* Content offset: push to the right of the fixed sidebar instead of the left */
+[dir="rtl"] .page-content {
+    margin-left: 0;
+    margin-right: 16.25rem;
+}
+@media (max-width: 1199.98px) {
+    /* Below xl the sidebar is an offcanvas overlay; remove the desktop offset */
+    [dir="rtl"] .page-content { margin-right: 0; }
+}
+
+/* ============================================================
+   2. Sidebar menu internals
+   ============================================================ */
+
+/* nav-link indent uses physical margin-left in the theme */
+[dir="rtl"] .sidebar .sidebar-content .nav.flex-column:not(.nav-pills) .nav-link {
+    margin-left: 0 !important;
+    margin-right: 1rem !important;
+}
+
+/* Collapse caret (the +/- glyph) is positioned with physical right: — mirror to left */
+[dir="rtl"] .sidebar .sidebar-content .nav-item [data-bs-toggle="collapse"]::before,
+[dir="rtl"] .sidebar .sidebar-content .nav-item [data-bs-toggle="collapse"]::after {
+    right: auto;
+    left: 0;
+}
+[dir="rtl"] .sidebar .sidebar-content .nav-item [data-bs-toggle="collapse"]::after {
+    left: 5px;
+}
+
+/* ============================================================
+   3. Top bar / navbar dropdowns (consolidated from the old inline
+      _AdminLayout [dir=rtl] patches so they live with the rest)
+   ============================================================ */
+
+[dir="rtl"] .navbar .dropdown-menu-end {
+    right: auto !important;
+    left: 0 !important;
+}
+[dir="rtl"] .navbar .dropdown-menu,
+[dir="rtl"] .navbar .dropdown-item,
+[dir="rtl"] .navbar .card-header,
+[dir="rtl"] .navbar .list-group-item {
+    text-align: right;
+}
+[dir="rtl"] .navbar .dropdown-menu .avatar.me-3 {
+    margin-right: 0 !important;
+    margin-left: 1rem !important;
+}
+[dir="rtl"] .notif-badge {
+    right: auto;
+    left: 0.5rem;
+}
+
+/* Search input clear/icon button pinned to the logical end */
+[dir="rtl"] .top-bar form.position-relative .btn.end-0 {
+    right: auto;
+    left: 0;
+}
+
+/* ============================================================
+   4. Generic mirroring for common theme patterns that use
+      physical properties Bootstrap utilities don't cover.
+   ============================================================ */
+
+/* Plain text alignment fallbacks */
+[dir="rtl"] .text-start { text-align: right !important; }
+[dir="rtl"] .text-end { text-align: left !important; }
+
+/* Float helpers (theme still ships a few float-left/right) */
+[dir="rtl"] .float-start { float: right !important; }
+[dir="rtl"] .float-end { float: left !important; }
+
+/* List groups / definition lists default to logical start already via BS5.3;
+   only the legacy borderless menu needs the indent flipped */
+[dir="rtl"] .list-group-borderless .list-group-item {
+    text-align: right;
+}
+
+/* ============================================================
+   5. Directional icon flips (RTL2): mirror ONLY arrows/chevrons
+      that imply reading/navigation direction. Non-directional
+      icons (clock, star, heart, gear, bell …) are NOT flipped.
+   ============================================================ */
+
+[dir="rtl"] .bi-chevron-left::before,
+[dir="rtl"] .bi-chevron-right::before,
+[dir="rtl"] .bi-chevron-double-left::before,
+[dir="rtl"] .bi-chevron-double-right::before,
+[dir="rtl"] .bi-arrow-left::before,
+[dir="rtl"] .bi-arrow-right::before,
+[dir="rtl"] .bi-arrow-left-short::before,
+[dir="rtl"] .bi-arrow-right-short::before,
+[dir="rtl"] .bi-caret-left-fill::before,
+[dir="rtl"] .bi-caret-right-fill::before,
+[dir="rtl"] .fa-arrow-left::before,
+[dir="rtl"] .fa-arrow-right::before,
+[dir="rtl"] .fa-chevron-left::before,
+[dir="rtl"] .fa-chevron-right::before,
+[dir="rtl"] .fa-angle-left::before,
+[dir="rtl"] .fa-angle-right::before,
+[dir="rtl"] .fa-arrow-right-long::before,
+[dir="rtl"] .fa-arrow-left-long::before {
+    display: inline-block;
+    transform: scaleX(-1);
+}
+
+/* ============================================================
+   6. Forms / inputs — keep Latin-only fields LTR even inside RTL
+      (emails, URLs, GUIDs, codes). Markup uses dir="ltr"; this is
+      a safety net so any such input reads left-to-right.
+   ============================================================ */
+
+[dir="rtl"] input[type="email"],
+[dir="rtl"] input[type="url"],
+[dir="rtl"] input[type="tel"],
+[dir="rtl"] input.font-data,
+[dir="rtl"] .font-data {
+    text-align: right;
+}
+[dir="rtl"] [dir="ltr"] {
+    text-align: left;
+}

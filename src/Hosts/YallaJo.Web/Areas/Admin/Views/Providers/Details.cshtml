@@ -1,218 +1,249 @@
+@using System.Globalization
+@using Microsoft.Extensions.Localization
 @using YallaJo.Web.Infrastructure.Authorization
 @using YallaJo.Web.Areas.Admin.Models.Providers
 @model ProviderDetailsVm
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
-    ViewData["Title"] = "Provider application";
-    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = Localizer["Admin.ProviderDetails.Title"].Value;
+    ViewData["AdminNav"] = "Providers";
+
+    var culture = CultureInfo.CurrentCulture;
+    string Count(int n) => n.ToString("N0", culture);
+    string DateTimeText(DateTime? d) => d?.ToString("yyyy-MM-dd HH:mm", culture) ?? "—";
+    string Day(DateTime? d) => d?.ToString("yyyy-MM-dd", culture) ?? "—";
 }
 
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <a asp-area="Admin" asp-controller="Providers" asp-action="Index"
-           class="btn btn-sm btn-outline-secondary">← Back to queue</a>
-        <span class="badge @Model.StatusBadgeClass fs-6">@Model.StatusLabel</span>
+@* Success/Error flash banners are rendered globally by the shared _Alerts partial. *@
+
+<div class="d-sm-flex justify-content-between align-items-start mb-4">
+    <div>
+        <h1 class="h3 mb-1">@Model.BusinessName</h1>
+        <p class="mb-0 text-secondary">@Model.TypeLabel</p>
     </div>
+    <div class="d-flex align-items-center gap-2 mt-2 mt-sm-0">
+        <span class="badge @Model.StatusBadgeClass fs-6">
+            <i class="fa-solid fa-circle-info fa-fw" aria-hidden="true"></i> @Model.StatusLabel
+        </span>
+        <a asp-area="Admin" asp-controller="Providers" asp-action="Index" class="btn btn-sm btn-outline-secondary">
+            <i class="fa-solid fa-arrow-left fa-fw me-1" aria-hidden="true"></i>@Localizer["Admin.ProviderDetails.Back"]
+        </a>
+    </div>
+</div>
 
-    @* Success/Error flash banners are rendered globally by the shared _Alerts partial. *@
-
-    <h2 class="mb-1">@Model.BusinessName</h2>
-    <p class="text-muted">@Model.TypeLabel</p>
-
-    <div class="row g-3">
-        <div class="col-lg-7">
-            <div class="card mb-3">
-                <div class="card-header"><strong>Application details</strong></div>
-                <div class="card-body">
-                    <dl class="row mb-0 small">
-                        <dt class="col-sm-4">Application ID</dt>
-                        <dd class="col-sm-8"><code>@Model.ApplicationId</code></dd>
-
-                        <dt class="col-sm-4">Applicant user ID</dt>
-                        <dd class="col-sm-8"><code>@Model.UserId</code></dd>
-
-                        <dt class="col-sm-4">Contact email</dt>
-                        <dd class="col-sm-8">@Model.ContactEmail</dd>
-
-                        <dt class="col-sm-4">Contact phone</dt>
-                        <dd class="col-sm-8">@Model.ContactPhone</dd>
-
-                        <dt class="col-sm-4">Address</dt>
-                        <dd class="col-sm-8">@Model.Address</dd>
-
-                        <dt class="col-sm-4">Description</dt>
-                        <dd class="col-sm-8" style="white-space: pre-wrap;">@Model.Description</dd>
-
-                        <dt class="col-sm-4">Submitted</dt>
-                        <dd class="col-sm-8">@(Model.SubmittedAt?.ToString("yyyy-MM-dd HH:mm") ?? "—")</dd>
-
-                        <dt class="col-sm-4">Reviewed</dt>
-                        <dd class="col-sm-8">@(Model.ReviewedAt?.ToString("yyyy-MM-dd HH:mm") ?? "—")</dd>
-
-                        @if (Model.ReviewedByUserId.HasValue)
-                        {
-                            <dt class="col-sm-4">Reviewed by</dt>
-                            <dd class="col-sm-8"><code>@Model.ReviewedByUserId</code></dd>
-                        }
-
-                        <dt class="col-sm-4">Reapplications</dt>
-                        <dd class="col-sm-8">@Model.ReapplicationCount</dd>
-
-                        @if (Model.CoolingPeriodEndsAt.HasValue)
-                        {
-                            <dt class="col-sm-4">Cooling period ends</dt>
-                            <dd class="col-sm-8">@Model.CoolingPeriodEndsAt.Value.ToString("yyyy-MM-dd")</dd>
-                        }
-                    </dl>
-
-                    @if (!string.IsNullOrWhiteSpace(Model.RejectionReason))
-                    {
-                        <div class="alert alert-danger mt-3 mb-0">
-                            <strong>Rejection reason:</strong> @Model.RejectionReason
-                        </div>
-                    }
-                    @if (!string.IsNullOrWhiteSpace(Model.SuspensionReason))
-                    {
-                        <div class="alert alert-warning mt-3 mb-0">
-                            <strong>Suspension reason:</strong> @Model.SuspensionReason
-                        </div>
-                    }
-                </div>
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="card shadow mb-4">
+            <div class="card-header border-bottom">
+                <h2 class="card-header-title h5 mb-0">@Localizer["Admin.ProviderDetails.OverviewHeading"]</h2>
             </div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-4 text-secondary fw-normal">@Localizer["Admin.ProviderDetails.ContactEmail"]</dt>
+                    <dd class="col-sm-8"><bdi dir="ltr">@Model.ContactEmail</bdi></dd>
 
-            <div class="card mb-3">
-                <div class="card-header"><strong>Documents</strong></div>
-                <div class="card-body">
-                    @if (Model.HasMissingDocuments)
-                    {
-                        <div class="alert alert-info py-2">
-                            <strong>Missing required documents:</strong>
-                            @string.Join(", ", Model.MissingDocumentTypes)
-                        </div>
-                    }
+                    <dt class="col-sm-4 text-secondary fw-normal">@Localizer["Admin.ProviderDetails.ContactPhone"]</dt>
+                    <dd class="col-sm-8"><bdi dir="ltr">@Model.ContactPhone</bdi></dd>
 
-                    @if (!Model.HasDocuments)
+                    <dt class="col-sm-4 text-secondary fw-normal">@Localizer["Admin.ProviderDetails.Address"]</dt>
+                    <dd class="col-sm-8">@Model.Address</dd>
+
+                    <dt class="col-sm-4 text-secondary fw-normal">@Localizer["Admin.ProviderDetails.Description"]</dt>
+                    <dd class="col-sm-8 text-break">@Model.Description</dd>
+
+                    <dt class="col-sm-4 text-secondary fw-normal">@Localizer["Admin.ProviderDetails.Submitted"]</dt>
+                    <dd class="col-sm-8"><bdi class="font-data">@DateTimeText(Model.SubmittedAt)</bdi></dd>
+
+                    <dt class="col-sm-4 text-secondary fw-normal">@Localizer["Admin.ProviderDetails.Reviewed"]</dt>
+                    <dd class="col-sm-8"><bdi class="font-data">@DateTimeText(Model.ReviewedAt)</bdi></dd>
+
+                    <dt class="col-sm-4 text-secondary fw-normal">@Localizer["Admin.ProviderDetails.Reapplications"]</dt>
+                    <dd class="col-sm-8"><bdi class="font-data">@Count(Model.ReapplicationCount)</bdi></dd>
+
+                    @if (Model.CoolingPeriodEndsAt.HasValue)
                     {
-                        <p class="small text-muted mb-0">No documents uploaded.</p>
+                        <dt class="col-sm-4 text-secondary fw-normal">@Localizer["Admin.ProviderDetails.CoolingEnds"]</dt>
+                        <dd class="col-sm-8"><bdi class="font-data">@Day(Model.CoolingPeriodEndsAt)</bdi></dd>
                     }
-                    else
-                    {
-                        <div class="table-responsive">
-                            <table class="table table-sm align-middle mb-0">
-                                <thead>
-                                    <tr>
-                                        <th>Type</th>
-                                        <th>File</th>
-                                        <th class="text-end">Size</th>
-                                        <th>Uploaded</th>
-                                        <th>Expires</th>
-                                        <th></th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach (var doc in Model.Documents)
-                                    {
-                                        <tr>
-                                            <td>@doc.DocumentTypeLabel</td>
-                                            <td class="text-truncate" style="max-width: 200px;">@doc.FileName</td>
-                                            <td class="text-end">@doc.FileSizeLabel</td>
-                                            <td>@doc.UploadedAt.ToString("yyyy-MM-dd")</td>
-                                            <td>@(doc.ExpiresAt?.ToString("yyyy-MM-dd") ?? "—")</td>
-                                            <td class="text-end">
-                                                @if (!string.IsNullOrWhiteSpace(doc.FileUrl))
-                                                {
-                                                    <a href="@doc.FileUrl" target="_blank" rel="noopener noreferrer"
-                                                       class="btn btn-sm btn-outline-primary">Open</a>
-                                                }
-                                            </td>
-                                        </tr>
-                                    }
-                                </tbody>
-                            </table>
-                        </div>
-                    }
-                </div>
+                </dl>
+
+                @if (!string.IsNullOrWhiteSpace(Model.RejectionReason))
+                {
+                    <div class="alert alert-danger mt-3 mb-0" role="alert">
+                        <i class="fa-solid fa-circle-xmark fa-fw me-1" aria-hidden="true"></i>
+                        <strong>@Localizer["Admin.ProviderDetails.RejectionReason"]</strong> @Model.RejectionReason
+                    </div>
+                }
+                @if (!string.IsNullOrWhiteSpace(Model.SuspensionReason))
+                {
+                    <div class="alert alert-warning mt-3 mb-0" role="alert">
+                        <i class="fa-solid fa-triangle-exclamation fa-fw me-1" aria-hidden="true"></i>
+                        <strong>@Localizer["Admin.ProviderDetails.SuspensionReason"]</strong> @Model.SuspensionReason
+                    </div>
+                }
             </div>
         </div>
 
-        <div class="col-lg-5">
-            <div class="card mb-3">
-                <div class="card-header"><strong>Actions</strong></div>
-                <div class="card-body d-flex flex-column gap-3">
-                    @if (!Model.HasAnyAction)
-                    {
-                        <p class="text-muted small mb-0">No actions are available for this status.</p>
-                    }
+        <div class="card shadow mb-4">
+            <div class="card-header border-bottom">
+                <h2 class="card-header-title h5 mb-0">@Localizer["Admin.ProviderDetails.DocumentsHeading"]</h2>
+            </div>
+            <div class="card-body">
+                @if (Model.HasMissingDocuments)
+                {
+                    <div class="alert alert-info py-2" role="alert">
+                        <i class="fa-solid fa-circle-info fa-fw me-1" aria-hidden="true"></i>
+                        <strong>@Localizer["Admin.ProviderDetails.MissingDocuments"]</strong>
+                        @string.Join(", ", Model.MissingDocumentTypes)
+                    </div>
+                }
 
-                    @if (Model.CanApprove)
-                    {
-                        <permission require="@WebPermission.AdminProviderQueue.Approve">
-                            <form asp-area="Admin" asp-controller="Providers" asp-action="Approve"
-                                  asp-route-id="@Model.ApplicationId" asp-route-fromDetails="true" method="post">
-                                @Html.AntiForgeryToken()
-                                <button type="submit" class="btn btn-success w-100">Approve</button>
-                            </form>
-                        </permission>
-                    }
+                @if (!Model.HasDocuments)
+                {
+                    <div class="text-center py-4">
+                        <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
+                        <p class="mb-0 text-secondary">@Localizer["Admin.ProviderDetails.NoDocuments"]</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th scope="col">@Localizer["Admin.ProviderDetails.DocType"]</th>
+                                    <th scope="col">@Localizer["Admin.ProviderDetails.DocFile"]</th>
+                                    <th scope="col" class="text-end">@Localizer["Admin.ProviderDetails.DocSize"]</th>
+                                    <th scope="col">@Localizer["Admin.ProviderDetails.DocUploaded"]</th>
+                                    <th scope="col">@Localizer["Admin.ProviderDetails.DocExpires"]</th>
+                                    <th scope="col" class="text-end">@Localizer["Admin.ProviderDetails.DocAction"]</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var doc in Model.Documents)
+                                {
+                                    <tr>
+                                        <td>@doc.DocumentTypeLabel</td>
+                                        <td class="text-truncate" style="max-width: 200px;"><bdi dir="ltr">@doc.FileName</bdi></td>
+                                        <td class="text-end"><bdi class="font-data">@doc.FileSizeLabel</bdi></td>
+                                        <td><bdi class="font-data">@Day(doc.UploadedAt)</bdi></td>
+                                        <td><bdi class="font-data">@Day(doc.ExpiresAt)</bdi></td>
+                                        <td class="text-end">
+                                            @if (!string.IsNullOrWhiteSpace(doc.FileUrl))
+                                            {
+                                                <a href="@doc.FileUrl" target="_blank" rel="noopener noreferrer"
+                                                   class="btn btn-sm btn-outline-primary">
+                                                    <i class="fa-solid fa-arrow-up-right-from-square fa-fw me-1" aria-hidden="true"></i>@Localizer["Admin.ProviderDetails.OpenDoc"]
+                                                </a>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
 
-                    @if (Model.CanReject)
-                    {
-                        <permission require="@WebPermission.AdminProviderQueue.Reject">
-                            <form asp-area="Admin" asp-controller="Providers" asp-action="Reject"
-                                  asp-route-id="@Model.ApplicationId" asp-route-fromDetails="true" method="post">
-                                @Html.AntiForgeryToken()
-                                <label class="form-label small mb-1">Rejection reason</label>
-                                <textarea name="reason" class="form-control form-control-sm mb-2" rows="2"
-                                          placeholder="Reason for rejection" required></textarea>
-                                <button type="submit" class="btn btn-outline-danger w-100">Reject</button>
-                            </form>
-                        </permission>
-                    }
+    <div class="col-lg-5">
+        <div class="card shadow mb-4">
+            <div class="card-header border-bottom">
+                <h2 class="card-header-title h5 mb-0">@Localizer["Admin.ProviderDetails.ActionsHeading"]</h2>
+            </div>
+            <div class="card-body d-flex flex-column gap-3">
+                @if (!Model.HasAnyAction)
+                {
+                    <p class="text-secondary small mb-0">@Localizer["Admin.ProviderDetails.NoActions"]</p>
+                }
 
-                    @if (Model.CanRequestDocs)
-                    {
-                        <permission require="@WebPermission.AdminProviderQueue.RequestDocs">
-                            <form asp-area="Admin" asp-controller="Providers" asp-action="RequestDocuments"
-                                  asp-route-id="@Model.ApplicationId" asp-route-fromDetails="true" method="post">
-                                @Html.AntiForgeryToken()
-                                <label class="form-label small mb-1">Missing documents</label>
-                                <select name="missingDocumentTypes" class="form-select form-select-sm mb-2" multiple size="6" required>
-                                    @foreach (var doc in Model.DocumentTypeOptions)
-                                    {
-                                        <option value="@doc.Value">@doc.Label</option>
-                                    }
-                                </select>
-                                <textarea name="notes" class="form-control form-control-sm mb-2" rows="2"
-                                          placeholder="Notes for the provider" required></textarea>
-                                <button type="submit" class="btn btn-info w-100">Request documents</button>
-                            </form>
-                        </permission>
-                    }
+                @if (Model.CanApprove)
+                {
+                    <permission require="@WebPermission.AdminProviderQueue.Approve">
+                        <form asp-area="Admin" asp-controller="Providers" asp-action="Approve"
+                              asp-route-id="@Model.ApplicationId" asp-route-fromDetails="true" method="post"
+                              data-confirm="@Localizer["Admin.Providers.ApproveConfirm", Model.BusinessName]"
+                              data-confirm-title="@Localizer["Admin.Providers.ApproveTitle"]"
+                              data-confirm-action="@Localizer["Admin.Providers.Approve"]">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-success w-100">
+                                <i class="fa-solid fa-circle-check fa-fw me-1" aria-hidden="true"></i>@Localizer["Admin.Providers.Approve"]
+                            </button>
+                        </form>
+                    </permission>
+                }
 
-                    @if (Model.CanSuspend)
-                    {
-                        <permission require="@WebPermission.AdminProviderQueue.Suspend">
-                            <form asp-area="Admin" asp-controller="Providers" asp-action="Suspend"
-                                  asp-route-id="@Model.ApplicationId" asp-route-fromDetails="true" method="post">
-                                @Html.AntiForgeryToken()
-                                <label class="form-label small mb-1">Suspension reason</label>
-                                <textarea name="reason" class="form-control form-control-sm mb-2" rows="2"
-                                          placeholder="Reason for suspension" required></textarea>
-                                <button type="submit" class="btn btn-outline-warning w-100">Suspend</button>
-                            </form>
-                        </permission>
-                    }
+                @if (Model.CanReject)
+                {
+                    <permission require="@WebPermission.AdminProviderQueue.Reject">
+                        <form asp-area="Admin" asp-controller="Providers" asp-action="Reject"
+                              asp-route-id="@Model.ApplicationId" asp-route-fromDetails="true" method="post">
+                            @Html.AntiForgeryToken()
+                            <label for="reject-reason" class="form-label small mb-1">@Localizer["Admin.ProviderDetails.RejectReasonLabel"]</label>
+                            <textarea id="reject-reason" name="reason" class="form-control form-control-sm mb-2" rows="2"
+                                      placeholder="@Localizer["Admin.ProviderDetails.RejectReasonPlaceholder"]" required></textarea>
+                            <button type="submit" class="btn btn-outline-danger w-100">
+                                <i class="fa-solid fa-circle-xmark fa-fw me-1" aria-hidden="true"></i>@Localizer["Admin.ProviderDetails.Reject"]
+                            </button>
+                        </form>
+                    </permission>
+                }
 
-                    @if (Model.CanReinstate)
-                    {
-                        <permission require="@WebPermission.AdminProviderQueue.Reinstate">
-                            <form asp-area="Admin" asp-controller="Providers" asp-action="Reinstate"
-                                  asp-route-id="@Model.ApplicationId" asp-route-fromDetails="true" method="post">
-                                @Html.AntiForgeryToken()
-                                <button type="submit" class="btn btn-outline-success w-100">Reinstate</button>
-                            </form>
-                        </permission>
-                    }
-                </div>
+                @if (Model.CanRequestDocs)
+                {
+                    <permission require="@WebPermission.AdminProviderQueue.RequestDocs">
+                        <form asp-area="Admin" asp-controller="Providers" asp-action="RequestDocuments"
+                              asp-route-id="@Model.ApplicationId" asp-route-fromDetails="true" method="post">
+                            @Html.AntiForgeryToken()
+                            <label for="missing-docs" class="form-label small mb-1">@Localizer["Admin.ProviderDetails.MissingDocsLabel"]</label>
+                            <select id="missing-docs" name="missingDocumentTypes" class="form-select form-select-sm mb-2" multiple size="6" required>
+                                @foreach (var doc in Model.DocumentTypeOptions)
+                                {
+                                    <option value="@doc.Value">@doc.Label</option>
+                                }
+                            </select>
+                            <label for="docs-notes" class="form-label small mb-1">@Localizer["Admin.ProviderDetails.DocsNotesLabel"]</label>
+                            <textarea id="docs-notes" name="notes" class="form-control form-control-sm mb-2" rows="2"
+                                      placeholder="@Localizer["Admin.ProviderDetails.DocsNotesPlaceholder"]" required></textarea>
+                            <button type="submit" class="btn btn-info w-100">
+                                <i class="fa-solid fa-file-circle-question fa-fw me-1" aria-hidden="true"></i>@Localizer["Admin.ProviderDetails.RequestDocuments"]
+                            </button>
+                        </form>
+                    </permission>
+                }
+
+                @if (Model.CanSuspend)
+                {
+                    <permission require="@WebPermission.AdminProviderQueue.Suspend">
+                        <form asp-area="Admin" asp-controller="Providers" asp-action="Suspend"
+                              asp-route-id="@Model.ApplicationId" asp-route-fromDetails="true" method="post">
+                            @Html.AntiForgeryToken()
+                            <label for="suspend-reason" class="form-label small mb-1">@Localizer["Admin.ProviderDetails.SuspendReasonLabel"]</label>
+                            <textarea id="suspend-reason" name="reason" class="form-control form-control-sm mb-2" rows="2"
+                                      placeholder="@Localizer["Admin.ProviderDetails.SuspendReasonPlaceholder"]" required></textarea>
+                            <button type="submit" class="btn btn-outline-warning w-100">
+                                <i class="fa-solid fa-ban fa-fw me-1" aria-hidden="true"></i>@Localizer["Admin.ProviderDetails.Suspend"]
+                            </button>
+                        </form>
+                    </permission>
+                }
+
+                @if (Model.CanReinstate)
+                {
+                    <permission require="@WebPermission.AdminProviderQueue.Reinstate">
+                        <form asp-area="Admin" asp-controller="Providers" asp-action="Reinstate"
+                              asp-route-id="@Model.ApplicationId" asp-route-fromDetails="true" method="post"
+                              data-confirm="@Localizer["Admin.ProviderDetails.ReinstateConfirm", Model.BusinessName]"
+                              data-confirm-title="@Localizer["Admin.ProviderDetails.ReinstateTitle"]"
+                              data-confirm-action="@Localizer["Admin.ProviderDetails.Reinstate"]">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-outline-success w-100">
+                                <i class="fa-solid fa-rotate-right fa-fw me-1" aria-hidden="true"></i>@Localizer["Admin.ProviderDetails.Reinstate"]
+                            </button>
+                        </form>
+                    </permission>
+                }
             </div>
         </div>
     </div>

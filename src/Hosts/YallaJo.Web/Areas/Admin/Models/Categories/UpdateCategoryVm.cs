@@ -30,4 +30,18 @@ public sealed class UpdateCategoryVm
     [StringLength(10)]
     [Display(Name = "Source language code")]
     public string? SourceLanguageCode { get; set; } = "en";
+
+    // F10: parent is chosen from a human-readable name dropdown, never a typed GUID.
+    // set (not init) so the controller can repopulate it on POST re-render.
+    public IReadOnlyList<CategoryParentOptionVm> ParentOptions { get; set; } = [];
+}
+
+// F10 dropdown option: shows the category Name (id is the option value); Depth
+// drives a visual indent so the tree hierarchy stays readable in a flat <select>.
+// Named distinctly from EntityCategories.CategoryOptionVm to avoid a namespace clash.
+public sealed class CategoryParentOptionVm
+{
+    public Guid Id { get; init; }
+    public string Name { get; init; } = string.Empty;
+    public int Depth { get; init; }
 }

@@ -1,41 +1,64 @@
+@using System.Globalization
+@using Microsoft.Extensions.Localization
 @using YallaJo.Web.Areas.Admin.Models.Support
 @using YallaJo.Web.Infrastructure.Authorization
 @model SupportTicketDetailVm
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
-    ViewData["Title"] = "Support ticket";
+    ViewData["Title"] = Localizer["Admin.SupportDetails.Title"].Value;
     ViewData["AdminNav"] = "Support";
+    var culture = CultureInfo.CurrentCulture;
+    string Date(DateTime dt) => dt.ToString("yyyy-MM-dd HH:mm", culture);
     var canAct = !Model.IsClosed;
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="d-sm-flex justify-content-between align-items-center mb-4">
     <div>
         <h1 class="h3 mb-1">@Model.Subject</h1>
-        <p class="text-body-secondary mb-0 font-data">@Model.Id.ToString("D")</p>
+        <p class="text-secondary mb-0">
+            <span class="badge bg-@SupportMapper.StatusColor(Model.Status) bg-opacity-10 text-@SupportMapper.StatusColor(Model.Status)">
+                <i class="fa-solid fa-@(SupportMapper.StatusIcon(Model.Status)) fa-fw" aria-hidden="true"></i>
+                @Localizer["Admin.Support.Status." + Model.Status]
+            </span>
+        </p>
     </div>
-    <a asp-area="Admin" asp-controller="Support" asp-action="Index" class="btn btn-outline-secondary">Back to list</a>
+    <a asp-area="Admin" asp-controller="Support" asp-action="Index" class="btn btn-outline-secondary">
+        <i class="fa-solid fa-arrow-left fa-fw" aria-hidden="true"></i> @Localizer["Admin.SupportDetails.Back"]
+    </a>
 </div>
 
 <div class="row g-4">
     <div class="col-lg-8">
-        <div class="card shadow-sm mb-4">
-            <div class="card-header"><span class="fw-semibold">Conversation</span></div>
+        <section class="card shadow mb-4" aria-labelledby="conversation-heading">
+            <div class="card-header border-bottom">
+                <h2 id="conversation-heading" class="card-header-title h5 mb-0">@Localizer["Admin.SupportDetails.Conversation"]</h2>
+            </div>
             <div class="card-body">
                 @if (Model.Messages.Count == 0)
                 {
-                    <p class="text-body-secondary mb-0">No messages yet.</p>
+                    <p class="text-secondary mb-0">@Localizer["Admin.SupportDetails.NoMessages"]</p>
                 }
                 else
                 {
                     @foreach (var m in Model.Messages)
                     {
                         <div class="border rounded p-3 mb-3 @(m.IsInternal ? "bg-warning bg-opacity-10" : "")">
-                            <div class="d-flex justify-content-between small text-body-secondary mb-1">
-                                <span class="font-data">@m.AuthorUserId.ToString("D")[..8]</span>
-                                <span class="font-data">@m.CreatedAt.ToString("g")</span>
+                            <div class="d-flex justify-content-between small text-secondary mb-1">
+                                @if (!string.IsNullOrWhiteSpace(m.AuthorEmail))
+                                {
+                                    <span class="fw-semibold"><bdi dir="ltr">@m.AuthorEmail</bdi></span>
+                                }
+                                else
+                                {
+                                    <span>@Localizer["Admin.SupportDetails.UnknownAuthor"]</span>
+                                }
+                                <bdi dir="ltr" class="font-data">@Date(m.CreatedAt)</bdi>
                             </div>
                             @if (m.IsInternal)
                             {
-                                <span class="badge bg-warning bg-opacity-10 text-warning mb-2">Internal note</span>
+                                <span class="badge bg-warning bg-opacity-10 text-warning mb-2">
+                                    <i class="fa-solid fa-lock fa-fw" aria-hidden="true"></i> @Localizer["Admin.SupportDetails.InternalNote"]
+                                </span>
                             }
                             <div>@m.Body</div>
                         </div>
@@ -44,76 +67,128 @@
             </div>
             @if (canAct)
             {
-                <div class="card-footer">
+                <div class="card-footer border-top">
                     <form method="post" asp-area="Admin" asp-controller="Support" asp-action="Reply" asp-route-id="@Model.Id">
                         @Html.AntiForgeryToken()
                         <div class="mb-2">
-                            <label class="form-label" for="body">Reply</label>
-                            <textarea class="form-control" id="body" name="body" rows="3" required></textarea>
+                            <label class="form-label" for="body">@Localizer["Admin.SupportDetails.ReplyLabel"]</label>
+                            <textarea class="form-control" id="body" name="body" rows="3" required aria-describedby="body-help"></textarea>
+                            <div class="form-text" id="body-help">@Localizer["Admin.SupportDetails.ReplyHelp"]</div>
                         </div>
                         <div class="form-check mb-3">
                             <input class="form-check-input" type="checkbox" id="isInternal" name="isInternal" value="true" />
-                            <label class="form-check-label" for="isInternal">Internal note (not visible to the user)</label>
+                            <label class="form-check-label" for="isInternal">@Localizer["Admin.SupportDetails.InternalCheck"]</label>
                         </div>
-                        <button type="submit" class="btn btn-primary">Post reply</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fa-solid fa-paper-plane fa-fw" aria-hidden="true"></i> @Localizer["Admin.SupportDetails.PostReply"]
+                        </button>
                     </form>
                 </div>
             }
-        </div>
+        </section>
     </div>
 
     <div class="col-lg-4">
-        <div class="card shadow-sm mb-4">
-            <div class="card-header"><span class="fw-semibold">Details</span></div>
+        <section class="card shadow mb-4" aria-labelledby="details-heading">
+            <div class="card-header border-bottom">
+                <h2 id="details-heading" class="card-header-title h5 mb-0">@Localizer["Admin.SupportDetails.DetailsHeading"]</h2>
+            </div>
             <div class="card-body">
                 <dl class="row mb-0">
-                    <dt class="col-5">Status</dt>
-                    <dd class="col-7"><span class="badge bg-@SupportMapper.StatusColor(Model.Status) bg-opacity-10 text-@SupportMapper.StatusColor(Model.Status)">@Model.Status</span></dd>
-                    <dt class="col-5">Category</dt>
-                    <dd class="col-7">@Model.Category</dd>
-                    <dt class="col-5">Priority</dt>
+                    <dt class="col-5">@Localizer["Admin.SupportDetails.CategoryLabel"]</dt>
+                    <dd class="col-7">@Localizer["Admin.Support.Category." + Model.Category]</dd>
+                    <dt class="col-5">@Localizer["Admin.SupportDetails.PriorityLabel"]</dt>
                     <dd class="col-7">@Model.Priority</dd>
-                    <dt class="col-5">Created by</dt>
-                    <dd class="col-7 font-data">@Model.CreatedByUserId.ToString("D")[..8]</dd>
-                    <dt class="col-5">SLA breach</dt>
-                    <dd class="col-7 font-data">@Model.SlaBreachAt.ToString("g")</dd>
-                    <dt class="col-5">Assigned to</dt>
-                    <dd class="col-7 font-data">@(Model.AssignedToUserId?.ToString("D")[..8] ?? "Unassigned")</dd>
-                    <dt class="col-5">Created</dt>
-                    <dd class="col-7 font-data">@Model.CreatedAt.ToString("g")</dd>
-                    @if (Model.ResolutionNotes is not null)
+                    <dt class="col-5">@Localizer["Admin.SupportDetails.RequesterLabel"]</dt>
+                    <dd class="col-7">
+                        @if (!string.IsNullOrWhiteSpace(Model.RequesterEmail))
+                        {
+                            <bdi dir="ltr">@Model.RequesterEmail</bdi>
+                        }
+                        else
+                        {
+                            <span class="text-secondary">@Localizer["Admin.Support.UnknownRequester"]</span>
+                        }
+                    </dd>
+                    <dt class="col-5">@Localizer["Admin.SupportDetails.AssignedLabel"]</dt>
+                    <dd class="col-7">
+                        @if (!string.IsNullOrWhiteSpace(Model.AssigneeEmail))
+                        {
+                            <bdi dir="ltr">@Model.AssigneeEmail</bdi>
+                        }
+                        else
+                        {
+                            <span class="text-secondary">@Localizer["Admin.SupportDetails.Unassigned"]</span>
+                        }
+                    </dd>
+                    <dt class="col-5">@Localizer["Admin.SupportDetails.SlaLabel"]</dt>
+                    <dd class="col-7"><bdi dir="ltr" class="font-data">@Date(Model.SlaBreachAt)</bdi></dd>
+                    <dt class="col-5">@Localizer["Admin.SupportDetails.CreatedLabel"]</dt>
+                    <dd class="col-7"><bdi dir="ltr" class="font-data">@Date(Model.CreatedAt)</bdi></dd>
+                    @if (!string.IsNullOrWhiteSpace(Model.ResolverEmail))
                     {
-                        <dt class="col-5">Resolution</dt>
+                        <dt class="col-5">@Localizer["Admin.SupportDetails.ResolvedByLabel"]</dt>
+                        <dd class="col-7"><bdi dir="ltr">@Model.ResolverEmail</bdi></dd>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(Model.ResolutionNotes))
+                    {
+                        <dt class="col-5">@Localizer["Admin.SupportDetails.ResolutionLabel"]</dt>
                         <dd class="col-7">@Model.ResolutionNotes</dd>
                     }
                 </dl>
             </div>
-        </div>
+        </section>
 
         @if (canAct)
         {
-            <div class="card shadow-sm">
-                <div class="card-header"><span class="fw-semibold">Actions</span></div>
-                <div class="card-body d-grid gap-2">
+            <section class="card shadow" aria-labelledby="actions-heading">
+                <div class="card-header border-bottom">
+                    <h2 id="actions-heading" class="card-header-title h5 mb-0">@Localizer["Admin.SupportDetails.ActionsHeading"]</h2>
+                </div>
+                <div class="card-body d-grid gap-3">
                     <permission require="@WebPermission.AdminSupportQueue.Assign">
-                        <form method="post" asp-area="Admin" asp-controller="Support" asp-action="Assign" asp-route-id="@Model.Id" class="d-flex gap-2">
+                        <form method="post" asp-area="Admin" asp-controller="Support" asp-action="Assign" asp-route-id="@Model.Id">
                             @Html.AntiForgeryToken()
-                            <input type="text" class="form-control font-data" name="adminUserId" placeholder="Admin user id" required />
-                            <button type="submit" class="btn btn-outline-primary">Assign</button>
+                            <label class="form-label" for="adminUserId">@Localizer["Admin.SupportDetails.AssignLabel"]</label>
+                            <div class="d-flex gap-2">
+                                @if (Model.AdminOptions.Count > 0)
+                                {
+                                    <select class="form-select" id="adminUserId" name="adminUserId" required aria-describedby="assign-help">
+                                        <option value="">@Localizer["Admin.SupportDetails.AssignPlaceholder"]</option>
+                                        @foreach (var a in Model.AdminOptions)
+                                        {
+                                            <option value="@a.Id">@a.Email</option>
+                                        }
+                                    </select>
+                                    <button type="submit" class="btn btn-outline-primary">@Localizer["Admin.SupportDetails.Assign"]</button>
+                                }
+                                else
+                                {
+                                    <span class="text-secondary small" id="adminUserId">@Localizer["Admin.SupportDetails.NoAdmins"]</span>
+                                }
+                            </div>
+                            <div class="form-text" id="assign-help">@Localizer["Admin.SupportDetails.AssignHelp"]</div>
                         </form>
                     </permission>
                     <permission require="@WebPermission.AdminSupportQueue.Resolve">
-                        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#resolveModal">Resolve</button>
+                        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#resolveModal">
+                            <i class="fa-solid fa-circle-check fa-fw" aria-hidden="true"></i> @Localizer["Admin.SupportDetails.Resolve"]
+                        </button>
                     </permission>
                     <permission require="@WebPermission.SupportTicket.Close">
-                        <form method="post" asp-area="Admin" asp-controller="Support" asp-action="Close" asp-route-id="@Model.Id">
+                        <form method="post" asp-area="Admin" asp-controller="Support" asp-action="Close" asp-route-id="@Model.Id"
+                              data-confirm="@Localizer["Admin.SupportDetails.CloseConfirm"]"
+                              data-confirm-title="@Localizer["Admin.SupportDetails.CloseTitle"]"
+                              data-confirm-action="@Localizer["Admin.SupportDetails.CloseAction"]">
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="rowVersion" value="@Model.RowVersion" />
-                            <button type="submit" class="btn btn-outline-secondary w-100">Close ticket</button>
+                            <button type="submit" class="btn btn-outline-secondary w-100">
+                                <i class="fa-solid fa-circle-xmark fa-fw" aria-hidden="true"></i> @Localizer["Admin.SupportDetails.CloseTicket"]
+                            </button>
                         </form>
                     </permission>
                 </div>
-            </div>
+            </section>
         }
     </div>
 </div>
@@ -121,22 +196,23 @@
 @if (canAct)
 {
     <permission require="@WebPermission.AdminSupportQueue.Resolve">
-        <div class="modal fade" id="resolveModal" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog">
-                <form method="post" asp-area="Admin" asp-controller="Support" asp-action="Resolve" asp-route-id="@Model.Id" class="modal-content">
+        <div class="modal fade" id="resolveModal" tabindex="-1" aria-labelledby="resolveModalTitle" aria-describedby="resolveModalBody" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+            <div class="modal-dialog modal-dialog-centered">
+                <form method="post" asp-area="Admin" asp-controller="Support" asp-action="Resolve" asp-route-id="@Model.Id" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="resolveModalTitle">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="rowVersion" value="@Model.RowVersion" />
                     <div class="modal-header">
-                        <h5 class="modal-title">Resolve ticket</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        <h2 class="modal-title h5" id="resolveModalTitle">@Localizer["Admin.SupportDetails.ResolveTitle"]</h2>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Admin.SupportDetails.Close"]"></button>
                     </div>
-                    <div class="modal-body">
-                        <label class="form-label" for="notes">Resolution notes</label>
-                        <textarea class="form-control" id="notes" name="notes" rows="3"></textarea>
+                    <div class="modal-body" id="resolveModalBody">
+                        <label class="form-label" for="notes">@Localizer["Admin.SupportDetails.NotesLabel"]</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="3" maxlength="1000" aria-describedby="notes-help"></textarea>
+                        <div class="form-text" id="notes-help">@Localizer["Admin.SupportDetails.NotesHelp"]</div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-success">Resolve</button>
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">@Localizer["Admin.SupportDetails.Cancel"]</button>
+                        <button type="submit" class="btn btn-success">@Localizer["Admin.SupportDetails.ResolveSubmit"]</button>
                     </div>
                 </form>
             </div>

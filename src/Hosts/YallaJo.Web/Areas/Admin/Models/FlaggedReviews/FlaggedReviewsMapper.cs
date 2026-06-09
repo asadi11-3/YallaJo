@@ -2,7 +2,7 @@ namespace YallaJo.Web.Areas.Admin.Models.FlaggedReviews;
 
 public static class FlaggedReviewsMapper
 {
-    public static FlaggedReviewsVm ToVm(ReviewPageResponse page)
+    public static FlaggedReviewsVm ToVm(ReviewPageResponse page, IReadOnlyDictionary<Guid, string>? reviewerEmails = null)
     {
         return new FlaggedReviewsVm
         {
@@ -11,6 +11,7 @@ public static class FlaggedReviewsMapper
             {
                 Id = r.Id,
                 UserId = r.UserId,
+                ReviewerEmail = reviewerEmails is not null && reviewerEmails.TryGetValue(r.UserId, out var email) ? email : null,
                 TargetType = r.TargetType,
                 TargetId = r.TargetId,
                 Rating = r.Rating,
@@ -33,5 +34,14 @@ public static class FlaggedReviewsMapper
         _ when string.Equals(status, "AutoHidden", StringComparison.OrdinalIgnoreCase) => "info",
         _ when string.Equals(status, "Removed", StringComparison.OrdinalIgnoreCase) => "danger",
         _ => "secondary",
+    };
+
+    public static string StatusIcon(string status) => status switch
+    {
+        _ when string.Equals(status, "Published", StringComparison.OrdinalIgnoreCase) => "circle-check",
+        _ when string.Equals(status, "Flagged", StringComparison.OrdinalIgnoreCase) => "flag",
+        _ when string.Equals(status, "AutoHidden", StringComparison.OrdinalIgnoreCase) => "eye-slash",
+        _ when string.Equals(status, "Removed", StringComparison.OrdinalIgnoreCase) => "circle-xmark",
+        _ => "circle-info",
     };
 }

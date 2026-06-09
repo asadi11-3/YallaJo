@@ -7,7 +7,9 @@ public static class StatisticsMapper
     public static StatisticsVm ToVm(
         InteractionPageResponse page,
         string? userLookupId = null,
-        bool isUserLookup = false)
+        bool isUserLookup = false,
+        IReadOnlyDictionary<Guid, string>? entityNames = null,
+        IReadOnlyDictionary<Guid, string>? userNames = null)
     {
         var rows = page.Items
             .Select(x => new InteractionRowVm
@@ -18,7 +20,9 @@ public static class StatisticsMapper
                 EntityType = x.EntityType,
                 EntityId = x.EntityId,
                 OccurredAt = x.OccurredAt,
-                UserAgent = x.UserAgent
+                UserAgent = x.UserAgent,
+                EntityName = entityNames is not null && entityNames.TryGetValue(x.EntityId, out var en) ? en : null,
+                UserName = x.UserId is { } uid && userNames is not null && userNames.TryGetValue(uid, out var un) ? un : null
             })
             .ToList();
 

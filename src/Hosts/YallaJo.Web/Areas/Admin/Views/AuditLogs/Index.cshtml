@@ -1,13 +1,25 @@
+@using Microsoft.Extensions.Localization
 @using YallaJo.Web.Infrastructure.Authorization
 @model YallaJo.Web.Areas.Admin.Models.AuditLogs.AuditLogListVm
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
-    ViewData["Title"] = "Audit Timeline";
-    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = Localizer["Admin.Audit.Title"].Value;
+    ViewData["AdminNav"] = "AuditLogs";
 
-    // Phase 5A — filter values are reflected back into the inputs and
-    // every pagination link below.
+    var culture = System.Globalization.CultureInfo.CurrentCulture;
+
+    // Filter values are reflected back into the inputs and every pagination link.
     string FmtDate(DateTime? d) =>
         d.HasValue ? d.Value.ToString("yyyy-MM-ddTHH:mm") : string.Empty;
+
+    // UTC audit timestamps are deliberately rendered in a stable, sortable,
+    // machine-comparable form (CON3: invariant by intent for an audit ledger),
+    // then wrapped in <bdi> at the call site for RTL safety (RTL3).
+    string FmtOccurred(DateTime d) => d.ToString("u");
+
+    string ShortId(Guid id) => id.ToString()[..8];
+
+    string Count(int n) => n.ToString("N0", culture);
 
     bool HasAnyFilter =
         Model.FilterUserId.HasValue
@@ -17,168 +29,260 @@
         || Model.FilterTo.HasValue;
 }
 
-<div class="container mt-4">
-    <h1 class="h3 mb-3">Audit Timeline</h1>
+@* ── Page header ─────────────────────────────────────────────────── *@
+<div class="d-sm-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-1">@Localizer["Admin.Audit.Title"]</h1>
+        <p class="mb-0 text-secondary">@Localizer["Admin.Audit.Subtitle"]</p>
+    </div>
+    <span class="badge bg-secondary bg-opacity-10 text-secondary align-self-start mt-2 mt-sm-0">
+        <i class="fa-solid fa-list-check fa-fw me-1" aria-hidden="true"></i>
+        <bdi>@Count(Model.TotalCount)</bdi>
+        <span class="ms-1">@Localizer["Admin.Audit.EntriesTotal"]</span>
+    </span>
+</div>
 
-    @if (ViewBag.Error is string err) { <div class="alert alert-danger">@err</div> }
+@if (ViewBag.Error is string err)
+{
+    <div class="alert alert-danger d-flex align-items-center" role="alert">
+        <i class="fa-solid fa-triangle-exclamation fa-fw me-2" aria-hidden="true"></i>
+        <span>@err</span>
+    </div>
+}
 
-    @* ── Filter bar ─────────────────────────────────────────────────── *@
-    <form method="get" class="row g-2 mb-3 align-items-end">
-        <div class="col-md-3">
-            <label class="form-label small text-muted mb-0">Subject (User ID)</label>
-            <input type="text" name="userId" class="form-control form-control-sm"
-                   placeholder="GUID"
-                   value="@(Model.FilterUserId?.ToString() ?? string.Empty)" />
-        </div>
-        <div class="col-md-3">
-            <label class="form-label small text-muted mb-0">Actor (Admin ID)</label>
-            <input type="text" name="actorUserId" class="form-control form-control-sm"
-                   placeholder="GUID"
-                   value="@(Model.FilterActorUserId?.ToString() ?? string.Empty)" />
-        </div>
-        <div class="col-md-2">
-            <label class="form-label small text-muted mb-0">Action</label>
-            <input type="text" name="action" class="form-control form-control-sm"
-                   placeholder="ADMIN_…"
-                   value="@(Model.FilterAction ?? string.Empty)" />
-        </div>
-        <div class="col-md-2">
-            <label class="form-label small text-muted mb-0">From (UTC)</label>
-            <input type="datetime-local" name="from" class="form-control form-control-sm"
-                   value="@FmtDate(Model.FilterFrom)" />
-        </div>
-        <div class="col-md-2">
-            <label class="form-label small text-muted mb-0">To (UTC)</label>
-            <input type="datetime-local" name="to" class="form-control form-control-sm"
-                   value="@FmtDate(Model.FilterTo)" />
-        </div>
-        <div class="col-12 d-flex gap-2">
-            <button type="submit" class="btn btn-sm btn-outline-secondary">Filter</button>
-            @if (HasAnyFilter)
-            {
-                <a asp-action="Index" class="btn btn-sm btn-link">Clear filters</a>
-            }
-        </div>
-    </form>
-
-    @* ── §8.13 Export (CSV for a date range) ────────────────────────── *@
-    <permission require="@WebPermission.AuditLog.Export">
-        <form method="get" asp-area="Admin" asp-controller="AuditLogs" asp-action="Export"
-              class="row g-2 mb-3 align-items-end border-top pt-3">
-            <div class="col-md-3">
-                <label class="form-label small text-muted mb-0" for="export-from">Export from (UTC)</label>
-                <input type="datetime-local" id="export-from" name="from" class="form-control form-control-sm"
+@* ── Filter bar ──────────────────────────────────────────────────── *@
+<div class="card shadow mb-4">
+    <div class="card-header border-bottom">
+        <h2 class="card-header-title h5 mb-0">
+            <i class="fa-solid fa-filter fa-fw me-1 text-primary" aria-hidden="true"></i>
+            @Localizer["Admin.Audit.FiltersHeading"]
+        </h2>
+    </div>
+    <div class="card-body">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-6 col-xl-3">
+                <label class="form-label small mb-1" for="filter-userId">@Localizer["Admin.Audit.SubjectLabel"]</label>
+                <input type="text" id="filter-userId" name="userId" class="form-control form-control-sm"
+                       inputmode="text" dir="ltr"
+                       placeholder="@Localizer["Admin.Audit.GuidPlaceholder"]"
+                       aria-describedby="filter-userId-help"
+                       value="@(Model.FilterUserId?.ToString() ?? string.Empty)" />
+                <small id="filter-userId-help" class="form-text">@Localizer["Admin.Audit.SubjectHelp"]</small>
+            </div>
+            <div class="col-md-6 col-xl-3">
+                <label class="form-label small mb-1" for="filter-actorUserId">@Localizer["Admin.Audit.ActorLabel"]</label>
+                <input type="text" id="filter-actorUserId" name="actorUserId" class="form-control form-control-sm"
+                       inputmode="text" dir="ltr"
+                       placeholder="@Localizer["Admin.Audit.GuidPlaceholder"]"
+                       aria-describedby="filter-actorUserId-help"
+                       value="@(Model.FilterActorUserId?.ToString() ?? string.Empty)" />
+                <small id="filter-actorUserId-help" class="form-text">@Localizer["Admin.Audit.ActorHelp"]</small>
+            </div>
+            <div class="col-md-4 col-xl-2">
+                <label class="form-label small mb-1" for="filter-action">@Localizer["Admin.Audit.ActionLabel"]</label>
+                <input type="text" id="filter-action" name="action" class="form-control form-control-sm"
+                       dir="ltr"
+                       placeholder="@Localizer["Admin.Audit.ActionPlaceholder"]"
+                       value="@(Model.FilterAction ?? string.Empty)" />
+            </div>
+            <div class="col-md-4 col-xl-2">
+                <label class="form-label small mb-1" for="filter-from">@Localizer["Admin.Audit.FromLabel"]</label>
+                <input type="datetime-local" id="filter-from" name="from" class="form-control form-control-sm"
                        value="@FmtDate(Model.FilterFrom)" />
             </div>
-            <div class="col-md-3">
-                <label class="form-label small text-muted mb-0" for="export-to">Export to (UTC)</label>
-                <input type="datetime-local" id="export-to" name="to" class="form-control form-control-sm"
+            <div class="col-md-4 col-xl-2">
+                <label class="form-label small mb-1" for="filter-to">@Localizer["Admin.Audit.ToLabel"]</label>
+                <input type="datetime-local" id="filter-to" name="to" class="form-control form-control-sm"
                        value="@FmtDate(Model.FilterTo)" />
             </div>
-            <div class="col-md-3">
-                <button type="submit" class="btn btn-sm btn-outline-primary">
-                    <i class="fa-solid fa-file-csv fa-fw" aria-hidden="true"></i>
-                    <span>Export CSV</span>
+            <div class="col-12 d-flex flex-wrap gap-2">
+                <button type="submit" class="btn btn-sm btn-primary">
+                    <i class="fa-solid fa-magnifying-glass fa-fw me-1" aria-hidden="true"></i>
+                    @Localizer["Admin.Audit.ApplyFilters"]
                 </button>
+                @if (HasAnyFilter)
+                {
+                    <a asp-action="Index" class="btn btn-sm btn-outline-secondary">
+                        <i class="fa-solid fa-xmark fa-fw me-1" aria-hidden="true"></i>
+                        @Localizer["Admin.Audit.ClearFilters"]
+                    </a>
+                }
             </div>
         </form>
-    </permission>
 
-    @* ── Table ──────────────────────────────────────────────────────── *@
-    <table class="table table-sm table-bordered align-middle">
-        <thead class="table-light">
-            <tr>
-                <th style="white-space: nowrap;">Occurred (UTC)</th>
-                <th>Actor</th>
-                <th>Action</th>
-                <th>Target</th>
-                <th>Reason</th>
-                <th>IP</th>
-                <th>Details</th>
-            </tr>
-        </thead>
-        <tbody>
-            @if (Model.Logs.Count == 0)
-            {
-                <tr><td colspan="7" class="text-center text-muted py-4">No audit entries match the current filters.</td></tr>
-            }
+        @* §8.13 Export (CSV for a date range) *@
+        <permission require="@WebPermission.AuditLog.Export">
+            <form method="get" asp-area="Admin" asp-controller="AuditLogs" asp-action="Export"
+                  class="row g-3 align-items-end border-top mt-3 pt-3">
+                <div class="col-12">
+                    <h3 class="h6 mb-0 text-secondary">@Localizer["Admin.Audit.ExportHeading"]</h3>
+                </div>
+                <div class="col-md-6 col-xl-3">
+                    <label class="form-label small mb-1" for="export-from">@Localizer["Admin.Audit.ExportFromLabel"]</label>
+                    <input type="datetime-local" id="export-from" name="from" class="form-control form-control-sm"
+                           value="@FmtDate(Model.FilterFrom)" />
+                </div>
+                <div class="col-md-6 col-xl-3">
+                    <label class="form-label small mb-1" for="export-to">@Localizer["Admin.Audit.ExportToLabel"]</label>
+                    <input type="datetime-local" id="export-to" name="to" class="form-control form-control-sm"
+                           value="@FmtDate(Model.FilterTo)" />
+                </div>
+                <div class="col-md-6 col-xl-3">
+                    <button type="submit" class="btn btn-sm btn-outline-primary">
+                        <i class="fa-solid fa-file-csv fa-fw me-1" aria-hidden="true"></i>
+                        <span>@Localizer["Admin.Audit.ExportCsv"]</span>
+                    </button>
+                </div>
+            </form>
+        </permission>
+    </div>
+</div>
 
-            @foreach (var log in Model.Logs)
-            {
-                <tr>
-                    <td class="small text-nowrap">@log.OccurredAt.ToString("u")</td>
-                    <td>
-                        @if (log.ActorUserId.HasValue)
-                        {
-                            <a asp-area="Admin" asp-controller="Users"
-                               asp-action="Details" asp-route-userId="@log.ActorUserId">
-                                @log.ActorUserId.Value.ToString()[..8]…
-                            </a>
-                        }
-                        else
-                        {
-                            <span class="text-muted">—</span>
-                        }
-                    </td>
-                    <td><code class="small">@log.Action</code></td>
-                    <td>
-                        @if (log.UserId.HasValue)
-                        {
-                            <a asp-area="Admin" asp-controller="Users"
-                               asp-action="Details" asp-route-userId="@log.UserId">
-                                @log.UserId.Value.ToString()[..8]…
-                            </a>
-                        }
-                        else
-                        {
-                            <span class="text-muted">—</span>
-                        }
-                    </td>
-                    <td class="small">
-                        @if (string.IsNullOrWhiteSpace(log.Reason))
-                        {
-                            <span class="text-muted">—</span>
-                        }
-                        else
-                        {
-                            @log.Reason
-                        }
-                    </td>
-                    <td class="small text-nowrap">@(log.IpAddress ?? "—")</td>
-                    <td>
-                        <partial name="Partials/_MetadataDetails"
-                                 model="@log.Metadata"
-                                 view-data='new ViewDataDictionary(ViewData) { ["id-suffix"] = log.Id.ToString("N") }' />
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
-
-    @* ── Pagination (filters preserved across page changes) ─────────── *@
-    <div class="d-flex gap-2">
-        @if (Model.HasPrevious)
+@* ── Table ───────────────────────────────────────────────────────── *@
+<div class="card shadow">
+    <div class="card-header border-bottom">
+        <h2 class="card-header-title h5 mb-0">
+            <i class="fa-solid fa-clock-rotate-left fa-fw me-1 text-primary" aria-hidden="true"></i>
+            @Localizer["Admin.Audit.TimelineHeading"]
+        </h2>
+    </div>
+    <div class="card-body">
+        @if (Model.Logs.Count == 0)
         {
-            <a asp-action="Index"
-               asp-route-page="@(Model.Page - 1)"
-               asp-route-userId="@Model.FilterUserId"
-               asp-route-actorUserId="@Model.FilterActorUserId"
-               asp-route-action="@Model.FilterAction"
-               asp-route-from="@(Model.FilterFrom?.ToString("o"))"
-               asp-route-to="@(Model.FilterTo?.ToString("o"))"
-               class="btn btn-outline-secondary">← Previous</a>
+            <div class="text-center py-5">
+                <img src="~/assets/images/element/17.svg" alt="" width="80" height="80"
+                     class="h-80px mb-3" aria-hidden="true" />
+                <p class="mb-3 text-secondary">@Localizer["Admin.Audit.EmptyMessage"]</p>
+                @if (HasAnyFilter)
+                {
+                    <a asp-action="Index" class="btn btn-sm btn-primary-soft">
+                        <i class="fa-solid fa-xmark fa-fw me-1" aria-hidden="true"></i>
+                        @Localizer["Admin.Audit.ClearFilters"]
+                    </a>
+                }
+            </div>
         }
-        <span class="align-self-center text-muted">Page @Model.Page — @Model.TotalCount total</span>
-        @if (Model.HasNext)
+        else
         {
-            <a asp-action="Index"
-               asp-route-page="@(Model.Page + 1)"
-               asp-route-userId="@Model.FilterUserId"
-               asp-route-actorUserId="@Model.FilterActorUserId"
-               asp-route-action="@Model.FilterAction"
-               asp-route-from="@(Model.FilterFrom?.ToString("o"))"
-               asp-route-to="@(Model.FilterTo?.ToString("o"))"
-               class="btn btn-outline-secondary">Next →</a>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th scope="col" class="text-nowrap">@Localizer["Admin.Audit.ColOccurred"]</th>
+                            <th scope="col">@Localizer["Admin.Audit.ColActor"]</th>
+                            <th scope="col">@Localizer["Admin.Audit.ColAction"]</th>
+                            <th scope="col">@Localizer["Admin.Audit.ColTarget"]</th>
+                            <th scope="col">@Localizer["Admin.Audit.ColReason"]</th>
+                            <th scope="col">@Localizer["Admin.Audit.ColIp"]</th>
+                            <th scope="col">@Localizer["Admin.Audit.ColDetails"]</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var log in Model.Logs)
+                        {
+                            <tr>
+                                <td class="small text-nowrap">
+                                    <bdi dir="ltr">@FmtOccurred(log.OccurredAt)</bdi>
+                                </td>
+                                <td>
+                                    @if (log.ActorUserId.HasValue)
+                                    {
+                                        <a asp-area="Admin" asp-controller="Users"
+                                           asp-action="Details" asp-route-userId="@log.ActorUserId"
+                                           title="@log.ActorUserId">
+                                            <bdi dir="ltr">@ShortId(log.ActorUserId.Value)…</bdi>
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-secondary" aria-label="@Localizer["Admin.Audit.NotAvailable"]">—</span>
+                                    }
+                                </td>
+                                <td><code class="small"><bdi dir="ltr">@log.Action</bdi></code></td>
+                                <td>
+                                    @if (log.UserId.HasValue)
+                                    {
+                                        <a asp-area="Admin" asp-controller="Users"
+                                           asp-action="Details" asp-route-userId="@log.UserId"
+                                           title="@log.UserId">
+                                            <bdi dir="ltr">@ShortId(log.UserId.Value)…</bdi>
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-secondary" aria-label="@Localizer["Admin.Audit.NotAvailable"]">—</span>
+                                    }
+                                </td>
+                                <td class="small">
+                                    @if (string.IsNullOrWhiteSpace(log.Reason))
+                                    {
+                                        <span class="text-secondary" aria-label="@Localizer["Admin.Audit.NotAvailable"]">—</span>
+                                    }
+                                    else
+                                    {
+                                        @log.Reason
+                                    }
+                                </td>
+                                <td class="small text-nowrap">
+                                    @if (string.IsNullOrWhiteSpace(log.IpAddress))
+                                    {
+                                        <span class="text-secondary" aria-label="@Localizer["Admin.Audit.NotAvailable"]">—</span>
+                                    }
+                                    else
+                                    {
+                                        <bdi dir="ltr">@log.IpAddress</bdi>
+                                    }
+                                </td>
+                                <td>
+                                    <partial name="Partials/_MetadataDetails"
+                                             model="@log.Metadata"
+                                             view-data='new ViewDataDictionary(ViewData) { ["id-suffix"] = log.Id.ToString("N") }' />
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
         }
     </div>
+
+    @* ── Pagination (filters preserved across page changes; driven by HasPrevious/HasNext per D1) ── *@
+    @if (Model.Logs.Count > 0 && (Model.HasPrevious || Model.HasNext))
+    {
+        <div class="card-footer d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <span class="small text-secondary">
+                @Localizer["Admin.Audit.PageLabel"] <bdi>@Count(Model.Page)</bdi>
+            </span>
+            <div class="d-flex gap-2">
+                @if (Model.HasPrevious)
+                {
+                    <a asp-action="Index"
+                       asp-route-page="@(Model.Page - 1)"
+                       asp-route-userId="@Model.FilterUserId"
+                       asp-route-actorUserId="@Model.FilterActorUserId"
+                       asp-route-action="@Model.FilterAction"
+                       asp-route-from="@(Model.FilterFrom?.ToString("o"))"
+                       asp-route-to="@(Model.FilterTo?.ToString("o"))"
+                       class="btn btn-sm btn-outline-secondary">
+                        <i class="fa-solid fa-arrow-left fa-fw me-1" aria-hidden="true"></i>
+                        @Localizer["Admin.Audit.Previous"]
+                    </a>
+                }
+                @if (Model.HasNext)
+                {
+                    <a asp-action="Index"
+                       asp-route-page="@(Model.Page + 1)"
+                       asp-route-userId="@Model.FilterUserId"
+                       asp-route-actorUserId="@Model.FilterActorUserId"
+                       asp-route-action="@Model.FilterAction"
+                       asp-route-from="@(Model.FilterFrom?.ToString("o"))"
+                       asp-route-to="@(Model.FilterTo?.ToString("o"))"
+                       class="btn btn-sm btn-outline-secondary">
+                        @Localizer["Admin.Audit.Next"]
+                        <i class="fa-solid fa-arrow-right fa-fw ms-1" aria-hidden="true"></i>
+                    </a>
+                }
+            </div>
+        </div>
+    }
 </div>

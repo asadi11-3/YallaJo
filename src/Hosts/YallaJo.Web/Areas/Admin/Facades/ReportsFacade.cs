@@ -8,8 +8,13 @@ public sealed class ReportsFacade
 {
     private const int DefaultPageSize = 20;
     private readonly ReportsApiClient _api;
+    private readonly UsersApiClient _users;
 
-    public ReportsFacade(ReportsApiClient api) => _api = api;
+    public ReportsFacade(ReportsApiClient api, UsersApiClient users)
+    {
+        _api = api;
+        _users = users;
+    }
 
     public async Task<ApiResult<ReportsVm>> GetIndexAsync(Guid? afterCursor, int pageSize, CancellationToken ct)
     {
@@ -29,7 +34,47 @@ public sealed class ReportsFacade
             return ApiResult<ReportsVm>.Fail(result.StatusCode, result.Error ?? "Could not load reports.");
         }
 
-        return ApiResult<ReportsVm>.Ok(ReportsMapper.ToVm(result.Data));
+        var reporterEmails = await ResolveUserEmailsAsync(result.Data.Items.Select(r => r.ReporterUserId), ct);
+        return ApiResult<ReportsVm>.Ok(ReportsMapper.ToVm(result.Data, reporterEmails));
+    }
+
+    private async Task<IReadOnlyDictionary<Guid, string>> ResolveUserEmailsAsync(IEnumerable<Guid> userIds, CancellationToken ct)
+    {
+        var distinct = userIds.Where(id => id != Guid.Empty).Distinct().ToList();
+        if (distinct.Count == 0)
+        {
+            return new Dictionary<Guid, string>();
+        }
+
+        var pairs = await Task.WhenAll(distinct.Select(id => ResolveOneAsync(id, ct)));
+        var map = new Dictionary<Guid, string>();
+        foreach (var pair in pairs)
+        {
+            if (pair is { } kvp)
+            {
+                map[kvp.Key] = kvp.Value;
+            }
+        }
+
+        return map;
+    }
+
+    private async Task<KeyValuePair<Guid, string>?> ResolveOneAsync(Guid userId, CancellationToken ct)
+    {
+        try
+        {
+            var result = await _users.GetUserAsync(userId, ct);
+            if (result is { IsSuccess: true, Data: not null } && !string.IsNullOrWhiteSpace(result.Data.Email))
+            {
+                return new KeyValuePair<Guid, string>(userId, result.Data.Email);
+            }
+        }
+        catch
+        {
+            // Tolerant: leave unresolved so the view shows the localized fallback (F10).
+        }
+
+        return null;
     }
 
     public Task<ApiResult> ResolveAsync(Guid id, string action, string? notes, CancellationToken ct)

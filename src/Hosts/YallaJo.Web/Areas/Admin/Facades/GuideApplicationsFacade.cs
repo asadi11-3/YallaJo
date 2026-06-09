@@ -7,10 +7,21 @@ namespace YallaJo.Web.Areas.Admin.Facades;
 public sealed class GuideApplicationsFacade
 {
     private const int PageSize = 20;
+    private const int TourLookupPageSize = 200;
 
     private readonly GuideApplicationsApiClient _api;
+    private readonly AdminToursApiClient _tours;
+    private readonly UsersApiClient _users;
 
-    public GuideApplicationsFacade(GuideApplicationsApiClient api) => _api = api;
+    public GuideApplicationsFacade(
+        GuideApplicationsApiClient api,
+        AdminToursApiClient tours,
+        UsersApiClient users)
+    {
+        _api = api;
+        _tours = tours;
+        _users = users;
+    }
 
     public async Task<ApiResult<GuideApplicationsVm>> GetIndexAsync(
         Guid? tourId,
@@ -18,6 +29,9 @@ public sealed class GuideApplicationsFacade
         int page,
         CancellationToken ct)
     {
+        // Tour-name options always load so the F10 tour picker is available even on the no-context view.
+        var tourOptions = await LoadTourOptionsAsync(ct);
+
         if (tourId is not { } id || id == Guid.Empty)
         {
             return ApiResult<GuideApplicationsVm>.Ok(new GuideApplicationsVm
@@ -25,6 +39,7 @@ public sealed class GuideApplicationsFacade
                 StatusFilter = status,
                 Page = page,
                 PageSize = PageSize,
+                TourOptions = tourOptions,
             });
         }
 
@@ -41,8 +56,74 @@ public sealed class GuideApplicationsFacade
                 result.Error ?? "Could not load guide applications.");
         }
 
-        return ApiResult<GuideApplicationsVm>.Ok(
-            GuideApplicationsMapper.ToVm(result.Data, id, status, page, PageSize));
+        // Resolve applying-guide identities (F10) concurrently (API1).
+        var guideEmails = await ResolveGuideEmailsAsync(result.Data.Items.Select(i => i.GuideUserId), ct);
+
+        var vm = GuideApplicationsMapper.ToVm(result.Data, id, status, page, PageSize, guideEmails);
+        vm.TourOptions = tourOptions;
+        return ApiResult<GuideApplicationsVm>.Ok(vm);
+    }
+
+    private async Task<IReadOnlyList<GuideTourOptionVm>> LoadTourOptionsAsync(CancellationToken ct)
+    {
+        try
+        {
+            var result = await _tours.ListAsync(status: null, page: 1, pageSize: TourLookupPageSize, sort: null, ct);
+            if (result is not { IsSuccess: true, Data: not null })
+            {
+                return [];
+            }
+
+            return result.Data.Items
+                .Select(t => new GuideTourOptionVm { Id = t.Id, Name = t.Name })
+                .OrderBy(o => o.Name, StringComparer.CurrentCultureIgnoreCase)
+                .ToList();
+        }
+        catch
+        {
+            return [];
+        }
+    }
+
+    private async Task<IReadOnlyDictionary<Guid, string>> ResolveGuideEmailsAsync(
+        IEnumerable<Guid> userIds,
+        CancellationToken ct)
+    {
+        var distinct = userIds.Where(id => id != Guid.Empty).Distinct().ToList();
+        if (distinct.Count == 0)
+        {
+            return new Dictionary<Guid, string>();
+        }
+
+        var pairs = await Task.WhenAll(distinct.Select(id => ResolveOneAsync(id, ct)));
+        var map = new Dictionary<Guid, string>();
+        foreach (var pair in pairs)
+        {
+            if (pair is { } kv)
+            {
+                map[kv.Key] = kv.Value;
+            }
+        }
+
+        return map;
+    }
+
+    private async Task<KeyValuePair<Guid, string>?> ResolveOneAsync(Guid userId, CancellationToken ct)
+    {
+        try
+        {
+            var result = await _users.GetUserAsync(userId, ct);
+            if (result is { IsSuccess: true, Data: not null } && !string.IsNullOrWhiteSpace(result.Data.Email))
+            {
+                return new KeyValuePair<Guid, string>(userId, result.Data.Email);
+            }
+        }
+        catch
+        {
+            // Graceful F10 fallback: leave the name unresolved.
+        }
+
+        return null;
     }
 
     public Task<ApiResult> ApproveAsync(Guid tourId, Guid applicationId, CancellationToken ct) =>

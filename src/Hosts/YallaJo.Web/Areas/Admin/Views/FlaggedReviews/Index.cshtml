@@ -1,66 +1,101 @@
+@using System.Globalization
+@using Microsoft.Extensions.Localization
 @using YallaJo.Web.Areas.Admin.Models.FlaggedReviews
 @using YallaJo.Web.Infrastructure.Authorization
 @model FlaggedReviewsVm
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
-    ViewData["Title"] = "Flagged reviews";
+    ViewData["Title"] = Localizer["Admin.FlaggedReviews.Title"].Value;
     ViewData["AdminNav"] = "FlaggedReviews";
+    var culture = CultureInfo.CurrentCulture;
+    string Count(int n) => n.ToString("N0", culture);
+    string Rating(decimal r) => r.ToString("N1", culture);
+    string Date(DateTime dt) => dt.ToString("yyyy-MM-dd HH:mm", culture);
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="d-sm-flex justify-content-between align-items-center mb-4">
     <div>
-        <h1 class="h3 mb-1">Flagged reviews</h1>
-        <p class="text-secondary mb-0">Reviews flagged for moderation review.</p>
+        <h1 class="h3 mb-1">@Localizer["Admin.FlaggedReviews.Title"]</h1>
+        <p class="text-secondary mb-0">@Localizer["Admin.FlaggedReviews.Subtitle"]</p>
     </div>
 </div>
 
-@if (Model.Reviews.Count == 0)
+@if (ViewBag.Error is string err && !string.IsNullOrWhiteSpace(err))
 {
-    <div class="card card-body shadow text-center py-5">
-        <img src="~/assets/images/element/17.svg" class="h-80px mb-3 mx-auto" alt="" />
-        <p class="text-secondary mb-0">No flagged reviews to display.</p>
-    </div>
+    <div class="alert alert-danger" role="alert">@err</div>
 }
-else
-{
-    <div class="card shadow">
+
+<section class="card shadow" aria-labelledby="flagged-reviews-heading">
+    <div class="card-header border-bottom">
+        <h2 id="flagged-reviews-heading" class="card-header-title h5 mb-0">@Localizer["Admin.FlaggedReviews.Directory"]</h2>
+    </div>
+    @if (Model.Reviews.Count == 0)
+    {
+        <div class="card-body text-center py-5">
+            <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
+            <p class="mb-0 text-secondary">@Localizer["Admin.FlaggedReviews.EmptyMessage"]</p>
+        </div>
+    }
+    else
+    {
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
                 <thead>
                     <tr>
-                        <th>Review</th>
-                        <th>Rating</th>
-                        <th>Reports</th>
-                        <th>Status</th>
-                        <th>Created</th>
-                        <th class="text-end">Actions</th>
+                        <th scope="col">@Localizer["Admin.FlaggedReviews.ColReview"]</th>
+                        <th scope="col">@Localizer["Admin.FlaggedReviews.ColReviewer"]</th>
+                        <th scope="col">@Localizer["Admin.FlaggedReviews.ColTarget"]</th>
+                        <th scope="col" class="text-end">@Localizer["Admin.FlaggedReviews.ColRating"]</th>
+                        <th scope="col" class="text-end">@Localizer["Admin.FlaggedReviews.ColReports"]</th>
+                        <th scope="col">@Localizer["Admin.FlaggedReviews.ColStatus"]</th>
+                        <th scope="col">@Localizer["Admin.FlaggedReviews.ColCreated"]</th>
+                        <th scope="col" class="text-end">@Localizer["Admin.FlaggedReviews.ColActions"]</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach (var r in Model.Reviews)
                     {
+                        var color = FlaggedReviewsMapper.StatusColor(r.Status);
+                        var icon = FlaggedReviewsMapper.StatusIcon(r.Status);
                         <tr>
                             <td>
-                                <div class="fw-semibold">@(string.IsNullOrWhiteSpace(r.Title) ? "(no title)" : r.Title)</div>
+                                <div class="fw-semibold">@(string.IsNullOrWhiteSpace(r.Title) ? Localizer["Admin.FlaggedReviews.NoTitle"].Value : r.Title)</div>
                                 <div class="text-secondary small">@r.Content</div>
                                 @if (r.ProfanityFlagged)
                                 {
-                                    <span class="badge bg-danger bg-opacity-10 text-danger">Profanity flagged</span>
+                                    <span class="badge bg-danger bg-opacity-10 text-danger mt-1"><i class="fa-solid fa-triangle-exclamation fa-fw" aria-hidden="true"></i> @Localizer["Admin.FlaggedReviews.ProfanityFlagged"]</span>
                                 }
                             </td>
-                            <td class="font-data">@r.Rating.ToString("0.0")</td>
-                            <td class="font-data">@r.CurrentReportCount</td>
-                            <td><span class="badge bg-@FlaggedReviewsMapper.StatusColor(r.Status) bg-opacity-10 text-@FlaggedReviewsMapper.StatusColor(r.Status)">@r.Status</span></td>
-                            <td class="font-data">@r.CreatedAt.ToString("g")</td>
+                            <td>
+                                @if (string.IsNullOrWhiteSpace(r.ReviewerEmail))
+                                {
+                                    <span class="text-secondary">@Localizer["Admin.FlaggedReviews.UnknownReviewer"]</span>
+                                }
+                                else
+                                {
+                                    <bdi dir="ltr">@r.ReviewerEmail</bdi>
+                                }
+                            </td>
+                            <td>@r.TargetType</td>
+                            <td class="text-end"><bdi dir="ltr" class="font-data">@Rating(r.Rating)</bdi></td>
+                            <td class="text-end"><bdi class="font-data">@Count(r.CurrentReportCount)</bdi></td>
+                            <td>
+                                <span class="badge bg-@color bg-opacity-10 text-@color"><i class="fa-solid fa-@icon fa-fw" aria-hidden="true"></i> @r.Status</span>
+                            </td>
+                            <td><bdi dir="ltr" class="font-data">@Date(r.CreatedAt)</bdi></td>
                             <td class="text-end">
                                 <permission require="@WebPermission.AdminModerationQueue.Approve">
-                                    <form asp-action="Approve" asp-route-id="@r.Id" method="post" class="d-inline">
+                                    <form asp-action="Approve" asp-route-id="@r.Id" method="post" class="d-inline"
+                                          data-confirm="@Localizer["Admin.FlaggedReviews.ApproveConfirm"]"
+                                          data-confirm-title="@Localizer["Admin.FlaggedReviews.ApproveTitle"]"
+                                          data-confirm-action="@Localizer["Admin.FlaggedReviews.Approve"]">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="rowVersion" value="@r.RowVersion" />
-                                        <button type="submit" class="btn btn-sm btn-success-soft">Approve</button>
+                                        <button type="submit" class="btn btn-sm btn-success-soft"><i class="fa-solid fa-check fa-fw" aria-hidden="true"></i> @Localizer["Admin.FlaggedReviews.Approve"]</button>
                                     </form>
                                 </permission>
                                 <permission require="@WebPermission.AdminModerationQueue.Remove">
-                                    <button type="button" class="btn btn-sm btn-danger-soft" data-bs-toggle="modal" data-bs-target="#removeModal-@r.Id">Remove</button>
+                                    <button type="button" class="btn btn-sm btn-danger-soft" data-bs-toggle="modal" data-bs-target="#removeModal-@r.Id.ToString("N")"><i class="fa-solid fa-trash fa-fw" aria-hidden="true"></i> @Localizer["Admin.FlaggedReviews.Remove"]</button>
                                 </permission>
                             </td>
                         </tr>
@@ -68,34 +103,42 @@ else
                 </tbody>
             </table>
         </div>
-    </div>
 
-    @if (!string.IsNullOrEmpty(Model.NextCursor))
-    {
-        <div class="mt-3 text-center">
-            <a class="btn btn-outline-secondary" asp-action="Index" asp-route-afterCursor="@Model.NextCursor">Load more</a>
-        </div>
+        @if (!string.IsNullOrEmpty(Model.NextCursor))
+        {
+            <div class="card-footer border-top text-center">
+                <a class="btn btn-sm btn-outline-primary" asp-action="Index" asp-route-afterCursor="@Model.NextCursor">@Localizer["Admin.FlaggedReviews.LoadMore"]</a>
+            </div>
+        }
     }
+</section>
 
+@if (Model.Reviews.Count > 0)
+{
     <permission require="@WebPermission.AdminModerationQueue.Remove">
         @foreach (var r in Model.Reviews)
         {
-            <div class="modal fade" id="removeModal-@r.Id" tabindex="-1" aria-hidden="true">
-                <div class="modal-dialog">
-                    <form asp-action="Remove" asp-route-id="@r.Id" method="post" class="modal-content">
+            var modalId = "removeModal-" + r.Id.ToString("N");
+            var titleId = modalId + "-title";
+            var bodyId = modalId + "-body";
+            var reasonId = modalId + "-reason";
+            <div class="modal fade" id="@modalId" tabindex="-1" aria-labelledby="@titleId" aria-describedby="@bodyId" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+                <div class="modal-dialog modal-dialog-centered">
+                    <form asp-action="Remove" asp-route-id="@r.Id" method="post" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="@titleId">
                         @Html.AntiForgeryToken()
                         <input type="hidden" name="rowVersion" value="@r.RowVersion" />
                         <div class="modal-header">
-                            <h5 class="modal-title">Remove review</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            <h2 class="modal-title h5" id="@titleId">@Localizer["Admin.FlaggedReviews.RemoveTitle"]</h2>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Admin.FlaggedReviews.Close"]"></button>
                         </div>
-                        <div class="modal-body">
-                            <label class="form-label">Notes</label>
-                            <textarea name="notes" class="form-control" rows="3"></textarea>
+                        <div class="modal-body" id="@bodyId">
+                            <label class="form-label" for="@reasonId">@Localizer["Admin.FlaggedReviews.NotesLabel"]</label>
+                            <textarea id="@reasonId" name="notes" class="form-control" rows="3" maxlength="1000" aria-describedby="@reasonId-help"></textarea>
+                            <div class="form-text" id="@reasonId-help">@Localizer["Admin.FlaggedReviews.NotesHelp"]</div>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <button type="submit" class="btn btn-danger">Remove review</button>
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">@Localizer["Admin.FlaggedReviews.Cancel"]</button>
+                            <button type="submit" class="btn btn-danger">@Localizer["Admin.FlaggedReviews.Remove"]</button>
                         </div>
                     </form>
                 </div>

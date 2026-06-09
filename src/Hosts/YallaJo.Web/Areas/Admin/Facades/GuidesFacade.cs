@@ -6,15 +6,25 @@ namespace YallaJo.Web.Areas.Admin.Facades;
 
 public sealed class GuidesFacade
 {
-    private readonly GuidesApiClient _api;
+    private const int GuideLookupPageSize = 200;
 
-    public GuidesFacade(GuidesApiClient api) => _api = api;
+    private readonly GuidesApiClient _api;
+    private readonly UsersApiClient _users;
+
+    public GuidesFacade(GuidesApiClient api, UsersApiClient users)
+    {
+        _api = api;
+        _users = users;
+    }
 
     public async Task<ApiResult<GuidesVm>> GetIndexAsync(Guid? id, CancellationToken ct)
     {
+        // Always load the guide-name options so the picker shows names, never a raw GUID input (F10).
+        var options = await LoadGuideOptionsAsync(ct);
+
         if (id is not { } guideId || guideId == Guid.Empty)
         {
-            return ApiResult<GuidesVm>.Ok(new GuidesVm());
+            return ApiResult<GuidesVm>.Ok(new GuidesVm { GuideOptions = options });
         }
 
         var result = await _api.GetGuideAsync(guideId, ct);
@@ -28,7 +38,60 @@ public sealed class GuidesFacade
             return ApiResult<GuidesVm>.Fail(result.StatusCode, result.Error ?? "Could not load the guide profile.");
         }
 
-        return ApiResult<GuidesVm>.Ok(GuidesMapper.ToVm(result.Data));
+        // Resolve the guide's account email so we show a human identity, not the raw UserId GUID (F10).
+        var email = await ResolveUserEmailAsync(result.Data.UserId, ct);
+
+        var vm = GuidesMapper.ToVm(result.Data, email);
+        vm.GuideOptions = options;
+        return ApiResult<GuidesVm>.Ok(vm);
+    }
+
+    private async Task<IReadOnlyList<GuideOptionVm>> LoadGuideOptionsAsync(CancellationToken ct)
+    {
+        try
+        {
+            var result = await _api.ListAsync(1, GuideLookupPageSize, ct);
+            if (result is not { IsSuccess: true, Data: not null })
+            {
+                return [];
+            }
+
+            return result.Data.Items
+                .Select(g => new GuideOptionVm
+                {
+                    Id = g.Id,
+                    Name = string.IsNullOrWhiteSpace(g.DisplayName) ? g.Id.ToString("D") : g.DisplayName!,
+                })
+                .OrderBy(o => o.Name, StringComparer.CurrentCultureIgnoreCase)
+                .ToList();
+        }
+        catch
+        {
+            return [];
+        }
+    }
+
+    private async Task<string?> ResolveUserEmailAsync(Guid userId, CancellationToken ct)
+    {
+        if (userId == Guid.Empty)
+        {
+            return null;
+        }
+
+        try
+        {
+            var result = await _users.GetUserAsync(userId, ct);
+            if (result is { IsSuccess: true, Data: not null } && !string.IsNullOrWhiteSpace(result.Data.Email))
+            {
+                return result.Data.Email;
+            }
+        }
+        catch
+        {
+            // Graceful F10 fallback — the view shows a localized "unknown" label, never a raw GUID.
+        }
+
+        return null;
     }
 
     public Task<ApiResult> SuspendAsync(Guid guideId, string reason, CancellationToken ct)

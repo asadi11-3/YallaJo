@@ -1,4 +1,5 @@
 @inject ICurrentUser CurrentUser
+@inject Microsoft.Extensions.Localization.IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @*
     Admin console layout — adapted from the Webestica "Booking" Bootstrap 5 admin theme (admin-dashboard.html).
 
@@ -14,9 +15,12 @@
 *@
 @{
     var displayName = User.Identity?.Name ?? "Account";
+    var adminCulture = System.Globalization.CultureInfo.CurrentUICulture;
+    var adminLang = adminCulture.TwoLetterISOLanguageName;
+    var adminDir = adminCulture.TextInfo.IsRightToLeft ? "rtl" : "ltr";
 }
 <!DOCTYPE html>
-<html lang="en">
+<html lang="@adminLang" dir="@adminDir">
 <head>
     @* dark mode switch (must run before stylesheets paint to avoid a flash of the wrong theme) *@
     <script>
@@ -75,30 +79,9 @@
                     })
             }
         })
-
-        // Language toggle — must run after the DOM is ready so the buttons exist
-        window.addEventListener('DOMContentLoaded', function () {
-            var buttons = document.querySelectorAll('.lang-toggle-btn');
-
-            function applyLang(lang, dir) {
-                document.documentElement.setAttribute('lang', lang);
-                document.documentElement.setAttribute('dir', dir);
-                buttons.forEach(function (b) {
-                    b.classList.toggle('active', b.dataset.lang === lang);
-                });
-            }
-
-            buttons.forEach(function (btn) {
-                btn.addEventListener('click', function () {
-                    applyLang(this.dataset.lang, this.dataset.dir);
-                    // TODO: hook into your i18n / routing (e.g. /ar/... vs /en/...)
-                });
-            });
-
-            // Default to English LTR
-            applyLang('en', 'ltr');
-        });
     </script>
+    @* Language switch — sets the ASP.NET Core culture cookie + reloads so IStringLocalizer renders the chosen culture (§2). *@
+    <script src="~/assets/js/language-toggle.js" asp-append-version="true" defer></script>
 
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -122,6 +105,12 @@
 
     @* Theme CSS (bundles Bootstrap v5.3.0) *@
     <link rel="stylesheet" type="text/css" href="~/assets/css/style.css" />
+
+    @* RTL overrides — loaded only for right-to-left cultures (UI-UX-Design.md §2) *@
+    @if (adminDir == "rtl")
+    {
+        <link rel="stylesheet" type="text/css" href="~/assets/css/rtl.css" asp-append-version="true" />
+    }
 
     @* Per-view extra styles *@
     @await RenderSectionAsync("Styles", required: false)
@@ -154,26 +143,7 @@
             background-color: var(--bs-dark, #14191e);
             color: #fff;
         }
-
-        /* ===== RTL fixes for header dropdowns ===== */
-        [dir="rtl"] .navbar .dropdown-menu-end {
-            right: auto !important;
-            left: 0 !important;
-        }
-        [dir="rtl"] .navbar .dropdown-menu,
-        [dir="rtl"] .navbar .dropdown-item,
-        [dir="rtl"] .navbar .card-header,
-        [dir="rtl"] .navbar .list-group-item {
-            text-align: right;
-        }
-        [dir="rtl"] .navbar .dropdown-menu .avatar.me-3 {
-            margin-right: 0 !important;
-            margin-left: 1rem !important;
-        }
-        [dir="rtl"] .notif-badge {
-            right: auto;
-            left: 0.5rem;
-        }
+        @* RTL layout/dropdown fixes now live in ~/assets/css/rtl.css (loaded above when dir=rtl). *@
     </style>
 
     @* Import map for fingerprinted JS modules served via MapStaticAssets()/.WithStaticAssets(). *@
@@ -206,12 +176,12 @@
                     <div class="d-flex align-items-center justify-content-between text-primary-hover mt-auto p-3">
                         <form asp-area="Auth" asp-controller="Auth" asp-action="Logout" method="post" class="mb-0">
                             @Html.AntiForgeryToken()
-                            <button type="submit" class="btn btn-link p-0 text-body" title="Sign Out">
-                                <i class="bi bi-power fa-fw me-1"></i>Sign Out
+                            <button type="submit" class="btn btn-link p-0 text-body" title="@Localizer["Admin.Nav.SignOut"]">
+                                <i class="bi bi-power fa-fw me-1" aria-hidden="true"></i>@Localizer["Admin.Nav.SignOut"]
                             </button>
                         </form>
                         <permission require="@WebPermission.System.Update">
-                            <a class="h5 mb-0 text-body" asp-area="Admin" asp-controller="Home" asp-action="Index" title="Settings"><i class="bi bi-gear fa-fw"></i></a>
+                            <a class="h5 mb-0 text-body" asp-area="Admin" asp-controller="Home" asp-action="Index" title="@Localizer["Admin.Nav.Settings"]" aria-label="@Localizer["Admin.Nav.Settings"]"><i class="bi bi-gear fa-fw" aria-hidden="true"></i></a>
                         </permission>
                     </div>
                     @* Sidebar footer END *@

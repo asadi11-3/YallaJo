@@ -60,87 +60,8 @@
         <script type="application/ld+json">@Html.Raw(seoJsonLd)</script>
     }
 
-    <script>
-        const storedTheme = localStorage.getItem('theme')
-
-        const getPreferredTheme = () => {
-        if (storedTheme) {
-        return storedTheme
-        }
-        return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
-        }
-
-        const setTheme = function (theme) {
-        if (theme === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        document.documentElement.setAttribute('data-bs-theme', 'dark')
-        } else {
-        document.documentElement.setAttribute('data-bs-theme', theme)
-        }
-        }
-
-        setTheme(getPreferredTheme())
-
-        window.addEventListener('DOMContentLoaded', () => {
-        var el = document.querySelector('.theme-icon-active');
-        if(el != 'undefined' && el != null) {
-        const showActiveTheme = theme => {
-        const activeThemeIcon = document.querySelector('.theme-icon-active use')
-        const btnToActive = document.querySelector(`[data-bs-theme-value="${theme}"]`)
-        const svgOfActiveBtn = btnToActive.querySelector('.mode-switch use').getAttribute('href')
-
-        document.querySelectorAll('[data-bs-theme-value]').forEach(element => {
-        element.classList.remove('active')
-        })
-
-        btnToActive.classList.add('active')
-        activeThemeIcon.setAttribute('href', svgOfActiveBtn)
-        }
-
-        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
-        if (storedTheme !== 'light' || storedTheme !== 'dark') {
-        setTheme(getPreferredTheme())
-        }
-        })
-
-        showActiveTheme(getPreferredTheme())
-
-        document.querySelectorAll('[data-bs-theme-value]')
-        .forEach(toggle => {
-        toggle.addEventListener('click', () => {
-        const theme = toggle.getAttribute('data-bs-theme-value')
-        localStorage.setItem('theme', theme)
-        setTheme(theme)
-        showActiveTheme(theme)
-        })
-        })
-
-        }
-        });
-
-        // Language toggle — must run after the DOM is ready so the buttons exist
-        window.addEventListener('DOMContentLoaded', function () {
-        var buttons = document.querySelectorAll('.lang-toggle-btn');
-
-        function applyLang(lang, dir) {
-        document.documentElement.setAttribute('lang', lang);
-        document.documentElement.setAttribute('dir', dir);
-        buttons.forEach(function (b) {
-        b.classList.toggle('active', b.dataset.lang === lang);
-        });
-        }
-
-        buttons.forEach(function (btn) {
-        btn.addEventListener('click', function () {
-        applyLang(this.dataset.lang, this.dataset.dir);
-        // TODO: hook into your i18n / routing (e.g. /ar/... vs /en/...)
-        });
-        });
-
-        // Default
-        applyLang('en', 'ltr');
-        });
-
-    </script>
+    @* Language toggle: persists culture via the .AspNetCore.Culture cookie + reload (CookieRequestCultureProvider). CSP-safe external script per A6/SEC1/J3. *@
+    <script src="~/assets/js/language-toggle.js" asp-append-version="true" defer></script>
 
     @* favicon *@
     <link rel="shortcut icon" href="~/assets/images/favicon.ico" />
@@ -160,6 +81,13 @@
 
     @* Theme CSS (bundles Bootstrap v5.3.0) *@
     <link rel="stylesheet" type="text/css" href="~/assets/css/style.css" />
+
+    @* RTL overrides — loaded only for right-to-left cultures (UI-UX-Design.md §2) *@
+    @if (seoDir == "rtl")
+    {
+        <link rel="stylesheet" type="text/css" href="~/assets/css/rtl.css" asp-append-version="true" />
+    }
+
 
     @* Per-view extra styles *@
     @await RenderSectionAsync("Styles", required: false)
@@ -228,7 +156,7 @@
 
 <body class="has-navbar-mobile">
 
-    <partial name="_Navbar" />
+    <partial name="_Navbar2" />
 
     @* **************** MAIN CONTENT START **************** *@
     <main>

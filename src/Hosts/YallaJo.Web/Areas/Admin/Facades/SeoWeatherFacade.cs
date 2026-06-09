@@ -5,21 +5,32 @@
 namespace YallaJo.Web.Areas.Admin.Facades;
 
 using YallaJo.Web.Areas.Admin.ApiClients;
+using YallaJo.Web.Areas.Admin.Models.Places;
 using YallaJo.Web.Areas.Admin.Models.SeoWeather;
 using YallaJo.Web.Infrastructure.Api.Contracts;
 
 public sealed class SeoWeatherFacade
 {
-    private readonly SeoWeatherApiClient _api;
+    private const int PlaceLookupPageSize = 200;
 
-    public SeoWeatherFacade(SeoWeatherApiClient api) => _api = api;
+    private readonly SeoWeatherApiClient _api;
+    private readonly PlacesApiClient _places;
+
+    public SeoWeatherFacade(SeoWeatherApiClient api, PlacesApiClient places)
+    {
+        _api = api;
+        _places = places;
+    }
 
     public async Task<ApiResult<SeoWeatherVm>> GetAsync(Guid? placeId, CancellationToken ct = default)
     {
+        var placeOptions = await LoadPlaceOptionsAsync(ct);
+
         var vm = new SeoWeatherVm
         {
             PlaceId = placeId,
             RefreshForm = new RefreshWeatherFormVm { PlaceId = placeId ?? Guid.Empty },
+            PlaceOptions = placeOptions,
         };
 
         if (placeId is null || placeId == Guid.Empty)
@@ -47,6 +58,27 @@ public sealed class SeoWeatherFacade
         vm.HasQueried = true;
         vm.Weather = SeoWeatherMapper.ToDetail(result.Data);
         return ApiResult<SeoWeatherVm>.Ok(vm);
+    }
+
+    private async Task<IReadOnlyList<WeatherPlaceOptionVm>> LoadPlaceOptionsAsync(CancellationToken ct)
+    {
+        try
+        {
+            var result = await _places.ListAsync(1, PlaceLookupPageSize, new PlaceListFilterVm(), ct);
+            if (result is not { IsSuccess: true, Data: not null })
+            {
+                return [];
+            }
+
+            return result.Data.Items
+                .Select(p => new WeatherPlaceOptionVm { Id = p.Id, Name = p.Name })
+                .OrderBy(o => o.Name, StringComparer.CurrentCultureIgnoreCase)
+                .ToList();
+        }
+        catch
+        {
+            return [];
+        }
     }
 
     public Task<ApiResult> RefreshAsync(RefreshWeatherFormVm form, CancellationToken ct = default)

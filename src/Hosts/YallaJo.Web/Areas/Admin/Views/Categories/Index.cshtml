@@ -1,119 +1,194 @@
+@using Microsoft.Extensions.Localization
 @using YallaJo.Web.Infrastructure.Authorization
 @model YallaJo.Web.Areas.Admin.Models.Categories.CategoryListVm
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
-    ViewData["Title"] = "Categories";
-    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = Localizer["Admin.Categories.Title"].Value;
+    ViewData["AdminNav"] = "Categories";
 }
 
-<div class="container mt-4">
-    <h1 class="h3 mb-3">Categories</h1>
+<div class="d-sm-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-1">@Localizer["Admin.Categories.Title"]</h1>
+        <p class="text-secondary mb-0">@Localizer["Admin.Categories.Subtitle"]</p>
+    </div>
+</div>
 
-    @* Success/Error flash banners are rendered globally by the shared _Alerts partial (in _Layout). *@
-    @if (ViewBag.Error       is string vbe) { <div class="alert alert-danger">@vbe</div> }
+@if (ViewBag.Error is string vbe)
+{
+    <div class="alert alert-danger" role="alert">@vbe</div>
+}
 
-    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
-
-    <permission require="@WebPermission.Category.Create">
-        <div class="card mb-4 p-3">
-            <h5>Create Category</h5>
+<permission require="@WebPermission.Category.Create">
+    <section class="card shadow mb-4" aria-labelledby="create-category-heading">
+        <div class="card-header border-bottom">
+            <h2 id="create-category-heading" class="card-header-title h5 mb-0">@Localizer["Admin.Categories.CreateHeading"]</h2>
+        </div>
+        <div class="card-body">
             <form asp-area="Admin" asp-controller="Categories" asp-action="Create" method="post">
                 @Html.AntiForgeryToken()
-                <div class="row g-2">
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3" role="alert"></div>
+                <div class="row g-3">
                     <div class="col-md-3">
-                        <label asp-for="Create.Name" class="form-label"></label>
-                        <input asp-for="Create.Name" class="form-control" />
-                        <span asp-validation-for="Create.Name" class="text-danger"></span>
+                        <label asp-for="Create.Name" class="form-label">@Localizer["Admin.Categories.NameLabel"]</label>
+                        <input asp-for="Create.Name" class="form-control" aria-describedby="create-name-help" />
+                        <small id="create-name-help" class="form-text">@Localizer["Admin.Categories.NameHelp"]</small>
+                        <span asp-validation-for="Create.Name" class="text-danger" role="alert"></span>
                     </div>
                     <div class="col-md-2">
-                        <label asp-for="Create.Slug" class="form-label"></label>
-                        <input asp-for="Create.Slug" class="form-control" />
-                        <span asp-validation-for="Create.Slug" class="text-danger"></span>
+                        <label asp-for="Create.Slug" class="form-label">@Localizer["Admin.Categories.SlugLabel"]</label>
+                        <input asp-for="Create.Slug" class="form-control" dir="ltr" aria-describedby="create-slug-help" />
+                        <small id="create-slug-help" class="form-text">@Localizer["Admin.Categories.SlugHelp"]</small>
+                        <span asp-validation-for="Create.Slug" class="text-danger" role="alert"></span>
                     </div>
                     <div class="col-md-3">
-                        <label asp-for="Create.ParentCategoryId" class="form-label"></label>
-                        <select asp-for="Create.ParentCategoryId" class="form-select">
-                            <option value="">— none (root) —</option>
+                        <label asp-for="Create.ParentCategoryId" class="form-label">@Localizer["Admin.Categories.ParentLabel"]</label>
+                        <select asp-for="Create.ParentCategoryId" class="form-select" aria-describedby="create-parent-help">
+                            <option value="">@Localizer["Admin.Categories.ParentNone"]</option>
                             @foreach (var c in Model.Categories)
                             {
-                                <option value="@c.Id">@(new string('—', c.Depth)) @c.Name</option>
+                                var label = new string('\u2014', c.Depth) + " " + c.Name;
+                                <option value="@c.Id">@label</option>
                             }
                         </select>
+                        <small id="create-parent-help" class="form-text">@Localizer["Admin.Categories.ParentHelp"]</small>
+                    </div>
+                    <div class="col-md-2">
+                        <label asp-for="Create.Icon" class="form-label">@Localizer["Admin.Categories.IconLabel"]</label>
+                        <input asp-for="Create.Icon" class="form-control" dir="ltr" />
                     </div>
                     <div class="col-md-1">
-                        <label asp-for="Create.Icon" class="form-label"></label>
-                        <input asp-for="Create.Icon" class="form-control" />
+                        <label asp-for="Create.SortOrder" class="form-label">@Localizer["Admin.Categories.SortLabel"]</label>
+                        <input asp-for="Create.SortOrder" class="form-control" dir="ltr" />
                     </div>
                     <div class="col-md-1">
-                        <label asp-for="Create.SortOrder" class="form-label"></label>
-                        <input asp-for="Create.SortOrder" class="form-control" />
+                        <label asp-for="Create.SourceLanguageCode" class="form-label">@Localizer["Admin.Categories.LanguageLabel"]</label>
+                        <input asp-for="Create.SourceLanguageCode" class="form-control" dir="ltr" />
                     </div>
-                    <div class="col-md-1">
-                        <label asp-for="Create.SourceLanguageCode" class="form-label">Lang</label>
-                        <input asp-for="Create.SourceLanguageCode" class="form-control" />
-                    </div>
-                    <div class="col-md-1 d-flex align-items-end">
-                        <button type="submit" class="btn btn-primary">Create</button>
-                    </div>
+                </div>
+                <div class="mt-3">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fa-solid fa-plus fa-fw" aria-hidden="true"></i> @Localizer["Admin.Categories.CreateSubmit"]
+                    </button>
                 </div>
             </form>
         </div>
-    </permission>
+    </section>
+</permission>
 
-    <table class="table table-sm table-bordered align-middle">
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>Slug</th>
-                <th>Icon</th>
-                <th>Sort</th>
-                <th>Active</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var c in Model.Categories)
-            {
-                <tr>
-                    <td>@(new string('·', c.Depth * 2)) @c.Name</td>
-                    <td>@c.Slug</td>
-                    <td>@(c.Icon ?? "—")</td>
-                    <td>@c.SortOrder</td>
-                    <td>@(c.IsActive ? "✓" : "—")</td>
-                    <td>
-                        <permission require="@WebPermission.Category.Update">
-                            <a asp-area="Admin" asp-controller="Categories" asp-action="Edit" asp-route-id="@c.Id"
-                               class="btn btn-sm btn-outline-secondary">Edit</a>
-                            @if (c.IsActive)
-                            {
-                                <form asp-area="Admin" asp-controller="Categories" asp-action="Deactivate" asp-route-id="@c.Id"
-                                      method="post" class="d-inline">
-                                    @Html.AntiForgeryToken()
-                                    <button type="submit" class="btn btn-sm btn-outline-warning">Deactivate</button>
-                                </form>
-                            }
-                            else
-                            {
-                                <form asp-area="Admin" asp-controller="Categories" asp-action="Activate" asp-route-id="@c.Id"
-                                      method="post" class="d-inline">
-                                    @Html.AntiForgeryToken()
-                                    <button type="submit" class="btn btn-sm btn-outline-success">Activate</button>
-                                </form>
-                            }
-                        </permission>
-                        <permission require="@WebPermission.Category.Delete">
-                            <form asp-area="Admin" asp-controller="Categories" asp-action="Delete" asp-route-id="@c.Id"
-                                  method="post" class="d-inline">
-                                @Html.AntiForgeryToken()
-                                <button type="submit" class="btn btn-sm btn-outline-danger"
-                                        onclick="return confirm('Delete this category?');">Delete</button>
-                            </form>
-                        </permission>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
-</div>
+<section class="card shadow" aria-labelledby="categories-heading">
+    <div class="card-header border-bottom">
+        <h2 id="categories-heading" class="card-header-title h5 mb-0">@Localizer["Admin.Categories.Directory"]</h2>
+    </div>
+    <div class="card-body">
+        @if (Model.Categories.Count == 0)
+        {
+            <div class="text-center py-5">
+                <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
+                <p class="mb-0 text-secondary">@Localizer["Admin.Categories.EmptyMessage"]</p>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th scope="col">@Localizer["Admin.Categories.ColName"]</th>
+                            <th scope="col">@Localizer["Admin.Categories.ColSlug"]</th>
+                            <th scope="col">@Localizer["Admin.Categories.ColIcon"]</th>
+                            <th scope="col" class="text-end">@Localizer["Admin.Categories.ColSort"]</th>
+                            <th scope="col">@Localizer["Admin.Categories.ColStatus"]</th>
+                            <th scope="col" class="text-end">@Localizer["Admin.Categories.ColActions"]</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var c in Model.Categories)
+                        {
+                            var indent = new string('\u00a0', c.Depth * 4);
+                            <tr>
+                                <td>
+                                    <span class="text-secondary" aria-hidden="true">@indent</span><span class="fw-semibold">@c.Name</span>
+                                </td>
+                                <td><bdi dir="ltr" class="font-data">@c.Slug</bdi></td>
+                                <td>
+                                    @if (string.IsNullOrWhiteSpace(c.Icon))
+                                    {
+                                        <span class="text-secondary" aria-label="@Localizer["Admin.Categories.NoIcon"]">&mdash;</span>
+                                    }
+                                    else
+                                    {
+                                        <bdi dir="ltr" class="font-data">@c.Icon</bdi>
+                                    }
+                                </td>
+                                <td class="text-end"><bdi class="font-data">@c.SortOrder</bdi></td>
+                                <td>
+                                    @if (c.IsActive)
+                                    {
+                                        <span class="badge bg-success bg-opacity-10 text-success">
+                                            <i class="fa-solid fa-circle-check fa-fw" aria-hidden="true"></i> @Localizer["Admin.Categories.StatusActive"]
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary bg-opacity-10 text-secondary">
+                                            <i class="fa-solid fa-circle-minus fa-fw" aria-hidden="true"></i> @Localizer["Admin.Categories.StatusInactive"]
+                                        </span>
+                                    }
+                                </td>
+                                <td class="text-end">
+                                    <div class="btn-group">
+                                        <permission require="@WebPermission.Category.Update">
+                                            <a asp-area="Admin" asp-controller="Categories" asp-action="Edit" asp-route-id="@c.Id"
+                                               class="btn btn-sm btn-outline-secondary">
+                                                <i class="fa-solid fa-pen fa-fw" aria-hidden="true"></i> @Localizer["Admin.Categories.Manage"]
+                                            </a>
+                                            @if (c.IsActive)
+                                            {
+                                                <form asp-area="Admin" asp-controller="Categories" asp-action="Deactivate" asp-route-id="@c.Id"
+                                                      method="post" class="d-inline"
+                                                      data-confirm="@Localizer["Admin.Categories.DeactivateConfirm", c.Name]"
+                                                      data-confirm-title="@Localizer["Admin.Categories.DeactivateTitle"]"
+                                                      data-confirm-action="@Localizer["Admin.Categories.Deactivate"]">
+                                                    @Html.AntiForgeryToken()
+                                                    <button type="submit" class="btn btn-sm btn-outline-warning">
+                                                        <i class="fa-solid fa-circle-pause fa-fw" aria-hidden="true"></i> @Localizer["Admin.Categories.Deactivate"]
+                                                    </button>
+                                                </form>
+                                            }
+                                            else
+                                            {
+                                                <form asp-area="Admin" asp-controller="Categories" asp-action="Activate" asp-route-id="@c.Id"
+                                                      method="post" class="d-inline">
+                                                    @Html.AntiForgeryToken()
+                                                    <button type="submit" class="btn btn-sm btn-outline-success">
+                                                        <i class="fa-solid fa-circle-play fa-fw" aria-hidden="true"></i> @Localizer["Admin.Categories.Activate"]
+                                                    </button>
+                                                </form>
+                                            }
+                                        </permission>
+                                        <permission require="@WebPermission.Category.Delete">
+                                            <form asp-area="Admin" asp-controller="Categories" asp-action="Delete" asp-route-id="@c.Id"
+                                                  method="post" class="d-inline"
+                                                  data-confirm="@Localizer["Admin.Categories.DeleteConfirm", c.Name]"
+                                                  data-confirm-title="@Localizer["Admin.Categories.DeleteTitle"]"
+                                                  data-confirm-action="@Localizer["Admin.Categories.Delete"]">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                    <i class="fa-solid fa-trash fa-fw" aria-hidden="true"></i> @Localizer["Admin.Categories.Delete"]
+                                                </button>
+                                            </form>
+                                        </permission>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</section>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />

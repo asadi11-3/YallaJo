@@ -164,7 +164,14 @@ builder.Services.AddOutputCache(options =>
 // Provider order is the framework default: QueryString → Cookie → Accept-Language,
 // matching the plan. The cookie provider lets the language switcher persist a
 // choice. Resources live under /Resources (e.g. Resources/SharedResource.ar.resx).
-builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
+//
+// IMPORTANT: ResourcesPath is left EMPTY on purpose. The marker type is
+// YallaJo.Web.Resources.SharedResource — its namespace ALREADY encodes the
+// "Resources" folder. ASP.NET Core builds the resource base name by prepending
+// ResourcesPath to the type's namespace-relative path, so a non-empty
+// ResourcesPath="Resources" would resolve to Resources/Resources/SharedResource.*.resx
+// (a path that does not exist) and EVERY key would fall back to its own name.
+builder.Services.AddLocalization();
 
 string[] supportedCultures = ["ar", "en"];
 builder.Services.Configure<RequestLocalizationOptions>(options =>

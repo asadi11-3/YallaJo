@@ -1,66 +1,113 @@
+@using Microsoft.Extensions.Localization
 @using YallaJo.Web.Infrastructure.Authorization
 @using YallaJo.Web.Areas.Admin.Models.BlogTranslations
 @model BlogTranslationsIndexVm
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
-    ViewData["Title"] = "Blog translations";
-    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = Localizer["Admin.BlogTranslations.Title"].Value;
+    ViewData["AdminNav"] = "Blogs";
 }
 
-<div class="container mt-4">
+<div class="d-sm-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-1">@Localizer["Admin.BlogTranslations.Heading"]</h1>
+        <p class="mb-0 text-secondary">@Localizer["Admin.BlogTranslations.Subtitle"]</p>
+    </div>
     <a asp-area="Admin" asp-controller="Blogs" asp-action="Edit" asp-route-id="@Model.BlogId"
-       class="btn btn-sm btn-outline-secondary mb-3">← Back to blog</a>
-
-    <h2 class="mb-3">Translations</h2>
-
-    @* Success/Error flash banners are rendered globally by the shared _Alerts partial. *@
-
-    @if (!Model.HasArabic)
-    {
-        <div class="alert alert-warning">
-            An Arabic (<code>ar</code>) translation is required before this blog can be published.
-        </div>
-    }
-
-    @if (!Model.HasTranslations)
-    {
-        <div class="alert alert-info">No translations yet.</div>
-    }
-    else
-    {
-        <div class="table-responsive">
-            <table class="table table-hover align-middle">
-                <thead>
-                    <tr>
-                        <th>Language</th>
-                        <th>Title</th>
-                        <th>Summary</th>
-                        <th class="text-end">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var t in Model.Translations)
-                    {
-                        <tr>
-                            <td><span class="badge text-bg-secondary text-uppercase">@t.LanguageCode</span></td>
-                            <td>@t.Title</td>
-                            <td>@(string.IsNullOrWhiteSpace(t.SummaryPreview) ? "—" : t.SummaryPreview)</td>
-                            <td class="text-end">
-                                <permission require="@WebPermission.Blog.Update">
-                                    <a asp-area="Admin" asp-controller="BlogTranslations" asp-action="Edit"
-                                       asp-route-id="@Model.BlogId" asp-route-languageCode="@t.LanguageCode"
-                                       class="btn btn-sm btn-outline-primary">Edit</a>
-                                </permission>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
-    }
-
-    <permission require="@WebPermission.Blog.Update">
-        <a asp-area="Admin" asp-controller="BlogTranslations" asp-action="Edit"
-           asp-route-id="@Model.BlogId" asp-route-languageCode="ar"
-           class="btn btn-primary">@(Model.HasArabic ? "Edit Arabic translation" : "Add Arabic translation")</a>
-    </permission>
+       class="btn btn-sm btn-outline-secondary">
+        <i class="fa-solid fa-arrow-left fa-fw" aria-hidden="true"></i>
+        @Localizer["Admin.BlogTranslations.BackToBlog"]
+    </a>
 </div>
+
+@if (!Model.HasArabic)
+{
+    <div class="alert alert-warning" role="alert">
+        <i class="fa-solid fa-triangle-exclamation fa-fw me-1" aria-hidden="true"></i>
+        @Localizer["Admin.BlogTranslations.ArabicRequired"]
+    </div>
+}
+
+<section class="card shadow" aria-labelledby="translations-heading">
+    <div class="card-header border-bottom">
+        <h2 id="translations-heading" class="card-header-title h5 mb-0">@Localizer["Admin.BlogTranslations.Directory"]</h2>
+    </div>
+    <div class="card-body">
+        @if (!Model.HasTranslations)
+        {
+            <div class="text-center py-5">
+                <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
+                <p class="mb-3 text-secondary">@Localizer["Admin.BlogTranslations.EmptyMessage"]</p>
+                <permission require="@WebPermission.Blog.Update">
+                    <a asp-area="Admin" asp-controller="BlogTranslations" asp-action="Edit"
+                       asp-route-id="@Model.BlogId" asp-route-languageCode="ar"
+                       class="btn btn-sm btn-primary-soft">
+                        <i class="fa-solid fa-plus fa-fw" aria-hidden="true"></i>
+                        @Localizer["Admin.BlogTranslations.AddArabic"]
+                    </a>
+                </permission>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th scope="col">@Localizer["Admin.BlogTranslations.ColLanguage"]</th>
+                            <th scope="col">@Localizer["Admin.BlogTranslations.ColTitle"]</th>
+                            <th scope="col">@Localizer["Admin.BlogTranslations.ColSummary"]</th>
+                            <th scope="col" class="text-end">@Localizer["Admin.BlogTranslations.ColActions"]</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var t in Model.Translations)
+                        {
+                            <tr>
+                                <td>
+                                    <span class="badge bg-secondary bg-opacity-10 text-secondary text-uppercase">
+                                        <bdi dir="ltr">@t.LanguageCode</bdi>
+                                    </span>
+                                </td>
+                                <td class="fw-semibold">@t.Title</td>
+                                <td>
+                                    @if (string.IsNullOrWhiteSpace(t.SummaryPreview))
+                                    {
+                                        <span class="text-secondary" aria-label="@Localizer["Admin.BlogTranslations.NoSummary"]">&mdash;</span>
+                                    }
+                                    else
+                                    {
+                                        @t.SummaryPreview
+                                    }
+                                </td>
+                                <td class="text-end">
+                                    <permission require="@WebPermission.Blog.Update">
+                                        <a asp-area="Admin" asp-controller="BlogTranslations" asp-action="Edit"
+                                           asp-route-id="@Model.BlogId" asp-route-languageCode="@t.LanguageCode"
+                                           class="btn btn-sm btn-outline-primary">
+                                            <i class="fa-solid fa-pen fa-fw" aria-hidden="true"></i>
+                                            @Localizer["Admin.BlogTranslations.Edit"]
+                                        </a>
+                                    </permission>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+    @if (Model.HasTranslations)
+    {
+        <div class="card-footer border-top">
+            <permission require="@WebPermission.Blog.Update">
+                <a asp-area="Admin" asp-controller="BlogTranslations" asp-action="Edit"
+                   asp-route-id="@Model.BlogId" asp-route-languageCode="ar"
+                   class="btn btn-primary">
+                    <i class="fa-solid fa-language fa-fw" aria-hidden="true"></i>
+                    @(Model.HasArabic ? Localizer["Admin.BlogTranslations.EditArabic"] : Localizer["Admin.BlogTranslations.AddArabic"])
+                </a>
+            </permission>
+        </div>
+    }
+</section>

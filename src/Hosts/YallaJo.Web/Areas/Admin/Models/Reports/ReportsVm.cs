@@ -10,6 +10,7 @@ public sealed class ReportRowVm
 {
     public Guid Id { get; set; }
     public Guid ReporterUserId { get; set; }
+    public string? ReporterEmail { get; set; }
     public string EntityType { get; set; } = "";
     public Guid EntityId { get; set; }
     public string Reason { get; set; } = "";

@@ -8,8 +8,13 @@ public sealed class ModerationFacade
 {
     private const int DefaultPageSize = 20;
     private readonly ModerationApiClient _api;
+    private readonly UsersApiClient _users;
 
-    public ModerationFacade(ModerationApiClient api) => _api = api;
+    public ModerationFacade(ModerationApiClient api, UsersApiClient users)
+    {
+        _api = api;
+        _users = users;
+    }
 
     public async Task<ApiResult<ModerationVm>> GetIndexAsync(Guid? afterCursor, int pageSize, CancellationToken ct)
     {
@@ -29,7 +34,47 @@ public sealed class ModerationFacade
             return ApiResult<ModerationVm>.Fail(result.StatusCode, result.Error ?? "Could not load moderation log.");
         }
 
-        return ApiResult<ModerationVm>.Ok(ModerationMapper.ToVm(result.Data));
+        var adminEmails = await ResolveUserEmailsAsync(result.Data.Items.Select(l => l.AdminUserId), ct);
+        return ApiResult<ModerationVm>.Ok(ModerationMapper.ToVm(result.Data, adminEmails));
+    }
+
+    private async Task<IReadOnlyDictionary<Guid, string>> ResolveUserEmailsAsync(IEnumerable<Guid> userIds, CancellationToken ct)
+    {
+        var distinct = userIds.Where(id => id != Guid.Empty).Distinct().ToList();
+        if (distinct.Count == 0)
+        {
+            return new Dictionary<Guid, string>();
+        }
+
+        var pairs = await Task.WhenAll(distinct.Select(id => ResolveOneAsync(id, ct)));
+        var map = new Dictionary<Guid, string>();
+        foreach (var pair in pairs)
+        {
+            if (pair is { } kv)
+            {
+                map[kv.Key] = kv.Value;
+            }
+        }
+
+        return map;
+    }
+
+    private async Task<KeyValuePair<Guid, string>?> ResolveOneAsync(Guid userId, CancellationToken ct)
+    {
+        try
+        {
+            var result = await _users.GetUserAsync(userId, ct);
+            if (result is { IsSuccess: true, Data: not null } && !string.IsNullOrWhiteSpace(result.Data.Email))
+            {
+                return new KeyValuePair<Guid, string>(userId, result.Data.Email);
+            }
+        }
+        catch
+        {
+            // graceful F10 fallback
+        }
+
+        return null;
     }
 
     public Task<ApiResult> WarnAsync(WarnUserFormVm form, CancellationToken ct)

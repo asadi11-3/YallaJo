@@ -8,8 +8,13 @@ public sealed class FlaggedReviewsFacade
 {
     private const int DefaultPageSize = 20;
     private readonly FlaggedReviewsApiClient _api;
+    private readonly UsersApiClient _users;
 
-    public FlaggedReviewsFacade(FlaggedReviewsApiClient api) => _api = api;
+    public FlaggedReviewsFacade(FlaggedReviewsApiClient api, UsersApiClient users)
+    {
+        _api = api;
+        _users = users;
+    }
 
     public async Task<ApiResult<FlaggedReviewsVm>> GetIndexAsync(Guid? afterCursor, int pageSize, CancellationToken ct)
     {
@@ -29,7 +34,47 @@ public sealed class FlaggedReviewsFacade
             return ApiResult<FlaggedReviewsVm>.Fail(result.StatusCode, result.Error ?? "Could not load flagged reviews.");
         }
 
-        return ApiResult<FlaggedReviewsVm>.Ok(FlaggedReviewsMapper.ToVm(result.Data));
+        var reviewerEmails = await ResolveUserEmailsAsync(result.Data.Items.Select(r => r.UserId), ct);
+        return ApiResult<FlaggedReviewsVm>.Ok(FlaggedReviewsMapper.ToVm(result.Data, reviewerEmails));
+    }
+
+    private async Task<IReadOnlyDictionary<Guid, string>> ResolveUserEmailsAsync(IEnumerable<Guid> userIds, CancellationToken ct)
+    {
+        var distinct = userIds.Where(id => id != Guid.Empty).Distinct().ToList();
+        if (distinct.Count == 0)
+        {
+            return new Dictionary<Guid, string>();
+        }
+
+        var pairs = await Task.WhenAll(distinct.Select(id => ResolveOneAsync(id, ct)));
+        var map = new Dictionary<Guid, string>();
+        foreach (var pair in pairs)
+        {
+            if (pair is { } kv)
+            {
+                map[kv.Key] = kv.Value;
+            }
+        }
+
+        return map;
+    }
+
+    private async Task<KeyValuePair<Guid, string>?> ResolveOneAsync(Guid userId, CancellationToken ct)
+    {
+        try
+        {
+            var result = await _users.GetUserAsync(userId, ct);
+            if (result is { IsSuccess: true, Data: not null } && !string.IsNullOrWhiteSpace(result.Data.Email))
+            {
+                return new KeyValuePair<Guid, string>(userId, result.Data.Email);
+            }
+        }
+        catch
+        {
+            // graceful F10 fallback: leave name unresolved
+        }
+
+        return null;
     }
 
     public Task<ApiResult> ApproveAsync(Guid id, string? rowVersion, string? notes, CancellationToken ct)

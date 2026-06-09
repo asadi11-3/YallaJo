@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.OutputCaching;
 using YallaJo.Web.Areas.Admin.ApiClients;
 using YallaJo.Web.Areas.Admin.Models.Blogs;
+using YallaJo.Web.Areas.Admin.Models.Places;
 using YallaJo.Web.Infrastructure.Api.Contracts;
 
 namespace YallaJo.Web.Areas.Admin.Facades;
@@ -18,13 +19,47 @@ namespace YallaJo.Web.Areas.Admin.Facades;
 public sealed class BlogsFacade
 {
     private readonly BlogsApiClient _api;
+    private readonly PlacesApiClient _places;
     private readonly IOutputCacheStore _cache;
 
-    public BlogsFacade(BlogsApiClient api, IOutputCacheStore cache)
+    public BlogsFacade(BlogsApiClient api, PlacesApiClient places, IOutputCacheStore cache)
     {
         _api = api;
+        _places = places;
         _cache = cache;
     }
+
+    // Place lookup feeds the related-place name dropdown (F10: never a raw GUID textbox).
+    // The /api/v1/places admin list is unbounded for our purposes; cap generously.
+    private const int PlaceLookupPageSize = 200;
+
+    /// <summary>
+    /// Loads selectable places (name shown, id submitted) for the related-place dropdown.
+    /// Tolerant: a lookup failure yields an empty list (place is optional) rather than
+    /// blocking the create/edit screen.
+    /// </summary>
+    public async Task<IReadOnlyList<PlaceOptionVm>> LoadPlaceOptionsAsync(CancellationToken ct)
+    {
+        try
+        {
+            var result = await _places.ListAsync(1, PlaceLookupPageSize, new PlaceListFilterVm(), ct);
+            if (!result.IsSuccess || result.Data is null) return [];
+
+            return result.Data.Items
+                .Select(p => new PlaceOptionVm { Id = p.Id, Name = p.Name })
+                .OrderBy(o => o.Name, StringComparer.CurrentCultureIgnoreCase)
+                .ToList();
+        }
+        catch
+        {
+            return [];
+        }
+    }
+
+    // ── Create load ───────────────────────────────────────────────────────────────
+    /// <summary>Builds a blank create form pre-populated with the related-place options (F10).</summary>
+    public async Task<CreateBlogVm> GetForCreateAsync(CancellationToken ct = default)
+        => new() { PlaceOptions = await LoadPlaceOptionsAsync(ct) };
 
     // ── List ─────────────────────────────────────────────────────────────────────
     public async Task<ApiResult<BlogListVm>> GetListAsync(
@@ -116,10 +151,12 @@ public sealed class BlogsFacade
         // blog detail, and titles are resolved from the published-tour lookup).
         var detailTask = _api.GetBlogByIdAsync(id, ct);
         var toursTask = _api.ListToursAsync(1, TourLookupPageSize, ct);
-        await Task.WhenAll(detailTask, toursTask);
+        var placesTask = LoadPlaceOptionsAsync(ct);
+        await Task.WhenAll(detailTask, toursTask, placesTask);
 
         var detail = await detailTask;
         var tours = await toursTask;
+        var placeOptions = await placesTask;
 
         var tourNames = tours is { IsSuccess: true, Data: { } td }
             ? td.Items.ToDictionary(t => t.Id, t => t.Name)
@@ -144,7 +181,7 @@ public sealed class BlogsFacade
             .ToList();
 
         return ApiResult<EditBlogVm>.Ok(
-            BlogsMapper.ToEditVm(result.Data, linkedTours, availableTours));
+            BlogsMapper.ToEditVm(result.Data, linkedTours, availableTours, placeOptions));
     }
 
     // ── Tour linking (Phase 4) ──────────────────────────────────────────────────────

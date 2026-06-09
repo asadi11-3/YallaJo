@@ -18,7 +18,16 @@ public sealed class SeoWeatherVm
 
     public ResetBudgetFormVm BudgetForm { get; set; } = new();
 
+    public IReadOnlyList<WeatherPlaceOptionVm> PlaceOptions { get; set; } = [];
+
     public bool Exists => Weather is not null;
+}
+
+public sealed class WeatherPlaceOptionVm
+{
+    public Guid Id { get; set; }
+
+    public string Name { get; set; } = string.Empty;
 }
 
 public sealed class WeatherDetailVm

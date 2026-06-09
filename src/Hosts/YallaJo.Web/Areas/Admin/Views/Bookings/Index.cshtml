@@ -1,9 +1,22 @@
+@using System.Globalization
+@using Microsoft.Extensions.Localization
 @using YallaJo.Web.Areas.Admin.Models.Bookings
 @using YallaJo.Web.Infrastructure.Authorization
 @model AdminBookingsIndexVm
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
-    ViewData["Title"] = "Bookings";
-    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = Localizer["Admin.Bookings.Title"].Value;
+    ViewData["AdminNav"] = "Bookings";
+
+    var culture = CultureInfo.CurrentCulture;
+    string Count(int n) => n.ToString("N0", culture);
+    string Money(decimal amount, string? currency) =>
+        string.IsNullOrWhiteSpace(currency) ? amount.ToString("N2", culture) : $"{amount.ToString("N2", culture)} {currency}";
+    string Date(DateTime value) => value.ToString("yyyy-MM-dd HH:mm", culture);
+
+    var hasFilters = !string.IsNullOrWhiteSpace(Model.Filters.Status)
+        || !string.IsNullOrWhiteSpace(Model.Filters.FromDate)
+        || !string.IsNullOrWhiteSpace(Model.Filters.ToDate);
 
     string NextPageUrl() => Url.Action("Index", "Bookings", new
     {
@@ -11,156 +24,187 @@
         status = Model.Filters.Status,
         fromDate = Model.Filters.FromDate,
         toDate = Model.Filters.ToDate,
-        providerId = Model.Filters.ProviderId,
-        tourId = Model.Filters.TourId,
-        userId = Model.Filters.UserId,
         cursor = Model.NextCursor,
     })!;
 }
 
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2 class="mb-0">Bookings</h2>
-        @if (Model.TotalCount is { } total)
+<div class="d-sm-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-1">@Localizer["Admin.Bookings.Title"]</h1>
+        <p class="mb-0 text-secondary">@Localizer["Admin.Bookings.Subtitle"]</p>
+    </div>
+    @if (Model.TotalCount is { } total)
+    {
+        <span class="badge bg-primary bg-opacity-10 text-primary align-self-start">
+            <bdi class="font-data">@Count(total)</bdi> @Localizer["Admin.Bookings.TotalLabel"]
+        </span>
+    }
+</div>
+
+@if (ViewBag.Error is string vbe)
+{
+    <div class="alert alert-danger" role="alert">@vbe</div>
+}
+
+<div class="card shadow mb-4">
+    <div class="card-header border-bottom">
+        <h2 class="card-header-title h5 mb-0">@Localizer["Admin.Bookings.FiltersHeading"]</h2>
+    </div>
+    <div class="card-body">
+        <form asp-area="Admin" asp-controller="Bookings" asp-action="Index" method="get" class="row g-3">
+            <div class="col-sm-4">
+                <label class="form-label" for="status">@Localizer["Admin.Bookings.StatusLabel"]</label>
+                <select name="status" id="status" class="form-select">
+                    <option value="">@Localizer["Admin.Bookings.AllStatuses"]</option>
+                    @foreach (var s in AdminBookingFiltersVm.StatusOptions)
+                    {
+                        if (string.Equals(s, Model.Filters.Status, StringComparison.OrdinalIgnoreCase))
+                        {
+                            <option value="@s" selected>@Localizer["Admin.Bookings.Status." + s]</option>
+                        }
+                        else
+                        {
+                            <option value="@s">@Localizer["Admin.Bookings.Status." + s]</option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="col-sm-3">
+                <label class="form-label" for="fromDate">@Localizer["Admin.Bookings.FromLabel"]</label>
+                <input type="date" name="fromDate" id="fromDate" value="@Model.Filters.FromDate" class="form-control" dir="ltr" />
+            </div>
+            <div class="col-sm-3">
+                <label class="form-label" for="toDate">@Localizer["Admin.Bookings.ToLabel"]</label>
+                <input type="date" name="toDate" id="toDate" value="@Model.Filters.ToDate" class="form-control" dir="ltr" />
+            </div>
+            <div class="col-sm-2 d-flex align-items-end gap-2">
+                <button type="submit" class="btn btn-primary">@Localizer["Admin.Bookings.Apply"]</button>
+                <a asp-area="Admin" asp-controller="Bookings" asp-action="Index" class="btn btn-outline-secondary">@Localizer["Admin.Bookings.Reset"]</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<section class="card shadow" aria-labelledby="bookings-directory-heading">
+    <div class="card-header border-bottom">
+        <h2 class="card-header-title h5 mb-0" id="bookings-directory-heading">@Localizer["Admin.Bookings.Directory"]</h2>
+    </div>
+    <div class="card-body">
+        @if (!Model.HasItems)
         {
-            <span class="text-muted small">@total total</span>
+            <div class="text-center py-5">
+                <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
+                <p class="mb-3 text-secondary">@Localizer["Admin.Bookings.EmptyMessage"]</p>
+                @if (hasFilters)
+                {
+                    <a asp-area="Admin" asp-controller="Bookings" asp-action="Index" class="btn btn-sm btn-primary-soft">@Localizer["Admin.Bookings.ClearFilters"]</a>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th scope="col">@Localizer["Admin.Bookings.ColReference"]</th>
+                            <th scope="col">@Localizer["Admin.Bookings.ColTour"]</th>
+                            <th scope="col">@Localizer["Admin.Bookings.ColTraveler"]</th>
+                            <th scope="col" class="text-end">@Localizer["Admin.Bookings.ColGuests"]</th>
+                            <th scope="col" class="text-end">@Localizer["Admin.Bookings.ColTotal"]</th>
+                            <th scope="col">@Localizer["Admin.Bookings.ColStatus"]</th>
+                            <th scope="col">@Localizer["Admin.Bookings.ColCreated"]</th>
+                            <th scope="col" class="text-end">@Localizer["Admin.Bookings.ColRefund"]</th>
+                            <th scope="col" class="text-end">@Localizer["Admin.Bookings.ColActions"]</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var b in Model.Items)
+                        {
+                            <tr>
+                                <td><bdi dir="ltr" class="font-data">@b.Reference</bdi></td>
+                                <td><span class="fw-semibold">@b.TourName</span></td>
+                                <td><span class="text-secondary">@b.TravelerHandle</span></td>
+                                <td class="text-end"><bdi class="font-data">@Count(b.ParticipantCount)</bdi></td>
+                                <td class="text-end"><bdi class="font-data" dir="ltr">@Money(b.TotalAmount, b.Currency)</bdi></td>
+                                <td>
+                                    <span class="badge @b.StatusBadgeClass">
+                                        <i class="fa-solid fa-@(AdminBookingsMapper.StatusIcon(b.Status)) fa-fw" aria-hidden="true"></i>
+                                        @Localizer["Admin.Bookings.Status." + b.Status]
+                                    </span>
+                                </td>
+                                <td><bdi class="font-data" dir="ltr">@Date(b.CreatedAt)</bdi></td>
+                                <td class="text-end">
+                                    @if (b.RefundAmount is { } r)
+                                    {
+                                        <bdi class="font-data" dir="ltr">@Money(r, b.Currency)</bdi>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-secondary" aria-label="@Localizer["Admin.Bookings.NoRefund"]">—</span>
+                                    }
+                                </td>
+                                <td class="text-end">
+                                    <div class="d-inline-flex gap-1">
+                                        <a asp-area="Admin" asp-controller="Bookings" asp-action="Details"
+                                           asp-route-id="@b.Id" class="btn btn-sm btn-outline-primary">@Localizer["Admin.Bookings.Details"]</a>
+                                        <permission require="@WebPermission.AdminBookingDashboard.Update">
+                                            <button type="button" class="btn btn-sm btn-outline-danger"
+                                                    data-bs-toggle="modal" data-bs-target="#forceRefundModal-@b.Id">
+                                                @Localizer["Admin.Bookings.ForceRefund"]
+                                            </button>
+                                        </permission>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
         }
     </div>
 
-    @if (ViewBag.Error is string vbe) { <div class="alert alert-danger">@vbe</div> }
-
-    <form asp-area="Admin" asp-controller="Bookings" asp-action="Index" method="get" class="row g-2 mb-3">
-        <div class="col-sm-3">
-            <label class="form-label small mb-1">Status</label>
-            <select name="status" class="form-select">
-                <option value="">All statuses</option>
-                @foreach (var s in AdminBookingFiltersVm.StatusOptions)
-                {
-                    if (string.Equals(s, Model.Filters.Status, StringComparison.OrdinalIgnoreCase))
-                    {
-                        <option value="@s" selected>@s</option>
-                    }
-                    else
-                    {
-                        <option value="@s">@s</option>
-                    }
-                }
-            </select>
-        </div>
-        <div class="col-sm-2">
-            <label class="form-label small mb-1">From</label>
-            <input type="date" name="fromDate" value="@Model.Filters.FromDate" class="form-control" />
-        </div>
-        <div class="col-sm-2">
-            <label class="form-label small mb-1">To</label>
-            <input type="date" name="toDate" value="@Model.Filters.ToDate" class="form-control" />
-        </div>
-        <div class="col-sm-2">
-            <label class="form-label small mb-1">Provider ID</label>
-            <input type="text" name="providerId" value="@Model.Filters.ProviderId" class="form-control" placeholder="GUID" />
-        </div>
-        <div class="col-sm-2">
-            <label class="form-label small mb-1">Tour ID</label>
-            <input type="text" name="tourId" value="@Model.Filters.TourId" class="form-control" placeholder="GUID" />
-        </div>
-        <div class="col-sm-2">
-            <label class="form-label small mb-1">Traveler (user) ID</label>
-            <input type="text" name="userId" value="@Model.Filters.UserId" class="form-control" placeholder="GUID" />
-        </div>
-        <div class="col-sm-2 d-flex align-items-end gap-2">
-            <button type="submit" class="btn btn-outline-secondary">Filter</button>
-            <a asp-area="Admin" asp-controller="Bookings" asp-action="Index" class="btn btn-link">Reset</a>
-        </div>
-    </form>
-
-    @if (!Model.HasItems)
+    @if (Model.HasNextPage)
     {
-        <div class="alert alert-info">No bookings found in this view.</div>
-    }
-    else
-    {
-        <div class="table-responsive">
-            <table class="table table-hover align-middle">
-                <thead>
-                    <tr>
-                        <th>Reference</th>
-                        <th>Tour</th>
-                        <th>Provider</th>
-                        <th>Traveler</th>
-                        <th class="text-end">Guests</th>
-                        <th class="text-end">Total</th>
-                        <th>Status</th>
-                        <th>Created</th>
-                        <th class="text-end">Refund</th>
-                        <th class="text-end">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var b in Model.Items)
-                    {
-                        <tr>
-                            <td><code>@b.Reference</code></td>
-                            <td>@b.TourName</td>
-                            <td><span class="text-muted small">@b.ProviderId.ToString("N").Substring(0, 8)</span></td>
-                            <td><span class="text-muted small">@b.TravelerHandle</span></td>
-                            <td class="text-end">@b.ParticipantCount</td>
-                            <td class="text-end">@b.TotalAmount.ToString("0.##") @b.Currency</td>
-                            <td><span class="badge @b.StatusBadgeClass">@b.Status</span></td>
-                            <td>@b.CreatedAt.ToString("yyyy-MM-dd")</td>
-                            <td class="text-end">@(b.RefundAmount is { } r ? $"{r.ToString("0.##")} {b.Currency}" : "—")</td>
-                            <td class="text-end">
-                                <div class="d-inline-flex gap-1">
-                                    <a asp-area="Admin" asp-controller="Bookings" asp-action="Details"
-                                       asp-route-id="@b.Id" class="btn btn-sm btn-outline-primary">Details</a>
-                                    <permission require="@WebPermission.AdminBookingDashboard.Update">
-                                        <button type="button" class="btn btn-sm btn-outline-danger"
-                                                data-bs-toggle="modal" data-bs-target="#forceRefundModal-@b.Id">
-                                            Force refund
-                                        </button>
-                                    </permission>
-                                </div>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
-
-        @if (Model.HasNextPage)
-        {
-            <nav aria-label="Bookings pagination">
+        <div class="card-footer border-top">
+            <nav aria-label="@Localizer["Admin.Bookings.PaginationLabel"]">
                 <ul class="pagination justify-content-center mb-0">
-                    <li class="page-item"><a class="page-link" href="@NextPageUrl()">Next →</a></li>
+                    <li class="page-item"><a class="page-link" href="@NextPageUrl()">@Localizer["Admin.Bookings.Next"]</a></li>
                 </ul>
             </nav>
-        }
-
-        <permission require="@WebPermission.AdminBookingDashboard.Update">
-            @foreach (var b in Model.Items)
-            {
-                <div class="modal fade" id="forceRefundModal-@b.Id" tabindex="-1" aria-hidden="true">
-                    <div class="modal-dialog">
-                        <div class="modal-content">
-                            <form method="post" asp-area="Admin" asp-controller="Bookings" asp-action="ForceRefund" asp-route-id="@b.Id">
-                                @Html.AntiForgeryToken()
-                                <div class="modal-header">
-                                    <h5 class="modal-title">Force refund booking @b.Reference</h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                </div>
-                                <div class="modal-body">
-                                    <p class="text-muted">This cancels the booking with a 100% refund and bypasses the refund policy. The action is audit-logged.</p>
-                                    <label class="form-label" for="reason-@b.Id">Reason</label>
-                                    <textarea class="form-control" id="reason-@b.Id" name="reason" rows="3" required></textarea>
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                                    <button type="submit" class="btn btn-danger">Force refund</button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            }
-        </permission>
+        </div>
     }
-</div>
+</section>
+
+@if (Model.HasItems)
+{
+    <permission require="@WebPermission.AdminBookingDashboard.Update">
+        @foreach (var b in Model.Items)
+        {
+            <div class="modal fade" id="forceRefundModal-@b.Id" tabindex="-1"
+                 aria-labelledby="forceRefundTitle-@b.Id" aria-describedby="forceRefundBody-@b.Id" aria-hidden="true"
+                 data-bs-backdrop="static" data-bs-keyboard="false">
+                <div class="modal-dialog modal-dialog-centered">
+                    <form method="post" asp-area="Admin" asp-controller="Bookings" asp-action="ForceRefund" asp-route-id="@b.Id"
+                          class="modal-content" role="dialog" aria-modal="true" aria-labelledby="forceRefundTitle-@b.Id">
+                        @Html.AntiForgeryToken()
+                        <div class="modal-header">
+                            <h2 class="modal-title h5" id="forceRefundTitle-@b.Id">@Localizer["Admin.Bookings.ForceRefundTitle", b.Reference]</h2>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Admin.Bookings.Close"]"></button>
+                        </div>
+                        <div class="modal-body" id="forceRefundBody-@b.Id">
+                            <label class="form-label" for="reason-@b.Id">@Localizer["Admin.Bookings.ForceRefundReasonLabel"]</label>
+                            <textarea class="form-control" id="reason-@b.Id" name="reason" rows="3" maxlength="1000" required
+                                      aria-describedby="reason-help-@b.Id"></textarea>
+                            <div class="form-text" id="reason-help-@b.Id">@Localizer["Admin.Bookings.ForceRefundReasonHelp"]</div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">@Localizer["Admin.Bookings.Cancel"]</button>
+                            <button type="submit" class="btn btn-danger">@Localizer["Admin.Bookings.ForceRefundSubmit"]</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        }
+    </permission>
+}

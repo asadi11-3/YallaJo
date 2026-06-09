@@ -1,37 +1,73 @@
 @model YallaJo.Web.Areas.Admin.Models.Statistics.StatisticsVm
+@using System.Globalization
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
-    ViewData["Title"] = "Analytics";
+    ViewData["Title"] = Localizer["Admin.Stats.Title"].Value;
     ViewData["AdminNav"] = "Statistics";
+
+    var culture = CultureInfo.CurrentCulture;
+    string Count(int n) => n.ToString("N0", culture);
+
+    // F10: never surface a raw entity GUID. Resolve to a human name when the
+    // backend could fetch one, else fall back to the localized entity-type label.
+    string EntityLabel(YallaJo.Web.Areas.Admin.Models.Statistics.InteractionRowVm r)
+    {
+        if (!string.IsNullOrWhiteSpace(r.EntityName))
+        {
+            return r.EntityName!;
+        }
+        var key = $"Admin.Stats.Entity.{r.EntityType}";
+        var localized = Localizer[key];
+        return localized.ResourceNotFound ? r.EntityType : localized.Value;
+    }
+
+    var queryInteractionType = Model.IsUserLookup
+        ? string.Empty
+        : ViewContext.HttpContext.Request.Query["InteractionType"].ToString();
+    var queryEntityType = Model.IsUserLookup
+        ? string.Empty
+        : ViewContext.HttpContext.Request.Query["EntityType"].ToString();
+
+    var typeLabelsJson = System.Text.Json.JsonSerializer.Serialize(
+        Model.TypeBreakdown.Select(t => t.InteractionType));
+    var typeCountsJson = System.Text.Json.JsonSerializer.Serialize(
+        Model.TypeBreakdown.Select(t => t.Count));
 }
 
 <div class="d-sm-flex justify-content-between align-items-center mb-4">
-    <h1 class="h3 mb-0">Analytics</h1>
+    <div>
+        <h1 class="h3 mb-1">@Localizer["Admin.Stats.Title"]</h1>
+        <p class="mb-0 text-secondary">@Localizer["Admin.Stats.Subtitle"]</p>
+    </div>
 </div>
 
 <!-- Filters -->
 <div class="card shadow mb-4">
+    <div class="card-header border-bottom">
+        <h2 class="card-header-title h5 mb-0">@Localizer["Admin.Stats.FiltersHeading"]</h2>
+    </div>
     <div class="card-body">
         <form method="get" asp-area="Admin" asp-controller="Statistics" asp-action="Index" class="row g-3 align-items-end">
-            <div class="col-sm-6 col-lg-3">
-                <label class="form-label" for="InteractionType">Interaction type</label>
+            <div class="col-sm-6 col-lg-4">
+                <label class="form-label" for="InteractionType">@Localizer["Admin.Stats.InteractionTypeLabel"]</label>
                 <input type="text" class="form-control" id="InteractionType" name="InteractionType"
-                       value="@(Model.IsUserLookup ? string.Empty : ViewContext.HttpContext.Request.Query["InteractionType"].ToString())"
-                       placeholder="e.g. view, favorite" />
+                       value="@queryInteractionType"
+                       aria-describedby="InteractionTypeHelp"
+                       placeholder="@Localizer["Admin.Stats.InteractionTypePlaceholder"]" />
+                <small id="InteractionTypeHelp" class="form-text text-secondary">@Localizer["Admin.Stats.InteractionTypeHelp"]</small>
             </div>
-            <div class="col-sm-6 col-lg-3">
-                <label class="form-label" for="EntityType">Entity type</label>
+            <div class="col-sm-6 col-lg-4">
+                <label class="form-label" for="EntityType">@Localizer["Admin.Stats.EntityTypeLabel"]</label>
                 <input type="text" class="form-control" id="EntityType" name="EntityType"
-                       value="@(Model.IsUserLookup ? string.Empty : ViewContext.HttpContext.Request.Query["EntityType"].ToString())"
-                       placeholder="e.g. Tour, Place" />
+                       value="@queryEntityType"
+                       aria-describedby="EntityTypeHelp"
+                       placeholder="@Localizer["Admin.Stats.EntityTypePlaceholder"]" />
+                <small id="EntityTypeHelp" class="form-text text-secondary">@Localizer["Admin.Stats.EntityTypeHelp"]</small>
             </div>
-            <div class="col-sm-6 col-lg-3">
-                <label class="form-label" for="UserId">User id (lookup)</label>
-                <input type="text" class="form-control font-data" id="UserId" name="UserId"
-                       value="@Model.UserLookupId" placeholder="GUID" />
-            </div>
-            <div class="col-sm-6 col-lg-3 d-flex gap-2">
-                <button type="submit" class="btn btn-primary">Apply</button>
-                <a class="btn btn-outline-secondary" asp-area="Admin" asp-controller="Statistics" asp-action="Index">Reset</a>
+            <div class="col-lg-4 d-flex gap-2">
+                <button type="submit" class="btn btn-primary">@Localizer["Admin.Stats.Apply"]</button>
+                <a class="btn btn-outline-secondary" asp-area="Admin" asp-controller="Statistics" asp-action="Index">@Localizer["Admin.Stats.Reset"]</a>
             </div>
         </form>
     </div>
@@ -42,18 +78,24 @@
     <div class="col-xxl-5">
         <div class="card shadow h-100">
             <div class="card-header border-bottom">
-                <h5 class="card-header-title mb-0">Interaction types</h5>
+                <h2 class="card-header-title h5 mb-0">@Localizer["Admin.Stats.ChartHeading"]</h2>
             </div>
             <div class="card-body">
                 @if (Model.TypeBreakdown.Count > 0)
                 {
-                    <div id="ChartTypes"></div>
+                    <div id="ChartTypes" role="img" aria-label="@Localizer["Admin.Stats.ChartAriaLabel"]"></div>
+                    <script type="application/json" data-yj-component="admin-statistics">
+                        {
+                            "typeLabels": @Html.Raw(typeLabelsJson),
+                            "typeCounts": @Html.Raw(typeCountsJson)
+                        }
+                    </script>
                 }
                 else
                 {
                     <div class="text-center py-5">
-                        <img src="~/assets/images/element/17.svg" alt="" class="h-80px mb-3" />
-                        <p class="mb-0 text-secondary">No interactions match this filter.</p>
+                        <img src="~/assets/images/element/17.svg" alt="" width="80" height="80" aria-hidden="true" class="mb-3" />
+                        <p class="mb-3 text-secondary">@Localizer["Admin.Stats.EmptyChart"]</p>
                     </div>
                 }
             </div>
@@ -64,11 +106,11 @@
     <div class="col-xxl-7">
         <div class="card shadow h-100">
             <div class="card-header border-bottom d-flex justify-content-between align-items-center">
-                <h5 class="card-header-title mb-0">
-                    @(Model.IsUserLookup ? "Interactions for user" : "Recent interactions")
-                </h5>
+                <h2 class="card-header-title h5 mb-0">
+                    @(Model.IsUserLookup ? Localizer["Admin.Stats.SummaryForUser"] : Localizer["Admin.Stats.SummaryRecent"])
+                </h2>
                 <span class="badge bg-secondary bg-opacity-10 text-secondary">
-                    <span class="font-data">@Model.TotalShown.ToString("N0")</span> shown
+                    <bdi class="font-data">@Count(Model.TotalShown)</bdi> @Localizer["Admin.Stats.ShownLabel"]
                 </span>
             </div>
             <div class="card-body p-0">
@@ -78,10 +120,10 @@
                         <table class="table table-hover align-middle mb-0">
                             <thead>
                                 <tr>
-                                    <th>Type</th>
-                                    <th>Entity</th>
-                                    <th>User</th>
-                                    <th>When</th>
+                                    <th scope="col">@Localizer["Admin.Stats.ColType"]</th>
+                                    <th scope="col">@Localizer["Admin.Stats.ColEntity"]</th>
+                                    <th scope="col">@Localizer["Admin.Stats.ColUser"]</th>
+                                    <th scope="col">@Localizer["Admin.Stats.ColWhen"]</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -92,11 +134,22 @@
                                             <span class="badge bg-info bg-opacity-10 text-info">@row.InteractionType</span>
                                         </td>
                                         <td>
-                                            <span class="fw-semibold">@row.EntityType</span>
-                                            <div class="font-data small text-secondary">@row.EntityId</div>
+                                            <span class="fw-semibold">@EntityLabel(row)</span>
+                                            <div class="small text-secondary">@row.EntityType</div>
                                         </td>
-                                        <td class="font-data small">@(row.UserId?.ToString() ?? "anonymous")</td>
-                                        <td class="font-data small text-secondary">@row.OccurredAt.ToString("g")</td>
+                                        <td class="small">
+                                            @if (!string.IsNullOrWhiteSpace(row.UserName))
+                                            {
+                                                <bdi dir="ltr">@row.UserName</bdi>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-secondary">@Localizer["Admin.Stats.Anonymous"]</span>
+                                            }
+                                        </td>
+                                        <td class="small text-secondary">
+                                            <bdi class="font-data">@row.OccurredAt.ToString("g", culture)</bdi>
+                                        </td>
                                     </tr>
                                 }
                             </tbody>
@@ -106,8 +159,9 @@
                 else
                 {
                     <div class="text-center py-5">
-                        <img src="~/assets/images/element/17.svg" alt="" class="h-80px mb-3" />
-                        <p class="mb-0 text-secondary">No interactions to show.</p>
+                        <img src="~/assets/images/element/17.svg" alt="" width="80" height="80" aria-hidden="true" class="mb-3" />
+                        <p class="mb-3 text-secondary">@Localizer["Admin.Stats.EmptyTable"]</p>
+                        <a class="btn btn-sm btn-primary-soft" asp-area="Admin" asp-controller="Statistics" asp-action="Index">@Localizer["Admin.Stats.EmptyCta"]</a>
                     </div>
                 }
             </div>
@@ -116,25 +170,5 @@
 </div>
 
 @section Scripts {
-    <script>
-        (function () {
-            var typeLabels = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.TypeBreakdown.Select(t => t.InteractionType)));
-            var typeCounts = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.TypeBreakdown.Select(t => t.Count)));
-
-            var ink = getComputedStyle(document.body).getPropertyValue('--bs-body-color') || '#212529';
-
-            function exists(id) { return document.getElementById(id) !== null; }
-
-            if (exists('ChartTypes') && typeCounts.length) {
-                new ApexCharts(document.getElementById('ChartTypes'), {
-                    chart: { type: 'donut', height: 320, fontFamily: 'inherit' },
-                    series: typeCounts,
-                    labels: typeLabels,
-                    colors: ['#5143d9', '#0cbc87', '#4f9ef8', '#f7c32e', '#d6293e'],
-                    legend: { position: 'bottom', labels: { colors: ink } },
-                    dataLabels: { enabled: true }
-                }).render();
-            }
-        })();
-    </script>
+    <script src="~/assets/js/admin-statistics.js" asp-append-version="true" defer></script>
 }

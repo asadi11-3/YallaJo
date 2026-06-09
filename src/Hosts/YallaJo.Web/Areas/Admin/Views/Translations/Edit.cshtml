@@ -1,44 +1,57 @@
+@using Microsoft.Extensions.Localization
 @model YallaJo.Web.Areas.Admin.Models.Translations.UpdateTranslationVm
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
-    ViewData["Title"] = "Edit Translation";
-    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
-    var original   = (ViewBag.Original as string) ?? string.Empty;
+    ViewData["Title"] = Localizer["Admin.Translations.EditTitle"].Value;
+    ViewData["AdminNav"] = "Translations";
+    var original = (ViewBag.Original as string) ?? string.Empty;
     var entityType = ViewBag.EntityType?.ToString() ?? string.Empty;
-    var entityId   = ViewBag.EntityId?.ToString() ?? string.Empty;
+    var entityId = ViewBag.EntityId?.ToString() ?? string.Empty;
 }
 
-<div class="container mt-4">
-    <h2>Edit Translation</h2>
+<div class="d-sm-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-1">@Localizer["Admin.Translations.EditHeading"]</h1>
+        <p class="mb-0 text-secondary">@Localizer["Admin.Translations.EditSubtitle"]</p>
+    </div>
+    <a asp-action="Index" asp-route-entityType="@entityType" asp-route-entityId="@entityId" class="btn btn-outline-secondary">
+        <i class="fa-solid fa-arrow-left fa-fw" aria-hidden="true"></i> @Localizer["Admin.Translations.Back"]
+    </a>
+</div>
 
-    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+<div class="card shadow">
+    <div class="card-header border-bottom">
+        <h2 class="card-header-title h5 mb-0">@Localizer["Admin.Translations.EditHeading"]</h2>
+    </div>
+    <div class="card-body">
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3" role="alert"></div>
 
-    @if (!string.IsNullOrEmpty(original))
-    {
-        <div class="mb-3">
-            <label class="form-label">Original</label>
-            <textarea class="form-control" rows="3" readonly>@original</textarea>
-        </div>
-    }
+        @if (!string.IsNullOrEmpty(original))
+        {
+            <div class="mb-3 col-lg-8">
+                <label for="original-text" class="form-label">@Localizer["Admin.Translations.OriginalLabel"]</label>
+                <textarea id="original-text" class="form-control" rows="3" readonly>@original</textarea>
+            </div>
+        }
 
-    <form asp-area="Admin" asp-controller="Translations" asp-action="Edit"
-          asp-route-id="@Model.Id" method="post" class="col-md-8">
-        @Html.AntiForgeryToken()
-        <input type="hidden" asp-for="Id" />
-        <input type="hidden" name="entityType" value="@entityType" />
-        <input type="hidden" name="entityId"   value="@entityId" />
+        <form asp-area="Admin" asp-controller="Translations" asp-action="Edit" asp-route-id="@Model.Id" method="post" class="col-lg-8">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="Id" />
+            <input type="hidden" name="entityType" value="@entityType" />
+            <input type="hidden" name="entityId" value="@entityId" />
 
-        <div class="mb-3">
-            <label asp-for="TranslatedText" class="form-label"></label>
-            <textarea asp-for="TranslatedText" class="form-control" rows="4"></textarea>
-            <span asp-validation-for="TranslatedText" class="text-danger"></span>
-        </div>
+            <div class="mb-3">
+                <label asp-for="TranslatedText" class="form-label">@Localizer["Admin.Translations.TranslatedLabel"]</label>
+                <textarea asp-for="TranslatedText" class="form-control" rows="4"></textarea>
+                <span asp-validation-for="TranslatedText" class="text-danger" role="alert"></span>
+            </div>
 
-        <button type="submit" class="btn btn-primary">Save</button>
-        <a asp-action="Index"
-           asp-route-entityType="@entityType"
-           asp-route-entityId="@entityId"
-           class="btn btn-link">Cancel</a>
-    </form>
+            <button type="submit" class="btn btn-primary">
+                <i class="fa-solid fa-floppy-disk fa-fw" aria-hidden="true"></i> @Localizer["Admin.Translations.Save"]
+            </button>
+            <a asp-action="Index" asp-route-entityType="@entityType" asp-route-entityId="@entityId" class="btn btn-link">@Localizer["Admin.Translations.Cancel"]</a>
+        </form>
+    </div>
 </div>
 
 @section Scripts {

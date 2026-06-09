@@ -1,113 +1,192 @@
+@using System.Globalization
+@using Microsoft.Extensions.Localization
 @using YallaJo.Web.Areas.Admin.Models.GuideApplications
 @using YallaJo.Web.Infrastructure.Authorization
 @model GuideApplicationsVm
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
-    ViewData["Title"] = "Guide applications";
+    ViewData["Title"] = Localizer["Admin.GuideApplications.Title"].Value;
     ViewData["AdminNav"] = "GuideApplications";
+
+    var culture = CultureInfo.CurrentCulture;
+    string Count(int n) => n.ToString("N0", culture);
+    string Money(decimal d) => d.ToString("N2", culture);
+    string Date(DateTime dt) => dt.ToString("yyyy-MM-dd HH:mm", culture);
+
+    var statuses = new[] { "Submitted", "Approved", "Rejected", "Draft" };
+    var hasTour = Model.TourId.HasValue && Model.TourId.Value != Guid.Empty;
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="d-sm-flex justify-content-between align-items-center mb-4">
     <div>
-        <h1 class="h3 mb-1">Guide applications</h1>
-        <p class="text-body-secondary mb-0">Review and moderate tour-guide applications for a specific tour.</p>
+        <h1 class="h3 mb-1">@Localizer["Admin.GuideApplications.Title"]</h1>
+        <p class="text-secondary mb-0">@Localizer["Admin.GuideApplications.Subtitle"]</p>
     </div>
-    @if (Model.TourId is not null)
+    @if (hasTour && Model.TotalCount > 0)
     {
-        <span class="badge bg-secondary bg-opacity-10 text-secondary fs-6">
-            <span class="font-data">@Model.TotalCount</span> total
+        <span class="badge bg-primary bg-opacity-10 text-primary fs-6">
+            <bdi class="font-data">@Count(Model.TotalCount)</bdi> @Localizer["Admin.GuideApplications.TotalLabel"]
         </span>
     }
 </div>
 
-<div class="card card-body shadow mb-4">
-    <form method="get" asp-area="Admin" asp-controller="GuideApplications" asp-action="Index" class="row g-3 align-items-end">
-        <div class="col-md-5">
-            <label for="tourId" class="form-label">Tour ID</label>
-            <input type="text" class="form-control font-data" id="tourId" name="tourId"
-                   value="@(Model.TourId?.ToString("D"))" placeholder="00000000-0000-0000-0000-000000000000" />
-        </div>
-        <div class="col-md-3">
-            <label for="status" class="form-label">Status</label>
-            <select class="form-select" id="status" name="status">
-                <option value="">All</option>
-                <option value="Submitted" selected="@(Model.StatusFilter == "Submitted")">Submitted</option>
-                <option value="Approved" selected="@(Model.StatusFilter == "Approved")">Approved</option>
-                <option value="Rejected" selected="@(Model.StatusFilter == "Rejected")">Rejected</option>
-                <option value="Draft" selected="@(Model.StatusFilter == "Draft")">Draft</option>
-            </select>
-        </div>
-        <div class="col-md-4 d-flex gap-2">
-            <button type="submit" class="btn btn-primary">Apply</button>
-            <a asp-area="Admin" asp-controller="GuideApplications" asp-action="Index" class="btn btn-outline-secondary">Reset</a>
-        </div>
-    </form>
-</div>
-
-@if (Model.Applications.Count > 0)
+@if (!string.IsNullOrWhiteSpace(ViewBag.Error as string))
 {
-    <div class="card shadow">
+    <div class="alert alert-danger" role="alert">@ViewBag.Error</div>
+}
+
+<section class="card shadow mb-4" aria-labelledby="ga-filters-heading">
+    <div class="card-header border-bottom">
+        <h2 id="ga-filters-heading" class="card-header-title h5 mb-0">@Localizer["Admin.GuideApplications.FiltersHeading"]</h2>
+    </div>
+    <div class="card-body">
+        <form method="get" asp-area="Admin" asp-controller="GuideApplications" asp-action="Index" class="row g-3 align-items-end">
+            <div class="col-md-6 col-lg-5">
+                <label for="tourId" class="form-label">@Localizer["Admin.GuideApplications.TourLabel"]</label>
+                <select id="tourId" name="tourId" class="form-select" aria-describedby="tourId-help">
+                    <option value="">@Localizer["Admin.GuideApplications.ChooseTour"]</option>
+                    @foreach (var t in Model.TourOptions)
+                    {
+                        if (Model.TourId == t.Id)
+                        {
+                            <option value="@t.Id" selected>@t.Name</option>
+                        }
+                        else
+                        {
+                            <option value="@t.Id">@t.Name</option>
+                        }
+                    }
+                </select>
+                <div id="tourId-help" class="form-text">@Localizer["Admin.GuideApplications.TourPlaceholder"]</div>
+            </div>
+            <div class="col-md-4 col-lg-4">
+                <label for="status" class="form-label">@Localizer["Admin.GuideApplications.StatusLabel"]</label>
+                <select id="status" name="status" class="form-select">
+                    <option value="">@Localizer["Admin.GuideApplications.AllStatuses"]</option>
+                    @foreach (var s in statuses)
+                    {
+                        if (string.Equals(Model.StatusFilter, s, StringComparison.OrdinalIgnoreCase))
+                        {
+                            <option value="@s" selected>@Localizer["Admin.GuideApplications.Status." + s]</option>
+                        }
+                        else
+                        {
+                            <option value="@s">@Localizer["Admin.GuideApplications.Status." + s]</option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="col-md-2 col-lg-3 d-flex gap-2">
+                <button type="submit" class="btn btn-primary">@Localizer["Admin.GuideApplications.Apply"]</button>
+                <a asp-area="Admin" asp-controller="GuideApplications" asp-action="Index" class="btn btn-outline-secondary">@Localizer["Admin.GuideApplications.Reset"]</a>
+            </div>
+        </form>
+    </div>
+</section>
+
+<section class="card shadow" aria-labelledby="ga-directory-heading">
+    <div class="card-header border-bottom">
+        <h2 id="ga-directory-heading" class="card-header-title h5 mb-0">@Localizer["Admin.GuideApplications.Directory"]</h2>
+    </div>
+    @if (!hasTour)
+    {
+        <div class="card-body">
+            <div class="text-center py-5">
+                <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
+                <p class="mb-0 text-secondary">@Localizer["Admin.GuideApplications.ChooseTourMessage"]</p>
+            </div>
+        </div>
+    }
+    else if (Model.Applications.Count == 0)
+    {
+        <div class="card-body">
+            <div class="text-center py-5">
+                <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
+                <p class="mb-0 text-secondary">@Localizer["Admin.GuideApplications.EmptyMessage"]</p>
+            </div>
+        </div>
+    }
+    else
+    {
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
                 <thead>
                     <tr>
-                        <th scope="col">Application</th>
-                        <th scope="col">Tour</th>
-                        <th scope="col">Guide user</th>
-                        <th scope="col">Proposed price</th>
-                        <th scope="col">Resubmissions</th>
-                        <th scope="col">Created</th>
-                        <th scope="col">Status</th>
-                        <th scope="col" class="text-end">Actions</th>
+                        <th scope="col">@Localizer["Admin.GuideApplications.ColTour"]</th>
+                        <th scope="col">@Localizer["Admin.GuideApplications.ColGuide"]</th>
+                        <th scope="col" class="text-end">@Localizer["Admin.GuideApplications.ColPrice"]</th>
+                        <th scope="col" class="text-end">@Localizer["Admin.GuideApplications.ColResubmissions"]</th>
+                        <th scope="col">@Localizer["Admin.GuideApplications.ColCreated"]</th>
+                        <th scope="col">@Localizer["Admin.GuideApplications.ColStatus"]</th>
+                        <th scope="col" class="text-end">@Localizer["Admin.GuideApplications.ColActions"]</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach (var row in Model.Applications)
                     {
                         var color = GuideApplicationsMapper.StatusColor(row.Status);
+                        var icon = GuideApplicationsMapper.StatusIcon(row.Status);
+                        var modalId = "rejectModal-" + row.ApplicationId.ToString("N");
+                        var titleId = modalId + "-title";
+                        var bodyId = modalId + "-body";
+                        var reasonId = modalId + "-reason";
+                        var helpId = modalId + "-help";
                         <tr>
-                            <td class="font-data text-truncate" style="max-width: 9rem;" title="@row.ApplicationId">@row.ApplicationId</td>
-                            <td>@(string.IsNullOrWhiteSpace(row.TourTitle) ? "—" : row.TourTitle)</td>
-                            <td class="font-data text-truncate" style="max-width: 9rem;" title="@row.GuideUserId">@row.GuideUserId</td>
-                            <td class="font-data">@(row.ProposedBasePrice?.ToString("N2") ?? "—")</td>
-                            <td class="font-data">@row.ResubmissionCount</td>
-                            <td class="font-data">@row.CreatedAt.ToString("g")</td>
-                            <td><span class="badge bg-@color bg-opacity-10 text-@color">@row.Status</span></td>
+                            <td>
+                                @if (string.IsNullOrWhiteSpace(row.TourTitle))
+                                {
+                                    <span class="text-secondary">@Localizer["Admin.GuideApplications.NoTour"]</span>
+                                }
+                                else
+                                {
+                                    <span class="fw-semibold">@row.TourTitle</span>
+                                }
+                            </td>
+                            <td>
+                                @if (string.IsNullOrWhiteSpace(row.GuideEmail))
+                                {
+                                    <span class="text-secondary">@Localizer["Admin.GuideApplications.UnknownGuide"]</span>
+                                }
+                                else
+                                {
+                                    <span class="fw-semibold"><bdi dir="ltr">@row.GuideEmail</bdi></span>
+                                }
+                            </td>
                             <td class="text-end">
-                                <div class="d-inline-flex gap-2">
+                                @if (row.ProposedBasePrice.HasValue)
+                                {
+                                    <bdi dir="ltr" class="font-data">@Money(row.ProposedBasePrice.Value)</bdi>
+                                }
+                                else
+                                {
+                                    <span class="text-secondary" aria-label="@Localizer["Admin.GuideApplications.NoTour"]">&mdash;</span>
+                                }
+                            </td>
+                            <td class="text-end"><bdi class="font-data">@Count(row.ResubmissionCount)</bdi></td>
+                            <td><bdi dir="ltr" class="font-data">@Date(row.CreatedAt)</bdi></td>
+                            <td>
+                                <span class="badge bg-@color bg-opacity-10 text-@color">
+                                    <i class="fa-solid fa-@icon fa-fw" aria-hidden="true"></i> @Localizer["Admin.GuideApplications.Status." + row.Status]
+                                </span>
+                            </td>
+                            <td class="text-end">
+                                <div class="btn-group">
                                     <permission require="@WebPermission.GuideApplication.Approve">
                                         <form method="post" asp-area="Admin" asp-controller="GuideApplications" asp-action="Approve"
-                                              asp-route-tourId="@row.TourId" asp-route-id="@row.ApplicationId" class="d-inline">
+                                              asp-route-tourId="@row.TourId" asp-route-id="@row.ApplicationId" class="d-inline"
+                                              data-confirm="@Localizer["Admin.GuideApplications.ApproveConfirm", row.TourTitle ?? string.Empty]"
+                                              data-confirm-title="@Localizer["Admin.GuideApplications.ApproveTitle"]"
+                                              data-confirm-action="@Localizer["Admin.GuideApplications.ApproveAction"]">
                                             @Html.AntiForgeryToken()
-                                            <button type="submit" class="btn btn-sm btn-success">Approve</button>
+                                            <button type="submit" class="btn btn-sm btn-success">
+                                                <i class="fa-solid fa-circle-check fa-fw" aria-hidden="true"></i> @Localizer["Admin.GuideApplications.Approve"]
+                                            </button>
                                         </form>
                                     </permission>
                                     <permission require="@WebPermission.GuideApplication.Reject">
-                                        <button type="button" class="btn btn-sm btn-outline-danger"
-                                                data-bs-toggle="modal" data-bs-target="#rejectModal-@row.ApplicationId">
-                                            Reject
+                                        <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#@modalId">
+                                            <i class="fa-solid fa-circle-xmark fa-fw" aria-hidden="true"></i> @Localizer["Admin.GuideApplications.Reject"]
                                         </button>
-                                        <div class="modal fade" id="rejectModal-@row.ApplicationId" tabindex="-1" aria-hidden="true">
-                                            <div class="modal-dialog">
-                                                <div class="modal-content">
-                                                    <form method="post" asp-area="Admin" asp-controller="GuideApplications" asp-action="Reject"
-                                                          asp-route-tourId="@row.TourId" asp-route-id="@row.ApplicationId">
-                                                        @Html.AntiForgeryToken()
-                                                        <div class="modal-header">
-                                                            <h5 class="modal-title">Reject guide application</h5>
-                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                        </div>
-                                                        <div class="modal-body text-start">
-                                                            <label for="reason-@row.ApplicationId" class="form-label">Rejection reason</label>
-                                                            <textarea class="form-control" id="reason-@row.ApplicationId" name="reason" rows="3" required></textarea>
-                                                        </div>
-                                                        <div class="modal-footer">
-                                                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                                                            <button type="submit" class="btn btn-danger">Reject application</button>
-                                                        </div>
-                                                    </form>
-                                                </div>
-                                            </div>
-                                        </div>
                                     </permission>
                                 </div>
                             </td>
@@ -116,36 +195,57 @@
                 </tbody>
             </table>
         </div>
-    </div>
 
-    <nav class="d-flex justify-content-between align-items-center mt-3" aria-label="Guide applications pagination">
-        <span class="text-body-secondary small">
-            Page <span class="font-data">@Model.Page</span>
-        </span>
-        <div class="btn-group">
-            @if (Model.HasPrevious)
-            {
-                <a class="btn btn-outline-secondary btn-sm"
-                   asp-area="Admin" asp-controller="GuideApplications" asp-action="Index"
-                   asp-route-tourId="@Model.TourId" asp-route-status="@Model.StatusFilter" asp-route-page="@(Model.Page - 1)">Previous</a>
-            }
-            @if (Model.HasNext)
-            {
-                <a class="btn btn-outline-secondary btn-sm"
-                   asp-area="Admin" asp-controller="GuideApplications" asp-action="Index"
-                   asp-route-tourId="@Model.TourId" asp-route-status="@Model.StatusFilter" asp-route-page="@(Model.Page + 1)">Next</a>
-            }
-        </div>
-    </nav>
-}
-else
-{
-    <div class="card card-body shadow text-center py-5">
-        <img src="~/assets/images/element/17.svg" alt="" class="mx-auto mb-3" style="height: 80px;" />
-        <p class="text-body-secondary mb-0">
-            @(Model.TourId is null
-                ? "Enter a tour ID above to view its guide applications."
-                : "No guide applications found for this tour.")
-        </p>
-    </div>
-}
+        @foreach (var row in Model.Applications)
+        {
+            var modalId = "rejectModal-" + row.ApplicationId.ToString("N");
+            var titleId = modalId + "-title";
+            var bodyId = modalId + "-body";
+            var reasonId = modalId + "-reason";
+            var helpId = modalId + "-help";
+            <permission require="@WebPermission.GuideApplication.Reject">
+                <div class="modal fade" id="@modalId" tabindex="-1" aria-labelledby="@titleId" aria-describedby="@bodyId" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <form method="post" asp-area="Admin" asp-controller="GuideApplications" asp-action="Reject"
+                              asp-route-tourId="@row.TourId" asp-route-id="@row.ApplicationId"
+                              class="modal-content" role="dialog" aria-modal="true" aria-labelledby="@titleId">
+                            @Html.AntiForgeryToken()
+                            <div class="modal-header">
+                                <h2 class="modal-title h5" id="@titleId">@Localizer["Admin.GuideApplications.RejectTitle"]</h2>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Admin.GuideApplications.Close"]"></button>
+                            </div>
+                            <div class="modal-body" id="@bodyId">
+                                <label for="@reasonId" class="form-label">@Localizer["Admin.GuideApplications.ReasonLabel"]</label>
+                                <textarea id="@reasonId" name="reason" class="form-control" rows="3" maxlength="1000" required aria-describedby="@helpId"></textarea>
+                                <div id="@helpId" class="form-text">@Localizer["Admin.GuideApplications.ReasonHelp"]</div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">@Localizer["Admin.GuideApplications.Cancel"]</button>
+                                <button type="submit" class="btn btn-danger">@Localizer["Admin.GuideApplications.RejectSubmit"]</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </permission>
+        }
+
+        @if (Model.HasPrevious || Model.HasNext)
+        {
+            <div class="card-footer border-top d-flex justify-content-between align-items-center">
+                <span class="text-secondary small">@Localizer["Admin.GuideApplications.PageLabel"] <bdi class="font-data">@Count(Model.Page)</bdi></span>
+                <div class="btn-group">
+                    @if (Model.HasPrevious)
+                    {
+                        <a class="btn btn-outline-secondary btn-sm" asp-area="Admin" asp-controller="GuideApplications" asp-action="Index"
+                           asp-route-tourId="@Model.TourId" asp-route-status="@Model.StatusFilter" asp-route-page="@(Model.Page - 1)">@Localizer["Admin.GuideApplications.Previous"]</a>
+                    }
+                    @if (Model.HasNext)
+                    {
+                        <a class="btn btn-outline-secondary btn-sm" asp-area="Admin" asp-controller="GuideApplications" asp-action="Index"
+                           asp-route-tourId="@Model.TourId" asp-route-status="@Model.StatusFilter" asp-route-page="@(Model.Page + 1)">@Localizer["Admin.GuideApplications.Next"]</a>
+                    }
+                </div>
+            </div>
+        }
+    }
+</section>

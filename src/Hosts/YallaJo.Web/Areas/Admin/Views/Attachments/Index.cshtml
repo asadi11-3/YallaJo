@@ -1,134 +1,184 @@
+@using System.Globalization
+@using Microsoft.Extensions.Localization
 @using YallaJo.Web.Infrastructure.Authorization
 @using YallaJo.Web.Areas.Admin.Models.Attachments
 @model YallaJo.Web.Areas.Admin.Models.Attachments.AttachmentListVm
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
-    ViewData["Title"] = "Attachments";
-    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = Localizer["Admin.Attachments.Title"].Value;
+    ViewData["AdminNav"] = "Attachments";
+
+    var culture = CultureInfo.CurrentCulture;
+    string Date(DateTime dt) => dt.ToString("yyyy-MM-dd HH:mm", culture);
+
+    var hasContext = Model.HasFilter;
+    var entityType = Model.Filter.EntityType;
+    var entityId = Model.Filter.EntityId;
 }
 
-<div class="container mt-4">
-    <h2>Attachments</h2>
-    <p class="text-muted">Select an entity to view or manage its attachments.</p>
+<div class="d-sm-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-1">@Localizer["Admin.Attachments.Title"]</h1>
+        <p class="mb-0 text-secondary">@Localizer["Admin.Attachments.Subtitle"]</p>
+    </div>
+</div>
 
-    @* Success/Error flash banners are rendered globally by the shared _Alerts partial (in _Layout). *@
-    @if (ViewBag.Error       is string vbe) { <div class="alert alert-danger">@vbe</div> }
+@if (ViewBag.Error is string vbe)
+{
+    <div class="alert alert-danger" role="alert">@vbe</div>
+}
 
-    @* ── Filter: choose entity ─────────────────────────────────────────── *@
-    <form asp-area="Admin" asp-controller="Attachments" asp-action="Index" method="get"
-          class="row g-2 mb-4">
-        <div class="col-md-3">
-            <label class="form-label">Entity type</label>
-            <select name="entityType"
-                    asp-items="Html.GetEnumSelectList<EntityTypeOption>()"
-                    class="form-select">
-                <option value="">—</option>
-            </select>
+@if (!hasContext)
+{
+    <div class="card shadow">
+        <div class="card-body text-center py-5">
+            <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
+            <h2 class="h5">@Localizer["Admin.Attachments.NoContextHeading"]</h2>
+            <p class="mb-0 text-secondary">@Localizer["Admin.Attachments.NoContextMessage"]</p>
         </div>
-        <div class="col-md-6">
-            <label class="form-label">Entity ID</label>
-            <input name="entityId" class="form-control"
-                   value="@(Model.HasFilter ? Model.Filter.EntityId.ToString() : string.Empty)"
-                   placeholder="00000000-0000-0000-0000-000000000000" />
+    </div>
+}
+else
+{
+    <div class="card shadow mb-4">
+        <div class="card-header border-bottom">
+            <h2 class="card-header-title h5 mb-0">@Localizer["Admin.Attachments.ContextHeading"]</h2>
         </div>
-        <div class="col-md-3 d-flex align-items-end">
-            <button type="submit" class="btn btn-outline-secondary">Load</button>
+        <div class="card-body">
+            <p class="mb-0 text-secondary">
+                @Localizer["Admin.Attachments.ContextLabel"]
+                <span class="badge bg-primary bg-opacity-10 text-primary ms-1">@entityType.ToString()</span>
+            </p>
         </div>
-    </form>
+    </div>
 
-    @if (Model.HasFilter)
-    {
-        <permission require="@WebPermission.Attachment.Create">
-            <div class="card mb-4 p-3">
-                <h5>Upload Attachment</h5>
-                <form asp-area="Admin" asp-controller="Attachments" asp-action="Upload"
-                      method="post" enctype="multipart/form-data">
+    <permission require="@WebPermission.Attachment.Create">
+        <div class="card shadow mb-4">
+            <div class="card-header border-bottom">
+                <h2 class="card-header-title h5 mb-0">@Localizer["Admin.Attachments.UploadHeading"]</h2>
+            </div>
+            <div class="card-body">
+                <form asp-area="Admin" asp-controller="Attachments" asp-action="Upload" method="post" enctype="multipart/form-data">
                     @Html.AntiForgeryToken()
-                    <input type="hidden" name="EntityType" value="@Model.Filter.EntityType" />
-                    <input type="hidden" name="EntityId" value="@Model.Filter.EntityId" />
-
-                    <div class="row g-2">
+                    <input type="hidden" name="EntityType" value="@entityType" />
+                    <input type="hidden" name="EntityId" value="@entityId" />
+                    <div class="row g-3">
                         <div class="col-md-4">
-                            <label class="form-label">File</label>
-                            <input type="file" name="File" class="form-control" required />
+                            <label for="upload-file" class="form-label">@Localizer["Admin.Attachments.FileLabel"]</label>
+                            <input id="upload-file" type="file" name="File" class="form-control" required aria-describedby="file-help" />
+                            <small id="file-help" class="form-text">@Localizer["Admin.Attachments.FileHelp"]</small>
                         </div>
                         <div class="col-md-3">
-                            <label class="form-label">Attachment type</label>
-                            <select name="AttachmentType"
-                                    asp-items="Html.GetEnumSelectList<AttachmentTypeOption>()"
-                                    class="form-select"></select>
+                            <label for="upload-type" class="form-label">@Localizer["Admin.Attachments.TypeLabel"]</label>
+                            <select id="upload-type" name="AttachmentType" asp-items="Html.GetEnumSelectList<AttachmentTypeOption>()" class="form-select"></select>
                         </div>
                         <div class="col-md-2">
-                            <label class="form-label">Sort order</label>
-                            <input name="SortOrder" type="number" value="0" min="0" class="form-control" />
+                            <label for="upload-sort" class="form-label">@Localizer["Admin.Attachments.SortLabel"]</label>
+                            <input id="upload-sort" name="SortOrder" type="number" value="0" min="0" class="form-control" dir="ltr" />
                         </div>
                         <div class="col-md-3 d-flex align-items-end">
-                            <button type="submit" class="btn btn-primary">Upload</button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fa-solid fa-upload fa-fw" aria-hidden="true"></i> @Localizer["Admin.Attachments.UploadSubmit"]
+                            </button>
                         </div>
                     </div>
                 </form>
             </div>
-        </permission>
+        </div>
+    </permission>
 
-        <table class="table table-sm table-bordered align-middle">
-            <thead>
-                <tr>
-                    <th style="width:96px;">Preview</th>
-                    <th>File</th>
-                    <th>Type</th>
-                    <th>Sort</th>
-                    <th>Uploaded</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var a in Model.Attachments.OrderBy(x => x.SortOrder))
-                {
-                    <tr>
-                        <td>
-                            @if (string.Equals(a.Type, "Image", StringComparison.OrdinalIgnoreCase))
+    <section class="card shadow" aria-labelledby="attachments-heading">
+        <div class="card-header border-bottom">
+            <h2 id="attachments-heading" class="card-header-title h5 mb-0">@Localizer["Admin.Attachments.Directory"]</h2>
+        </div>
+        <div class="card-body">
+            @if (Model.Attachments.Count == 0)
+            {
+                <div class="text-center py-5">
+                    <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
+                    <p class="mb-0 text-secondary">@Localizer["Admin.Attachments.EmptyMessage"]</p>
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th scope="col">@Localizer["Admin.Attachments.ColPreview"]</th>
+                                <th scope="col">@Localizer["Admin.Attachments.ColFile"]</th>
+                                <th scope="col">@Localizer["Admin.Attachments.ColType"]</th>
+                                <th scope="col">@Localizer["Admin.Attachments.ColSort"]</th>
+                                <th scope="col">@Localizer["Admin.Attachments.ColUploaded"]</th>
+                                <th scope="col" class="text-end">@Localizer["Admin.Attachments.ColActions"]</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var a in Model.Attachments.OrderBy(x => x.SortOrder))
                             {
-                                <img src="@(a.ThumbnailUrl ?? a.Url)" alt="" style="max-width:80px;max-height:80px;" />
+                                var isImage = string.Equals(a.Type, "Image", StringComparison.OrdinalIgnoreCase);
+                                <tr>
+                                    <td>
+                                        @if (isImage)
+                                        {
+                                            <img src="@(a.ThumbnailUrl ?? a.Url)" width="80" height="80" loading="lazy"
+                                                 alt="@(a.OriginalFileName ?? Localizer["Admin.Attachments.ImageAlt"].Value)"
+                                                 class="rounded" style="object-fit:cover;" />
+                                        }
+                                        else
+                                        {
+                                            <a href="@a.Url" target="_blank" rel="noopener" class="btn btn-sm btn-outline-secondary">
+                                                <i class="fa-solid fa-up-right-from-square fa-fw" aria-hidden="true"></i> @Localizer["Admin.Attachments.Open"]
+                                            </a>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (string.IsNullOrWhiteSpace(a.OriginalFileName))
+                                        {
+                                            <span class="text-secondary" aria-label="@Localizer["Admin.Attachments.NoFileName"]">&mdash;</span>
+                                        }
+                                        else
+                                        {
+                                            <bdi dir="ltr" class="text-break">@a.OriginalFileName</bdi>
+                                        }
+                                    </td>
+                                    <td><span class="badge bg-secondary bg-opacity-10 text-secondary">@a.Type</span></td>
+                                    <td><bdi dir="ltr" class="font-data">@a.SortOrder</bdi></td>
+                                    <td><bdi dir="ltr" class="font-data text-secondary">@Date(a.UploadedAt)</bdi></td>
+                                    <td class="text-end">
+                                        @if (isImage)
+                                        {
+                                            <permission require="@WebPermission.EntityImage.Update">
+                                                <form asp-area="Admin" asp-controller="Attachments" asp-action="SetPrimary" asp-route-id="@a.Id" method="post" class="d-inline">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="EntityType" value="@entityType" />
+                                                    <input type="hidden" name="EntityId" value="@entityId" />
+                                                    <button type="submit" class="btn btn-sm btn-outline-secondary">
+                                                        <i class="fa-solid fa-star fa-fw" aria-hidden="true"></i> @Localizer["Admin.Attachments.MakePrimary"]
+                                                    </button>
+                                                </form>
+                                            </permission>
+                                        }
+                                        <permission require="@WebPermission.Attachment.Delete">
+                                            <form asp-area="Admin" asp-controller="Attachments" asp-action="Delete" asp-route-id="@a.Id" method="post" class="d-inline"
+                                                  data-confirm="@Localizer["Admin.Attachments.DeleteConfirm"]"
+                                                  data-confirm-title="@Localizer["Admin.Attachments.DeleteTitle"]"
+                                                  data-confirm-action="@Localizer["Admin.Attachments.Delete"]">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="entityType" value="@entityType" />
+                                                <input type="hidden" name="entityId" value="@entityId" />
+                                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                    <i class="fa-solid fa-trash fa-fw" aria-hidden="true"></i> @Localizer["Admin.Attachments.Delete"]
+                                                </button>
+                                            </form>
+                                        </permission>
+                                    </td>
+                                </tr>
                             }
-                            else
-                            {
-                                <a href="@a.Url" target="_blank">Open</a>
-                            }
-                        </td>
-                        <td>@(a.OriginalFileName ?? "—")</td>
-                        <td>@a.Type</td>
-                        <td>@a.SortOrder</td>
-                        <td>@a.UploadedAt.ToString("u")</td>
-                        <td>
-                            <permission require="@WebPermission.EntityImage.Update">
-                                @if (string.Equals(a.Type, "Image", StringComparison.OrdinalIgnoreCase))
-                                {
-                                    <form asp-area="Admin" asp-controller="Attachments" asp-action="SetPrimary"
-                                          asp-route-id="@a.Id" method="post" class="d-inline">
-                                        @Html.AntiForgeryToken()
-                                        <input type="hidden" name="EntityType" value="@Model.Filter.EntityType" />
-                                        <input type="hidden" name="EntityId" value="@Model.Filter.EntityId" />
-                                        <button type="submit" class="btn btn-sm btn-outline-secondary">Make primary</button>
-                                    </form>
-                                }
-                            </permission>
-                            <permission require="@WebPermission.Attachment.Delete">
-                                <form asp-area="Admin" asp-controller="Attachments" asp-action="Delete"
-                                      asp-route-id="@a.Id" method="post" class="d-inline">
-                                    @Html.AntiForgeryToken()
-                                    <input type="hidden" name="entityType" value="@Model.Filter.EntityType" />
-                                    <input type="hidden" name="entityId" value="@Model.Filter.EntityId" />
-                                    <button type="submit" class="btn btn-sm btn-outline-danger"
-                                            onclick="return confirm('Delete this attachment?');">Delete</button>
-                                </form>
-                            </permission>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    }
-</div>
-
-@section Scripts {
-    <partial name="_ValidationScriptsPartial" />
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </section>
 }

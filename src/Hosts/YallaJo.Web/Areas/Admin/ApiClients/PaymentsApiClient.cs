@@ -20,7 +20,8 @@ public sealed class PaymentsApiClient
         string? type,
         Guid? cursor,
         int pageSize,
-        CancellationToken ct = default)
+        CancellationToken ct = default,
+        Guid? bookingId = null)
     {
         var query = new List<string>
         {
@@ -41,6 +42,13 @@ public sealed class PaymentsApiClient
         if (cursor is { } c && c != Guid.Empty)
         {
             query.Add("cursor=" + c.ToString("D"));
+        }
+
+        // Best-effort server-side narrowing; callers also filter client-side by
+        // BookingId in case the API ignores this param.
+        if (bookingId is { } b && b != Guid.Empty)
+        {
+            query.Add("bookingId=" + b.ToString("D"));
         }
 
         var url = "/api/v1/payments/admin/all?" + string.Join("&", query);

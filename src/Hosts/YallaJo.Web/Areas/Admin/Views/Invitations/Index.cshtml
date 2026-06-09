@@ -1,97 +1,141 @@
+@using Microsoft.Extensions.Localization
 @using YallaJo.Web.Infrastructure.Authorization
 @model YallaJo.Web.Areas.Admin.Models.Invitations.InviteUserVm
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
-    ViewData["Title"] = "Invite User";
-    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = Localizer["Admin.Invite.Title"].Value;
+    ViewData["AdminNav"] = "Invitations";
 }
 
-<div class="container mt-4">
-    <h2>Invite User</h2>
-    <p class="text-muted">
-        Creates a pending identity and profile, then emails the user an invite link. The account becomes active only after the invitee sets their password through the invite link.
-    </p>
+@* Success/Error flash banners are rendered globally by the shared _Alerts partial in the layout. *@
 
-    @* Success/Error flash banners are rendered globally by the shared _Alerts partial (in _Layout). *@
-
-    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
-
-    <permission require="@WebPermission.User.Create">
-        <form asp-area="Admin" asp-controller="Invitations" asp-action="Create" method="post" class="col-md-6">
-            @Html.AntiForgeryToken()
-
-            <div class="mb-3">
-                <label asp-for="Email" class="form-label"></label>
-                <input asp-for="Email" class="form-control" autocomplete="email" />
-                <span asp-validation-for="Email" class="text-danger"></span>
-            </div>
-
-            <div class="row g-2">
-                <div class="col-md-6 mb-3">
-                    <label asp-for="FirstName" class="form-label"></label>
-                    <input asp-for="FirstName" class="form-control" />
-                    <span asp-validation-for="FirstName" class="text-danger"></span>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label asp-for="LastName" class="form-label"></label>
-                    <input asp-for="LastName" class="form-control" />
-                    <span asp-validation-for="LastName" class="text-danger"></span>
-                </div>
-            </div>
-
-            <div class="mb-3">
-                <label asp-for="DisplayName" class="form-label"></label>
-                <input asp-for="DisplayName" class="form-control" />
-                <span asp-validation-for="DisplayName" class="text-danger"></span>
-            </div>
-
-            <div class="mb-3">
-                <label asp-for="AvatarUrl" class="form-label"></label>
-                <input asp-for="AvatarUrl" class="form-control" type="url" />
-                <span asp-validation-for="AvatarUrl" class="text-danger"></span>
-            </div>
-
-            <div class="mb-3">
-                <label asp-for="SelectedRoleIds" class="form-label"></label>
-                <span asp-validation-for="SelectedRoleIds" class="text-danger d-block mb-1"></span>
-
-                @if (Model.AvailableRoles.Count == 0)
-                {
-                    <div class="alert alert-warning mb-0">No assignable roles available.</div>
-                }
-                else
-                {
-                    <div class="border rounded p-2">
-                        @foreach (var role in Model.AvailableRoles)
-                        {
-                            <div class="form-check mb-1">
-                                <input class="form-check-input"
-                                       type="checkbox"
-                                       name="SelectedRoleIds"
-                                       value="@role.RoleId"
-                                       id="role_@role.RoleId"
-                                       @(Model.SelectedRoleIds.Contains(role.RoleId) ? "checked" : null) />
-                                <label class="form-check-label" for="role_@role.RoleId">
-                                    @role.Name
-                                    @if (role.IsPrivileged)
-                                    {
-                                        <span class="badge bg-warning text-dark ms-1">Privileged</span>
-                                    }
-                                    @if (!string.IsNullOrWhiteSpace(role.Description))
-                                    {
-                                        <small class="text-muted ms-1">— @role.Description</small>
-                                    }
-                                </label>
-                            </div>
-                        }
-                    </div>
-                }
-            </div>
-
-            <button type="submit" class="btn btn-primary">Send invite</button>
-            <a asp-area="Admin" asp-controller="Invitations" asp-action="Resend" class="btn btn-link">Resend an invite</a>
-        </form>
-    </permission>
+<div class="d-sm-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-1">@Localizer["Admin.Invite.Heading"]</h1>
+        <p class="mb-0 text-secondary">@Localizer["Admin.Invite.Subtitle"]</p>
+    </div>
+    <a asp-area="Admin" asp-controller="Invitations" asp-action="Resend" class="btn btn-outline-secondary btn-sm mt-3 mt-sm-0">
+        <i class="fa-solid fa-paper-plane fa-fw me-1" aria-hidden="true"></i>@Localizer["Admin.Invite.ResendLink"]
+    </a>
 </div>
+
+<permission require="@WebPermission.User.Create">
+    <div class="row g-4">
+        <div class="col-xxl-8">
+            <div class="card shadow">
+                <div class="card-header border-bottom">
+                    <h2 class="card-header-title h5 mb-0">@Localizer["Admin.Invite.FormHeading"]</h2>
+                </div>
+                <div class="card-body">
+                    <form asp-area="Admin" asp-controller="Invitations" asp-action="Create" method="post" novalidate>
+                        @Html.AntiForgeryToken()
+
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                        <div class="mb-3">
+                            <label for="invite-email" class="form-label">@Localizer["Admin.Invite.EmailLabel"]</label>
+                            <input asp-for="Email" id="invite-email" class="form-control" type="email"
+                                   autocomplete="email" dir="ltr" aria-describedby="invite-email-help"
+                                   placeholder="@Localizer["Admin.Invite.EmailPlaceholder"]" />
+                            <small id="invite-email-help" class="form-text text-secondary">@Localizer["Admin.Invite.EmailHelp"]</small>
+                            <span asp-validation-for="Email" class="text-danger d-block" role="alert"></span>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-6 mb-3">
+                                <label for="invite-first-name" class="form-label">@Localizer["Admin.Invite.FirstNameLabel"]</label>
+                                <input asp-for="FirstName" id="invite-first-name" class="form-control" autocomplete="given-name" />
+                                <span asp-validation-for="FirstName" class="text-danger d-block" role="alert"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="invite-last-name" class="form-label">@Localizer["Admin.Invite.LastNameLabel"]</label>
+                                <input asp-for="LastName" id="invite-last-name" class="form-control" autocomplete="family-name" />
+                                <span asp-validation-for="LastName" class="text-danger d-block" role="alert"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="invite-display-name" class="form-label">@Localizer["Admin.Invite.DisplayNameLabel"]</label>
+                            <input asp-for="DisplayName" id="invite-display-name" class="form-control"
+                                   aria-describedby="invite-display-name-help" />
+                            <small id="invite-display-name-help" class="form-text text-secondary">@Localizer["Admin.Invite.DisplayNameHelp"]</small>
+                            <span asp-validation-for="DisplayName" class="text-danger d-block" role="alert"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="invite-avatar-url" class="form-label">@Localizer["Admin.Invite.AvatarUrlLabel"]</label>
+                            <input asp-for="AvatarUrl" id="invite-avatar-url" class="form-control" type="url" dir="ltr"
+                                   aria-describedby="invite-avatar-url-help" placeholder="@Localizer["Admin.Invite.AvatarUrlPlaceholder"]" />
+                            <small id="invite-avatar-url-help" class="form-text text-secondary">@Localizer["Admin.Invite.AvatarUrlHelp"]</small>
+                            <span asp-validation-for="AvatarUrl" class="text-danger d-block" role="alert"></span>
+                        </div>
+
+                        <fieldset class="mb-3">
+                            <legend class="form-label h6">@Localizer["Admin.Invite.RolesLabel"]</legend>
+                            <span asp-validation-for="SelectedRoleIds" class="text-danger d-block mb-1" role="alert"></span>
+
+                            @if (Model.AvailableRoles.Count == 0)
+                            {
+                                <div class="alert alert-warning mb-0" role="alert">@Localizer["Admin.Invite.NoRoles"]</div>
+                            }
+                            else
+                            {
+                                <div class="border rounded p-3">
+                                    @foreach (var role in Model.AvailableRoles)
+                                    {
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input"
+                                                   type="checkbox"
+                                                   name="SelectedRoleIds"
+                                                   value="@role.RoleId"
+                                                   id="role_@role.RoleId"
+                                                   @(Model.SelectedRoleIds.Contains(role.RoleId) ? "checked" : null) />
+                                            <label class="form-check-label" for="role_@role.RoleId">
+                                                <span class="fw-semibold">@role.Name</span>
+                                                @if (role.IsPrivileged)
+                                                {
+                                                    <span class="badge bg-warning bg-opacity-10 text-warning ms-1">
+                                                        <i class="fa-solid fa-shield-halved fa-fw" aria-hidden="true"></i>
+                                                        @Localizer["Admin.Invite.Privileged"]
+                                                    </span>
+                                                }
+                                                @if (!string.IsNullOrWhiteSpace(role.Description))
+                                                {
+                                                    <small class="text-secondary d-block">@role.Description</small>
+                                                }
+                                            </label>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </fieldset>
+
+                        <div class="d-flex flex-wrap gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fa-solid fa-paper-plane fa-fw me-1" aria-hidden="true"></i>@Localizer["Admin.Invite.Submit"]
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xxl-4">
+            <div class="card shadow">
+                <div class="card-header border-bottom">
+                    <h2 class="card-header-title h5 mb-0">@Localizer["Admin.Invite.HowHeading"]</h2>
+                </div>
+                <div class="card-body">
+                    <ol class="list-group list-group-borderless list-group-numbered small mb-0">
+                        <li class="list-group-item px-0 bg-transparent">@Localizer["Admin.Invite.Step1"]</li>
+                        <li class="list-group-item px-0 bg-transparent">@Localizer["Admin.Invite.Step2"]</li>
+                        <li class="list-group-item px-0 bg-transparent">@Localizer["Admin.Invite.Step3"]</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+</permission>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />

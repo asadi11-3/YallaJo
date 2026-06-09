@@ -46,4 +46,13 @@ public static class NotificationTemplatesMapper
         "InApp" => "secondary",
         _ => "secondary",
     };
+
+    public static string ChannelIcon(string channel) => channel switch
+    {
+        "Email" => "envelope",
+        "Sms" => "comment-sms",
+        "Push" => "bell",
+        "InApp" => "window-maximize",
+        _ => "circle-info",
+    };
 }

@@ -27,6 +27,20 @@ public sealed class CreateBlogVm
     [Display(Name = "Meta description")]
     public string? MetaDescription { get; set; }
 
-    [Display(Name = "Place ID (optional)")]
+    /// <summary>
+    /// Optional related place. Rendered as a name dropdown (F10: never a raw GUID
+    /// textbox) whose option values carry the place id while the user only ever
+    /// reads the place name.
+    /// </summary>
     public Guid? PlaceId { get; set; }
+
+    /// <summary>Selectable places (name shown, id submitted). Populated by the facade.</summary>
+    public IReadOnlyList<PlaceOptionVm> PlaceOptions { get; set; } = [];
+}
+
+/// <summary>A selectable place for the related-place dropdown (F10: name shown, id is the value).</summary>
+public sealed class PlaceOptionVm
+{
+    public Guid Id { get; init; }
+    public string Name { get; init; } = string.Empty;
 }

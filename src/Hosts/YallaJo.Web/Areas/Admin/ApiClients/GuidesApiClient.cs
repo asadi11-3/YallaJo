@@ -15,6 +15,11 @@ public sealed class GuidesApiClient
     public Task<ApiResult<TourGuideProfileResponse>> GetGuideAsync(Guid guideId, CancellationToken ct)
         => _api.GetAsync<TourGuideProfileResponse>($"{Base}/{guideId:D}/", ct);
 
+    // GET /api/v1/guides — public list of active tour guides; used to build the
+    // guide-name picker (F10) so admins select a name instead of typing a GUID.
+    public Task<ApiResult<AdminGuideListResponse>> ListAsync(int page, int pageSize, CancellationToken ct)
+        => _api.GetAsync<AdminGuideListResponse>($"/api/v1/guides?page={page}&pageSize={pageSize}", ct);
+
     public Task<ApiResult> SuspendAsync(Guid guideId, string reason, CancellationToken ct)
         => _api.PostAsync($"{Base}/{guideId:D}/suspend", new { reason }, ct);
 

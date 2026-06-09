@@ -1,76 +1,136 @@
+@using Microsoft.Extensions.Localization
 @using YallaJo.Web.Infrastructure.Authorization
 @model YallaJo.Web.Areas.Admin.Models.Specializations.SpecializationListVm
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
-    ViewData["Title"] = "Specializations";
-    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = Localizer["Admin.Specializations.Title"].Value;
+    ViewData["AdminNav"] = "Specializations";
 }
 
-<div class="container mt-4">
-    <h2>Specializations</h2>
+<div class="d-sm-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-1">@Localizer["Admin.Specializations.Title"]</h1>
+        <p class="mb-0 text-secondary">@Localizer["Admin.Specializations.Subtitle"]</p>
+    </div>
+</div>
 
-    @* Success/Error flash banners are rendered globally by the shared _Alerts partial (in _Layout). *@
-    @if (ViewBag.Error       is string vbe) { <div class="alert alert-danger">@vbe</div> }
+@if (ViewBag.Error is string vbe)
+{
+    <div class="alert alert-danger" role="alert">@vbe</div>
+}
 
-    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
-
-    <permission require="@WebPermission.Specialization.Create">
-        <div class="card mb-4 p-3">
-            <h5>Create Specialization</h5>
+<permission require="@WebPermission.Specialization.Create">
+    <div class="card shadow mb-4">
+        <div class="card-header border-bottom">
+            <h2 class="card-header-title h5 mb-0">@Localizer["Admin.Specializations.CreateHeading"]</h2>
+        </div>
+        <div class="card-body">
             <form asp-area="Admin" asp-controller="Specializations" asp-action="Create" method="post">
                 @Html.AntiForgeryToken()
-                <div class="row g-2">
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3" role="alert"></div>
+                <div class="row g-3">
                     <div class="col-md-4">
-                        <label asp-for="Create.Name" class="form-label"></label>
+                        <label asp-for="Create.Name" class="form-label">@Localizer["Admin.Specializations.NameLabel"]</label>
                         <input asp-for="Create.Name" class="form-control" />
-                        <span asp-validation-for="Create.Name" class="text-danger"></span>
+                        <span asp-validation-for="Create.Name" class="text-danger" role="alert"></span>
                     </div>
                     <div class="col-md-4">
-                        <label asp-for="Create.Description" class="form-label"></label>
+                        <label asp-for="Create.Description" class="form-label">@Localizer["Admin.Specializations.DescriptionLabel"]</label>
                         <input asp-for="Create.Description" class="form-control" />
-                        <span asp-validation-for="Create.Description" class="text-danger"></span>
+                        <span asp-validation-for="Create.Description" class="text-danger" role="alert"></span>
                     </div>
                     <div class="col-md-2">
-                        <label asp-for="Create.Icon" class="form-label"></label>
-                        <input asp-for="Create.Icon" class="form-control" />
-                        <span asp-validation-for="Create.Icon" class="text-danger"></span>
+                        <label asp-for="Create.Icon" class="form-label">@Localizer["Admin.Specializations.IconLabel"]</label>
+                        <input asp-for="Create.Icon" class="form-control" dir="ltr" aria-describedby="icon-help" />
+                        <small id="icon-help" class="form-text">@Localizer["Admin.Specializations.IconHelp"]</small>
+                        <span asp-validation-for="Create.Icon" class="text-danger" role="alert"></span>
                     </div>
                     <div class="col-md-2 d-flex align-items-end">
-                        <button type="submit" class="btn btn-primary">Create</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fa-solid fa-plus fa-fw" aria-hidden="true"></i> @Localizer["Admin.Specializations.CreateSubmit"]
+                        </button>
                     </div>
                 </div>
             </form>
         </div>
-    </permission>
+    </div>
+</permission>
 
-    <table class="table table-sm table-bordered">
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>Description</th>
-                <th>Icon</th>
-                <th>Active</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var s in Model.Specializations)
-            {
-                <tr>
-                    <td>@s.Name</td>
-                    <td>@(s.Description ?? "—")</td>
-                    <td>@(s.Icon ?? "—")</td>
-                    <td>@(s.IsActive ? "✓" : "—")</td>
-                    <td>
-                        <permission require="@WebPermission.Specialization.Update">
-                            <a asp-area="Admin" asp-controller="Specializations" asp-action="Edit" asp-route-id="@s.Id"
-                               class="btn btn-sm btn-outline-secondary">Edit</a>
-                        </permission>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
-</div>
+<section class="card shadow" aria-labelledby="specializations-heading">
+    <div class="card-header border-bottom">
+        <h2 id="specializations-heading" class="card-header-title h5 mb-0">@Localizer["Admin.Specializations.Directory"]</h2>
+    </div>
+    <div class="card-body">
+        @if (Model.Specializations.Count == 0)
+        {
+            <div class="text-center py-5">
+                <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
+                <p class="mb-0 text-secondary">@Localizer["Admin.Specializations.EmptyMessage"]</p>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th scope="col">@Localizer["Admin.Specializations.ColName"]</th>
+                            <th scope="col">@Localizer["Admin.Specializations.ColDescription"]</th>
+                            <th scope="col">@Localizer["Admin.Specializations.ColIcon"]</th>
+                            <th scope="col">@Localizer["Admin.Specializations.ColStatus"]</th>
+                            <th scope="col" class="text-end">@Localizer["Admin.Specializations.ColActions"]</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var s in Model.Specializations)
+                        {
+                            <tr>
+                                <td class="fw-semibold">@s.Name</td>
+                                <td>
+                                    @if (string.IsNullOrWhiteSpace(s.Description))
+                                    {
+                                        <span class="text-secondary" aria-label="@Localizer["Admin.Specializations.NoDescription"]">&mdash;</span>
+                                    }
+                                    else
+                                    {
+                                        @s.Description
+                                    }
+                                </td>
+                                <td>
+                                    @if (string.IsNullOrWhiteSpace(s.Icon))
+                                    {
+                                        <span class="text-secondary" aria-label="@Localizer["Admin.Specializations.NoIcon"]">&mdash;</span>
+                                    }
+                                    else
+                                    {
+                                        <bdi dir="ltr" class="font-data text-secondary">@s.Icon</bdi>
+                                    }
+                                </td>
+                                <td>
+                                    @if (s.IsActive)
+                                    {
+                                        <span class="badge bg-success bg-opacity-10 text-success"><i class="fa-solid fa-circle-check fa-fw" aria-hidden="true"></i> @Localizer["Admin.Specializations.Active"]</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary bg-opacity-10 text-secondary"><i class="fa-solid fa-circle-minus fa-fw" aria-hidden="true"></i> @Localizer["Admin.Specializations.Inactive"]</span>
+                                    }
+                                </td>
+                                <td class="text-end">
+                                    <permission require="@WebPermission.Specialization.Update">
+                                        <a asp-area="Admin" asp-controller="Specializations" asp-action="Edit" asp-route-id="@s.Id" class="btn btn-sm btn-outline-secondary">
+                                            <i class="fa-solid fa-pen fa-fw" aria-hidden="true"></i> @Localizer["Admin.Specializations.Edit"]
+                                        </a>
+                                    </permission>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</section>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />

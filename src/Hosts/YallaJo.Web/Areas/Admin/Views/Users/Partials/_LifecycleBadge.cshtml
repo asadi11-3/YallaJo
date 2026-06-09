@@ -6,13 +6,15 @@
     Every call site already passes the field, so the future upgrade
     is a one-helper change.
 *@
+@using Microsoft.Extensions.Localization
 @using YallaJo.Web.Areas.Admin.Helpers
 @model YallaJo.Web.Areas.Admin.Models.Users.LifecycleBadgeVm
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
     var css   = LifecycleBadge.GetCssClass(Model.IsActive, Model.LifecycleState);
     var label = LifecycleBadge.GetLabel(Model.IsActive, Model.LifecycleState);
     var icon  = LifecycleBadge.GetIconClass(Model.IsActive, Model.LifecycleState);
-    var aria  = Model.IsActive ? "User is active" : "User is inactive";
+    var aria  = Model.IsActive ? Localizer["Admin.UserDetails.StatusActiveAria"].Value : Localizer["Admin.UserDetails.StatusInactiveAria"].Value;
 }
 @* A11Y5 — status conveyed by colour + icon + text, not colour alone. *@
 <span class="badge @css" aria-label="@aria"><i class="@icon fa-fw" aria-hidden="true"></i> <span>@label</span></span>

@@ -1,41 +1,66 @@
+@using System.Globalization
+@using Microsoft.Extensions.Localization
 @using YallaJo.Web.Areas.Admin.Models.Outbox
 @using YallaJo.Web.Infrastructure.Authorization
 @model OutboxVm
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
-    ViewData["Title"] = "Outbox dead-letters";
+    ViewData["Title"] = Localizer["Admin.Outbox.Title"].Value;
     ViewData["AdminNav"] = "Outbox";
+
+    var culture = CultureInfo.CurrentCulture;
+    string Count(int n) => n.ToString("N0", culture);
+    string Date(DateTime dt) => dt.ToString("yyyy-MM-dd HH:mm", culture);
+    var hasFilter = !string.IsNullOrWhiteSpace(Model.ModuleFilter);
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="d-sm-flex justify-content-between align-items-center mb-4">
     <div>
-        <h1 class="h3 mb-1">Outbox dead-letters</h1>
-        <p class="text-muted mb-0">Messages that exhausted their retries across all modules. Replay clones a message with fresh retry state.</p>
+        <h1 class="h3 mb-1">@Localizer["Admin.Outbox.Title"]</h1>
+        <p class="text-secondary mb-0">@Localizer["Admin.Outbox.Subtitle"]</p>
     </div>
     @if (Model.TotalCount > 0)
     {
-        <span class="badge bg-danger bg-opacity-10 text-danger font-data">@Model.TotalCount dead</span>
+        <span class="badge bg-danger bg-opacity-10 text-danger">
+            <i class="fa-solid fa-triangle-exclamation fa-fw" aria-hidden="true"></i>
+            <bdi class="font-data">@Count(Model.TotalCount)</bdi> @Localizer["Admin.Outbox.DeadLabel"]
+        </span>
     }
 </div>
+
+@if (ViewBag.Error is string outboxError && !string.IsNullOrWhiteSpace(outboxError))
+{
+    <div class="alert alert-danger" role="alert">@outboxError</div>
+}
 
 <form method="get" asp-controller="Outbox" asp-action="Index" class="card card-body shadow mb-4">
     <div class="row g-2 align-items-end">
         <div class="col-md-4">
-            <label class="form-label">Module</label>
-            <input name="Module" value="@Model.ModuleFilter" class="form-control" placeholder="All modules" />
+            <label class="form-label" for="outbox-module">@Localizer["Admin.Outbox.ModuleLabel"]</label>
+            <input id="outbox-module" name="Module" value="@Model.ModuleFilter" class="form-control" dir="ltr"
+                   aria-describedby="outbox-module-help" placeholder="@Localizer["Admin.Outbox.ModulePlaceholder"]" />
+            <small id="outbox-module-help" class="form-text">@Localizer["Admin.Outbox.ModuleHelp"]</small>
         </div>
         <div class="col-auto">
-            <button type="submit" class="btn btn-primary">Apply</button>
-            <a asp-controller="Outbox" asp-action="Index" class="btn btn-outline-secondary">Reset</a>
+            <button type="submit" class="btn btn-primary">@Localizer["Admin.Outbox.Apply"]</button>
+            <a asp-controller="Outbox" asp-action="Index" class="btn btn-outline-secondary">@Localizer["Admin.Outbox.Reset"]</a>
         </div>
     </div>
 </form>
 
-<div class="card shadow">
+<section class="card shadow" aria-labelledby="outbox-heading">
+    <div class="card-header border-bottom">
+        <h2 id="outbox-heading" class="card-header-title h5 mb-0">@Localizer["Admin.Outbox.Directory"]</h2>
+    </div>
     @if (Model.DeadLetters.Count == 0)
     {
         <div class="card-body text-center py-5">
-            <img src="~/assets/images/element/17.svg" class="h-80px mb-3" alt="" />
-            <p class="text-muted mb-0">No dead-lettered outbox messages.</p>
+            <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
+            <p class="mb-3 text-secondary">@Localizer["Admin.Outbox.EmptyMessage"]</p>
+            @if (hasFilter)
+            {
+                <a class="btn btn-sm btn-primary-soft" asp-controller="Outbox" asp-action="Index">@Localizer["Admin.Outbox.ClearFilter"]</a>
+            }
         </div>
     }
     else
@@ -44,31 +69,42 @@
             <table class="table table-hover align-middle mb-0">
                 <thead>
                     <tr>
-                        <th>Message</th>
-                        <th>Module</th>
-                        <th>Type</th>
-                        <th>Occurred</th>
-                        <th>Retries</th>
-                        <th>Last error</th>
-                        <th class="text-end">Actions</th>
+                        <th scope="col">@Localizer["Admin.Outbox.ColModule"]</th>
+                        <th scope="col">@Localizer["Admin.Outbox.ColType"]</th>
+                        <th scope="col">@Localizer["Admin.Outbox.ColOccurred"]</th>
+                        <th scope="col" class="text-end">@Localizer["Admin.Outbox.ColRetries"]</th>
+                        <th scope="col">@Localizer["Admin.Outbox.ColLastError"]</th>
+                        <th scope="col" class="text-end">@Localizer["Admin.Outbox.ColActions"]</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach (var d in Model.DeadLetters)
                     {
                         <tr>
-                            <td class="font-data">@d.Id.ToString("D").Substring(0, 8)</td>
-                            <td>@d.Module</td>
-                            <td>@d.Type</td>
-                            <td class="font-data">@d.OccurredOnUtc.ToString("g")</td>
-                            <td class="font-data">@d.RetryCount</td>
-                            <td class="text-truncate" style="max-width: 280px;">@(string.IsNullOrWhiteSpace(d.LastError) ? "—" : d.LastError)</td>
+                            <td class="fw-semibold">@d.Module</td>
+                            <td><bdi dir="ltr">@d.Type</bdi></td>
+                            <td><bdi class="font-data" dir="ltr">@Date(d.OccurredOnUtc)</bdi></td>
+                            <td class="text-end"><bdi class="font-data">@Count(d.RetryCount)</bdi></td>
+                            <td class="text-truncate" style="max-width: 280px;">
+                                @if (string.IsNullOrWhiteSpace(d.LastError))
+                                {
+                                    <span class="text-secondary" aria-label="@Localizer["Admin.Outbox.NoError"]">&mdash;</span>
+                                }
+                                else
+                                {
+                                    <bdi dir="ltr" class="text-break">@d.LastError</bdi>
+                                }
+                            </td>
                             <td class="text-end">
                                 <permission require="@WebPermission.Outbox.Replay">
-                                    <form method="post" asp-action="Replay" asp-route-module="@d.Module" asp-route-id="@d.Id" class="d-inline">
+                                    <form method="post" asp-action="Replay" asp-route-module="@d.Module" asp-route-id="@d.Id"
+                                          class="d-inline"
+                                          data-confirm="@Localizer["Admin.Outbox.ReplayConfirm"]"
+                                          data-confirm-title="@Localizer["Admin.Outbox.ReplayTitle"]"
+                                          data-confirm-action="@Localizer["Admin.Outbox.Replay"]">
                                         @Html.AntiForgeryToken()
                                         <button type="submit" class="btn btn-sm btn-outline-primary">
-                                            <i class="bi bi-arrow-repeat me-1"></i>Replay
+                                            <i class="fa-solid fa-arrows-rotate fa-fw me-1" aria-hidden="true"></i>@Localizer["Admin.Outbox.Replay"]
                                         </button>
                                     </form>
                                 </permission>
@@ -79,4 +115,32 @@
             </table>
         </div>
     }
-</div>
+</section>
+
+<permission require="@WebPermission.Outbox.Replay">
+    <section class="card shadow mt-4" aria-labelledby="outbox-backfill-heading">
+        <div class="card-header border-bottom">
+            <h2 id="outbox-backfill-heading" class="card-header-title h5 mb-0">@Localizer["Admin.Outbox.BackfillHeading"]</h2>
+        </div>
+        <div class="card-body">
+            <p class="text-secondary">@Localizer["Admin.Outbox.BackfillHint"]</p>
+            <form method="post" asp-action="BackfillTourSnapshots" class="row g-2 align-items-end"
+                  data-confirm="@Localizer["Admin.Outbox.BackfillConfirm"]"
+                  data-confirm-title="@Localizer["Admin.Outbox.BackfillTitle"]"
+                  data-confirm-action="@Localizer["Admin.Outbox.BackfillSubmit"]">
+                @Html.AntiForgeryToken()
+                <div class="col-sm-4">
+                    <label class="form-label" for="outbox-batch-size">@Localizer["Admin.Outbox.BatchSizeLabel"]</label>
+                    <input id="outbox-batch-size" name="batchSize" type="number" min="1" max="10000" dir="ltr"
+                           class="form-control" aria-describedby="outbox-batch-size-help" />
+                    <small id="outbox-batch-size-help" class="form-text">@Localizer["Admin.Outbox.BatchSizeHelp"]</small>
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-outline-secondary">
+                        <i class="fa-solid fa-database fa-fw me-1" aria-hidden="true"></i>@Localizer["Admin.Outbox.BackfillSubmit"]
+                    </button>
+                </div>
+            </form>
+        </div>
+    </section>
+</permission>

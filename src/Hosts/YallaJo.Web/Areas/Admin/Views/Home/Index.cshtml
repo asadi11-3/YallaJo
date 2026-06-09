@@ -1,22 +1,34 @@
 @model YallaJo.Web.Areas.Admin.Models.Home.DashboardVm
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
-    ViewData["Title"] = "Dashboard";
+    ViewData["Title"] = Localizer["Admin.Dashboard"];
     ViewData["AdminNav"] = "Dashboard";
-}
-@functions {
-    static string Money(decimal amount, string? currency)
-        => string.IsNullOrWhiteSpace(currency) ? amount.ToString("N0") : $"{amount:N0} {currency}";
-}
 
-<div class="d-sm-flex justify-content-between align-items-center mb-4">
-    <h1 class="h3 mb-0">Dashboard</h1>
-</div>
+    // Culture-aware numbers/currency (CON3): never string-concatenate. JOD uses
+    // 3 decimals (fils); counts use the integer "N0" pattern under the request
+    // culture's IFormatProvider so AR renders Arabic-Indic numerals when configured.
+    var culture = System.Globalization.CultureInfo.CurrentCulture;
 
-@{
     var revenueValue = Model.TotalRevenue > 0 ? Model.TotalRevenue : Model.Revenue;
     var bookingsValue = Model.TotalBookings > 0 ? Model.TotalBookings : Model.Bookings;
     var usersValue = Model.TotalUsers > 0 ? Model.TotalUsers : Model.Users;
+
+    string Count(int n) => n.ToString("N0", culture);
+    // Revenue shown as a whole figure (fils omitted on the KPI tile for scan-ability).
+    string Amount(decimal d) => d.ToString("N0", culture);
+
+    var hasAlerts = Model.Alerts > 0;
 }
+
+@*
+    KPI status text (A11Y5): each tile carries colour + icon + TEXT, never colour
+    alone. The Alerts tile especially states its condition in words.
+*@
+
+<div class="d-sm-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0">@Localizer["Admin.Dashboard"]</h1>
+</div>
 
 <!-- KPI tiles -->
 <div class="row g-4 mb-4">
@@ -24,11 +36,12 @@
         <div class="card card-body shadow p-4 h-100">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
-                    <h6 class="fw-light mb-1">Revenue</h6>
-                    <h3 class="font-data mb-0">@Money(revenueValue, null)</h3>
+                    <h2 class="h6 fw-light mb-1">@Localizer["Admin.Revenue"]</h2>
+                    <p class="font-data h3 mb-1"><bdi>@Amount(revenueValue)</bdi></p>
+                    <span class="badge bg-success bg-opacity-10 text-success">@Localizer["Admin.Kpi.Total"]</span>
                 </div>
                 <div class="icon-lg rounded-circle bg-success bg-opacity-10 text-success">
-                    <i class="fa-solid fa-sack-dollar fa-fw"></i>
+                    <i class="fa-solid fa-sack-dollar fa-fw" aria-hidden="true"></i>
                 </div>
             </div>
         </div>
@@ -37,11 +50,12 @@
         <div class="card card-body shadow p-4 h-100">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
-                    <h6 class="fw-light mb-1">Bookings</h6>
-                    <h3 class="font-data mb-0">@bookingsValue.ToString("N0")</h3>
+                    <h2 class="h6 fw-light mb-1">@Localizer["Admin.Bookings"]</h2>
+                    <p class="font-data h3 mb-1"><bdi>@Count(bookingsValue)</bdi></p>
+                    <span class="badge bg-primary bg-opacity-10 text-primary">@Localizer["Admin.Kpi.Total"]</span>
                 </div>
                 <div class="icon-lg rounded-circle bg-primary bg-opacity-10 text-primary">
-                    <i class="fa-solid fa-ticket fa-fw"></i>
+                    <i class="fa-solid fa-ticket fa-fw" aria-hidden="true"></i>
                 </div>
             </div>
         </div>
@@ -50,11 +64,12 @@
         <div class="card card-body shadow p-4 h-100">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
-                    <h6 class="fw-light mb-1">Users</h6>
-                    <h3 class="font-data mb-0">@usersValue.ToString("N0")</h3>
+                    <h2 class="h6 fw-light mb-1">@Localizer["Admin.Users"]</h2>
+                    <p class="font-data h3 mb-1"><bdi>@Count(usersValue)</bdi></p>
+                    <span class="badge bg-info bg-opacity-10 text-info">@Localizer["Admin.Kpi.Total"]</span>
                 </div>
                 <div class="icon-lg rounded-circle bg-info bg-opacity-10 text-info">
-                    <i class="fa-solid fa-users fa-fw"></i>
+                    <i class="fa-solid fa-users fa-fw" aria-hidden="true"></i>
                 </div>
             </div>
         </div>
@@ -63,11 +78,23 @@
         <div class="card card-body shadow p-4 h-100">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
-                    <h6 class="fw-light mb-1">Alerts</h6>
-                    <h3 class="font-data mb-0">@Model.Alerts.ToString("N0")</h3>
+                    <h2 class="h6 fw-light mb-1">@Localizer["Admin.Alerts"]</h2>
+                    <p class="font-data h3 mb-1"><bdi>@Count(Model.Alerts)</bdi></p>
+                    @if (hasAlerts)
+                    {
+                        <span class="badge bg-warning bg-opacity-10 text-warning">
+                            <i class="fa-solid fa-triangle-exclamation fa-fw me-1" aria-hidden="true"></i>@Localizer["Admin.Kpi.NeedsAttention"]
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-success bg-opacity-10 text-success">
+                            <i class="fa-solid fa-circle-check fa-fw me-1" aria-hidden="true"></i>@Localizer["Admin.Kpi.AllClear"]
+                        </span>
+                    }
                 </div>
-                <div class="icon-lg rounded-circle bg-warning bg-opacity-10 text-warning">
-                    <i class="fa-solid fa-triangle-exclamation fa-fw"></i>
+                <div class="icon-lg rounded-circle @(hasAlerts ? "bg-warning text-warning" : "bg-success text-success") bg-opacity-10">
+                    <i class="fa-solid @(hasAlerts ? "fa-triangle-exclamation" : "fa-circle-check") fa-fw" aria-hidden="true"></i>
                 </div>
             </div>
         </div>
@@ -79,18 +106,19 @@
     <div class="col-xxl-8">
         <div class="card shadow h-100">
             <div class="card-header border-bottom">
-                <h5 class="card-header-title mb-0">Revenue trend</h5>
+                <h2 class="card-header-title h5 mb-0">@Localizer["Admin.RevenueTrend"]</h2>
             </div>
             <div class="card-body">
                 @if (Model.HasRevenueSeries)
                 {
-                    <div id="ChartRevenue"></div>
+                    <div id="ChartRevenue" role="img" aria-label="@Localizer["Admin.RevenueTrend"]"></div>
                 }
                 else
                 {
                     <div class="text-center py-5">
-                        <img src="~/assets/images/element/17.svg" alt="" class="h-80px mb-3" />
-                        <p class="mb-0 text-secondary">No revenue data for this period.</p>
+                        <img src="~/assets/images/element/17.svg" alt="" width="80" height="80" class="h-80px mb-3" aria-hidden="true" />
+                        <p class="mb-3 text-secondary">@Localizer["Admin.Empty.Revenue"]</p>
+                        <a class="btn btn-sm btn-primary-soft" asp-area="Admin" asp-controller="Bookings" asp-action="Index">@Localizer["Admin.Empty.ViewBookings"]</a>
                     </div>
                 }
             </div>
@@ -99,18 +127,19 @@
     <div class="col-xxl-4">
         <div class="card shadow h-100">
             <div class="card-header border-bottom">
-                <h5 class="card-header-title mb-0">Bookings breakdown</h5>
+                <h2 class="card-header-title h5 mb-0">@Localizer["Admin.BookingsBreakdown"]</h2>
             </div>
             <div class="card-body">
                 @if (Model.TotalBookings > 0)
                 {
-                    <div id="ChartBookings"></div>
+                    <div id="ChartBookings" role="img" aria-label="@Localizer["Admin.BookingsBreakdown"]"></div>
                 }
                 else
                 {
                     <div class="text-center py-5">
-                        <img src="~/assets/images/element/17.svg" alt="" class="h-80px mb-3" />
-                        <p class="mb-0 text-secondary">No bookings yet.</p>
+                        <img src="~/assets/images/element/17.svg" alt="" width="80" height="80" class="h-80px mb-3" aria-hidden="true" />
+                        <p class="mb-3 text-secondary">@Localizer["Admin.Empty.Bookings"]</p>
+                        <a class="btn btn-sm btn-primary-soft" asp-area="Admin" asp-controller="Bookings" asp-action="Index">@Localizer["Admin.Empty.ViewBookings"]</a>
                     </div>
                 }
             </div>
@@ -122,18 +151,19 @@
     <div class="col-xxl-6">
         <div class="card shadow h-100">
             <div class="card-header border-bottom">
-                <h5 class="card-header-title mb-0">Users</h5>
+                <h2 class="card-header-title h5 mb-0">@Localizer["Admin.Users"]</h2>
             </div>
             <div class="card-body">
                 @if (Model.TotalUsers > 0)
                 {
-                    <div id="ChartUsers"></div>
+                    <div id="ChartUsers" role="img" aria-label="@Localizer["Admin.Users"]"></div>
                 }
                 else
                 {
                     <div class="text-center py-5">
-                        <img src="~/assets/images/element/17.svg" alt="" class="h-80px mb-3" />
-                        <p class="mb-0 text-secondary">No user data.</p>
+                        <img src="~/assets/images/element/17.svg" alt="" width="80" height="80" class="h-80px mb-3" aria-hidden="true" />
+                        <p class="mb-3 text-secondary">@Localizer["Admin.Empty.Users"]</p>
+                        <a class="btn btn-sm btn-primary-soft" asp-area="Admin" asp-controller="Users" asp-action="Index">@Localizer["Admin.Empty.ViewUsers"]</a>
                     </div>
                 }
             </div>
@@ -144,7 +174,7 @@
     <div class="col-xxl-6">
         <div class="card shadow h-100">
             <div class="card-header border-bottom">
-                <h5 class="card-header-title mb-0">Recent activity</h5>
+                <h2 class="card-header-title h5 mb-0">@Localizer["Admin.RecentActivity"]</h2>
             </div>
             <div class="card-body">
                 @if (Model.HasInteractions)
@@ -157,7 +187,9 @@
                                     <span class="fw-semibold">@i.InteractionType</span>
                                     <span class="text-secondary small ms-1">@i.EntityType</span>
                                 </div>
-                                <span class="font-data small text-secondary">@i.OccurredAt.ToString("g")</span>
+                                <span class="font-data small text-secondary">
+                                    <bdi>@i.OccurredAt.ToString("g", culture)</bdi>
+                                </span>
                             </li>
                         }
                     </ul>
@@ -165,8 +197,8 @@
                 else
                 {
                     <div class="text-center py-5">
-                        <img src="~/assets/images/element/17.svg" alt="" class="h-80px mb-3" />
-                        <p class="mb-0 text-secondary">No recent activity.</p>
+                        <img src="~/assets/images/element/17.svg" alt="" width="80" height="80" class="h-80px mb-3" aria-hidden="true" />
+                        <p class="mb-0 text-secondary">@Localizer["Admin.Empty.Activity"]</p>
                     </div>
                 }
             </div>
@@ -174,57 +206,30 @@
     </div>
 </div>
 
+@*
+    CSP-safe server→client data hand-off (A6/SEC1/J3/JS5): a NON-executable JSON
+    data island, read by wwwroot/assets/js/admin-dashboard.js via the
+    data-yj-component root below. No inline executable <script>, no nonce needed.
+    Chart labels are localized server-side here so the JS never hard-codes copy
+    (CON1).
+*@
+<script type="application/json" data-yj-component="admin-dashboard">
+    {
+        "revenue": @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.RevenueSeries.Select(p => new { x = p.Date, y = p.Revenue }))),
+        "bookings": [@Model.CompletedBookings, @Model.CancelledBookings, @Model.OtherBookings],
+        "users": [@Model.TotalUsers, @Model.NewUsers],
+        "labels": {
+            "revenue": @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Localizer["Admin.Revenue"].Value)),
+            "users": @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Localizer["Admin.Users"].Value)),
+            "completed": @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Localizer["Admin.Bookings.Completed"].Value)),
+            "cancelled": @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Localizer["Admin.Bookings.Cancelled"].Value)),
+            "other": @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Localizer["Admin.Bookings.Other"].Value)),
+            "totalUsers": @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Localizer["Admin.Users.Total"].Value)),
+            "newUsers": @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Localizer["Admin.Users.New"].Value))
+        }
+    }
+</script>
+
 @section Scripts {
-    <script>
-        (function () {
-            var revenueData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.RevenueSeries.Select(p => new { x = p.Date, y = p.Revenue })));
-            var bookingsData = [@Model.CompletedBookings, @Model.CancelledBookings, @Model.OtherBookings];
-            var usersData = [@Model.TotalUsers, @Model.NewUsers];
-
-            var ink = getComputedStyle(document.body).getPropertyValue('--bs-body-color') || '#212529';
-            var grid = 'rgba(120,120,120,.15)';
-
-            function exists(id) { return document.getElementById(id) !== null; }
-
-            if (exists('ChartRevenue') && revenueData.length) {
-                new ApexCharts(document.getElementById('ChartRevenue'), {
-                    chart: { type: 'area', height: 300, toolbar: { show: false }, fontFamily: 'inherit' },
-                    series: [{ name: 'Revenue', data: revenueData }],
-                    colors: ['#5143d9'],
-                    dataLabels: { enabled: false },
-                    stroke: { curve: 'smooth', width: 2 },
-                    fill: { type: 'gradient', gradient: { opacityFrom: 0.25, opacityTo: 0.02 } },
-                    xaxis: { type: 'datetime', labels: { style: { colors: ink } } },
-                    yaxis: { labels: { style: { colors: ink } } },
-                    grid: { borderColor: grid },
-                    tooltip: { x: { format: 'dd MMM yyyy' } }
-                }).render();
-            }
-
-            if (exists('ChartBookings') && bookingsData.some(function (v) { return v > 0; })) {
-                new ApexCharts(document.getElementById('ChartBookings'), {
-                    chart: { type: 'donut', height: 300, fontFamily: 'inherit' },
-                    series: bookingsData,
-                    labels: ['Completed', 'Cancelled', 'Other'],
-                    colors: ['#0cbc87', '#d6293e', '#4f9ef8'],
-                    legend: { position: 'bottom', labels: { colors: ink } },
-                    dataLabels: { enabled: true }
-                }).render();
-            }
-
-            if (exists('ChartUsers') && usersData.some(function (v) { return v > 0; })) {
-                new ApexCharts(document.getElementById('ChartUsers'), {
-                    chart: { type: 'bar', height: 300, toolbar: { show: false }, fontFamily: 'inherit' },
-                    series: [{ name: 'Users', data: usersData }],
-                    colors: ['#4f9ef8'],
-                    plotOptions: { bar: { columnWidth: '45%', borderRadius: 4, distributed: true } },
-                    legend: { show: false },
-                    dataLabels: { enabled: false },
-                    xaxis: { categories: ['Total users', 'New users'], labels: { style: { colors: ink } } },
-                    yaxis: { labels: { style: { colors: ink } } },
-                    grid: { borderColor: grid }
-                }).render();
-            }
-        })();
-    </script>
+    <script src="~/assets/js/admin-dashboard.js" asp-append-version="true" defer></script>
 }

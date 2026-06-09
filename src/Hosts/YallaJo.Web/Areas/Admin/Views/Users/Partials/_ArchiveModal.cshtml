@@ -1,11 +1,6 @@
-@*
-    Phase 5C — Archive admin lifecycle modal (DESTRUCTIVE, terminal).
-    Triggered by `data-bs-toggle="modal" data-bs-target="#mdl-archive-{userId}"`.
-    Posts to LifecycleController.Archive with AdminArchiveVm.ConfirmText.
-    Requires the operator to type ARCHIVE (capitals) before Submit
-    enables; the same regex is enforced server-side as defense-in-depth.
-*@
+@using Microsoft.Extensions.Localization
 @model Guid
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
     var userId = Model;
     var email = (ViewData["TargetEmail"] as string) ?? string.Empty;
@@ -14,56 +9,35 @@
     var bannerId = $"{modalId}-banner";
     var inputId = $"{modalId}-confirm";
 }
-
-<div class="modal fade admin-action-modal" id="@modalId" tabindex="-1"
-     aria-labelledby="@titleId" aria-describedby="@bannerId" aria-hidden="true"
-     data-bs-backdrop="static" data-bs-keyboard="false">
+<div class="modal fade admin-action-modal" id="@modalId" tabindex="-1" aria-labelledby="@titleId" aria-describedby="@bannerId" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <form asp-area="Admin" asp-controller="Lifecycle"
-                  asp-action="Archive" asp-route-userId="@userId"
-                  method="post" id="archive-form">
+            <form asp-area="Admin" asp-controller="Lifecycle" asp-action="Archive" asp-route-userId="@userId" method="post" id="archive-form">
                 @Html.AntiForgeryToken()
                 <div class="modal-header bg-danger text-white">
-                    <h5 class="modal-title" id="@titleId">
-                        <i class="bi bi-archive-fill me-1"></i>
-                        Archive account — irreversible
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white"
-                            data-bs-dismiss="modal" aria-label="Close"></button>
+                    <h2 class="modal-title h5" id="@titleId">
+                        <i class="fa-solid fa-box-archive fa-fw me-1" aria-hidden="true"></i>@Localizer["Admin.UserModal.Archive.Title"]
+                    </h2>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="@Localizer["Admin.UserModal.Close"]"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="alert alert-danger small mb-3" id="@bannerId">
-                        Archiving is <strong>permanent</strong>. The user will be
-                        signed out, locked out of every reset / reassign /
-                        reactivate path, and cannot recover the account. Roles
-                        and historical data remain in the database (audit only).
-                    </div>
-                    <p class="mb-2">
-                        About to archive
+                    <div class="alert alert-danger" id="@bannerId">@Localizer["Admin.UserModal.Archive.Banner"]</div>
+                    <p>
                         @if (!string.IsNullOrWhiteSpace(email))
                         {
-                            <strong>@email</strong>
+                            @Localizer["Admin.UserModal.Archive.AboutTo", email]
                         }
                         else
                         {
-                            <span>this user</span>
-                        }.
+                            @Localizer["Admin.UserModal.Archive.AboutTo", Localizer["Admin.UserModal.ThisUser"].Value]
+                        }
                     </p>
-                    <label class="form-label small text-muted mb-1" for="@inputId">
-                        Type <code>ARCHIVE</code> in capitals to confirm:
-                    </label>
-                    <input id="@inputId" name="ConfirmText" type="text"
-                           autocomplete="off" required
-                           class="form-control" placeholder="ARCHIVE" />
+                    <label class="form-label" for="@inputId">@Localizer["Admin.UserModal.Archive.ConfirmLabel", "ARCHIVE"]</label>
+                    <input id="@inputId" name="ConfirmText" type="text" autocomplete="off" required class="form-control" placeholder="ARCHIVE" dir="ltr" />
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary"
-                            data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-danger" disabled
-                            data-archive-submit>
-                        Archive permanently
-                    </button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Localizer["Admin.UserModal.Cancel"]</button>
+                    <button type="submit" class="btn btn-danger" disabled data-archive-submit>@Localizer["Admin.UserModal.Archive.Submit"]</button>
                 </div>
             </form>
         </div>

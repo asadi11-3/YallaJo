@@ -1,12 +1,6 @@
-@*
-    Phase 5C — Reassign admin lifecycle modal (DESTRUCTIVE — full credential
-    teardown). Triggered by `data-bs-toggle="modal" data-bs-target="#mdl-reassign-{userId}"`.
-    Posts to LifecycleController.Reassign with AdminReassignAccountVm
-    (NewEmail / Reason / IUnderstand). The "I understand" checkbox is the
-    server-side authoritative confirmation; the JS gate that disables the
-    Submit button is cosmetic.
-*@
+@using Microsoft.Extensions.Localization
 @model Guid
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
     var userId = Model;
     var email = (ViewData["TargetEmail"] as string) ?? string.Empty;
@@ -17,79 +11,51 @@
     var reasonId = $"{modalId}-reason";
     var checkboxId = $"{modalId}-understand";
 }
-
-<div class="modal fade admin-action-modal" id="@modalId" tabindex="-1"
-     aria-labelledby="@titleId" aria-describedby="@bannerId" aria-hidden="true"
-     data-bs-backdrop="static" data-bs-keyboard="false">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
+<div class="modal fade admin-action-modal" id="@modalId" tabindex="-1" aria-labelledby="@titleId" aria-describedby="@bannerId" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
-            <form asp-area="Admin" asp-controller="Lifecycle"
-                  asp-action="Reassign" asp-route-userId="@userId"
-                  method="post" id="reassign-form">
+            <form asp-area="Admin" asp-controller="Lifecycle" asp-action="Reassign" asp-route-userId="@userId" method="post" id="reassign-form">
                 @Html.AntiForgeryToken()
                 <div class="modal-header bg-danger text-white">
-                    <h5 class="modal-title" id="@titleId">
-                        <i class="bi bi-arrow-left-right me-1"></i>
-                        Reassign account to a new owner
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white"
-                            data-bs-dismiss="modal" aria-label="Close"></button>
+                    <h2 class="modal-title h5" id="@titleId">
+                        <i class="fa-solid fa-right-left fa-fw me-1" aria-hidden="true"></i>@Localizer["Admin.UserModal.Reassign.Title"]
+                    </h2>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="@Localizer["Admin.UserModal.Close"]"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="alert alert-danger small mb-3" id="@bannerId">
-                        This action will:
-                        <ul class="mb-2 mt-1">
-                            <li>Change the primary email to the new address (unverified)</li>
-                            <li>Invalidate the current password</li>
-                            <li>Revoke all sessions</li>
-                            <li>Deactivate every external sign-in link (Google, Facebook, …)</li>
-                            <li>Scrub the profile to placeholder values</li>
-                            <li>Email an activation link to the new email</li>
+                    <div class="alert alert-danger" id="@bannerId">
+                        <p class="mb-1">@Localizer["Admin.UserModal.Reassign.BannerIntro"]</p>
+                        <ul class="mb-1">
+                            <li>@Localizer["Admin.UserModal.Reassign.Item1"]</li>
+                            <li>@Localizer["Admin.UserModal.Reassign.Item2"]</li>
+                            <li>@Localizer["Admin.UserModal.Reassign.Item3"]</li>
+                            <li>@Localizer["Admin.UserModal.Reassign.Item4"]</li>
+                            <li>@Localizer["Admin.UserModal.Reassign.Item5"]</li>
+                            <li>@Localizer["Admin.UserModal.Reassign.Item6"]</li>
                         </ul>
-                        The old owner loses access immediately and cannot recover the account.
+                        <p class="mb-0">@Localizer["Admin.UserModal.Reassign.BannerOutro"]</p>
                     </div>
-
                     @if (!string.IsNullOrWhiteSpace(email))
                     {
-                        <p class="mb-3 small text-muted">
-                            Current owner: <strong>@email</strong>
-                        </p>
+                        <p class="mb-3 small text-muted">@Localizer["Admin.UserModal.Reassign.CurrentOwner", email]</p>
                     }
-
                     <div class="mb-3">
-                        <label class="form-label" for="@newEmailId">New email</label>
-                        <input id="@newEmailId" name="NewEmail" type="email"
-                               required maxlength="320"
-                               class="form-control"
-                               placeholder="newowner@example.com" />
+                        <label class="form-label" for="@newEmailId">@Localizer["Admin.UserModal.Reassign.NewEmailLabel"]</label>
+                        <input id="@newEmailId" name="NewEmail" type="email" required maxlength="320" class="form-control" placeholder="@Localizer["Admin.UserModal.Reassign.NewEmailPlaceholder"]" dir="ltr" />
                     </div>
-
                     <div class="mb-3">
-                        <label class="form-label" for="@reasonId">
-                            Reason (optional, recorded in the audit timeline)
-                        </label>
-                        <textarea id="@reasonId" name="Reason" maxlength="500" rows="2"
-                                  class="form-control"
-                                  placeholder="e.g. ownership transfer"></textarea>
-                        <div class="form-text">Up to 500 characters.</div>
+                        <label class="form-label" for="@reasonId">@Localizer["Admin.UserModal.Reassign.ReasonLabel"]</label>
+                        <textarea id="@reasonId" name="Reason" maxlength="500" rows="2" class="form-control" placeholder="@Localizer["Admin.UserModal.Reassign.ReasonPlaceholder"]"></textarea>
+                        <div class="form-text">@Localizer["Admin.UserModal.CharLimit"]</div>
                     </div>
-
                     <div class="form-check">
-                        <input class="form-check-input" type="checkbox"
-                               id="@checkboxId" name="IUnderstand" value="true" />
-                        <label class="form-check-label" for="@checkboxId">
-                            I understand this will revoke the old owner's access and
-                            transfer the account to the new email.
-                        </label>
+                        <input class="form-check-input" type="checkbox" id="@checkboxId" name="IUnderstand" value="true" />
+                        <label class="form-check-label" for="@checkboxId">@Localizer["Admin.UserModal.Reassign.UnderstandLabel"]</label>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary"
-                            data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-danger" disabled
-                            data-reassign-submit>
-                        Reassign
-                    </button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Localizer["Admin.UserModal.Cancel"]</button>
+                    <button type="submit" class="btn btn-danger" disabled data-reassign-submit>@Localizer["Admin.UserModal.Reassign.Submit"]</button>
                 </div>
             </form>
         </div>

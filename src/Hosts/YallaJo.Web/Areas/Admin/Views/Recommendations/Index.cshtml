@@ -1,9 +1,16 @@
+@using System.Globalization
+@using Microsoft.Extensions.Localization
 @using YallaJo.Web.Areas.Admin.Models.Recommendations
 @using YallaJo.Web.Infrastructure.Authorization
 @model RecommendationsVm
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
-    ViewData["Title"] = "Recommendations";
+    ViewData["Title"] = Localizer["Admin.Recommendations.Title"].Value;
     ViewData["AdminNav"] = "Recommendations";
+
+    var culture = CultureInfo.CurrentCulture;
+    string Count(int n) => n.ToString("N0", culture);
+    string Date(DateTime dt) => dt.ToString("yyyy-MM-dd HH:mm", culture);
 
     var entityKinds = new[] { "Tour", "Place", "Business", "Category" };
     var contexts = new[]
@@ -14,44 +21,49 @@
     };
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="d-sm-flex justify-content-between align-items-center mb-4">
     <div>
-        <h1 class="h3 mb-1">Recommendations</h1>
-        <p class="text-muted mb-0">Suggestion batches, boost packages and editorial pins.</p>
+        <h1 class="h3 mb-1">@Localizer["Admin.Recommendations.Title"]</h1>
+        <p class="text-secondary mb-0">@Localizer["Admin.Recommendations.Subtitle"]</p>
     </div>
     <div class="d-flex flex-wrap gap-2">
         <permission require="@WebPermission.BoostPackage.Create">
             <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#createBoostModal">
-                <i class="bi bi-rocket-takeoff me-1"></i>Create boost
+                <i class="fa-solid fa-rocket fa-fw me-1" aria-hidden="true"></i>@Localizer["Admin.Recommendations.CreateBoost"]
             </button>
         </permission>
         <permission require="@WebPermission.EditorialPin.Create">
             <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#createPinModal">
-                <i class="bi bi-pin-angle me-1"></i>Create pin
+                <i class="fa-solid fa-thumbtack fa-fw me-1" aria-hidden="true"></i>@Localizer["Admin.Recommendations.CreatePin"]
             </button>
         </permission>
         <permission require="@WebPermission.BoostPackage.Delete">
             <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deactivateBoostModal">
-                Deactivate boost
+                @Localizer["Admin.Recommendations.DeactivateBoost"]
             </button>
         </permission>
         <permission require="@WebPermission.EditorialPin.Delete">
             <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deactivatePinModal">
-                Deactivate pin
+                @Localizer["Admin.Recommendations.DeactivatePin"]
             </button>
         </permission>
     </div>
 </div>
 
-<div class="card shadow">
-    <div class="card-header">
-        <h2 class="h6 mb-0">Suggestion batches</h2>
+@if (ViewBag.Error is string recError && !string.IsNullOrWhiteSpace(recError))
+{
+    <div class="alert alert-danger" role="alert">@recError</div>
+}
+
+<section class="card shadow" aria-labelledby="batches-heading">
+    <div class="card-header border-bottom">
+        <h2 id="batches-heading" class="card-header-title h5 mb-0">@Localizer["Admin.Recommendations.Directory"]</h2>
     </div>
     @if (Model.Batches.Count == 0)
     {
         <div class="card-body text-center py-5">
-            <img src="~/assets/images/element/17.svg" class="h-80px mb-3" alt="" />
-            <p class="text-muted mb-0">No recommendation batches to display.</p>
+            <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
+            <p class="mb-0 text-secondary">@Localizer["Admin.Recommendations.EmptyMessage"]</p>
         </div>
     }
     else
@@ -60,15 +72,14 @@
             <table class="table table-hover align-middle mb-0">
                 <thead>
                     <tr>
-                        <th>Batch</th>
-                        <th>Source</th>
-                        <th>Context</th>
-                        <th>Algorithm</th>
-                        <th>Items</th>
-                        <th>Freshness</th>
-                        <th>Computed</th>
+                        <th scope="col">@Localizer["Admin.Recommendations.ColSource"]</th>
+                        <th scope="col">@Localizer["Admin.Recommendations.ColContext"]</th>
+                        <th scope="col">@Localizer["Admin.Recommendations.ColAlgorithm"]</th>
+                        <th scope="col" class="text-end">@Localizer["Admin.Recommendations.ColItems"]</th>
+                        <th scope="col">@Localizer["Admin.Recommendations.ColFreshness"]</th>
+                        <th scope="col">@Localizer["Admin.Recommendations.ColComputed"]</th>
                         <permission require="@WebPermission.Batch.Refresh">
-                            <th class="text-end">Actions</th>
+                            <th scope="col" class="text-end">@Localizer["Admin.Recommendations.ColActions"]</th>
                         </permission>
                     </tr>
                 </thead>
@@ -76,29 +87,37 @@
                     @foreach (var b in Model.Batches)
                     {
                         <tr>
-                            <td class="font-data">@b.Id.ToString("D").Substring(0, 8)</td>
-                            <td>
-                                <span class="d-block">@b.SourceKind</span>
-                                <span class="font-data text-muted small">@b.SourceId.ToString("D").Substring(0, 8)</span>
-                            </td>
+                            <td class="fw-semibold">@b.SourceKind</td>
                             <td>@b.Context</td>
-                            <td>@b.AlgorithmVersion</td>
-                            <td class="font-data">@b.ItemCount</td>
+                            <td><bdi dir="ltr">@b.AlgorithmVersion</bdi></td>
+                            <td class="text-end"><bdi class="font-data">@Count(b.ItemCount)</bdi></td>
                             <td>
-                                <span class="badge bg-@(b.IsStale ? "warning" : "success") bg-opacity-10 text-@(b.IsStale ? "warning" : "success")">
-                                    @(b.IsStale ? "Stale" : "Fresh")
-                                </span>
+                                @if (b.IsStale)
+                                {
+                                    <span class="badge bg-warning bg-opacity-10 text-warning">
+                                        <i class="fa-solid fa-clock-rotate-left fa-fw" aria-hidden="true"></i> @Localizer["Admin.Recommendations.Stale"]
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-success bg-opacity-10 text-success">
+                                        <i class="fa-solid fa-circle-check fa-fw" aria-hidden="true"></i> @Localizer["Admin.Recommendations.Fresh"]
+                                    </span>
+                                }
                             </td>
-                            <td class="font-data">@b.ComputedAt.ToString("g")</td>
+                            <td><bdi class="font-data" dir="ltr">@Date(b.ComputedAt)</bdi></td>
                             <permission require="@WebPermission.Batch.Refresh">
                                 <td class="text-end">
-                                    <form method="post" asp-action="RefreshBatches" class="d-inline">
+                                    <form method="post" asp-action="RefreshBatches" class="d-inline"
+                                          data-confirm="@Localizer["Admin.Recommendations.RefreshConfirm", b.SourceKind, b.Context]"
+                                          data-confirm-title="@Localizer["Admin.Recommendations.RefreshTitle"]"
+                                          data-confirm-action="@Localizer["Admin.Recommendations.Refresh"]">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="SourceKind" value="@b.SourceKind" />
                                         <input type="hidden" name="SourceId" value="@b.SourceId" />
                                         <input type="hidden" name="Context" value="@b.Context" />
                                         <button type="submit" class="btn btn-sm btn-outline-secondary">
-                                            <i class="bi bi-arrow-clockwise me-1"></i>Refresh
+                                            <i class="fa-solid fa-arrows-rotate fa-fw me-1" aria-hidden="true"></i>@Localizer["Admin.Recommendations.Refresh"]
                                         </button>
                                     </form>
                                 </td>
@@ -109,25 +128,27 @@
             </table>
         </div>
     }
-</div>
+</section>
 
 <permission require="@WebPermission.BoostPackage.Create">
-    <div class="modal fade" id="createBoostModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
-            <form method="post" asp-action="CreateBoost" class="modal-content">
+    <div class="modal fade" id="createBoostModal" tabindex="-1" aria-labelledby="createBoostTitle" aria-describedby="createBoostBody" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <form method="post" asp-action="CreateBoost" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="createBoostTitle">
                 @Html.AntiForgeryToken()
                 <div class="modal-header">
-                    <h5 class="modal-title">Create boost package</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <h2 class="modal-title h5" id="createBoostTitle">@Localizer["Admin.Recommendations.CreateBoostTitle"]</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Admin.Recommendations.Close"]"></button>
                 </div>
-                <div class="modal-body">
+                <div class="modal-body" id="createBoostBody">
+                    <p class="small text-secondary">@Localizer["Admin.Recommendations.OperatorHelp"]</p>
                     <div class="mb-3">
-                        <label class="form-label">Provider id</label>
-                        <input name="ProviderId" class="form-control font-data" required />
+                        <label class="form-label" for="boost-provider">@Localizer["Admin.Recommendations.ProviderIdLabel"]</label>
+                        <input id="boost-provider" name="ProviderId" class="form-control font-data" dir="ltr" aria-describedby="boost-provider-help" required />
+                        <small id="boost-provider-help" class="form-text">@Localizer["Admin.Recommendations.ProviderIdHelp"]</small>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Entity kind</label>
-                        <select name="EntityKind" class="form-select" required>
+                        <label class="form-label" for="boost-kind">@Localizer["Admin.Recommendations.EntityKindLabel"]</label>
+                        <select id="boost-kind" name="EntityKind" class="form-select" required>
                             @foreach (var k in entityKinds)
                             {
                                 <option value="@k">@k</option>
@@ -135,25 +156,26 @@
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Entity id</label>
-                        <input name="EntityId" class="form-control font-data" required />
+                        <label class="form-label" for="boost-entity">@Localizer["Admin.Recommendations.EntityIdLabel"]</label>
+                        <input id="boost-entity" name="EntityId" class="form-control font-data" dir="ltr" aria-describedby="boost-entity-help" required />
+                        <small id="boost-entity-help" class="form-text">@Localizer["Admin.Recommendations.EntityIdHelp"]</small>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Multiplier</label>
-                        <input name="Multiplier" type="number" step="0.01" class="form-control font-data" required />
+                        <label class="form-label" for="boost-mult">@Localizer["Admin.Recommendations.MultiplierLabel"]</label>
+                        <input id="boost-mult" name="Multiplier" type="number" step="0.01" class="form-control font-data" dir="ltr" required />
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Starts at</label>
-                        <input name="StartsAt" type="datetime-local" class="form-control" required />
+                        <label class="form-label" for="boost-starts">@Localizer["Admin.Recommendations.StartsLabel"]</label>
+                        <input id="boost-starts" name="StartsAt" type="datetime-local" class="form-control" dir="ltr" required />
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Expires at</label>
-                        <input name="ExpiresAt" type="datetime-local" class="form-control" required />
+                        <label class="form-label" for="boost-expires">@Localizer["Admin.Recommendations.ExpiresLabel"]</label>
+                        <input id="boost-expires" name="ExpiresAt" type="datetime-local" class="form-control" dir="ltr" required />
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Create boost</button>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">@Localizer["Admin.Recommendations.Cancel"]</button>
+                    <button type="submit" class="btn btn-primary">@Localizer["Admin.Recommendations.CreateBoostSubmit"]</button>
                 </div>
             </form>
         </div>
@@ -161,18 +183,19 @@
 </permission>
 
 <permission require="@WebPermission.EditorialPin.Create">
-    <div class="modal fade" id="createPinModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
-            <form method="post" asp-action="CreatePin" class="modal-content">
+    <div class="modal fade" id="createPinModal" tabindex="-1" aria-labelledby="createPinTitle" aria-describedby="createPinBody" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <form method="post" asp-action="CreatePin" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="createPinTitle">
                 @Html.AntiForgeryToken()
                 <div class="modal-header">
-                    <h5 class="modal-title">Create editorial pin</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <h2 class="modal-title h5" id="createPinTitle">@Localizer["Admin.Recommendations.CreatePinTitle"]</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Admin.Recommendations.Close"]"></button>
                 </div>
-                <div class="modal-body">
+                <div class="modal-body" id="createPinBody">
+                    <p class="small text-secondary">@Localizer["Admin.Recommendations.OperatorHelp"]</p>
                     <div class="mb-3">
-                        <label class="form-label">Entity kind</label>
-                        <select name="EntityKind" class="form-select" required>
+                        <label class="form-label" for="pin-kind">@Localizer["Admin.Recommendations.EntityKindLabel"]</label>
+                        <select id="pin-kind" name="EntityKind" class="form-select" required>
                             @foreach (var k in entityKinds)
                             {
                                 <option value="@k">@k</option>
@@ -180,16 +203,17 @@
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Entity id</label>
-                        <input name="EntityId" class="form-control font-data" required />
+                        <label class="form-label" for="pin-entity">@Localizer["Admin.Recommendations.EntityIdLabel"]</label>
+                        <input id="pin-entity" name="EntityId" class="form-control font-data" dir="ltr" aria-describedby="pin-entity-help" required />
+                        <small id="pin-entity-help" class="form-text">@Localizer["Admin.Recommendations.EntityIdHelp"]</small>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Position</label>
-                        <input name="Position" type="number" class="form-control font-data" required />
+                        <label class="form-label" for="pin-position">@Localizer["Admin.Recommendations.PositionLabel"]</label>
+                        <input id="pin-position" name="Position" type="number" class="form-control font-data" dir="ltr" required />
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Context</label>
-                        <select name="Context" class="form-select" required>
+                        <label class="form-label" for="pin-context">@Localizer["Admin.Recommendations.ContextLabel"]</label>
+                        <select id="pin-context" name="Context" class="form-select" required>
                             @foreach (var c in contexts)
                             {
                                 <option value="@c">@c</option>
@@ -197,17 +221,17 @@
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Badge text <span class="text-muted">(optional)</span></label>
-                        <input name="BadgeText" class="form-control" />
+                        <label class="form-label" for="pin-badge">@Localizer["Admin.Recommendations.BadgeLabel"]</label>
+                        <input id="pin-badge" name="BadgeText" class="form-control" />
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Expires at <span class="text-muted">(optional)</span></label>
-                        <input name="ExpiresAt" type="datetime-local" class="form-control" />
+                        <label class="form-label" for="pin-expires">@Localizer["Admin.Recommendations.ExpiresOptionalLabel"]</label>
+                        <input id="pin-expires" name="ExpiresAt" type="datetime-local" class="form-control" dir="ltr" />
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Create pin</button>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">@Localizer["Admin.Recommendations.Cancel"]</button>
+                    <button type="submit" class="btn btn-primary">@Localizer["Admin.Recommendations.CreatePinSubmit"]</button>
                 </div>
             </form>
         </div>
@@ -215,23 +239,25 @@
 </permission>
 
 <permission require="@WebPermission.BoostPackage.Delete">
-    <div class="modal fade" id="deactivateBoostModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
-            <form method="post" asp-action="DeactivateBoost" class="modal-content">
+    <div class="modal fade" id="deactivateBoostModal" tabindex="-1" aria-labelledby="deactivateBoostTitle" aria-describedby="deactivateBoostBody"
+         aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered">
+            <form method="post" asp-action="DeactivateBoost" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="deactivateBoostTitle">
                 @Html.AntiForgeryToken()
                 <div class="modal-header">
-                    <h5 class="modal-title">Deactivate boost package</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <h2 class="modal-title h5" id="deactivateBoostTitle">@Localizer["Admin.Recommendations.DeactivateBoostTitle"]</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Admin.Recommendations.Close"]"></button>
                 </div>
-                <div class="modal-body">
+                <div class="modal-body" id="deactivateBoostBody">
                     <div class="mb-3">
-                        <label class="form-label">Boost package id</label>
-                        <input name="boostId" class="form-control font-data" required />
+                        <label class="form-label" for="deactivate-boost-id">@Localizer["Admin.Recommendations.BoostIdLabel"]</label>
+                        <input id="deactivate-boost-id" name="boostId" class="form-control font-data" dir="ltr" aria-describedby="deactivate-boost-help" required />
+                        <small id="deactivate-boost-help" class="form-text">@Localizer["Admin.Recommendations.BoostIdHelp"]</small>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-danger">Deactivate boost</button>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">@Localizer["Admin.Recommendations.Cancel"]</button>
+                    <button type="submit" class="btn btn-danger">@Localizer["Admin.Recommendations.DeactivateBoostSubmit"]</button>
                 </div>
             </form>
         </div>
@@ -239,23 +265,25 @@
 </permission>
 
 <permission require="@WebPermission.EditorialPin.Delete">
-    <div class="modal fade" id="deactivatePinModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
-            <form method="post" asp-action="DeactivatePin" class="modal-content">
+    <div class="modal fade" id="deactivatePinModal" tabindex="-1" aria-labelledby="deactivatePinTitle" aria-describedby="deactivatePinBody"
+         aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered">
+            <form method="post" asp-action="DeactivatePin" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="deactivatePinTitle">
                 @Html.AntiForgeryToken()
                 <div class="modal-header">
-                    <h5 class="modal-title">Deactivate editorial pin</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <h2 class="modal-title h5" id="deactivatePinTitle">@Localizer["Admin.Recommendations.DeactivatePinTitle"]</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Admin.Recommendations.Close"]"></button>
                 </div>
-                <div class="modal-body">
+                <div class="modal-body" id="deactivatePinBody">
                     <div class="mb-3">
-                        <label class="form-label">Editorial pin id</label>
-                        <input name="pinId" class="form-control font-data" required />
+                        <label class="form-label" for="deactivate-pin-id">@Localizer["Admin.Recommendations.PinIdLabel"]</label>
+                        <input id="deactivate-pin-id" name="pinId" class="form-control font-data" dir="ltr" aria-describedby="deactivate-pin-help" required />
+                        <small id="deactivate-pin-help" class="form-text">@Localizer["Admin.Recommendations.PinIdHelp"]</small>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-danger">Deactivate pin</button>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">@Localizer["Admin.Recommendations.Cancel"]</button>
+                    <button type="submit" class="btn btn-danger">@Localizer["Admin.Recommendations.DeactivatePinSubmit"]</button>
                 </div>
             </form>
         </div>

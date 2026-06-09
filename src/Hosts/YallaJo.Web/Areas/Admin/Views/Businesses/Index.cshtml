@@ -1,117 +1,193 @@
+@using System.Globalization
+@using Microsoft.Extensions.Localization
 @using YallaJo.Web.Areas.Admin.Models.Businesses
 @using YallaJo.Web.Infrastructure.Authorization
 @model BusinessesVm
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
-    ViewData["Title"] = "Business approvals";
+    ViewData["Title"] = Localizer["Admin.Businesses.Title"].Value;
     ViewData["AdminNav"] = "Businesses";
+
+    var culture = CultureInfo.CurrentCulture;
+    string Count(int n) => n.ToString("N0", culture);
+    string Rating(decimal r) => r.ToString("N1", culture);
+
     var statuses = new[] { "Pending", "Approved", "Rejected", "Suspended", "MoreDocsNeeded" };
+    var hasPlace = Model.PlaceId is { } pid && pid != Guid.Empty;
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="d-sm-flex justify-content-between align-items-center mb-4">
     <div>
-        <h1 class="h3 mb-1">Business approvals</h1>
-        <p class="text-body-secondary mb-0">Review and moderate the businesses registered under a place.</p>
+        <h1 class="h3 mb-1">@Localizer["Admin.Businesses.Title"]</h1>
+        <p class="text-secondary mb-0">@Localizer["Admin.Businesses.Subtitle"]</p>
     </div>
 </div>
 
-<div class="card card-body shadow mb-4">
-    <form method="get" asp-area="Admin" asp-controller="Businesses" asp-action="Index" class="row g-3 align-items-end">
-        <div class="col-md-5">
-            <label class="form-label" for="placeId">Place ID</label>
-            <input type="text" class="form-control font-data" id="placeId" name="placeId"
-                   value="@(Model.PlaceId?.ToString("D"))" placeholder="00000000-0000-0000-0000-000000000000" />
-        </div>
-        <div class="col-md-4">
-            <label class="form-label" for="status">Status</label>
-            <select class="form-select" id="status" name="status">
-                <option value="">All statuses</option>
-                @foreach (var s in statuses)
+<div class="card shadow mb-4">
+    <div class="card-header border-bottom">
+        <h2 class="card-header-title h5 mb-0">@Localizer["Admin.Businesses.FiltersHeading"]</h2>
+    </div>
+    <div class="card-body">
+        <form method="get" asp-area="Admin" asp-controller="Businesses" asp-action="Index" class="row g-3 align-items-end">
+            <div class="col-md-5">
+                <label class="form-label" for="placeId">@Localizer["Admin.Businesses.PlaceLabel"]</label>
+                @if (Model.PlaceOptions.Count > 0)
                 {
-                    if (string.Equals(s, Model.StatusFilter, StringComparison.OrdinalIgnoreCase))
-                    {
-                        <option value="@s" selected>@s</option>
-                    }
-                    else
-                    {
-                        <option value="@s">@s</option>
-                    }
+                    <select class="form-select" id="placeId" name="placeId" aria-describedby="placeId-help">
+                        <option value="">@Localizer["Admin.Businesses.PlacePlaceholder"]</option>
+                        @foreach (var p in Model.PlaceOptions)
+                        {
+                            if (hasPlace && p.Id == Model.PlaceId)
+                            {
+                                <option value="@p.Id" selected>@p.Name</option>
+                            }
+                            else
+                            {
+                                <option value="@p.Id">@p.Name</option>
+                            }
+                        }
+                    </select>
                 }
-            </select>
-        </div>
-        <div class="col-md-3 d-flex gap-2">
-            <button type="submit" class="btn btn-primary">Apply</button>
-            <a class="btn btn-outline-secondary" asp-area="Admin" asp-controller="Businesses" asp-action="Index">Reset</a>
-        </div>
-    </form>
+                else
+                {
+                    <select class="form-select" id="placeId" name="placeId" aria-describedby="placeId-help" disabled>
+                        <option value="">@Localizer["Admin.Businesses.NoPlaces"]</option>
+                    </select>
+                }
+                <small id="placeId-help" class="form-text">@Localizer["Admin.Businesses.PlaceHelp"]</small>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label" for="status">@Localizer["Admin.Businesses.StatusLabel"]</label>
+                <select class="form-select" id="status" name="status">
+                    <option value="">@Localizer["Admin.Businesses.AllStatuses"]</option>
+                    @foreach (var s in statuses)
+                    {
+                        if (string.Equals(s, Model.StatusFilter, StringComparison.OrdinalIgnoreCase))
+                        {
+                            <option value="@s" selected>@Localizer["Admin.Businesses.Status." + s]</option>
+                        }
+                        else
+                        {
+                            <option value="@s">@Localizer["Admin.Businesses.Status." + s]</option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="col-md-3 d-flex gap-2">
+                <button type="submit" class="btn btn-primary">@Localizer["Admin.Businesses.Apply"]</button>
+                <a class="btn btn-outline-secondary" asp-area="Admin" asp-controller="Businesses" asp-action="Index">@Localizer["Admin.Businesses.Reset"]</a>
+            </div>
+        </form>
+    </div>
 </div>
 
 @if (Model.Businesses.Count > 0)
 {
-    <div class="card shadow">
+    <section class="card shadow" aria-labelledby="businesses-heading">
+        <div class="card-header border-bottom d-flex justify-content-between align-items-center">
+            <h2 id="businesses-heading" class="card-header-title h5 mb-0">
+                @if (!string.IsNullOrWhiteSpace(Model.SelectedPlaceName))
+                {
+                    @Localizer["Admin.Businesses.DirectoryFor", Model.SelectedPlaceName]
+                }
+                else
+                {
+                    @Localizer["Admin.Businesses.Directory"]
+                }
+            </h2>
+            <span class="badge bg-primary bg-opacity-10 text-primary">
+                <bdi class="font-data">@Count(Model.TotalCount)</bdi> @Localizer["Admin.Businesses.TotalLabel"]
+            </span>
+        </div>
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
                 <thead>
                     <tr>
-                        <th>Business</th>
-                        <th>Type</th>
-                        <th>Location</th>
-                        <th>Rating</th>
-                        <th>Verified</th>
-                        <th>Status</th>
-                        <th class="text-end">Actions</th>
+                        <th scope="col">@Localizer["Admin.Businesses.ColBusiness"]</th>
+                        <th scope="col">@Localizer["Admin.Businesses.ColType"]</th>
+                        <th scope="col">@Localizer["Admin.Businesses.ColLocation"]</th>
+                        <th scope="col">@Localizer["Admin.Businesses.ColRating"]</th>
+                        <th scope="col">@Localizer["Admin.Businesses.ColVerified"]</th>
+                        <th scope="col">@Localizer["Admin.Businesses.ColStatus"]</th>
+                        <th scope="col" class="text-end">@Localizer["Admin.Businesses.ColActions"]</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach (var b in Model.Businesses)
                     {
                         var color = BusinessesMapper.StatusColor(b.Status);
+                        var icon = BusinessesMapper.StatusIcon(b.Status);
+                        var location = string.Join(", ", new[] { b.City, b.Country }.Where(x => !string.IsNullOrWhiteSpace(x)));
                         <tr>
                             <td>
                                 <div class="fw-semibold">@b.Name</div>
-                                <div class="small text-body-secondary">@b.Slug</div>
+                                <div class="small text-secondary"><bdi dir="ltr">@b.Slug</bdi></div>
                             </td>
                             <td>@b.BusinessType</td>
-                            <td>@(string.Join(", ", new[] { b.City, b.Country }.Where(x => !string.IsNullOrWhiteSpace(x))))</td>
                             <td>
-                                <span class="font-data">@b.AverageRating.ToString("N1")</span>
-                                <span class="small text-body-secondary">(@b.ReviewCount)</span>
+                                @if (string.IsNullOrWhiteSpace(location))
+                                {
+                                    <span class="text-secondary" aria-label="@Localizer["Admin.Businesses.NoLocation"]">—</span>
+                                }
+                                else
+                                {
+                                    @location
+                                }
+                            </td>
+                            <td>
+                                <bdi class="font-data">@Rating(b.AverageRating)</bdi>
+                                <span class="small text-secondary">(<bdi class="font-data">@Count(b.ReviewCount)</bdi>)</span>
                             </td>
                             <td>
                                 @if (b.IsVerified)
                                 {
-                                    <span class="badge bg-success bg-opacity-10 text-success">Verified</span>
+                                    <span class="badge bg-success bg-opacity-10 text-success">
+                                        <i class="fa-solid fa-circle-check fa-fw" aria-hidden="true"></i> @Localizer["Admin.Businesses.Verified"]
+                                    </span>
                                 }
                                 else
                                 {
-                                    <span class="badge bg-secondary bg-opacity-10 text-secondary">Unverified</span>
+                                    <span class="badge bg-secondary bg-opacity-10 text-secondary">
+                                        <i class="fa-solid fa-circle-minus fa-fw" aria-hidden="true"></i> @Localizer["Admin.Businesses.Unverified"]
+                                    </span>
                                 }
                             </td>
-                            <td><span class="badge bg-@color bg-opacity-10 text-@color">@b.Status</span></td>
+                            <td>
+                                <span class="badge bg-@color bg-opacity-10 text-@color">
+                                    <i class="fa-solid fa-@icon fa-fw" aria-hidden="true"></i> @Localizer["Admin.Businesses.Status." + b.Status]
+                                </span>
+                            </td>
                             <td class="text-end">
                                 <div class="d-inline-flex gap-1 flex-wrap justify-content-end">
                                     <permission require="@WebPermission.Business.Approve">
-                                        <form method="post" asp-action="Approve" asp-route-id="@b.Id" asp-route-placeId="@Model.PlaceId" class="d-inline">
+                                        <form method="post" asp-action="Approve" asp-route-id="@b.Id" asp-route-placeId="@Model.PlaceId" class="d-inline"
+                                              data-confirm="@Localizer["Admin.Businesses.ApproveConfirm", b.Name]"
+                                              data-confirm-title="@Localizer["Admin.Businesses.ApproveTitle"]"
+                                              data-confirm-action="@Localizer["Admin.Businesses.Approve"]">
                                             @Html.AntiForgeryToken()
-                                            <button type="submit" class="btn btn-sm btn-outline-success">Approve</button>
+                                            <button type="submit" class="btn btn-sm btn-outline-success">@Localizer["Admin.Businesses.Approve"]</button>
                                         </form>
                                     </permission>
                                     <permission require="@WebPermission.Business.Reject">
-                                        <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#rejectModal-@b.Id">Reject</button>
+                                        <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#rejectModal-@b.Id">@Localizer["Admin.Businesses.Reject"]</button>
                                     </permission>
                                     <permission require="@WebPermission.Business.RequestDocs">
-                                        <button type="button" class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#docsModal-@b.Id">Request docs</button>
+                                        <button type="button" class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#docsModal-@b.Id">@Localizer["Admin.Businesses.RequestDocs"]</button>
                                     </permission>
                                     <permission require="@WebPermission.Business.Suspend">
-                                        <button type="button" class="btn btn-sm btn-outline-warning" data-bs-toggle="modal" data-bs-target="#suspendModal-@b.Id">Suspend</button>
+                                        <button type="button" class="btn btn-sm btn-outline-warning" data-bs-toggle="modal" data-bs-target="#suspendModal-@b.Id">@Localizer["Admin.Businesses.Suspend"]</button>
                                     </permission>
                                     <permission require="@WebPermission.Business.Reinstate">
-                                        <form method="post" asp-action="Reinstate" asp-route-id="@b.Id" asp-route-placeId="@Model.PlaceId" class="d-inline">
+                                        <form method="post" asp-action="Reinstate" asp-route-id="@b.Id" asp-route-placeId="@Model.PlaceId" class="d-inline"
+                                              data-confirm="@Localizer["Admin.Businesses.ReinstateConfirm", b.Name]"
+                                              data-confirm-title="@Localizer["Admin.Businesses.ReinstateTitle"]"
+                                              data-confirm-action="@Localizer["Admin.Businesses.Reinstate"]">
                                             @Html.AntiForgeryToken()
-                                            <button type="submit" class="btn btn-sm btn-outline-secondary">Reinstate</button>
+                                            <button type="submit" class="btn btn-sm btn-outline-secondary">@Localizer["Admin.Businesses.Reinstate"]</button>
                                         </form>
                                     </permission>
                                     <permission require="@WebPermission.Business.Delete">
-                                        <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal-@b.Id">Delete</button>
+                                        <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal-@b.Id">@Localizer["Admin.Businesses.Delete"]</button>
                                     </permission>
                                 </div>
                             </td>
@@ -120,120 +196,129 @@
                 </tbody>
             </table>
         </div>
-    </div>
+
+        @if (Model.HasPrevious || Model.HasNext)
+        {
+            <nav class="card-footer border-top d-flex justify-content-between align-items-center" aria-label="@Localizer["Admin.Businesses.PaginationLabel"]">
+                <span class="small text-secondary">@Localizer["Admin.Businesses.PageLabel"] <bdi class="font-data">@Count(Model.PageNumber)</bdi></span>
+                <div class="d-flex gap-2">
+                    @if (Model.HasPrevious)
+                    {
+                        <a class="btn btn-outline-secondary btn-sm" asp-action="Index" asp-route-placeId="@Model.PlaceId" asp-route-status="@Model.StatusFilter" asp-route-page="@(Model.PageNumber - 1)">@Localizer["Admin.Businesses.Previous"]</a>
+                    }
+                    @if (Model.HasNext)
+                    {
+                        <a class="btn btn-outline-secondary btn-sm" asp-action="Index" asp-route-placeId="@Model.PlaceId" asp-route-status="@Model.StatusFilter" asp-route-page="@(Model.PageNumber + 1)">@Localizer["Admin.Businesses.Next"]</a>
+                    }
+                </div>
+            </nav>
+        }
+    </section>
 
     @foreach (var b in Model.Businesses)
     {
         <permission require="@WebPermission.Business.Reject">
-            <div class="modal fade" id="rejectModal-@b.Id" tabindex="-1" aria-hidden="true">
-                <div class="modal-dialog">
-                    <form method="post" asp-action="Reject" asp-route-id="@b.Id" asp-route-placeId="@Model.PlaceId" class="modal-content">
+            <div class="modal fade" id="rejectModal-@b.Id" tabindex="-1" aria-labelledby="rejectTitle-@b.Id" aria-describedby="rejectBody-@b.Id" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+                <div class="modal-dialog modal-dialog-centered">
+                    <form method="post" asp-action="Reject" asp-route-id="@b.Id" asp-route-placeId="@Model.PlaceId" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="rejectTitle-@b.Id">
                         @Html.AntiForgeryToken()
                         <div class="modal-header">
-                            <h5 class="modal-title">Reject @b.Name</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            <h2 class="modal-title h5" id="rejectTitle-@b.Id">@Localizer["Admin.Businesses.RejectTitleFor", b.Name]</h2>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Admin.Businesses.Close"]"></button>
                         </div>
-                        <div class="modal-body">
-                            <label class="form-label" for="reject-reason-@b.Id">Reason</label>
-                            <textarea class="form-control" id="reject-reason-@b.Id" name="reason" rows="3" required></textarea>
+                        <div class="modal-body" id="rejectBody-@b.Id">
+                            <label class="form-label" for="reject-reason-@b.Id">@Localizer["Admin.Businesses.ReasonLabel"]</label>
+                            <textarea class="form-control" id="reject-reason-@b.Id" name="reason" rows="3" maxlength="1000" required aria-describedby="reject-reason-help-@b.Id"></textarea>
+                            <small id="reject-reason-help-@b.Id" class="form-text">@Localizer["Admin.Businesses.ReasonHelp"]</small>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <button type="submit" class="btn btn-danger">Reject business</button>
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">@Localizer["Admin.Businesses.Cancel"]</button>
+                            <button type="submit" class="btn btn-danger">@Localizer["Admin.Businesses.RejectSubmit"]</button>
                         </div>
                     </form>
                 </div>
             </div>
         </permission>
         <permission require="@WebPermission.Business.RequestDocs">
-            <div class="modal fade" id="docsModal-@b.Id" tabindex="-1" aria-hidden="true">
-                <div class="modal-dialog">
-                    <form method="post" asp-action="RequestMoreDocs" asp-route-id="@b.Id" asp-route-placeId="@Model.PlaceId" class="modal-content">
+            <div class="modal fade" id="docsModal-@b.Id" tabindex="-1" aria-labelledby="docsTitle-@b.Id" aria-describedby="docsBody-@b.Id" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+                <div class="modal-dialog modal-dialog-centered">
+                    <form method="post" asp-action="RequestMoreDocs" asp-route-id="@b.Id" asp-route-placeId="@Model.PlaceId" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="docsTitle-@b.Id">
                         @Html.AntiForgeryToken()
                         <div class="modal-header">
-                            <h5 class="modal-title">Request documents from @b.Name</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            <h2 class="modal-title h5" id="docsTitle-@b.Id">@Localizer["Admin.Businesses.DocsTitleFor", b.Name]</h2>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Admin.Businesses.Close"]"></button>
                         </div>
-                        <div class="modal-body">
-                            <label class="form-label" for="docs-reason-@b.Id">Note</label>
-                            <textarea class="form-control" id="docs-reason-@b.Id" name="reason" rows="3" required></textarea>
+                        <div class="modal-body" id="docsBody-@b.Id">
+                            <label class="form-label" for="docs-reason-@b.Id">@Localizer["Admin.Businesses.NoteLabel"]</label>
+                            <textarea class="form-control" id="docs-reason-@b.Id" name="reason" rows="3" maxlength="1000" required aria-describedby="docs-reason-help-@b.Id"></textarea>
+                            <small id="docs-reason-help-@b.Id" class="form-text">@Localizer["Admin.Businesses.ReasonHelp"]</small>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <button type="submit" class="btn btn-info">Send request</button>
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">@Localizer["Admin.Businesses.Cancel"]</button>
+                            <button type="submit" class="btn btn-info">@Localizer["Admin.Businesses.DocsSubmit"]</button>
                         </div>
                     </form>
                 </div>
             </div>
         </permission>
         <permission require="@WebPermission.Business.Suspend">
-            <div class="modal fade" id="suspendModal-@b.Id" tabindex="-1" aria-hidden="true">
-                <div class="modal-dialog">
-                    <form method="post" asp-action="Suspend" asp-route-id="@b.Id" asp-route-placeId="@Model.PlaceId" class="modal-content">
+            <div class="modal fade" id="suspendModal-@b.Id" tabindex="-1" aria-labelledby="suspendTitle-@b.Id" aria-describedby="suspendBody-@b.Id" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+                <div class="modal-dialog modal-dialog-centered">
+                    <form method="post" asp-action="Suspend" asp-route-id="@b.Id" asp-route-placeId="@Model.PlaceId" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="suspendTitle-@b.Id">
                         @Html.AntiForgeryToken()
                         <div class="modal-header">
-                            <h5 class="modal-title">Suspend @b.Name</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            <h2 class="modal-title h5" id="suspendTitle-@b.Id">@Localizer["Admin.Businesses.SuspendTitleFor", b.Name]</h2>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Admin.Businesses.Close"]"></button>
                         </div>
-                        <div class="modal-body">
-                            <label class="form-label" for="suspend-reason-@b.Id">Reason</label>
-                            <textarea class="form-control" id="suspend-reason-@b.Id" name="reason" rows="3" required></textarea>
+                        <div class="modal-body" id="suspendBody-@b.Id">
+                            <label class="form-label" for="suspend-reason-@b.Id">@Localizer["Admin.Businesses.ReasonLabel"]</label>
+                            <textarea class="form-control" id="suspend-reason-@b.Id" name="reason" rows="3" maxlength="1000" required aria-describedby="suspend-reason-help-@b.Id"></textarea>
+                            <small id="suspend-reason-help-@b.Id" class="form-text">@Localizer["Admin.Businesses.ReasonHelp"]</small>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <button type="submit" class="btn btn-warning">Suspend business</button>
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">@Localizer["Admin.Businesses.Cancel"]</button>
+                            <button type="submit" class="btn btn-warning">@Localizer["Admin.Businesses.SuspendSubmit"]</button>
                         </div>
                     </form>
                 </div>
             </div>
         </permission>
         <permission require="@WebPermission.Business.Delete">
-            <div class="modal fade" id="deleteModal-@b.Id" tabindex="-1" aria-hidden="true">
-                <div class="modal-dialog">
-                    <form method="post" asp-action="Delete" asp-route-id="@b.Id" asp-route-placeId="@Model.PlaceId" class="modal-content">
+            <div class="modal fade" id="deleteModal-@b.Id" tabindex="-1" aria-labelledby="deleteTitle-@b.Id" aria-describedby="deleteBody-@b.Id" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+                <div class="modal-dialog modal-dialog-centered">
+                    <form method="post" asp-action="Delete" asp-route-id="@b.Id" asp-route-placeId="@Model.PlaceId" class="modal-content" role="alertdialog" aria-modal="true" aria-labelledby="deleteTitle-@b.Id">
                         @Html.AntiForgeryToken()
                         <div class="modal-header">
-                            <h5 class="modal-title">Delete @b.Name</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            <h2 class="modal-title h5" id="deleteTitle-@b.Id">@Localizer["Admin.Businesses.DeleteTitleFor", b.Name]</h2>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Admin.Businesses.Close"]"></button>
                         </div>
-                        <div class="modal-body">
-                            <p class="mb-0">This permanently deletes the business. This action cannot be undone.</p>
+                        <div class="modal-body" id="deleteBody-@b.Id">
+                            <p class="mb-0">@Localizer["Admin.Businesses.DeleteBody"]</p>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <button type="submit" class="btn btn-danger">Delete business</button>
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" autofocus>@Localizer["Admin.Businesses.Cancel"]</button>
+                            <button type="submit" class="btn btn-danger">@Localizer["Admin.Businesses.DeleteSubmit"]</button>
                         </div>
                     </form>
                 </div>
             </div>
         </permission>
     }
-
-    @if (Model.HasPrevious || Model.HasNext)
-    {
-        <nav class="d-flex justify-content-between align-items-center mt-3">
-            <div class="small text-body-secondary">Page @Model.PageNumber of @Model.TotalPages (@Model.TotalCount total)</div>
-            <div class="d-flex gap-2">
-                @if (Model.HasPrevious)
-                {
-                    <a class="btn btn-outline-secondary btn-sm" asp-action="Index" asp-route-placeId="@Model.PlaceId" asp-route-status="@Model.StatusFilter" asp-route-page="@(Model.PageNumber - 1)">Previous</a>
-                }
-                @if (Model.HasNext)
-                {
-                    <a class="btn btn-outline-secondary btn-sm" asp-action="Index" asp-route-placeId="@Model.PlaceId" asp-route-status="@Model.StatusFilter" asp-route-page="@(Model.PageNumber + 1)">Next</a>
-                }
-            </div>
-        </nav>
-    }
 }
 else
 {
     <div class="card card-body shadow text-center py-5">
-        <img src="~/assets/images/element/17.svg" alt="" class="h-80px mx-auto mb-3" />
-        <p class="text-body-secondary mb-0">
-            @(Model.PlaceId is null
-                ? "Enter a place ID above to view its businesses."
-                : "No businesses found for this place.")
+        <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mx-auto mb-3" />
+        <p class="text-secondary mb-3">
+            @(hasPlace
+                ? Localizer["Admin.Businesses.EmptyForPlace"].Value
+                : Localizer["Admin.Businesses.EmptyNoPlace"].Value)
         </p>
+        @if (hasPlace)
+        {
+            <div>
+                <a class="btn btn-sm btn-primary-soft" asp-action="Index">@Localizer["Admin.Businesses.ClearFilters"]</a>
+            </div>
+        }
     </div>
 }

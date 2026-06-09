@@ -10,6 +10,15 @@ public sealed class GuideApplicationsVm
     public int PageSize { get; set; } = 20;
     public bool HasNext { get; set; }
     public bool HasPrevious { get; set; }
+
+    // Tour-name options for the F10-compliant tour picker (id travels as option value).
+    public IReadOnlyList<GuideTourOptionVm> TourOptions { get; set; } = [];
+}
+
+public sealed class GuideTourOptionVm
+{
+    public Guid Id { get; set; }
+    public string Name { get; set; } = string.Empty;
 }
 
 public sealed class GuideApplicationRowVm
@@ -27,4 +36,7 @@ public sealed class GuideApplicationRowVm
     public DateTime CreatedAt { get; set; }
     public DateTime? ReviewedAt { get; set; }
     public string? RejectionReason { get; set; }
+
+    // Resolved human identity of the applying guide (F10). Null when not resolvable.
+    public string? GuideEmail { get; set; }
 }

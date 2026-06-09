@@ -1,129 +1,250 @@
+@using System.Globalization
+@using Microsoft.Extensions.Localization
 @using YallaJo.Web.Infrastructure.Authorization
 @model YallaJo.Web.Areas.Admin.Models.Places.PlaceDetailsVm
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
-    ViewData["Title"] = $"Place — {Model.Name}";
-    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"]    = Localizer["Admin.PlaceDetails.Title", Model.Name].Value;
+    ViewData["AdminNav"] = "Places";
+
+    var culture = CultureInfo.CurrentCulture;
 }
 
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <div>
-            <h2 class="mb-0">@Model.Name</h2>
-            <span class="text-muted small">@Model.Slug · @Model.PlaceType</span>
-        </div>
-        <div class="d-flex gap-2">
-            <a asp-area="Admin" asp-controller="Places" asp-action="Index"
-               class="btn btn-outline-secondary">Back to list</a>
-            @* CP-4b: deep-link to the generic Admin Attachments manager scoped to
-               this place (upload/delete/set-primary already supported there). *@
-            <permission require="@WebPermission.Attachment.Read">
-                <a asp-area="Admin" asp-controller="Attachments" asp-action="Index"
-                   asp-route-entityType="Place" asp-route-entityId="@Model.Id"
-                   class="btn btn-outline-primary"><i class="bi bi-images me-1"></i>Manage images</a>
-            </permission>
-            <permission require="@WebPermission.Place.Update">
-                <a asp-area="Admin" asp-controller="Places" asp-action="Edit"
-                   asp-route-id="@Model.Id" class="btn btn-primary">Edit</a>
-            </permission>
+@{
+    var yes = Localizer["Admin.PlaceDetails.Yes"].Value;
+    var no  = Localizer["Admin.PlaceDetails.No"].Value;
+}
+
+<div class="d-sm-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-1">@Model.Name</h1>
+        <p class="mb-0 text-secondary">
+            <bdi dir="ltr">@Model.Slug</bdi> · @Model.PlaceType
+        </p>
+    </div>
+    <div class="d-flex flex-wrap gap-2 mt-3 mt-sm-0">
+        <a asp-area="Admin" asp-controller="Places" asp-action="Index"
+           class="btn btn-outline-secondary">@Localizer["Admin.PlaceDetails.Back"]</a>
+        @* Deep-link to the generic Admin Attachments manager scoped to this place. *@
+        <permission require="@WebPermission.Attachment.Read">
+            <a asp-area="Admin" asp-controller="Attachments" asp-action="Index"
+               asp-route-entityType="Place" asp-route-entityId="@Model.Id"
+               class="btn btn-outline-primary">
+                <i class="fa-solid fa-images fa-fw" aria-hidden="true"></i> @Localizer["Admin.PlaceDetails.ManageImages"]
+            </a>
+        </permission>
+        <permission require="@WebPermission.Place.Update">
+            <a asp-area="Admin" asp-controller="Places" asp-action="Edit" asp-route-id="@Model.Id"
+               class="btn btn-primary">
+                <i class="fa-solid fa-pen fa-fw" aria-hidden="true"></i> @Localizer["Admin.PlaceDetails.Edit"]
+            </a>
+        </permission>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-6">
+        <div class="card shadow h-100">
+            <div class="card-header border-bottom">
+                <h2 class="card-header-title h5 mb-0">@Localizer["Admin.PlaceDetails.LocationHeading"]</h2>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-4">@Localizer["Admin.PlaceDetails.Latitude"]</dt>
+                    <dd class="col-sm-8"><bdi dir="ltr" class="font-data">@Model.Latitude.ToString(culture)</bdi></dd>
+                    <dt class="col-sm-4">@Localizer["Admin.PlaceDetails.Longitude"]</dt>
+                    <dd class="col-sm-8"><bdi dir="ltr" class="font-data">@Model.Longitude.ToString(culture)</bdi></dd>
+                    <dt class="col-sm-4">@Localizer["Admin.PlaceDetails.Address"]</dt>
+                    <dd class="col-sm-8">@(Model.Address ?? "—")</dd>
+                    <dt class="col-sm-4">@Localizer["Admin.PlaceDetails.City"]</dt>
+                    <dd class="col-sm-8">@(Model.City ?? "—")</dd>
+                    <dt class="col-sm-4">@Localizer["Admin.PlaceDetails.Country"]</dt>
+                    <dd class="col-sm-8">@(Model.Country ?? "—")</dd>
+                    <dt class="col-sm-4">@Localizer["Admin.PlaceDetails.PostalCode"]</dt>
+                    <dd class="col-sm-8">
+                        @if (string.IsNullOrWhiteSpace(Model.PostalCode))
+                        {
+                            <span>—</span>
+                        }
+                        else
+                        {
+                            <bdi dir="ltr" class="font-data">@Model.PostalCode</bdi>
+                        }
+                    </dd>
+                </dl>
+            </div>
         </div>
     </div>
 
-    @* Success/Error flash banners are rendered globally by the shared _Alerts partial (in _Layout). *@
-
-    <div class="row g-3">
-        <div class="col-md-6">
-            <div class="card p-3">
-                <h5>Location</h5>
+    <div class="col-md-6">
+        <div class="card shadow h-100">
+            <div class="card-header border-bottom">
+                <h2 class="card-header-title h5 mb-0">@Localizer["Admin.PlaceDetails.ContactHeading"]</h2>
+            </div>
+            <div class="card-body">
                 <dl class="row mb-0">
-                    <dt class="col-sm-4">Latitude</dt>     <dd class="col-sm-8">@Model.Latitude</dd>
-                    <dt class="col-sm-4">Longitude</dt>    <dd class="col-sm-8">@Model.Longitude</dd>
-                    <dt class="col-sm-4">Address</dt>      <dd class="col-sm-8">@(Model.Address ?? "—")</dd>
-                    <dt class="col-sm-4">City</dt>         <dd class="col-sm-8">@(Model.City ?? "—")</dd>
-                    <dt class="col-sm-4">Country</dt>      <dd class="col-sm-8">@(Model.Country ?? "—")</dd>
-                    <dt class="col-sm-4">Postal code</dt>  <dd class="col-sm-8">@(Model.PostalCode ?? "—")</dd>
+                    <dt class="col-sm-4">@Localizer["Admin.PlaceDetails.Phone"]</dt>
+                    <dd class="col-sm-8">
+                        @if (string.IsNullOrWhiteSpace(Model.Phone))
+                        {
+                            <span>—</span>
+                        }
+                        else
+                        {
+                            <bdi dir="ltr" class="font-data">@Model.Phone</bdi>
+                        }
+                    </dd>
+                    <dt class="col-sm-4">@Localizer["Admin.PlaceDetails.Email"]</dt>
+                    <dd class="col-sm-8">
+                        @if (string.IsNullOrWhiteSpace(Model.Email))
+                        {
+                            <span>—</span>
+                        }
+                        else
+                        {
+                            <bdi dir="ltr">@Model.Email</bdi>
+                        }
+                    </dd>
+                    <dt class="col-sm-4">@Localizer["Admin.PlaceDetails.Website"]</dt>
+                    <dd class="col-sm-8">
+                        @if (string.IsNullOrWhiteSpace(Model.Website))
+                        {
+                            <span>—</span>
+                        }
+                        else
+                        {
+                            <a href="@Model.Website" target="_blank" rel="noopener noreferrer">
+                                <bdi dir="ltr">@Model.Website</bdi>
+                            </a>
+                        }
+                    </dd>
                 </dl>
             </div>
         </div>
+    </div>
 
-        <div class="col-md-6">
-            <div class="card p-3">
-                <h5>Contact</h5>
-                <dl class="row mb-0">
-                    <dt class="col-sm-4">Phone</dt>   <dd class="col-sm-8">@(Model.Phone ?? "—")</dd>
-                    <dt class="col-sm-4">Email</dt>   <dd class="col-sm-8">@(Model.Email ?? "—")</dd>
-                    <dt class="col-sm-4">Website</dt> <dd class="col-sm-8">@(Model.Website ?? "—")</dd>
+    <div class="col-md-6">
+        <div class="card shadow h-100">
+            <div class="card-header border-bottom">
+                <h2 class="card-header-title h5 mb-0">@Localizer["Admin.PlaceDetails.StatusHeading"]</h2>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-0 align-items-center">
+                    <dt class="col-sm-6">@Localizer["Admin.PlaceDetails.AverageRating"]</dt>
+                    <dd class="col-sm-6"><bdi class="font-data">@Model.AverageRating.ToString("0.0", culture)</bdi></dd>
+                    <dt class="col-sm-6">@Localizer["Admin.PlaceDetails.ReviewCount"]</dt>
+                    <dd class="col-sm-6"><bdi class="font-data">@Model.ReviewCount.ToString("N0", culture)</bdi></dd>
+                    <dt class="col-sm-6">@Localizer["Admin.PlaceDetails.Featured"]</dt>
+                    <dd class="col-sm-6">
+                        @if (Model.IsFeatured)
+                        {
+                            <span class="badge bg-warning bg-opacity-10 text-warning">
+                                <i class="fa-solid fa-star fa-fw" aria-hidden="true"></i> @Localizer["Admin.Places.Featured"]
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary bg-opacity-10 text-secondary">
+                                <i class="fa-solid fa-minus fa-fw" aria-hidden="true"></i> @Localizer["Admin.Places.NotFeatured"]
+                            </span>
+                        }
+                    </dd>
+                    <dt class="col-sm-6">@Localizer["Admin.PlaceDetails.Verified"]</dt>
+                    <dd class="col-sm-6">
+                        @if (Model.IsVerified)
+                        {
+                            <span class="badge bg-success bg-opacity-10 text-success">
+                                <i class="fa-solid fa-circle-check fa-fw" aria-hidden="true"></i> @Localizer["Admin.Places.Verified"]
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary bg-opacity-10 text-secondary">
+                                <i class="fa-solid fa-circle fa-fw" aria-hidden="true"></i> @Localizer["Admin.Places.Unverified"]
+                            </span>
+                        }
+                    </dd>
                 </dl>
             </div>
         </div>
+    </div>
 
-        <div class="col-md-6">
-            <div class="card p-3">
-                <h5>Status</h5>
+    <div class="col-md-6">
+        <div class="card shadow h-100">
+            <div class="card-header border-bottom">
+                <h2 class="card-header-title h5 mb-0">@Localizer["Admin.PlaceDetails.AccessibilityHeading"]</h2>
+            </div>
+            <div class="card-body">
                 <dl class="row mb-0">
-                    <dt class="col-sm-6">Average rating</dt>  <dd class="col-sm-6">@Model.AverageRating.ToString("0.0")</dd>
-                    <dt class="col-sm-6">Review count</dt>    <dd class="col-sm-6">@Model.ReviewCount</dd>
-                    <dt class="col-sm-6">Featured</dt>        <dd class="col-sm-6">@(Model.IsFeatured ? "✓" : "—")</dd>
-                    <dt class="col-sm-6">Verified</dt>        <dd class="col-sm-6">@(Model.IsVerified ? "✓" : "—")</dd>
+                    <dt class="col-sm-7">@Localizer["Admin.PlaceDetails.Wheelchair"]</dt>
+                    <dd class="col-sm-5">@(Model.IsWheelchairAccessible ? yes : no)</dd>
+                    <dt class="col-sm-7">@Localizer["Admin.PlaceDetails.AudioGuide"]</dt>
+                    <dd class="col-sm-5">@(Model.HasAudioGuide ? yes : no)</dd>
+                    <dt class="col-sm-7">@Localizer["Admin.PlaceDetails.Braille"]</dt>
+                    <dd class="col-sm-5">@(Model.HasBrailleSignage ? yes : no)</dd>
                 </dl>
             </div>
         </div>
+    </div>
 
-        <div class="col-md-6">
-            <div class="card p-3">
-                <h5>Accessibility</h5>
-                <dl class="row mb-0">
-                    <dt class="col-sm-7">Wheelchair accessible</dt> <dd class="col-sm-5">@(Model.IsWheelchairAccessible ? "✓" : "—")</dd>
-                    <dt class="col-sm-7">Audio guide</dt>           <dd class="col-sm-5">@(Model.HasAudioGuide ? "✓" : "—")</dd>
-                    <dt class="col-sm-7">Braille signage</dt>       <dd class="col-sm-5">@(Model.HasBrailleSignage ? "✓" : "—")</dd>
-                </dl>
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header border-bottom">
+                <h2 class="card-header-title h5 mb-0">@Localizer["Admin.PlaceDetails.DescriptionHeading"]</h2>
             </div>
-        </div>
-
-        <div class="col-12">
-            <div class="card p-3">
-                <h5>Description</h5>
+            <div class="card-body">
                 <p class="mb-0">@(string.IsNullOrWhiteSpace(Model.Description) ? "—" : Model.Description)</p>
             </div>
         </div>
+    </div>
 
-        <div class="col-12">
-            <div class="card p-3">
-                <h5>SEO</h5>
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header border-bottom">
+                <h2 class="card-header-title h5 mb-0">@Localizer["Admin.PlaceDetails.SeoHeading"]</h2>
+            </div>
+            <div class="card-body">
                 <dl class="row mb-0">
-                    <dt class="col-sm-2">Meta title</dt>       <dd class="col-sm-10">@(Model.MetaTitle ?? "—")</dd>
-                    <dt class="col-sm-2">Meta description</dt> <dd class="col-sm-10">@(Model.MetaDescription ?? "—")</dd>
+                    <dt class="col-sm-2">@Localizer["Admin.PlaceDetails.MetaTitle"]</dt>
+                    <dd class="col-sm-10">@(Model.MetaTitle ?? "—")</dd>
+                    <dt class="col-sm-2">@Localizer["Admin.PlaceDetails.MetaDescription"]</dt>
+                    <dd class="col-sm-10">@(Model.MetaDescription ?? "—")</dd>
                 </dl>
             </div>
         </div>
+    </div>
 
-        @if (Model.Translations.Count > 0)
-        {
-            <div class="col-12">
-                <div class="card p-3">
-                    <h5>Translations</h5>
-                    <table class="table table-sm mb-0">
+    @if (Model.Translations.Count > 0)
+    {
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header border-bottom">
+                    <h2 class="card-header-title h5 mb-0">@Localizer["Admin.PlaceDetails.TranslationsHeading"]</h2>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
                         <thead>
                             <tr>
-                                <th>Language Id</th>
-                                <th>Name</th>
-                                <th>Description</th>
-                                <th>Address</th>
+                                <th scope="col">@Localizer["Admin.PlaceDetails.TrName"]</th>
+                                <th scope="col">@Localizer["Admin.PlaceDetails.TrDescription"]</th>
+                                <th scope="col">@Localizer["Admin.PlaceDetails.TrAddress"]</th>
                             </tr>
                         </thead>
                         <tbody>
+                            @* F10: the raw LanguageId GUID column was removed — a translation row
+                               is identified by its localized Name, never a GUID. *@
                             @foreach (var t in Model.Translations)
                             {
                                 <tr>
-                                    <td><code>@t.LanguageId</code></td>
-                                    <td>@(t.Name ?? "—")</td>
-                                    <td>@(t.Description ?? "—")</td>
-                                    <td>@(t.Address ?? "—")</td>
+                                    <td>@(string.IsNullOrWhiteSpace(t.Name) ? "—" : t.Name)</td>
+                                    <td>@(string.IsNullOrWhiteSpace(t.Description) ? "—" : t.Description)</td>
+                                    <td>@(string.IsNullOrWhiteSpace(t.Address) ? "—" : t.Address)</td>
                                 </tr>
                             }
                         </tbody>
                     </table>
                 </div>
             </div>
-        }
-    </div>
+        </div>
+    }
 </div>

@@ -7,9 +7,15 @@ namespace YallaJo.Web.Areas.Admin.Facades;
 public sealed class SupportFacade
 {
     private const int DefaultPageSize = 20;
+    private const int AdminOptionsPageSize = 200;
     private readonly SupportApiClient _api;
+    private readonly UsersApiClient _users;
 
-    public SupportFacade(SupportApiClient api) => _api = api;
+    public SupportFacade(SupportApiClient api, UsersApiClient users)
+    {
+        _api = api;
+        _users = users;
+    }
 
     public async Task<ApiResult<SupportListVm>> GetIndexAsync(
         string? status, string? category, Guid? cursor, int pageSize, CancellationToken ct)
@@ -29,7 +35,10 @@ public sealed class SupportFacade
             return ApiResult<SupportListVm>.Fail(result.StatusCode, result.Error ?? "Could not load support tickets.");
         }
 
-        return ApiResult<SupportListVm>.Ok(SupportMapper.ToListVm(result.Data, status, category));
+        var emails = await ResolveUserEmailsAsync(
+            result.Data.Items
+                .SelectMany(t => new[] { t.CreatedByUserId, t.AssignedToUserId ?? Guid.Empty }), ct);
+        return ApiResult<SupportListVm>.Ok(SupportMapper.ToListVm(result.Data, status, category, emails));
     }
 
     public async Task<ApiResult<SupportTicketDetailVm>> GetDetailsAsync(Guid id, CancellationToken ct)
@@ -44,7 +53,79 @@ public sealed class SupportFacade
             return ApiResult<SupportTicketDetailVm>.Fail(result.StatusCode, result.Error ?? "Could not load the support ticket.");
         }
 
-        return ApiResult<SupportTicketDetailVm>.Ok(SupportMapper.ToDetailVm(result.Data));
+        var ticket = result.Data;
+        var userIds = new List<Guid> { ticket.CreatedByUserId };
+        if (ticket.AssignedToUserId is { } aid) userIds.Add(aid);
+        if (ticket.ResolvedByUserId is { } rid) userIds.Add(rid);
+        if (ticket.Messages is not null) userIds.AddRange(ticket.Messages.Select(m => m.AuthorUserId));
+
+        var emailsTask = ResolveUserEmailsAsync(userIds, ct);
+        var optionsTask = LoadAdminOptionsAsync(ct);
+        await Task.WhenAll(emailsTask, optionsTask);
+
+        return ApiResult<SupportTicketDetailVm>.Ok(
+            SupportMapper.ToDetailVm(ticket, await emailsTask, await optionsTask));
+    }
+
+    private async Task<IReadOnlyList<SupportAdminOptionVm>> LoadAdminOptionsAsync(CancellationToken ct)
+    {
+        try
+        {
+            var result = await _users.GetUsersAsync(1, AdminOptionsPageSize, ct);
+            if (result is { IsSuccess: true, Data: not null })
+            {
+                return result.Data.Items
+                    .Where(u => !string.IsNullOrWhiteSpace(u.Email))
+                    .Select(u => new SupportAdminOptionVm { Id = u.Id, Email = u.Email })
+                    .OrderBy(o => o.Email, StringComparer.CurrentCultureIgnoreCase)
+                    .ToList();
+            }
+        }
+        catch
+        {
+            // Tolerant: empty options simply hide the assign dropdown choices.
+        }
+
+        return [];
+    }
+
+    private async Task<IReadOnlyDictionary<Guid, string>> ResolveUserEmailsAsync(IEnumerable<Guid> userIds, CancellationToken ct)
+    {
+        var distinct = userIds.Where(id => id != Guid.Empty).Distinct().ToList();
+        if (distinct.Count == 0)
+        {
+            return new Dictionary<Guid, string>();
+        }
+
+        var pairs = await Task.WhenAll(distinct.Select(id => ResolveOneAsync(id, ct)));
+        var map = new Dictionary<Guid, string>();
+        foreach (var pair in pairs)
+        {
+            if (pair is { } kvp)
+            {
+                map[kvp.Key] = kvp.Value;
+            }
+        }
+
+        return map;
+    }
+
+    private async Task<KeyValuePair<Guid, string>?> ResolveOneAsync(Guid userId, CancellationToken ct)
+    {
+        try
+        {
+            var result = await _users.GetUserAsync(userId, ct);
+            if (result is { IsSuccess: true, Data: not null } && !string.IsNullOrWhiteSpace(result.Data.Email))
+            {
+                return new KeyValuePair<Guid, string>(userId, result.Data.Email);
+            }
+        }
+        catch
+        {
+            // Tolerant: leave unresolved so the view shows the localized fallback (F10).
+        }
+
+        return null;
     }
 
     public Task<ApiResult> PostMessageAsync(Guid id, string body, bool isInternal, CancellationToken ct)

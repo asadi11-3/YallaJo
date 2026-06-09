@@ -5,8 +5,11 @@ public static class CreatorsMapper
     public static CreatorsVm ToVm(
         CreatorApplicationPageResponse page,
         CreatorApplicationDetailResponse? detail,
-        string? statusFilter)
+        string? statusFilter,
+        IReadOnlyDictionary<Guid, string>? applicantEmails = null)
     {
+        var emails = applicantEmails ?? new Dictionary<Guid, string>();
+
         var vm = new CreatorsVm
         {
             PageNumber = page.PageNumber,
@@ -16,10 +19,11 @@ public static class CreatorsMapper
             HasNextPage = page.HasNextPage,
             HasPreviousPage = page.HasPreviousPage,
             StatusFilter = statusFilter,
-            Applications = page.Items.Select(static i => new CreatorApplicationRowVm
+            Applications = page.Items.Select(i => new CreatorApplicationRowVm
             {
                 Id = i.Id,
                 ApplicantUserId = i.ApplicantUserId,
+                ApplicantEmail = emails.TryGetValue(i.ApplicantUserId, out var email) ? email : null,
                 Status = i.Status,
                 Source = i.Source,
                 ReapplicationCount = i.ReapplicationCount,
@@ -34,6 +38,7 @@ public static class CreatorsMapper
             {
                 Id = detail.Id,
                 ApplicantUserId = detail.ApplicantUserId,
+                ApplicantEmail = emails.TryGetValue(detail.ApplicantUserId, out var detailEmail) ? detailEmail : null,
                 Bio = detail.Bio,
                 Status = detail.Status,
                 Source = detail.Source,
@@ -60,5 +65,16 @@ public static class CreatorsMapper
         "Rejected" => "danger",
         "MoreInfoNeeded" => "info",
         _ => "secondary",
+    };
+
+    // A11Y5: status conveyed by colour + icon + text, never colour alone.
+    public static string StatusIcon(string status) => status switch
+    {
+        "Approved" => "circle-check",
+        "Pending" => "clock",
+        "Draft" => "pen-ruler",
+        "Rejected" => "circle-xmark",
+        "MoreInfoNeeded" => "circle-question",
+        _ => "circle-info",
     };
 }

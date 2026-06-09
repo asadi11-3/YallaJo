@@ -1,107 +1,134 @@
 @using System.Globalization
+@using Microsoft.Extensions.Localization
 @using YallaJo.Web.Areas.Admin.Models.Commissions
 @using YallaJo.Web.Infrastructure.Authorization
 @model CommissionsVm
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
-    ViewData["Title"] = "Commission rules";
+    ViewData["Title"] = Localizer["Admin.Commissions.Title"].Value;
     ViewData["AdminNav"] = "Commissions";
 
-    string Money(decimal value) => value.ToString("N2", CultureInfo.InvariantCulture);
+    var culture = CultureInfo.CurrentCulture;
+    // Display formatting is culture-aware (CON3); raw <input> values stay InvariantCulture so the form posts parse.
+    string Money(decimal value) => value.ToString("N2", culture);
+    string Percent(decimal value) => value.ToString("N2", culture);
+    string Date(DateTime dt) => dt.ToString("yyyy-MM-dd HH:mm", culture);
+    string Raw(decimal value) => value.ToString(CultureInfo.InvariantCulture);
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="d-sm-flex justify-content-between align-items-center mb-4">
     <div>
-        <h1 class="h3 mb-1">Commission rules</h1>
-        <p class="text-body-secondary mb-0">Revenue-tier commission percentages applied to provider payouts.</p>
+        <h1 class="h3 mb-1">@Localizer["Admin.Commissions.Title"]</h1>
+        <p class="text-secondary mb-0">@Localizer["Admin.Commissions.Subtitle"]</p>
     </div>
     <permission require="@WebPermission.CommissionRule.Create">
         <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createModal">
-            <i class="bi bi-plus-lg me-1"></i>New rule
+            <i class="fa-solid fa-plus fa-fw" aria-hidden="true"></i> @Localizer["Admin.Commissions.NewRule"]
         </button>
     </permission>
 </div>
 
-<form method="get" asp-area="Admin" asp-controller="Commissions" asp-action="Index" class="card card-body shadow-sm mb-4">
+<form method="get" asp-area="Admin" asp-controller="Commissions" asp-action="Index" class="card card-body shadow mb-4">
     <div class="row g-3 align-items-end">
         <div class="col-md-3">
-            <label class="form-label" for="tier">Tier</label>
-            <input type="text" class="form-control font-data" id="tier" name="tier" value="@Model.TierFilter" />
+            <label class="form-label" for="tier">@Localizer["Admin.Commissions.TierLabel"]</label>
+            <input type="text" class="form-control" id="tier" name="tier" value="@Model.TierFilter" aria-describedby="tier-help" />
+            <small id="tier-help" class="form-text">@Localizer["Admin.Commissions.TierHelp"]</small>
         </div>
         <div class="col-md-3">
-            <label class="form-label" for="currency">Currency</label>
-            <input type="text" class="form-control font-data" id="currency" name="currency" value="@Model.CurrencyFilter" />
+            <label class="form-label" for="currency">@Localizer["Admin.Commissions.CurrencyLabel"]</label>
+            <input type="text" class="form-control" id="currency" name="currency" value="@Model.CurrencyFilter" dir="ltr" aria-describedby="currency-help" />
+            <small id="currency-help" class="form-text">@Localizer["Admin.Commissions.CurrencyHelp"]</small>
         </div>
         <div class="col-md-3">
             <div class="form-check mt-4">
                 <input class="form-check-input" type="checkbox" id="includeInactive" name="includeInactive" value="true" @(Model.IncludeInactive ? "checked" : null) />
-                <label class="form-check-label" for="includeInactive">Include inactive</label>
+                <label class="form-check-label" for="includeInactive">@Localizer["Admin.Commissions.IncludeInactive"]</label>
             </div>
         </div>
         <div class="col-md-3 d-flex gap-2">
-            <button type="submit" class="btn btn-outline-primary">Apply</button>
-            <a asp-area="Admin" asp-controller="Commissions" asp-action="Index" class="btn btn-outline-secondary">Reset</a>
+            <button type="submit" class="btn btn-outline-primary">@Localizer["Admin.Commissions.Apply"]</button>
+            <a asp-area="Admin" asp-controller="Commissions" asp-action="Index" class="btn btn-outline-secondary">@Localizer["Admin.Commissions.Reset"]</a>
         </div>
     </div>
 </form>
 
-@if (Model.Rules.Count == 0)
-{
-    <div class="text-center py-5">
-        <img src="~/assets/images/element/17.svg" alt="" class="mb-3" style="height: 80px;" />
-        <p class="text-body-secondary mb-0">No commission rules to display.</p>
+<section class="card shadow" aria-labelledby="commissions-heading">
+    <div class="card-header border-bottom">
+        <h2 id="commissions-heading" class="card-header-title h5 mb-0">@Localizer["Admin.Commissions.Directory"]</h2>
     </div>
-}
-else
-{
-    <div class="card shadow-sm">
+
+    @if (Model.Rules.Count == 0)
+    {
+        <div class="card-body">
+            <div class="text-center py-5">
+                <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
+                <p class="mb-3 text-secondary">@Localizer["Admin.Commissions.EmptyMessage"]</p>
+                <permission require="@WebPermission.CommissionRule.Create">
+                    <button type="button" class="btn btn-sm btn-primary-soft" data-bs-toggle="modal" data-bs-target="#createModal">@Localizer["Admin.Commissions.EmptyCta"]</button>
+                </permission>
+            </div>
+        </div>
+    }
+    else
+    {
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
                 <thead>
                     <tr>
-                        <th scope="col">Tier</th>
-                        <th scope="col">Revenue band</th>
-                        <th scope="col">Currency</th>
-                        <th scope="col">Percentage</th>
-                        <th scope="col">Status</th>
-                        <th scope="col">Created</th>
-                        <th scope="col" class="text-end">Actions</th>
+                        <th scope="col">@Localizer["Admin.Commissions.ColTier"]</th>
+                        <th scope="col">@Localizer["Admin.Commissions.ColRevenueBand"]</th>
+                        <th scope="col">@Localizer["Admin.Commissions.ColCurrency"]</th>
+                        <th scope="col">@Localizer["Admin.Commissions.ColPercentage"]</th>
+                        <th scope="col">@Localizer["Admin.Commissions.ColStatus"]</th>
+                        <th scope="col">@Localizer["Admin.Commissions.ColCreated"]</th>
+                        <th scope="col" class="text-end">@Localizer["Admin.Commissions.ColActions"]</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach (var rule in Model.Rules)
                     {
                         <tr>
-                            <td>@rule.Tier</td>
-                            <td class="font-data">
-                                @Money(rule.MinMonthlyRevenue)
+                            <td><span class="fw-semibold">@rule.Tier</span></td>
+                            <td>
+                                <bdi dir="ltr" class="font-data">@Money(rule.MinMonthlyRevenue)</bdi>
                                 @if (rule.MaxMonthlyRevenue.HasValue)
                                 {
-                                    <span> &ndash; @Money(rule.MaxMonthlyRevenue.Value)</span>
+                                    <span class="text-secondary"> &ndash; </span>
+                                    <bdi dir="ltr" class="font-data">@Money(rule.MaxMonthlyRevenue.Value)</bdi>
                                 }
                                 else
                                 {
-                                    <span> and up</span>
+                                    <span class="text-secondary"> @Localizer["Admin.Commissions.AndUp"]</span>
                                 }
                             </td>
-                            <td>@rule.Currency</td>
-                            <td class="font-data">@Money(rule.Percentage)%</td>
+                            <td><bdi dir="ltr">@rule.Currency</bdi></td>
+                            <td><bdi dir="ltr" class="font-data">@Percent(rule.Percentage)%</bdi></td>
                             <td>
                                 @if (rule.IsActive)
                                 {
-                                    <span class="badge bg-success bg-opacity-10 text-success">Active</span>
+                                    <span class="badge bg-success bg-opacity-10 text-success">
+                                        <i class="fa-solid fa-circle-check fa-fw" aria-hidden="true"></i> @Localizer["Admin.Commissions.Active"]
+                                    </span>
                                 }
                                 else
                                 {
-                                    <span class="badge bg-secondary bg-opacity-10 text-secondary">Inactive</span>
+                                    <span class="badge bg-secondary bg-opacity-10 text-secondary">
+                                        <i class="fa-solid fa-circle-minus fa-fw" aria-hidden="true"></i> @Localizer["Admin.Commissions.Inactive"]
+                                    </span>
                                 }
                             </td>
-                            <td class="font-data">@rule.CreatedAt.ToString("g", CultureInfo.InvariantCulture)</td>
+                            <td><bdi dir="ltr" class="font-data">@Date(rule.CreatedAt)</bdi></td>
                             <td class="text-end">
                                 <permission require="@WebPermission.CommissionRule.Update">
-                                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#editModal-@rule.Id">Edit</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#editModal-@rule.Id.ToString("N")">
+                                        <i class="fa-solid fa-pen fa-fw" aria-hidden="true"></i> @Localizer["Admin.Commissions.Edit"]
+                                    </button>
                                 </permission>
                                 <permission require="@WebPermission.CommissionRule.Delete">
-                                    <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal-@rule.Id">Delete</button>
+                                    <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal-@rule.Id.ToString("N")">
+                                        <i class="fa-solid fa-trash fa-fw" aria-hidden="true"></i> @Localizer["Admin.Commissions.Delete"]
+                                    </button>
                                 </permission>
                             </td>
                         </tr>
@@ -109,110 +136,115 @@ else
                 </tbody>
             </table>
         </div>
-    </div>
-
-    @foreach (var rule in Model.Rules)
-    {
-        <permission require="@WebPermission.CommissionRule.Update">
-            <div class="modal fade" id="editModal-@rule.Id" tabindex="-1" aria-hidden="true">
-                <div class="modal-dialog">
-                    <form method="post" asp-area="Admin" asp-controller="Commissions" asp-action="Update" asp-route-id="@rule.Id" class="modal-content">
-                        @Html.AntiForgeryToken()
-                        <div class="modal-header">
-                            <h5 class="modal-title">Edit rule &mdash; @rule.Tier (@rule.Currency)</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                            <div class="mb-3">
-                                <label class="form-label" for="edit-min-@rule.Id">Min monthly revenue</label>
-                                <input type="number" step="0.01" class="form-control font-data" id="edit-min-@rule.Id" name="MinMonthlyRevenue" value="@rule.MinMonthlyRevenue.ToString(CultureInfo.InvariantCulture)" required />
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label" for="edit-max-@rule.Id">Max monthly revenue (optional)</label>
-                                <input type="number" step="0.01" class="form-control font-data" id="edit-max-@rule.Id" name="MaxMonthlyRevenue" value="@(rule.MaxMonthlyRevenue?.ToString(CultureInfo.InvariantCulture))" />
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label" for="edit-pct-@rule.Id">Percentage</label>
-                                <input type="number" step="0.01" class="form-control font-data" id="edit-pct-@rule.Id" name="Percentage" value="@rule.Percentage.ToString(CultureInfo.InvariantCulture)" required />
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label" for="edit-notes-@rule.Id">Notes</label>
-                                <textarea class="form-control" id="edit-notes-@rule.Id" name="Notes" rows="2">@rule.Notes</textarea>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <button type="submit" class="btn btn-primary">Save changes</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </permission>
-        <permission require="@WebPermission.CommissionRule.Delete">
-            <div class="modal fade" id="deleteModal-@rule.Id" tabindex="-1" aria-hidden="true">
-                <div class="modal-dialog">
-                    <form method="post" asp-area="Admin" asp-controller="Commissions" asp-action="Delete" asp-route-id="@rule.Id" class="modal-content">
-                        @Html.AntiForgeryToken()
-                        <div class="modal-header">
-                            <h5 class="modal-title">Delete rule</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                            <p>Deactivate the @rule.Tier (@rule.Currency) commission rule?</p>
-                            <div class="mb-3">
-                                <label class="form-label" for="delete-reason-@rule.Id">Reason (optional)</label>
-                                <input type="text" class="form-control" id="delete-reason-@rule.Id" name="reason" />
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <button type="submit" class="btn btn-danger">Delete rule</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </permission>
     }
+</section>
+
+@foreach (var rule in Model.Rules)
+{
+    var nid = rule.Id.ToString("N");
+
+    <permission require="@WebPermission.CommissionRule.Update">
+        <div class="modal fade" id="editModal-@nid" tabindex="-1" aria-labelledby="editTitle-@nid" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+            <div class="modal-dialog modal-dialog-centered">
+                <form method="post" asp-area="Admin" asp-controller="Commissions" asp-action="Update" asp-route-id="@rule.Id" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="editTitle-@nid">
+                    @Html.AntiForgeryToken()
+                    <div class="modal-header">
+                        <h2 class="modal-title h5" id="editTitle-@nid">@Localizer["Admin.Commissions.EditTitle", rule.Tier, rule.Currency]</h2>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Admin.Commissions.Close"]"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label" for="edit-min-@nid">@Localizer["Admin.Commissions.MinRevenueLabel"]</label>
+                            <input type="number" step="0.01" class="form-control font-data" dir="ltr" id="edit-min-@nid" name="MinMonthlyRevenue" value="@Raw(rule.MinMonthlyRevenue)" required />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="edit-max-@nid">@Localizer["Admin.Commissions.MaxRevenueLabel"]</label>
+                            <input type="number" step="0.01" class="form-control font-data" dir="ltr" id="edit-max-@nid" name="MaxMonthlyRevenue" value="@(rule.MaxMonthlyRevenue.HasValue ? Raw(rule.MaxMonthlyRevenue.Value) : null)" aria-describedby="edit-max-help-@nid" />
+                            <small id="edit-max-help-@nid" class="form-text">@Localizer["Admin.Commissions.MaxRevenueHelp"]</small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="edit-pct-@nid">@Localizer["Admin.Commissions.PercentageLabel"]</label>
+                            <input type="number" step="0.01" min="0.01" class="form-control font-data" dir="ltr" id="edit-pct-@nid" name="Percentage" value="@Raw(rule.Percentage)" required />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="edit-notes-@nid">@Localizer["Admin.Commissions.NotesLabel"]</label>
+                            <textarea class="form-control" id="edit-notes-@nid" name="Notes" rows="2" maxlength="500">@rule.Notes</textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">@Localizer["Admin.Commissions.Cancel"]</button>
+                        <button type="submit" class="btn btn-primary">@Localizer["Admin.Commissions.SaveChanges"]</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </permission>
+    <permission require="@WebPermission.CommissionRule.Delete">
+        <div class="modal fade" id="deleteModal-@nid" tabindex="-1" aria-labelledby="deleteTitle-@nid" aria-describedby="deleteBody-@nid" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+            <div class="modal-dialog modal-dialog-centered">
+                <form method="post" asp-area="Admin" asp-controller="Commissions" asp-action="Delete" asp-route-id="@rule.Id" class="modal-content" role="alertdialog" aria-modal="true" aria-labelledby="deleteTitle-@nid" aria-describedby="deleteBody-@nid">
+                    @Html.AntiForgeryToken()
+                    <div class="modal-header">
+                        <h2 class="modal-title h5" id="deleteTitle-@nid">@Localizer["Admin.Commissions.DeleteTitle"]</h2>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Admin.Commissions.Close"]"></button>
+                    </div>
+                    <div class="modal-body" id="deleteBody-@nid">
+                        <p>@Localizer["Admin.Commissions.DeleteConfirm", rule.Tier, rule.Currency]</p>
+                        <div class="mb-3">
+                            <label class="form-label" for="delete-reason-@nid">@Localizer["Admin.Commissions.ReasonLabel"]</label>
+                            <input type="text" class="form-control" id="delete-reason-@nid" name="reason" maxlength="500" />
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">@Localizer["Admin.Commissions.Cancel"]</button>
+                        <button type="submit" class="btn btn-danger">@Localizer["Admin.Commissions.DeleteSubmit"]</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </permission>
 }
 
 <permission require="@WebPermission.CommissionRule.Create">
-    <div class="modal fade" id="createModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
-            <form method="post" asp-area="Admin" asp-controller="Commissions" asp-action="Create" class="modal-content">
+    <div class="modal fade" id="createModal" tabindex="-1" aria-labelledby="createTitle" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered">
+            <form method="post" asp-area="Admin" asp-controller="Commissions" asp-action="Create" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="createTitle">
                 @Html.AntiForgeryToken()
                 <div class="modal-header">
-                    <h5 class="modal-title">New commission rule</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <h2 class="modal-title h5" id="createTitle">@Localizer["Admin.Commissions.CreateTitle"]</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Admin.Commissions.Close"]"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label" for="create-tier">Tier</label>
-                        <input type="text" class="form-control" id="create-tier" name="Tier" required />
+                        <label class="form-label" for="create-tier">@Localizer["Admin.Commissions.TierLabel"]</label>
+                        <input type="text" class="form-control" id="create-tier" name="Tier" required aria-describedby="create-tier-help" />
+                        <small id="create-tier-help" class="form-text">@Localizer["Admin.Commissions.TierFieldHelp"]</small>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label" for="create-min">Min monthly revenue</label>
-                        <input type="number" step="0.01" class="form-control font-data" id="create-min" name="MinMonthlyRevenue" value="0" required />
+                        <label class="form-label" for="create-min">@Localizer["Admin.Commissions.MinRevenueLabel"]</label>
+                        <input type="number" step="0.01" class="form-control font-data" dir="ltr" id="create-min" name="MinMonthlyRevenue" value="0" required />
                     </div>
                     <div class="mb-3">
-                        <label class="form-label" for="create-max">Max monthly revenue (optional)</label>
-                        <input type="number" step="0.01" class="form-control font-data" id="create-max" name="MaxMonthlyRevenue" />
+                        <label class="form-label" for="create-max">@Localizer["Admin.Commissions.MaxRevenueLabel"]</label>
+                        <input type="number" step="0.01" class="form-control font-data" dir="ltr" id="create-max" name="MaxMonthlyRevenue" aria-describedby="create-max-help" />
+                        <small id="create-max-help" class="form-text">@Localizer["Admin.Commissions.MaxRevenueHelp"]</small>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label" for="create-currency">Currency</label>
-                        <input type="text" class="form-control" id="create-currency" name="Currency" value="JOD" required />
+                        <label class="form-label" for="create-currency">@Localizer["Admin.Commissions.CurrencyLabel"]</label>
+                        <input type="text" class="form-control" dir="ltr" id="create-currency" name="Currency" value="JOD" required />
                     </div>
                     <div class="mb-3">
-                        <label class="form-label" for="create-pct">Percentage</label>
-                        <input type="number" step="0.01" class="form-control font-data" id="create-pct" name="Percentage" required />
+                        <label class="form-label" for="create-pct">@Localizer["Admin.Commissions.PercentageLabel"]</label>
+                        <input type="number" step="0.01" min="0.01" class="form-control font-data" dir="ltr" id="create-pct" name="Percentage" required />
                     </div>
                     <div class="mb-3">
-                        <label class="form-label" for="create-notes">Notes</label>
-                        <textarea class="form-control" id="create-notes" name="Notes" rows="2"></textarea>
+                        <label class="form-label" for="create-notes">@Localizer["Admin.Commissions.NotesLabel"]</label>
+                        <textarea class="form-control" id="create-notes" name="Notes" rows="2" maxlength="500"></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Create rule</button>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">@Localizer["Admin.Commissions.Cancel"]</button>
+                    <button type="submit" class="btn btn-primary">@Localizer["Admin.Commissions.CreateSubmit"]</button>
                 </div>
             </form>
         </div>

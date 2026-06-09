@@ -1,23 +1,31 @@
+@using System.Globalization
+@using Microsoft.Extensions.Localization
 @using YallaJo.Web.Areas.Admin.Models.SeoSitemap
 @using YallaJo.Web.Infrastructure.Authorization
 @model SeoSitemapVm
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
-    ViewData["Title"] = "SEO Sitemap";
+    ViewData["Title"] = Localizer["Admin.SeoSitemap.Title"].Value;
     ViewData["AdminNav"] = "SeoSitemap";
+    var culture = CultureInfo.CurrentCulture;
+    string Priority(decimal? p) => p?.ToString("0.0##", culture) ?? "—";
+    string Date(DateTime? d) => d?.ToString("yyyy-MM-dd HH:mm", culture) ?? "—";
     var freqOptions = new[] { "always", "hourly", "daily", "weekly", "monthly", "yearly", "never" };
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="d-sm-flex justify-content-between align-items-center mb-4">
     <div>
-        <h1 class="h3 mb-1">SEO Sitemap</h1>
-        <p class="text-muted mb-0">Review sitemap entries, tune crawl priority/frequency, and regenerate the sitemap.</p>
+        <h1 class="h3 mb-1">@Localizer["Admin.SeoSitemap.Title"]</h1>
+        <p class="text-secondary mb-0">@Localizer["Admin.SeoSitemap.Subtitle"]</p>
     </div>
     <permission require="@WebPermission.Sitemap.Refresh">
         <form asp-area="Admin" asp-controller="SeoSitemap" asp-action="Regenerate" method="post"
-              onsubmit="return confirm('Regenerate the sitemap now?');">
+              data-confirm="@Localizer["Admin.SeoSitemap.RegenerateConfirm"].Value"
+              data-confirm-title="@Localizer["Admin.SeoSitemap.RegenerateTitle"].Value"
+              data-confirm-action="@Localizer["Admin.SeoSitemap.Regenerate"].Value">
             @Html.AntiForgeryToken()
             <button type="submit" class="btn btn-primary-soft">
-                <i class="bi bi-arrow-repeat me-1"></i>Regenerate sitemap
+                <i class="fa-solid fa-arrows-rotate fa-fw me-1" aria-hidden="true"></i>@Localizer["Admin.SeoSitemap.Regenerate"]
             </button>
         </form>
     </permission>
@@ -25,26 +33,28 @@
 
 @if (ViewBag.Error is string vbe)
 {
-    <div class="alert alert-danger">@vbe</div>
+    <div class="alert alert-danger" role="alert">@vbe</div>
 }
-<div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+<div asp-validation-summary="ModelOnly" class="text-danger mb-3" role="alert"></div>
 
-<form asp-area="Admin" asp-controller="SeoSitemap" asp-action="Index" method="get" class="card card-body shadow-sm mb-4">
+<form asp-area="Admin" asp-controller="SeoSitemap" asp-action="Index" method="get" class="card card-body shadow mb-4">
     <div class="row g-3 align-items-end">
         <div class="col-md-4">
-            <label class="form-label">Entity type</label>
-            <input type="text" name="EntityType" value="@Model.EntityTypeFilter" class="form-control" placeholder="Tour, Place, ..." />
+            <label class="form-label" for="sitemap-entity-type">@Localizer["Admin.SeoSitemap.EntityTypeLabel"]</label>
+            <input type="text" id="sitemap-entity-type" name="EntityType" value="@Model.EntityTypeFilter" class="form-control"
+                   aria-describedby="sitemap-entity-type-help" placeholder="@Localizer["Admin.SeoSitemap.EntityTypePlaceholder"]" />
+            <small id="sitemap-entity-type-help" class="form-text">@Localizer["Admin.SeoSitemap.EntityTypeHelp"]</small>
         </div>
         <div class="col-md-3">
-            <label class="form-label">Active</label>
-            <select name="IsActive" class="form-select">
-                <option value="">All</option>
-                <option value="true" selected="@(Model.IsActiveFilter == true)">Active</option>
-                <option value="false" selected="@(Model.IsActiveFilter == false)">Inactive</option>
+            <label class="form-label" for="sitemap-active">@Localizer["Admin.SeoSitemap.ActiveLabel"]</label>
+            <select id="sitemap-active" name="IsActive" class="form-select">
+                <option value="">@Localizer["Admin.SeoSitemap.AllStatuses"]</option>
+                <option value="true" selected="@(Model.IsActiveFilter == true)">@Localizer["Admin.SeoSitemap.Active"]</option>
+                <option value="false" selected="@(Model.IsActiveFilter == false)">@Localizer["Admin.SeoSitemap.Inactive"]</option>
             </select>
         </div>
         <div class="col-md-2">
-            <button type="submit" class="btn btn-outline-secondary w-100">Apply</button>
+            <button type="submit" class="btn btn-outline-secondary w-100">@Localizer["Admin.SeoSitemap.Apply"]</button>
         </div>
     </div>
 </form>
@@ -52,58 +62,77 @@
 @if (!Model.HasEntries)
 {
     <div class="card card-body shadow text-center py-5">
-        <img src="~/assets/images/element/17.svg" class="h-80px mb-3 mx-auto" alt="No entries" />
-        <h5 class="mb-1">No sitemap entries</h5>
-        <p class="text-muted mb-0">Regenerate the sitemap to populate entries, or adjust your filters.</p>
+        <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3 mx-auto" />
+        <p class="mb-0 text-secondary">@Localizer["Admin.SeoSitemap.EmptyMessage"]</p>
     </div>
 }
 else
 {
-    <div class="card shadow">
+    <section class="card shadow" aria-labelledby="sitemap-heading">
+        <div class="card-header border-bottom">
+            <h2 id="sitemap-heading" class="card-header-title h5 mb-0">@Localizer["Admin.SeoSitemap.Directory"]</h2>
+        </div>
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
                 <thead>
                     <tr>
-                        <th>URL</th>
-                        <th>Entity type</th>
-                        <th>Priority</th>
-                        <th>Change freq</th>
-                        <th>Last modified</th>
-                        <th>Active</th>
-                        <th class="text-end">Actions</th>
+                        <th scope="col">@Localizer["Admin.SeoSitemap.ColUrl"]</th>
+                        <th scope="col">@Localizer["Admin.SeoSitemap.ColEntityType"]</th>
+                        <th scope="col" class="text-end">@Localizer["Admin.SeoSitemap.ColPriority"]</th>
+                        <th scope="col">@Localizer["Admin.SeoSitemap.ColChangeFreq"]</th>
+                        <th scope="col">@Localizer["Admin.SeoSitemap.ColLastModified"]</th>
+                        <th scope="col">@Localizer["Admin.SeoSitemap.ColActive"]</th>
+                        <th scope="col" class="text-end">@Localizer["Admin.SeoSitemap.ColActions"]</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach (var e in Model.Entries)
                     {
                         <tr>
-                            <td class="text-truncate" style="max-width: 320px;" title="@e.Url">@e.Url</td>
+                            <td class="text-truncate" style="max-width: 320px;" title="@e.Url"><bdi dir="ltr" class="font-data">@e.Url</bdi></td>
                             <td>@e.EntityType</td>
-                            <td>@(e.Priority?.ToString("0.0##") ?? "—")</td>
-                            <td>@(e.ChangeFrequency ?? "—")</td>
-                            <td>@(e.LastModified?.ToString("g") ?? "—")</td>
+                            <td class="text-end"><bdi dir="ltr" class="font-data">@Priority(e.Priority)</bdi></td>
                             <td>
-                                @if (e.IsActive)
+                                @if (string.IsNullOrWhiteSpace(e.ChangeFrequency))
                                 {
-                                    <span class="badge bg-success bg-opacity-10 text-success">Active</span>
+                                    <span class="text-secondary" aria-label="@Localizer["Admin.SeoSitemap.NotSet"]">—</span>
                                 }
                                 else
                                 {
-                                    <span class="badge bg-secondary bg-opacity-10 text-secondary">Inactive</span>
+                                    <bdi dir="ltr">@e.ChangeFrequency</bdi>
+                                }
+                            </td>
+                            <td><bdi dir="ltr" class="font-data">@Date(e.LastModified)</bdi></td>
+                            <td>
+                                @if (e.IsActive)
+                                {
+                                    <span class="badge bg-success bg-opacity-10 text-success">
+                                        <i class="fa-solid fa-circle-check fa-fw" aria-hidden="true"></i> @Localizer["Admin.SeoSitemap.Active"]
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary bg-opacity-10 text-secondary">
+                                        <i class="fa-solid fa-circle-minus fa-fw" aria-hidden="true"></i> @Localizer["Admin.SeoSitemap.Inactive"]
+                                    </span>
                                 }
                             </td>
                             <td class="text-end">
                                 <permission require="@WebPermission.Sitemap.Update">
-                                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#editSitemap-@e.Id">
-                                        <i class="bi bi-pencil"></i>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#editSitemap-@e.Id.ToString("N")">
+                                        <i class="fa-solid fa-pen fa-fw" aria-hidden="true"></i> @Localizer["Admin.SeoSitemap.Edit"]
                                     </button>
                                 </permission>
                                 <permission require="@WebPermission.Sitemap.Delete">
                                     <form asp-area="Admin" asp-controller="SeoSitemap" asp-action="Delete" method="post" class="d-inline"
-                                          onsubmit="return confirm('Delete this sitemap entry?');">
+                                          data-confirm="@Localizer["Admin.SeoSitemap.DeleteConfirm"].Value"
+                                          data-confirm-title="@Localizer["Admin.SeoSitemap.DeleteTitle"].Value"
+                                          data-confirm-action="@Localizer["Admin.SeoSitemap.Delete"].Value">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="id" value="@e.Id" />
-                                        <button type="submit" class="btn btn-sm btn-danger-soft"><i class="bi bi-trash"></i></button>
+                                        <button type="submit" class="btn btn-sm btn-danger-soft">
+                                            <i class="fa-solid fa-trash fa-fw" aria-hidden="true"></i> @Localizer["Admin.SeoSitemap.Delete"]
+                                        </button>
                                     </form>
                                 </permission>
                             </td>
@@ -112,61 +141,63 @@ else
                 </tbody>
             </table>
         </div>
-    </div>
-
-    @if (Model.TotalPages > 1)
-    {
-        <nav class="mt-3">
-            <ul class="pagination justify-content-center mb-0">
-                <li class="page-item @(Model.HasPrevious ? "" : "disabled")">
-                    <a class="page-link" asp-area="Admin" asp-controller="SeoSitemap" asp-action="Index"
-                       asp-route-page="@(Model.Page - 1)" asp-route-entityType="@Model.EntityTypeFilter" asp-route-isActive="@Model.IsActiveFilter">Previous</a>
-                </li>
-                <li class="page-item disabled"><span class="page-link">Page @Model.Page of @Model.TotalPages</span></li>
-                <li class="page-item @(Model.HasNext ? "" : "disabled")">
-                    <a class="page-link" asp-area="Admin" asp-controller="SeoSitemap" asp-action="Index"
-                       asp-route-page="@(Model.Page + 1)" asp-route-entityType="@Model.EntityTypeFilter" asp-route-isActive="@Model.IsActiveFilter">Next</a>
-                </li>
-            </ul>
-        </nav>
-    }
+        @if (Model.TotalPages > 1)
+        {
+            <div class="card-footer border-top">
+                <nav aria-label="@Localizer["Admin.SeoSitemap.PaginationLabel"]">
+                    <ul class="pagination justify-content-center mb-0">
+                        <li class="page-item @(Model.HasPrevious ? "" : "disabled")">
+                            <a class="page-link" asp-area="Admin" asp-controller="SeoSitemap" asp-action="Index"
+                               asp-route-page="@(Model.Page - 1)" asp-route-entityType="@Model.EntityTypeFilter" asp-route-isActive="@Model.IsActiveFilter">@Localizer["Admin.SeoSitemap.Previous"]</a>
+                        </li>
+                        <li class="page-item disabled"><span class="page-link">@Localizer["Admin.SeoSitemap.PageLabel"] <bdi class="font-data">@Model.Page</bdi></span></li>
+                        <li class="page-item @(Model.HasNext ? "" : "disabled")">
+                            <a class="page-link" asp-area="Admin" asp-controller="SeoSitemap" asp-action="Index"
+                               asp-route-page="@(Model.Page + 1)" asp-route-entityType="@Model.EntityTypeFilter" asp-route-isActive="@Model.IsActiveFilter">@Localizer["Admin.SeoSitemap.Next"]</a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        }
+    </section>
 
     <permission require="@WebPermission.Sitemap.Update">
         @foreach (var e in Model.Entries)
         {
-            <div class="modal fade" id="editSitemap-@e.Id" tabindex="-1" aria-hidden="true">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <form asp-area="Admin" asp-controller="SeoSitemap" asp-action="Update" method="post">
-                            @Html.AntiForgeryToken()
-                            <input type="hidden" name="Id" value="@e.Id" />
-                            <div class="modal-header">
-                                <h5 class="modal-title">Edit sitemap entry</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            var modalId = "editSitemap-" + e.Id.ToString("N");
+            var titleId = modalId + "-title";
+            <div class="modal fade" id="@modalId" tabindex="-1" aria-labelledby="@titleId" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+                <div class="modal-dialog modal-dialog-centered">
+                    <form asp-area="Admin" asp-controller="SeoSitemap" asp-action="Update" method="post" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="@titleId">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="Id" value="@e.Id" />
+                        <div class="modal-header">
+                            <h2 class="modal-title h5" id="@titleId">@Localizer["Admin.SeoSitemap.EditTitle"]</h2>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Admin.SeoSitemap.Close"]"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p class="small text-secondary text-truncate" title="@e.Url"><bdi dir="ltr">@e.Url</bdi></p>
+                            <div class="mb-3">
+                                <label class="form-label" for="@(modalId)-priority">@Localizer["Admin.SeoSitemap.PriorityLabel"]</label>
+                                <input type="number" id="@(modalId)-priority" name="Priority" step="0.1" min="0" max="1" dir="ltr"
+                                       value="@(e.Priority?.ToString("0.0##", CultureInfo.InvariantCulture))" class="form-control" />
                             </div>
-                            <div class="modal-body">
-                                <p class="small text-muted text-truncate" title="@e.Url">@e.Url</p>
-                                <div class="mb-3">
-                                    <label class="form-label">Priority</label>
-                                    <input type="number" name="Priority" step="0.1" min="0" max="1" value="@(e.Priority?.ToString("0.0##"))" class="form-control" />
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Change frequency</label>
-                                    <select name="ChangeFrequency" class="form-select">
-                                        <option value="">— none —</option>
-                                        @foreach (var f in freqOptions)
-                                        {
-                                            <option value="@f" selected="@(string.Equals(e.ChangeFrequency, f, StringComparison.OrdinalIgnoreCase))">@f</option>
-                                        }
-                                    </select>
-                                </div>
+                            <div class="mb-3">
+                                <label class="form-label" for="@(modalId)-freq">@Localizer["Admin.SeoSitemap.ChangeFrequencyLabel"]</label>
+                                <select id="@(modalId)-freq" name="ChangeFrequency" class="form-select">
+                                    <option value="">@Localizer["Admin.SeoSitemap.None"]</option>
+                                    @foreach (var f in freqOptions)
+                                    {
+                                        <option value="@f" selected="@(string.Equals(e.ChangeFrequency, f, StringComparison.OrdinalIgnoreCase))">@f</option>
+                                    }
+                                </select>
                             </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                                <button type="submit" class="btn btn-primary-soft">Save</button>
-                            </div>
-                        </form>
-                    </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">@Localizer["Admin.SeoSitemap.Cancel"]</button>
+                            <button type="submit" class="btn btn-primary-soft">@Localizer["Admin.SeoSitemap.Save"]</button>
+                        </div>
+                    </form>
                 </div>
             </div>
         }

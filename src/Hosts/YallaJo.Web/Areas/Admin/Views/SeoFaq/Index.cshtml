@@ -1,49 +1,58 @@
+@using System.Globalization
+@using Microsoft.Extensions.Localization
 @using YallaJo.Web.Areas.Admin.Models.SeoFaq
 @using YallaJo.Web.Infrastructure.Authorization
 @model SeoFaqVm
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
-    ViewData["Title"] = "SEO FAQ";
+    ViewData["Title"] = Localizer["Admin.SeoFaq.Title"].Value;
     ViewData["AdminNav"] = "SeoFaq";
+    var culture = CultureInfo.CurrentCulture;
     var entityTypes = Html.GetEnumSelectList<SeoEntityType>();
+    string Count(int n) => n.ToString("N0", culture);
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="d-sm-flex justify-content-between align-items-center mb-4">
     <div>
-        <h1 class="h3 mb-1">SEO FAQ</h1>
-        <p class="text-muted mb-0">Manage frequently-asked questions attached to tours, places, businesses and more.</p>
+        <h1 class="h3 mb-1">@Localizer["Admin.SeoFaq.Title"]</h1>
+        <p class="text-secondary mb-0">@Localizer["Admin.SeoFaq.Subtitle"]</p>
     </div>
     <permission require="@WebPermission.FaqItem.Create">
         <button type="button" class="btn btn-primary-soft" data-bs-toggle="modal" data-bs-target="#createFaqModal">
-            <i class="bi bi-plus-lg me-1"></i>Add FAQ
+            <i class="fa-solid fa-plus fa-fw me-1" aria-hidden="true"></i>@Localizer["Admin.SeoFaq.Add"]
         </button>
     </permission>
 </div>
 
 @if (ViewBag.Error is string vbe)
 {
-    <div class="alert alert-danger">@vbe</div>
+    <div class="alert alert-danger" role="alert">@vbe</div>
 }
-<div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+<div asp-validation-summary="ModelOnly" class="text-danger mb-3" role="alert"></div>
 
 <div class="card shadow mb-4">
+    <div class="card-header border-bottom">
+        <h2 class="card-header-title h5 mb-0">@Localizer["Admin.SeoFaq.FiltersHeading"]</h2>
+    </div>
     <div class="card-body">
-        <form asp-area="Admin" asp-controller="SeoFaq" asp-action="Index" method="get" class="row g-2 align-items-end">
+        <form asp-area="Admin" asp-controller="SeoFaq" asp-action="Index" method="get" class="row g-3 align-items-end">
             <div class="col-sm-4">
-                <label class="form-label small">Entity type</label>
-                <select name="EntityType" class="form-select" asp-items="entityTypes">
-                    <option value="">All</option>
+                <label for="faq-entity-type" class="form-label">@Localizer["Admin.SeoFaq.EntityTypeLabel"]</label>
+                <select id="faq-entity-type" name="EntityType" class="form-select" asp-items="entityTypes">
+                    <option value="">@Localizer["Admin.SeoFaq.AllTypes"]</option>
                 </select>
             </div>
-            <div class="col-sm-3">
-                <label class="form-label small">Active only</label>
-                <select name="ActiveOnly" class="form-select">
-                    <option value="">All</option>
-                    <option value="true" selected="@(Model.ActiveOnlyFilter == true)">Active</option>
-                    <option value="false" selected="@(Model.ActiveOnlyFilter == false)">Inactive</option>
+            <div class="col-sm-4">
+                <label for="faq-active" class="form-label">@Localizer["Admin.SeoFaq.ActiveLabel"]</label>
+                <select id="faq-active" name="ActiveOnly" class="form-select">
+                    <option value="">@Localizer["Admin.SeoFaq.AllStatuses"]</option>
+                    <option value="true" selected="@(Model.ActiveOnlyFilter == true)">@Localizer["Admin.SeoFaq.Active"]</option>
+                    <option value="false" selected="@(Model.ActiveOnlyFilter == false)">@Localizer["Admin.SeoFaq.Inactive"]</option>
                 </select>
             </div>
-            <div class="col-sm-2">
-                <button type="submit" class="btn btn-outline-secondary w-100">Apply</button>
+            <div class="col-sm-4 d-flex gap-2">
+                <button type="submit" class="btn btn-primary">@Localizer["Admin.SeoFaq.Apply"]</button>
+                <a asp-action="Index" class="btn btn-outline-secondary">@Localizer["Admin.SeoFaq.Reset"]</a>
             </div>
         </form>
     </div>
@@ -51,24 +60,28 @@
 
 @if (!Model.HasItems)
 {
-    <div class="card card-body shadow text-center py-5">
-        <img src="~/assets/images/element/17.svg" class="h-80px mb-3 mx-auto" alt="" />
-        <h6 class="mb-1">No FAQ items found</h6>
-        <p class="text-muted mb-0">Add an FAQ item or adjust the filter above.</p>
+    <div class="card shadow">
+        <div class="card-body text-center py-5">
+            <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
+            <p class="mb-0 text-secondary">@Localizer["Admin.SeoFaq.EmptyMessage"]</p>
+        </div>
     </div>
 }
 else
 {
-    <div class="card shadow">
+    <section class="card shadow" aria-labelledby="faq-directory">
+        <div class="card-header border-bottom">
+            <h2 id="faq-directory" class="card-header-title h5 mb-0">@Localizer["Admin.SeoFaq.Directory"]</h2>
+        </div>
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
                 <thead>
                     <tr>
-                        <th>Question</th>
-                        <th>Entity</th>
-                        <th>Order</th>
-                        <th>Active</th>
-                        <th class="text-end">Actions</th>
+                        <th scope="col">@Localizer["Admin.SeoFaq.ColQuestion"]</th>
+                        <th scope="col">@Localizer["Admin.SeoFaq.ColEntity"]</th>
+                        <th scope="col" class="text-end">@Localizer["Admin.SeoFaq.ColOrder"]</th>
+                        <th scope="col">@Localizer["Admin.SeoFaq.ColStatus"]</th>
+                        <th scope="col" class="text-end">@Localizer["Admin.SeoFaq.ColActions"]</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -77,34 +90,34 @@ else
                         <tr>
                             <td>
                                 <div class="fw-semibold">@item.Question</div>
-                                <div class="small text-muted text-truncate" style="max-width:480px;">@item.Answer</div>
+                                <div class="small text-secondary text-truncate" style="max-width:480px;">@item.Answer</div>
                             </td>
                             <td>
                                 <span class="badge bg-primary bg-opacity-10 text-primary">@item.EntityType</span>
-                                <div class="small text-muted font-monospace">@item.EntityId.ToString("D")[..8]</div>
                             </td>
-                            <td>@item.SortOrder</td>
+                            <td class="text-end"><bdi class="font-data">@Count(item.SortOrder)</bdi></td>
                             <td>
                                 @if (item.IsActive)
                                 {
-                                    <span class="badge bg-success bg-opacity-10 text-success">Active</span>
+                                    <span class="badge bg-success bg-opacity-10 text-success"><i class="fa-solid fa-circle-check fa-fw" aria-hidden="true"></i> @Localizer["Admin.SeoFaq.Active"]</span>
                                 }
                                 else
                                 {
-                                    <span class="badge bg-secondary bg-opacity-10 text-secondary">Inactive</span>
+                                    <span class="badge bg-secondary bg-opacity-10 text-secondary"><i class="fa-solid fa-circle-minus fa-fw" aria-hidden="true"></i> @Localizer["Admin.SeoFaq.Inactive"]</span>
                                 }
                             </td>
                             <td class="text-end">
                                 <permission require="@WebPermission.FaqItem.Update">
-                                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#editFaq-@item.Id">
-                                        <i class="bi bi-pencil"></i>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#editFaq-@item.Id.ToString("N")" aria-label="@Localizer["Admin.SeoFaq.Edit"]">
+                                        <i class="fa-solid fa-pen fa-fw" aria-hidden="true"></i>
                                     </button>
                                 </permission>
                                 <permission require="@WebPermission.FaqItem.Delete">
-                                    <form asp-area="Admin" asp-controller="SeoFaq" asp-action="Delete" method="post" class="d-inline" onsubmit="return confirm('Delete this FAQ item?');">
+                                    <form asp-area="Admin" asp-controller="SeoFaq" asp-action="Delete" method="post" class="d-inline"
+                                          data-confirm="@Localizer["Admin.SeoFaq.DeleteConfirm"]" data-confirm-title="@Localizer["Admin.SeoFaq.DeleteTitle"]" data-confirm-action="@Localizer["Admin.SeoFaq.Delete"]">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="id" value="@item.Id" />
-                                        <button type="submit" class="btn btn-sm btn-danger-soft"><i class="bi bi-trash"></i></button>
+                                        <button type="submit" class="btn btn-sm btn-danger-soft" aria-label="@Localizer["Admin.SeoFaq.Delete"]"><i class="fa-solid fa-trash fa-fw" aria-hidden="true"></i></button>
                                     </form>
                                 </permission>
                             </td>
@@ -113,52 +126,51 @@ else
                 </tbody>
             </table>
         </div>
-    </div>
-
-    @if (Model.TotalPages > 1)
-    {
-        <nav class="mt-3">
-            <ul class="pagination justify-content-center mb-0">
-                <li class="page-item @(Model.HasPrevious ? string.Empty : "disabled")">
-                    <a class="page-link" asp-action="Index" asp-route-page="@(Model.Page - 1)" asp-route-entityType="@Model.EntityTypeFilter" asp-route-activeOnly="@Model.ActiveOnlyFilter">Previous</a>
-                </li>
-                <li class="page-item disabled"><span class="page-link">Page @Model.Page of @Model.TotalPages</span></li>
-                <li class="page-item @(Model.HasNext ? string.Empty : "disabled")">
-                    <a class="page-link" asp-action="Index" asp-route-page="@(Model.Page + 1)" asp-route-entityType="@Model.EntityTypeFilter" asp-route-activeOnly="@Model.ActiveOnlyFilter">Next</a>
-                </li>
-            </ul>
-        </nav>
-    }
+        @if (Model.TotalPages > 1)
+        {
+            <div class="card-footer border-top">
+                <nav aria-label="@Localizer["Admin.SeoFaq.PaginationLabel"]">
+                    <ul class="pagination justify-content-center mb-0">
+                        <li class="page-item @(Model.HasPrevious ? string.Empty : "disabled")">
+                            <a class="page-link" asp-action="Index" asp-route-page="@(Model.Page - 1)" asp-route-entityType="@Model.EntityTypeFilter" asp-route-activeOnly="@Model.ActiveOnlyFilter">@Localizer["Admin.SeoFaq.Previous"]</a>
+                        </li>
+                        <li class="page-item disabled"><span class="page-link">@Localizer["Admin.SeoFaq.PageLabel"] <bdi class="font-data">@Count(Model.Page)</bdi></span></li>
+                        <li class="page-item @(Model.HasNext ? string.Empty : "disabled")">
+                            <a class="page-link" asp-action="Index" asp-route-page="@(Model.Page + 1)" asp-route-entityType="@Model.EntityTypeFilter" asp-route-activeOnly="@Model.ActiveOnlyFilter">@Localizer["Admin.SeoFaq.Next"]</a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        }
+    </section>
 
     @foreach (var item in Model.Items)
     {
         <permission require="@WebPermission.FaqItem.Update">
-            <div class="modal fade" id="editFaq-@item.Id" tabindex="-1">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <form asp-area="Admin" asp-controller="SeoFaq" asp-action="Update" method="post">
-                            @Html.AntiForgeryToken()
-                            <div class="modal-header">
-                                <h5 class="modal-title">Edit FAQ item</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            <div class="modal fade" id="editFaq-@item.Id.ToString("N")" tabindex="-1" aria-labelledby="editFaqTitle-@item.Id.ToString("N")" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+                <div class="modal-dialog modal-dialog-centered">
+                    <form asp-area="Admin" asp-controller="SeoFaq" asp-action="Update" method="post" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="editFaqTitle-@item.Id.ToString("N")">
+                        @Html.AntiForgeryToken()
+                        <div class="modal-header">
+                            <h2 class="modal-title h5" id="editFaqTitle-@item.Id.ToString("N")">@Localizer["Admin.SeoFaq.EditTitle"]</h2>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Admin.SeoFaq.Close"]"></button>
+                        </div>
+                        <div class="modal-body">
+                            <input type="hidden" name="Id" value="@item.Id" />
+                            <div class="mb-3">
+                                <label for="edit-q-@item.Id.ToString("N")" class="form-label">@Localizer["Admin.SeoFaq.QuestionLabel"]</label>
+                                <input id="edit-q-@item.Id.ToString("N")" name="Question" class="form-control" value="@item.Question" maxlength="500" required />
                             </div>
-                            <div class="modal-body">
-                                <input type="hidden" name="Id" value="@item.Id" />
-                                <div class="mb-3">
-                                    <label class="form-label">Question</label>
-                                    <input name="Question" class="form-control" value="@item.Question" maxlength="500" />
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Answer</label>
-                                    <textarea name="Answer" class="form-control" rows="4" maxlength="4000">@item.Answer</textarea>
-                                </div>
+                            <div class="mb-3">
+                                <label for="edit-a-@item.Id.ToString("N")" class="form-label">@Localizer["Admin.SeoFaq.AnswerLabel"]</label>
+                                <textarea id="edit-a-@item.Id.ToString("N")" name="Answer" class="form-control" rows="4" maxlength="4000" required>@item.Answer</textarea>
                             </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                                <button type="submit" class="btn btn-primary-soft">Save</button>
-                            </div>
-                        </form>
-                    </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">@Localizer["Admin.SeoFaq.Cancel"]</button>
+                            <button type="submit" class="btn btn-primary">@Localizer["Admin.SeoFaq.Save"]</button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </permission>
@@ -166,43 +178,43 @@ else
 }
 
 <permission require="@WebPermission.FaqItem.Create">
-    <div class="modal fade" id="createFaqModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <form asp-area="Admin" asp-controller="SeoFaq" asp-action="Create" method="post">
-                    @Html.AntiForgeryToken()
-                    <div class="modal-header">
-                        <h5 class="modal-title">Add FAQ item</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+    <div class="modal fade" id="createFaqModal" tabindex="-1" aria-labelledby="createFaqTitle" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered">
+            <form asp-area="Admin" asp-controller="SeoFaq" asp-action="Create" method="post" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="createFaqTitle">
+                @Html.AntiForgeryToken()
+                <div class="modal-header">
+                    <h2 class="modal-title h5" id="createFaqTitle">@Localizer["Admin.SeoFaq.Add"]</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Admin.SeoFaq.Close"]"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="small text-secondary">@Localizer["Admin.SeoFaq.OperatorHelp"]</p>
+                    <div class="mb-3">
+                        <label for="create-entity-type" class="form-label">@Localizer["Admin.SeoFaq.EntityTypeLabel"]</label>
+                        <select id="create-entity-type" name="EntityType" class="form-select" asp-items="entityTypes"></select>
                     </div>
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label class="form-label">Entity type</label>
-                            <select name="EntityType" class="form-select" asp-items="entityTypes"></select>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Entity id</label>
-                            <input name="EntityId" class="form-control" placeholder="00000000-0000-0000-0000-000000000000" />
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Question</label>
-                            <input name="Question" class="form-control" maxlength="500" />
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Answer</label>
-                            <textarea name="Answer" class="form-control" rows="4" maxlength="4000"></textarea>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Sort order</label>
-                            <input name="SortOrder" type="number" class="form-control" value="0" min="0" max="1000" />
-                        </div>
+                    <div class="mb-3">
+                        <label for="create-entity-id" class="form-label">@Localizer["Admin.SeoFaq.EntityIdLabel"]</label>
+                        <input id="create-entity-id" name="EntityId" class="form-control" dir="ltr" aria-describedby="create-entity-id-help" placeholder="00000000-0000-0000-0000-000000000000" required />
+                        <div id="create-entity-id-help" class="form-text">@Localizer["Admin.SeoFaq.EntityIdHelp"]</div>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary-soft">Create</button>
+                    <div class="mb-3">
+                        <label for="create-q" class="form-label">@Localizer["Admin.SeoFaq.QuestionLabel"]</label>
+                        <input id="create-q" name="Question" class="form-control" maxlength="500" required />
                     </div>
-                </form>
-            </div>
+                    <div class="mb-3">
+                        <label for="create-a" class="form-label">@Localizer["Admin.SeoFaq.AnswerLabel"]</label>
+                        <textarea id="create-a" name="Answer" class="form-control" rows="4" maxlength="4000" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="create-sort" class="form-label">@Localizer["Admin.SeoFaq.SortOrderLabel"]</label>
+                        <input id="create-sort" name="SortOrder" type="number" class="form-control" dir="ltr" value="0" min="0" max="1000" />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">@Localizer["Admin.SeoFaq.Cancel"]</button>
+                    <button type="submit" class="btn btn-primary">@Localizer["Admin.SeoFaq.CreateSubmit"]</button>
+                </div>
+            </form>
         </div>
     </div>
 </permission>

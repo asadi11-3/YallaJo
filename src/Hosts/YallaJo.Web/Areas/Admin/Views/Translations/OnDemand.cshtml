@@ -1,57 +1,80 @@
+@using System.Globalization
+@using Microsoft.Extensions.Localization
 @model YallaJo.Web.Areas.Admin.Models.Translations.TranslateOnDemandVm
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
-    ViewData["Title"] = "On-demand Translate";
-    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = Localizer["Admin.Translations.OnDemandTitle"].Value;
+    ViewData["AdminNav"] = "Translations";
+    var culture = CultureInfo.CurrentCulture;
 }
 
-<div class="container mt-4">
-    <h2>On-demand Translate</h2>
+<div class="d-sm-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-1">@Localizer["Admin.Translations.OnDemandTitle"]</h1>
+        <p class="mb-0 text-secondary">@Localizer["Admin.Translations.OnDemandSubtitle"]</p>
+    </div>
+    <a asp-action="Index" class="btn btn-outline-secondary">
+        <i class="fa-solid fa-arrow-left fa-fw" aria-hidden="true"></i> @Localizer["Admin.Translations.Back"]
+    </a>
+</div>
 
-    <div asp-validation-summary="All" class="text-danger mb-3"></div>
+<div class="card shadow">
+    <div class="card-header border-bottom">
+        <h2 class="card-header-title h5 mb-0">@Localizer["Admin.Translations.OnDemandHeading"]</h2>
+    </div>
+    <div class="card-body">
+        <form asp-area="Admin" asp-controller="Translations" asp-action="OnDemand" method="post" class="col-lg-8">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="All" class="text-danger mb-3" role="alert"></div>
 
-    <form asp-area="Admin" asp-controller="Translations" asp-action="OnDemand" method="post" class="col-md-8">
-        @Html.AntiForgeryToken()
-
-        <div class="row g-2 mb-3">
-            <div class="col-md-6">
-                <label asp-for="FromLanguageCode" class="form-label"></label>
-                <input asp-for="FromLanguageCode" class="form-control" />
-                <span asp-validation-for="FromLanguageCode" class="text-danger"></span>
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                    <label asp-for="FromLanguageCode" class="form-label">@Localizer["Admin.Translations.FromLabel"]</label>
+                    <input asp-for="FromLanguageCode" class="form-control" dir="ltr" aria-describedby="from-help" />
+                    <small id="from-help" class="form-text">@Localizer["Admin.Translations.CodeHelp"]</small>
+                    <span asp-validation-for="FromLanguageCode" class="text-danger" role="alert"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="ToLanguageCode" class="form-label">@Localizer["Admin.Translations.ToLabel"]</label>
+                    <input asp-for="ToLanguageCode" class="form-control" dir="ltr" aria-describedby="to-help" />
+                    <small id="to-help" class="form-text">@Localizer["Admin.Translations.CodeHelp"]</small>
+                    <span asp-validation-for="ToLanguageCode" class="text-danger" role="alert"></span>
+                </div>
             </div>
-            <div class="col-md-6">
-                <label asp-for="ToLanguageCode" class="form-label"></label>
-                <input asp-for="ToLanguageCode" class="form-control" />
-                <span asp-validation-for="ToLanguageCode" class="text-danger"></span>
+
+            <div class="mb-3">
+                <label asp-for="Text" class="form-label">@Localizer["Admin.Translations.TextLabel"]</label>
+                <textarea asp-for="Text" class="form-control" rows="4"></textarea>
+                <span asp-validation-for="Text" class="text-danger" role="alert"></span>
             </div>
-        </div>
 
-        <div class="mb-3">
-            <label asp-for="Text" class="form-label"></label>
-            <textarea asp-for="Text" class="form-control" rows="4"></textarea>
-            <span asp-validation-for="Text" class="text-danger"></span>
-        </div>
+            <button type="submit" class="btn btn-primary">
+                <i class="fa-solid fa-language fa-fw" aria-hidden="true"></i> @Localizer["Admin.Translations.TranslateSubmit"]
+            </button>
+        </form>
 
-        <button type="submit" class="btn btn-primary">Translate</button>
-        <a asp-action="Index" class="btn btn-link">Back</a>
-    </form>
-
-    @if (!string.IsNullOrEmpty(Model.LastTranslated))
-    {
-        <div class="card mt-4 p-3">
-            <h5>Result</h5>
-            <dl class="row mb-0">
-                <dt class="col-sm-3">Original</dt>
-                <dd class="col-sm-9">@Model.LastOriginal</dd>
-                <dt class="col-sm-3">Translated</dt>
-                <dd class="col-sm-9">@Model.LastTranslated</dd>
-                @if (Model.LastConfidence.HasValue)
-                {
-                    <dt class="col-sm-3">Confidence</dt>
-                    <dd class="col-sm-9">@Model.LastConfidence.Value.ToString("0.00")</dd>
-                }
-            </dl>
-        </div>
-    }
+        @if (!string.IsNullOrEmpty(Model.LastTranslated))
+        {
+            <div class="card shadow-sm mt-4">
+                <div class="card-header border-bottom">
+                    <h2 class="card-header-title h5 mb-0">@Localizer["Admin.Translations.ResultHeading"]</h2>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-3">@Localizer["Admin.Translations.OriginalLabel"]</dt>
+                        <dd class="col-sm-9">@Model.LastOriginal</dd>
+                        <dt class="col-sm-3">@Localizer["Admin.Translations.TranslatedLabel"]</dt>
+                        <dd class="col-sm-9"><bdi>@Model.LastTranslated</bdi></dd>
+                        @if (Model.LastConfidence.HasValue)
+                        {
+                            <dt class="col-sm-3">@Localizer["Admin.Translations.ConfidenceLabel"]</dt>
+                            <dd class="col-sm-9"><bdi dir="ltr" class="font-data">@Model.LastConfidence.Value.ToString("0.00", culture)</bdi></dd>
+                        }
+                    </dl>
+                </div>
+            </div>
+        }
+    </div>
 </div>
 
 @section Scripts {

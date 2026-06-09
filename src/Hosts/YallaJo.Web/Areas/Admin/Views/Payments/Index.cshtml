@@ -1,18 +1,25 @@
 @model YallaJo.Web.Areas.Admin.Models.Payments.PaymentsVm
+@using System.Globalization
+@using Microsoft.Extensions.Localization
 @using YallaJo.Web.Areas.Admin.Models.Payments
 @using YallaJo.Web.Infrastructure.Authorization
 @inject YallaJo.Web.Infrastructure.Identity.ICurrentUser CurrentUser
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
-    ViewData["Title"] = "Earnings";
+    ViewData["Title"] = Localizer["Admin.Finance.Title"].Value;
     ViewData["AdminNav"] = "Finance";
+
+    var culture = CultureInfo.CurrentCulture;
     var canRefund = CurrentUser.HasPermission(WebPermission.Refund.Create);
-}
-@functions {
-    static string Money(decimal amount, string? currency)
-        => string.IsNullOrWhiteSpace(currency) ? amount.ToString("N2") : $"{amount:N2} {currency}";
+    var hasFilters = !string.IsNullOrWhiteSpace(Model.StatusFilter) || !string.IsNullOrWhiteSpace(Model.TypeFilter);
+
+    string Count(int n) => n.ToString("N0", culture);
+    string Money(decimal amount, string? currency)
+        => amount.ToString("N3", culture) + " " + (string.IsNullOrWhiteSpace(currency) ? Model.Currency : currency);
+    string Date(DateTime dt) => dt.ToString("yyyy-MM-dd HH:mm", culture);
 
     // §8.7 — a payment is refundable when it has settled and still has a refundable balance.
-    static bool IsRefundable(PaymentRowVm p)
+    bool IsRefundable(PaymentRowVm p)
     {
         var status = p.Status?.Trim().ToLowerInvariant();
         var settled = status is "succeeded" or "completed" or "captured" or "partiallyrefunded" or "partially refunded";
@@ -21,20 +28,23 @@
 }
 
 <div class="d-sm-flex justify-content-between align-items-center mb-4">
-    <h1 class="h3 mb-0">Earnings</h1>
+    <div>
+        <h1 class="h3 mb-1">@Localizer["Admin.Finance.Title"]</h1>
+        <p class="mb-0 text-secondary">@Localizer["Admin.Finance.Subtitle"]</p>
+    </div>
 </div>
 
-<!-- KPI tiles -->
+@* KPI tiles *@
 <div class="row g-4 mb-4">
     <div class="col-md-6 col-xxl-3">
         <div class="card card-body shadow p-4 h-100">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
-                    <h6 class="fw-light mb-1">Gross revenue</h6>
-                    <h3 class="font-data mb-0">@Money(Model.GrossRevenue, Model.Currency)</h3>
+                    <h2 class="h6 fw-light mb-1">@Localizer["Admin.Finance.GrossRevenue"]</h2>
+                    <p class="font-data h3 mb-0"><bdi dir="ltr">@Money(Model.GrossRevenue, Model.Currency)</bdi></p>
                 </div>
                 <div class="icon-lg rounded-circle bg-success bg-opacity-10 text-success">
-                    <i class="fa-solid fa-sack-dollar fa-fw"></i>
+                    <i class="fa-solid fa-sack-dollar fa-fw" aria-hidden="true"></i>
                 </div>
             </div>
         </div>
@@ -43,11 +53,11 @@
         <div class="card card-body shadow p-4 h-100">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
-                    <h6 class="fw-light mb-1">Platform commission</h6>
-                    <h3 class="font-data mb-0">@Money(Model.PlatformCommissionEstimate, Model.Currency)</h3>
+                    <h2 class="h6 fw-light mb-1">@Localizer["Admin.Finance.PlatformCommission"]</h2>
+                    <p class="font-data h3 mb-0"><bdi dir="ltr">@Money(Model.PlatformCommissionEstimate, Model.Currency)</bdi></p>
                 </div>
                 <div class="icon-lg rounded-circle bg-primary bg-opacity-10 text-primary">
-                    <i class="fa-solid fa-percent fa-fw"></i>
+                    <i class="fa-solid fa-percent fa-fw" aria-hidden="true"></i>
                 </div>
             </div>
         </div>
@@ -56,11 +66,11 @@
         <div class="card card-body shadow p-4 h-100">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
-                    <h6 class="fw-light mb-1">Provider net</h6>
-                    <h3 class="font-data mb-0">@Money(Model.ProviderNetEstimate, Model.Currency)</h3>
+                    <h2 class="h6 fw-light mb-1">@Localizer["Admin.Finance.ProviderNet"]</h2>
+                    <p class="font-data h3 mb-0"><bdi dir="ltr">@Money(Model.ProviderNetEstimate, Model.Currency)</bdi></p>
                 </div>
                 <div class="icon-lg rounded-circle bg-info bg-opacity-10 text-info">
-                    <i class="fa-solid fa-hand-holding-dollar fa-fw"></i>
+                    <i class="fa-solid fa-hand-holding-dollar fa-fw" aria-hidden="true"></i>
                 </div>
             </div>
         </div>
@@ -69,46 +79,55 @@
         <div class="card card-body shadow p-4 h-100">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
-                    <h6 class="fw-light mb-1">Open disputes</h6>
-                    <h3 class="font-data mb-0">@Model.OpenDisputeCount.ToString("N0")</h3>
+                    <h2 class="h6 fw-light mb-1">@Localizer["Admin.Finance.OpenDisputes"]</h2>
+                    <p class="font-data h3 mb-0"><bdi dir="ltr">@Count(Model.OpenDisputeCount)</bdi></p>
                 </div>
                 <div class="icon-lg rounded-circle bg-warning bg-opacity-10 text-warning">
-                    <i class="fa-solid fa-scale-balanced fa-fw"></i>
+                    <i class="fa-solid fa-scale-balanced fa-fw" aria-hidden="true"></i>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Filters -->
+@* Filters *@
 <div class="card shadow mb-4">
+    <div class="card-header border-bottom">
+        <h2 class="card-header-title h5 mb-0">@Localizer["Admin.Finance.FiltersHeading"]</h2>
+    </div>
     <div class="card-body">
         <form method="get" asp-area="Admin" asp-controller="Payments" asp-action="Index" class="row g-3 align-items-end">
             <div class="col-sm-6 col-lg-3">
-                <label class="form-label" for="Status">Status</label>
-                <input type="text" class="form-control" id="Status" name="Status"
-                       value="@Model.StatusFilter" placeholder="e.g. Succeeded, Pending" />
+                <label class="form-label" for="Status">@Localizer["Admin.Finance.StatusLabel"]</label>
+                <input type="text" class="form-control" id="Status" name="Status" dir="ltr"
+                       value="@Model.StatusFilter" aria-describedby="status-help"
+                       placeholder="@Localizer["Admin.Finance.StatusPlaceholder"]" />
+                <small id="status-help" class="form-text">@Localizer["Admin.Finance.StatusHelp"]</small>
             </div>
             <div class="col-sm-6 col-lg-3">
-                <label class="form-label" for="Type">Type</label>
-                <input type="text" class="form-control" id="Type" name="Type"
-                       value="@Model.TypeFilter" placeholder="e.g. Payment, Refund" />
+                <label class="form-label" for="Type">@Localizer["Admin.Finance.TypeLabel"]</label>
+                <input type="text" class="form-control" id="Type" name="Type" dir="ltr"
+                       value="@Model.TypeFilter" aria-describedby="type-help"
+                       placeholder="@Localizer["Admin.Finance.TypePlaceholder"]" />
+                <small id="type-help" class="form-text">@Localizer["Admin.Finance.TypeHelp"]</small>
             </div>
             <div class="col-sm-6 col-lg-3 d-flex gap-2">
-                <button type="submit" class="btn btn-primary">Apply</button>
-                <a class="btn btn-outline-secondary" asp-area="Admin" asp-controller="Payments" asp-action="Index">Reset</a>
+                <button type="submit" class="btn btn-primary">@Localizer["Admin.Finance.Apply"]</button>
+                <a class="btn btn-outline-secondary" asp-area="Admin" asp-controller="Payments" asp-action="Index">@Localizer["Admin.Finance.Reset"]</a>
             </div>
         </form>
     </div>
 </div>
 
-<!-- Payments table -->
-<div class="card shadow">
+@* Payments table *@
+<section class="card shadow" aria-labelledby="payments-heading">
     <div class="card-header border-bottom d-flex justify-content-between align-items-center">
-        <h5 class="card-header-title mb-0">Payments</h5>
+        <h2 id="payments-heading" class="card-header-title h5 mb-0">@Localizer["Admin.Finance.Directory"]</h2>
         @if (Model.TotalCount is { } total)
         {
-            <span class="badge bg-secondary bg-opacity-10 text-secondary font-data">@total.ToString("N0") total</span>
+            <span class="badge bg-secondary bg-opacity-10 text-secondary">
+                <bdi class="font-data" dir="ltr">@Count(total)</bdi> @Localizer["Admin.Finance.TotalLabel"]
+            </span>
         }
     </div>
     <div class="card-body">
@@ -118,16 +137,16 @@
                 <table class="table table-hover align-middle mb-0">
                     <thead>
                         <tr>
-                            <th scope="col">Payment</th>
-                            <th scope="col">Type</th>
-                            <th scope="col">Status</th>
-                            <th scope="col" class="text-end">Amount</th>
-                            <th scope="col" class="text-end">Refunded</th>
-                            <th scope="col">Gateway</th>
-                            <th scope="col">Created</th>
+                            <th scope="col">@Localizer["Admin.Finance.ColReference"]</th>
+                            <th scope="col">@Localizer["Admin.Finance.ColType"]</th>
+                            <th scope="col">@Localizer["Admin.Finance.ColStatus"]</th>
+                            <th scope="col" class="text-end">@Localizer["Admin.Finance.ColAmount"]</th>
+                            <th scope="col" class="text-end">@Localizer["Admin.Finance.ColRefunded"]</th>
+                            <th scope="col">@Localizer["Admin.Finance.ColGateway"]</th>
+                            <th scope="col">@Localizer["Admin.Finance.ColCreated"]</th>
                             @if (canRefund)
                             {
-                                <th scope="col" class="text-end">Actions</th>
+                                <th scope="col" class="text-end">@Localizer["Admin.Finance.ColActions"]</th>
                             }
                         </tr>
                     </thead>
@@ -135,30 +154,53 @@
                         @foreach (var p in Model.Payments)
                         {
                             var color = PaymentsMapper.StatusColor(p.Status);
+                            var icon = PaymentsMapper.StatusIcon(p.Status);
                             <tr>
-                                <td class="font-data small">@p.Id.ToString("D")</td>
+                                <td>
+                                    @if (string.IsNullOrWhiteSpace(p.GatewayTransactionId))
+                                    {
+                                        <span class="text-secondary" aria-label="@Localizer["Admin.Finance.NoReference"]">&mdash;</span>
+                                    }
+                                    else
+                                    {
+                                        <bdi class="font-data" dir="ltr">@p.GatewayTransactionId</bdi>
+                                    }
+                                </td>
                                 <td>@p.PaymentType</td>
                                 <td>
-                                    <span class="badge bg-@color bg-opacity-10 text-@color">@p.Status</span>
+                                    <span class="badge bg-@color bg-opacity-10 text-@color">
+                                        <i class="fa-solid fa-@icon fa-fw" aria-hidden="true"></i> @p.Status
+                                    </span>
                                 </td>
-                                <td class="text-end font-data">@Money(p.Amount, p.Currency)</td>
-                                <td class="text-end font-data">@(p.RefundedTotal > 0 ? Money(p.RefundedTotal, p.Currency) : "-")</td>
+                                <td class="text-end"><bdi class="font-data" dir="ltr">@Money(p.Amount, p.Currency)</bdi></td>
+                                <td class="text-end">
+                                    @if (p.RefundedTotal > 0)
+                                    {
+                                        <bdi class="font-data" dir="ltr">@Money(p.RefundedTotal, p.Currency)</bdi>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-secondary" aria-label="@Localizer["Admin.Finance.NoRefund"]">&mdash;</span>
+                                    }
+                                </td>
                                 <td>@p.GatewayProvider</td>
-                                <td class="font-data small text-secondary">@p.CreatedAt.ToString("g")</td>
+                                <td><bdi class="font-data small text-secondary" dir="ltr">@Date(p.CreatedAt)</bdi></td>
                                 @if (canRefund)
                                 {
                                     <td class="text-end">
                                         @if (IsRefundable(p))
                                         {
-                                            <button type="button" class="btn btn-sm btn-outline-danger"
-                                                    data-bs-toggle="modal" data-bs-target="#refundModal-@p.Id.ToString("N")">
-                                                <i class="fa-solid fa-rotate-left fa-fw" aria-hidden="true"></i>
-                                                <span>Refund</span>
-                                            </button>
+                                            <permission require="@WebPermission.Refund.Create">
+                                                <button type="button" class="btn btn-sm btn-outline-danger"
+                                                        data-bs-toggle="modal" data-bs-target="#refundModal-@p.Id.ToString("N")">
+                                                    <i class="fa-solid fa-rotate-left fa-fw" aria-hidden="true"></i>
+                                                    <span>@Localizer["Admin.Finance.Refund"]</span>
+                                                </button>
+                                            </permission>
                                         }
                                         else
                                         {
-                                            <span class="text-secondary small">&mdash;</span>
+                                            <span class="text-secondary small" aria-label="@Localizer["Admin.Finance.NotRefundable"]">&mdash;</span>
                                         }
                                     </td>
                                 }
@@ -175,48 +217,58 @@
                 {
                     var modalId = $"refundModal-{p.Id:N}";
                     var labelId = $"refundLabel-{p.Id:N}";
+                    var descId = $"refundDesc-{p.Id:N}";
+                    var amountId = $"amount-{p.Id:N}";
+                    var reasonId = $"reason-{p.Id:N}";
                     var maxRefund = p.Amount - p.RefundedTotal;
-                    <div class="modal fade" id="@modalId" tabindex="-1" aria-labelledby="@labelId" aria-hidden="true">
-                        <div class="modal-dialog modal-dialog-centered">
-                            <div class="modal-content">
+                    var reference = string.IsNullOrWhiteSpace(p.GatewayTransactionId)
+                        ? Localizer["Admin.Finance.ThisPayment"].Value
+                        : p.GatewayTransactionId;
+                    <permission require="@WebPermission.Refund.Create">
+                        <div class="modal fade" id="@modalId" tabindex="-1" aria-labelledby="@labelId" aria-describedby="@descId"
+                             aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+                            <div class="modal-dialog modal-dialog-centered">
                                 <form method="post" asp-area="Admin" asp-controller="Payments" asp-action="Refund"
-                                      asp-route-id="@p.Id" onsubmit="return confirm('Refund this payment? This action cannot be undone.');">
+                                      asp-route-id="@p.Id" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="@labelId">
                                     @Html.AntiForgeryToken()
                                     <div class="modal-header">
-                                        <h2 class="modal-title h5 mb-0" id="@labelId">Refund payment</h2>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        <h2 class="modal-title h5 mb-0" id="@labelId">@Localizer["Admin.Finance.RefundTitle"]</h2>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Admin.Finance.Close"]"></button>
                                     </div>
-                                    <div class="modal-body">
+                                    <div class="modal-body" id="@descId">
                                         <p class="small text-secondary">
-                                            Payment <bdi class="font-data" dir="ltr">@p.Id.ToString("D")</bdi><br />
-                                            Charged <strong>@Money(p.Amount, p.Currency)</strong>,
-                                            already refunded <strong>@Money(p.RefundedTotal, p.Currency)</strong>.
-                                            Refundable balance: <strong>@Money(maxRefund, p.Currency)</strong>.
+                                            @Localizer["Admin.Finance.RefundIntro", reference]<br />
+                                            @Localizer["Admin.Finance.RefundCharged", Money(p.Amount, p.Currency)]
+                                            @Localizer["Admin.Finance.RefundAlready", Money(p.RefundedTotal, p.Currency)]
+                                            <strong>@Localizer["Admin.Finance.RefundBalance", Money(maxRefund, p.Currency)]</strong>
                                         </p>
                                         <input type="hidden" name="currency" value="@p.Currency" />
                                         <div class="mb-3">
-                                            <label class="form-label" for="amount-@p.Id.ToString("N")">Amount (@p.Currency)</label>
-                                            <input type="number" step="0.01" min="0.01" max="@maxRefund.ToString(System.Globalization.CultureInfo.InvariantCulture)"
-                                                   class="form-control font-data" id="amount-@p.Id.ToString("N")" name="amount"
-                                                   value="@maxRefund.ToString(System.Globalization.CultureInfo.InvariantCulture)" required />
+                                            <label class="form-label" for="@amountId">@Localizer["Admin.Finance.AmountLabel", p.Currency]</label>
+                                            <input type="number" step="0.001" min="0.001" dir="ltr"
+                                                   max="@maxRefund.ToString(CultureInfo.InvariantCulture)"
+                                                   class="form-control font-data" id="@amountId" name="amount"
+                                                   value="@maxRefund.ToString(CultureInfo.InvariantCulture)" required />
                                         </div>
                                         <div class="mb-1">
-                                            <label class="form-label" for="reason-@p.Id.ToString("N")">Reason</label>
-                                            <textarea class="form-control" id="reason-@p.Id.ToString("N")" name="reason"
-                                                      rows="3" maxlength="500" required placeholder="Why is this payment being refunded?"></textarea>
+                                            <label class="form-label" for="@reasonId">@Localizer["Admin.Finance.ReasonLabel"]</label>
+                                            <textarea class="form-control" id="@reasonId" name="reason"
+                                                      rows="3" maxlength="500" required aria-describedby="@reasonId-help"
+                                                      placeholder="@Localizer["Admin.Finance.ReasonPlaceholder"]"></textarea>
+                                            <small id="@reasonId-help" class="form-text">@Localizer["Admin.Finance.ReasonHelp"]</small>
                                         </div>
                                     </div>
                                     <div class="modal-footer">
-                                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">@Localizer["Admin.Finance.Cancel"]</button>
                                         <button type="submit" class="btn btn-danger">
                                             <i class="fa-solid fa-rotate-left fa-fw" aria-hidden="true"></i>
-                                            <span>Issue refund</span>
+                                            <span>@Localizer["Admin.Finance.RefundSubmit"]</span>
                                         </button>
                                     </div>
                                 </form>
                             </div>
                         </div>
-                    </div>
+                    </permission>
                 }
             }
 
@@ -226,16 +278,20 @@
                     <a class="btn btn-outline-primary btn-sm"
                        asp-area="Admin" asp-controller="Payments" asp-action="Index"
                        asp-route-Status="@Model.StatusFilter" asp-route-Type="@Model.TypeFilter"
-                       asp-route-Cursor="@next">Load more</a>
+                       asp-route-Cursor="@next">@Localizer["Admin.Finance.LoadMore"]</a>
                 </div>
             }
         }
         else
         {
             <div class="text-center py-5">
-                <img src="~/assets/images/element/17.svg" alt="" class="h-80px mb-3" />
-                <p class="mb-0 text-secondary">No payments match these filters.</p>
+                <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
+                <p class="mb-3 text-secondary">@Localizer["Admin.Finance.EmptyMessage"]</p>
+                @if (hasFilters)
+                {
+                    <a class="btn btn-sm btn-primary-soft" asp-area="Admin" asp-controller="Payments" asp-action="Index">@Localizer["Admin.Finance.ClearFilters"]</a>
+                }
             </div>
         }
     </div>
-</div>
+</section>

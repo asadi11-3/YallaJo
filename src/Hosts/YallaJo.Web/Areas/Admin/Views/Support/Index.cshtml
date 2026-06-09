@@ -1,104 +1,145 @@
+@using System.Globalization
+@using Microsoft.Extensions.Localization
 @using YallaJo.Web.Areas.Admin.Models.Support
 @model SupportListVm
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
-    ViewData["Title"] = "Support";
+    ViewData["Title"] = Localizer["Admin.Support.Title"].Value;
     ViewData["AdminNav"] = "Support";
+    var culture = CultureInfo.CurrentCulture;
+    string Date(DateTime dt) => dt.ToString("yyyy-MM-dd HH:mm", culture);
     var statuses = new[] { "Open", "Assigned", "InProgress", "AwaitingUser", "Resolved", "Closed" };
     var categories = new[]
     {
         "PaymentProblem", "BookingIssue", "ProviderComplaint", "AccountHelp", "BugReport",
         "Other", "PayoutIssue", "CommissionDispute", "GuideScheduleIssue", "TourApprovalHelp", "DocumentVerification"
     };
+    var hasFilters = !string.IsNullOrWhiteSpace(Model.StatusFilter) || !string.IsNullOrWhiteSpace(Model.CategoryFilter);
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="d-sm-flex justify-content-between align-items-center mb-4">
     <div>
-        <h1 class="h3 mb-1">Support</h1>
-        <p class="text-body-secondary mb-0">Support ticket queue.</p>
+        <h1 class="h3 mb-1">@Localizer["Admin.Support.Title"]</h1>
+        <p class="text-secondary mb-0">@Localizer["Admin.Support.Subtitle"]</p>
     </div>
 </div>
 
-<form method="get" asp-area="Admin" asp-controller="Support" asp-action="Index" class="card card-body shadow-sm mb-4">
-    <div class="row g-3 align-items-end">
-        <div class="col-sm-4">
-            <label class="form-label" for="status">Status</label>
-            <select class="form-select" id="status" name="status">
-                <option value="">All statuses</option>
-                @foreach (var s in statuses)
-                {
-                    <option value="@s" selected="@(string.Equals(Model.StatusFilter, s, StringComparison.OrdinalIgnoreCase))">@s</option>
-                }
-            </select>
-        </div>
-        <div class="col-sm-4">
-            <label class="form-label" for="category">Category</label>
-            <select class="form-select" id="category" name="category">
-                <option value="">All categories</option>
-                @foreach (var c in categories)
-                {
-                    <option value="@c" selected="@(string.Equals(Model.CategoryFilter, c, StringComparison.OrdinalIgnoreCase))">@c</option>
-                }
-            </select>
-        </div>
-        <div class="col-sm-4">
-            <button type="submit" class="btn btn-primary">Apply</button>
-            <a asp-area="Admin" asp-controller="Support" asp-action="Index" class="btn btn-outline-secondary">Reset</a>
-        </div>
+@if (ViewBag.Error is string err && !string.IsNullOrWhiteSpace(err))
+{
+    <div class="alert alert-danger" role="alert">@err</div>
+}
+
+<section class="card shadow mb-4" aria-labelledby="support-filters-heading">
+    <div class="card-header border-bottom">
+        <h2 id="support-filters-heading" class="card-header-title h5 mb-0">@Localizer["Admin.Support.FiltersHeading"]</h2>
     </div>
-</form>
+    <div class="card-body">
+        <form method="get" asp-area="Admin" asp-controller="Support" asp-action="Index" class="row g-3 align-items-end">
+            <div class="col-sm-4">
+                <label class="form-label" for="status">@Localizer["Admin.Support.StatusLabel"]</label>
+                <select class="form-select" id="status" name="status">
+                    <option value="">@Localizer["Admin.Support.AllStatuses"]</option>
+                    @foreach (var s in statuses)
+                    {
+                        <option value="@s" selected="@(string.Equals(Model.StatusFilter, s, StringComparison.OrdinalIgnoreCase))">@Localizer["Admin.Support.Status." + s]</option>
+                    }
+                </select>
+            </div>
+            <div class="col-sm-4">
+                <label class="form-label" for="category">@Localizer["Admin.Support.CategoryLabel"]</label>
+                <select class="form-select" id="category" name="category">
+                    <option value="">@Localizer["Admin.Support.AllCategories"]</option>
+                    @foreach (var c in categories)
+                    {
+                        <option value="@c" selected="@(string.Equals(Model.CategoryFilter, c, StringComparison.OrdinalIgnoreCase))">@Localizer["Admin.Support.Category." + c]</option>
+                    }
+                </select>
+            </div>
+            <div class="col-sm-4">
+                <button type="submit" class="btn btn-primary">@Localizer["Admin.Support.Apply"]</button>
+                <a asp-area="Admin" asp-controller="Support" asp-action="Index" class="btn btn-outline-secondary">@Localizer["Admin.Support.Reset"]</a>
+            </div>
+        </form>
+    </div>
+</section>
 
 @if (Model.Tickets.Count == 0)
 {
-    <div class="card card-body shadow-sm text-center py-5">
-        <img src="~/assets/images/element/17.svg" alt="" class="mx-auto mb-3" style="height: 80px;" />
-        <p class="text-body-secondary mb-0">No support tickets to display.</p>
-    </div>
+    <section class="card shadow">
+        <div class="card-body text-center py-5">
+            <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
+            <p class="mb-3 text-secondary">@Localizer["Admin.Support.EmptyMessage"]</p>
+            @if (hasFilters)
+            {
+                <a class="btn btn-sm btn-primary-soft" asp-area="Admin" asp-controller="Support" asp-action="Index">@Localizer["Admin.Support.ClearFilters"]</a>
+            }
+        </div>
+    </section>
 }
 else
 {
-    <div class="card shadow-sm">
+    <section class="card shadow" aria-labelledby="support-heading">
+        <div class="card-header border-bottom">
+            <h2 id="support-heading" class="card-header-title h5 mb-0">@Localizer["Admin.Support.Directory"]</h2>
+        </div>
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
                 <thead>
                     <tr>
-                        <th scope="col">Ticket</th>
-                        <th scope="col">Category</th>
-                        <th scope="col">Priority</th>
-                        <th scope="col">Status</th>
-                        <th scope="col">SLA breach</th>
-                        <th scope="col">Created</th>
-                        <th scope="col" class="text-end">Actions</th>
+                        <th scope="col">@Localizer["Admin.Support.ColSubject"]</th>
+                        <th scope="col">@Localizer["Admin.Support.ColRequester"]</th>
+                        <th scope="col">@Localizer["Admin.Support.ColCategory"]</th>
+                        <th scope="col">@Localizer["Admin.Support.ColPriority"]</th>
+                        <th scope="col">@Localizer["Admin.Support.ColStatus"]</th>
+                        <th scope="col">@Localizer["Admin.Support.ColSla"]</th>
+                        <th scope="col">@Localizer["Admin.Support.ColCreated"]</th>
+                        <th scope="col" class="text-end">@Localizer["Admin.Support.ColActions"]</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach (var t in Model.Tickets)
                     {
                         <tr>
+                            <td><span class="fw-semibold">@t.Subject</span></td>
                             <td>
-                                <div class="fw-semibold">@t.Subject</div>
-                                <div class="small text-body-secondary font-data">@t.Id.ToString("D")[..8] &middot; @t.CreatedByUserId.ToString("D")[..8]</div>
+                                @if (!string.IsNullOrWhiteSpace(t.RequesterEmail))
+                                {
+                                    <bdi dir="ltr">@t.RequesterEmail</bdi>
+                                }
+                                else
+                                {
+                                    <span class="text-secondary">@Localizer["Admin.Support.UnknownRequester"]</span>
+                                }
                             </td>
-                            <td>@t.Category</td>
+                            <td>@Localizer["Admin.Support.Category." + t.Category]</td>
                             <td>@t.Priority</td>
-                            <td><span class="badge bg-@SupportMapper.StatusColor(t.Status) bg-opacity-10 text-@SupportMapper.StatusColor(t.Status)">@t.Status</span></td>
-                            <td class="font-data">@t.SlaBreachAt.ToString("g")</td>
-                            <td class="font-data">@t.CreatedAt.ToString("g")</td>
+                            <td>
+                                <span class="badge bg-@SupportMapper.StatusColor(t.Status) bg-opacity-10 text-@SupportMapper.StatusColor(t.Status)">
+                                    <i class="fa-solid fa-@(SupportMapper.StatusIcon(t.Status)) fa-fw" aria-hidden="true"></i>
+                                    @Localizer["Admin.Support.Status." + t.Status]
+                                </span>
+                            </td>
+                            <td><bdi dir="ltr" class="font-data">@Date(t.SlaBreachAt)</bdi></td>
+                            <td><bdi dir="ltr" class="font-data">@Date(t.CreatedAt)</bdi></td>
                             <td class="text-end">
-                                <a asp-area="Admin" asp-controller="Support" asp-action="Details" asp-route-id="@t.Id" class="btn btn-sm btn-outline-primary">View</a>
+                                <a asp-area="Admin" asp-controller="Support" asp-action="Details" asp-route-id="@t.Id" class="btn btn-sm btn-outline-primary">
+                                    <i class="fa-solid fa-eye fa-fw" aria-hidden="true"></i> @Localizer["Admin.Support.View"]
+                                </a>
                             </td>
                         </tr>
                     }
                 </tbody>
             </table>
         </div>
-    </div>
-
-    @if (Model.NextCursor is { } next && next != Guid.Empty)
-    {
-        <div class="mt-3 text-center">
-            <a asp-area="Admin" asp-controller="Support" asp-action="Index"
-               asp-route-status="@Model.StatusFilter" asp-route-category="@Model.CategoryFilter" asp-route-cursor="@next"
-               class="btn btn-outline-secondary">Load more</a>
-        </div>
-    }
+        @if (Model.NextCursor is { } next && next != Guid.Empty)
+        {
+            <div class="card-footer border-top text-center">
+                <a asp-area="Admin" asp-controller="Support" asp-action="Index"
+                   asp-route-status="@Model.StatusFilter" asp-route-category="@Model.CategoryFilter" asp-route-cursor="@next"
+                   class="btn btn-sm btn-outline-primary">
+                    <i class="fa-solid fa-arrow-down fa-fw" aria-hidden="true"></i> @Localizer["Admin.Support.LoadMore"]
+                </a>
+            </div>
+        }
+    </section>
 }

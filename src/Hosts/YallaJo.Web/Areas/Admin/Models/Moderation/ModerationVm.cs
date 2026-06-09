@@ -13,6 +13,7 @@ public sealed class ModerationLogRowVm
 {
     public Guid Id { get; set; }
     public Guid AdminUserId { get; set; }
+    public string? AdminEmail { get; set; }
     public string EntityType { get; set; } = "";
     public Guid EntityId { get; set; }
     public string Action { get; set; } = "";

@@ -11,6 +11,20 @@ public sealed class BusinessesVm
     public int TotalPages { get; set; }
     public bool HasNext { get; set; }
     public bool HasPrevious { get; set; }
+
+    // F10: businesses are place-scoped and there is no name-search endpoint, so the
+    // place filter is a NAME dropdown (id travels as the option value) instead of a
+    // raw-GUID text input. Resolved server-side from the places list.
+    public IReadOnlyList<PlaceOptionVm> PlaceOptions { get; set; } = [];
+
+    // Human-readable name of the currently-selected place (F10 — never show the GUID).
+    public string? SelectedPlaceName { get; set; }
+}
+
+public sealed class PlaceOptionVm
+{
+    public Guid Id { get; set; }
+    public string Name { get; set; } = "";
 }
 
 public sealed class BusinessRowVm

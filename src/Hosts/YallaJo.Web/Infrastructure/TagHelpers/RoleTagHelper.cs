@@ -71,15 +71,19 @@ public sealed class RoleTagHelper : TagHelper
     /// <summary>
     /// Prefers the DB-backed GET /security/me role snapshot (when the AdminNav view component
     /// populated it) so navigation/UI gating is driven by the database, not raw JWT claims.
-    /// Falls back to <see cref="ICurrentUser.IsInRole"/> otherwise (ERR3).
+    /// Falls back to <see cref="ICurrentUser.IsInRole"/> otherwise.<br/>
+    /// Supports comma-separated role lists — any match returns <c>true</c>
+    /// (e.g. <c>require="Admin,SuperAdmin,Owner"</c>).
     /// </summary>
-    private bool IsInRole(string role)
+    private bool IsInRole(string roles)
     {
+        var roleList = roles.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
         if (ViewContext?.ViewData[SecurityMeRolesKey] is IReadOnlyCollection<string> dbRoles)
         {
-            return dbRoles.Contains(role, StringComparer.OrdinalIgnoreCase);
+            return roleList.Any(r => dbRoles.Contains(r, StringComparer.OrdinalIgnoreCase));
         }
 
-        return _currentUser.IsInRole(role);
+        return roleList.Any(r => _currentUser.IsInRole(r));
     }
 }

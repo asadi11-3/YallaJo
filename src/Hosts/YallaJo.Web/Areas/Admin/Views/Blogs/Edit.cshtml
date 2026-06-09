@@ -1,276 +1,443 @@
+@using System.Globalization
+@using Microsoft.Extensions.Localization
 @using YallaJo.Web.Infrastructure.Authorization
 @using YallaJo.Web.Areas.Admin.Models.Blogs
 @model EditBlogVm
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
-    ViewData["Title"] = "Edit blog";
-    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = Localizer["Admin.Blogs.EditTitle"].Value;
+    ViewData["AdminNav"] = "Blogs";
+
+    var culture = CultureInfo.CurrentCulture;
+    string Count(int n) => n.ToString("N0", culture);
+
     var isPublished = string.Equals(Model.StatusLabel, "Published", StringComparison.OrdinalIgnoreCase);
     var isDraft = string.Equals(Model.StatusLabel, "Draft", StringComparison.OrdinalIgnoreCase);
     var isPendingReview = string.Equals(Model.StatusLabel, "PendingReview", StringComparison.OrdinalIgnoreCase);
     var isHidden = string.Equals(Model.StatusLabel, "Hidden", StringComparison.OrdinalIgnoreCase);
     var isRemoved = string.Equals(Model.StatusLabel, "Removed", StringComparison.OrdinalIgnoreCase);
+
+    (string Color, string Icon) StatusBadge(string status) => status?.Trim().ToLowerInvariant() switch
+    {
+        "published" => ("success", "circle-check"),
+        "draft" => ("secondary", "pen-ruler"),
+        "pendingreview" => ("warning", "clock"),
+        "hidden" => ("info", "eye-slash"),
+        "removed" => ("danger", "circle-xmark"),
+        "archived" => ("secondary", "box-archive"),
+        _ => ("secondary", "circle-question")
+    };
+    var badge = StatusBadge(Model.StatusLabel);
+    var publishedText = Model.PublishedAt?.ToString("yyyy-MM-dd", culture);
 }
 
-<div class="container mt-4">
-    <a asp-area="Admin" asp-controller="Blogs" asp-action="Index" class="btn btn-sm btn-outline-secondary mb-3">← Back</a>
+<div class="d-sm-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-1">@Localizer["Admin.Blogs.EditHeading"]</h1>
+        <p class="mb-0 fw-semibold">@Model.Title</p>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+        <span class="badge bg-@badge.Color bg-opacity-10 text-@badge.Color">
+            <i class="fa-solid fa-@badge.Icon fa-fw" aria-hidden="true"></i> @Model.StatusLabel
+        </span>
+        @if (Model.IsFeatured)
+        {
+            <span class="badge bg-warning bg-opacity-10 text-warning">
+                <i class="fa-solid fa-star fa-fw" aria-hidden="true"></i> @Localizer["Admin.Blogs.Featured"]
+            </span>
+        }
+        <a asp-area="Admin" asp-controller="Blogs" asp-action="Index" class="btn btn-outline-secondary">
+            <i class="fa-solid fa-arrow-left fa-fw me-1" aria-hidden="true"></i>@Localizer["Admin.Blogs.Back"]
+        </a>
+    </div>
+</div>
 
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2 class="mb-0">Edit blog</h2>
-        <div>
-            <span class="badge text-bg-secondary">@Model.StatusLabel</span>
-            @if (Model.IsFeatured) { <span class="badge text-bg-warning">Featured</span> }
-        </div>
+<div class="row g-4">
+    <div class="col-lg-8">
+        <section class="card shadow" aria-labelledby="edit-blog-heading">
+            <div class="card-header border-bottom">
+                <h2 id="edit-blog-heading" class="card-header-title h5 mb-0">@Localizer["Admin.Blogs.EditHeading"]</h2>
+            </div>
+            <div class="card-body">
+                <form asp-area="Admin" asp-controller="Blogs" asp-action="Edit" asp-route-id="@Model.Id" method="post" class="row g-3">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" asp-for="Id" />
+                    <input type="hidden" asp-for="RowVersion" />
+                    <div asp-validation-summary="All" class="text-danger mb-0" role="alert"></div>
+
+                    <div class="col-md-8">
+                        <label asp-for="Title" class="form-label">@Localizer["Admin.Blogs.TitleLabel"]</label>
+                        <input asp-for="Title" class="form-control" />
+                        <span asp-validation-for="Title" class="text-danger" role="alert"></span>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label asp-for="ReadTimeMinutes" class="form-label">@Localizer["Admin.Blogs.ReadTimeLabel"]</label>
+                        <input asp-for="ReadTimeMinutes" class="form-control" dir="ltr" inputmode="numeric" />
+                        <span asp-validation-for="ReadTimeMinutes" class="text-danger" role="alert"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="Slug" class="form-label">@Localizer["Admin.Blogs.SlugLabel"]</label>
+                        <input asp-for="Slug" class="form-control" dir="ltr" />
+                        <span asp-validation-for="Slug" class="text-danger" role="alert"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="PlaceId" class="form-label">@Localizer["Admin.Blogs.PlaceLabel"]</label>
+                        <select asp-for="PlaceId" class="form-select" aria-describedby="edit-place-help">
+                            <option value="">@Localizer["Admin.Blogs.PlaceNone"]</option>
+                            @foreach (var place in Model.PlaceOptions)
+                            {
+                                <option value="@place.Id">@place.Name</option>
+                            }
+                        </select>
+                        <small id="edit-place-help" class="form-text">@Localizer["Admin.Blogs.PlaceHelp"]</small>
+                        <span asp-validation-for="PlaceId" class="text-danger" role="alert"></span>
+                    </div>
+
+                    <div class="col-12">
+                        <label asp-for="Summary" class="form-label">@Localizer["Admin.Blogs.SummaryLabel"]</label>
+                        <textarea asp-for="Summary" class="form-control" rows="2"></textarea>
+                        <span asp-validation-for="Summary" class="text-danger" role="alert"></span>
+                    </div>
+
+                    <div class="col-12">
+                        <label asp-for="Content" class="form-label">@Localizer["Admin.Blogs.ContentLabel"]</label>
+                        <textarea asp-for="Content" class="form-control" rows="12"></textarea>
+                        <span asp-validation-for="Content" class="text-danger" role="alert"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="MetaTitle" class="form-label">@Localizer["Admin.Blogs.MetaTitleLabel"]</label>
+                        <input asp-for="MetaTitle" class="form-control" />
+                        <span asp-validation-for="MetaTitle" class="text-danger" role="alert"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="MetaDescription" class="form-label">@Localizer["Admin.Blogs.MetaDescriptionLabel"]</label>
+                        <input asp-for="MetaDescription" class="form-control" />
+                        <span asp-validation-for="MetaDescription" class="text-danger" role="alert"></span>
+                    </div>
+
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fa-solid fa-floppy-disk fa-fw me-1" aria-hidden="true"></i>@Localizer["Admin.Blogs.Save"]
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </section>
     </div>
 
-    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
-
-    <div class="row g-4">
-        <div class="col-lg-8">
-            <form asp-area="Admin" asp-controller="Blogs" asp-action="Edit" asp-route-id="@Model.Id" method="post" class="row g-3">
-                @Html.AntiForgeryToken()
-                <input type="hidden" asp-for="Id" />
-                <input type="hidden" asp-for="RowVersion" />
-
-                <div class="col-md-8">
-                    <label asp-for="Title" class="form-label"></label>
-                    <input asp-for="Title" class="form-control" />
-                    <span asp-validation-for="Title" class="text-danger"></span>
-                </div>
-
-                <div class="col-md-4">
-                    <label asp-for="ReadTimeMinutes" class="form-label"></label>
-                    <input asp-for="ReadTimeMinutes" class="form-control" />
-                    <span asp-validation-for="ReadTimeMinutes" class="text-danger"></span>
-                </div>
-
-                <div class="col-md-6">
-                    <label asp-for="Slug" class="form-label"></label>
-                    <input asp-for="Slug" class="form-control" />
-                    <span asp-validation-for="Slug" class="text-danger"></span>
-                </div>
-
-                <div class="col-md-6">
-                    <label asp-for="PlaceId" class="form-label"></label>
-                    <input asp-for="PlaceId" class="form-control" />
-                    <span asp-validation-for="PlaceId" class="text-danger"></span>
-                </div>
-
-                <div class="col-12">
-                    <label asp-for="Summary" class="form-label"></label>
-                    <textarea asp-for="Summary" class="form-control" rows="2"></textarea>
-                </div>
-
-                <div class="col-12">
-                    <label asp-for="Content" class="form-label"></label>
-                    <textarea asp-for="Content" class="form-control" rows="12"></textarea>
-                    <span asp-validation-for="Content" class="text-danger"></span>
-                </div>
-
-                <div class="col-md-6">
-                    <label asp-for="MetaTitle" class="form-label"></label>
-                    <input asp-for="MetaTitle" class="form-control" />
-                </div>
-
-                <div class="col-md-6">
-                    <label asp-for="MetaDescription" class="form-label"></label>
-                    <input asp-for="MetaDescription" class="form-control" />
-                </div>
-
-                <div class="col-12">
-                    <button type="submit" class="btn btn-primary">Save changes</button>
-                </div>
-            </form>
-        </div>
-
-        <div class="col-lg-4">
-            <div class="card">
-                <div class="card-header"><strong>Status actions</strong></div>
-                <div class="card-body d-grid gap-2">
-                    @if (isPendingReview)
-                    {
-                        <permission require="@WebPermission.Blog.Approve">
-                            <form asp-area="Admin" asp-controller="Blogs" asp-action="Approve" asp-route-id="@Model.Id" method="post">
-                                @Html.AntiForgeryToken()
-                                <input type="hidden" name="fromEdit" value="true" />
-                                <button type="submit" class="btn btn-success w-100">Approve &amp; publish</button>
-                            </form>
-                        </permission>
-                        <permission require="@WebPermission.Blog.Reject">
-                            <form asp-area="Admin" asp-controller="Blogs" asp-action="Reject" asp-route-id="@Model.Id" method="post">
-                                @Html.AntiForgeryToken()
-                                <input type="hidden" name="fromEdit" value="true" />
-                                <textarea name="reason" class="form-control mb-2" rows="2" placeholder="Rejection reason" required></textarea>
-                                <button type="submit" class="btn btn-outline-danger w-100">Reject</button>
-                            </form>
-                        </permission>
-                    }
-                    @if (isDraft)
-                    {
-                        <permission require="@WebPermission.Blog.Approve">
-                            <form asp-area="Admin" asp-controller="Blogs" asp-action="Publish" asp-route-id="@Model.Id" method="post">
-                                @Html.AntiForgeryToken()
-                                <button type="submit" class="btn btn-success w-100">Publish</button>
-                            </form>
-                        </permission>
-                    }
-                    @if (isPublished)
-                    {
-                        <permission require="@WebPermission.Blog.Approve">
-                            <form asp-area="Admin" asp-controller="Blogs" asp-action="Unpublish" asp-route-id="@Model.Id" method="post">
-                                @Html.AntiForgeryToken()
-                                <button type="submit" class="btn btn-outline-secondary w-100">Unpublish</button>
-                            </form>
-                            <form asp-area="Admin" asp-controller="Blogs" asp-action="Archive" asp-route-id="@Model.Id" method="post">
-                                @Html.AntiForgeryToken()
-                                <button type="submit" class="btn btn-outline-secondary w-100">Archive</button>
-                            </form>
-                        </permission>
-                        @if (!Model.IsFeatured)
-                        {
-                            <permission require="@WebPermission.Blog.Feature">
-                                <form asp-area="Admin" asp-controller="Blogs" asp-action="Feature" asp-route-id="@Model.Id" method="post">
-                                    @Html.AntiForgeryToken()
-                                    <button type="submit" class="btn btn-outline-warning w-100">Feature</button>
-                                </form>
-                            </permission>
-                        }
-                        else
-                        {
-                            <permission require="@WebPermission.Blog.Unfeature">
-                                <form asp-area="Admin" asp-controller="Blogs" asp-action="Unfeature" asp-route-id="@Model.Id" method="post">
-                                    @Html.AntiForgeryToken()
-                                    <button type="submit" class="btn btn-outline-warning w-100">Unfeature</button>
-                                </form>
-                            </permission>
-                        }
-
-                        <permission require="@WebPermission.Blog.Approve">
-                            <form asp-area="Admin" asp-controller="Blogs" asp-action="Hide" asp-route-id="@Model.Id" method="post">
-                                @Html.AntiForgeryToken()
-                                <textarea name="reason" class="form-control mb-2" rows="2" placeholder="Reason for hiding" required></textarea>
-                                <button type="submit" class="btn btn-outline-secondary w-100">Hide</button>
-                            </form>
-                        </permission>
-                    }
-
-                    @if (isHidden)
-                    {
-                        <permission require="@WebPermission.Blog.Approve">
-                            <form asp-area="Admin" asp-controller="Blogs" asp-action="Unhide" asp-route-id="@Model.Id" method="post">
-                                @Html.AntiForgeryToken()
-                                <button type="submit" class="btn btn-success w-100">Unhide (publish)</button>
-                            </form>
-                        </permission>
-                    }
-
-                    <permission require="@WebPermission.Blog.DeleteOwn">
-                        <form asp-area="Admin" asp-controller="Blogs" asp-action="Delete" asp-route-id="@Model.Id" method="post"
-                              onsubmit="return confirm('Delete this blog?');">
+    <div class="col-lg-4">
+        <section class="card shadow" aria-labelledby="status-actions-heading">
+            <div class="card-header border-bottom">
+                <h2 id="status-actions-heading" class="card-header-title h5 mb-0">@Localizer["Admin.Blogs.StatusActions"]</h2>
+            </div>
+            <div class="card-body d-grid gap-2">
+                @if (isPendingReview)
+                {
+                    <permission require="@WebPermission.Blog.Approve">
+                        <form asp-area="Admin" asp-controller="Blogs" asp-action="Approve" asp-route-id="@Model.Id" method="post"
+                              data-confirm="@Localizer["Admin.Blogs.ApproveConfirm", Model.Title]"
+                              data-confirm-title="@Localizer["Admin.Blogs.ApproveTitle"]"
+                              data-confirm-action="@Localizer["Admin.Blogs.ApprovePublish"]">
                             @Html.AntiForgeryToken()
-                            <button type="submit" class="btn btn-outline-danger w-100">Delete</button>
+                            <input type="hidden" name="fromEdit" value="true" />
+                            <button type="submit" class="btn btn-success w-100">
+                                <i class="fa-solid fa-check fa-fw me-1" aria-hidden="true"></i>@Localizer["Admin.Blogs.ApprovePublish"]
+                            </button>
                         </form>
                     </permission>
-
-                    @if (!isRemoved)
+                    <permission require="@WebPermission.Blog.Reject">
+                        <button type="button" class="btn btn-outline-danger w-100" data-bs-toggle="modal" data-bs-target="#rejectModal">
+                            <i class="fa-solid fa-xmark fa-fw me-1" aria-hidden="true"></i>@Localizer["Admin.Blogs.Reject"]
+                        </button>
+                    </permission>
+                }
+                @if (isDraft)
+                {
+                    <permission require="@WebPermission.Blog.Approve">
+                        <form asp-area="Admin" asp-controller="Blogs" asp-action="Publish" asp-route-id="@Model.Id" method="post">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-success w-100">
+                                <i class="fa-solid fa-upload fa-fw me-1" aria-hidden="true"></i>@Localizer["Admin.Blogs.Publish"]
+                            </button>
+                        </form>
+                    </permission>
+                }
+                @if (isPublished)
+                {
+                    <permission require="@WebPermission.Blog.Approve">
+                        <form asp-area="Admin" asp-controller="Blogs" asp-action="Unpublish" asp-route-id="@Model.Id" method="post">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-outline-secondary w-100">
+                                <i class="fa-solid fa-eye-slash fa-fw me-1" aria-hidden="true"></i>@Localizer["Admin.Blogs.Unpublish"]
+                            </button>
+                        </form>
+                        <form asp-area="Admin" asp-controller="Blogs" asp-action="Archive" asp-route-id="@Model.Id" method="post">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-outline-secondary w-100">
+                                <i class="fa-solid fa-box-archive fa-fw me-1" aria-hidden="true"></i>@Localizer["Admin.Blogs.Archive"]
+                            </button>
+                        </form>
+                    </permission>
+                    @if (!Model.IsFeatured)
                     {
-                        <permission require="@WebPermission.Blog.Remove">
-                            <hr />
-                            <div class="text-danger small fw-bold">Danger zone</div>
-                            <form asp-area="Admin" asp-controller="Blogs" asp-action="Remove" asp-route-id="@Model.Id" method="post"
-                                  onsubmit="return confirm('Permanently remove this blog? This cannot be undone.');">
+                        <permission require="@WebPermission.Blog.Feature">
+                            <form asp-area="Admin" asp-controller="Blogs" asp-action="Feature" asp-route-id="@Model.Id" method="post">
                                 @Html.AntiForgeryToken()
-                                <textarea name="reason" class="form-control mb-2" rows="2" placeholder="Reason for removal" required></textarea>
-                                <button type="submit" class="btn btn-danger w-100">Remove (moderation)</button>
+                                <button type="submit" class="btn btn-outline-warning w-100">
+                                    <i class="fa-solid fa-star fa-fw me-1" aria-hidden="true"></i>@Localizer["Admin.Blogs.Feature"]
+                                </button>
                             </form>
                         </permission>
-                    }
-                </div>
-            </div>
-
-            <div class="card mt-3">
-                <div class="card-header"><strong>Info</strong></div>
-                <ul class="list-group list-group-flush small">
-                    <li class="list-group-item d-flex justify-content-between"><span>Views</span><strong>@Model.ViewCount</strong></li>
-                    <li class="list-group-item d-flex justify-content-between"><span>Language</span><strong>@Model.LanguageCode</strong></li>
-                    <li class="list-group-item d-flex justify-content-between"><span>Published</span><strong>@(Model.PublishedAt?.ToString("yyyy-MM-dd") ?? "—")</strong></li>
-                </ul>
-            </div>
-
-            <permission require="@WebPermission.Attachment.Read">
-                <div class="card mt-3">
-                    <div class="card-header"><strong>Images / attachments</strong></div>
-                    <div class="card-body">
-                        <p class="small text-muted mb-2">Blog images are managed through the shared attachments page.</p>
-                        <a asp-area="Admin" asp-controller="Attachments" asp-action="Index"
-                           asp-route-entityType="Blog" asp-route-entityId="@Model.Id"
-                           class="btn btn-outline-secondary w-100">Manage images / attachments</a>
-                    </div>
-                </div>
-            </permission>
-
-            <permission require="@WebPermission.Blog.Update">
-                <div class="card mt-3">
-                    <div class="card-header"><strong>Translations</strong></div>
-                    <div class="card-body">
-                        <p class="small text-muted mb-2">An Arabic translation is required before publishing.</p>
-                        <a asp-area="Admin" asp-controller="BlogTranslations" asp-action="Index"
-                           asp-route-id="@Model.Id"
-                           class="btn btn-outline-secondary w-100">Manage translations</a>
-                    </div>
-                </div>
-            </permission>
-
-            <div class="card mt-3">
-                <div class="card-header"><strong>Linked tours</strong></div>
-                <div class="card-body">
-                    @if (Model.LinkedTours.Count == 0)
-                    {
-                        <p class="small text-muted mb-2">No tours linked.</p>
                     }
                     else
                     {
-                        <ul class="list-group list-group-flush small mb-2">
-                            @foreach (var tour in Model.LinkedTours)
-                            {
-                                <li class="list-group-item d-flex justify-content-between align-items-center px-0">
-                                    <span>@tour.DisplayName</span>
-                                    <permission require="@WebPermission.BlogTourLink.Delete">
-                                        <form asp-area="Admin" asp-controller="Blogs" asp-action="UnlinkTour"
-                                              asp-route-id="@Model.Id" asp-route-tourId="@tour.TourId" method="post" class="d-inline">
-                                            @Html.AntiForgeryToken()
-                                            <button type="submit" class="btn btn-sm btn-outline-danger">Unlink</button>
-                                        </form>
-                                    </permission>
-                                </li>
-                            }
-                        </ul>
-                    }
-
-                    <permission require="@WebPermission.BlogTourLink.Create">
-                        @if (Model.AvailableTours.Count > 0)
-                        {
-                            <form asp-area="Admin" asp-controller="Blogs" asp-action="LinkTour"
-                                  asp-route-id="@Model.Id" method="post" class="d-flex gap-1">
+                        <permission require="@WebPermission.Blog.Unfeature">
+                            <form asp-area="Admin" asp-controller="Blogs" asp-action="Unfeature" asp-route-id="@Model.Id" method="post">
                                 @Html.AntiForgeryToken()
-                                <select name="tourId" class="form-select form-select-sm">
-                                    @foreach (var opt in Model.AvailableTours)
-                                    {
-                                        <option value="@opt.TourId">@opt.Name</option>
-                                    }
-                                </select>
-                                <button type="submit" class="btn btn-sm btn-outline-primary">Link</button>
+                                <button type="submit" class="btn btn-outline-warning w-100">
+                                    <i class="fa-solid fa-star-half-stroke fa-fw me-1" aria-hidden="true"></i>@Localizer["Admin.Blogs.Unfeature"]
+                                </button>
                             </form>
-                        }
-                        else
-                        {
-                            <p class="small text-muted mb-0">No more published tours available to link.</p>
-                        }
+                        </permission>
+                    }
+                    <permission require="@WebPermission.Blog.Approve">
+                        <button type="button" class="btn btn-outline-secondary w-100" data-bs-toggle="modal" data-bs-target="#hideModal">
+                            <i class="fa-solid fa-eye-slash fa-fw me-1" aria-hidden="true"></i>@Localizer["Admin.Blogs.Hide"]
+                        </button>
                     </permission>
-                </div>
+                }
+                @if (isHidden)
+                {
+                    <permission require="@WebPermission.Blog.Approve">
+                        <form asp-area="Admin" asp-controller="Blogs" asp-action="Unhide" asp-route-id="@Model.Id" method="post">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-success w-100">
+                                <i class="fa-solid fa-eye fa-fw me-1" aria-hidden="true"></i>@Localizer["Admin.Blogs.Unhide"]
+                            </button>
+                        </form>
+                    </permission>
+                }
+                <permission require="@WebPermission.Blog.DeleteOwn">
+                    <form asp-area="Admin" asp-controller="Blogs" asp-action="Delete" asp-route-id="@Model.Id" method="post"
+                          data-confirm="@Localizer["Admin.Blogs.DeleteConfirm", Model.Title]"
+                          data-confirm-title="@Localizer["Admin.Blogs.DeleteTitle"]"
+                          data-confirm-action="@Localizer["Admin.Blogs.Delete"]">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-outline-danger w-100">
+                            <i class="fa-solid fa-trash fa-fw me-1" aria-hidden="true"></i>@Localizer["Admin.Blogs.Delete"]
+                        </button>
+                    </form>
+                </permission>
+                @if (!isRemoved)
+                {
+                    <permission require="@WebPermission.Blog.Remove">
+                        <hr />
+                        <div class="text-danger small fw-bold">@Localizer["Admin.Blogs.DangerZone"]</div>
+                        <button type="button" class="btn btn-danger w-100" data-bs-toggle="modal" data-bs-target="#removeModal">
+                            <i class="fa-solid fa-ban fa-fw me-1" aria-hidden="true"></i>@Localizer["Admin.Blogs.Remove"]
+                        </button>
+                    </permission>
+                }
             </div>
-        </div>
+        </section>
+
+        <section class="card shadow mt-3" aria-labelledby="info-heading">
+            <div class="card-header border-bottom">
+                <h2 id="info-heading" class="card-header-title h5 mb-0">@Localizer["Admin.Blogs.InfoHeading"]</h2>
+            </div>
+            <ul class="list-group list-group-flush small">
+                <li class="list-group-item d-flex justify-content-between"><span>@Localizer["Admin.Blogs.ColViews"]</span><strong><bdi dir="ltr" class="font-data">@Count(Model.ViewCount)</bdi></strong></li>
+                <li class="list-group-item d-flex justify-content-between"><span>@Localizer["Admin.Blogs.LanguageLabel"]</span><strong><bdi dir="ltr" class="font-data">@Model.LanguageCode</bdi></strong></li>
+                <li class="list-group-item d-flex justify-content-between">
+                    <span>@Localizer["Admin.Blogs.ColPublished"]</span>
+                    @if (string.IsNullOrEmpty(publishedText))
+                    {
+                        <span class="text-secondary">&mdash;</span>
+                    }
+                    else
+                    {
+                        <strong><bdi dir="ltr" class="font-data">@publishedText</bdi></strong>
+                    }
+                </li>
+            </ul>
+        </section>
+
+        <permission require="@WebPermission.Attachment.Read">
+            <section class="card shadow mt-3" aria-labelledby="images-heading">
+                <div class="card-header border-bottom">
+                    <h2 id="images-heading" class="card-header-title h5 mb-0">@Localizer["Admin.Blogs.ImagesHeading"]</h2>
+                </div>
+                <div class="card-body">
+                    <p class="small text-secondary mb-2">@Localizer["Admin.Blogs.ImagesHint"]</p>
+                    <a asp-area="Admin" asp-controller="Attachments" asp-action="Index"
+                       asp-route-entityType="Blog" asp-route-entityId="@Model.Id"
+                       class="btn btn-outline-secondary w-100">@Localizer["Admin.Blogs.ManageImages"]</a>
+                </div>
+            </section>
+        </permission>
+
+        <permission require="@WebPermission.Blog.Update">
+            <section class="card shadow mt-3" aria-labelledby="translations-heading">
+                <div class="card-header border-bottom">
+                    <h2 id="translations-heading" class="card-header-title h5 mb-0">@Localizer["Admin.Blogs.TranslationsHeading"]</h2>
+                </div>
+                <div class="card-body">
+                    <p class="small text-secondary mb-2">@Localizer["Admin.Blogs.TranslationsHint"]</p>
+                    <a asp-area="Admin" asp-controller="BlogTranslations" asp-action="Index" asp-route-id="@Model.Id"
+                       class="btn btn-outline-secondary w-100">@Localizer["Admin.Blogs.ManageTranslations"]</a>
+                </div>
+            </section>
+        </permission>
+
+        <section class="card shadow mt-3" aria-labelledby="linked-tours-heading">
+            <div class="card-header border-bottom">
+                <h2 id="linked-tours-heading" class="card-header-title h5 mb-0">@Localizer["Admin.Blogs.LinkedToursHeading"]</h2>
+            </div>
+            <div class="card-body">
+                @if (Model.LinkedTours.Count == 0)
+                {
+                    <p class="small text-secondary mb-2">@Localizer["Admin.Blogs.NoLinkedTours"]</p>
+                }
+                else
+                {
+                    <ul class="list-group list-group-flush small mb-2">
+                        @foreach (var tour in Model.LinkedTours)
+                        {
+                            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                <span class="fw-semibold">@tour.DisplayName</span>
+                                <permission require="@WebPermission.BlogTourLink.Delete">
+                                    <form asp-area="Admin" asp-controller="Blogs" asp-action="UnlinkTour"
+                                          asp-route-id="@Model.Id" asp-route-tourId="@tour.TourId" method="post" class="d-inline"
+                                          data-confirm="@Localizer["Admin.Blogs.UnlinkConfirm", tour.DisplayName]"
+                                          data-confirm-title="@Localizer["Admin.Blogs.UnlinkTitle"]"
+                                          data-confirm-action="@Localizer["Admin.Blogs.Unlink"]">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">@Localizer["Admin.Blogs.Unlink"]</button>
+                                    </form>
+                                </permission>
+                            </li>
+                        }
+                    </ul>
+                }
+
+                <permission require="@WebPermission.BlogTourLink.Create">
+                    @if (Model.AvailableTours.Count > 0)
+                    {
+                        <form asp-area="Admin" asp-controller="Blogs" asp-action="LinkTour" asp-route-id="@Model.Id" method="post" class="d-flex gap-1">
+                            @Html.AntiForgeryToken()
+                            <label for="link-tour-select" class="visually-hidden">@Localizer["Admin.Blogs.LinkTourLabel"]</label>
+                            <select id="link-tour-select" name="tourId" class="form-select form-select-sm">
+                                @foreach (var opt in Model.AvailableTours)
+                                {
+                                    <option value="@opt.TourId">@opt.Name</option>
+                                }
+                            </select>
+                            <button type="submit" class="btn btn-sm btn-outline-primary">@Localizer["Admin.Blogs.Link"]</button>
+                        </form>
+                    }
+                    else
+                    {
+                        <p class="small text-secondary mb-0">@Localizer["Admin.Blogs.NoToursAvailable"]</p>
+                    }
+                </permission>
+            </div>
+        </section>
     </div>
 </div>
+
+@if (isPendingReview)
+{
+    <permission require="@WebPermission.Blog.Reject">
+        <div class="modal fade" id="rejectModal" tabindex="-1" aria-labelledby="rejectModalTitle" aria-describedby="rejectModalBody"
+             aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+            <div class="modal-dialog modal-dialog-centered">
+                <form asp-area="Admin" asp-controller="Blogs" asp-action="Reject" asp-route-id="@Model.Id" method="post"
+                      class="modal-content" role="dialog" aria-modal="true" aria-labelledby="rejectModalTitle">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="fromEdit" value="true" />
+                    <div class="modal-header">
+                        <h2 class="modal-title h5" id="rejectModalTitle">@Localizer["Admin.Blogs.RejectTitle"]</h2>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Admin.Blogs.Close"]"></button>
+                    </div>
+                    <div class="modal-body" id="rejectModalBody">
+                        <p class="mb-3">@Localizer["Admin.Blogs.RejectIntro", Model.Title]</p>
+                        <label for="rejectReason" class="form-label">@Localizer["Admin.Blogs.ReasonLabel"]</label>
+                        <textarea id="rejectReason" name="reason" rows="3" maxlength="1000" required class="form-control" aria-describedby="rejectReasonHelp"></textarea>
+                        <small id="rejectReasonHelp" class="form-text">@Localizer["Admin.Blogs.ReasonHelp"]</small>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">@Localizer["Admin.Blogs.Cancel"]</button>
+                        <button type="submit" class="btn btn-danger">@Localizer["Admin.Blogs.Reject"]</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </permission>
+}
+
+@if (isPublished)
+{
+    <permission require="@WebPermission.Blog.Approve">
+        <div class="modal fade" id="hideModal" tabindex="-1" aria-labelledby="hideModalTitle" aria-describedby="hideModalBody"
+             aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+            <div class="modal-dialog modal-dialog-centered">
+                <form asp-area="Admin" asp-controller="Blogs" asp-action="Hide" asp-route-id="@Model.Id" method="post"
+                      class="modal-content" role="dialog" aria-modal="true" aria-labelledby="hideModalTitle">
+                    @Html.AntiForgeryToken()
+                    <div class="modal-header">
+                        <h2 class="modal-title h5" id="hideModalTitle">@Localizer["Admin.Blogs.HideTitle"]</h2>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Admin.Blogs.Close"]"></button>
+                    </div>
+                    <div class="modal-body" id="hideModalBody">
+                        <p class="mb-3">@Localizer["Admin.Blogs.HideIntro", Model.Title]</p>
+                        <label for="hideReason" class="form-label">@Localizer["Admin.Blogs.ReasonLabel"]</label>
+                        <textarea id="hideReason" name="reason" rows="3" maxlength="1000" required class="form-control" aria-describedby="hideReasonHelp"></textarea>
+                        <small id="hideReasonHelp" class="form-text">@Localizer["Admin.Blogs.ReasonHelp"]</small>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">@Localizer["Admin.Blogs.Cancel"]</button>
+                        <button type="submit" class="btn btn-warning">@Localizer["Admin.Blogs.Hide"]</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </permission>
+}
+
+@if (!isRemoved)
+{
+    <permission require="@WebPermission.Blog.Remove">
+        <div class="modal fade" id="removeModal" tabindex="-1" aria-labelledby="removeModalTitle" aria-describedby="removeModalBody"
+             aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+            <div class="modal-dialog modal-dialog-centered">
+                <form asp-area="Admin" asp-controller="Blogs" asp-action="Remove" asp-route-id="@Model.Id" method="post"
+                      class="modal-content" role="alertdialog" aria-modal="true" aria-labelledby="removeModalTitle">
+                    @Html.AntiForgeryToken()
+                    <div class="modal-header bg-danger text-white">
+                        <h2 class="modal-title h5" id="removeModalTitle">@Localizer["Admin.Blogs.RemoveTitle"]</h2>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="@Localizer["Admin.Blogs.Close"]"></button>
+                    </div>
+                    <div class="modal-body" id="removeModalBody">
+                        <div class="alert alert-danger">@Localizer["Admin.Blogs.RemoveBanner"]</div>
+                        <p class="mb-3">@Localizer["Admin.Blogs.RemoveIntro", Model.Title]</p>
+                        <label for="removeReason" class="form-label">@Localizer["Admin.Blogs.ReasonLabel"]</label>
+                        <textarea id="removeReason" name="reason" rows="3" maxlength="1000" required class="form-control" aria-describedby="removeReasonHelp"></textarea>
+                        <small id="removeReasonHelp" class="form-text">@Localizer["Admin.Blogs.ReasonHelp"]</small>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">@Localizer["Admin.Blogs.Cancel"]</button>
+                        <button type="submit" class="btn btn-danger">@Localizer["Admin.Blogs.Remove"]</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </permission>
+}
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />

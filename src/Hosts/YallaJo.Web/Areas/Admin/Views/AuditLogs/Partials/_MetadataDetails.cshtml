@@ -12,18 +12,23 @@
     the audit row id) so multiple rows on the same page have distinct
     Bootstrap collapse target ids.
 *@
+@using Microsoft.Extensions.Localization
 @using YallaJo.Web.Areas.Admin.Helpers
 @model string?
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 
 @{
     var idSuffix = ViewData["id-suffix"] as string ?? Guid.NewGuid().ToString("N");
     var formatted = AuditMetadataFormatter.Format(Model);
     var collapseId = $"meta-{idSuffix}";
+    var toggleLabel = formatted.IsValidJson
+        ? Localizer["Admin.Audit.MetadataDetails"]
+        : Localizer["Admin.Audit.MetadataRaw"];
 }
 
 @if (formatted.IsEmpty)
 {
-    <span class="text-muted">—</span>
+    <span class="text-secondary" aria-label="@Localizer["Admin.Audit.NotAvailable"]">—</span>
 }
 else
 {
@@ -33,10 +38,11 @@ else
             data-bs-target="#@collapseId"
             aria-expanded="false"
             aria-controls="@collapseId">
-        @(formatted.IsValidJson ? "Details" : "Raw")
+        @toggleLabel
     </button>
     <div class="collapse mt-1" id="@collapseId">
-        <pre class="border rounded p-2 mb-0 small bg-light"
-             style="white-space: pre-wrap; word-break: break-all;">@formatted.Text</pre>
+        @* dir="ltr" + <bdi>: JSON/code stays LTR inside RTL pages (RTL3).
+           text-break replaces the X6-forbidden inline static style. *@
+        <pre class="border rounded p-2 mb-0 small bg-light text-break" dir="ltr"><bdi>@formatted.Text</bdi></pre>
     </div>
 }

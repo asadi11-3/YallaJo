@@ -1,5 +1,6 @@
 using YallaJo.Web.Areas.Admin.ApiClients;
 using YallaJo.Web.Areas.Admin.Models.Bookings;
+using YallaJo.Web.Areas.Admin.Models.Payments;
 using YallaJo.Web.Infrastructure.Api.Contracts;
 
 namespace YallaJo.Web.Areas.Admin.Facades;
@@ -12,8 +13,16 @@ namespace YallaJo.Web.Areas.Admin.Facades;
 public sealed class AdminBookingsFacade
 {
     private readonly AdminBookingsApiClient _api;
+    private readonly PaymentsApiClient _payments;
 
-    public AdminBookingsFacade(AdminBookingsApiClient api) => _api = api;
+    // How many recent payments to scan when resolving a booking's refundable payments.
+    private const int PaymentScanPageSize = 100;
+
+    public AdminBookingsFacade(AdminBookingsApiClient api, PaymentsApiClient payments)
+    {
+        _api = api;
+        _payments = payments;
+    }
 
     public async Task<ApiResult<AdminBookingsIndexVm>> GetListAsync(
         AdminBookingFiltersVm filters, string? cursor, int pageSize, CancellationToken ct = default)
@@ -41,12 +50,48 @@ public sealed class AdminBookingsFacade
         if (!result.IsSuccess || result.Data is null)
             return ApiResult<AdminBookingDetailsVm>.Fail(result.StatusCode, result.Error ?? "Could not load the booking.");
 
-        var names = await HydrateTourNamesAsync([result.Data.TourId], ct);
+        // Resolve the tour name and the booking's refundable payments concurrently (API1).
+        var namesTask = HydrateTourNamesAsync([result.Data.TourId], ct);
+        var paymentsTask = LoadBookingPaymentsAsync(id, ct);
+        await Task.WhenAll(namesTask, paymentsTask);
+
+        var names = await namesTask;
         var tourName = names.TryGetValue(result.Data.TourId, out var n) && !string.IsNullOrWhiteSpace(n)
             ? n
             : $"Tour {result.Data.TourId.ToString("N")[..8]}";
 
-        return ApiResult<AdminBookingDetailsVm>.Ok(AdminBookingsMapper.ToDetailsVm(result.Data, tourName));
+        var payments = await paymentsTask;
+        return ApiResult<AdminBookingDetailsVm>.Ok(
+            AdminBookingsMapper.ToDetailsVm(result.Data, tourName, payments));
+    }
+
+    /// <summary>
+    /// Best-effort load of this booking's refundable (Completed) payments so the
+    /// resolve-dispute refund leg can offer a real payment <see langword="select"/>
+    /// (F10) instead of a raw GUID input. Tolerant: any failure yields an empty list,
+    /// which collapses the refund leg to resolve-only.
+    /// </summary>
+    private async Task<IReadOnlyList<PaymentResponse>> LoadBookingPaymentsAsync(
+        Guid bookingId, CancellationToken ct)
+    {
+        try
+        {
+            var result = await _payments.GetAdminPaymentsAsync(
+                status: "Completed", type: null, cursor: null,
+                pageSize: PaymentScanPageSize, ct: ct, bookingId: bookingId);
+
+            if (!result.IsSuccess || result.Data is null)
+                return [];
+
+            // Client-side filter as a safety net in case the API ignores bookingId.
+            return result.Data.Items
+                .Where(p => p.BookingId == bookingId)
+                .ToList();
+        }
+        catch
+        {
+            return [];
+        }
     }
 
     // POST /api/v1/admin/bookings/{id}/force-refund — force-majeure cancel + full refund (E4).

@@ -1,144 +1,152 @@
+@using Microsoft.Extensions.Localization
 @using YallaJo.Web.Infrastructure.Authorization
 @using YallaJo.Web.Areas.Admin.Models.Users
 @using YallaJo.Web.Areas.Admin.Helpers
 @model YallaJo.Web.Areas.Admin.Models.Users.UserDetailsVm
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
-    ViewData["Title"] = "User Details";
-    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = Localizer["Admin.UserDetails.Title"].Value;
+    ViewData["AdminNav"] = "Users";
 }
 
-<div class="container mt-4">
-    <h1 class="h3">User: @Model.Email</h1>
-    <a asp-area="Admin" asp-controller="Users" asp-action="Index" class="btn btn-sm btn-outline-secondary mb-3">← Back</a>
+@* ── Page header: single <h1> (A11Y6). Email is the human-readable name (F10);
+     the GUID is never shown, only used in route/form values below. ─────────── *@
+<div class="d-sm-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-1">@Localizer["Admin.UserDetails.Heading"]</h1>
+        <p class="mb-0 text-secondary"><bdi dir="ltr">@Model.Email</bdi></p>
+    </div>
+    <a asp-area="Admin" asp-controller="Users" asp-action="Index"
+       class="btn btn-sm btn-outline-secondary align-self-start mt-2 mt-sm-0">
+        <i class="fa-solid fa-arrow-left fa-fw" aria-hidden="true"></i>
+        <span>@Localizer["Admin.UserDetails.Back"]</span>
+    </a>
+</div>
 
-    @* Success/Error flash banners are rendered globally by the shared _Alerts partial
-       (in _Layout), which is itself dismissible with role="alert". *@
+<div data-yj-component="admin-users-details">
 
-    <dl class="row">
-        <dt class="col-sm-3">Status</dt>
-        <dd class="col-sm-9">
-            @*
-                Phase 5E — delegate the binary status badge to the shared
-                _LifecycleBadge partial introduced in Phase 5D so Users
-                list + Details render lifecycle status from a single
-                source. The optional LifecycleState parameter is left
-                null until the backend UserDto exposes granular states.
-            *@
-            <partial name="Partials/_LifecycleBadge"
-                     model="@(new LifecycleBadgeVm(Model.IsActive, null))" />
-        </dd>
-        <dt class="col-sm-3">Roles</dt>
-        <dd class="col-sm-9">@string.Join(", ", Model.CurrentRoles)</dd>
-    </dl>
-
-    @*
-        Canonical RBAC Activate / Deactivate (plan §9). These post to the
-        UsersController.Activate / Deactivate actions (anti-forgery + PRG).
-        They are gated by User.UpdateAny and shown conditionally on the
-        binary IsActive state. Deactivate routes through the shared F8
-        confirm modal (data-confirm); Activate is non-destructive so it
-        submits directly. The lifecycle modals below (Suspend / Reactivate /
-        Archive / Reset password / Reassign) coexist with these.
-    *@
-    <permission require="@WebPermission.User.UpdateAny">
-        <div class="mb-3 d-flex flex-wrap gap-2">
-            @if (Model.IsActive)
-            {
-                <form asp-area="Admin" asp-controller="Users"
-                      asp-action="Deactivate" asp-route-userId="@Model.UserId" method="post" class="d-inline"
-                      data-confirm="Deactivate @Model.Email? They will be unable to sign in until reactivated."
-                      data-confirm-title="Deactivate user"
-                      data-confirm-action="Deactivate">
-                    @Html.AntiForgeryToken()
-                    <button type="submit" class="btn btn-warning btn-sm">
-                        <i class="fa-solid fa-ban fa-fw" aria-hidden="true"></i>
-                        <span>Deactivate</span>
-                    </button>
-                </form>
-            }
-            else
-            {
-                <form asp-area="Admin" asp-controller="Users"
-                      asp-action="Activate" asp-route-userId="@Model.UserId" method="post" class="d-inline">
-                    @Html.AntiForgeryToken()
-                    <button type="submit" class="btn btn-success btn-sm">
-                        <i class="fa-solid fa-circle-check fa-fw" aria-hidden="true"></i>
-                        <span>Activate</span>
-                    </button>
-                </form>
-            }
+    @* ── Overview: status + roles ─────────────────────────────────────────── *@
+    <div class="card shadow mb-4">
+        <div class="card-header border-bottom">
+            <h2 class="card-header-title h5 mb-0">@Localizer["Admin.UserDetails.OverviewHeading"]</h2>
         </div>
-    </permission>
+        <div class="card-body">
+            <dl class="row mb-0">
+                <dt class="col-sm-3">@Localizer["Admin.UserDetails.StatusLabel"]</dt>
+                <dd class="col-sm-9">
+                    <partial name="Partials/_LifecycleBadge"
+                             model="@(new LifecycleBadgeVm(Model.IsActive, null))" />
+                </dd>
+                <dt class="col-sm-3">@Localizer["Admin.UserDetails.RolesLabel"]</dt>
+                <dd class="col-sm-9 mb-0">
+                    @if (Model.CurrentRoles.Any())
+                    {
+                        foreach (var role in Model.CurrentRoles)
+                        {
+                            <span class="badge bg-secondary bg-opacity-10 text-secondary me-1">@role</span>
+                        }
+                    }
+                    else
+                    {
+                        <span class="text-secondary">@Localizer["Admin.UserDetails.NoRoles"]</span>
+                    }
+                </dd>
+            </dl>
 
-    @*
-        Phase 5C — admin lifecycle actions, now driven by Bootstrap 5 modals.
-        Every trigger button uses `data-bs-toggle="modal"` and the matching
-        modal posts to LifecycleController on submit. Backend, API endpoints,
-        and controller routes are unchanged from Phase 5B; only the UX
-        layer was upgraded from confirm() prompts.
+            @* Canonical RBAC Activate / Deactivate (gated by User.UpdateAny).
+               Deactivate routes through the shared F8 confirm modal (data-confirm);
+               Activate is non-destructive so it submits directly. *@
+            <permission require="@WebPermission.User.UpdateAny">
+                <div class="mt-3 d-flex flex-wrap gap-2">
+                    @if (Model.IsActive)
+                    {
+                        <form asp-area="Admin" asp-controller="Users"
+                              asp-action="Deactivate" asp-route-userId="@Model.UserId" method="post" class="d-inline"
+                              data-confirm="@Localizer["Admin.UserDetails.DeactivateConfirm", Model.Email]"
+                              data-confirm-title="@Localizer["Admin.UserDetails.DeactivateTitle"]"
+                              data-confirm-action="@Localizer["Admin.UserDetails.DeactivateAction"]">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-warning btn-sm">
+                                <i class="fa-solid fa-ban fa-fw" aria-hidden="true"></i>
+                                <span>@Localizer["Admin.UserDetails.Deactivate"]</span>
+                            </button>
+                        </form>
+                    }
+                    else
+                    {
+                        <form asp-area="Admin" asp-controller="Users"
+                              asp-action="Activate" asp-route-userId="@Model.UserId" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-success btn-sm">
+                                <i class="fa-solid fa-circle-check fa-fw" aria-hidden="true"></i>
+                                <span>@Localizer["Admin.UserDetails.Activate"]</span>
+                            </button>
+                        </form>
+                    }
+                </div>
+            </permission>
+        </div>
+    </div>
 
-        Buttons render for any admin with User.UpdateAny; the backend
-        enforces hierarchy / self-management / lifecycle eligibility and
-        surfaces 403/409 messages in TempData on redirect.
-    *@
+    @* ── Admin lifecycle actions (Bootstrap modals → LifecycleController) ───── *@
     <permission require="@WebPermission.User.UpdateAny">
         @{
             var modalViewData = new ViewDataDictionary(ViewData) { ["TargetEmail"] = Model.Email };
         }
-        <div class="card mb-4">
-            <div class="card-header bg-light">
-                <strong>Admin actions</strong>
-                <span class="text-muted small">— governed by lifecycle rules on the server</span>
+        <div class="card shadow mb-4">
+            <div class="card-header border-bottom">
+                <h2 class="card-header-title h5 mb-0">@Localizer["Admin.UserDetails.AdminActionsHeading"]</h2>
+                <small class="text-secondary">@Localizer["Admin.UserDetails.AdminActionsHint"]</small>
             </div>
             <div class="card-body">
                 <div class="d-flex flex-wrap gap-2">
                     <button type="button" class="btn btn-warning btn-sm"
-                            data-bs-toggle="modal"
-                            data-bs-target="#mdl-suspend-@Model.UserId">
-                        Suspend
+                            data-bs-toggle="modal" data-bs-target="#mdl-suspend-@Model.UserId">
+                        <i class="fa-solid fa-circle-pause fa-fw" aria-hidden="true"></i>
+                        <span>@Localizer["Admin.UserDetails.Suspend"]</span>
                     </button>
 
                     <button type="button" class="btn btn-success btn-sm"
-                            data-bs-toggle="modal"
-                            data-bs-target="#mdl-reactivate-@Model.UserId">
-                        Reactivate
+                            data-bs-toggle="modal" data-bs-target="#mdl-reactivate-@Model.UserId">
+                        <i class="fa-solid fa-circle-play fa-fw" aria-hidden="true"></i>
+                        <span>@Localizer["Admin.UserDetails.Reactivate"]</span>
                     </button>
 
                     <button type="button" class="btn btn-dark btn-sm"
-                            data-bs-toggle="modal"
-                            data-bs-target="#mdl-archive-@Model.UserId">
-                        Archive
+                            data-bs-toggle="modal" data-bs-target="#mdl-archive-@Model.UserId">
+                        <i class="fa-solid fa-box-archive fa-fw" aria-hidden="true"></i>
+                        <span>@Localizer["Admin.UserDetails.Archive"]</span>
                     </button>
 
                     <button type="button" class="btn btn-outline-warning btn-sm"
-                            data-bs-toggle="modal"
-                            data-bs-target="#mdl-reset-pwd-@Model.UserId">
-                        Reset password
+                            data-bs-toggle="modal" data-bs-target="#mdl-reset-pwd-@Model.UserId">
+                        <i class="fa-solid fa-key fa-fw" aria-hidden="true"></i>
+                        <span>@Localizer["Admin.UserDetails.ResetPassword"]</span>
                     </button>
 
                     <button type="button" class="btn btn-outline-danger btn-sm"
-                            data-bs-toggle="modal"
-                            data-bs-target="#mdl-reassign-@Model.UserId">
-                        Reassign
+                            data-bs-toggle="modal" data-bs-target="#mdl-reassign-@Model.UserId">
+                        <i class="fa-solid fa-right-left fa-fw" aria-hidden="true"></i>
+                        <span>@Localizer["Admin.UserDetails.Reassign"]</span>
                     </button>
 
-                    @* §8.13 — force-revoke all of the user's active sessions. *@
+                    @* Force-revoke all active sessions — F8 confirm via data-confirm. *@
                     <form asp-area="Admin" asp-controller="Lifecycle" asp-action="RevokeSessions"
                           asp-route-userId="@Model.UserId" method="post" class="d-inline"
-                          data-confirm="Revoke all active sessions for this user? They will be signed out everywhere and must sign in again."
-                          data-confirm-title="Revoke sessions"
-                          data-confirm-action="Revoke sessions">
+                          data-confirm="@Localizer["Admin.UserDetails.RevokeConfirm"]"
+                          data-confirm-title="@Localizer["Admin.UserDetails.RevokeTitle"]"
+                          data-confirm-action="@Localizer["Admin.UserDetails.RevokeAction"]">
                         @Html.AntiForgeryToken()
                         <button type="submit" class="btn btn-outline-danger btn-sm">
                             <i class="fa-solid fa-right-from-bracket fa-fw" aria-hidden="true"></i>
-                            <span>Revoke sessions</span>
+                            <span>@Localizer["Admin.UserDetails.RevokeSessions"]</span>
                         </button>
                     </form>
                 </div>
             </div>
         </div>
 
-        @* Modals (rendered once per page; opened via the buttons above). *@
+        @* Modals (rendered once; opened via the buttons above). *@
         <partial name="Partials/_SuspendModal"            model="Model.UserId" view-data="modalViewData" />
         <partial name="Partials/_ReactivateModal"         model="Model.UserId" view-data="modalViewData" />
         <partial name="Partials/_ArchiveModal"            model="Model.UserId" view-data="modalViewData" />
@@ -146,165 +154,163 @@
         <partial name="Partials/_ReassignModal"           model="Model.UserId" view-data="modalViewData" />
     </permission>
 
-    <hr />
+    @* ── Roles management ─────────────────────────────────────────────────── *@
+    <div class="card shadow mb-4">
+        <div class="card-header border-bottom">
+            <h2 class="card-header-title h5 mb-0">@Localizer["Admin.UserDetails.RolesHeading"]</h2>
+        </div>
+        <div class="card-body">
+            @* Assign role — F10: a <select> of role NAMES, the id is the option value. *@
+            <permission require="@WebPermission.UserRole.Create">
+                <form asp-area="Admin" asp-controller="Users"
+                      asp-action="AssignRole" asp-route-userId="@Model.UserId" method="post"
+                      class="row g-2 align-items-end mb-3">
+                    @Html.AntiForgeryToken()
+                    <div class="col-sm-auto">
+                        <label for="RoleId" class="form-label small mb-1">@Localizer["Admin.UserDetails.RoleSelectLabel"]</label>
+                        <select name="RoleId" id="RoleId" class="form-select form-select-sm"
+                                asp-items="@(new SelectList(Model.AvailableRoles, "Id", "Name"))">
+                            <option value="">@Localizer["Admin.UserDetails.RoleSelectPlaceholder"]</option>
+                        </select>
+                    </div>
+                    <div class="col-sm-auto">
+                        <button type="submit" class="btn btn-primary btn-sm">
+                            <i class="fa-solid fa-plus fa-fw" aria-hidden="true"></i>
+                            <span>@Localizer["Admin.UserDetails.AssignRole"]</span>
+                        </button>
+                    </div>
+                </form>
+            </permission>
 
-    @* Assign Role *@
-    <permission require="@WebPermission.UserRole.Create">
-        <h5>Assign Role</h5>
-        <form asp-area="Admin" asp-controller="Users"
-              asp-action="AssignRole" asp-route-userId="@Model.UserId" method="post" class="row g-2 mb-3">
-            @Html.AntiForgeryToken()
-            <div class="col-auto">
-                <select name="RoleId" id="RoleId" class="form-select"
-                        asp-items="@(new SelectList(Model.AvailableRoles, "Id", "Name"))">
-                    <option value="">-- select role --</option>
-                </select>
-            </div>
-            <div class="col-auto">
-                <button type="submit" class="btn btn-primary btn-sm">Assign</button>
-            </div>
-        </form>
-    </permission>
+            @if (Model.CurrentRoles.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle w-auto mb-0">
+                        <thead>
+                            <tr>
+                                <th scope="col">@Localizer["Admin.UserDetails.ColRole"]</th>
+                                <permission require="@WebPermission.UserRole.Delete">
+                                    <th scope="col" class="text-end">@Localizer["Admin.UserDetails.ColAction"]</th>
+                                </permission>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var role in Model.AvailableRoles.Where(r => Model.CurrentRoles.Contains(r.Name)))
+                            {
+                                <tr>
+                                    <td><span class="fw-semibold">@role.Name</span></td>
+                                    <permission require="@WebPermission.UserRole.Delete">
+                                        <td class="text-end">
+                                            <form asp-area="Admin" asp-controller="Users"
+                                                  asp-action="RemoveRole"
+                                                  asp-route-userId="@Model.UserId"
+                                                  asp-route-roleId="@role.Id" method="post" class="d-inline"
+                                                  data-confirm="@Localizer["Admin.UserDetails.RemoveRoleConfirm", role.Name]"
+                                                  data-confirm-title="@Localizer["Admin.UserDetails.RemoveRoleTitle"]"
+                                                  data-confirm-action="@Localizer["Admin.UserDetails.RemoveAction"]">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="btn btn-outline-danger btn-sm">
+                                                    <i class="fa-solid fa-trash-can fa-fw" aria-hidden="true"></i>
+                                                    <span>@Localizer["Admin.UserDetails.Remove"]</span>
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </permission>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <p class="mb-0 text-secondary">@Localizer["Admin.UserDetails.NoRolesAssigned"]</p>
+            }
+        </div>
+    </div>
 
-    @* Current roles + Remove *@
-    @if (Model.CurrentRoles.Any())
-    {
-        <table class="table table-sm w-auto">
-            <thead>
-                <tr>
-                    <th>Role</th>
-                    <permission require="@WebPermission.UserRole.Delete"><th></th></permission>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var role in Model.AvailableRoles.Where(r => Model.CurrentRoles.Contains(r.Name)))
-                {
-                    <tr>
-                        <td>@role.Name</td>
-                        <permission require="@WebPermission.UserRole.Delete">
-                            <td>
-                                <form asp-area="Admin" asp-controller="Users"
-                                      asp-action="RemoveRole"
-                                      asp-route-userId="@Model.UserId"
-                                      asp-route-roleId="@role.Id" method="post" class="d-inline"
-                                      data-confirm="Remove role @role.Name from this user?"
-                                      data-confirm-title="Remove role"
-                                      data-confirm-action="Remove">
-                                    @Html.AntiForgeryToken()
-                                    <button type="submit" class="btn btn-danger btn-sm">Remove</button>
-                                </form>
-                            </td>
-                        </permission>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    }
+    @* ── Claims management ────────────────────────────────────────────────── *@
+    <div class="card shadow mb-4">
+        <div class="card-header border-bottom">
+            <h2 class="card-header-title h5 mb-0">@Localizer["Admin.UserDetails.ClaimsHeading"]</h2>
+        </div>
+        <div class="card-body">
+            <permission require="@WebPermission.User.UpdateAny">
+                <form asp-area="Admin" asp-controller="Users"
+                      asp-action="AddClaim" asp-route-userId="@Model.UserId" method="post"
+                      class="row g-2 align-items-end mb-3">
+                    @Html.AntiForgeryToken()
+                    <div class="col-sm-auto">
+                        <label for="ClaimType" class="form-label small mb-1">@Localizer["Admin.UserDetails.ClaimTypeLabel"]</label>
+                        <input name="ClaimType" id="ClaimType" class="form-control form-control-sm"
+                               placeholder="@Localizer["Admin.UserDetails.ClaimTypePlaceholder"]" />
+                    </div>
+                    <div class="col-sm-auto">
+                        <label for="ClaimValue" class="form-label small mb-1">@Localizer["Admin.UserDetails.ClaimValueLabel"]</label>
+                        <input name="ClaimValue" id="ClaimValue" class="form-control form-control-sm"
+                               placeholder="@Localizer["Admin.UserDetails.ClaimValuePlaceholder"]" />
+                    </div>
+                    <div class="col-sm-auto">
+                        <button type="submit" class="btn btn-primary btn-sm">
+                            <i class="fa-solid fa-plus fa-fw" aria-hidden="true"></i>
+                            <span>@Localizer["Admin.UserDetails.AddClaim"]</span>
+                        </button>
+                    </div>
+                </form>
+            </permission>
 
-    <hr />
-
-    @* Add Claim *@
-    <permission require="@WebPermission.User.UpdateAny">
-        <h5>Add Claim</h5>
-        <form asp-area="Admin" asp-controller="Users"
-              asp-action="AddClaim" asp-route-userId="@Model.UserId" method="post" class="row g-2 mb-3">
-            @Html.AntiForgeryToken()
-            <div class="col-auto">
-                <input name="ClaimType" id="ClaimType" class="form-control" placeholder="Type" />
-            </div>
-            <div class="col-auto">
-                <input name="ClaimValue" id="ClaimValue" class="form-control" placeholder="Value" />
-            </div>
-            <div class="col-auto">
-                <button type="submit" class="btn btn-primary btn-sm">Add Claim</button>
-            </div>
-        </form>
-    </permission>
-
-    @* Existing claims + Remove *@
-    @if (Model.Claims.Any())
-    {
-        <h5>Claims</h5>
-        <table class="table table-sm w-auto">
-            <thead>
-                <tr>
-                    <th>Type</th>
-                    <th>Value</th>
-                    <permission require="@WebPermission.User.UpdateAny"><th></th></permission>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var c in Model.Claims)
-                {
-                    <tr>
-                        <td>@c.ClaimType</td>
-                        <td>@c.ClaimValue</td>
-                        <permission require="@WebPermission.User.UpdateAny">
-                            <td>
-                                <form asp-area="Admin" asp-controller="Users"
-                                      asp-action="RemoveClaim"
-                                      asp-route-userId="@Model.UserId"
-                                      asp-route-claimId="@c.Id" method="post" class="d-inline"
-                                      data-confirm="Remove the @c.ClaimType claim from this user?"
-                                      data-confirm-title="Remove claim"
-                                      data-confirm-action="Remove">
-                                    @Html.AntiForgeryToken()
-                                    <button type="submit" class="btn btn-danger btn-sm">Remove</button>
-                                </form>
-                            </td>
-                        </permission>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    }
+            @if (Model.Claims.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle w-auto mb-0">
+                        <thead>
+                            <tr>
+                                <th scope="col">@Localizer["Admin.UserDetails.ColClaimType"]</th>
+                                <th scope="col">@Localizer["Admin.UserDetails.ColClaimValue"]</th>
+                                <permission require="@WebPermission.User.UpdateAny">
+                                    <th scope="col" class="text-end">@Localizer["Admin.UserDetails.ColAction"]</th>
+                                </permission>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var c in Model.Claims)
+                            {
+                                <tr>
+                                    <td><span class="fw-semibold">@c.ClaimType</span></td>
+                                    <td><bdi dir="ltr">@c.ClaimValue</bdi></td>
+                                    <permission require="@WebPermission.User.UpdateAny">
+                                        <td class="text-end">
+                                            <form asp-area="Admin" asp-controller="Users"
+                                                  asp-action="RemoveClaim"
+                                                  asp-route-userId="@Model.UserId"
+                                                  asp-route-claimId="@c.Id" method="post" class="d-inline"
+                                                  data-confirm="@Localizer["Admin.UserDetails.RemoveClaimConfirm", c.ClaimType]"
+                                                  data-confirm-title="@Localizer["Admin.UserDetails.RemoveClaimTitle"]"
+                                                  data-confirm-action="@Localizer["Admin.UserDetails.RemoveAction"]">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="btn btn-outline-danger btn-sm">
+                                                    <i class="fa-solid fa-trash-can fa-fw" aria-hidden="true"></i>
+                                                    <span>@Localizer["Admin.UserDetails.Remove"]</span>
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </permission>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <p class="mb-0 text-secondary">@Localizer["Admin.UserDetails.NoClaims"]</p>
+            }
+        </div>
+    </div>
 </div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
-
-    @*
-        Phase 5C — minimal modal helpers (no third-party deps; Bootstrap is
-        already loaded by the layout). All three handlers degrade safely:
-        the server-side validators on AdminArchiveVm.ConfirmText and
-        AdminReassignAccountVm.IUnderstand reject submissions that bypass
-        the JS gates.
-    *@
-    <script>
-        (function () {
-            // 1) Archive: enable Submit only when "ARCHIVE" is typed exactly.
-            const archiveForm = document.getElementById('archive-form');
-            if (archiveForm) {
-                const input  = archiveForm.querySelector('input[name="ConfirmText"]');
-                const submit = archiveForm.querySelector('[data-archive-submit]');
-                const sync   = function () { submit.disabled = (input.value !== 'ARCHIVE'); };
-                input.addEventListener('input', sync);
-                sync();
-            }
-
-            // 2) Reassign: enable Submit only when "I understand" is ticked
-            //    AND the new email field has a non-empty value.
-            const reassignForm = document.getElementById('reassign-form');
-            if (reassignForm) {
-                const cb     = reassignForm.querySelector('input[name="IUnderstand"]');
-                const email  = reassignForm.querySelector('input[name="NewEmail"]');
-                const submit = reassignForm.querySelector('[data-reassign-submit]');
-                const sync   = function () {
-                    submit.disabled = !(cb.checked && email.value.trim().length > 0);
-                };
-                cb.addEventListener('change', sync);
-                email.addEventListener('input', sync);
-                sync();
-            }
-
-            // 3) Disable submit-on-click on every admin-action modal form to
-            //    block double-fire while the redirect runs.
-            document.querySelectorAll('.admin-action-modal form').forEach(function (form) {
-                form.addEventListener('submit', function () {
-                    const btn = form.querySelector('button[type="submit"]');
-                    if (btn) { btn.disabled = true; }
-                });
-            });
-        })();
-    </script>
+    @* A6/SEC1/J3 — modal gating + double-submit guard live in external CSP-safe JS. *@
+    <script src="~/assets/js/admin-users.js" asp-append-version="true" defer></script>
 }

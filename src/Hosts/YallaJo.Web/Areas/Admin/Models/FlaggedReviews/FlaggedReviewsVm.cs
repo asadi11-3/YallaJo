@@ -10,6 +10,7 @@ public sealed class FlaggedReviewRowVm
 {
     public Guid Id { get; set; }
     public Guid UserId { get; set; }
+    public string? ReviewerEmail { get; set; }
     public string TargetType { get; set; } = "";
     public Guid TargetId { get; set; }
     public decimal Rating { get; set; }

@@ -28,8 +28,14 @@ public sealed class EditBlogVm
     [Display(Name = "Meta description")]
     public string? MetaDescription { get; set; }
 
-    [Display(Name = "Place ID (optional)")]
+    /// <summary>
+    /// Optional related place. Rendered as a name dropdown (F10: never a raw GUID
+    /// textbox); the user reads the place name, the option value carries the id.
+    /// </summary>
     public Guid? PlaceId { get; set; }
+
+    /// <summary>Selectable places (name shown, id submitted). Populated by the facade.</summary>
+    public IReadOnlyList<PlaceOptionVm> PlaceOptions { get; set; } = [];
 
     [Display(Name = "Read time (minutes)")]
     [Range(0, 1000)]

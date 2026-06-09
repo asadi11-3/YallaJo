@@ -4,7 +4,7 @@ namespace YallaJo.Web.Areas.Admin.Models.Support;
 
 public static class SupportMapper
 {
-    public static SupportListVm ToListVm(SupportTicketPageResponse page, string? statusFilter, string? categoryFilter)
+    public static SupportListVm ToListVm(SupportTicketPageResponse page, string? statusFilter, string? categoryFilter, IReadOnlyDictionary<Guid, string>? userEmails = null)
     {
         return new SupportListVm
         {
@@ -15,6 +15,8 @@ public static class SupportMapper
             {
                 Id = t.Id,
                 CreatedByUserId = t.CreatedByUserId,
+                RequesterEmail = Lookup(userEmails, t.CreatedByUserId),
+                AssigneeEmail = t.AssignedToUserId is { } aid ? Lookup(userEmails, aid) : null,
                 Category = t.Category,
                 Subject = t.Subject,
                 Priority = t.Priority,
@@ -26,12 +28,19 @@ public static class SupportMapper
         };
     }
 
-    public static SupportTicketDetailVm ToDetailVm(SupportTicketItemResponse ticket)
+    public static SupportTicketDetailVm ToDetailVm(
+        SupportTicketItemResponse ticket,
+        IReadOnlyDictionary<Guid, string>? userEmails = null,
+        IReadOnlyList<SupportAdminOptionVm>? adminOptions = null)
     {
         return new SupportTicketDetailVm
         {
             Id = ticket.Id,
             CreatedByUserId = ticket.CreatedByUserId,
+            RequesterEmail = Lookup(userEmails, ticket.CreatedByUserId),
+            AssigneeEmail = ticket.AssignedToUserId is { } aid ? Lookup(userEmails, aid) : null,
+            ResolverEmail = ticket.ResolvedByUserId is { } rid ? Lookup(userEmails, rid) : null,
+            AdminOptions = adminOptions ?? [],
             Category = ticket.Category,
             Subject = ticket.Subject,
             Priority = ticket.Priority,
@@ -51,6 +60,7 @@ public static class SupportMapper
             {
                 Id = m.Id,
                 AuthorUserId = m.AuthorUserId,
+                AuthorEmail = Lookup(userEmails, m.AuthorUserId),
                 Body = m.Body,
                 IsInternal = m.IsInternal,
                 CreatedAt = m.CreatedAt,
@@ -68,4 +78,18 @@ public static class SupportMapper
         "Closed" => "secondary",
         _ => "secondary",
     };
+
+    public static string StatusIcon(string status) => status switch
+    {
+        "Open" => "clock",
+        "Assigned" => "user-check",
+        "InProgress" => "spinner",
+        "AwaitingUser" => "hourglass-half",
+        "Resolved" => "circle-check",
+        "Closed" => "circle-xmark",
+        _ => "circle-info",
+    };
+
+    private static string? Lookup(IReadOnlyDictionary<Guid, string>? emails, Guid id)
+        => emails is not null && emails.TryGetValue(id, out var email) ? email : null;
 }

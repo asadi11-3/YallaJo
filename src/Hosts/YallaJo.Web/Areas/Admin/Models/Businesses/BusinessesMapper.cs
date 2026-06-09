@@ -47,4 +47,16 @@ public static class BusinessesMapper
         "MoreDocsNeeded" => "info",
         _ => "secondary",
     };
+
+    // A11Y5: status badges must convey meaning via colour + icon + text, never colour
+    // alone. Paired with StatusColor for the badge tint.
+    public static string StatusIcon(string status) => status switch
+    {
+        "Approved" => "circle-check",
+        "Pending" => "clock",
+        "Rejected" => "circle-xmark",
+        "Suspended" => "circle-pause",
+        "MoreDocsNeeded" => "file-circle-question",
+        _ => "circle-question",
+    };
 }

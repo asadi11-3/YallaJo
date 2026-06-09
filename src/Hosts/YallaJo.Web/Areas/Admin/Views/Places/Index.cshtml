@@ -1,17 +1,22 @@
 @using System.Globalization
+@using Microsoft.Extensions.Localization
 @using YallaJo.Web.Infrastructure.Authorization
 @model YallaJo.Web.Areas.Admin.Models.Places.PlaceListVm
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
-    ViewData["Title"] = "Places";
-    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"]    = Localizer["Admin.Places.Title"].Value;
+    ViewData["AdminNav"] = "Places";
 
     var f = Model.Filter;
+    var culture = CultureInfo.CurrentCulture;
+    string Count(int n) => n.ToString("N0", culture);
 
+    // Pager route values (filters preserved). Raw GUID CategoryId is intentionally
+    // omitted from the visible filter UI (F10), so it is not echoed here either.
     Dictionary<string, string?> RouteValuesFor(int targetPage) => new()
     {
         ["page"]                  = targetPage.ToString(CultureInfo.InvariantCulture),
         ["pageSize"]              = Model.PageSize.ToString(CultureInfo.InvariantCulture),
-        ["Filter.CategoryId"]     = f.CategoryId?.ToString(),
         ["Filter.RatingMin"]      = f.RatingMin?.ToString(CultureInfo.InvariantCulture),
         ["Filter.RatingMax"]      = f.RatingMax?.ToString(CultureInfo.InvariantCulture),
         ["Filter.City"]           = f.City,
@@ -20,96 +25,115 @@
     };
 }
 
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h1 class="h3 mb-0">Places</h1>
+<div class="d-sm-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-1">@Localizer["Admin.Places.Title"]</h1>
+        <p class="mb-0 text-secondary">@Localizer["Admin.Places.Subtitle"]</p>
+    </div>
+    <div class="d-flex align-items-center gap-2 mt-3 mt-sm-0">
+        <span class="badge bg-primary bg-opacity-10 text-primary">
+            <bdi class="font-data">@Count(Model.TotalCount)</bdi> @Localizer["Admin.Places.TotalLabel"]
+        </span>
         <permission require="@WebPermission.Place.Create">
-            <a asp-area="Admin" asp-controller="Places" asp-action="Create"
-               class="btn btn-primary">New Place</a>
+            <a asp-area="Admin" asp-controller="Places" asp-action="Create" class="btn btn-sm btn-primary">
+                <i class="fa-solid fa-plus fa-fw" aria-hidden="true"></i> @Localizer["Admin.Places.New"]
+            </a>
         </permission>
     </div>
+</div>
 
-    @* Success/Error flash banners are rendered globally by the shared _Alerts partial (in _Layout). *@
-    @if (ViewBag.Error       is string vbe) { <div class="alert alert-danger">@vbe</div> }
+@if (ViewBag.Error is string vbe)
+{
+    <div class="alert alert-danger" role="alert">@vbe</div>
+}
 
-    <div class="card mb-3 p-3">
-        <form asp-area="Admin" asp-controller="Places" asp-action="Index" method="get" class="row g-2">
+<div class="card shadow mb-4">
+    <div class="card-header border-bottom">
+        <h2 class="card-header-title h5 mb-0">@Localizer["Admin.Places.FiltersHeading"]</h2>
+    </div>
+    <div class="card-body">
+        <form asp-area="Admin" asp-controller="Places" asp-action="Index" method="get" class="row g-3">
             <div class="col-md-3">
-                <label asp-for="Filter.City" class="form-label"></label>
-                <input asp-for="Filter.City" class="form-control" />
+                <label asp-for="Filter.City" class="form-label">@Localizer["Admin.Places.CityLabel"]</label>
+                <input asp-for="Filter.City" class="form-control"
+                       placeholder="@Localizer["Admin.Places.CityPlaceholder"]" />
             </div>
             <div class="col-md-3">
-                <label asp-for="Filter.Country" class="form-label"></label>
-                <input asp-for="Filter.Country" class="form-control" />
+                <label asp-for="Filter.Country" class="form-label">@Localizer["Admin.Places.CountryLabel"]</label>
+                <input asp-for="Filter.Country" class="form-control"
+                       placeholder="@Localizer["Admin.Places.CountryPlaceholder"]" />
             </div>
             <div class="col-md-3">
-                <label asp-for="Filter.CategoryId" class="form-label"></label>
-                <input asp-for="Filter.CategoryId" class="form-control" placeholder="GUID (optional)" />
-            </div>
-            <div class="col-md-3">
-                <label class="form-label">Rating range</label>
+                <label class="form-label" for="Filter_RatingMin">@Localizer["Admin.Places.RatingLabel"]</label>
                 <div class="input-group">
                     <input asp-for="Filter.RatingMin" type="number" step="0.1" min="0" max="5"
-                           class="form-control" placeholder="min" />
+                           class="form-control" dir="ltr"
+                           aria-label="@Localizer["Admin.Places.RatingMinAria"]"
+                           placeholder="@Localizer["Admin.Places.RatingMinPlaceholder"]" />
                     <input asp-for="Filter.RatingMax" type="number" step="0.1" min="0" max="5"
-                           class="form-control" placeholder="max" />
+                           class="form-control" dir="ltr"
+                           aria-label="@Localizer["Admin.Places.RatingMaxAria"]"
+                           placeholder="@Localizer["Admin.Places.RatingMaxPlaceholder"]" />
                 </div>
             </div>
             <div class="col-md-3">
-                <label asp-for="Filter.HasActiveTours" class="form-label"></label>
+                <label asp-for="Filter.HasActiveTours" class="form-label">@Localizer["Admin.Places.HasToursLabel"]</label>
                 <select asp-for="Filter.HasActiveTours" class="form-select">
-                    <option value="">— any —</option>
-                    <option value="true">Yes</option>
-                    <option value="false">No</option>
+                    <option value="">@Localizer["Admin.Places.AnyOption"]</option>
+                    <option value="true">@Localizer["Admin.Places.YesOption"]</option>
+                    <option value="false">@Localizer["Admin.Places.NoOption"]</option>
                 </select>
             </div>
-            <div class="col-md-2">
-                <label for="pageSize" class="form-label">Page size</label>
+            <div class="col-md-3">
+                <label for="pageSize" class="form-label">@Localizer["Admin.Places.PageSizeLabel"]</label>
                 <select id="pageSize" name="pageSize" class="form-select">
                     @foreach (var size in new[] { 10, 20, 50 })
                     {
                         if (size == Model.PageSize)
                         {
-                            <option value="@size" selected>@size</option>
+                            <option value="@size" selected>@Count(size)</option>
                         }
                         else
                         {
-                            <option value="@size">@size</option>
+                            <option value="@size">@Count(size)</option>
                         }
                     }
                 </select>
             </div>
-            <div class="col-md-7 d-flex align-items-end gap-2">
-                <button type="submit" class="btn btn-primary">Filter</button>
+            <div class="col-12 d-flex gap-2">
+                <button type="submit" class="btn btn-primary">@Localizer["Admin.Places.ApplyFilters"]</button>
                 <a asp-area="Admin" asp-controller="Places" asp-action="Index"
-                   class="btn btn-outline-secondary">Reset</a>
+                   class="btn btn-outline-secondary">@Localizer["Admin.Places.ClearFilters"]</a>
             </div>
         </form>
     </div>
+</div>
 
+<div class="card shadow">
+    <div class="card-header border-bottom">
+        <h2 class="card-header-title h5 mb-0">@Localizer["Admin.Places.DirectoryHeading"]</h2>
+    </div>
     <partial name="_Table" model="Model" />
 
-    @if (Model.TotalPages > 1)
+    @if (Model.HasPreviousPage || Model.HasNextPage)
     {
-        <nav aria-label="Place list pagination">
-            <ul class="pagination">
-                <li class="page-item @(Model.HasPreviousPage ? "" : "disabled")">
-                    <a class="page-link"
-                       asp-area="Admin" asp-controller="Places" asp-action="Index"
-                       asp-all-route-data="RouteValuesFor(Model.Page - 1)">Previous</a>
-                </li>
-
-                <li class="page-item active" aria-current="page">
-                    <span class="page-link">Page @Model.Page of @Model.TotalPages (@Model.TotalCount items)</span>
-                </li>
-
-                <li class="page-item @(Model.HasNextPage ? "" : "disabled")">
-                    <a class="page-link"
-                       asp-area="Admin" asp-controller="Places" asp-action="Index"
-                       asp-all-route-data="RouteValuesFor(Model.Page + 1)">Next</a>
-                </li>
-            </ul>
-        </nav>
+        <div class="card-footer border-top">
+            <nav aria-label="@Localizer["Admin.Places.PaginationLabel"]">
+                <ul class="pagination justify-content-center mb-0">
+                    <li class="page-item @(Model.HasPreviousPage ? "" : "disabled")">
+                        <a class="page-link" asp-area="Admin" asp-controller="Places" asp-action="Index"
+                           asp-all-route-data="RouteValuesFor(Model.Page - 1)">@Localizer["Admin.Places.Previous"]</a>
+                    </li>
+                    <li class="page-item active" aria-current="page">
+                        <span class="page-link">@Localizer["Admin.Places.PageLabel"] <bdi class="font-data">@Count(Model.Page)</bdi></span>
+                    </li>
+                    <li class="page-item @(Model.HasNextPage ? "" : "disabled")">
+                        <a class="page-link" asp-area="Admin" asp-controller="Places" asp-action="Index"
+                           asp-all-route-data="RouteValuesFor(Model.Page + 1)">@Localizer["Admin.Places.Next"]</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
     }
 </div>
 

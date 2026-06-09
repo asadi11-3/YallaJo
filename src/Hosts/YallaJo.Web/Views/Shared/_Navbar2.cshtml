@@ -7,127 +7,83 @@
 }
 
 <header class="navbar-light header-sticky">
-	<!-- Logo Nav START -->
-	<nav class="navbar navbar-expand-xl">
-		<div class="container">
-			<!-- Logo START -->
-			<a class="navbar-brand" href="index.html">
-				<img class="light-mode-item navbar-brand-item" src="~/assets/images/logo.svg" alt="YallaJo">
-				<img class="dark-mode-item navbar-brand-item" src="~/assets/images/logo-light.svg" alt="YallaJo">
-			</a>
-			<!-- Logo END -->
+    <!-- Logo Nav START -->
+    <nav class="navbar navbar-expand-xl">
+        <div class="container">
+            <!-- Logo START -->
+            <a class="navbar-brand" href="index.html">
+                <img class="light-mode-item navbar-brand-item" src="~/assets/images/logo.svg" alt="YallaJo">
+                <img class="dark-mode-item navbar-brand-item" src="~/assets/images/logo-light.svg" alt="YallaJo">
+            </a>
+            <!-- Logo END -->
+            <!-- Responsive navbar toggler -->
+            <button class="navbar-toggler ms-auto p-0 p-sm-2" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-animation">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </span>
+                <span class="d-none d-sm-inline-block small">Menu</span>
+            </button>
 
-			<!-- Responsive navbar toggler -->
-			<button class="navbar-toggler ms-auto p-0 p-sm-2" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
-				<span class="navbar-toggler-animation">
-					<span></span>
-					<span></span>
-					<span></span>
-				</span>
-				<span class="d-none d-sm-inline-block small">Menu</span>
-			</button>
+            <!-- Main navbar START -->
+            <div class="navbar-collapse collapse" id="navbarCollapse">
+                <ul class="navbar-nav navbar-nav-scroll me-auto">
 
-			<!-- Main navbar START -->
-			<div class="navbar-collapse collapse" id="navbarCollapse">
-				<ul class="navbar-nav navbar-nav-scroll me-auto">
-
-					<!-- Nav item Tours -->
-					<li class="nav-item">
-                        <a class="nav-link" href="agencies.html">Explore</a>
+                    <!-- Nav item Tours -->
+                    <li class="nav-item">
+                        <a class="nav-link" asp-action="Index" asp-controller="Tours" asp-area="Public">Explore</a>
                     </li>
 
-					<!-- Nav item Places -->
-					<li class="nav-item">
-                        <a class="nav-link" href="agencies.html">
+                    <!-- Nav item Places -->
+                    <li class="nav-item">
+                        <a class="nav-link" asp-action="Index" asp-controller="Places" asp-area="Public">
                             Destinations
                         </a>
                     </li>
 
-					<!-- Nav item Experiences -->
-					<li class="nav-item">
-                        <a class="nav-link" href="agencies.html">Stories</a>
+                    <!-- Nav item Experiences -->
+                    <li class="nav-item">
+                        <a class="nav-link" asp-action="Index" asp-controller="Blog" asp-area="Public">
+                            Stories
+                        </a>
                     </li>
 
-					<!-- Nav item Tour Guides -->
-					<li class="nav-item">
-                        <a class="nav-link" href="guides.html">
+                    <!-- Nav item Tour Guides -->
+                    <li class="nav-item">
+                        <a class="nav-link" asp-action="Index" asp-controller="TourGuides" asp-area="Public">
                             List your experience
                         </a>
-					</li>
+                    </li>
 
-					<!-- Nav item Agencies -->
-					<li class="nav-item">
-						<a class="nav-link" href="agencies.html">FAQ</a>
-					</li>
+                    <!-- Nav item Agencies -->
+                    <li class="nav-item">
+                        <a class="nav-link" asp-action="Index" asp-controller="Agencies" asp-area="Public">
+                            FAQ
+                        </a>
+                    </li>
 
-				</ul>
-			</div>
-			<!-- Main navbar END -->
+                </ul>
+            </div>
+            <!-- Main navbar END -->
+            <!-- Profile and Notification START -->
+            <ul class="nav flex-row align-items-center list-unstyled ms-xl-auto">
 
-			<!-- Profile and Notification START -->
-			<ul class="nav flex-row align-items-center list-unstyled ms-xl-auto">
-
-				<!-- List your experience CTA -->
-		
-
-				<!-- Language toggle START -->
-				<li class="nav-item ms-0 ms-md-2">
-					<div class="lang-toggle" role="group" aria-label="Language switch">
-						<button type="button" class="lang-toggle-btn active" data-lang="en" data-dir="ltr">EN</button>
-						<button type="button" class="lang-toggle-btn" data-lang="ar" data-dir="rtl">عربي</button>
-					</div>
-				</li>
-				<!-- Language toggle END -->
+                <!-- List your experience CTA -->
+                <!-- Language toggle START -->
+                <li class="nav-item ms-0 ms-md-2">
+                    <div class="lang-toggle" role="group" aria-label="Language switch">
+                        <button type="button" class="lang-toggle-btn active" data-lang="en" data-dir="ltr">EN</button>
+                        <button type="button" class="lang-toggle-btn" data-lang="ar" data-dir="rtl">عربي</button>
+                    </div>
+                </li>
+                <!-- Language toggle END -->
                 @if (CurrentUser.IsAuthenticated)
                 {
                     <!-- Notification dropdown START -->
-                    <li class="nav-item dropdown ms-0 ms-md-3">
-                        <!-- Notification button -->
-                        <a class="nav-notification btn btn-light p-0 mb-0" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside">
-                            <i class="bi bi-bell fa-fw"></i>
-                        </a>
-                        <!-- Notification dote -->
-                        <span class="notif-badge animation-blink"></span>
-
-                        <!-- Notification dropdown menu START -->
-                        <div class="dropdown-menu dropdown-animation dropdown-menu-end dropdown-menu-size-md shadow-lg p-0">
-                            <div class="card bg-transparent">
-                                <!-- Card header -->
-                                <div class="card-header bg-transparent d-flex justify-content-between align-items-center border-bottom">
-                                    <h6 class="m-0">Notifications <span class="badge bg-danger bg-opacity-10 text-danger ms-2">2 new</span></h6>
-                                    <a class="small" href="#">Clear all</a>
-                                </div>
-
-                                <!-- Card body START -->
-                                <div class="card-body p-0">
-                                    <ul class="list-group list-group-flush list-unstyled p-2">
-                                        <!-- Notification item -->
-                                        <li>
-                                            <a href="#" class="list-group-item list-group-item-action rounded notif-unread border-0 mb-1 p-3">
-                                                <h6 class="mb-2">Your Wadi Rum tour is confirmed ✈️</h6>
-                                                <p class="mb-0 small">Your booking for the 2-day Wadi Rum desert tour has been confirmed by the provider.</p>
-                                                <span>2 hours ago</span>
-                                            </a>
-                                        </li>
-                                        <!-- Notification item -->
-                                        <li>
-                                            <a href="#" class="list-group-item list-group-item-action rounded border-0 mb-1 p-3">
-                                                <h6 class="mb-2">New review on your Petra listing ⭐</h6>
-                                                <span>Yesterday</span>
-                                            </a>
-                                        </li>
-                                    </ul>
-                                </div>
-                                <!-- Card body END -->
-                                <!-- Card footer -->
-                                <div class="card-footer bg-transparent text-center border-top">
-                                    <a href="#" class="btn btn-sm btn-link mb-0 p-0">See all activity</a>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- Notification dropdown menu END -->
-                    </li>
-                    <!-- Notification dropdown END -->
+                    <permission require="@WebPermission.Notification.Read">
+                        <vc:notification-bell />
+                    </permission>                    <!-- Notification dropdown END -->
                     <!-- Profile dropdown START -->
                     <li class="nav-item ms-3 dropdown">
                         <!-- Avatar -->
@@ -155,7 +111,38 @@
                             <li><a class="dropdown-item" asp-area="Accounts" asp-controller="Bookings" asp-action="Index"><i class="bi bi-bookmark-check fa-fw me-2"></i>My Bookings</a></li>
                             <li><a class="dropdown-item" asp-area="Accounts" asp-controller="Wishlist" asp-action="Index"><i class="bi bi-heart fa-fw me-2"></i>Wishlist</a></li>
                             <li> <hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="provider-dashboard.html"><i class="bi bi-grid fa-fw me-2"></i>Provider Dashboard</a></li>
+                            <role require="Admin,SuperAdmin,Owner">
+                                <permission require="@WebPermission.AdminDashboard.Read">
+                                    <a href="/admin" class="dropdown-item">
+                                        <i class="bi bi-grid fa-fw me-2"></i>Admin Dashboard
+                                    </a>
+                                </permission>
+                            </role>
+
+                            <role require="TourGuide">
+                                <permission require="@WebPermission.GuideDashboard.Read">
+                                    <a href="/guide" class="dropdown-item">
+                                        <i class="bi bi-grid fa-fw me-2"></i>Guide Dashboard
+                                    </a>
+                                </permission>
+                            </role>
+
+                            <role require="Provider">
+                                <permission require="@WebPermission.ProviderDashboard.Read">
+                                    <a href="/provider" class="dropdown-item">
+                                        <i class="bi bi-grid fa-fw me-2"></i>Provider Dashboard
+                                    </a>
+                                </permission>
+                            </role>
+
+                            <role require="Creator">
+                                <permission require="@WebPermission.Creator.Read">
+                                    <a href="/creator" class="dropdown-item">
+                                        <i class="bi bi-grid fa-fw me-2"></i>Creator Dashboard
+                                    </a>
+                                </permission>
+                            </role>
+
                             <li><a class="dropdown-item" asp-area="Accounts" asp-controller="Settings" asp-action="Index"><i class="bi bi-gear fa-fw me-2"></i>Settings</a></li>
                             <li>
                                 <form asp-area="Auth" asp-controller="Auth" asp-action="Logout" method="post" class="d-grid">
@@ -195,12 +182,20 @@
                     </li>
                     <!-- Profile dropdown END -->
                 }
+                else
+                {
+
+                    <li class="nav-item ms-2">
+                        <a class="btn btn-primary mb-0" asp-area="Auth" asp-controller="Auth" asp-action="SignIn">Sign In</a>
+                    </li>
+
+                }
 
 				
-			</ul>
-			<!-- Profile and Notification END -->
+            </ul>
+            <!-- Profile and Notification END -->
 
-		</div>
-	</nav>
-	<!-- Logo Nav END -->
+        </div>
+    </nav>
+    <!-- Logo Nav END -->
 </header>

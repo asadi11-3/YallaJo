@@ -1,105 +1,149 @@
+@using Microsoft.Extensions.Localization
 @using YallaJo.Web.Infrastructure.Authorization
 @model YallaJo.Web.Areas.Admin.Models.EntityCategories.EntityCategoriesVm
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
-    ViewData["Title"] = "Entity categories";
-    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = Localizer["Admin.EntityCategories.Title"].Value;
+    ViewData["AdminNav"] = "EntityCategories";
+
+    var entityType = Model.Query.EntityType;
+    var entityId = Model.Query.EntityId;
+    var hasContext = Model.HasQueried;
     var assignedIds = new HashSet<Guid>(Model.Assigned.Select(a => a.CategoryId));
 }
 
-<div class="container mt-4">
-    <h1 class="h3 mb-3">Entity categories</h1>
+<div class="d-sm-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-1">@Localizer["Admin.EntityCategories.Title"]</h1>
+        <p class="mb-0 text-secondary">@Localizer["Admin.EntityCategories.Subtitle"]</p>
+    </div>
+</div>
 
-    @if (ViewBag.Error is string vbe)
-    {
-        <div class="alert alert-danger">@vbe</div>
-    }
-    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+@if (ViewBag.Error is string vbe)
+{
+    <div class="alert alert-danger" role="alert">@vbe</div>
+}
 
-    <div class="card mb-4 p-3">
-        <h2 class="h5">Look up an entity</h2>
-        <form asp-area="Admin" asp-controller="EntityCategories" asp-action="Index" method="get" class="row g-2 align-items-end">
-            <div class="col-md-5">
-                <label asp-for="Query.EntityType" class="form-label"></label>
-                <input asp-for="Query.EntityType" name="entityType" class="form-control" placeholder="e.g. Tour, Place, Business" />
-                <span asp-validation-for="Query.EntityType" class="text-danger"></span>
-            </div>
-            <div class="col-md-5">
-                <label asp-for="Query.EntityId" class="form-label"></label>
-                <input asp-for="Query.EntityId" name="entityId" class="form-control" />
-                <span asp-validation-for="Query.EntityId" class="text-danger"></span>
-            </div>
-            <div class="col-md-2">
-                <button type="submit" class="btn btn-primary w-100">Load</button>
-            </div>
-        </form>
+@if (!hasContext)
+{
+    <div class="card shadow">
+        <div class="card-body text-center py-5">
+            <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
+            <h2 class="h5">@Localizer["Admin.EntityCategories.NoContextHeading"]</h2>
+            <p class="mb-0 text-secondary">@Localizer["Admin.EntityCategories.NoContextMessage"]</p>
+        </div>
+    </div>
+}
+else
+{
+    <div class="card shadow mb-4">
+        <div class="card-header border-bottom">
+            <h2 class="card-header-title h5 mb-0">@Localizer["Admin.EntityCategories.ContextHeading"]</h2>
+        </div>
+        <div class="card-body">
+            <p class="mb-0 text-secondary">
+                @Localizer["Admin.EntityCategories.ContextLabel"]
+                <span class="badge bg-primary bg-opacity-10 text-primary ms-1"><bdi dir="ltr">@entityType</bdi></span>
+            </p>
+        </div>
     </div>
 
-    @if (Model.HasQueried)
-    {
-        <div class="card mb-4 p-3">
-            <h2 class="h5">Assigned categories</h2>
-            <p class="text-muted small mb-2">@Model.Query.EntityType / @Model.Query.EntityId</p>
-            @if (!Model.HasAssigned)
-            {
-                <p class="text-muted mb-0">No categories assigned.</p>
-            }
-            else
-            {
-                <table class="table table-sm table-bordered align-middle mb-0">
-                    <thead>
-                        <tr><th>Name</th><th>Slug</th><th class="text-end">Actions</th></tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var row in Model.Assigned)
-                        {
-                            <tr>
-                                <td>@row.Name</td>
-                                <td><code>@row.Slug</code></td>
-                                <td class="text-end">
-                                    <permission require="@WebPermission.EntityCategory.Delete">
-                                        <form asp-area="Admin" asp-controller="EntityCategories" asp-action="Remove" method="post" class="d-inline">
-                                            @Html.AntiForgeryToken()
-                                            <input type="hidden" name="entityType" value="@Model.Query.EntityType" />
-                                            <input type="hidden" name="entityId" value="@Model.Query.EntityId" />
-                                            <input type="hidden" name="categoryId" value="@row.CategoryId" />
-                                            <button type="submit" class="btn btn-sm btn-outline-danger"
-                                                    onclick="return confirm('Remove this category?');">Remove</button>
-                                        </form>
-                                    </permission>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            }
+    <div class="row g-4">
+        <div class="col-xxl-6">
+            <div class="card shadow h-100">
+                <div class="card-header border-bottom">
+                    <h2 class="card-header-title h5 mb-0">@Localizer["Admin.EntityCategories.AssignedHeading"]</h2>
+                </div>
+                <div class="card-body">
+                    @if (!Model.HasAssigned)
+                    {
+                        <div class="text-center py-4">
+                            <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
+                            <p class="mb-0 text-secondary">@Localizer["Admin.EntityCategories.NoneAssigned"]</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">@Localizer["Admin.EntityCategories.ColName"]</th>
+                                        <th scope="col">@Localizer["Admin.EntityCategories.ColSlug"]</th>
+                                        <th scope="col" class="text-end">@Localizer["Admin.EntityCategories.ColActions"]</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var row in Model.Assigned)
+                                    {
+                                        <tr>
+                                            <td class="fw-semibold">@row.Name</td>
+                                            <td><bdi dir="ltr" class="font-data text-secondary">@row.Slug</bdi></td>
+                                            <td class="text-end">
+                                                <permission require="@WebPermission.EntityCategory.Delete">
+                                                    <form asp-area="Admin" asp-controller="EntityCategories" asp-action="Remove" method="post" class="d-inline"
+                                                          data-confirm="@Localizer["Admin.EntityCategories.RemoveConfirm", row.Name]"
+                                                          data-confirm-title="@Localizer["Admin.EntityCategories.RemoveTitle"]"
+                                                          data-confirm-action="@Localizer["Admin.EntityCategories.Remove"]">
+                                                        @Html.AntiForgeryToken()
+                                                        <input type="hidden" name="entityType" value="@entityType" />
+                                                        <input type="hidden" name="entityId" value="@entityId" />
+                                                        <input type="hidden" name="categoryId" value="@row.CategoryId" />
+                                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                            <i class="fa-solid fa-xmark fa-fw" aria-hidden="true"></i> @Localizer["Admin.EntityCategories.Remove"]
+                                                        </button>
+                                                    </form>
+                                                </permission>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+            </div>
         </div>
 
         <permission require="@WebPermission.EntityCategory.Create">
-            <div class="card mb-4 p-3">
-                <h2 class="h5">Assign categories</h2>
-                <form asp-area="Admin" asp-controller="EntityCategories" asp-action="Assign" method="post">
-                    @Html.AntiForgeryToken()
-                    <input type="hidden" name="entityType" value="@Model.Query.EntityType" />
-                    <input type="hidden" name="entityId" value="@Model.Query.EntityId" />
-                    <div class="mb-2">
-                        <label for="categoryIds" class="form-label">Categories</label>
-                        <select id="categoryIds" name="categoryIds" multiple size="10" class="form-select">
-                            @foreach (var o in Model.AvailableCategories)
-                            {
-                                var isAssigned = assignedIds.Contains(o.Id);
-                                <option value="@o.Id" disabled="@isAssigned">
-                                    @o.Name@(o.IsActive ? "" : " (inactive)")@(isAssigned ? " (assigned)" : "")
-                                </option>
-                            }
-                        </select>
+            <div class="col-xxl-6">
+                <div class="card shadow h-100">
+                    <div class="card-header border-bottom">
+                        <h2 class="card-header-title h5 mb-0">@Localizer["Admin.EntityCategories.AssignHeading"]</h2>
                     </div>
-                    <button type="submit" class="btn btn-primary">Assign</button>
-                </form>
+                    <div class="card-body">
+                        <form asp-area="Admin" asp-controller="EntityCategories" asp-action="Assign" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="entityType" value="@entityType" />
+                            <input type="hidden" name="entityId" value="@entityId" />
+                            <div class="mb-3">
+                                <label for="categoryIds" class="form-label">@Localizer["Admin.EntityCategories.SelectLabel"]</label>
+                                <select id="categoryIds" name="categoryIds" class="form-select" multiple size="10" aria-describedby="categoryIds-help">
+                                    @foreach (var o in Model.AvailableCategories)
+                                    {
+                                        if (assignedIds.Contains(o.Id))
+                                        {
+                                            <option value="@o.Id" disabled>@o.Name @Localizer["Admin.EntityCategories.AssignedSuffix"]</option>
+                                        }
+                                        else if (!o.IsActive)
+                                        {
+                                            <option value="@o.Id">@o.Name @Localizer["Admin.EntityCategories.InactiveSuffix"]</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@o.Id">@o.Name</option>
+                                        }
+                                    }
+                                </select>
+                                <small id="categoryIds-help" class="form-text">@Localizer["Admin.EntityCategories.SelectHelp"]</small>
+                            </div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fa-solid fa-plus fa-fw" aria-hidden="true"></i> @Localizer["Admin.EntityCategories.AssignSubmit"]
+                            </button>
+                        </form>
+                    </div>
+                </div>
             </div>
         </permission>
-    }
-</div>
-
-@section Scripts {
-    <partial name="_ValidationScriptsPartial" />
+    </div>
 }

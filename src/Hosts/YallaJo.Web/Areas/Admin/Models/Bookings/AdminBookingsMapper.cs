@@ -29,7 +29,10 @@ public static class AdminBookingsMapper
         RefundAmount     = i.RefundAmount,
     };
 
-    public static AdminBookingDetailsVm ToDetailsVm(AdminBookingDetailResponse d, string tourName) => new()
+    public static AdminBookingDetailsVm ToDetailsVm(
+        AdminBookingDetailResponse d,
+        string tourName,
+        IReadOnlyList<Payments.PaymentResponse>? payments = null) => new()
     {
         Id                 = d.Id,
         Reference          = d.Reference,
@@ -68,6 +71,17 @@ public static class AdminBookingsMapper
         DisputeReason      = d.Dispute?.Reason,
         ResolvedAt         = d.Dispute?.ResolvedAt,
         ResolutionNotes    = d.Dispute?.ResolutionNotes,
+
+        Payments           = (payments ?? []).Select(p => new PaymentOptionVm
+        {
+            Id            = p.Id,
+            Amount        = p.Amount,
+            Currency      = p.Currency,
+            Status        = p.Status,
+            PaymentType   = p.PaymentType,
+            RefundedTotal = p.RefundedTotal,
+            When          = p.PaidAt ?? p.CreatedAt,
+        }).ToList(),
     };
 
     // ── Helpers ──────────────────────────────────────────────────────────────────────
@@ -93,5 +107,21 @@ public static class AdminBookingsMapper
         "Refunded"            => "bg-dark",
         "NoShow"              => "bg-danger",
         _                     => "bg-secondary",
+    };
+
+    /// <summary>A11Y5: a per-status Font Awesome icon so status is never colour-only.</summary>
+    public static string StatusIcon(string status) => status switch
+    {
+        "Confirmed"           => "circle-check",
+        "Completed"           => "flag-checkered",
+        "AwaitingPayment"     => "hourglass-half",
+        "PendingConfirmation" => "clock",
+        "Disputed"            => "triangle-exclamation",
+        "Resolved"            => "circle-check",
+        "Cancelled"           => "ban",
+        "Rejected"            => "circle-xmark",
+        "Refunded"            => "rotate-left",
+        "NoShow"              => "user-xmark",
+        _                     => "circle-question",
     };
 }

@@ -1,16 +1,30 @@
+@using Microsoft.Extensions.Localization
 @model YallaJo.Web.Areas.Admin.Models.Roles.CreateRoleVm
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 
-<form asp-area="Admin" asp-controller="Roles" asp-action="Create" method="post" class="row g-2">
+@* A11Y4 — every input has an associated <label asp-for> + validation message role=alert. *@
+<form asp-area="Admin" asp-controller="Roles" asp-action="Create" method="post" class="row g-3 align-items-end">
     @Html.AntiForgeryToken()
-    <div asp-validation-summary="All" class="text-danger"></div>
-    <div class="col-auto">
-        <input asp-for="Name" class="form-control" placeholder="Role name" />
-        <span asp-validation-for="Name" class="text-danger"></span>
+    <div asp-validation-summary="All" class="text-danger small" role="alert"></div>
+
+    <div class="col-12 col-md-5">
+        <label asp-for="Name" class="form-label">@Localizer["Admin.Roles.NameLabel"]</label>
+        <input asp-for="Name" class="form-control" autocomplete="off"
+               placeholder="@Localizer["Admin.Roles.NamePlaceholder"]"
+               aria-describedby="create-role-name-help" />
+        <span asp-validation-for="Name" class="text-danger small" role="alert"></span>
+        <small id="create-role-name-help" class="form-text">@Localizer["Admin.Roles.NameHelp"]</small>
     </div>
-    <div class="col-auto">
-        <input asp-for="Description" class="form-control" placeholder="Description (optional)" />
+
+    <div class="col-12 col-md-5">
+        <label asp-for="Description" class="form-label">@Localizer["Admin.Roles.DescriptionLabel"]</label>
+        <input asp-for="Description" class="form-control" autocomplete="off"
+               placeholder="@Localizer["Admin.Roles.DescriptionPlaceholder"]" />
     </div>
-    <div class="col-auto">
-        <button type="submit" class="btn btn-primary">Create</button>
+
+    <div class="col-12 col-md-2">
+        <button type="submit" class="btn btn-primary w-100">
+            <i class="fa-solid fa-plus fa-fw me-1" aria-hidden="true"></i>@Localizer["Admin.Roles.CreateSubmit"]
+        </button>
     </div>
 </form>

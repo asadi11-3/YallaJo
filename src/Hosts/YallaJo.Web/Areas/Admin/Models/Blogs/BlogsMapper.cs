@@ -35,7 +35,8 @@ public static class BlogsMapper
     public static EditBlogVm ToEditVm(
         AdminBlogDetailResponse r,
         IReadOnlyList<LinkedTourVm> linkedTours,
-        IReadOnlyList<TourOptionVm> availableTours) => new()
+        IReadOnlyList<TourOptionVm> availableTours,
+        IReadOnlyList<PlaceOptionVm>? placeOptions = null) => new()
     {
         Id              = r.Id,
         RowVersion      = EncodeRowVersion(r.RowVersion),
@@ -54,6 +55,7 @@ public static class BlogsMapper
         LanguageCode    = r.LanguageCode,
         LinkedTours     = linkedTours,
         AvailableTours  = availableTours,
+        PlaceOptions    = placeOptions ?? [],
     };
 
     // ── Requests ─────────────────────────────────────────────────────────────────

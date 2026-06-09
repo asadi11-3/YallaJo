@@ -1,82 +1,133 @@
+@using Microsoft.Extensions.Localization
 @using YallaJo.Web.Infrastructure.Authorization
 @model YallaJo.Web.Areas.Admin.Models.Languages.LanguageListVm
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
-    ViewData["Title"] = "Languages";
-    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = Localizer["Admin.Languages.Title"].Value;
+    ViewData["AdminNav"] = "Languages";
 }
 
-<div class="container mt-4">
-    <h2>Languages</h2>
+<div class="d-sm-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-1">@Localizer["Admin.Languages.Title"]</h1>
+        <p class="mb-0 text-secondary">@Localizer["Admin.Languages.Subtitle"]</p>
+    </div>
+</div>
 
-    @* Success/Error flash banners are rendered globally by the shared _Alerts partial (in _Layout). *@
-    @if (ViewBag.Error       is string vbe) { <div class="alert alert-danger">@vbe</div> }
+@if (ViewBag.Error is string vbe)
+{
+    <div class="alert alert-danger" role="alert">@vbe</div>
+}
 
-    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
-
-    <permission require="@WebPermission.Language.Create">
-        <div class="card mb-4 p-3">
-            <h5>Create Language</h5>
+<permission require="@WebPermission.Language.Create">
+    <div class="card shadow mb-4">
+        <div class="card-header border-bottom">
+            <h2 class="card-header-title h5 mb-0">@Localizer["Admin.Languages.CreateHeading"]</h2>
+        </div>
+        <div class="card-body">
             <form asp-area="Admin" asp-controller="Languages" asp-action="Create" method="post">
                 @Html.AntiForgeryToken()
-                <div class="row g-2">
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3" role="alert"></div>
+                <div class="row g-3">
                     <div class="col-md-3">
-                        <label asp-for="Create.Code" class="form-label"></label>
-                        <input asp-for="Create.Code" class="form-control" />
-                        <span asp-validation-for="Create.Code" class="text-danger"></span>
+                        <label asp-for="Create.Code" class="form-label">@Localizer["Admin.Languages.CodeLabel"]</label>
+                        <input asp-for="Create.Code" class="form-control" dir="ltr" aria-describedby="code-help" />
+                        <small id="code-help" class="form-text">@Localizer["Admin.Languages.CodeHelp"]</small>
+                        <span asp-validation-for="Create.Code" class="text-danger" role="alert"></span>
                     </div>
                     <div class="col-md-3">
-                        <label asp-for="Create.Name" class="form-label"></label>
+                        <label asp-for="Create.Name" class="form-label">@Localizer["Admin.Languages.NameLabel"]</label>
                         <input asp-for="Create.Name" class="form-control" />
-                        <span asp-validation-for="Create.Name" class="text-danger"></span>
+                        <span asp-validation-for="Create.Name" class="text-danger" role="alert"></span>
                     </div>
                     <div class="col-md-3">
-                        <label asp-for="Create.NativeName" class="form-label"></label>
+                        <label asp-for="Create.NativeName" class="form-label">@Localizer["Admin.Languages.NativeNameLabel"]</label>
                         <input asp-for="Create.NativeName" class="form-control" />
-                        <span asp-validation-for="Create.NativeName" class="text-danger"></span>
+                        <span asp-validation-for="Create.NativeName" class="text-danger" role="alert"></span>
                     </div>
-                    <div class="col-md-3 d-flex align-items-end">
-                        <div class="form-check me-3">
+                    <div class="col-md-3 d-flex align-items-end justify-content-between">
+                        <div class="form-check">
                             <input asp-for="Create.IsRtl" class="form-check-input" />
-                            <label asp-for="Create.IsRtl" class="form-check-label"></label>
+                            <label asp-for="Create.IsRtl" class="form-check-label">@Localizer["Admin.Languages.RtlLabel"]</label>
                         </div>
-                        <button type="submit" class="btn btn-primary">Create</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fa-solid fa-plus fa-fw" aria-hidden="true"></i> @Localizer["Admin.Languages.CreateSubmit"]
+                        </button>
                     </div>
                 </div>
             </form>
         </div>
-    </permission>
+    </div>
+</permission>
 
-    <table class="table table-sm table-bordered">
-        <thead>
-            <tr>
-                <th>Code</th>
-                <th>Name</th>
-                <th>Native</th>
-                <th>RTL</th>
-                <th>Active</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var l in Model.Languages)
-            {
-                <tr>
-                    <td>@l.Code</td>
-                    <td>@l.Name</td>
-                    <td>@l.NativeName</td>
-                    <td>@(l.IsRtl ? "✓" : "—")</td>
-                    <td>@(l.IsActive ? "✓" : "—")</td>
-                    <td>
-                        <permission require="@WebPermission.Language.Update">
-                            <a asp-area="Admin" asp-controller="Languages" asp-action="Edit" asp-route-id="@l.Id"
-                               class="btn btn-sm btn-outline-secondary">Edit</a>
-                        </permission>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
-</div>
+<section class="card shadow" aria-labelledby="languages-heading">
+    <div class="card-header border-bottom">
+        <h2 id="languages-heading" class="card-header-title h5 mb-0">@Localizer["Admin.Languages.Directory"]</h2>
+    </div>
+    <div class="card-body">
+        @if (Model.Languages.Count == 0)
+        {
+            <div class="text-center py-5">
+                <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
+                <p class="mb-0 text-secondary">@Localizer["Admin.Languages.EmptyMessage"]</p>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th scope="col">@Localizer["Admin.Languages.ColCode"]</th>
+                            <th scope="col">@Localizer["Admin.Languages.ColName"]</th>
+                            <th scope="col">@Localizer["Admin.Languages.ColNative"]</th>
+                            <th scope="col">@Localizer["Admin.Languages.ColDirection"]</th>
+                            <th scope="col">@Localizer["Admin.Languages.ColStatus"]</th>
+                            <th scope="col" class="text-end">@Localizer["Admin.Languages.ColActions"]</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var l in Model.Languages)
+                        {
+                            <tr>
+                                <td><bdi dir="ltr" class="font-data fw-semibold">@l.Code</bdi></td>
+                                <td>@l.Name</td>
+                                <td><bdi>@l.NativeName</bdi></td>
+                                <td>
+                                    @if (l.IsRtl)
+                                    {
+                                        <span class="badge bg-info bg-opacity-10 text-info"><i class="fa-solid fa-arrow-right-arrow-left fa-fw" aria-hidden="true"></i> @Localizer["Admin.Languages.Rtl"]</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary bg-opacity-10 text-secondary"><i class="fa-solid fa-arrow-left-long fa-fw" aria-hidden="true"></i> @Localizer["Admin.Languages.Ltr"]</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (l.IsActive)
+                                    {
+                                        <span class="badge bg-success bg-opacity-10 text-success"><i class="fa-solid fa-circle-check fa-fw" aria-hidden="true"></i> @Localizer["Admin.Languages.Active"]</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary bg-opacity-10 text-secondary"><i class="fa-solid fa-circle-minus fa-fw" aria-hidden="true"></i> @Localizer["Admin.Languages.Inactive"]</span>
+                                    }
+                                </td>
+                                <td class="text-end">
+                                    <permission require="@WebPermission.Language.Update">
+                                        <a asp-area="Admin" asp-controller="Languages" asp-action="Edit" asp-route-id="@l.Id" class="btn btn-sm btn-outline-secondary">
+                                            <i class="fa-solid fa-pen fa-fw" aria-hidden="true"></i> @Localizer["Admin.Languages.Edit"]
+                                        </a>
+                                    </permission>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</section>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />

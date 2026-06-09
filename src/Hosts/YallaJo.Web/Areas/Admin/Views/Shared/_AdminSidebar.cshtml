@@ -1,7 +1,12 @@
+@using Microsoft.Extensions.Localization
 @inject YallaJo.Web.Infrastructure.Identity.ICurrentUser CurrentUser
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
     var nav = ViewData["AdminNav"] as string ?? string.Empty;
-    string Active(string key) => string.Equals(nav, key, StringComparison.OrdinalIgnoreCase) ? "nav-link active" : "nav-link";
+
+    // Active-state helpers. The active link also carries aria-current="page" (A11Y1).
+    bool IsActive(string key) => string.Equals(nav, key, StringComparison.OrdinalIgnoreCase);
+    string Active(string key) => IsActive(key) ? "nav-link active" : "nav-link";
 
     // Nav driver (plan §9 line 13): prefer the DB-backed GET /security/me permission snapshot
     // supplied by AdminNavViewComponent. When absent (direct partial render or snapshot load
@@ -24,18 +29,20 @@
     var showTrust = Has(WebPermission.AdminCreatorQueue.Read) || Has(WebPermission.TourGuideProfile.Read) || Has(WebPermission.GuideApplication.Read) || Has(WebPermission.AdminModerationQueue.Read) || Has(WebPermission.SupportTicket.Read);
     var showOpsSystem = Has(WebPermission.NotificationTemplate.Read) || Has(WebPermission.Batch.Read) || Has(WebPermission.Outbox.Read);
     var showSeo = Has(WebPermission.Redirect.Read) || Has(WebPermission.SeoMetadata.Read) || Has(WebPermission.Sitemap.Read) || Has(WebPermission.Weather.Read) || Has(WebPermission.FaqItem.Read);
+
+    var taxonomyOpen = nav.StartsWith("Taxonomy", StringComparison.OrdinalIgnoreCase);
 }
 
-<ul class="navbar-nav flex-column" id="navbar-sidebar">
+<ul class="navbar-nav flex-column" id="navbar-sidebar" aria-label="@Localizer["Admin.Nav.Primary"]">
 
     @if (showOverview)
     {
-        <li class="nav-item ms-2 my-2 text-uppercase small fw-bold opacity-75">Overview</li>
+        <li class="nav-item ms-2 my-2 text-uppercase small fw-bold opacity-75" role="presentation">@Localizer["Admin.Nav.Overview"]</li>
 
         <permission require="@WebPermission.AdminDashboard.Read">
             <li class="nav-item">
-                <a class="@Active("Dashboard")" asp-area="Admin" asp-controller="Home" asp-action="Index">
-                    <i class="bi bi-speedometer2 fa-fw me-2"></i>Dashboard
+                <a class="@Active("Dashboard")" asp-area="Admin" asp-controller="Home" asp-action="Index" aria-current="@(IsActive("Dashboard") ? "page" : null)">
+                    <i class="bi bi-speedometer2 fa-fw me-2" aria-hidden="true"></i>@Localizer["Admin.Nav.Dashboard"]
                 </a>
             </li>
         </permission>
@@ -43,16 +50,16 @@
         @if (Has(WebPermission.AuditLog.Read) || Has(WebPermission.System.Read))
         {
             <li class="nav-item">
-                <a class="@Active("Audit")" asp-area="Admin" asp-controller="AuditLogs" asp-action="Index">
-                    <i class="bi bi-clock-history fa-fw me-2"></i>Activity &amp; audit
+                <a class="@Active("Audit")" asp-area="Admin" asp-controller="AuditLogs" asp-action="Index" aria-current="@(IsActive("Audit") ? "page" : null)">
+                    <i class="bi bi-clock-history fa-fw me-2" aria-hidden="true"></i>@Localizer["Admin.Nav.Audit"]
                 </a>
             </li>
         }
 
         <permission require="@WebPermission.Interaction.Read">
             <li class="nav-item">
-                <a class="@Active("Statistics")" asp-area="Admin" asp-controller="Statistics" asp-action="Index">
-                    <i class="bi bi-graph-up fa-fw me-2"></i>Analytics
+                <a class="@Active("Statistics")" asp-area="Admin" asp-controller="Statistics" asp-action="Index" aria-current="@(IsActive("Statistics") ? "page" : null)">
+                    <i class="bi bi-graph-up fa-fw me-2" aria-hidden="true"></i>@Localizer["Admin.Nav.Analytics"]
                 </a>
             </li>
         </permission>
@@ -60,28 +67,28 @@
 
     @if (showPeople)
     {
-        <li class="nav-item ms-2 my-2 text-uppercase small fw-bold opacity-75">People &amp; access</li>
+        <li class="nav-item ms-2 my-2 text-uppercase small fw-bold opacity-75" role="presentation">@Localizer["Admin.Nav.People"]</li>
 
         <permission require="@WebPermission.User.Read">
             <li class="nav-item">
-                <a class="@Active("Users")" asp-area="Admin" asp-controller="Users" asp-action="Index">
-                    <i class="bi bi-people fa-fw me-2"></i>Users
+                <a class="@Active("Users")" asp-area="Admin" asp-controller="Users" asp-action="Index" aria-current="@(IsActive("Users") ? "page" : null)">
+                    <i class="bi bi-people fa-fw me-2" aria-hidden="true"></i>@Localizer["Admin.Nav.Users"]
                 </a>
             </li>
         </permission>
 
         <permission require="@WebPermission.Role.Read">
             <li class="nav-item">
-                <a class="@Active("Roles")" asp-area="Admin" asp-controller="Roles" asp-action="Index">
-                    <i class="bi bi-shield-lock fa-fw me-2"></i>Roles
+                <a class="@Active("Roles")" asp-area="Admin" asp-controller="Roles" asp-action="Index" aria-current="@(IsActive("Roles") ? "page" : null)">
+                    <i class="bi bi-shield-lock fa-fw me-2" aria-hidden="true"></i>@Localizer["Admin.Nav.Roles"]
                 </a>
             </li>
         </permission>
 
         <permission require="@WebPermission.User.Create">
             <li class="nav-item">
-                <a class="@Active("Invitations")" asp-area="Admin" asp-controller="Invitations" asp-action="Index">
-                    <i class="bi bi-envelope-plus fa-fw me-2"></i>Invitations
+                <a class="@Active("Invitations")" asp-area="Admin" asp-controller="Invitations" asp-action="Index" aria-current="@(IsActive("Invitations") ? "page" : null)">
+                    <i class="bi bi-envelope-plus fa-fw me-2" aria-hidden="true"></i>@Localizer["Admin.Nav.Invitations"]
                 </a>
             </li>
         </permission>
@@ -89,36 +96,36 @@
 
     @if (showMarketplace)
     {
-        <li class="nav-item ms-2 my-2 text-uppercase small fw-bold opacity-75">Marketplace ops</li>
+        <li class="nav-item ms-2 my-2 text-uppercase small fw-bold opacity-75" role="presentation">@Localizer["Admin.Nav.Marketplace"]</li>
 
         <permission require="@WebPermission.AdminProviderQueue.Read">
             <li class="nav-item">
-                <a class="@Active("Providers")" asp-area="Admin" asp-controller="Providers" asp-action="Index">
-                    <i class="bi bi-shop fa-fw me-2"></i>Provider approvals
+                <a class="@Active("Providers")" asp-area="Admin" asp-controller="Providers" asp-action="Index" aria-current="@(IsActive("Providers") ? "page" : null)">
+                    <i class="bi bi-shop fa-fw me-2" aria-hidden="true"></i>@Localizer["Admin.Nav.Providers"]
                 </a>
             </li>
         </permission>
 
         <permission require="@WebPermission.Place.Read">
             <li class="nav-item">
-                <a class="@Active("Places")" asp-area="Admin" asp-controller="Places" asp-action="Index">
-                    <i class="bi bi-geo-alt fa-fw me-2"></i>Places &amp; businesses
+                <a class="@Active("Places")" asp-area="Admin" asp-controller="Places" asp-action="Index" aria-current="@(IsActive("Places") ? "page" : null)">
+                    <i class="bi bi-geo-alt fa-fw me-2" aria-hidden="true"></i>@Localizer["Admin.Nav.Places"]
                 </a>
             </li>
         </permission>
 
         <permission require="@WebPermission.Tour.Approve">
             <li class="nav-item">
-                <a class="@Active("Tours")" asp-area="Admin" asp-controller="Trips" asp-action="Index">
-                    <i class="bi bi-map fa-fw me-2"></i>Tour approvals
+                <a class="@Active("Tours")" asp-area="Admin" asp-controller="Trips" asp-action="Index" aria-current="@(IsActive("Tours") ? "page" : null)">
+                    <i class="bi bi-map fa-fw me-2" aria-hidden="true"></i>@Localizer["Admin.Nav.Tours"]
                 </a>
             </li>
         </permission>
 
         <permission require="@WebPermission.Business.Read">
             <li class="nav-item">
-                <a class="@Active("Businesses")" asp-area="Admin" asp-controller="Businesses" asp-action="Index">
-                    <i class="bi bi-building-check fa-fw me-2"></i>Business approvals
+                <a class="@Active("Businesses")" asp-area="Admin" asp-controller="Businesses" asp-action="Index" aria-current="@(IsActive("Businesses") ? "page" : null)">
+                    <i class="bi bi-building-check fa-fw me-2" aria-hidden="true"></i>@Localizer["Admin.Nav.Businesses"]
                 </a>
             </li>
         </permission>
@@ -126,44 +133,44 @@
 
     @if (showCommerce)
     {
-        <li class="nav-item ms-2 my-2 text-uppercase small fw-bold opacity-75">Commerce</li>
+        <li class="nav-item ms-2 my-2 text-uppercase small fw-bold opacity-75" role="presentation">@Localizer["Admin.Nav.Commerce"]</li>
 
         <permission require="@WebPermission.AdminBookingDashboard.Read">
             <li class="nav-item">
-                <a class="@Active("Bookings")" asp-area="Admin" asp-controller="Bookings" asp-action="Index">
-                    <i class="bi bi-calendar-check fa-fw me-2"></i>Bookings
+                <a class="@Active("Bookings")" asp-area="Admin" asp-controller="Bookings" asp-action="Index" aria-current="@(IsActive("Bookings") ? "page" : null)">
+                    <i class="bi bi-calendar-check fa-fw me-2" aria-hidden="true"></i>@Localizer["Admin.Nav.Bookings"]
                 </a>
             </li>
         </permission>
 
         <permission require="@WebPermission.AdminFinanceDashboard.Read">
             <li class="nav-item">
-                <a class="@Active("Finance")" asp-area="Admin" asp-controller="Payments" asp-action="Index">
-                    <i class="bi bi-cash-coin fa-fw me-2"></i>Earnings
+                <a class="@Active("Finance")" asp-area="Admin" asp-controller="Payments" asp-action="Index" aria-current="@(IsActive("Finance") ? "page" : null)">
+                    <i class="bi bi-cash-coin fa-fw me-2" aria-hidden="true"></i>@Localizer["Admin.Nav.Earnings"]
                 </a>
             </li>
         </permission>
 
         <permission require="@WebPermission.Payout.Read">
             <li class="nav-item">
-                <a class="@Active("Payouts")" asp-area="Admin" asp-controller="Payouts" asp-action="Index">
-                    <i class="bi bi-bank fa-fw me-2"></i>Payouts
+                <a class="@Active("Payouts")" asp-area="Admin" asp-controller="Payouts" asp-action="Index" aria-current="@(IsActive("Payouts") ? "page" : null)">
+                    <i class="bi bi-bank fa-fw me-2" aria-hidden="true"></i>@Localizer["Admin.Nav.Payouts"]
                 </a>
             </li>
         </permission>
 
         <permission require="@WebPermission.AdminFinanceDashboard.Read">
             <li class="nav-item">
-                <a class="@Active("Disputes")" asp-area="Admin" asp-controller="Disputes" asp-action="Index">
-                    <i class="bi bi-exclamation-octagon fa-fw me-2"></i>Disputes
+                <a class="@Active("Disputes")" asp-area="Admin" asp-controller="Disputes" asp-action="Index" aria-current="@(IsActive("Disputes") ? "page" : null)">
+                    <i class="bi bi-exclamation-octagon fa-fw me-2" aria-hidden="true"></i>@Localizer["Admin.Nav.Disputes"]
                 </a>
             </li>
         </permission>
 
         <permission require="@WebPermission.CommissionRule.Read">
             <li class="nav-item">
-                <a class="@Active("Commissions")" asp-area="Admin" asp-controller="Commissions" asp-action="Index">
-                    <i class="bi bi-percent fa-fw me-2"></i>Commission rules
+                <a class="@Active("Commissions")" asp-area="Admin" asp-controller="Commissions" asp-action="Index" aria-current="@(IsActive("Commissions") ? "page" : null)">
+                    <i class="bi bi-percent fa-fw me-2" aria-hidden="true"></i>@Localizer["Admin.Nav.Commissions"]
                 </a>
             </li>
         </permission>
@@ -171,12 +178,12 @@
 
     @if (showContent)
     {
-        <li class="nav-item ms-2 my-2 text-uppercase small fw-bold opacity-75">Content</li>
+        <li class="nav-item ms-2 my-2 text-uppercase small fw-bold opacity-75" role="presentation">@Localizer["Admin.Nav.Content"]</li>
 
         <permission require="@WebPermission.AdminBlogQueue.Read">
             <li class="nav-item">
-                <a class="@Active("Blogs")" asp-area="Admin" asp-controller="Blogs" asp-action="Index">
-                    <i class="bi bi-journal-text fa-fw me-2"></i>Blog moderation
+                <a class="@Active("Blogs")" asp-area="Admin" asp-controller="Blogs" asp-action="Index" aria-current="@(IsActive("Blogs") ? "page" : null)">
+                    <i class="bi bi-journal-text fa-fw me-2" aria-hidden="true"></i>@Localizer["Admin.Nav.Blogs"]
                 </a>
             </li>
         </permission>
@@ -184,29 +191,29 @@
         @if (showTaxonomy)
         {
             <li class="nav-item">
-                <a class="nav-link @(nav.StartsWith("Taxonomy", StringComparison.OrdinalIgnoreCase) ? "" : "collapsed")"
+                <a class="nav-link @(taxonomyOpen ? "" : "collapsed")"
                    data-bs-toggle="collapse" href="#collapseTaxonomy" role="button"
-                   aria-expanded="@(nav.StartsWith("Taxonomy", StringComparison.OrdinalIgnoreCase) ? "true" : "false")" aria-controls="collapseTaxonomy">
-                    <i class="bi bi-tags fa-fw me-2"></i>Taxonomy
+                   aria-expanded="@(taxonomyOpen ? "true" : "false")" aria-controls="collapseTaxonomy">
+                    <i class="bi bi-tags fa-fw me-2" aria-hidden="true"></i>@Localizer["Admin.Nav.Taxonomy"]
                 </a>
-                <ul class="nav collapse flex-column ms-3 @(nav.StartsWith("Taxonomy", StringComparison.OrdinalIgnoreCase) ? "show" : "")" id="collapseTaxonomy" data-bs-parent="#navbar-sidebar">
+                <ul class="nav collapse flex-column ms-3 @(taxonomyOpen ? "show" : "")" id="collapseTaxonomy" data-bs-parent="#navbar-sidebar">
                     <permission require="@WebPermission.Category.Read">
-                        <li class="nav-item"><a class="@Active("TaxonomyCategories")" asp-area="Admin" asp-controller="Categories" asp-action="Index">Categories</a></li>
+                        <li class="nav-item"><a class="@Active("TaxonomyCategories")" asp-area="Admin" asp-controller="Categories" asp-action="Index" aria-current="@(IsActive("TaxonomyCategories") ? "page" : null)">@Localizer["Admin.Nav.Categories"]</a></li>
                     </permission>
                     <permission require="@WebPermission.Tag.Read">
-                        <li class="nav-item"><a class="@Active("TaxonomyTags")" asp-area="Admin" asp-controller="Tags" asp-action="Index">Tags</a></li>
+                        <li class="nav-item"><a class="@Active("TaxonomyTags")" asp-area="Admin" asp-controller="Tags" asp-action="Index" aria-current="@(IsActive("TaxonomyTags") ? "page" : null)">@Localizer["Admin.Nav.Tags"]</a></li>
                     </permission>
                     <permission require="@WebPermission.Language.Read">
-                        <li class="nav-item"><a class="@Active("TaxonomyLanguages")" asp-area="Admin" asp-controller="Languages" asp-action="Index">Languages</a></li>
+                        <li class="nav-item"><a class="@Active("TaxonomyLanguages")" asp-area="Admin" asp-controller="Languages" asp-action="Index" aria-current="@(IsActive("TaxonomyLanguages") ? "page" : null)">@Localizer["Admin.Nav.Languages"]</a></li>
                     </permission>
                     <permission require="@WebPermission.Specialization.Read">
-                        <li class="nav-item"><a class="@Active("TaxonomySpecializations")" asp-area="Admin" asp-controller="Specializations" asp-action="Index">Specializations</a></li>
+                        <li class="nav-item"><a class="@Active("TaxonomySpecializations")" asp-area="Admin" asp-controller="Specializations" asp-action="Index" aria-current="@(IsActive("TaxonomySpecializations") ? "page" : null)">@Localizer["Admin.Nav.Specializations"]</a></li>
                     </permission>
                     <permission require="@WebPermission.TranslationCache.Read">
-                        <li class="nav-item"><a class="@Active("TaxonomyTranslations")" asp-area="Admin" asp-controller="Translations" asp-action="Index">Translations</a></li>
+                        <li class="nav-item"><a class="@Active("TaxonomyTranslations")" asp-area="Admin" asp-controller="Translations" asp-action="Index" aria-current="@(IsActive("TaxonomyTranslations") ? "page" : null)">@Localizer["Admin.Nav.Translations"]</a></li>
                     </permission>
                     <permission require="@WebPermission.Attachment.Read">
-                        <li class="nav-item"><a class="@Active("TaxonomyAttachments")" asp-area="Admin" asp-controller="Attachments" asp-action="Index">Attachments</a></li>
+                        <li class="nav-item"><a class="@Active("TaxonomyAttachments")" asp-area="Admin" asp-controller="Attachments" asp-action="Index" aria-current="@(IsActive("TaxonomyAttachments") ? "page" : null)">@Localizer["Admin.Nav.Attachments"]</a></li>
                     </permission>
                 </ul>
             </li>
@@ -215,54 +222,54 @@
 
     @if (showTrust)
     {
-        <li class="nav-item ms-2 my-2 text-uppercase small fw-bold opacity-75">Trust &amp; moderation</li>
+        <li class="nav-item ms-2 my-2 text-uppercase small fw-bold opacity-75" role="presentation">@Localizer["Admin.Nav.Trust"]</li>
 
         <permission require="@WebPermission.AdminCreatorQueue.Read">
             <li class="nav-item">
-                <a class="@Active("Creators")" asp-area="Admin" asp-controller="Creators" asp-action="Index">
-                    <i class="bi bi-person-badge fa-fw me-2"></i>Creator approvals
+                <a class="@Active("Creators")" asp-area="Admin" asp-controller="Creators" asp-action="Index" aria-current="@(IsActive("Creators") ? "page" : null)">
+                    <i class="bi bi-person-badge fa-fw me-2" aria-hidden="true"></i>@Localizer["Admin.Nav.Creators"]
                 </a>
             </li>
         </permission>
 
         <permission require="@WebPermission.TourGuideProfile.Read">
             <li class="nav-item">
-                <a class="@Active("Guides")" asp-area="Admin" asp-controller="Guides" asp-action="Index">
-                    <i class="bi bi-person-vcard fa-fw me-2"></i>Tour guides
+                <a class="@Active("Guides")" asp-area="Admin" asp-controller="Guides" asp-action="Index" aria-current="@(IsActive("Guides") ? "page" : null)">
+                    <i class="bi bi-person-vcard fa-fw me-2" aria-hidden="true"></i>@Localizer["Admin.Nav.Guides"]
                 </a>
             </li>
         </permission>
 
         <permission require="@WebPermission.GuideApplication.Read">
             <li class="nav-item">
-                <a class="@Active("GuideApplications")" asp-area="Admin" asp-controller="GuideApplications" asp-action="Index">
-                    <i class="bi bi-card-checklist fa-fw me-2"></i>Guide applications
+                <a class="@Active("GuideApplications")" asp-area="Admin" asp-controller="GuideApplications" asp-action="Index" aria-current="@(IsActive("GuideApplications") ? "page" : null)">
+                    <i class="bi bi-card-checklist fa-fw me-2" aria-hidden="true"></i>@Localizer["Admin.Nav.GuideApplications"]
                 </a>
             </li>
         </permission>
 
         <permission require="@WebPermission.AdminModerationQueue.Read">
             <li class="nav-item">
-                <a class="@Active("Reports")" asp-area="Admin" asp-controller="Reports" asp-action="Index">
-                    <i class="bi bi-flag fa-fw me-2"></i>Reports
+                <a class="@Active("Reports")" asp-area="Admin" asp-controller="Reports" asp-action="Index" aria-current="@(IsActive("Reports") ? "page" : null)">
+                    <i class="bi bi-flag fa-fw me-2" aria-hidden="true"></i>@Localizer["Admin.Nav.Reports"]
                 </a>
             </li>
             <li class="nav-item">
-                <a class="@Active("FlaggedReviews")" asp-area="Admin" asp-controller="FlaggedReviews" asp-action="Index">
-                    <i class="bi bi-star fa-fw me-2"></i>Flagged reviews
+                <a class="@Active("FlaggedReviews")" asp-area="Admin" asp-controller="FlaggedReviews" asp-action="Index" aria-current="@(IsActive("FlaggedReviews") ? "page" : null)">
+                    <i class="bi bi-star fa-fw me-2" aria-hidden="true"></i>@Localizer["Admin.Nav.FlaggedReviews"]
                 </a>
             </li>
             <li class="nav-item">
-                <a class="@Active("Moderation")" asp-area="Admin" asp-controller="Moderation" asp-action="Index">
-                    <i class="bi bi-shield-exclamation fa-fw me-2"></i>Moderation
+                <a class="@Active("Moderation")" asp-area="Admin" asp-controller="Moderation" asp-action="Index" aria-current="@(IsActive("Moderation") ? "page" : null)">
+                    <i class="bi bi-shield-exclamation fa-fw me-2" aria-hidden="true"></i>@Localizer["Admin.Nav.Moderation"]
                 </a>
             </li>
         </permission>
 
         <permission require="@WebPermission.SupportTicket.Read">
             <li class="nav-item">
-                <a class="@Active("Support")" asp-area="Admin" asp-controller="Support" asp-action="Index">
-                    <i class="bi bi-headset fa-fw me-2"></i>Support
+                <a class="@Active("Support")" asp-area="Admin" asp-controller="Support" asp-action="Index" aria-current="@(IsActive("Support") ? "page" : null)">
+                    <i class="bi bi-headset fa-fw me-2" aria-hidden="true"></i>@Localizer["Admin.Nav.Support"]
                 </a>
             </li>
         </permission>
@@ -270,44 +277,44 @@
 
     @if (showSeo)
     {
-        <li class="nav-item ms-2 my-2 text-uppercase small fw-bold opacity-75">SEO &amp; site</li>
+        <li class="nav-item ms-2 my-2 text-uppercase small fw-bold opacity-75" role="presentation">@Localizer["Admin.Nav.Seo"]</li>
 
         <permission require="@WebPermission.Redirect.Read">
             <li class="nav-item">
-                <a class="@Active("SeoRedirects")" asp-area="Admin" asp-controller="SeoRedirects" asp-action="Index">
-                    <i class="bi bi-signpost-split fa-fw me-2"></i>Redirects
+                <a class="@Active("SeoRedirects")" asp-area="Admin" asp-controller="SeoRedirects" asp-action="Index" aria-current="@(IsActive("SeoRedirects") ? "page" : null)">
+                    <i class="bi bi-signpost-split fa-fw me-2" aria-hidden="true"></i>@Localizer["Admin.Nav.Redirects"]
                 </a>
             </li>
         </permission>
 
         <permission require="@WebPermission.SeoMetadata.Read">
             <li class="nav-item">
-                <a class="@Active("SeoMetadata")" asp-area="Admin" asp-controller="SeoMetadata" asp-action="Index">
-                    <i class="bi bi-card-heading fa-fw me-2"></i>Metadata
+                <a class="@Active("SeoMetadata")" asp-area="Admin" asp-controller="SeoMetadata" asp-action="Index" aria-current="@(IsActive("SeoMetadata") ? "page" : null)">
+                    <i class="bi bi-card-heading fa-fw me-2" aria-hidden="true"></i>@Localizer["Admin.Nav.Metadata"]
                 </a>
             </li>
         </permission>
 
         <permission require="@WebPermission.Sitemap.Read">
             <li class="nav-item">
-                <a class="@Active("SeoSitemap")" asp-area="Admin" asp-controller="SeoSitemap" asp-action="Index">
-                    <i class="bi bi-diagram-3 fa-fw me-2"></i>Sitemap
+                <a class="@Active("SeoSitemap")" asp-area="Admin" asp-controller="SeoSitemap" asp-action="Index" aria-current="@(IsActive("SeoSitemap") ? "page" : null)">
+                    <i class="bi bi-diagram-3 fa-fw me-2" aria-hidden="true"></i>@Localizer["Admin.Nav.Sitemap"]
                 </a>
             </li>
         </permission>
 
         <permission require="@WebPermission.Weather.Read">
             <li class="nav-item">
-                <a class="@Active("SeoWeather")" asp-area="Admin" asp-controller="SeoWeather" asp-action="Index">
-                    <i class="bi bi-cloud-sun fa-fw me-2"></i>Weather
+                <a class="@Active("SeoWeather")" asp-area="Admin" asp-controller="SeoWeather" asp-action="Index" aria-current="@(IsActive("SeoWeather") ? "page" : null)">
+                    <i class="bi bi-cloud-sun fa-fw me-2" aria-hidden="true"></i>@Localizer["Admin.Nav.Weather"]
                 </a>
             </li>
         </permission>
 
         <permission require="@WebPermission.FaqItem.Read">
             <li class="nav-item">
-                <a class="@Active("SeoFaq")" asp-area="Admin" asp-controller="SeoFaq" asp-action="Index">
-                    <i class="bi bi-question-circle fa-fw me-2"></i>FAQ
+                <a class="@Active("SeoFaq")" asp-area="Admin" asp-controller="SeoFaq" asp-action="Index" aria-current="@(IsActive("SeoFaq") ? "page" : null)">
+                    <i class="bi bi-question-circle fa-fw me-2" aria-hidden="true"></i>@Localizer["Admin.Nav.Faq"]
                 </a>
             </li>
         </permission>
@@ -315,36 +322,36 @@
 
     @if (showOpsSystem)
     {
-        <li class="nav-item ms-2 my-2 text-uppercase small fw-bold opacity-75">Ops &amp; system</li>
+        <li class="nav-item ms-2 my-2 text-uppercase small fw-bold opacity-75" role="presentation">@Localizer["Admin.Nav.Ops"]</li>
 
         <permission require="@WebPermission.NotificationTemplate.Read">
             <li class="nav-item">
-                <a class="@Active("NotificationTemplates")" asp-area="Admin" asp-controller="NotificationTemplates" asp-action="Index">
-                    <i class="bi bi-envelope-paper fa-fw me-2"></i>Notification templates
+                <a class="@Active("NotificationTemplates")" asp-area="Admin" asp-controller="NotificationTemplates" asp-action="Index" aria-current="@(IsActive("NotificationTemplates") ? "page" : null)">
+                    <i class="bi bi-envelope-paper fa-fw me-2" aria-hidden="true"></i>@Localizer["Admin.Nav.NotificationTemplates"]
                 </a>
             </li>
         </permission>
 
         <permission require="@WebPermission.Batch.Read">
             <li class="nav-item">
-                <a class="@Active("Recommendations")" asp-area="Admin" asp-controller="Recommendations" asp-action="Index">
-                    <i class="bi bi-stars fa-fw me-2"></i>Recommendations
+                <a class="@Active("Recommendations")" asp-area="Admin" asp-controller="Recommendations" asp-action="Index" aria-current="@(IsActive("Recommendations") ? "page" : null)">
+                    <i class="bi bi-stars fa-fw me-2" aria-hidden="true"></i>@Localizer["Admin.Nav.Recommendations"]
                 </a>
             </li>
         </permission>
 
         <permission require="@WebPermission.Outbox.Read">
             <li class="nav-item">
-                <a class="@Active("Outbox")" asp-area="Admin" asp-controller="Outbox" asp-action="Index">
-                    <i class="bi bi-inboxes fa-fw me-2"></i>Outbox dead-letters
+                <a class="@Active("Outbox")" asp-area="Admin" asp-controller="Outbox" asp-action="Index" aria-current="@(IsActive("Outbox") ? "page" : null)">
+                    <i class="bi bi-inboxes fa-fw me-2" aria-hidden="true"></i>@Localizer["Admin.Nav.Outbox"]
                 </a>
             </li>
         </permission>
 
         <permission require="@WebPermission.Batch.Read">
             <li class="nav-item">
-                <a class="@Active("Growth")" asp-area="Admin" asp-controller="Growth" asp-action="Index">
-                    <i class="bi bi-graph-up-arrow fa-fw me-2"></i>Growth tools
+                <a class="@Active("Growth")" asp-area="Admin" asp-controller="Growth" asp-action="Index" aria-current="@(IsActive("Growth") ? "page" : null)">
+                    <i class="bi bi-graph-up-arrow fa-fw me-2" aria-hidden="true"></i>@Localizer["Admin.Nav.Growth"]
                 </a>
             </li>
         </permission>

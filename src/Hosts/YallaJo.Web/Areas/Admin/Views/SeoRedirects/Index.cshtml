@@ -1,46 +1,58 @@
+@using System.Globalization
+@using Microsoft.Extensions.Localization
 @using YallaJo.Web.Areas.Admin.Models.SeoRedirects
 @using YallaJo.Web.Infrastructure.Authorization
 @model RedirectsVm
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
-    ViewData["Title"] = "SEO Redirects";
+    ViewData["Title"] = Localizer["Admin.SeoRedirects.Title"].Value;
     ViewData["AdminNav"] = "SeoRedirects";
+    var culture = CultureInfo.CurrentCulture;
+    string Count(long n) => n.ToString("N0", culture);
+    string Date(DateTime dt) => dt.ToString("yyyy-MM-dd HH:mm", culture);
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="d-sm-flex justify-content-between align-items-center mb-4">
     <div>
-        <h1 class="h3 mb-1">SEO Redirects</h1>
-        <p class="text-muted mb-0">Manage URL redirects (301/302/307/308) for moved or retired pages.</p>
+        <h1 class="h3 mb-1">@Localizer["Admin.SeoRedirects.Title"]</h1>
+        <p class="text-secondary mb-0">@Localizer["Admin.SeoRedirects.Subtitle"]</p>
     </div>
     <permission require="@WebPermission.Redirect.Create">
         <button type="button" class="btn btn-primary-soft" data-bs-toggle="modal" data-bs-target="#createRedirectModal">
-            <i class="bi bi-plus-lg me-1"></i> Add redirect
+            <i class="fa-solid fa-plus fa-fw me-1" aria-hidden="true"></i>@Localizer["Admin.SeoRedirects.Add"]
         </button>
     </permission>
 </div>
 
+@if (ViewBag.Error is string vbe)
+{
+    <div class="alert alert-danger" role="alert">@vbe</div>
+}
+
 <div class="card shadow mb-4">
+    <div class="card-header border-bottom">
+        <h2 class="card-header-title h5 mb-0">@Localizer["Admin.SeoRedirects.FiltersHeading"]</h2>
+    </div>
     <div class="card-body">
-        <form asp-action="Index" method="get" class="row g-2 align-items-end">
+        <form asp-action="Index" method="get" class="row g-3 align-items-end">
             <div class="col-md-4">
-                <label class="form-label small mb-1">Old URL contains</label>
-                <input type="text" name="OldUrl" value="@Model.OldUrlFilter" class="form-control form-control-sm" placeholder="/old-path" />
+                <label for="r-old" class="form-label">@Localizer["Admin.SeoRedirects.OldUrlFilterLabel"]</label>
+                <input id="r-old" type="text" name="OldUrl" value="@Model.OldUrlFilter" class="form-control" dir="ltr" placeholder="/old-path" />
             </div>
             <div class="col-md-3">
-                <label class="form-label small mb-1">Active</label>
-                <select name="IsActive" class="form-select form-select-sm">
-                    <option value="">All</option>
-                    <option value="true" selected="@(Model.IsActiveFilter == true)">Active</option>
-                    <option value="false" selected="@(Model.IsActiveFilter == false)">Inactive</option>
+                <label for="r-active" class="form-label">@Localizer["Admin.SeoRedirects.ActiveLabel"]</label>
+                <select id="r-active" name="IsActive" class="form-select">
+                    <option value="">@Localizer["Admin.SeoRedirects.AllStatuses"]</option>
+                    <option value="true" selected="@(Model.IsActiveFilter == true)">@Localizer["Admin.SeoRedirects.Active"]</option>
+                    <option value="false" selected="@(Model.IsActiveFilter == false)">@Localizer["Admin.SeoRedirects.Inactive"]</option>
                 </select>
             </div>
             <div class="col-md-3">
-                <label class="form-label small mb-1">Status code</label>
-                <input type="number" name="StatusCode" min="300" max="399" class="form-control form-control-sm" placeholder="301" />
+                <label for="r-status" class="form-label">@Localizer["Admin.SeoRedirects.StatusCodeLabel"]</label>
+                <input id="r-status" type="number" name="StatusCode" min="300" max="399" class="form-control" dir="ltr" placeholder="301" />
             </div>
-            <div class="col-md-2">
-                <button type="submit" class="btn btn-outline-secondary btn-sm w-100">
-                    <i class="bi bi-funnel me-1"></i> Apply
-                </button>
+            <div class="col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-primary w-100">@Localizer["Admin.SeoRedirects.Apply"]</button>
             </div>
         </form>
     </div>
@@ -48,26 +60,30 @@
 
 @if (!Model.HasRedirects)
 {
-    <div class="card card-body shadow text-center py-5">
-        <img src="~/assets/images/element/17.svg" class="h-80px mb-3 mx-auto" alt="No redirects" />
-        <h5 class="mb-1">No redirects found</h5>
-        <p class="text-muted mb-0">Create a redirect to send visitors from an old URL to a new one.</p>
+    <div class="card shadow">
+        <div class="card-body text-center py-5">
+            <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
+            <p class="mb-0 text-secondary">@Localizer["Admin.SeoRedirects.EmptyMessage"]</p>
+        </div>
     </div>
 }
 else
 {
-    <div class="card shadow">
+    <section class="card shadow" aria-labelledby="r-directory">
+        <div class="card-header border-bottom">
+            <h2 id="r-directory" class="card-header-title h5 mb-0">@Localizer["Admin.SeoRedirects.Directory"]</h2>
+        </div>
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
                 <thead>
                     <tr>
-                        <th>Old URL</th>
-                        <th>New URL</th>
-                        <th>Status</th>
-                        <th>Active</th>
-                        <th class="text-end">Hits</th>
-                        <th>Created</th>
-                        <th class="text-end">Actions</th>
+                        <th scope="col">@Localizer["Admin.SeoRedirects.ColOldUrl"]</th>
+                        <th scope="col">@Localizer["Admin.SeoRedirects.ColNewUrl"]</th>
+                        <th scope="col">@Localizer["Admin.SeoRedirects.ColStatus"]</th>
+                        <th scope="col">@Localizer["Admin.SeoRedirects.ColActive"]</th>
+                        <th scope="col" class="text-end">@Localizer["Admin.SeoRedirects.ColHits"]</th>
+                        <th scope="col">@Localizer["Admin.SeoRedirects.ColCreated"]</th>
+                        <th scope="col" class="text-end">@Localizer["Admin.SeoRedirects.ColActions"]</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -75,33 +91,34 @@ else
                     {
                         var statusColor = RedirectsMapper.StatusBadge(r.StatusCode);
                         <tr>
-                            <td class="text-break"><code>@r.OldUrl</code></td>
-                            <td class="text-break"><code>@r.NewUrl</code></td>
-                            <td><span class="badge bg-@statusColor bg-opacity-10 text-@statusColor">@r.StatusCode</span></td>
+                            <td class="text-break"><bdi dir="ltr" class="font-data">@r.OldUrl</bdi></td>
+                            <td class="text-break"><bdi dir="ltr" class="font-data">@r.NewUrl</bdi></td>
+                            <td><span class="badge bg-@statusColor bg-opacity-10 text-@statusColor"><bdi dir="ltr">@r.StatusCode</bdi></span></td>
                             <td>
                                 @if (r.IsActive)
                                 {
-                                    <span class="badge bg-success bg-opacity-10 text-success">Active</span>
+                                    <span class="badge bg-success bg-opacity-10 text-success"><i class="fa-solid fa-circle-check fa-fw" aria-hidden="true"></i> @Localizer["Admin.SeoRedirects.Active"]</span>
                                 }
                                 else
                                 {
-                                    <span class="badge bg-secondary bg-opacity-10 text-secondary">Inactive</span>
+                                    <span class="badge bg-secondary bg-opacity-10 text-secondary"><i class="fa-solid fa-circle-minus fa-fw" aria-hidden="true"></i> @Localizer["Admin.SeoRedirects.Inactive"]</span>
                                 }
                             </td>
-                            <td class="text-end">@r.HitCount</td>
-                            <td>@r.CreatedAt.ToString("g")</td>
+                            <td class="text-end"><bdi dir="ltr" class="font-data">@Count(r.HitCount)</bdi></td>
+                            <td><bdi dir="ltr" class="font-data">@Date(r.CreatedAt)</bdi></td>
                             <td class="text-end">
                                 <permission require="@WebPermission.Redirect.Update">
-                                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#editRedirect-@r.Id">
-                                        <i class="bi bi-pencil"></i>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#editRedirect-@r.Id.ToString("N")" aria-label="@Localizer["Admin.SeoRedirects.Edit"]">
+                                        <i class="fa-solid fa-pen fa-fw" aria-hidden="true"></i>
                                     </button>
                                 </permission>
                                 <permission require="@WebPermission.Redirect.Delete">
-                                    <form asp-action="Delete" method="post" class="d-inline" onsubmit="return confirm('Delete this redirect?');">
+                                    <form asp-action="Delete" method="post" class="d-inline"
+                                          data-confirm="@Localizer["Admin.SeoRedirects.DeleteConfirm"]" data-confirm-title="@Localizer["Admin.SeoRedirects.DeleteTitle"]" data-confirm-action="@Localizer["Admin.SeoRedirects.Delete"]">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="id" value="@r.Id" />
-                                        <button type="submit" class="btn btn-sm btn-danger-soft">
-                                            <i class="bi bi-trash"></i>
+                                        <button type="submit" class="btn btn-sm btn-danger-soft" aria-label="@Localizer["Admin.SeoRedirects.Delete"]">
+                                            <i class="fa-solid fa-trash fa-fw" aria-hidden="true"></i>
                                         </button>
                                     </form>
                                 </permission>
@@ -111,67 +128,65 @@ else
                 </tbody>
             </table>
         </div>
-    </div>
+        @if (Model.TotalPages > 1)
+        {
+            <div class="card-footer border-top">
+                <nav aria-label="@Localizer["Admin.SeoRedirects.PaginationLabel"]">
+                    <ul class="pagination justify-content-center mb-0">
+                        <li class="page-item @(Model.HasPrevious ? "" : "disabled")">
+                            <a class="page-link" asp-action="Index" asp-route-page="@(Model.Page - 1)" asp-route-OldUrl="@Model.OldUrlFilter" asp-route-IsActive="@Model.IsActiveFilter">@Localizer["Admin.SeoRedirects.Previous"]</a>
+                        </li>
+                        <li class="page-item disabled"><span class="page-link">@Localizer["Admin.SeoRedirects.PageLabel"] <bdi class="font-data">@Model.Page.ToString("N0", culture)</bdi></span></li>
+                        <li class="page-item @(Model.HasNext ? "" : "disabled")">
+                            <a class="page-link" asp-action="Index" asp-route-page="@(Model.Page + 1)" asp-route-OldUrl="@Model.OldUrlFilter" asp-route-IsActive="@Model.IsActiveFilter">@Localizer["Admin.SeoRedirects.Next"]</a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        }
+    </section>
 
-    @if (Model.TotalPages > 1)
-    {
-        <nav class="mt-3">
-            <ul class="pagination justify-content-center mb-0">
-                <li class="page-item @(Model.HasPrevious ? "" : "disabled")">
-                    <a class="page-link" asp-action="Index" asp-route-page="@(Model.Page - 1)" asp-route-OldUrl="@Model.OldUrlFilter" asp-route-IsActive="@Model.IsActiveFilter">Previous</a>
-                </li>
-                <li class="page-item disabled"><span class="page-link">Page @Model.Page of @Model.TotalPages</span></li>
-                <li class="page-item @(Model.HasNext ? "" : "disabled")">
-                    <a class="page-link" asp-action="Index" asp-route-page="@(Model.Page + 1)" asp-route-OldUrl="@Model.OldUrlFilter" asp-route-IsActive="@Model.IsActiveFilter">Next</a>
-                </li>
-            </ul>
-        </nav>
-    }
-
-    @* Per-row edit modals *@
     <permission require="@WebPermission.Redirect.Update">
         @foreach (var r in Model.Redirects)
         {
-            <div class="modal fade" id="editRedirect-@r.Id" tabindex="-1" aria-hidden="true">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <form asp-action="Update" method="post">
-                            @Html.AntiForgeryToken()
-                            <input type="hidden" name="Id" value="@r.Id" />
-                            <div class="modal-header">
-                                <h5 class="modal-title">Edit redirect</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal fade" id="editRedirect-@r.Id.ToString("N")" tabindex="-1" aria-labelledby="editRedirectTitle-@r.Id.ToString("N")" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+                <div class="modal-dialog modal-dialog-centered">
+                    <form asp-action="Update" method="post" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="editRedirectTitle-@r.Id.ToString("N")">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="Id" value="@r.Id" />
+                        <div class="modal-header">
+                            <h2 class="modal-title h5" id="editRedirectTitle-@r.Id.ToString("N")">@Localizer["Admin.SeoRedirects.EditTitle"]</h2>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Admin.SeoRedirects.Close"]"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label for="er-old-@r.Id.ToString("N")" class="form-label">@Localizer["Admin.SeoRedirects.OldUrlLabel"]</label>
+                                <input id="er-old-@r.Id.ToString("N")" type="text" class="form-control" dir="ltr" value="@r.OldUrl" disabled />
+                                <div class="form-text">@Localizer["Admin.SeoRedirects.OldUrlHelp"]</div>
                             </div>
-                            <div class="modal-body">
-                                <div class="mb-3">
-                                    <label class="form-label">Old URL</label>
-                                    <input type="text" class="form-control" value="@r.OldUrl" disabled />
-                                    <div class="form-text">Old URL cannot be changed; delete and recreate to change it.</div>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">New URL</label>
-                                    <input type="text" name="NewUrl" value="@r.NewUrl" class="form-control" />
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Status code</label>
-                                    <select name="StatusCode" class="form-select">
-                                        <option value="301" selected="@(r.StatusCode == 301)">301 – Permanent</option>
-                                        <option value="302" selected="@(r.StatusCode == 302)">302 – Found</option>
-                                        <option value="307" selected="@(r.StatusCode == 307)">307 – Temporary</option>
-                                        <option value="308" selected="@(r.StatusCode == 308)">308 – Permanent</option>
-                                    </select>
-                                </div>
-                                <div class="form-check">
-                                    <input type="checkbox" name="IsActive" value="true" class="form-check-input" id="active-@r.Id" checked="@r.IsActive" />
-                                    <label class="form-check-label" for="active-@r.Id">Active</label>
-                                </div>
+                            <div class="mb-3">
+                                <label for="er-new-@r.Id.ToString("N")" class="form-label">@Localizer["Admin.SeoRedirects.NewUrlLabel"]</label>
+                                <input id="er-new-@r.Id.ToString("N")" type="text" name="NewUrl" value="@r.NewUrl" class="form-control" dir="ltr" />
                             </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                                <button type="submit" class="btn btn-primary-soft">Save changes</button>
+                            <div class="mb-3">
+                                <label for="er-status-@r.Id.ToString("N")" class="form-label">@Localizer["Admin.SeoRedirects.StatusCodeLabel"]</label>
+                                <select id="er-status-@r.Id.ToString("N")" name="StatusCode" class="form-select">
+                                    <option value="301" selected="@(r.StatusCode == 301)">@Localizer["Admin.SeoRedirects.Status301"]</option>
+                                    <option value="302" selected="@(r.StatusCode == 302)">@Localizer["Admin.SeoRedirects.Status302"]</option>
+                                    <option value="307" selected="@(r.StatusCode == 307)">@Localizer["Admin.SeoRedirects.Status307"]</option>
+                                    <option value="308" selected="@(r.StatusCode == 308)">@Localizer["Admin.SeoRedirects.Status308"]</option>
+                                </select>
                             </div>
-                        </form>
-                    </div>
+                            <div class="form-check">
+                                <input type="checkbox" name="IsActive" value="true" class="form-check-input" id="active-@r.Id.ToString("N")" checked="@r.IsActive" />
+                                <label class="form-check-label" for="active-@r.Id.ToString("N")">@Localizer["Admin.SeoRedirects.Active"]</label>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">@Localizer["Admin.SeoRedirects.Cancel"]</button>
+                            <button type="submit" class="btn btn-primary">@Localizer["Admin.SeoRedirects.Save"]</button>
+                        </div>
+                    </form>
                 </div>
             </div>
         }
@@ -179,40 +194,38 @@ else
 }
 
 <permission require="@WebPermission.Redirect.Create">
-    <div class="modal fade" id="createRedirectModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <form asp-action="Create" method="post">
-                    @Html.AntiForgeryToken()
-                    <div class="modal-header">
-                        <h5 class="modal-title">Add redirect</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    <div class="modal fade" id="createRedirectModal" tabindex="-1" aria-labelledby="createRedirectTitle" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered">
+            <form asp-action="Create" method="post" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="createRedirectTitle">
+                @Html.AntiForgeryToken()
+                <div class="modal-header">
+                    <h2 class="modal-title h5" id="createRedirectTitle">@Localizer["Admin.SeoRedirects.Add"]</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Admin.SeoRedirects.Close"]"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="cr-old" class="form-label">@Localizer["Admin.SeoRedirects.OldUrlLabel"]</label>
+                        <input id="cr-old" type="text" name="OldUrl" class="form-control" dir="ltr" placeholder="/old-path" required />
                     </div>
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label class="form-label">Old URL</label>
-                            <input type="text" name="OldUrl" class="form-control" placeholder="/old-path" required />
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">New URL</label>
-                            <input type="text" name="NewUrl" class="form-control" placeholder="/new-path" required />
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Status code</label>
-                            <select name="StatusCode" class="form-select">
-                                <option value="301" selected>301 – Permanent</option>
-                                <option value="302">302 – Found</option>
-                                <option value="307">307 – Temporary</option>
-                                <option value="308">308 – Permanent</option>
-                            </select>
-                        </div>
+                    <div class="mb-3">
+                        <label for="cr-new" class="form-label">@Localizer["Admin.SeoRedirects.NewUrlLabel"]</label>
+                        <input id="cr-new" type="text" name="NewUrl" class="form-control" dir="ltr" placeholder="/new-path" required />
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary-soft">Create redirect</button>
+                    <div class="mb-3">
+                        <label for="cr-status" class="form-label">@Localizer["Admin.SeoRedirects.StatusCodeLabel"]</label>
+                        <select id="cr-status" name="StatusCode" class="form-select">
+                            <option value="301" selected>@Localizer["Admin.SeoRedirects.Status301"]</option>
+                            <option value="302">@Localizer["Admin.SeoRedirects.Status302"]</option>
+                            <option value="307">@Localizer["Admin.SeoRedirects.Status307"]</option>
+                            <option value="308">@Localizer["Admin.SeoRedirects.Status308"]</option>
+                        </select>
                     </div>
-                </form>
-            </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">@Localizer["Admin.SeoRedirects.Cancel"]</button>
+                    <button type="submit" class="btn btn-primary">@Localizer["Admin.SeoRedirects.CreateSubmit"]</button>
+                </div>
+            </form>
         </div>
     </div>
 </permission>

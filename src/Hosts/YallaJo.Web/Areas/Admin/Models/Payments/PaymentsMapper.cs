@@ -49,4 +49,15 @@ public static class PaymentsMapper
         "refunded" or "partiallyrefunded" => "info",
         _ => "secondary"
     };
+
+    // A11Y5 — pairs each status with a Font Awesome icon so the badge never relies on colour alone.
+    public static string StatusIcon(string status) => status?.ToLowerInvariant() switch
+    {
+        "succeeded" or "completed" or "paid" or "captured" => "circle-check",
+        "pending" or "processing" or "initiated" or "authorized" => "clock",
+        "failed" or "cancelled" or "canceled" or "expired" => "circle-xmark",
+        "refunded" => "rotate-left",
+        "partiallyrefunded" => "circle-half-stroke",
+        _ => "circle-question"
+    };
 }

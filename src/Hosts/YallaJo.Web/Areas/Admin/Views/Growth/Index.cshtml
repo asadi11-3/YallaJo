@@ -1,75 +1,109 @@
+@using System.Globalization
+@using Microsoft.Extensions.Localization
 @using YallaJo.Web.Areas.Admin.Models.Growth
 @using YallaJo.Web.Infrastructure.Authorization
 @model GrowthVm
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
-    ViewData["Title"] = "Growth tools";
+    ViewData["Title"] = Localizer["Admin.Growth.Title"].Value;
     ViewData["AdminNav"] = "Growth";
 
+    var culture = CultureInfo.CurrentCulture;
     string MonthName(int m) => m is >= 1 and <= 12
-        ? System.Globalization.CultureInfo.InvariantCulture.DateTimeFormat.GetMonthName(m)
-        : m.ToString();
+        ? culture.DateTimeFormat.GetMonthName(m)
+        : m.ToString(culture);
+    string Mult(decimal d) => d.ToString("0.00", culture);
+    string Day(DateOnly d) => d.ToString("MMM d", culture);
+    string Count(int n) => n.ToString("N0", culture);
 }
 
 <div class="d-sm-flex justify-content-between align-items-center mb-4">
     <div>
-        <h1 class="h3 mb-1">Growth tools</h1>
-        <p class="text-secondary mb-0">Seasonality boosts, holiday calendar, photogenic flags, A/B experiments, and re-engagement segments.</p>
+        <h1 class="h3 mb-1">@Localizer["Admin.Growth.Title"]</h1>
+        <p class="text-secondary mb-0">@Localizer["Admin.Growth.Subtitle"]</p>
     </div>
 </div>
 
+@if (ViewBag.Error is string growthError && !string.IsNullOrWhiteSpace(growthError))
+{
+    <div class="alert alert-danger" role="alert">@growthError</div>
+}
+
 @if (ViewData["SegmentJson"] is string segmentJson)
 {
-    <div class="card shadow mb-4">
-        <div class="card-header"><strong>Segment result</strong> <span class="text-secondary">— rule: @ViewData["SegmentRule"]</span></div>
-        <div class="card-body">
-            <pre class="mb-0 small" dir="ltr" style="white-space:pre-wrap;">@segmentJson</pre>
+    <section class="card shadow mb-4" aria-labelledby="segment-result-heading">
+        <div class="card-header border-bottom">
+            <h2 id="segment-result-heading" class="card-header-title h5 mb-0">
+                @Localizer["Admin.Growth.SegmentResult"]
+                <span class="text-secondary fw-normal">— <bdi dir="ltr">@ViewData["SegmentRule"]</bdi></span>
+            </h2>
         </div>
-    </div>
+        <div class="card-body">
+            <pre class="mb-0 small text-break" dir="ltr">@segmentJson</pre>
+        </div>
+    </section>
 }
 
 <div class="row g-4">
     <!-- ── Seasonality rules ─────────────────────────────────────────── -->
     <div class="col-xl-6">
-        <div class="card shadow h-100">
-            <div class="card-header"><strong>Seasonality rules</strong></div>
+        <section class="card shadow h-100" aria-labelledby="seasonality-heading">
+            <div class="card-header border-bottom">
+                <h2 id="seasonality-heading" class="card-header-title h5 mb-0">@Localizer["Admin.Growth.SeasonalityHeading"]</h2>
+            </div>
             <div class="card-body">
                 @if (Model.SeasonalityLoadFailed)
                 {
-                    <div class="alert alert-warning">
+                    <div class="alert alert-warning" role="alert">
                         <i class="fa-solid fa-triangle-exclamation fa-fw" aria-hidden="true"></i>
-                        Could not load seasonality rules.
+                        @Localizer["Admin.Growth.SeasonalityLoadFailed"]
                     </div>
                 }
                 else if (Model.SeasonalityRules.Count == 0)
                 {
-                    <p class="text-secondary">No active seasonality rules.</p>
+                    <p class="text-secondary">@Localizer["Admin.Growth.NoSeasonalityRules"]</p>
                 }
                 else
                 {
                     <div class="table-responsive mb-3">
-                        <table class="table table-sm align-middle mb-0">
+                        <table class="table table-hover align-middle mb-0">
                             <thead>
                                 <tr>
-                                    <th scope="col">Place</th>
-                                    <th scope="col">Window</th>
-                                    <th scope="col" class="text-end">Multiplier</th>
-                                    <th scope="col"></th>
+                                    <th scope="col">@Localizer["Admin.Growth.ColWindow"]</th>
+                                    <th scope="col" class="text-end">@Localizer["Admin.Growth.ColMultiplier"]</th>
+                                    <th scope="col">@Localizer["Admin.Growth.ColStatus"]</th>
+                                    <th scope="col" class="text-end">@Localizer["Admin.Growth.ColActions"]</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach (var r in Model.SeasonalityRules)
                                 {
                                     <tr>
-                                        <td><bdi class="font-data small" dir="ltr">@r.PlaceId.ToString("D")[..8]…</bdi></td>
                                         <td class="small">@MonthName(r.MonthStart) – @MonthName(r.MonthEnd)</td>
-                                        <td class="text-end font-data">×@r.Multiplier.ToString("0.00")</td>
+                                        <td class="text-end"><bdi class="font-data" dir="ltr">×@Mult(r.Multiplier)</bdi></td>
+                                        <td>
+                                            @if (r.IsActive)
+                                            {
+                                                <span class="badge bg-success bg-opacity-10 text-success">
+                                                    <i class="fa-solid fa-circle-check fa-fw" aria-hidden="true"></i> @Localizer["Admin.Growth.Active"]
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-secondary bg-opacity-10 text-secondary">
+                                                    <i class="fa-solid fa-circle-minus fa-fw" aria-hidden="true"></i> @Localizer["Admin.Growth.Inactive"]
+                                                </span>
+                                            }
+                                        </td>
                                         <td class="text-end">
                                             <permission require="@WebPermission.SeasonalityRule.Delete">
                                                 <form method="post" asp-area="Admin" asp-controller="Growth"
-                                                      asp-action="DeactivateSeasonalityRule" asp-route-ruleId="@r.Id"
-                                                      onsubmit="return confirm('Deactivate this seasonality rule?');" class="d-inline">
+                                                      asp-action="DeactivateSeasonalityRule" asp-route-ruleId="@r.Id" class="d-inline"
+                                                      data-confirm="@Localizer["Admin.Growth.DeactivateRuleConfirm"]"
+                                                      data-confirm-title="@Localizer["Admin.Growth.DeactivateRuleTitle"]"
+                                                      data-confirm-action="@Localizer["Admin.Growth.Deactivate"]">
                                                     @Html.AntiForgeryToken()
-                                                    <button type="submit" class="btn btn-sm btn-outline-danger">Deactivate</button>
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger">@Localizer["Admin.Growth.Deactivate"]</button>
                                                 </form>
                                             </permission>
                                         </td>
@@ -83,65 +117,67 @@
                 <permission require="@WebPermission.SeasonalityRule.Create">
                     <form method="post" asp-area="Admin" asp-controller="Growth" asp-action="CreateSeasonalityRule" class="border-top pt-3">
                         @Html.AntiForgeryToken()
-                        <h2 class="h6">Add a rule</h2>
+                        <h3 class="h6">@Localizer["Admin.Growth.AddRuleHeading"]</h3>
                         <div class="mb-2">
-                            <label class="form-label small" for="s-place">Place ID</label>
-                            <input type="text" class="form-control form-control-sm font-data" id="s-place" name="PlaceId" required />
+                            <label class="form-label" for="s-place">@Localizer["Admin.Growth.PlaceIdLabel"]</label>
+                            <input type="text" class="form-control font-data" id="s-place" name="PlaceId" dir="ltr"
+                                   aria-describedby="s-place-help" required />
+                            <small id="s-place-help" class="form-text">@Localizer["Admin.Growth.PlaceIdHelp"]</small>
                         </div>
                         <div class="row g-2 mb-2">
                             <div class="col">
-                                <label class="form-label small" for="s-start">Month start</label>
-                                <input type="number" min="1" max="12" class="form-control form-control-sm" id="s-start" name="MonthStart" required />
+                                <label class="form-label" for="s-start">@Localizer["Admin.Growth.MonthStartLabel"]</label>
+                                <input type="number" min="1" max="12" class="form-control" id="s-start" name="MonthStart" dir="ltr" required />
                             </div>
                             <div class="col">
-                                <label class="form-label small" for="s-end">Month end</label>
-                                <input type="number" min="1" max="12" class="form-control form-control-sm" id="s-end" name="MonthEnd" required />
+                                <label class="form-label" for="s-end">@Localizer["Admin.Growth.MonthEndLabel"]</label>
+                                <input type="number" min="1" max="12" class="form-control" id="s-end" name="MonthEnd" dir="ltr" required />
                             </div>
                             <div class="col">
-                                <label class="form-label small" for="s-mult">Multiplier</label>
-                                <input type="number" step="0.01" min="0.01" class="form-control form-control-sm" id="s-mult" name="Multiplier" value="1.00" required />
+                                <label class="form-label" for="s-mult">@Localizer["Admin.Growth.MultiplierLabel"]</label>
+                                <input type="number" step="0.01" min="0.01" class="form-control" id="s-mult" name="Multiplier" value="1.00" dir="ltr" required />
                             </div>
                         </div>
                         <div class="mb-2">
-                            <label class="form-label small" for="s-desc">Description</label>
-                            <input type="text" class="form-control form-control-sm" id="s-desc" name="Description" maxlength="200" />
+                            <label class="form-label" for="s-desc">@Localizer["Admin.Growth.DescriptionLabel"]</label>
+                            <input type="text" class="form-control" id="s-desc" name="Description" maxlength="200" />
                         </div>
-                        <button type="submit" class="btn btn-sm btn-primary">Create rule</button>
+                        <button type="submit" class="btn btn-sm btn-primary">@Localizer["Admin.Growth.CreateRule"]</button>
                     </form>
                 </permission>
             </div>
-        </div>
+        </section>
     </div>
 
     <!-- ── Holiday calendar ──────────────────────────────────────────── -->
     <div class="col-xl-6">
-        <div class="card shadow h-100">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <strong>Holiday calendar</strong>
+        <section class="card shadow h-100" aria-labelledby="holiday-heading">
+            <div class="card-header border-bottom d-flex justify-content-between align-items-center">
+                <h2 id="holiday-heading" class="card-header-title h5 mb-0">@Localizer["Admin.Growth.HolidayHeading"]</h2>
                 <form method="get" asp-area="Admin" asp-controller="Growth" asp-action="Index" class="d-flex gap-2 align-items-center">
-                    <label class="form-label small mb-0" for="h-year">Year</label>
-                    <input type="number" min="2000" max="2100" class="form-control form-control-sm" style="width:6rem"
+                    <label class="form-label mb-0" for="h-year">@Localizer["Admin.Growth.YearLabel"]</label>
+                    <input type="number" min="2000" max="2100" class="form-control form-control-sm" style="width:6rem" dir="ltr"
                            id="h-year" name="year" value="@Model.Year" />
-                    <button type="submit" class="btn btn-sm btn-outline-secondary">View</button>
+                    <button type="submit" class="btn btn-sm btn-outline-secondary">@Localizer["Admin.Growth.View"]</button>
                 </form>
             </div>
             <div class="card-body">
                 @if (Model.HolidaysLoadFailed)
                 {
-                    <div class="alert alert-warning">Could not load the holiday calendar.</div>
+                    <div class="alert alert-warning" role="alert">@Localizer["Admin.Growth.HolidaysLoadFailed"]</div>
                 }
                 else if (Model.Holidays.Count == 0)
                 {
-                    <p class="text-secondary">No holiday entries for @Model.Year.</p>
+                    <p class="text-secondary">@Localizer["Admin.Growth.NoHolidays", Count(Model.Year)]</p>
                 }
                 else
                 {
-                    <ul class="list-group list-group-flush mb-3">
+                    <ul class="list-group list-group-borderless mb-3">
                         @foreach (var h in Model.Holidays)
                         {
                             <li class="list-group-item d-flex justify-content-between px-0">
-                                <span>@h.HolidayName</span>
-                                <span class="text-secondary small font-data" dir="ltr">@h.StartDate.ToString("MMM d") – @h.EndDate.ToString("MMM d")</span>
+                                <span class="fw-semibold">@h.HolidayName</span>
+                                <span class="text-secondary small"><bdi class="font-data" dir="ltr">@Day(h.StartDate) – @Day(h.EndDate)</bdi></span>
                             </li>
                         }
                     </ul>
@@ -150,135 +186,156 @@
                 <permission require="@WebPermission.HolidayCalendar.Create">
                     <form method="post" asp-area="Admin" asp-controller="Growth" asp-action="CreateHoliday" class="border-top pt-3">
                         @Html.AntiForgeryToken()
-                        <h2 class="h6">Add a holiday</h2>
+                        <h3 class="h6">@Localizer["Admin.Growth.AddHolidayHeading"]</h3>
                         <div class="mb-2">
-                            <label class="form-label small" for="h-name">Name</label>
-                            <input type="text" class="form-control form-control-sm" id="h-name" name="HolidayName" maxlength="200" required />
+                            <label class="form-label" for="h-name">@Localizer["Admin.Growth.HolidayNameLabel"]</label>
+                            <input type="text" class="form-control" id="h-name" name="HolidayName" maxlength="200" required />
                         </div>
                         <div class="row g-2 mb-2">
                             <div class="col">
-                                <label class="form-label small" for="h-start">Start</label>
-                                <input type="date" class="form-control form-control-sm" id="h-start" name="StartDate" required />
+                                <label class="form-label" for="h-start">@Localizer["Admin.Growth.StartLabel"]</label>
+                                <input type="date" class="form-control" id="h-start" name="StartDate" dir="ltr" required />
                             </div>
                             <div class="col">
-                                <label class="form-label small" for="h-end">End</label>
-                                <input type="date" class="form-control form-control-sm" id="h-end" name="EndDate" required />
+                                <label class="form-label" for="h-end">@Localizer["Admin.Growth.EndLabel"]</label>
+                                <input type="date" class="form-control" id="h-end" name="EndDate" dir="ltr" required />
                             </div>
                             <div class="col">
-                                <label class="form-label small" for="h-yr">Year</label>
-                                <input type="number" min="2000" max="2100" class="form-control form-control-sm" id="h-yr" name="Year" value="@Model.Year" required />
+                                <label class="form-label" for="h-yr">@Localizer["Admin.Growth.YearLabel"]</label>
+                                <input type="number" min="2000" max="2100" class="form-control" id="h-yr" name="Year" value="@Model.Year" dir="ltr" required />
                             </div>
                         </div>
-                        <button type="submit" class="btn btn-sm btn-primary">Create holiday</button>
+                        <button type="submit" class="btn btn-sm btn-primary">@Localizer["Admin.Growth.CreateHoliday"]</button>
                     </form>
                 </permission>
             </div>
-        </div>
+        </section>
     </div>
 
     <!-- ── A/B experiments ───────────────────────────────────────────── -->
     <permission require="@WebPermission.Experiment.Create">
         <div class="col-xl-6">
-            <div class="card shadow h-100">
-                <div class="card-header"><strong>A/B experiments</strong></div>
+            <section class="card shadow h-100" aria-labelledby="experiments-heading">
+                <div class="card-header border-bottom">
+                    <h2 id="experiments-heading" class="card-header-title h5 mb-0">@Localizer["Admin.Growth.ExperimentsHeading"]</h2>
+                </div>
                 <div class="card-body">
                     <form method="post" asp-area="Admin" asp-controller="Growth" asp-action="CreateExperiment" class="mb-3">
                         @Html.AntiForgeryToken()
                         <div class="mb-2">
-                            <label class="form-label small" for="e-name">Name</label>
-                            <input type="text" class="form-control form-control-sm" id="e-name" name="Name" maxlength="200" required />
+                            <label class="form-label" for="e-name">@Localizer["Admin.Growth.ExperimentNameLabel"]</label>
+                            <input type="text" class="form-control" id="e-name" name="Name" maxlength="200" required />
                         </div>
                         <div class="row g-2 mb-2">
                             <div class="col">
-                                <label class="form-label small" for="e-start">Starts</label>
-                                <input type="datetime-local" class="form-control form-control-sm" id="e-start" name="StartsAt" required />
+                                <label class="form-label" for="e-start">@Localizer["Admin.Growth.StartsLabel"]</label>
+                                <input type="datetime-local" class="form-control" id="e-start" name="StartsAt" dir="ltr" required />
                             </div>
                             <div class="col">
-                                <label class="form-label small" for="e-end">Expires</label>
-                                <input type="datetime-local" class="form-control form-control-sm" id="e-end" name="ExpiresAt" required />
+                                <label class="form-label" for="e-end">@Localizer["Admin.Growth.ExpiresLabel"]</label>
+                                <input type="datetime-local" class="form-control" id="e-end" name="ExpiresAt" dir="ltr" required />
                             </div>
                             <div class="col">
-                                <label class="form-label small" for="e-traffic">Traffic %</label>
-                                <input type="number" min="0" max="100" class="form-control form-control-sm" id="e-traffic" name="TrafficPercent" value="100" required />
+                                <label class="form-label" for="e-traffic">@Localizer["Admin.Growth.TrafficLabel"]</label>
+                                <input type="number" min="0" max="100" class="form-control" id="e-traffic" name="TrafficPercent" value="100" dir="ltr" required />
                             </div>
                         </div>
                         <div class="mb-2">
-                            <label class="form-label small" for="e-variants">Variants (JSON)</label>
-                            <textarea class="form-control form-control-sm font-data" id="e-variants" name="VariantsJson" rows="2" dir="ltr">[]</textarea>
+                            <label class="form-label" for="e-variants">@Localizer["Admin.Growth.VariantsLabel"]</label>
+                            <textarea class="form-control font-data" id="e-variants" name="VariantsJson" rows="2" dir="ltr"
+                                      aria-describedby="e-variants-help">[]</textarea>
+                            <small id="e-variants-help" class="form-text">@Localizer["Admin.Growth.VariantsHelp"]</small>
                         </div>
-                        <button type="submit" class="btn btn-sm btn-primary">Create experiment</button>
+                        <button type="submit" class="btn btn-sm btn-primary">@Localizer["Admin.Growth.CreateExperiment"]</button>
                     </form>
 
-                    <div class="border-top pt-3">
-                        <h2 class="h6">Manage by ID</h2>
-                        <div class="d-flex flex-wrap gap-2">
-                            <form method="post" asp-area="Admin" asp-controller="Growth" asp-action="StartExperiment" class="d-flex gap-2">
-                                @Html.AntiForgeryToken()
-                                <input type="text" class="form-control form-control-sm font-data" name="experimentId" placeholder="Experiment ID" required />
-                                <button type="submit" class="btn btn-sm btn-outline-success">Start</button>
-                            </form>
-                            <form method="post" asp-area="Admin" asp-controller="Growth" asp-action="CompleteExperiment" class="d-flex gap-2"
-                                  onsubmit="return confirm('Complete this experiment? It can no longer collect data afterwards.');">
-                                @Html.AntiForgeryToken()
-                                <input type="text" class="form-control form-control-sm font-data" name="experimentId" placeholder="Experiment ID" required />
-                                <button type="submit" class="btn btn-sm btn-outline-secondary">Complete</button>
-                            </form>
+                    <permission require="@WebPermission.Experiment.Update">
+                        <div class="border-top pt-3">
+                            <h3 class="h6">@Localizer["Admin.Growth.ManageByIdHeading"]</h3>
+                            <p class="small text-secondary">@Localizer["Admin.Growth.OperatorHelp"]</p>
+                            <div class="d-flex flex-wrap gap-2">
+                                <form method="post" asp-area="Admin" asp-controller="Growth" asp-action="StartExperiment" class="d-flex gap-2">
+                                    @Html.AntiForgeryToken()
+                                    <label class="visually-hidden" for="e-start-id">@Localizer["Admin.Growth.ExperimentIdLabel"]</label>
+                                    <input type="text" class="form-control form-control-sm font-data" id="e-start-id" name="experimentId" dir="ltr"
+                                           placeholder="@Localizer["Admin.Growth.ExperimentIdLabel"]" required />
+                                    <button type="submit" class="btn btn-sm btn-outline-success">@Localizer["Admin.Growth.Start"]</button>
+                                </form>
+                                <form method="post" asp-area="Admin" asp-controller="Growth" asp-action="CompleteExperiment" class="d-flex gap-2"
+                                      data-confirm="@Localizer["Admin.Growth.CompleteConfirm"]"
+                                      data-confirm-title="@Localizer["Admin.Growth.CompleteTitle"]"
+                                      data-confirm-action="@Localizer["Admin.Growth.Complete"]">
+                                    @Html.AntiForgeryToken()
+                                    <label class="visually-hidden" for="e-complete-id">@Localizer["Admin.Growth.ExperimentIdLabel"]</label>
+                                    <input type="text" class="form-control form-control-sm font-data" id="e-complete-id" name="experimentId" dir="ltr"
+                                           placeholder="@Localizer["Admin.Growth.ExperimentIdLabel"]" required />
+                                    <button type="submit" class="btn btn-sm btn-outline-secondary">@Localizer["Admin.Growth.Complete"]</button>
+                                </form>
+                            </div>
                         </div>
-                    </div>
+                    </permission>
                 </div>
-            </div>
+            </section>
         </div>
     </permission>
 
     <!-- ── Photogenic + Segments ─────────────────────────────────────── -->
     <div class="col-xl-6">
         <permission require="@WebPermission.Photogenic.Update">
-            <div class="card shadow mb-4">
-                <div class="card-header"><strong>Photogenic flag</strong></div>
+            <section class="card shadow mb-4" aria-labelledby="photogenic-heading">
+                <div class="card-header border-bottom">
+                    <h2 id="photogenic-heading" class="card-header-title h5 mb-0">@Localizer["Admin.Growth.PhotogenicHeading"]</h2>
+                </div>
                 <div class="card-body">
+                    <p class="small text-secondary">@Localizer["Admin.Growth.OperatorHelp"]</p>
                     <form method="post" asp-area="Admin" asp-controller="Growth" asp-action="SetPhotogenic" class="row g-2 align-items-end">
                         @Html.AntiForgeryToken()
                         <div class="col-sm-4">
-                            <label class="form-label small" for="p-kind">Entity kind</label>
-                            <input type="text" class="form-control form-control-sm" id="p-kind" name="kind" placeholder="Tour / Place" required />
+                            <label class="form-label" for="p-kind">@Localizer["Admin.Growth.EntityKindLabel"]</label>
+                            <input type="text" class="form-control" id="p-kind" name="kind" placeholder="@Localizer["Admin.Growth.EntityKindPlaceholder"]" required />
                         </div>
                         <div class="col-sm-5">
-                            <label class="form-label small" for="p-id">Entity ID</label>
-                            <input type="text" class="form-control form-control-sm font-data" id="p-id" name="entityId" required />
+                            <label class="form-label" for="p-id">@Localizer["Admin.Growth.EntityIdLabel"]</label>
+                            <input type="text" class="form-control font-data" id="p-id" name="entityId" dir="ltr"
+                                   aria-describedby="p-id-help" required />
+                            <small id="p-id-help" class="form-text">@Localizer["Admin.Growth.EntityIdHelp"]</small>
                         </div>
                         <div class="col-sm-3 form-check mt-4 ms-2">
                             <input type="checkbox" class="form-check-input" id="p-flag" name="isPhotogenic" value="true" checked />
-                            <label class="form-check-label small" for="p-flag">Photogenic</label>
+                            <label class="form-check-label" for="p-flag">@Localizer["Admin.Growth.Photogenic"]</label>
                         </div>
                         <div class="col-12">
-                            <button type="submit" class="btn btn-sm btn-primary">Apply</button>
+                            <button type="submit" class="btn btn-sm btn-primary">@Localizer["Admin.Growth.Apply"]</button>
                         </div>
                     </form>
                 </div>
-            </div>
+            </section>
         </permission>
 
-        <div class="card shadow">
-            <div class="card-header"><strong>Re-engagement segments</strong></div>
+        <section class="card shadow" aria-labelledby="segments-heading">
+            <div class="card-header border-bottom">
+                <h2 id="segments-heading" class="card-header-title h5 mb-0">@Localizer["Admin.Growth.SegmentsHeading"]</h2>
+            </div>
             <div class="card-body">
+                <p class="small text-secondary">@Localizer["Admin.Growth.OperatorHelp"]</p>
                 <form method="get" asp-area="Admin" asp-controller="Growth" asp-action="Segment" class="row g-2 align-items-end">
                     <div class="col-sm-5">
-                        <label class="form-label small" for="seg-rule">Rule</label>
-                        <input type="text" class="form-control form-control-sm" id="seg-rule" name="rule" required />
+                        <label class="form-label" for="seg-rule">@Localizer["Admin.Growth.RuleLabel"]</label>
+                        <input type="text" class="form-control" id="seg-rule" name="rule" required />
                     </div>
                     <div class="col-sm-3">
-                        <label class="form-label small" for="seg-kind">Entity kind</label>
-                        <input type="text" class="form-control form-control-sm" id="seg-kind" name="entityKind" />
+                        <label class="form-label" for="seg-kind">@Localizer["Admin.Growth.EntityKindLabel"]</label>
+                        <input type="text" class="form-control" id="seg-kind" name="entityKind" />
                     </div>
                     <div class="col-sm-4">
-                        <label class="form-label small" for="seg-id">Entity ID</label>
-                        <input type="text" class="form-control form-control-sm font-data" id="seg-id" name="entityId" />
+                        <label class="form-label" for="seg-id">@Localizer["Admin.Growth.EntityIdLabel"]</label>
+                        <input type="text" class="form-control font-data" id="seg-id" name="entityId" dir="ltr" />
                     </div>
                     <div class="col-12">
-                        <button type="submit" class="btn btn-sm btn-primary">Query segment</button>
+                        <button type="submit" class="btn btn-sm btn-primary">@Localizer["Admin.Growth.QuerySegment"]</button>
                     </div>
                 </form>
             </div>
-        </div>
+        </section>
     </div>
 </div>

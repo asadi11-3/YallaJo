@@ -78,4 +78,19 @@ public static class TripsMapper
         "Archived" => "secondary",
         _ => "secondary",
     };
+
+    /// <summary>
+    /// Maps a tour status name to a Font Awesome icon name (used alongside color + text so status is
+    /// never conveyed by color alone, per UI-UX-A11Y5).
+    /// </summary>
+    public static string StatusIcon(string statusName) => statusName switch
+    {
+        "Approved" => "circle-check",
+        "Pending" => "clock",
+        "Draft" => "pen-ruler",
+        "Rejected" => "circle-xmark",
+        "Suspended" => "circle-pause",
+        "Archived" => "box-archive",
+        _ => "circle-question",
+    };
 }

@@ -39,6 +39,7 @@ public sealed class ContentToursDbInitializer(ContentToursDbContext dbContext) :
 
         await SeedTourChildFacilitiesAsync(cancellationToken);
         await SeedTourPricingTierTranslationsAsync(cancellationToken);
+        await EnsureAdditionalToursAsync(cancellationToken);
 
         if (dbContext.ChangeTracker.HasChanges())
         {
@@ -212,6 +213,211 @@ public sealed class ContentToursDbInitializer(ContentToursDbContext dbContext) :
             languageCode,
             name,
             description));
+    }
+
+    private async Task EnsureAdditionalToursAsync(CancellationToken cancellationToken)
+    {
+        // ── Dead Sea Day Trip ─────────────────────────────────────────────
+        if (!await dbContext.Tours.AnyAsync(x => x.Id == SeedContentIds.TourDeadSeaDay, cancellationToken))
+        {
+            var deadSea = CreateEntity<Tour>();
+            SetProperty(deadSea, nameof(Tour.Id),                    SeedContentIds.TourDeadSeaDay);
+            SetProperty(deadSea, nameof(Tour.Name),                  "Dead Sea Floating Experience");
+            SetProperty(deadSea, nameof(Tour.Slug),                  "dead-sea-floating-experience");
+            SetProperty(deadSea, nameof(Tour.Description),           "A full-day trip to the Dead Sea including mud baths, floating, and a beach lunch.");
+            SetProperty(deadSea, nameof(Tour.ShortDescription),      "Day trip to the Dead Sea with guided spa and float session.");
+            SetProperty(deadSea, nameof(Tour.Difficulty),            Difficulty.Easy);
+            SetProperty(deadSea, nameof(Tour.DurationMinutes),       480);
+            SetProperty(deadSea, nameof(Tour.MaxGroupSize),          20);
+            SetProperty(deadSea, nameof(Tour.MinAge),                5);
+            SetProperty(deadSea, nameof(Tour.BasePrice),             new Money(55m, "JOD"));
+            SetProperty(deadSea, nameof(Tour.Currency),              "JOD");
+            SetProperty(deadSea, nameof(Tour.Location),              new Location(31.5590m, 35.4732m));
+            SetProperty(deadSea, nameof(Tour.MeetingPoint),          new Location(31.9496m, 35.9328m));
+            SetProperty(deadSea, nameof(Tour.Status),                TourStatus.Approved);
+            SetProperty(deadSea, nameof(Tour.IsFeatured),            true);
+            SetProperty(deadSea, nameof(Tour.IsInstantBooking),      true);
+            SetProperty(deadSea, nameof(Tour.CancellationPolicyHours), 12);
+            SetProperty(deadSea, nameof(Tour.CreatedByUserId),       GuideUserId);
+            SetProperty(deadSea, nameof(Tour.PlaceId),               SeedContentIds.PlaceDeadSea);
+            SetProperty(deadSea, nameof(Tour.IsChildFriendly),       true);
+            SetProperty(deadSea, nameof(Tour.IsAccessible),          true);
+            SetProperty(deadSea, nameof(Tour.AverageRating),         4.8m);
+            SetProperty(deadSea, nameof(Tour.ReviewCount),           315);
+            SetProperty(deadSea, nameof(Tour.BookingCount),          892);
+
+            var deadSeaSchedule = CreateEntity<TourSchedule>();
+            SetProperty(deadSeaSchedule, nameof(TourSchedule.TourId),    SeedContentIds.TourDeadSeaDay);
+            SetProperty(deadSeaSchedule, nameof(TourSchedule.DayOfWeek), (byte)2); // Tuesday
+            SetProperty(deadSeaSchedule, nameof(TourSchedule.StartTime), new TimeOnly(7, 30));
+            SetProperty(deadSeaSchedule, nameof(TourSchedule.EndTime),   new TimeOnly(16, 0));
+            SetProperty(deadSeaSchedule, nameof(TourSchedule.IsActive),  true);
+
+            var deadSeaSchedule2 = CreateEntity<TourSchedule>();
+            SetProperty(deadSeaSchedule2, nameof(TourSchedule.TourId),    SeedContentIds.TourDeadSeaDay);
+            SetProperty(deadSeaSchedule2, nameof(TourSchedule.DayOfWeek), (byte)5); // Friday
+            SetProperty(deadSeaSchedule2, nameof(TourSchedule.StartTime), new TimeOnly(7, 30));
+            SetProperty(deadSeaSchedule2, nameof(TourSchedule.EndTime),   new TimeOnly(16, 0));
+            SetProperty(deadSeaSchedule2, nameof(TourSchedule.IsActive),  true);
+
+            var deadSeaTier = CreateEntity<TourPricingTier>();
+            SetProperty(deadSeaTier, nameof(TourPricingTier.TourId),            SeedContentIds.TourDeadSeaDay);
+            SetProperty(deadSeaTier, nameof(TourPricingTier.Name),              "Standard");
+            SetProperty(deadSeaTier, nameof(TourPricingTier.Description),       "Includes entry, mud bath, lunch, and transport.");
+            SetProperty(deadSeaTier, nameof(TourPricingTier.Price),             new Money(55m, "JOD"));
+            SetProperty(deadSeaTier, nameof(TourPricingTier.ParticipantType),   ParticipantType.Adult);
+            SetProperty(deadSeaTier, nameof(TourPricingTier.MinParticipants),   1);
+            SetProperty(deadSeaTier, nameof(TourPricingTier.MaxParticipants),   20);
+            SetProperty(deadSeaTier, nameof(TourPricingTier.IsActive),          true);
+
+            var deadSeaGuide = CreateEntity<TourTourGuide>();
+            SetProperty(deadSeaGuide, nameof(TourTourGuide.TourId),      SeedContentIds.TourDeadSeaDay);
+            SetProperty(deadSeaGuide, nameof(TourTourGuide.TourGuideId), GuideUserId);
+            SetProperty(deadSeaGuide, nameof(TourTourGuide.IsPrimary),   true);
+
+            dbContext.Tours.Add(deadSea);
+            dbContext.TourSchedules.AddRange(deadSeaSchedule, deadSeaSchedule2);
+            dbContext.TourPricingTiers.Add(deadSeaTier);
+            dbContext.TourTourGuides.Add(deadSeaGuide);
+        }
+
+        // ── Wadi Rum Desert Camp Tour ─────────────────────────────────────
+        if (!await dbContext.Tours.AnyAsync(x => x.Id == SeedContentIds.TourWadiRumCamp, cancellationToken))
+        {
+            var wadiRum = CreateEntity<Tour>();
+            SetProperty(wadiRum, nameof(Tour.Id),                    SeedContentIds.TourWadiRumCamp);
+            SetProperty(wadiRum, nameof(Tour.Name),                  "Wadi Rum Jeep & Camp Overnight");
+            SetProperty(wadiRum, nameof(Tour.Slug),                  "wadi-rum-jeep-camp-overnight");
+            SetProperty(wadiRum, nameof(Tour.Description),           "Explore the majestic Wadi Rum desert by jeep and spend the night under a sky full of stars at a Bedouin camp.");
+            SetProperty(wadiRum, nameof(Tour.ShortDescription),      "Jeep tour + Bedouin stargazing camp overnight in Wadi Rum.");
+            SetProperty(wadiRum, nameof(Tour.Difficulty),            Difficulty.Easy);
+            SetProperty(wadiRum, nameof(Tour.DurationMinutes),       1440); // 24 hrs
+            SetProperty(wadiRum, nameof(Tour.MaxGroupSize),          14);
+            SetProperty(wadiRum, nameof(Tour.MinAge),                8);
+            SetProperty(wadiRum, nameof(Tour.BasePrice),             new Money(90m, "JOD"));
+            SetProperty(wadiRum, nameof(Tour.Currency),              "JOD");
+            SetProperty(wadiRum, nameof(Tour.Location),              new Location(29.5764m, 35.4203m));
+            SetProperty(wadiRum, nameof(Tour.MeetingPoint),          new Location(29.6000m, 35.4167m));
+            SetProperty(wadiRum, nameof(Tour.Status),                TourStatus.Approved);
+            SetProperty(wadiRum, nameof(Tour.IsFeatured),            true);
+            SetProperty(wadiRum, nameof(Tour.IsInstantBooking),      false);
+            SetProperty(wadiRum, nameof(Tour.CancellationPolicyHours), 48);
+            SetProperty(wadiRum, nameof(Tour.CreatedByUserId),       GuideUserId);
+            SetProperty(wadiRum, nameof(Tour.PlaceId),               SeedContentIds.PlaceWadiRum);
+            SetProperty(wadiRum, nameof(Tour.IsChildFriendly),       true);
+            SetProperty(wadiRum, nameof(Tour.IsAccessible),          false);
+            SetProperty(wadiRum, nameof(Tour.AverageRating),         4.9m);
+            SetProperty(wadiRum, nameof(Tour.ReviewCount),           572);
+            SetProperty(wadiRum, nameof(Tour.BookingCount),          1204);
+
+            var wadiRumSchedule = CreateEntity<TourSchedule>();
+            SetProperty(wadiRumSchedule, nameof(TourSchedule.TourId),    SeedContentIds.TourWadiRumCamp);
+            SetProperty(wadiRumSchedule, nameof(TourSchedule.DayOfWeek), (byte)3); // Wednesday
+            SetProperty(wadiRumSchedule, nameof(TourSchedule.StartTime), new TimeOnly(9, 0));
+            SetProperty(wadiRumSchedule, nameof(TourSchedule.EndTime),   new TimeOnly(9, 0)); // next day
+            SetProperty(wadiRumSchedule, nameof(TourSchedule.IsActive),  true);
+
+            var wadiRumTier = CreateEntity<TourPricingTier>();
+            SetProperty(wadiRumTier, nameof(TourPricingTier.TourId),            SeedContentIds.TourWadiRumCamp);
+            SetProperty(wadiRumTier, nameof(TourPricingTier.Name),              "Standard");
+            SetProperty(wadiRumTier, nameof(TourPricingTier.Description),       "Includes jeep tour, Bedouin dinner, and overnight stay.");
+            SetProperty(wadiRumTier, nameof(TourPricingTier.Price),             new Money(90m, "JOD"));
+            SetProperty(wadiRumTier, nameof(TourPricingTier.ParticipantType),   ParticipantType.Adult);
+            SetProperty(wadiRumTier, nameof(TourPricingTier.MinParticipants),   1);
+            SetProperty(wadiRumTier, nameof(TourPricingTier.MaxParticipants),   14);
+            SetProperty(wadiRumTier, nameof(TourPricingTier.IsActive),          true);
+
+            var wadiRumGuide = CreateEntity<TourTourGuide>();
+            SetProperty(wadiRumGuide, nameof(TourTourGuide.TourId),      SeedContentIds.TourWadiRumCamp);
+            SetProperty(wadiRumGuide, nameof(TourTourGuide.TourGuideId), GuideUserId);
+            SetProperty(wadiRumGuide, nameof(TourTourGuide.IsPrimary),   true);
+
+            dbContext.Tours.Add(wadiRum);
+            dbContext.TourSchedules.Add(wadiRumSchedule);
+            dbContext.TourPricingTiers.Add(wadiRumTier);
+            dbContext.TourTourGuides.Add(wadiRumGuide);
+        }
+
+        // ── Amman City Walking Tour ────────────────────────────────────────
+        if (!await dbContext.Tours.AnyAsync(x => x.Id == SeedContentIds.TourAmmanCity, cancellationToken))
+        {
+            var amman = CreateEntity<Tour>();
+            SetProperty(amman, nameof(Tour.Id),                    SeedContentIds.TourAmmanCity);
+            SetProperty(amman, nameof(Tour.Name),                  "Amman Old City Walking Tour");
+            SetProperty(amman, nameof(Tour.Slug),                  "amman-old-city-walking-tour");
+            SetProperty(amman, nameof(Tour.Description),           "A half-day walking tour through downtown Amman's historic souks, Roman theatre, and street-food hotspots.");
+            SetProperty(amman, nameof(Tour.ShortDescription),      "Historic downtown walk with street food tasting in Amman.");
+            SetProperty(amman, nameof(Tour.Difficulty),            Difficulty.Easy);
+            SetProperty(amman, nameof(Tour.DurationMinutes),       240);
+            SetProperty(amman, nameof(Tour.MaxGroupSize),          15);
+            SetProperty(amman, nameof(Tour.MinAge),                (int?)null);
+            SetProperty(amman, nameof(Tour.BasePrice),             new Money(35m, "JOD"));
+            SetProperty(amman, nameof(Tour.Currency),              "JOD");
+            SetProperty(amman, nameof(Tour.Location),              new Location(31.9496m, 35.9328m));
+            SetProperty(amman, nameof(Tour.MeetingPoint),          new Location(31.9530m, 35.9310m));
+            SetProperty(amman, nameof(Tour.Status),                TourStatus.Approved);
+            SetProperty(amman, nameof(Tour.IsFeatured),            false);
+            SetProperty(amman, nameof(Tour.IsInstantBooking),      true);
+            SetProperty(amman, nameof(Tour.CancellationPolicyHours), 6);
+            SetProperty(amman, nameof(Tour.CreatedByUserId),       GuideUserId);
+            SetProperty(amman, nameof(Tour.PlaceId),               SeedContentIds.PlaceAmman);
+            SetProperty(amman, nameof(Tour.IsChildFriendly),       true);
+            SetProperty(amman, nameof(Tour.IsAccessible),          true);
+            SetProperty(amman, nameof(Tour.AverageRating),         4.6m);
+            SetProperty(amman, nameof(Tour.ReviewCount),           204);
+            SetProperty(amman, nameof(Tour.BookingCount),          631);
+
+            var ammanSchedule1 = CreateEntity<TourSchedule>();
+            SetProperty(ammanSchedule1, nameof(TourSchedule.TourId),    SeedContentIds.TourAmmanCity);
+            SetProperty(ammanSchedule1, nameof(TourSchedule.DayOfWeek), (byte)1); // Monday
+            SetProperty(ammanSchedule1, nameof(TourSchedule.StartTime), new TimeOnly(9, 0));
+            SetProperty(ammanSchedule1, nameof(TourSchedule.EndTime),   new TimeOnly(13, 0));
+            SetProperty(ammanSchedule1, nameof(TourSchedule.IsActive),  true);
+
+            var ammanSchedule2 = CreateEntity<TourSchedule>();
+            SetProperty(ammanSchedule2, nameof(TourSchedule.TourId),    SeedContentIds.TourAmmanCity);
+            SetProperty(ammanSchedule2, nameof(TourSchedule.DayOfWeek), (byte)3); // Wednesday
+            SetProperty(ammanSchedule2, nameof(TourSchedule.StartTime), new TimeOnly(9, 0));
+            SetProperty(ammanSchedule2, nameof(TourSchedule.EndTime),   new TimeOnly(13, 0));
+            SetProperty(ammanSchedule2, nameof(TourSchedule.IsActive),  true);
+
+            var ammanSchedule3 = CreateEntity<TourSchedule>();
+            SetProperty(ammanSchedule3, nameof(TourSchedule.TourId),    SeedContentIds.TourAmmanCity);
+            SetProperty(ammanSchedule3, nameof(TourSchedule.DayOfWeek), (byte)6); // Saturday
+            SetProperty(ammanSchedule3, nameof(TourSchedule.StartTime), new TimeOnly(10, 0));
+            SetProperty(ammanSchedule3, nameof(TourSchedule.EndTime),   new TimeOnly(14, 0));
+            SetProperty(ammanSchedule3, nameof(TourSchedule.IsActive),  true);
+
+            var ammanTierAdult = CreateEntity<TourPricingTier>();
+            SetProperty(ammanTierAdult, nameof(TourPricingTier.TourId),          SeedContentIds.TourAmmanCity);
+            SetProperty(ammanTierAdult, nameof(TourPricingTier.Name),            "Adult");
+            SetProperty(ammanTierAdult, nameof(TourPricingTier.Description),     "Includes local guide, street food tasting, and museum entry.");
+            SetProperty(ammanTierAdult, nameof(TourPricingTier.Price),           new Money(35m, "JOD"));
+            SetProperty(ammanTierAdult, nameof(TourPricingTier.ParticipantType), ParticipantType.Adult);
+            SetProperty(ammanTierAdult, nameof(TourPricingTier.MinParticipants), 1);
+            SetProperty(ammanTierAdult, nameof(TourPricingTier.MaxParticipants), 15);
+            SetProperty(ammanTierAdult, nameof(TourPricingTier.IsActive),        true);
+
+            var ammanTierChild = CreateEntity<TourPricingTier>();
+            SetProperty(ammanTierChild, nameof(TourPricingTier.TourId),          SeedContentIds.TourAmmanCity);
+            SetProperty(ammanTierChild, nameof(TourPricingTier.Name),            "Child");
+            SetProperty(ammanTierChild, nameof(TourPricingTier.Description),     "Ages 5–12 accompanied by an adult.");
+            SetProperty(ammanTierChild, nameof(TourPricingTier.Price),           new Money(18m, "JOD"));
+            SetProperty(ammanTierChild, nameof(TourPricingTier.ParticipantType), ParticipantType.Child);
+            SetProperty(ammanTierChild, nameof(TourPricingTier.MinParticipants), 1);
+            SetProperty(ammanTierChild, nameof(TourPricingTier.MaxParticipants), 15);
+            SetProperty(ammanTierChild, nameof(TourPricingTier.IsActive),        true);
+
+            var ammanGuide = CreateEntity<TourTourGuide>();
+            SetProperty(ammanGuide, nameof(TourTourGuide.TourId),      SeedContentIds.TourAmmanCity);
+            SetProperty(ammanGuide, nameof(TourTourGuide.TourGuideId), GuideUserId);
+            SetProperty(ammanGuide, nameof(TourTourGuide.IsPrimary),   true);
+
+            dbContext.Tours.Add(amman);
+            dbContext.TourSchedules.AddRange(ammanSchedule1, ammanSchedule2, ammanSchedule3);
+            dbContext.TourPricingTiers.AddRange(ammanTierAdult, ammanTierChild);
+            dbContext.TourTourGuides.Add(ammanGuide);
+        }
     }
 
     private static Tour CreateTour()

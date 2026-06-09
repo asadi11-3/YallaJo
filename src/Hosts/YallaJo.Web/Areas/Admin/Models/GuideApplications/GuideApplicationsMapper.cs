@@ -7,7 +7,8 @@ public static class GuideApplicationsMapper
         Guid? tourId,
         string? statusFilter,
         int currentPage,
-        int pageSize)
+        int pageSize,
+        IReadOnlyDictionary<Guid, string>? guideEmails = null)
     {
         var rows = page.Items
             .Select(item => new GuideApplicationRowVm
@@ -25,6 +26,9 @@ public static class GuideApplicationsMapper
                 CreatedAt = item.CreatedAt,
                 ReviewedAt = item.ReviewedAt,
                 RejectionReason = item.RejectionReason,
+                GuideEmail = guideEmails is not null && guideEmails.TryGetValue(item.GuideUserId, out var email)
+                    ? email
+                    : null,
             })
             .ToList();
 
@@ -48,5 +52,14 @@ public static class GuideApplicationsMapper
         "Rejected" => "danger",
         "Draft" => "secondary",
         _ => "secondary",
+    };
+
+    public static string StatusIcon(string status) => status switch
+    {
+        "Approved" => "circle-check",
+        "Submitted" => "clock",
+        "Rejected" => "circle-xmark",
+        "Draft" => "pen-ruler",
+        _ => "circle-info",
     };
 }

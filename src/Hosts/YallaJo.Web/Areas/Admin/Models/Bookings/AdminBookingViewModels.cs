@@ -77,6 +77,27 @@ public sealed class AdminBookingDetailsVm
     public string? DisputeReason { get; init; }
     public DateTime? ResolvedAt { get; init; }
     public string? ResolutionNotes { get; init; }
+
+    // ── Refundable payments (F10) ──────────────────────────────────────────────
+    // Real payment options for the resolve-dispute refund leg so the admin picks a
+    // payment by amount/status/date (id travels as the option value) — never a raw GUID.
+    public IReadOnlyList<PaymentOptionVm> Payments { get; init; } = [];
+    public bool HasRefundablePayments => Payments.Count > 0;
+}
+
+/// <summary>
+/// A booking payment surfaced as a selectable option (F10): the view renders a
+/// culture-aware, localized label from these fields; the GUID is only the value.
+/// </summary>
+public sealed class PaymentOptionVm
+{
+    public Guid Id { get; init; }
+    public decimal Amount { get; init; }
+    public string Currency { get; init; } = string.Empty;
+    public string Status { get; init; } = string.Empty;
+    public string PaymentType { get; init; } = string.Empty;
+    public decimal RefundedTotal { get; init; }
+    public DateTime When { get; init; }
 }
 
 public sealed class AdminBookingLineVm

@@ -44,11 +44,28 @@ public sealed class CategoriesFacade
                 Icon             = result.Data.Icon,
                 SortOrder        = result.Data.SortOrder,
                 ParentCategoryId = result.Data.ParentCategoryId,
+                // F10: parent picker shows names, not a raw GUID input. Exclude self
+                // to prevent self-parenting.
+                ParentOptions    = await LoadParentOptionsAsync(id, ct),
             });
         }
         if (result.IsUnauthorized) return ApiResult<UpdateCategoryVm>.ForceSignOut();
         if (result.IsNotFound)     return ApiResult<UpdateCategoryVm>.CreateFailure(404, "Category not found.");
         return ApiResult<UpdateCategoryVm>.CreateFailure(result.StatusCode, result.Error);
+    }
+
+    // F10: builds the human-readable parent dropdown options (name + depth), excluding
+    // the category being edited so it cannot be set as its own parent. Public so the
+    // controller can repopulate the list on a POST validation re-render. Tolerant:
+    // returns [] if the tree fetch fails (the field is optional).
+    public async Task<IReadOnlyList<CategoryParentOptionVm>> LoadParentOptionsAsync(Guid excludeId, CancellationToken ct = default)
+    {
+        var result = await _api.GetCategoriesAsync(includeInactive: true, ct);
+        if (!result.IsSuccess || result.Data is null) return [];
+        return CategoriesMapper.Flatten(result.Data)
+            .Where(c => c.Id != excludeId)
+            .Select(c => new CategoryParentOptionVm { Id = c.Id, Name = c.Name, Depth = c.Depth })
+            .ToList();
     }
 
     public async Task<ApiResult> CreateAsync(CreateCategoryVm vm, CancellationToken ct = default)

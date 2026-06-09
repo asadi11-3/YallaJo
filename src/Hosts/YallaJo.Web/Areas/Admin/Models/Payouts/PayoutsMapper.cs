@@ -38,4 +38,16 @@ public static class PayoutsMapper
         "ManuallyResolved" => "secondary",
         _ => "secondary",
     };
+
+    // A11Y5: status conveyed via colour + icon + text (never colour alone).
+    public static string StatusIcon(string status) => status switch
+    {
+        "Completed" => "circle-check",
+        "ReadyForPayout" => "money-bill-transfer",
+        "Pending" => "clock",
+        "Hold" => "circle-pause",
+        "Failed" => "circle-xmark",
+        "ManuallyResolved" => "user-gear",
+        _ => "circle-question",
+    };
 }

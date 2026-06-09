@@ -1,59 +1,83 @@
+@using Microsoft.Extensions.Localization
 @using YallaJo.Web.Infrastructure.Authorization
 @using YallaJo.Web.Areas.Admin.Models.BlogTranslations
 @model BlogTranslationEditVm
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
-    ViewData["Title"] = "Edit translation";
-    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = Localizer["Admin.BlogTranslations.EditTitle"].Value;
+    ViewData["AdminNav"] = "Blogs";
 }
 
-<div class="container mt-4">
+<div class="d-sm-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-1">
+            @(Model.IsNew ? Localizer["Admin.BlogTranslations.AddHeading"] : Localizer["Admin.BlogTranslations.EditHeading"])
+            <span class="badge bg-secondary bg-opacity-10 text-secondary text-uppercase align-middle">
+                <bdi dir="ltr">@Model.LanguageCode</bdi>
+            </span>
+        </h1>
+        <p class="mb-0 text-secondary">@Localizer["Admin.BlogTranslations.EditSubtitle"]</p>
+    </div>
     <a asp-area="Admin" asp-controller="BlogTranslations" asp-action="Index" asp-route-id="@Model.BlogId"
-       class="btn btn-sm btn-outline-secondary mb-3">← Back to translations</a>
-
-    <h2 class="mb-3">
-        @(Model.IsNew ? "Add" : "Edit") translation
-        <span class="badge text-bg-secondary text-uppercase">@Model.LanguageCode</span>
-    </h2>
-
-    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
-
-    <form asp-area="Admin" asp-controller="BlogTranslations" asp-action="Save"
-          asp-route-id="@Model.BlogId" asp-route-languageCode="@Model.LanguageCode" method="post" class="row g-3">
-        @Html.AntiForgeryToken()
-        <input type="hidden" asp-for="BlogId" />
-        <input type="hidden" asp-for="LanguageCode" />
-
-        <div class="col-12">
-            <label class="form-label">Language</label>
-            <input class="form-control" value="@Model.LanguageCode" readonly />
-        </div>
-
-        <div class="col-12">
-            <label asp-for="Title" class="form-label"></label>
-            <input asp-for="Title" class="form-control" />
-            <span asp-validation-for="Title" class="text-danger"></span>
-        </div>
-
-        <div class="col-12">
-            <label asp-for="Content" class="form-label"></label>
-            <textarea asp-for="Content" class="form-control" rows="10"></textarea>
-            <span asp-validation-for="Content" class="text-danger"></span>
-            <div class="form-text">At least 150 characters (excluding HTML).</div>
-        </div>
-
-        <div class="col-12">
-            <label asp-for="Summary" class="form-label"></label>
-            <textarea asp-for="Summary" class="form-control" rows="2"></textarea>
-            <span asp-validation-for="Summary" class="text-danger"></span>
-        </div>
-
-        <div class="col-12">
-            <button type="submit" class="btn btn-primary">Save translation</button>
-            <a asp-area="Admin" asp-controller="BlogTranslations" asp-action="Index" asp-route-id="@Model.BlogId"
-               class="btn btn-outline-secondary">Cancel</a>
-        </div>
-    </form>
+       class="btn btn-sm btn-outline-secondary">
+        <i class="fa-solid fa-arrow-left fa-fw" aria-hidden="true"></i>
+        @Localizer["Admin.BlogTranslations.BackToList"]
+    </a>
 </div>
+
+<section class="card shadow" aria-labelledby="translation-form-heading">
+    <div class="card-header border-bottom">
+        <h2 id="translation-form-heading" class="card-header-title h5 mb-0">@Localizer["Admin.BlogTranslations.FormHeading"]</h2>
+    </div>
+    <div class="card-body">
+        <div asp-validation-summary="All" class="text-danger mb-3" role="alert"></div>
+
+        <form asp-area="Admin" asp-controller="BlogTranslations" asp-action="Save"
+              asp-route-id="@Model.BlogId" asp-route-languageCode="@Model.LanguageCode" method="post" class="row g-3">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="BlogId" />
+            <input type="hidden" asp-for="LanguageCode" />
+            <input type="hidden" asp-for="IsNew" />
+
+            <div class="col-12">
+                <label for="translation-language" class="form-label">@Localizer["Admin.BlogTranslations.LanguageLabel"]</label>
+                <input id="translation-language" class="form-control" value="@Model.LanguageCode" dir="ltr" readonly
+                       aria-describedby="translation-language-help" />
+                <div id="translation-language-help" class="form-text">@Localizer["Admin.BlogTranslations.LanguageHelp"]</div>
+            </div>
+
+            <div class="col-12">
+                <label asp-for="Title" class="form-label">@Localizer["Admin.BlogTranslations.TitleLabel"]</label>
+                <input asp-for="Title" class="form-control" aria-describedby="translation-title-help" />
+                <span asp-validation-for="Title" class="text-danger" role="alert"></span>
+                <div id="translation-title-help" class="form-text">@Localizer["Admin.BlogTranslations.TitleHelp"]</div>
+            </div>
+
+            <div class="col-12">
+                <label asp-for="Content" class="form-label">@Localizer["Admin.BlogTranslations.ContentLabel"]</label>
+                <textarea asp-for="Content" class="form-control" rows="10" aria-describedby="translation-content-help"></textarea>
+                <span asp-validation-for="Content" class="text-danger" role="alert"></span>
+                <div id="translation-content-help" class="form-text">@Localizer["Admin.BlogTranslations.ContentHelp"]</div>
+            </div>
+
+            <div class="col-12">
+                <label asp-for="Summary" class="form-label">@Localizer["Admin.BlogTranslations.SummaryLabel"]</label>
+                <textarea asp-for="Summary" class="form-control" rows="2" aria-describedby="translation-summary-help"></textarea>
+                <span asp-validation-for="Summary" class="text-danger" role="alert"></span>
+                <div id="translation-summary-help" class="form-text">@Localizer["Admin.BlogTranslations.SummaryHelp"]</div>
+            </div>
+
+            <div class="col-12">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fa-solid fa-floppy-disk fa-fw" aria-hidden="true"></i>
+                    @Localizer["Admin.BlogTranslations.Save"]
+                </button>
+                <a asp-area="Admin" asp-controller="BlogTranslations" asp-action="Index" asp-route-id="@Model.BlogId"
+                   class="btn btn-outline-secondary">@Localizer["Admin.BlogTranslations.Cancel"]</a>
+            </div>
+        </form>
+    </div>
+</section>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />

@@ -2,7 +2,7 @@ namespace YallaJo.Web.Areas.Admin.Models.Guides;
 
 public static class GuidesMapper
 {
-    public static GuidesVm ToVm(TourGuideProfileResponse? detail)
+    public static GuidesVm ToVm(TourGuideProfileResponse? detail, string? userEmail = null)
     {
         var vm = new GuidesVm();
 
@@ -13,6 +13,7 @@ public static class GuidesMapper
             {
                 Id = detail.Id,
                 UserId = detail.UserId,
+                UserEmail = userEmail,
                 DisplayName = detail.DisplayName,
                 AvatarUrl = detail.AvatarUrl,
                 Bio = detail.Bio,

@@ -12,22 +12,51 @@ public sealed class SecurityDbInitializer(
 {
     private static readonly Dictionary<string, Guid> RoleIds = new(StringComparer.OrdinalIgnoreCase)
     {
-        [AppRoles.Owner] = Guid.Parse("a0000000-0000-0000-0000-000000000000"),
+        [AppRoles.Owner]      = Guid.Parse("a0000000-0000-0000-0000-000000000000"),
         [AppRoles.SuperAdmin] = Guid.Parse("a0000000-0000-0000-0000-000000000001"),
-        [AppRoles.Admin] = Guid.Parse("a1111111-1111-1111-1111-111111111111"),
-        [AppRoles.TourGuide] = Guid.Parse("a2222222-2222-2222-2222-222222222222"),
-        [AppRoles.User] = Guid.Parse("a4444444-4444-4444-4444-444444444444")
+        [AppRoles.Admin]      = Guid.Parse("a1111111-1111-1111-1111-111111111111"),
+        [AppRoles.TourGuide]  = Guid.Parse("a2222222-2222-2222-2222-222222222222"),
+        [AppRoles.Provider]   = Guid.Parse("a3333333-3333-3333-3333-333333333333"),
+        [AppRoles.User]       = Guid.Parse("a4444444-4444-4444-4444-444444444444"),
+        [AppRoles.Creator]    = Guid.Parse("a5555555-5555-5555-5555-555555555555"),
+        [AppRoles.Guest]      = Guid.Parse("a6666666-6666-6666-6666-666666666666"),
     };
 
     public int Order => 30;
 
     public async Task InitializeAsync(CancellationToken cancellationToken = default)
     {
-        // Roles + claims: one-time bootstrap (immutable seed). Skip if already present.
-        if (!await dbContext.Roles.AnyAsync(cancellationToken))
+        // Roles + claims: idempotent per-row. Insert only what's missing so newly
+        // added roles (e.g. Provider/Creator/Guest) seed into an already-seeded DB
+        // without skipping them just because *some* roles already exist.
+        var existingRoleIds = (await dbContext.Roles
+                .Select(r => r.Id)
+                .ToListAsync(cancellationToken))
+            .ToHashSet();
+
+        var newRoles = CreateRoles()
+            .Where(r => !existingRoleIds.Contains(r.Id))
+            .ToList();
+
+        if (newRoles.Count > 0)
         {
-            dbContext.Roles.AddRange(CreateRoles());
-            dbContext.RoleClaims.AddRange(CreateRoleClaims());
+            dbContext.Roles.AddRange(newRoles);
+        }
+
+        // Role claims: idempotent per (RoleId, ClaimValue) pair.
+        var existingClaimKeys = (await dbContext.RoleClaims
+                .Select(c => new { c.RoleId, c.ClaimValue })
+                .ToListAsync(cancellationToken))
+            .Select(c => (c.RoleId, c.ClaimValue))
+            .ToHashSet();
+
+        var newClaims = CreateRoleClaims()
+            .Where(c => !existingClaimKeys.Contains((c.RoleId, c.ClaimValue)))
+            .ToList();
+
+        if (newClaims.Count > 0)
+        {
+            dbContext.RoleClaims.AddRange(newClaims);
         }
 
         // Users: idempotent per-user - allows appending new test users to an
@@ -60,11 +89,14 @@ public sealed class SecurityDbInitializer(
     {
         var roleDefinitions = new[]
         {
-            (Name: AppRoles.Owner, Description: "Platform owner"),
+            (Name: AppRoles.Owner,      Description: "Platform owner"),
             (Name: AppRoles.SuperAdmin, Description: "Platform super administrator"),
-            (Name: AppRoles.Admin, Description: "Platform administrator"),
-            (Name: AppRoles.TourGuide, Description: "Tour guide"),
-            (Name: AppRoles.User, Description: "Traveler customer")
+            (Name: AppRoles.Admin,      Description: "Platform administrator"),
+            (Name: AppRoles.TourGuide,  Description: "Tour guide"),
+            (Name: AppRoles.Provider,   Description: "Business or accommodation provider"),
+            (Name: AppRoles.User,       Description: "Traveler customer"),
+            (Name: AppRoles.Creator,    Description: "Blog content creator"),
+            (Name: AppRoles.Guest,      Description: "Unverified registered user"),
         };
 
         return roleDefinitions.Select(role =>
@@ -138,11 +170,14 @@ public sealed class SecurityDbInitializer(
     {
         var claimMap = new Dictionary<string, string[]>
         {
-            [AppRoles.Owner] = ["*"],
+            [AppRoles.Owner]      = ["*"],
             [AppRoles.SuperAdmin] = ["*"],
-            [AppRoles.Admin] = ["users:manage", "roles:manage", "claims:manage"],
-            [AppRoles.TourGuide] = ["tours:write", "bookings:read", "bookings:update"],
-            [AppRoles.User] = ["bookings:create", "bookings:read", "reviews:write"]
+            [AppRoles.Admin]      = ["users:manage", "roles:manage", "claims:manage"],
+            [AppRoles.TourGuide]  = ["tours:write", "bookings:read", "bookings:update"],
+            [AppRoles.Provider]   = ["listings:write", "listings:read", "bookings:read", "reviews:read"],
+            [AppRoles.User]       = ["bookings:create", "bookings:read", "reviews:write"],
+            [AppRoles.Creator]    = ["blog:write", "blog:read"],
+            [AppRoles.Guest]      = ["profile:read"],
         };
 
         var claims = new List<RoleClaim>();

@@ -1,73 +1,127 @@
+@using System.Globalization
+@using Microsoft.Extensions.Localization
 @using YallaJo.Web.Infrastructure.Authorization
 @model YallaJo.Web.Areas.Admin.Models.Roles.RoleListVm
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
-    ViewData["Title"] = "Roles";
-    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = Localizer["Admin.Roles.Title"].Value;
+    ViewData["AdminNav"] = "Roles";
+
+    string Count(int n) => n.ToString("N0", CultureInfo.CurrentCulture); // CON3 culture-aware
 }
 
-<div class="container mt-4">
-    <h1 class="h3">Roles</h1>
+@* Page header — single <h1> (A11Y6); layout owns no heading. *@
+<div class="d-sm-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-1">@Localizer["Admin.Roles.Title"]</h1>
+        <p class="mb-0 text-secondary">@Localizer["Admin.Roles.Subtitle"]</p>
+    </div>
+    <span class="badge bg-primary bg-opacity-10 text-primary align-self-start mt-2 mt-sm-0">
+        <bdi class="font-data">@Count(Model.Roles.Count)</bdi> @Localizer["Admin.Roles.TotalLabel"]
+    </span>
+</div>
 
-    @* Success/Error flash banners are rendered globally by the shared _Alerts partial (in _Layout). *@
-    @if (ViewBag.Error       is string vbe) { <div class="alert alert-danger">@vbe</div> }
+@* Success/Error flash banners are rendered globally by the shared _Alerts partial. *@
+@if (ViewBag.Error is string vbe)
+{
+    <div class="alert alert-danger" role="alert">@vbe</div>
+}
 
-    @* ── Create form: visible only to users with Role.Create ──────────────────
-       <permission> TagHelper suppresses the block entirely when the permission is absent.
-       No ViewModel boolean. No @if (Model.CanCreate). *@
-    <permission require="@WebPermission.Role.Create">
-        <div class="card mb-4 p-3">
-            <h5>Create Role</h5>
+@* ── Create form: visible only to users with Role.Create (TagHelper suppresses the block entirely). *@
+<permission require="@WebPermission.Role.Create">
+    <div class="card shadow mb-4">
+        <div class="card-header">
+            <h2 class="card-header-title h5 mb-0">@Localizer["Admin.Roles.CreateHeading"]</h2>
+        </div>
+        <div class="card-body">
             <partial name="_CreateRoleForm" model="Model.Create" />
         </div>
-    </permission>
+    </div>
+</permission>
 
-    @* ── Roles table: always shown (user passed the Role.Read page-level gate).
-       Actions column + Deactivate button shown only to users with Role.Update. *@
-    <table class="table table-bordered">
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>Description</th>
-                <th>Status</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var r in Model.Roles)
-            {
-                <tr>
-                    <td><strong>@r.Name</strong></td>
-                    <td>@(r.Description ?? "—")</td>
-                    <td>
-                        @* A11Y5 — status conveyed by colour + icon + text. *@
-                        <span class="badge @(r.IsActive ? "bg-success" : "bg-secondary")">
-                            <i class="fa-solid @(r.IsActive ? "fa-circle-check" : "fa-ban") fa-fw" aria-hidden="true"></i>
-                            <span>@(r.IsActive ? "Active" : "Inactive")</span>
-                        </span>
-                    </td>
-                    <td>
-                        <a asp-area="Admin" asp-controller="Roles"
-                           asp-action="Details" asp-route-roleId="@r.Id"
-                           class="btn btn-sm btn-outline-primary">Manage</a>
-                        <permission require="@WebPermission.Role.Update">
-                            @if (r.IsActive)
-                            {
-                                <form asp-area="Admin" asp-controller="Roles"
-                                      asp-action="Deactivate" asp-route-roleId="@r.Id"
-                                      method="post" class="d-inline"
-                                      data-confirm="Deactivate role @r.Name? Members will lose this role's permissions."
-                                      data-confirm-title="Deactivate role"
-                                      data-confirm-action="Deactivate">
-                                    @Html.AntiForgeryToken()
-                                    <button type="submit" class="btn btn-warning btn-sm">Deactivate</button>
-                                </form>
-                            }
-                        </permission>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
+@* ── Roles table: always shown (user passed the Role.Read page-level gate). *@
+<div class="card shadow">
+    <div class="card-header">
+        <h2 class="card-header-title h5 mb-0">@Localizer["Admin.Roles.Directory"]</h2>
+    </div>
+    <div class="card-body">
+        @if (Model.Roles.Count == 0)
+        {
+            @* L6 — empty state carries a CTA. *@
+            <div class="text-center py-5">
+                <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
+                <p class="mb-3 text-secondary">@Localizer["Admin.Roles.EmptyMessage"]</p>
+                <permission require="@WebPermission.Role.Create">
+                    <a class="btn btn-sm btn-primary-soft" asp-area="Admin" asp-controller="Roles" asp-action="Index">
+                        <i class="fa-solid fa-plus fa-fw me-1" aria-hidden="true"></i>@Localizer["Admin.Roles.EmptyCta"]
+                    </a>
+                </permission>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th scope="col">@Localizer["Admin.Roles.ColName"]</th>
+                            <th scope="col">@Localizer["Admin.Roles.ColDescription"]</th>
+                            <th scope="col">@Localizer["Admin.Roles.ColStatus"]</th>
+                            <th scope="col" class="text-end">@Localizer["Admin.Roles.ColActions"]</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var r in Model.Roles)
+                        {
+                            <tr>
+                                <td><span class="fw-semibold">@r.Name</span></td>
+                                <td>
+                                    @if (string.IsNullOrWhiteSpace(r.Description))
+                                    {
+                                        <span class="text-secondary" aria-label="@Localizer["Admin.Roles.NoDescription"]">—</span>
+                                    }
+                                    else
+                                    {
+                                        @r.Description
+                                    }
+                                </td>
+                                <td>
+                                    @* A11Y5 — status conveyed by colour + icon + text. *@
+                                    <span class="badge @(r.IsActive ? "bg-success" : "bg-secondary")">
+                                        <i class="fa-solid @(r.IsActive ? "fa-circle-check" : "fa-ban") fa-fw" aria-hidden="true"></i>
+                                        <span>@(r.IsActive ? Localizer["Admin.Roles.StatusActive"] : Localizer["Admin.Roles.StatusInactive"])</span>
+                                    </span>
+                                </td>
+                                <td class="text-end">
+                                    <div class="btn-group" role="group" aria-label="@Localizer["Admin.Roles.RowActionsLabel"]">
+                                        <permission require="@WebPermission.Role.Read">
+                                            <a asp-area="Admin" asp-controller="Roles"
+                                               asp-action="Details" asp-route-roleId="@r.Id"
+                                               class="btn btn-sm btn-outline-primary">@Localizer["Admin.Roles.Manage"]</a>
+                                        </permission>
+                                        <permission require="@WebPermission.Role.Update">
+                                            @if (r.IsActive)
+                                            {
+                                                <form asp-area="Admin" asp-controller="Roles"
+                                                      asp-action="Deactivate" asp-route-roleId="@r.Id"
+                                                      method="post" class="d-inline"
+                                                      data-confirm="@Localizer["Admin.Roles.DeactivateConfirm", r.Name]"
+                                                      data-confirm-title="@Localizer["Admin.Roles.DeactivateTitle"]"
+                                                      data-confirm-action="@Localizer["Admin.Roles.DeactivateAction"]">
+                                                    @Html.AntiForgeryToken()
+                                                    <button type="submit" class="btn btn-sm btn-warning">@Localizer["Admin.Roles.Deactivate"]</button>
+                                                </form>
+                                            }
+                                        </permission>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
 </div>
 
 @section Scripts {
