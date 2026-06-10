@@ -1,3 +1,4 @@
+@inject Microsoft.Extensions.Localization.IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @*
     F8 — shared destructive-confirm modal. Replaces inline onclick/onsubmit
     confirm() prompts across the Admin RBAC console (and is reusable by any
@@ -13,21 +14,27 @@
     a data-confirm attribute are unaffected. Anti-forgery + PRG are preserved
     because the original form (tokens, asp-action, method=post) is submitted
     unchanged.
+
+    Localization: per-form data-confirm* attributes (set by the calling view)
+    are already localized at their call sites. The modal's own static labels
+    and the JS fallback defaults below are localized via the shared resources;
+    the JS reads the localized DOM text as its fallback, so the data-confirm
+    contract is unchanged.
 *@
 <div class="modal fade" id="adminConfirmModal" tabindex="-1"
      aria-labelledby="adminConfirmModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="adminConfirmModalLabel">Please confirm</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h5 class="modal-title" id="adminConfirmModalLabel">@Localizer["Admin.Confirm.Title"]</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Localizer["Admin.Confirm.Close"]"></button>
             </div>
             <div class="modal-body">
-                <p id="adminConfirmModalMessage" class="mb-0">Are you sure?</p>
+                <p id="adminConfirmModalMessage" class="mb-0">@Localizer["Admin.Confirm.Message"]</p>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-danger btn-sm" id="adminConfirmModalConfirm">Confirm</button>
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">@Localizer["Admin.Confirm.Cancel"]</button>
+                <button type="button" class="btn btn-danger btn-sm" id="adminConfirmModalConfirm">@Localizer["Admin.Confirm.Confirm"]</button>
             </div>
         </div>
     </div>
@@ -44,6 +51,12 @@
         var confirmBtn  = document.getElementById('adminConfirmModalConfirm');
         var pendingForm = null;
 
+        // Localized fallbacks: capture the server-rendered (already-localized) default
+        // text so forms that omit a data-confirm* attribute still show localized labels.
+        var defaultMessage = messageEl.textContent;
+        var defaultTitle   = titleEl.textContent;
+        var defaultConfirm = confirmBtn.textContent;
+
         // Intercept submit of any form flagged with data-confirm.
         document.addEventListener('submit', function (e) {
             var form = e.target;
@@ -52,9 +65,9 @@
 
             e.preventDefault();
             pendingForm = form;
-            messageEl.textContent = form.getAttribute('data-confirm') || 'Are you sure?';
-            titleEl.textContent   = form.getAttribute('data-confirm-title') || 'Please confirm';
-            confirmBtn.textContent = form.getAttribute('data-confirm-action') || 'Confirm';
+            messageEl.textContent = form.getAttribute('data-confirm') || defaultMessage;
+            titleEl.textContent   = form.getAttribute('data-confirm-title') || defaultTitle;
+            confirmBtn.textContent = form.getAttribute('data-confirm-action') || defaultConfirm;
             bsModal.show();
         }, true);
 

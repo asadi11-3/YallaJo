@@ -6634,6 +6634,21 @@
   <data name="Admin.Layout.SignIn" xml:space="preserve">
     <value>تسجيل الدخول</value>
   </data>
+  <data name="Admin.Confirm.Title" xml:space="preserve">
+    <value>يرجى التأكيد</value>
+  </data>
+  <data name="Admin.Confirm.Message" xml:space="preserve">
+    <value>هل أنت متأكد؟</value>
+  </data>
+  <data name="Admin.Confirm.Cancel" xml:space="preserve">
+    <value>إلغاء</value>
+  </data>
+  <data name="Admin.Confirm.Confirm" xml:space="preserve">
+    <value>تأكيد</value>
+  </data>
+  <data name="Admin.Confirm.Close" xml:space="preserve">
+    <value>إغلاق</value>
+  </data>
   <data name="Auth.SignIn.Title" xml:space="preserve">
     <value>تسجيل الدخول</value>
   </data>
