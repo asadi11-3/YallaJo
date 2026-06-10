@@ -83,7 +83,7 @@
                                 <div class="mt-3">
                                     <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="collapse" data-bs-target="#edit-ar-@review.Id" aria-expanded="false">Edit your review</button>
                                     <div class="collapse mt-3" id="edit-ar-@review.Id">
-                                        <form method="post" asp-area="Public" asp-controller="@controller" asp-action="EditAccessibilityReview" asp-route-slug="@routeSlug" asp-route-id="@routeId" asp-route-reviewId="@review.Id" class="border rounded p-3">
+                                        <form method="post" asp-area="Public" asp-controller="@controller" asp-action="EditAccessibilityReview" asp-route-slug="@routeSlug" asp-route-id="@routeId" asp-route-reviewId="@review.Id" class="border rounded p-3" data-loading>
                                             @Html.AntiForgeryToken()
                                             <div class="mb-2">
                                                 <label class="form-label small" for="editArRating-@review.Id">Rating</label>
@@ -145,7 +145,7 @@
             <div class="card border mt-3">
                 <div class="card-body">
                     <h3 class="h6">Write an accessibility review</h3>
-                    <form method="post" asp-area="Public" asp-controller="@controller" asp-action="CreateAccessibilityReview" asp-route-slug="@routeSlug" asp-route-id="@routeId">
+                    <form method="post" asp-area="Public" asp-controller="@controller" asp-action="CreateAccessibilityReview" asp-route-slug="@routeSlug" asp-route-id="@routeId" data-loading>
                         @Html.AntiForgeryToken()
                         <div class="row g-2">
                             <div class="col-sm-3">

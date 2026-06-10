@@ -83,7 +83,7 @@
                         <p class="small text-secondary">@Localizer["Public.Join.this.agency.to.get.matched.with.tours"]</p>
                         @if (User.IsInRole("TourGuide"))
                         {
-                            <form method="post" asp-area="Public" asp-controller="Agencies" asp-action="Apply" asp-route-agencyUserId="@Model.UserId">
+                            <form method="post" asp-area="Public" asp-controller="Agencies" asp-action="Apply" asp-route-agencyUserId="@Model.UserId" data-loading>
                                 @Html.AntiForgeryToken()
                                 <button type="submit" class="btn btn-primary w-100">@Localizer["Public.Apply.to.this.Agency"]</button>
                             </form>

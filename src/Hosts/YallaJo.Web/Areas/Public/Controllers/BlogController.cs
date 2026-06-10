@@ -214,7 +214,5 @@ public sealed class BlogController(BlogFacade blog, ReviewsFacade reviews) : Bas
 
     private static string SafeSlug(string? slug) => string.IsNullOrWhiteSpace(slug) ? "" : slug;
 
-    private bool WantsNoContent()
-        => string.Equals(Request.Headers.Accept.ToString(), "application/json", StringComparison.OrdinalIgnoreCase)
-           || string.Equals(Request.Headers["X-Requested-With"].ToString(), "XMLHttpRequest", StringComparison.OrdinalIgnoreCase);
+    private bool WantsNoContent() => WantsAjax();
 }

@@ -97,4 +97,18 @@ public abstract class BaseController : Controller
                 ModelState.AddModelError(field, message);
         return true;
     }
+
+    /// <summary>
+    /// True when the request came from the shared JS api client (api-client.js sends
+    /// <c>X-Requested-With: fetch</c>) or a classic XHR, or explicitly asks for JSON.
+    /// Actions use this to return a <see cref="Controller.PartialView()"/> / JSON for
+    /// AJAX while keeping the PRG redirect as the no-JS fallback (rules UI-UX-PE1).
+    /// </summary>
+    protected bool WantsAjax()
+    {
+        var requestedWith = Request.Headers.XRequestedWith.ToString();
+        return string.Equals(requestedWith, "fetch", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(requestedWith, "XMLHttpRequest", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(Request.Headers.Accept.ToString(), "application/json", StringComparison.OrdinalIgnoreCase);
+    }
 }

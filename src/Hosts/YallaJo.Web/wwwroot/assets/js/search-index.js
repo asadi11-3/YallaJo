@@ -1,3 +1,4 @@
+// Search page behaviors. All HTTP goes through the shared api client (JS5).
 (function () {
     var dataScript = document.getElementById('search-index-script');
     var data = dataScript ? dataScript.dataset : {};
@@ -9,6 +10,7 @@
     var mapResults = document.getElementById('searchMapResults');
     var nearbyRail = document.getElementById('searchNearbyRail');
     var mapLoaded = false;
+    var api = window.YallaJo.api;
 
     function escapeHtml(value) {
         return String(value || '').replace(/[<>&"]/g, function (c) { return '&#' + c.charCodeAt(0) + ';'; });
@@ -31,8 +33,7 @@
         if (!listRail || !listRail.dataset.url) { return; }
         var url = listRail.dataset.url + '?pageSize=5';
         if (listRail.dataset.q) { url += '&q=' + encodeURIComponent(listRail.dataset.q); }
-        fetch(url, { headers: { 'Accept': 'application/json' } })
-            .then(function (r) { return r.ok ? r.json() : null; })
+        api.get(url)
             .then(function (response) {
                 var items = response && response.items ? response.items : [];
                 if (!items.length) { listRail.textContent = data.noRelatedBusinesses || 'No related businesses found.'; return; }
@@ -49,8 +50,7 @@
         mapLoaded = true;
         mapResults.textContent = data.loadingMapPins || 'Loading map pins...';
         var qs = '?northLat=33.4&southLat=29.1&eastLng=39.4&westLng=34.8';
-        fetch(mapRail.dataset.url + qs, { headers: { 'Accept': 'application/json' } })
-            .then(function (r) { return r.ok ? r.json() : null; })
+        api.get(mapRail.dataset.url + qs)
             .then(function (response) {
                 var pins = response && response.pins ? response.pins : [];
                 if (!pins.length) { mapResults.textContent = data.noPlacePins || 'No place pins in this viewport.'; return; }
@@ -64,8 +64,7 @@
     function loadNearby(lat, lng) {
         if (!nearbyRail || !nearbyRail.dataset.url) { return; }
         nearbyRail.textContent = data.findingNearby || 'Finding nearby places and businesses...';
-        fetch(nearbyRail.dataset.url + '?lat=' + encodeURIComponent(lat) + '&lng=' + encodeURIComponent(lng) + '&radius=10&pageSize=6', { headers: { 'Accept': 'application/json' } })
-            .then(function (r) { return r.ok ? r.json() : null; })
+        api.get(nearbyRail.dataset.url + '?lat=' + encodeURIComponent(lat) + '&lng=' + encodeURIComponent(lng) + '&radius=10&pageSize=6')
             .then(function (response) {
                 var places = response && response.places ? response.places : [];
                 var businesses = response && response.businesses ? response.businesses : [];
@@ -135,8 +134,7 @@
         if (q.length < 2) { close(); return; }
         t = setTimeout(function () {
             controller = new AbortController();
-            fetch('/search/suggest?q=' + encodeURIComponent(q), { signal: controller.signal, headers: { 'Accept': 'application/json' } })
-                .then(function (r) { return r.ok ? r.json() : []; })
+            window.YallaJo.api.get('/search/suggest?q=' + encodeURIComponent(q), { signal: controller.signal })
                 .then(render)
                 .catch(function () { /* aborted or network error — silently ignore */ });
         }, 300);

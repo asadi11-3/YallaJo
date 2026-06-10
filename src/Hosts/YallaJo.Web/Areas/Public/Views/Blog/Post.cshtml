@@ -88,7 +88,7 @@
 
                     @if (isAuthed)
                     {
-                        <form method="post" asp-area="Public" asp-controller="Blog" asp-action="CreateComment" asp-route-id="@Model.Id" class="card border mb-4">
+                        <form method="post" asp-area="Public" asp-controller="Blog" asp-action="CreateComment" asp-route-id="@Model.Id" class="card border mb-4" data-loading>
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="Slug" value="@Model.Slug" />
                             <div class="card-body">
@@ -150,7 +150,7 @@
                                         @if (isAuthed && !comment.IsContentRedacted)
                                         {
                                             <div class="collapse mt-3" id="reply-comment-@comment.Id">
-                                                <form method="post" asp-area="Public" asp-controller="Blog" asp-action="CreateComment" asp-route-id="@Model.Id" class="border rounded p-3">
+                                                <form method="post" asp-area="Public" asp-controller="Blog" asp-action="CreateComment" asp-route-id="@Model.Id" class="border rounded p-3" data-loading>
                                                     @Html.AntiForgeryToken()
                                                     <input type="hidden" name="Slug" value="@Model.Slug" />
                                                     <input type="hidden" name="ParentCommentId" value="@comment.Id" />
@@ -166,7 +166,7 @@
                                             <div class="mt-3">
                                                 <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="collapse" data-bs-target="#edit-comment-@comment.Id" aria-expanded="false">@Localizer["Public.Edit.your.comment"]</button>
                                                 <div class="collapse mt-3" id="edit-comment-@comment.Id">
-                                                    <form method="post" asp-area="Public" asp-controller="Blog" asp-action="EditComment" asp-route-commentId="@comment.Id" class="border rounded p-3">
+                                                    <form method="post" asp-area="Public" asp-controller="Blog" asp-action="EditComment" asp-route-commentId="@comment.Id" class="border rounded p-3" data-loading>
                                                         @Html.AntiForgeryToken()
                                                         <input type="hidden" name="postId" value="@Model.Id" />
                                                         <input type="hidden" name="Slug" value="@Model.Slug" />
@@ -222,7 +222,7 @@
                                                             <div class="mt-2">
                                                                 <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="collapse" data-bs-target="#edit-comment-@reply.Id" aria-expanded="false">@Localizer["Public.Edit.your.reply"]</button>
                                                                 <div class="collapse mt-2" id="edit-comment-@reply.Id">
-                                                                    <form method="post" asp-area="Public" asp-controller="Blog" asp-action="EditComment" asp-route-commentId="@reply.Id" class="border rounded p-3">
+                                                                    <form method="post" asp-area="Public" asp-controller="Blog" asp-action="EditComment" asp-route-commentId="@reply.Id" class="border rounded p-3" data-loading>
                                                                         @Html.AntiForgeryToken()
                                                                         <input type="hidden" name="postId" value="@Model.Id" />
                                                                         <input type="hidden" name="Slug" value="@Model.Slug" />
@@ -273,7 +273,8 @@
                               asp-controller="Blog"
                               asp-action="Report"
                               asp-route-slug="@Model.Slug"
-                              class="card border p-3">
+                              class="card border p-3"
+                              data-loading>
                             @Html.AntiForgeryToken()
                             <h2 id="report-post-title" class="h6 mb-3">@Localizer["Public.Report.this.post"]</h2>
                             <input type="hidden" name="Report.EntityId" value="@Model.Id" />

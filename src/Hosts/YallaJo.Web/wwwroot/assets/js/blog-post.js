@@ -9,7 +9,10 @@
         if (navigator.sendBeacon) {
             navigator.sendBeacon(viewUrl);
         } else {
-            fetch(viewUrl, { method: 'POST', keepalive: true, credentials: 'same-origin' }).catch(function () { });
+            // Raw fetch is intentional (JS5 exception): fire-and-forget view beacon needs
+    // `keepalive` semantics which YallaJo.api does not expose; endpoint is
+    // [IgnoreAntiforgeryToken] and the result is never consumed.
+    fetch(viewUrl, { method: 'POST', keepalive: true, credentials: 'same-origin' }).catch(function () { });
         }
     } catch (e) { }
 })();

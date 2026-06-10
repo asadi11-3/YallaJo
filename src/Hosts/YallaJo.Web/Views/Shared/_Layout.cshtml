@@ -270,12 +270,16 @@
     @* Theme functions *@
     <script src="~/assets/js/functions.js"></script>
 
-    @* Wishlist favorite toggle (delegated handler for .js-favorite buttons on cards). *@
-    @if (CurrentUser.IsAuthenticated)
-    {
-        @Html.AntiForgeryToken()
-        <script src="~/assets/js/favorites.js" asp-append-version="true"></script>
-    }
+    @* Antiforgery token consumed by api-client.js for all AJAX POSTs (rules UI-SEC SEC7).
+       Rendered unconditionally so guest interactions (e.g. wishlist sign-in redirect per WL1) work too. *@
+    @Html.AntiForgeryToken()
+
+    @* Shared AJAX client + site-wide form UX (loading states, toasts, confirm modal). Rules UI-JS JS5, UI-UX-L2/F7/NF1. *@
+    <script src="~/assets/js/api-client.js" asp-append-version="true"></script>
+    <script src="~/assets/js/form-ux.js" asp-append-version="true"></script>
+
+    @* Wishlist favorite toggle (delegated handler for .js-favorite buttons on cards; guests are sent to sign-in per WL1). *@
+    <script src="~/assets/js/favorites.js" asp-append-version="true"></script>
 
     @* Per-view extra scripts *@
     @await RenderSectionAsync("Scripts", required: false)

@@ -87,7 +87,7 @@
                                     <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="collapse" data-bs-target="#report-review-@review.Id" aria-expanded="false">@Localizer["Public.Report"]</button>
                                 </div>
                                 <div class="collapse mt-3" id="report-review-@review.Id">
-                                    <form method="post" asp-area="Public" asp-controller="@controller" asp-action="ReportReview" asp-route-slug="@routeSlug" asp-route-id="@routeId" asp-route-reviewId="@review.Id" class="border rounded p-3">
+                                    <form method="post" asp-area="Public" asp-controller="@controller" asp-action="ReportReview" asp-route-slug="@routeSlug" asp-route-id="@routeId" asp-route-reviewId="@review.Id" class="border rounded p-3" data-loading>
                                         @Html.AntiForgeryToken()
                                         <div class="row g-2">
                                             <div class="col-sm-4">
@@ -115,7 +115,7 @@
                                 <div class="mt-3">
                                     <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="collapse" data-bs-target="#edit-review-@review.Id" aria-expanded="false">@Localizer["Public.Edit.your.review"]</button>
                                     <div class="collapse mt-3" id="edit-review-@review.Id">
-                                        <form method="post" asp-area="Public" asp-controller="@controller" asp-action="EditReview" asp-route-slug="@routeSlug" asp-route-id="@routeId" asp-route-reviewId="@review.Id" class="border rounded p-3">
+                                        <form method="post" asp-area="Public" asp-controller="@controller" asp-action="EditReview" asp-route-slug="@routeSlug" asp-route-id="@routeId" asp-route-reviewId="@review.Id" class="border rounded p-3" data-loading>
                                             @Html.AntiForgeryToken()
                                             <input type="hidden" name="Review.RowVersion" value="@review.RowVersion" />
                                             <div class="mb-2">

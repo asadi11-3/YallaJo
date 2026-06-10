@@ -641,7 +641,7 @@
             <div class="container">
                 <div class="row g-4">
                     <div class="col-lg-7">
-                        <form method="post" asp-area="Public" asp-controller="Tours" asp-action="CreateReview" asp-route-slug="@Model.Slug" class="card border p-3">
+                        <form method="post" asp-area="Public" asp-controller="Tours" asp-action="CreateReview" asp-route-slug="@Model.Slug" class="card border p-3" data-loading>
                             @Html.AntiForgeryToken()
                             <h3 class="h6 mb-3">@Localizer["Public.Write.a.review"]</h3>
                             <input type="hidden" name="Review.TargetId" value="@Model.Id" />
@@ -672,7 +672,7 @@
                         </form>
                     </div>
                     <div class="col-lg-5">
-                        <form method="post" asp-area="Public" asp-controller="Tours" asp-action="Report" asp-route-slug="@Model.Slug" class="card border p-3">
+                        <form method="post" asp-area="Public" asp-controller="Tours" asp-action="Report" asp-route-slug="@Model.Slug" class="card border p-3" data-loading>
                             @Html.AntiForgeryToken()
                             <h3 class="h6 mb-3">@Localizer["Public.Report.this.tour"]</h3>
                             <input type="hidden" name="Report.EntityId" value="@Model.Id" />
