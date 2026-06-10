@@ -6,6 +6,8 @@ Single source of truth for performance, UX, accessibility, and security rules. C
 > All rules are **mandatory** unless explicitly marked optional or guidance.
 > Rule IDs are stable references — cite them in code review and CI checks
 > (e.g., `UI-PERF-A1`, `UI-UX-NF6`). Section numbers may change; IDs may not.
+>
+> **Status legend:** ✅ = enforced/true in the codebase today · 🎯 = target — aspirational tooling or infrastructure that does **not** exist yet (treat as the bar to build toward, not as a description of reality). Rules without a marker describe behavior expected of any new code.
 
 ---
 
@@ -18,9 +20,9 @@ Single source of truth for performance, UX, accessibility, and security rules. C
 - **API errors are values, not exceptions:** every call returns `ApiResult` / `ApiResult<T>` (`IsSuccess`, `Data`, `Error`, `ValidationErrors`, `IsUnauthorized` / `IsNotFound` / `IsConflict` / …). Do not throw/catch for API failures.
 - **`BaseController` helpers:** `GuardSignOut(result)` (bounces 401 → `/auth/sign-in`; call after every Facade call), `SetSuccess` / `SetError` (flash → `_Alerts`), `ApplyValidationErrors` (API field errors → `ModelState`), and PRG after every successful write.
 - **Suffix-based DI:** any `*ApiClient` / `*Facade` is auto-registered Scoped — no manual `AddScoped`.
-- **Shared partials:** `_Alerts` (flash), `_ValidationScriptsPartial` (client validation), `_Navbar`. Use `<partial>` / `PartialAsync`, never `Html.Partial` / `RenderPartial`.
+- **Shared partials:** `_Alerts` (flash), `_ValidationScriptsPartial` (client validation), `_Navbar2` (the active navbar — the older `_Navbar.cshtml` was dead code and has been deleted). Use `<partial>` / `PartialAsync`, never `Html.Partial` / `RenderPartial`.
 - **Permissions:** `WebPermission.{Feature}.{Action}` constants, applied via `[RequirePermission(...)]`, `<permission require="…">`, or `ICurrentUser.HasPermission(...)`.
-- **Real areas (9):** `Accounts`, `Admin`, `Auth`, `Business`, `Content`, `Creator`, `Guide`, `Provider`, `Public`. Generated URLs are lowercase (`/accounts/bookings`, `/auth/sign-in`, `/provider/dashboard`).
+- **Real areas (8):** `Accounts`, `Admin`, `Auth`, `Business`, `Creator`, `Guide`, `Provider`, `Public`. (The planned `Content` area was consolidated into `Admin` in code — see `7-admin-dashboard.md`.) Generated URLs are lowercase (`/accounts/bookings`, `/auth/sign-in`, `/provider/dashboard`).
 
 ---
 
@@ -68,7 +70,7 @@ Before starting **any task** that touches a Razor view, layout, partial, or desi
 - **Default culture: `ar`** — aligns with Jordan-first launch market (Program.cs `DefaultRequestCulture = new("ar")`).
 - Culture provider chain: `QueryStringRequestCultureProvider` → `CookieRequestCultureProvider` → `AcceptLanguageHeaderRequestCultureProvider`.
 - `_Layout.cshtml`: `<html lang="@culture" dir="@dir">`. Set `dir="rtl"` when `ar`.
-- Load `style.rtl.css` when culture is RTL (swap stylesheet, not append).
+- ✅ Today: `rtl.css` is **appended** after `style.css` when culture is RTL (real assets: `wwwroot/assets/css/rtl.css`; no `style.rtl.css` exists). 🎯 Target: migrate to a generated `style.rtl.css` swapped (not appended) once an RTLCSS build step exists.
 - Render `hreflang` alternate links for AR↔EN on every page.
 - All user-facing strings via `IStringLocalizer` / `IViewLocalizer`. Resources in `Resources/Views/...` and `Resources/SharedResource.{culture}.resx`.
 
@@ -276,9 +278,9 @@ CI fails any build that violates these rules.
 |---|---|
 | **M1** | Application Insights tracks p50/p95/p99. Alert when p95 > ceiling for 5+ min. |
 | **M2** | RUM via `web-vitals`: `onLCP`, `onINP`, `onCLS`. POST to `/api/v1/analytics/rum`. |
-| **M3** | Lighthouse CI in pipeline. `categories:performance` minimum 0.9. `largest-contentful-paint` budget 2500 ms. |
+| **M3** | 🎯 Lighthouse CI in pipeline (no CI pipeline exists yet). `categories:performance` minimum 0.9. `largest-contentful-paint` budget 2500 ms. |
 | **M4** | Synthetic checks every 5 min from 3 geos (Pingdom / UptimeRobot). |
-| **M5** | Bundle-size tracking in CI. Fails if any bundle grows > 10% vs main branch. |
+| **M5** | 🎯 Bundle-size tracking in CI (no CI pipeline exists yet). Fails if any bundle grows > 10% vs main branch. |
 
 > Note: bare `M3` references elsewhere in this document (NF7, CAL3, T4, RT1, M2) refer to **UI-UX-M3 (reduced motion)**, not UI-PERF-M3. When citing in code review, prefix the family: `UI-PERF-M3` for Lighthouse, `UI-UX-M3` for reduced motion.
 
@@ -484,7 +486,7 @@ Inherits weights and formats from UI-PERF-I.
 | **CAL4** | 10-min slot lock countdown is always visible during checkout. 1-min warning toast. On expiry, redirect to slot picker. |
 | **CAL5** | Booking stepper: Date + Participants / Traveler details / Add-ons / Promo + Loyalty / Payment. Per-step validation. Back never loses data. |
 | **CAL6** | Disabled dates show a tooltip: "No availability" / "Blocked out" / "Past date". |
-| **CAL7** | 2-hour minimum lead time. Nearby slots greyed with tooltip "Bookings need 2 hours notice". |
+| **CAL7** | 2-hour minimum lead time. Nearby slots greyed with tooltip "Bookings need 2 hours notice". *Only if the backend enforces a lead time — verify the Booking availability chain; if it doesn't, don't invent a client-side gate (add `// TODO(backend)`).* |
 | **CAL8** | `localStorage` saves abandoned booking state. On return: "You had a booking in progress for [Tour]. [Continue] [Discard]". |
 
 ### §UI-UX-WL — Wishlist
@@ -531,9 +533,9 @@ Inherits weights and formats from UI-PERF-I.
 |---|---|
 | **REV1** | Post-experience email links to `/accounts/bookings/{id}?action=review`, which opens the review modal. |
 | **REV2** | "Write a review" button on tour detail page for users whose bookings on that tour are `Completed`. |
-| **REV3** | Form: stars 1–5 in 0.5 increments (required), title ≤ 150 chars (optional), content 20–2000 chars (required), photos max 3 / 5 MB each (JPG/PNG/WebP, optional, Dropzone). |
-| **REV4** | 30-day review window from completion date. Reminder banner "You can review until [date]". After 30 days the action is disabled with tooltip "Review window closed". |
-| **REV5** | 48-hour edit window after posting. Countdown badge "Edit (12h left)". After 48 h the badge is replaced with "Posted" + timestamp. |
+| **REV3** | Form: stars 1–5 in 0.5 increments (required), title ≤ 150 chars (optional), content 20–2000 chars (required), photos max 3 / 5 MB each (JPG/PNG/WebP, optional, Dropzone). *Apply each constraint only where the backend supports it — verify the Facade → ApiClient → API chain first; where unsupported, mirror the server's actual validation and add `// TODO(backend)`.* |
+| **REV4** | 30-day review window from completion date. Reminder banner "You can review until [date]". After 30 days the action is disabled with tooltip "Review window closed". *UI applies only if the backend enforces/exposes the window — verify before building the banner/disabled states.* |
+| **REV5** | 48-hour edit window after posting. Countdown badge "Edit (12h left)". After 48 h the badge is replaced with "Posted" + timestamp. *Backend enforces the 48 h author edit window; the countdown badge is UI-side — build it against the timestamps the API actually returns.* |
 | **REV6** | Profanity-flagged review: "Pending moderation. We'll publish it after review." User may edit and resubmit. |
 
 ### §UI-UX-CC — Cookie Consent
@@ -570,7 +572,7 @@ Inherits weights and formats from UI-PERF-I.
 
 | ID | Rule |
 |---|---|
-| **SEC1** | Send a Content-Security-Policy header on every response. `default-src 'self'`; explicitly allowlist Mapbox, the asset CDN, and App Insights origins. No `unsafe-inline` for scripts — the theme bootstrap script (T5) uses a per-request nonce. Report violations to `/api/v1/csp-report`. |
+| **SEC1** | Send a Content-Security-Policy header on every response. `default-src 'self'`; explicitly allowlist Mapbox, the asset CDN, and App Insights origins. No `unsafe-inline` for scripts — the theme bootstrap script (T5) uses a per-request nonce. 🎯 Report violations to `/api/v1/csp-report` once that endpoint exists (verify the API exposes it before adding `report-to`/`report-uri`). |
 | **SEC2** | Send hardening headers on every response: `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY` (or CSP `frame-ancestors 'none'`), `Referrer-Policy: strict-origin-when-cross-origin`, and a `Permissions-Policy` that disables unused features (camera, microphone, geolocation unless needed, payment). |
 | **SEC3** | Razor output is HTML-encoded by default. `@Html.Raw()` is forbidden unless the value was server-side sanitized (Ganss.Xss / HtmlSanitizer) and the call site carries a `// SANITIZED:` comment naming the sanitizer. |
 | **SEC4** | File uploads are validated by magic-byte signature, never by extension or client MIME type. Cap size per type. Strip EXIF. Store outside the web root (blob/disk) with randomized names; serve via an authenticated proxy action, never a direct static path. |
@@ -606,7 +608,7 @@ Inherits weights and formats from UI-PERF-I.
 
 | ID | Rule |
 |---|---|
-| **CON1** | All UI copy lives in `.resx` (per §2). No hardcoded strings in Razor or JS. A CI grep gate flags literal user-facing text. |
+| **CON1** | All UI copy lives in `.resx` (per §2). No hardcoded strings in Razor or JS. 🎯 A CI grep gate flags literal user-facing text (gate not built yet — enforce via review until then). |
 | **CON2** | Voice is clear, concise, action-oriented. Buttons are verbs ("Book now", not "Submit"). Errors state what happened and how to fix it. No jargon, no blame. |
 | **CON3** | Numbers, dates, and currency are formatted per culture via `IFormatProvider`, never string-concatenated. JOD uses 3 decimals (fils). Arabic-Indic numerals are configurable. |
 | **CON4** | Truncate long text with the full value available on hover/expand. Tour titles clamp to 2 lines (`-webkit-line-clamp`). |
@@ -630,7 +632,7 @@ Inherits weights and formats from UI-PERF-I.
 |---|---|
 | **TEST1** | Every controller action has ≥ 1 integration test (happy path + auth-denied) via `WebApplicationFactory`. |
 | **TEST2** | Critical flows have E2E coverage (Playwright): sign-in, search → book → pay, provider tour create, review submit. They run in CI on every PR. |
-| **TEST3** | Automated accessibility checks (axe-core / Playwright-axe) run on key pages in CI and fail the build on WCAG AA violations. |
+| **TEST3** | 🎯 Automated accessibility checks (axe-core / Playwright-axe) run on key pages in CI and fail the build on WCAG AA violations (no CI pipeline exists yet — run axe scans manually until then). |
 | **TEST4** | Visual regression snapshots cover core components (cards, nav, modals) in both themes and both directions. |
 
 ---
@@ -752,3 +754,9 @@ When a rule is added, removed, or modified, append a row here with rule ID, date
 | init | UI-UX-NF1 | Distinguished toast vs `_Alerts` flash | Toasts = AJAX/optimistic; PRG full-page flash = `_Alerts` (guide §10); inline alert markup is legacy. |
 | init | Routes | Lowercased real area paths (`/accounts/`, `/provider/`, `/admin/`, `/auth/sign-in`) | Customer area is `Accounts` (plural); generated URLs are lowercase; verified against `[Area("Accounts")]` controllers. |
 | init | Related Architecture | Added cross-reference section | Points to CONTROLLER_AUTHORING_GUIDE.md as source-of-truth for pipeline/ApiResult/BaseController/DI; clarifies doc-ownership split. |
+| 2026-06-10 | Related Architecture | Real areas 9 → 8 — removed `Content` | No `Content` area exists on disk; it was consolidated into `Admin` (see `7-admin-dashboard.md`). Verified against `src/Hosts/YallaJo.Web/Areas/`. |
+| 2026-06-10 | Related Architecture | `_Navbar` → `_Navbar2` in shared partials | `_Layout.cshtml` renders `_Navbar2`; the old `_Navbar.cshtml` was dead code and has been deleted (Public master plan Phase 0.6). |
+| 2026-06-10 | §2 | RTL stylesheet rule aligned with reality | Real mechanism is `rtl.css` appended after `style.css` for RTL cultures; no `style.rtl.css` exists. Swap-not-append kept as 🎯 target pending an RTLCSS build step. |
+| 2026-06-10 | Preamble | Added ✅/🎯 status legend | Several rules described nonexistent tooling as present; the legend separates enforced-today rules from build-toward targets. |
+| 2026-06-10 | UI-PERF-M3, UI-PERF-M5, CON1, TEST3 | Marked CI gates 🎯 | No CI pipeline exists yet (no Lighthouse CI, bundle-size tracking, resx grep gate, or axe-core gate); enforce via review/manual runs until built. |
+| 2026-06-10 | REV3–REV5, CAL7, SEC1 | Added verify-backend-first conditional language | Constraints (photo upload, review/edit windows, 2 h lead time, `/api/v1/csp-report`) must be confirmed against the Facade → ApiClient → API chain before building UI for them, matching the F5 precedent. |

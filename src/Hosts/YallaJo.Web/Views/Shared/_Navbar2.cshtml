@@ -11,7 +11,7 @@
     <nav class="navbar navbar-expand-xl">
         <div class="container">
             <!-- Logo START -->
-            <a class="navbar-brand" href="index.html">
+            <a class="navbar-brand" asp-area="Public" asp-controller="Home" asp-action="Index">
                 <img class="light-mode-item navbar-brand-item" src="~/assets/images/logo.svg" alt="YallaJo">
                 <img class="dark-mode-item navbar-brand-item" src="~/assets/images/logo-light.svg" alt="YallaJo">
             </a>
@@ -49,16 +49,26 @@
                         </a>
                     </li>
 
-                    <!-- Nav item Tour Guides -->
+                    <!-- Nav item: provider onboarding CTA. Authenticated users go to the provider application; guests sign up first. -->
                     <li class="nav-item">
-                        <a class="nav-link" asp-action="Index" asp-controller="TourGuides" asp-area="Public">
-                            List your experience
-                        </a>
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            <a class="nav-link" asp-area="Provider" asp-controller="Provider" asp-action="Apply">
+                                List your experience
+                            </a>
+                        }
+                        else
+                        {
+                            @* TODO(backend): SignUp does not honor returnUrl today (only SignIn does); once it does, pass returnUrl=/provider/apply. *@
+                            <a class="nav-link" asp-area="Auth" asp-controller="Auth" asp-action="SignUp">
+                                List your experience
+                            </a>
+                        }
                     </li>
 
-                    <!-- Nav item Agencies -->
+                    <!-- Nav item Help / FAQ -->
                     <li class="nav-item">
-                        <a class="nav-link" asp-action="Index" asp-controller="Agencies" asp-area="Public">
+                        <a class="nav-link" asp-action="Index" asp-controller="Help" asp-area="Public">
                             FAQ
                         </a>
                     </li>
@@ -88,7 +98,7 @@
                     <li class="nav-item ms-3 dropdown">
                         <!-- Avatar -->
                         <a class="avatar avatar-sm p-0" href="#" id="profileDropdown" role="button" data-bs-auto-close="outside" data-bs-display="static" data-bs-toggle="dropdown" aria-expanded="false">
-                            <img class="avatar-img rounded-2" src="assets/images/avatar/01.jpg" alt="avatar">
+                            <vc:navbar-avatar css-class="avatar-img rounded-2" alt="@displayName" />
                         </a>
 
                         <ul class="dropdown-menu dropdown-animation dropdown-menu-end shadow pt-3" aria-labelledby="profileDropdown">
@@ -97,7 +107,7 @@
                                 <div class="d-flex align-items-center">
                                     <!-- Avatar -->
                                     <div class="avatar me-3">
-                                        <img class="avatar-img rounded-circle shadow" src="~/assets/images/avatar/01.jpg" alt="avatar">
+                                        <vc:navbar-avatar css-class="avatar-img rounded-circle shadow" alt="@displayName" />
                                     </div>
                                     <div>
                                         <a class="h6 mt-2 mt-sm-0" href="#">@displayName</a>

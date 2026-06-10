@@ -22,12 +22,7 @@ public sealed class ContactController : BaseController
     }
 
     [HttpGet("contact")]
-    public Task<IActionResult> Index(CancellationToken ct = default) =>
-        Task.FromResult<IActionResult>(View(new ContactFormVm()));
-
-    [HttpGet("contact-2")]
-    public Task<IActionResult> Index2(CancellationToken ct = default) =>
-        Task.FromResult<IActionResult>(View("Index2", new ContactFormVm()));
+    public IActionResult Index() => View(new ContactFormVm());
 
     [HttpPost("contact")]
     [ValidateAntiForgeryToken]
