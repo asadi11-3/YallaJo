@@ -11884,4 +11884,31 @@
 <data name="Public.Confirm.DeleteAccessibilityReview" xml:space="preserve">
 <value>Delete your accessibility review? This cannot be undone.</value>
 </data>
+<data name="Public.Comment.Created" xml:space="preserve">
+<value>Your comment was posted.</value>
+</data>
+<data name="Public.Comment.Updated" xml:space="preserve">
+<value>Your comment was updated.</value>
+</data>
+<data name="Public.Comment.Deleted" xml:space="preserve">
+<value>Your comment was deleted.</value>
+</data>
+<data name="Public.Comment.FormError" xml:space="preserve">
+<value>Please write a comment before posting.</value>
+</data>
+<data name="Public.Comment.EditFormError" xml:space="preserve">
+<value>Please update the comment text before saving.</value>
+</data>
+<data name="Public.Creator.Followed" xml:space="preserve">
+<value>You are now following this creator.</value>
+</data>
+<data name="Public.Creator.Unfollowed" xml:space="preserve">
+<value>You are no longer following this creator.</value>
+</data>
+<data name="Public.Confirm.DeleteComment" xml:space="preserve">
+<value>Delete your comment? This cannot be undone.</value>
+</data>
+<data name="Public.Sign.in.to.comment" xml:space="preserve">
+<value>Sign in to comment</value>
+</data>
 </root>

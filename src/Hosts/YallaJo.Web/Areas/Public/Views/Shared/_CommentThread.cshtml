@@ -1,0 +1,196 @@
+@model YallaJo.Web.Areas.Public.Models.Blog.BlogPostVm
+@using YallaJo.Web.Infrastructure.Authentication.Claims
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
+@{
+    @* Phase 5.4: comment thread extracted from Blog/Post.cshtml. Rendered on the page AND
+       returned by BlogController comment actions when WantsAjax() so blog-post.js can swap
+       the whole #comments section after a mutation (UI-UX-S1; PE1 fallback = PRG redirect). *@
+    var isAuthed = User.Identity?.IsAuthenticated == true;
+    var currentUserId = Guid.TryParse(User.FindFirst(AppClaimTypes.UserId)?.Value, out var uid) ? uid : Guid.Empty;
+    var returnUrl = Context.Request.PathBase + Context.Request.Path + Context.Request.QueryString;
+}
+<section class="pb-5" id="comments" aria-labelledby="comments-title">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-9 col-xl-8">
+                <div class="d-flex flex-wrap align-items-center justify-content-between mb-3">
+                    <h2 id="comments-title" class="h4 mb-0">@Localizer["Public.Comments"]</h2>
+                    <span class="text-secondary small">@Localizer["Public.Comments.Count", Model.Comments.TotalCount]</span>
+                </div>
+
+                @if (isAuthed)
+                {
+                    <form method="post" asp-area="Public" asp-controller="Blog" asp-action="CreateComment" asp-route-id="@Model.Id" class="card border mb-4" data-loading data-success-message="@Localizer["Public.Comment.Created"]">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="Slug" value="@Model.Slug" />
+                        <div class="card-body">
+                            <label class="form-label" for="newComment">@Localizer["Public.Post.a.comment"]</label>
+                            <textarea id="newComment" name="Content" rows="4" minlength="2" maxlength="2000" required class="form-control" placeholder="@Localizer["Public.Share.your.thoughts.about.this.article"]"></textarea>
+                            <button type="submit" class="btn btn-primary mt-3"><i class="bi bi-chat-left-text me-1" aria-hidden="true"></i>@Localizer["Public.Post.comment"]</button>
+                        </div>
+                    </form>
+                }
+                else
+                {
+                    <div class="card border mb-4">
+                        <div class="card-body d-sm-flex align-items-center justify-content-between gap-3">
+                            <p class="mb-3 mb-sm-0 text-secondary">@Localizer["Public.Sign.in.to.comment.reply.and.like.comments"]</p>
+                            <a class="btn btn-outline-primary" asp-area="Auth" asp-controller="Auth" asp-action="SignIn" asp-route-returnUrl="@returnUrl">
+                                <i class="bi bi-box-arrow-in-right me-1" aria-hidden="true"></i>@Localizer["Public.Sign.in.to.comment"]
+                            </a>
+                        </div>
+                    </div>
+                }
+
+                @if (Model.Comments.HasResults)
+                {
+                    <div class="vstack gap-3">
+                        @foreach (var comment in Model.Comments.Items)
+                        {
+                            var ownComment = isAuthed && currentUserId != Guid.Empty && comment.UserId == currentUserId;
+                            <article class="card border" id="comment-@comment.Id">
+                                <div class="card-body">
+                                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
+                                        <div class="fw-semibold">@Localizer["Public.Community.member"]</div>
+                                        <div class="text-secondary small">
+                                            <i class="bi bi-calendar3 me-1" aria-hidden="true"></i>@comment.CreatedAt.ToString("d MMM yyyy")
+                                            @if (comment.UpdatedAt is { } updated)
+                                            {
+                                                <span class="ms-2">@Localizer["Public.EditedDate", updated.ToString("d MMM yyyy")]</span>
+                                            }
+                                        </div>
+                                    </div>
+                                    <p class="mb-2 preserve-whitespace">@(comment.IsContentRedacted ? "[deleted]" : comment.Content)</p>
+                                    <div class="d-flex flex-wrap align-items-center gap-2">
+                                        <span class="text-secondary small"><i class="bi bi-hand-thumbs-up me-1" aria-hidden="true"></i>@Localizer["Public.Likes.Count", comment.LikeCount]</span>
+                                        @if (isAuthed && !comment.IsContentRedacted)
+                                        {
+                                            <form method="post" asp-area="Public" asp-controller="Blog" asp-action="ReactComment" asp-route-commentId="@comment.Id" class="d-inline js-comment-react">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="slug" value="@Model.Slug" />
+                                                <button type="submit" class="btn btn-sm btn-light"><i class="bi bi-hand-thumbs-up me-1" aria-hidden="true"></i>@Localizer["Public.Like"]</button>
+                                            </form>
+                                            <form method="post" asp-area="Public" asp-controller="Blog" asp-action="UnreactComment" asp-route-commentId="@comment.Id" class="d-inline js-comment-react">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="slug" value="@Model.Slug" />
+                                                <button type="submit" class="btn btn-sm btn-outline-light text-secondary">@Localizer["Public.Unlike"]</button>
+                                            </form>
+                                            <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="collapse" data-bs-target="#reply-comment-@comment.Id" aria-expanded="false">@Localizer["Public.Reply"]</button>
+                                        }
+                                    </div>
+
+                                    @if (isAuthed && !comment.IsContentRedacted)
+                                    {
+                                        <div class="collapse mt-3" id="reply-comment-@comment.Id">
+                                            <form method="post" asp-area="Public" asp-controller="Blog" asp-action="CreateComment" asp-route-id="@Model.Id" class="border rounded p-3" data-loading data-success-message="@Localizer["Public.Comment.Created"]">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="Slug" value="@Model.Slug" />
+                                                <input type="hidden" name="ParentCommentId" value="@comment.Id" />
+                                                <label class="form-label small" for="replyContent-@comment.Id">@Localizer["Public.Reply"]</label>
+                                                <textarea id="replyContent-@comment.Id" name="Content" rows="2" minlength="2" maxlength="2000" required class="form-control form-control-sm" placeholder="@Localizer["Public.Write.a.reply"]"></textarea>
+                                                <button type="submit" class="btn btn-sm btn-primary mt-2">@Localizer["Public.Post.reply"]</button>
+                                            </form>
+                                        </div>
+                                    }
+
+                                    @if (ownComment && comment.IsWithinEditWindow)
+                                    {
+                                        <div class="mt-3">
+                                            <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="collapse" data-bs-target="#edit-comment-@comment.Id" aria-expanded="false">@Localizer["Public.Edit.your.comment"]</button>
+                                            <div class="collapse mt-3" id="edit-comment-@comment.Id">
+                                                <form method="post" asp-area="Public" asp-controller="Blog" asp-action="EditComment" asp-route-commentId="@comment.Id" class="border rounded p-3" data-loading data-success-message="@Localizer["Public.Comment.Updated"]">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="postId" value="@Model.Id" />
+                                                    <input type="hidden" name="Slug" value="@Model.Slug" />
+                                                    <input type="hidden" name="RowVersion" value="@comment.RowVersion" />
+                                                    <label class="form-label small" for="editCommentContent-@comment.Id">@Localizer["Public.Comment"]</label>
+                                                    <textarea id="editCommentContent-@comment.Id" name="Content" rows="3" minlength="2" maxlength="2000" required class="form-control form-control-sm">@comment.Content</textarea>
+                                                    <button type="submit" class="btn btn-sm btn-primary mt-2">@Localizer["Public.Save.changes"]</button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    }
+                                    @if (ownComment)
+                                    {
+                                        <form method="post" asp-area="Public" asp-controller="Blog" asp-action="DeleteComment" asp-route-commentId="@comment.Id" class="mt-2" data-confirm="@Localizer["Public.Confirm.DeleteComment"]" data-confirm-title="@Localizer["Public.Confirm.Title"]" data-confirm-action="@Localizer["Public.Confirm.Delete"]" data-confirm-cancel="@Localizer["Public.Confirm.Cancel"]">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="postId" value="@Model.Id" />
+                                            <input type="hidden" name="slug" value="@Model.Slug" />
+                                            <input type="hidden" name="rowVersion" value="@comment.RowVersion" />
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">@Localizer["Public.Delete.your.comment"]</button>
+                                        </form>
+                                    }
+
+                                    @if (comment.HasReplies)
+                                    {
+                                        <div class="vstack gap-2 mt-3 ps-3 border-start">
+                                            @foreach (var reply in comment.Replies)
+                                            {
+                                                var ownReply = isAuthed && currentUserId != Guid.Empty && reply.UserId == currentUserId;
+                                                <article class="border rounded p-3" id="comment-@reply.Id">
+                                                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
+                                                        <div class="fw-semibold small">@Localizer["Public.Community.member"]</div>
+                                                        <div class="text-secondary small">@reply.CreatedAt.ToString("d MMM yyyy")</div>
+                                                    </div>
+                                                    <p class="mb-2 preserve-whitespace">@(reply.IsContentRedacted ? "[deleted]" : reply.Content)</p>
+                                                    <div class="d-flex flex-wrap align-items-center gap-2">
+                                                        <span class="text-secondary small"><i class="bi bi-hand-thumbs-up me-1" aria-hidden="true"></i>@Localizer["Public.Likes.Count", reply.LikeCount]</span>
+                                                        @if (isAuthed && !reply.IsContentRedacted)
+                                                        {
+                                                            <form method="post" asp-area="Public" asp-controller="Blog" asp-action="ReactComment" asp-route-commentId="@reply.Id" class="d-inline js-comment-react">
+                                                                @Html.AntiForgeryToken()
+                                                                <input type="hidden" name="slug" value="@Model.Slug" />
+                                                                <button type="submit" class="btn btn-sm btn-light">@Localizer["Public.Like"]</button>
+                                                            </form>
+                                                            <form method="post" asp-area="Public" asp-controller="Blog" asp-action="UnreactComment" asp-route-commentId="@reply.Id" class="d-inline js-comment-react">
+                                                                @Html.AntiForgeryToken()
+                                                                <input type="hidden" name="slug" value="@Model.Slug" />
+                                                                <button type="submit" class="btn btn-sm btn-outline-light text-secondary">@Localizer["Public.Unlike"]</button>
+                                                            </form>
+                                                        }
+                                                    </div>
+                                                    @if (ownReply && reply.IsWithinEditWindow)
+                                                    {
+                                                        <div class="mt-2">
+                                                            <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="collapse" data-bs-target="#edit-comment-@reply.Id" aria-expanded="false">@Localizer["Public.Edit.your.reply"]</button>
+                                                            <div class="collapse mt-2" id="edit-comment-@reply.Id">
+                                                                <form method="post" asp-area="Public" asp-controller="Blog" asp-action="EditComment" asp-route-commentId="@reply.Id" class="border rounded p-3" data-loading data-success-message="@Localizer["Public.Comment.Updated"]">
+                                                                    @Html.AntiForgeryToken()
+                                                                    <input type="hidden" name="postId" value="@Model.Id" />
+                                                                    <input type="hidden" name="Slug" value="@Model.Slug" />
+                                                                    <input type="hidden" name="RowVersion" value="@reply.RowVersion" />
+                                                                    <label class="form-label small" for="editCommentContent-@reply.Id">@Localizer["Public.Reply"]</label>
+                                                                    <textarea id="editCommentContent-@reply.Id" name="Content" rows="3" minlength="2" maxlength="2000" required class="form-control form-control-sm">@reply.Content</textarea>
+                                                                    <button type="submit" class="btn btn-sm btn-primary mt-2">@Localizer["Public.Save.changes"]</button>
+                                                                </form>
+                                                            </div>
+                                                        </div>
+                                                    }
+                                                    @if (ownReply)
+                                                    {
+                                                        <form method="post" asp-area="Public" asp-controller="Blog" asp-action="DeleteComment" asp-route-commentId="@reply.Id" class="mt-2" data-confirm="@Localizer["Public.Confirm.DeleteComment"]" data-confirm-title="@Localizer["Public.Confirm.Title"]" data-confirm-action="@Localizer["Public.Confirm.Delete"]" data-confirm-cancel="@Localizer["Public.Confirm.Cancel"]">
+                                                            @Html.AntiForgeryToken()
+                                                            <input type="hidden" name="postId" value="@Model.Id" />
+                                                            <input type="hidden" name="slug" value="@Model.Slug" />
+                                                            <input type="hidden" name="rowVersion" value="@reply.RowVersion" />
+                                                            <button type="submit" class="btn btn-sm btn-outline-danger">@Localizer["Public.Delete.your.reply"]</button>
+                                                        </form>
+                                                    }
+                                                </article>
+                                            }
+                                        </div>
+                                    }
+                                </div>
+                            </article>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <p class="text-secondary">@Localizer["Public.No.comments.yet.Be.the.first.to.start.the.conversation"]</p>
+                }
+            </div>
+        </div>
+    </div>
+</section>

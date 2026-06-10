@@ -11884,4 +11884,31 @@
 <data name="Public.Confirm.DeleteAccessibilityReview" xml:space="preserve">
 <value>هل تريد حذف تقييم إمكانية الوصول الخاص بك؟ لا يمكن التراجع عن هذا الإجراء.</value>
 </data>
+<data name="Public.Comment.Created" xml:space="preserve">
+<value>تم نشر تعليقك.</value>
+</data>
+<data name="Public.Comment.Updated" xml:space="preserve">
+<value>تم تحديث تعليقك.</value>
+</data>
+<data name="Public.Comment.Deleted" xml:space="preserve">
+<value>تم حذف تعليقك.</value>
+</data>
+<data name="Public.Comment.FormError" xml:space="preserve">
+<value>يرجى كتابة تعليق قبل النشر.</value>
+</data>
+<data name="Public.Comment.EditFormError" xml:space="preserve">
+<value>يرجى تحديث نص التعليق قبل الحفظ.</value>
+</data>
+<data name="Public.Creator.Followed" xml:space="preserve">
+<value>أنت الآن تتابع هذا المبدع.</value>
+</data>
+<data name="Public.Creator.Unfollowed" xml:space="preserve">
+<value>لم تعد تتابع هذا المبدع.</value>
+</data>
+<data name="Public.Confirm.DeleteComment" xml:space="preserve">
+<value>هل تريد حذف تعليقك؟ لا يمكن التراجع عن هذا الإجراء.</value>
+</data>
+<data name="Public.Sign.in.to.comment" xml:space="preserve">
+<value>سجّل الدخول للتعليق</value>
+</data>
 </root>

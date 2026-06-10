@@ -49,21 +49,21 @@
                 {
                     <a class="btn btn-sm btn-outline-primary" asp-area="Auth" asp-controller="Auth" asp-action="SignIn" asp-route-returnUrl="@returnUrl"><i class="bi bi-person-plus me-1" aria-hidden="true"></i>@Localizer["Public.Sign.in.to.follow"]</a>
                 }
-                else if (Model.IsFollowing)
-                {
-                    <form method="post" asp-area="Public" asp-controller="Blog" asp-action="UnfollowCreator" asp-route-profileId="@Model.Id">
-                        @Html.AntiForgeryToken()
-                        <input type="hidden" name="creatorSlug" value="@Model.Slug" />
-                        <button type="submit" class="btn btn-sm btn-outline-primary"><i class="bi bi-person-dash me-1" aria-hidden="true"></i>@Localizer["Public.Unfollow"]</button>
-                    </form>
-                }
                 else
                 {
-                    <form method="post" asp-area="Public" asp-controller="Blog" asp-action="FollowCreator" asp-route-profileId="@Model.Id">
-                        @Html.AntiForgeryToken()
-                        <input type="hidden" name="creatorSlug" value="@Model.Slug" />
-                        <button type="submit" class="btn btn-sm btn-primary"><i class="bi bi-person-plus me-1" aria-hidden="true"></i>@Localizer["Public.Follow"]</button>
-                    </form>
+                    @* Phase 5.4: both forms rendered, one hidden — blog-creator.js toggles them optimistically (NF6); without JS the visible form posts natively (PE1). *@
+                    <div id="creatorFollow" data-yj-component="creator-follow">
+                        <form method="post" class="js-follow-form @(Model.IsFollowing ? "" : "d-none")" data-following="true" asp-area="Public" asp-controller="Blog" asp-action="UnfollowCreator" asp-route-profileId="@Model.Id">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="creatorSlug" value="@Model.Slug" />
+                            <button type="submit" class="btn btn-sm btn-outline-primary"><i class="bi bi-person-dash me-1" aria-hidden="true"></i>@Localizer["Public.Unfollow"]</button>
+                        </form>
+                        <form method="post" class="js-follow-form @(Model.IsFollowing ? "d-none" : "")" data-following="false" asp-area="Public" asp-controller="Blog" asp-action="FollowCreator" asp-route-profileId="@Model.Id">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="creatorSlug" value="@Model.Slug" />
+                            <button type="submit" class="btn btn-sm btn-primary"><i class="bi bi-person-plus me-1" aria-hidden="true"></i>@Localizer["Public.Follow"]</button>
+                        </form>
+                    </div>
                 }
             </div>
         </div>
