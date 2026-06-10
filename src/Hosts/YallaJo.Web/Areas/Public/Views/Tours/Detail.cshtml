@@ -164,25 +164,25 @@
                 <ul class="nav nav-pills nav-pills-bg-soft nav-responsive justify-content-center mb-4" id="tour-pills-tab" role="tablist">
                     <li class="nav-item" role="presentation">
                         <button class="nav-link active" id="pills-overview-tab" data-bs-toggle="pill"
-                                data-bs-target="#pane-overview" type="button" role="tab" aria-selected="true">@Localizer["Public.Overview"]</button>
+                                data-bs-target="#pane-overview" type="button" role="tab" aria-controls="pane-overview" aria-selected="true">@Localizer["Public.Overview"]</button>
                     </li>
                     @if (showItinerary)
                     {
                         <li class="nav-item" role="presentation">
                             <button class="nav-link" id="pills-itinerary-tab" data-bs-toggle="pill"
-                                    data-bs-target="#pane-itinerary" type="button" role="tab">@Localizer["Public.Itinerary"]</button>
+                                    data-bs-target="#pane-itinerary" type="button" role="tab" aria-controls="pane-itinerary" aria-selected="false">@Localizer["Public.Itinerary"]</button>
                         </li>
                     }
                     @if (showPricing)
                     {
                         <li class="nav-item" role="presentation">
                             <button class="nav-link" id="pills-pricing-tab" data-bs-toggle="pill"
-                                    data-bs-target="#pane-pricing" type="button" role="tab">@Localizer["Public.Pricing.amp.Schedule"]</button>
+                                    data-bs-target="#pane-pricing" type="button" role="tab" aria-controls="pane-pricing" aria-selected="false">@Localizer["Public.Pricing.amp.Schedule"]</button>
                         </li>
                     }
                     <li class="nav-item" role="presentation">
                         <button class="nav-link" id="pills-reviews-tab" data-bs-toggle="pill"
-                                data-bs-target="#pane-reviews" type="button" role="tab">@Localizer["Public.Reviews"]</button>
+                                data-bs-target="#pane-reviews" type="button" role="tab" aria-controls="pane-reviews" aria-selected="false">@Localizer["Public.Reviews"]</button>
                     </li>
                 </ul>
 

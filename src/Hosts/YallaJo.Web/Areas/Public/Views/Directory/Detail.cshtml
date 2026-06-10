@@ -293,23 +293,36 @@
 
                 @if (Model.Hours.Any())
                 {
-                    <div class="card border mb-4">
-                        <div class="card-header border-bottom">
+                    @* Phase 8.5: current-day highlight + open-now badge computed client-side in directory-detail.js
+                       (client local time approximates business time; acceptable until backend exposes a timezone). *@
+                    <div class="card border mb-4" data-yj-component="business-hours"
+                         data-open-label="@Localizer["Public.OpenNow"]"
+                         data-closed-label="@Localizer["Public.ClosedNow"]">
+                        <div class="card-header border-bottom d-flex align-items-center justify-content-between">
                             <h5 class="card-header-title mb-0">@Localizer["Public.Opening.hours"]</h5>
+                            <span class="badge d-none ms-2" data-yj-open-badge aria-live="polite"></span>
                         </div>
                         <div class="card-body">
                             <ul class="list-group list-group-borderless mb-0">
                                 @foreach (var h in Model.Hours)
                                 {
-                                    <li class="list-group-item d-flex justify-content-between px-0">
-                                        <span class="fw-semibold">@h.DayOfWeek</span>
+                                    @* Day names arrive as English strings from the API; localize via the current UI culture. *@
+                                    var dayLabel = Enum.TryParse<DayOfWeek>(h.DayOfWeek, true, out var dow)
+                                        ? System.Globalization.CultureInfo.CurrentUICulture.DateTimeFormat.GetDayName(dow)
+                                        : h.DayOfWeek;
+                                    <li class="list-group-item d-flex justify-content-between px-0"
+                                        data-yj-day="@h.DayOfWeek"
+                                        data-yj-closed="@(h.IsClosed ? "true" : "false")"
+                                        data-yj-open="@h.OpenTime"
+                                        data-yj-close="@h.CloseTime">
+                                        <span class="fw-semibold">@dayLabel</span>
                                         @if (h.IsClosed)
                                         {
                                             <span class="text-danger">@Localizer["Public.Closed"]</span>
                                         }
                                         else
                                         {
-                                            <span class="text-muted">@h.OpenTime - @h.CloseTime</span>
+                                            <span class="text-muted" dir="ltr">@h.OpenTime - @h.CloseTime</span>
                                         }
                                     </li>
                                 }
@@ -324,13 +337,13 @@
                         @if (isAuthed)
                         {
                             <button type="button" class="btn btn-outline-primary w-100 js-favorite" data-entity-type="Business" data-entity-id="@Model.Id">
-                                <i class="bi bi-heart me-1"></i>Add to wishlist
+                                <i class="bi bi-heart me-1"></i>@Localizer["Public.Save.to.wishlist"]
                             </button>
                         }
                         else
                         {
                             <a asp-area="Auth" asp-controller="Auth" asp-action="SignIn" class="btn btn-outline-primary w-100">
-                                <i class="bi bi-box-arrow-in-right me-1"></i>Sign in to save
+                                <i class="bi bi-box-arrow-in-right me-1"></i>@Localizer["Public.Log.in.to.save"]
                             </a>
                         }
                     </div>

@@ -12034,4 +12034,10 @@
 <data name="Public.Package.InquirySubject" xml:space="preserve">
 <value>Package: {0}</value>
 </data>
+<data name="Public.OpenNow" xml:space="preserve">
+<value>Open now</value>
+</data>
+<data name="Public.ClosedNow" xml:space="preserve">
+<value>Closed now</value>
+</data>
 </root>

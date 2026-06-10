@@ -12034,4 +12034,10 @@
 <data name="Public.Package.InquirySubject" xml:space="preserve">
 <value>باقة: {0}</value>
 </data>
+<data name="Public.OpenNow" xml:space="preserve">
+<value>مفتوح الآن</value>
+</data>
+<data name="Public.ClosedNow" xml:space="preserve">
+<value>مغلق الآن</value>
+</data>
 </root>
