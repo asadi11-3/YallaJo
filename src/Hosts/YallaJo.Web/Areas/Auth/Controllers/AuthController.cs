@@ -9,6 +9,7 @@ using YallaJo.Web.Areas.Auth.Models.Register;
 using YallaJo.Web.Areas.Auth.Models.ResetPassword;
 using YallaJo.Web.Areas.Auth.Models.VerifyEmail;
 using YallaJo.Web.Infrastructure.Authentication.Claims;
+using YallaJo.Web.Infrastructure.Authentication.SignIn;
 using YallaJo.Web.Infrastructure.Mvc;
 
 namespace YallaJo.Web.Areas.Auth.Controllers;
@@ -33,6 +34,7 @@ public sealed class AuthController : BaseController
     private readonly VerifyEmailFacade _verify;
     private readonly LogoutFacade _logout;
     private readonly LogoutAllFacade _logoutAll;
+    private readonly IPendingVerificationStore _pendingVerification;
     private readonly IStringLocalizer<YallaJo.Web.Resources.SharedResource> _localizer;
 
     public AuthController(
@@ -43,6 +45,7 @@ public sealed class AuthController : BaseController
         VerifyEmailFacade verify,
         LogoutFacade logout,
         LogoutAllFacade logoutAll,
+        IPendingVerificationStore pendingVerification,
         IStringLocalizer<YallaJo.Web.Resources.SharedResource> localizer)
     {
         _login = login;
@@ -52,7 +55,16 @@ public sealed class AuthController : BaseController
         _verify = verify;
         _logout = logout;
         _logoutAll = logoutAll;
+        _pendingVerification = pendingVerification;
         _localizer = localizer;
+    }
+
+    /// <summary>Display-mask for the pending e-mail, e.g. "j***@example.com".</summary>
+    private static string MaskEmail(string email)
+    {
+        var at = email.IndexOf('@');
+        if (at <= 1) return at == 1 ? $"{email[0]}***{email[at..]}" : email;
+        return $"{email[0]}***{email[(at - 1)..]}";
     }
 
     // ── Sign in ───────────────────────────────────────────────────────────────
@@ -116,8 +128,11 @@ public sealed class AuthController : BaseController
 
         if (result.IsSuccess)
         {
+            // The pending e-mail travels in an encrypted, time-limited cookie — never in
+            // the URL or a hidden field (PII + arbitrary-target OTP guessing).
+            _pendingVerification.Issue(result.Email!);
             SetSuccess(_localizer["Auth.Flash.RegistrationSuccess"].Value);
-            return RedirectToAction(nameof(TwoFactor), new { email = result.Email });
+            return RedirectToAction(nameof(TwoFactor));
         }
 
         if (result.ValidationErrors is { Count: > 0 })
@@ -196,15 +211,44 @@ public sealed class AuthController : BaseController
     }
 
     // ── Two-factor / email verification ─────────────────────────────────────────
+    // The pending identity comes EXCLUSIVELY from the encrypted pending-verification
+    // cookie issued by SignUp (hard cutover — the old ?email= parameter is no longer
+    // honored). Without a valid cookie the OTP screen is unreachable, so the endpoint
+    // cannot be pointed at an arbitrary account.
 
     [HttpGet("two-factor-auth")]
-    public IActionResult TwoFactor(string? email = null) =>
-        View(new VerifyEmailVm { Email = email ?? string.Empty });
+    public IActionResult TwoFactor()
+    {
+        var pendingEmail = _pendingVerification.TryRead();
+        if (string.IsNullOrWhiteSpace(pendingEmail))
+        {
+            SetError(_localizer["Auth.Flash.VerificationExpired"].Value);
+            return RedirectToLogin();
+        }
+
+        return View(new VerifyEmailVm
+        {
+            Email = pendingEmail,
+            MaskedEmail = MaskEmail(pendingEmail),
+        });
+    }
 
     [HttpPost("two-factor-auth")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> TwoFactor(VerifyEmailVm vm, CancellationToken ct)
     {
+        // [BindNever] keeps any posted Email out of the model — re-resolve it from the
+        // cookie so the OTP check is always bound to the registration that issued it.
+        var pendingEmail = _pendingVerification.TryRead();
+        if (string.IsNullOrWhiteSpace(pendingEmail))
+        {
+            SetError(_localizer["Auth.Flash.VerificationExpired"].Value);
+            return RedirectToLogin();
+        }
+
+        vm.Email = pendingEmail;
+        vm.MaskedEmail = MaskEmail(pendingEmail);
+
         if (!ModelState.IsValid)
             return View(vm);
 
@@ -215,7 +259,10 @@ public sealed class AuthController : BaseController
 
         // On success the facade has already signed the user in via IWebSignInService.
         if (result.IsSuccess)
+        {
+            _pendingVerification.Clear();
             return RedirectToAction("Index", "Sessions", new { area = "Auth" });
+        }
 
         if (ApplyValidationErrors(result))
             return View(vm);
@@ -230,19 +277,28 @@ public sealed class AuthController : BaseController
     // would let an attacker confirm account existence or probe rate-limit boundaries.
     // The only non-200 responses are input-shape guards that reveal nothing about
     // accounts. Same pattern as ForgotPassword's "If that email is registered…".
+    //
+    // The target e-mail is resolved from the encrypted pending-verification cookie —
+    // the client no longer chooses who receives an OTP, killing the "spam OTPs to an
+    // arbitrary address" abuse vector. The payload's Email field is ignored.
     [HttpPost("resend-otp")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> ResendOtp([FromBody] ResendOtpPayload payload, CancellationToken ct)
     {
-        if (string.IsNullOrWhiteSpace(payload.Email))
-            return BadRequest(new { error = _localizer["Auth.Resend.EmailRequired"].Value });
-
         if (string.IsNullOrWhiteSpace(payload.RecaptchaToken))
             return BadRequest(new { error = _localizer["Auth.Resend.VerificationFailed"].Value });
 
+        var pendingEmail = _pendingVerification.TryRead();
+        if (string.IsNullOrWhiteSpace(pendingEmail))
+        {
+            // No pending verification in this browser. Stay uniform: report the same
+            // neutral message rather than confirming/denying anything.
+            return Ok(new { message = _localizer["Auth.Resend.Uniform"].Value });
+        }
+
         // Outcome deliberately ignored beyond awaiting completion: success, unknown
         // email, and upstream errors all collapse into the same neutral message.
-        await _verify.ResendOtpAsync(payload.Email, "EmailVerification", payload.RecaptchaToken, ct);
+        await _verify.ResendOtpAsync(pendingEmail, "EmailVerification", payload.RecaptchaToken, ct);
 
         return Ok(new { message = _localizer["Auth.Resend.Uniform"].Value });
     }

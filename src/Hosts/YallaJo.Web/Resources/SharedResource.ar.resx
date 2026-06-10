@@ -6940,6 +6940,9 @@
   <data name="Auth.Flash.ExternalSignInFailed" xml:space="preserve">
     <value>فشل تسجيل الدخول الخارجي.</value>
   </data>
+  <data name="Auth.Flash.VerificationExpired" xml:space="preserve">
+    <value>انتهت صلاحية جلسة التحقق. يرجى تسجيل الدخول — وإذا كان بريدك الإلكتروني لا يزال بحاجة إلى تحقق، يمكنك التسجيل مجددًا.</value>
+  </data>
   <data name="Auth.Resend.EmailRequired" xml:space="preserve">
     <value>البريد الإلكتروني مطلوب.</value>
   </data>

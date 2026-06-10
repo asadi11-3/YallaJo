@@ -31,7 +31,9 @@
                                 <h1 class="mb-2 h3">@Localizer["Auth.TwoFactor.Heading"]</h1>
                                 <p class="mb-sm-0">
                                     @Localizer["Auth.TwoFactor.SentTo"]
-                                    <b><bdi dir="ltr">@(string.IsNullOrEmpty(Model.Email) ? Localizer["Auth.TwoFactor.YourEmail"].Value : Model.Email)</bdi></b>
+                                    @* Masked server-side (first letter + domain hint) — the full address
+                                       never renders, reducing shoulder-surfing exposure on a shared screen. *@
+                                    <b><bdi dir="ltr">@(string.IsNullOrEmpty(Model.MaskedEmail) ? Localizer["Auth.TwoFactor.YourEmail"].Value : Model.MaskedEmail)</bdi></b>
                                 </p>
 
                                 <div asp-validation-summary="All" class="text-danger mt-3 mb-0"></div>
@@ -40,7 +42,9 @@
                                 <form asp-area="Auth" asp-controller="Auth" asp-action="TwoFactor" method="post" class="mt-sm-4 text-start">
                                     @Html.AntiForgeryToken()
 
-                                    <input asp-for="Email" type="hidden" />
+                                    @* No hidden Email field: the pending identity lives in the encrypted
+                                       pending-verification cookie and is re-resolved server-side on POST
+                                       ([BindNever] on the VM ignores any posted value). *@
 
                                     <!-- Verification code -->
                                     <label asp-for="OtpCode" class="form-label mb-1">@Localizer["Auth.TwoFactor.Intro"]</label>

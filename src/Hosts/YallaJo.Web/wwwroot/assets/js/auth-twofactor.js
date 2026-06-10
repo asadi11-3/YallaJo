@@ -11,7 +11,6 @@
 
     var btn = document.getElementById('resendBtn');
     var msg = document.getElementById('resendMsg');
-    var emailInput = document.querySelector('[name="Email"]');
     var tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
 
     if (!btn || !msg) { return; }
@@ -55,8 +54,9 @@
                     'Content-Type': 'application/json',
                     'RequestVerificationToken': tokenInput ? tokenInput.value : ''
                 },
+                // No email in the payload: the server resolves the pending address from
+                // its encrypted pending-verification cookie (sent automatically).
                 body: JSON.stringify({
-                    email: emailInput ? emailInput.value : '',
                     recaptchaToken: token
                 })
             });

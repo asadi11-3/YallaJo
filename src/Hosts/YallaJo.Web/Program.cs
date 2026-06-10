@@ -104,6 +104,14 @@ builder.Services.AddHttpClient("anon", client =>
 // ── Auth infrastructure ───────────────────────────────────────────────────────
 builder.Services.AddScoped<IWebSignInService, WebSignInService>();
 
+// Pending e-mail-verification state: Data-Protection-encrypted, time-limited cookie
+// carrying the registered e-mail between SignUp and the OTP (TwoFactor) screen —
+// replaces the old ?email= query-string / hidden-field round-trip (PII + arbitrary-
+// target OTP guessing). The OTP itself is never stored here.
+builder.Services.AddScoped<
+    YallaJo.Web.Infrastructure.Authentication.SignIn.IPendingVerificationStore,
+    YallaJo.Web.Infrastructure.Authentication.SignIn.PendingVerificationStore>();
+
 // API-hosted asset URL resolver — turns API-relative paths like
 // "/uploads/avatars/<guid>.png" into absolute URLs the browser can fetch
 // from the API origin. Used for avatar rendering in the web layer.

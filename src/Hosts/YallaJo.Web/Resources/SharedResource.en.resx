@@ -6940,6 +6940,9 @@
   <data name="Auth.Flash.ExternalSignInFailed" xml:space="preserve">
     <value>External sign-in failed.</value>
   </data>
+  <data name="Auth.Flash.VerificationExpired" xml:space="preserve">
+    <value>Your verification session has expired. Please sign in — if your email still needs verification, you can register again.</value>
+  </data>
   <data name="Auth.Resend.EmailRequired" xml:space="preserve">
     <value>Email is required.</value>
   </data>
