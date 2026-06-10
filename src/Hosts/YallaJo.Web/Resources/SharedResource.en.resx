@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='utf-8'?>
+﻿<?xml version='1.0' encoding='utf-8'?>
 <root xmlns:ns1="urn:schemas-microsoft-com:xml-msdata" xmlns:xs="http://www.w3.org/2001/XMLSchema">
   <xs:schema id="root">
     <xs:import namespace="http://www.w3.org/XML/1998/namespace" />
@@ -68,7 +68,7 @@
     <value>Search tours</value>
   </data>
   <data name="Home.Search.Placeholder" xml:space="preserve">
-    <value>Search tours, destinations, activities…</value>
+    <value>Search tours, destinations, activitiesâ€¦</value>
   </data>
   <data name="Home.Search.Button" xml:space="preserve">
     <value>Explore Tours</value>
@@ -101,7 +101,7 @@
     <value>Browse by category</value>
   </data>
   <data name="Home.Categories.Subtitle" xml:space="preserve">
-    <value>Find the kind of experience you’re after.</value>
+    <value>Find the kind of experience youâ€™re after.</value>
   </data>
   <data name="Home.ViewAll" xml:space="preserve">
     <value>View all</value>
@@ -125,7 +125,7 @@
     <value>Language</value>
   </data>
   <data name="Lang.Arabic" xml:space="preserve">
-    <value>العربية</value>
+    <value>Ø§Ù„Ø¹Ø±Ø¨ÙŠØ©</value>
   </data>
   <data name="Lang.English" xml:space="preserve">
     <value>English</value>
@@ -386,7 +386,7 @@
     <value>Filter</value>
   </data>
   <data name="Public.Filter.controls.price.slider.categories.rating.will.be.wired.in.the.2." xml:space="preserve">
-    <value>Filter controls (price slider, categories, rating) will be wired in the §2.2 follow-up pass.</value>
+    <value>Filter controls (price slider, categories, rating) will be wired in the Â§2.2 follow-up pass.</value>
   </data>
   <data name="Public.Filter.tours.on.this.page" xml:space="preserve">
     <value>Filter tours on this page...</value>
@@ -611,7 +611,7 @@
     <value>Nothing matched your search</value>
   </data>
   <data name="Public.Number.it.distanceKm.toFixed.1.km" xml:space="preserve">
-    <value>— ' + Number(it.distanceKm).toFixed(1) + ' km</value>
+    <value>â€” ' + Number(it.distanceKm).toFixed(1) + ' km</value>
   </data>
   <data name="Public.Number.pin.lat.toFixed.3.Number.pin.lng.toFixed.3" xml:space="preserve">
     <value>(' + Number(pin.lat).toFixed(3) + ', ' + Number(pin.lng).toFixed(3) + ')</value>
@@ -749,7 +749,7 @@
     <value>{0} reviews</value>
   </data>
   <data name="Public.Sat.Thu.9.00.18.00" xml:space="preserve">
-    <value>Sat – Thu, 9:00 – 18:00</value>
+    <value>Sat â€“ Thu, 9:00 â€“ 18:00</value>
   </data>
   <data name="Public.Save" xml:space="preserve">
     <value>Save</value>
@@ -1001,7 +1001,7 @@
     <value>' + escapeHtml(pin.name) + '</value>
   </data>
   <data name="Public.meta" xml:space="preserve">
-    <value>— ' + meta + '</value>
+    <value>â€” ' + meta + '</value>
   </data>
   <data name="Public.name" xml:space="preserve">
     <value>' + name + '</value>
@@ -1022,7 +1022,7 @@
     <value>Clear place filter</value>
   </data>
   <data name="Public.ShowingResults" xml:space="preserve">
-    <value>Showing {0}–{1} of {2} results</value>
+    <value>Showing {0}â€“{1} of {2} results</value>
   </data>
   <data name="Public.PercentOff" xml:space="preserve">
     <value>{0}% off</value>
@@ -1031,7 +1031,7 @@
     <value>{0} booked</value>
   </data>
   <data name="Public.ShowingPlaces" xml:space="preserve">
-    <value>Showing {0}–{1} of {2} places</value>
+    <value>Showing {0}â€“{1} of {2} places</value>
   </data>
   <data name="Public.PageOf" xml:space="preserve">
     <value>Page {0} of {1}</value>
@@ -1157,7 +1157,7 @@
     <value>User identifier</value>
   </data>
   <data name="Admin.Audit.ActionPlaceholder" xml:space="preserve">
-    <value>e.g. ADMIN_…</value>
+    <value>e.g. ADMIN_â€¦</value>
   </data>
   <data name="Admin.Audit.FromLabel" xml:space="preserve">
     <value>From (UTC)</value>
@@ -1334,7 +1334,7 @@
     <value>Filter users</value>
   </data>
   <data name="Admin.Users.FilterPlaceholder" xml:space="preserve">
-    <value>Filter by email or role…</value>
+    <value>Filter by email or roleâ€¦</value>
   </data>
   <data name="Admin.Users.FilterHelp" xml:space="preserve">
     <value>Results filter as you type.</value>
@@ -1454,7 +1454,7 @@
     <value>Add a role</value>
   </data>
   <data name="Admin.UserDetails.RoleSelectPlaceholder" xml:space="preserve">
-    <value>Select a role…</value>
+    <value>Select a roleâ€¦</value>
   </data>
   <data name="Admin.UserDetails.AssignRole" xml:space="preserve">
     <value>Assign role</value>
@@ -1547,7 +1547,7 @@
     <value>Reactivate account</value>
   </data>
   <data name="Admin.UserModal.Reactivate.Banner" xml:space="preserve">
-    <value>Restores login access. The user will sign in with their existing credentials. No new sessions are created — they must re-login.</value>
+    <value>Restores login access. The user will sign in with their existing credentials. No new sessions are created â€” they must re-login.</value>
   </data>
   <data name="Admin.UserModal.Reactivate.Confirm" xml:space="preserve">
     <value>Are you sure you want to reactivate {0}?</value>
@@ -1556,7 +1556,7 @@
     <value>Reactivate</value>
   </data>
   <data name="Admin.UserModal.Archive.Title" xml:space="preserve">
-    <value>Archive account — irreversible</value>
+    <value>Archive account â€” irreversible</value>
   </data>
   <data name="Admin.UserModal.Archive.Banner" xml:space="preserve">
     <value>Archiving is permanent. The user will be signed out, locked out of every reset / reassign / reactivate path, and cannot recover the account. Roles and historical data remain in the database (audit only).</value>
@@ -1604,7 +1604,7 @@
     <value>Revoke all sessions</value>
   </data>
   <data name="Admin.UserModal.Reassign.Item4" xml:space="preserve">
-    <value>Deactivate every external sign-in link (Google, Facebook, …)</value>
+    <value>Deactivate every external sign-in link (Google, Facebook, â€¦)</value>
   </data>
   <data name="Admin.UserModal.Reassign.Item5" xml:space="preserve">
     <value>Scrub the profile to placeholder values</value>
@@ -1631,7 +1631,7 @@
     <value>e.g. ownership transfer</value>
   </data>
   <data name="Admin.UserModal.Reassign.UnderstandLabel" xml:space="preserve">
-    <value>I understand this will revoke the old owner’s access and transfer the account to the new email.</value>
+    <value>I understand this will revoke the old ownerâ€™s access and transfer the account to the new email.</value>
   </data>
   <data name="Admin.UserModal.Reassign.Submit" xml:space="preserve">
     <value>Reassign</value>
@@ -1823,7 +1823,7 @@
     <value>Avatar URL</value>
   </data>
   <data name="Admin.Invite.AvatarUrlPlaceholder" xml:space="preserve">
-    <value>https://…</value>
+    <value>https://â€¦</value>
   </data>
   <data name="Admin.Invite.AvatarUrlHelp" xml:space="preserve">
     <value>Optional. A link to a profile picture.</value>
@@ -2129,7 +2129,7 @@
     <value>Has active tours</value>
   </data>
   <data name="Admin.Places.AnyOption" xml:space="preserve">
-    <value>— any —</value>
+    <value>â€” any â€”</value>
   </data>
   <data name="Admin.Places.YesOption" xml:space="preserve">
     <value>Yes</value>
@@ -2237,7 +2237,7 @@
     <value>Page</value>
   </data>
   <data name="Admin.PlaceDetails.Title" xml:space="preserve">
-    <value>Place — {0}</value>
+    <value>Place â€” {0}</value>
   </data>
   <data name="Admin.PlaceDetails.Back" xml:space="preserve">
     <value>Back to list</value>
@@ -2543,7 +2543,7 @@
     <value>Place</value>
   </data>
   <data name="Admin.Businesses.PlacePlaceholder" xml:space="preserve">
-    <value>Select a place…</value>
+    <value>Select a placeâ€¦</value>
   </data>
   <data name="Admin.Businesses.PlaceHelp" xml:space="preserve">
     <value>Businesses are listed per place. Pick a place to load its businesses.</value>
@@ -2942,7 +2942,7 @@
     <value>Total</value>
   </data>
   <data name="Admin.BookingDetails.ResolveModalTitle" xml:space="preserve">
-    <value>Resolve dispute — {0}</value>
+    <value>Resolve dispute â€” {0}</value>
   </data>
   <data name="Admin.BookingDetails.ResolutionNotesFieldLabel" xml:space="preserve">
     <value>Resolution notes</value>
@@ -3392,7 +3392,7 @@
     <value>Delete</value>
   </data>
   <data name="Admin.Commissions.EditTitle" xml:space="preserve">
-    <value>Edit rule — {0} ({1})</value>
+    <value>Edit rule â€” {0} ({1})</value>
   </data>
   <data name="Admin.Commissions.CreateTitle" xml:space="preserve">
     <value>New commission rule</value>
@@ -3461,7 +3461,7 @@
     <value>Search posts</value>
   </data>
   <data name="Admin.Blogs.SearchPlaceholder" xml:space="preserve">
-    <value>Search by title…</value>
+    <value>Search by titleâ€¦</value>
   </data>
   <data name="Admin.Blogs.SearchHelp" xml:space="preserve">
     <value>Filter the list by post title.</value>
@@ -3506,7 +3506,7 @@
     <value>Restore</value>
   </data>
   <data name="Admin.Blogs.RestoreConfirm" xml:space="preserve">
-    <value>Restore the post “{0}”?</value>
+    <value>Restore the post â€œ{0}â€?</value>
   </data>
   <data name="Admin.Blogs.RestoreTitle" xml:space="preserve">
     <value>Restore post</value>
@@ -3515,7 +3515,7 @@
     <value>Approve</value>
   </data>
   <data name="Admin.Blogs.ApproveConfirm" xml:space="preserve">
-    <value>Approve and publish the post “{0}”?</value>
+    <value>Approve and publish the post â€œ{0}â€?</value>
   </data>
   <data name="Admin.Blogs.ApproveTitle" xml:space="preserve">
     <value>Approve post</value>
@@ -3530,7 +3530,7 @@
     <value>Reject post</value>
   </data>
   <data name="Admin.Blogs.RejectIntro" xml:space="preserve">
-    <value>Provide a reason for rejecting “{0}”. The author will see this note.</value>
+    <value>Provide a reason for rejecting â€œ{0}â€. The author will see this note.</value>
   </data>
   <data name="Admin.Blogs.ReasonLabel" xml:space="preserve">
     <value>Reason</value>
@@ -3542,7 +3542,7 @@
     <value>Delete</value>
   </data>
   <data name="Admin.Blogs.DeleteConfirm" xml:space="preserve">
-    <value>Delete the post “{0}”? It can be restored from the Deleted tab.</value>
+    <value>Delete the post â€œ{0}â€? It can be restored from the Deleted tab.</value>
   </data>
   <data name="Admin.Blogs.DeleteTitle" xml:space="preserve">
     <value>Delete post</value>
@@ -3605,10 +3605,10 @@
     <value>Related place (optional)</value>
   </data>
   <data name="Admin.Blogs.PlaceNone" xml:space="preserve">
-    <value>— None —</value>
+    <value>â€” None â€”</value>
   </data>
   <data name="Admin.Blogs.PlaceHelp" xml:space="preserve">
-    <value>Link this post to a place to surface it on that place’s page.</value>
+    <value>Link this post to a place to surface it on that placeâ€™s page.</value>
   </data>
   <data name="Admin.Blogs.SummaryLabel" xml:space="preserve">
     <value>Summary</value>
@@ -3659,7 +3659,7 @@
     <value>Hide post</value>
   </data>
   <data name="Admin.Blogs.HideIntro" xml:space="preserve">
-    <value>Hide “{0}” from readers. Provide a reason for the audit trail.</value>
+    <value>Hide â€œ{0}â€ from readers. Provide a reason for the audit trail.</value>
   </data>
   <data name="Admin.Blogs.Unhide" xml:space="preserve">
     <value>Unhide</value>
@@ -3677,7 +3677,7 @@
     <value>Removing takes the post down permanently. This cannot be undone from the dashboard.</value>
   </data>
   <data name="Admin.Blogs.RemoveIntro" xml:space="preserve">
-    <value>Provide a reason for removing “{0}”.</value>
+    <value>Provide a reason for removing â€œ{0}â€.</value>
   </data>
   <data name="Admin.Blogs.InfoHeading" xml:space="preserve">
     <value>Details</value>
@@ -3710,7 +3710,7 @@
     <value>Unlink</value>
   </data>
   <data name="Admin.Blogs.UnlinkConfirm" xml:space="preserve">
-    <value>Unlink the tour “{0}” from this post?</value>
+    <value>Unlink the tour â€œ{0}â€ from this post?</value>
   </data>
   <data name="Admin.Blogs.UnlinkTitle" xml:space="preserve">
     <value>Unlink tour</value>
@@ -3860,7 +3860,7 @@
     <value>Remove tag</value>
   </data>
   <data name="Admin.EntityTags.RemoveConfirm" xml:space="preserve">
-    <value>Remove the “{0}” tag from this entity?</value>
+    <value>Remove the â€œ{0}â€ tag from this entity?</value>
   </data>
   <data name="Admin.EntityTags.SelectLabel" xml:space="preserve">
     <value>Tags (Ctrl/Cmd-click to select several)</value>
@@ -3920,7 +3920,7 @@
     <value>Remove category</value>
   </data>
   <data name="Admin.EntityCategories.RemoveConfirm" xml:space="preserve">
-    <value>Remove the “{0}” category from this entity?</value>
+    <value>Remove the â€œ{0}â€ category from this entity?</value>
   </data>
   <data name="Admin.EntityCategories.SelectLabel" xml:space="preserve">
     <value>Categories (Ctrl/Cmd-click to select several)</value>
@@ -4130,7 +4130,7 @@
     <value>Field</value>
   </data>
   <data name="Admin.Translations.ColLanguages" xml:space="preserve">
-    <value>From → To</value>
+    <value>From â†’ To</value>
   </data>
   <data name="Admin.Translations.ColOriginal" xml:space="preserve">
     <value>Original</value>
@@ -4385,7 +4385,7 @@
     <value>Deactivate category</value>
   </data>
   <data name="Admin.Categories.DeactivateConfirm" xml:space="preserve">
-    <value>Deactivate the “{0}” category? It will be hidden from the catalog.</value>
+    <value>Deactivate the â€œ{0}â€ category? It will be hidden from the catalog.</value>
   </data>
   <data name="Admin.Categories.Delete" xml:space="preserve">
     <value>Delete</value>
@@ -4394,7 +4394,7 @@
     <value>Delete category</value>
   </data>
   <data name="Admin.Categories.DeleteConfirm" xml:space="preserve">
-    <value>Delete the “{0}” category? This cannot be undone.</value>
+    <value>Delete the â€œ{0}â€ category? This cannot be undone.</value>
   </data>
   <data name="Admin.Categories.EditTitle" xml:space="preserve">
     <value>Edit category</value>
@@ -4472,7 +4472,7 @@
     <value>Delete tag</value>
   </data>
   <data name="Admin.Tags.DeleteConfirm" xml:space="preserve">
-    <value>Delete the “{0}” tag? This cannot be undone.</value>
+    <value>Delete the â€œ{0}â€ tag? This cannot be undone.</value>
   </data>
   <data name="Admin.Tags.EditTitle" xml:space="preserve">
     <value>Edit tag</value>
@@ -4688,7 +4688,7 @@
     <value>Select a tour to view its guide applications.</value>
   </data>
   <data name="Admin.GuideApplications.ChooseTour" xml:space="preserve">
-    <value>Choose a tour…</value>
+    <value>Choose a tourâ€¦</value>
   </data>
   <data name="Admin.GuideApplications.StatusLabel" xml:space="preserve">
     <value>Status</value>
@@ -4748,7 +4748,7 @@
     <value>Unknown guide</value>
   </data>
   <data name="Admin.GuideApplications.NoTour" xml:space="preserve">
-    <value>—</value>
+    <value>â€”</value>
   </data>
   <data name="Admin.GuideApplications.Approve" xml:space="preserve">
     <value>Approve</value>
@@ -4805,7 +4805,7 @@
     <value>Tour guide</value>
   </data>
   <data name="Admin.Guides.SelectPlaceholder" xml:space="preserve">
-    <value>Select a tour guide…</value>
+    <value>Select a tour guideâ€¦</value>
   </data>
   <data name="Admin.Guides.SelectHelp" xml:space="preserve">
     <value>Active tour guides are listed by name.</value>
@@ -5363,7 +5363,7 @@
     <value>Assign to</value>
   </data>
   <data name="Admin.SupportDetails.AssignPlaceholder" xml:space="preserve">
-    <value>Select an admin…</value>
+    <value>Select an adminâ€¦</value>
   </data>
   <data name="Admin.SupportDetails.Assign" xml:space="preserve">
     <value>Assign</value>
@@ -5843,7 +5843,7 @@
     <value>Place</value>
   </data>
   <data name="Admin.SeoWeather.PlacePlaceholder" xml:space="preserve">
-    <value>Select a place…</value>
+    <value>Select a placeâ€¦</value>
   </data>
   <data name="Admin.SeoWeather.PlaceHelp" xml:space="preserve">
     <value>Choose a place to view its weather snapshot.</value>
@@ -7247,7 +7247,7 @@
     <value>Active</value>
   </data>
   <data name="Creator.Profile.ActiveTier" xml:space="preserve">
-    <value>Active · {0}</value>
+    <value>Active Â· {0}</value>
   </data>
   <data name="Creator.Profile.NoProfileTitle" xml:space="preserve">
     <value>No creator profile found</value>
@@ -7397,7 +7397,7 @@
     <value>Add images</value>
   </data>
   <data name="Creator.Images.AddHint" xml:space="preserve">
-    <value>(JPG, PNG, GIF, WEBP · max 10 MB each · {0} slot(s) left)</value>
+    <value>(JPG, PNG, GIF, WEBP Â· max 10 MB each Â· {0} slot(s) left)</value>
   </data>
   <data name="Creator.Images.Upload" xml:space="preserve">
     <value>Upload</value>
@@ -8831,7 +8831,7 @@
     <value>{0} document(s)</value>
   </data>
   <data name="Provider.Dashboard.DocAlerts" xml:space="preserve">
-    <value>{0} expired · {1} expiring soon</value>
+    <value>{0} expired Â· {1} expiring soon</value>
   </data>
   <data name="Provider.Dashboard.TotalListings" xml:space="preserve">
     <value>Total Listings</value>
@@ -9311,7 +9311,7 @@
     <value>Page</value>
   </data>
   <data name="Provider.Packages.ManageTitle" xml:space="preserve">
-    <value>Package — {0}</value>
+    <value>Package â€” {0}</value>
   </data>
   <data name="Provider.Packages.MaxParticipants" xml:space="preserve">
     <value>max {0}</value>
@@ -9344,7 +9344,7 @@
     <value>Add inclusion</value>
   </data>
   <data name="Provider.Packages.AddInclusionPlaceholder" xml:space="preserve">
-    <value>Add an inclusion…</value>
+    <value>Add an inclusionâ€¦</value>
   </data>
   <data name="Provider.Packages.Add" xml:space="preserve">
     <value>Add</value>
@@ -9728,7 +9728,7 @@
     <value>My application</value>
   </data>
   <data name="Provider.Apply.ChooseType" xml:space="preserve">
-    <value>— choose —</value>
+    <value>â€” choose â€”</value>
   </data>
   <data name="Provider.Apply.Start" xml:space="preserve">
     <value>Start application</value>
@@ -9824,7 +9824,7 @@
     <value>Document type</value>
   </data>
   <data name="Provider.Onboarding.ChooseType" xml:space="preserve">
-    <value>— choose —</value>
+    <value>â€” choose â€”</value>
   </data>
   <data name="Provider.Onboarding.File" xml:space="preserve">
     <value>File</value>
@@ -9929,7 +9929,7 @@
     <value>Application #{0}</value>
   </data>
   <data name="Provider.TourApplications.Resubmitted" xml:space="preserve">
-    <value>Resubmitted {0}×</value>
+    <value>Resubmitted {0}Ã—</value>
   </data>
   <data name="Provider.TourApplications.ProposedPrice" xml:space="preserve">
     <value>Proposed base price</value>
@@ -11732,7 +11732,7 @@
 <value>Search YallaJo</value>
 </data>
 <data name="Search.Overlay.Placeholder" xml:space="preserve">
-<value>Search tours, destinations, experiences…</value>
+<value>Search tours, destinations, experiencesâ€¦</value>
 </data>
 <data name="Search.Overlay.Close" xml:space="preserve">
 <value>Close</value>
@@ -11831,7 +11831,7 @@
 <value>Remove filter: {0}</value>
 </data>
 <data name="Public.Loading" xml:space="preserve">
-<value>Loading…</value>
+<value>Loadingâ€¦</value>
 </data>
 <data name="Public.Review.Created" xml:space="preserve">
 <value>Thanks for your review!</value>
@@ -12005,7 +12005,7 @@
 <value>What happens next?</value>
 </data>
 <data name="Public.Booking.Next1" xml:space="preserve">
-<value>Save your reference number — you will need it for any inquiries.</value>
+<value>Save your reference number â€” you will need it for any inquiries.</value>
 </data>
 <data name="Public.Booking.Next2" xml:space="preserve">
 <value>You can view or manage this booking anytime from My bookings.</value>
@@ -12039,5 +12039,251 @@
 </data>
 <data name="Public.ClosedNow" xml:space="preserve">
 <value>Closed now</value>
+</data>
+<data name="Help.Title" xml:space="preserve">
+<value>Help Center</value>
+</data>
+<data name="Help.HeroTitle" xml:space="preserve">
+<value>How can we help you?</value>
+</data>
+<data name="Help.HeroSubtitle" xml:space="preserve">
+<value>Search our help center or browse the frequently asked questions below.</value>
+</data>
+<data name="Help.SearchPlaceholder" xml:space="preserve">
+<value>Search the help center...</value>
+</data>
+<data name="Help.SearchAria" xml:space="preserve">
+<value>Search help</value>
+</data>
+<data name="Help.Faq.Title" xml:space="preserve">
+<value>Frequently asked questions</value>
+</data>
+<data name="Help.NoMatch" xml:space="preserve">
+<value>No articles match your search. Try a different keyword.</value>
+</data>
+<data name="Help.NoArticlesAlt" xml:space="preserve">
+<value>No articles</value>
+</data>
+<data name="Help.Empty.Title" xml:space="preserve">
+<value>No help articles yet</value>
+</data>
+<data name="Help.Empty.Text" xml:space="preserve">
+<value>Our help center is being put together. Please check back soon.</value>
+</data>
+<data name="Help.StillNeedHelp" xml:space="preserve">
+<value>Still need help?</value>
+</data>
+<data name="Help.ReachSupport" xml:space="preserve">
+<value>Reach our support team directly.</value>
+</data>
+<data name="Help.SubmitTicket" xml:space="preserve">
+<value>Submit a ticket</value>
+</data>
+<data name="Help.SubmitTicketText" xml:space="preserve">
+<value>Open a support request and track it.</value>
+</data>
+<data name="Public.Error.ReferenceId" xml:space="preserve">
+<value>Reference ID:</value>
+</data>
+<data name="Public.Back.to.home" xml:space="preserve">
+<value>Back to home</value>
+</data>
+<data name="Public.Contact.support" xml:space="preserve">
+<value>Contact support</value>
+</data>
+<data name="Public.Accessibility.reviews" xml:space="preserve">
+<value>Accessibility reviews</value>
+</data>
+<data name="Public.Visited" xml:space="preserve">
+<value>Visited {0}</value>
+</data>
+<data name="Public.Accessibility.features" xml:space="preserve">
+<value>Accessibility features</value>
+</data>
+<data name="Public.Select.at.least.one" xml:space="preserve">
+<value>(select at least one)</value>
+</data>
+<data name="Public.AccessibilityReview.Empty" xml:space="preserve">
+<value>No accessibility reviews yet. Share your accessibility experience to help others.</value>
+</data>
+<data name="Public.Write.an.accessibility.review" xml:space="preserve">
+<value>Write an accessibility review</value>
+</data>
+<data name="Public.Your.accessibility.experience" xml:space="preserve">
+<value>Your accessibility experience</value>
+</data>
+<data name="Public.Describe.accessibility.placeholder" xml:space="preserve">
+<value>Describe accessibility (entrances, restrooms, signage, staff assistance, etc.)</value>
+</data>
+<data name="Public.Submit.accessibility.review" xml:space="preserve">
+<value>Submit accessibility review</value>
+</data>
+<data name="Public.Sign.in.to.write.an.accessibility.review" xml:space="preserve">
+<value>Sign in to write an accessibility review</value>
+</data>
+<data name="Public.AccessibilityFeature.Wheelchair" xml:space="preserve">
+<value>Wheelchair access</value>
+</data>
+<data name="Public.AccessibilityFeature.Visual" xml:space="preserve">
+<value>Visual accessibility</value>
+</data>
+<data name="Public.AccessibilityFeature.Hearing" xml:space="preserve">
+<value>Hearing accessibility</value>
+</data>
+<data name="Public.AccessibilityFeature.Cognitive" xml:space="preserve">
+<value>Cognitive accessibility</value>
+</data>
+<data name="Public.AccessibilityFeature.Mobility" xml:space="preserve">
+<value>Mobility support</value>
+</data>
+<data name="Public.AccessibilityFeature.Other" xml:space="preserve">
+<value>Other</value>
+</data>
+<data name="Public.FoundHelpful.Count" xml:space="preserve">
+<value>{0} found this helpful</value>
+</data>
+<data name="Public.Sign.in.to.write.a.review" xml:space="preserve">
+<value>Sign in to write a review</value>
+</data>
+<data name="Public.YearsExperience" xml:space="preserve">
+<value>{0} yrs experience</value>
+</data>
+<data name="Public.Specialties.Count" xml:space="preserve">
+<value>{0} specialties</value>
+</data>
+<data name="Public.Years.Short" xml:space="preserve">
+<value>{0} yrs</value>
+</data>
+<data name="Public.To.contact.our.support.team" xml:space="preserve">
+<value>to contact our support team.</value>
+</data>
+<data name="Public.ActiveGuides.Count" xml:space="preserve">
+<value>{0} active guide(s)</value>
+</data>
+<data name="Public.Request.to.join.a.group" xml:space="preserve">
+<value>Request to join a group</value>
+</data>
+<data name="Public.JoinRequest.Sent" xml:space="preserve">
+<value>Your request to join has been sent.</value>
+</data>
+<data name="Public.Tours.for.selected.place" xml:space="preserve">
+<value>Tours for selected place</value>
+</data>
+<data name="Public.Tours.in.Place" xml:space="preserve">
+<value>Tours in {0}</value>
+</data>
+<data name="Home.Hero.TitleLead" xml:space="preserve">
+<value>Discover the best</value>
+</data>
+<data name="Home.Hero.TitleEmphasis" xml:space="preserve">
+<value>tours in Jordan</value>
+</data>
+<data name="Home.Hero.Cta" xml:space="preserve">
+<value>Discover Now</value>
+</data>
+<data name="Home.Hero.Watch" xml:space="preserve">
+<value>Watch our story</value>
+</data>
+<data name="Home.Hero.SupportBadge" xml:space="preserve">
+<value>Support</value>
+</data>
+<data name="Home.Search.Where" xml:space="preserve">
+<value>Where to?</value>
+</data>
+<data name="Home.Search.AnyDestination" xml:space="preserve">
+<value>Any destination</value>
+</data>
+<data name="Home.Search.When" xml:space="preserve">
+<value>When?</value>
+</data>
+<data name="Home.Search.SelectDates" xml:space="preserve">
+<value>Select dates</value>
+</data>
+<data name="Home.Search.Who" xml:space="preserve">
+<value>Who?</value>
+</data>
+<data name="Home.Search.Adults" xml:space="preserve">
+<value>Adults</value>
+</data>
+<data name="Home.Search.AdultsAge" xml:space="preserve">
+<value>Age 13+</value>
+</data>
+<data name="Home.Search.AdultsCounter" xml:space="preserve">
+<value>Adults counter</value>
+</data>
+<data name="Home.Search.DecreaseAdults" xml:space="preserve">
+<value>Decrease adults</value>
+</data>
+<data name="Home.Search.IncreaseAdults" xml:space="preserve">
+<value>Increase adults</value>
+</data>
+<data name="Home.Search.Children" xml:space="preserve">
+<value>Children</value>
+</data>
+<data name="Home.Search.ChildrenAge" xml:space="preserve">
+<value>Age 0â€“12</value>
+</data>
+<data name="Home.Search.ChildrenCounter" xml:space="preserve">
+<value>Children counter</value>
+</data>
+<data name="Home.Search.DecreaseChildren" xml:space="preserve">
+<value>Decrease children</value>
+</data>
+<data name="Home.Search.IncreaseChildren" xml:space="preserve">
+<value>Increase children</value>
+</data>
+<data name="Home.Search.WordAdult" xml:space="preserve">
+<value>adult</value>
+</data>
+<data name="Home.Search.WordAdults" xml:space="preserve">
+<value>adults</value>
+</data>
+<data name="Home.Search.WordChild" xml:space="preserve">
+<value>child</value>
+</data>
+<data name="Home.Search.WordChildren" xml:space="preserve">
+<value>children</value>
+</data>
+<data name="Home.Features.Title" xml:space="preserve">
+<value>Why book with YallaJo</value>
+</data>
+<data name="Home.Features.Lead" xml:space="preserve">
+<value>Every tour is hand-picked and run by vetted local guides. Pay securely, book instantly, and travel with peace of mind.</value>
+</data>
+<data name="Home.Features.GuidesTitle" xml:space="preserve">
+<value>Vetted local guides</value>
+</data>
+<data name="Home.Features.GuidesText" xml:space="preserve">
+<value>Every guide is interviewed and rated by real travelers.</value>
+</data>
+<data name="Home.Features.InstantTitle" xml:space="preserve">
+<value>Instant booking</value>
+</data>
+<data name="Home.Features.InstantText" xml:space="preserve">
+<value>Confirm your spot in seconds â€” no waiting for replies.</value>
+</data>
+<data name="Home.Features.SecureTitle" xml:space="preserve">
+<value>Secure payments</value>
+</data>
+<data name="Home.Features.SecureText" xml:space="preserve">
+<value>Bank-grade encryption and full refund protection.</value>
+</data>
+<data name="Home.Features.SupportTitle" xml:space="preserve">
+<value>24/7 traveler support</value>
+</data>
+<data name="Home.Features.SupportText" xml:space="preserve">
+<value>Real humans on call, day or night, wherever you are.</value>
+</data>
+<data name="Home.SeeAllTours" xml:space="preserve">
+<value>See all tours</value>
+</data>
+<data name="Home.BrowseAllPlaces" xml:space="preserve">
+<value>Browse all places</value>
+</data>
+<data name="Home.SeeAllBusinesses" xml:space="preserve">
+<value>See all businesses</value>
+</data>
+<data name="Home.Empty.Text" xml:space="preserve">
+<value>We're hand-picking tours and experiences for you. Check back soon.</value>
 </data>
 </root>

@@ -1,10 +1,12 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OutputCaching;
+using Microsoft.Extensions.Localization;
 using YallaJo.Web.Areas.Public.Caching;
 using YallaJo.Web.Areas.Public.Facades;
 using YallaJo.Web.Areas.Public.Models.Tours;
 using YallaJo.Web.Infrastructure.Mvc;
+using YallaJo.Web.Resources;
 
 namespace YallaJo.Web.Areas.Public.Controllers;
 
@@ -16,12 +18,14 @@ public sealed class ToursController : BaseController
     private readonly ToursFacade _tours;
     private readonly ReviewsFacade _reviews;
     private readonly AccessibilityReviewsFacade _accessibilityReviews;
+    private readonly IStringLocalizer<SharedResource> _localizer;
 
-    public ToursController(ToursFacade tours, ReviewsFacade reviews, AccessibilityReviewsFacade accessibilityReviews)
+    public ToursController(ToursFacade tours, ReviewsFacade reviews, AccessibilityReviewsFacade accessibilityReviews, IStringLocalizer<SharedResource> localizer)
     {
         _tours = tours;
         _reviews = reviews;
         _accessibilityReviews = accessibilityReviews;
+        _localizer = localizer;
     }
 
     // Phase 4: /tours is the canonical search surface. Filter params map 1:1 to the
@@ -116,7 +120,7 @@ public sealed class ToursController : BaseController
             return signOut;
 
         if (result.IsSuccess)
-            SetSuccess("Your request to join has been sent.");
+            SetSuccess(_localizer["Public.JoinRequest.Sent"]);
         else
             SetError(result.Error);
 

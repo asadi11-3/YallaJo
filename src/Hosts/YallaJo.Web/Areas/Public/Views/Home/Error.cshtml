@@ -1,4 +1,6 @@
 @model YallaJo.Web.Areas.Public.Models.Home.ErrorVm
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 
 @{
     ViewData["Title"] = $"{Model.StatusCode} - {Model.Title}";
@@ -15,13 +17,13 @@
                 @if (!string.IsNullOrWhiteSpace(Model.CorrelationId))
                 {
                     <p class="small text-body-secondary mb-4">
-                        Reference ID: <code>@Model.CorrelationId</code>
+                        @Localizer["Public.Error.ReferenceId"] <code dir="ltr">@Model.CorrelationId</code>
                     </p>
                 }
 
                 <div class="d-flex flex-column flex-sm-row gap-2 justify-content-center">
-                    <a class="btn btn-primary" asp-area="Public" asp-controller="Home" asp-action="Index">Back to home</a>
-                    <a class="btn btn-outline-primary" asp-area="Public" asp-controller="Contact" asp-action="Index">Contact support</a>
+                    <a class="btn btn-primary" asp-area="Public" asp-controller="Home" asp-action="Index">@Localizer["Public.Back.to.home"]</a>
+                    <a class="btn btn-outline-primary" asp-area="Public" asp-controller="Contact" asp-action="Index">@Localizer["Public.Contact.support"]</a>
                 </div>
             </div>
         </div>

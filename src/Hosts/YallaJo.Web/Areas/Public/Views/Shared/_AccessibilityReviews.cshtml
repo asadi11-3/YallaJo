@@ -34,8 +34,8 @@
 <section class="pb-5" id="accessibility-reviews">
     <div class="container">
         <div class="d-flex flex-wrap align-items-center justify-content-between mb-3">
-            <h2 class="h4 mb-0"><i class="bi bi-universal-access me-2" aria-hidden="true"></i>Accessibility reviews</h2>
-            <span class="text-secondary">@Model.TotalCount review@(Model.TotalCount == 1 ? "" : "s")</span>
+            <h2 class="h4 mb-0"><i class="bi bi-universal-access me-2" aria-hidden="true"></i>@Localizer["Public.Accessibility.reviews"]</h2>
+            <span class="text-secondary">@Localizer["Public.Reviews.Count", Model.TotalCount]</span>
         </div>
 
         @if (Model.HasResults)
@@ -65,7 +65,7 @@
                                 <div class="mb-2">
                                     @foreach (var f in review.FeatureTypes)
                                     {
-                                        <span class="badge text-bg-light border me-1">@f</span>
+                                        <span class="badge text-bg-light border me-1">@Localizer["Public.AccessibilityFeature." + f]</span>
                                     }
                                 </div>
                             }
@@ -76,19 +76,19 @@
                             }
                             @if (review.VisitDate is { } vd)
                             {
-                                <span class="text-secondary small"><i class="bi bi-geo-alt me-1" aria-hidden="true"></i>Visited @vd.ToString("MMM yyyy")</span>
+                                <span class="text-secondary small"><i class="bi bi-geo-alt me-1" aria-hidden="true"></i>@Localizer["Public.Visited", vd.ToString("MMM yyyy")]</span>
                             }
 
                             @if (ownReview && review.IsWithinEditWindow)
                             {
                                 <div class="mt-3">
-                                    <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="collapse" data-bs-target="#edit-ar-@review.Id" aria-expanded="false">Edit your review</button>
+                                    <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="collapse" data-bs-target="#edit-ar-@review.Id" aria-expanded="false">@Localizer["Public.Edit.your.review"]</button>
                                     <div class="collapse mt-3" id="edit-ar-@review.Id">
                                         <form method="post" asp-area="Public" asp-controller="Reviews" asp-action="EditAccessibilityReview" asp-route-targetType="@targetToken" asp-route-targetId="@Model.TargetId" asp-route-reviewId="@review.Id" class="border rounded p-3" data-loading data-success-message="@Localizer["Public.AccessibilityReview.Updated"]">
                                             @Html.AntiForgeryToken()
                                             <input type="hidden" name="returnUrl" value="@returnUrl" />
                                             <div class="mb-2">
-                                                <label class="form-label small" for="editArRating-@review.Id">Rating</label>
+                                                <label class="form-label small" for="editArRating-@review.Id">@Localizer["Public.Rating"]</label>
                                                 <select id="editArRating-@review.Id" name="AccessibilityReview.Rating" class="form-select form-select-sm">
                                                     @for (var i = 5; i >= 1; i--)
                                                     {
@@ -97,29 +97,29 @@
                                                 </select>
                                             </div>
                                             <div class="mb-2">
-                                                <label class="form-label small" for="editArTitle-@review.Id">Title</label>
+                                                <label class="form-label small" for="editArTitle-@review.Id">@Localizer["Public.Title"]</label>
                                                 <input id="editArTitle-@review.Id" name="AccessibilityReview.Title" value="@review.Title" maxlength="200" class="form-control form-control-sm" />
                                             </div>
                                             <div class="mb-2">
-                                                <label class="form-label small" for="editArContent-@review.Id">Review</label>
+                                                <label class="form-label small" for="editArContent-@review.Id">@Localizer["Public.Review"]</label>
                                                 <textarea id="editArContent-@review.Id" name="AccessibilityReview.Content" minlength="10" maxlength="5000" rows="3" required class="form-control form-control-sm">@review.Content</textarea>
                                             </div>
                                             <div class="mb-2">
-                                                <label class="form-label small d-block">Accessibility features</label>
+                                                <label class="form-label small d-block">@Localizer["Public.Accessibility.features"]</label>
                                                 @foreach (var kind in featureKinds)
                                                 {
                                                     <div class="form-check form-check-inline">
                                                         <input class="form-check-input" type="checkbox" name="AccessibilityReview.FeatureTypes" value="@kind"
                                                                id="editArFeat-@review.Id-@kind" checked="@(review.FeatureTypes.Contains(kind))" />
-                                                        <label class="form-check-label small" for="editArFeat-@review.Id-@kind">@kind</label>
+                                                        <label class="form-check-label small" for="editArFeat-@review.Id-@kind">@Localizer["Public.AccessibilityFeature." + kind]</label>
                                                     </div>
                                                 }
                                             </div>
                                             <div class="mb-2">
-                                                <label class="form-label small" for="editArVisit-@review.Id">Visit date</label>
+                                                <label class="form-label small" for="editArVisit-@review.Id">@Localizer["Public.Visit.date"]</label>
                                                 <input id="editArVisit-@review.Id" type="date" name="AccessibilityReview.VisitDate" value="@review.VisitDate?.ToString("yyyy-MM-dd")" class="form-control form-control-sm" />
                                             </div>
-                                            <button type="submit" class="btn btn-sm btn-primary">Save changes</button>
+                                            <button type="submit" class="btn btn-sm btn-primary">@Localizer["Public.Save.changes"]</button>
                                         </form>
                                     </div>
                                 </div>
@@ -130,7 +130,7 @@
                                       data-confirm="@Localizer["Public.Confirm.DeleteAccessibilityReview"]" data-confirm-title="@Localizer["Public.Confirm.Title"]" data-confirm-action="@Localizer["Public.Confirm.Delete"]" data-confirm-cancel="@Localizer["Public.Confirm.Cancel"]">
                                     @Html.AntiForgeryToken()
                                     <input type="hidden" name="returnUrl" value="@returnUrl" />
-                                    <button type="submit" class="btn btn-sm btn-outline-danger">Delete your review</button>
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">@Localizer["Public.Delete.your.review"]</button>
                                 </form>
                             }
                         </div>
@@ -140,20 +140,20 @@
         }
         else
         {
-            <p class="text-secondary">No accessibility reviews yet. Share your accessibility experience to help others.</p>
+            <p class="text-secondary">@Localizer["Public.AccessibilityReview.Empty"]</p>
         }
 
         @if (isAuthed)
         {
             <div class="card border mt-3">
                 <div class="card-body">
-                    <h3 class="h6">Write an accessibility review</h3>
+                    <h3 class="h6">@Localizer["Public.Write.an.accessibility.review"]</h3>
                     <form method="post" asp-area="Public" asp-controller="Reviews" asp-action="CreateAccessibilityReview" asp-route-targetType="@targetToken" asp-route-targetId="@Model.TargetId" data-loading data-success-message="@Localizer["Public.AccessibilityReview.Created"]">
                         @Html.AntiForgeryToken()
                         <input type="hidden" name="returnUrl" value="@returnUrl" />
                         <div class="row g-2">
                             <div class="col-sm-3">
-                                <label class="form-label small" for="arRating">Rating</label>
+                                <label class="form-label small" for="arRating">@Localizer["Public.Rating"]</label>
                                 <select id="arRating" name="AccessibilityReview.Rating" class="form-select form-select-sm">
                                     @for (var i = 5; i >= 1; i--)
                                     {
@@ -162,31 +162,31 @@
                                 </select>
                             </div>
                             <div class="col-sm-9">
-                                <label class="form-label small" for="arTitle">Title</label>
+                                <label class="form-label small" for="arTitle">@Localizer["Public.Title"]</label>
                                 <input id="arTitle" name="AccessibilityReview.Title" maxlength="200" class="form-control form-control-sm" />
                             </div>
                         </div>
                         <div class="mt-2">
-                            <label class="form-label small" for="arContent">Your accessibility experience</label>
+                            <label class="form-label small" for="arContent">@Localizer["Public.Your.accessibility.experience"]</label>
                             <textarea id="arContent" name="AccessibilityReview.Content" minlength="10" maxlength="5000" rows="3" required class="form-control form-control-sm"
-                                      placeholder="Describe accessibility (entrances, restrooms, signage, staff assistance, etc.)"></textarea>
+                                      placeholder="@Localizer["Public.Describe.accessibility.placeholder"]"></textarea>
                         </div>
                         <div class="mt-2">
-                            <label class="form-label small d-block">Accessibility features <span class="text-secondary">(select at least one)</span></label>
+                            <label class="form-label small d-block">@Localizer["Public.Accessibility.features"] <span class="text-secondary">@Localizer["Public.Select.at.least.one"]</span></label>
                             @foreach (var kind in featureKinds)
                             {
                                 <div class="form-check form-check-inline">
                                     <input class="form-check-input" type="checkbox" name="AccessibilityReview.FeatureTypes" value="@kind" id="arFeat-@kind" />
-                                    <label class="form-check-label small" for="arFeat-@kind">@kind</label>
+                                    <label class="form-check-label small" for="arFeat-@kind">@Localizer["Public.AccessibilityFeature." + kind]</label>
                                 </div>
                             }
                         </div>
                         <div class="mt-2 max-w-220">
-                            <label class="form-label small" for="arVisit">Visit date</label>
+                            <label class="form-label small" for="arVisit">@Localizer["Public.Visit.date"]</label>
                             <input id="arVisit" type="date" name="AccessibilityReview.VisitDate" class="form-control form-control-sm" />
                         </div>
                         <button type="submit" class="btn btn-sm btn-primary mt-3">
-                            <i class="bi bi-send me-1" aria-hidden="true"></i>Submit accessibility review
+                            <i class="bi bi-send me-1" aria-hidden="true"></i>@Localizer["Public.Submit.accessibility.review"]
                         </button>
                     </form>
                 </div>
@@ -196,7 +196,7 @@
         {
             <div class="mt-3">
                 <a class="btn btn-outline-primary btn-sm" asp-area="Auth" asp-controller="Auth" asp-action="SignIn" asp-route-returnUrl="@returnUrl">
-                    <i class="bi bi-pencil-square me-1" aria-hidden="true"></i>Sign in to write an accessibility review
+                    <i class="bi bi-pencil-square me-1" aria-hidden="true"></i>@Localizer["Public.Sign.in.to.write.an.accessibility.review"]
                 </a>
             </div>
         }

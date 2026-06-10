@@ -43,7 +43,7 @@
                     <div class="small text-body-secondary">
                         <i class="bi bi-star-fill text-warning" aria-hidden="true"></i>
                         @Model.AverageRating.ToString("0.0")
-                        <span class="text-body-tertiary">(@Model.ReviewCount reviews)</span>
+                        <span class="text-body-tertiary">(@Localizer["Public.Reviews.Count", Model.ReviewCount])</span>
                     </div>
                 </div>
             </div>
@@ -67,7 +67,7 @@
             <li class="nav-item"><span class="badge text-bg-light">@Localizer["Public.Tours.Count", Model.TourCount]</span></li>
             @if (Model.YearsOfExperience > 0)
             {
-                <li class="nav-item"><i class="bi bi-briefcase me-1" aria-hidden="true"></i>@Model.YearsOfExperience yrs experience</li>
+                <li class="nav-item"><i class="bi bi-briefcase me-1" aria-hidden="true"></i>@Localizer["Public.YearsExperience", Model.YearsOfExperience]</li>
             }
             @if (Model.HasFirstAid)
             {
@@ -79,7 +79,7 @@
             }
             @if (Model.SpecializationCount > 0)
             {
-                <li class="nav-item"><i class="bi bi-stars me-1" aria-hidden="true"></i>@Model.SpecializationCount specialties</li>
+                <li class="nav-item"><i class="bi bi-stars me-1" aria-hidden="true"></i>@Localizer["Public.Specialties.Count", Model.SpecializationCount]</li>
             }
         </ul>
     </div>
@@ -135,7 +135,7 @@
                         <li class="list-group-item d-flex justify-content-between"><span class="text-body-secondary">@Localizer["Public.Tours"]</span><span>@Model.TourCount</span></li>
                         @if (Model.YearsOfExperience > 0)
                         {
-                            <li class="list-group-item d-flex justify-content-between"><span class="text-body-secondary">@Localizer["Public.Experience"]</span><span>@Model.YearsOfExperience yrs</span></li>
+                            <li class="list-group-item d-flex justify-content-between"><span class="text-body-secondary">@Localizer["Public.Experience"]</span><span>@Localizer["Public.Years.Short", Model.YearsOfExperience]</span></li>
                         }
                     </ul>
                 </div>

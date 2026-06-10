@@ -79,8 +79,10 @@
                 });
             });
             var totalTravelers = state.adults + state.children;
-            var pluralAdults = state.adults === 1 ? 'adult' : 'adults';
-            var pluralChildren = state.children === 1 ? 'child' : 'children';
+            // Phase 9 (CON1): localized words come from data-word-* on the label; EN fallbacks for safety.
+            var words = label.dataset || {};
+            var pluralAdults = state.adults === 1 ? (words.wordAdult || 'adult') : (words.wordAdults || 'adults');
+            var pluralChildren = state.children === 1 ? (words.wordChild || 'child') : (words.wordChildren || 'children');
             total.value = String(totalTravelers);
             if (state.children === 0) {
                 label.textContent = state.adults + ' ' + pluralAdults;

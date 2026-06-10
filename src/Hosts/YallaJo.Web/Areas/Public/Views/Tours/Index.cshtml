@@ -30,7 +30,7 @@
             <div class="row mb-3">
                 <div class="col-12">
                     <span class="badge text-bg-primary fs-6 me-2">
-                        <i class="bi bi-geo-alt me-1"></i>@Model.PlaceFilterLabel
+                        <i class="bi bi-geo-alt me-1"></i>@(string.IsNullOrWhiteSpace(Model.PlaceFilterName) ? Localizer["Public.Tours.for.selected.place"] : Localizer["Public.Tours.in.Place", Model.PlaceFilterName])
                     </span>
                     <a asp-area="Public" asp-controller="Tours" asp-action="Index" class="btn btn-sm btn-outline-secondary">
                         <i class="bi bi-x-lg me-1"></i>@Localizer["Public.Clear.place.filter"]

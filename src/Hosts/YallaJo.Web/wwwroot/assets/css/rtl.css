@@ -204,3 +204,17 @@
     right: auto;
     left: 0.5rem;
 }
+
+/* ------------------------------------------------------------------
+   8. Bootstrap-icons directional flips (Phase 9, UI-RTL-RTL2).
+      Font Awesome arrows/angles are flipped in an earlier section;
+      these cover the bi-* arrows/chevrons used for "see all" links,
+      back buttons and pagination affordances.
+   ------------------------------------------------------------------ */
+[dir="rtl"] .bi-arrow-left,
+[dir="rtl"] .bi-arrow-right,
+[dir="rtl"] .bi-chevron-left,
+[dir="rtl"] .bi-chevron-right {
+    display: inline-block;
+    transform: scaleX(-1);
+}

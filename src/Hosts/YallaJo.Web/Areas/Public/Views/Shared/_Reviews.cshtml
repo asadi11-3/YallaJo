@@ -70,7 +70,7 @@
                             }
                             @if (review.HelpfulVoteCount > 0)
                             {
-                                <span class="text-secondary small"><i class="bi bi-hand-thumbs-up me-1" aria-hidden="true"></i>@review.HelpfulVoteCount found this helpful</span>
+                                <span class="text-secondary small"><i class="bi bi-hand-thumbs-up me-1" aria-hidden="true"></i>@Localizer["Public.FoundHelpful.Count", review.HelpfulVoteCount]</span>
                             }
                             @if (isAuthed)
                             {
@@ -170,7 +170,7 @@
         {
             <div class="mt-3">
                 <a class="btn btn-outline-primary btn-sm" asp-area="Auth" asp-controller="Auth" asp-action="SignIn" asp-route-returnUrl="@returnUrl">
-                    <i class="bi bi-pencil-square me-1" aria-hidden="true"></i>Sign in to write a review
+                    <i class="bi bi-pencil-square me-1" aria-hidden="true"></i>@Localizer["Public.Sign.in.to.write.a.review"]
                 </a>
             </div>
         }
