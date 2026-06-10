@@ -11944,4 +11944,73 @@
 <data name="Public.Booking.FreeCancellation" xml:space="preserve">
 <value>Free cancellation up to {0} h before</value>
 </data>
+<data name="Public.Booking.Confirmation.Title" xml:space="preserve">
+<value>Booking confirmation</value>
+</data>
+<data name="Public.Booking.Confirmed" xml:space="preserve">
+<value>Booking confirmed</value>
+</data>
+<data name="Public.Booking.Cancelled" xml:space="preserve">
+<value>Booking cancelled</value>
+</data>
+<data name="Public.Booking.Reference" xml:space="preserve">
+<value>Reference</value>
+</data>
+<data name="Public.CopyReference" xml:space="preserve">
+<value>Copy reference</value>
+</data>
+<data name="Public.Copied" xml:space="preserve">
+<value>Copied to clipboard</value>
+</data>
+<data name="Public.Booking.BookedOn" xml:space="preserve">
+<value>Booked {0}</value>
+</data>
+<data name="Public.Subtotal" xml:space="preserve">
+<value>Subtotal</value>
+</data>
+<data name="Public.Discount" xml:space="preserve">
+<value>Discount</value>
+</data>
+<data name="Public.Loyalty" xml:space="preserve">
+<value>Loyalty</value>
+</data>
+<data name="Public.Total" xml:space="preserve">
+<value>Total</value>
+</data>
+<data name="Public.Booking.CancelledOn" xml:space="preserve">
+<value>This booking was cancelled on {0}.</value>
+</data>
+<data name="Public.Booking.CancelledNoDate" xml:space="preserve">
+<value>This booking was cancelled.</value>
+</data>
+<data name="Public.Booking.RefundIssued" xml:space="preserve">
+<value>A refund of {0} was issued.</value>
+</data>
+<data name="Public.Booking.AwaitingPayment" xml:space="preserve">
+<value>Your booking is awaiting payment.</value>
+</data>
+<data name="Public.Booking.PaymentExpires" xml:space="preserve">
+<value>Payment expires {0}.</value>
+</data>
+<data name="Public.PayNow" xml:space="preserve">
+<value>Pay now</value>
+</data>
+<data name="Public.DownloadPdf" xml:space="preserve">
+<value>Download PDF</value>
+</data>
+<data name="Public.Explore.more.tours" xml:space="preserve">
+<value>Explore more tours</value>
+</data>
+<data name="Public.Booking.WhatsNext" xml:space="preserve">
+<value>What happens next?</value>
+</data>
+<data name="Public.Booking.Next1" xml:space="preserve">
+<value>Save your reference number — you will need it for any inquiries.</value>
+</data>
+<data name="Public.Booking.Next2" xml:space="preserve">
+<value>You can view or manage this booking anytime from My bookings.</value>
+</data>
+<data name="Public.Booking.Next3" xml:space="preserve">
+<value>Questions? Contact our support team and quote your reference.</value>
+</data>
 </root>

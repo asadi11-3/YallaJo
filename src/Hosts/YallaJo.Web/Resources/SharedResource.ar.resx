@@ -11944,4 +11944,73 @@
 <data name="Public.Booking.FreeCancellation" xml:space="preserve">
 <value>إلغاء مجاني حتى {0} ساعة قبل الموعد.</value>
 </data>
+<data name="Public.Booking.Confirmation.Title" xml:space="preserve">
+<value>تأكيد الحجز</value>
+</data>
+<data name="Public.Booking.Confirmed" xml:space="preserve">
+<value>تم تأكيد الحجز</value>
+</data>
+<data name="Public.Booking.Cancelled" xml:space="preserve">
+<value>تم إلغاء الحجز</value>
+</data>
+<data name="Public.Booking.Reference" xml:space="preserve">
+<value>الرقم المرجعي</value>
+</data>
+<data name="Public.CopyReference" xml:space="preserve">
+<value>نسخ الرقم المرجعي</value>
+</data>
+<data name="Public.Copied" xml:space="preserve">
+<value>تم النسخ إلى الحافظة</value>
+</data>
+<data name="Public.Booking.BookedOn" xml:space="preserve">
+<value>تم الحجز في {0}</value>
+</data>
+<data name="Public.Subtotal" xml:space="preserve">
+<value>المجموع الفرعي</value>
+</data>
+<data name="Public.Discount" xml:space="preserve">
+<value>الخصم</value>
+</data>
+<data name="Public.Loyalty" xml:space="preserve">
+<value>نقاط الولاء</value>
+</data>
+<data name="Public.Total" xml:space="preserve">
+<value>الإجمالي</value>
+</data>
+<data name="Public.Booking.CancelledOn" xml:space="preserve">
+<value>تم إلغاء هذا الحجز في {0}.</value>
+</data>
+<data name="Public.Booking.CancelledNoDate" xml:space="preserve">
+<value>تم إلغاء هذا الحجز.</value>
+</data>
+<data name="Public.Booking.RefundIssued" xml:space="preserve">
+<value>تم إصدار استرداد بقيمة {0}.</value>
+</data>
+<data name="Public.Booking.AwaitingPayment" xml:space="preserve">
+<value>حجزك في انتظار الدفع.</value>
+</data>
+<data name="Public.Booking.PaymentExpires" xml:space="preserve">
+<value>تنتهي مهلة الدفع في {0}.</value>
+</data>
+<data name="Public.PayNow" xml:space="preserve">
+<value>ادفع الآن</value>
+</data>
+<data name="Public.DownloadPdf" xml:space="preserve">
+<value>تنزيل PDF</value>
+</data>
+<data name="Public.Explore.more.tours" xml:space="preserve">
+<value>استكشف المزيد من الجولات</value>
+</data>
+<data name="Public.Booking.WhatsNext" xml:space="preserve">
+<value>ما الخطوة التالية؟</value>
+</data>
+<data name="Public.Booking.Next1" xml:space="preserve">
+<value>احتفظ برقمك المرجعي — ستحتاجه لأي استفسار.</value>
+</data>
+<data name="Public.Booking.Next2" xml:space="preserve">
+<value>يمكنك عرض هذا الحجز أو إدارته في أي وقت من صفحة حجوزاتي.</value>
+</data>
+<data name="Public.Booking.Next3" xml:space="preserve">
+<value>لديك أسئلة؟ تواصل مع فريق الدعم واذكر رقمك المرجعي.</value>
+</data>
 </root>
