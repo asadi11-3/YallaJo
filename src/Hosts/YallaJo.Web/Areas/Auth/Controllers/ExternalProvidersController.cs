@@ -63,9 +63,19 @@ public sealed class ExternalProvidersController : BaseController
             return signOut;
 
         if (result.IsSuccess)
+        {
             SetSuccess(_localizer["Auth.Flash.ProviderUnlinked"].Value);
+        }
+        else if (result.IsConflict)
+        {
+            // B6 lockout guard — show the localized explanation rather than relaying
+            // the API's English message.
+            SetError(_localizer["Auth.External.LastLoginMethod"].Value);
+        }
         else
+        {
             SetError(result.Error);
+        }
 
         return RedirectToAction(nameof(Index));
     }

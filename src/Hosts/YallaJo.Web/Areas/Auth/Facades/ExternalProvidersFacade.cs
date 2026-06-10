@@ -143,6 +143,11 @@ public sealed class ExternalProvidersFacade
             return ApiResult.ForceSignOut();
         }
 
+        // B6: 409 = last-login-method guard (or a concurrency conflict) — preserve the
+        // status so the controller can show the localized lockout explanation.
+        if (result.IsConflict)
+            return ApiResult.Fail(409, result.Error);
+
         return ApiResult.Fail(result.Error ?? "Unlink failed.");
     }
 }

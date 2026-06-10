@@ -109,4 +109,13 @@ internal sealed class UserRepository(SecurityDbContext context)
             .Select(p => (string?)p.PhoneNumber)
             .FirstOrDefaultAsync(ct);
     }
+
+    public async Task<string?> GetPasswordHashAsync(Guid userId, CancellationToken ct = default)
+    {
+        return await context.Users
+            .AsNoTracking()
+            .Where(u => u.Id == userId)
+            .Select(u => (string?)u.PasswordHash)
+            .FirstOrDefaultAsync(ct);
+    }
 }

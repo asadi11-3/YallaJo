@@ -7132,6 +7132,9 @@
   <data name="Auth.Flash.ProviderUnlinked" xml:space="preserve">
     <value>تم إلغاء ربط مزوّد الخدمة.</value>
   </data>
+  <data name="Auth.External.LastLoginMethod" xml:space="preserve">
+    <value>هذا الحساب هو وسيلتك الوحيدة لتسجيل الدخول. عيّن كلمة مرور أولاً، ثم ألغِ ربطه.</value>
+  </data>
   <data name="Auth.Complete.Title" xml:space="preserve">
     <value>جارٍ إتمام تسجيل الدخول</value>
   </data>

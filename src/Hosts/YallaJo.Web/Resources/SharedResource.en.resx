@@ -7132,6 +7132,9 @@
   <data name="Auth.Flash.ProviderUnlinked" xml:space="preserve">
     <value>Provider unlinked.</value>
   </data>
+  <data name="Auth.External.LastLoginMethod" xml:space="preserve">
+    <value>This account is your only way to sign in. Set a password first, then unlink it.</value>
+  </data>
   <data name="Auth.Complete.Title" xml:space="preserve">
     <value>Completing sign-in</value>
   </data>

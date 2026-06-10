@@ -137,6 +137,20 @@ internal sealed class SecurityService(
         return await userRepository.GetPrimaryPhoneNumberAsync(userId, ct);
     }
 
+    public async Task<bool> HasUsablePasswordAsync(Guid userId, CancellationToken ct = default)
+    {
+        var hash = await userRepository.GetPasswordHashAsync(userId, ct);
+
+        // Mirrors PasswordHasher.Verify's fail-closed semantics: a missing user, an
+        // empty hash, or a non-Base64 value (the deliberate "EXTERNAL-ONLY:<guid>" /
+        // "REASSIGNED:<guid>" placeholders) all mean "no usable local password".
+        if (string.IsNullOrWhiteSpace(hash))
+            return false;
+
+        var buffer = new byte[((hash.Length * 3) + 3) / 4];
+        return Convert.TryFromBase64String(hash, buffer, out _);
+    }
+
     public async Task<SecurityContactData?> GetPrimaryContactDataAsync(Guid userId, CancellationToken ct = default)
     {
         // Email is sourced from the Security aggregate (persistent source of truth),

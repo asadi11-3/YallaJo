@@ -21,4 +21,7 @@ public interface IUserRepository : IRepository<User, Guid>
     void RemoveUserRole(UserRole userRole);
     Task<Guid?> GetUserIdByEmailAsync(string normalizedEmail, CancellationToken ct = default);
     Task<string?> GetPrimaryPhoneNumberAsync(Guid userId, CancellationToken ct = default);
+
+    /// <summary>Stored password hash for the user, or null when the user does not exist. B6.</summary>
+    Task<string?> GetPasswordHashAsync(Guid userId, CancellationToken ct = default);
 }
