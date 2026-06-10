@@ -104,8 +104,9 @@
                                                 <label class="form-label small" for="editArContent-@review.Id">@Localizer["Public.Review"]</label>
                                                 <textarea id="editArContent-@review.Id" name="AccessibilityReview.Content" minlength="10" maxlength="5000" rows="3" required class="form-control form-control-sm">@review.Content</textarea>
                                             </div>
-                                            <div class="mb-2">
-                                                <label class="form-label small d-block">@Localizer["Public.Accessibility.features"]</label>
+                                            @* Phase 10 (A11Y4): feature checkboxes grouped with fieldset+legend *@
+                                            <fieldset class="border-0 p-0 mb-2">
+                                                <legend class="form-label small d-block fs-6 float-none w-auto p-0">@Localizer["Public.Accessibility.features"]</legend>
                                                 @foreach (var kind in featureKinds)
                                                 {
                                                     <div class="form-check form-check-inline">
@@ -114,7 +115,7 @@
                                                         <label class="form-check-label small" for="editArFeat-@review.Id-@kind">@Localizer["Public.AccessibilityFeature." + kind]</label>
                                                     </div>
                                                 }
-                                            </div>
+                                            </fieldset>
                                             <div class="mb-2">
                                                 <label class="form-label small" for="editArVisit-@review.Id">@Localizer["Public.Visit.date"]</label>
                                                 <input id="editArVisit-@review.Id" type="date" name="AccessibilityReview.VisitDate" value="@review.VisitDate?.ToString("yyyy-MM-dd")" class="form-control form-control-sm" />
@@ -171,8 +172,9 @@
                             <textarea id="arContent" name="AccessibilityReview.Content" minlength="10" maxlength="5000" rows="3" required class="form-control form-control-sm"
                                       placeholder="@Localizer["Public.Describe.accessibility.placeholder"]"></textarea>
                         </div>
-                        <div class="mt-2">
-                            <label class="form-label small d-block">@Localizer["Public.Accessibility.features"] <span class="text-secondary">@Localizer["Public.Select.at.least.one"]</span></label>
+                        @* Phase 10 (A11Y4): feature checkboxes grouped with fieldset+legend *@
+                        <fieldset class="border-0 p-0 mt-2">
+                            <legend class="form-label small d-block fs-6 float-none w-auto p-0">@Localizer["Public.Accessibility.features"] <span class="text-secondary">@Localizer["Public.Select.at.least.one"]</span></legend>
                             @foreach (var kind in featureKinds)
                             {
                                 <div class="form-check form-check-inline">
@@ -180,7 +182,7 @@
                                     <label class="form-check-label small" for="arFeat-@kind">@Localizer["Public.AccessibilityFeature." + kind]</label>
                                 </div>
                             }
-                        </div>
+                        </fieldset>
                         <div class="mt-2 max-w-220">
                             <label class="form-label small" for="arVisit">@Localizer["Public.Visit.date"]</label>
                             <input id="arVisit" type="date" name="AccessibilityReview.VisitDate" class="form-control form-control-sm" />

@@ -113,8 +113,9 @@
                                 <div class="vstack gap-3">
                                     @foreach (var group in slotsByDate)
                                     {
-                                        <div>
-                                            <h6 class="small text-uppercase text-secondary mb-2">@group.Key.ToString("ddd, dd MMM yyyy")</h6>
+                                        @* Phase 10 (A11Y4): slot radios grouped with fieldset+legend per date *@
+                                        <fieldset class="border-0 p-0 m-0">
+                                            <legend class="small text-uppercase text-secondary mb-2 fs-6 float-none w-auto p-0">@group.Key.ToString("ddd, dd MMM yyyy")</legend>
                                             <div class="d-flex flex-wrap gap-2">
                                                 @foreach (var slot in group)
                                                 {
@@ -128,7 +129,7 @@
                                                     </label>
                                                 }
                                             </div>
-                                        </div>
+                                        </fieldset>
                                     }
                                 </div>
                                 <span asp-validation-for="Form.AvailabilitySlotId" class="text-danger small d-block mt-2"></span>
@@ -156,12 +157,15 @@
                             <h5 class="card-header-title mb-0">@Localizer["Public.Travelers"]</h5>
                         </div>
                         <div class="card-body">
+                            @* Phase 10 (A11Y4): travelers counters grouped with fieldset + visually-hidden legend *@
+                            <fieldset class="border-0 p-0 m-0">
+                            <legend class="visually-hidden">@Localizer["Public.Travelers"]</legend>
                             <div class="row g-3">
                                 <div class="col-sm-6 col-lg-3">
                                     <label asp-for="Form.Adults" class="form-label">@Localizer["Public.Adults"]</label>
                                     <input asp-for="Form.Adults" type="number" min="1" max="50" class="form-control js-participant" />
                                     <span asp-validation-for="Form.Adults" class="text-danger small"></span>
-                                </div>
+                                </div><!-- /Adults -->
                                 <div class="col-sm-6 col-lg-3">
                                     <label asp-for="Form.Children" class="form-label">@Localizer["Public.Children"]</label>
                                     <input asp-for="Form.Children" type="number" min="0" max="50" class="form-control js-participant" />
@@ -175,6 +179,7 @@
                                     <input asp-for="Form.Seniors" type="number" min="0" max="50" class="form-control js-participant" />
                                 </div>
                             </div>
+                            </fieldset>
                             @if (Model.HasSlots && Model.HasGuide)
                             {
                                 <p class="small text-secondary mt-2 mb-0">
@@ -228,7 +233,8 @@
                                 </div>
                             }
                             <hr class="my-2" />
-                            <div class="d-flex justify-content-between align-items-center mb-1">
+                            @* Phase 10 (A11Y9): estimated total updates live as travelers/slots change *@
+                            <div class="d-flex justify-content-between align-items-center mb-1" aria-live="polite">
                                 <span class="small">@Localizer["Public.Estimated.total"] <span class="text-secondary">(<span id="estTravelers">@Localizer["Public.Booking.TravelersCount", 1]</span>)</span></span>
                                 <span class="h6 mb-0" id="estTotal"
                                       data-unit="@Model.EffectivePrice.ToString(System.Globalization.CultureInfo.InvariantCulture)"

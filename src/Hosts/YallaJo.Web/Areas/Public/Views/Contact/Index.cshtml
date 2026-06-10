@@ -115,7 +115,7 @@
                             }
                             else
                             {
-                                <button type="button" class="btn btn-dark mb-0 disabled" disabled data-bs-toggle="tooltip" title="@Localizer["Public.Sign.in.to.contact.support"]">@Localizer["Public.Send.Message"]</button>
+                                <button type="button" class="btn btn-dark mb-0 disabled" disabled aria-disabled="true" data-bs-toggle="tooltip" title="@Localizer["Public.Sign.in.to.contact.support"]">@Localizer["Public.Send.Message"]</button>
                                 <p class="small mt-2 mb-0">
                                     <a asp-area="Auth" asp-controller="Auth" asp-action="SignIn" asp-route-returnUrl="@returnUrl">@Localizer["Public.Sign.in"]</a>
                                     @Localizer["Public.To.contact.our.support.team"]
