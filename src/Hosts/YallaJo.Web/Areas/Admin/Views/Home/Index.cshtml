@@ -212,6 +212,13 @@
     data-yj-component root below. No inline executable <script>, no nonce needed.
     Chart labels are localized server-side here so the JS never hard-codes copy
     (CON1).
+
+    SANITIZED (SEC3): every @Html.Raw below wraps System.Text.Json.JsonSerializer.Serialize.
+    The default System.Text.Json encoder is HTML-safe — it escapes <, >, &, ' and non-ASCII
+    as \uXXXX, so any string (e.g. a localized label) containing "</script>" is emitted as
+    "\u003C/script\u003E" and cannot terminate this non-executable application/json island.
+    Html.Raw only prevents Razor from double-encoding that already-safe JSON; it introduces
+    no XSS surface. The numeric @Model.* values on the "bookings"/"users" lines are ints.
 *@
 <script type="application/json" data-yj-component="admin-dashboard">
     {
