@@ -188,6 +188,8 @@ var mvcBuilder  = builder.Services.AddControllersWithViews(options =>
     // ForbiddenResultFilter: the ONE code path that renders AccessDenied.cshtml.
     // Branches on content negotiation: HTML page → view, AJAX/JSON → ProblemDetails.
     options.Filters.Add<ForbiddenResultFilter>();
+
+    options.Filters.Add<YallaJo.Web.Infrastructure.Mvc.AdminNoStoreCacheFilter>();
 })
     .AddRazorOptions(o =>
     {
