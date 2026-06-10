@@ -1,8 +1,7 @@
-@using Microsoft.Extensions.Localization
 @model YallaJo.Web.Areas.Auth.Models.ExternalProviders.ExternalAuthCompleteVm
-@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
     ViewData["Title"] = Localizer["Auth.Complete.Title"].Value;
+    @* Interstitial in the external-auth flow: public site chrome (overrides the funnel default). *@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 

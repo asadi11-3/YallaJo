@@ -1,12 +1,9 @@
 @model YallaJo.Web.Areas.Auth.Models.Login.LoginVm
-@using Microsoft.Extensions.Localization
 @using YallaJo.Web.Infrastructure.Authentication.ExternalAuth
 @using YallaJo.Web.Infrastructure.Security.Recaptcha
 @inject IExternalProviderAvailability ProviderAvailability
-@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
     ViewData["Title"] = Localizer["Auth.SignIn.Title"].Value;
-    Layout = "~/Areas/Auth/Views/Shared/_AuthLayout.cshtml";
 }
 
 <section class="vh-xxl-100">

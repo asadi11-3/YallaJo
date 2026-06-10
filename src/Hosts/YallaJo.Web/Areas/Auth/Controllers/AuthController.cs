@@ -86,7 +86,7 @@ public sealed class AuthController : BaseController
         }
         else
         {
-            ModelState.AddModelError(string.Empty, result.Error ?? "Login failed.");
+            ModelState.AddModelError(string.Empty, result.Error ?? _localizer["Auth.Flash.LoginFailed"].Value);
         }
 
         return View(vm);
@@ -95,12 +95,14 @@ public sealed class AuthController : BaseController
     // ── Sign up ───────────────────────────────────────────────────────────────
 
     [HttpGet("sign-up")]
-    public IActionResult SignUp()
+    public IActionResult SignUp(string? returnUrl = null)
     {
         if (User.Identity?.IsAuthenticated == true)
-            return RedirectToAction("Index", "Sessions", new { area = "Auth" });
+            return RedirectToLocal(returnUrl);
 
-        return View(new RegisterVm());
+        // returnUrl is carried only into the social-login challenge forms (validated by
+        // ExternalAuthController); the email registration path always goes to OTP first.
+        return View(new RegisterVm { ReturnUrl = returnUrl });
     }
 
     [HttpPost("sign-up")]
@@ -114,7 +116,7 @@ public sealed class AuthController : BaseController
 
         if (result.IsSuccess)
         {
-            SetSuccess("Registration successful. Please check your email for a verification code.");
+            SetSuccess(_localizer["Auth.Flash.RegistrationSuccess"].Value);
             return RedirectToAction(nameof(TwoFactor), new { email = result.Email });
         }
 
@@ -126,7 +128,7 @@ public sealed class AuthController : BaseController
         }
         else
         {
-            ModelState.AddModelError(string.Empty, result.Error ?? "Registration failed.");
+            ModelState.AddModelError(string.Empty, result.Error ?? _localizer["Auth.Flash.RegistrationFailed"].Value);
         }
 
         return View(vm);
@@ -151,14 +153,14 @@ public sealed class AuthController : BaseController
 
         if (result.IsSuccess)
         {
-            SetSuccess("If that email is registered, a reset code has been sent.");
+            SetSuccess(_localizer["Auth.Flash.ForgotUniform"].Value);
             return RedirectToAction(nameof(ResetPassword), new { email = vm.Email });
         }
 
         if (ApplyValidationErrors(result))
             return View(vm);
 
-        ModelState.AddModelError(string.Empty, result.Error ?? "Request failed.");
+        ModelState.AddModelError(string.Empty, result.Error ?? _localizer["Auth.Flash.RequestFailed"].Value);
         return View(vm);
     }
 
@@ -182,14 +184,14 @@ public sealed class AuthController : BaseController
 
         if (result.IsSuccess)
         {
-            SetSuccess("Password reset successfully. Please sign in.");
+            SetSuccess(_localizer["Auth.Flash.ResetSuccess"].Value);
             return RedirectToAction(nameof(SignIn));
         }
 
         if (ApplyValidationErrors(result))
             return View(vm);
 
-        ModelState.AddModelError(string.Empty, result.Error ?? "Password reset failed.");
+        ModelState.AddModelError(string.Empty, result.Error ?? _localizer["Auth.Flash.ResetFailed"].Value);
         return View(vm);
     }
 
@@ -218,7 +220,7 @@ public sealed class AuthController : BaseController
         if (ApplyValidationErrors(result))
             return View(vm);
 
-        ModelState.AddModelError(string.Empty, result.Error ?? "Email verification failed.");
+        ModelState.AddModelError(string.Empty, result.Error ?? _localizer["Auth.Flash.VerifyFailed"].Value);
         return View(vm);
     }
 

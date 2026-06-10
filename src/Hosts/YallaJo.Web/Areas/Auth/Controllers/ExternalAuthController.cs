@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using YallaJo.Web.Areas.Auth.Models.ExternalProviders;
+using Microsoft.Extensions.Localization;
 using YallaJo.Web.Infrastructure.Authentication.Claims;
 using YallaJo.Web.Infrastructure.Authentication.ExternalAuth;
 using YallaJo.Web.Infrastructure.Mvc;
@@ -19,6 +20,7 @@ public sealed class ExternalAuthController : BaseController
     private readonly ExternalProvidersFacade _facade;
     private readonly IExternalProviderAvailability _availability;
     private readonly ILogger<ExternalAuthController> _logger;
+    private readonly IStringLocalizer<YallaJo.Web.Resources.SharedResource> _localizer;
 
     private const string ModeItemKey = "ExternalAuth.Mode";
     private const string ReturnUrlItemKey = "ExternalAuth.ReturnUrl";
@@ -29,11 +31,13 @@ public sealed class ExternalAuthController : BaseController
     public ExternalAuthController(
         ExternalProvidersFacade facade,
         IExternalProviderAvailability availability,
-        ILogger<ExternalAuthController> logger)
+        ILogger<ExternalAuthController> logger,
+        IStringLocalizer<YallaJo.Web.Resources.SharedResource> localizer)
     {
         _facade = facade;
         _availability = availability;
         _logger = logger;
+        _localizer = localizer;
     }
 
     [HttpPost("challenge")]
@@ -132,7 +136,7 @@ public sealed class ExternalAuthController : BaseController
         {
             if (User.Identity?.IsAuthenticated != true)
             {
-                SetError("Please sign in first, then link your account.");
+                SetError(_localizer["Auth.Flash.SignInFirstToLink"].Value);
                 return RedirectToLogin();
             }
 
@@ -185,7 +189,7 @@ public sealed class ExternalAuthController : BaseController
         {
             if (User.Identity?.IsAuthenticated != true)
             {
-                SetError("Please sign in first, then link your account.");
+                SetError(_localizer["Auth.Flash.SignInFirstToLink"].Value);
                 return RedirectToLogin();
             }
 
@@ -193,7 +197,7 @@ public sealed class ExternalAuthController : BaseController
 
             if (linkResult.IsSuccess)
             {
-                SetSuccess($"{provider} account linked successfully.");
+                SetSuccess(_localizer["Auth.Flash.ProviderLinked", provider].Value);
             }
             else
             {
@@ -204,7 +208,7 @@ public sealed class ExternalAuthController : BaseController
                 var firstValidation = linkResult.ValidationErrors?
                     .SelectMany(kv => kv.Value)
                     .FirstOrDefault(m => !string.IsNullOrWhiteSpace(m));
-                SetError(linkResult.Error ?? firstValidation ?? "Could not link provider.");
+                SetError(linkResult.Error ?? firstValidation ?? _localizer["Auth.Flash.ProviderLinkFailed"].Value);
             }
 
             // Flash is written before the guard on purpose: the original behavior
@@ -222,7 +226,7 @@ public sealed class ExternalAuthController : BaseController
         // Standard _Alerts flash (was a bespoke TempData["LoginError"] side channel).
         // outcome.Error is always facade-authored friendly copy — never a raw
         // provider/API error — so it is safe to surface verbatim.
-        SetError(outcome.Error ?? "External sign-in failed.");
+        SetError(outcome.Error ?? _localizer["Auth.Flash.ExternalSignInFailed"].Value);
         return RedirectToLogin();
     }
 

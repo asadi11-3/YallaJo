@@ -26,6 +26,15 @@ public sealed class RegisterVm
     public string Password { get; set; } = string.Empty;
 
     /// <summary>
+    /// Optional post-auth destination, forwarded to the social-login challenge forms so
+    /// an external sign-up started from this page lands back where the user came from
+    /// (validated server-side via Url.IsLocalUrl in ExternalAuthController). The email
+    /// registration path intentionally ignores it — that flow always proceeds to OTP
+    /// verification first.
+    /// </summary>
+    public string? ReturnUrl { get; set; }
+
+    /// <summary>
     /// Populated client-side by the centralized <c>_RecaptchaField</c> partial.
     /// </summary>
     public string RecaptchaToken { get; set; } = string.Empty;

@@ -1,0 +1,19 @@
+/*
+ * auth.css — project-owned custom styles for the authentication funnel pages.
+ *
+ * Loaded by Areas/Auth/Views/Shared/_AuthLayout.cshtml AFTER the vendored theme
+ * bundle (style.css), mirroring the admin.css convention. Replaces the static
+ * inline style="..." attributes previously embedded in the auth views (X6).
+ * All rules are direction-agnostic (RTL1).
+ */
+
+/* One-time-code input: spaced monospace-style digits (TwoFactor, ResetPassword). */
+.otp-input {
+    letter-spacing: .5em;
+}
+
+/* Slim password-strength meter track (SignUp, ResetPassword). The bar's width is
+   JS-driven (dynamic style is permitted by X6); only the static track height moves here. */
+.progress-thin {
+    height: 4px;
+}

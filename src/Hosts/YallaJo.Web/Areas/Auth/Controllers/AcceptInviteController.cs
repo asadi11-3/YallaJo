@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Localization;
 using YallaJo.Web.Areas.Auth.Models.AcceptInvite;
 using YallaJo.Web.Infrastructure.Mvc;
 using YallaJo.Web.Areas.Auth.Facades;
@@ -11,8 +12,15 @@ namespace YallaJo.Web.Areas.Auth.Controllers;
 public sealed class AcceptInviteController : BaseController
 {
     private readonly AcceptInviteFacade _facade;
+    private readonly IStringLocalizer<YallaJo.Web.Resources.SharedResource> _localizer;
 
-    public AcceptInviteController(AcceptInviteFacade facade) => _facade = facade;
+    public AcceptInviteController(
+        AcceptInviteFacade facade,
+        IStringLocalizer<YallaJo.Web.Resources.SharedResource> localizer)
+    {
+        _facade = facade;
+        _localizer = localizer;
+    }
 
     [HttpGet("")]
     public IActionResult Index(string? email = null, string? token = null)
@@ -40,7 +48,7 @@ public sealed class AcceptInviteController : BaseController
 
         if (result.IsSuccess)
         {
-            SetSuccess("Your account is active. Please sign in with your email and new password.");
+            SetSuccess(_localizer["Auth.Flash.InviteAccepted"].Value);
             return RedirectToLogin();
         }
 
@@ -66,7 +74,7 @@ public sealed class AcceptInviteController : BaseController
             return View(vm);
         }
 
-        ModelState.AddModelError(string.Empty, result.Error ?? "Could not accept invite.");
+        ModelState.AddModelError(string.Empty, result.Error ?? _localizer["Auth.Flash.InviteFailed"].Value);
         return View(vm);
     }
 }

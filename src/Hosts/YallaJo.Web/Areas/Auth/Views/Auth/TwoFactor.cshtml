@@ -1,11 +1,8 @@
 @model YallaJo.Web.Areas.Auth.Models.VerifyEmail.VerifyEmailVm
 @using YallaJo.Web.Infrastructure.Security.Recaptcha
-@using Microsoft.Extensions.Localization
 @inject IRecaptchaScriptService Recaptcha
-@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
     ViewData["Title"] = Localizer["Auth.TwoFactor.Title"].Value;
-    Layout = "~/Areas/Auth/Views/Shared/_AuthLayout.cshtml";
 }
 
 <section class="vh-xxl-100">
@@ -46,18 +43,18 @@
                                     <input asp-for="Email" type="hidden" />
 
                                     <!-- Verification code -->
-                                    <p class="mb-1">@Localizer["Auth.TwoFactor.Intro"]</p>
+                                    <label asp-for="OtpCode" class="form-label mb-1">@Localizer["Auth.TwoFactor.Intro"]</label>
                                     <div class="mb-2">
                                         <input asp-for="OtpCode"
-                                               class="form-control form-control-lg text-center"
-                                               style="letter-spacing:.5em;"
+                                               class="form-control form-control-lg text-center otp-input"
                                                dir="ltr"
                                                maxlength="6"
                                                autocomplete="one-time-code"
                                                inputmode="numeric"
                                                placeholder="------"
+                                               aria-describedby="otp-error"
                                                autofocus />
-                                        <span asp-validation-for="OtpCode" class="text-danger small"></span>
+                                        <span asp-validation-for="OtpCode" id="otp-error" class="text-danger small" role="alert"></span>
                                     </div>
 
                                     <!-- Resend -->
@@ -84,6 +81,11 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    @* SANITIZED (SEC3): the value is System.Text.Json.JsonSerializer.Serialize output —
+       the default encoder is HTML-safe (escapes <, >, & as \uXXXX), so a value containing
+       "</script>" cannot terminate this non-executable application/json island. The
+       payload is config-controlled (site key + constant action name), and Html.Raw only
+       prevents Razor from double-encoding the already-safe JSON. *@
     <script type="application/json" id="auth-twofactor-data">@Html.Raw(System.Text.Json.JsonSerializer.Serialize(new { recaptchaEnabled = Recaptcha.IsEnabled, recaptchaSiteKey = Recaptcha.SiteKey, resendAction = RecaptchaActions.ResendOtp }))</script>
     <script src="~/assets/js/auth-twofactor.js" asp-append-version="true"></script>
 }

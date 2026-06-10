@@ -1,9 +1,9 @@
 @using System.Globalization
-@using Microsoft.Extensions.Localization
 @model YallaJo.Web.Areas.Auth.Models.Sessions.SessionsVm
-@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
     ViewData["Title"] = Localizer["Auth.Sessions.Title"].Value;
+    @* Account-management page: opts back into the public site chrome (overrides the
+       funnel _AuthLayout default set by the area _ViewStart). *@
     Layout = "~/Views/Shared/_Layout.cshtml";
     var culture = CultureInfo.CurrentUICulture;
     string When(DateTime dt) => dt.ToString("g", culture);
@@ -31,7 +31,7 @@
 
             <div class="card shadow">
                 <div class="card-header border-bottom">
-                    <h2 class="card-header-title h5 mb-0">@Localizer["Auth.Sessions.Heading"]</h2>
+                    <h2 class="card-header-title h5 mb-0">@Localizer["Auth.Sessions.ListHeading"]</h2>
                 </div>
                 <div class="card-body">
                     @if (!Model.Sessions.Any())
@@ -117,3 +117,14 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+    @* F8 — activates the data-confirm attributes on the destructive forms above
+       (Sign out all devices / Revoke session), which were previously inert because
+       the public _Layout (unlike _AdminLayout) renders no confirm-modal partial.
+       The shared partial is self-contained (modal markup + submit interceptor +
+       localized labels) and is rendered here per-page instead of touching the
+       public layout globally. Bootstrap's bundle loads before this section in
+       _Layout, so the script's bootstrap.Modal dependency is satisfied. *@
+    <partial name="~/Areas/Admin/Views/Shared/Partials/_ConfirmModal.cshtml" />
+}

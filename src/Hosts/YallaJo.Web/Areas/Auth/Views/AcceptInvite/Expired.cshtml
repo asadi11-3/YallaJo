@@ -1,9 +1,7 @@
-@using Microsoft.Extensions.Localization
 @model YallaJo.Web.Areas.Auth.Models.AcceptInvite.ResendFromExpiredVm
-@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
+    @* Part of the anonymous auth funnel — uses the chrome-less _AuthLayout via _ViewStart. *@
     ViewData["Title"] = Localizer["Auth.AcceptInvite.ExpiredTitle"].Value;
-    Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
 <div class="container py-5">

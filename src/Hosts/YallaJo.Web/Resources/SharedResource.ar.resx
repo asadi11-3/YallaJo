@@ -6898,6 +6898,48 @@
   <data name="Auth.SignUp.OrWith" xml:space="preserve">
     <value>أو سجّل عبر</value>
   </data>
+  <data name="Auth.Flash.LoginFailed" xml:space="preserve">
+    <value>فشل تسجيل الدخول.</value>
+  </data>
+  <data name="Auth.Flash.RegistrationSuccess" xml:space="preserve">
+    <value>تم التسجيل بنجاح. يرجى التحقق من بريدك الإلكتروني للحصول على رمز التحقق.</value>
+  </data>
+  <data name="Auth.Flash.RegistrationFailed" xml:space="preserve">
+    <value>فشل التسجيل.</value>
+  </data>
+  <data name="Auth.Flash.ForgotUniform" xml:space="preserve">
+    <value>إذا كان هذا البريد الإلكتروني مسجلاً، فقد تم إرسال رمز إعادة التعيين.</value>
+  </data>
+  <data name="Auth.Flash.RequestFailed" xml:space="preserve">
+    <value>فشل الطلب.</value>
+  </data>
+  <data name="Auth.Flash.ResetSuccess" xml:space="preserve">
+    <value>تمت إعادة تعيين كلمة المرور بنجاح. يرجى تسجيل الدخول.</value>
+  </data>
+  <data name="Auth.Flash.ResetFailed" xml:space="preserve">
+    <value>فشلت إعادة تعيين كلمة المرور.</value>
+  </data>
+  <data name="Auth.Flash.VerifyFailed" xml:space="preserve">
+    <value>فشل التحقق من البريد الإلكتروني.</value>
+  </data>
+  <data name="Auth.Flash.InviteAccepted" xml:space="preserve">
+    <value>حسابك نشط الآن. يرجى تسجيل الدخول ببريدك الإلكتروني وكلمة المرور الجديدة.</value>
+  </data>
+  <data name="Auth.Flash.InviteFailed" xml:space="preserve">
+    <value>تعذّر قبول الدعوة.</value>
+  </data>
+  <data name="Auth.Flash.SignInFirstToLink" xml:space="preserve">
+    <value>يرجى تسجيل الدخول أولاً، ثم ربط حسابك.</value>
+  </data>
+  <data name="Auth.Flash.ProviderLinked" xml:space="preserve">
+    <value>تم ربط حساب {0} بنجاح.</value>
+  </data>
+  <data name="Auth.Flash.ProviderLinkFailed" xml:space="preserve">
+    <value>تعذّر ربط مزوّد الخدمة.</value>
+  </data>
+  <data name="Auth.Flash.ExternalSignInFailed" xml:space="preserve">
+    <value>فشل تسجيل الدخول الخارجي.</value>
+  </data>
   <data name="Auth.Resend.EmailRequired" xml:space="preserve">
     <value>البريد الإلكتروني مطلوب.</value>
   </data>
@@ -6978,6 +7020,9 @@
   </data>
   <data name="Auth.Sessions.Heading" xml:space="preserve">
     <value>الجلسات النشطة</value>
+  </data>
+  <data name="Auth.Sessions.ListHeading" xml:space="preserve">
+    <value>الأجهزة المسجّل الدخول منها</value>
   </data>
   <data name="Auth.Sessions.Subtitle" xml:space="preserve">
     <value>الأجهزة المسجّلة دخولها حالياً إلى حسابك.</value>
