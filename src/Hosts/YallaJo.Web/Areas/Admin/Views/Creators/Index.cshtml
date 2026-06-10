@@ -299,7 +299,13 @@
         <div class="card-body">
             <div class="text-center py-5">
                 <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
-                <p class="mb-0 text-secondary">@Localizer["Admin.Creators.EmptyMessage"]</p>
+                <p class="mb-3 text-secondary">@Localizer["Admin.Creators.EmptyMessage"]</p>
+                @if (!string.IsNullOrWhiteSpace(Model.StatusFilter))
+                {
+                    <a asp-area="Admin" asp-controller="Creators" asp-action="Index" class="btn btn-sm btn-outline-secondary">
+                        <i class="fa-solid fa-arrow-rotate-left fa-fw me-1" aria-hidden="true"></i>@Localizer["Admin.Creators.Reset"]
+                    </a>
+                }
             </div>
         </div>
     }

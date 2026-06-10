@@ -44,3 +44,24 @@
 .text-pre-wrap {
     white-space: pre-wrap;
 }
+
+/* Image fit helper — replaces inline style="object-fit:cover" on thumbnails (X6). */
+.object-fit-cover {
+    object-fit: cover;
+}
+
+/* Inline-size helper for narrow numeric inputs — replaces style="width:6rem" (X6).
+   Uses the logical inline-size so it mirrors correctly under RTL. */
+.iw-6 {
+    inline-size: 6rem;
+}
+
+/* Max-width caps for truncated/long table cells — replace inline style="max-width:Npx"
+   (X6). Logical max-inline-size keeps them direction-agnostic (RTL1). Values match the
+   prior inline styles exactly to preserve column widths. */
+.mw-200 { max-inline-size: 200px; }
+.mw-220 { max-inline-size: 220px; }
+.mw-240 { max-inline-size: 240px; }
+.mw-280 { max-inline-size: 280px; }
+.mw-320 { max-inline-size: 320px; }
+.mw-480 { max-inline-size: 480px; }
