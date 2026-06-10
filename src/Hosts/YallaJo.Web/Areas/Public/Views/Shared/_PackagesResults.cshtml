@@ -31,23 +31,26 @@
                         }
                         @if (package.HasValidity)
                         {
-                            <p class="small text-body-secondary mt-auto mb-0">
+                            <p class="small text-body-secondary mb-3">
                                 <i class="bi bi-calendar-event me-1" aria-hidden="true"></i>
-                                @* TODO(Phase 9): localize the From/Until validity prefixes. *@
                                 @if (package.ValidFrom is not null && package.ValidTo is not null)
                                 {
                                     @($"{package.ValidFrom:d MMM yyyy} – {package.ValidTo:d MMM yyyy}")
                                 }
                                 else if (package.ValidFrom is not null)
                                 {
-                                    @($"From {package.ValidFrom:d MMM yyyy}")
+                                    @Localizer["Public.ValidFrom", $"{package.ValidFrom:d MMM yyyy}"]
                                 }
                                 else
                                 {
-                                    @($"Until {package.ValidTo:d MMM yyyy}")
+                                    @Localizer["Public.ValidUntil", $"{package.ValidTo:d MMM yyyy}"]
                                 }
                             </p>
                         }
+                        @* Phase 8.3: visible CTA in addition to the stretched-link title. *@
+                        <div class="mt-auto">
+                            <a class="btn btn-sm btn-primary position-relative z-index-2" asp-area="Public" asp-controller="Packages" asp-action="Detail" asp-route-id="@package.Id" aria-label="@Localizer["Public.ViewPackage"] – @package.Name">@Localizer["Public.ViewPackage"]</a>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -21,8 +21,21 @@ public sealed class ContactController : BaseController
         _localizer = localizer;
     }
 
+    /// <summary>
+    /// Contact form. <paramref name="subject"/> allows other pages (e.g. package
+    /// inquiries, Phase 8.3) to prefill the subject line via ?subject=.
+    /// </summary>
     [HttpGet("contact")]
-    public IActionResult Index() => View(new ContactFormVm());
+    public IActionResult Index(string? subject = null)
+    {
+        var trimmed = subject?.Trim();
+        if (trimmed is { Length: > 200 })
+        {
+            trimmed = trimmed[..200];
+        }
+
+        return View(new ContactFormVm { Subject = trimmed ?? string.Empty });
+    }
 
     [HttpPost("contact")]
     [ValidateAntiForgeryToken]

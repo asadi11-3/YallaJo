@@ -12013,4 +12013,25 @@
 <data name="Public.Booking.Next3" xml:space="preserve">
 <value>Questions? Contact our support team and quote your reference.</value>
 </data>
+<data name="Public.ValidFrom" xml:space="preserve">
+<value>From {0}</value>
+</data>
+<data name="Public.ValidUntil" xml:space="preserve">
+<value>Until {0}</value>
+</data>
+<data name="Public.ViewPackage" xml:space="preserve">
+<value>View package</value>
+</data>
+<data name="Public.Package.InterestedTitle" xml:space="preserve">
+<value>Interested in this package?</value>
+</data>
+<data name="Public.Package.InquiryHelp" xml:space="preserve">
+<value>Have questions or want to book this bundle? Send us a message and our team will help you arrange it.</value>
+</data>
+<data name="Public.Package.Inquire" xml:space="preserve">
+<value>Inquire about this package</value>
+</data>
+<data name="Public.Package.InquirySubject" xml:space="preserve">
+<value>Package: {0}</value>
+</data>
 </root>

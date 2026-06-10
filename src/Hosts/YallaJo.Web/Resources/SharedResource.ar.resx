@@ -12013,4 +12013,25 @@
 <data name="Public.Booking.Next3" xml:space="preserve">
 <value>لديك أسئلة؟ تواصل مع فريق الدعم واذكر رقمك المرجعي.</value>
 </data>
+<data name="Public.ValidFrom" xml:space="preserve">
+<value>من {0}</value>
+</data>
+<data name="Public.ValidUntil" xml:space="preserve">
+<value>حتى {0}</value>
+</data>
+<data name="Public.ViewPackage" xml:space="preserve">
+<value>عرض الباقة</value>
+</data>
+<data name="Public.Package.InterestedTitle" xml:space="preserve">
+<value>مهتم بهذه الباقة؟</value>
+</data>
+<data name="Public.Package.InquiryHelp" xml:space="preserve">
+<value>لديك أسئلة أو ترغب بحجز هذه الباقة؟ أرسل لنا رسالة وسيساعدك فريقنا في ترتيبها.</value>
+</data>
+<data name="Public.Package.Inquire" xml:space="preserve">
+<value>استفسر عن هذه الباقة</value>
+</data>
+<data name="Public.Package.InquirySubject" xml:space="preserve">
+<value>باقة: {0}</value>
+</data>
 </root>
