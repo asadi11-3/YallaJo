@@ -4,10 +4,9 @@ using YallaJo.Web.Areas.Accounts.Facades;
 using YallaJo.Web.Areas.Accounts.Models.ChangePassword;
 using YallaJo.Web.Areas.Accounts.Models.Profile;
 using YallaJo.Web.Areas.Accounts.Models.UpdatePhone;
-using YallaJo.Web.Areas.Provider.ApiClients;
+using YallaJo.Web.Areas.Provider.Facades;
 using YallaJo.Web.Areas.Provider.Models;
 using YallaJo.Web.Areas.Provider.Models.Settings;
-using YallaJo.Web.Areas.Provider.Shared;
 using YallaJo.Web.Infrastructure.Mvc;
 
 namespace YallaJo.Web.Areas.Provider.Controllers;
@@ -19,14 +18,14 @@ public sealed class SettingsController : BaseController
     private readonly ProfileFacade _profile;
     private readonly ChangePasswordFacade _password;
     private readonly UpdatePhoneFacade _phone;
-    private readonly ProviderApiClient _provider;
+    private readonly ProviderFacade _provider;
     private readonly ILogger<SettingsController> _logger;
 
     public SettingsController(
         ProfileFacade profile,
         ChangePasswordFacade password,
         UpdatePhoneFacade phone,
-        ProviderApiClient provider,
+        ProviderFacade provider,
         ILogger<SettingsController> logger)
     {
         _profile = profile;
@@ -39,7 +38,6 @@ public sealed class SettingsController : BaseController
     [HttpGet("provider/settings")]
     public async Task<IActionResult> Index(CancellationToken ct = default)
     {
-        SetSidebar();
 
         var result = await _profile.GetAsync(ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
@@ -58,7 +56,6 @@ public sealed class SettingsController : BaseController
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> UpdateProfile(UpdateProfileVm form, CancellationToken ct = default)
     {
-        SetSidebar();
 
         if (!ModelState.IsValid)
             return await ReloadAsync(profile: form, ct: ct);
@@ -80,7 +77,6 @@ public sealed class SettingsController : BaseController
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> ChangePassword(ChangePasswordVm form, CancellationToken ct = default)
     {
-        SetSidebar();
 
         if (!ModelState.IsValid)
             return await ReloadAsync(password: form, ct: ct);
@@ -102,7 +98,6 @@ public sealed class SettingsController : BaseController
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> UpdatePhone(UpdatePhoneVm form, CancellationToken ct = default)
     {
-        SetSidebar();
 
         if (!ModelState.IsValid)
             return await ReloadAsync(phone: form, ct: ct);
@@ -153,7 +148,7 @@ public sealed class SettingsController : BaseController
     };
 
     /// <summary>
-    /// Loads the provider business information from <c>GET /api/v1/provider/settings</c>.
+    /// Loads the provider business information via <see cref="ProviderFacade.GetSettingsAsync"/>.
     /// Non-blocking: returns <c>null</c> on any failure (e.g. no application yet) so the
     /// account-settings forms always render.
     /// </summary>
@@ -195,9 +190,4 @@ public sealed class SettingsController : BaseController
         _ => "Unknown",
     };
 
-    private void SetSidebar()
-    {
-        ViewData["ProviderNav"] = "Settings";
-        ViewBag.Sidebar = new ProviderSidebarVm { DisplayName = User.Identity?.Name ?? "Provider" };
-    }
 }

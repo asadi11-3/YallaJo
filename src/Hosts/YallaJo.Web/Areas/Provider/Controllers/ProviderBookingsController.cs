@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using YallaJo.Web.Areas.Provider.Facades;
-using YallaJo.Web.Areas.Provider.Shared;
 using YallaJo.Web.Infrastructure.Mvc;
 
 namespace YallaJo.Web.Areas.Provider.Controllers;
@@ -23,7 +22,6 @@ public sealed class ProviderBookingsController : BaseController
     [HttpGet("provider/bookings/manage")]
     public async Task<IActionResult> Index(string? status, CancellationToken ct = default)
     {
-        SetSidebar();
         var result = await _facade.GetListAsync(status, ct);
         if (result.Outcome == ProviderBookingOutcome.ForceSignOut) return RedirectToLogin();
 
@@ -39,7 +37,6 @@ public sealed class ProviderBookingsController : BaseController
     [HttpGet("provider/bookings/manage/{id:guid}")]
     public async Task<IActionResult> Details(Guid id, CancellationToken ct = default)
     {
-        SetSidebar();
         var result = await _facade.GetDetailsAsync(id, ct);
         if (result.Outcome == ProviderBookingOutcome.ForceSignOut) return RedirectToLogin();
 
@@ -102,20 +99,8 @@ public sealed class ProviderBookingsController : BaseController
     {
         if (result.Outcome == ProviderBookingOutcome.ForceSignOut) return RedirectToLogin();
 
-        if (result.Outcome == ProviderBookingOutcome.Ok)
-            SetSuccess(successMessage);
-        else
-            SetError(result.Error);
-
+        SetFlash(result.Outcome == ProviderBookingOutcome.Ok, result.Error, successMessage);
         return RedirectToAction(nameof(Details), new { id });
     }
 
-    private void SetSidebar()
-    {
-        ViewData["ProviderNav"] = "Bookings";
-        ViewBag.Sidebar = new ProviderSidebarVm
-        {
-            DisplayName = User.Identity?.Name ?? "Provider",
-        };
-    }
 }

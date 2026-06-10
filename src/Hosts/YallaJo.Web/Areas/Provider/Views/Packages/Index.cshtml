@@ -1,21 +1,14 @@
-@using System.Globalization
-@using Microsoft.Extensions.Localization
-@using YallaJo.Web.Infrastructure.Authorization
-@using YallaJo.Web.Areas.Provider.Shared
 @model YallaJo.Web.Areas.Provider.Models.Packages.PackagesIndexVm
-@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
     ViewData["Title"] = Localizer["Provider.Packages.Title"].Value;
     ViewData["ProviderNav"] = "Listings";
-    Layout = "~/Views/Shared/_Layout.cshtml";
-    var sidebar = ViewBag.Sidebar as ProviderSidebarVm ?? new ProviderSidebarVm();
 
     var culture = CultureInfo.CurrentUICulture;
     string Count(int n) => n.ToString("N0", culture);
     string Date(DateTime dt) => dt.ToString("d MMM yyyy", culture);
 }
 
-<partial name="_ProviderSidebar" model="sidebar" />
+@await Component.InvokeAsync("ProviderSidebar")
 
 <section class="pt-0">
     <div class="container vstack gap-4">

@@ -1,17 +1,12 @@
-@using Microsoft.Extensions.Localization
 @using YallaJo.Web.Areas.Accounts.Models.Profile
-@using YallaJo.Web.Areas.Provider.Shared
 @model YallaJo.Web.Areas.Provider.Models.Settings.ProviderSettingsVm
-@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
     ViewData["Title"] = Localizer["Provider.Settings.Title"].Value;
     ViewData["ProviderNav"] = "Settings";
-    Layout = "~/Views/Shared/_Layout.cshtml";
-    var sidebar = ViewBag.Sidebar as ProviderSidebarVm ?? new ProviderSidebarVm();
     var avatar = string.IsNullOrWhiteSpace(Model.AvatarUrl) ? Url.Content("~/assets/images/avatar/01.jpg") : Model.AvatarUrl;
 }
 
-<partial name="_ProviderSidebar" model="sidebar" />
+@await Component.InvokeAsync("ProviderSidebar")
 
 <section class="pt-0">
     <div class="container vstack gap-4">

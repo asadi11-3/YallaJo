@@ -10,7 +10,7 @@ namespace YallaJo.Web.Areas.Provider.Controllers;
 
 [Area("Provider")]
 [Authorize]
-public sealed class TourGuidesController : BaseController
+public sealed class TourGuidesController : ProviderTourResourceController
 {
     private readonly ProviderTourGuidesFacade _facade;
     private readonly ICurrentUser _currentUser;
@@ -64,7 +64,7 @@ public sealed class TourGuidesController : BaseController
                 SetError(result.Error);
                 return RedirectToAction(nameof(Index), new { id });
             default:
-                ApplyValidation(result.ValidationErrors, result.Error);
+                ApplyFacadeValidation(result.ValidationErrors, result.Error, keyPrefix: "Assign.");
                 return await ReloadIndex(id, vm, ct);
         }
     }
@@ -107,38 +107,4 @@ public sealed class TourGuidesController : BaseController
         };
         return View(nameof(Index), vm);
     }
-
-    private void ApplyValidation(IReadOnlyDictionary<string, string[]>? errors, string? fallback)
-    {
-        var applied = false;
-        if (errors is { Count: > 0 })
-        {
-            foreach (var (field, messages) in errors)
-            {
-                foreach (var message in messages)
-                    ModelState.AddModelError($"Assign.{field}", message);
-                applied = true;
-            }
-        }
-
-        if (!applied)
-            ModelState.AddModelError(string.Empty, fallback ?? "Please correct the highlighted fields and try again.");
-        else if (!string.IsNullOrWhiteSpace(fallback))
-            SetError(fallback);
-    }
-
-    private IActionResult Denied(string? message)
-    {
-        SetError(message ?? "You don't have access to this listing.");
-        return RedirectToAction("Index", "Tours", new { area = "Provider" });
-    }
-
-    private IActionResult NotFoundRedirect(string? message)
-    {
-        SetError(message ?? "Not found.");
-        return RedirectToAction("Index", "Tours", new { area = "Provider" });
-    }
-
-    private IActionResult RedirectToStatus() =>
-        RedirectToAction("Status", "Provider", new { area = "Provider" });
 }

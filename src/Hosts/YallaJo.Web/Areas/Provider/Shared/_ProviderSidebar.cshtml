@@ -1,13 +1,11 @@
 @using Microsoft.Extensions.Localization
 @using YallaJo.Web.Infrastructure.Authorization
-@inject YallaJo.Web.Infrastructure.Identity.ICurrentUser CurrentUser
 @inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @model YallaJo.Web.Areas.Provider.Shared.ProviderSidebarVm
 @{
     var active = ViewData["ProviderNav"] as string ?? "Dashboard";
     string Nav(string key) => active == key ? "nav-link active" : "nav-link";
     bool Current(string key) => active == key;
-    bool Has(string permission) => CurrentUser.HasPermission(permission);
 }
 
 <section class="pt-4">

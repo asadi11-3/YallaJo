@@ -1,15 +1,8 @@
-@using System.Globalization
-@using Microsoft.Extensions.Localization
-@using YallaJo.Web.Infrastructure.Authorization
-@using YallaJo.Web.Areas.Provider.Shared
 @using YallaJo.Web.Areas.Provider.Models.PaymentMethods
 @model YallaJo.Web.Areas.Provider.Models.Finance.ProviderFinanceVm
-@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
     ViewData["Title"] = Localizer["Provider.Finance.Title"].Value;
     ViewData["ProviderNav"] = "Finance";
-    Layout = "~/Views/Shared/_Layout.cshtml";
-    var sidebar = ViewBag.Sidebar as ProviderSidebarVm ?? new ProviderSidebarVm();
 
     var culture = CultureInfo.CurrentUICulture;
     string Money(decimal a, string? c) => a.ToString("N3", culture) + (string.IsNullOrWhiteSpace(c) ? "" : " " + c);
@@ -34,7 +27,7 @@
     string TypeLabel(ProviderPaymentMethodType t) => Localizer["Provider.Finance.MethodType." + t.ToString()];
 }
 
-<partial name="_ProviderSidebar" model="sidebar" />
+@await Component.InvokeAsync("ProviderSidebar")
 
 <section class="pt-0">
     <div class="container vstack gap-4">

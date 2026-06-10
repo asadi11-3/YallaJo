@@ -1,21 +1,14 @@
-@using System.Globalization
-@using Microsoft.Extensions.Localization
-@using YallaJo.Web.Infrastructure.Authorization
-@using YallaJo.Web.Areas.Provider.Shared
 @model YallaJo.Web.Areas.Provider.Models.TourWaypoints.TourWaypointsIndexVm
-@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
     ViewData["Title"] = Localizer["Provider.TourWaypoints.Title"].Value;
     ViewData["ProviderNav"] = "Listings";
-    Layout = "~/Views/Shared/_Layout.cshtml";
-    var sidebar = ViewBag.Sidebar as ProviderSidebarVm ?? new ProviderSidebarVm();
     var ids = Model.Waypoints.Select(w => w.Id).ToList();
     var culture = CultureInfo.CurrentUICulture;
     string Coord(double lat, double lng) => lat.ToString("0.#####", culture) + ", " + lng.ToString("0.#####", culture);
     string StopTime(int? m) => m is > 0 ? Localizer["Provider.TourWaypoints.Minutes", m.Value.ToString("N0", culture)].Value : "—";
 }
 
-<partial name="_ProviderSidebar" model="sidebar" />
+@await Component.InvokeAsync("ProviderSidebar")
 
 <section class="pt-0">
     <div class="container vstack gap-4">

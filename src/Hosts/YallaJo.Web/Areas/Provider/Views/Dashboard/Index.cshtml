@@ -1,12 +1,7 @@
 @model YallaJo.Web.Areas.Provider.Models.Dashboard.DashboardVm
-@using System.Globalization
-@using Microsoft.Extensions.Localization
-@using YallaJo.Web.Areas.Provider.Shared
-@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
     ViewData["Title"] = Localizer["Provider.Dashboard.Title"].Value;
-    Layout = "~/Views/Shared/_Layout.cshtml";
-    var sidebar = ViewBag.Sidebar as ProviderSidebarVm ?? new ProviderSidebarVm();
+    ViewData["ProviderNav"] = "Dashboard";
 
     var culture = CultureInfo.CurrentUICulture;
     string Money(decimal amount, string? currency) =>
@@ -16,7 +11,7 @@
     string StatusLabel(string? s) => Localizer["Provider.Status." + (string.IsNullOrWhiteSpace(s) ? "Draft" : s)];
 }
 
-<partial name="_ProviderSidebar" model="sidebar" />
+@await Component.InvokeAsync("ProviderSidebar")
 
 <section class="pt-0">
     <div class="container vstack gap-4">

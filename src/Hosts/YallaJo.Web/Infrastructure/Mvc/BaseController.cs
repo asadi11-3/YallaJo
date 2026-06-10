@@ -75,6 +75,18 @@ public abstract class BaseController : Controller
     }
 
     /// <summary>
+    /// Outcome-enum variant of <see cref="SetFlash(ApiResult,string,string?)"/> for
+    /// facades that return bespoke outcome results instead of <see cref="ApiResult"/>.
+    /// </summary>
+    protected void SetFlash(bool isSuccess, string? error, string successMessage, string? fallbackError = null)
+    {
+        if (isSuccess)
+            SetSuccess(successMessage);
+        else
+            SetError(error ?? fallbackError);
+    }
+
+    /// <summary>
     /// Copies any server-side validation errors from the API result into
     /// <see cref="Controller.ModelState"/> so they re-render against the form.
     /// Returns <c>true</c> if at least one error was applied.

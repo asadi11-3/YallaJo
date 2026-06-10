@@ -9,7 +9,7 @@ namespace YallaJo.Web.Areas.Provider.Controllers;
 
 [Area("Provider")]
 [Authorize]
-public sealed class TourApplicationsController : BaseController
+public sealed class TourApplicationsController : ProviderTourResourceController
 {
     private readonly ProviderTourApplicationsFacade _facade;
     private readonly ICurrentUser _currentUser;
@@ -97,26 +97,7 @@ public sealed class TourApplicationsController : BaseController
     {
         if (result.Outcome == TourApplicationOutcome.ForceSignOut) return RedirectToLogin();
 
-        if (result.Outcome == TourApplicationOutcome.Ok)
-            SetSuccess(success);
-        else
-            SetError(result.Error ?? "The action could not be completed.");
-
+        SetFlash(result.Outcome == TourApplicationOutcome.Ok, result.Error, success, "The action could not be completed.");
         return RedirectToAction(nameof(Index), new { id });
     }
-
-    private IActionResult Denied(string? message)
-    {
-        SetError(message ?? "You don't have access to this listing.");
-        return RedirectToAction("Index", "Tours", new { area = "Provider" });
-    }
-
-    private IActionResult NotFoundRedirect(string? message)
-    {
-        SetError(message ?? "Not found.");
-        return RedirectToAction("Index", "Tours", new { area = "Provider" });
-    }
-
-    private IActionResult RedirectToStatus() =>
-        RedirectToAction("Status", "Provider", new { area = "Provider" });
 }

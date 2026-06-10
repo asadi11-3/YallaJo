@@ -32,6 +32,23 @@ public sealed class ProviderFacade
         return ApiResult<ProviderStatusVm>.Ok(ProviderMapper.ToStatusVm(result.Data));
     }
 
+    /// <summary>
+    /// Loads the approved provider's business settings
+    /// (<c>GET /api/v1/provider/settings</c>). A 404 means "no application yet" —
+    /// callers treat any failure as "no business info to show" (non-blocking).
+    /// </summary>
+    public async Task<ApiResult<ProviderSettingsResponse>> GetSettingsAsync(CancellationToken ct = default)
+    {
+        var result = await _api.GetSettingsAsync(ct);
+
+        if (result.IsUnauthorized) return ApiResult<ProviderSettingsResponse>.ForceSignOut();
+        if (!result.IsSuccess || result.Data is null)
+            return ApiResult<ProviderSettingsResponse>.Fail(
+                result.StatusCode, result.Error ?? "Could not load your business settings.");
+
+        return ApiResult<ProviderSettingsResponse>.Ok(result.Data);
+    }
+
     public async Task<ApiResult<RegisterProviderResponse>> RegisterAsync(
         ProviderApplyVm vm, CancellationToken ct = default)
     {

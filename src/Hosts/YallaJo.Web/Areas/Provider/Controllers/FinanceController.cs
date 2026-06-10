@@ -5,7 +5,6 @@ using YallaJo.Web.Areas.Provider.Models.Earnings;
 using YallaJo.Web.Areas.Provider.Models.Finance;
 using YallaJo.Web.Areas.Provider.Models.Invoices;
 using YallaJo.Web.Areas.Provider.Models.PaymentMethods;
-using YallaJo.Web.Areas.Provider.Shared;
 using YallaJo.Web.Infrastructure.Mvc;
 
 namespace YallaJo.Web.Areas.Provider.Controllers;
@@ -37,9 +36,6 @@ public sealed class FinanceController : BaseController
     [HttpGet("provider/finance")]
     public async Task<IActionResult> Index(CancellationToken ct = default)
     {
-        ViewData["ProviderNav"] = "Finance";
-        ViewBag.Sidebar = new ProviderSidebarVm { DisplayName = User.Identity?.Name ?? "Provider" };
-
         // API1: gather the three independent reads concurrently, then GuardSignOut each.
         var earningsTask = _earnings.GetEarningsAsync(ct);
         var invoicesTask = _invoices.GetAsync(ct);

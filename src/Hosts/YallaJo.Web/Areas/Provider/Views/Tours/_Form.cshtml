@@ -1,6 +1,4 @@
-@using Microsoft.Extensions.Localization
 @model YallaJo.Web.Areas.Provider.Models.Tours.ProviderTourFormVm
-@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
     string DiffLabel(string d) => Localizer["Provider.TourForm.Difficulty." + d];
 }

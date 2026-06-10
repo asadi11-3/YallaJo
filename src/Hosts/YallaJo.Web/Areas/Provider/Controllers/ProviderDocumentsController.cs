@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using YallaJo.Web.Areas.Provider.Facades;
 using YallaJo.Web.Areas.Provider.Models.ProviderDocuments;
-using YallaJo.Web.Areas.Provider.Shared;
 using YallaJo.Web.Infrastructure.Authorization;
 using YallaJo.Web.Infrastructure.Mvc;
 
@@ -22,7 +21,6 @@ public sealed class ProviderDocumentsController : BaseController
     [HttpGet("provider/documents")]
     public async Task<IActionResult> Index(CancellationToken ct = default)
     {
-        SetSidebar();
 
         var result = await _facade.GetAsync(ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
@@ -42,7 +40,6 @@ public sealed class ProviderDocumentsController : BaseController
     [RequirePermission(WebPermission.ProviderDocument.Create)]
     public async Task<IActionResult> Upload(UploadProviderDocumentFormVm form, CancellationToken ct = default)
     {
-        SetSidebar();
 
         if (!ModelState.IsValid)
             return await ReloadAsync(form, ct);
@@ -83,9 +80,4 @@ public sealed class ProviderDocumentsController : BaseController
         return View(nameof(Index), vm);
     }
 
-    private void SetSidebar()
-    {
-        ViewData["ProviderNav"] = "Documents";
-        ViewBag.Sidebar = new ProviderSidebarVm { DisplayName = User.Identity?.Name ?? "Provider" };
-    }
 }

@@ -1,12 +1,7 @@
-@using System.Globalization
-@using Microsoft.Extensions.Localization
 @using YallaJo.Web.Areas.Provider.Models
-@using YallaJo.Web.Infrastructure.Authorization
 @model ProviderStatusVm
-@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
     ViewData["Title"] = Localizer["Provider.Onboarding.Title"].Value;
-    Layout = "~/Views/Shared/_Layout.cshtml";
 
     var culture = CultureInfo.CurrentUICulture;
     string Date(DateTime dt) => dt.ToString("yyyy-MM-dd", culture);

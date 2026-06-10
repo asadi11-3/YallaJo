@@ -10,7 +10,7 @@ namespace YallaJo.Web.Areas.Provider.Controllers;
 
 [Area("Provider")]
 [Authorize]
-public sealed class TourImagesController : BaseController
+public sealed class TourImagesController : ProviderTourResourceController
 {
     private readonly ProviderTourImagesFacade _facade;
     private readonly ICurrentUser _currentUser;
@@ -25,6 +25,8 @@ public sealed class TourImagesController : BaseController
     [HttpGet("provider/tours/{id:guid}/images")]
     public async Task<IActionResult> Index(Guid id, CancellationToken ct)
     {
+        // Deliberate double-check: the gallery requires BOTH the tour-editor permission
+        // and attachment read access (images are ContentCore attachments). Keep imperative.
         if (!_currentUser.HasPermission(WebPermission.Tour.ReadOwn)
             || !_currentUser.HasPermission(WebPermission.Attachment.Read))
             return RedirectToStatus();
@@ -35,7 +37,7 @@ public sealed class TourImagesController : BaseController
             TourImagesOutcome.Ok => View(result.Data),
             TourImagesOutcome.ForceSignOut => RedirectToLogin(),
             TourImagesOutcome.Forbidden => Denied(result.Error),
-            _ => NotFoundRedirect(result.Error),
+            _ => NotFoundRedirect(result.Error, notFoundFallback: "Listing not found."),
         };
     }
 
@@ -87,21 +89,6 @@ public sealed class TourImagesController : BaseController
 
     // ── Helpers ───────────────────────────────────────────────────────────────────
 
-    private IActionResult Denied(string? message)
-    {
-        SetError(message ?? "You don't have access to this listing.");
-        return RedirectToAction("Index", "Tours", new { area = "Provider" });
-    }
-
-    private IActionResult NotFoundRedirect(string? message)
-    {
-        SetError(message ?? "Listing not found.");
-        return RedirectToAction("Index", "Tours", new { area = "Provider" });
-    }
-
     private IActionResult RedirectToImages(Guid id) =>
         RedirectToAction(nameof(Index), new { id });
-
-    private IActionResult RedirectToStatus() =>
-        RedirectToAction("Status", "Provider", new { area = "Provider" });
 }

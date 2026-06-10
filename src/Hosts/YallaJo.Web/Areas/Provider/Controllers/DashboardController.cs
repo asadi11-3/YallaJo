@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using YallaJo.Web.Areas.Provider.Facades;
 using YallaJo.Web.Areas.Provider.Models.Dashboard;
-using YallaJo.Web.Areas.Provider.Shared;
 using YallaJo.Web.Infrastructure.Authorization;
 using YallaJo.Web.Infrastructure.Mvc;
 
@@ -21,12 +20,6 @@ public sealed class DashboardController : BaseController
     [HttpGet("provider/dashboard")]
     public async Task<IActionResult> Index(CancellationToken ct = default)
     {
-        ViewData["ProviderNav"] = "Dashboard";
-        ViewBag.Sidebar = new ProviderSidebarVm
-        {
-            DisplayName = User.Identity?.Name ?? "Provider"
-        };
-
         var result = await _dashboard.GetDashboardAsync(ct);
         if (GuardSignOut(result) is { } signOut)
         {

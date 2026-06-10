@@ -1,16 +1,11 @@
-@using Microsoft.Extensions.Localization
-@using YallaJo.Web.Areas.Provider.Shared
 @using YallaJo.Web.Areas.Provider.Models.TourPricing
 @model TourPricingFormVm
-@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
     ViewData["Title"] = Localizer["Provider.TourPricing.EditTitle"].Value;
     ViewData["ProviderNav"] = "Listings";
-    Layout = "~/Views/Shared/_Layout.cshtml";
-    var sidebar = ViewBag.Sidebar as ProviderSidebarVm ?? new ProviderSidebarVm { DisplayName = User.Identity?.Name ?? "Provider" };
 }
 
-<partial name="_ProviderSidebar" model="sidebar" />
+@await Component.InvokeAsync("ProviderSidebar")
 
 <section class="pt-0">
     <div class="container">

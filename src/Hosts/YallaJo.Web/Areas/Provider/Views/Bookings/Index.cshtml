@@ -1,13 +1,8 @@
-@using System.Globalization
-@using Microsoft.Extensions.Localization
 @using YallaJo.Web.Areas.Provider.Models.Bookings
-@using YallaJo.Web.Areas.Provider.Shared
 @model BookingsVm
-@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
     ViewData["Title"] = Localizer["Provider.Bookings.Title"].Value;
-    Layout = "~/Views/Shared/_Layout.cshtml";
-    var sidebar = ViewBag.Sidebar as ProviderSidebarVm ?? new ProviderSidebarVm();
+    ViewData["ProviderNav"] = "Bookings";
 
     var culture = CultureInfo.CurrentUICulture;
     string Count(int n) => n.ToString("N0", culture);
@@ -32,7 +27,7 @@
     };
 }
 
-<partial name="_ProviderSidebar" model="sidebar" />
+@await Component.InvokeAsync("ProviderSidebar")
 
 <section class="pt-0">
     <div class="container vstack gap-4">

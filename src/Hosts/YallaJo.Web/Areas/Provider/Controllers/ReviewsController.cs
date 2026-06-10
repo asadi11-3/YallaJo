@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using YallaJo.Web.Areas.Provider.Facades;
 using YallaJo.Web.Areas.Provider.Models.Reviews;
-using YallaJo.Web.Areas.Provider.Shared;
 using YallaJo.Web.Infrastructure.Mvc;
 
 namespace YallaJo.Web.Areas.Provider.Controllers;
@@ -18,7 +17,6 @@ public sealed class ReviewsController : BaseController
     [HttpGet("provider/reviews")]
     public async Task<IActionResult> Index(Guid? tourId, CancellationToken ct = default)
     {
-        SetSidebar();
         var result = await _reviews.GetAsync(tourId, ct);
         if (GuardSignOut(result) is { } signOut)
             return signOut;
@@ -108,9 +106,4 @@ public sealed class ReviewsController : BaseController
         return RedirectToAction(nameof(Index), new { tourId });
     }
 
-    private void SetSidebar()
-    {
-        ViewData["ProviderNav"] = "Reviews";
-        ViewBag.Sidebar = new ProviderSidebarVm { DisplayName = User.Identity?.Name ?? "Provider" };
-    }
 }

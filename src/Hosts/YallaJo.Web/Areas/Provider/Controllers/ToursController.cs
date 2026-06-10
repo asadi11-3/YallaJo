@@ -10,7 +10,7 @@ namespace YallaJo.Web.Areas.Provider.Controllers;
 
 [Area("Provider")]
 [Authorize]
-public sealed class ToursController : BaseController
+public sealed class ToursController : ProviderTourResourceController
 {
     private readonly ProviderToursFacade _facade;
     private readonly ProviderPlacesFacade _placesFacade;
@@ -107,7 +107,7 @@ public sealed class ToursController : BaseController
             case ProviderTourOutcome.Forbidden:
                 return RedirectToStatus();
             default:
-                return NotFoundRedirect(result.Error);
+                return NotFoundRedirect(result.Error, notFoundFallback: "Listing not found.");
         }
     }
 
@@ -220,43 +220,9 @@ public sealed class ToursController : BaseController
         return null;
     }
 
-    // Applies API validation errors to ModelState where field keys are safe (create/update
-    // field keys mirror the VM property names); otherwise surfaces a general error.
-    private void ApplyFacadeValidation(IReadOnlyDictionary<string, string[]>? errors, string? fallback)
-    {
-        var applied = false;
-        if (errors is { Count: > 0 })
-        {
-            foreach (var (field, messages) in errors)
-            {
-                var key = NormalizeFieldKey(field);
-                foreach (var message in messages)
-                    ModelState.AddModelError(key, message);
-                applied = true;
-            }
-        }
-
-        if (!applied)
-            ModelState.AddModelError(string.Empty, fallback ?? "Please correct the highlighted fields and try again.");
-        else if (!string.IsNullOrWhiteSpace(fallback))
-            SetError(fallback);
-    }
-
-    private static string NormalizeFieldKey(string field)
-        => string.IsNullOrWhiteSpace(field) ? string.Empty : field;
-
     private IActionResult IndexError(string? message, string? status, int page)
     {
         SetError(message);
         return View(ProviderToursMapper.EmptyIndex(status, page < 1 ? 1 : page, 20));
     }
-
-    private IActionResult NotFoundRedirect(string? message)
-    {
-        SetError(message ?? "Listing not found.");
-        return RedirectToAction(nameof(Index));
-    }
-
-    private IActionResult RedirectToStatus() =>
-        RedirectToAction("Status", "Provider", new { area = "Provider" });
 }

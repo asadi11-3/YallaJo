@@ -1,14 +1,7 @@
-@using System.Globalization
-@using Microsoft.Extensions.Localization
-@using YallaJo.Web.Infrastructure.Authorization
-@using YallaJo.Web.Areas.Provider.Shared
 @model YallaJo.Web.Areas.Provider.Models.TourApplications.TourApplicationsIndexVm
-@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
     ViewData["Title"] = Localizer["Provider.TourApplications.Title"].Value;
     ViewData["ProviderNav"] = "Listings";
-    Layout = "~/Views/Shared/_Layout.cshtml";
-    var sidebar = ViewBag.Sidebar as ProviderSidebarVm ?? new ProviderSidebarVm();
 
     var culture = CultureInfo.CurrentUICulture;
     string Money(decimal a) => a.ToString("N3", culture) + " JOD";
@@ -25,7 +18,7 @@
     string StatusLabel(string s) => Localizer["Provider.Status." + s];
 }
 
-<partial name="_ProviderSidebar" model="sidebar" />
+@await Component.InvokeAsync("ProviderSidebar")
 
 <section class="pt-0">
     <div class="container vstack gap-4">

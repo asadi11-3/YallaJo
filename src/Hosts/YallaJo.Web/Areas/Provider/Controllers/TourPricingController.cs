@@ -10,7 +10,7 @@ namespace YallaJo.Web.Areas.Provider.Controllers;
 
 [Area("Provider")]
 [Authorize]
-public sealed class TourPricingController : BaseController
+public sealed class TourPricingController : ProviderTourResourceController
 {
     private readonly ProviderTourPricingFacade _facade;
     private readonly ICurrentUser _currentUser;
@@ -82,7 +82,7 @@ public sealed class TourPricingController : BaseController
                 SetError(result.Error);
                 return RedirectToAction(nameof(Index), new { id });
             default:
-                ApplyPricingValidation(result.ValidationErrors, result.Error);
+                ApplyFacadeValidation(result.ValidationErrors, result.Error);
                 return View(vm);
         }
     }
@@ -136,7 +136,7 @@ public sealed class TourPricingController : BaseController
                 SetError(result.Error);
                 return View(vm);
             default:
-                ApplyPricingValidation(result.ValidationErrors, result.Error);
+                ApplyFacadeValidation(result.ValidationErrors, result.Error);
                 return View(vm);
         }
     }
@@ -159,42 +159,4 @@ public sealed class TourPricingController : BaseController
 
         return RedirectToAction(nameof(Index), new { id });
     }
-
-    // ── Helpers ───────────────────────────────────────────────────────────────────
-
-    private void ApplyPricingValidation(IReadOnlyDictionary<string, string[]>? errors, string? fallback)
-    {
-        var applied = false;
-        if (errors is { Count: > 0 })
-        {
-            foreach (var (field, messages) in errors)
-            {
-                foreach (var message in messages)
-                    ModelState.AddModelError(field, message);
-                applied = true;
-            }
-        }
-
-        if (!applied)
-            ModelState.AddModelError(string.Empty, fallback ?? "Please correct the highlighted fields and try again.");
-        else if (!string.IsNullOrWhiteSpace(fallback))
-            SetError(fallback);
-    }
-
-    private IActionResult Denied(string? message)
-    {
-        SetError(message ?? "You don't have access to this listing.");
-        return RedirectToAction("Index", "Tours", new { area = "Provider" });
-    }
-
-    private IActionResult NotFoundRedirect(string? message, Guid? tourId = null)
-    {
-        SetError(message ?? "Not found.");
-        return tourId.HasValue
-            ? RedirectToAction(nameof(Index), new { id = tourId.Value })
-            : RedirectToAction("Index", "Tours", new { area = "Provider" });
-    }
-
-    private IActionResult RedirectToStatus() =>
-        RedirectToAction("Status", "Provider", new { area = "Provider" });
 }

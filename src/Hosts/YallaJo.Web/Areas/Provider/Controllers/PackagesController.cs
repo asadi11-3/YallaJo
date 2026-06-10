@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using YallaJo.Web.Areas.Provider.Facades;
 using YallaJo.Web.Areas.Provider.Models.Packages;
-using YallaJo.Web.Areas.Provider.Shared;
 using YallaJo.Web.Infrastructure.Authorization;
 using YallaJo.Web.Infrastructure.Identity;
 using YallaJo.Web.Infrastructure.Mvc;
@@ -26,7 +25,6 @@ public sealed class PackagesController : BaseController
     [HttpGet("provider/packages")]
     public async Task<IActionResult> Index(int page = 1, CancellationToken ct = default)
     {
-        SetSidebar();
 
         var result = await _facade.GetIndexAsync(page, ct);
         return result.Outcome switch
@@ -44,7 +42,6 @@ public sealed class PackagesController : BaseController
     [RequirePermission(WebPermission.Package.Create)]
     public async Task<IActionResult> Create(CreatePackageFormVm form, CancellationToken ct = default)
     {
-        SetSidebar();
 
         if (!ModelState.IsValid)
             return await ReloadIndex(form, ct);
@@ -71,7 +68,6 @@ public sealed class PackagesController : BaseController
     [HttpGet("provider/packages/{id:guid}")]
     public async Task<IActionResult> Manage(Guid id, CancellationToken ct = default)
     {
-        SetSidebar();
 
         var result = await _facade.GetManageAsync(id, ct);
         return result.Outcome switch
@@ -132,11 +128,7 @@ public sealed class PackagesController : BaseController
     {
         if (result.Outcome == PackageOutcome.ForceSignOut) return RedirectToLogin();
 
-        if (result.Outcome == PackageOutcome.Ok)
-            SetSuccess(success);
-        else
-            SetError(result.Error ?? "The action could not be completed.");
-
+        SetFlash(result.Outcome == PackageOutcome.Ok, result.Error, success, "The action could not be completed.");
         return RedirectToAction(nameof(Manage), new { id });
     }
 
@@ -172,9 +164,4 @@ public sealed class PackagesController : BaseController
     private IActionResult RedirectToStatus() =>
         RedirectToAction("Status", "Provider", new { area = "Provider" });
 
-    private void SetSidebar()
-    {
-        ViewData["ProviderNav"] = "Listings";
-        ViewBag.Sidebar = new ProviderSidebarVm { DisplayName = User.Identity?.Name ?? "Provider" };
-    }
 }

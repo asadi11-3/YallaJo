@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using YallaJo.Web.Areas.Provider.Facades;
 using YallaJo.Web.Areas.Provider.Models.Bookings;
-using YallaJo.Web.Areas.Provider.Shared;
 using YallaJo.Web.Infrastructure.Mvc;
 
 namespace YallaJo.Web.Areas.Provider.Controllers;
@@ -18,7 +17,6 @@ public sealed class BookingsController : BaseController
     [HttpGet("provider/bookings")]
     public async Task<IActionResult> Index(Guid? lookupId, CancellationToken ct = default)
     {
-        SetSidebar();
         var result = await _bookings.GetAsync(lookupId, ct);
         if (GuardSignOut(result) is { } signOut)
             return signOut;
@@ -115,12 +113,4 @@ public sealed class BookingsController : BaseController
         return RedirectToAction(nameof(Index), new { lookupId = id });
     }
 
-    private void SetSidebar()
-    {
-        ViewData["ProviderNav"] = "Bookings";
-        ViewBag.Sidebar = new ProviderSidebarVm
-        {
-            DisplayName = User.Identity?.Name ?? "Provider",
-        };
-    }
 }
