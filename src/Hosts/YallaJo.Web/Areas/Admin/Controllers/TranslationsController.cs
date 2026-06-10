@@ -38,9 +38,26 @@ public sealed class TranslationsController : BaseController
         return View(result.Data);
     }
 
+    // TempData keys carrying the on-demand translation result across the PRG redirect.
+    // TempData survives exactly one request then auto-evicts, so a browser refresh of the
+    // GET result page does NOT re-POST and therefore never re-bills the translation provider.
+    private const string OnDemandOriginalKey   = "Translations.OnDemand.Original";
+    private const string OnDemandTranslatedKey  = "Translations.OnDemand.Translated";
+    private const string OnDemandConfidenceKey  = "Translations.OnDemand.Confidence";
+
     [HttpGet("admin/translations/on-demand")]
     [RequirePermission(WebPermission.TranslationCache.Create)]
-    public IActionResult OnDemand() => View(new TranslateOnDemandVm());
+    public IActionResult OnDemand()
+    {
+        // Read back the result of a prior successful POST (PRG), if any.
+        var vm = new TranslateOnDemandVm
+        {
+            LastOriginal   = TempData[OnDemandOriginalKey] as string,
+            LastTranslated = TempData[OnDemandTranslatedKey] as string,
+            LastConfidence = TempData[OnDemandConfidenceKey] is double c ? c : null,
+        };
+        return View(vm);
+    }
 
     [HttpPost("admin/translations/on-demand")]
     [ValidateAntiForgeryToken]
@@ -54,7 +71,13 @@ public sealed class TranslationsController : BaseController
 
         if (result.IsSuccess && result.Data is not null)
         {
-            return View(result.Data);
+            // PRG: stash the (small) result in TempData and redirect to the GET page so a
+            // refresh re-issues a harmless GET instead of re-running the paid translation.
+            TempData[OnDemandOriginalKey]   = result.Data.LastOriginal;
+            TempData[OnDemandTranslatedKey]  = result.Data.LastTranslated;
+            if (result.Data.LastConfidence is { } confidence)
+                TempData[OnDemandConfidenceKey] = confidence;
+            return RedirectToAction(nameof(OnDemand));
         }
 
         if (!ApplyValidationErrors(result))
