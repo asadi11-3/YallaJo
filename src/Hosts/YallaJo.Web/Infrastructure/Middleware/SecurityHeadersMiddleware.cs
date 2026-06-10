@@ -114,7 +114,13 @@ public sealed class SecurityHeadersMiddleware
                 "frame-src https://www.google.com; " +
                 "frame-ancestors 'none'; " +
                 "base-uri 'self'; " +
-                "form-action 'self'";
+                // form-action must allowlist the external OAuth authorization
+                // endpoints: the provider sign-in buttons are <form method="post">,
+                // so the challenge 302 to accounts.google.com / www.facebook.com is a
+                // form-initiated cross-origin navigation. A 'self'-only form-action
+                // makes Chromium refuse to follow that redirect, silently breaking
+                // Google/Facebook external login.
+                "form-action 'self' https://accounts.google.com https://www.facebook.com";
 
             // Observability (rule ERR4): surface the trace id so clients can
             // correlate a response with server-side logs/traces.
