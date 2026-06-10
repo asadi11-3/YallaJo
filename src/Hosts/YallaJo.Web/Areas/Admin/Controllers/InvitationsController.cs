@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using YallaJo.Web.Areas.Admin.Models.Invitations;
 using YallaJo.Web.Infrastructure.Api.Contracts;
 using YallaJo.Web.Infrastructure.Authorization;
+using YallaJo.Web.Infrastructure.Mvc;
 
 using YallaJo.Web.Areas.Admin.Facades;
 namespace YallaJo.Web.Areas.Admin.Controllers;
@@ -10,7 +11,7 @@ namespace YallaJo.Web.Areas.Admin.Controllers;
 [Area("Admin")]
 [Authorize]
 [RequirePermission(WebPermission.User.Create)]
-public sealed class InvitationsController : Controller
+public sealed class InvitationsController : BaseController
 {
     private readonly InvitationsFacade _facade;
 
@@ -21,11 +22,10 @@ public sealed class InvitationsController : Controller
     {
         var vm = new InviteUserVm();
         var loaded = await PopulateRoleOptionsAsync(vm, ct);
-        if (loaded.RequireSignOut)
-            return RedirectToAction("SignIn", "Auth", new { area = "Auth" });
+        if (GuardSignOut(loaded) is { } signOut) return signOut;
 
         if (!loaded.IsSuccess)
-            TempData["Error"] = loaded.Error ?? "Could not load role options.";
+            SetError(loaded.Error ?? "Could not load role options.");
 
         return View(vm);
     }
@@ -40,8 +40,7 @@ public sealed class InvitationsController : Controller
     public async Task<IActionResult> Create(InviteUserVm vm, CancellationToken ct)
     {
         var loaded = await PopulateRoleOptionsAsync(vm, ct);
-        if (loaded.RequireSignOut)
-            return RedirectToAction("SignIn", "Auth", new { area = "Auth" });
+        if (GuardSignOut(loaded) is { } signOut) return signOut;
 
         if (!loaded.IsSuccess)
             ModelState.AddModelError(string.Empty, loaded.Error ?? "Could not load role options.");
@@ -51,25 +50,18 @@ public sealed class InvitationsController : Controller
 
         var result = await _facade.InviteAsync(vm, ct);
 
-        if (result.RequireSignOut)
-            return RedirectToAction("SignIn", "Auth", new { area = "Auth" });
+        if (GuardSignOut(result) is { } resultSignOut) return resultSignOut;
 
         if (result.IsSuccess)
         {
-            TempData["Success"] =
-                $"Invite sent to {vm.Email}. They will receive an email to set a password and activate the account.";
+            SetSuccess(
+                $"Invite sent to {vm.Email}. They will receive an email to set a password and activate the account.");
             return RedirectToAction(nameof(Index));
         }
 
-        if (result.ValidationErrors is not null)
-        {
-            foreach (var (field, messages) in result.ValidationErrors)
-                foreach (var m in messages)
-                    ModelState.AddModelError(field, m);
-            return View(nameof(Index), vm);
-        }
+        if (!ApplyValidationErrors(result))
+            ModelState.AddModelError(string.Empty, result.Error ?? "Could not send invite.");
 
-        ModelState.AddModelError(string.Empty, result.Error ?? "Could not send invite.");
         return View(nameof(Index), vm);
     }
 
@@ -83,25 +75,17 @@ public sealed class InvitationsController : Controller
 
         var result = await _facade.ResendAsync(vm, ct);
 
-        if (result.RequireSignOut)
-            return RedirectToAction("SignIn", "Auth", new { area = "Auth" });
+        if (GuardSignOut(result) is { } signOut) return signOut;
 
         if (result.IsSuccess)
         {
-            TempData["Success"] =
-                "If an invited account exists for that email, a new invite has been sent.";
+            SetSuccess("If an invited account exists for that email, a new invite has been sent.");
             return RedirectToAction(nameof(Resend));
         }
 
-        if (result.ValidationErrors is not null)
-        {
-            foreach (var (field, messages) in result.ValidationErrors)
-                foreach (var m in messages)
-                    ModelState.AddModelError(field, m);
-            return View(nameof(Resend), vm);
-        }
+        if (!ApplyValidationErrors(result))
+            ModelState.AddModelError(string.Empty, result.Error ?? "Could not resend invite.");
 
-        ModelState.AddModelError(string.Empty, result.Error ?? "Could not resend invite.");
         return View(nameof(Resend), vm);
     }
 
