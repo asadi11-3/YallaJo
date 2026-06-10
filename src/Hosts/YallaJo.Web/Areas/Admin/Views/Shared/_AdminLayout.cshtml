@@ -91,10 +91,11 @@
     @* favicon *@
     <link rel="shortcut icon" href="~/assets/images/favicon.ico" />
 
-    @* Google Fonts *@
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    @* Fonts: the external Google Fonts CDN has been removed (UI-UX-Design.md V3 — no
+       third-party font CDN). No local DM Sans / Poppins font files are bundled, so the
+       theme's existing "DM Sans"/"Poppins" rules fall back to their declared `sans-serif`
+       generic (and Bootstrap's --bs-font-sans-serif system stack). Icon fonts
+       (Font Awesome, Bootstrap Icons) remain self-hosted under ~/assets/vendor. *@
 
     @* Plugins CSS *@
     <link rel="stylesheet" type="text/css" href="~/assets/vendor/font-awesome/css/all.min.css" />
