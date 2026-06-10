@@ -200,9 +200,13 @@
 
                             @* Language toggle START *@
                             <li class="nav-item ms-3">
-                                <div class="lang-toggle">
-                                    <button class="lang-toggle-btn active" data-lang="en" data-dir="ltr">EN</button>
-                                    <button class="lang-toggle-btn" data-lang="ar" data-dir="rtl">AR</button>
+                                <div class="lang-toggle" role="group" aria-label="@Localizer["Admin.Layout.LanguageToggle"]">
+                                    <button type="button" class="lang-toggle-btn @(adminLang == "en" ? "active" : null)" data-lang="en" data-dir="ltr"
+                                            lang="en" title="@Localizer["Lang.English"]" aria-label="@Localizer["Lang.English"]"
+                                            aria-pressed="@(adminLang == "en" ? "true" : "false")">EN</button>
+                                    <button type="button" class="lang-toggle-btn @(adminLang == "ar" ? "active" : null)" data-lang="ar" data-dir="rtl"
+                                            lang="ar" title="@Localizer["Lang.Arabic"]" aria-label="@Localizer["Lang.Arabic"]"
+                                            aria-pressed="@(adminLang == "ar" ? "true" : "false")">AR</button>
                                 </div>
                             </li>
                             @* Language toggle END *@

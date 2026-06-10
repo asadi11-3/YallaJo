@@ -6634,6 +6634,9 @@
   <data name="Admin.Layout.SignIn" xml:space="preserve">
     <value>تسجيل الدخول</value>
   </data>
+  <data name="Admin.Layout.LanguageToggle" xml:space="preserve">
+    <value>اللغة</value>
+  </data>
   <data name="Admin.Confirm.Title" xml:space="preserve">
     <value>يرجى التأكيد</value>
   </data>
