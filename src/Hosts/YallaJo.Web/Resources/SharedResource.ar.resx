@@ -11911,4 +11911,37 @@
 <data name="Public.Sign.in.to.comment" xml:space="preserve">
 <value>سجّل الدخول للتعليق</value>
 </data>
+<data name="Public.BookTour" xml:space="preserve">
+<value>احجز {0}</value>
+</data>
+<data name="Public.Slot.Available" xml:space="preserve">
+<value>متاح</value>
+</data>
+<data name="Public.Booking.Progress" xml:space="preserve">
+<value>خطوات الحجز</value>
+</data>
+<data name="Public.Booking.StepDetails" xml:space="preserve">
+<value>المسافرون والتفاصيل</value>
+</data>
+<data name="Public.Booking.StepConfirmation" xml:space="preserve">
+<value>التأكيد</value>
+</data>
+<data name="Public.Booking.NoGuide" xml:space="preserve">
+<value>لهذه الجولة مواعيد قادمة لكن لم يتم تعيين مرشد بعد، لذا لا يمكن حجزها حالياً. يرجى المحاولة لاحقاً.</value>
+</data>
+<data name="Public.Booking.SeatsHint" xml:space="preserve">
+<value>يتوفر حتى {0} مقعد للتاريخ المحدد.</value>
+</data>
+<data name="Public.Booking.TravelersCount" xml:space="preserve">
+<value>{0} مسافر</value>
+</data>
+<data name="Public.Booking.SelectSlot" xml:space="preserve">
+<value>يرجى اختيار التاريخ والوقت قبل المتابعة.</value>
+</data>
+<data name="Public.Booking.TooManySeats" xml:space="preserve">
+<value>يتوفر {0} مقعد فقط للتاريخ المحدد. يرجى تقليل عدد المسافرين.</value>
+</data>
+<data name="Public.Booking.FreeCancellation" xml:space="preserve">
+<value>إلغاء مجاني حتى {0} ساعة قبل الموعد.</value>
+</data>
 </root>

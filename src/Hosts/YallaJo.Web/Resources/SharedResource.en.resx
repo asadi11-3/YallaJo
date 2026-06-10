@@ -11911,4 +11911,37 @@
 <data name="Public.Sign.in.to.comment" xml:space="preserve">
 <value>Sign in to comment</value>
 </data>
+<data name="Public.BookTour" xml:space="preserve">
+<value>Book {0}</value>
+</data>
+<data name="Public.Slot.Available" xml:space="preserve">
+<value>Available</value>
+</data>
+<data name="Public.Booking.Progress" xml:space="preserve">
+<value>Booking progress</value>
+</data>
+<data name="Public.Booking.StepDetails" xml:space="preserve">
+<value>Travelers &amp; details</value>
+</data>
+<data name="Public.Booking.StepConfirmation" xml:space="preserve">
+<value>Confirmation</value>
+</data>
+<data name="Public.Booking.NoGuide" xml:space="preserve">
+<value>This tour has upcoming dates but no guide is assigned yet, so it can't be booked right now. Please check back soon.</value>
+</data>
+<data name="Public.Booking.SeatsHint" xml:space="preserve">
+<value>Up to {0} seat(s) available for the selected date.</value>
+</data>
+<data name="Public.Booking.TravelersCount" xml:space="preserve">
+<value>{0} traveler(s)</value>
+</data>
+<data name="Public.Booking.SelectSlot" xml:space="preserve">
+<value>Please choose a date and time before continuing.</value>
+</data>
+<data name="Public.Booking.TooManySeats" xml:space="preserve">
+<value>Only {0} seat(s) are available for the selected date. Please reduce the number of travelers.</value>
+</data>
+<data name="Public.Booking.FreeCancellation" xml:space="preserve">
+<value>Free cancellation up to {0} h before</value>
+</data>
 </root>
