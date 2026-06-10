@@ -13,7 +13,7 @@ public sealed class PayoutsFacade
 
     public async Task<ApiResult<PayoutsVm>> GetIndexAsync(Guid? cursor, int pageSize, CancellationToken ct)
     {
-        if (pageSize < 1 || pageSize > 100)
+        if (pageSize < 1 || pageSize > 50)
         {
             pageSize = DefaultPageSize;
         }

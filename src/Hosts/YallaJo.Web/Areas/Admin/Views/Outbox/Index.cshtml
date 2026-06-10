@@ -85,7 +85,7 @@
                             <td><bdi dir="ltr">@d.Type</bdi></td>
                             <td><bdi class="font-data" dir="ltr">@Date(d.OccurredOnUtc)</bdi></td>
                             <td class="text-end"><bdi class="font-data">@Count(d.RetryCount)</bdi></td>
-                            <td class="text-truncate" style="max-width: 280px;">
+                            <td class="text-truncate mw-280">
                                 @if (string.IsNullOrWhiteSpace(d.LastError))
                                 {
                                     <span class="text-secondary" aria-label="@Localizer["Admin.Outbox.NoError"]">&mdash;</span>

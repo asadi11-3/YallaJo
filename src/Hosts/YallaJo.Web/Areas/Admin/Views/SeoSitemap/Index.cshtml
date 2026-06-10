@@ -89,7 +89,7 @@ else
                     @foreach (var e in Model.Entries)
                     {
                         <tr>
-                            <td class="text-truncate" style="max-width: 320px;" title="@e.Url"><bdi dir="ltr" class="font-data">@e.Url</bdi></td>
+                            <td class="text-truncate mw-320" title="@e.Url"><bdi dir="ltr" class="font-data">@e.Url</bdi></td>
                             <td>@e.EntityType</td>
                             <td class="text-end"><bdi dir="ltr" class="font-data">@Priority(e.Priority)</bdi></td>
                             <td>
@@ -141,7 +141,7 @@ else
                 </tbody>
             </table>
         </div>
-        @if (Model.TotalPages > 1)
+        @if (Model.HasPrevious || Model.HasNext)
         {
             <div class="card-footer border-top">
                 <nav aria-label="@Localizer["Admin.SeoSitemap.PaginationLabel"]">

@@ -82,7 +82,7 @@
                                 <div class="fw-semibold">@d.Reason</div>
                                 @if (!string.IsNullOrWhiteSpace(d.Description))
                                 {
-                                    <div class="small text-secondary text-truncate" style="max-width: 280px;">@d.Description</div>
+                                    <div class="small text-secondary text-truncate mw-280">@d.Description</div>
                                 }
                             </td>
                             <td>
@@ -97,7 +97,7 @@
                                     <div>@Localizer["Admin.Disputes.Resolution." + d.Resolution]</div>
                                     @if (!string.IsNullOrWhiteSpace(d.ResolutionNotes))
                                     {
-                                        <div class="small text-secondary text-truncate" style="max-width: 220px;">@d.ResolutionNotes</div>
+                                        <div class="small text-secondary text-truncate mw-220">@d.ResolutionNotes</div>
                                     }
                                 }
                                 else

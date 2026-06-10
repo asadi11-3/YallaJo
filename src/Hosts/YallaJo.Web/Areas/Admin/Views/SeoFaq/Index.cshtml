@@ -90,7 +90,7 @@ else
                         <tr>
                             <td>
                                 <div class="fw-semibold">@item.Question</div>
-                                <div class="small text-secondary text-truncate" style="max-width:480px;">@item.Answer</div>
+                                <div class="small text-secondary text-truncate mw-480">@item.Answer</div>
                             </td>
                             <td>
                                 <span class="badge bg-primary bg-opacity-10 text-primary">@item.EntityType</span>
@@ -126,7 +126,7 @@ else
                 </tbody>
             </table>
         </div>
-        @if (Model.TotalPages > 1)
+        @if (Model.HasPrevious || Model.HasNext)
         {
             <div class="card-footer border-top">
                 <nav aria-label="@Localizer["Admin.SeoFaq.PaginationLabel"]">

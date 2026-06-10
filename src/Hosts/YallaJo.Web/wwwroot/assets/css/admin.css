@@ -1,0 +1,67 @@
+/*
+ * admin.css — project-owned custom styles for the Admin console.
+ *
+ * Loaded by Areas/Admin/Views/Shared/_AdminLayout.cshtml AFTER the vendored theme
+ * bundle (style.css) so it can override/augment without editing the theme file.
+ * Keep rules direction-agnostic by using CSS logical properties (margin-inline-*,
+ * padding-inline-*, inset-inline-*) so they work under both dir="ltr" and dir="rtl"
+ * without RTL-specific overrides (UI-UX-Design.md §2 / RTL1).
+ */
+
+/* Language toggle (top bar) — moved verbatim from the _AdminLayout inline <style>. */
+.lang-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: .15rem;
+    background-color: var(--bs-light, #f5f5f5);
+    border-radius: var(--bs-border-radius, .5rem);
+    padding: .2rem;
+    height: 40px;
+    margin-inline-end: .5rem;
+}
+
+.lang-toggle-btn {
+    border: 0;
+    background: transparent;
+    color: var(--bs-secondary-color, #6c757d);
+    font-size: .8rem;
+    font-weight: 600;
+    line-height: 1;
+    padding-block: .35rem;
+    padding-inline: .6rem;
+    border-radius: calc(var(--bs-border-radius, .5rem) - .15rem);
+    cursor: pointer;
+    transition: background-color .2s ease, color .2s ease;
+}
+
+.lang-toggle-btn.active {
+    background-color: var(--bs-dark, #14191e);
+    color: #fff;
+}
+
+/* Preserve author line breaks in long-form text (e.g. tour descriptions) without
+   an inline style attribute (X6). Direction-agnostic. */
+.text-pre-wrap {
+    white-space: pre-wrap;
+}
+
+/* Image fit helper — replaces inline style="object-fit:cover" on thumbnails (X6). */
+.object-fit-cover {
+    object-fit: cover;
+}
+
+/* Inline-size helper for narrow numeric inputs — replaces style="width:6rem" (X6).
+   Uses the logical inline-size so it mirrors correctly under RTL. */
+.iw-6 {
+    inline-size: 6rem;
+}
+
+/* Max-width caps for truncated/long table cells — replace inline style="max-width:Npx"
+   (X6). Logical max-inline-size keeps them direction-agnostic (RTL1). Values match the
+   prior inline styles exactly to preserve column widths. */
+.mw-200 { max-inline-size: 200px; }
+.mw-220 { max-inline-size: 220px; }
+.mw-240 { max-inline-size: 240px; }
+.mw-280 { max-inline-size: 280px; }
+.mw-320 { max-inline-size: 320px; }
+.mw-480 { max-inline-size: 480px; }

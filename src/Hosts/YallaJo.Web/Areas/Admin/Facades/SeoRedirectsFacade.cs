@@ -13,10 +13,8 @@ public sealed class SeoRedirectsFacade
 
     public async Task<ApiResult<RedirectsVm>> GetIndexAsync(RedirectsFilterRequest filter, CancellationToken ct = default)
     {
-        if (filter.PageSize < 1 || filter.PageSize > 200)
-        {
-            filter.PageSize = DefaultPageSize;
-        }
+        // UI-UX-D1/R4: cap the page size at the 50 max (was 200).
+        filter.PageSize = Math.Clamp(filter.PageSize, 1, DefaultPageSize);
 
         if (filter.Page < 1)
         {

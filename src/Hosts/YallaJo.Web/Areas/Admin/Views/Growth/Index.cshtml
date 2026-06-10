@@ -156,7 +156,7 @@
                 <h2 id="holiday-heading" class="card-header-title h5 mb-0">@Localizer["Admin.Growth.HolidayHeading"]</h2>
                 <form method="get" asp-area="Admin" asp-controller="Growth" asp-action="Index" class="d-flex gap-2 align-items-center">
                     <label class="form-label mb-0" for="h-year">@Localizer["Admin.Growth.YearLabel"]</label>
-                    <input type="number" min="2000" max="2100" class="form-control form-control-sm" style="width:6rem" dir="ltr"
+                    <input type="number" min="2000" max="2100" class="form-control form-control-sm iw-6" dir="ltr"
                            id="h-year" name="year" value="@Model.Year" />
                     <button type="submit" class="btn btn-sm btn-outline-secondary">@Localizer["Admin.Growth.View"]</button>
                 </form>

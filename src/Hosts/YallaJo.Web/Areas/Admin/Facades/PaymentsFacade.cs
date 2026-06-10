@@ -13,7 +13,8 @@ public sealed class PaymentsFacade
 
     public async Task<ApiResult<PaymentsVm>> GetEarningsAsync(PaymentsFilterRequest request, CancellationToken ct = default)
     {
-        var pageSize = request.PageSize is < 1 or > 200 ? 25 : request.PageSize;
+        // UI-UX-D1/R4: cap the page size at 50 (was 200).
+        var pageSize = Math.Clamp(request.PageSize, 1, 50);
 
         var dashboard = await _api.GetDashboardAsync(ct);
         if (dashboard.IsUnauthorized)

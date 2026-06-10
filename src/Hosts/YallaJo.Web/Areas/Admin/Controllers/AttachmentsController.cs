@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using YallaJo.Web.Areas.Admin.Models.Attachments;
 using YallaJo.Web.Infrastructure.Authorization;
+using YallaJo.Web.Infrastructure.Mvc;
 
 using YallaJo.Web.Areas.Admin.Facades;
 namespace YallaJo.Web.Areas.Admin.Controllers;
@@ -9,7 +10,7 @@ namespace YallaJo.Web.Areas.Admin.Controllers;
 [Area("Admin")]
 [Authorize]
 [RequirePermission(WebPermission.Attachment.Read)]
-public sealed class AttachmentsController : Controller
+public sealed class AttachmentsController : BaseController
 {
     private readonly AttachmentsFacade _facade;
     public AttachmentsController(AttachmentsFacade facade) => _facade = facade;
@@ -28,7 +29,7 @@ public sealed class AttachmentsController : Controller
         };
 
         var result = await _facade.GetForEntityAsync(filter, ct);
-        if (result.RequireSignOut) return RedirectToLogin();
+        if (GuardSignOut(result) is { } signOut) return signOut;
         if (!result.IsSuccess)
         {
             ViewBag.Error = result.Error;
@@ -44,16 +45,15 @@ public sealed class AttachmentsController : Controller
     {
         if (!ModelState.IsValid)
         {
-            TempData["Error"] = "Please fix the upload form errors.";
+            SetError("Please fix the upload form errors.");
             return RedirectToAction(nameof(Index),
                 new { entityType = vm.EntityType, entityId = vm.EntityId });
         }
 
         var result = await _facade.UploadAsync(vm, ct);
-        if (result.RequireSignOut) return RedirectToLogin();
+        if (GuardSignOut(result) is { } signOut) return signOut;
 
-        TempData[result.IsSuccess ? "Success" : "Error"] =
-            result.IsSuccess ? "Attachment uploaded." : result.Error ?? "Upload failed.";
+        SetFlash(result, "Attachment uploaded.", "Upload failed.");
 
         return RedirectToAction(nameof(Index),
             new { entityType = vm.EntityType, entityId = vm.EntityId });
@@ -66,10 +66,9 @@ public sealed class AttachmentsController : Controller
         Guid id, EntityTypeOption entityType, Guid entityId, CancellationToken ct)
     {
         var result = await _facade.DeleteAsync(id, ct);
-        if (result.RequireSignOut) return RedirectToLogin();
+        if (GuardSignOut(result) is { } signOut) return signOut;
 
-        TempData[result.IsSuccess ? "Success" : "Error"] =
-            result.IsSuccess ? "Attachment deleted." : result.Error ?? "Delete failed.";
+        SetFlash(result, "Attachment deleted.", "Delete failed.");
 
         return RedirectToAction(nameof(Index), new { entityType, entityId });
     }
@@ -81,14 +80,10 @@ public sealed class AttachmentsController : Controller
         Guid id, EntityTypeOption entityType, Guid entityId, CancellationToken ct)
     {
         var result = await _facade.SetPrimaryAsync(entityType, entityId, id, ct);
-        if (result.RequireSignOut) return RedirectToLogin();
+        if (GuardSignOut(result) is { } signOut) return signOut;
 
-        TempData[result.IsSuccess ? "Success" : "Error"] =
-            result.IsSuccess ? "Primary image set." : result.Error ?? "Could not set primary image.";
+        SetFlash(result, "Primary image set.", "Could not set primary image.");
 
         return RedirectToAction(nameof(Index), new { entityType, entityId });
     }
-
-    private IActionResult RedirectToLogin()
-        => RedirectToAction("SignIn", "Auth", new { area = "Auth" });
 }

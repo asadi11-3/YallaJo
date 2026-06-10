@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using YallaJo.Web.Areas.Admin.Models.Translations;
 using YallaJo.Web.Infrastructure.Authorization;
+using YallaJo.Web.Infrastructure.Mvc;
 
 using YallaJo.Web.Areas.Admin.Facades;
 namespace YallaJo.Web.Areas.Admin.Controllers;
@@ -9,7 +10,7 @@ namespace YallaJo.Web.Areas.Admin.Controllers;
 [Area("Admin")]
 [Authorize]
 [RequirePermission(WebPermission.TranslationCache.Read)]
-public sealed class TranslationsController : Controller
+public sealed class TranslationsController : BaseController
 {
     private readonly TranslationsFacade _facade;
     public TranslationsController(TranslationsFacade facade) => _facade = facade;
@@ -28,7 +29,7 @@ public sealed class TranslationsController : Controller
         };
 
         var result = await _facade.GetForEntityAsync(filter, ct);
-        if (result.RequireSignOut) return RedirectToLogin();
+        if (GuardSignOut(result) is { } signOut) return signOut;
         if (!result.IsSuccess)
         {
             ViewBag.Error = result.Error;
@@ -37,9 +38,26 @@ public sealed class TranslationsController : Controller
         return View(result.Data);
     }
 
+    // TempData keys carrying the on-demand translation result across the PRG redirect.
+    // TempData survives exactly one request then auto-evicts, so a browser refresh of the
+    // GET result page does NOT re-POST and therefore never re-bills the translation provider.
+    private const string OnDemandOriginalKey   = "Translations.OnDemand.Original";
+    private const string OnDemandTranslatedKey  = "Translations.OnDemand.Translated";
+    private const string OnDemandConfidenceKey  = "Translations.OnDemand.Confidence";
+
     [HttpGet("admin/translations/on-demand")]
     [RequirePermission(WebPermission.TranslationCache.Create)]
-    public IActionResult OnDemand() => View(new TranslateOnDemandVm());
+    public IActionResult OnDemand()
+    {
+        // Read back the result of a prior successful POST (PRG), if any.
+        var vm = new TranslateOnDemandVm
+        {
+            LastOriginal   = TempData[OnDemandOriginalKey] as string,
+            LastTranslated = TempData[OnDemandTranslatedKey] as string,
+            LastConfidence = TempData[OnDemandConfidenceKey] is double c ? c : null,
+        };
+        return View(vm);
+    }
 
     [HttpPost("admin/translations/on-demand")]
     [ValidateAntiForgeryToken]
@@ -49,22 +67,22 @@ public sealed class TranslationsController : Controller
         if (!ModelState.IsValid) return View(vm);
 
         var result = await _facade.TranslateOnDemandAsync(vm, ct);
-        if (result.RequireSignOut) return RedirectToLogin();
+        if (GuardSignOut(result) is { } signOut) return signOut;
 
         if (result.IsSuccess && result.Data is not null)
         {
-            return View(result.Data);
+            // PRG: stash the (small) result in TempData and redirect to the GET page so a
+            // refresh re-issues a harmless GET instead of re-running the paid translation.
+            TempData[OnDemandOriginalKey]   = result.Data.LastOriginal;
+            TempData[OnDemandTranslatedKey]  = result.Data.LastTranslated;
+            if (result.Data.LastConfidence is { } confidence)
+                TempData[OnDemandConfidenceKey] = confidence;
+            return RedirectToAction(nameof(OnDemand));
         }
 
-        if (result.ValidationErrors is not null)
-        {
-            foreach (var (field, messages) in result.ValidationErrors)
-                foreach (var m in messages)
-                    ModelState.AddModelError(field, m);
-            return View(vm);
-        }
+        if (!ApplyValidationErrors(result))
+            ModelState.AddModelError(string.Empty, result.Error ?? "Translation failed.");
 
-        ModelState.AddModelError(string.Empty, result.Error ?? "Translation failed.");
         return View(vm);
     }
 
@@ -96,25 +114,19 @@ public sealed class TranslationsController : Controller
         }
 
         var result = await _facade.UpdateAsync(vm, ct);
-        if (result.RequireSignOut) return RedirectToLogin();
+        if (GuardSignOut(result) is { } signOut) return signOut;
 
         if (result.IsSuccess)
         {
-            TempData["Success"] = "Translation updated.";
+            SetSuccess("Translation updated.");
             return RedirectToAction(nameof(Index), new { entityType, entityId });
         }
 
-        if (result.ValidationErrors is not null)
-        {
-            foreach (var (field, messages) in result.ValidationErrors)
-                foreach (var m in messages)
-                    ModelState.AddModelError(field, m);
-            ViewBag.EntityType = entityType;
-            ViewBag.EntityId   = entityId;
-            return View(vm);
-        }
+        // Re-render the same edit view with field-level errors (UI-UX-F6); restore the
+        // entity context the view needs.
+        if (!ApplyValidationErrors(result))
+            ModelState.AddModelError(string.Empty, result.Error ?? "Could not update translation.");
 
-        ModelState.AddModelError(string.Empty, result.Error ?? "Could not update translation.");
         ViewBag.EntityType = entityType;
         ViewBag.EntityId   = entityId;
         return View(vm);
@@ -127,10 +139,9 @@ public sealed class TranslationsController : Controller
         Guid id, EntityTypeOption entityType, Guid entityId, CancellationToken ct)
     {
         var result = await _facade.ApproveAsync(id, ct);
-        if (result.RequireSignOut) return RedirectToLogin();
+        if (GuardSignOut(result) is { } signOut) return signOut;
 
-        TempData[result.IsSuccess ? "Success" : "Error"] =
-            result.IsSuccess ? "Translation approved." : result.Error ?? "Could not approve translation.";
+        SetFlash(result, "Translation approved.", "Could not approve translation.");
 
         return RedirectToAction(nameof(Index), new { entityType, entityId });
     }
@@ -142,10 +153,9 @@ public sealed class TranslationsController : Controller
     public async Task<IActionResult> Backfill(string? entityKind, CancellationToken ct)
     {
         var result = await _facade.BackfillAsync(entityKind, ct);
-        if (result.RequireSignOut) return RedirectToLogin();
+        if (GuardSignOut(result) is { } signOut) return signOut;
 
-        TempData[result.IsSuccess ? "Success" : "Error"] =
-            result.IsSuccess ? "Translation backfill started." : result.Error ?? "Could not start the backfill.";
+        SetFlash(result, "Translation backfill started.", "Could not start the backfill.");
         return RedirectToAction(nameof(Index));
     }
 
@@ -157,13 +167,9 @@ public sealed class TranslationsController : Controller
         EntityTypeOption entityType, Guid entityId, string? languageCode, List<string>? fieldNames, CancellationToken ct)
     {
         var result = await _facade.ApproveBatchAsync(entityType.ToString(), entityId, languageCode, fieldNames, ct);
-        if (result.RequireSignOut) return RedirectToLogin();
+        if (GuardSignOut(result) is { } signOut) return signOut;
 
-        TempData[result.IsSuccess ? "Success" : "Error"] =
-            result.IsSuccess ? "Translations approved." : result.Error ?? "Could not approve the translations.";
+        SetFlash(result, "Translations approved.", "Could not approve the translations.");
         return RedirectToAction(nameof(Index), new { entityType, entityId });
     }
-
-    private IActionResult RedirectToLogin()
-        => RedirectToAction("SignIn", "Auth", new { area = "Auth" });
 }

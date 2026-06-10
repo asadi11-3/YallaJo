@@ -18,7 +18,7 @@ public sealed class FlaggedReviewsFacade
 
     public async Task<ApiResult<FlaggedReviewsVm>> GetIndexAsync(Guid? afterCursor, int pageSize, CancellationToken ct)
     {
-        if (pageSize < 1 || pageSize > 100)
+        if (pageSize < 1 || pageSize > 50)
         {
             pageSize = DefaultPageSize;
         }

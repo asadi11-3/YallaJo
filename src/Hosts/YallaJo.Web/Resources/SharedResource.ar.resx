@@ -2404,6 +2404,195 @@
   <data name="Admin.PlaceForm.MetaDescription" xml:space="preserve">
     <value>ÙˆØµÙ Ø§Ù„Ù…ÙŠØªØ§</value>
   </data>
+  <data name="Admin.Tours.Title" xml:space="preserve">
+    <value>إدارة الجولات</value>
+  </data>
+  <data name="Admin.Tours.Subtitle" xml:space="preserve">
+    <value>راجع الجولات ونفّذ إجراءات قائمة المراجعة.</value>
+  </data>
+  <data name="Admin.Tours.DetailsTitle" xml:space="preserve">
+    <value>تفاصيل الجولة</value>
+  </data>
+  <data name="Admin.Tours.FilterStatus" xml:space="preserve">
+    <value>الحالة</value>
+  </data>
+  <data name="Admin.Tours.AllStatuses" xml:space="preserve">
+    <value>كل الحالات</value>
+  </data>
+  <data name="Admin.Tours.Filter" xml:space="preserve">
+    <value>تصفية</value>
+  </data>
+  <data name="Admin.Tours.ColName" xml:space="preserve">
+    <value>الاسم</value>
+  </data>
+  <data name="Admin.Tours.ColStatus" xml:space="preserve">
+    <value>الحالة</value>
+  </data>
+  <data name="Admin.Tours.ColBasePrice" xml:space="preserve">
+    <value>السعر الأساسي</value>
+  </data>
+  <data name="Admin.Tours.ColSubmitted" xml:space="preserve">
+    <value>تاريخ التقديم</value>
+  </data>
+  <data name="Admin.Tours.ColCreated" xml:space="preserve">
+    <value>تاريخ الإنشاء</value>
+  </data>
+  <data name="Admin.Tours.ColActions" xml:space="preserve">
+    <value>إجراءات</value>
+  </data>
+  <data name="Admin.Tours.Details" xml:space="preserve">
+    <value>التفاصيل</value>
+  </data>
+  <data name="Admin.Tours.Empty" xml:space="preserve">
+    <value>لا توجد جولات في هذا العرض.</value>
+  </data>
+  <data name="Admin.Tours.EmptyHint" xml:space="preserve">
+    <value>جرّب تصفية بحالة مختلفة لعرض المزيد من الجولات.</value>
+  </data>
+  <data name="Admin.Tours.ActionsHint" xml:space="preserve">
+    <value>تُنفَّذ إجراءات المراجعة (الموافقة / الرفض / التعليق / إعادة التفعيل) من صفحة تفاصيل الجولة.</value>
+  </data>
+  <data name="Admin.Tours.PaginationLabel" xml:space="preserve">
+    <value>ترقيم صفحات الجولات</value>
+  </data>
+  <data name="Admin.Tours.PageLabel" xml:space="preserve">
+    <value>صفحة</value>
+  </data>
+  <data name="Admin.Tours.Previous" xml:space="preserve">
+    <value>السابق</value>
+  </data>
+  <data name="Admin.Tours.Next" xml:space="preserve">
+    <value>التالي</value>
+  </data>
+  <data name="Admin.Tours.BackToQueue" xml:space="preserve">
+    <value>العودة إلى القائمة</value>
+  </data>
+  <data name="Admin.Tours.Overview" xml:space="preserve">
+    <value>نظرة عامة</value>
+  </data>
+  <data name="Admin.Tours.NoDescription" xml:space="preserve">
+    <value>لا يوجد وصف.</value>
+  </data>
+  <data name="Admin.Tours.DetailsHeading" xml:space="preserve">
+    <value>التفاصيل</value>
+  </data>
+  <data name="Admin.Tours.Difficulty" xml:space="preserve">
+    <value>مستوى الصعوبة</value>
+  </data>
+  <data name="Admin.Tours.Duration" xml:space="preserve">
+    <value>المدة</value>
+  </data>
+  <data name="Admin.Tours.MaxGroupSize" xml:space="preserve">
+    <value>الحد الأقصى لحجم المجموعة</value>
+  </data>
+  <data name="Admin.Tours.MinAge" xml:space="preserve">
+    <value>الحد الأدنى للعمر</value>
+  </data>
+  <data name="Admin.Tours.BasePrice" xml:space="preserve">
+    <value>السعر الأساسي</value>
+  </data>
+  <data name="Admin.Tours.Location" xml:space="preserve">
+    <value>الموقع</value>
+  </data>
+  <data name="Admin.Tours.MeetingPoint" xml:space="preserve">
+    <value>نقطة الالتقاء</value>
+  </data>
+  <data name="Admin.Tours.InstantBooking" xml:space="preserve">
+    <value>الحجز الفوري</value>
+  </data>
+  <data name="Admin.Tours.CancellationPolicy" xml:space="preserve">
+    <value>سياسة الإلغاء</value>
+  </data>
+  <data name="Admin.Tours.ChildFriendly" xml:space="preserve">
+    <value>مناسب للأطفال</value>
+  </data>
+  <data name="Admin.Tours.Accessible" xml:space="preserve">
+    <value>مهيأ لذوي الإعاقة</value>
+  </data>
+  <data name="Admin.Tours.CreatedLabel" xml:space="preserve">
+    <value>تاريخ الإنشاء</value>
+  </data>
+  <data name="Admin.Tours.LastUpdated" xml:space="preserve">
+    <value>آخر تحديث</value>
+  </data>
+  <data name="Admin.Tours.Place" xml:space="preserve">
+    <value>المكان</value>
+  </data>
+  <data name="Admin.Tours.Yes" xml:space="preserve">
+    <value>نعم</value>
+  </data>
+  <data name="Admin.Tours.No" xml:space="preserve">
+    <value>لا</value>
+  </data>
+  <data name="Admin.Tours.Hours" xml:space="preserve">
+    <value>ساعة</value>
+  </data>
+  <data name="Admin.Tours.Moderation" xml:space="preserve">
+    <value>المراجعة</value>
+  </data>
+  <data name="Admin.Tours.NoConcurrency" xml:space="preserve">
+    <value>إجراءات المراجعة غير متاحة لعدم توفّر بيانات التزامن للجولة.</value>
+  </data>
+  <data name="Admin.Tours.NoActions" xml:space="preserve">
+    <value>لا تتوفر إجراءات مراجعة لجولة في حالة {0}.</value>
+  </data>
+  <data name="Admin.Tours.Approve" xml:space="preserve">
+    <value>موافقة</value>
+  </data>
+  <data name="Admin.Tours.ApproveConfirm" xml:space="preserve">
+    <value>الموافقة على الجولة ‏«{0}»؟ ستصبح مرئية للعامة.</value>
+  </data>
+  <data name="Admin.Tours.ApproveTitle" xml:space="preserve">
+    <value>الموافقة على الجولة</value>
+  </data>
+  <data name="Admin.Tours.Reject" xml:space="preserve">
+    <value>رفض</value>
+  </data>
+  <data name="Admin.Tours.RejectReason" xml:space="preserve">
+    <value>سبب الرفض</value>
+  </data>
+  <data name="Admin.Tours.RejectReasonPlaceholder" xml:space="preserve">
+    <value>سبب الرفض</value>
+  </data>
+  <data name="Admin.Tours.RejectConfirm" xml:space="preserve">
+    <value>رفض الجولة ‏«{0}»؟ سيتم إشعار المنشئ.</value>
+  </data>
+  <data name="Admin.Tours.RejectTitle" xml:space="preserve">
+    <value>رفض الجولة</value>
+  </data>
+  <data name="Admin.Tours.Suspend" xml:space="preserve">
+    <value>تعليق</value>
+  </data>
+  <data name="Admin.Tours.SuspendReason" xml:space="preserve">
+    <value>سبب التعليق</value>
+  </data>
+  <data name="Admin.Tours.SuspendReasonPlaceholder" xml:space="preserve">
+    <value>سبب التعليق</value>
+  </data>
+  <data name="Admin.Tours.SuspendConfirm" xml:space="preserve">
+    <value>تعليق الجولة ‏«{0}»؟ ستُخفى عن العامة حتى إعادة تفعيلها.</value>
+  </data>
+  <data name="Admin.Tours.SuspendTitle" xml:space="preserve">
+    <value>تعليق الجولة</value>
+  </data>
+  <data name="Admin.Tours.Reinstate" xml:space="preserve">
+    <value>إعادة تفعيل</value>
+  </data>
+  <data name="Admin.Tours.ReinstateConfirm" xml:space="preserve">
+    <value>إعادة تفعيل الجولة ‏«{0}»؟ ستصبح مرئية للعامة مجددًا.</value>
+  </data>
+  <data name="Admin.Tours.ReinstateTitle" xml:space="preserve">
+    <value>إعادة تفعيل الجولة</value>
+  </data>
+  <data name="Admin.Tours.HomepageCuration" xml:space="preserve">
+    <value>تنسيق الصفحة الرئيسية</value>
+  </data>
+  <data name="Admin.Tours.Feature" xml:space="preserve">
+    <value>إبراز</value>
+  </data>
+  <data name="Admin.Tours.Unfeature" xml:space="preserve">
+    <value>إلغاء الإبراز</value>
+  </data>
   <data name="Admin.Trips.Title" xml:space="preserve">
     <value>Ø§Ø¹ØªÙ…Ø§Ø¯ Ø§Ù„Ø¬ÙˆÙ„Ø§Øª</value>
   </data>
@@ -3643,8 +3832,20 @@
   <data name="Admin.Blogs.Unpublish" xml:space="preserve">
     <value>Ø¥Ù„ØºØ§Ø¡ Ø§Ù„Ù†Ø´Ø±</value>
   </data>
+  <data name="Admin.Blogs.UnpublishConfirm" xml:space="preserve">
+    <value>إلغاء نشر المقال ‏«{0}»؟ لن يعود ظاهرًا للعامة حتى تتم إعادة نشره.</value>
+  </data>
+  <data name="Admin.Blogs.UnpublishTitle" xml:space="preserve">
+    <value>إلغاء نشر المقال</value>
+  </data>
   <data name="Admin.Blogs.Archive" xml:space="preserve">
     <value>Ø£Ø±Ø´ÙØ©</value>
+  </data>
+  <data name="Admin.Blogs.ArchiveConfirm" xml:space="preserve">
+    <value>أرشفة المقال ‏«{0}»؟ ستتم إزالته من القائمة النشطة.</value>
+  </data>
+  <data name="Admin.Blogs.ArchiveTitle" xml:space="preserve">
+    <value>أرشفة المقال</value>
   </data>
   <data name="Admin.Blogs.Feature" xml:space="preserve">
     <value>ØªÙ…ÙŠÙŠØ²</value>
@@ -3970,6 +4171,9 @@
   <data name="Admin.Languages.Directory" xml:space="preserve">
     <value>Ø¯Ù„ÙŠÙ„ Ø§Ù„Ù„ØºØ§Øª</value>
   </data>
+  <data name="Admin.Languages.EmptyCta" xml:space="preserve">
+    <value>إضافة لغة</value>
+  </data>
   <data name="Admin.Languages.EmptyMessage" xml:space="preserve">
     <value>Ù„Ù… ØªØªÙ… Ø¥Ø¶Ø§ÙØ© Ø£ÙŠ Ù„ØºØ§Øª Ø¨Ø¹Ø¯.</value>
   </data>
@@ -4050,6 +4254,9 @@
   </data>
   <data name="Admin.Specializations.Directory" xml:space="preserve">
     <value>Ø¯Ù„ÙŠÙ„ Ø§Ù„ØªØ®ØµØµØ§Øª</value>
+  </data>
+  <data name="Admin.Specializations.EmptyCta" xml:space="preserve">
+    <value>إضافة تخصص</value>
   </data>
   <data name="Admin.Specializations.EmptyMessage" xml:space="preserve">
     <value>Ù„Ù… ØªØªÙ… Ø¥Ø¶Ø§ÙØ© Ø£ÙŠ ØªØ®ØµØµØ§Øª Ø¨Ø¹Ø¯.</value>
@@ -4342,6 +4549,9 @@
   <data name="Admin.Categories.Directory" xml:space="preserve">
     <value>Ø´Ø¬Ø±Ø© Ø§Ù„ÙØ¦Ø§Øª</value>
   </data>
+  <data name="Admin.Categories.EmptyCta" xml:space="preserve">
+    <value>إنشاء فئة</value>
+  </data>
   <data name="Admin.Categories.EmptyMessage" xml:space="preserve">
     <value>Ù„Ø§ ØªÙˆØ¬Ø¯ ÙØ¦Ø§Øª Ø¨Ø¹Ø¯. Ø£Ù†Ø´Ø¦ Ø£ÙˆÙ„ ÙØ¦Ø© Ù…Ù† Ø§Ù„Ø£Ø¹Ù„Ù‰.</value>
   </data>
@@ -4440,6 +4650,9 @@
   </data>
   <data name="Admin.Tags.Apply" xml:space="preserve">
     <value>ØªØ·Ø¨ÙŠÙ‚</value>
+  </data>
+  <data name="Admin.Tags.EmptyCta" xml:space="preserve">
+    <value>إنشاء وسم</value>
   </data>
   <data name="Admin.Tags.EmptyMessage" xml:space="preserve">
     <value>Ù„Ø§ ØªÙˆØ¬Ø¯ ÙˆØ³ÙˆÙ… Ø¨Ø¹Ø¯. Ø£Ù†Ø´Ø¦ Ø£ÙˆÙ„ ÙˆØ³Ù… Ù…Ù† Ø§Ù„Ø£Ø¹Ù„Ù‰.</value>
@@ -6588,6 +6801,57 @@
   </data>
   <data name="Admin.Nav.Settings" xml:space="preserve">
     <value>Ø§Ù„Ø¥Ø¹Ø¯Ø§Ø¯Ø§Øª</value>
+  </data>
+  <data name="Admin.Layout.Account" xml:space="preserve">
+    <value>الحساب</value>
+  </data>
+  <data name="Admin.Layout.Search" xml:space="preserve">
+    <value>بحث</value>
+  </data>
+  <data name="Admin.Layout.ToggleNavigation" xml:space="preserve">
+    <value>تبديل القائمة</value>
+  </data>
+  <data name="Admin.Layout.ToggleTheme" xml:space="preserve">
+    <value>تبديل السمة</value>
+  </data>
+  <data name="Admin.Layout.ThemeLight" xml:space="preserve">
+    <value>فاتح</value>
+  </data>
+  <data name="Admin.Layout.ThemeDark" xml:space="preserve">
+    <value>داكن</value>
+  </data>
+  <data name="Admin.Layout.ThemeAuto" xml:space="preserve">
+    <value>تلقائي</value>
+  </data>
+  <data name="Admin.Layout.MyProfile" xml:space="preserve">
+    <value>ملفي الشخصي</value>
+  </data>
+  <data name="Admin.Layout.ChangePassword" xml:space="preserve">
+    <value>تغيير كلمة المرور</value>
+  </data>
+  <data name="Admin.Layout.Sessions" xml:space="preserve">
+    <value>الجلسات</value>
+  </data>
+  <data name="Admin.Layout.SignIn" xml:space="preserve">
+    <value>تسجيل الدخول</value>
+  </data>
+  <data name="Admin.Layout.LanguageToggle" xml:space="preserve">
+    <value>اللغة</value>
+  </data>
+  <data name="Admin.Confirm.Title" xml:space="preserve">
+    <value>يرجى التأكيد</value>
+  </data>
+  <data name="Admin.Confirm.Message" xml:space="preserve">
+    <value>هل أنت متأكد؟</value>
+  </data>
+  <data name="Admin.Confirm.Cancel" xml:space="preserve">
+    <value>إلغاء</value>
+  </data>
+  <data name="Admin.Confirm.Confirm" xml:space="preserve">
+    <value>تأكيد</value>
+  </data>
+  <data name="Admin.Confirm.Close" xml:space="preserve">
+    <value>إغلاق</value>
   </data>
   <data name="Auth.SignIn.Title" xml:space="preserve">
     <value>ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø¯Ø®ÙˆÙ„</value>

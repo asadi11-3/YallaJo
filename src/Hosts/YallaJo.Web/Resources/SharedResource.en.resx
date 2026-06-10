@@ -2404,6 +2404,195 @@
   <data name="Admin.PlaceForm.MetaDescription" xml:space="preserve">
     <value>Meta description</value>
   </data>
+  <data name="Admin.Tours.Title" xml:space="preserve">
+    <value>Tour moderation</value>
+  </data>
+  <data name="Admin.Tours.Subtitle" xml:space="preserve">
+    <value>Review tours and act on the moderation queue.</value>
+  </data>
+  <data name="Admin.Tours.DetailsTitle" xml:space="preserve">
+    <value>Tour details</value>
+  </data>
+  <data name="Admin.Tours.FilterStatus" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="Admin.Tours.AllStatuses" xml:space="preserve">
+    <value>All statuses</value>
+  </data>
+  <data name="Admin.Tours.Filter" xml:space="preserve">
+    <value>Filter</value>
+  </data>
+  <data name="Admin.Tours.ColName" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="Admin.Tours.ColStatus" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="Admin.Tours.ColBasePrice" xml:space="preserve">
+    <value>Base price</value>
+  </data>
+  <data name="Admin.Tours.ColSubmitted" xml:space="preserve">
+    <value>Submitted</value>
+  </data>
+  <data name="Admin.Tours.ColCreated" xml:space="preserve">
+    <value>Created</value>
+  </data>
+  <data name="Admin.Tours.ColActions" xml:space="preserve">
+    <value>Actions</value>
+  </data>
+  <data name="Admin.Tours.Details" xml:space="preserve">
+    <value>Details</value>
+  </data>
+  <data name="Admin.Tours.Empty" xml:space="preserve">
+    <value>No tours found in this view.</value>
+  </data>
+  <data name="Admin.Tours.EmptyHint" xml:space="preserve">
+    <value>Try a different status filter to see more tours.</value>
+  </data>
+  <data name="Admin.Tours.ActionsHint" xml:space="preserve">
+    <value>Moderation actions (Approve / Reject / Suspend / Reinstate) are performed on the tour details page.</value>
+  </data>
+  <data name="Admin.Tours.PaginationLabel" xml:space="preserve">
+    <value>Tour pagination</value>
+  </data>
+  <data name="Admin.Tours.PageLabel" xml:space="preserve">
+    <value>Page</value>
+  </data>
+  <data name="Admin.Tours.Previous" xml:space="preserve">
+    <value>Previous</value>
+  </data>
+  <data name="Admin.Tours.Next" xml:space="preserve">
+    <value>Next</value>
+  </data>
+  <data name="Admin.Tours.BackToQueue" xml:space="preserve">
+    <value>Back to queue</value>
+  </data>
+  <data name="Admin.Tours.Overview" xml:space="preserve">
+    <value>Overview</value>
+  </data>
+  <data name="Admin.Tours.NoDescription" xml:space="preserve">
+    <value>No description provided.</value>
+  </data>
+  <data name="Admin.Tours.DetailsHeading" xml:space="preserve">
+    <value>Details</value>
+  </data>
+  <data name="Admin.Tours.Difficulty" xml:space="preserve">
+    <value>Difficulty</value>
+  </data>
+  <data name="Admin.Tours.Duration" xml:space="preserve">
+    <value>Duration</value>
+  </data>
+  <data name="Admin.Tours.MaxGroupSize" xml:space="preserve">
+    <value>Max group size</value>
+  </data>
+  <data name="Admin.Tours.MinAge" xml:space="preserve">
+    <value>Min age</value>
+  </data>
+  <data name="Admin.Tours.BasePrice" xml:space="preserve">
+    <value>Base price</value>
+  </data>
+  <data name="Admin.Tours.Location" xml:space="preserve">
+    <value>Location</value>
+  </data>
+  <data name="Admin.Tours.MeetingPoint" xml:space="preserve">
+    <value>Meeting point</value>
+  </data>
+  <data name="Admin.Tours.InstantBooking" xml:space="preserve">
+    <value>Instant booking</value>
+  </data>
+  <data name="Admin.Tours.CancellationPolicy" xml:space="preserve">
+    <value>Cancellation policy</value>
+  </data>
+  <data name="Admin.Tours.ChildFriendly" xml:space="preserve">
+    <value>Child friendly</value>
+  </data>
+  <data name="Admin.Tours.Accessible" xml:space="preserve">
+    <value>Accessible</value>
+  </data>
+  <data name="Admin.Tours.CreatedLabel" xml:space="preserve">
+    <value>Created</value>
+  </data>
+  <data name="Admin.Tours.LastUpdated" xml:space="preserve">
+    <value>Last updated</value>
+  </data>
+  <data name="Admin.Tours.Place" xml:space="preserve">
+    <value>Place</value>
+  </data>
+  <data name="Admin.Tours.Yes" xml:space="preserve">
+    <value>Yes</value>
+  </data>
+  <data name="Admin.Tours.No" xml:space="preserve">
+    <value>No</value>
+  </data>
+  <data name="Admin.Tours.Hours" xml:space="preserve">
+    <value>h</value>
+  </data>
+  <data name="Admin.Tours.Moderation" xml:space="preserve">
+    <value>Moderation</value>
+  </data>
+  <data name="Admin.Tours.NoConcurrency" xml:space="preserve">
+    <value>Moderation actions are unavailable because the tour's concurrency data was not returned.</value>
+  </data>
+  <data name="Admin.Tours.NoActions" xml:space="preserve">
+    <value>No moderation actions are available for a tour in {0} status.</value>
+  </data>
+  <data name="Admin.Tours.Approve" xml:space="preserve">
+    <value>Approve</value>
+  </data>
+  <data name="Admin.Tours.ApproveConfirm" xml:space="preserve">
+    <value>Approve the tour “{0}”? It will become publicly visible.</value>
+  </data>
+  <data name="Admin.Tours.ApproveTitle" xml:space="preserve">
+    <value>Approve tour</value>
+  </data>
+  <data name="Admin.Tours.Reject" xml:space="preserve">
+    <value>Reject</value>
+  </data>
+  <data name="Admin.Tours.RejectReason" xml:space="preserve">
+    <value>Rejection reason</value>
+  </data>
+  <data name="Admin.Tours.RejectReasonPlaceholder" xml:space="preserve">
+    <value>Reason for rejection</value>
+  </data>
+  <data name="Admin.Tours.RejectConfirm" xml:space="preserve">
+    <value>Reject the tour “{0}”? The creator will be notified.</value>
+  </data>
+  <data name="Admin.Tours.RejectTitle" xml:space="preserve">
+    <value>Reject tour</value>
+  </data>
+  <data name="Admin.Tours.Suspend" xml:space="preserve">
+    <value>Suspend</value>
+  </data>
+  <data name="Admin.Tours.SuspendReason" xml:space="preserve">
+    <value>Suspension reason</value>
+  </data>
+  <data name="Admin.Tours.SuspendReasonPlaceholder" xml:space="preserve">
+    <value>Reason for suspension</value>
+  </data>
+  <data name="Admin.Tours.SuspendConfirm" xml:space="preserve">
+    <value>Suspend the tour “{0}”? It will be hidden from the public until reinstated.</value>
+  </data>
+  <data name="Admin.Tours.SuspendTitle" xml:space="preserve">
+    <value>Suspend tour</value>
+  </data>
+  <data name="Admin.Tours.Reinstate" xml:space="preserve">
+    <value>Reinstate</value>
+  </data>
+  <data name="Admin.Tours.ReinstateConfirm" xml:space="preserve">
+    <value>Reinstate the tour “{0}”? It will become publicly visible again.</value>
+  </data>
+  <data name="Admin.Tours.ReinstateTitle" xml:space="preserve">
+    <value>Reinstate tour</value>
+  </data>
+  <data name="Admin.Tours.HomepageCuration" xml:space="preserve">
+    <value>Homepage curation</value>
+  </data>
+  <data name="Admin.Tours.Feature" xml:space="preserve">
+    <value>Feature</value>
+  </data>
+  <data name="Admin.Tours.Unfeature" xml:space="preserve">
+    <value>Unfeature</value>
+  </data>
   <data name="Admin.Trips.Title" xml:space="preserve">
     <value>Tour approvals</value>
   </data>
@@ -3643,8 +3832,20 @@
   <data name="Admin.Blogs.Unpublish" xml:space="preserve">
     <value>Unpublish</value>
   </data>
+  <data name="Admin.Blogs.UnpublishConfirm" xml:space="preserve">
+    <value>Unpublish the post “{0}”? It will no longer be visible to the public until re-published.</value>
+  </data>
+  <data name="Admin.Blogs.UnpublishTitle" xml:space="preserve">
+    <value>Unpublish post</value>
+  </data>
   <data name="Admin.Blogs.Archive" xml:space="preserve">
     <value>Archive</value>
+  </data>
+  <data name="Admin.Blogs.ArchiveConfirm" xml:space="preserve">
+    <value>Archive the post “{0}”? It will be removed from the active list.</value>
+  </data>
+  <data name="Admin.Blogs.ArchiveTitle" xml:space="preserve">
+    <value>Archive post</value>
   </data>
   <data name="Admin.Blogs.Feature" xml:space="preserve">
     <value>Feature</value>
@@ -3970,6 +4171,9 @@
   <data name="Admin.Languages.Directory" xml:space="preserve">
     <value>Language directory</value>
   </data>
+  <data name="Admin.Languages.EmptyCta" xml:space="preserve">
+    <value>Add a language</value>
+  </data>
   <data name="Admin.Languages.EmptyMessage" xml:space="preserve">
     <value>No languages have been added yet.</value>
   </data>
@@ -4050,6 +4254,9 @@
   </data>
   <data name="Admin.Specializations.Directory" xml:space="preserve">
     <value>Specialization directory</value>
+  </data>
+  <data name="Admin.Specializations.EmptyCta" xml:space="preserve">
+    <value>Add a specialization</value>
   </data>
   <data name="Admin.Specializations.EmptyMessage" xml:space="preserve">
     <value>No specializations have been added yet.</value>
@@ -4342,6 +4549,9 @@
   <data name="Admin.Categories.Directory" xml:space="preserve">
     <value>Category tree</value>
   </data>
+  <data name="Admin.Categories.EmptyCta" xml:space="preserve">
+    <value>Create a category</value>
+  </data>
   <data name="Admin.Categories.EmptyMessage" xml:space="preserve">
     <value>No categories yet. Create the first one above.</value>
   </data>
@@ -4440,6 +4650,9 @@
   </data>
   <data name="Admin.Tags.Apply" xml:space="preserve">
     <value>Apply</value>
+  </data>
+  <data name="Admin.Tags.EmptyCta" xml:space="preserve">
+    <value>Create a tag</value>
   </data>
   <data name="Admin.Tags.EmptyMessage" xml:space="preserve">
     <value>No tags yet. Create the first one above.</value>
@@ -6588,6 +6801,57 @@
   </data>
   <data name="Admin.Nav.Settings" xml:space="preserve">
     <value>Settings</value>
+  </data>
+  <data name="Admin.Layout.Account" xml:space="preserve">
+    <value>Account</value>
+  </data>
+  <data name="Admin.Layout.Search" xml:space="preserve">
+    <value>Search</value>
+  </data>
+  <data name="Admin.Layout.ToggleNavigation" xml:space="preserve">
+    <value>Toggle navigation</value>
+  </data>
+  <data name="Admin.Layout.ToggleTheme" xml:space="preserve">
+    <value>Toggle theme</value>
+  </data>
+  <data name="Admin.Layout.ThemeLight" xml:space="preserve">
+    <value>Light</value>
+  </data>
+  <data name="Admin.Layout.ThemeDark" xml:space="preserve">
+    <value>Dark</value>
+  </data>
+  <data name="Admin.Layout.ThemeAuto" xml:space="preserve">
+    <value>Auto</value>
+  </data>
+  <data name="Admin.Layout.MyProfile" xml:space="preserve">
+    <value>My Profile</value>
+  </data>
+  <data name="Admin.Layout.ChangePassword" xml:space="preserve">
+    <value>Change Password</value>
+  </data>
+  <data name="Admin.Layout.Sessions" xml:space="preserve">
+    <value>Sessions</value>
+  </data>
+  <data name="Admin.Layout.SignIn" xml:space="preserve">
+    <value>Sign In</value>
+  </data>
+  <data name="Admin.Layout.LanguageToggle" xml:space="preserve">
+    <value>Language</value>
+  </data>
+  <data name="Admin.Confirm.Title" xml:space="preserve">
+    <value>Please confirm</value>
+  </data>
+  <data name="Admin.Confirm.Message" xml:space="preserve">
+    <value>Are you sure?</value>
+  </data>
+  <data name="Admin.Confirm.Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="Admin.Confirm.Confirm" xml:space="preserve">
+    <value>Confirm</value>
+  </data>
+  <data name="Admin.Confirm.Close" xml:space="preserve">
+    <value>Close</value>
   </data>
   <data name="Auth.SignIn.Title" xml:space="preserve">
     <value>Sign in</value>

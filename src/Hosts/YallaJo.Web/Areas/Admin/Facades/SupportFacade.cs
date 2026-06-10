@@ -20,7 +20,7 @@ public sealed class SupportFacade
     public async Task<ApiResult<SupportListVm>> GetIndexAsync(
         string? status, string? category, Guid? cursor, int pageSize, CancellationToken ct)
     {
-        if (pageSize < 1 || pageSize > 100)
+        if (pageSize < 1 || pageSize > 50)
         {
             pageSize = DefaultPageSize;
         }

@@ -1,191 +1,219 @@
+@using System.Globalization
+@using Microsoft.Extensions.Localization
 @using YallaJo.Web.Infrastructure.Authorization
 @using YallaJo.Web.Areas.Admin.Models.Tours
 @model AdminTourDetailsVm
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
-    ViewData["Title"] = "Tour details";
-    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = Localizer["Admin.Tours.DetailsTitle"].Value;
+    ViewData["AdminNav"] = "Tours";
 
+    var culture = CultureInfo.CurrentCulture;
+    string Date(DateTime d) => d.ToString("yyyy-MM-dd HH:mm", culture);
     string Duration(int minutes) => $"{minutes / 60}h {minutes % 60}m";
+    string YesNo(bool v) => v ? Localizer["Admin.Tours.Yes"].Value : Localizer["Admin.Tours.No"].Value;
 }
 
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <div>
-                <h1 class="h3 mb-1">@Model.Name</h1>
-            <span class="badge @Model.StatusBadgeClass">@Model.Status</span>
-            <code class="ms-2">@Model.Slug</code>
+<div class="d-sm-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-1">@Model.Name</h1>
+        <span class="badge @Model.StatusBadgeClass">@Model.Status</span>
+        <bdi dir="ltr" class="font-data ms-2 text-secondary">@Model.Slug</bdi>
+    </div>
+    <a asp-area="Admin" asp-controller="Tours" asp-action="Index" class="btn btn-outline-secondary">
+        <i class="fa-solid fa-arrow-left fa-fw me-1" aria-hidden="true"></i>@Localizer["Admin.Tours.BackToQueue"]
+    </a>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card shadow mb-4">
+            <div class="card-header border-bottom">
+                <h2 class="card-header-title h5 mb-0">@Localizer["Admin.Tours.Overview"]</h2>
+            </div>
+            <div class="card-body">
+                @if (!string.IsNullOrWhiteSpace(Model.ShortDescription))
+                {
+                    <p class="fst-italic">@Model.ShortDescription</p>
+                }
+                @if (!string.IsNullOrWhiteSpace(Model.Description))
+                {
+                    <p class="text-pre-wrap mb-0">@Model.Description</p>
+                }
+                else
+                {
+                    <p class="text-secondary mb-0">@Localizer["Admin.Tours.NoDescription"]</p>
+                }
+            </div>
         </div>
-        <a asp-area="Admin" asp-controller="Tours" asp-action="Index" class="btn btn-outline-secondary">Back to queue</a>
+
+        <div class="card shadow">
+            <div class="card-header border-bottom">
+                <h2 class="card-header-title h5 mb-0">@Localizer["Admin.Tours.DetailsHeading"]</h2>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-4">@Localizer["Admin.Tours.Difficulty"]</dt>
+                    <dd class="col-sm-8">@Model.Difficulty</dd>
+
+                    <dt class="col-sm-4">@Localizer["Admin.Tours.Duration"]</dt>
+                    <dd class="col-sm-8"><bdi dir="ltr" class="font-data">@Duration(Model.DurationMinutes)</bdi></dd>
+
+                    <dt class="col-sm-4">@Localizer["Admin.Tours.MaxGroupSize"]</dt>
+                    <dd class="col-sm-8">@Model.MaxGroupSize.ToString("N0", culture)</dd>
+
+                    <dt class="col-sm-4">@Localizer["Admin.Tours.MinAge"]</dt>
+                    <dd class="col-sm-8">@(Model.MinAge?.ToString("N0", culture) ?? "—")</dd>
+
+                    <dt class="col-sm-4">@Localizer["Admin.Tours.BasePrice"]</dt>
+                    <dd class="col-sm-8"><bdi dir="ltr" class="font-data">@Model.BasePrice.ToString("0.##", culture) @Model.Currency</bdi></dd>
+
+                    <dt class="col-sm-4">@Localizer["Admin.Tours.Location"]</dt>
+                    <dd class="col-sm-8"><bdi dir="ltr" class="font-data">@Model.Latitude, @Model.Longitude</bdi></dd>
+
+                    <dt class="col-sm-4">@Localizer["Admin.Tours.MeetingPoint"]</dt>
+                    <dd class="col-sm-8">
+                        @if (Model.MeetingPointLatitude.HasValue && Model.MeetingPointLongitude.HasValue)
+                        {
+                            <bdi dir="ltr" class="font-data">@($"{Model.MeetingPointLatitude}, {Model.MeetingPointLongitude}")</bdi>
+                        }
+                        else
+                        {
+                            <span>—</span>
+                        }
+                    </dd>
+
+                    <dt class="col-sm-4">@Localizer["Admin.Tours.InstantBooking"]</dt>
+                    <dd class="col-sm-8">@YesNo(Model.IsInstantBooking)</dd>
+
+                    <dt class="col-sm-4">@Localizer["Admin.Tours.CancellationPolicy"]</dt>
+                    <dd class="col-sm-8">@Model.CancellationPolicyHours @Localizer["Admin.Tours.Hours"]</dd>
+
+                    <dt class="col-sm-4">@Localizer["Admin.Tours.ChildFriendly"]</dt>
+                    <dd class="col-sm-8">@YesNo(Model.IsChildFriendly)</dd>
+
+                    <dt class="col-sm-4">@Localizer["Admin.Tours.Accessible"]</dt>
+                    <dd class="col-sm-8">@YesNo(Model.IsAccessible)</dd>
+
+                    <dt class="col-sm-4">@Localizer["Admin.Tours.CreatedLabel"]</dt>
+                    <dd class="col-sm-8">@Date(Model.CreatedAt)</dd>
+
+                    <dt class="col-sm-4">@Localizer["Admin.Tours.LastUpdated"]</dt>
+                    <dd class="col-sm-8">@(Model.UpdatedAt is { } up ? Date(up) : "—")</dd>
+
+                    <dt class="col-sm-4">@Localizer["Admin.Tours.Place"]</dt>
+                    <dd class="col-sm-8">@Model.PlaceDisplay</dd>
+                </dl>
+            </div>
+        </div>
     </div>
 
-    <div class="row g-4">
-        <div class="col-lg-8">
-            <div class="card mb-3">
-                <div class="card-header"><strong>Overview</strong></div>
-                <div class="card-body">
-                    @if (!string.IsNullOrWhiteSpace(Model.ShortDescription))
-                    {
-                        <p class="fst-italic">@Model.ShortDescription</p>
-                    }
-                    @if (!string.IsNullOrWhiteSpace(Model.Description))
-                    {
-                        <p style="white-space: pre-wrap;">@Model.Description</p>
-                    }
-                    else
-                    {
-                        <p class="text-muted mb-0">No description provided.</p>
-                    }
-                </div>
+    <div class="col-lg-4">
+        <div class="card shadow">
+            <div class="card-header border-bottom">
+                <h2 class="card-header-title h5 mb-0">@Localizer["Admin.Tours.Moderation"]</h2>
             </div>
+            <div class="card-body d-grid gap-3">
+                @if (!Model.HasRowVersion)
+                {
+                    <div class="alert alert-warning mb-0" role="alert">@Localizer["Admin.Tours.NoConcurrency"]</div>
+                }
+                else if (!Model.HasAnyAction)
+                {
+                    <p class="text-secondary mb-0">@Localizer["Admin.Tours.NoActions", Model.Status]</p>
+                }
 
-            <div class="card">
-                <div class="card-header"><strong>Details</strong></div>
-                <div class="card-body">
-                    <dl class="row mb-0">
-                        <dt class="col-sm-4">Difficulty</dt>
-                        <dd class="col-sm-8">@Model.Difficulty</dd>
+                @if (Model.CanApprove)
+                {
+                    <permission require="@WebPermission.Tour.Approve">
+                        <form asp-area="Admin" asp-controller="Tours" asp-action="Approve" asp-route-id="@Model.Id" method="post"
+                              data-confirm="@Localizer["Admin.Tours.ApproveConfirm", Model.Name]"
+                              data-confirm-title="@Localizer["Admin.Tours.ApproveTitle"]"
+                              data-confirm-action="@Localizer["Admin.Tours.Approve"]">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-success w-100">
+                                <i class="fa-solid fa-check fa-fw me-1" aria-hidden="true"></i>@Localizer["Admin.Tours.Approve"]
+                            </button>
+                        </form>
+                    </permission>
+                }
 
-                        <dt class="col-sm-4">Duration</dt>
-                        <dd class="col-sm-8">@Duration(Model.DurationMinutes)</dd>
+                @if (Model.CanReject)
+                {
+                    <permission require="@WebPermission.Tour.Reject">
+                        <form asp-area="Admin" asp-controller="Tours" asp-action="Reject" asp-route-id="@Model.Id" method="post"
+                              data-confirm="@Localizer["Admin.Tours.RejectConfirm", Model.Name]"
+                              data-confirm-title="@Localizer["Admin.Tours.RejectTitle"]"
+                              data-confirm-action="@Localizer["Admin.Tours.Reject"]">
+                            @Html.AntiForgeryToken()
+                            <label class="form-label small mb-1" for="rejectReason">@Localizer["Admin.Tours.RejectReason"]</label>
+                            <textarea id="rejectReason" name="reason" class="form-control mb-2" rows="2" maxlength="1000"
+                                      placeholder="@Localizer["Admin.Tours.RejectReasonPlaceholder"]" required></textarea>
+                            <button type="submit" class="btn btn-outline-danger w-100">
+                                <i class="fa-solid fa-xmark fa-fw me-1" aria-hidden="true"></i>@Localizer["Admin.Tours.Reject"]
+                            </button>
+                        </form>
+                    </permission>
+                }
 
-                        <dt class="col-sm-4">Max group size</dt>
-                        <dd class="col-sm-8">@Model.MaxGroupSize</dd>
+                @if (Model.CanSuspend)
+                {
+                    <permission require="@WebPermission.Tour.Suspend">
+                        <form asp-area="Admin" asp-controller="Tours" asp-action="Suspend" asp-route-id="@Model.Id" method="post"
+                              data-confirm="@Localizer["Admin.Tours.SuspendConfirm", Model.Name]"
+                              data-confirm-title="@Localizer["Admin.Tours.SuspendTitle"]"
+                              data-confirm-action="@Localizer["Admin.Tours.Suspend"]">
+                            @Html.AntiForgeryToken()
+                            <label class="form-label small mb-1" for="suspendReason">@Localizer["Admin.Tours.SuspendReason"]</label>
+                            <textarea id="suspendReason" name="reason" class="form-control mb-2" rows="2" maxlength="1000"
+                                      placeholder="@Localizer["Admin.Tours.SuspendReasonPlaceholder"]" required></textarea>
+                            <button type="submit" class="btn btn-outline-warning w-100">
+                                <i class="fa-solid fa-pause fa-fw me-1" aria-hidden="true"></i>@Localizer["Admin.Tours.Suspend"]
+                            </button>
+                        </form>
+                    </permission>
+                }
 
-                        <dt class="col-sm-4">Min age</dt>
-                        <dd class="col-sm-8">@(Model.MinAge?.ToString() ?? "—")</dd>
+                @if (Model.CanReinstate)
+                {
+                    <permission require="@WebPermission.Tour.Reinstate">
+                        <form asp-area="Admin" asp-controller="Tours" asp-action="Reinstate" asp-route-id="@Model.Id" method="post"
+                              data-confirm="@Localizer["Admin.Tours.ReinstateConfirm", Model.Name]"
+                              data-confirm-title="@Localizer["Admin.Tours.ReinstateTitle"]"
+                              data-confirm-action="@Localizer["Admin.Tours.Reinstate"]">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-success w-100">
+                                <i class="fa-solid fa-rotate-left fa-fw me-1" aria-hidden="true"></i>@Localizer["Admin.Tours.Reinstate"]
+                            </button>
+                        </form>
+                    </permission>
+                }
 
-                        <dt class="col-sm-4">Base price</dt>
-                        <dd class="col-sm-8">@Model.BasePrice.ToString("0.##") @Model.Currency</dd>
-
-                        <dt class="col-sm-4">Location</dt>
-                        <dd class="col-sm-8">@Model.Latitude, @Model.Longitude</dd>
-
-                        <dt class="col-sm-4">Meeting point</dt>
-                        <dd class="col-sm-8">
-                            @if (Model.MeetingPointLatitude.HasValue && Model.MeetingPointLongitude.HasValue)
-                            {
-                                @($"{Model.MeetingPointLatitude}, {Model.MeetingPointLongitude}")
-                            }
-                            else
-                            {
-                                <span>—</span>
-                            }
-                        </dd>
-
-                        <dt class="col-sm-4">Instant booking</dt>
-                        <dd class="col-sm-8">@(Model.IsInstantBooking ? "Yes" : "No")</dd>
-
-                        <dt class="col-sm-4">Cancellation policy</dt>
-                        <dd class="col-sm-8">@Model.CancellationPolicyHours h</dd>
-
-                        <dt class="col-sm-4">Child friendly</dt>
-                        <dd class="col-sm-8">@(Model.IsChildFriendly ? "Yes" : "No")</dd>
-
-                        <dt class="col-sm-4">Accessible</dt>
-                        <dd class="col-sm-8">@(Model.IsAccessible ? "Yes" : "No")</dd>
-
-                        <dt class="col-sm-4">Created</dt>
-                        <dd class="col-sm-8">@Model.CreatedAt.ToString("yyyy-MM-dd HH:mm")</dd>
-
-                        <dt class="col-sm-4">Last updated</dt>
-                        <dd class="col-sm-8">@(Model.UpdatedAt?.ToString("yyyy-MM-dd HH:mm") ?? "—")</dd>
-
-                        <dt class="col-sm-4">Place</dt>
-                        <dd class="col-sm-8">@Model.PlaceDisplay</dd>
-                    </dl>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-lg-4">
-            <div class="card">
-                <div class="card-header"><strong>Moderation</strong></div>
-                <div class="card-body d-grid gap-3">
-                    @if (!Model.HasRowVersion)
-                    {
-                        <div class="alert alert-warning mb-0">
-                            Moderation actions are unavailable because the tour's concurrency data was not returned.
-                        </div>
-                    }
-                    else if (!Model.HasAnyAction)
-                    {
-                        <p class="text-muted mb-0">No moderation actions are available for a tour in <strong>@Model.Status</strong> status.</p>
-                    }
-
-                    @if (Model.CanApprove)
-                    {
-                        <permission require="@WebPermission.Tour.Approve">
-                            <form asp-area="Admin" asp-controller="Tours" asp-action="Approve" asp-route-id="@Model.Id" method="post">
-                                @Html.AntiForgeryToken()
-                                <button type="submit" class="btn btn-success w-100">Approve</button>
-                            </form>
-                        </permission>
-                    }
-
-                    @if (Model.CanReject)
-                    {
-                        <permission require="@WebPermission.Tour.Reject">
-                            <form asp-area="Admin" asp-controller="Tours" asp-action="Reject" asp-route-id="@Model.Id" method="post">
-                                @Html.AntiForgeryToken()
-                                <label class="form-label small mb-1">Rejection reason</label>
-                                <textarea name="reason" class="form-control mb-2" rows="2" maxlength="1000"
-                                          placeholder="Reason for rejection" required></textarea>
-                                <button type="submit" class="btn btn-outline-danger w-100">Reject</button>
-                            </form>
-                        </permission>
-                    }
-
-                    @if (Model.CanSuspend)
-                    {
-                        <permission require="@WebPermission.Tour.Suspend">
-                            <form asp-area="Admin" asp-controller="Tours" asp-action="Suspend" asp-route-id="@Model.Id" method="post">
-                                @Html.AntiForgeryToken()
-                                <label class="form-label small mb-1">Suspension reason</label>
-                                <textarea name="reason" class="form-control mb-2" rows="2" maxlength="1000"
-                                          placeholder="Reason for suspension" required></textarea>
-                                <button type="submit" class="btn btn-outline-warning w-100">Suspend</button>
-                            </form>
-                        </permission>
-                    }
-
-                    @if (Model.CanReinstate)
-                    {
-                        <permission require="@WebPermission.Tour.Reinstate">
-                            <form asp-area="Admin" asp-controller="Tours" asp-action="Reinstate" asp-route-id="@Model.Id" method="post">
-                                @Html.AntiForgeryToken()
-                                <button type="submit" class="btn btn-success w-100">Reinstate</button>
-                            </form>
-                        </permission>
-                    }
-
-                    @* §8.4 — homepage curation. Only meaningful once a tour is live (Approved). *@
-                    @if (Model.Status == "Approved")
-                    {
-                        <permission require="@WebPermission.Tour.Feature">
-                            <div class="border-top pt-3">
-                                <label class="form-label small mb-2 d-block">Homepage curation</label>
-                                <div class="d-flex gap-2">
-                                    <form asp-area="Admin" asp-controller="Tours" asp-action="Feature" asp-route-id="@Model.Id" method="post" class="flex-fill">
-                                        @Html.AntiForgeryToken()
-                                        <input type="hidden" name="isFeatured" value="true" />
-                                        <button type="submit" class="btn btn-outline-primary w-100">
-                                            <i class="fa-solid fa-star fa-fw" aria-hidden="true"></i>
-                                            <span>Feature</span>
-                                        </button>
-                                    </form>
-                                    <form asp-area="Admin" asp-controller="Tours" asp-action="Feature" asp-route-id="@Model.Id" method="post" class="flex-fill">
-                                        @Html.AntiForgeryToken()
-                                        <input type="hidden" name="isFeatured" value="false" />
-                                        <button type="submit" class="btn btn-outline-secondary w-100">
-                                            <i class="fa-regular fa-star fa-fw" aria-hidden="true"></i>
-                                            <span>Unfeature</span>
-                                        </button>
-                                    </form>
-                                </div>
+                @* §8.4 — homepage curation. Only meaningful once a tour is live (Approved). *@
+                @if (Model.Status == "Approved")
+                {
+                    <permission require="@WebPermission.Tour.Feature">
+                        <div class="border-top pt-3">
+                            <label class="form-label small mb-2 d-block">@Localizer["Admin.Tours.HomepageCuration"]</label>
+                            <div class="d-flex gap-2">
+                                <form asp-area="Admin" asp-controller="Tours" asp-action="Feature" asp-route-id="@Model.Id" method="post" class="flex-fill">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="isFeatured" value="true" />
+                                    <button type="submit" class="btn btn-outline-primary w-100">
+                                        <i class="fa-solid fa-star fa-fw me-1" aria-hidden="true"></i>@Localizer["Admin.Tours.Feature"]
+                                    </button>
+                                </form>
+                                <form asp-area="Admin" asp-controller="Tours" asp-action="Feature" asp-route-id="@Model.Id" method="post" class="flex-fill">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="isFeatured" value="false" />
+                                    <button type="submit" class="btn btn-outline-secondary w-100">
+                                        <i class="fa-regular fa-star fa-fw me-1" aria-hidden="true"></i>@Localizer["Admin.Tours.Unfeature"]
+                                    </button>
+                                </form>
                             </div>
-                        </permission>
-                    }
-                </div>
+                        </div>
+                    </permission>
+                }
             </div>
         </div>
     </div>

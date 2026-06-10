@@ -13,7 +13,8 @@ public sealed class OutboxFacade
 
     public async Task<ApiResult<OutboxVm>> GetIndexAsync(OutboxFilterRequest request, CancellationToken ct = default)
     {
-        var limit = request.Limit is < 1 or > 200 ? DefaultLimit : request.Limit;
+        // UI-UX-D1/R4: cap the list size at the 50 max (was 200).
+        var limit = Math.Clamp(request.Limit, 1, DefaultLimit);
         var result = await _api.GetDeadLettersAsync(request.Module, limit, ct);
         if (result.IsUnauthorized)
         {

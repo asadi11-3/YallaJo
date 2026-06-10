@@ -210,7 +210,7 @@
         }
     </div>
 
-    @if (Model.HasItems && Model.TotalPages > 1)
+    @if (Model.HasPreviousPage || Model.HasNextPage)
     {
         <div class="card-footer border-top">
             <nav aria-label="@Localizer["Admin.Blogs.PaginationLabel"]">

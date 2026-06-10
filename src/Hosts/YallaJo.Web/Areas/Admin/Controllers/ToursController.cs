@@ -68,7 +68,7 @@ public sealed class ToursController : BaseController
         if (GuardSignOut(result) is { } signOut) return signOut;
 
         SetFlash(result, "Tour approved.", "Could not approve the tour.");
-        return RedirectToAction(nameof(Details), new { id });
+        return BackToDetails(id);
     }
 
     // ── POST /admin/tours/{id}/reject ───────────────────────────────────────────────
@@ -80,14 +80,14 @@ public sealed class ToursController : BaseController
         if (string.IsNullOrWhiteSpace(reason))
         {
             SetError("A rejection reason is required.");
-            return RedirectToAction(nameof(Details), new { id });
+            return BackToDetails(id);
         }
 
         var result = await _facade.RejectAsync(id, reason.Trim(), ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
         SetFlash(result, "Tour rejected.", "Could not reject the tour.");
-        return RedirectToAction(nameof(Details), new { id });
+        return BackToDetails(id);
     }
 
     // ── POST /admin/tours/{id}/suspend ──────────────────────────────────────────────
@@ -99,14 +99,14 @@ public sealed class ToursController : BaseController
         if (string.IsNullOrWhiteSpace(reason))
         {
             SetError("A suspension reason is required.");
-            return RedirectToAction(nameof(Details), new { id });
+            return BackToDetails(id);
         }
 
         var result = await _facade.SuspendAsync(id, reason.Trim(), ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
         SetFlash(result, "Tour suspended.", "Could not suspend the tour.");
-        return RedirectToAction(nameof(Details), new { id });
+        return BackToDetails(id);
     }
 
     // ── POST /admin/tours/{id}/reinstate ────────────────────────────────────────────
@@ -119,7 +119,7 @@ public sealed class ToursController : BaseController
         if (GuardSignOut(result) is { } signOut) return signOut;
 
         SetFlash(result, "Tour reinstated.", "Could not reinstate the tour.");
-        return RedirectToAction(nameof(Details), new { id });
+        return BackToDetails(id);
     }
 
     // ── POST /admin/tours/{id}/feature ──────────────────────────────────────────────
@@ -135,7 +135,7 @@ public sealed class ToursController : BaseController
             result,
             isFeatured ? "Tour featured." : "Tour unfeatured.",
             isFeatured ? "Could not feature the tour." : "Could not unfeature the tour.");
-        return RedirectToAction(nameof(Details), new { id });
+        return BackToDetails(id);
     }
 
     // ── POST /admin/tours/proposals/{id}/approve ────────────────────────────────────
@@ -181,7 +181,7 @@ public sealed class ToursController : BaseController
 
         SetFlash(result, "Package approved.", "Could not approve the package.");
         return tourId is { } tid
-            ? RedirectToAction(nameof(Details), new { id = tid })
+            ? BackToDetails(tid)
             : RedirectToAction(nameof(Index), new { status = DefaultStatus });
     }
 
@@ -195,7 +195,7 @@ public sealed class ToursController : BaseController
         {
             SetError("A rejection reason is required.");
             return tourId is { } tidErr
-                ? RedirectToAction(nameof(Details), new { id = tidErr })
+                ? BackToDetails(tidErr)
                 : RedirectToAction(nameof(Index), new { status = DefaultStatus });
         }
 
@@ -204,7 +204,7 @@ public sealed class ToursController : BaseController
 
         SetFlash(result, "Package rejected.", "Could not reject the package.");
         return tourId is { } tid
-            ? RedirectToAction(nameof(Details), new { id = tid })
+            ? BackToDetails(tid)
             : RedirectToAction(nameof(Index), new { status = DefaultStatus });
     }
 
@@ -217,14 +217,14 @@ public sealed class ToursController : BaseController
         if (string.IsNullOrWhiteSpace(reason))
         {
             SetError("A suspension reason is required.");
-            return RedirectToAction(nameof(Details), new { id = tourId });
+            return BackToDetails(tourId);
         }
 
         var result = await _facade.SuspendOfferingAsync(tourId, guideId, reason.Trim(), ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
         SetFlash(result, "Guide offering suspended.", "Could not suspend the guide offering.");
-        return RedirectToAction(nameof(Details), new { id = tourId });
+        return BackToDetails(tourId);
     }
 
     // ── POST /admin/tours/{tourId}/guide-offerings/{guideId}/reinstate ───────────────
@@ -237,6 +237,11 @@ public sealed class ToursController : BaseController
         if (GuardSignOut(result) is { } signOut) return signOut;
 
         SetFlash(result, "Guide offering reinstated.", "Could not reinstate the guide offering.");
-        return RedirectToAction(nameof(Details), new { id = tourId });
+        return BackToDetails(tourId);
     }
+
+    // PRG target shared by all moderation/curation actions — redirect back to the
+    // tour Details page. Pure refactor of the repeated RedirectToAction(nameof(Details), …).
+    private IActionResult BackToDetails(Guid id) =>
+        RedirectToAction(nameof(Details), new { id });
 }

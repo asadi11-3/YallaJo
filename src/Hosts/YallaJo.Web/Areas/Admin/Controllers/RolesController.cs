@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using YallaJo.Web.Areas.Admin.Models.Roles;
 using YallaJo.Web.Infrastructure.Api.Contracts;
 using YallaJo.Web.Infrastructure.Authorization;
+using YallaJo.Web.Infrastructure.Mvc;
 
 using YallaJo.Web.Areas.Admin.Facades;
 namespace YallaJo.Web.Areas.Admin.Controllers;
@@ -10,7 +11,7 @@ namespace YallaJo.Web.Areas.Admin.Controllers;
 [Area("Admin")]
 [Authorize]
 [RequirePermission(WebPermission.Role.Read)]
-public sealed class RolesController : Controller
+public sealed class RolesController : BaseController
 {
     private readonly RolesFacade _facade;
     public RolesController(RolesFacade facade) => _facade = facade;
@@ -40,7 +41,7 @@ public sealed class RolesController : Controller
 
         if (!result.IsSuccess)
         {
-            TempData["Error"] = result.Error;
+            SetError(result.Error);
             return RedirectToAction(nameof(Index));
         }
 
@@ -52,34 +53,40 @@ public sealed class RolesController : Controller
     [RequirePermission(WebPermission.Role.Create)]
     public async Task<IActionResult> Create(CreateRoleVm vm, CancellationToken ct)
     {
+        // Client-side model invalid: re-render the create form on the Index view.
         if (!ModelState.IsValid)
-        {
-            var listResult = await _facade.GetRolesAsync(ct);
-            if (listResult.State == ApiResultState.Unauthorized) return RedirectToLogin();
-            if (listResult.State == ApiResultState.Forbidden)    return new ForbidResult();
-
-            return View("Index", new RoleListVm
-            {
-                Roles  = listResult.Data?.Roles ?? [],
-                Create = vm,
-            });
-        }
+            return await RenderIndexWithCreate(vm, ct);
 
         var result = await _facade.CreateAsync(vm, ct);
 
         if (result.State == ApiResultState.Unauthorized) return RedirectToLogin();
         if (result.State == ApiResultState.Forbidden)    return new ForbidResult();
 
-        if (result.IsValidationError && result.ValidationErrors is not null)
+        if (result.IsSuccess)
         {
-            foreach (var (field, msgs) in result.ValidationErrors)
-                foreach (var msg in msgs) ModelState.AddModelError(field, msg);
+            SetSuccess($"Role '{vm.Name}' created.");
+            return RedirectToAction(nameof(Index));
         }
 
-        TempData[result.IsSuccess ? "Success" : "Error"] =
-            result.IsSuccess ? $"Role '{vm.Name}' created." : result.Error;
+        // Failure: re-render the Index view with the create form so field-level errors
+        // are preserved (UI-UX-F6). A redirect here would discard ModelState.
+        if (!ApplyValidationErrors(result))
+            ModelState.AddModelError(string.Empty, result.Error ?? "Could not create role.");
 
-        return RedirectToAction(nameof(Index));
+        return await RenderIndexWithCreate(vm, ct);
+    }
+
+    private async Task<IActionResult> RenderIndexWithCreate(CreateRoleVm vm, CancellationToken ct)
+    {
+        var listResult = await _facade.GetRolesAsync(ct);
+        if (listResult.State == ApiResultState.Unauthorized) return RedirectToLogin();
+        if (listResult.State == ApiResultState.Forbidden)    return new ForbidResult();
+
+        return View("Index", new RoleListVm
+        {
+            Roles  = listResult.Data?.Roles ?? [],
+            Create = vm,
+        });
     }
 
     [HttpPost("admin/roles/{roleId:guid}/update")]
@@ -92,16 +99,28 @@ public sealed class RolesController : Controller
         if (result.State == ApiResultState.Unauthorized) return RedirectToLogin();
         if (result.State == ApiResultState.Forbidden)    return new ForbidResult();
 
-        if (result.IsValidationError && result.ValidationErrors is not null)
+        if (result.IsSuccess)
         {
-            foreach (var (field, msgs) in result.ValidationErrors)
-                foreach (var msg in msgs) ModelState.AddModelError(field, msg);
+            SetSuccess("Role updated.");
+            return RedirectToAction(nameof(Details), new { roleId });
         }
 
-        TempData[result.IsSuccess ? "Success" : "Error"] =
-            result.IsSuccess ? "Role updated." : result.Error;
+        // Failure: re-render the Details view with field-level errors (UI-UX-F6) rather
+        // than redirecting (which would discard ModelState). Reload the detail model first.
+        if (!ApplyValidationErrors(result))
+            ModelState.AddModelError(string.Empty, result.Error ?? "Could not update role.");
 
-        return RedirectToAction(nameof(Details), new { roleId });
+        var details = await _facade.GetDetailsAsync(roleId, ct);
+        if (details.State == ApiResultState.Unauthorized) return RedirectToLogin();
+        if (details.State == ApiResultState.Forbidden)    return new ForbidResult();
+        if (!details.IsSuccess || details.Data is null)
+        {
+            // Can't re-render without the model; fall back to a flash on Details.
+            SetError(result.Error ?? "Could not update role.");
+            return RedirectToAction(nameof(Details), new { roleId });
+        }
+
+        return View(nameof(Details), details.Data);
     }
 
     [HttpPost("admin/roles/{roleId:guid}/deactivate")]
@@ -114,8 +133,7 @@ public sealed class RolesController : Controller
         if (result.State == ApiResultState.Unauthorized) return RedirectToLogin();
         if (result.State == ApiResultState.Forbidden)    return new ForbidResult();
 
-        TempData[result.IsSuccess ? "Success" : "Error"] =
-            result.IsSuccess ? "Role deactivated." : result.Error;
+        SetFlash(result, "Role deactivated.");
 
         return RedirectToAction(nameof(Index));
     }
@@ -127,7 +145,9 @@ public sealed class RolesController : Controller
     {
         if (!ModelState.IsValid)
         {
-            TempData["Error"] = "Claim type and value are required.";
+            // Add-claim is a modal on the Details page with no view of its own; surface
+            // the guard as a flash on the redirect target.
+            SetError("Claim type and value are required.");
             return RedirectToAction(nameof(Details), new { roleId });
         }
 
@@ -136,8 +156,7 @@ public sealed class RolesController : Controller
         if (result.State == ApiResultState.Unauthorized) return RedirectToLogin();
         if (result.State == ApiResultState.Forbidden)    return new ForbidResult();
 
-        TempData[result.IsSuccess ? "Success" : "Error"] =
-            result.IsSuccess ? "Claim added." : result.Error;
+        SetFlash(result, "Claim added.");
 
         return RedirectToAction(nameof(Details), new { roleId });
     }
@@ -152,14 +171,10 @@ public sealed class RolesController : Controller
         if (result.State == ApiResultState.Unauthorized) return RedirectToLogin();
         if (result.State == ApiResultState.Forbidden)    return new ForbidResult();
 
-        TempData[result.IsSuccess ? "Success" : "Error"] =
-            result.IsSuccess ? "Claim removed." : result.Error;
+        SetFlash(result, "Claim removed.");
 
         return RedirectToAction(nameof(Details), new { roleId });
     }
-
-    private RedirectToActionResult RedirectToLogin() =>
-        RedirectToAction("SignIn", "Auth", new { area = "Auth" });
 
     private ViewResult ViewWithError(RoleListVm vm, string? error)
     {

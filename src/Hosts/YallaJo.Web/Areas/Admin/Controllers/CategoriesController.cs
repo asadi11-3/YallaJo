@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using YallaJo.Web.Areas.Admin.Models.Categories;
 using YallaJo.Web.Infrastructure.Authorization;
+using YallaJo.Web.Infrastructure.Mvc;
 
 using YallaJo.Web.Areas.Admin.Facades;
 namespace YallaJo.Web.Areas.Admin.Controllers;
@@ -9,7 +10,7 @@ namespace YallaJo.Web.Areas.Admin.Controllers;
 [Area("Admin")]
 [Authorize]
 [RequirePermission(WebPermission.Category.Read)]
-public sealed class CategoriesController : Controller
+public sealed class CategoriesController : BaseController
 {
     private readonly CategoriesFacade _facade;
     public CategoriesController(CategoriesFacade facade) => _facade = facade;
@@ -18,7 +19,7 @@ public sealed class CategoriesController : Controller
     public async Task<IActionResult> Index(CancellationToken ct)
     {
         var result = await _facade.GetCategoriesAsync(includeInactive: true, ct);
-        if (result.RequireSignOut) return RedirectToLogin();
+        if (GuardSignOut(result) is { } signOut) return signOut;
         if (!result.IsSuccess)
         {
             ViewBag.Error = result.Error;
@@ -35,14 +36,18 @@ public sealed class CategoriesController : Controller
         if (!ModelState.IsValid) return await ReloadIndex(vm, ct);
 
         var result = await _facade.CreateAsync(vm, ct);
-        if (result.RequireSignOut) return RedirectToLogin();
+        if (GuardSignOut(result) is { } signOut) return signOut;
 
         if (result.IsSuccess)
         {
-            TempData["Success"] = "Category created.";
+            SetSuccess("Category created.");
             return RedirectToAction(nameof(Index));
         }
 
+        // The create form is rendered as a sub-section of the Index view and binds its
+        // fields under the "Create." prefix, so API field errors must be prefixed to
+        // surface against the right inputs (BaseController.ApplyValidationErrors emits
+        // bare field names, which would not match here).
         if (result.ValidationErrors is not null)
         {
             foreach (var (field, messages) in result.ValidationErrors)
@@ -60,10 +65,10 @@ public sealed class CategoriesController : Controller
     public async Task<IActionResult> Edit(Guid id, CancellationToken ct)
     {
         var result = await _facade.GetForEditAsync(id, ct);
-        if (result.RequireSignOut) return RedirectToLogin();
+        if (GuardSignOut(result) is { } signOut) return signOut;
         if (!result.IsSuccess || result.Data is null)
         {
-            TempData["Error"] = result.Error ?? "Category not found.";
+            SetError(result.Error ?? "Category not found.");
             return RedirectToAction(nameof(Index));
         }
         return View(result.Data);
@@ -83,25 +88,21 @@ public sealed class CategoriesController : Controller
         }
 
         var result = await _facade.UpdateAsync(vm, ct);
-        if (result.RequireSignOut) return RedirectToLogin();
+        if (GuardSignOut(result) is { } signOut) return signOut;
 
         if (result.IsSuccess)
         {
-            TempData["Success"] = "Category updated.";
+            SetSuccess("Category updated.");
             return RedirectToAction(nameof(Index));
         }
 
+        // Re-render the same edit view with field-level errors (UI-UX-F6) — repopulate
+        // the parent-name dropdown first so it survives the round-trip.
         vm.ParentOptions = await _facade.LoadParentOptionsAsync(id, ct);
 
-        if (result.ValidationErrors is not null)
-        {
-            foreach (var (field, messages) in result.ValidationErrors)
-                foreach (var m in messages)
-                    ModelState.AddModelError(field, m);
-            return View(vm);
-        }
+        if (!ApplyValidationErrors(result))
+            ModelState.AddModelError(string.Empty, result.Error ?? "Could not update category.");
 
-        ModelState.AddModelError(string.Empty, result.Error ?? "Could not update category.");
         return View(vm);
     }
 
@@ -111,9 +112,8 @@ public sealed class CategoriesController : Controller
     public async Task<IActionResult> Deactivate(Guid id, CancellationToken ct)
     {
         var result = await _facade.DeactivateAsync(id, ct);
-        if (result.RequireSignOut) return RedirectToLogin();
-        TempData[result.IsSuccess ? "Success" : "Error"] =
-            result.IsSuccess ? "Category deactivated." : result.Error ?? "Failed.";
+        if (GuardSignOut(result) is { } signOut) return signOut;
+        SetFlash(result, "Category deactivated.", "Failed.");
         return RedirectToAction(nameof(Index));
     }
 
@@ -123,9 +123,8 @@ public sealed class CategoriesController : Controller
     public async Task<IActionResult> Activate(Guid id, CancellationToken ct)
     {
         var result = await _facade.ActivateAsync(id, ct);
-        if (result.RequireSignOut) return RedirectToLogin();
-        TempData[result.IsSuccess ? "Success" : "Error"] =
-            result.IsSuccess ? "Category activated." : result.Error ?? "Failed.";
+        if (GuardSignOut(result) is { } signOut) return signOut;
+        SetFlash(result, "Category activated.", "Failed.");
         return RedirectToAction(nameof(Index));
     }
 
@@ -135,9 +134,8 @@ public sealed class CategoriesController : Controller
     public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
     {
         var result = await _facade.DeleteAsync(id, ct);
-        if (result.RequireSignOut) return RedirectToLogin();
-        TempData[result.IsSuccess ? "Success" : "Error"] =
-            result.IsSuccess ? "Category deleted." : result.Error ?? "Failed.";
+        if (GuardSignOut(result) is { } signOut) return signOut;
+        SetFlash(result, "Category deleted.", "Failed.");
         return RedirectToAction(nameof(Index));
     }
 
@@ -148,9 +146,8 @@ public sealed class CategoriesController : Controller
     public async Task<IActionResult> Restore(Guid id, CancellationToken ct)
     {
         var result = await _facade.RestoreAsync(id, ct);
-        if (result.RequireSignOut) return RedirectToLogin();
-        TempData[result.IsSuccess ? "Success" : "Error"] =
-            result.IsSuccess ? "Category restored." : result.Error ?? "Failed.";
+        if (GuardSignOut(result) is { } signOut) return signOut;
+        SetFlash(result, "Category restored.", "Failed.");
         return RedirectToAction(nameof(Index));
     }
 
@@ -161,9 +158,8 @@ public sealed class CategoriesController : Controller
     public async Task<IActionResult> Reorder(List<Guid> ids, List<int> sortOrders, CancellationToken ct)
     {
         var result = await _facade.ReorderAsync(ids, sortOrders, ct);
-        if (result.RequireSignOut) return RedirectToLogin();
-        TempData[result.IsSuccess ? "Success" : "Error"] =
-            result.IsSuccess ? "Categories reordered." : result.Error ?? "Failed.";
+        if (GuardSignOut(result) is { } signOut) return signOut;
+        SetFlash(result, "Categories reordered.", "Failed.");
         return RedirectToAction(nameof(Index));
     }
 
@@ -175,7 +171,4 @@ public sealed class CategoriesController : Controller
             : new CategoryListVm { Create = create };
         return View(nameof(Index), vm);
     }
-
-    private IActionResult RedirectToLogin()
-        => RedirectToAction("SignIn", "Auth", new { area = "Auth" });
 }

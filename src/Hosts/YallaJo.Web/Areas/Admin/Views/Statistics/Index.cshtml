@@ -84,6 +84,12 @@
                 @if (Model.TypeBreakdown.Count > 0)
                 {
                     <div id="ChartTypes" role="img" aria-label="@Localizer["Admin.Stats.ChartAriaLabel"]"></div>
+                    @* SANITIZED (SEC3): both values come from System.Text.Json.JsonSerializer.Serialize
+                       (see typeLabelsJson/typeCountsJson above). The default System.Text.Json encoder is
+                       HTML-safe — it escapes <, >, &, ' and non-ASCII as \uXXXX, so a value containing
+                       "</script>" is emitted as "\u003C/script\u003E" and cannot break out of this
+                       non-executable application/json island. Html.Raw only suppresses Razor's
+                       double-encoding of that already-safe JSON. *@
                     <script type="application/json" data-yj-component="admin-statistics">
                         {
                             "typeLabels": @Html.Raw(typeLabelsJson),

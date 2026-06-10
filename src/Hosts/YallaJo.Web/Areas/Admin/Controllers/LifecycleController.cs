@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using YallaJo.Web.Areas.Admin.Models.Lifecycle;
 using YallaJo.Web.Infrastructure.Authorization;
+using YallaJo.Web.Infrastructure.Mvc;
 using YallaJo.Web.Areas.Admin.Facades;
 namespace YallaJo.Web.Areas.Admin.Controllers;
 
@@ -22,7 +23,7 @@ namespace YallaJo.Web.Areas.Admin.Controllers;
 [Area("Admin")]
 [Authorize]
 [RequirePermission(WebPermission.User.UpdateAny)]
-public sealed class LifecycleController : Controller
+public sealed class LifecycleController : BaseController
 {
     private readonly LifecycleFacade _facade;
     public LifecycleController(LifecycleFacade facade) => _facade = facade;
@@ -58,7 +59,7 @@ public sealed class LifecycleController : Controller
                 .Select(e => e.ErrorMessage)
                 .FirstOrDefault(m => !string.IsNullOrWhiteSpace(m))
                 ?? "Type ARCHIVE in capitals to confirm.";
-            TempData["Error"] = firstError;
+            SetError(firstError);
             return RedirectToDetails(userId);
         }
 
@@ -73,7 +74,7 @@ public sealed class LifecycleController : Controller
     {
         if (!ModelState.IsValid)
         {
-            TempData["Error"] = "Reason is too long (max 500 characters).";
+            SetError("Reason is too long (max 500 characters).");
             return RedirectToDetails(userId);
         }
 
@@ -96,7 +97,7 @@ public sealed class LifecycleController : Controller
                 .Select(e => e.ErrorMessage)
                 .FirstOrDefault(m => !string.IsNullOrWhiteSpace(m))
                 ?? "Reassignment input is invalid.";
-            TempData["Error"] = firstError;
+            SetError(firstError);
             return RedirectToDetails(userId);
         }
 
@@ -115,26 +116,25 @@ public sealed class LifecycleController : Controller
 
     private IActionResult RedirectAfter(Guid userId, Infrastructure.Api.Contracts.ApiResult result, string successMessage)
     {
-        if (result.RequireSignOut)
-            return RedirectToAction("SignIn", "Auth", new { area = "Auth" });
+        if (GuardSignOut(result) is { } signOut) return signOut;
 
         if (result.IsSuccess)
         {
-            TempData["Success"] = successMessage;
+            SetSuccess(successMessage);
         }
         else if (result.ValidationErrors is not null)
         {
-            // No view re-render in Phase 5B — collapse to a single
-            // human-readable error; modals in Phase 5C will keep the
-            // typed values and re-render field-level messages.
+            // These actions are driven by modals on the Users/Details page and have no
+            // view of their own to re-render, so field-level errors are collapsed to a
+            // single human-readable flash message on the redirect target.
             var first = result.ValidationErrors
                 .SelectMany(kv => kv.Value)
                 .FirstOrDefault(m => !string.IsNullOrWhiteSpace(m));
-            TempData["Error"] = first ?? "The action could not be completed.";
+            SetError(first ?? "The action could not be completed.");
         }
         else
         {
-            TempData["Error"] = result.Error ?? "The action could not be completed.";
+            SetError(result.Error ?? "The action could not be completed.");
         }
 
         return RedirectToDetails(userId);
