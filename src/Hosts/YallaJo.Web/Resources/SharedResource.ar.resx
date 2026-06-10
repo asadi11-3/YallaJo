@@ -4171,6 +4171,9 @@
   <data name="Admin.Languages.Directory" xml:space="preserve">
     <value>دليل اللغات</value>
   </data>
+  <data name="Admin.Languages.EmptyCta" xml:space="preserve">
+    <value>إضافة لغة</value>
+  </data>
   <data name="Admin.Languages.EmptyMessage" xml:space="preserve">
     <value>لم تتم إضافة أي لغات بعد.</value>
   </data>
@@ -4251,6 +4254,9 @@
   </data>
   <data name="Admin.Specializations.Directory" xml:space="preserve">
     <value>دليل التخصصات</value>
+  </data>
+  <data name="Admin.Specializations.EmptyCta" xml:space="preserve">
+    <value>إضافة تخصص</value>
   </data>
   <data name="Admin.Specializations.EmptyMessage" xml:space="preserve">
     <value>لم تتم إضافة أي تخصصات بعد.</value>
@@ -4543,6 +4549,9 @@
   <data name="Admin.Categories.Directory" xml:space="preserve">
     <value>شجرة الفئات</value>
   </data>
+  <data name="Admin.Categories.EmptyCta" xml:space="preserve">
+    <value>إنشاء فئة</value>
+  </data>
   <data name="Admin.Categories.EmptyMessage" xml:space="preserve">
     <value>لا توجد فئات بعد. أنشئ أول فئة من الأعلى.</value>
   </data>
@@ -4641,6 +4650,9 @@
   </data>
   <data name="Admin.Tags.Apply" xml:space="preserve">
     <value>تطبيق</value>
+  </data>
+  <data name="Admin.Tags.EmptyCta" xml:space="preserve">
+    <value>إنشاء وسم</value>
   </data>
   <data name="Admin.Tags.EmptyMessage" xml:space="preserve">
     <value>لا توجد وسوم بعد. أنشئ أول وسم من الأعلى.</value>

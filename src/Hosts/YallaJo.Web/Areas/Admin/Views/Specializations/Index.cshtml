@@ -65,7 +65,12 @@
         {
             <div class="text-center py-5">
                 <img src="~/assets/images/element/17.svg" width="80" height="80" aria-hidden="true" alt="" class="h-80px mb-3" />
-                <p class="mb-0 text-secondary">@Localizer["Admin.Specializations.EmptyMessage"]</p>
+                <p class="mb-3 text-secondary">@Localizer["Admin.Specializations.EmptyMessage"]</p>
+                <permission require="@WebPermission.Specialization.Create">
+                    <a href="#Create_Name" class="btn btn-sm btn-primary">
+                        <i class="fa-solid fa-plus fa-fw me-1" aria-hidden="true"></i>@Localizer["Admin.Specializations.EmptyCta"]
+                    </a>
+                </permission>
             </div>
         }
         else

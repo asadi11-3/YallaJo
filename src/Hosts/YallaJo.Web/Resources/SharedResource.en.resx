@@ -4171,6 +4171,9 @@
   <data name="Admin.Languages.Directory" xml:space="preserve">
     <value>Language directory</value>
   </data>
+  <data name="Admin.Languages.EmptyCta" xml:space="preserve">
+    <value>Add a language</value>
+  </data>
   <data name="Admin.Languages.EmptyMessage" xml:space="preserve">
     <value>No languages have been added yet.</value>
   </data>
@@ -4251,6 +4254,9 @@
   </data>
   <data name="Admin.Specializations.Directory" xml:space="preserve">
     <value>Specialization directory</value>
+  </data>
+  <data name="Admin.Specializations.EmptyCta" xml:space="preserve">
+    <value>Add a specialization</value>
   </data>
   <data name="Admin.Specializations.EmptyMessage" xml:space="preserve">
     <value>No specializations have been added yet.</value>
@@ -4543,6 +4549,9 @@
   <data name="Admin.Categories.Directory" xml:space="preserve">
     <value>Category tree</value>
   </data>
+  <data name="Admin.Categories.EmptyCta" xml:space="preserve">
+    <value>Create a category</value>
+  </data>
   <data name="Admin.Categories.EmptyMessage" xml:space="preserve">
     <value>No categories yet. Create the first one above.</value>
   </data>
@@ -4641,6 +4650,9 @@
   </data>
   <data name="Admin.Tags.Apply" xml:space="preserve">
     <value>Apply</value>
+  </data>
+  <data name="Admin.Tags.EmptyCta" xml:space="preserve">
+    <value>Create a tag</value>
   </data>
   <data name="Admin.Tags.EmptyMessage" xml:space="preserve">
     <value>No tags yet. Create the first one above.</value>
