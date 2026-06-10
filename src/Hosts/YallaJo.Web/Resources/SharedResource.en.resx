@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='utf-8'?>
+﻿<?xml version='1.0' encoding='utf-8'?>
 <root xmlns:ns1="urn:schemas-microsoft-com:xml-msdata" xmlns:xs="http://www.w3.org/2001/XMLSchema">
   <xs:schema id="root">
     <xs:import namespace="http://www.w3.org/XML/1998/namespace" />
@@ -12001,4 +12001,706 @@
   <data name="Business.Staff.Role.Staff" xml:space="preserve">
     <value>Staff</value>
   </data>
+<data name="Navbar.Menu" xml:space="preserve">
+<value>Menu</value>
+</data>
+<data name="Navbar.Explore" xml:space="preserve">
+<value>Explore</value>
+</data>
+<data name="Navbar.Tours" xml:space="preserve">
+<value>Tours</value>
+</data>
+<data name="Navbar.Destinations" xml:space="preserve">
+<value>Destinations</value>
+</data>
+<data name="Navbar.Packages" xml:space="preserve">
+<value>Packages</value>
+</data>
+<data name="Navbar.Guides" xml:space="preserve">
+<value>Guides</value>
+</data>
+<data name="Navbar.Directory" xml:space="preserve">
+<value>Businesses</value>
+</data>
+<data name="Navbar.Stories" xml:space="preserve">
+<value>Stories</value>
+</data>
+<data name="Navbar.More" xml:space="preserve">
+<value>More</value>
+</data>
+<data name="Navbar.Help" xml:space="preserve">
+<value>Help center</value>
+</data>
+<data name="Navbar.Faq" xml:space="preserve">
+<value>FAQ</value>
+</data>
+<data name="Navbar.Contact" xml:space="preserve">
+<value>Contact us</value>
+</data>
+<data name="Navbar.Agencies" xml:space="preserve">
+<value>Agencies</value>
+</data>
+<data name="Navbar.ListExperience" xml:space="preserve">
+<value>List your experience</value>
+</data>
+<data name="Navbar.SignIn" xml:space="preserve">
+<value>Sign in</value>
+</data>
+<data name="Navbar.Register" xml:space="preserve">
+<value>Sign up</value>
+</data>
+<data name="Navbar.MyProfile" xml:space="preserve">
+<value>My profile</value>
+</data>
+<data name="Navbar.MyBookings" xml:space="preserve">
+<value>My bookings</value>
+</data>
+<data name="Navbar.Wishlist" xml:space="preserve">
+<value>Wishlist</value>
+</data>
+<data name="Navbar.Settings" xml:space="preserve">
+<value>Settings</value>
+</data>
+<data name="Navbar.SignOut" xml:space="preserve">
+<value>Sign out</value>
+</data>
+<data name="Navbar.AdminDashboard" xml:space="preserve">
+<value>Admin dashboard</value>
+</data>
+<data name="Navbar.GuideDashboard" xml:space="preserve">
+<value>Guide dashboard</value>
+</data>
+<data name="Navbar.ProviderDashboard" xml:space="preserve">
+<value>Provider dashboard</value>
+</data>
+<data name="Navbar.CreatorDashboard" xml:space="preserve">
+<value>Creator studio</value>
+</data>
+<data name="Navbar.Mode" xml:space="preserve">
+<value>Mode</value>
+</data>
+<data name="Navbar.ModeLight" xml:space="preserve">
+<value>Light</value>
+</data>
+<data name="Navbar.ModeDark" xml:space="preserve">
+<value>Dark</value>
+</data>
+<data name="Navbar.ModeAuto" xml:space="preserve">
+<value>Auto</value>
+</data>
+<data name="Navbar.Search" xml:space="preserve">
+<value>Search</value>
+</data>
+<data name="Navbar.Account" xml:space="preserve">
+<value>Account</value>
+</data>
+<data name="Footer.Tagline" xml:space="preserve">
+<value>Discover and book authentic tours and experiences across Jordan.</value>
+</data>
+<data name="Footer.Explore" xml:space="preserve">
+<value>Explore</value>
+</data>
+<data name="Footer.Company" xml:space="preserve">
+<value>Company</value>
+</data>
+<data name="Footer.Support" xml:space="preserve">
+<value>Support</value>
+</data>
+<data name="Footer.Blog" xml:space="preserve">
+<value>Blog</value>
+</data>
+<data name="Footer.Privacy" xml:space="preserve">
+<value>Privacy policy</value>
+</data>
+<data name="Footer.Terms" xml:space="preserve">
+<value>Terms of service</value>
+</data>
+<data name="Footer.Rights" xml:space="preserve">
+<value>All rights reserved.</value>
+</data>
+<data name="MobileNav.Browse" xml:space="preserve">
+<value>Browse</value>
+</data>
+<data name="MobileNav.Search" xml:space="preserve">
+<value>Search</value>
+</data>
+<data name="MobileNav.Wishlist" xml:space="preserve">
+<value>Wishlist</value>
+</data>
+<data name="MobileNav.Bookings" xml:space="preserve">
+<value>Bookings</value>
+</data>
+<data name="MobileNav.Profile" xml:space="preserve">
+<value>Profile</value>
+</data>
+<data name="Search.Overlay.Title" xml:space="preserve">
+<value>Search YallaJo</value>
+</data>
+<data name="Search.Overlay.Placeholder" xml:space="preserve">
+<value>Search tours, destinations, experiences…</value>
+</data>
+<data name="Search.Overlay.Close" xml:space="preserve">
+<value>Close</value>
+</data>
+<data name="Search.Overlay.Recent" xml:space="preserve">
+<value>Recent searches</value>
+</data>
+<data name="Search.Overlay.Clear" xml:space="preserve">
+<value>Clear</value>
+</data>
+<data name="Search.Overlay.ViewAll" xml:space="preserve">
+<value>View all results</value>
+</data>
+<data name="Search.Overlay.NoResults" xml:space="preserve">
+<value>No matches found</value>
+</data>
+<data name="Public.Remove.from.wishlist" xml:space="preserve">
+<value>Remove from wishlist</value>
+</data>
+<data name="Public.RatingOutOfFive" xml:space="preserve">
+<value>Rated {0} out of 5</value>
+</data>
+<data name="Public.Filter.Apply" xml:space="preserve">
+<value>Apply filters</value>
+</data>
+<data name="Public.Filter.ClearAll" xml:space="preserve">
+<value>Clear all</value>
+</data>
+<data name="Public.Filter.Price" xml:space="preserve">
+<value>Price range</value>
+</data>
+<data name="Public.Filter.PriceMin" xml:space="preserve">
+<value>Min price</value>
+</data>
+<data name="Public.Filter.PriceMax" xml:space="preserve">
+<value>Max price</value>
+</data>
+<data name="Public.Filter.Difficulty" xml:space="preserve">
+<value>Difficulty</value>
+</data>
+<data name="Public.Difficulty.Any" xml:space="preserve">
+<value>Any</value>
+</data>
+<data name="Public.Difficulty.Easy" xml:space="preserve">
+<value>Easy</value>
+</data>
+<data name="Public.Difficulty.Moderate" xml:space="preserve">
+<value>Moderate</value>
+</data>
+<data name="Public.Difficulty.Hard" xml:space="preserve">
+<value>Hard</value>
+</data>
+<data name="Public.Difficulty.Expert" xml:space="preserve">
+<value>Expert</value>
+</data>
+<data name="Public.Filter.Duration" xml:space="preserve">
+<value>Duration</value>
+</data>
+<data name="Public.Filter.DurationMin" xml:space="preserve">
+<value>Min duration</value>
+</data>
+<data name="Public.Filter.DurationMax" xml:space="preserve">
+<value>Max duration</value>
+</data>
+<data name="Public.HoursShort" xml:space="preserve">
+<value>{0}h</value>
+</data>
+<data name="Public.Filter.MinRating" xml:space="preserve">
+<value>Minimum rating</value>
+</data>
+<data name="Public.StarsPlus" xml:space="preserve">
+<value>{0}+ stars</value>
+</data>
+<data name="Public.Filter.ChildFriendly" xml:space="preserve">
+<value>Child friendly</value>
+</data>
+<data name="Public.Filter.Accessible" xml:space="preserve">
+<value>Wheelchair accessible</value>
+</data>
+<data name="Public.Filter.InstantBooking" xml:space="preserve">
+<value>Instant booking</value>
+</data>
+<data name="Public.Filter.HasDiscount" xml:space="preserve">
+<value>On sale</value>
+</data>
+<data name="Public.Most.relevant" xml:space="preserve">
+<value>Most relevant</value>
+</data>
+<data name="Public.Results.Error" xml:space="preserve">
+<value>Couldn't load results.</value>
+</data>
+<data name="Public.Retry" xml:space="preserve">
+<value>Try again</value>
+</data>
+<data name="Public.RemoveFilter" xml:space="preserve">
+<value>Remove filter: {0}</value>
+</data>
+<data name="Public.Loading" xml:space="preserve">
+<value>Loading…</value>
+</data>
+<data name="Public.Review.Created" xml:space="preserve">
+<value>Thanks for your review!</value>
+</data>
+<data name="Public.Review.Updated" xml:space="preserve">
+<value>Your review was updated.</value>
+</data>
+<data name="Public.Review.Deleted" xml:space="preserve">
+<value>Your review was deleted.</value>
+</data>
+<data name="Public.Review.Helpful" xml:space="preserve">
+<value>Marked as helpful.</value>
+</data>
+<data name="Public.Review.HelpfulRemoved" xml:space="preserve">
+<value>Helpful vote removed.</value>
+</data>
+<data name="Public.Review.Reported" xml:space="preserve">
+<value>Thanks for reporting. Our team will review it.</value>
+</data>
+<data name="Public.Review.FormError" xml:space="preserve">
+<value>Please complete the review form.</value>
+</data>
+<data name="Public.AccessibilityReview.Created" xml:space="preserve">
+<value>Thanks for your accessibility review!</value>
+</data>
+<data name="Public.AccessibilityReview.Updated" xml:space="preserve">
+<value>Your accessibility review was updated.</value>
+</data>
+<data name="Public.AccessibilityReview.Deleted" xml:space="preserve">
+<value>Your accessibility review was deleted.</value>
+</data>
+<data name="Public.AccessibilityReview.FormError" xml:space="preserve">
+<value>Please complete the accessibility review form, including at least one feature.</value>
+</data>
+<data name="Public.Report.FormError" xml:space="preserve">
+<value>Please choose a reason and add a short description.</value>
+</data>
+<data name="Public.Confirm.Title" xml:space="preserve">
+<value>Are you sure?</value>
+</data>
+<data name="Public.Confirm.Delete" xml:space="preserve">
+<value>Delete</value>
+</data>
+<data name="Public.Confirm.Cancel" xml:space="preserve">
+<value>Cancel</value>
+</data>
+<data name="Public.Confirm.DeleteReview" xml:space="preserve">
+<value>Delete your review? This cannot be undone.</value>
+</data>
+<data name="Public.Confirm.DeleteAccessibilityReview" xml:space="preserve">
+<value>Delete your accessibility review? This cannot be undone.</value>
+</data>
+<data name="Public.Comment.Created" xml:space="preserve">
+<value>Your comment was posted.</value>
+</data>
+<data name="Public.Comment.Updated" xml:space="preserve">
+<value>Your comment was updated.</value>
+</data>
+<data name="Public.Comment.Deleted" xml:space="preserve">
+<value>Your comment was deleted.</value>
+</data>
+<data name="Public.Comment.FormError" xml:space="preserve">
+<value>Please write a comment before posting.</value>
+</data>
+<data name="Public.Comment.EditFormError" xml:space="preserve">
+<value>Please update the comment text before saving.</value>
+</data>
+<data name="Public.Creator.Followed" xml:space="preserve">
+<value>You are now following this creator.</value>
+</data>
+<data name="Public.Creator.Unfollowed" xml:space="preserve">
+<value>You are no longer following this creator.</value>
+</data>
+<data name="Public.Confirm.DeleteComment" xml:space="preserve">
+<value>Delete your comment? This cannot be undone.</value>
+</data>
+<data name="Public.Sign.in.to.comment" xml:space="preserve">
+<value>Sign in to comment</value>
+</data>
+<data name="Public.BookTour" xml:space="preserve">
+<value>Book {0}</value>
+</data>
+<data name="Public.Slot.Available" xml:space="preserve">
+<value>Available</value>
+</data>
+<data name="Public.Booking.Progress" xml:space="preserve">
+<value>Booking progress</value>
+</data>
+<data name="Public.Booking.StepDetails" xml:space="preserve">
+<value>Travelers &amp; details</value>
+</data>
+<data name="Public.Booking.StepConfirmation" xml:space="preserve">
+<value>Confirmation</value>
+</data>
+<data name="Public.Booking.NoGuide" xml:space="preserve">
+<value>This tour has upcoming dates but no guide is assigned yet, so it can't be booked right now. Please check back soon.</value>
+</data>
+<data name="Public.Booking.SeatsHint" xml:space="preserve">
+<value>Up to {0} seat(s) available for the selected date.</value>
+</data>
+<data name="Public.Booking.TravelersCount" xml:space="preserve">
+<value>{0} traveler(s)</value>
+</data>
+<data name="Public.Booking.SelectSlot" xml:space="preserve">
+<value>Please choose a date and time before continuing.</value>
+</data>
+<data name="Public.Booking.TooManySeats" xml:space="preserve">
+<value>Only {0} seat(s) are available for the selected date. Please reduce the number of travelers.</value>
+</data>
+<data name="Public.Booking.FreeCancellation" xml:space="preserve">
+<value>Free cancellation up to {0} h before</value>
+</data>
+<data name="Public.Booking.Confirmation.Title" xml:space="preserve">
+<value>Booking confirmation</value>
+</data>
+<data name="Public.Booking.Confirmed" xml:space="preserve">
+<value>Booking confirmed</value>
+</data>
+<data name="Public.Booking.Cancelled" xml:space="preserve">
+<value>Booking cancelled</value>
+</data>
+<data name="Public.Booking.Reference" xml:space="preserve">
+<value>Reference</value>
+</data>
+<data name="Public.CopyReference" xml:space="preserve">
+<value>Copy reference</value>
+</data>
+<data name="Public.Copied" xml:space="preserve">
+<value>Copied to clipboard</value>
+</data>
+<data name="Public.Booking.BookedOn" xml:space="preserve">
+<value>Booked {0}</value>
+</data>
+<data name="Public.Subtotal" xml:space="preserve">
+<value>Subtotal</value>
+</data>
+<data name="Public.Discount" xml:space="preserve">
+<value>Discount</value>
+</data>
+<data name="Public.Loyalty" xml:space="preserve">
+<value>Loyalty</value>
+</data>
+<data name="Public.Total" xml:space="preserve">
+<value>Total</value>
+</data>
+<data name="Public.Booking.CancelledOn" xml:space="preserve">
+<value>This booking was cancelled on {0}.</value>
+</data>
+<data name="Public.Booking.CancelledNoDate" xml:space="preserve">
+<value>This booking was cancelled.</value>
+</data>
+<data name="Public.Booking.RefundIssued" xml:space="preserve">
+<value>A refund of {0} was issued.</value>
+</data>
+<data name="Public.Booking.AwaitingPayment" xml:space="preserve">
+<value>Your booking is awaiting payment.</value>
+</data>
+<data name="Public.Booking.PaymentExpires" xml:space="preserve">
+<value>Payment expires {0}.</value>
+</data>
+<data name="Public.PayNow" xml:space="preserve">
+<value>Pay now</value>
+</data>
+<data name="Public.DownloadPdf" xml:space="preserve">
+<value>Download PDF</value>
+</data>
+<data name="Public.Explore.more.tours" xml:space="preserve">
+<value>Explore more tours</value>
+</data>
+<data name="Public.Booking.WhatsNext" xml:space="preserve">
+<value>What happens next?</value>
+</data>
+<data name="Public.Booking.Next1" xml:space="preserve">
+<value>Save your reference number — you will need it for any inquiries.</value>
+</data>
+<data name="Public.Booking.Next2" xml:space="preserve">
+<value>You can view or manage this booking anytime from My bookings.</value>
+</data>
+<data name="Public.Booking.Next3" xml:space="preserve">
+<value>Questions? Contact our support team and quote your reference.</value>
+</data>
+<data name="Public.ValidFrom" xml:space="preserve">
+<value>From {0}</value>
+</data>
+<data name="Public.ValidUntil" xml:space="preserve">
+<value>Until {0}</value>
+</data>
+<data name="Public.ViewPackage" xml:space="preserve">
+<value>View package</value>
+</data>
+<data name="Public.Package.InterestedTitle" xml:space="preserve">
+<value>Interested in this package?</value>
+</data>
+<data name="Public.Package.InquiryHelp" xml:space="preserve">
+<value>Have questions or want to book this bundle? Send us a message and our team will help you arrange it.</value>
+</data>
+<data name="Public.Package.Inquire" xml:space="preserve">
+<value>Inquire about this package</value>
+</data>
+<data name="Public.Package.InquirySubject" xml:space="preserve">
+<value>Package: {0}</value>
+</data>
+<data name="Public.OpenNow" xml:space="preserve">
+<value>Open now</value>
+</data>
+<data name="Public.ClosedNow" xml:space="preserve">
+<value>Closed now</value>
+</data>
+<data name="Help.Title" xml:space="preserve">
+<value>Help Center</value>
+</data>
+<data name="Help.HeroTitle" xml:space="preserve">
+<value>How can we help you?</value>
+</data>
+<data name="Help.HeroSubtitle" xml:space="preserve">
+<value>Search our help center or browse the frequently asked questions below.</value>
+</data>
+<data name="Help.SearchPlaceholder" xml:space="preserve">
+<value>Search the help center...</value>
+</data>
+<data name="Help.SearchAria" xml:space="preserve">
+<value>Search help</value>
+</data>
+<data name="Help.Faq.Title" xml:space="preserve">
+<value>Frequently asked questions</value>
+</data>
+<data name="Help.NoMatch" xml:space="preserve">
+<value>No articles match your search. Try a different keyword.</value>
+</data>
+<data name="Help.NoArticlesAlt" xml:space="preserve">
+<value>No articles</value>
+</data>
+<data name="Help.Empty.Title" xml:space="preserve">
+<value>No help articles yet</value>
+</data>
+<data name="Help.Empty.Text" xml:space="preserve">
+<value>Our help center is being put together. Please check back soon.</value>
+</data>
+<data name="Help.StillNeedHelp" xml:space="preserve">
+<value>Still need help?</value>
+</data>
+<data name="Help.ReachSupport" xml:space="preserve">
+<value>Reach our support team directly.</value>
+</data>
+<data name="Help.SubmitTicket" xml:space="preserve">
+<value>Submit a ticket</value>
+</data>
+<data name="Help.SubmitTicketText" xml:space="preserve">
+<value>Open a support request and track it.</value>
+</data>
+<data name="Public.Error.ReferenceId" xml:space="preserve">
+<value>Reference ID:</value>
+</data>
+<data name="Public.Back.to.home" xml:space="preserve">
+<value>Back to home</value>
+</data>
+<data name="Public.Contact.support" xml:space="preserve">
+<value>Contact support</value>
+</data>
+<data name="Public.Accessibility.reviews" xml:space="preserve">
+<value>Accessibility reviews</value>
+</data>
+<data name="Public.Visited" xml:space="preserve">
+<value>Visited {0}</value>
+</data>
+<data name="Public.Accessibility.features" xml:space="preserve">
+<value>Accessibility features</value>
+</data>
+<data name="Public.Select.at.least.one" xml:space="preserve">
+<value>(select at least one)</value>
+</data>
+<data name="Public.AccessibilityReview.Empty" xml:space="preserve">
+<value>No accessibility reviews yet. Share your accessibility experience to help others.</value>
+</data>
+<data name="Public.Write.an.accessibility.review" xml:space="preserve">
+<value>Write an accessibility review</value>
+</data>
+<data name="Public.Your.accessibility.experience" xml:space="preserve">
+<value>Your accessibility experience</value>
+</data>
+<data name="Public.Describe.accessibility.placeholder" xml:space="preserve">
+<value>Describe accessibility (entrances, restrooms, signage, staff assistance, etc.)</value>
+</data>
+<data name="Public.Submit.accessibility.review" xml:space="preserve">
+<value>Submit accessibility review</value>
+</data>
+<data name="Public.Sign.in.to.write.an.accessibility.review" xml:space="preserve">
+<value>Sign in to write an accessibility review</value>
+</data>
+<data name="Public.AccessibilityFeature.Wheelchair" xml:space="preserve">
+<value>Wheelchair access</value>
+</data>
+<data name="Public.AccessibilityFeature.Visual" xml:space="preserve">
+<value>Visual accessibility</value>
+</data>
+<data name="Public.AccessibilityFeature.Hearing" xml:space="preserve">
+<value>Hearing accessibility</value>
+</data>
+<data name="Public.AccessibilityFeature.Cognitive" xml:space="preserve">
+<value>Cognitive accessibility</value>
+</data>
+<data name="Public.AccessibilityFeature.Mobility" xml:space="preserve">
+<value>Mobility support</value>
+</data>
+<data name="Public.AccessibilityFeature.Other" xml:space="preserve">
+<value>Other</value>
+</data>
+<data name="Public.FoundHelpful.Count" xml:space="preserve">
+<value>{0} found this helpful</value>
+</data>
+<data name="Public.Sign.in.to.write.a.review" xml:space="preserve">
+<value>Sign in to write a review</value>
+</data>
+<data name="Public.YearsExperience" xml:space="preserve">
+<value>{0} yrs experience</value>
+</data>
+<data name="Public.Specialties.Count" xml:space="preserve">
+<value>{0} specialties</value>
+</data>
+<data name="Public.Years.Short" xml:space="preserve">
+<value>{0} yrs</value>
+</data>
+<data name="Public.To.contact.our.support.team" xml:space="preserve">
+<value>to contact our support team.</value>
+</data>
+<data name="Public.ActiveGuides.Count" xml:space="preserve">
+<value>{0} active guide(s)</value>
+</data>
+<data name="Public.Request.to.join.a.group" xml:space="preserve">
+<value>Request to join a group</value>
+</data>
+<data name="Public.JoinRequest.Sent" xml:space="preserve">
+<value>Your request to join has been sent.</value>
+</data>
+<data name="Public.Tours.for.selected.place" xml:space="preserve">
+<value>Tours for selected place</value>
+</data>
+<data name="Public.Tours.in.Place" xml:space="preserve">
+<value>Tours in {0}</value>
+</data>
+<data name="Home.Hero.TitleLead" xml:space="preserve">
+<value>Discover the best</value>
+</data>
+<data name="Home.Hero.TitleEmphasis" xml:space="preserve">
+<value>tours in Jordan</value>
+</data>
+<data name="Home.Hero.Cta" xml:space="preserve">
+<value>Discover Now</value>
+</data>
+<data name="Home.Hero.Watch" xml:space="preserve">
+<value>Watch our story</value>
+</data>
+<data name="Home.Hero.SupportBadge" xml:space="preserve">
+<value>Support</value>
+</data>
+<data name="Home.Search.Where" xml:space="preserve">
+<value>Where to?</value>
+</data>
+<data name="Home.Search.AnyDestination" xml:space="preserve">
+<value>Any destination</value>
+</data>
+<data name="Home.Search.When" xml:space="preserve">
+<value>When?</value>
+</data>
+<data name="Home.Search.SelectDates" xml:space="preserve">
+<value>Select dates</value>
+</data>
+<data name="Home.Search.Who" xml:space="preserve">
+<value>Who?</value>
+</data>
+<data name="Home.Search.Adults" xml:space="preserve">
+<value>Adults</value>
+</data>
+<data name="Home.Search.AdultsAge" xml:space="preserve">
+<value>Age 13+</value>
+</data>
+<data name="Home.Search.AdultsCounter" xml:space="preserve">
+<value>Adults counter</value>
+</data>
+<data name="Home.Search.DecreaseAdults" xml:space="preserve">
+<value>Decrease adults</value>
+</data>
+<data name="Home.Search.IncreaseAdults" xml:space="preserve">
+<value>Increase adults</value>
+</data>
+<data name="Home.Search.Children" xml:space="preserve">
+<value>Children</value>
+</data>
+<data name="Home.Search.ChildrenAge" xml:space="preserve">
+<value>Age 0–12</value>
+</data>
+<data name="Home.Search.ChildrenCounter" xml:space="preserve">
+<value>Children counter</value>
+</data>
+<data name="Home.Search.DecreaseChildren" xml:space="preserve">
+<value>Decrease children</value>
+</data>
+<data name="Home.Search.IncreaseChildren" xml:space="preserve">
+<value>Increase children</value>
+</data>
+<data name="Home.Search.WordAdult" xml:space="preserve">
+<value>adult</value>
+</data>
+<data name="Home.Search.WordAdults" xml:space="preserve">
+<value>adults</value>
+</data>
+<data name="Home.Search.WordChild" xml:space="preserve">
+<value>child</value>
+</data>
+<data name="Home.Search.WordChildren" xml:space="preserve">
+<value>children</value>
+</data>
+<data name="Home.Features.Title" xml:space="preserve">
+<value>Why book with YallaJo</value>
+</data>
+<data name="Home.Features.Lead" xml:space="preserve">
+<value>Every tour is hand-picked and run by vetted local guides. Pay securely, book instantly, and travel with peace of mind.</value>
+</data>
+<data name="Home.Features.GuidesTitle" xml:space="preserve">
+<value>Vetted local guides</value>
+</data>
+<data name="Home.Features.GuidesText" xml:space="preserve">
+<value>Every guide is interviewed and rated by real travelers.</value>
+</data>
+<data name="Home.Features.InstantTitle" xml:space="preserve">
+<value>Instant booking</value>
+</data>
+<data name="Home.Features.InstantText" xml:space="preserve">
+<value>Confirm your spot in seconds — no waiting for replies.</value>
+</data>
+<data name="Home.Features.SecureTitle" xml:space="preserve">
+<value>Secure payments</value>
+</data>
+<data name="Home.Features.SecureText" xml:space="preserve">
+<value>Bank-grade encryption and full refund protection.</value>
+</data>
+<data name="Home.Features.SupportTitle" xml:space="preserve">
+<value>24/7 traveler support</value>
+</data>
+<data name="Home.Features.SupportText" xml:space="preserve">
+<value>Real humans on call, day or night, wherever you are.</value>
+</data>
+<data name="Home.SeeAllTours" xml:space="preserve">
+<value>See all tours</value>
+</data>
+<data name="Home.BrowseAllPlaces" xml:space="preserve">
+<value>Browse all places</value>
+</data>
+<data name="Home.SeeAllBusinesses" xml:space="preserve">
+<value>See all businesses</value>
+</data>
+<data name="Home.Empty.Text" xml:space="preserve">
+<value>We're hand-picking tours and experiences for you. Check back soon.</value>
+</data>
+<data name="Home.Trust.Title" xml:space="preserve">
+<value>Real reviews from real travelers</value>
+</data>
+<data name="Home.Trust.Text" xml:space="preserve">
+<value>Every review on YallaJo comes from a verified booking.</value>
+</data>
+<data name="Home.Features.VerifiedTitle" xml:space="preserve">
+<value>Verified reviews</value>
+</data>
+<data name="Home.Features.VerifiedText" xml:space="preserve">
+<value>Ratings come from travelers with completed bookings.</value>
+</data>
 </root>

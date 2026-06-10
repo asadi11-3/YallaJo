@@ -1,0 +1,33 @@
+﻿@model YallaJo.Web.Areas.Public.Models.Shared.WishlistButtonVm
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
+@*
+    Shared wishlist heart button (master plan §3.1).
+    Authenticated: .js-favorite toggle handled by favorites.js (optimistic per UI-UX-NF6/WL2).
+    Guest: disabled with tooltip per UI-UX-WL1.
+*@
+@if (Model.IsAuthenticated)
+{
+    <button type="button"
+            class="btn btn-sm btn-light rounded-circle js-favorite @Model.ExtraClass"
+            data-entity-type="@Model.EntityType"
+            data-entity-id="@Model.EntityId"
+            data-title-add="@Localizer["Public.Save.to.wishlist"]"
+            data-title-remove="@Localizer["Public.Remove.from.wishlist"]"
+            title="@Localizer["Public.Save.to.wishlist"]"
+            aria-label="@Localizer["Public.Save.to.wishlist"]"
+            aria-pressed="false">
+        <i class="bi bi-heart" aria-hidden="true"></i>
+    </button>
+}
+else
+{
+    <button type="button"
+            class="btn btn-sm btn-light rounded-circle @Model.ExtraClass"
+            data-bs-toggle="tooltip"
+            title="@Localizer["Public.Log.in.to.save"]"
+            aria-label="@Localizer["Public.Log.in.to.save"]"
+            disabled>
+        <i class="bi bi-heart" aria-hidden="true"></i>
+    </button>
+}

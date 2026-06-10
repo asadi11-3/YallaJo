@@ -1,0 +1,78 @@
+﻿@model YallaJo.Web.Areas.Public.Models.Shared.TourCardVm
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
+@*
+    Canonical tour card (master plan §3.1). Used by Home rails, Tours index, Search results,
+    Packages detail. ViewData knobs:
+      - "isAuthed"  (bool)    enables the wishlist toggle
+      - "colClass"  (string)  grid column classes, default "col-md-6 col-xl-4"
+      - "dataTitle" (string?) optional data-title attr for client-side page filtering (Tours index)
+*@
+@{
+    var isAuthed = ViewData["isAuthed"] as bool? ?? false;
+    var colClass = ViewData["colClass"] as string ?? "col-md-6 col-xl-4";
+    var dataTitle = ViewData["dataTitle"] as string;
+}
+<div class="@colClass" data-title="@dataTitle">
+    <div class="card card-hover-shadow h-100">
+        <div class="position-relative">
+            @if (!string.IsNullOrWhiteSpace(Model.ImageUrl))
+            {
+                <img src="@Model.ImageUrl" class="card-img-top object-cover card-img-h220" alt="@Model.Name" loading="lazy" />
+            }
+            else
+            {
+                <div class="card-img-top card-img-h220 bg-light d-flex align-items-center justify-content-center" aria-hidden="true">
+                    <i class="bi bi-image display-5 text-secondary"></i>
+                </div>
+            }
+            <div class="position-absolute top-0 start-0 p-3 z-index-1">
+                @if (Model.HasDiscount)
+                {
+                    <span class="badge text-bg-danger me-1">@Localizer["Public.PercentOff", Model.DiscountPercent]</span>
+                }
+                @if (Model.IsFeatured)
+                {
+                    <span class="badge text-bg-dark">@Localizer["Public.Featured"]</span>
+                }
+            </div>
+            <div class="position-absolute top-0 end-0 p-3 z-index-2">
+                <partial name="_WishlistButton" model="@(new YallaJo.Web.Areas.Public.Models.Shared.WishlistButtonVm
+                         {
+                             EntityType = "Tour",
+                             EntityId = Model.Id,
+                             IsAuthenticated = isAuthed,
+                             ExtraClass = "shadow-sm"
+                         })" />
+            </div>
+        </div>
+        <div class="card-body d-flex flex-column">
+            <h5 class="card-title h6 mb-2">
+                <a class="stretched-link text-reset"
+                   asp-area="Public" asp-controller="Tours" asp-action="Detail" asp-route-slug="@Model.Slug">@Model.Name</a>
+            </h5>
+            <ul class="nav nav-divider small text-body-secondary mb-2">
+                <li class="nav-item">
+                    <i class="bi bi-star-fill text-warning me-1" aria-hidden="true"></i>@Model.AverageRating.ToString("0.0")
+                    <span>(@Model.ReviewCount)</span>
+                </li>
+                @if (Model.BookingCount > 0)
+                {
+                    <li class="nav-item">@Localizer["Public.BookedCount", Model.BookingCount]</li>
+                }
+            </ul>
+            <div class="mt-auto d-flex align-items-end justify-content-between pt-2">
+                <div>
+                    <span class="h5 fw-normal text-success mb-0">@($"{Model.EffectivePrice:N0} {Model.Currency}")</span>
+                    <small class="text-body-secondary"> @Localizer["Public.per.person"]</small>
+                    @if (Model.HasDiscount)
+                    {
+                        <small class="text-decoration-line-through text-body-secondary d-block">@($"{Model.BasePrice:N0} {Model.Currency}")</small>
+                    }
+                </div>
+                <a class="btn btn-sm btn-primary z-index-2 position-relative"
+                   asp-area="Public" asp-controller="Tours" asp-action="Detail" asp-route-slug="@Model.Slug">@Localizer["Public.View.Details"]</a>
+            </div>
+        </div>
+    </div>
+</div>

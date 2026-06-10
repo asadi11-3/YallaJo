@@ -1,4 +1,4 @@
-using YallaJo.Web.Areas.Public.Models.Home;
+using YallaJo.Web.Areas.Public.Models.Shared;
 
 namespace YallaJo.Web.Areas.Public.Models.Packages;
 
@@ -42,7 +42,7 @@ public sealed class PackageDetailVm
     public DateTime? ValidTo { get; init; }
 
     /// <summary>The tours bundled in this package, rendered with the shared Home tour card.</summary>
-    public IReadOnlyList<HomeTourCardVm> IncludedTours { get; init; } = [];
+    public IReadOnlyList<TourCardVm> IncludedTours { get; init; } = [];
 
     /// <summary>Free-text inclusion lines, ordered by the backend SortOrder.</summary>
     public IReadOnlyList<string> Inclusions { get; init; } = [];

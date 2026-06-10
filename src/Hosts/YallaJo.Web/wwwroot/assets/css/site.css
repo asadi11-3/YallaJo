@@ -1,0 +1,232 @@
+/*
+ * YallaJo site styles.
+ * Loaded after the theme style.css; holds self-hosted fonts, shell styles,
+ * and shared utilities. Keep page-specific CSS out of this file.
+ * Rules: UI-PERF-V3/V4 (self-hosted, subset fonts), UI-PERF-X10 (font-display: swap).
+ */
+
+/* ------------------------------------------------------------------ */
+/* Self-hosted web fonts (replaces Google Fonts CDN per UI-PERF-A5/V3) */
+/* ------------------------------------------------------------------ */
+
+/* DM Sans — variable font, latin subset */
+@font-face {
+    font-family: 'DM Sans';
+    font-style: normal;
+    font-weight: 400 700;
+    font-display: swap;
+    src: url('../../fonts/dm-sans-latin.woff2') format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* Poppins — static weights, latin subset */
+@font-face {
+    font-family: 'Poppins';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url('../../fonts/poppins-latin-400.woff2') format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+    font-family: 'Poppins';
+    font-style: normal;
+    font-weight: 500;
+    font-display: swap;
+    src: url('../../fonts/poppins-latin-500.woff2') format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+    font-family: 'Poppins';
+    font-style: normal;
+    font-weight: 600;
+    font-display: swap;
+    src: url('../../fonts/poppins-latin-600.woff2') format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+    font-family: 'Poppins';
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url('../../fonts/poppins-latin-700.woff2') format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* IBM Plex Sans Arabic — static weights, arabic subset (RTL cultures) */
+@font-face {
+    font-family: 'IBM Plex Sans Arabic';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url('../../fonts/ibm-plex-sans-arabic-400.woff2') format('woff2');
+    unicode-range: U+0600-06FF, U+0750-077F, U+0870-088E, U+0890-0891, U+0898-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC;
+}
+
+@font-face {
+    font-family: 'IBM Plex Sans Arabic';
+    font-style: normal;
+    font-weight: 500;
+    font-display: swap;
+    src: url('../../fonts/ibm-plex-sans-arabic-500.woff2') format('woff2');
+    unicode-range: U+0600-06FF, U+0750-077F, U+0870-088E, U+0890-0891, U+0898-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC;
+}
+
+@font-face {
+    font-family: 'IBM Plex Sans Arabic';
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url('../../fonts/ibm-plex-sans-arabic-700.woff2') format('woff2');
+    unicode-range: U+0600-06FF, U+0750-077F, U+0870-088E, U+0890-0891, U+0898-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC;
+}
+
+/* Arabic UI: prepend the Arabic family so Arabic glyphs render with it
+   while Latin glyphs keep using the theme fonts (unicode-range scoped). */
+html[lang="ar"] body {
+    font-family: 'IBM Plex Sans Arabic', 'DM Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+html[lang="ar"] h1, html[lang="ar"] h2, html[lang="ar"] h3,
+html[lang="ar"] h4, html[lang="ar"] h5, html[lang="ar"] h6,
+html[lang="ar"] .h1, html[lang="ar"] .h2, html[lang="ar"] .h3,
+html[lang="ar"] .h4, html[lang="ar"] .h5, html[lang="ar"] .h6 {
+    font-family: 'IBM Plex Sans Arabic', 'Poppins', system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+/* ------------------------------------------------------------------ */
+/* Header: language toggle (moved out of _Layout inline styles)        */
+/* ------------------------------------------------------------------ */
+
+.lang-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: .15rem;
+    background-color: var(--bs-light, #f5f5f5);
+    border-radius: var(--bs-border-radius, .5rem);
+    padding: .2rem;
+    height: 40px;
+    margin-inline-end: .5rem;
+}
+
+.lang-toggle-btn {
+    border: 0;
+    background: transparent;
+    color: var(--bs-secondary-color, #6c757d);
+    font-size: .8rem;
+    font-weight: 600;
+    line-height: 1;
+    padding: .35rem .6rem;
+    border-radius: calc(var(--bs-border-radius, .5rem) - .15rem);
+    cursor: pointer;
+    transition: background-color .2s ease, color .2s ease;
+}
+
+.lang-toggle-btn.active {
+    background-color: var(--bs-dark, #14191e);
+    color: #fff;
+}
+
+/* ------------------------------------------------------------------ */
+/* Header: search overlay                                              */
+/* ------------------------------------------------------------------ */
+
+.search-overlay .offcanvas-body {
+    max-width: 720px;
+    margin-inline: auto;
+    width: 100%;
+}
+
+.search-overlay-suggestions .list-group-item {
+    border-inline: 0;
+}
+
+/* ------------------------------------------------------------------
+   5. Utility classes (Phase 3.2) - replace per-view inline styles.
+   Rules: UI-PERF-X6 (no static inline style=), UI-UX-CON4 (2-line clamp).
+   ------------------------------------------------------------------ */
+
+.object-cover {
+  object-fit: cover;
+}
+
+.preserve-whitespace {
+  white-space: pre-line;
+}
+
+/* Multi-line text clamping */
+.text-truncate-2,
+.text-truncate-3 {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.text-truncate-2 {
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.text-truncate-3 {
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+}
+
+/* Fixed-height media (cards, heroes, gallery thumbnails) */
+.card-img-h200 { height: 200px; }
+.card-img-h220 { height: 220px; }
+.hero-img-h360 { height: 360px; }
+.hero-img-h380 { height: 380px; }
+.hero-img-h420 { height: 420px; }
+.thumb-h90 { height: 90px; }
+.thumb-h120 { height: 120px; }
+.thumb-h185 { height: 185px; }
+.thumb-h204 { height: 204px; }
+
+/* Square avatars (pair with .object-cover + rounded-circle) */
+.avatar-48 { width: 48px; height: 48px; }
+.avatar-56 { width: 56px; height: 56px; }
+.avatar-64 { width: 64px; height: 64px; }
+.avatar-72 { width: 72px; height: 72px; }
+.avatar-96 { width: 96px; height: 96px; }
+
+/* Circle tiles (Home destinations rail) */
+.img-circle-140 { width: 140px; height: 140px; }
+
+/* Phase 3.2 additions */
+.card-img-h170 { height: 170px; }
+.card-img-h180 { height: 180px; }
+.hero-img-h320 { height: 320px; }
+.min-w-240 { min-width: 240px; }
+.img-max-h380 { max-height: 380px; }
+.max-w-220 { max-width: 220px; }
+
+
+/* ------------------------------------------------------------------
+   6. Filter offcanvas - mobile bottom sheet (Phase 4.3, UI-UX-D4/S3)
+   Desktop: standard offcanvas-end side panel.
+   Mobile (<768px): becomes a bottom sheet with sticky Apply footer.
+   ------------------------------------------------------------------ */
+@media (max-width: 767.98px) {
+    .filter-offcanvas.offcanvas.offcanvas-end {
+        top: auto;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        width: 100%;
+        height: auto;
+        max-height: 85vh;
+        border-left: 0;
+        border-top-left-radius: 1rem;
+        border-top-right-radius: 1rem;
+        transform: translateY(100%);
+    }
+
+    .filter-offcanvas.offcanvas.offcanvas-end.show,
+    .filter-offcanvas.offcanvas.offcanvas-end.showing {
+        transform: none;
+    }
+}

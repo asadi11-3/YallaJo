@@ -4,9 +4,6 @@
 @{
     ViewData["Title"] = Localizer["Public.Explore.the.Directory"];
     Layout = "~/Views/Shared/_Layout.cshtml";
-    var isAuthed = User.Identity?.IsAuthenticated == true;
-    var firstResult = Model.TotalCount == 0 ? 0 : ((Model.PageNumber - 1) * Model.PageSize) + 1;
-    var lastResult = Math.Min(Model.PageNumber * Model.PageSize, Model.TotalCount);
 }
 
 @functions {
@@ -26,6 +23,7 @@
 @Html.AntiForgeryToken()
 
 <!-- Banner -->
+@* Inline style justified (UI-PERF-X6): background-image URL is resolved at runtime via Url.Content *@
 <section class="position-relative py-6 py-lg-7" style="background-image:url('@Url.Content("~/assets/images/bg/20.jpg")'); background-position:center; background-size:cover;">
     <div class="bg-overlay bg-dark opacity-7"></div>
     <div class="container position-relative">
@@ -33,7 +31,8 @@
             <div class="col-xl-9 mx-auto text-center">
                 <h6 class="text-white fw-normal mb-3">@Localizer["Public.Discover.amp.connect.with.great.places"]</h6>
                 <h1 class="display-5 text-white mb-4">@Localizer["Public.Explore.the.Directory"]</h1>
-                <form class="row g-2 justify-content-center" asp-area="Public" asp-controller="Directory" asp-action="Index" method="get">
+                @* Real GET form per UI-UX-PE1; listing.js enhances it via data-yj-listing *@
+                <form class="row g-2 justify-content-center" asp-area="Public" asp-controller="Directory" asp-action="Index" method="get" data-yj-listing>
                     <div class="col-lg-5">
                         <input class="form-control form-control-lg" type="text" name="q" value="@Model.Query" placeholder="@Localizer["Public.What.are.you.looking.for"]" />
                     </div>
@@ -86,122 +85,14 @@
 <!-- Listing -->
 <section class="pt-4">
     <div class="container">
-        <div class="d-sm-flex justify-content-between align-items-center mb-4">
-            <h5 class="mb-2 mb-sm-0">
-                @if (Model.HasResults)
-                {
-                    <text>@Localizer["Public.ShowingPlaces", firstResult, lastResult, Model.TotalCount]</text>
-                }
-                else
-                {
-                    <text>@Localizer["Public.No.places.found"]</text>
-                }
-            </h5>
+        @* Phase 7: results fragment is shared with the AJAX partial response (WantsAjax) and swapped in place by listing.js. *@
+        <div id="listingResults" data-yj-component="listing" aria-live="polite" aria-busy="false"
+             data-error-text="@Localizer["Public.Results.Error"]" data-retry-text="@Localizer["Public.Retry"]" data-loading-text="@Localizer["Public.Loading"]">
+            <partial name="_DirectoryResults" model="Model" />
         </div>
-
-        @if (!Model.HasResults)
-        {
-            <div class="text-center py-5">
-                <img src="@Url.Content("~/assets/images/element/17.svg")" class="h-100px mb-3" alt="@Localizer["Public.No.results"]" />
-                <h5 class="mb-1">@Localizer["Public.Nothing.matched.your.search"]</h5>
-                <p class="mb-0">@Localizer["Public.Try.a.different.category.city.or.search.term"]</p>
-            </div>
-        }
-        else
-        {
-            <div class="row g-4">
-                @foreach (var biz in Model.Businesses)
-                {
-                    <div class="col-sm-6 col-lg-4 col-xl-3">
-                        <div class="card shadow h-100">
-                            <div class="position-relative">
-                                @if (!string.IsNullOrEmpty(biz.ImageUrl))
-                                {
-                                    <img src="@biz.ImageUrl" class="card-img-top" style="height:200px;object-fit:cover;" alt="@biz.Name" />
-                                }
-                                else
-                                {
-                                    <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height:200px;">
-                                        <i class="bi @TypeIcon(biz.BusinessType) display-5 text-secondary"></i>
-                                    </div>
-                                }
-                                <div class="card-img-overlay p-3 z-index-1">
-                                    @if (!string.IsNullOrEmpty(biz.BusinessType))
-                                    {
-                                        <div class="badge text-bg-dark"><i class="bi @TypeIcon(biz.BusinessType) me-1"></i>@biz.BusinessType</div>
-                                    }
-                                    @if (biz.IsVerified)
-                                    {
-                                        <div class="badge text-bg-success">@Localizer["Public.Verified"]</div>
-                                    }
-                                </div>
-                                <div class="position-absolute top-0 end-0 p-3 z-index-2">
-                                    @if (isAuthed)
-                                    {
-                                        <button type="button" class="btn btn-sm btn-light rounded-circle js-favorite" data-entity-type="Business" data-entity-id="@biz.Id" title="@Localizer["Public.Save"]">
-                                            <i class="bi bi-heart"></i>
-                                        </button>
-                                    }
-                                    else
-                                    {
-                                        <button type="button" class="btn btn-sm btn-light rounded-circle" disabled data-bs-toggle="tooltip" title="@Localizer["Public.Log.in.to.save"]">
-                                            <i class="bi bi-heart"></i>
-                                        </button>
-                                    }
-                                </div>
-                            </div>
-
-                            <div class="card-body">
-                                @if (biz.IsFeatured)
-                                {
-                                    <div class="badge bg-danger bg-opacity-10 text-danger mb-2">@Localizer["Public.Featured"]</div>
-                                }
-                                <h5 class="card-title mb-2">
-                                    <a asp-area="Public" asp-controller="Directory" asp-action="Detail" asp-route-id="@biz.Id">@biz.Name</a>
-                                </h5>
-                                <ul class="list-group list-group-borderless mb-0">
-                                    @if (!string.IsNullOrEmpty(biz.Location))
-                                    {
-                                        <li class="list-group-item small pb-0">
-                                            <i class="bi bi-pin-map-fill fa-fw me-1"></i>@biz.Location
-                                        </li>
-                                    }
-                                    <li class="list-group-item small pb-0">
-                                        <i class="bi bi-star-fill fa-fw text-warning me-1"></i>@biz.AverageRating.ToString("0.0") <span class="text-body-secondary">(@Localizer["Public.Reviews.Count", biz.ReviewCount])</span>
-                                    </li>
-                                </ul>
-                            </div>
-
-                            <div class="card-footer border-top">
-                                <a asp-area="Public" asp-controller="Directory" asp-action="Detail" asp-route-id="@biz.Id" class="btn btn-link p-0 mb-0">
-                                    View detail<i class="bi bi-arrow-right ms-1"></i>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                }
-            </div>
-
-            @if (Model.TotalPages > 1)
-            {
-                <nav class="mt-5" aria-label="@Localizer["Public.Directory.pages"]">
-                    <ul class="pagination pagination-primary-soft justify-content-center mb-0">
-                        <li class="page-item @(Model.HasPreviousPage ? "" : "disabled")">
-                            <a class="page-link" asp-area="Public" asp-controller="Directory" asp-action="Index"
-                               asp-route-q="@Model.Query" asp-route-businessType="@Model.SelectedBusinessType" asp-route-city="@Model.City" asp-route-page="@(Model.PageNumber - 1)">@Localizer["Public.Prev"]</a>
-                        </li>
-                        <li class="page-item disabled"><span class="page-link">@Localizer["Public.PageOf", Model.PageNumber, Model.TotalPages]</span></li>
-                        <li class="page-item @(Model.HasNextPage ? "" : "disabled")">
-                            <a class="page-link" asp-area="Public" asp-controller="Directory" asp-action="Index"
-                               asp-route-q="@Model.Query" asp-route-businessType="@Model.SelectedBusinessType" asp-route-city="@Model.City" asp-route-page="@(Model.PageNumber + 1)">@Localizer["Public.Next"]</a>
-                        </li>
-                    </ul>
-                </nav>
-            }
-        }
     </div>
 </section>
 
 @section Scripts {
-    <script src="~/assets/js/directory-index.js" asp-append-version="true"></script>
+    <script src="~/assets/js/listing.js" asp-append-version="true"></script>
 }

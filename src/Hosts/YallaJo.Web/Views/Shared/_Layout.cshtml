@@ -1,6 +1,7 @@
 @using System.Globalization
 @using YallaJo.Web.Infrastructure.Identity
 @inject ICurrentUser CurrentUser
+@inject Microsoft.Extensions.Localization.IStringLocalizer<YallaJo.Web.Resources.SharedResource> L
 @*
     Shared application layout — adapted from the Webestica "Booking" Bootstrap 5 theme (Hotel Home / index.html).
 
@@ -11,7 +12,7 @@
       2. The theme's demo dropdown links (static .html files) are rewired to real asp-area/asp-controller/asp-action
          routes and gated with <permission> tag helpers.
 
-    The sticky top header lives in the _Navbar.cshtml partial (single source of truth).
+    The sticky top header lives in the _Navbar2.cshtml partial (single source of truth).
 
     NOTE: assets/css/style.css already bundles Bootstrap v5.3.0, so no separate Bootstrap CSS link is loaded.
 *@
@@ -66,11 +67,6 @@
     @* favicon *@
     <link rel="shortcut icon" href="~/assets/images/favicon.ico" />
 
-    @* Google Fonts *@
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
-
     @* Plugins CSS *@
     <link rel="stylesheet" type="text/css" href="~/assets/vendor/font-awesome/css/all.min.css" />
     <link rel="stylesheet" type="text/css" href="~/assets/vendor/bootstrap-icons/bootstrap-icons.css" />
@@ -82,6 +78,9 @@
     @* Theme CSS (bundles Bootstrap v5.3.0) *@
     <link rel="stylesheet" type="text/css" href="~/assets/css/style.css" />
 
+    @* Site CSS — self-hosted fonts (UI-PERF-V3/V4, no Google Fonts CDN per A5), shell styles, shared utilities *@
+    <link rel="stylesheet" type="text/css" href="~/assets/css/site.css" asp-append-version="true" />
+
     @* RTL overrides — loaded only for right-to-left cultures (UI-UX-Design.md §2) *@
     @if (seoDir == "rtl")
     {
@@ -91,65 +90,6 @@
 
     @* Per-view extra styles *@
     @await RenderSectionAsync("Styles", required: false)
-    <style>
-        .lang-toggle {
-        display: inline-flex;
-        align-items: center;
-        gap: .15rem;
-        background-color: var(--bs-light, #f5f5f5);
-        border-radius: var(--bs-border-radius, .5rem); /* match the notification button corners */
-        padding: .2rem;
-        height: 40px; /* match the bell / avatar height */
-        margin-inline-end: .5rem; /* keep clear of the notification button */
-        }
-
-        .lang-toggle-btn {
-        border: 0;
-        background: transparent;
-        color: var(--bs-secondary-color, #6c757d);
-        font-size: .8rem;
-        font-weight: 600;
-        line-height: 1;
-        padding: .35rem .6rem;
-        border-radius: calc(var(--bs-border-radius, .5rem) - .15rem); /* match inner corners */
-        cursor: pointer;
-        transition: background-color .2s ease, color .2s ease;
-        }
-
-        .lang-toggle-btn.active {
-        background-color: var(--bs-dark, #14191e);
-        color: #fff;
-        }
-
-        /* ===== RTL fixes for header dropdowns ===== */
-        /* The profile menu is positioned statically (data-bs-display="static"),
-        so its .dropdown-menu-end keeps right:0 even in RTL and opens off-screen.
-        Re-anchor end-aligned menus to the start edge when the page is RTL. */
-        [dir="rtl"] .navbar .dropdown-menu-end {
-        right: auto !important;
-        left: 0 !important;
-        }
-
-        /* Keep dropdown text/items reading from the right in RTL */
-        [dir="rtl"] .navbar .dropdown-menu,
-        [dir="rtl"] .navbar .dropdown-item,
-        [dir="rtl"] .navbar .card-header,
-        [dir="rtl"] .navbar .list-group-item {
-        text-align: right;
-        }
-
-        /* Profile header (avatar + name) realignment in RTL */
-        [dir="rtl"] .navbar .dropdown-menu .avatar.me-3 {
-        margin-right: 0 !important;
-        margin-left: 1rem !important;
-        }
-
-        /* Notification "dot" sits on the bell — move it to the opposite corner in RTL */
-        [dir="rtl"] .notif-badge {
-        right: auto;
-        left: 0.5rem;
-        }
-    </style>
     @* Import map for fingerprinted JS modules served via MapStaticAssets()/.WithStaticAssets(). *@
     <ImportMap />
 </head>
@@ -173,32 +113,45 @@
                 @* Widget 1 START *@
                 <div class="col-lg-3">
                     @* logo *@
-                    <a class="navbar-brand" asp-area="Accounts" asp-controller="Profile" asp-action="Index">
-                        <img class="h-40px" src="~/assets/images/logo-light.svg" alt="logo" />
+                    <a class="navbar-brand" asp-area="Public" asp-controller="Home" asp-action="Index">
+                        <img class="h-40px" src="~/assets/images/logo-light.svg" alt="YallaJo" />
                     </a>
-                    <p class="my-3 text-body-secondary">YallaJo — your trusted booking platform.</p>
+                    <p class="my-3 text-body-secondary">@L["Footer.Tagline"]</p>
                 </div>
                 @* Widget 1 END *@
 
                 @* Widget 2 START *@
                 <div class="col-lg-8 ms-auto">
                     <div class="row g-4">
-                        @* Link block *@
+                        @* Explore *@
                         <div class="col-6 col-md-4">
-                            <h5 class="text-white mb-2 mb-md-4">Company</h5>
+                            <h5 class="text-white mb-2 mb-md-4">@L["Footer.Explore"]</h5>
                             <ul class="nav flex-column text-primary-hover">
-                                <li class="nav-item"><a class="nav-link text-body-secondary" asp-area="Accounts" asp-controller="Profile" asp-action="Index">My Profile</a></li>
-                                <li class="nav-item"><a class="nav-link text-body-secondary" asp-area="Auth" asp-controller="Sessions" asp-action="Index">Sessions</a></li>
-                                <li class="nav-item"><a class="nav-link text-body-secondary" asp-area="Auth" asp-controller="Devices" asp-action="Index">Devices</a></li>
+                                <li class="nav-item"><a class="nav-link text-body-secondary" asp-area="Public" asp-controller="Tours" asp-action="Index">@L["Navbar.Tours"]</a></li>
+                                <li class="nav-item"><a class="nav-link text-body-secondary" asp-area="Public" asp-controller="Places" asp-action="Index">@L["Navbar.Destinations"]</a></li>
+                                <li class="nav-item"><a class="nav-link text-body-secondary" asp-area="Public" asp-controller="Packages" asp-action="Index">@L["Navbar.Packages"]</a></li>
+                                <li class="nav-item"><a class="nav-link text-body-secondary" asp-area="Public" asp-controller="Guides" asp-action="Index">@L["Navbar.Guides"]</a></li>
+                                <li class="nav-item"><a class="nav-link text-body-secondary" asp-area="Public" asp-controller="Directory" asp-action="Index">@L["Navbar.Directory"]</a></li>
                             </ul>
                         </div>
 
-                        @* Link block *@
+                        @* Company *@
                         <div class="col-6 col-md-4">
-                            <h5 class="text-white mb-2 mb-md-4">Account</h5>
+                            <h5 class="text-white mb-2 mb-md-4">@L["Footer.Company"]</h5>
                             <ul class="nav flex-column text-primary-hover">
-                                <li class="nav-item"><a class="nav-link text-body-secondary" asp-area="Accounts" asp-controller="ChangePassword" asp-action="Index">Change Password</a></li>
-                                <li class="nav-item"><a class="nav-link text-body-secondary" asp-area="Accounts" asp-controller="UpdatePhone" asp-action="Index">Update Phone</a></li>
+                                <li class="nav-item"><a class="nav-link text-body-secondary" asp-area="Public" asp-controller="Blog" asp-action="Index">@L["Footer.Blog"]</a></li>
+                                <li class="nav-item"><a class="nav-link text-body-secondary" asp-area="Public" asp-controller="Agencies" asp-action="Index">@L["Navbar.Agencies"]</a></li>
+                                <li class="nav-item"><a class="nav-link text-body-secondary" asp-area="Public" asp-controller="Contact" asp-action="Index">@L["Navbar.Contact"]</a></li>
+                            </ul>
+                        </div>
+
+                        @* Support *@
+                        <div class="col-6 col-md-4">
+                            <h5 class="text-white mb-2 mb-md-4">@L["Footer.Support"]</h5>
+                            <ul class="nav flex-column text-primary-hover">
+                                <li class="nav-item"><a class="nav-link text-body-secondary" asp-area="Public" asp-controller="Help" asp-action="Index">@L["Navbar.Help"]</a></li>
+                                <li class="nav-item"><a class="nav-link text-body-secondary" asp-area="Public" asp-controller="Help" asp-action="Index">@L["Navbar.Faq"]</a></li>
+                                @* TODO(backend): no Privacy/Terms pages exist yet; wire these once legal content pages ship. *@
                             </ul>
                         </div>
                     </div>
@@ -213,7 +166,7 @@
             @* Bottom footer START *@
             <div class="d-md-flex justify-content-between align-items-center py-3 text-center text-md-start">
                 <div class="text-body-secondary text-primary-hover">
-                    Copyrights &copy;@DateTime.Now.Year YallaJo.
+                    &copy;@DateTime.Now.Year YallaJo. @L["Footer.Rights"]
                 </div>
             </div>
             @* Bottom footer END *@
@@ -225,37 +178,62 @@
     <div class="back-top"></div>
 
     @* **************** Navbar Mobile START **************** *@
-    @if (CurrentUser.IsAuthenticated)
-    {
-        <div class="navbar navbar-mobile">
-            <ul class="navbar-nav">
-                <li class="nav-item">
-                    <a class="nav-link" asp-area="Accounts" asp-controller="Profile" asp-action="Index">
-                        <i class="bi bi-house-door fs-4"></i>
-                        <span class="mb-0 nav-text">Home</span>
+    @* Public mobile bottom nav per UI-UX-D3: Browse / Search / Wishlist / Bookings / Profile.
+       Search is a real link to /tours (PE1); search-overlay.js intercepts it to open the overlay. *@
+    <div class="navbar navbar-mobile">
+        <ul class="navbar-nav">
+            <li class="nav-item">
+                <a class="nav-link" asp-area="Public" asp-controller="Tours" asp-action="Index">
+                    <i class="bi bi-compass fs-4"></i>
+                    <span class="mb-0 nav-text">@L["MobileNav.Browse"]</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link js-search-toggle" asp-area="Public" asp-controller="Tours" asp-action="Index">
+                    <i class="bi bi-search fs-4"></i>
+                    <span class="mb-0 nav-text">@L["MobileNav.Search"]</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" asp-area="Accounts" asp-controller="Wishlist" asp-action="Index">
+                    <i class="bi bi-heart fs-4"></i>
+                    <span class="mb-0 nav-text">@L["MobileNav.Wishlist"]</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                @if (CurrentUser.IsAuthenticated)
+                {
+                    <a class="nav-link" asp-area="Accounts" asp-controller="Bookings" asp-action="Index">
+                        <i class="bi bi-bookmark-check fs-4"></i>
+                        <span class="mb-0 nav-text">@L["MobileNav.Bookings"]</span>
                     </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" asp-area="Auth" asp-controller="Sessions" asp-action="Index">
-                        <i class="bi bi-laptop fs-4"></i>
-                        <span class="mb-0 nav-text">Sessions</span>
+                }
+                else
+                {
+                    <a class="nav-link" asp-area="Auth" asp-controller="Auth" asp-action="SignIn">
+                        <i class="bi bi-bookmark-check fs-4"></i>
+                        <span class="mb-0 nav-text">@L["MobileNav.Bookings"]</span>
                     </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" asp-area="Auth" asp-controller="Devices" asp-action="Index">
-                        <i class="bi bi-phone fs-4"></i>
-                        <span class="mb-0 nav-text">Devices</span>
-                    </a>
-                </li>
-                <li class="nav-item">
+                }
+            </li>
+            <li class="nav-item">
+                @if (CurrentUser.IsAuthenticated)
+                {
                     <a class="nav-link" asp-area="Accounts" asp-controller="Profile" asp-action="Index">
                         <i class="bi bi-person-circle fs-4"></i>
-                        <span class="mb-0 nav-text">Account</span>
+                        <span class="mb-0 nav-text">@L["MobileNav.Profile"]</span>
                     </a>
-                </li>
-            </ul>
-        </div>
-    }
+                }
+                else
+                {
+                    <a class="nav-link" asp-area="Auth" asp-controller="Auth" asp-action="SignIn">
+                        <i class="bi bi-person-circle fs-4"></i>
+                        <span class="mb-0 nav-text">@L["Navbar.SignIn"]</span>
+                    </a>
+                }
+            </li>
+        </ul>
+    </div>
     @* **************** Navbar Mobile END **************** *@
 
     @* Bootstrap JS bundle (served locally; fingerprinted + immutable-cached via .WithStaticAssets()). *@
@@ -270,12 +248,18 @@
     @* Theme functions *@
     <script src="~/assets/js/functions.js"></script>
 
-    @* Wishlist favorite toggle (delegated handler for .js-favorite buttons on cards). *@
-    @if (CurrentUser.IsAuthenticated)
-    {
-        @Html.AntiForgeryToken()
-        <script src="~/assets/js/favorites.js" asp-append-version="true"></script>
-    }
+    @* Antiforgery token consumed by api-client.js for all AJAX POSTs (rules UI-SEC SEC7).
+       Rendered unconditionally so guest interactions (e.g. wishlist sign-in redirect per WL1) work too. *@
+    @Html.AntiForgeryToken()
+
+    @* Shared AJAX client + site-wide form UX (loading states, toasts, confirm modal). Rules UI-JS JS5, UI-UX-L2/F7/NF1. *@
+    <script src="~/assets/js/api-client.js" asp-append-version="true"></script>
+    <script src="~/assets/js/form-ux.js" asp-append-version="true"></script>
+
+    @* Wishlist favorite toggle (delegated handler for .js-favorite buttons on cards; guests are sent to sign-in per WL1). *@
+    <script src="~/assets/js/favorites.js" asp-append-version="true"></script>
+    @* Navbar search overlay (UI-UX-S2); triggers degrade to plain /tours links without JS (PE1) *@
+    <script src="~/assets/js/search-overlay.js" asp-append-version="true"></script>
 
     @* Per-view extra scripts *@
     @await RenderSectionAsync("Scripts", required: false)

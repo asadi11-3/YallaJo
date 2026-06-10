@@ -123,8 +123,7 @@
             {
                 <div class="col-lg-8">
                     <a href="@Model.ImageUrls[0]" class="glightbox" data-gallery="tour-gallery">
-                        <img src="@Model.ImageUrls[0]" class="rounded-3 w-100" alt="@Model.Name"
-                             style="height:420px;object-fit:cover;">
+                        <img src="@Model.ImageUrls[0]" class="rounded-3 w-100 hero-img-h420 object-cover" alt="@Model.Name" fetchpriority="high">
                     </a>
                 </div>
                 <div class="col-lg-4">
@@ -133,8 +132,7 @@
                         {
                             <div class="col-6">
                                 <a href="@img" class="glightbox" data-gallery="tour-gallery">
-                                    <img src="@img" class="rounded-3 w-100" alt="@Model.Name"
-                                         style="height:204px;object-fit:cover;">
+                                    <img src="@img" class="rounded-3 w-100 thumb-h204 object-cover" alt="@Model.Name" loading="lazy">
                                 </a>
                             </div>
                         }
@@ -144,7 +142,7 @@
             else
             {
                 <div class="col-12">
-                    <div class="rounded-3 bg-light d-flex align-items-center justify-content-center" style="height:420px;">
+                    <div class="rounded-3 bg-light d-flex align-items-center justify-content-center hero-img-h420">
                         <i class="bi bi-image text-secondary display-3"></i>
                     </div>
                 </div>
@@ -166,25 +164,25 @@
                 <ul class="nav nav-pills nav-pills-bg-soft nav-responsive justify-content-center mb-4" id="tour-pills-tab" role="tablist">
                     <li class="nav-item" role="presentation">
                         <button class="nav-link active" id="pills-overview-tab" data-bs-toggle="pill"
-                                data-bs-target="#pane-overview" type="button" role="tab" aria-selected="true">@Localizer["Public.Overview"]</button>
+                                data-bs-target="#pane-overview" type="button" role="tab" aria-controls="pane-overview" aria-selected="true">@Localizer["Public.Overview"]</button>
                     </li>
                     @if (showItinerary)
                     {
                         <li class="nav-item" role="presentation">
                             <button class="nav-link" id="pills-itinerary-tab" data-bs-toggle="pill"
-                                    data-bs-target="#pane-itinerary" type="button" role="tab">@Localizer["Public.Itinerary"]</button>
+                                    data-bs-target="#pane-itinerary" type="button" role="tab" aria-controls="pane-itinerary" aria-selected="false">@Localizer["Public.Itinerary"]</button>
                         </li>
                     }
                     @if (showPricing)
                     {
                         <li class="nav-item" role="presentation">
                             <button class="nav-link" id="pills-pricing-tab" data-bs-toggle="pill"
-                                    data-bs-target="#pane-pricing" type="button" role="tab">@Localizer["Public.Pricing.amp.Schedule"]</button>
+                                    data-bs-target="#pane-pricing" type="button" role="tab" aria-controls="pane-pricing" aria-selected="false">@Localizer["Public.Pricing.amp.Schedule"]</button>
                         </li>
                     }
                     <li class="nav-item" role="presentation">
                         <button class="nav-link" id="pills-reviews-tab" data-bs-toggle="pill"
-                                data-bs-target="#pane-reviews" type="button" role="tab">@Localizer["Public.Reviews"]</button>
+                                data-bs-target="#pane-reviews" type="button" role="tab" aria-controls="pane-reviews" aria-selected="false">@Localizer["Public.Reviews"]</button>
                     </li>
                 </ul>
 
@@ -203,7 +201,7 @@
                                 }
                                 @if (!string.IsNullOrWhiteSpace(Model.Description))
                                 {
-                                    <p style="white-space:pre-line">@Model.Description</p>
+                                    <p class="preserve-whitespace">@Model.Description</p>
                                 }
                                 else if (string.IsNullOrWhiteSpace(Model.ShortDescription))
                                 {
@@ -461,12 +459,11 @@
                                                 <div class="d-flex align-items-center">
                                                     @if (!string.IsNullOrWhiteSpace(g.AvatarUrl))
                                                     {
-                                                        <img src="@g.AvatarUrl" class="avatar avatar-md rounded-circle me-2" alt="@g.DisplayName"
-                                                             style="width:48px;height:48px;object-fit:cover;">
+                                                        <img src="@g.AvatarUrl" class="avatar avatar-md rounded-circle me-2 avatar-48 object-cover" alt="@g.DisplayName" loading="lazy">
                                                     }
                                                     else
                                                     {
-                                                        <span class="avatar avatar-md me-2 d-inline-flex align-items-center justify-content-center bg-light rounded-circle" style="width:48px;height:48px;">
+                                                        <span class="avatar avatar-md me-2 d-inline-flex align-items-center justify-content-center bg-light rounded-circle avatar-48">
                                                             <i class="bi bi-person text-secondary"></i>
                                                         </span>
                                                     }
@@ -569,7 +566,7 @@
                             @if (isAuthed)
                             {
                                 <button type="button" class="btn btn-outline-primary w-100" data-bs-toggle="modal" data-bs-target="#joinRequestModal">
-                                    <i class="bi bi-people me-2"></i>Request to join a group
+                                    <i class="bi bi-people me-2"></i>@Localizer["Public.Request.to.join.a.group"]
                                 </button>
                             }
                             else
@@ -641,10 +638,11 @@
             <div class="container">
                 <div class="row g-4">
                     <div class="col-lg-7">
-                        <form method="post" asp-area="Public" asp-controller="Tours" asp-action="CreateReview" asp-route-slug="@Model.Slug" class="card border p-3">
+                        <form method="post" asp-area="Public" asp-controller="Reviews" asp-action="CreateReview" asp-route-targetType="tour" asp-route-targetId="@Model.Id" class="card border p-3" data-loading data-success-message="@Localizer["Public.Review.Created"]">
                             @Html.AntiForgeryToken()
                             <h3 class="h6 mb-3">@Localizer["Public.Write.a.review"]</h3>
                             <input type="hidden" name="Review.TargetId" value="@Model.Id" />
+                                <input type="hidden" name="returnUrl" value="@(Context.Request.PathBase + Context.Request.Path + Context.Request.QueryString)" />
                             <div class="mb-2">
                                 <label class="form-label" for="tourReviewRating">@Localizer["Public.Rating"]</label>
                                 <select id="tourReviewRating" name="Review.Rating" class="form-select">
@@ -672,10 +670,11 @@
                         </form>
                     </div>
                     <div class="col-lg-5">
-                        <form method="post" asp-area="Public" asp-controller="Tours" asp-action="Report" asp-route-slug="@Model.Slug" class="card border p-3">
+                        <form method="post" asp-area="Public" asp-controller="Reviews" asp-action="ReportEntity" asp-route-targetType="tour" asp-route-targetId="@Model.Id" class="card border p-3" data-loading data-success-message="@Localizer["Public.Review.Reported"]">
                             @Html.AntiForgeryToken()
                             <h3 class="h6 mb-3">@Localizer["Public.Report.this.tour"]</h3>
                             <input type="hidden" name="Report.EntityId" value="@Model.Id" />
+                                <input type="hidden" name="returnUrl" value="@(Context.Request.PathBase + Context.Request.Path + Context.Request.QueryString)" />
                             <div class="mb-2">
                                 <label class="form-label" for="tourReportReason">@Localizer["Public.Reason"]</label>
                                 <select id="tourReportReason" name="Report.Reason" class="form-select">
@@ -707,6 +706,7 @@
 
 @section Scripts {
     <script src="~/assets/js/tours-detail.js" asp-append-version="true"></script>
+    <script src="~/assets/js/reviews.js" asp-append-version="true"></script>
     @if (Model.HasJoinSlots && !string.IsNullOrEmpty(apiBaseUrl))
     {
         @* UI-PERF S2: the ONE public-page SignalR hub. Self-hosted client (CSP-friendly: external

@@ -1,0 +1,36 @@
+﻿@model YallaJo.Web.Areas.Public.Models.Packages.PackagesGridVm
+@using YallaJo.Web.Infrastructure.Seo
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var baseUrl = $"{Context.Request.Scheme}://{Context.Request.Host}";
+    ViewData.SetSeo(new SeoModel
+    {
+        Title = "Tour packages",
+        Description = "Browse curated multi-tour packages and save on hand-picked experiences across Jordan with YallaJo.",
+        Canonical = $"{baseUrl}/packages",
+        OgType = "website"
+    });
+}
+
+<section class="pt-4 pb-2">
+    <div class="container">
+        <h1 class="fs-2 mb-1">@Localizer["Public.Tour.packages"]</h1>
+        <p class="text-body-secondary mb-0">@Localizer["Public.Curated.bundles.of.tours.at.a.single.price"]</p>
+    </div>
+</section>
+
+<section class="pb-5">
+    <div class="container">
+        @* Phase 7: results fragment is swapped in place by listing.js (UI-UX-S1); plain GET navigation without JS (PE1). *@
+        <div id="listingResults" data-yj-component="listing" aria-live="polite" aria-busy="false"
+             data-error-text="@Localizer["Public.Results.Error"]" data-retry-text="@Localizer["Public.Retry"]" data-loading-text="@Localizer["Public.Loading"]">
+            <partial name="_PackagesResults" model="Model" />
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script src="~/assets/js/listing.js" asp-append-version="true"></script>
+}

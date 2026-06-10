@@ -3,9 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OutputCaching;
 using YallaJo.Web.Areas.Public.Caching;
 using YallaJo.Web.Areas.Public.Facades;
-using YallaJo.Web.Areas.Public.Models.AccessibilityReviews;
 using YallaJo.Web.Areas.Public.Models.Places;
-using YallaJo.Web.Areas.Public.Models.Reviews;
 using YallaJo.Web.Infrastructure.Mvc;
 
 namespace YallaJo.Web.Areas.Public.Controllers;
@@ -28,7 +26,7 @@ public sealed class PlacesController : BaseController
 
     // ── GET /places ───────────────────────────────────────────────────────────
     [HttpGet("places")]
-    [OutputCache(PolicyName = "PublicShort")]
+    [OutputCache(PolicyName = "PublicShort", VaryByHeaderNames = new[] { "X-Requested-With" })]
     public async Task<IActionResult> Index(
         string? city = null,
         string? country = null,
@@ -52,10 +50,12 @@ public sealed class PlacesController : BaseController
             // Tolerant: render a friendly empty grid (with the echoed filters
             // preserved) plus the error message, rather than a 500.
             SetError(result.Error);
-            return View(new PlacesGridVm { Filters = filters });
+            var fallback = new PlacesGridVm { Filters = filters };
+            return WantsAjax() ? PartialView("_PlacesResults", fallback) : View(fallback);
         }
 
-        return View(result.Data);
+        // Phase 7: AJAX requests (listing.js) receive just the results fragment.
+        return WantsAjax() ? PartialView("_PlacesResults", result.Data) : View(result.Data);
     }
 
     // ── GET /places/{slug} ──────────────────────────────────────────────────────
@@ -80,182 +80,7 @@ public sealed class PlacesController : BaseController
         return View(result.Data);
     }
 
-    // ── Accessibility reviews (login-gated create/edit/delete) ──────────────────
-
-    [HttpPost("places/{slug}/accessibility-reviews")]
-    [Authorize]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> CreateAccessibilityReview(
-        string slug, [Bind(Prefix = "AccessibilityReview")] AccessibilityReviewFormVm form, CancellationToken ct = default)
-    {
-        form.TargetType = TargetType;
-        if (!ModelState.IsValid)
-        {
-            SetError("Please complete the accessibility review form, including at least one feature.");
-            return RedirectToAction(nameof(Details), new { slug });
-        }
-
-        var result = await _accessibilityReviews.SubmitAsync(form, ct);
-        if (GuardSignOut(result) is { } signOut) return signOut;
-        if (result.IsSuccess) SetSuccess("Thanks for your accessibility review!");
-        else if (!ApplyValidationErrors(result)) SetError(result.Error);
-
-        return RedirectToAction(nameof(Details), new { slug });
-    }
-
-    [HttpPost("places/{slug}/accessibility-reviews/{reviewId:guid}/edit")]
-    [Authorize]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> EditAccessibilityReview(
-        string slug, Guid reviewId, [Bind(Prefix = "AccessibilityReview")] AccessibilityReviewFormVm form, CancellationToken ct = default)
-    {
-        form.TargetType = TargetType;
-        if (!ModelState.IsValid)
-        {
-            SetError("Please complete the accessibility review form, including at least one feature.");
-            return RedirectToAction(nameof(Details), new { slug });
-        }
-
-        var result = await _accessibilityReviews.EditAsync(reviewId, form, ct);
-        if (GuardSignOut(result) is { } signOut) return signOut;
-        if (result.IsSuccess) SetSuccess("Your accessibility review was updated.");
-        else if (!ApplyValidationErrors(result)) SetError(result.Error);
-
-        return RedirectToAction(nameof(Details), new { slug });
-    }
-
-    [HttpPost("places/{slug}/accessibility-reviews/{reviewId:guid}/delete")]
-    [Authorize]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteAccessibilityReview(string slug, Guid reviewId, CancellationToken ct = default)
-    {
-        var result = await _accessibilityReviews.DeleteAsync(reviewId, ct);
-        if (GuardSignOut(result) is { } signOut) return signOut;
-        if (result.IsSuccess) SetSuccess("Your accessibility review was deleted.");
-        else if (!ApplyValidationErrors(result)) SetError(result.Error);
-
-        return RedirectToAction(nameof(Details), new { slug });
-    }
-
-    // ── POST /places/{slug}/reviews (login-gated review create) ─────────────────
-    [HttpPost("places/{slug}/reviews")]
-    [Authorize]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> CreateReview(string slug, [Bind(Prefix = "Review")] ReviewFormVm form, CancellationToken ct = default)
-    {
-        form.TargetType = TargetType;
-        if (!ModelState.IsValid)
-        {
-            SetError("Please complete the review form.");
-            return RedirectToAction(nameof(Details), new { slug });
-        }
-
-        var result = await _reviews.SubmitReviewAsync(form, ct);
-        if (GuardSignOut(result) is { } signOut) return signOut;
-        if (result.IsSuccess) SetSuccess("Thanks for your review!");
-        else if (!ApplyValidationErrors(result)) SetError(result.Error);
-
-        return RedirectToAction(nameof(Details), new { slug });
-    }
-
-    [HttpPost("places/{slug}/reviews/{reviewId:guid}/edit")]
-    [Authorize]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> EditReview(string slug, Guid reviewId, [Bind(Prefix = "Review")] ReviewEditFormVm form, CancellationToken ct = default)
-    {
-        form.ReviewId = reviewId;
-        if (!ModelState.IsValid)
-        {
-            SetError("Please complete the review form.");
-            return RedirectToAction(nameof(Details), new { slug });
-        }
-
-        var result = await _reviews.EditReviewAsync(form, ct);
-        if (GuardSignOut(result) is { } signOut) return signOut;
-        if (result.IsSuccess) SetSuccess("Your review was updated.");
-        else if (!ApplyValidationErrors(result)) SetError(result.Error);
-
-        return RedirectToAction(nameof(Details), new { slug });
-    }
-
-    [HttpPost("places/{slug}/reviews/{reviewId:guid}/delete")]
-    [Authorize]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteReview(string slug, Guid reviewId, string? rowVersion, CancellationToken ct = default)
-    {
-        var result = await _reviews.DeleteReviewAsync(reviewId, rowVersion, ct);
-        if (GuardSignOut(result) is { } signOut) return signOut;
-        if (result.IsSuccess) SetSuccess("Your review was deleted.");
-        else if (!ApplyValidationErrors(result)) SetError(result.Error);
-
-        return RedirectToAction(nameof(Details), new { slug });
-    }
-
-    [HttpPost("places/{slug}/reviews/{reviewId:guid}/helpful")]
-    [Authorize]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> MarkHelpful(string slug, Guid reviewId, CancellationToken ct = default)
-    {
-        var result = await _reviews.MarkHelpfulAsync(reviewId, ct);
-        if (GuardSignOut(result) is { } signOut) return signOut;
-        if (result.IsSuccess) SetSuccess("Marked as helpful.");
-        else if (!ApplyValidationErrors(result)) SetError(result.Error);
-
-        return RedirectToAction(nameof(Details), new { slug });
-    }
-
-    [HttpPost("places/{slug}/reviews/{reviewId:guid}/unhelpful")]
-    [Authorize]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> UnmarkHelpful(string slug, Guid reviewId, CancellationToken ct = default)
-    {
-        var result = await _reviews.UnmarkHelpfulAsync(reviewId, ct);
-        if (GuardSignOut(result) is { } signOut) return signOut;
-        if (result.IsSuccess) SetSuccess("Helpful vote removed.");
-        else if (!ApplyValidationErrors(result)) SetError(result.Error);
-
-        return RedirectToAction(nameof(Details), new { slug });
-    }
-
-    [HttpPost("places/{slug}/reviews/{reviewId:guid}/report")]
-    [Authorize]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> ReportReview(string slug, Guid reviewId, [Bind(Prefix = "Report")] ReportFormVm form, CancellationToken ct = default)
-    {
-        if (!ModelState.IsValid)
-        {
-            SetError("Please choose a reason and add a short description.");
-            return RedirectToAction(nameof(Details), new { slug });
-        }
-
-        var result = await _reviews.ReportReviewAsync(reviewId, form, ct);
-        if (GuardSignOut(result) is { } signOut) return signOut;
-        if (result.IsSuccess) SetSuccess("Thanks for reporting. Our team will review it.");
-        else if (!ApplyValidationErrors(result)) SetError(result.Error);
-
-        return RedirectToAction(nameof(Details), new { slug });
-    }
-
-    // ── POST /places/{slug}/report (login-gated content report) ─────────────────
-    [HttpPost("places/{slug}/report")]
-    [Authorize]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Report(string slug, [Bind(Prefix = "Report")] ReportFormVm form, CancellationToken ct = default)
-    {
-        form.EntityType = TargetType;
-        if (!ModelState.IsValid)
-        {
-            SetError("Please choose a reason and add a short description.");
-            return RedirectToAction(nameof(Details), new { slug });
-        }
-
-        var result = await _reviews.SubmitReportAsync(form, ct);
-        if (GuardSignOut(result) is { } signOut) return signOut;
-        if (result.IsSuccess) SetSuccess("Thanks for reporting. Our team will review it.");
-        else if (!ApplyValidationErrors(result)) SetError(result.Error);
-
-        return RedirectToAction(nameof(Details), new { slug });
-    }
+    // Review/report/accessibility-review actions moved to the unified ReviewsController (Phase 5).
 
     [HttpPost("places/{slug}/recommendations/sponsored-click")]
     [ValidateAntiForgeryToken]

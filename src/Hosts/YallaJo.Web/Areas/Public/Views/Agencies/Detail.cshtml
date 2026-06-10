@@ -25,12 +25,12 @@
             </ol>
         </nav>
         <div class="d-flex align-items-center">
-            <div class="bg-light rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width:72px;height:72px;">
+            <div class="bg-light rounded-circle d-flex align-items-center justify-content-center flex-shrink-0 avatar-72">
                 <i class="bi bi-building fs-2 text-primary" aria-hidden="true"></i>
             </div>
             <div class="ms-3">
                 <h1 class="h3 mb-1">@Model.BusinessName</h1>
-                <span class="badge text-bg-light me-1"><i class="bi bi-people me-1" aria-hidden="true"></i>@Model.ActiveGuideCount active guide@(Model.ActiveGuideCount == 1 ? "" : "s")</span>
+                <span class="badge text-bg-light me-1"><i class="bi bi-people me-1" aria-hidden="true"></i>@Localizer["Public.ActiveGuides.Count", Model.ActiveGuideCount]</span>
                 @if (!string.IsNullOrWhiteSpace(Model.ProviderType))
                 {
                     <span class="badge text-bg-light">@Model.ProviderType</span>
@@ -48,7 +48,7 @@
                 {
                     <div class="card border">
                         <div class="card-header"><h2 class="h5 mb-0">@Localizer["Public.About"]</h2></div>
-                        <div class="card-body"><p class="mb-0" style="white-space:pre-line;">@Model.Description</p></div>
+                        <div class="card-body"><p class="mb-0 preserve-whitespace">@Model.Description</p></div>
                     </div>
                 }
                 else
@@ -83,7 +83,7 @@
                         <p class="small text-secondary">@Localizer["Public.Join.this.agency.to.get.matched.with.tours"]</p>
                         @if (User.IsInRole("TourGuide"))
                         {
-                            <form method="post" asp-area="Public" asp-controller="Agencies" asp-action="Apply" asp-route-agencyUserId="@Model.UserId">
+                            <form method="post" asp-area="Public" asp-controller="Agencies" asp-action="Apply" asp-route-agencyUserId="@Model.UserId" data-loading>
                                 @Html.AntiForgeryToken()
                                 <button type="submit" class="btn btn-primary w-100">@Localizer["Public.Apply.to.this.Agency"]</button>
                             </form>

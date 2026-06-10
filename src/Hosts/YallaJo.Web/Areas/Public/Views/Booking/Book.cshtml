@@ -27,11 +27,34 @@
             </ol>
         </nav>
 
-        <h1 class="h3 mb-4">Book @Model.TourName</h1>
+        <h1 class="h3 mb-3">@Localizer["Public.BookTour", Model.TourName]</h1>
+
+        @* Phase 8.1: static booking progress indicator (steps 1-2 = this page, step 3 = confirmation).
+           Deliberately not a JS pane-switching stepper so the whole form stays usable without JS (UI-UX-PE1). *@
+        <nav aria-label="@Localizer["Public.Booking.Progress"]" class="mb-4">
+            <ol class="list-unstyled d-flex flex-wrap align-items-center gap-3 small mb-0">
+                <li class="d-flex align-items-center fw-semibold" aria-current="step">
+                    <span class="badge rounded-pill text-bg-primary me-2" aria-hidden="true">1</span>@Localizer["Public.Choose.date.amp.time"]
+                </li>
+                <li class="text-secondary" aria-hidden="true"><i class="bi bi-chevron-right small"></i></li>
+                <li class="d-flex align-items-center fw-semibold">
+                    <span class="badge rounded-pill text-bg-primary me-2" aria-hidden="true">2</span>@Localizer["Public.Booking.StepDetails"]
+                </li>
+                <li class="text-secondary" aria-hidden="true"><i class="bi bi-chevron-right small"></i></li>
+                <li class="d-flex align-items-center text-secondary">
+                    <span class="badge rounded-pill text-bg-light border me-2" aria-hidden="true">3</span>@Localizer["Public.Booking.StepConfirmation"]
+                </li>
+            </ol>
+        </nav>
 
         <div asp-validation-summary="ModelOnly" class="alert alert-danger d-none-empty"></div>
 
-        <form method="post" asp-area="Public" asp-controller="Booking" asp-action="Book" asp-route-tourId="@Model.TourId">
+        <form method="post" id="bookingForm" asp-area="Public" asp-controller="Booking" asp-action="Book" asp-route-tourId="@Model.TourId" data-loading
+              aria-label="@Localizer["Public.BookTour", Model.TourName]"
+              data-msg-select-slot="@Localizer["Public.Booking.SelectSlot"]"
+              data-msg-too-many="@Localizer["Public.Booking.TooManySeats"]"
+              data-seats-hint="@Localizer["Public.Booking.SeatsHint"]"
+              data-travelers-label="@Localizer["Public.Booking.TravelersCount"]">
             @Html.AntiForgeryToken()
             <input type="hidden" name="Form.TourId" value="@Model.TourId" />
             <input type="hidden" name="Form.GuideId" id="bookingGuideId" value="@Model.Form.GuideId" />
@@ -48,11 +71,11 @@
                                 <div class="col-sm-4">
                                     @if (!string.IsNullOrWhiteSpace(Model.ImageUrl))
                                     {
-                                        <img src="@Model.ImageUrl" class="rounded w-100" style="height:120px;object-fit:cover;" alt="@Model.TourName" />
+                                        <img src="@Model.ImageUrl" class="rounded w-100 thumb-h120 object-cover" alt="@Model.TourName" />
                                     }
                                     else
                                     {
-                                        <div class="bg-light rounded d-flex align-items-center justify-content-center" style="height:120px;">
+                                        <div class="bg-light rounded d-flex align-items-center justify-content-center thumb-h120">
                                             <i class="bi bi-image fs-2 text-secondary"></i>
                                         </div>
                                     }
@@ -67,12 +90,12 @@
                                         }
                                         @if (Model.MaxGroupSize is > 0)
                                         {
-                                            <li class="nav-item">Up to @Localizer["Public.UpToPeople", Model.MaxGroupSize]</li>
+                                            <li class="nav-item">@Localizer["Public.UpToPeople", Model.MaxGroupSize]</li>
                                         }
                                     </ul>
                                     @if (Model.ReviewCount > 0)
                                     {
-                                        <span class="small"><i class="bi bi-star-fill text-warning me-1"></i>@Model.AverageRating.ToString("0.0") (@Model.ReviewCount reviews)</span>
+                                        <span class="small"><i class="bi bi-star-fill text-warning me-1"></i>@Model.AverageRating.ToString("0.0") (@Localizer["Public.Reviews.Count", Model.ReviewCount])</span>
                                     }
                                 </div>
                             </div>
@@ -90,8 +113,9 @@
                                 <div class="vstack gap-3">
                                     @foreach (var group in slotsByDate)
                                     {
-                                        <div>
-                                            <h6 class="small text-uppercase text-secondary mb-2">@group.Key.ToString("ddd, dd MMM yyyy")</h6>
+                                        @* Phase 10 (A11Y4): slot radios grouped with fieldset+legend per date *@
+                                        <fieldset class="border-0 p-0 m-0">
+                                            <legend class="small text-uppercase text-secondary mb-2 fs-6 float-none w-auto p-0">@group.Key.ToString("ddd, dd MMM yyyy")</legend>
                                             <div class="d-flex flex-wrap gap-2">
                                                 @foreach (var slot in group)
                                                 {
@@ -100,20 +124,21 @@
                                                            data-guide="@slot.TourGuideId" data-available="@slot.AvailableCount"
                                                            autocomplete="off" checked="@(Model.Form.AvailabilitySlotId == slot.Id)" required />
                                                     <label class="btn btn-sm btn-outline-primary" for="slot-@slot.Id">
-                                                        @(string.IsNullOrWhiteSpace(slotLabel) ? "Available" : slotLabel)
+                                                        @(string.IsNullOrWhiteSpace(slotLabel) ? Localizer["Public.Slot.Available"].Value : slotLabel)
                                                         <span class="d-block small text-body-secondary">@Localizer["Public.Left.Count", slot.AvailableCount]</span>
                                                     </label>
                                                 }
                                             </div>
-                                        </div>
+                                        </fieldset>
                                     }
                                 </div>
                                 <span asp-validation-for="Form.AvailabilitySlotId" class="text-danger small d-block mt-2"></span>
+                                <div id="bookingSlotError" class="text-danger small mt-2 d-none" role="alert"></div>
                             }
                             else if (Model.HasSlots)
                             {
                                 <div class="alert alert-warning mb-0">
-                                    <i class="bi bi-person-x me-2"></i>This tour has upcoming dates but no guide is assigned yet, so it can't be booked right now. Please check back soon.
+                                    <i class="bi bi-person-x me-2"></i>@Localizer["Public.Booking.NoGuide"]
                                 </div>
                             }
                             else
@@ -132,12 +157,15 @@
                             <h5 class="card-header-title mb-0">@Localizer["Public.Travelers"]</h5>
                         </div>
                         <div class="card-body">
+                            @* Phase 10 (A11Y4): travelers counters grouped with fieldset + visually-hidden legend *@
+                            <fieldset class="border-0 p-0 m-0">
+                            <legend class="visually-hidden">@Localizer["Public.Travelers"]</legend>
                             <div class="row g-3">
                                 <div class="col-sm-6 col-lg-3">
                                     <label asp-for="Form.Adults" class="form-label">@Localizer["Public.Adults"]</label>
                                     <input asp-for="Form.Adults" type="number" min="1" max="50" class="form-control js-participant" />
                                     <span asp-validation-for="Form.Adults" class="text-danger small"></span>
-                                </div>
+                                </div><!-- /Adults -->
                                 <div class="col-sm-6 col-lg-3">
                                     <label asp-for="Form.Children" class="form-label">@Localizer["Public.Children"]</label>
                                     <input asp-for="Form.Children" type="number" min="0" max="50" class="form-control js-participant" />
@@ -151,11 +179,13 @@
                                     <input asp-for="Form.Seniors" type="number" min="0" max="50" class="form-control js-participant" />
                                 </div>
                             </div>
+                            </fieldset>
                             @if (Model.HasSlots && Model.HasGuide)
                             {
                                 <p class="small text-secondary mt-2 mb-0">
-                                    <i class="bi bi-info-circle me-1"></i><span id="seatsHint">Up to @Model.MaxAvailableCount seat(s) available for the selected date.</span>
+                                    <i class="bi bi-info-circle me-1"></i><span id="seatsHint">@Localizer["Public.Booking.SeatsHint", Model.MaxAvailableCount]</span>
                                 </p>
+                                <div id="bookingSeatsError" class="text-danger small mt-2 d-none" role="alert"></div>
                             }
 
                             <div class="form-check form-switch mt-3">
@@ -203,8 +233,9 @@
                                 </div>
                             }
                             <hr class="my-2" />
-                            <div class="d-flex justify-content-between align-items-center mb-1">
-                                <span class="small">@Localizer["Public.Estimated.total"] <span class="text-secondary">(<span id="estCount">1</span> @Localizer["Public.traveler"]<span id="estPlural"></span>)</span></span>
+                            @* Phase 10 (A11Y9): estimated total updates live as travelers/slots change *@
+                            <div class="d-flex justify-content-between align-items-center mb-1" aria-live="polite">
+                                <span class="small">@Localizer["Public.Estimated.total"] <span class="text-secondary">(<span id="estTravelers">@Localizer["Public.Booking.TravelersCount", 1]</span>)</span></span>
                                 <span class="h6 mb-0" id="estTotal"
                                       data-unit="@Model.EffectivePrice.ToString(System.Globalization.CultureInfo.InvariantCulture)"
                                       data-currency="@Model.Currency">@Money(Model.EstimatedTotal, Model.Currency)</span>
@@ -228,12 +259,9 @@
                                 <div class="d-grid gap-2">
                                     <a class="btn btn-primary mb-0" asp-area="Auth" asp-controller="Auth" asp-action="SignIn"
                                        asp-route-returnUrl="@Url.Action("Book", "Booking", new { area = "Public", tourId = Model.TourId })">@Localizer["Public.Sign.in.to.continue"]</a>
-                                    <form method="post" action="/auth/external/challenge" class="d-grid">
-                                        @Html.AntiForgeryToken()
-                                        <input type="hidden" name="provider" value="Google" />
-                                        <input type="hidden" name="returnUrl" value="@Url.Action("Book", "Booking", new { area = "Public", tourId = Model.TourId })" />
-                                        <button type="submit" class="btn btn-light mb-0"><i class="fab fa-fw fa-google text-google-icon me-2"></i>@Localizer["Public.Book.as.guest.with.Google"]</button>
-                                    </form>
+                                    @* Phase 8.1: the Google challenge form lives OUTSIDE the booking form (nested forms are invalid HTML);
+                                       this button is associated with it via the HTML5 form attribute. *@
+                                    <button type="submit" form="googleChallengeForm" class="btn btn-light mb-0"><i class="fab fa-fw fa-google text-google-icon me-2"></i>@Localizer["Public.Book.as.guest.with.Google"]</button>
                                 </div>
                             </div>
                         </div>
@@ -249,7 +277,7 @@
                                 }
                                 @if (Model.CancellationPolicyHours is > 0)
                                 {
-                                    <li class="list-group-item px-0 py-1"><i class="bi bi-arrow-counterclockwise text-success me-2"></i>Free cancellation up to @Model.CancellationPolicyHours h before</li>
+                                    <li class="list-group-item px-0 py-1"><i class="bi bi-arrow-counterclockwise text-success me-2"></i>@Localizer["Public.Booking.FreeCancellation", Model.CancellationPolicyHours]</li>
                                 }
                                 <li class="list-group-item px-0 py-1"><i class="bi bi-shield-check text-primary me-2"></i>@Localizer["Public.Secure.checkout"]</li>
                             </ul>
@@ -258,6 +286,17 @@
                 </aside>
             </div>
         </form>
+
+        @if (!isAuthed)
+        {
+            @* Phase 8.1: external sign-in challenge form, kept outside the booking form to avoid invalid nested forms.
+               The visible button inside the guest card targets it via form="googleChallengeForm". *@
+            <form method="post" action="/auth/external/challenge" id="googleChallengeForm">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="provider" value="Google" />
+                <input type="hidden" name="returnUrl" value="@Url.Action("Book", "Booking", new { area = "Public", tourId = Model.TourId })" />
+            </form>
+        }
     </div>
 </section>
 

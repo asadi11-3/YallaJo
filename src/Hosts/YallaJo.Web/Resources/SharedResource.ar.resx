@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='utf-8'?>
+﻿<?xml version='1.0' encoding='utf-8'?>
 <root xmlns:ns1="urn:schemas-microsoft-com:xml-msdata" xmlns:xs="http://www.w3.org/2001/XMLSchema">
   <xs:schema id="root">
     <xs:import namespace="http://www.w3.org/XML/1998/namespace" />
@@ -5003,7 +5003,7 @@
     <value>السابق</value>
   </data>
   <data name="Admin.GuideApplications.Next" xml:space="preserve">
-    <value>Ø§Ù„ØªØ§Ù„ÙŠ</value>
+    <value>التالي</value>
   </data>
   <data name="Admin.Guides.Title" xml:space="preserve">
     <value>المرشدون السياحيون</value>
@@ -6143,7 +6143,7 @@
     <value>إعادة تعيين الحصة</value>
   </data>
   <data name="Admin.SeoWeather.BudgetDateLabel" xml:space="preserve">
-    <value>Ø§Ù„ØªØ§Ø±ÙŠØ®</value>
+    <value>التاريخ</value>
   </data>
   <data name="Admin.Growth.Title" xml:space="preserve">
     <value>أدوات النمو</value>
@@ -7250,7 +7250,7 @@
     <value>إنشاء حساب عبر جوجل</value>
   </data>
   <data name="Auth.Social.FacebookSignup" xml:space="preserve">
-    <value>O�U+O'OO� O-O3OO" O1O"O� U?USO3O"U^U�</value>
+    <value>Oï¿½U+O'OOï¿½ O-O3OO" O1O"Oï¿½ U?USO3O"U^Uï¿½</value>
   </data>
   <data name="Creator.Nav.Greeting" xml:space="preserve">
     <value>مرحبًا،</value>
@@ -12001,4 +12001,706 @@
   <data name="Business.Staff.Role.Staff" xml:space="preserve">
     <value>موظف</value>
   </data>
+<data name="Navbar.Menu" xml:space="preserve">
+<value>القائمة</value>
+</data>
+<data name="Navbar.Explore" xml:space="preserve">
+<value>استكشف</value>
+</data>
+<data name="Navbar.Tours" xml:space="preserve">
+<value>الجولات</value>
+</data>
+<data name="Navbar.Destinations" xml:space="preserve">
+<value>الوجهات</value>
+</data>
+<data name="Navbar.Packages" xml:space="preserve">
+<value>الباقات</value>
+</data>
+<data name="Navbar.Guides" xml:space="preserve">
+<value>المرشدون</value>
+</data>
+<data name="Navbar.Directory" xml:space="preserve">
+<value>الأنشطة التجارية</value>
+</data>
+<data name="Navbar.Stories" xml:space="preserve">
+<value>القصص</value>
+</data>
+<data name="Navbar.More" xml:space="preserve">
+<value>المزيد</value>
+</data>
+<data name="Navbar.Help" xml:space="preserve">
+<value>مركز المساعدة</value>
+</data>
+<data name="Navbar.Faq" xml:space="preserve">
+<value>الأسئلة الشائعة</value>
+</data>
+<data name="Navbar.Contact" xml:space="preserve">
+<value>اتصل بنا</value>
+</data>
+<data name="Navbar.Agencies" xml:space="preserve">
+<value>الوكالات</value>
+</data>
+<data name="Navbar.ListExperience" xml:space="preserve">
+<value>أضف تجربتك</value>
+</data>
+<data name="Navbar.SignIn" xml:space="preserve">
+<value>تسجيل الدخول</value>
+</data>
+<data name="Navbar.Register" xml:space="preserve">
+<value>إنشاء حساب</value>
+</data>
+<data name="Navbar.MyProfile" xml:space="preserve">
+<value>ملفي الشخصي</value>
+</data>
+<data name="Navbar.MyBookings" xml:space="preserve">
+<value>حجوزاتي</value>
+</data>
+<data name="Navbar.Wishlist" xml:space="preserve">
+<value>المفضلة</value>
+</data>
+<data name="Navbar.Settings" xml:space="preserve">
+<value>الإعدادات</value>
+</data>
+<data name="Navbar.SignOut" xml:space="preserve">
+<value>تسجيل الخروج</value>
+</data>
+<data name="Navbar.AdminDashboard" xml:space="preserve">
+<value>لوحة تحكم المشرف</value>
+</data>
+<data name="Navbar.GuideDashboard" xml:space="preserve">
+<value>لوحة تحكم المرشد</value>
+</data>
+<data name="Navbar.ProviderDashboard" xml:space="preserve">
+<value>لوحة تحكم المزوّد</value>
+</data>
+<data name="Navbar.CreatorDashboard" xml:space="preserve">
+<value>استوديو صانع المحتوى</value>
+</data>
+<data name="Navbar.Mode" xml:space="preserve">
+<value>الوضع</value>
+</data>
+<data name="Navbar.ModeLight" xml:space="preserve">
+<value>فاتح</value>
+</data>
+<data name="Navbar.ModeDark" xml:space="preserve">
+<value>داكن</value>
+</data>
+<data name="Navbar.ModeAuto" xml:space="preserve">
+<value>تلقائي</value>
+</data>
+<data name="Navbar.Search" xml:space="preserve">
+<value>بحث</value>
+</data>
+<data name="Navbar.Account" xml:space="preserve">
+<value>الحساب</value>
+</data>
+<data name="Footer.Tagline" xml:space="preserve">
+<value>اكتشف واحجز جولات وتجارب أصيلة في جميع أنحاء الأردن.</value>
+</data>
+<data name="Footer.Explore" xml:space="preserve">
+<value>استكشف</value>
+</data>
+<data name="Footer.Company" xml:space="preserve">
+<value>الشركة</value>
+</data>
+<data name="Footer.Support" xml:space="preserve">
+<value>الدعم</value>
+</data>
+<data name="Footer.Blog" xml:space="preserve">
+<value>المدونة</value>
+</data>
+<data name="Footer.Privacy" xml:space="preserve">
+<value>سياسة الخصوصية</value>
+</data>
+<data name="Footer.Terms" xml:space="preserve">
+<value>شروط الخدمة</value>
+</data>
+<data name="Footer.Rights" xml:space="preserve">
+<value>جميع الحقوق محفوظة.</value>
+</data>
+<data name="MobileNav.Browse" xml:space="preserve">
+<value>تصفح</value>
+</data>
+<data name="MobileNav.Search" xml:space="preserve">
+<value>بحث</value>
+</data>
+<data name="MobileNav.Wishlist" xml:space="preserve">
+<value>المفضلة</value>
+</data>
+<data name="MobileNav.Bookings" xml:space="preserve">
+<value>الحجوزات</value>
+</data>
+<data name="MobileNav.Profile" xml:space="preserve">
+<value>حسابي</value>
+</data>
+<data name="Search.Overlay.Title" xml:space="preserve">
+<value>ابحث في YallaJo</value>
+</data>
+<data name="Search.Overlay.Placeholder" xml:space="preserve">
+<value>ابحث عن جولات ووجهات وتجارب…</value>
+</data>
+<data name="Search.Overlay.Close" xml:space="preserve">
+<value>إغلاق</value>
+</data>
+<data name="Search.Overlay.Recent" xml:space="preserve">
+<value>عمليات البحث الأخيرة</value>
+</data>
+<data name="Search.Overlay.Clear" xml:space="preserve">
+<value>مسح</value>
+</data>
+<data name="Search.Overlay.ViewAll" xml:space="preserve">
+<value>عرض كل النتائج</value>
+</data>
+<data name="Search.Overlay.NoResults" xml:space="preserve">
+<value>لا توجد نتائج مطابقة</value>
+</data>
+<data name="Public.Remove.from.wishlist" xml:space="preserve">
+<value>إزالة من قائمة الأمنيات</value>
+</data>
+<data name="Public.RatingOutOfFive" xml:space="preserve">
+<value>التقييم {0} من 5</value>
+</data>
+<data name="Public.Filter.Apply" xml:space="preserve">
+<value>تطبيق الفلاتر</value>
+</data>
+<data name="Public.Filter.ClearAll" xml:space="preserve">
+<value>مسح الكل</value>
+</data>
+<data name="Public.Filter.Price" xml:space="preserve">
+<value>نطاق السعر</value>
+</data>
+<data name="Public.Filter.PriceMin" xml:space="preserve">
+<value>أدنى سعر</value>
+</data>
+<data name="Public.Filter.PriceMax" xml:space="preserve">
+<value>أعلى سعر</value>
+</data>
+<data name="Public.Filter.Difficulty" xml:space="preserve">
+<value>مستوى الصعوبة</value>
+</data>
+<data name="Public.Difficulty.Any" xml:space="preserve">
+<value>الكل</value>
+</data>
+<data name="Public.Difficulty.Easy" xml:space="preserve">
+<value>سهل</value>
+</data>
+<data name="Public.Difficulty.Moderate" xml:space="preserve">
+<value>متوسط</value>
+</data>
+<data name="Public.Difficulty.Hard" xml:space="preserve">
+<value>صعب</value>
+</data>
+<data name="Public.Difficulty.Expert" xml:space="preserve">
+<value>خبير</value>
+</data>
+<data name="Public.Filter.Duration" xml:space="preserve">
+<value>المدة</value>
+</data>
+<data name="Public.Filter.DurationMin" xml:space="preserve">
+<value>أقل مدة</value>
+</data>
+<data name="Public.Filter.DurationMax" xml:space="preserve">
+<value>أقصى مدة</value>
+</data>
+<data name="Public.HoursShort" xml:space="preserve">
+<value>{0} س</value>
+</data>
+<data name="Public.Filter.MinRating" xml:space="preserve">
+<value>الحد الأدنى للتقييم</value>
+</data>
+<data name="Public.StarsPlus" xml:space="preserve">
+<value>{0}+ نجوم</value>
+</data>
+<data name="Public.Filter.ChildFriendly" xml:space="preserve">
+<value>مناسب للأطفال</value>
+</data>
+<data name="Public.Filter.Accessible" xml:space="preserve">
+<value>مهيأ لذوي الإعاقة</value>
+</data>
+<data name="Public.Filter.InstantBooking" xml:space="preserve">
+<value>حجز فوري</value>
+</data>
+<data name="Public.Filter.HasDiscount" xml:space="preserve">
+<value>عليه خصم</value>
+</data>
+<data name="Public.Most.relevant" xml:space="preserve">
+<value>الأكثر صلة</value>
+</data>
+<data name="Public.Results.Error" xml:space="preserve">
+<value>تعذر تحميل النتائج.</value>
+</data>
+<data name="Public.Retry" xml:space="preserve">
+<value>حاول مرة أخرى</value>
+</data>
+<data name="Public.RemoveFilter" xml:space="preserve">
+<value>إزالة الفلتر: {0}</value>
+</data>
+<data name="Public.Loading" xml:space="preserve">
+<value>جارٍ التحميل…</value>
+</data>
+<data name="Public.Review.Created" xml:space="preserve">
+<value>شكراً لتقييمك!</value>
+</data>
+<data name="Public.Review.Updated" xml:space="preserve">
+<value>تم تحديث تقييمك.</value>
+</data>
+<data name="Public.Review.Deleted" xml:space="preserve">
+<value>تم حذف تقييمك.</value>
+</data>
+<data name="Public.Review.Helpful" xml:space="preserve">
+<value>تم وضع علامة مفيد.</value>
+</data>
+<data name="Public.Review.HelpfulRemoved" xml:space="preserve">
+<value>تمت إزالة تصويت "مفيد".</value>
+</data>
+<data name="Public.Review.Reported" xml:space="preserve">
+<value>شكراً للإبلاغ. سيراجع فريقنا البلاغ.</value>
+</data>
+<data name="Public.Review.FormError" xml:space="preserve">
+<value>يرجى إكمال نموذج التقييم.</value>
+</data>
+<data name="Public.AccessibilityReview.Created" xml:space="preserve">
+<value>شكراً لتقييم إمكانية الوصول!</value>
+</data>
+<data name="Public.AccessibilityReview.Updated" xml:space="preserve">
+<value>تم تحديث تقييم إمكانية الوصول.</value>
+</data>
+<data name="Public.AccessibilityReview.Deleted" xml:space="preserve">
+<value>تم حذف تقييم إمكانية الوصول.</value>
+</data>
+<data name="Public.AccessibilityReview.FormError" xml:space="preserve">
+<value>يرجى إكمال نموذج تقييم إمكانية الوصول مع اختيار ميزة واحدة على الأقل.</value>
+</data>
+<data name="Public.Report.FormError" xml:space="preserve">
+<value>يرجى اختيار سبب وإضافة وصف قصير.</value>
+</data>
+<data name="Public.Confirm.Title" xml:space="preserve">
+<value>هل أنت متأكد؟</value>
+</data>
+<data name="Public.Confirm.Delete" xml:space="preserve">
+<value>حذف</value>
+</data>
+<data name="Public.Confirm.Cancel" xml:space="preserve">
+<value>إلغاء</value>
+</data>
+<data name="Public.Confirm.DeleteReview" xml:space="preserve">
+<value>هل تريد حذف تقييمك؟ لا يمكن التراجع عن هذا الإجراء.</value>
+</data>
+<data name="Public.Confirm.DeleteAccessibilityReview" xml:space="preserve">
+<value>هل تريد حذف تقييم إمكانية الوصول الخاص بك؟ لا يمكن التراجع عن هذا الإجراء.</value>
+</data>
+<data name="Public.Comment.Created" xml:space="preserve">
+<value>تم نشر تعليقك.</value>
+</data>
+<data name="Public.Comment.Updated" xml:space="preserve">
+<value>تم تحديث تعليقك.</value>
+</data>
+<data name="Public.Comment.Deleted" xml:space="preserve">
+<value>تم حذف تعليقك.</value>
+</data>
+<data name="Public.Comment.FormError" xml:space="preserve">
+<value>يرجى كتابة تعليق قبل النشر.</value>
+</data>
+<data name="Public.Comment.EditFormError" xml:space="preserve">
+<value>يرجى تحديث نص التعليق قبل الحفظ.</value>
+</data>
+<data name="Public.Creator.Followed" xml:space="preserve">
+<value>أنت الآن تتابع هذا المبدع.</value>
+</data>
+<data name="Public.Creator.Unfollowed" xml:space="preserve">
+<value>لم تعد تتابع هذا المبدع.</value>
+</data>
+<data name="Public.Confirm.DeleteComment" xml:space="preserve">
+<value>هل تريد حذف تعليقك؟ لا يمكن التراجع عن هذا الإجراء.</value>
+</data>
+<data name="Public.Sign.in.to.comment" xml:space="preserve">
+<value>سجّل الدخول للتعليق</value>
+</data>
+<data name="Public.BookTour" xml:space="preserve">
+<value>احجز {0}</value>
+</data>
+<data name="Public.Slot.Available" xml:space="preserve">
+<value>متاح</value>
+</data>
+<data name="Public.Booking.Progress" xml:space="preserve">
+<value>خطوات الحجز</value>
+</data>
+<data name="Public.Booking.StepDetails" xml:space="preserve">
+<value>المسافرون والتفاصيل</value>
+</data>
+<data name="Public.Booking.StepConfirmation" xml:space="preserve">
+<value>التأكيد</value>
+</data>
+<data name="Public.Booking.NoGuide" xml:space="preserve">
+<value>لهذه الجولة مواعيد قادمة لكن لم يتم تعيين مرشد بعد، لذا لا يمكن حجزها حالياً. يرجى المحاولة لاحقاً.</value>
+</data>
+<data name="Public.Booking.SeatsHint" xml:space="preserve">
+<value>يتوفر حتى {0} مقعد للتاريخ المحدد.</value>
+</data>
+<data name="Public.Booking.TravelersCount" xml:space="preserve">
+<value>{0} مسافر</value>
+</data>
+<data name="Public.Booking.SelectSlot" xml:space="preserve">
+<value>يرجى اختيار التاريخ والوقت قبل المتابعة.</value>
+</data>
+<data name="Public.Booking.TooManySeats" xml:space="preserve">
+<value>يتوفر {0} مقعد فقط للتاريخ المحدد. يرجى تقليل عدد المسافرين.</value>
+</data>
+<data name="Public.Booking.FreeCancellation" xml:space="preserve">
+<value>إلغاء مجاني حتى {0} ساعة قبل الموعد.</value>
+</data>
+<data name="Public.Booking.Confirmation.Title" xml:space="preserve">
+<value>تأكيد الحجز</value>
+</data>
+<data name="Public.Booking.Confirmed" xml:space="preserve">
+<value>تم تأكيد الحجز</value>
+</data>
+<data name="Public.Booking.Cancelled" xml:space="preserve">
+<value>تم إلغاء الحجز</value>
+</data>
+<data name="Public.Booking.Reference" xml:space="preserve">
+<value>الرقم المرجعي</value>
+</data>
+<data name="Public.CopyReference" xml:space="preserve">
+<value>نسخ الرقم المرجعي</value>
+</data>
+<data name="Public.Copied" xml:space="preserve">
+<value>تم النسخ إلى الحافظة</value>
+</data>
+<data name="Public.Booking.BookedOn" xml:space="preserve">
+<value>تم الحجز في {0}</value>
+</data>
+<data name="Public.Subtotal" xml:space="preserve">
+<value>المجموع الفرعي</value>
+</data>
+<data name="Public.Discount" xml:space="preserve">
+<value>الخصم</value>
+</data>
+<data name="Public.Loyalty" xml:space="preserve">
+<value>نقاط الولاء</value>
+</data>
+<data name="Public.Total" xml:space="preserve">
+<value>الإجمالي</value>
+</data>
+<data name="Public.Booking.CancelledOn" xml:space="preserve">
+<value>تم إلغاء هذا الحجز في {0}.</value>
+</data>
+<data name="Public.Booking.CancelledNoDate" xml:space="preserve">
+<value>تم إلغاء هذا الحجز.</value>
+</data>
+<data name="Public.Booking.RefundIssued" xml:space="preserve">
+<value>تم إصدار استرداد بقيمة {0}.</value>
+</data>
+<data name="Public.Booking.AwaitingPayment" xml:space="preserve">
+<value>حجزك في انتظار الدفع.</value>
+</data>
+<data name="Public.Booking.PaymentExpires" xml:space="preserve">
+<value>تنتهي مهلة الدفع في {0}.</value>
+</data>
+<data name="Public.PayNow" xml:space="preserve">
+<value>ادفع الآن</value>
+</data>
+<data name="Public.DownloadPdf" xml:space="preserve">
+<value>تنزيل PDF</value>
+</data>
+<data name="Public.Explore.more.tours" xml:space="preserve">
+<value>استكشف المزيد من الجولات</value>
+</data>
+<data name="Public.Booking.WhatsNext" xml:space="preserve">
+<value>ما الخطوة التالية؟</value>
+</data>
+<data name="Public.Booking.Next1" xml:space="preserve">
+<value>احتفظ برقمك المرجعي — ستحتاجه لأي استفسار.</value>
+</data>
+<data name="Public.Booking.Next2" xml:space="preserve">
+<value>يمكنك عرض هذا الحجز أو إدارته في أي وقت من صفحة حجوزاتي.</value>
+</data>
+<data name="Public.Booking.Next3" xml:space="preserve">
+<value>لديك أسئلة؟ تواصل مع فريق الدعم واذكر رقمك المرجعي.</value>
+</data>
+<data name="Public.ValidFrom" xml:space="preserve">
+<value>من {0}</value>
+</data>
+<data name="Public.ValidUntil" xml:space="preserve">
+<value>حتى {0}</value>
+</data>
+<data name="Public.ViewPackage" xml:space="preserve">
+<value>عرض الباقة</value>
+</data>
+<data name="Public.Package.InterestedTitle" xml:space="preserve">
+<value>مهتم بهذه الباقة؟</value>
+</data>
+<data name="Public.Package.InquiryHelp" xml:space="preserve">
+<value>لديك أسئلة أو ترغب بحجز هذه الباقة؟ أرسل لنا رسالة وسيساعدك فريقنا في ترتيبها.</value>
+</data>
+<data name="Public.Package.Inquire" xml:space="preserve">
+<value>استفسر عن هذه الباقة</value>
+</data>
+<data name="Public.Package.InquirySubject" xml:space="preserve">
+<value>باقة: {0}</value>
+</data>
+<data name="Public.OpenNow" xml:space="preserve">
+<value>مفتوح الآن</value>
+</data>
+<data name="Public.ClosedNow" xml:space="preserve">
+<value>مغلق الآن</value>
+</data>
+<data name="Help.Title" xml:space="preserve">
+<value>مركز المساعدة</value>
+</data>
+<data name="Help.HeroTitle" xml:space="preserve">
+<value>كيف يمكننا مساعدتك؟</value>
+</data>
+<data name="Help.HeroSubtitle" xml:space="preserve">
+<value>ابحث في مركز المساعدة أو تصفح الأسئلة الشائعة أدناه.</value>
+</data>
+<data name="Help.SearchPlaceholder" xml:space="preserve">
+<value>ابحث في مركز المساعدة...</value>
+</data>
+<data name="Help.SearchAria" xml:space="preserve">
+<value>البحث في المساعدة</value>
+</data>
+<data name="Help.Faq.Title" xml:space="preserve">
+<value>الأسئلة الشائعة</value>
+</data>
+<data name="Help.NoMatch" xml:space="preserve">
+<value>لا توجد مقالات تطابق بحثك. جرّب كلمة مختلفة.</value>
+</data>
+<data name="Help.NoArticlesAlt" xml:space="preserve">
+<value>لا توجد مقالات</value>
+</data>
+<data name="Help.Empty.Title" xml:space="preserve">
+<value>لا توجد مقالات مساعدة بعد</value>
+</data>
+<data name="Help.Empty.Text" xml:space="preserve">
+<value>نعمل على تجهيز مركز المساعدة. يرجى العودة قريباً.</value>
+</data>
+<data name="Help.StillNeedHelp" xml:space="preserve">
+<value>ما زلت بحاجة إلى مساعدة؟</value>
+</data>
+<data name="Help.ReachSupport" xml:space="preserve">
+<value>تواصل مع فريق الدعم مباشرة.</value>
+</data>
+<data name="Help.SubmitTicket" xml:space="preserve">
+<value>إرسال تذكرة</value>
+</data>
+<data name="Help.SubmitTicketText" xml:space="preserve">
+<value>افتح طلب دعم وتابعه.</value>
+</data>
+<data name="Public.Error.ReferenceId" xml:space="preserve">
+<value>رقم المرجع:</value>
+</data>
+<data name="Public.Back.to.home" xml:space="preserve">
+<value>العودة إلى الرئيسية</value>
+</data>
+<data name="Public.Contact.support" xml:space="preserve">
+<value>التواصل مع الدعم</value>
+</data>
+<data name="Public.Accessibility.reviews" xml:space="preserve">
+<value>مراجعات إمكانية الوصول</value>
+</data>
+<data name="Public.Visited" xml:space="preserve">
+<value>تمت الزيارة {0}</value>
+</data>
+<data name="Public.Accessibility.features" xml:space="preserve">
+<value>ميزات إمكانية الوصول</value>
+</data>
+<data name="Public.Select.at.least.one" xml:space="preserve">
+<value>(اختر واحدة على الأقل)</value>
+</data>
+<data name="Public.AccessibilityReview.Empty" xml:space="preserve">
+<value>لا توجد مراجعات إمكانية وصول بعد. شارك تجربتك لمساعدة الآخرين.</value>
+</data>
+<data name="Public.Write.an.accessibility.review" xml:space="preserve">
+<value>اكتب مراجعة إمكانية وصول</value>
+</data>
+<data name="Public.Your.accessibility.experience" xml:space="preserve">
+<value>تجربتك مع إمكانية الوصول</value>
+</data>
+<data name="Public.Describe.accessibility.placeholder" xml:space="preserve">
+<value>صف إمكانية الوصول (المداخل، دورات المياه، اللافتات، مساعدة الموظفين، إلخ)</value>
+</data>
+<data name="Public.Submit.accessibility.review" xml:space="preserve">
+<value>إرسال مراجعة إمكانية الوصول</value>
+</data>
+<data name="Public.Sign.in.to.write.an.accessibility.review" xml:space="preserve">
+<value>سجّل الدخول لكتابة مراجعة إمكانية وصول</value>
+</data>
+<data name="Public.AccessibilityFeature.Wheelchair" xml:space="preserve">
+<value>وصول الكراسي المتحركة</value>
+</data>
+<data name="Public.AccessibilityFeature.Visual" xml:space="preserve">
+<value>إمكانية الوصول البصرية</value>
+</data>
+<data name="Public.AccessibilityFeature.Hearing" xml:space="preserve">
+<value>إمكانية الوصول السمعية</value>
+</data>
+<data name="Public.AccessibilityFeature.Cognitive" xml:space="preserve">
+<value>إمكانية الوصول الإدراكية</value>
+</data>
+<data name="Public.AccessibilityFeature.Mobility" xml:space="preserve">
+<value>دعم التنقل</value>
+</data>
+<data name="Public.AccessibilityFeature.Other" xml:space="preserve">
+<value>أخرى</value>
+</data>
+<data name="Public.FoundHelpful.Count" xml:space="preserve">
+<value>{0} وجدوا هذا مفيداً</value>
+</data>
+<data name="Public.Sign.in.to.write.a.review" xml:space="preserve">
+<value>سجّل الدخول لكتابة مراجعة</value>
+</data>
+<data name="Public.YearsExperience" xml:space="preserve">
+<value>{0} سنوات خبرة</value>
+</data>
+<data name="Public.Specialties.Count" xml:space="preserve">
+<value>{0} تخصصات</value>
+</data>
+<data name="Public.Years.Short" xml:space="preserve">
+<value>{0} سنة</value>
+</data>
+<data name="Public.To.contact.our.support.team" xml:space="preserve">
+<value>للتواصل مع فريق الدعم.</value>
+</data>
+<data name="Public.ActiveGuides.Count" xml:space="preserve">
+<value>{0} مرشد نشط</value>
+</data>
+<data name="Public.Request.to.join.a.group" xml:space="preserve">
+<value>اطلب الانضمام إلى مجموعة</value>
+</data>
+<data name="Public.JoinRequest.Sent" xml:space="preserve">
+<value>تم إرسال طلب الانضمام الخاص بك.</value>
+</data>
+<data name="Public.Tours.for.selected.place" xml:space="preserve">
+<value>جولات للمكان المحدد</value>
+</data>
+<data name="Public.Tours.in.Place" xml:space="preserve">
+<value>جولات في {0}</value>
+</data>
+<data name="Home.Hero.TitleLead" xml:space="preserve">
+<value>اكتشف أفضل</value>
+</data>
+<data name="Home.Hero.TitleEmphasis" xml:space="preserve">
+<value>الجولات في الأردن</value>
+</data>
+<data name="Home.Hero.Cta" xml:space="preserve">
+<value>اكتشف الآن</value>
+</data>
+<data name="Home.Hero.Watch" xml:space="preserve">
+<value>شاهد قصتنا</value>
+</data>
+<data name="Home.Hero.SupportBadge" xml:space="preserve">
+<value>دعم</value>
+</data>
+<data name="Home.Search.Where" xml:space="preserve">
+<value>إلى أين؟</value>
+</data>
+<data name="Home.Search.AnyDestination" xml:space="preserve">
+<value>أي وجهة</value>
+</data>
+<data name="Home.Search.When" xml:space="preserve">
+<value>متى؟</value>
+</data>
+<data name="Home.Search.SelectDates" xml:space="preserve">
+<value>اختر التواريخ</value>
+</data>
+<data name="Home.Search.Who" xml:space="preserve">
+<value>من؟</value>
+</data>
+<data name="Home.Search.Adults" xml:space="preserve">
+<value>البالغون</value>
+</data>
+<data name="Home.Search.AdultsAge" xml:space="preserve">
+<value>13 سنة فأكثر</value>
+</data>
+<data name="Home.Search.AdultsCounter" xml:space="preserve">
+<value>عدّاد البالغين</value>
+</data>
+<data name="Home.Search.DecreaseAdults" xml:space="preserve">
+<value>إنقاص عدد البالغين</value>
+</data>
+<data name="Home.Search.IncreaseAdults" xml:space="preserve">
+<value>زيادة عدد البالغين</value>
+</data>
+<data name="Home.Search.Children" xml:space="preserve">
+<value>الأطفال</value>
+</data>
+<data name="Home.Search.ChildrenAge" xml:space="preserve">
+<value>0–12 سنة</value>
+</data>
+<data name="Home.Search.ChildrenCounter" xml:space="preserve">
+<value>عدّاد الأطفال</value>
+</data>
+<data name="Home.Search.DecreaseChildren" xml:space="preserve">
+<value>إنقاص عدد الأطفال</value>
+</data>
+<data name="Home.Search.IncreaseChildren" xml:space="preserve">
+<value>زيادة عدد الأطفال</value>
+</data>
+<data name="Home.Search.WordAdult" xml:space="preserve">
+<value>بالغ</value>
+</data>
+<data name="Home.Search.WordAdults" xml:space="preserve">
+<value>بالغين</value>
+</data>
+<data name="Home.Search.WordChild" xml:space="preserve">
+<value>طفل</value>
+</data>
+<data name="Home.Search.WordChildren" xml:space="preserve">
+<value>أطفال</value>
+</data>
+<data name="Home.Features.Title" xml:space="preserve">
+<value>لماذا تحجز مع يلا جو</value>
+</data>
+<data name="Home.Features.Lead" xml:space="preserve">
+<value>كل جولة مختارة بعناية ويديرها مرشدون محليون موثوقون. ادفع بأمان واحجز فوراً وسافر براحة بال.</value>
+</data>
+<data name="Home.Features.GuidesTitle" xml:space="preserve">
+<value>مرشدون محليون موثوقون</value>
+</data>
+<data name="Home.Features.GuidesText" xml:space="preserve">
+<value>تتم مقابلة كل مرشد ويُقيَّم من قبل مسافرين حقيقيين.</value>
+</data>
+<data name="Home.Features.InstantTitle" xml:space="preserve">
+<value>حجز فوري</value>
+</data>
+<data name="Home.Features.InstantText" xml:space="preserve">
+<value>أكّد مكانك في ثوانٍ — دون انتظار الردود.</value>
+</data>
+<data name="Home.Features.SecureTitle" xml:space="preserve">
+<value>مدفوعات آمنة</value>
+</data>
+<data name="Home.Features.SecureText" xml:space="preserve">
+<value>تشفير بمستوى البنوك وحماية كاملة للاسترداد.</value>
+</data>
+<data name="Home.Features.SupportTitle" xml:space="preserve">
+<value>دعم المسافرين على مدار الساعة</value>
+</data>
+<data name="Home.Features.SupportText" xml:space="preserve">
+<value>أشخاص حقيقيون جاهزون ليلاً ونهاراً أينما كنت.</value>
+</data>
+<data name="Home.SeeAllTours" xml:space="preserve">
+<value>عرض كل الجولات</value>
+</data>
+<data name="Home.BrowseAllPlaces" xml:space="preserve">
+<value>تصفح كل الأماكن</value>
+</data>
+<data name="Home.SeeAllBusinesses" xml:space="preserve">
+<value>عرض كل المنشآت</value>
+</data>
+<data name="Home.Empty.Text" xml:space="preserve">
+<value>نختار لك الجولات والتجارب بعناية. عُد قريباً.</value>
+</data>
+<data name="Home.Trust.Title" xml:space="preserve">
+<value>تقييمات حقيقية من مسافرين حقيقيين</value>
+</data>
+<data name="Home.Trust.Text" xml:space="preserve">
+<value>كل تقييم على يلا جو يأتي من حجز مُوثَّق.</value>
+</data>
+<data name="Home.Features.VerifiedTitle" xml:space="preserve">
+<value>تقييمات موثَّقة</value>
+</data>
+<data name="Home.Features.VerifiedText" xml:space="preserve">
+<value>التقييمات تأتي من مسافرين أكملوا حجوزاتهم.</value>
+</data>
 </root>

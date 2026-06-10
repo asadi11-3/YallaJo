@@ -1,0 +1,58 @@
+﻿@model YallaJo.Web.Areas.Public.Models.Places.PlaceCardVm
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
+@*
+    Circle "destination" tile (master plan §3.1) — deliberately distinct from the standard
+    _PlaceCard grid card; used for the Explore-Nearby rail on the home page.
+    ViewData knobs: "isAuthed" (bool).
+*@
+@{
+    var isAuthed = ViewData["isAuthed"] as bool? ?? false;
+}
+<div class="col-6 col-md-4 col-xl-2">
+    <div class="card border-0 bg-transparent text-center h-100">
+        <div class="position-relative d-inline-block">
+            @if (!string.IsNullOrWhiteSpace(Model.ImageUrl))
+            {
+                <img src="@Model.ImageUrl" class="rounded-circle object-cover img-circle-140" alt="@Model.Name" loading="lazy" />
+            }
+            else
+            {
+                <div class="rounded-circle bg-light d-inline-flex align-items-center justify-content-center img-circle-140" aria-hidden="true">
+                    <i class="bi bi-geo-alt fs-1 text-body-secondary"></i>
+                </div>
+            }
+
+            @if (Model.IsFeatured)
+            {
+                <span class="badge text-bg-dark position-absolute top-0 start-0">@Localizer["Public.Featured"]</span>
+            }
+
+            <div class="position-absolute bottom-0 end-0">
+                <partial name="_WishlistButton" model="@(new YallaJo.Web.Areas.Public.Models.Shared.WishlistButtonVm
+                         {
+                             EntityType = "Place",
+                             EntityId = Model.Id,
+                             IsAuthenticated = isAuthed,
+                             ExtraClass = "shadow-sm"
+                         })" />
+            </div>
+        </div>
+
+        <div class="card-body p-2 pt-3">
+            <h6 class="card-title mb-1">
+                <a asp-area="Public" asp-controller="Places" asp-action="Details" asp-route-slug="@Model.Slug"
+                   class="stretched-link text-reset">@Model.Name</a>
+            </h6>
+            @if (!string.IsNullOrWhiteSpace(Model.LocationLabel))
+            {
+                <div class="small text-body-secondary mb-1">@Model.LocationLabel</div>
+            }
+            <div class="small text-warning">
+                <span class="text-body">@Model.AverageRating.ToString("0.0")</span>
+                <i class="bi bi-star-fill" aria-hidden="true"></i>
+                <span class="text-body-secondary">(@Model.ReviewCount)</span>
+            </div>
+        </div>
+    </div>
+</div>

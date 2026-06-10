@@ -1,7 +1,9 @@
 using YallaJo.Web.Areas.Public.ApiClients;
 using YallaJo.Web.Areas.Public.Helpers;
+using YallaJo.Web.Areas.Public.Models.Directory;
 using YallaJo.Web.Areas.Public.Models.Home;
 using YallaJo.Web.Areas.Public.Models.Places;
+using YallaJo.Web.Areas.Public.Models.Shared;
 using YallaJo.Web.Infrastructure.Api.Contracts;
 using YallaJo.Web.Services;
 
@@ -49,7 +51,7 @@ public sealed class HomeFacade
         return ApiResult<HomeVm>.Ok(vm);
     }
 
-    private async Task<IReadOnlyList<HomeTourCardVm>> BuildFeaturedAsync(CancellationToken ct)
+    private async Task<IReadOnlyList<TourCardVm>> BuildFeaturedAsync(CancellationToken ct)
     {
         try
         {
@@ -66,9 +68,9 @@ public sealed class HomeFacade
         }
     }
 
-    private async Task<HomeTourCardVm> BuildFeaturedCardAsync(FeaturedTourResponse t, CancellationToken ct)
+    private async Task<TourCardVm> BuildFeaturedCardAsync(FeaturedTourResponse t, CancellationToken ct)
     {
-        return new HomeTourCardVm
+        return new TourCardVm
         {
             Id = t.Id,
             Name = t.Name,
@@ -84,7 +86,7 @@ public sealed class HomeFacade
         };
     }
 
-    private async Task<IReadOnlyList<HomeTourCardVm>> BuildPopularAsync(CancellationToken ct)
+    private async Task<IReadOnlyList<TourCardVm>> BuildPopularAsync(CancellationToken ct)
     {
         try
         {
@@ -107,7 +109,7 @@ public sealed class HomeFacade
         }
     }
 
-    private async Task<HomeTourCardVm?> BuildPopularCardAsync(Guid tourId, CancellationToken ct)
+    private async Task<TourCardVm?> BuildPopularCardAsync(Guid tourId, CancellationToken ct)
     {
         try
         {
@@ -115,7 +117,7 @@ public sealed class HomeFacade
             if (result is not { IsSuccess: true, Data: { } t })
                 return null;
 
-            return new HomeTourCardVm
+            return new TourCardVm
             {
                 Id = t.Id,
                 Name = t.Name,
@@ -136,7 +138,7 @@ public sealed class HomeFacade
         }
     }
 
-    private async Task<IReadOnlyList<HomePlaceCardVm>> BuildPopularPlacesAsync(CancellationToken ct)
+    private async Task<IReadOnlyList<PlaceCardVm>> BuildPopularPlacesAsync(CancellationToken ct)
     {
         try
         {
@@ -163,7 +165,7 @@ public sealed class HomeFacade
         }
     }
 
-    private async Task<HomePlaceCardVm?> BuildPlaceCardAsync(Guid placeId, CancellationToken ct)
+    private async Task<PlaceCardVm?> BuildPlaceCardAsync(Guid placeId, CancellationToken ct)
     {
         try
         {
@@ -177,7 +179,7 @@ public sealed class HomeFacade
             if (result is not { IsSuccess: true, Data: { } p } || string.IsNullOrWhiteSpace(p.Slug))
                 return null;
 
-            return new HomePlaceCardVm
+            return new PlaceCardVm
             {
                 Id = p.Id,
                 Name = p.Name,
@@ -216,7 +218,7 @@ public sealed class HomeFacade
         return PublicImagePlaceholder.ResolvePlaceImage(placeId);
     }
 
-    private async Task<IReadOnlyList<HomeBusinessCardVm>> BuildPopularBusinessesAsync(CancellationToken ct)
+    private async Task<IReadOnlyList<BusinessCardVm>> BuildPopularBusinessesAsync(CancellationToken ct)
     {
         try
         {
@@ -243,7 +245,7 @@ public sealed class HomeFacade
         }
     }
 
-    private async Task<HomeBusinessCardVm?> BuildBusinessCardAsync(Guid businessId, CancellationToken ct)
+    private async Task<BusinessCardVm?> BuildBusinessCardAsync(Guid businessId, CancellationToken ct)
     {
         try
         {
@@ -251,15 +253,14 @@ public sealed class HomeFacade
             if (result is not { IsSuccess: true, Data: { } b } || string.IsNullOrWhiteSpace(b.Slug))
                 return null;
 
-            return new HomeBusinessCardVm
+            return new BusinessCardVm
             {
                 Id = b.Id,
                 Name = b.Name,
                 Slug = b.Slug,
                 ImageUrl = null,
                 BusinessType = b.BusinessType,
-                City = b.City,
-                Country = b.Country,
+                Location = PlaceCardVm.FormatLocation(b.City, b.Country),
                 AverageRating = b.AverageRating,
                 ReviewCount = b.ReviewCount,
                 IsFeatured = b.IsFeatured,

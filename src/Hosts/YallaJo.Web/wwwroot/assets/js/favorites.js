@@ -2,14 +2,10 @@
 // Delegated handler for any element with class "js-favorite" that carries
 // data-entity-type and data-entity-id attributes (e.g. the heart button on
 // tour/place/business cards). POSTs to the Accounts wishlist toggle endpoint
-// and flips the bi-heart / bi-heart-fill icon to reflect the new state.
+// via the shared api client (JS5) and flips the bi-heart / bi-heart-fill icon.
+// Guests get redirected to sign-in with a returnUrl by the api client (WL1).
 (function () {
     "use strict";
-
-    function antiForgeryToken() {
-        var input = document.querySelector('input[name="__RequestVerificationToken"]');
-        return input ? input.value : "";
-    }
 
     function setState(button, isFavorited) {
         var icon = button.querySelector("i.bi");
@@ -20,7 +16,12 @@
         }
         button.classList.toggle("active", isFavorited);
         button.setAttribute("aria-pressed", isFavorited ? "true" : "false");
-        button.title = isFavorited ? "Remove from wishlist" : "Save to wishlist";
+        // Localized titles come from data attributes when the view provides them.
+        var title = isFavorited
+            ? (button.dataset.titleRemove || "Remove from wishlist")
+            : (button.dataset.titleAdd || "Save to wishlist");
+        button.title = title;
+        button.setAttribute("aria-label", title);
     }
 
     function buildUrl(entityType, entityId) {
@@ -31,6 +32,7 @@
     async function toggle(button) {
         var entityType = button.getAttribute("data-entity-type");
         var entityId = button.getAttribute("data-entity-id");
+        var data;
         if (!entityType || !entityId || button.dataset.busy === "1") {
             return;
         }
@@ -39,28 +41,11 @@
         button.disabled = true;
 
         try {
-            var response = await fetch(buildUrl(entityType, entityId), {
-                method: "POST",
-                headers: {
-                    "RequestVerificationToken": antiForgeryToken(),
-                    "Accept": "application/json"
-                },
-                credentials: "same-origin"
-            });
-
-            if (response.status === 401) {
-                window.location.href = "/Auth/Auth/SignIn";
-                return;
-            }
-
-            if (!response.ok) {
-                return;
-            }
-
-            var data = await response.json();
-            setState(button, data.isFavorited === true);
+            data = await window.YallaJo.api.post(buildUrl(entityType, entityId));
+            setState(button, !!(data && data.isFavorited === true));
         } catch (e) {
-            // network error — leave the button untouched
+            // 401 is handled by the api client (sign-in redirect); other
+            // failures leave the button untouched.
         } finally {
             button.dataset.busy = "0";
             button.disabled = false;

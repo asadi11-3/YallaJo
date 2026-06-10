@@ -1,0 +1,27 @@
+@*
+    Shared empty state (UI-UX-L6: empty states have a CTA).
+    ViewData knobs:
+      - title    (string, required) localized heading
+      - message  (string, optional) localized sub-copy
+      - imageUrl (string, optional) defaults to the theme's element/17.svg
+      - ctaText / ctaUrl (string, optional) renders a primary CTA when both set
+*@
+@{
+    var title = ViewData["title"] as string ?? string.Empty;
+    var message = ViewData["message"] as string;
+    var imageUrl = ViewData["imageUrl"] as string ?? Url.Content("~/assets/images/element/17.svg");
+    var ctaText = ViewData["ctaText"] as string;
+    var ctaUrl = ViewData["ctaUrl"] as string;
+}
+<div class="text-center py-5">
+    <img src="@imageUrl" class="h-100px mb-3" alt="" aria-hidden="true" />
+    <h5 class="mb-1">@title</h5>
+    @if (!string.IsNullOrWhiteSpace(message))
+    {
+        <p class="text-body-secondary mb-3">@message</p>
+    }
+    @if (!string.IsNullOrWhiteSpace(ctaText) && !string.IsNullOrWhiteSpace(ctaUrl))
+    {
+        <a href="@ctaUrl" class="btn btn-primary">@ctaText</a>
+    }
+</div>

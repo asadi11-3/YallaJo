@@ -1,6 +1,7 @@
 using System.Globalization;
 using Microsoft.AspNetCore.WebUtilities;
 using YallaJo.Web.Areas.Public.Models.Search;
+using YallaJo.Web.Areas.Public.Models.Tours;
 using YallaJo.Web.Infrastructure.Api.Contracts;
 using YallaJo.Web.Services;
 
@@ -27,18 +28,25 @@ public sealed class SearchApiClient
     /// <paramref name="placeId"/> filters results to tours operating at that place (backend supported,
     /// see <c>SearchToursRequest.PlaceId</c>). <c>from/to/participants</c> are NOT plumbed through —
     /// the backend has no availability-window filter yet, so the BFF only echoes them on the VM.
+    /// <paramref name="filters"/> maps to the optional backend filters (priceMin/priceMax/difficulty/
+    /// durationMinutesMin/durationMinutesMax/isChildFriendly/isAccessible/isInstantBooking/
+    /// hasDiscount/minRating). <paramref name="sort"/> is the backend SearchSort enum name
+    /// (Relevance|PriceAsc|PriceDesc|RatingDesc|PopularityDesc|Newest); minimal-API enum binding
+    /// is case-insensitive by name.
     /// </summary>
     public Task<ApiResult<PaginatedTourSearchResponse>> SearchToursAsync(
         string? query,
         int page,
         int pageSize,
         Guid? placeId = null,
+        TourFilterVm? filters = null,
+        string? sort = null,
         CancellationToken ct = default)
     {
         var qs = new Dictionary<string, string?>
         {
-            ["page"] = page.ToString(),
-            ["pageSize"] = pageSize.ToString()
+            ["page"] = page.ToString(CultureInfo.InvariantCulture),
+            ["pageSize"] = pageSize.ToString(CultureInfo.InvariantCulture)
         };
         if (!string.IsNullOrWhiteSpace(query))
         {
@@ -47,6 +55,23 @@ public sealed class SearchApiClient
         if (placeId is { } id && id != Guid.Empty)
         {
             qs["placeId"] = id.ToString();
+        }
+        if (!string.IsNullOrWhiteSpace(sort))
+        {
+            qs["sort"] = sort;
+        }
+        if (filters is not null)
+        {
+            if (filters.PriceMin is { } priceMin) qs["priceMin"] = priceMin.ToString(CultureInfo.InvariantCulture);
+            if (filters.PriceMax is { } priceMax) qs["priceMax"] = priceMax.ToString(CultureInfo.InvariantCulture);
+            if (!string.IsNullOrWhiteSpace(filters.Difficulty)) qs["difficulty"] = filters.Difficulty.Trim();
+            if (filters.DurationMin is { } durMin) qs["durationMinutesMin"] = durMin.ToString(CultureInfo.InvariantCulture);
+            if (filters.DurationMax is { } durMax) qs["durationMinutesMax"] = durMax.ToString(CultureInfo.InvariantCulture);
+            if (filters.ChildFriendly is { } child) qs["isChildFriendly"] = child ? "true" : "false";
+            if (filters.Accessible is { } acc) qs["isAccessible"] = acc ? "true" : "false";
+            if (filters.InstantBooking is { } instant) qs["isInstantBooking"] = instant ? "true" : "false";
+            if (filters.HasDiscount is { } disc) qs["hasDiscount"] = disc ? "true" : "false";
+            if (filters.MinRating is { } minRating) qs["minRating"] = minRating.ToString(CultureInfo.InvariantCulture);
         }
         var url = QueryHelpers.AddQueryString(ToursSearch, qs);
         return _api.GetAsync<PaginatedTourSearchResponse>(url, ct);

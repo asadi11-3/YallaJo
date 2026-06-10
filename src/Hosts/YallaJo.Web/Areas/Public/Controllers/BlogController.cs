@@ -1,31 +1,35 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OutputCaching;
+using Microsoft.Extensions.Localization;
 using YallaJo.Web.Areas.Public.Caching;
 using YallaJo.Web.Areas.Public.Facades;
 using YallaJo.Web.Areas.Public.Models.Blog;
 using YallaJo.Web.Areas.Public.Models.Reviews;
 using YallaJo.Web.Infrastructure.Mvc;
+using YallaJo.Web.Resources;
 
 namespace YallaJo.Web.Areas.Public.Controllers;
 
 [Area("Public")]
-public sealed class BlogController(BlogFacade blog, ReviewsFacade reviews) : BaseController
+public sealed class BlogController(BlogFacade blog, ReviewsFacade reviews, IStringLocalizer<SharedResource> localizer) : BaseController
 {
     private const string TargetType = "Blog";
 
     [HttpGet("blog")]
-    [OutputCache(PolicyName = "PublicShort")]
+    [OutputCache(PolicyName = "PublicShort", VaryByHeaderNames = new[] { "X-Requested-With" })]
     public async Task<IActionResult> Index(int page = 1, CancellationToken ct = default)
     {
         var result = await blog.GetGridAsync(page, ct);
         if (!result.IsSuccess || result.Data is null)
         {
             SetError(result.Error);
-            return View(new BlogsGridVm());
+            var fallback = new BlogsGridVm();
+            return WantsAjax() ? PartialView("_BlogResults", fallback) : View(fallback);
         }
 
-        return View(result.Data);
+        // Phase 7: AJAX requests (listing.js) receive just the results fragment.
+        return WantsAjax() ? PartialView("_BlogResults", result.Data) : View(result.Data);
     }
 
     [HttpGet("blog/{slug}")]
@@ -65,15 +69,21 @@ public sealed class BlogController(BlogFacade blog, ReviewsFacade reviews) : Bas
         var slug = SafeSlug(form.Slug);
         if (!ModelState.IsValid)
         {
-            SetError("Please write a comment before posting.");
-            return RedirectToAction(nameof(Post), new { slug });
+            return CommentFailure(localizer["Public.Comment.FormError"], slug);
         }
 
         var result = await blog.CreateCommentAsync(id, form, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
-        if (result.IsSuccess) SetSuccess("Your comment was posted.");
-        else if (!ApplyValidationErrors(result)) SetError(result.Error);
 
+        if (result.IsSuccess)
+        {
+            return WantsAjax()
+                ? await CommentsPartialAsync(slug, ct)
+                : CommentSuccess(localizer["Public.Comment.Created"], slug);
+        }
+
+        if (WantsAjax()) return BadRequest(new { error = FailureMessage(result.Error) });
+        if (!ApplyValidationErrors(result)) SetError(result.Error);
         return RedirectToAction(nameof(Post), new { slug });
     }
 
@@ -85,15 +95,21 @@ public sealed class BlogController(BlogFacade blog, ReviewsFacade reviews) : Bas
         var slug = SafeSlug(form.Slug);
         if (!ModelState.IsValid)
         {
-            SetError("Please update the comment text before saving.");
-            return RedirectToAction(nameof(Post), new { slug });
+            return CommentFailure(localizer["Public.Comment.EditFormError"], slug);
         }
 
         var result = await blog.EditCommentAsync(commentId, form, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
-        if (result.IsSuccess) SetSuccess("Your comment was updated.");
-        else if (!ApplyValidationErrors(result)) SetError(result.Error);
 
+        if (result.IsSuccess)
+        {
+            return WantsAjax()
+                ? await CommentsPartialAsync(slug, ct)
+                : CommentSuccess(localizer["Public.Comment.Updated"], slug);
+        }
+
+        if (WantsAjax()) return BadRequest(new { error = FailureMessage(result.Error) });
+        if (!ApplyValidationErrors(result)) SetError(result.Error);
         return RedirectToAction(nameof(Post), new { slug });
     }
 
@@ -104,7 +120,7 @@ public sealed class BlogController(BlogFacade blog, ReviewsFacade reviews) : Bas
     {
         var result = await blog.DeleteCommentAsync(commentId, rowVersion, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
-        if (result.IsSuccess) SetSuccess("Your comment was deleted.");
+        if (result.IsSuccess) SetSuccess(localizer["Public.Comment.Deleted"]);
         else if (!ApplyValidationErrors(result)) SetError(result.Error);
 
         return RedirectToAction(nameof(Post), new { slug = SafeSlug(slug) });
@@ -117,9 +133,16 @@ public sealed class BlogController(BlogFacade blog, ReviewsFacade reviews) : Bas
     {
         var result = await blog.AddCommentReactionAsync(commentId, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
-        if (!result.IsSuccess && !ApplyValidationErrors(result)) SetError(result.Error);
 
-        return WantsNoContent() ? NoContent() : RedirectToAction(nameof(Post), new { slug = SafeSlug(slug) });
+        if (WantsAjax())
+        {
+            return result.IsSuccess
+                ? await CommentsPartialAsync(SafeSlug(slug), ct)
+                : BadRequest(new { error = FailureMessage(result.Error) });
+        }
+
+        if (!result.IsSuccess && !ApplyValidationErrors(result)) SetError(result.Error);
+        return RedirectToAction(nameof(Post), new { slug = SafeSlug(slug) });
     }
 
     [HttpPost("blog/comments/{commentId:guid}/unreact")]
@@ -129,9 +152,16 @@ public sealed class BlogController(BlogFacade blog, ReviewsFacade reviews) : Bas
     {
         var result = await blog.RemoveCommentReactionAsync(commentId, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
-        if (!result.IsSuccess && !ApplyValidationErrors(result)) SetError(result.Error);
 
-        return WantsNoContent() ? NoContent() : RedirectToAction(nameof(Post), new { slug = SafeSlug(slug) });
+        if (WantsAjax())
+        {
+            return result.IsSuccess
+                ? await CommentsPartialAsync(SafeSlug(slug), ct)
+                : BadRequest(new { error = FailureMessage(result.Error) });
+        }
+
+        if (!result.IsSuccess && !ApplyValidationErrors(result)) SetError(result.Error);
+        return RedirectToAction(nameof(Post), new { slug = SafeSlug(slug) });
     }
 
     [HttpGet("creators/{slug}")]
@@ -167,7 +197,15 @@ public sealed class BlogController(BlogFacade blog, ReviewsFacade reviews) : Bas
     {
         var result = await blog.FollowCreatorAsync(profileId, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
-        if (result.IsSuccess) SetSuccess("You are now following this creator.");
+
+        if (WantsAjax())
+        {
+            return result.IsSuccess
+                ? Json(new { success = true, isFollowing = true, message = localizer["Public.Creator.Followed"].Value })
+                : BadRequest(new { error = FailureMessage(result.Error) });
+        }
+
+        if (result.IsSuccess) SetSuccess(localizer["Public.Creator.Followed"]);
         else if (!ApplyValidationErrors(result)) SetError(result.Error);
 
         return RedirectToAction(nameof(Creator), new { slug = SafeSlug(creatorSlug) });
@@ -180,7 +218,15 @@ public sealed class BlogController(BlogFacade blog, ReviewsFacade reviews) : Bas
     {
         var result = await blog.UnfollowCreatorAsync(profileId, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
-        if (result.IsSuccess) SetSuccess("You are no longer following this creator.");
+
+        if (WantsAjax())
+        {
+            return result.IsSuccess
+                ? Json(new { success = true, isFollowing = false, message = localizer["Public.Creator.Unfollowed"].Value })
+                : BadRequest(new { error = FailureMessage(result.Error) });
+        }
+
+        if (result.IsSuccess) SetSuccess(localizer["Public.Creator.Unfollowed"]);
         else if (!ApplyValidationErrors(result)) SetError(result.Error);
 
         return RedirectToAction(nameof(Creator), new { slug = SafeSlug(creatorSlug) });
@@ -195,7 +241,7 @@ public sealed class BlogController(BlogFacade blog, ReviewsFacade reviews) : Bas
 
         if (!ModelState.IsValid)
         {
-            SetError("Please choose a reason and add a short description.");
+            SetError(localizer["Public.Report.FormError"]);
             return RedirectToAction(nameof(Post), new { slug = SafeSlug(slug) });
         }
 
@@ -205,7 +251,7 @@ public sealed class BlogController(BlogFacade blog, ReviewsFacade reviews) : Bas
             return signOut;
 
         if (result.IsSuccess)
-            SetSuccess("Thanks for reporting. Our team will review it.");
+            SetSuccess(localizer["Public.Review.Reported"]);
         else if (!ApplyValidationErrors(result))
             SetError(result.Error);
 
@@ -214,7 +260,33 @@ public sealed class BlogController(BlogFacade blog, ReviewsFacade reviews) : Bas
 
     private static string SafeSlug(string? slug) => string.IsNullOrWhiteSpace(slug) ? "" : slug;
 
-    private bool WantsNoContent()
-        => string.Equals(Request.Headers.Accept.ToString(), "application/json", StringComparison.OrdinalIgnoreCase)
-           || string.Equals(Request.Headers["X-Requested-With"].ToString(), "XMLHttpRequest", StringComparison.OrdinalIgnoreCase);
+    private string FailureMessage(string? error)
+        => string.IsNullOrWhiteSpace(error) ? localizer["Public.Results.Error"].Value : error;
+
+    /// <summary>
+    /// Returns the refreshed comment thread for AJAX callers (Phase 5.4); the partial swap is the success feedback.
+    /// </summary>
+    private async Task<IActionResult> CommentsPartialAsync(string slug, CancellationToken ct)
+    {
+        var result = await blog.GetPostAsync(slug, ct);
+        if (!result.IsSuccess || result.Data is null)
+        {
+            return BadRequest(new { error = FailureMessage(result.Error) });
+        }
+
+        return PartialView("_CommentThread", result.Data);
+    }
+
+    private IActionResult CommentFailure(string message, string slug)
+    {
+        if (WantsAjax()) return BadRequest(new { error = message });
+        SetError(message);
+        return RedirectToAction(nameof(Post), new { slug });
+    }
+
+    private IActionResult CommentSuccess(string message, string slug)
+    {
+        SetSuccess(message);
+        return RedirectToAction(nameof(Post), new { slug });
+    }
 }

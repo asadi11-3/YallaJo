@@ -1,0 +1,9 @@
+@model YallaJo.Web.Features.Navbar.NavbarAvatarVm
+@{
+    var cssClass = ViewData["CssClass"] as string ?? "avatar-img rounded-2";
+    var alt = ViewData["Alt"] as string ?? "avatar";
+    var src = string.IsNullOrWhiteSpace(Model.AvatarUrl)
+        ? Url.Content("~/assets/images/avatar/01.jpg")
+        : Model.AvatarUrl;
+}
+<img class="@cssClass" src="@src" alt="@alt">

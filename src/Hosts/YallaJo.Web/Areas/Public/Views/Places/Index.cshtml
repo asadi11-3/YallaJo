@@ -4,9 +4,6 @@
 @{
     ViewData["Title"] = Localizer["Public.Explore.Places"];
     Layout = "~/Views/Shared/_Layout.cshtml";
-
-    var rangeStart = Model.TotalCount == 0 ? 0 : ((Model.PageNumber - 1) * Model.PageSize) + 1;
-    var rangeEnd = Math.Min(Model.PageNumber * Model.PageSize, Model.TotalCount);
 }
 
 <!-- ======================= Page banner START -->
@@ -26,16 +23,31 @@
 <section class="pt-4">
     <div class="container">
 
-        <!-- Filter bar START -->
-        <form method="get" asp-area="Public" asp-controller="Places" asp-action="Index" class="card bg-light p-3 mb-4">
+        <!-- Filter bar START (real GET form per UI-UX-PE1; listing.js enhances it via data-yj-listing) -->
+        <form method="get" asp-area="Public" asp-controller="Places" asp-action="Index" class="card bg-light p-3 mb-4" data-yj-listing>
             <div class="row g-3 align-items-end">
+                @* Phase 8.4: datalist suggestions sourced from the current page's places.
+                   TODO(backend): no city/country lookup endpoint exists; once one does, replace
+                   these datalists with a proper autocomplete fed by that endpoint. *@
                 <div class="col-sm-6 col-lg-3">
                     <label for="city" class="form-label small mb-1">@Localizer["Public.City"]</label>
-                    <input type="text" id="city" name="city" value="@Model.Filters.City" class="form-control" placeholder="@Localizer["Public.e.g.Petra"]" />
+                    <input type="text" id="city" name="city" value="@Model.Filters.City" class="form-control" placeholder="@Localizer["Public.e.g.Petra"]" list="cityOptions" autocomplete="off" />
+                    <datalist id="cityOptions">
+                        @foreach (var c in Model.Places.Select(p => p.City).Where(c => !string.IsNullOrWhiteSpace(c)).Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(c => c, StringComparer.OrdinalIgnoreCase))
+                        {
+                            <option value="@c"></option>
+                        }
+                    </datalist>
                 </div>
                 <div class="col-sm-6 col-lg-3">
                     <label for="country" class="form-label small mb-1">@Localizer["Public.Country"]</label>
-                    <input type="text" id="country" name="country" value="@Model.Filters.Country" class="form-control" placeholder="@Localizer["Public.e.g.Jordan"]" />
+                    <input type="text" id="country" name="country" value="@Model.Filters.Country" class="form-control" placeholder="@Localizer["Public.e.g.Jordan"]" list="countryOptions" autocomplete="off" />
+                    <datalist id="countryOptions">
+                        @foreach (var c in Model.Places.Select(p => p.Country).Where(c => !string.IsNullOrWhiteSpace(c)).Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(c => c, StringComparer.OrdinalIgnoreCase))
+                        {
+                            <option value="@c"></option>
+                        }
+                    </datalist>
                 </div>
                 <div class="col-sm-6 col-lg-2">
                     <label for="ratingMin" class="form-label small mb-1">@Localizer["Public.Minimum.rating"]</label>
@@ -48,7 +60,8 @@
                     </select>
                 </div>
                 <div class="col-sm-6 col-lg-2">
-                    <div class="form-check mt-4">
+                    @* Phase 8.4: mb-2 aligns the checkbox with the inputs' baseline (row is align-items-end); old mt-4 hack removed. *@
+                    <div class="form-check mb-2">
                         <input type="checkbox" id="hasActiveTours" name="hasActiveTours" value="true" class="form-check-input" checked="@Model.Filters.HasActiveTours" />
                         <label for="hasActiveTours" class="form-check-label small">@Localizer["Public.Has.active.tours"]</label>
                     </div>
@@ -66,136 +79,15 @@
         </form>
         <!-- Filter bar END -->
 
-        <div class="row mb-4">
-            <div class="col-12">
-                <h5 class="mb-0">
-                    Showing @rangeStart-@rangeEnd of @Model.TotalCount place@(Model.TotalCount == 1 ? "" : "s")
-                </h5>
-            </div>
+        @* Phase 7: results fragment is shared with the AJAX partial response (WantsAjax) and swapped in place by listing.js. *@
+        <div id="listingResults" data-yj-component="listing" aria-live="polite" aria-busy="false"
+             data-error-text="@Localizer["Public.Results.Error"]" data-retry-text="@Localizer["Public.Retry"]" data-loading-text="@Localizer["Public.Loading"]">
+            <partial name="_PlacesResults" model="Model" />
         </div>
-
-        @if (!Model.HasResults)
-        {
-            <!-- Empty state (filter-aware) -->
-            <div class="row">
-                <div class="col-12 text-center py-5">
-                    <img src="~/assets/images/element/17.svg" class="h-100px mb-3" alt="@Localizer["Public.No.places"]">
-                    @if (Model.Filters.HasAnyFilter)
-                    {
-                        <h5 class="mb-1">@Localizer["Public.No.places.match.your.filters"]</h5>
-                        <p class="mb-2">@Localizer["Public.Try.removing.or.changing.a.filter"]</p>
-                        <a asp-area="Public" asp-controller="Places" asp-action="Index" class="btn btn-sm btn-outline-secondary">@Localizer["Public.Reset.filters"]</a>
-                    }
-                    else
-                    {
-                        <h5 class="mb-1">@Localizer["Public.No.places.found"]</h5>
-                        <p class="mb-0">@Localizer["Public.Check.back.soon"]</p>
-                    }
-                </div>
-            </div>
-        }
-        else
-        {
-            <div class="row g-4">
-                @foreach (var place in Model.Places)
-                {
-                    <!-- Card item START -->
-                    <div class="col-md-6 col-xl-4">
-                        <div class="card card-hover-shadow pb-0 h-100">
-                            <!-- Image + overlay -->
-                            <div class="position-relative">
-                                <img src="@place.ImageUrl" class="card-img-top" alt="@place.Name" style="height:220px;object-fit:cover;">
-                                <div class="card-img-overlay d-flex flex-column p-3 z-index-1">
-                                    <div>
-                                        @if (place.IsFeatured)
-                                        {
-                                            <span class="badge text-bg-dark">@Localizer["Public.Featured"]</span>
-                                        }
-                                        @if (place.IsVerified)
-                                        {
-                                            <span class="badge text-bg-success"><i class="bi bi-patch-check-fill me-1"></i>@Localizer["Public.Verified"]</span>
-                                        }
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Card body -->
-                            <div class="card-body px-3">
-                                <h5 class="card-title mb-1">
-                                    <a asp-area="Public" asp-controller="Places" asp-action="Details" asp-route-slug="@place.Slug" class="stretched-link">@place.Name</a>
-                                </h5>
-                                <ul class="nav nav-divider mb-0 small">
-                                    @if (!string.IsNullOrWhiteSpace(place.PlaceType))
-                                    {
-                                        <li class="nav-item"><span class="badge text-bg-light">@place.PlaceType</span></li>
-                                    }
-                                    @if (!string.IsNullOrWhiteSpace(place.LocationLabel))
-                                    {
-                                        <li class="nav-item"><i class="bi bi-geo-alt me-1"></i>@place.LocationLabel</li>
-                                    }
-                                </ul>
-                                <ul class="nav nav-divider mb-0 small mt-1">
-                                    <li class="nav-item">
-                                        <i class="bi bi-star-fill text-warning me-1"></i>@place.AverageRating.ToString("0.0")
-                                        <span class="text-body">(@place.ReviewCount)</span>
-                                    </li>
-                                </ul>
-                            </div>
-
-                            <!-- Card footer -->
-                            <div class="card-footer pt-0">
-                                <a asp-area="Public" asp-controller="Places" asp-action="Details" asp-route-slug="@place.Slug" class="btn btn-sm btn-primary mb-0">@Localizer["Public.View.Details"]</a>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Card item END -->
-                }
-            </div>
-
-            <!-- Pagination -->
-            @if (Model.TotalPages > 1)
-            {
-                <div class="row">
-                    <div class="col-12">
-                        <nav class="mt-4 d-flex justify-content-center" aria-label="@Localizer["Public.Places.pagination"]">
-                            <ul class="pagination pagination-primary-soft d-inline-block d-md-flex rounded mb-0">
-                                <li class="page-item mb-0 @(Model.HasPreviousPage ? "" : "disabled")">
-                                    <a class="page-link"
-                                       asp-area="Public" asp-controller="Places" asp-action="Index"
-                                       asp-route-page="@(Model.PageNumber - 1)"
-                                       asp-route-city="@Model.Filters.City"
-                                       asp-route-country="@Model.Filters.Country"
-                                       asp-route-ratingMin="@(Model.Filters.RatingMin is > 0 ? Model.Filters.RatingMin : null)"
-                                       asp-route-hasActiveTours="@(Model.Filters.HasActiveTours ? "true" : null)"
-                                       tabindex="-1"><i class="fa-solid fa-angle-left"></i></a>
-                                </li>
-                                @for (var p = 1; p <= Model.TotalPages; p++)
-                                {
-                                    <li class="page-item mb-0 @(p == Model.PageNumber ? "active" : "")">
-                                        <a class="page-link"
-                                           asp-area="Public" asp-controller="Places" asp-action="Index"
-                                           asp-route-page="@p"
-                                           asp-route-city="@Model.Filters.City"
-                                           asp-route-country="@Model.Filters.Country"
-                                           asp-route-ratingMin="@(Model.Filters.RatingMin is > 0 ? Model.Filters.RatingMin : null)"
-                                           asp-route-hasActiveTours="@(Model.Filters.HasActiveTours ? "true" : null)">@p</a>
-                                    </li>
-                                }
-                                <li class="page-item mb-0 @(Model.HasNextPage ? "" : "disabled")">
-                                    <a class="page-link"
-                                       asp-area="Public" asp-controller="Places" asp-action="Index"
-                                       asp-route-page="@(Model.PageNumber + 1)"
-                                       asp-route-city="@Model.Filters.City"
-                                       asp-route-country="@Model.Filters.Country"
-                                       asp-route-ratingMin="@(Model.Filters.RatingMin is > 0 ? Model.Filters.RatingMin : null)"
-                                       asp-route-hasActiveTours="@(Model.Filters.HasActiveTours ? "true" : null)"><i class="fa-solid fa-angle-right"></i></a>
-                                </li>
-                            </ul>
-                        </nav>
-                    </div>
-                </div>
-            }
-        }
     </div>
 </section>
 <!-- ======================= Places grid END -->
+
+@section Scripts {
+    <script src="~/assets/js/listing.js" asp-append-version="true"></script>
+}

@@ -1,0 +1,58 @@
+@model YallaJo.Web.Areas.Public.Models.Agencies.AgenciesGridVm
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
+@*
+    Phase 7: results fragment for the agencies listing.
+    Rendered inside Agencies/Index.cshtml on full page loads and returned
+    standalone for AJAX requests (WantsAjax); swapped client-side by listing.js.
+*@
+@if (Model.HasResults)
+{
+    <div class="row g-3 g-md-4">
+        @foreach (var agency in Model.Agencies)
+        {
+            <div class="col-sm-6 col-xl-4">
+                <div class="card border h-100 card-hover-shadow position-relative">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="bg-light rounded-circle d-flex align-items-center justify-content-center flex-shrink-0 avatar-56">
+                                <i class="bi bi-building fs-4 text-primary" aria-hidden="true"></i>
+                            </div>
+                            <h2 class="h6 mb-0 ms-3">
+                                <a class="stretched-link text-reset" asp-area="Public" asp-controller="Agencies" asp-action="Detail" asp-route-agencyUserId="@agency.UserId">@agency.BusinessName</a>
+                            </h2>
+                        </div>
+                        @if (!string.IsNullOrWhiteSpace(agency.Description))
+                        {
+                            <p class="text-secondary small mb-0 text-truncate-3">@agency.Description</p>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    @if (Model.HasPreviousPage || Model.HasNextPage)
+    {
+        <nav aria-label="@Localizer["Public.Agencies.pagination"]" class="mt-4">
+            <ul class="pagination justify-content-center mb-0">
+                <li class="page-item @(Model.HasPreviousPage ? "" : "disabled")">
+                    <a class="page-link" asp-area="Public" asp-controller="Agencies" asp-action="Index" asp-route-page="@(Model.PageNumber - 1)">@Localizer["Public.Previous"]</a>
+                </li>
+                <li class="page-item active" aria-current="page"><span class="page-link">@Model.PageNumber</span></li>
+                <li class="page-item @(Model.HasNextPage ? "" : "disabled")">
+                    <a class="page-link" asp-area="Public" asp-controller="Agencies" asp-action="Index" asp-route-page="@(Model.PageNumber + 1)">@Localizer["Public.Next"]</a>
+                </li>
+            </ul>
+        </nav>
+    }
+}
+else
+{
+    <div class="text-center py-5">
+        <i class="bi bi-building display-4 text-secondary" aria-hidden="true"></i>
+        <h2 class="h5 mt-3">@Localizer["Public.No.agencies.yet"]</h2>
+        <p class="text-secondary">@Localizer["Public.Check.back.soon.for.verified.travel.agencies"]</p>
+        <a class="btn btn-primary" asp-area="Public" asp-controller="Tours" asp-action="Index">@Localizer["Public.Browse.all.tours"]</a>
+    </div>
+}

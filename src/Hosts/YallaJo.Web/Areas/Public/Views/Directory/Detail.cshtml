@@ -96,7 +96,7 @@
             <div class="row g-2">
                 <div class="col-lg-8">
                     <a href="@Model.ImageUrls[0]" class="glightbox" data-gallery="business-gallery">
-                        <img src="@Model.ImageUrls[0]" class="rounded-3 w-100" style="height:380px;object-fit:cover;" alt="@Model.Name">
+                        <img src="@Model.ImageUrls[0]" class="rounded-3 w-100 hero-img-h380 object-cover" alt="@Model.Name" fetchpriority="high">
                     </a>
                 </div>
                 <div class="col-lg-4">
@@ -105,7 +105,7 @@
                         {
                             <div class="col-6">
                                 <a href="@img" class="glightbox" data-gallery="business-gallery">
-                                    <img src="@img" class="rounded-3 w-100" style="height:185px;object-fit:cover;" alt="@Model.Name">
+                                    <img src="@img" class="rounded-3 w-100 thumb-h185 object-cover" alt="@Model.Name" loading="lazy">
                                 </a>
                             </div>
                         }
@@ -115,7 +115,7 @@
         }
         else
         {
-            <div class="rounded-3 bg-light d-flex align-items-center justify-content-center" style="height:320px;">
+            <div class="rounded-3 bg-light d-flex align-items-center justify-content-center hero-img-h320">
                 <i class="@TypeIcon(Model.BusinessType) display-3 text-secondary"></i>
             </div>
         }
@@ -135,7 +135,7 @@
                     <div class="card-body">
                         @if (!string.IsNullOrWhiteSpace(Model.Description))
                         {
-                            <p class="mb-0" style="white-space:pre-line;">@Model.Description</p>
+                            <p class="mb-0 preserve-whitespace">@Model.Description</p>
                         }
                         else
                         {
@@ -293,23 +293,36 @@
 
                 @if (Model.Hours.Any())
                 {
-                    <div class="card border mb-4">
-                        <div class="card-header border-bottom">
+                    @* Phase 8.5: current-day highlight + open-now badge computed client-side in directory-detail.js
+                       (client local time approximates business time; acceptable until backend exposes a timezone). *@
+                    <div class="card border mb-4" data-yj-component="business-hours"
+                         data-open-label="@Localizer["Public.OpenNow"]"
+                         data-closed-label="@Localizer["Public.ClosedNow"]">
+                        <div class="card-header border-bottom d-flex align-items-center justify-content-between">
                             <h5 class="card-header-title mb-0">@Localizer["Public.Opening.hours"]</h5>
+                            <span class="badge d-none ms-2" data-yj-open-badge aria-live="polite"></span>
                         </div>
                         <div class="card-body">
                             <ul class="list-group list-group-borderless mb-0">
                                 @foreach (var h in Model.Hours)
                                 {
-                                    <li class="list-group-item d-flex justify-content-between px-0">
-                                        <span class="fw-semibold">@h.DayOfWeek</span>
+                                    @* Day names arrive as English strings from the API; localize via the current UI culture. *@
+                                    var dayLabel = Enum.TryParse<DayOfWeek>(h.DayOfWeek, true, out var dow)
+                                        ? System.Globalization.CultureInfo.CurrentUICulture.DateTimeFormat.GetDayName(dow)
+                                        : h.DayOfWeek;
+                                    <li class="list-group-item d-flex justify-content-between px-0"
+                                        data-yj-day="@h.DayOfWeek"
+                                        data-yj-closed="@(h.IsClosed ? "true" : "false")"
+                                        data-yj-open="@h.OpenTime"
+                                        data-yj-close="@h.CloseTime">
+                                        <span class="fw-semibold">@dayLabel</span>
                                         @if (h.IsClosed)
                                         {
                                             <span class="text-danger">@Localizer["Public.Closed"]</span>
                                         }
                                         else
                                         {
-                                            <span class="text-muted">@h.OpenTime - @h.CloseTime</span>
+                                            <span class="text-muted" dir="ltr">@h.OpenTime - @h.CloseTime</span>
                                         }
                                     </li>
                                 }
@@ -324,13 +337,13 @@
                         @if (isAuthed)
                         {
                             <button type="button" class="btn btn-outline-primary w-100 js-favorite" data-entity-type="Business" data-entity-id="@Model.Id">
-                                <i class="bi bi-heart me-1"></i>Add to wishlist
+                                <i class="bi bi-heart me-1"></i>@Localizer["Public.Save.to.wishlist"]
                             </button>
                         }
                         else
                         {
                             <a asp-area="Auth" asp-controller="Auth" asp-action="SignIn" class="btn btn-outline-primary w-100">
-                                <i class="bi bi-box-arrow-in-right me-1"></i>Sign in to save
+                                <i class="bi bi-box-arrow-in-right me-1"></i>@Localizer["Public.Log.in.to.save"]
                             </a>
                         }
                     </div>
@@ -384,10 +397,11 @@
             <div class="container">
                 <div class="row g-4">
                     <div class="col-lg-7">
-                        <form method="post" asp-area="Public" asp-controller="Directory" asp-action="CreateReview" asp-route-id="@Model.Id" class="card border p-3 mb-3 mb-lg-0">
+                        <form method="post" asp-area="Public" asp-controller="Reviews" asp-action="CreateReview" asp-route-targetType="business" asp-route-targetId="@Model.Id" class="card border p-3 mb-3 mb-lg-0" data-loading data-success-message="@Localizer["Public.Review.Created"]">
                             @Html.AntiForgeryToken()
                             <h3 class="h6 mb-3">@Localizer["Public.Write.a.review"]</h3>
                             <input type="hidden" name="Review.TargetId" value="@Model.Id" />
+                                <input type="hidden" name="returnUrl" value="@(Context.Request.PathBase + Context.Request.Path + Context.Request.QueryString)" />
                             <div class="mb-2">
                                 <label class="form-label" for="directoryReviewRating">@Localizer["Public.Rating"]</label>
                                 <select class="form-select" id="directoryReviewRating" name="Review.Rating">
@@ -414,10 +428,11 @@
                         </form>
                     </div>
                     <div class="col-lg-5">
-                        <form method="post" asp-area="Public" asp-controller="Directory" asp-action="Report" asp-route-id="@Model.Id" class="card border p-3">
+                        <form method="post" asp-area="Public" asp-controller="Reviews" asp-action="ReportEntity" asp-route-targetType="business" asp-route-targetId="@Model.Id" class="card border p-3" data-loading data-success-message="@Localizer["Public.Review.Reported"]">
                             @Html.AntiForgeryToken()
                             <h3 class="h6 mb-3">@Localizer["Public.Report.this.business"]</h3>
                             <input type="hidden" name="Report.EntityId" value="@Model.Id" />
+                                <input type="hidden" name="returnUrl" value="@(Context.Request.PathBase + Context.Request.Path + Context.Request.QueryString)" />
                             <div class="mb-2">
                                 <label class="form-label" for="directoryReportReason">@Localizer["Public.Reason"]</label>
                                 <select class="form-select" id="directoryReportReason" name="Report.Reason">
@@ -444,4 +459,5 @@
 
 @section Scripts {
     <script src="~/assets/js/directory-detail.js" asp-append-version="true"></script>
+    <script src="~/assets/js/reviews.js" asp-append-version="true"></script>
 }

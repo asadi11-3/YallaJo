@@ -30,11 +30,11 @@
         <div class="d-sm-flex align-items-center">
             @if (Model.HasAvatar)
             {
-                <img src="@Model.AvatarUrl" alt="@Model.DisplayName" class="rounded-circle flex-shrink-0" width="96" height="96" style="object-fit:cover;">
+                <img src="@Model.AvatarUrl" alt="@Model.DisplayName" class="rounded-circle flex-shrink-0 object-cover" width="96" height="96">
             }
             else
             {
-                <span class="d-inline-flex align-items-center justify-content-center bg-light rounded-circle flex-shrink-0" style="width:96px;height:96px;"><i class="bi bi-person-circle display-5 text-secondary" aria-hidden="true"></i></span>
+                <span class="d-inline-flex align-items-center justify-content-center bg-light rounded-circle flex-shrink-0 avatar-96"><i class="bi bi-person-circle display-5 text-secondary" aria-hidden="true"></i></span>
             }
             <div class="ms-sm-3 mt-3 mt-sm-0 flex-grow-1">
                 <h1 class="h3 mb-1">@Model.DisplayName</h1>
@@ -49,21 +49,21 @@
                 {
                     <a class="btn btn-sm btn-outline-primary" asp-area="Auth" asp-controller="Auth" asp-action="SignIn" asp-route-returnUrl="@returnUrl"><i class="bi bi-person-plus me-1" aria-hidden="true"></i>@Localizer["Public.Sign.in.to.follow"]</a>
                 }
-                else if (Model.IsFollowing)
-                {
-                    <form method="post" asp-area="Public" asp-controller="Blog" asp-action="UnfollowCreator" asp-route-profileId="@Model.Id">
-                        @Html.AntiForgeryToken()
-                        <input type="hidden" name="creatorSlug" value="@Model.Slug" />
-                        <button type="submit" class="btn btn-sm btn-outline-primary"><i class="bi bi-person-dash me-1" aria-hidden="true"></i>@Localizer["Public.Unfollow"]</button>
-                    </form>
-                }
                 else
                 {
-                    <form method="post" asp-area="Public" asp-controller="Blog" asp-action="FollowCreator" asp-route-profileId="@Model.Id">
-                        @Html.AntiForgeryToken()
-                        <input type="hidden" name="creatorSlug" value="@Model.Slug" />
-                        <button type="submit" class="btn btn-sm btn-primary"><i class="bi bi-person-plus me-1" aria-hidden="true"></i>@Localizer["Public.Follow"]</button>
-                    </form>
+                    @* Phase 5.4: both forms rendered, one hidden — blog-creator.js toggles them optimistically (NF6); without JS the visible form posts natively (PE1). *@
+                    <div id="creatorFollow" data-yj-component="creator-follow">
+                        <form method="post" class="js-follow-form @(Model.IsFollowing ? "" : "d-none")" data-following="true" asp-area="Public" asp-controller="Blog" asp-action="UnfollowCreator" asp-route-profileId="@Model.Id">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="creatorSlug" value="@Model.Slug" />
+                            <button type="submit" class="btn btn-sm btn-outline-primary"><i class="bi bi-person-dash me-1" aria-hidden="true"></i>@Localizer["Public.Unfollow"]</button>
+                        </form>
+                        <form method="post" class="js-follow-form @(Model.IsFollowing ? "d-none" : "")" data-following="false" asp-area="Public" asp-controller="Blog" asp-action="FollowCreator" asp-route-profileId="@Model.Id">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="creatorSlug" value="@Model.Slug" />
+                            <button type="submit" class="btn btn-sm btn-primary"><i class="bi bi-person-plus me-1" aria-hidden="true"></i>@Localizer["Public.Follow"]</button>
+                        </form>
+                    </div>
                 }
             </div>
         </div>
@@ -78,7 +78,7 @@
                 {
                     <div class="card border">
                         <div class="card-header"><h2 class="h6 mb-0">@Localizer["Public.About"]</h2></div>
-                        <div class="card-body"><p class="mb-0" style="white-space:pre-line;">@Model.Bio</p></div>
+                        <div class="card-body"><p class="mb-0 preserve-whitespace">@Model.Bio</p></div>
                     </div>
                 }
             </div>

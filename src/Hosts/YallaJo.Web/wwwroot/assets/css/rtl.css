@@ -175,3 +175,46 @@
 [dir="rtl"] [dir="ltr"] {
     text-align: left;
 }
+
+/* ============================================================
+   7. Header / navbar dropdowns (moved from _Layout inline styles)
+      The profile menu uses data-bs-display="static", so Bootstrap
+      keeps .dropdown-menu-end anchored right:0 in RTL and the menu
+      opens off-screen; re-anchor it to the left edge instead.
+   ============================================================ */
+
+[dir="rtl"] .navbar .dropdown-menu-end {
+    right: auto !important;
+    left: 0 !important;
+}
+
+[dir="rtl"] .navbar .dropdown-menu,
+[dir="rtl"] .navbar .dropdown-item,
+[dir="rtl"] .navbar .card-header,
+[dir="rtl"] .navbar .list-group-item {
+    text-align: right;
+}
+
+[dir="rtl"] .navbar .dropdown-menu .avatar.me-3 {
+    margin-right: 0 !important;
+    margin-left: 1rem !important;
+}
+
+[dir="rtl"] .notif-badge {
+    right: auto;
+    left: 0.5rem;
+}
+
+/* ------------------------------------------------------------------
+   8. Bootstrap-icons directional flips (Phase 9, UI-RTL-RTL2).
+      Font Awesome arrows/angles are flipped in an earlier section;
+      these cover the bi-* arrows/chevrons used for "see all" links,
+      back buttons and pagination affordances.
+   ------------------------------------------------------------------ */
+[dir="rtl"] .bi-arrow-left,
+[dir="rtl"] .bi-arrow-right,
+[dir="rtl"] .bi-chevron-left,
+[dir="rtl"] .bi-chevron-right {
+    display: inline-block;
+    transform: scaleX(-1);
+}

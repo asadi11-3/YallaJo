@@ -1,0 +1,132 @@
+@model YallaJo.Web.Areas.Public.Models.Places.PlacesGridVm
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
+@*
+    Phase 7: results fragment for the places listing.
+    Rendered inside Places/Index.cshtml on full page loads and returned
+    standalone for AJAX requests (WantsAjax); swapped client-side by listing.js.
+*@
+@{
+    var rangeStart = Model.TotalCount == 0 ? 0 : ((Model.PageNumber - 1) * Model.PageSize) + 1;
+    var rangeEnd = Math.Min(Model.PageNumber * Model.PageSize, Model.TotalCount);
+
+    // Phase 8.4: rebuilds the current URL without the given filter param (and without page) for removal chips.
+    string RemoveParamUrl(string param)
+    {
+        var query = Context.Request.Query
+            .Where(kv => !string.Equals(kv.Key, param, StringComparison.OrdinalIgnoreCase)
+                      && !string.Equals(kv.Key, "page", StringComparison.OrdinalIgnoreCase))
+            .SelectMany(kv => kv.Value, (kv, v) => $"{Uri.EscapeDataString(kv.Key)}={Uri.EscapeDataString(v ?? string.Empty)}")
+            .ToList();
+        var path = Context.Request.PathBase + Context.Request.Path;
+        return query.Count > 0 ? $"{path}?{string.Join("&", query)}" : path.ToString();
+    }
+
+    var chips = new List<(string Label, string Param)>();
+    if (!string.IsNullOrWhiteSpace(Model.Filters.City)) { chips.Add(($"{Localizer["Public.City"]}: {Model.Filters.City}", "city")); }
+    if (!string.IsNullOrWhiteSpace(Model.Filters.Country)) { chips.Add(($"{Localizer["Public.Country"]}: {Model.Filters.Country}", "country")); }
+    if (Model.Filters.EffectiveRatingMin is int rm) { chips.Add((Localizer["Public.StarsPlus", rm].Value, "ratingMin")); }
+    if (Model.Filters.HasActiveTours) { chips.Add((Localizer["Public.Has.active.tours"].Value, "hasActiveTours")); }
+}
+<div class="row mb-4">
+    <div class="col-12">
+        <h5 class="mb-0">@Localizer["Public.ShowingPlaces", rangeStart, rangeEnd, Model.TotalCount]</h5>
+        @if (chips.Count > 0)
+        {
+            @* Phase 8.4: active-filter chips (same pattern as _TourResults); links stay same-pathname so listing.js AJAX-swaps them. *@
+            <div class="d-flex flex-wrap align-items-center gap-2 mt-2">
+                @foreach (var chip in chips)
+                {
+                    <a href="@RemoveParamUrl(chip.Param)" class="badge text-bg-light border text-decoration-none js-filter-chip"
+                       aria-label="@Localizer["Public.RemoveFilter", chip.Label]">
+                        @chip.Label <i class="bi bi-x-lg ms-1" aria-hidden="true"></i>
+                    </a>
+                }
+                <a asp-area="Public" asp-controller="Places" asp-action="Index" class="btn btn-sm btn-link p-0">@Localizer["Public.Filter.ClearAll"]</a>
+            </div>
+        }
+    </div>
+</div>
+
+@if (!Model.HasResults)
+{
+    <!-- Empty state (filter-aware) -->
+    <div class="row">
+        <div class="col-12 text-center py-5">
+            <img src="~/assets/images/element/17.svg" class="h-100px mb-3" alt="@Localizer["Public.No.places"]">
+            @if (Model.Filters.HasAnyFilter)
+            {
+                <h5 class="mb-1">@Localizer["Public.No.places.match.your.filters"]</h5>
+                <p class="mb-2">@Localizer["Public.Try.removing.or.changing.a.filter"]</p>
+                <a asp-area="Public" asp-controller="Places" asp-action="Index" class="btn btn-sm btn-outline-secondary">@Localizer["Public.Reset.filters"]</a>
+            }
+            else
+            {
+                <h5 class="mb-1">@Localizer["Public.No.places.found"]</h5>
+                <p class="mb-0">@Localizer["Public.Check.back.soon"]</p>
+            }
+        </div>
+    </div>
+}
+else
+{
+    <div class="row g-4">
+        @foreach (var place in Model.Places)
+        {
+            <!-- Card item START -->
+            <div class="col-md-6 col-xl-4">
+                <div class="card card-hover-shadow pb-0 h-100">
+                    <!-- Image + overlay -->
+                    <div class="position-relative">
+                        <img src="@place.ImageUrl" class="card-img-top card-img-h220 object-cover" alt="@place.Name" loading="lazy">
+                        <div class="card-img-overlay d-flex flex-column p-3 z-index-1">
+                            <div>
+                                @if (place.IsFeatured)
+                                {
+                                    <span class="badge text-bg-dark">@Localizer["Public.Featured"]</span>
+                                }
+                                @if (place.IsVerified)
+                                {
+                                    <span class="badge text-bg-success"><i class="bi bi-patch-check-fill me-1"></i>@Localizer["Public.Verified"]</span>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card body -->
+                    <div class="card-body px-3">
+                        <h5 class="card-title mb-1">
+                            <a asp-area="Public" asp-controller="Places" asp-action="Details" asp-route-slug="@place.Slug" class="stretched-link">@place.Name</a>
+                        </h5>
+                        <ul class="nav nav-divider mb-0 small">
+                            @if (!string.IsNullOrWhiteSpace(place.PlaceType))
+                            {
+                                <li class="nav-item"><span class="badge text-bg-light">@place.PlaceType</span></li>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(place.LocationLabel))
+                            {
+                                <li class="nav-item"><i class="bi bi-geo-alt me-1"></i>@place.LocationLabel</li>
+                            }
+                        </ul>
+                        <ul class="nav nav-divider mb-0 small mt-1">
+                            <li class="nav-item">
+                                <i class="bi bi-star-fill text-warning me-1"></i>@place.AverageRating.ToString("0.0")
+                                <span class="text-body">(@place.ReviewCount)</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Card footer -->
+                    <div class="card-footer pt-0">
+                        <a asp-area="Public" asp-controller="Places" asp-action="Details" asp-route-slug="@place.Slug" class="btn btn-sm btn-primary mb-0">@Localizer["Public.View.Details"]</a>
+                    </div>
+                </div>
+            </div>
+            <!-- Card item END -->
+        }
+    </div>
+
+    <!-- Pagination (shared partial preserves query string, swaps page) -->
+    <partial name="_Pagination"
+             model='new YallaJo.Web.Areas.Public.Models.Shared.PaginationVm { PageNumber = Model.PageNumber, TotalPages = Model.TotalPages, AriaLabel = Localizer["Public.Places.pagination"] }' />
+}

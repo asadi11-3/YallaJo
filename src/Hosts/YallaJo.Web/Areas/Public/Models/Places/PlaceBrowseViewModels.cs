@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using YallaJo.Web.Areas.Public.Models.Directory;
-using YallaJo.Web.Areas.Public.Models.Tours;
+using YallaJo.Web.Areas.Public.Models.Shared;
 using YallaJo.Web.Infrastructure.Seo;
 
 namespace YallaJo.Web.Areas.Public.Models.Places;

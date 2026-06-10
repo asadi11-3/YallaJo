@@ -1,41 +1,8 @@
-using YallaJo.Web.Areas.Public.Models.Home;
-
 namespace YallaJo.Web.Areas.Public.Models.Search;
 
-/// <summary>
-/// Top-level view model for the §2.2 Search results page (route <c>/search</c>).
-/// Holds the echoed filters + a paginated list of result cards. Result cards reuse
-/// <see cref="HomeTourCardVm"/> since the card is shape-generic; future Place/Business
-/// tabs can add their own collections without breaking this contract.
-/// </summary>
-public sealed class SearchVm
-{
-    public string? Query { get; init; }
-
-    // ── Filters echoed from the Home "Check Availability" form ─────────────────
-    // PlaceId is the only filter currently honored by the backend search endpoint
-    // (SearchToursRequest.PlaceId). From/To/Participants are kept on the VM so the
-    // URL stays sticky across pagination and the chips can be rendered; once the
-    // backend gains an availability window we'll plumb them through to the API.
-    public Guid? PlaceId { get; init; }
-    public DateOnly? From { get; init; }
-    public DateOnly? To { get; init; }
-    public int? Participants { get; init; }
-
-    public IReadOnlyList<HomeTourCardVm> Items { get; init; } = [];
-    public int PageNumber { get; init; } = 1;
-    public int PageSize { get; init; } = 20;
-    public int TotalCount { get; init; }
-    public bool HasPreviousPage { get; init; }
-    public bool HasNextPage { get; init; }
-    public bool HasResults => Items.Count > 0;
-    public bool HasQuery => !string.IsNullOrWhiteSpace(Query);
-    public bool HasFilters =>
-        (PlaceId is { } pid && pid != Guid.Empty)
-        || From is not null
-        || To is not null
-        || (Participants is { } p && p > 1);
-}
+// Phase 4.1 note: SearchVm (the /search SSR page model) was deleted along with the
+// page — /tours (TourGridVm) is the canonical search surface now. The VMs below back
+// the JSON gateway endpoints (search/businesses, search/nearby, search/map).
 
 public sealed class SearchBusinessRailVm
 {

@@ -1,0 +1,66 @@
+﻿@model YallaJo.Web.Areas.Public.Models.Directory.BusinessCardVm
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
+@*
+    Canonical business card (master plan §3.1). Used by Home rail and Directory index.
+    ViewData knobs:
+      - "isAuthed" (bool)   enables the wishlist toggle
+      - "colClass" (string) grid column classes, default "col-md-6 col-xl-4"
+*@
+@{
+    var isAuthed = ViewData["isAuthed"] as bool? ?? false;
+    var colClass = ViewData["colClass"] as string ?? "col-md-6 col-xl-4";
+}
+<div class="@colClass">
+    <div class="card card-hover-shadow h-100">
+        <div class="position-relative">
+            @if (!string.IsNullOrWhiteSpace(Model.ImageUrl))
+            {
+                <img src="@Model.ImageUrl" class="card-img-top object-cover card-img-h220" alt="@Model.Name" loading="lazy" />
+            }
+            else
+            {
+                <div class="card-img-top card-img-h220 bg-light d-flex align-items-center justify-content-center" aria-hidden="true">
+                    <i class="bi bi-shop display-5 text-secondary"></i>
+                </div>
+            }
+            @if (Model.IsFeatured)
+            {
+                <div class="position-absolute top-0 start-0 p-3 z-index-1">
+                    <span class="badge text-bg-dark">@Localizer["Public.Featured"]</span>
+                </div>
+            }
+            <div class="position-absolute top-0 end-0 p-3 z-index-2">
+                <partial name="_WishlistButton" model="@(new YallaJo.Web.Areas.Public.Models.Shared.WishlistButtonVm
+                         {
+                             EntityType = "Business",
+                             EntityId = Model.Id,
+                             IsAuthenticated = isAuthed,
+                             ExtraClass = "shadow-sm"
+                         })" />
+            </div>
+        </div>
+        <div class="card-body d-flex flex-column">
+            <h5 class="card-title h6 mb-1">
+                <a class="stretched-link text-reset"
+                   asp-area="Public" asp-controller="Directory" asp-action="Detail" asp-route-id="@Model.Id">@Model.Name</a>
+                @if (Model.IsVerified)
+                {
+                    <i class="bi bi-patch-check-fill text-primary ms-1" aria-hidden="true" title="@Localizer["Public.Verified"]"></i>
+                }
+            </h5>
+            @if (!string.IsNullOrWhiteSpace(Model.BusinessType))
+            {
+                <small class="text-body-secondary mb-1">@Model.BusinessType</small>
+            }
+            @if (!string.IsNullOrWhiteSpace(Model.Location))
+            {
+                <small class="text-body-secondary mb-2"><i class="bi bi-geo-alt me-1" aria-hidden="true"></i>@Model.Location</small>
+            }
+            <div class="mt-auto small">
+                <i class="bi bi-star-fill text-warning me-1" aria-hidden="true"></i>@Model.AverageRating.ToString("0.0")
+                <span class="text-body-secondary">(@Model.ReviewCount)</span>
+            </div>
+        </div>
+    </div>
+</div>

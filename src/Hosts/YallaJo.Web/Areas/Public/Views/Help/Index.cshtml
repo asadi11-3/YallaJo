@@ -1,6 +1,8 @@
 @model YallaJo.Web.Areas.Public.Models.Help.HelpVm
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
-    ViewData["Title"] = "Help Center";
+    ViewData["Title"] = Localizer["Help.Title"].Value;
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
@@ -9,13 +11,13 @@
         <!-- Hero / search -->
         <div class="card bg-primary text-center overflow-hidden p-4 p-sm-5 mb-4 mb-lg-5">
             <div class="card-body position-relative">
-                <h1 class="text-white mb-3">How can we help you?</h1>
-                <p class="text-white text-opacity-75 mb-4">Search our help center or browse the frequently asked questions below.</p>
+                <h1 class="text-white mb-3">@Localizer["Help.HeroTitle"]</h1>
+                <p class="text-white text-opacity-75 mb-4">@Localizer["Help.HeroSubtitle"]</p>
                 <div class="row justify-content-center">
                     <div class="col-lg-8 col-xl-6">
                         <div class="input-group">
                             <input id="faqSearch" type="search" class="form-control form-control-lg border-0"
-                                   placeholder="Search the help center..." autocomplete="off" aria-label="Search help">
+                                   placeholder="@Localizer["Help.SearchPlaceholder"]" autocomplete="off" aria-label="@Localizer["Help.SearchAria"]">
                             <span class="input-group-text bg-white border-0"><i class="bi bi-search"></i></span>
                         </div>
                     </div>
@@ -26,7 +28,7 @@
         <div class="row g-4 g-lg-5">
             <!-- FAQ list -->
             <div class="col-lg-8">
-                <h2 class="mb-4">Frequently asked questions</h2>
+                <h2 class="mb-4">@Localizer["Help.Faq.Title"]</h2>
 
                 @if (Model.HasFaqs)
                 {
@@ -35,7 +37,8 @@
                         {
                             var collapseId = $"c-{faq.Id:N}";
                             var headingId = $"h-{faq.Id:N}";
-                            <div class="accordion-item mb-3 js-faq-item"
+                            @* Phase 6: stable per-FAQ anchor — /help/{id} now 301s to /help#faq-{id} *@
+                            <div class="accordion-item mb-3 js-faq-item" id="faq-@faq.Id.ToString("N")"
                                  data-faq="@(((faq.Question ?? "") + " " + (faq.Answer ?? "")).ToLowerInvariant())">
                                 <h6 class="accordion-header" id="@headingId">
                                     <button class="accordion-button collapsed" type="button"
@@ -47,26 +50,22 @@
                                 <div id="@collapseId" class="accordion-collapse collapse"
                                      aria-labelledby="@headingId" data-bs-parent="#helpAccordion">
                                     <div class="accordion-body">
-                                        <p class="mb-3" style="white-space: pre-line;">@faq.Answer</p>
-                                        <a class="btn btn-sm btn-primary-soft mb-0"
-                                           asp-area="Public" asp-controller="Help" asp-action="Detail" asp-route-id="@faq.Id">
-                                            Read full article
-                                        </a>
+                                        <p class="mb-0 preserve-whitespace">@faq.Answer</p>
                                     </div>
                                 </div>
                             </div>
                         }
                     </div>
                     <div id="faqNoResults" class="text-center py-4 d-none">
-                        <p class="text-muted mb-0">No articles match your search. Try a different keyword.</p>
+                        <p class="text-muted mb-0">@Localizer["Help.Faq.NoMatch"]</p>
                     </div>
                 }
                 else
                 {
                     <div class="text-center py-5">
-                        <img src="~/assets/images/element/17.svg" class="h-100px mb-3" alt="No articles">
-                        <h5 class="mb-1">No help articles yet</h5>
-                        <p class="text-muted mb-0">Our help center is being put together. Please check back soon.</p>
+                        <img src="~/assets/images/element/17.svg" class="h-100px mb-3" alt="@Localizer["Help.NoArticlesAlt"]">
+                        <h5 class="mb-1">@Localizer["Help.Empty.Title"]</h5>
+                        <p class="text-muted mb-0">@Localizer["Help.Empty.Text"]</p>
                     </div>
                 }
             </div>
@@ -79,13 +78,13 @@
                             <div class="d-flex align-items-center mb-2">
                                 <span class="display-6 text-primary me-3"><i class="bi bi-headset"></i></span>
                                 <div>
-                                    <h5 class="mb-0">Still need help?</h5>
-                                    <p class="small mb-0 text-muted">Reach our support team directly.</p>
+                                    <h5 class="mb-0">@Localizer["Help.StillNeedHelp"]</h5>
+                                    <p class="small mb-0 text-muted">@Localizer["Help.ReachSupport"]</p>
                                 </div>
                             </div>
                             <a class="btn btn-primary w-100 mb-0"
                                asp-area="Public" asp-controller="Contact" asp-action="Index">
-                                Contact us
+                                @Localizer["Navbar.Contact"]
                             </a>
                         </div>
                         <hr class="my-0">
@@ -93,13 +92,13 @@
                             <div class="d-flex align-items-center mb-2">
                                 <span class="display-6 text-primary me-3"><i class="bi bi-ticket-detailed"></i></span>
                                 <div>
-                                    <h5 class="mb-0">Submit a ticket</h5>
-                                    <p class="small mb-0 text-muted">Open a support request and track it.</p>
+                                    <h5 class="mb-0">@Localizer["Help.SubmitTicket"]</h5>
+                                    <p class="small mb-0 text-muted">@Localizer["Help.SubmitTicketText"]</p>
                                 </div>
                             </div>
                             <a class="btn btn-primary-soft w-100 mb-0"
                                asp-area="Public" asp-controller="Contact" asp-action="Index">
-                                Submit a ticket
+                                @Localizer["Help.SubmitTicket"]
                             </a>
                         </div>
                     </div>

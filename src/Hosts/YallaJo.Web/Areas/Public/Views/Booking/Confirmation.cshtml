@@ -1,6 +1,8 @@
 @model YallaJo.Web.Areas.Public.Models.Booking.BookingConfirmVm
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<YallaJo.Web.Resources.SharedResource> Localizer
 @{
-    ViewData["Title"] = "Booking confirmation";
+    ViewData["Title"] = Localizer["Public.Booking.Confirmation.Title"].Value;
     Layout = "~/Views/Shared/_Layout.cshtml";
     string Money(decimal amount, string? currency) =>
         string.IsNullOrWhiteSpace(currency) ? amount.ToString("N0") : $"{amount:N0} {currency}";
@@ -11,22 +13,35 @@
         <div class="row justify-content-center">
             <div class="col-lg-9 col-xl-8">
 
-                <div class="text-center mb-4">
+                @* Phase 8.2: localized header with status icon aria-label + copyable reference (role=status announces outcome). *@
+                <div class="text-center mb-4" role="status">
                     @if (Model.IsCancelled)
                     {
-                        <div class="icon-lg rounded-circle bg-danger bg-opacity-10 text-danger d-inline-flex align-items-center justify-content-center mb-3" style="width:64px;height:64px;">
-                            <i class="bi bi-x-lg fs-3"></i>
+                        <div class="icon-lg rounded-circle bg-danger bg-opacity-10 text-danger d-inline-flex align-items-center justify-content-center mb-3 avatar-64" role="img" aria-label="@Localizer["Public.Booking.Cancelled"]">
+                            <i class="bi bi-x-lg fs-3" aria-hidden="true"></i>
                         </div>
-                        <h1 class="h3 mb-1">Booking cancelled</h1>
+                        <h1 class="h3 mb-1">@Localizer["Public.Booking.Cancelled"]</h1>
                     }
                     else
                     {
-                        <div class="icon-lg rounded-circle bg-success bg-opacity-10 text-success d-inline-flex align-items-center justify-content-center mb-3" style="width:64px;height:64px;">
-                            <i class="bi bi-check-lg fs-3"></i>
+                        <div class="icon-lg rounded-circle bg-success bg-opacity-10 text-success d-inline-flex align-items-center justify-content-center mb-3 avatar-64" role="img" aria-label="@Localizer["Public.Booking.Confirmed"]">
+                            <i class="bi bi-check-lg fs-3" aria-hidden="true"></i>
                         </div>
-                        <h1 class="h3 mb-1">Booking confirmed</h1>
+                        <h1 class="h3 mb-1">@Localizer["Public.Booking.Confirmed"]</h1>
                     }
-                    <p class="text-secondary mb-0">Reference <span class="fw-semibold">@Model.Reference</span></p>
+                    <p class="text-secondary mb-0">
+                        @Localizer["Public.Booking.Reference"]
+                        <span class="fw-semibold" id="bookingReference" dir="ltr">@Model.Reference</span>
+                        <button type="button" class="btn btn-sm btn-light ms-1 mb-0 js-copy-ref"
+                                data-copy-target="bookingReference"
+                                data-copied-text="@Localizer["Public.Copied"]"
+                                aria-label="@Localizer["Public.CopyReference"]"
+                                title="@Localizer["Public.CopyReference"]">
+                            <i class="bi bi-clipboard" aria-hidden="true"></i>
+                        </button>
+                    </p>
+                    @* TODO(backend): show "a confirmation email was sent to {email}" once the booking API
+                       exposes whether/where a confirmation email was dispatched. No such field exists today. *@
                 </div>
 
                 <div class="card border mb-4">
@@ -35,20 +50,20 @@
                             <div class="col-sm-3">
                                 @if (!string.IsNullOrWhiteSpace(Model.ImageUrl))
                                 {
-                                    <img src="@Model.ImageUrl" class="rounded w-100" style="height:90px;object-fit:cover;" alt="@Model.TourName" />
+                                    <img src="@Model.ImageUrl" class="rounded w-100 thumb-h90 object-cover" alt="@Model.TourName" />
                                 }
                                 else
                                 {
-                                    <div class="bg-light rounded d-flex align-items-center justify-content-center" style="height:90px;">
-                                        <i class="bi bi-image fs-3 text-secondary"></i>
+                                    <div class="bg-light rounded d-flex align-items-center justify-content-center thumb-h90">
+                                        <i class="bi bi-image fs-3 text-secondary" aria-hidden="true"></i>
                                     </div>
                                 }
                             </div>
                             <div class="col-sm-9">
                                 <h5 class="mb-1">@Model.TourName</h5>
                                 <ul class="nav nav-divider small mb-0">
-                                    <li class="nav-item">@Model.ParticipantCount traveler(s)</li>
-                                    <li class="nav-item">Booked @Model.CreatedAt.ToString("dd MMM yyyy")</li>
+                                    <li class="nav-item">@Localizer["Public.Booking.TravelersCount", Model.ParticipantCount]</li>
+                                    <li class="nav-item">@Localizer["Public.Booking.BookedOn", Model.CreatedAt.ToString("d MMM yyyy")]</li>
                                     <li class="nav-item">
                                         <span class="badge text-bg-light text-uppercase">@Model.Status</span>
                                     </li>
@@ -58,10 +73,10 @@
 
                         @if (!string.IsNullOrWhiteSpace(Model.SpecialRequests))
                         {
-                            <p class="small mb-3"><span class="fw-semibold">Special requests:</span> @Model.SpecialRequests</p>
+                            <p class="small mb-3"><span class="fw-semibold">@Localizer["Public.Special.requests"]:</span> @Model.SpecialRequests</p>
                         }
 
-                        <h6 class="border-bottom pb-2 mb-3">Price summary</h6>
+                        <h6 class="border-bottom pb-2 mb-3">@Localizer["Public.Price.summary"]</h6>
                         @if (Model.LineItems.Any())
                         {
                             <ul class="list-group list-group-borderless small mb-2">
@@ -76,22 +91,22 @@
                         }
                         <ul class="list-group list-group-borderless mb-0">
                             <li class="list-group-item d-flex justify-content-between px-0 py-1">
-                                <span>Subtotal</span><span>@Money(Model.Subtotal, Model.Currency)</span>
+                                <span>@Localizer["Public.Subtotal"]</span><span>@Money(Model.Subtotal, Model.Currency)</span>
                             </li>
                             @if (Model.DiscountAmount > 0)
                             {
                                 <li class="list-group-item d-flex justify-content-between px-0 py-1 text-success">
-                                    <span>Discount</span><span>-@Money(Model.DiscountAmount, Model.Currency)</span>
+                                    <span>@Localizer["Public.Discount"]</span><span>-@Money(Model.DiscountAmount, Model.Currency)</span>
                                 </li>
                             }
                             @if (Model.LoyaltyAmount > 0)
                             {
                                 <li class="list-group-item d-flex justify-content-between px-0 py-1 text-success">
-                                    <span>Loyalty</span><span>-@Money(Model.LoyaltyAmount, Model.Currency)</span>
+                                    <span>@Localizer["Public.Loyalty"]</span><span>-@Money(Model.LoyaltyAmount, Model.Currency)</span>
                                 </li>
                             }
                             <li class="list-group-item d-flex justify-content-between px-0 pt-2 border-top fw-bold">
-                                <span>Total</span><span>@Money(Model.TotalAmount, Model.Currency)</span>
+                                <span>@Localizer["Public.Total"]</span><span>@Money(Model.TotalAmount, Model.Currency)</span>
                             </li>
                         </ul>
                     </div>
@@ -99,32 +114,60 @@
 
                 @if (Model.IsCancelled)
                 {
-                    <div class="alert alert-warning">
-                        This booking was cancelled@(Model.CancelledAt is { } c ? $" on {c:dd MMM yyyy}" : "").
+                    <div class="alert alert-warning" role="alert">
+                        @(Model.CancelledAt is { } c
+                            ? Localizer["Public.Booking.CancelledOn", c.ToString("d MMM yyyy")]
+                            : Localizer["Public.Booking.CancelledNoDate"])
                         @if (Model.RefundAmount is > 0)
                         {
-                            <text> A refund of @Money(Model.RefundAmount.Value, Model.Currency) was issued.</text>
+                            <span class="fw-bold text-success d-block mt-1">@Localizer["Public.Booking.RefundIssued", Money(Model.RefundAmount.Value, Model.Currency)]</span>
                         }
                     </div>
                 }
                 else if (Model.AwaitingPayment)
                 {
-                    <div class="alert alert-info d-flex justify-content-between align-items-center flex-wrap gap-2">
-                        <span><i class="bi bi-hourglass-split me-2"></i>Your booking is awaiting payment@(Model.PaymentExpiresAt is { } p ? $" (expires {p:dd MMM yyyy HH:mm})" : "").</span>
-                        <form asp-area="Accounts" asp-controller="Bookings" asp-action="Pay" asp-route-id="@Model.Id" method="post" class="mb-0">
+                    <div class="alert alert-info d-flex justify-content-between align-items-center flex-wrap gap-2" role="alert"
+                         @(Model.PaymentExpiresAt is { } exp ? Html.Raw($"data-expires-at=\"{exp:O}\"") : Html.Raw(""))>
+                        <span>
+                            <i class="bi bi-hourglass-split me-2" aria-hidden="true"></i>@Localizer["Public.Booking.AwaitingPayment"]
+                            @if (Model.PaymentExpiresAt is { } p)
+                            {
+                                <span class="d-block small mt-1">
+                                    @Localizer["Public.Booking.PaymentExpires", p.ToString("d MMM yyyy HH:mm")]
+                                    <span id="paymentCountdown" class="fw-semibold" dir="ltr" aria-live="polite"></span>
+                                </span>
+                            }
+                        </span>
+                        <form asp-area="Accounts" asp-controller="Bookings" asp-action="Pay" asp-route-id="@Model.Id" method="post" class="mb-0" data-loading>
                             @Html.AntiForgeryToken()
-                            <button type="submit" class="btn btn-sm btn-primary mb-0">Pay now</button>
+                            <button type="submit" class="btn btn-sm btn-primary mb-0">@Localizer["Public.PayNow"]</button>
                         </form>
                     </div>
                 }
 
+                @* Phase 8.2: what-happens-next guidance. *@
+                <div class="card bg-light border-0 mb-4">
+                    <div class="card-body">
+                        <h6 class="mb-2">@Localizer["Public.Booking.WhatsNext"]</h6>
+                        <ul class="list-unstyled small mb-0 vstack gap-1">
+                            <li><i class="bi bi-1-circle me-2 text-primary" aria-hidden="true"></i>@Localizer["Public.Booking.Next1"]</li>
+                            <li><i class="bi bi-2-circle me-2 text-primary" aria-hidden="true"></i>@Localizer["Public.Booking.Next2"]</li>
+                            <li><i class="bi bi-3-circle me-2 text-primary" aria-hidden="true"></i>@Localizer["Public.Booking.Next3"]</li>
+                        </ul>
+                    </div>
+                </div>
+
                 <div class="d-flex flex-wrap gap-2 justify-content-center">
-                    <button type="button" class="btn btn-outline-primary mb-0" onclick="window.print()"><i class="bi bi-download me-2"></i>Download PDF</button>
-                    <a class="btn btn-primary mb-0" asp-area="Accounts" asp-controller="Bookings" asp-action="Index">My bookings</a>
-                    <a class="btn btn-light mb-0" asp-area="Public" asp-controller="Tours" asp-action="Index">Explore more tours</a>
+                    <button type="button" class="btn btn-outline-primary mb-0" onclick="window.print()"><i class="bi bi-download me-2" aria-hidden="true"></i>@Localizer["Public.DownloadPdf"]</button>
+                    <a class="btn btn-primary mb-0" asp-area="Accounts" asp-controller="Bookings" asp-action="Index">@Localizer["Navbar.MyBookings"]</a>
+                    <a class="btn btn-light mb-0" asp-area="Public" asp-controller="Tours" asp-action="Index">@Localizer["Public.Explore.more.tours"]</a>
                 </div>
 
             </div>
         </div>
     </div>
 </section>
+
+@section Scripts {
+    <script src="~/assets/js/booking-confirmation.js" asp-append-version="true"></script>
+}
