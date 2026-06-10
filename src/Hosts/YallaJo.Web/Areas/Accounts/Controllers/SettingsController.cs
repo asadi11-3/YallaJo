@@ -46,10 +46,24 @@ public sealed class SettingsController : BaseController
         new(ExternalProviderConstants.Facebook, "Facebook", false),
     ];
 
+    // Phase 2 (Accounts plan): tab names the settings hub understands. The query value is
+    // server-honoured (?tab=) so deep links work without JS (PE1); accounts-settings.js
+    // additionally syncs the Bootstrap tabs with the URL hash.
+    private static string NormalizeTab(string? tab) => tab?.ToLowerInvariant() switch
+    {
+        "security" => "security",
+        "devices" => "devices",
+        "linked" => "linked",
+        "privacy" => "privacy",
+        "account" => "account",
+        _ => "notifications",
+    };
+
     [HttpGet]
-    public async Task<IActionResult> Index(CancellationToken ct)
+    public async Task<IActionResult> Index(string? tab, CancellationToken ct)
     {
         ViewData["AccountNav"] = "Settings";
+        ViewData["SettingsTab"] = NormalizeTab(tab);
 
         var rowsResult = await _settings.GetNotificationRowsAsync(ct);
         if (GuardSignOut(rowsResult) is { } so1) return so1;
@@ -114,7 +128,7 @@ public sealed class SettingsController : BaseController
         if (GuardSignOut(result) is { } so) return so;
         if (result.IsSuccess) SetSuccess("Notification preferences saved.");
         else SetError(result.Error);
-        return RedirectToAction(nameof(Index));
+        return RedirectToAction(nameof(Index), new { tab = "notifications" });
     }
 
     [HttpPost("accounts/settings/marketing")]
@@ -130,7 +144,7 @@ public sealed class SettingsController : BaseController
         if (GuardSignOut(result) is { } so) return so;
         if (result.IsSuccess) SetSuccess("Marketing preferences saved.");
         else SetError(result.Error);
-        return RedirectToAction(nameof(Index));
+        return RedirectToAction(nameof(Index), new { tab = "notifications" });
     }
 
     [HttpPost("accounts/settings/phone")]
@@ -140,14 +154,14 @@ public sealed class SettingsController : BaseController
         if (!ModelState.IsValid)
         {
             SetError("Please enter a valid phone number.");
-            return RedirectToAction(nameof(Index));
+            return RedirectToAction(nameof(Index), new { tab = "security" });
         }
 
         var result = await _phone.HandleAsync(vm, ct);
         if (GuardSignOut(result) is { } so) return so;
         if (result.IsSuccess) SetSuccess("Phone number updated.");
         else SetError(result.Error);
-        return RedirectToAction(nameof(Index));
+        return RedirectToAction(nameof(Index), new { tab = "security" });
     }
 
     [HttpPost("accounts/settings/sessions/revoke/{sessionId:guid}")]
@@ -158,7 +172,7 @@ public sealed class SettingsController : BaseController
         if (GuardSignOut(result) is { } so) return so;
         if (result.IsSuccess) SetSuccess("Session signed out.");
         else SetError(result.Error);
-        return RedirectToAction(nameof(Index));
+        return RedirectToAction(nameof(Index), new { tab = "security" });
     }
 
     [HttpPost("accounts/settings/devices/trust/{deviceId:guid}")]
@@ -169,7 +183,7 @@ public sealed class SettingsController : BaseController
         if (GuardSignOut(result) is { } so) return so;
         if (result.IsSuccess) SetSuccess("Device marked as trusted.");
         else SetError(result.Error);
-        return RedirectToAction(nameof(Index));
+        return RedirectToAction(nameof(Index), new { tab = "security" });
     }
 
     [HttpPost("accounts/settings/logout-all")]
@@ -193,14 +207,14 @@ public sealed class SettingsController : BaseController
             || string.IsNullOrWhiteSpace(platform))
         {
             SetError("Device id, platform and token are all required.");
-            return RedirectToAction(nameof(Index));
+            return RedirectToAction(nameof(Index), new { tab = "devices" });
         }
 
         var result = await _devices.RegisterTokenAsync(deviceId, platform, token, ct);
         if (GuardSignOut(result) is { } so) return so;
         if (result.IsSuccess) SetSuccess("Device registered for notifications.");
         else SetError(result.Error);
-        return RedirectToAction(nameof(Index));
+        return RedirectToAction(nameof(Index), new { tab = "devices" });
     }
 
     [HttpPost("accounts/settings/devices/{id:guid}/remove")]
@@ -212,6 +226,6 @@ public sealed class SettingsController : BaseController
         if (GuardSignOut(result) is { } so) return so;
         if (result.IsSuccess) SetSuccess("Device removed.");
         else SetError(result.Error);
-        return RedirectToAction(nameof(Index));
+        return RedirectToAction(nameof(Index), new { tab = "devices" });
     }
 }

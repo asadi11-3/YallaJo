@@ -6,6 +6,12 @@ using YallaJo.Web.Infrastructure.Mvc;
 
 namespace YallaJo.Web.Areas.Accounts.Controllers;
 
+/// <summary>
+/// Phase 2 (Accounts plan): the standalone change-password page was retired and merged into
+/// the Settings hub's Security tab. The GET now 301s there; the POST survives unchanged
+/// (it is submitted by the Security tab's password form and Profile's inline form) but
+/// follows PRG back to the caller via a validated returnUrl (UI-UX-PE1).
+/// </summary>
 [Area("Accounts")]
 [Authorize]
 public sealed class ChangePasswordController : BaseController
@@ -14,26 +20,33 @@ public sealed class ChangePasswordController : BaseController
     public ChangePasswordController(ChangePasswordFacade facade) => _facade = facade;
 
     [HttpGet]
-    public IActionResult Index() => View(new ChangePasswordVm());
+    public IActionResult Index()
+        => RedirectPermanent(Url.Action("Index", "Settings", new { area = "Accounts", tab = "security" })!);
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Index(ChangePasswordVm vm, CancellationToken ct)
+    public async Task<IActionResult> Index(ChangePasswordVm vm, string? returnUrl, CancellationToken ct)
     {
-        if (!ModelState.IsValid) return View(vm);
+        if (!ModelState.IsValid)
+        {
+            var firstError = ModelState.Values
+                .SelectMany(v => v.Errors)
+                .Select(e => e.ErrorMessage)
+                .FirstOrDefault(m => !string.IsNullOrWhiteSpace(m));
+            SetError(firstError ?? "Please complete the password form.");
+            return RedirectBack(returnUrl);
+        }
 
         var result = await _facade.HandleAsync(vm, ct);
         if (GuardSignOut(result) is { } signOut) return signOut;
 
-        if (result.IsSuccess)
-        {
-            SetSuccess("Password changed successfully.");
-            return RedirectToAction(nameof(Index));
-        }
-
-        if (!ApplyValidationErrors(result))
-            ModelState.AddModelError(string.Empty, result.Error ?? "Could not change password.");
-
-        return View(vm);
+        if (result.IsSuccess) SetSuccess("Password changed successfully.");
+        else SetError(result.Error ?? "Could not change password.");
+        return RedirectBack(returnUrl);
     }
+
+    private IActionResult RedirectBack(string? returnUrl)
+        => !string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl)
+            ? Redirect(returnUrl)
+            : RedirectToAction("Index", "Settings", new { area = "Accounts", tab = "security" });
 }

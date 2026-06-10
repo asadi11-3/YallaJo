@@ -1,31 +1,26 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using YallaJo.Web.Areas.Accounts.Facades;
-using YallaJo.Web.Areas.Accounts.Shared;
 using YallaJo.Web.Infrastructure.Mvc;
 
 namespace YallaJo.Web.Areas.Accounts.Controllers;
 
+/// <summary>
+/// Phase 2 (Accounts plan): the standalone delete-profile page was retired and merged into
+/// the Settings hub's Account tab. The GET 301s there; the Delete/Restore POSTs keep their
+/// routes and behaviour, with PRG back to the Account tab.
+/// </summary>
 [Area("Accounts")]
 [Authorize]
 public sealed class DeleteController : BaseController
 {
     private readonly DeleteFacade _delete;
-    private readonly ProfileFacade _profile;
 
-    public DeleteController(DeleteFacade delete, ProfileFacade profile)
-    {
-        _delete = delete;
-        _profile = profile;
-    }
+    public DeleteController(DeleteFacade delete) => _delete = delete;
 
     [HttpGet("accounts/delete")]
-    public async Task<IActionResult> Index(CancellationToken ct)
-    {
-        ViewData["AccountNav"] = "Delete";
-        await PopulateSidebarAsync(ct);
-        return View();
-    }
+    public IActionResult Index()
+        => RedirectPermanent(Url.Action("Index", "Settings", new { area = "Accounts", tab = "account" })!);
 
     [HttpPost("accounts/delete")]
     [ValidateAntiForgeryToken]
@@ -37,7 +32,7 @@ public sealed class DeleteController : BaseController
         if (!result.IsSuccess)
         {
             SetError(result.Error);
-            return RedirectToAction(nameof(Index));
+            return BackToTab();
         }
 
         // Account soft-deleted and local cookie cleared; send the user to sign-in.
@@ -57,26 +52,9 @@ public sealed class DeleteController : BaseController
         else
             SetError(result.Error);
 
-        return RedirectToAction(nameof(Index));
+        return BackToTab();
     }
 
-    private async Task PopulateSidebarAsync(CancellationToken ct)
-    {
-        var profile = await _profile.GetAsync(ct);
-        if (profile is { IsSuccess: true, Data: { } p })
-        {
-            ViewBag.Sidebar = new AccountSidebarVm
-            {
-                AvatarUrl = p.AvatarUrl,
-                DisplayName = string.IsNullOrWhiteSpace(p.DisplayName)
-                    ? $"{p.FirstName} {p.LastName}".Trim()
-                    : p.DisplayName,
-                Email = p.Email,
-            };
-        }
-        else
-        {
-            ViewBag.Sidebar = new AccountSidebarVm();
-        }
-    }
+    private IActionResult BackToTab()
+        => RedirectToAction("Index", "Settings", new { area = "Accounts", tab = "account" });
 }

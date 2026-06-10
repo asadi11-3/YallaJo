@@ -1,8 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using YallaJo.Web.Areas.Accounts.Facades;
-using YallaJo.Web.Areas.Accounts.Models.Privacy;
-using YallaJo.Web.Areas.Accounts.Shared;
 using YallaJo.Web.Infrastructure.Authorization;
 using YallaJo.Web.Infrastructure.Mvc;
 
@@ -13,9 +11,11 @@ namespace YallaJo.Web.Areas.Accounts.Controllers;
 /// personal analytics/recommendation data): export, request deletion (30-day window),
 /// and cancel a pending deletion.
 /// <para>
-/// This page is intentionally separate from Settings and from the account-deletion
-/// ("Delete Profile") page. The destructive delete-data action deletes recommendation/
-/// analytics data only — NOT the account — and requires an explicit typed confirmation.
+/// Phase 2 (Accounts plan): the standalone privacy page was retired and merged into the
+/// Settings hub's Privacy &amp; data tab — the GET now 301s there (no permission gate on a
+/// pure redirect; the actions below keep their gates). The destructive delete-data action
+/// deletes recommendation/analytics data only — NOT the account — and requires an explicit
+/// typed confirmation.
 /// </para>
 /// </summary>
 [Area("Accounts")]
@@ -25,22 +25,12 @@ public sealed class PrivacyController : BaseController
     private const string ConfirmationWord = "DELETE";
 
     private readonly PrivacyFacade _privacy;
-    private readonly ProfileFacade _profile;
 
-    public PrivacyController(PrivacyFacade privacy, ProfileFacade profile)
-    {
-        _privacy = privacy;
-        _profile = profile;
-    }
+    public PrivacyController(PrivacyFacade privacy) => _privacy = privacy;
 
     [HttpGet("accounts/privacy")]
-    [RequirePermission(WebPermission.Preference.Read)]
-    public async Task<IActionResult> Index(CancellationToken ct)
-    {
-        ViewData["AccountNav"] = "Privacy";
-        await PopulateSidebarAsync(ct);
-        return View(new PrivacyVm());
-    }
+    public IActionResult Index()
+        => RedirectPermanent(Url.Action("Index", "Settings", new { area = "Accounts", tab = "privacy" })!);
 
     [HttpGet("accounts/privacy/export")]
     [RequirePermission(WebPermission.Preference.Read)]
@@ -52,7 +42,7 @@ public sealed class PrivacyController : BaseController
         if (!result.IsSuccess || result.Data is null)
         {
             SetError(result.Error ?? "Could not prepare your data export.");
-            return RedirectToAction(nameof(Index));
+            return BackToTab();
         }
 
         // Re-serve the proxied JSON bytes as a download. JWT never leaves the server.
@@ -68,7 +58,7 @@ public sealed class PrivacyController : BaseController
         if (!string.Equals(confirmation?.Trim(), ConfirmationWord, StringComparison.Ordinal))
         {
             SetError($"Please type {ConfirmationWord} to confirm deleting your recommendation data.");
-            return RedirectToAction(nameof(Index));
+            return BackToTab();
         }
 
         var result = await _privacy.RequestDataDeletionAsync(ct);
@@ -79,7 +69,7 @@ public sealed class PrivacyController : BaseController
         else
             SetError(result.Error ?? "Could not request data deletion.");
 
-        return RedirectToAction(nameof(Index));
+        return BackToTab();
     }
 
     [HttpPost("accounts/privacy/cancel-deletion")]
@@ -95,26 +85,9 @@ public sealed class PrivacyController : BaseController
         else
             SetError(result.Error ?? "Could not cancel the deletion.");
 
-        return RedirectToAction(nameof(Index));
+        return BackToTab();
     }
 
-    private async Task PopulateSidebarAsync(CancellationToken ct)
-    {
-        var profile = await _profile.GetAsync(ct);
-        if (profile is { IsSuccess: true, Data: { } p })
-        {
-            ViewBag.Sidebar = new AccountSidebarVm
-            {
-                AvatarUrl = p.AvatarUrl,
-                DisplayName = string.IsNullOrWhiteSpace(p.DisplayName)
-                    ? $"{p.FirstName} {p.LastName}".Trim()
-                    : p.DisplayName,
-                Email = p.Email,
-            };
-        }
-        else
-        {
-            ViewBag.Sidebar = new AccountSidebarVm();
-        }
-    }
+    private IActionResult BackToTab()
+        => RedirectToAction("Index", "Settings", new { area = "Accounts", tab = "privacy" });
 }

@@ -12772,4 +12772,22 @@
 <data name="Accounts.Confirm.Close" xml:space="preserve">
 <value>Close</value>
 </data>
+<data name="Accounts.Settings.Tab.Notifications" xml:space="preserve">
+<value>Notifications</value>
+</data>
+<data name="Accounts.Settings.Tab.Security" xml:space="preserve">
+<value>Security</value>
+</data>
+<data name="Accounts.Settings.Tab.Devices" xml:space="preserve">
+<value>Devices</value>
+</data>
+<data name="Accounts.Settings.Tab.Linked" xml:space="preserve">
+<value>Linked accounts</value>
+</data>
+<data name="Accounts.Settings.Tab.Privacy" xml:space="preserve">
+<value>Privacy &amp; data</value>
+</data>
+<data name="Accounts.Settings.Tab.Account" xml:space="preserve">
+<value>Account</value>
+</data>
 </root>

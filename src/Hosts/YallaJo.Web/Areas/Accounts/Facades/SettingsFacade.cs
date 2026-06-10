@@ -17,6 +17,9 @@ public sealed class SettingsFacade
     /// security alerts and payment receipts are intentionally excluded because the
     /// API forbids disabling them). Order is the display order.
     /// </summary>
+    // TODO(backend): replace this hardcoded list with GET /api/v1/notifications/types
+    // (Messaging module) so new notification types surface automatically — Accounts plan
+    // Phase 2 item 5; keep this array as the graceful fallback when that endpoint fails.
     private static readonly (string Type, string Label)[] SurfacedTypes =
     [
         ("BookingConfirmed", "Booking confirmed"),

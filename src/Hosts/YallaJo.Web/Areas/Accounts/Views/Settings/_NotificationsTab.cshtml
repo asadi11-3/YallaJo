@@ -1,0 +1,91 @@
+@model YallaJo.Web.Areas.Accounts.Models.Settings.SettingsVm
+@* Phase 2 (Accounts plan): Notifications tab — notification matrix + marketing consent, extracted from Settings/Index. *@
+
+<div class="vstack gap-4">
+
+    @* ---------- Notification settings ---------- *@
+    <div class="card border">
+        <div class="card-header border-bottom">
+            <h4 class="card-header-title mb-0">Notification settings</h4>
+            <p class="mb-0 small">Choose how you want to be notified. Security and payment alerts are always on.</p>
+        </div>
+        <div class="card-body">
+            <form asp-area="Accounts" asp-controller="Settings" asp-action="UpdateNotifications" method="post" data-loading>
+                @Html.AntiForgeryToken()
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th scope="col">Activity</th>
+                                <th scope="col" class="text-center">Email</th>
+                                <th scope="col" class="text-center">Push</th>
+                                <th scope="col" class="text-center">In-app</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var row in Model.NotificationRows)
+                            {
+                                <tr>
+                                    <td>@row.Label</td>
+                                    <td class="text-center">
+                                        <div class="form-check form-switch d-inline-block">
+                                            <input class="form-check-input" type="checkbox" role="switch"
+                                                   name="pref_@(row.Type)_Email" value="true" @(row.Email ? "checked" : "") />
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="form-check form-switch d-inline-block">
+                                            <input class="form-check-input" type="checkbox" role="switch"
+                                                   name="pref_@(row.Type)_Push" value="true" @(row.Push ? "checked" : "") />
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="form-check form-switch d-inline-block">
+                                            <input class="form-check-input" type="checkbox" role="switch"
+                                                   name="pref_@(row.Type)_InApp" value="true" @(row.InApp ? "checked" : "") />
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                <div class="text-end mt-3">
+                    <button type="submit" class="btn btn-primary mb-0">Save preferences</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    @* ---------- Marketing / newsletter ---------- *@
+    <div class="card border">
+        <div class="card-header border-bottom">
+            <h4 class="card-header-title mb-0">Marketing &amp; newsletter</h4>
+            <p class="mb-0 small">Manage promotional communication.</p>
+        </div>
+        <div class="card-body">
+            <form asp-area="Accounts" asp-controller="Settings" asp-action="UpdateMarketing" method="post" data-loading>
+                @Html.AntiForgeryToken()
+                <div class="form-check form-switch mb-3">
+                    <input class="form-check-input" type="checkbox" role="switch" id="emailDigest"
+                           name="emailDigest" value="true" @(Model.Marketing.EmailDigest ? "checked" : "") />
+                    <label class="form-check-label" for="emailDigest">Email digest &amp; newsletter</label>
+                </div>
+                <div class="form-check form-switch mb-3">
+                    <input class="form-check-input" type="checkbox" role="switch" id="pushNotifications"
+                           name="pushNotifications" value="true" @(Model.Marketing.PushNotifications ? "checked" : "") />
+                    <label class="form-check-label" for="pushNotifications">Promotional push notifications</label>
+                </div>
+                <div class="form-check form-switch mb-3">
+                    <input class="form-check-input" type="checkbox" role="switch" id="reEngagementCampaigns"
+                           name="reEngagementCampaigns" value="true" @(Model.Marketing.ReEngagementCampaigns ? "checked" : "") />
+                    <label class="form-check-label" for="reEngagementCampaigns">Re-engagement campaigns</label>
+                </div>
+                <div class="text-end">
+                    <button type="submit" class="btn btn-primary mb-0">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+</div>

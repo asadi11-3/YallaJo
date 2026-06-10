@@ -1,0 +1,129 @@
+@model YallaJo.Web.Areas.Accounts.Models.Settings.SettingsVm
+@* Phase 2 (Accounts plan): Security tab — password change (single write stays on ChangePasswordController),
+   phone number, active sessions and logout-all, consolidated from the retired ChangePassword/UpdatePhone pages. *@
+
+<div class="vstack gap-4">
+
+    @* ---------- Password ---------- *@
+    <div class="card border">
+        <div class="card-header border-bottom">
+            <h4 class="card-header-title mb-0">Update Password</h4>
+            <p class="mb-0 mt-1 small">Choose a strong password you do not use elsewhere.</p>
+        </div>
+        <div class="card-body">
+            <form asp-area="Accounts" asp-controller="ChangePassword" asp-action="Index" method="post" class="row g-3" data-loading>
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="returnUrl" value="@(Url.Action("Index", "Settings", new { area = "Accounts", tab = "security" }))" />
+                <div class="col-12">
+                    <label for="settingsCurrentPassword" class="form-label">Current password</label>
+                    <input type="password" id="settingsCurrentPassword" name="CurrentPassword" class="form-control" autocomplete="current-password" />
+                </div>
+                <div class="col-12">
+                    <label for="settingsNewPassword" class="form-label">New password</label>
+                    <input type="password" id="settingsNewPassword" name="NewPassword" class="form-control" autocomplete="new-password" />
+                </div>
+                <div class="col-12">
+                    <label for="settingsConfirmNewPassword" class="form-label">Confirm new password</label>
+                    <input type="password" id="settingsConfirmNewPassword" name="ConfirmNewPassword" class="form-control" autocomplete="new-password" />
+                </div>
+                <div class="col-12 text-end">
+                    <button type="submit" class="btn btn-primary mb-0">Change Password</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    @* ---------- Security (phone + sessions) ---------- *@
+    <div class="card border">
+        <div class="card-header border-bottom">
+            <h4 class="card-header-title mb-0">Security settings</h4>
+        </div>
+        <div class="card-body vstack gap-4">
+
+            @* Phone number *@
+            <div>
+                <h6>Phone number</h6>
+                <form asp-area="Accounts" asp-controller="Settings" asp-action="UpdatePhone" method="post" class="row g-2 align-items-end" data-loading>
+                    @Html.AntiForgeryToken()
+                    <div class="col-sm-8">
+                        <label class="form-label" for="PhoneNumber">Primary phone</label>
+                        <input class="form-control" type="tel" id="PhoneNumber" name="PhoneNumber"
+                               value="@Model.PhoneNumber" placeholder="+1 555 123 4567" autocomplete="tel" />
+                    </div>
+                    <div class="col-sm-4 d-grid">
+                        <button type="submit" class="btn btn-primary mb-0">Update phone</button>
+                    </div>
+                </form>
+            </div>
+
+            <hr class="my-1" />
+
+            @* Active sessions *@
+            <div>
+                <h6>Active sessions</h6>
+                @if (Model.Sessions.Count == 0)
+                {
+                    <p class="text-body-secondary small mb-0">No other active sessions.</p>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Device</th>
+                                    <th scope="col">IP</th>
+                                    <th scope="col">Started</th>
+                                    <th scope="col">Expires</th>
+                                    <th scope="col" class="text-end">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var s in Model.Sessions)
+                                {
+                                    <tr>
+                                        <td>
+                                            @s.DeviceName
+                                            @if (s.IsCurrent)
+                                            {
+                                                <span class="badge bg-success bg-opacity-10 text-success ms-1">This device</span>
+                                            }
+                                        </td>
+                                        <td class="small">@s.IpAddress</td>
+                                        <td class="small">@s.CreatedAt.ToString("d MMM yyyy")</td>
+                                        <td class="small">@s.ExpiresAt.ToString("d MMM yyyy")</td>
+                                        <td class="text-end">
+                                            <div class="d-inline-flex gap-1">
+                                                <form asp-area="Accounts" asp-controller="Settings" asp-action="TrustDevice"
+                                                      asp-route-deviceId="@s.DeviceId" method="post" class="d-inline">
+                                                    @Html.AntiForgeryToken()
+                                                    <button type="submit" class="btn btn-sm btn-outline-secondary mb-0">Trust</button>
+                                                </form>
+                                                @if (!s.IsCurrent)
+                                                {
+                                                    <form asp-area="Accounts" asp-controller="Settings" asp-action="RevokeSession"
+                                                          asp-route-sessionId="@s.SessionId" method="post" class="d-inline">
+                                                        @Html.AntiForgeryToken()
+                                                        <button type="submit" class="btn btn-sm btn-outline-danger mb-0">Sign out</button>
+                                                    </form>
+                                                }
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                <form asp-area="Accounts" asp-controller="Settings" asp-action="LogoutAll" method="post" class="mt-2">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-outline-danger mb-0">
+                        <i class="fas fa-sign-out-alt me-2"></i>Sign out of all devices
+                    </button>
+                </form>
+            </div>
+
+        </div>
+    </div>
+
+</div>

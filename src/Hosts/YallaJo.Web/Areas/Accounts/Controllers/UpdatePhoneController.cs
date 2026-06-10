@@ -1,39 +1,20 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using YallaJo.Web.Areas.Accounts.Models.UpdatePhone;
-using YallaJo.Web.Areas.Accounts.Facades;
 using YallaJo.Web.Infrastructure.Mvc;
 
 namespace YallaJo.Web.Areas.Accounts.Controllers;
 
+/// <summary>
+/// Phase 2 (Accounts plan): the standalone update-phone page was retired and merged into the
+/// Settings hub's Security tab. The GET 301s there; the phone write now lives solely at
+/// POST /accounts/settings/phone (SettingsController.UpdatePhone) — the duplicate POST that
+/// previously lived here had no remaining consumers after the page retirement.
+/// </summary>
 [Area("Accounts")]
 [Authorize]
 public sealed class UpdatePhoneController : BaseController
 {
-    private readonly UpdatePhoneFacade _facade;
-    public UpdatePhoneController(UpdatePhoneFacade facade) => _facade = facade;
-
     [HttpGet]
-    public IActionResult Index() => View(new UpdatePhoneVm());
-
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Index(UpdatePhoneVm vm, CancellationToken ct)
-    {
-        if (!ModelState.IsValid) return View(vm);
-
-        var result = await _facade.HandleAsync(vm, ct);
-        if (GuardSignOut(result) is { } signOut) return signOut;
-
-        if (result.IsSuccess)
-        {
-            SetSuccess("Phone number updated.");
-            return RedirectToAction(nameof(Index));
-        }
-
-        if (!ApplyValidationErrors(result))
-            ModelState.AddModelError(string.Empty, result.Error ?? "Could not update phone number.");
-
-        return View(vm);
-    }
+    public IActionResult Index()
+        => RedirectPermanent(Url.Action("Index", "Settings", new { area = "Accounts", tab = "security" })!);
 }

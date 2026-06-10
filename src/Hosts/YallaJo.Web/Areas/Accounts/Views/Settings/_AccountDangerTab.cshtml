@@ -1,0 +1,56 @@
+@* Phase 2 (Accounts plan): Account tab — delete/deactivate danger zone, extracted from the retired
+   Delete/Index page. The Delete/Restore POST routes and the F8 data-confirm modal are unchanged;
+   the checkbox-enables-button logic lives in accounts-settings.js. *@
+
+<div class="card border">
+    <div class="card-header border-bottom">
+        <h4 class="card-header-title mb-0">Delete Account</h4>
+    </div>
+
+    <div class="card-body">
+        <div class="alert alert-warning d-flex align-items-start gap-2" role="alert">
+            <i class="bi bi-exclamation-triangle-fill fs-5"></i>
+            <div>
+                <strong>This will deactivate your account.</strong>
+                Deleting is a soft action &ndash; you can restore your account by signing in
+                again later, but the deactivation takes effect immediately.
+            </div>
+        </div>
+
+        <p class="mb-2">Before you go, please note:</p>
+        <ul class="list-group list-group-borderless mb-4">
+            <li class="list-group-item d-flex">
+                <i class="bi bi-dot text-primary me-1"></i>
+                Your bookings and wishlist remain linked to your account and return if you restore it.
+            </li>
+            <li class="list-group-item d-flex">
+                <i class="bi bi-dot text-primary me-1"></i>
+                You will be signed out of this device once the account is deleted.
+            </li>
+            <li class="list-group-item d-flex">
+                <i class="bi bi-dot text-primary me-1"></i>
+                To use the platform again, just sign in &ndash; you'll be offered the option to restore.
+            </li>
+        </ul>
+
+        <div class="form-check mb-4">
+            <input class="form-check-input" type="checkbox" id="deleteaccountCheck">
+            <label class="form-check-label" for="deleteaccountCheck">
+                Yes, I want to delete my account.
+            </label>
+        </div>
+
+        <div class="d-flex flex-wrap gap-2">
+            <a asp-area="Accounts" asp-controller="Profile" asp-action="Index" class="btn btn-primary-soft mb-0">
+                Keep my account
+            </a>
+            <form asp-area="Accounts" asp-controller="Delete" asp-action="Delete" method="post" class="mb-0"
+                  data-confirm="@Localizer["Accounts.Confirm.DeleteAccount"]" data-confirm-title="@Localizer["Public.Confirm.Title"]" data-confirm-action="@Localizer["Public.Confirm.Delete"]" data-confirm-cancel="@Localizer["Public.Confirm.Cancel"]">
+                @Html.AntiForgeryToken()
+                <button type="submit" id="deleteAccountBtn" class="btn btn-danger mb-0" disabled>
+                    <i class="bi bi-trash me-1"></i>Delete my account
+                </button>
+            </form>
+        </div>
+    </div>
+</div>

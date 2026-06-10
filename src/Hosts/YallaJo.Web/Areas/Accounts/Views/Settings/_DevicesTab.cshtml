@@ -1,0 +1,71 @@
+@model YallaJo.Web.Areas.Accounts.Models.Settings.SettingsVm
+@* Phase 2 (Accounts plan): Devices tab — push-notification device tokens, extracted from Settings/Index. *@
+
+<div class="card border">
+    <div class="card-header border-bottom">
+        <h4 class="card-header-title mb-0">Devices</h4>
+        <p class="mb-0 small">Devices registered to receive push notifications.</p>
+    </div>
+    <div class="card-body">
+        @if (Model.Devices.Count == 0)
+        {
+            <p class="text-body-secondary small mb-3">No devices are registered for push notifications.</p>
+        }
+        else
+        {
+            <div class="table-responsive mb-3">
+                <table class="table table-sm align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th scope="col">Device</th>
+                            <th scope="col">Platform</th>
+                            <th scope="col">Last seen</th>
+                            <th scope="col" class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var d in Model.Devices)
+                        {
+                            <tr>
+                                <td class="small">@d.DeviceId</td>
+                                <td class="small">@d.Platform</td>
+                                <td class="small">@d.LastSeenAt.ToString("d MMM yyyy")</td>
+                                <td class="text-end">
+                                    <form asp-area="Accounts" asp-controller="Settings" asp-action="RemoveDevice"
+                                          asp-route-id="@d.Id" method="post" class="d-inline"
+                                          data-confirm="@Localizer["Accounts.Confirm.RemoveDevice"]" data-confirm-title="@Localizer["Public.Confirm.Title"]" data-confirm-action="@Localizer["Public.Confirm.Delete"]" data-confirm-cancel="@Localizer["Public.Confirm.Cancel"]">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-sm btn-outline-danger mb-0">Remove</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+
+        <form asp-area="Accounts" asp-controller="Settings" asp-action="RegisterDevice" method="post" class="row g-2 align-items-end" data-loading>
+            @Html.AntiForgeryToken()
+            <div class="col-sm-4">
+                <label class="form-label" for="deviceId">Device id</label>
+                <input class="form-control" id="deviceId" name="deviceId" placeholder="e.g. my-browser" />
+            </div>
+            <div class="col-sm-3">
+                <label class="form-label" for="platform">Platform</label>
+                <select class="form-select" id="platform" name="platform">
+                    <option value="Web">Web</option>
+                    <option value="Android">Android</option>
+                    <option value="iOS">iOS</option>
+                </select>
+            </div>
+            <div class="col-sm-3">
+                <label class="form-label" for="token">Token</label>
+                <input class="form-control" id="token" name="token" placeholder="Push token" />
+            </div>
+            <div class="col-sm-2 d-grid">
+                <button type="submit" class="btn btn-primary mb-0">Register</button>
+            </div>
+        </form>
+    </div>
+</div>

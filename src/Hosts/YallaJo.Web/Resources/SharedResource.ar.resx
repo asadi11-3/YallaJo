@@ -12772,4 +12772,22 @@
 <data name="Accounts.Confirm.Close" xml:space="preserve">
 <value>إغلاق</value>
 </data>
+<data name="Accounts.Settings.Tab.Notifications" xml:space="preserve">
+<value>الإشعارات</value>
+</data>
+<data name="Accounts.Settings.Tab.Security" xml:space="preserve">
+<value>الأمان</value>
+</data>
+<data name="Accounts.Settings.Tab.Devices" xml:space="preserve">
+<value>الأجهزة</value>
+</data>
+<data name="Accounts.Settings.Tab.Linked" xml:space="preserve">
+<value>الحسابات المرتبطة</value>
+</data>
+<data name="Accounts.Settings.Tab.Privacy" xml:space="preserve">
+<value>الخصوصية والبيانات</value>
+</data>
+<data name="Accounts.Settings.Tab.Account" xml:space="preserve">
+<value>الحساب</value>
+</data>
 </root>
